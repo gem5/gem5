@@ -54,39 +54,39 @@ class SparseMemory
   public:
     SparseMemory(int number_of_bits, int number_of_levels);
     ~SparseMemory();
-    
+
     void printConfig(ostream& out) { }
-    
+
     bool exist(const Address& address) const;
     void add(const Address& address);
     void remove(const Address& address);
-    
+
     Directory_Entry* lookup(const Address& address);
-    
+
     // Print cache contents
     void print(ostream& out) const;
     void printStats(ostream& out) const;
 
   private:
     // Private Methods
-    
+
     // Private copy constructor and assignment operator
     SparseMemory(const SparseMemory& obj);
     SparseMemory& operator=(const SparseMemory& obj);
-    
+
     // Used by destructor to recursively remove all tables
     void recursivelyRemoveTables(SparseMapType* currentTable, int level);
-    
+
     // recursive search for address and remove associated entries
     int recursivelyRemoveLevels(const Address& address, CurNextInfo& curInfo);
-    
+
     // Data Members (m_prefix)
     SparseMapType* m_map_head;
-    
+
     int m_total_number_of_bits;
     int m_number_of_levels;
     int* m_number_of_bits_per_level;
-    
+
     uint64_t m_total_adds;
     uint64_t m_total_removes;
     uint64_t* m_adds_per_level;

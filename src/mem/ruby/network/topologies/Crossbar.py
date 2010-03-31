@@ -33,7 +33,7 @@ def makeTopology(nodes, options):
     ext_links = [ExtLink(ext_node=n, int_node=i)
                  for (i, n) in enumerate(nodes)]
     xbar = len(nodes) # node ID for crossbar switch
-    int_links = [IntLink(node_a=i, node_b=xbar) for i in range(len(nodes))]    
+    int_links = [IntLink(node_a=i, node_b=xbar) for i in range(len(nodes))]
     return Topology(ext_links=ext_links, int_links=int_links,
                     num_int_nodes=len(nodes)+1)
 

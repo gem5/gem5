@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,248 +26,262 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * SimpleNetwork.cc
- *
- * Description: See SimpleNetwork.hh
- *
- * $Id$
- *
- */
-
+#include "mem/gems_common/Map.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/protocol/Protocol.hh"
+#include "mem/protocol/TopologyType.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
+#include "mem/ruby/network/simple/Switch.hh"
+#include "mem/ruby/network/simple/Topology.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/network/simple/Switch.hh"
-#include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/simple/Topology.hh"
-#include "mem/protocol/TopologyType.hh"
-#include "mem/protocol/MachineType.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/protocol/Protocol.hh"
-#include "mem/gems_common/Map.hh"
 
+#if 0
 // ***BIG HACK*** - This is actually code that _should_ be in Network.cc
 
 // Note: Moved to Princeton Network
 // calls new to abstract away from the network
-/*
-Network* Network::createNetwork(int nodes)
+Network*
+Network::createNetwork(int nodes)
 {
-  return new SimpleNetwork(nodes);
+    return new SimpleNetwork(nodes);
 }
-*/
+#endif
 
 SimpleNetwork::SimpleNetwork(const Params *p)
     : Network(p)
 {
-  //
-  // Note: the parent Network Object constructor is called before the 
-  // SimpleNetwork child constructor.  Therefore, the member variables
-  // used below should already be initialized.
-  //
-  
-  m_endpoint_switches.setSize(m_nodes);
+    // Note: the parent Network Object constructor is called before the
+    // SimpleNetwork child constructor.  Therefore, the member variables
+    // used below should already be initialized.
 
-  m_in_use.setSize(m_virtual_networks);
-  m_ordered.setSize(m_virtual_networks);
-  for (int i = 0; i < m_virtual_networks; i++) {
-    m_in_use[i] = false;
-    m_ordered[i] = false;
-  }
+    m_endpoint_switches.setSize(m_nodes);
 
-  // Allocate to and from queues
-  m_toNetQueues.setSize(m_nodes);
-  m_fromNetQueues.setSize(m_nodes);
-  for (int node = 0; node < m_nodes; node++) {
-    m_toNetQueues[node].setSize(m_virtual_networks);
-    m_fromNetQueues[node].setSize(m_virtual_networks);
-    for (int j = 0; j < m_virtual_networks; j++) {
-      m_toNetQueues[node][j] = new MessageBuffer(
-                   "toNet node "+int_to_string(node)+" j "+int_to_string(j));
-      m_fromNetQueues[node][j] = new MessageBuffer(
-                   "fromNet node "+int_to_string(node)+" j "+int_to_string(j));
+    m_in_use.setSize(m_virtual_networks);
+    m_ordered.setSize(m_virtual_networks);
+    for (int i = 0; i < m_virtual_networks; i++) {
+        m_in_use[i] = false;
+        m_ordered[i] = false;
     }
-  }
+
+    // Allocate to and from queues
+    m_toNetQueues.setSize(m_nodes);
+    m_fromNetQueues.setSize(m_nodes);
+    for (int node = 0; node < m_nodes; node++) {
+        m_toNetQueues[node].setSize(m_virtual_networks);
+        m_fromNetQueues[node].setSize(m_virtual_networks);
+        for (int j = 0; j < m_virtual_networks; j++) {
+            m_toNetQueues[node][j] = new MessageBuffer(
+                "toNet node "+int_to_string(node)+" j "+int_to_string(j));
+            m_fromNetQueues[node][j] = new MessageBuffer(
+                "fromNet node "+int_to_string(node)+" j "+int_to_string(j));
+        }
+    }
 }
 
-void SimpleNetwork::init()
+void
+SimpleNetwork::init()
 {
+    Network::init();
 
-  Network::init();
+    // The topology pointer should have already been initialized in
+    // the parent class network constructor.
+    assert(m_topology_ptr != NULL);
+    int number_of_switches = m_topology_ptr->numSwitches();
+    for (int i = 0; i < number_of_switches; i++) {
+        m_switch_ptr_vector.insertAtBottom(new Switch(i, this));
+    }
 
-  //
-  // The topology pointer should have already been initialized in the parent 
-  // class network constructor.
-  //
-  assert(m_topology_ptr != NULL);
-  int number_of_switches = m_topology_ptr->numSwitches();
-  for (int i=0; i<number_of_switches; i++) {
-    m_switch_ptr_vector.insertAtBottom(new Switch(i, this));
-  }
-  m_topology_ptr->createLinks(this, false);  // false because this isn't a reconfiguration
+    // false because this isn't a reconfiguration
+    m_topology_ptr->createLinks(this, false);
 }
 
-void SimpleNetwork::reset()
+void
+SimpleNetwork::reset()
 {
-  for (int node = 0; node < m_nodes; node++) {
-    for (int j = 0; j < m_virtual_networks; j++) {
-      m_toNetQueues[node][j]->clear();
-      m_fromNetQueues[node][j]->clear();
+    for (int node = 0; node < m_nodes; node++) {
+        for (int j = 0; j < m_virtual_networks; j++) {
+            m_toNetQueues[node][j]->clear();
+            m_fromNetQueues[node][j]->clear();
+        }
     }
-  }
 
-  for(int i=0; i<m_switch_ptr_vector.size(); i++){
-    m_switch_ptr_vector[i]->clearBuffers();
-  }
+    for(int i = 0; i < m_switch_ptr_vector.size(); i++){
+        m_switch_ptr_vector[i]->clearBuffers();
+    }
 }
 
 SimpleNetwork::~SimpleNetwork()
 {
-  for (int i = 0; i < m_nodes; i++) {
-    m_toNetQueues[i].deletePointers();
-    m_fromNetQueues[i].deletePointers();
-  }
-  m_switch_ptr_vector.deletePointers();
-  m_buffers_to_free.deletePointers();
-  // delete m_topology_ptr;
+    for (int i = 0; i < m_nodes; i++) {
+        m_toNetQueues[i].deletePointers();
+        m_fromNetQueues[i].deletePointers();
+    }
+    m_switch_ptr_vector.deletePointers();
+    m_buffers_to_free.deletePointers();
+    // delete m_topology_ptr;
 }
 
 // From a switch to an endpoint node
-void SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration)
+void
+SimpleNetwork::makeOutLink(SwitchID src, NodeID dest,
+    const NetDest& routing_table_entry, int link_latency, int link_weight,
+    int bw_multiplier, bool isReconfiguration)
 {
-  assert(dest < m_nodes);
-  assert(src < m_switch_ptr_vector.size());
-  assert(m_switch_ptr_vector[src] != NULL);
-  if(!isReconfiguration){
-    m_switch_ptr_vector[src]->addOutPort(m_fromNetQueues[dest], routing_table_entry, link_latency, bw_multiplier);
+    assert(dest < m_nodes);
+    assert(src < m_switch_ptr_vector.size());
+    assert(m_switch_ptr_vector[src] != NULL);
+
+    if (isReconfiguration) {
+        m_switch_ptr_vector[src]->reconfigureOutPort(routing_table_entry);
+        return;
+    }
+
+    m_switch_ptr_vector[src]->addOutPort(m_fromNetQueues[dest],
+        routing_table_entry, link_latency, bw_multiplier);
     m_endpoint_switches[dest] = m_switch_ptr_vector[src];
-  } else {
-    m_switch_ptr_vector[src]->reconfigureOutPort(routing_table_entry);
-  }
 }
 
 // From an endpoint node to a switch
-void SimpleNetwork::makeInLink(NodeID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int bw_multiplier, bool isReconfiguration)
+void
+SimpleNetwork::makeInLink(NodeID src, SwitchID dest,
+    const NetDest& routing_table_entry, int link_latency, int bw_multiplier,
+    bool isReconfiguration)
 {
-  assert(src < m_nodes);
-  if(!isReconfiguration){
+    assert(src < m_nodes);
+    if (isReconfiguration) {
+        // do nothing
+        return;
+    }
+
     m_switch_ptr_vector[dest]->addInPort(m_toNetQueues[src]);
-  } else {
-    // do nothing
-  }
 }
 
 // From a switch to a switch
-void SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration)
+void
+SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest,
+    const NetDest& routing_table_entry, int link_latency, int link_weight,
+    int bw_multiplier, bool isReconfiguration)
 {
-  if(!isReconfiguration){
+    if (isReconfiguration) {
+        m_switch_ptr_vector[src]->reconfigureOutPort(routing_table_entry);
+        return;
+    }
+
     // Create a set of new MessageBuffers
     Vector<MessageBuffer*> queues;
     for (int i = 0; i < m_virtual_networks; i++) {
-      // allocate a buffer
-      MessageBuffer* buffer_ptr = new MessageBuffer;
-      buffer_ptr->setOrdering(true);
-      if (m_buffer_size > 0) {
-        buffer_ptr->setSize(m_buffer_size);
-      }
-      queues.insertAtBottom(buffer_ptr);
-      // remember to deallocate it
-      m_buffers_to_free.insertAtBottom(buffer_ptr);
+        // allocate a buffer
+        MessageBuffer* buffer_ptr = new MessageBuffer;
+        buffer_ptr->setOrdering(true);
+        if (m_buffer_size > 0) {
+            buffer_ptr->setSize(m_buffer_size);
+        }
+        queues.insertAtBottom(buffer_ptr);
+        // remember to deallocate it
+        m_buffers_to_free.insertAtBottom(buffer_ptr);
     }
-
     // Connect it to the two switches
     m_switch_ptr_vector[dest]->addInPort(queues);
-    m_switch_ptr_vector[src]->addOutPort(queues, routing_table_entry, link_latency, bw_multiplier);
-  } else {
-    m_switch_ptr_vector[src]->reconfigureOutPort(routing_table_entry);
-  }
+    m_switch_ptr_vector[src]->addOutPort(queues, routing_table_entry,
+        link_latency, bw_multiplier);
 }
 
-void SimpleNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
+void
+SimpleNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
 {
-  ASSERT(id < m_nodes);
-  ASSERT(network_num < m_virtual_networks);
+    ASSERT(id < m_nodes);
+    ASSERT(network_num < m_virtual_networks);
 
-  if (ordered) {
-    m_ordered[network_num] = true;
-  }
-  m_in_use[network_num] = true;
-}
-
-MessageBuffer* SimpleNetwork::getToNetQueue(NodeID id, bool ordered, int network_num)
-{
-  checkNetworkAllocation(id, ordered, network_num);
-  return m_toNetQueues[id][network_num];
-}
-
-MessageBuffer* SimpleNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num)
-{
-  checkNetworkAllocation(id, ordered, network_num);
-  return m_fromNetQueues[id][network_num];
-}
-
-const Vector<Throttle*>* SimpleNetwork::getThrottles(NodeID id) const
-{
-  assert(id >= 0);
-  assert(id < m_nodes);
-  assert(m_endpoint_switches[id] != NULL);
-  return m_endpoint_switches[id]->getThrottles();
-}
-
-void SimpleNetwork::printStats(ostream& out) const
-{
-  out << endl;
-  out << "Network Stats" << endl;
-  out << "-------------" << endl;
-  out << endl;
-  for(int i=0; i<m_switch_ptr_vector.size(); i++) {
-    m_switch_ptr_vector[i]->printStats(out);
-  }
-  m_topology_ptr->printStats(out);
-}
-
-void SimpleNetwork::clearStats()
-{
-  for(int i=0; i<m_switch_ptr_vector.size(); i++) {
-    m_switch_ptr_vector[i]->clearStats();
-  }
-  m_topology_ptr->clearStats();
-}
-
-void SimpleNetwork::printConfig(ostream& out) const
-{
-  out << endl;
-  out << "Network Configuration" << endl;
-  out << "---------------------" << endl;
-  out << "network: SIMPLE_NETWORK" << endl;
-  out << "topology: " << m_topology_ptr->getName() << endl;
-  out << endl;
-
-  for (int i = 0; i < m_virtual_networks; i++) {
-    out << "virtual_net_" << i << ": ";
-    if (m_in_use[i]) {
-      out << "active, ";
-      if (m_ordered[i]) {
-        out << "ordered" << endl;
-      } else {
-        out << "unordered" << endl;
-      }
-    } else {
-      out << "inactive" << endl;
+    if (ordered) {
+        m_ordered[network_num] = true;
     }
-  }
-  out << endl;
-  for(int i=0; i<m_switch_ptr_vector.size(); i++) {
-    m_switch_ptr_vector[i]->printConfig(out);
-  }
-
-  m_topology_ptr->printConfig(out);
+    m_in_use[network_num] = true;
 }
 
-void SimpleNetwork::print(ostream& out) const
+MessageBuffer*
+SimpleNetwork::getToNetQueue(NodeID id, bool ordered, int network_num)
 {
-  out << "[SimpleNetwork]";
+    checkNetworkAllocation(id, ordered, network_num);
+    return m_toNetQueues[id][network_num];
+}
+
+MessageBuffer*
+SimpleNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num)
+{
+    checkNetworkAllocation(id, ordered, network_num);
+    return m_fromNetQueues[id][network_num];
+}
+
+const Vector<Throttle*>*
+SimpleNetwork::getThrottles(NodeID id) const
+{
+    assert(id >= 0);
+    assert(id < m_nodes);
+    assert(m_endpoint_switches[id] != NULL);
+    return m_endpoint_switches[id]->getThrottles();
+}
+
+void
+SimpleNetwork::printStats(ostream& out) const
+{
+    out << endl;
+    out << "Network Stats" << endl;
+    out << "-------------" << endl;
+    out << endl;
+    for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
+        m_switch_ptr_vector[i]->printStats(out);
+    }
+    m_topology_ptr->printStats(out);
+}
+
+void
+SimpleNetwork::clearStats()
+{
+    for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
+        m_switch_ptr_vector[i]->clearStats();
+    }
+    m_topology_ptr->clearStats();
+}
+
+void
+SimpleNetwork::printConfig(ostream& out) const
+{
+    out << endl;
+    out << "Network Configuration" << endl;
+    out << "---------------------" << endl;
+    out << "network: SIMPLE_NETWORK" << endl;
+    out << "topology: " << m_topology_ptr->getName() << endl;
+    out << endl;
+
+    for (int i = 0; i < m_virtual_networks; i++) {
+        out << "virtual_net_" << i << ": ";
+        if (m_in_use[i]) {
+            out << "active, ";
+            if (m_ordered[i]) {
+                out << "ordered" << endl;
+            } else {
+                out << "unordered" << endl;
+            }
+        } else {
+            out << "inactive" << endl;
+        }
+    }
+    out << endl;
+
+    for(int i = 0; i < m_switch_ptr_vector.size(); i++) {
+        m_switch_ptr_vector[i]->printConfig(out);
+    }
+
+    m_topology_ptr->printConfig(out);
+}
+
+void
+SimpleNetwork::print(ostream& out) const
+{
+    out << "[SimpleNetwork]";
 }
 
 

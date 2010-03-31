@@ -46,7 +46,7 @@ PersistentTable::~PersistentTable()
 {
     delete m_map_ptr;
     m_map_ptr = NULL;
-}  
+}
 
 void
 PersistentTable::persistentRequestLock(const Address& address,

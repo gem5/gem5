@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,9 +27,7 @@
  */
 
 /*
- * SimpleNetwork.hh
- *
- * Description: The SimpleNetwork class implements the interconnection
+ * The SimpleNetwork class implements the interconnection
  * SimpleNetwork between components (processor/cache components and
  * memory/directory components).  The interconnection network as
  * described here is not a physical network, but a programming concept
@@ -61,20 +58,17 @@
  *        abstract Network class take a enumeration parameter, and based on
  *        that to initial proper network. Or even better, just make the ruby
  *        system initializer choose the proper network to initiate.
- *
- * $Id$
- *
  */
 
-#ifndef SIMPLENETWORK_H
-#define SIMPLENETWORK_H
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "sim/sim_object.hh"
 #include "params/SimpleNetwork.hh"
+#include "sim/sim_object.hh"
 
 class NetDest;
 class MessageBuffer;
@@ -82,78 +76,74 @@ class Throttle;
 class Switch;
 class Topology;
 
-class SimpleNetwork : public Network {
-public:
-  // Constructors
+class SimpleNetwork : public Network
+{
+  public:
     typedef SimpleNetworkParams Params;
     SimpleNetwork(const Params *p);
+    ~SimpleNetwork();
 
-  // Destructor
-  ~SimpleNetwork();
+    void init();
 
-  void init();
+    void printStats(ostream& out) const;
+    void clearStats();
+    void printConfig(ostream& out) const;
 
-  // Public Methods
-  void printStats(ostream& out) const;
-  void clearStats();
-  void printConfig(ostream& out) const;
+    void reset();
 
-  void reset();
+    // returns the queue requested for the given component
+    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
+    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
+    virtual const Vector<Throttle*>* getThrottles(NodeID id) const;
 
-  // returns the queue requested for the given component
-  MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
-  MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
-  virtual const Vector<Throttle*>* getThrottles(NodeID id) const;
+    bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
+    bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
 
-  bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
-  bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
+    int getNumNodes() {return m_nodes; }
 
-  int getNumNodes() {return m_nodes; }
+    // Methods used by Topology to setup the network
+    void makeOutLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency, int link_weight,
+        int bw_multiplier, bool isReconfiguration);
+    void makeInLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency,
+        int bw_multiplier, bool isReconfiguration);
+    void makeInternalLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency, int link_weight,
+        int bw_multiplier, bool isReconfiguration);
 
-  // Methods used by Topology to setup the network
-  void makeOutLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration);
-  void makeInLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int bw_multiplier, bool isReconfiguration);
-  void makeInternalLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration);
+    void print(ostream& out) const;
 
-  void print(ostream& out) const;
-private:
-  void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
-  void addLink(SwitchID src, SwitchID dest, int link_latency);
-  void makeLink(SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency);
-  SwitchID createSwitch();
-  void makeTopology();
-  void linkTopology();
+  private:
+    void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
+    void addLink(SwitchID src, SwitchID dest, int link_latency);
+    void makeLink(SwitchID src, SwitchID dest,
+        const NetDest& routing_table_entry, int link_latency);
+    SwitchID createSwitch();
+    void makeTopology();
+    void linkTopology();
 
+    // Private copy constructor and assignment operator
+    SimpleNetwork(const SimpleNetwork& obj);
+    SimpleNetwork& operator=(const SimpleNetwork& obj);
 
-  // Private copy constructor and assignment operator
-  SimpleNetwork(const SimpleNetwork& obj);
-  SimpleNetwork& operator=(const SimpleNetwork& obj);
+    // vector of queues from the components
+    Vector<Vector<MessageBuffer*> > m_toNetQueues;
+    Vector<Vector<MessageBuffer*> > m_fromNetQueues;
 
-  // Data Members (m_ prefix)
-
-  // vector of queues from the components
-  Vector<Vector<MessageBuffer*> > m_toNetQueues;
-  Vector<Vector<MessageBuffer*> > m_fromNetQueues;
-
-  Vector<bool> m_in_use;
-  Vector<bool> m_ordered;
-  Vector<Switch*> m_switch_ptr_vector;
-  Vector<MessageBuffer*> m_buffers_to_free;
-  Vector<Switch*> m_endpoint_switches;
+    Vector<bool> m_in_use;
+    Vector<bool> m_ordered;
+    Vector<Switch*> m_switch_ptr_vector;
+    Vector<MessageBuffer*> m_buffers_to_free;
+    Vector<Switch*> m_endpoint_switches;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const SimpleNetwork& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const SimpleNetwork& obj)
+inline ostream&
+operator<<(ostream& out, const SimpleNetwork& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //SIMPLENETWORK_H
+#endif // __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__

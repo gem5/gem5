@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,130 +26,106 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-#include "mem/ruby/recorder/Tracer.hh"
-#include "mem/ruby/recorder/TraceRecord.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "base/cprintf.hh"
 #include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/recorder/TraceRecord.hh"
+#include "mem/ruby/recorder/Tracer.hh"
 #include "mem/ruby/system/System.hh"
 
-//added by SS
 Tracer::Tracer(const Params *p)
     : SimObject(p)
 {
-  m_enabled = false;
-  m_warmup_length = p->warmup_length;
-  assert(m_warmup_length  > 0);
-  RubySystem::m_tracer_ptr = this;
-}
-
-//commented by SS
-//Tracer::Tracer()
-//{
-//  m_enabled = false;
-//}
-
-Tracer::~Tracer()
-{
-}
-
-void Tracer::init()
-{
-}
-
-void Tracer::startTrace(std::string filename)
-{
-  if (m_enabled) {
-    stopTrace();
-  }
-
-  if (filename != "") {
-    m_trace_file.open(filename.c_str());
-    if (m_trace_file.fail()) {
-      cout << "Error: error opening file '" << filename << "'" << endl;
-      cout << "Trace not enabled." << endl;
-      return;
-    }
-    cout << "Request trace enabled to output file '" << filename << "'" << endl;
-    m_enabled = true;
-  }
-}
-
-void Tracer::stopTrace()
-{
-  if (m_enabled == true) {
-    m_trace_file.close();
-    cout << "Request trace file closed." << endl;
     m_enabled = false;
-  }
+    m_warmup_length = p->warmup_length;
+    assert(m_warmup_length  > 0);
+    RubySystem::m_tracer_ptr = this;
 }
 
-void Tracer::traceRequest(Sequencer* sequencer, 
-                          const Address& data_addr, 
-                          const Address& pc_addr, 
-                          RubyRequestType type, 
-                          Time time)
+void
+Tracer::startTrace(std::string filename)
 {
-  assert(m_enabled == true);
-  TraceRecord tr(sequencer, data_addr, pc_addr, type, time);
-  tr.output(m_trace_file);
+    if (m_enabled)
+        stopTrace();
+
+    if (filename != "") {
+        m_trace_file.open(filename.c_str());
+        if (m_trace_file.fail()) {
+            cprintf("Error: error opening file '%s'\n", filename);
+            cprintf("Trace not enabled.\n");
+            return;
+        }
+        cprintf("Request trace enabled to output file '%s'\n", filename);
+        m_enabled = true;
+    }
 }
 
-// Class method
-int Tracer::playbackTrace(std::string filename)
+void
+Tracer::stopTrace()
 {
-  igzstream in(filename.c_str());
-  if (in.fail()) {
-    cout << "Error: error opening file '" << filename << "'" << endl;
-    return 0;
-  }
+    if (m_enabled) {
+        m_trace_file.close();
+        cout << "Request trace file closed." << endl;
+        m_enabled = false;
+    }
+}
 
-  time_t start_time = time(NULL);
+void
+Tracer::traceRequest(Sequencer* sequencer, const Address& data_addr,
+    const Address& pc_addr, RubyRequestType type, Time time)
+{
+    assert(m_enabled);
+    TraceRecord tr(sequencer, data_addr, pc_addr, type, time);
+    tr.output(m_trace_file);
+}
 
-  TraceRecord record;
-  int counter = 0;
-  // Read in the next TraceRecord
-  bool ok = record.input(in);
-  while (ok) {
-    // Put it in the right cache
-    record.issueRequest();
-    counter++;
+int
+Tracer::playbackTrace(std::string filename)
+{
+    igzstream in(filename.c_str());
+    if (in.fail()) {
+        cprintf("Error: error opening file '%s'\n", filename);
+        return 0;
+    }
 
+    time_t start_time = time(NULL);
+
+    TraceRecord record;
+    int counter = 0;
     // Read in the next TraceRecord
-    ok = record.input(in);
+    bool ok = record.input(in);
+    while (ok) {
+        // Put it in the right cache
+        record.issueRequest();
+        counter++;
 
-    // Clear the statistics after warmup
-/*    if (counter == m_warmup_length) {
-      cout << "Clearing stats after warmup of length " << m_warmup_length << endl;
-      g_system_ptr->clearStats();
+        // Read in the next TraceRecord
+        ok = record.input(in);
+
+        // Clear the statistics after warmup
+        if (counter == m_warmup_length) {
+            cprintf("Clearing stats after warmup of length %s\n",
+                    m_warmup_length);
+            g_system_ptr->clearStats();
+        }
     }
-*/
-    if (counter == m_warmup_length) {
-      cout << "Clearing stats after warmup of length " << m_warmup_length << endl;
-      g_system_ptr->clearStats();
-    }
 
-  }
+    // Flush the prefetches through the system
+    // FIXME - should be smarter
+    g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 1000);
 
-  // Flush the prefetches through the system
-  g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 1000);  // FIXME - should be smarter
+    time_t stop_time = time(NULL);
+    double seconds = difftime(stop_time, start_time);
+    double minutes = seconds / 60.0;
+    cout << "playbackTrace: " << minutes << " minutes" << endl;
 
-  time_t stop_time = time(NULL);
-  double seconds = difftime(stop_time, start_time);
-  double minutes = seconds / 60.0;
-  cout << "playbackTrace: " << minutes << " minutes" << endl;
-
-  return counter;
+    return counter;
 }
 
-void Tracer::print(std::ostream& out) const
+void
+Tracer::print(std::ostream& out) const
 {
 }
-
 
 Tracer *
 RubyTracerParams::create()

@@ -54,7 +54,7 @@ class PersistentTable
 
     // Destructor
     ~PersistentTable();
-  
+
     // Public Methods
     void persistentRequestLock(const Address& address, MachineID locker,
                                AccessType type);

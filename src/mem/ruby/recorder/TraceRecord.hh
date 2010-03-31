@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,84 +27,69 @@
  */
 
 /*
- * $Id$
- *
- * Description: A entry in the cache request record. It is aware of
- *              the ruby time and can issue the request back to the
- *              cache.
- *
+ * A entry in the cache request record. It is aware of the ruby time
+ * and can issue the request back to the cache.
  */
 
-#ifndef TRACERECORD_H
-#define TRACERECORD_H
+#ifndef __MEM_RUBY_RECORDER_TRACERECORD_HH__
+#define __MEM_RUBY_RECORDER_TRACERECORD_HH__
 
-#include "mem/ruby/libruby_internal.hh"
-#include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/libruby_internal.hh"
 #include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/Sequencer.hh"
+
 class CacheMsg;
 
-class TraceRecord {
-public:
-  // Constructors
-  TraceRecord(Sequencer* _sequencer, 
-              const Address& data_addr, 
-              const Address& pc_addr, 
-              RubyRequestType type, 
-              Time time);
+class TraceRecord
+{
+  public:
+    TraceRecord(Sequencer* _sequencer, const Address& data_addr,
+        const Address& pc_addr, RubyRequestType type, Time time);
 
-  TraceRecord() { 
-    m_sequencer_ptr = NULL; 
-    m_time = 0; 
-    m_type = RubyRequestType_NULL; 
-  }
+    TraceRecord()
+    {
+        m_sequencer_ptr = NULL;
+        m_time = 0;
+        m_type = RubyRequestType_NULL;
+    }
 
-  // Destructor
-  //  ~TraceRecord();
+    TraceRecord(const TraceRecord& obj);
+    TraceRecord& operator=(const TraceRecord& obj);
 
-  // Public copy constructor and assignment operator
-  TraceRecord(const TraceRecord& obj);
-  TraceRecord& operator=(const TraceRecord& obj);
+    bool
+    node_less_then_eq(const TraceRecord& rec) const
+    {
+        return this->m_time <= rec.m_time;
+    }
 
-  // Public Methods
-  bool node_less_then_eq(const TraceRecord& rec) const { return (this->m_time <= rec.m_time); }
-  void issueRequest() const;
+    void issueRequest() const;
 
-  void print(ostream& out) const;
-  void output(ostream& out) const;
-  bool input(istream& in);
-private:
-  // Private Methods
+    void print(ostream& out) const;
+    void output(ostream& out) const;
+    bool input(istream& in);
 
-  // Data Members (m_ prefix)
-  Sequencer* m_sequencer_ptr;
-  Time m_time;
-  Address m_data_address;
-  Address m_pc_address;
-  RubyRequestType m_type;
+  private:
+    Sequencer* m_sequencer_ptr;
+    Time m_time;
+    Address m_data_address;
+    Address m_pc_address;
+    RubyRequestType m_type;
 };
 
-inline extern bool node_less_then_eq(const TraceRecord& n1, const TraceRecord& n2);
-
-// Output operator declaration
-ostream& operator<<(ostream& out, const TraceRecord& obj);
-
-// ******************* Definitions *******************
-
-inline extern
-bool node_less_then_eq(const TraceRecord& n1, const TraceRecord& n2)
+inline bool
+node_less_then_eq(const TraceRecord& n1, const TraceRecord& n2)
 {
-  return n1.node_less_then_eq(n2);
+    return n1.node_less_then_eq(n2);
 }
 
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const TraceRecord& obj)
+inline std::ostream&
+operator<<(ostream& out, const TraceRecord& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //TRACERECORD_H
+#endif // __MEM_RUBY_RECORDER_TRACERECORD_HH__

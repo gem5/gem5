@@ -27,106 +27,96 @@
  */
 
 /*
- * Network.hh
- *
- * Description: The Network class is the base class for classes that
- * implement the interconnection network between components
- * (processor/cache components and memory/directory components).  The
- * interconnection network as described here is not a physical
- * network, but a programming concept used to implement all
- * communication between components.  Thus parts of this 'network'
- * will model the on-chip connections between cache controllers and
- * directory controllers as well as the links between chip and network
- * switches.
- *
- * $Id$
- * */
+ * The Network class is the base class for classes that implement the
+ * interconnection network between components (processor/cache
+ * components and memory/directory components).  The interconnection
+ * network as described here is not a physical network, but a
+ * programming concept used to implement all communication between
+ * components.  Thus parts of this 'network' will model the on-chip
+ * connections between cache controllers and directory controllers as
+ * well as the links between chip and network switches.
+ */
 
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef __MEM_RUBY_NETWORK_NETWORK_HH__
+#define __MEM_RUBY_NETWORK_NETWORK_HH__
 
+#include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/system/System.hh"
-#include "sim/sim_object.hh"
 #include "params/RubyNetwork.hh"
+#include "sim/sim_object.hh"
 
 class NetDest;
 class MessageBuffer;
 class Throttle;
 class Topology;
 
-class Network : public SimObject {
-public:
-  // Constructors
+class Network : public SimObject
+{
+  public:
     typedef RubyNetworkParams Params;
     Network(const Params *p);
-  virtual void init();
+    virtual ~Network() {}
 
-  // Destructor
-  virtual ~Network() {}
+    virtual void init();
 
-  // Public Methods
-  int getBufferSize() { return m_buffer_size; }
-  int getNumberOfVirtualNetworks() { return m_virtual_networks; }
-  int getEndpointBandwidth() { return m_endpoint_bandwidth; }
-  bool getAdaptiveRouting() {return m_adaptive_routing; }
-  int getLinkLatency() { return m_link_latency; }
-  int MessageSizeType_to_int(MessageSizeType size_type);
+    int getBufferSize() { return m_buffer_size; }
+    int getNumberOfVirtualNetworks() { return m_virtual_networks; }
+    int getEndpointBandwidth() { return m_endpoint_bandwidth; }
+    bool getAdaptiveRouting() {return m_adaptive_routing; }
+    int getLinkLatency() { return m_link_latency; }
+    int MessageSizeType_to_int(MessageSizeType size_type);
 
+    // returns the queue requested for the given component
+    virtual MessageBuffer* getToNetQueue(NodeID id, bool ordered,
+        int netNumber) = 0;
+    virtual MessageBuffer* getFromNetQueue(NodeID id, bool ordered,
+        int netNumber) = 0;
+    virtual const Vector<Throttle*>* getThrottles(NodeID id) const;
+    virtual int getNumNodes() {return 1;}
 
-  // returns the queue requested for the given component
-  virtual MessageBuffer* getToNetQueue(NodeID id, bool ordered, int netNumber) = 0;
-  virtual MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int netNumber) = 0;
-  virtual const Vector<Throttle*>* getThrottles(NodeID id) const { return NULL; }
+    virtual void makeOutLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency, int link_weight,
+        int bw_multiplier, bool isReconfiguration) = 0;
+    virtual void makeInLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency,
+        int bw_multiplier, bool isReconfiguration) = 0;
+    virtual void makeInternalLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency, int link_weight,
+        int bw_multiplier, bool isReconfiguration) = 0;
 
-  virtual int getNumNodes() {return 1;}
+    virtual void reset() = 0;
 
-  virtual void makeOutLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration) = 0;
-  virtual void makeInLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int bw_multiplier, bool isReconfiguration) = 0;
-  virtual void makeInternalLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration) = 0;
+    virtual void printStats(ostream& out) const = 0;
+    virtual void clearStats() = 0;
+    virtual void printConfig(ostream& out) const = 0;
+    virtual void print(ostream& out) const = 0;
 
-  virtual void reset() = 0;
+  protected:
+    // Private copy constructor and assignment operator
+    Network(const Network& obj);
+    Network& operator=(const Network& obj);
 
-  virtual void printStats(ostream& out) const = 0;
-  virtual void clearStats() = 0;
-  virtual void printConfig(ostream& out) const = 0;
-  virtual void print(ostream& out) const = 0;
-
-protected:
-
-  // Private Methods
-  // Private copy constructor and assignment operator
-  Network(const Network& obj);
-  Network& operator=(const Network& obj);
-
-  // Data Members (m_ prefix)
-protected:
-  const string m_name;
-  int m_nodes;
-  int m_virtual_networks;
-  int m_buffer_size;
-  int m_endpoint_bandwidth;
-  Topology* m_topology_ptr;
-  bool m_adaptive_routing;
-  int m_link_latency;
-  int m_control_msg_size;
-  int m_data_msg_size;
+  protected:
+    const string m_name;
+    int m_nodes;
+    int m_virtual_networks;
+    int m_buffer_size;
+    int m_endpoint_bandwidth;
+    Topology* m_topology_ptr;
+    bool m_adaptive_routing;
+    int m_link_latency;
+    int m_control_msg_size;
+    int m_data_msg_size;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const Network& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const Network& obj)
+inline ostream&
+operator<<(ostream& out, const Network& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //NETWORK_H
+#endif // __MEM_RUBY_NETWORK_NETWORK_HH__

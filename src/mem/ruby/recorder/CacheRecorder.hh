@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,15 +27,12 @@
  */
 
 /*
- * $Id$
- *
- * Description: Recording cache requests made to a ruby cache at certain
- *              ruby time. Also dump the requests to a gziped file.
- *
+ * Recording cache requests made to a ruby cache at certain ruby
+ * time. Also dump the requests to a gziped file.
  */
 
-#ifndef CACHERECORDER_H
-#define CACHERECORDER_H
+#ifndef __MEM_RUBY_RECORDER_CACHERECORDER_HH__
+#define __MEM_RUBY_RECORDER_CACHERECORDER_HH__
 
 #include <iostream>
 #include <string>
@@ -51,46 +47,32 @@ class Address;
 class TraceRecord;
 class Sequencer;
 
-class CacheRecorder {
-public:
-  // Constructors
-  CacheRecorder();
+class CacheRecorder
+{
+  public:
+    CacheRecorder();
+    ~CacheRecorder();
 
-  // Destructor
-  ~CacheRecorder();
+    void addRecord(Sequencer* sequencer, const Address& data_addr,
+        const Address& pc_addr, RubyRequestType type, Time time);
+    int dumpRecords(std::string filename);
 
-  // Public Methods
-  void addRecord(Sequencer* sequencer, 
-                 const Address& data_addr, 
-                 const Address& pc_addr, 
-                 RubyRequestType type, 
-                 Time time);
-  int dumpRecords(std::string filename);
+    void print(std::ostream& out) const;
 
-  void print(std::ostream& out) const;
-private:
-  // Private Methods
+  private:
+    // Private copy constructor and assignment operator
+    CacheRecorder(const CacheRecorder& obj);
+    CacheRecorder& operator=(const CacheRecorder& obj);
 
-  // Private copy constructor and assignment operator
-  CacheRecorder(const CacheRecorder& obj);
-  CacheRecorder& operator=(const CacheRecorder& obj);
-
-  // Data Members (m_ prefix)
-  PrioHeap<TraceRecord>* m_records_ptr;
+    PrioHeap<TraceRecord>* m_records_ptr;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const CacheRecorder& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const CacheRecorder& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const CacheRecorder& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //CACHERECORDER_H
+#endif // __MEM_RUBY_RECORDER_CACHERECORDER_HH__

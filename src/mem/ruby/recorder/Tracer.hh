@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,87 +27,64 @@
  */
 
 /*
- * $Id$
- *
- * Description: Controller class of the tracer. Can stop/start/playback
- *              the ruby cache requests trace.
- *
+ * Controller class of the tracer. Can stop/start/playback the ruby
+ * cache requests trace.
  */
 
-#ifndef TRACER_H
-#define TRACER_H
+#ifndef __MEM_RUBY_RECORDER_TRACER_HH__
+#define __MEM_RUBY_RECORDER_TRACER_HH__
 
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/libruby_internal.hh"
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/protocol/CacheRequestType.hh"
-#include "sim/sim_object.hh"
-
-#include "params/RubyTracer.hh"
-
 #include "gzstream.hh"
+
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/libruby_internal.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "params/RubyTracer.hh"
+#include "sim/sim_object.hh"
 
 template <class TYPE> class PrioHeap;
 class Address;
 class TraceRecord;
 class Sequencer;
 
-class Tracer : public SimObject {
-public:
-  // Constructors
-//  Tracer();
+class Tracer : public SimObject
+{
+  public:
     typedef RubyTracerParams Params;
-  Tracer(const Params *p);
+    Tracer(const Params *p);
 
-  // Destructor
-  ~Tracer();
+    void startTrace(std::string filename);
+    void stopTrace();
+    bool traceEnabled() { return m_enabled; }
+    void traceRequest(Sequencer* sequencer, const Address& data_addr,
+        const Address& pc_addr, RubyRequestType type, Time time);
 
-  // Public Methods
-  void startTrace(std::string filename);
-  void stopTrace();
-  bool traceEnabled() { return m_enabled; }
-  void traceRequest(Sequencer* sequencer, 
-                    const Address& data_addr, 
-                    const Address& pc_addr, 
-                    RubyRequestType type, 
-                    Time time);
+    void print(std::ostream& out) const;
 
-  void print(std::ostream& out) const;
+    int playbackTrace(std::string filename);
 
-  // Public Class Methods
-  int playbackTrace(std::string filename);
-  void init();
-private:
-  // Private Methods
+  private:
+    // Private copy constructor and assignment operator
+    Tracer(const Tracer& obj);
+    Tracer& operator=(const Tracer& obj);
 
-  // Private copy constructor and assignment operator
-  Tracer(const Tracer& obj);
-  Tracer& operator=(const Tracer& obj);
+    ogzstream m_trace_file;
+    bool m_enabled;
 
-  // Data Members (m_ prefix)
-  ogzstream m_trace_file;
-  bool m_enabled;
-
-  //added by SS
-  int m_warmup_length;
+    //added by SS
+    int m_warmup_length;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const Tracer& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const Tracer& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Tracer& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //TRACER_H
+#endif // __MEM_RUBY_RECORDER_TRACER_HH__

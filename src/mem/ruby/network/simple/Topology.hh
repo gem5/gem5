@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,133 +27,121 @@
  */
 
 /*
- * Topology.hh
- *
- * Description: The topology here is configurable; it can be a hierachical
- *              (default one) or a 2D torus or a 2D torus with half switches
- *              killed. I think all input port has a
- *              one-input-one-output switch connected just to control and
- *              bandwidth, since we don't control bandwidth on input ports.
- *              Basically, the class has a vector of nodes and edges. First
- *              2*m_nodes elements in the node vector are input and output
- *              ports. Edges are represented in two vectors of src and dest
- *              nodes. All edges have latency.
- *
- * $Id$
- *
- * */
+ * The topology here is configurable; it can be a hierachical (default
+ * one) or a 2D torus or a 2D torus with half switches killed. I think
+ * all input port has a one-input-one-output switch connected just to
+ * control and bandwidth, since we don't control bandwidth on input
+ * ports.  Basically, the class has a vector of nodes and edges. First
+ * 2*m_nodes elements in the node vector are input and output
+ * ports. Edges are represented in two vectors of src and dest
+ * nodes. All edges have latency.
+ */
 
-#ifndef TOPOLOGY_H
-#define TOPOLOGY_H
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_TOPOLOGY_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_TOPOLOGY_HH__
 
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "sim/sim_object.hh"
-#include "params/Topology.hh"
-#include "params/Link.hh"
 #include "params/ExtLink.hh"
 #include "params/IntLink.hh"
+#include "params/Link.hh"
+#include "params/Topology.hh"
+#include "sim/sim_object.hh"
 
 class Network;
 class NetDest;
 
-typedef Vector < Vector <int> > Matrix;
+typedef Vector<Vector<int> > Matrix;
 
-class Link : public SimObject {
+class Link : public SimObject
+{
   public:
     typedef LinkParams Params;
     Link(const Params *p) : SimObject(p) {}
     const Params *params() const { return (const Params *)_params; }
 };
 
-
-class ExtLink : public Link {
+class ExtLink : public Link
+{
   public:
     typedef ExtLinkParams Params;
     ExtLink(const Params *p) : Link(p) {}
     const Params *params() const { return (const Params *)_params; }
 };
 
-
-class IntLink : public Link {
+class IntLink : public Link
+{
   public:
     typedef IntLinkParams Params;
     IntLink(const Params *p) : Link(p) {}
     const Params *params() const { return (const Params *)_params; }
 };
 
-
-class Topology : public SimObject {
-public:
-  // Constructors
+class Topology : public SimObject
+{
+  public:
     typedef TopologyParams Params;
     Topology(const Params *p);
+    virtual ~Topology() {}
     const Params *params() const { return (const Params *)_params; }
 
-  // Destructor
-  virtual ~Topology() {}
+    int numSwitches() const { return m_number_of_switches; }
+    void createLinks(Network *net, bool isReconfiguration);
 
-  // Public Methods
-  int numSwitches() const { return m_number_of_switches; }
-  void createLinks(Network *net, bool isReconfiguration);
+    void initNetworkPtr(Network* net_ptr);
 
-  void initNetworkPtr(Network* net_ptr);
+    const std::string getName() { return m_name; }
+    void printStats(std::ostream& out) const;
+    void clearStats();
+    void printConfig(std::ostream& out) const;
+    void print(std::ostream& out) const { out << "[Topology]"; }
 
-  const std::string getName() { return m_name; }
-  void printStats(std::ostream& out) const;
-  void clearStats();
-  void printConfig(std::ostream& out) const;
-  void print(std::ostream& out) const { out << "[Topology]"; }
+  protected:
+    SwitchID newSwitchID();
+    void addLink(SwitchID src, SwitchID dest, int link_latency);
+    void addLink(SwitchID src, SwitchID dest, int link_latency,
+        int bw_multiplier);
+    void addLink(SwitchID src, SwitchID dest, int link_latency,
+        int bw_multiplier, int link_weight);
+    void makeLink(Network *net, SwitchID src, SwitchID dest,
+        const NetDest& routing_table_entry, int link_latency, int weight,
+        int bw_multiplier, bool isReconfiguration);
 
-protected:
-  // Private Methods
-  SwitchID newSwitchID();
-  void addLink(SwitchID src, SwitchID dest, int link_latency);
-  void addLink(SwitchID src, SwitchID dest, int link_latency, int bw_multiplier);
-  void addLink(SwitchID src, SwitchID dest, int link_latency, int bw_multiplier, int link_weight);
-  void makeLink(Network *net, SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int weight, int bw_multiplier, bool isReconfiguration);
+    //void makeSwitchesPerChip(Vector<Vector< SwitchID> > &nodePairs,
+    //    Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChips);
 
-  //  void makeSwitchesPerChip(Vector< Vector < SwitchID > > &nodePairs, Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChips);
+    std::string getDesignStr();
+    // Private copy constructor and assignment operator
+    Topology(const Topology& obj);
+    Topology& operator=(const Topology& obj);
 
-  std::string getDesignStr();
-  // Private copy constructor and assignment operator
-  Topology(const Topology& obj);
-  Topology& operator=(const Topology& obj);
+    std::string m_name;
+    bool m_print_config;
+    NodeID m_nodes;
+    int m_number_of_switches;
 
-  // Data Members (m_ prefix)
-  std::string m_name;
-  bool m_print_config;
-  NodeID m_nodes;
-  int m_number_of_switches;
+    Vector<AbstractController*> m_controller_vector;
 
-  Vector<AbstractController*> m_controller_vector;
+    Vector<SwitchID> m_links_src_vector;
+    Vector<SwitchID> m_links_dest_vector;
+    Vector<int> m_links_latency_vector;
+    Vector<int> m_links_weight_vector;
+    Vector<int> m_bw_multiplier_vector;
 
-  Vector<SwitchID> m_links_src_vector;
-  Vector<SwitchID> m_links_dest_vector;
-  Vector<int> m_links_latency_vector;
-  Vector<int> m_links_weight_vector;
-  Vector<int> m_bw_multiplier_vector;
-
-  Matrix m_component_latencies;
-  Matrix m_component_inter_switches;
+    Matrix m_component_latencies;
+    Matrix m_component_inter_switches;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const Topology& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const Topology& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Topology& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif
+#endif // __MEM_RUBY_NETWORK_SIMPLE_TOPOLOGY_HH__

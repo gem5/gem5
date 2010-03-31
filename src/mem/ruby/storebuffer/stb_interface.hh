@@ -27,16 +27,12 @@
  */
 
 #include "mem/ruby/storebuffer/storebuffer.hh"
-#include <iostream>
 
-StoreBuffer * createNewSTB (uint32 id, uint32 block_bits, int storebuffer_size);
-
-storebuffer_status_t handleStore (StoreBuffer * storebuffer, const RubyRequest & request);
-
-uint64_t handleLoad(StoreBuffer * storebuffer, const RubyRequest & request);
-
-uint64_t handleAtomic(StoreBuffer * storebuffer, const RubyRequest & request);
-
-void flushSTB(StoreBuffer * storebuffer);
-
-void registerHitCallback(StoreBuffer * storebuffer, void (*hit_callback)(int64_t access_id));
+StoreBuffer *createNewSTB(uint32 id, uint32 block_bits, int storebuffer_size);
+storebuffer_status_t handleStore(StoreBuffer *storebuffer,
+    const RubyRequest &request);
+uint64_t handleLoad(StoreBuffer *storebuffer, const RubyRequest &request);
+uint64_t handleAtomic(StoreBuffer *storebuffer, const RubyRequest &request);
+void flushSTB(StoreBuffer *storebuffer);
+void registerHitCallback(StoreBuffer *storebuffer,
+    void (*hit_callback)(int64_t access_id));

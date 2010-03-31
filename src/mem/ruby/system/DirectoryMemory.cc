@@ -110,7 +110,7 @@ DirectoryMemory::printGlobalConfig(ostream & out)
     if (m_num_directories > 1) {
         out << "  number of selection bits: " << m_num_directories_bits << endl
             << "  selection bits: " << m_numa_high_bit
-            << "-" << m_numa_high_bit-m_num_directories_bits 
+            << "-" << m_numa_high_bit-m_num_directories_bits
             << endl;
     }
     out << "  total memory size bytes: " << m_total_size_bytes << endl;
@@ -216,7 +216,7 @@ DirectoryMemory::invalidateBlock(PhysAddress address)
         assert(isPresent(address));
 
         Index index = address.memoryModuleIndex();
-    
+
         if (index < 0 || index > m_size) {
             ERROR_MSG("Directory Memory Assertion: "
                       "accessing memory out of range.");

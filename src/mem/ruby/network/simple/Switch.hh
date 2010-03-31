@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,26 +27,22 @@
  */
 
 /*
- * $Id$
- *
- * Description: The actual modelled switch. It use the perfect switch and a
- *              Throttle object to control and bandwidth and timing *only for
- *              the output port*. So here we have un-realistic modelling,
- *              since the order of PerfectSwitch and Throttle objects get
- *              woke up affect the message timing. A more accurate model would
- *              be having two set of system states, one for this cycle, one for
- *              next cycle. And on the cycle boundary swap the two set of
- *              states.
- *
+ * The actual modelled switch. It use the perfect switch and a
+ * Throttle object to control and bandwidth and timing *only for the
+ * output port*. So here we have un-realistic modelling, since the
+ * order of PerfectSwitch and Throttle objects get woke up affect the
+ * message timing. A more accurate model would be having two set of
+ * system states, one for this cycle, one for next cycle. And on the
+ * cycle boundary swap the two set of states.
  */
 
-#ifndef Switch_H
-#define Switch_H
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_SWITCH_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_SWITCH_HH__
 
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/Global.hh"
 
 class MessageBuffer;
 class PerfectSwitch;
@@ -56,54 +51,46 @@ class SimpleNetwork;
 class Throttle;
 class Network;
 
-class Switch {
-public:
-  // Constructors
+class Switch
+{
+  public:
+    Switch(SwitchID sid, SimpleNetwork* network_ptr);
+    ~Switch();
 
-  // constructor specifying the number of ports
-  Switch(SwitchID sid, SimpleNetwork* network_ptr);
-  void addInPort(const Vector<MessageBuffer*>& in);
-  void addOutPort(const Vector<MessageBuffer*>& out, const NetDest& routing_table_entry, int link_latency, int bw_multiplier);
-  const Throttle* getThrottle(LinkID link_number) const;
-  const Vector<Throttle*>* getThrottles() const;
-  void clearRoutingTables();
-  void clearBuffers();
-  void reconfigureOutPort(const NetDest& routing_table_entry);
+    void addInPort(const Vector<MessageBuffer*>& in);
+    void addOutPort(const Vector<MessageBuffer*>& out,
+        const NetDest& routing_table_entry, int link_latency,
+        int bw_multiplier);
+    const Throttle* getThrottle(LinkID link_number) const;
+    const Vector<Throttle*>* getThrottles() const;
+    void clearRoutingTables();
+    void clearBuffers();
+    void reconfigureOutPort(const NetDest& routing_table_entry);
 
-  void printStats(std::ostream& out) const;
-  void clearStats();
-  void printConfig(std::ostream& out) const;
+    void printStats(std::ostream& out) const;
+    void clearStats();
+    void printConfig(std::ostream& out) const;
 
-  // Destructor
-  ~Switch();
+    void print(std::ostream& out) const;
 
-  void print(std::ostream& out) const;
-private:
+  private:
+    // Private copy constructor and assignment operator
+    Switch(const Switch& obj);
+    Switch& operator=(const Switch& obj);
 
-  // Private copy constructor and assignment operator
-  Switch(const Switch& obj);
-  Switch& operator=(const Switch& obj);
-
-  // Data Members (m_ prefix)
-  PerfectSwitch* m_perfect_switch_ptr;
-  Network* m_network_ptr;
-  Vector<Throttle*> m_throttles;
-  Vector<MessageBuffer*> m_buffers_to_free;
-  SwitchID m_switch_id;
+    PerfectSwitch* m_perfect_switch_ptr;
+    Network* m_network_ptr;
+    Vector<Throttle*> m_throttles;
+    Vector<MessageBuffer*> m_buffers_to_free;
+    SwitchID m_switch_id;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const Switch& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const Switch& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Switch& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //Switch_H
+#endif // __MEM_RUBY_NETWORK_SIMPLE_SWITCH_HH__

@@ -27,49 +27,59 @@
  */
 
 #include <iostream>
+
 #include "mem/ruby/storebuffer/stb_interface.hh"
 
-StoreBuffer * createNewSTB(uint32 id, uint32 block_bits, int storebuffer_size) {
-  StoreBuffer * stb = new StoreBuffer(id, block_bits, storebuffer_size);
-  return stb;
+StoreBuffer *
+createNewSTB(uint32 id, uint32 block_bits, int storebuffer_size)
+{
+    StoreBuffer *stb = new StoreBuffer(id, block_bits, storebuffer_size);
+    return stb;
 }
 
-storebuffer_status_t handleStore (StoreBuffer * storebuffer, const RubyRequest & request) {
-  assert(request.type == RubyRequestType_ST);
-  if (storebuffer->storeBufferFull()){
-    return WB_FULL;
-  }
-  else if (storebuffer->storeBufferFlushing()) {
-    return WB_FLUSHING;
-  }
-  else {
-    storebuffer->addToStoreBuffer(request);
-    return WB_OK;
-  }
+storebuffer_status_t
+handleStore(StoreBuffer *storebuffer, const RubyRequest &request)
+{
+    assert(request.type == RubyRequestType_ST);
+    if (storebuffer->storeBufferFull()){
+        return WB_FULL;
+    } else if (storebuffer->storeBufferFlushing()) {
+        return WB_FLUSHING;
+    } else {
+        storebuffer->addToStoreBuffer(request);
+        return WB_OK;
+    }
 }
 
-uint64_t handleLoad(StoreBuffer * storebuffer, const RubyRequest & request) {
-  assert(request.type == RubyRequestType_LD);
-  return storebuffer->handleLoad(request);
+uint64_t
+handleLoad(StoreBuffer *storebuffer, const RubyRequest &request)
+{
+    assert(request.type == RubyRequestType_LD);
+    return storebuffer->handleLoad(request);
 }
 
 #if 0
-uint64_t handleAtomic(StoreBuffer * storebuffer, const RubyRequest & request) {
-  // flush the store buffer
-  storebuffer->flushStoreBuffer();
-  // let storebuffer issue atomic
-  //return storebuffer->issueAtomic(request);
+uint64_t
+handleAtomic(StoreBuffer *storebuffer, const RubyRequest &request)
+{
+    // flush the store buffer
+    storebuffer->flushStoreBuffer();
+    // let storebuffer issue atomic
+    // return storebuffer->issueAtomic(request);
 }
 #endif
 
-void flushSTB(StoreBuffer * storebuffer) {
-  // in in-order can't get a request to flushSTB if already flushing
-  // on out of order, have to check if already flushing
-  storebuffer->flushStoreBuffer();
+void
+flushSTB(StoreBuffer *storebuffer)
+{
+    // in in-order can't get a request to flushSTB if already flushing
+    // on out of order, have to check if already flushing
+    storebuffer->flushStoreBuffer();
 }
 
-void registerHitCallback(StoreBuffer * storebuffer, void (*hit_callback)(int64_t access_id)) {
-  storebuffer->registerHitCallback(hit_callback);
+void
+registerHitCallback(StoreBuffer *storebuffer,
+        void (*hit_callback)(int64_t access_id))
+{
+    storebuffer->registerHitCallback(hit_callback);
 }
-
-

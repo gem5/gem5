@@ -47,7 +47,7 @@ lookupTraceForAddress(const Address& addr, AddressMap* record_map)
 }
 
 void
-printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map, 
+printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map,
             string description)
 {
     const int records_printed = 100;

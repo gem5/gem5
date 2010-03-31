@@ -34,7 +34,7 @@ SparseMemory::SparseMemory(int number_of_bits, int number_of_levels)
     int extra;
     m_total_number_of_bits = number_of_bits;
     m_number_of_levels = number_of_levels;
-    
+
     //
     // Create the array that describes the bits per level
     //
@@ -48,7 +48,7 @@ SparseMemory::SparseMemory(int number_of_bits, int number_of_levels)
             m_number_of_bits_per_level[level] = even_level_bits;
     }
     m_map_head = new SparseMapType;
-    
+
     m_total_adds = 0;
     m_total_removes = 0;
     m_adds_per_level = new uint64_t[m_number_of_levels];
@@ -70,14 +70,14 @@ SparseMemory::~SparseMemory()
 
 // Recursively search table hierarchy for the lowest level table.
 // Delete the lowest table first, the tables above
-void 
+void
 SparseMemory::recursivelyRemoveTables(SparseMapType* curTable, int curLevel)
 {
     SparseMapType::iterator iter;
 
     for (iter = curTable->begin(); iter != curTable->end(); iter++) {
         SparseMemEntry* entryStruct = &((*iter).second);
-        
+
         if (curLevel != (m_number_of_levels - 1)) {
             // If the not at the last level, analyze those lower level
             // tables first, then delete those next tables
@@ -91,19 +91,19 @@ SparseMemory::recursivelyRemoveTables(SparseMapType* curTable, int curLevel)
             delete dirEntry;
         }
         entryStruct->entry = NULL;
-    }  
-    
+    }
+
     // Once all entries have been deleted, erase the entries
     curTable->erase(curTable->begin(), curTable->end());
 }
 
 // tests to see if an address is present in the memory
-bool 
+bool
 SparseMemory::exist(const Address& address) const
 {
     SparseMapType* curTable = m_map_head;
     Address curAddress;
-    
+
     // Initiallize the high bit to be the total number of bits plus
     // the block offset.  However the highest bit index is one less
     // than this value.
@@ -111,7 +111,7 @@ SparseMemory::exist(const Address& address) const
     int lowBit;
     assert(address == line_address(address));
     DEBUG_EXPR(CACHE_COMP, HighPrio, address);
-    
+
     for (int level = 0; level < m_number_of_levels; level++) {
         // Create the appropriate sub address for this level
         // Note: that set Address is inclusive of the specified range,
@@ -119,15 +119,15 @@ SparseMemory::exist(const Address& address) const
         // used to create the address.
         lowBit = highBit - m_number_of_bits_per_level[level];
         curAddress.setAddress(address.bitSelect(lowBit, highBit - 1));
-        
+
         DEBUG_EXPR(CACHE_COMP, HighPrio, level);
         DEBUG_EXPR(CACHE_COMP, HighPrio, lowBit);
         DEBUG_EXPR(CACHE_COMP, HighPrio, highBit - 1);
         DEBUG_EXPR(CACHE_COMP, HighPrio, curAddress);
-        
+
         // Adjust the highBit value for the next level
         highBit -= m_number_of_bits_per_level[level];
-        
+
         // If the address is found, move on to the next level.
         // Otherwise, return not found
         if (curTable->count(curAddress) != 0) {
@@ -137,31 +137,31 @@ SparseMemory::exist(const Address& address) const
             return false;
         }
     }
-    
+
     DEBUG_MSG(CACHE_COMP, HighPrio, "Entry found");
     return true;
 }
 
 // add an address to memory
-void 
+void
 SparseMemory::add(const Address& address)
 {
     assert(address == line_address(address));
     assert(!exist(address));
-    
+
     m_total_adds++;
-    
+
     Address curAddress;
     SparseMapType* curTable = m_map_head;
     SparseMemEntry* entryStruct = NULL;
-    
+
     // Initiallize the high bit to be the total number of bits plus
     // the block offset.  However the highest bit index is one less
     // than this value.
     int highBit = m_total_number_of_bits + RubySystem::getBlockSizeBits();
     int lowBit;
     void* newEntry = NULL;
-    
+
     for (int level = 0; level < m_number_of_levels; level++) {
         // create the appropriate address for this level
         // Note: that set Address is inclusive of the specified range,
@@ -169,15 +169,15 @@ SparseMemory::add(const Address& address)
         // used to create the address.
         lowBit = highBit - m_number_of_bits_per_level[level];
         curAddress.setAddress(address.bitSelect(lowBit, highBit - 1));
-        
+
         // Adjust the highBit value for the next level
         highBit -= m_number_of_bits_per_level[level];
-        
+
         // if the address exists in the cur table, move on.  Otherwise
         // create a new table.
         if (curTable->count(curAddress) != 0) {
             curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
-        } else {           
+        } else {
             m_adds_per_level[level]++;
 
             // if the last level, add a directory entry.  Otherwise add a map.
@@ -195,57 +195,57 @@ SparseMemory::add(const Address& address)
             entryStruct = new SparseMemEntry;
             entryStruct->entry = newEntry;
             (*curTable)[curAddress] = *entryStruct;
-            
+
             // Move to the next level of the heirarchy
             curTable = (SparseMapType*)newEntry;
         }
     }
-    
+
     assert(exist(address));
     return;
 }
 
 // recursively search table hierarchy for the lowest level table.
 // remove the lowest entry and any empty tables above it.
-int 
+int
 SparseMemory::recursivelyRemoveLevels(const Address& address,
                                       CurNextInfo& curInfo)
 {
     Address curAddress;
     CurNextInfo nextInfo;
     SparseMemEntry* entryStruct;
-    
+
     // create the appropriate address for this level
     // Note: that set Address is inclusive of the specified range,
     // thus the high bit is one less than the total number of bits
     // used to create the address.
-    curAddress.setAddress(address.bitSelect(curInfo.lowBit, 
+    curAddress.setAddress(address.bitSelect(curInfo.lowBit,
                                             curInfo.highBit - 1));
-    
+
     DEBUG_EXPR(CACHE_COMP, HighPrio, address);
     DEBUG_EXPR(CACHE_COMP, HighPrio, curInfo.level);
     DEBUG_EXPR(CACHE_COMP, HighPrio, curInfo.lowBit);
     DEBUG_EXPR(CACHE_COMP, HighPrio, curInfo.highBit - 1);
     DEBUG_EXPR(CACHE_COMP, HighPrio, curAddress);
-    
+
     assert(curInfo.curTable->count(curAddress) != 0);
-    
+
     entryStruct = &((*(curInfo.curTable))[curAddress]);
-    
+
     if (curInfo.level < (m_number_of_levels - 1)) {
         // set up next level's info
         nextInfo.curTable = (SparseMapType*)(entryStruct->entry);
         nextInfo.level = curInfo.level + 1;
 
-        nextInfo.highBit = curInfo.highBit - 
+        nextInfo.highBit = curInfo.highBit -
             m_number_of_bits_per_level[curInfo.level];
 
-        nextInfo.lowBit = curInfo.lowBit - 
+        nextInfo.lowBit = curInfo.lowBit -
             m_number_of_bits_per_level[curInfo.level + 1];
-        
+
         // recursively search the table hierarchy
         int tableSize = recursivelyRemoveLevels(address, nextInfo);
-        
+
         // If this table below is now empty, we must delete it and
         // erase it from our table.
         if (tableSize == 0) {
@@ -269,54 +269,54 @@ SparseMemory::recursivelyRemoveLevels(const Address& address,
 }
 
 // remove an entry from the table
-void 
+void
 SparseMemory::remove(const Address& address)
 {
     assert(address == line_address(address));
     assert(exist(address));
-    
+
     m_total_removes++;
-    
+
     CurNextInfo nextInfo;
-    
+
     // Initialize table pointer and level value
     nextInfo.curTable = m_map_head;
     nextInfo.level = 0;
-    
+
     // Initiallize the high bit to be the total number of bits plus
     // the block offset.  However the highest bit index is one less
     // than this value.
     nextInfo.highBit = m_total_number_of_bits + RubySystem::getBlockSizeBits();
     nextInfo.lowBit = nextInfo.highBit - m_number_of_bits_per_level[0];;
-    
+
     // recursively search the table hierarchy for empty tables
     // starting from the level 0.  Note we do not check the return
     // value because the head table is never deleted;
     recursivelyRemoveLevels(address, nextInfo);
-    
+
     assert(!exist(address));
     return;
 }
 
 // looks an address up in memory
-Directory_Entry* 
+Directory_Entry*
 SparseMemory::lookup(const Address& address)
 {
     assert(exist(address));
     assert(address == line_address(address));
 
     DEBUG_EXPR(CACHE_COMP, HighPrio, address);
-    
+
     Address curAddress;
     SparseMapType* curTable = m_map_head;
     Directory_Entry* entry = NULL;
-    
+
     // Initiallize the high bit to be the total number of bits plus
     // the block offset.  However the highest bit index is one less
     // than this value.
     int highBit = m_total_number_of_bits + RubySystem::getBlockSizeBits();
     int lowBit;
-    
+
     for (int level = 0; level < m_number_of_levels; level++) {
         // create the appropriate address for this level
         // Note: that set Address is inclusive of the specified range,
@@ -324,32 +324,32 @@ SparseMemory::lookup(const Address& address)
         // used to create the address.
         lowBit = highBit - m_number_of_bits_per_level[level];
         curAddress.setAddress(address.bitSelect(lowBit, highBit - 1));
-        
+
         DEBUG_EXPR(CACHE_COMP, HighPrio, level);
         DEBUG_EXPR(CACHE_COMP, HighPrio, lowBit);
         DEBUG_EXPR(CACHE_COMP, HighPrio, highBit - 1);
         DEBUG_EXPR(CACHE_COMP, HighPrio, curAddress);
-        
+
         // Adjust the highBit value for the next level
         highBit -= m_number_of_bits_per_level[level];
-        
+
         // The entry should be in the table and valid
         curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
         assert(curTable != NULL);
     }
-    
+
     // The last entry actually points to the Directory entry not a table
     entry = (Directory_Entry*)curTable;
 
     return entry;
 }
 
-void 
+void
 SparseMemory::print(ostream& out) const
 {
 }
 
-void 
+void
 SparseMemory::printStats(ostream& out) const
 {
     out << "total_adds: " << m_total_adds << " [";

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,125 +26,114 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
+#include "mem/protocol/CacheMsg.hh"
 #include "mem/ruby/recorder/TraceRecord.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/protocol/CacheMsg.hh"
 #include "sim/sim_object.hh"
 
-TraceRecord::TraceRecord(Sequencer* _sequencer, 
-                         const Address& data_addr, 
-                         const Address& pc_addr, 
-                         RubyRequestType type, 
-                         Time time)
+TraceRecord::TraceRecord(Sequencer* _sequencer, const Address& data_addr,
+    const Address& pc_addr, RubyRequestType type, Time time)
 {
-  m_sequencer_ptr = _sequencer;
-  m_data_address = data_addr;
-  m_pc_address = pc_addr;
-  m_time = time;
-  m_type = type;
+    m_sequencer_ptr = _sequencer;
+    m_data_address = data_addr;
+    m_pc_address = pc_addr;
+    m_time = time;
+    m_type = type;
 
-  // Don't differentiate between store misses and atomic requests in
-  // the trace
-  if (m_type == RubyRequestType_Locked_Read) {
-    m_type = RubyRequestType_ST;
-  }
-  else if (m_type == RubyRequestType_Locked_Write) {
-    m_type = RubyRequestType_ST;
-  }
+    // Don't differentiate between store misses and atomic requests in
+    // the trace
+    if (m_type == RubyRequestType_Locked_Read) {
+        m_type = RubyRequestType_ST;
+    } else if (m_type == RubyRequestType_Locked_Write) {
+        m_type = RubyRequestType_ST;
+    }
 }
 
-// Public copy constructor and assignment operator
 TraceRecord::TraceRecord(const TraceRecord& obj)
 {
-  *this = obj;  // Call assignment operator
+    // Call assignment operator
+    *this = obj;
 }
 
-TraceRecord& TraceRecord::operator=(const TraceRecord& obj)
+TraceRecord&
+TraceRecord::operator=(const TraceRecord& obj)
 {
-  m_sequencer_ptr = obj.m_sequencer_ptr;
-  m_time = obj.m_time;
-  m_data_address = obj.m_data_address;
-  m_pc_address = obj.m_pc_address;
-  m_type = obj.m_type;
-  return *this;
+    m_sequencer_ptr = obj.m_sequencer_ptr;
+    m_time = obj.m_time;
+    m_data_address = obj.m_data_address;
+    m_pc_address = obj.m_pc_address;
+    m_type = obj.m_type;
+    return *this;
 }
 
-void TraceRecord::issueRequest() const
+void
+TraceRecord::issueRequest() const
 {
-  assert(m_sequencer_ptr != NULL);
+    assert(m_sequencer_ptr != NULL);
 
-  RubyRequest request(m_data_address.getAddress(), 
-                      NULL, 
-                      RubySystem::getBlockSizeBytes(), 
-                      m_pc_address.getAddress(), 
-                      m_type, 
-                      RubyAccessMode_User,
-                      NULL);
+    RubyRequest request(m_data_address.getAddress(), NULL,
+        RubySystem::getBlockSizeBytes(), m_pc_address.getAddress(),
+        m_type, RubyAccessMode_User, NULL);
 
-  // Clear out the sequencer
-  while (!m_sequencer_ptr->empty()) {
-    g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
-  }
+    // Clear out the sequencer
+    while (!m_sequencer_ptr->empty()) {
+        g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
+    }
 
-  m_sequencer_ptr->makeRequest(request);
+    m_sequencer_ptr->makeRequest(request);
 
-  // Clear out the sequencer
-  while (!m_sequencer_ptr->empty()) {
-    g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
-  }
+    // Clear out the sequencer
+    while (!m_sequencer_ptr->empty()) {
+        g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
+    }
 }
 
-void TraceRecord::print(ostream& out) const
+void
+TraceRecord::print(ostream& out) const
 {
-  out << "[TraceRecord: Node, " << m_sequencer_ptr->name() << ", " 
-      << m_data_address << ", " << m_pc_address << ", " 
-      << m_type << ", Time: " << m_time << "]";
+    out << "[TraceRecord: Node, " << m_sequencer_ptr->name() << ", "
+        << m_data_address << ", " << m_pc_address << ", "
+        << m_type << ", Time: " << m_time << "]";
 }
 
-void TraceRecord::output(ostream& out) const
+void
+TraceRecord::output(ostream& out) const
 {
-  out << m_sequencer_ptr->name() << " ";
-  m_data_address.output(out);
-  out << " ";
-  m_pc_address.output(out);
-  out << " ";
-  out << m_type;
-  out << endl;
+    out << m_sequencer_ptr->name() << " ";
+    m_data_address.output(out);
+    out << " ";
+    m_pc_address.output(out);
+    out << " ";
+    out << m_type;
+    out << endl;
 }
 
-bool TraceRecord::input(istream& in)
+bool
+TraceRecord::input(istream& in)
 {
-  string sequencer_name;
-  in >> sequencer_name;
-  
-  //
-  // The SimObject find function is slow and iterates through the 
-  // simObjectList to find the sequencer pointer.  Therefore, expect trace
-  // playback to be slow.
-  //
-  m_sequencer_ptr = (Sequencer*)SimObject::find(sequencer_name.c_str());
+    string sequencer_name;
+    in >> sequencer_name;
 
-  m_data_address.input(in);
-  m_pc_address.input(in);
-  string type;
-  if (!in.eof()) {
+    // The SimObject find function is slow and iterates through the
+    // simObjectList to find the sequencer pointer.  Therefore, expect
+    // trace playback to be slow.
+    m_sequencer_ptr = (Sequencer*)SimObject::find(sequencer_name.c_str());
+
+    m_data_address.input(in);
+    m_pc_address.input(in);
+    if (in.eof())
+        return false;
+
+    string type;
     in >> type;
     m_type = string_to_RubyRequestType(type);
 
     // Ignore the rest of the line
     char c = '\0';
     while ((!in.eof()) && (c != '\n')) {
-      in.get(c);
+        in.get(c);
     }
 
     return true;
-  } else {
-    return false;
-  }
 }

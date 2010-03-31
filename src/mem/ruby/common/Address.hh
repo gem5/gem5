@@ -171,7 +171,7 @@ Address::bitRemove(int small, int big) const
 {
     physical_address_t mask;
     assert((unsigned)big >= (unsigned)small);
-    
+
     if (small >= ADDRESS_WIDTH - 1) {
         return m_address;
     } else if (big >= ADDRESS_WIDTH - 1) {
@@ -228,7 +228,7 @@ inline integer_t
 Address::memoryModuleIndex() const
 {
     integer_t index =
-        bitSelect(RubySystem::getBlockSizeBits() + 
+        bitSelect(RubySystem::getBlockSizeBits() +
                   RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
     assert (index >= 0);
     return index;

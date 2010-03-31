@@ -38,18 +38,18 @@
 class RubyEventQueueNode : public Event
 {
   public:
-    RubyEventQueueNode(Consumer* _consumer, RubyEventQueue* _eventq) 
+    RubyEventQueueNode(Consumer* _consumer, RubyEventQueue* _eventq)
         : m_consumer_ptr(_consumer), m_eventq_ptr(_eventq)
-    { 
-        setFlags(AutoDelete); 
+    {
+        setFlags(AutoDelete);
     }
 
     void print(std::ostream& out) const;
     virtual void
-    process() 
-    { 
-        m_consumer_ptr->wakeup(); 
-        m_consumer_ptr->removeScheduledWakeupTime(m_eventq_ptr->getTime()); 
+    process()
+    {
+        m_consumer_ptr->wakeup();
+        m_consumer_ptr->removeScheduledWakeupTime(m_eventq_ptr->getTime());
     }
     virtual const char *description() const { return "Ruby Event"; }
 

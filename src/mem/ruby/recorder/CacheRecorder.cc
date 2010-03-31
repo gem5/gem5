@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,53 +26,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
+#include "gzstream.hh"
 
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/recorder/TraceRecord.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/gems_common/PrioHeap.hh"
-#include "gzstream.hh"
 
 CacheRecorder::CacheRecorder()
 {
-  m_records_ptr = new PrioHeap<TraceRecord>;
+    m_records_ptr = new PrioHeap<TraceRecord>;
 }
 
 CacheRecorder::~CacheRecorder()
 {
-  delete m_records_ptr;
+    delete m_records_ptr;
 }
 
-void CacheRecorder::addRecord(Sequencer* sequencer, 
-                              const Address& data_addr, 
-                              const Address& pc_addr, 
-                              RubyRequestType type, 
-                              Time time)
+void
+CacheRecorder::addRecord(Sequencer* sequencer, const Address& data_addr,
+    const Address& pc_addr, RubyRequestType type, Time time)
 {
-  m_records_ptr->insert(TraceRecord(sequencer, data_addr, pc_addr, type, time));
+    m_records_ptr->
+        insert(TraceRecord(sequencer, data_addr, pc_addr, type, time));
 }
 
-int CacheRecorder::dumpRecords(string filename)
+int
+CacheRecorder::dumpRecords(string filename)
 {
-  ogzstream out(filename.c_str());
-  if (out.fail()) {
-    cout << "Error: error opening file '" << filename << "'" << endl;
-    return 0;
-  }
+    ogzstream out(filename.c_str());
+    if (out.fail()) {
+        cout << "Error: error opening file '" << filename << "'" << endl;
+        return 0;
+    }
 
-  int counter = 0;
-  while (m_records_ptr->size() != 0) {
-    TraceRecord record = m_records_ptr->extractMin();
-    record.output(out);
-    counter++;
-  }
-  return counter;
+    int counter = 0;
+    while (m_records_ptr->size() != 0) {
+        TraceRecord record = m_records_ptr->extractMin();
+        record.output(out);
+        counter++;
+    }
+    return counter;
 }
 
-void CacheRecorder::print(ostream& out) const
+void
+CacheRecorder::print(ostream& out) const
 {
 }

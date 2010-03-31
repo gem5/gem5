@@ -26,23 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STOREBUFFER_H_
-#define _STOREBUFFER_H_
+#ifndef __MEM_RUBY_STOREBUFFER_STOREBUFFER_HH__
+#define __MEM_RUBY_STOREBUFFER_STOREBUFFER_HH__
 
-#include <map>
 #include <deque>
+#include <map>
 
-#include "config/ruby_tso_checker.hh"
-#include "mem/ruby/storebuffer/hfa.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/libruby.hh"
 
-#if RUBY_TSO_CHECKER
-#include "TsoCheckerCmd.hh"
-#endif
-
 /**
- *  Status for write buffer accesses. The Write buffer can hit in fastpath, be full, or
- *     successfully enqueue the store request
+ *  Status for write buffer accesses. The Write buffer can hit in
+ *  fastpath, be full, or successfully enqueue the store request
  */
 enum storebuffer_status_t { WB_FULL, WB_OK, WB_FLUSHING };
 
@@ -51,114 +46,106 @@ enum storebuffer_status_t { WB_FULL, WB_OK, WB_FLUSHING };
  */
 enum load_match { NO_MATCH, PARTIAL_MATCH, FULL_MATCH };
 
-struct SBEntry {
-  struct RubyRequest m_request;
-#if RUBY_TSO_CHECKER
-  Tso::TsoCheckerCmd * m_next_ptr;
-#endif
-  SBEntry(struct RubyRequest request, void * ptr)
-      : m_request(request)
+struct SBEntry
+{
+    RubyRequest m_request;
+
+    SBEntry(RubyRequest request, void * ptr)
+        : m_request(request)
     {
-#if RUBY_TSO_CHECKER
-        m_next_ptr = (Tso::TsoCheckerCmd*) ptr;
-#endif
     }
 };
 
-class StoreBuffer {
- public:
-  ///Constructor
-  /// Note that the size of the Write Buffer is determined by the WRITE_BUFFER_SIZE config parameter
-  StoreBuffer(uint32 id, uint32 block_bits, int storebuffer_size);
+class StoreBuffer
+{
+  public:
+    /// Note that the size of the Write Buffer is determined by the
+    /// WRITE_BUFFER_SIZE config parameter
+    StoreBuffer(uint32_t id, uint32_t block_bits, int storebuffer_size);
 
-  /// Register hitcallback back to CPU
-  void registerHitCallback(void (*hit_callback)(int64_t request_id));
+    ~StoreBuffer();
 
-  /// Destructor
-  ~StoreBuffer();
+    /// Register hitcallback back to CPU
+    void registerHitCallback(void (*hit_callback)(int64_t request_id));
 
-  ///Adds a store entry to the write buffer
-  void addToStoreBuffer(struct RubyRequest request);
+    ///Adds a store entry to the write buffer
+    void addToStoreBuffer(RubyRequest request);
 
-  ///Flushes the entire write buffer
-  void flushStoreBuffer();
+    ///Flushes the entire write buffer
+    void flushStoreBuffer();
 
-  ///A pseq object calls this when Ruby completes our request
-  void complete(uint64_t);
+    ///A pseq object calls this when Ruby completes our request
+    void complete(uint64_t);
 
-  /// Returns ID. If ID == -2, HIT, else it's an ID to wait on
-  int64_t handleLoad(struct RubyRequest request);
+    /// Returns ID. If ID == -2, HIT, else it's an ID to wait on
+    int64_t handleLoad(RubyRequest request);
 
-  /// Used by all load insts to check whether it hits to any entry in the WB. If so, the WB is flushed
-  load_match checkForLoadHit(struct RubyRequest request);
+    /// Used by all load insts to check whether it hits to any entry
+    /// in the WB. If so, the WB is flushed
+    load_match checkForLoadHit(RubyRequest request);
 
-  /// Used to fill the load in case of FULL_MATCH
-  void returnMatchedData(struct RubyRequest request);
+    /// Used to fill the load in case of FULL_MATCH
+    void returnMatchedData(RubyRequest request);
 
-  /// Issue next store in line
-  void issueNextStore();
+    /// Issue next store in line
+    void issueNextStore();
 
-  /// prints out the contents of the Write Buffer
-  void print();
+    /// prints out the contents of the Write Buffer
+    void print();
 
-#if RUBY_TSO_CHECKER
-  /// if load completes before store, insert correctly to be issued to TSOChecker
-  void insertTsoLL(Tso::TsoCheckerCmd * cmd);
-#endif
+    /// Returns flag indicating whether we are using the write buffer
+    bool useStoreBuffer() { return m_use_storebuffer; }
 
-  /// Returns flag indicating whether we are using the write buffer
-  bool useStoreBuffer() { return m_use_storebuffer; }
+    bool storeBufferFull() { return m_storebuffer_full; }
 
-  bool storeBufferFull() { return m_storebuffer_full; }
+    bool storeBufferFlushing() { return m_storebuffer_flushing; }
 
-  bool storeBufferFlushing() { return m_storebuffer_flushing; }
+  private:
+    /// id of this write buffer (one per sequencer object)
+    uint32_t m_id;
 
- private:
-  /// id of this write buffer (one per sequencer object)
-  uint32          m_id;
+    /// number of bytes in cacheline
+    uint32_t m_block_size;
 
-  /// number of bytes in cacheline
-  uint32          m_block_size;
+    /// the size of the write buffer
+    uint32_t m_storebuffer_size;
 
-  /// the size of the write buffer
-  uint32          m_storebuffer_size;
+    /// mask to strip off non-cache line bits
+    pa_t m_block_mask;
 
-  /// mask to strip off non-cache line bits
-  pa_t            m_block_mask;
+    /// list of store requests in the write buffer
+    std::deque<SBEntry> buffer;
 
-  /// list of store requests in the write buffer
-  deque <struct SBEntry> buffer;
+    /// the current length of the write buffer
+    uint32_t m_buffer_size;
 
-  /// the current length of the write buffer
-  uint32          m_buffer_size;
+    /// whether we want to simulate the write buffer or not:
+    bool m_use_storebuffer;
 
-  /// whether we want to simulate the write buffer or not:
-  bool            m_use_storebuffer;
+    /// indicates whether the write buffer is full or not
+    bool m_storebuffer_full;
 
-  /// indicates whether the write buffer is full or not
-  bool            m_storebuffer_full;
+    /// indicates that we are currently flushing the write buffer
+    bool m_storebuffer_flushing;
 
-  /// indicates that we are currently flushing the write buffer
-  bool            m_storebuffer_flushing;
+    /// indicates that automatic issue is stalled and the next store
+    /// to be added should issue itself
+    bool m_stalled_issue;
 
-  /// indicates that automatic issue is stalled and the next store to be added should issue itself
-  bool            m_stalled_issue;
+    /// RubyPort to make requests to
+    RubyPortHandle m_port;
 
-  /// RubyPort to make requests to
-  RubyPortHandle  m_port;
+    /// HitCallback to CPU
+    void (*m_hit_callback)(int64_t);
 
-  /// HitCallback to CPU
-  void            (*m_hit_callback)(int64_t);
+    /// Map the request id to rubyrequest
+    std::map<uint64_t, RubyRequest> outstanding_requests;
 
-  /// Map the request id to rubyrequest
-  map<uint64_t, struct RubyRequest> outstanding_requests;
+    /// current instruction counter
+    uint64_t iseq;
 
-  /// current instruction counter
-  uint64_t iseq;
-
-
-  /// input into tso counter
-  uint64_t tso_iseq;
+    /// input into tso counter
+    uint64_t tso_iseq;
 };
 
-#endif
+#endif //  __MEM_RUBY_STOREBUFFER_STOREBUFFER_HH__

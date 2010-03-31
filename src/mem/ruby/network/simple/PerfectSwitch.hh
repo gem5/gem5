@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,93 +27,79 @@
  */
 
 /*
- * $Id$
- *
- * Description: Perfect switch, of course it is perfect and no latency or what
- *              so ever. Every cycle it is woke up and perform all the
- *              necessary routings that must be done. Note, this switch also
- *              has number of input ports/output ports and has a routing table
- *              as well.
- *
+ * Perfect switch, of course it is perfect and no latency or what so
+ * ever. Every cycle it is woke up and perform all the necessary
+ * routings that must be done. Note, this switch also has number of
+ * input ports/output ports and has a routing table as well.
  */
 
-#ifndef PerfectSwitch_H
-#define PerfectSwitch_H
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__
 
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 
 class MessageBuffer;
 class NetDest;
 class SimpleNetwork;
 
-class LinkOrder {
-public:
-  int m_link;
-  int m_value;
-};
-
-class PerfectSwitch : public Consumer {
-public:
-  // Constructors
-
-  // constructor specifying the number of ports
-  PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr);
-  void addInPort(const Vector<MessageBuffer*>& in);
-  void addOutPort(const Vector<MessageBuffer*>& out, const NetDest& routing_table_entry);
-  void clearRoutingTables();
-  void clearBuffers();
-  void reconfigureOutPort(const NetDest& routing_table_entry);
-  int getInLinks() const { return m_in.size(); }
-  int getOutLinks() const { return m_out.size(); }
-
-  // Destructor
-  ~PerfectSwitch();
-
-  // Public Methods
-  void wakeup();
-
-  void printStats(std::ostream& out) const;
-  void clearStats();
-  void printConfig(std::ostream& out) const;
-
-  void print(std::ostream& out) const;
-private:
-
-  // Private copy constructor and assignment operator
-  PerfectSwitch(const PerfectSwitch& obj);
-  PerfectSwitch& operator=(const PerfectSwitch& obj);
-
-  // Data Members (m_ prefix)
-  SwitchID m_switch_id;
-
-  // vector of queues from the components
-  Vector<Vector<MessageBuffer*> > m_in;
-  Vector<Vector<MessageBuffer*> > m_out;
-  Vector<NetDest> m_routing_table;
-  Vector<LinkOrder> m_link_order;
-  int m_virtual_networks;
-  int m_round_robin_start;
-  int m_wakeups_wo_switch;
-  SimpleNetwork* m_network_ptr;
-};
-
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const PerfectSwitch& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const PerfectSwitch& obj)
+struct LinkOrder
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    int m_link;
+    int m_value;
+};
+
+class PerfectSwitch : public Consumer
+{
+  public:
+    PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr);
+    ~PerfectSwitch();
+
+    void addInPort(const Vector<MessageBuffer*>& in);
+    void addOutPort(const Vector<MessageBuffer*>& out,
+        const NetDest& routing_table_entry);
+    void clearRoutingTables();
+    void clearBuffers();
+    void reconfigureOutPort(const NetDest& routing_table_entry);
+    int getInLinks() const { return m_in.size(); }
+    int getOutLinks() const { return m_out.size(); }
+
+    void wakeup();
+
+    void printStats(std::ostream& out) const;
+    void clearStats();
+    void printConfig(std::ostream& out) const;
+
+    void print(std::ostream& out) const;
+
+  private:
+    // Private copy constructor and assignment operator
+    PerfectSwitch(const PerfectSwitch& obj);
+    PerfectSwitch& operator=(const PerfectSwitch& obj);
+
+    SwitchID m_switch_id;
+
+    // vector of queues from the components
+    Vector<Vector<MessageBuffer*> > m_in;
+    Vector<Vector<MessageBuffer*> > m_out;
+    Vector<NetDest> m_routing_table;
+    Vector<LinkOrder> m_link_order;
+    int m_virtual_networks;
+    int m_round_robin_start;
+    int m_wakeups_wo_switch;
+    SimpleNetwork* m_network_ptr;
+};
+
+inline std::ostream&
+operator<<(std::ostream& out, const PerfectSwitch& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //PerfectSwitch_H
+#endif // __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__

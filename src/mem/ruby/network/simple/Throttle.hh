@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,94 +27,92 @@
  */
 
 /*
- * $Id$
- *
- * Description: The class to implement bandwidth and latency throttle. An
- *              instance of consumer class that can be woke up. It is only used
- *              to control bandwidth at output port of a switch. And the
- *              throttle is added *after* the output port, means the message is
- *              put in the output port of the PerfectSwitch (a
- *              intermediateBuffers) first, then go through the Throttle.
- *
+ * The class to implement bandwidth and latency throttle. An instance
+ * of consumer class that can be woke up. It is only used to control
+ * bandwidth at output port of a switch. And the throttle is added
+ * *after* the output port, means the message is put in the output
+ * port of the PerfectSwitch (a intermediateBuffers) first, then go
+ * through the Throttle.
  */
 
-#ifndef THROTTLE_H
-#define THROTTLE_H
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/network/Network.hh"
 
 class MessageBuffer;
 
-class Throttle : public Consumer {
-public:
-  // Constructors
-  Throttle(int sID, NodeID node, int link_latency, int link_bandwidth_multiplier);
-  Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier);
+class Throttle : public Consumer
+{
+  public:
+    Throttle(int sID, NodeID node, int link_latency,
+        int link_bandwidth_multiplier);
+    Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier);
+    ~Throttle() {}
 
-  // Destructor
-  ~Throttle() {}
+    void addLinks(const Vector<MessageBuffer*>& in_vec,
+        const Vector<MessageBuffer*>& out_vec);
+    void wakeup();
 
-  // Public Methods
-  void addLinks(const Vector<MessageBuffer*>& in_vec, const Vector<MessageBuffer*>& out_vec);
-  void wakeup();
+    void printStats(ostream& out) const;
+    void clearStats();
+    void printConfig(ostream& out) const;
+    // The average utilization (a percent) since last clearStats()
+    double getUtilization() const;
+    int
+    getLinkBandwidth() const
+    {
+        return RubySystem::getNetwork()->getEndpointBandwidth() *
+            m_link_bandwidth_multiplier;
+    }
+    int getLatency() const { return m_link_latency; }
 
-  void printStats(ostream& out) const;
-  void clearStats();
-  void printConfig(ostream& out) const;
-  double getUtilization() const; // The average utilization (a percent) since last clearStats()
-  int getLinkBandwidth() const { return RubySystem::getNetwork()->getEndpointBandwidth() * m_link_bandwidth_multiplier; }
-  int getLatency() const { return m_link_latency; }
+    const Vector<Vector<int> >&
+    getCounters() const
+    {
+        return m_message_counters;
+    }
 
-  const Vector<Vector<int> >& getCounters() const { return m_message_counters; }
+    void clear();
 
-  void clear();
+    void print(ostream& out) const;
 
-  void print(ostream& out) const;
+  private:
+    void init(NodeID node, int link_latency, int link_bandwidth_multiplier);
+    void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr);
+    void linkUtilized(double ratio) { m_links_utilized += ratio; }
 
-private:
-  // Private Methods
-  void init(NodeID node, int link_latency, int link_bandwidth_multiplier);
-  void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr);
-  void linkUtilized(double ratio) { m_links_utilized += ratio; }
+    // Private copy constructor and assignment operator
+    Throttle(const Throttle& obj);
+    Throttle& operator=(const Throttle& obj);
 
-  // Private copy constructor and assignment operator
-  Throttle(const Throttle& obj);
-  Throttle& operator=(const Throttle& obj);
+    Vector<MessageBuffer*> m_in;
+    Vector<MessageBuffer*> m_out;
+    Vector<Vector<int> > m_message_counters;
+    int m_vnets;
+    Vector<int> m_units_remaining;
+    int m_sID;
+    NodeID m_node;
+    int m_link_bandwidth_multiplier;
+    int m_link_latency;
+    int m_wakeups_wo_switch;
 
-  // Data Members (m_ prefix)
-  Vector<MessageBuffer*> m_in;
-  Vector<MessageBuffer*> m_out;
-  Vector<Vector<int> > m_message_counters;
-  int m_vnets;
-  Vector<int> m_units_remaining;
-  int m_sID;
-  NodeID m_node;
-  int m_link_bandwidth_multiplier;
-  int m_link_latency;
-  int m_wakeups_wo_switch;
-
-  // For tracking utilization
-  Time m_ruby_start;
-  double m_links_utilized;
+    // For tracking utilization
+    Time m_ruby_start;
+    double m_links_utilized;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const Throttle& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const Throttle& obj)
+inline ostream&
+operator<<(ostream& out, const Throttle& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //THROTTLE_H
+#endif // __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__

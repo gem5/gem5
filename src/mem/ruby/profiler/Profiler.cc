@@ -125,7 +125,7 @@ Profiler::wakeup()
         << "mbytes_total: " << process_memory_total() << endl;
 
     if (process_memory_total() > 0) {
-        out << "resident_ratio: " 
+        out << "resident_ratio: "
             << process_memory_resident() / process_memory_total() << endl;
     }
 
@@ -158,7 +158,7 @@ Profiler::setPeriodicStatsFile(const string& filename)
 void
 Profiler::setPeriodicStatsInterval(integer_t period)
 {
-    cout << "Recording periodic statistics every " << m_stats_period 
+    cout << "Recording periodic statistics every " << m_stats_period
          << " Ruby cycles" << endl;
 
     m_stats_period = period;
@@ -227,7 +227,7 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << "mbytes_resident: " << process_memory_resident() << endl;
         out << "mbytes_total: " << process_memory_total() << endl;
         if (process_memory_total() > 0) {
-            out << "resident_ratio: " 
+            out << "resident_ratio: "
                 << process_memory_resident()/process_memory_total() << endl;
         }
         out << endl;
@@ -633,7 +633,7 @@ static double
 process_memory_total()
 {
     // 4kB page size, 1024*1024 bytes per MB,
-    const double MULTIPLIER = 4096.0 / (1024.0 * 1024.0); 
+    const double MULTIPLIER = 4096.0 / (1024.0 * 1024.0);
     ifstream proc_file;
     proc_file.open("/proc/self/statm");
     int total_size_in_pages = 0;
