@@ -37,7 +37,11 @@ class RefCounted
     int count;
 
   private:
+    // Don't allow a default copy constructor or copy operator on
+    // these objects because the default operation will copy the
+    // reference count as well and we certainly don't want that.
     RefCounted(const RefCounted &);
+    RefCounted &operator=(const RefCounted &);
 
   public:
     RefCounted() : count(0) {}
