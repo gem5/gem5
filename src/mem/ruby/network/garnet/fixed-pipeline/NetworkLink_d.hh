@@ -31,6 +31,8 @@
 #ifndef NETWORK_LINK_D_H
 #define NETWORK_LINK_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
@@ -47,7 +49,7 @@ public:
         NetworkLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr);
         void setLinkConsumer(Consumer *consumer);
         void setSourceQueue(flitBuffer_d *srcQueue);
-        void print(ostream& out) const{}
+        void print(std::ostream& out) const{}
         int getLinkUtilization();
         Vector<int> getVcLoad();
         int get_id(){return m_id;}

@@ -29,6 +29,8 @@
 #include "mem/gems_common/util.hh"
 #include "mem/ruby/system/PersistentTable.hh"
 
+using namespace std;
+
 // randomize so that handoffs are not locality-aware
 #if 0
 int persistent_randomize[] = {0, 4, 8, 12, 1, 5, 9, 13, 2, 6,

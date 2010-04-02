@@ -29,7 +29,7 @@
 
 // Miscallaneous Functions
 
-void error(string msg);
+void error(std::string msg);
 void assert(bool condition);
 int random(int number);
 Time get_time();

@@ -34,12 +34,14 @@
 #ifndef __MEM_RUBY_COMMON_NETDEST_HH__
 #define __MEM_RUBY_COMMON_NETDEST_HH__
 
-#include "mem/ruby/common/Global.hh"
+#include <iostream>
+
 #include "mem/gems_common/Vector.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/common/Set.hh"
 #include "mem/protocol/MachineType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 class NetDest
 {
@@ -98,7 +100,7 @@ class NetDest
     // get element for a index
     NodeID elementAt(MachineID index);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     // returns a value >= MachineType_base_level("this machine")
@@ -120,11 +122,11 @@ class NetDest
     Vector <Set> m_bits;  // a Vector of bit vectors - i.e. Sets
 };
 
-inline ostream&
-operator<<(ostream& out, const NetDest& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const NetDest& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

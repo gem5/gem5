@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__
 #define __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__
 
+#include <iostream>
+
 #include "mem/gems_common/Map.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/ruby/common/Address.hh"
@@ -39,7 +41,7 @@
 class PersistentTableEntry
 {
   public:
-    void print(ostream& out) const {}
+    void print(std::ostream& out) const {}
 
     NetDest m_starving;
     NetDest m_marked;
@@ -67,9 +69,9 @@ class PersistentTable
     int countStarvingForAddress(const Address& addr) const;
     int countReadStarvingForAddress(const Address& addr) const;
 
-    static void printConfig(ostream& out) {}
+    static void printConfig(std::ostream& out) {}
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -80,19 +82,19 @@ class PersistentTable
     Map<Address, PersistentTableEntry>* m_map_ptr;
 };
 
-inline ostream&
-operator<<(ostream& out, const PersistentTable& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const PersistentTable& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
-inline ostream&
-operator<<(ostream& out, const PersistentTableEntry& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const PersistentTableEntry& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

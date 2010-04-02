@@ -29,23 +29,23 @@
 #include "mem/ruby/common/Address.hh"
 
 void
-Address::output(ostream& out) const
+Address::output(std::ostream& out) const
 {
     // Note: this outputs addresses in the form "ffff", not "0xffff".
     // This code should always be able to write out addresses in a
     // format that can be read in by the below input() method.  Please
     // don't change this without talking to Milo first.
-    out << hex << m_address << dec;
+    out << std::hex << m_address << std::dec;
 }
 
 void
-Address::input(istream& in)
+Address::input(std::istream& in)
 {
     // Note: this only works with addresses in the form "ffff", not
     // "0xffff".  This code should always be able to read in addresses
     // written out by the above output() method.  Please don't change
     // this without talking to Milo first.
-    in >> hex >> m_address >> dec;
+    in >> std::hex >> m_address >> std::dec;
 }
 
 Address::Address(const Address& obj)

@@ -45,6 +45,8 @@
 #ifndef SET_H
 #define SET_H
 
+#include <iostream>
+
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
@@ -164,7 +166,7 @@ public:
   void setBroadcast() { broadcast(); }   // Deprecated
   bool presentInSet(NodeID element) const { return isElement(element); }  // Deprecated
 
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
 
@@ -185,16 +187,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const Set& obj);
+std::ostream& operator<<(std::ostream& out, const Set& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const Set& obj)
+std::ostream& operator<<(std::ostream& out, const Set& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

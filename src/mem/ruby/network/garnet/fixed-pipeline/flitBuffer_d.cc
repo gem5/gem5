@@ -67,10 +67,10 @@ bool flitBuffer_d::isReadyForNext()
         return false;
 }
 
-void flitBuffer_d::print(ostream& out) const
+void flitBuffer_d::print(std::ostream& out) const
 {
         out << "[flitBuffer: ";
-        out << m_buffer.size() << "] " << endl;
+        out << m_buffer.size() << "] " << std::endl;
 }
 
 bool flitBuffer_d::isFull()

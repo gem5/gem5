@@ -334,7 +334,7 @@ Check::pickInitiatingNode()
 }
 
 void
-Check::print(ostream& out) const
+Check::print(std::ostream& out) const
 {
     out << "["
         << m_address << ", value: "
@@ -342,7 +342,7 @@ Check::print(ostream& out) const
         << m_status << ", initiating node: "
         << m_initiatingNode << ", store_count: "
         << m_store_count
-        << "]" << flush;
+        << "]" << std::flush;
 }
 
 void

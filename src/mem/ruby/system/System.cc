@@ -36,6 +36,8 @@
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
 Tick RubySystem::m_clock;

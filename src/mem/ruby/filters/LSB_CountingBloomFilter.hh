@@ -29,6 +29,9 @@
 #ifndef __MEM_RUBY_FILTERS_LSBCOUNTINGBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_LSBCOUNTINGBLOOMFILTER_HH__
 
+#include <iostream>
+#include <string>
+
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -37,7 +40,7 @@
 class LSB_CountingBloomFilter : public AbstractBloomFilter
 {
   public:
-    LSB_CountingBloomFilter(string config);
+    LSB_CountingBloomFilter(std::string config);
     ~LSB_CountingBloomFilter();
 
     void clear();
@@ -54,7 +57,7 @@ class LSB_CountingBloomFilter : public AbstractBloomFilter
     int readBit(const int index);
     void writeBit(const int index, const int value);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     int get_index(const Address& addr);

@@ -260,7 +260,7 @@ NetDest::setSize()
 }
 
 void
-NetDest::print(ostream& out) const
+NetDest::print(std::ostream& out) const
 {
     out << "[NetDest (" << m_bits.size() << ") ";
 

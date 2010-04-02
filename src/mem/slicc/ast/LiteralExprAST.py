@@ -39,7 +39,7 @@ class LiteralExprAST(ExprAST):
 
     def generate(self, code):
         fix = code.nofix()
-        if self.type == "string":
+        if self.type == "std::string":
             code('("${{self.literal}}")')
         elif self.type == "bool":
             code('(${{str(self.literal).lower()}})')

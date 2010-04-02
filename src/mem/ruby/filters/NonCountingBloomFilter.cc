@@ -30,6 +30,8 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/NonCountingBloomFilter.hh"
 
+using namespace std;
+
 NonCountingBloomFilter::NonCountingBloomFilter(string str)
 {
     string tail(str);

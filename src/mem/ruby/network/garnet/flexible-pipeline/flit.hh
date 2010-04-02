@@ -28,6 +28,8 @@
  * Authors: Niket Agarwal
  */
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
@@ -48,7 +50,7 @@ public:
         void set_vc(int vc);
         MsgPtr& get_msg_ptr();
         flit_type get_type();
-        void print(ostream&out) const;
+        void print(std::ostream& out) const;
 
 private:
 /************Data Members*************/
@@ -75,18 +77,12 @@ bool node_less_then_eq(flit* n1, flit* n2)
   }
 }
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const flit& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const flit& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const flit& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
 #endif

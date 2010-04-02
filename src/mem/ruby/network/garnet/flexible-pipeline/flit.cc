@@ -96,7 +96,7 @@ flit_type flit::get_type()
         return m_type;
 }
 
-void flit::print(ostream& out) const
+void flit::print(std::ostream& out) const
 {
         out << "[flit:: ";
         out << "Id=" << m_id << " ";

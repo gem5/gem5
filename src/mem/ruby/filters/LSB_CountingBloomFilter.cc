@@ -30,6 +30,8 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
 
+using namespace std;
+
 LSB_CountingBloomFilter::LSB_CountingBloomFilter(string str)
 {
     string tail(str);

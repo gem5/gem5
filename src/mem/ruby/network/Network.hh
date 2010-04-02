@@ -40,6 +40,9 @@
 #ifndef __MEM_RUBY_NETWORK_NETWORK_HH__
 #define __MEM_RUBY_NETWORK_NETWORK_HH__
 
+#include <iostream>
+#include <string>
+
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
@@ -88,10 +91,10 @@ class Network : public SimObject
 
     virtual void reset() = 0;
 
-    virtual void printStats(ostream& out) const = 0;
+    virtual void printStats(std::ostream& out) const = 0;
     virtual void clearStats() = 0;
-    virtual void printConfig(ostream& out) const = 0;
-    virtual void print(ostream& out) const = 0;
+    virtual void printConfig(std::ostream& out) const = 0;
+    virtual void print(std::ostream& out) const = 0;
 
   protected:
     // Private copy constructor and assignment operator
@@ -99,7 +102,7 @@ class Network : public SimObject
     Network& operator=(const Network& obj);
 
   protected:
-    const string m_name;
+    const std::string m_name;
     int m_nodes;
     int m_virtual_networks;
     int m_buffer_size;
@@ -111,11 +114,11 @@ class Network : public SimObject
     int m_data_msg_size;
 };
 
-inline ostream&
-operator<<(ostream& out, const Network& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Network& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

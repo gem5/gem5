@@ -43,6 +43,8 @@
 #include "mem/ruby/system/System.hh"
 #include "params/RubySequencer.hh"
 
+using namespace std;
+
 Sequencer *
 RubySequencerParams::create()
 {

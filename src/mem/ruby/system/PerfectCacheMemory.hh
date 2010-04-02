@@ -43,8 +43,8 @@ struct PerfectCacheLineState
 };
 
 template<class ENTRY>
-inline ostream&
-operator<<(ostream& out, const PerfectCacheLineState<ENTRY>& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const PerfectCacheLineState<ENTRY>& obj)
 {
     return out;
 }
@@ -55,7 +55,7 @@ class PerfectCacheMemory
   public:
     PerfectCacheMemory();
 
-    static void printConfig(ostream& out);
+    static void printConfig(std::ostream& out);
 
     // perform a cache access and see if we hit or not.  Return true
     // on a hit.
@@ -86,7 +86,7 @@ class PerfectCacheMemory
     void changePermission(const Address& address, AccessPermission new_perm);
 
     // Print cache contents
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -98,11 +98,11 @@ class PerfectCacheMemory
 };
 
 template<class ENTRY>
-inline ostream&
-operator<<(ostream& out, const PerfectCacheMemory<ENTRY>& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const PerfectCacheMemory<ENTRY>& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
@@ -114,7 +114,7 @@ PerfectCacheMemory<ENTRY>::PerfectCacheMemory()
 
 template<class ENTRY>
 inline void
-PerfectCacheMemory<ENTRY>::printConfig(ostream& out)
+PerfectCacheMemory<ENTRY>::printConfig(std::ostream& out)
 {
 }
 
@@ -206,7 +206,7 @@ PerfectCacheMemory<ENTRY>::changePermission(const Address& address,
 
 template<class ENTRY>
 inline void
-PerfectCacheMemory<ENTRY>::print(ostream& out) const
+PerfectCacheMemory<ENTRY>::print(std::ostream& out) const
 {
 }
 

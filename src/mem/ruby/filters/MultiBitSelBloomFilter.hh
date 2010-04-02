@@ -29,6 +29,9 @@
 #ifndef __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
 
+#include <iostream>
+#include <string>
+
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -39,7 +42,7 @@
 class MultiBitSelBloomFilter : public AbstractBloomFilter
 {
   public:
-    MultiBitSelBloomFilter(string config);
+    MultiBitSelBloomFilter(std::string config);
     ~MultiBitSelBloomFilter();
 
     void clear();
@@ -52,7 +55,7 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
     bool isSet(const Address& addr);
     int getCount(const Address& addr);
     int getTotalCount();
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
     int getIndex(const Address& addr);
     int readBit(const int index);

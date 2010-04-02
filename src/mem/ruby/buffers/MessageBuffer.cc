@@ -29,6 +29,8 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 MessageBuffer::MessageBuffer(const string &name)
 {
     m_msg_counter = 0;

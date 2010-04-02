@@ -45,6 +45,9 @@
 #ifndef __MEM_RUBY_PROFILER_PROFILER_HH__
 #define __MEM_RUBY_PROFILER_PROFILER_HH__
 
+#include <iostream>
+#include <string>
+
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -77,22 +80,22 @@ class Profiler : public SimObject, public Consumer
 
     void wakeup();
 
-    void setPeriodicStatsFile(const string& filename);
+    void setPeriodicStatsFile(const std::string& filename);
     void setPeriodicStatsInterval(integer_t period);
 
-    void printStats(ostream& out, bool short_stats=false);
-    void printShortStats(ostream& out) { printStats(out, true); }
-    void printTraceStats(ostream& out) const;
+    void printStats(std::ostream& out, bool short_stats=false);
+    void printShortStats(std::ostream& out) { printStats(out, true); }
+    void printTraceStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(ostream& out) const;
-    void printResourceUsage(ostream& out) const;
+    void printConfig(std::ostream& out) const;
+    void printResourceUsage(std::ostream& out) const;
 
     AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }
     AddressProfiler* getInstructionProfiler() { return m_inst_profiler_ptr; }
 
     void addAddressTraceSample(const CacheMsg& msg, NodeID id);
 
-    void profileRequest(const string& requestStr);
+    void profileRequest(const std::string& requestStr);
     void profileSharing(const Address& addr, AccessType type,
                         NodeID requestor, const Set& sharers,
                         const Set& owner);
@@ -134,13 +137,12 @@ class Profiler : public SimObject, public Consumer
                            GenericMachineType respondingMach);
     void sequencerRequests(int num) { m_sequencer_requests.add(num); }
 
-    void profileTransition(const string& component, NodeID version,
-                           Address addr, const string& state,
-                           const string& event, const string& next_state,
-                           const string& note);
+    void profileTransition(const std::string& component, NodeID version,
+        Address addr, const std::string& state, const std::string& event,
+        const std::string& next_state, const std::string& note);
     void profileMsgDelay(int virtualNetwork, int delayCycles);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
     void rubyWatch(int proc);
     bool watchAddress(Address addr);
@@ -167,7 +169,7 @@ class Profiler : public SimObject, public Consumer
     Vector<int64> m_instructions_executed_at_start;
     Vector<int64> m_cycles_executed_at_start;
 
-    ostream* m_periodic_output_file_ptr;
+    std::ostream* m_periodic_output_file_ptr;
     integer_t m_stats_period;
 
     Time m_ruby_start;
@@ -210,7 +212,7 @@ class Profiler : public SimObject, public Consumer
     Map<Address, int>* m_watch_address_list_ptr;
     // counts all initiated cache request including PUTs
     int m_requests;
-    Map <string, int>* m_requestProfileMap_ptr;
+    Map <std::string, int>* m_requestProfileMap_ptr;
 
     //added by SS
     bool m_hot_lines;
@@ -219,11 +221,11 @@ class Profiler : public SimObject, public Consumer
     int m_num_of_sequencers;
 };
 
-inline ostream&
-operator<<(ostream& out, const Profiler& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Profiler& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

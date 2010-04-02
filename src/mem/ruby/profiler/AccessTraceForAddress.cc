@@ -55,7 +55,7 @@ AccessTraceForAddress::~AccessTraceForAddress()
 }
 
 void
-AccessTraceForAddress::print(ostream& out) const
+AccessTraceForAddress::print(std::ostream& out) const
 {
     out << m_addr;
 

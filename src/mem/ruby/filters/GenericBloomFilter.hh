@@ -29,6 +29,9 @@
 #ifndef __MEM_RUBY_FILTERS_GENERICBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_GENERICBLOOMFILTER_HH__
 
+#include <iostream>
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
@@ -36,7 +39,7 @@
 class GenericBloomFilter
 {
   public:
-    GenericBloomFilter(string config);
+    GenericBloomFilter(std::string config);
     ~GenericBloomFilter();
 
     void clear();
@@ -61,18 +64,22 @@ class GenericBloomFilter
     int readBit(const int index);
     void writeBit(const int index, const int value);
 
-    void print(ostream& out) const;
-    void printConfig(ostream& out) { out << "GenericBloomFilter" << endl; }
+    void print(std::ostream& out) const;
+    void
+    printConfig(std::ostream& out)
+    {
+        out << "GenericBloomFilter" << std::endl;
+    }
 
   private:
     AbstractBloomFilter* m_filter;
 };
 
-inline ostream&
-operator<<(ostream& out, const GenericBloomFilter& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const GenericBloomFilter& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

@@ -33,6 +33,8 @@
 #include "mem/ruby/recorder/Tracer.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 Tracer::Tracer(const Params *p)
     : SimObject(p)
 {
@@ -43,7 +45,7 @@ Tracer::Tracer(const Params *p)
 }
 
 void
-Tracer::startTrace(std::string filename)
+Tracer::startTrace(string filename)
 {
     if (m_enabled)
         stopTrace();
@@ -80,7 +82,7 @@ Tracer::traceRequest(Sequencer* sequencer, const Address& data_addr,
 }
 
 int
-Tracer::playbackTrace(std::string filename)
+Tracer::playbackTrace(string filename)
 {
     igzstream in(filename.c_str());
     if (in.fail()) {
@@ -123,7 +125,7 @@ Tracer::playbackTrace(std::string filename)
 }
 
 void
-Tracer::print(std::ostream& out) const
+Tracer::print(ostream& out) const
 {
 }
 

@@ -35,6 +35,8 @@
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 const int PRIORITY_SWITCH_LIMIT = 128;
 
 // Operator for helper class

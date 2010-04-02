@@ -39,6 +39,8 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/SWallocator_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Switch_d.hh"
 
+using namespace std;
+
 Router_d::Router_d(int id, GarnetNetwork_d *network_ptr)
 {
         m_id = id;

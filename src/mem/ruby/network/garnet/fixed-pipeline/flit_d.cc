@@ -117,7 +117,7 @@ void flit_d::advance_stage(flit_stage t_stage)
         m_stage.second = g_eventQueue_ptr->getTime() + 1;
 }
 */
-void flit_d::print(ostream& out) const
+void flit_d::print(std::ostream& out) const
 {
         out << "[flit:: ";
         out << "Id=" << m_id << " ";

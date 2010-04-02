@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_SYSTEM_TBETABLE_HH__
 #define __MEM_RUBY_SYSTEM_TBETABLE_HH__
 
+#include <iostream>
+
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -45,9 +47,9 @@ class TBETable
     }
 
     void
-    printConfig(ostream& out)
+    printConfig(std::ostream& out)
     {
-        out << "TBEs_per_TBETable: " << m_number_of_TBEs << endl;
+        out << "TBEs_per_TBETable: " << m_number_of_TBEs << std::endl;
     }
 
     bool isPresent(const Address& address) const;
@@ -63,7 +65,7 @@ class TBETable
     const ENTRY& lookup(const Address& address) const;
 
     // Print cache contents
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -78,11 +80,11 @@ class TBETable
 };
 
 template<class ENTRY>
-inline ostream&
-operator<<(ostream& out, const TBETable<ENTRY>& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const TBETable<ENTRY>& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
@@ -133,7 +135,7 @@ TBETable<ENTRY>::lookup(const Address& address) const
 
 template<class ENTRY>
 inline void
-TBETable<ENTRY>::print(ostream& out) const
+TBETable<ENTRY>::print(std::ostream& out) const
 {
 }
 

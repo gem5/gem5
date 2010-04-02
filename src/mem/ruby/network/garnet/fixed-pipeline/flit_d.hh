@@ -31,6 +31,8 @@
 #ifndef FLIT_D_H
 #define FLIT_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
@@ -40,7 +42,7 @@ public:
         flit_d(int vc, bool is_free_signal);
         void set_outport(int port) { m_outport = port; }
         int get_outport() {return m_outport; }
-        void print(ostream& out) const;
+        void print(std::ostream& out) const;
         bool is_free_signal()
         {
                 return m_is_free_signal;
@@ -99,7 +101,7 @@ public:
                 m_stage.first = t_stage;
                 m_stage.second = g_eventQueue_ptr->getTime() + 1;
         }
-        inline pair<flit_stage, Time> get_stage()
+        inline std::pair<flit_stage, Time> get_stage()
         {
                 return m_stage;
         }
@@ -126,7 +128,7 @@ private:
         MsgPtr m_msg_ptr;
         int m_outport;
         int src_delay;
-        pair<flit_stage, Time> m_stage;
+        std::pair<flit_stage, Time> m_stage;
 
 };
 
@@ -143,18 +145,12 @@ bool node_less_then_eq(flit_d* n1, flit_d* n2)
   }
 }
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const flit_d& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const flit_d& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const flit_d& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
 #endif

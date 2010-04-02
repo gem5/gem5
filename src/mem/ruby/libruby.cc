@@ -38,6 +38,8 @@
 #include "mem/ruby/system/RubyPort.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 string
 RubyRequestType_to_string(const RubyRequestType& obj)
 {
@@ -64,7 +66,7 @@ RubyRequestType_to_string(const RubyRequestType& obj)
 }
 
 RubyRequestType
-string_to_RubyRequestType(std::string str)
+string_to_RubyRequestType(string str)
 {
     if (str == "IFETCH")
         return RubyRequestType_IFETCH;
@@ -94,7 +96,7 @@ operator<<(ostream& out, const RubyRequestType& obj)
 }
 
 ostream&
-operator<<(std::ostream& out, const RubyRequest& obj)
+operator<<(ostream& out, const RubyRequest& obj)
 {
     out << hex << "0x" << obj.paddr << " data: 0x" << flush;
     for (int i = 0; i < obj.len; i++) {
@@ -147,8 +149,8 @@ libruby_init(const char* cfg_filename)
         assert(tokens.size() >= 2);
         vector<string> argv;
         for (size_t i=2; i<tokens.size(); i++) {
-            std::replace(tokens[i].begin(), tokens[i].end(), '%', ' ');
-            std::replace(tokens[i].begin(), tokens[i].end(), '#', '\n');
+            replace(tokens[i].begin(), tokens[i].end(), '%', ' ');
+            replace(tokens[i].begin(), tokens[i].end(), '#', '\n');
             argv.push_back(tokens[i]);
         }
         sys_conf->push_back(RubyObjConf(tokens[0], tokens[1], argv));
@@ -224,13 +226,13 @@ libruby_last_error()
 }
 
 void
-libruby_print_config(std::ostream & out)
+libruby_print_config(ostream & out)
 {
     RubySystem::printConfig(out);
 }
 
 void
-libruby_print_stats(std::ostream & out)
+libruby_print_stats(ostream & out)
 {
     RubySystem::printStats(out);
 }

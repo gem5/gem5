@@ -31,6 +31,8 @@
 #ifndef FLIT_BUFFER_H
 #define FLIT_BUFFER_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/flit.hh"
@@ -48,7 +50,7 @@ public:
         flit *getTopFlit();
         flit *peekTopFlit();
         void insert(flit *flt);
-        void print(ostream& out) const;
+        void print(std::ostream& out) const;
 
 /**********Data Members*********/
 private:
@@ -56,17 +58,12 @@ private:
         int size, max_size;
 };
 
-ostream& operator<<(ostream& out, const flitBuffer& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const flitBuffer& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const flitBuffer& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
 #endif

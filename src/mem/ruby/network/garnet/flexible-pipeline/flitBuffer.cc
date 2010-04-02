@@ -92,8 +92,8 @@ void flitBuffer::insert(flit *flt)
         m_buffer.insert(flt);
 }
 
-void flitBuffer::print(ostream& out) const
+void flitBuffer::print(std::ostream& out) const
 {
         out << "[flitBuffer: ";
-        out << m_buffer.size() << "] " << endl;
+        out << m_buffer.size() << "] " << std::endl;
 }

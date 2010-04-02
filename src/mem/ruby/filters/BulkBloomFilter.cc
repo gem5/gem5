@@ -30,6 +30,8 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/BulkBloomFilter.hh"
 
+using namespace std;
+
 BulkBloomFilter::BulkBloomFilter(string str)
 {
     string tail(str);

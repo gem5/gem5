@@ -222,7 +222,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     }
   }
 
-  string getCoherenceRequestTypeStr(CoherenceRequestType type) {
+  std::string getCoherenceRequestTypeStr(CoherenceRequestType type) {
     return CoherenceRequestType_to_string(type);
   }
 
@@ -260,7 +260,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     return State:L2_NP;
   }
 
-  string getStateStr(Address addr) {
+  std::string getStateStr(Address addr) {
     return L2Cache_State_to_string(getState(addr));
   }
 

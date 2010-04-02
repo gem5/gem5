@@ -31,6 +31,8 @@
 #ifndef OUTPUT_UNIT_D_H
 #define OUTPUT_UNIT_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
@@ -48,9 +50,9 @@ public:
         void set_credit_link(CreditLink_d *credit_link);
         void wakeup();
         flitBuffer_d* getOutQueue();
-        void printConfig(ostream& out);
+        void printConfig(std::ostream& out);
         void update_vc(int vc, int in_port, int in_vc);
-        void print(ostream& out) const {};
+        void print(std::ostream& out) const {};
         int get_credit_cnt(int vc) { return m_outvc_state[vc]->get_credit_count(); }
         void decrement_credit(int out_vc);
 

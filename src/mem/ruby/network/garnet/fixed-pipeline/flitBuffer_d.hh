@@ -31,6 +31,8 @@
 #ifndef FLIT_BUFFER_D_H
 #define FLIT_BUFFER_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
@@ -43,7 +45,7 @@ public:
         bool isReady();
         bool isReadyForNext();
         bool isEmpty();
-        void print(ostream& out) const;
+        void print(std::ostream& out) const;
         bool isFull();
         void setMaxSize(int maximum);
 
@@ -65,17 +67,12 @@ private:
         int size, max_size;
 };
 
-ostream& operator<<(ostream& out, const flitBuffer_d& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const flitBuffer_d& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const flitBuffer_d& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
 #endif

@@ -33,6 +33,8 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCACHEENTRY_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCACHEENTRY_HH__
 
+#include <iostream>
+
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -53,11 +55,11 @@ class AbstractCacheEntry : public AbstractEntry
                                    // block, required by CacheMemory
 };
 
-inline ostream&
-operator<<(ostream& out, const AbstractCacheEntry& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const AbstractCacheEntry& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

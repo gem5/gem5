@@ -28,6 +28,8 @@
 
 #include "mem/ruby/system/CacheMemory.hh"
 
+using namespace std;
+
 ostream&
 operator<<(ostream& out, const CacheMemory& obj)
 {

@@ -187,7 +187,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") {
     return State:NP;
   }
 
-  string getStateStr(Address addr) {
+  std::string getStateStr(Address addr) {
     return L1Cache_State_to_string(getState(addr));
   }
 

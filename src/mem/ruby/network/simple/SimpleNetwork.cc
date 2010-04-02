@@ -38,6 +38,8 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 #if 0
 // ***BIG HACK*** - This is actually code that _should_ be in Network.cc
 

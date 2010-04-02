@@ -38,6 +38,8 @@
 #ifndef __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__
 #define __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__
 
+#include <iostream>
+
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
@@ -59,9 +61,9 @@ class Throttle : public Consumer
         const Vector<MessageBuffer*>& out_vec);
     void wakeup();
 
-    void printStats(ostream& out) const;
+    void printStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(ostream& out) const;
+    void printConfig(std::ostream& out) const;
     // The average utilization (a percent) since last clearStats()
     double getUtilization() const;
     int
@@ -80,7 +82,7 @@ class Throttle : public Consumer
 
     void clear();
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     void init(NodeID node, int link_latency, int link_bandwidth_multiplier);
@@ -107,11 +109,11 @@ class Throttle : public Consumer
     double m_links_utilized;
 };
 
-inline ostream&
-operator<<(ostream& out, const Throttle& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Throttle& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

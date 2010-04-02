@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
 #define __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__
 
+#include <iostream>
+#include <string>
 #include <vector>
 
 #include "base/hashmap.hh"
@@ -61,7 +63,7 @@ class CacheMemory : public SimObject
     void init();
 
     // Public Methods
-    void printConfig(ostream& out);
+    void printConfig(std::ostream& out);
 
     // perform a cache access and see if we hit or not.  Return true on a hit.
     bool tryCacheAccess(const Address& address, CacheRequestType type,
@@ -120,11 +122,11 @@ class CacheMemory : public SimObject
     void clearLocked (const Address& addr);
     bool isLocked (const Address& addr, int context);
     // Print cache contents
-    void print(ostream& out) const;
-    void printData(ostream& out) const;
+    void print(std::ostream& out) const;
+    void printData(std::ostream& out) const;
 
     void clearStats() const;
-    void printStats(ostream& out) const;
+    void printStats(std::ostream& out) const;
 
   private:
     // convert a Address to its location in the cache
@@ -141,7 +143,7 @@ class CacheMemory : public SimObject
     CacheMemory& operator=(const CacheMemory& obj);
 
   private:
-    const string m_cache_name;
+    const std::string m_cache_name;
     int m_latency;
 
     // Data Members (m_prefix)
@@ -159,7 +161,7 @@ class CacheMemory : public SimObject
     CacheProfiler* m_profiler_ptr;
 
     int m_cache_size;
-    string m_policy;
+    std::string m_policy;
     int m_cache_num_sets;
     int m_cache_num_set_bits;
     int m_cache_assoc;

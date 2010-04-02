@@ -31,6 +31,8 @@
 #ifndef NETWORK_LINK_H
 #define NETWORK_LINK_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/FlexibleConsumer.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/flitBuffer.hh"
@@ -50,7 +52,7 @@ public:
         flit* peekLink();
         flit* consumeLink();
 
-        void print(ostream& out) const {}
+        void print(std::ostream& out) const {}
 
         bool is_vc_ready(flit *t_flit);
 

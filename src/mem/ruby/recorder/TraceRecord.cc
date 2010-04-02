@@ -32,6 +32,8 @@
 #include "mem/ruby/system/System.hh"
 #include "sim/sim_object.hh"
 
+using namespace std;
+
 TraceRecord::TraceRecord(Sequencer* _sequencer, const Address& data_addr,
     const Address& pc_addr, RubyRequestType type, Time time)
 {

@@ -31,6 +31,8 @@
 #ifndef NET_INTERFACE_H
 #define NET_INTERFACE_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/gems_common/Vector.hh"
@@ -62,8 +64,8 @@ public:
         }
         void request_vc(int in_vc, int in_port, NetDest destination, Time request_time);
 
-        void printConfig(ostream& out) const;
-        void print(ostream& out) const;
+        void printConfig(std::ostream& out) const;
+        void print(std::ostream& out) const;
 
 private:
 /**************Data Members*************/

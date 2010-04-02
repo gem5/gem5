@@ -34,6 +34,8 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/OutVcState.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/VCarbiter.hh"
 
+using namespace std;
+
 Router::Router(int id, GarnetNetwork *network_ptr)
 {
         m_id = id;

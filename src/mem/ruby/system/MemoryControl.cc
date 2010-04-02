@@ -104,8 +104,6 @@
  *
  */
 
-#include <list>
-
 #include "base/cprintf.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
@@ -117,6 +115,8 @@
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/MemoryControl.hh"
 #include "mem/ruby/system/System.hh"
+
+using namespace std;
 
 class Consumer;
 

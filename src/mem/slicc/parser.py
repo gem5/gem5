@@ -394,8 +394,16 @@ class SLICC(Grammar):
         "types : empty"
         p[0] = []
 
-    def p_type(self, p):
-        "type : ident"
+    def p_typestr__multi(self, p):
+        "typestr : typestr DOUBLE_COLON ident"
+        p[0] = '%s::%s' % (p[1], p[3])
+
+    def p_typestr__single(self, p):
+        "typestr : ident"
+        p[0] = p[1]
+
+    def p_type__one(self, p):
+        "type : typestr"
         p[0] = ast.TypeAST(self, p[1])
 
     def p_void(self, p):
@@ -670,7 +678,7 @@ class SLICC(Grammar):
 
     def p_literal__string(self, p):
         "literal : STRING"
-        p[0] = ast.LiteralExprAST(self, p[1], "string")
+        p[0] = ast.LiteralExprAST(self, p[1], "std::string")
 
     def p_literal__number(self, p):
         "literal : NUMBER"

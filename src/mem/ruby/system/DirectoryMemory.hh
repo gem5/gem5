@@ -29,6 +29,9 @@
 #ifndef __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
 #define __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
 
+#include <iostream>
+#include <string>
+
 #include "mem/protocol/Directory_Entry.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -52,15 +55,15 @@ class DirectoryMemory : public SimObject
     bool isSparseImplementation() { return m_use_map; }
     uint64 getSize() { return m_size_bytes; }
 
-    void printConfig(ostream& out) const;
-    static void printGlobalConfig(ostream & out);
+    void printConfig(std::ostream& out) const;
+    static void printGlobalConfig(std::ostream & out);
     bool isPresent(PhysAddress address);
     Directory_Entry& lookup(PhysAddress address);
 
     void invalidateBlock(PhysAddress address);
 
-    void print(ostream& out) const;
-    void printStats(ostream& out) const;
+    void print(std::ostream& out) const;
+    void printStats(std::ostream& out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -68,7 +71,7 @@ class DirectoryMemory : public SimObject
     DirectoryMemory& operator=(const DirectoryMemory& obj);
 
   private:
-    const string m_name;
+    const std::string m_name;
     Directory_Entry **m_entries;
     // int m_size;  // # of memory module blocks this directory is
                     // responsible for
@@ -88,11 +91,11 @@ class DirectoryMemory : public SimObject
     int m_map_levels;
 };
 
-inline ostream&
-operator<<(ostream& out, const DirectoryMemory& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const DirectoryMemory& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

@@ -31,6 +31,8 @@
 #ifndef VC_ARBITER_H
 #define VC_ARBITER_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 
@@ -41,7 +43,7 @@ public:
         VCarbiter(Router *router);
         ~VCarbiter() {}
 
-        void print(ostream& out) const {}
+        void print(std::ostream& out) const {}
         void wakeup();
 
 private:

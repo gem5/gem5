@@ -39,8 +39,6 @@
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"
 
-using namespace std;
-
 class MessageBuffer;
 class AbstractController;
 
@@ -110,7 +108,7 @@ class RubyPort : public MemObject
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
 
   protected:
-    const string m_name;
+    const std::string m_name;
     void ruby_hit_callback(PacketPtr pkt);
     void hit(PacketPtr pkt);
 

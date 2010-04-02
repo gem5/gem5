@@ -30,6 +30,8 @@
 #define __MEM_RUBY_SYSTEM_TIMERTABLE_HH__
 
 #include <cassert>
+#include <iostream>
+#include <string>
 
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
@@ -42,7 +44,7 @@ class TimerTable
   public:
     TimerTable();
 
-    static void printConfig(ostream& out) {}
+    static void printConfig(std::ostream& out) {}
 
     void
     setConsumer(Consumer* consumer_ptr)
@@ -52,7 +54,7 @@ class TimerTable
     }
 
     void
-    setDescription(const string& name)
+    setDescription(const std::string& name)
     {
         m_name = name;
     }
@@ -62,7 +64,7 @@ class TimerTable
     bool isSet(const Address& address) const { return m_map.exist(address); }
     void set(const Address& address, Time relative_latency);
     void unset(const Address& address);
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     void updateNext() const;
@@ -77,17 +79,14 @@ class TimerTable
     mutable Time m_next_time; // Only valid if m_next_valid is true
     mutable Address m_next_address;  // Only valid if m_next_valid is true
     Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
-    string m_name;
+    std::string m_name;
 };
 
-// ******************* Definitions *******************
-
-// Output operator definition
-inline ostream&
-operator<<(ostream& out, const TimerTable& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const TimerTable& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

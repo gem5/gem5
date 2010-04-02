@@ -30,6 +30,8 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/H3BloomFilter.hh"
 
+using namespace std;
+
 static int H3[64][16] = {
     { 33268410,   395488709,  311024285,  456111753,
       181495008,  119997521,  220697869,  433891432,

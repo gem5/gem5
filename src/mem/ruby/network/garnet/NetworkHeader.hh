@@ -34,9 +34,6 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 
-using namespace std;
-using namespace __gnu_cxx;
-
 enum flit_type {HEAD_, BODY_, TAIL_, HEAD_TAIL_, NUM_FLIT_TYPE_};
 enum VC_state_type {IDLE_, VC_AB_, ACTIVE_, NUM_VC_STATE_TYPE_};
 enum flit_stage {I_, VA_, SA_, ST_, LT_, NUM_FLIT_STAGE_};

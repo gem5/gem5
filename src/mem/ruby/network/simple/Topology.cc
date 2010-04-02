@@ -36,6 +36,8 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 const int DEFAULT_BW_MULTIPLIER = 1;  // Just to be consistent with above :)
 
@@ -276,8 +278,6 @@ Topology::clearStats()
 void
 Topology::printConfig(std::ostream& out) const
 {
-    using namespace std;
-
     if (m_print_config == false)
         return;
 

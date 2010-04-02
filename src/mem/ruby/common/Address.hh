@@ -98,9 +98,9 @@ class Address
 
     Index memoryModuleIndex() const;
 
-    void print(ostream& out) const;
-    void output(ostream& out) const;
-    void input(istream& in);
+    void print(std::ostream& out) const;
+    void output(std::ostream& out) const;
+    void input(std::istream& in);
 
     void
     setOffset(int offset)
@@ -128,11 +128,11 @@ operator<(const Address& obj1, const Address& obj2)
     return obj1.getAddress() < obj2.getAddress();
 }
 
-inline ostream&
-operator<<(ostream& out, const Address& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Address& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
@@ -259,7 +259,7 @@ ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
 }
 
 inline void
-Address::print(ostream& out) const
+Address::print(std::ostream& out) const
 {
     using namespace std;
     out << "[" << hex << "0x" << m_address << "," << " line 0x"

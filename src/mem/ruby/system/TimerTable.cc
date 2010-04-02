@@ -96,7 +96,7 @@ TimerTable::unset(const Address& address)
 }
 
 void
-TimerTable::print(ostream& out) const
+TimerTable::print(std::ostream& out) const
 {
 }
 

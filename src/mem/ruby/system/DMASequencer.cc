@@ -164,7 +164,7 @@ DMASequencer::ackCallback()
 }
 
 void
-DMASequencer::printConfig(ostream & out)
+DMASequencer::printConfig(std::ostream & out)
 {
 }
 

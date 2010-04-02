@@ -30,6 +30,8 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
 
+using namespace std;
+
 MultiBitSelBloomFilter::MultiBitSelBloomFilter(string str)
 {
     string tail(str);

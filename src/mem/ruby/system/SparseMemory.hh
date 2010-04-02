@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
 #define __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
 
+#include <iostream>
+
 #include "base/hashmap.hh"
 #include "mem/protocol/Directory_Entry.hh"
 #include "mem/ruby/common/Address.hh"
@@ -55,7 +57,7 @@ class SparseMemory
     SparseMemory(int number_of_bits, int number_of_levels);
     ~SparseMemory();
 
-    void printConfig(ostream& out) { }
+    void printConfig(std::ostream& out) { }
 
     bool exist(const Address& address) const;
     void add(const Address& address);
@@ -64,8 +66,8 @@ class SparseMemory
     Directory_Entry* lookup(const Address& address);
 
     // Print cache contents
-    void print(ostream& out) const;
-    void printStats(ostream& out) const;
+    void print(std::ostream& out) const;
+    void printStats(std::ostream& out) const;
 
   private:
     // Private Methods
@@ -93,11 +95,11 @@ class SparseMemory
     uint64_t* m_removes_per_level;
 };
 
-inline ostream&
-operator<<(ostream& out, const SparseMemEntry& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const SparseMemEntry& obj)
 {
     out << "SparseMemEntry";
-    out << flush;
+    out << std::flush;
     return out;
 }
 

@@ -63,6 +63,8 @@
 #ifndef __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__
 #define __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__
 
+#include <iostream>
+
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/network/Network.hh"
@@ -85,9 +87,9 @@ class SimpleNetwork : public Network
 
     void init();
 
-    void printStats(ostream& out) const;
+    void printStats(std::ostream& out) const;
     void clearStats();
-    void printConfig(ostream& out) const;
+    void printConfig(std::ostream& out) const;
 
     void reset();
 
@@ -112,7 +114,7 @@ class SimpleNetwork : public Network
         const NetDest& routing_table_entry, int link_latency, int link_weight,
         int bw_multiplier, bool isReconfiguration);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
@@ -138,11 +140,11 @@ class SimpleNetwork : public Network
     Vector<Switch*> m_endpoint_switches;
 };
 
-inline ostream&
-operator<<(ostream& out, const SimpleNetwork& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const SimpleNetwork& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

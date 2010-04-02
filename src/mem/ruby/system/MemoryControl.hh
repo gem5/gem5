@@ -29,7 +29,9 @@
 #ifndef __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
 #define __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
 
+#include <iostream>
 #include <list>
+#include <string>
 
 #include "mem/gems_common/Map.hh"
 #include "mem/gems_common/util.hh"
@@ -67,8 +69,8 @@ class MemoryControl :
 
     void setConsumer(Consumer* consumer_ptr);
     Consumer* getConsumer() { return m_consumer_ptr; };
-    void setDescription(const string& name) { m_description = name; };
-    string getDescription() { return m_description; };
+    void setDescription(const std::string& name) { m_description = name; };
+    std::string getDescription() { return m_description; };
 
     // Called from the directory:
     void enqueue(const MsgPtr& message, int latency );
@@ -82,11 +84,11 @@ class MemoryControl :
     //// Called from L3 cache:
     //void writeBack(physical_address_t addr);
 
-    void printConfig(ostream& out);
-    void print(ostream& out) const;
+    void printConfig(std::ostream& out);
+    void print(std::ostream& out) const;
     void setDebug(int debugFlag);
     void clearStats() const;
-    void printStats(ostream& out) const;
+    void printStats(std::ostream& out) const;
 
     //added by SS
     int getBanksPerRank() { return m_banks_per_rank; };
@@ -109,7 +111,7 @@ class MemoryControl :
 
     // data members
     Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
-    string m_description;
+    std::string m_description;
     int m_msg_counter;
     int m_awakened;
 
@@ -136,9 +138,9 @@ class MemoryControl :
     int m_refresh_period_system;
 
     // queues where memory requests live
-    list<MemoryNode> m_response_queue;
-    list<MemoryNode> m_input_queue;
-    list<MemoryNode>* m_bankQueues;
+    std::list<MemoryNode> m_response_queue;
+    std::list<MemoryNode> m_input_queue;
+    std::list<MemoryNode>* m_bankQueues;
 
     // Each entry indicates number of address-bus cycles until bank
     // is reschedulable:

@@ -81,6 +81,7 @@ class Func(Symbol):
         if self.isInternalMachineFunc:
             code('#include "mem/protocol/${{self.machineStr}}_Controller.hh"')
 
+        code('using namespace std;')
         # Generate function header
         void_type = self.symtab.find("void", Type)
         return_type = self.return_type.c_ident

@@ -457,11 +457,11 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  string getStateStr(Address addr) {
+  std::string getStateStr(Address addr) {
     return L2Cache_State_to_string(getState(addr));
   }
 
-  string getCoherenceRequestTypeStr(CoherenceRequestType type) {
+  std::string getCoherenceRequestTypeStr(CoherenceRequestType type) {
     return CoherenceRequestType_to_string(type);
   }
 

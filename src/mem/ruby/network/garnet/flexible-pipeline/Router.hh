@@ -31,6 +31,8 @@
 #ifndef ROUTER_H
 #define ROUTER_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/FlexibleConsumer.hh"
@@ -58,8 +60,8 @@ public:
         void release_vc(int out_port, int vc, Time release_time);
         void vc_arbitrate();
 
-        void printConfig(ostream& out) const;
-        void print(ostream& out) const;
+        void printConfig(std::ostream& out) const;
+        void print(std::ostream& out) const;
 
 private:
 /***************Data Members******************/

@@ -33,6 +33,8 @@
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/recorder/TraceRecord.hh"
 
+using namespace std;
+
 CacheRecorder::CacheRecorder()
 {
     m_records_ptr = new PrioHeap<TraceRecord>;

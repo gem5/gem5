@@ -31,6 +31,8 @@
 #ifndef VIRTUAL_CHANNEL_D_H
 #define VIRTUAL_CHANNEL_D_H
 
+#include <utility>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
 
@@ -105,7 +107,7 @@ public:
 private:
         int m_id;
         flitBuffer_d *m_input_buffer;
-        pair<VC_state_type, Time> m_vc_state; // I/R/V/A/C
+        std::pair<VC_state_type, Time> m_vc_state; // I/R/V/A/C
         int route;
         Time m_enqueue_time;
         int m_output_vc;

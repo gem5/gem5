@@ -30,6 +30,9 @@
 #ifndef __CPU_RUBYTEST_RUBYTESTER_HH__
 #define __CPU_RUBYTEST_RUBYTESTER_HH__
 
+#include <iostream>
+#include <string>
+
 #include "cpu/rubytest/CheckTable.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
@@ -91,11 +94,11 @@ class RubyTester : public MemObject
 
     void incrementCheckCompletions() { m_checks_completed++; }
 
-    void printStats(ostream& out) const {}
+    void printStats(std::ostream& out) const {}
     void clearStats() {}
-    void printConfig(ostream& out) const {}
+    void printConfig(std::ostream& out) const {}
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   protected:
     class CheckStartEvent : public Event
@@ -133,11 +136,11 @@ class RubyTester : public MemObject
     int m_wakeup_frequency;
 };
 
-inline ostream&
-operator<<(ostream& out, const RubyTester& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const RubyTester& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

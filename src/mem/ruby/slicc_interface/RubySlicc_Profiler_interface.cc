@@ -34,6 +34,8 @@
 #include "mem/ruby/slicc_interface/RubySlicc_Profiler_interface.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 void
 profile_request(int cache_state, Directory_State directory_state,
                 GenericRequestType request_type)

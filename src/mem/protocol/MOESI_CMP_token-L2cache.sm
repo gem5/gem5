@@ -183,7 +183,7 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  string getStateStr(Address addr) {
+  std::string getStateStr(Address addr) {
     return L2Cache_State_to_string(getState(addr));
   }
 

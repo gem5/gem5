@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_COMMON_SUBBLOCK_HH__
 #define __MEM_RUBY_COMMON_SUBBLOCK_HH__
 
+#include <iostream>
+
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
@@ -58,7 +60,7 @@ class SubBlock
     void mergeTo(DataBlock& data) const { internalMergeTo(data); }
     void mergeFrom(const DataBlock& data) { internalMergeFrom(data); }
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     void internalMergeTo(DataBlock& data) const;
@@ -69,11 +71,11 @@ class SubBlock
     Vector<uint8_t> m_data;
 };
 
-inline ostream&
-operator<<(ostream& out, const SubBlock& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const SubBlock& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

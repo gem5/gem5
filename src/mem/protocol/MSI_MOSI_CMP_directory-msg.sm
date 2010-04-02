@@ -69,8 +69,8 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   DataBlock DataBlk,            desc="Data for the cache line (if PUTX)";
   int NumPendingExtAcks,        desc="Number of acks to wait for"; // Needed for forwarded responses only
   MessageSizeType MessageSize,  desc="size category of the message";
-  string L1CacheStateStr,       desc="describes L1 cache block state";
-  string L2CacheStateStr,       desc="describes L2 cache block state";
+  std::string L1CacheStateStr,  desc="describes L1 cache block state";
+  std::string L2CacheStateStr,  desc="describes L2 cache block state";
   PrefetchBit Prefetch,         desc="Is this a prefetch request";
 }
 

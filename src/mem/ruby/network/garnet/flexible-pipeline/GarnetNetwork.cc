@@ -39,6 +39,8 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/common/NetDest.hh"
 
+using namespace std;
+
 GarnetNetwork::GarnetNetwork(const Params *p)
   : BaseGarnetNetwork(p)
 {

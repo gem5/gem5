@@ -29,6 +29,9 @@
 #ifndef __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
 
+#include <iostream>
+#include <string>
+
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -37,7 +40,7 @@
 class BulkBloomFilter : public AbstractBloomFilter
 {
   public:
-    BulkBloomFilter(string config);
+    BulkBloomFilter(std::string config);
     ~BulkBloomFilter();
 
     void clear();
@@ -54,7 +57,7 @@ class BulkBloomFilter : public AbstractBloomFilter
     int readBit(const int index);
     void writeBit(const int index, const int value);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     int get_index(const Address& addr);

@@ -31,6 +31,8 @@
 #ifndef NET_INTERFACE_D_H
 #define NET_INTERFACE_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/gems_common/Vector.hh"
@@ -55,8 +57,8 @@ public:
 
         void wakeup();
         void addNode(Vector<MessageBuffer *> &inNode, Vector<MessageBuffer *> &outNode);
-        void printConfig(ostream& out) const;
-        void print(ostream& out) const;
+        void printConfig(std::ostream& out) const;
+        void print(std::ostream& out) const;
         int get_vnet(int vc);
 
 private:

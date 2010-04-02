@@ -113,8 +113,8 @@ class RubySystem : public SimObject
     }
 
     void recordCacheContents(CacheRecorder& tr) const;
-    static void printConfig(ostream& out);
-    static void printStats(ostream& out);
+    static void printConfig(std::ostream& out);
+    static void printStats(std::ostream& out);
     void clearStats() const;
 
     uint64 getInstructionCount(int thread) { return 1; }
@@ -124,7 +124,7 @@ class RubySystem : public SimObject
         return g_eventQueue_ptr->getTime();
     }
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     // Private copy constructor and assignment operator
@@ -133,7 +133,7 @@ class RubySystem : public SimObject
 
     void init();
 
-    static void printSystemConfig(ostream& out);
+    static void printSystemConfig(std::ostream& out);
 
   private:
     // configuration parameters
@@ -153,23 +153,23 @@ class RubySystem : public SimObject
     static MemoryVector* m_mem_vec_ptr;
 };
 
-inline ostream&
-operator<<(ostream& out, const RubySystem& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const RubySystem& obj)
 {
     //obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
 class RubyExitCallback : public Callback
 {
   private:
-    string stats_filename;
+    std::string stats_filename;
 
   public:
     virtual ~RubyExitCallback() {}
 
-    RubyExitCallback(const string& _stats_filename)
+    RubyExitCallback(const std::string& _stats_filename)
     {
         stats_filename = _stats_filename;
     }

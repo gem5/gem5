@@ -37,6 +37,8 @@
 #include "mem/ruby/filters/MultiGrainBloomFilter.hh"
 #include "mem/ruby/filters/NonCountingBloomFilter.hh"
 
+using namespace std;
+
 GenericBloomFilter::GenericBloomFilter(string config)
 {
     string tail(config);

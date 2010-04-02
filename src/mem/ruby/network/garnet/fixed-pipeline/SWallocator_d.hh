@@ -31,6 +31,8 @@
 #ifndef SW_ALLOCATOR_D_H
 #define SW_ALLOCATOR_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 
@@ -46,7 +48,7 @@ public:
         void clear_request_vector();
         void check_for_wakeup();
         int get_vnet (int invc);
-        void print(ostream& out) const {};
+        void print(std::ostream& out) const {};
         void arbitrate_inports();
         void arbitrate_outports();
         bool is_candidate_inport(int inport, int invc);

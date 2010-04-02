@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_NETWORKMESSAGE_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_NETWORKMESSAGE_HH__
 
+#include <iostream>
+
 #include "mem/gems_common/RefCnt.hh"
 #include "mem/gems_common/RefCountable.hh"
 #include "mem/protocol/MessageSizeType.hh"
@@ -76,18 +78,18 @@ class NetworkMessage : public Message
         return m_internal_dest;
     }
 
-    virtual void print(ostream& out) const = 0;
+    virtual void print(std::ostream& out) const = 0;
 
   private:
     NetDest m_internal_dest;
     bool m_internal_dest_valid;
 };
 
-inline ostream&
-operator<<(ostream& out, const NetworkMessage& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const NetworkMessage& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

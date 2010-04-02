@@ -61,7 +61,7 @@ RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
 }
 
 void
-RubyEventQueue::print(ostream& out) const
+RubyEventQueue::print(std::ostream& out) const
 {
     out << "[Event Queue:]";
 }

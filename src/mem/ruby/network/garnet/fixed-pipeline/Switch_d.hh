@@ -31,6 +31,8 @@
 #ifndef SWITCH_D_H
 #define SWITCH_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
@@ -45,7 +47,7 @@ public:
         void wakeup();
         void init();
         void check_for_wakeup();
-        void print(ostream& out) const {};
+        void print(std::ostream& out) const {};
         inline void update_sw_winner(int inport, flit_d *t_flit)
         {
                 m_switch_buffer[inport]->insert(t_flit);

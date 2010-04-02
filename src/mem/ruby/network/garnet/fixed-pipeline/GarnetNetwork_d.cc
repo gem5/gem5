@@ -38,6 +38,8 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
 #include "mem/ruby/common/NetDest.hh"
 
+using namespace std;
+
 GarnetNetwork_d::GarnetNetwork_d(const Params *p)
   : BaseGarnetNetwork(p)
 {

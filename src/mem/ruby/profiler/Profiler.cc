@@ -59,7 +59,9 @@
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/system/System.hh"
 
-extern std::ostream* debug_cout_ptr;
+using namespace std;
+
+extern ostream* debug_cout_ptr;
 
 static double process_memory_total();
 static double process_memory_resident();

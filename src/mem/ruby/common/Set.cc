@@ -557,7 +557,7 @@ Set& Set::operator=(const Set& obj) {
   return *this;
 }
 
-void Set::print(ostream& out) const
+void Set::print(std::ostream& out) const
 {
   if(m_p_nArray==NULL) {
     out << "[Set {Empty}]";

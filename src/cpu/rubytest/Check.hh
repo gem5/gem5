@@ -30,6 +30,8 @@
 #ifndef __CPU_RUBYTEST_CHECK_HH__
 #define __CPU_RUBYTEST_CHECK_HH__
 
+#include <iostream>
+
 #include "cpu/rubytest/RubyTester.hh"
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/TesterStatus.hh"
@@ -53,7 +55,7 @@ class Check
     const Address& getAddress() { return m_address; }
     void changeAddress(const Address& address);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     void initiatePrefetch();
@@ -76,11 +78,11 @@ class Check
     RubyTester* m_tester_ptr;
 };
 
-inline ostream&
-operator<<(ostream& out, const Check& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Check& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

@@ -34,6 +34,8 @@
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 const int HIGH_RANGE = 256;
 const int ADJUST_INTERVAL = 50000;
 const int MESSAGE_SIZE_MULTIPLIER = 1000;
@@ -43,7 +45,7 @@ const int PRIORITY_SWITCH_LIMIT = 128;
 
 static int network_message_to_size(NetworkMessage* net_msg_ptr);
 
-extern std::ostream *debug_cout_ptr;
+extern ostream *debug_cout_ptr;
 
 Throttle::Throttle(int sID, NodeID node, int link_latency,
     int link_bandwidth_multiplier)

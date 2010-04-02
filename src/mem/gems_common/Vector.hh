@@ -38,6 +38,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <vector>
@@ -184,7 +185,7 @@ template <class TYPE>
 inline
 void Vector<TYPE>::sortVector()
 {
-  sort(&m_vec[0], &m_vec[m_size]);
+  std::sort(&m_vec[0], &m_vec[m_size]);
 }
 
 template <class TYPE>

@@ -31,6 +31,9 @@
 #ifndef VC_ALLOCATOR_D_H
 #define VC_ALLOCATOR_D_H
 
+#include <iostream>
+#include <utility>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 
@@ -46,7 +49,7 @@ public:
         void check_for_wakeup();
         void clear_request_vector();
         int get_vnet(int invc);
-        void print(ostream& out) const {};
+        void print(std::ostream& out) const {};
         void arbitrate_invcs();
         void arbitrate_outvcs();
         bool is_invc_candidate(int inport_iter, int invc_iter);
@@ -69,7 +72,7 @@ private:
 
         Router_d *m_router;
         Vector<Vector <int > > m_round_robin_invc; // First stage of arbitration where all vcs select an output vc to content for
-        Vector<Vector <pair<int, int> > > m_round_robin_outvc; // Arbiter for every output vc
+        Vector<Vector <std::pair<int, int> > > m_round_robin_outvc; // Arbiter for every output vc
         Vector<Vector<Vector<Vector<bool > > > > m_outvc_req; // [outport][outvc][inpotr][invc]. set true in the first phase of allocation
         Vector<Vector<bool > > m_outvc_is_req;
 

@@ -33,6 +33,8 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
+
 CacheProfiler::CacheProfiler(const string& description)
 {
     m_description = description;

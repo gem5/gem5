@@ -385,12 +385,7 @@ set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}})
         code('};')
 
         code('''
-// Output operator declaration
-std::ostream&
-operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
-
-// Output operator definition
-extern inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 {
     obj.print(out);

@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_SYSTEM_SEQUENCER_HH__
 #define __MEM_RUBY_SYSTEM_SEQUENCER_HH__
 
+#include <iostream>
+
 #include "mem/gems_common/Map.hh"
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -68,9 +70,9 @@ class Sequencer : public RubyPort, public Consumer
     // Public Methods
     void wakeup(); // Used only for deadlock detection
 
-    void printConfig(ostream& out) const;
+    void printConfig(std::ostream& out) const;
 
-    void printProgress(ostream& out) const;
+    void printProgress(std::ostream& out) const;
 
     void writeCallback(const Address& address, DataBlock& data);
     void readCallback(const Address& address, DataBlock& data);
@@ -79,8 +81,8 @@ class Sequencer : public RubyPort, public Consumer
     RequestStatus getRequestStatus(const RubyRequest& request);
     bool empty() const;
 
-    void print(ostream& out) const;
-    void printStats(ostream & out) const;
+    void print(std::ostream& out) const;
+    void printStats(std::ostream& out) const;
     void checkCoherence(const Address& address);
 
     void removeRequest(SequencerRequest* request);
@@ -133,11 +135,11 @@ class Sequencer : public RubyPort, public Consumer
     SequencerWakeupEvent deadlockCheckEvent;
 };
 
-inline ostream&
-operator<<(ostream& out, const Sequencer& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Sequencer& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

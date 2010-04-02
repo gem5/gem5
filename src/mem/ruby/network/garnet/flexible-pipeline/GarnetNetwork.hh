@@ -31,6 +31,8 @@
 #ifndef GARNET_NETWORK_H
 #define GARNET_NETWORK_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 #include "mem/gems_common/Vector.hh"
@@ -58,9 +60,9 @@ public:
         MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
 
         void clearStats();
-        void printStats(ostream& out) const;
-        void printConfig(ostream& out) const;
-        void print(ostream& out) const;
+        void printStats(std::ostream& out) const;
+        void printConfig(std::ostream& out) const;
+        void print(std::ostream& out) const;
 
         bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
         bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
@@ -101,17 +103,12 @@ private:
         Time m_ruby_start;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const GarnetNetwork& obj);
-
-// ******************* Definitions *******************
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const GarnetNetwork& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const GarnetNetwork& obj)
 {
-        obj.print(out);
-        out << flush;
-        return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
 #endif //NETWORK_H

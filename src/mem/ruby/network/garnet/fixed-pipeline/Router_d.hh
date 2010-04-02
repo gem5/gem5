@@ -31,6 +31,8 @@
 #ifndef ROUTER_D_H
 #define ROUTER_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
@@ -60,7 +62,7 @@ public:
         int get_vc_per_vnet() {return m_vc_per_vnet; }
         int get_num_inports() { return m_input_unit.size(); }
         int get_num_outports() { return m_output_unit.size(); }
-        void printConfig(ostream& out);
+        void printConfig(std::ostream& out);
         int get_id() { return m_id; }
         GarnetNetwork_d* get_net_ptr() { return m_network_ptr; }
 

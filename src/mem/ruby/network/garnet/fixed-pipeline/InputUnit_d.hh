@@ -31,6 +31,8 @@
 #ifndef INPUT_UNIT_D_H
 #define INPUT_UNIT_D_H
 
+#include <iostream>
+
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -47,9 +49,9 @@ public:
         ~InputUnit_d();
 
         void wakeup();
-        void printConfig(ostream& out);
+        void printConfig(std::ostream& out);
         flitBuffer_d* getCreditQueue() { return creditQueue; }
-        void print(ostream& out) const {};
+        void print(std::ostream& out) const {};
 
         inline int get_inlink_id()
         {

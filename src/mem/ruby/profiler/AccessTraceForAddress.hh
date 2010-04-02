@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_PROFILER_ACCESSTRACEFORADDRESS_HH__
 #define __MEM_RUBY_PROFILER_ACCESSTRACEFORADDRESS_HH__
 
+#include <iostream>
+
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/ruby/common/Address.hh"
@@ -53,7 +55,7 @@ class AccessTraceForAddress
     const Address& getAddress() const { return m_addr; }
     void addSample(int value);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     Address m_addr;
@@ -74,11 +76,11 @@ node_less_then_eq(const AccessTraceForAddress* n1,
     return n1->getTotal() > n2->getTotal();
 }
 
-inline ostream&
-operator<<(ostream& out, const AccessTraceForAddress& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const AccessTraceForAddress& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

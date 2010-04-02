@@ -32,7 +32,7 @@ from slicc.symbols.Var import Var
 import slicc.generate.html as html
 
 python_class_map = {"int": "Int",
-                    "string": "String",
+                    "std::string": "String",
                     "bool": "Bool",
                     "CacheMemory": "RubyCache",
                     "Sequencer": "RubySequencer",
@@ -271,12 +271,12 @@ std::string m_name;
 int m_transitions_per_cycle;
 int m_buffer_size;
 int m_recycle_latency;
-map<std::string, std::string> m_cfg;
+std::map<std::string, std::string> m_cfg;
 NodeID m_version;
 Network* m_net_ptr;
 MachineID m_machineID;
 bool m_is_blocking;
-map< Address, MessageBuffer* > m_block_map;
+std::map<Address, MessageBuffer*> m_block_map;
 ${ident}_Profiler s_profiler;
 static int m_num_controllers;
 
@@ -713,6 +713,8 @@ $c_ident::${{action.ident}}(const Address& addr)
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/system/System.hh"
+
+using namespace std;
 
 void
 ${ident}_Controller::wakeup()

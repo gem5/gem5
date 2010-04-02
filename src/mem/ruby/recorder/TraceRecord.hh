@@ -34,6 +34,8 @@
 #ifndef __MEM_RUBY_RECORDER_TRACERECORD_HH__
 #define __MEM_RUBY_RECORDER_TRACERECORD_HH__
 
+#include <iostream>
+
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/libruby_internal.hh"
@@ -66,9 +68,9 @@ class TraceRecord
 
     void issueRequest() const;
 
-    void print(ostream& out) const;
-    void output(ostream& out) const;
-    bool input(istream& in);
+    void print(std::ostream& out) const;
+    void output(std::ostream& out) const;
+    bool input(std::istream& in);
 
   private:
     Sequencer* m_sequencer_ptr;
@@ -85,7 +87,7 @@ node_less_then_eq(const TraceRecord& n1, const TraceRecord& n2)
 }
 
 inline std::ostream&
-operator<<(ostream& out, const TraceRecord& obj)
+operator<<(std::ostream& out, const TraceRecord& obj)
 {
     obj.print(out);
     out << std::flush;

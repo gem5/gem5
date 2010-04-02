@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_ABSTRACTENTRY_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_ABSTRACTENTRY_HH__
 
+#include <iostream>
+
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/protocol/AccessPermission.hh"
@@ -45,14 +47,14 @@ class AbstractEntry
     // is absolutely necessary and should all be virtual function.
     virtual DataBlock& getDataBlk() = 0;
 
-    virtual void print(ostream& out) const = 0;
+    virtual void print(std::ostream& out) const = 0;
 };
 
-inline ostream&
-operator<<(ostream& out, const AbstractEntry& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const AbstractEntry& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

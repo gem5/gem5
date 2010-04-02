@@ -34,6 +34,8 @@
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
 
+using namespace std;
+
 Switch::Switch(SwitchID sid, SimpleNetwork* network_ptr)
 {
     m_perfect_switch_ptr = new PerfectSwitch(sid, network_ptr);
@@ -129,8 +131,6 @@ Switch::getThrottles() const
 void
 Switch::printStats(std::ostream& out) const
 {
-    using namespace std;
-
     ccprintf(out, "switch_%d_inlinks: %d\n", m_switch_id,
         m_perfect_switch_ptr->getInLinks());
     ccprintf(out, "switch_%d_outlinks: %d\n", m_switch_id,

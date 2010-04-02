@@ -28,6 +28,8 @@
 
 #include "mem/ruby/system/SparseMemory.hh"
 
+using namespace std;
+
 SparseMemory::SparseMemory(int number_of_bits, int number_of_levels)
 {
     int even_level_bits;

@@ -34,6 +34,7 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
 
+using namespace std;
 typedef AddressProfiler::AddressMap AddressMap;
 
 // Helper functions

@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_COMMON_DRIVER_HH__
 #define __MEM_RUBY_COMMON_DRIVER_HH__
 
+#include <iostream>
+
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
@@ -51,10 +53,10 @@ class Driver
                                      int conflict_thread) const;
     virtual void printDebug(); //called by Sequencer
 
-    virtual void printStats(ostream& out) const = 0;
+    virtual void printStats(std::ostream& out) const = 0;
     virtual void clearStats() = 0;
 
-    virtual void printConfig(ostream& out) const = 0;
+    virtual void printConfig(std::ostream& out) const = 0;
 
     virtual integer_t readPhysicalMemory(int procID, physical_address_t addr,
                                          int len);

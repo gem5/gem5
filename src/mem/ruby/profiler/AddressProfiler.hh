@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_PROFILER_ADDRESSPROFILER_HH__
 #define __MEM_RUBY_PROFILER_ADDRESSPROFILER_HH__
 
+#include <iostream>
+
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/ruby/common/Address.hh"
@@ -49,7 +51,7 @@ class AddressProfiler
     AddressProfiler(int num_of_sequencers);
     ~AddressProfiler();
 
-    void printStats(ostream& out) const;
+    void printStats(std::ostream& out) const;
     void clearStats();
 
     void addTraceSample(Address data_addr, Address pc_addr,
@@ -61,7 +63,7 @@ class AddressProfiler
     void profileGetS(const Address& datablock, const Address& PC,
                      const Set& owner, const Set& sharers, NodeID requestor);
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
     //added by SS
     void setHotLines(bool hot_lines);
@@ -91,11 +93,11 @@ class AddressProfiler
     int m_num_of_sequencers;
 };
 
-inline ostream&
-operator<<(ostream& out, const AddressProfiler& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const AddressProfiler& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

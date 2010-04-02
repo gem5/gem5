@@ -100,11 +100,11 @@ machine(Directory, "MOSI Directory Optimized") {
     return State:NP;
   }
 
-  string getDirStateStr(Address addr) {
+  std::string getDirStateStr(Address addr) {
     return Directory_State_to_string(getState(addr));
   }
 
-  string getRequestTypeStr(CoherenceRequestType type) {
+  std::string getRequestTypeStr(CoherenceRequestType type) {
     return CoherenceRequestType_to_string(type);
   }
 

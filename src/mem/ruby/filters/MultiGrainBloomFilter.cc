@@ -30,6 +30,8 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/MultiGrainBloomFilter.hh"
 
+using namespace std;
+
 MultiGrainBloomFilter::MultiGrainBloomFilter(string str)
 {
     string tail(str);

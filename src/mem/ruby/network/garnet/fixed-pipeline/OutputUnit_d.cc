@@ -31,6 +31,8 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 
+using namespace std;
+
 OutputUnit_d::OutputUnit_d(int id, Router_d *router)
 {
         m_id = id;

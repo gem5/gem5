@@ -33,6 +33,8 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_PROFILER_INTERFACE_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_PROFILER_INTERFACE_HH__
 
+#include <string>
+
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/Directory_State.hh"
 #include "mem/protocol/GenericRequestType.hh"
@@ -50,10 +52,10 @@ void profile_outstanding_persistent_request(int outstanding);
 void profile_outstanding_request(int outstanding);
 void profile_sharing(const Address& addr, AccessType type, NodeID requestor,
                      const Set& sharers, const Set& owner);
-void profile_request(const string& L1CacheStateStr,
-                     const string& L2CacheStateStr,
-                     const string& directoryStateStr,
-                     const string& requestTypeStr);
+void profile_request(const std::string& L1CacheStateStr,
+                     const std::string& L2CacheStateStr,
+                     const std::string& directoryStateStr,
+                     const std::string& requestTypeStr);
 void profile_miss(const CacheMsg& msg, NodeID id);
 void profile_L1Cache_miss(const CacheMsg& msg, NodeID id);
 void profile_L2Cache_miss(GenericRequestType requestType, AccessModeType type,

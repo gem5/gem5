@@ -126,6 +126,6 @@ CheckTable::getCheck(const Address& address)
 }
 
 void
-CheckTable::print(ostream& out) const
+CheckTable::print(std::ostream& out) const
 {
 }

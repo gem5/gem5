@@ -183,9 +183,9 @@ RubyTester::checkForDeadlock()
 }
 
 void
-RubyTester::print(ostream& out) const
+RubyTester::print(std::ostream& out) const
 {
-    out << "[RubyTester]" << endl;
+    out << "[RubyTester]" << std::endl;
 }
 
 RubyTester *

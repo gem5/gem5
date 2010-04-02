@@ -29,6 +29,8 @@
 #ifndef __MEM_RUBY_PROFILER_STORETRACE_HH__
 #define __MEM_RUBY_PROFILER_STORETRACE_HH__
 
+#include <iostream>
+
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
@@ -44,10 +46,10 @@ class StoreTrace
     void downgrade(NodeID node);
     int getTotal() const { return m_total_samples; }
     static void initSummary();
-    static void printSummary(ostream& out);
+    static void printSummary(std::ostream& out);
     static void clearSummary();
 
-    void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   private:
     static bool s_init;
@@ -77,11 +79,11 @@ node_less_then_eq(const StoreTrace* n1, const StoreTrace* n2)
     return n1->getTotal() > n2->getTotal();
 }
 
-inline ostream&
-operator<<(ostream& out, const StoreTrace& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const StoreTrace& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 

@@ -61,7 +61,7 @@ SubBlock::internalMergeTo(DataBlock& data) const
 }
 
 void
-SubBlock::print(ostream& out) const
+SubBlock::print(std::ostream& out) const
 {
     out << "[" << m_address << ", " << getSize() << ", " << m_data << "]";
 }
