@@ -68,17 +68,22 @@ class Event : public Serializable, public FastAlloc
     typedef short FlagsType;
     typedef ::Flags<FlagsType> Flags;
 
-    static const FlagsType PublicRead    = 0x003f;
-    static const FlagsType PublicWrite   = 0x001d;
-    static const FlagsType Squashed      = 0x0001;
-    static const FlagsType Scheduled     = 0x0002;
-    static const FlagsType AutoDelete    = 0x0004;
-    static const FlagsType AutoSerialize = 0x0008;
-    static const FlagsType IsExitEvent   = 0x0010;
-    static const FlagsType IsMainQueue   = 0x0020;
-#ifdef EVENTQ_DEBUG
-    static const FlagsType Initialized   = 0xf000;
-#endif
+    static const FlagsType PublicRead    = 0x003f; // public readable flags
+    static const FlagsType PublicWrite   = 0x001d; // public writable flags
+    static const FlagsType Squashed      = 0x0001; // has been squashed
+    static const FlagsType Scheduled     = 0x0002; // has been scheduled
+    static const FlagsType AutoDelete    = 0x0004; // delete after dispatch
+    static const FlagsType AutoSerialize = 0x0008; // must be serialized
+    static const FlagsType IsExitEvent   = 0x0010; // special exit event
+    static const FlagsType IsMainQueue   = 0x0020; // on main event queue
+    static const FlagsType Initialized   = 0x7a40; // somewhat random bits
+    static const FlagsType InitMask      = 0xffc0; // mask for init bits
+
+    bool
+    initialized() const
+    {
+        return this && (flags & InitMask) == Initialized;
+    }
 
   public:
     typedef int8_t Priority;
@@ -146,7 +151,7 @@ class Event : public Serializable, public FastAlloc
     Flags
     getFlags(Flags _flags) const
     {
-        assert(flags.noneSet(~PublicRead));
+        assert(_flags.noneSet(~PublicRead));
         return flags.isSet(_flags);
     }
 
@@ -242,14 +247,13 @@ class Event : public Serializable, public FastAlloc
      * @param queue that the event gets scheduled on
      */
     Event(Priority p = Default_Pri)
-        : nextBin(NULL), nextInBin(NULL), _priority(p)
+        : nextBin(NULL), nextInBin(NULL), _priority(p), flags(Initialized)
     {
 #ifndef NDEBUG
         instance = ++instanceCounter;
         queue = NULL;
 #endif
 #ifdef EVENTQ_DEBUG
-        flags.set(Initialized);
         whenCreated = curTick;
         whenScheduled = 0;
 #endif
@@ -478,9 +482,7 @@ EventQueue::schedule(Event *event, Tick when)
 {
     assert((UTick)when >= (UTick)curTick);
     assert(!event->scheduled());
-#ifdef EVENTQ_DEBUG
-    assert((event->flags & Event::Initialized) == Event::Initialized);
-#endif
+    assert(event->initialized());
 
     event->setWhen(when, this);
     insert(event);
@@ -498,9 +500,7 @@ inline void
 EventQueue::deschedule(Event *event)
 {
     assert(event->scheduled());
-#ifdef EVENTQ_DEBUG
-    assert((event->flags & Event::Initialized) == Event::Initialized);
-#endif
+    assert(event->initialized());
 
     remove(event);
 
@@ -519,9 +519,7 @@ EventQueue::reschedule(Event *event, Tick when, bool always)
 {
     assert(when >= curTick);
     assert(always || event->scheduled());
-#ifdef EVENTQ_DEBUG
-    assert((event->flags & Event::Initialized) == Event::Initialized);
-#endif
+    assert(event->initialized());
 
     if (event->scheduled())
         remove(event);
