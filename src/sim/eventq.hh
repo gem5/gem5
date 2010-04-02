@@ -80,6 +80,9 @@ class Event : public Serializable, public FastAlloc
     static const FlagsType Initialized   = 0xf000;
 #endif
 
+  public:
+    typedef int8_t Priority;
+
   private:
     // The event queue is now a linked list of linked lists.  The
     // 'nextBin' pointer is to find the bin, where a bin is defined as
@@ -97,7 +100,7 @@ class Event : public Serializable, public FastAlloc
     static Event *removeItem(Event *event, Event *last);
 
     Tick _when;         //!< timestamp when event should be processed
-    short _priority;    //!< event priority
+    Priority _priority; //!< event priority
     Flags flags;
 
 #ifndef NDEBUG
@@ -183,57 +186,56 @@ class Event : public Serializable, public FastAlloc
     /// at the same cycle.  Most events are scheduled at the default
     /// priority; these values are used to control events that need to
     /// be ordered within a cycle.
-    enum Priority {
-        /// Minimum priority
-        Minimum_Pri             = SHRT_MIN,
 
-        /// If we enable tracing on a particular cycle, do that as the
-        /// very first thing so we don't miss any of the events on
-        /// that cycle (even if we enter the debugger).
-        Trace_Enable_Pri        = -101,
+    /// Minimum priority
+    static const Priority Minimum_Pri =          SCHAR_MIN;
 
-        /// Breakpoints should happen before anything else (except
-        /// enabling trace output), so we don't miss any action when
-        /// debugging.
-        Debug_Break_Pri         = -100,
+    /// If we enable tracing on a particular cycle, do that as the
+    /// very first thing so we don't miss any of the events on
+    /// that cycle (even if we enter the debugger).
+    static const Priority Trace_Enable_Pri =          -101;
 
-        /// CPU switches schedule the new CPU's tick event for the
-        /// same cycle (after unscheduling the old CPU's tick event).
-        /// The switch needs to come before any tick events to make
-        /// sure we don't tick both CPUs in the same cycle.
-        CPU_Switch_Pri          =   -31,
+    /// Breakpoints should happen before anything else (except
+    /// enabling trace output), so we don't miss any action when
+    /// debugging.
+    static const Priority Debug_Break_Pri =           -100;
 
-        /// For some reason "delayed" inter-cluster writebacks are
-        /// scheduled before regular writebacks (which have default
-        /// priority).  Steve?
-        Delayed_Writeback_Pri   =   -1,
+    /// CPU switches schedule the new CPU's tick event for the
+    /// same cycle (after unscheduling the old CPU's tick event).
+    /// The switch needs to come before any tick events to make
+    /// sure we don't tick both CPUs in the same cycle.
+    static const Priority CPU_Switch_Pri =             -31;
 
-        /// Default is zero for historical reasons.
-        Default_Pri             =    0,
+    /// For some reason "delayed" inter-cluster writebacks are
+    /// scheduled before regular writebacks (which have default
+    /// priority).  Steve?
+    static const Priority Delayed_Writeback_Pri =       -1;
 
-        /// Serailization needs to occur before tick events also, so
-        /// that a serialize/unserialize is identical to an on-line
-        /// CPU switch.
-        Serialize_Pri           =   32,
+    /// Default is zero for historical reasons.
+    static const Priority Default_Pri =                  0;
 
-        /// CPU ticks must come after other associated CPU events
-        /// (such as writebacks).
-        CPU_Tick_Pri            =   50,
+    /// Serailization needs to occur before tick events also, so
+    /// that a serialize/unserialize is identical to an on-line
+    /// CPU switch.
+    static const Priority Serialize_Pri =               32;
 
-        /// Statistics events (dump, reset, etc.) come after
-        /// everything else, but before exit.
-        Stat_Event_Pri          =   90,
+    /// CPU ticks must come after other associated CPU events
+    /// (such as writebacks).
+    static const Priority CPU_Tick_Pri =                50;
 
-        /// Progress events come at the end.
-        Progress_Event_Pri      =   95,
+    /// Statistics events (dump, reset, etc.) come after
+    /// everything else, but before exit.
+    static const Priority Stat_Event_Pri =              90;
 
-        /// If we want to exit on this cycle, it's the very last thing
-        /// we do.
-        Sim_Exit_Pri            =  100,
+    /// Progress events come at the end.
+    static const Priority Progress_Event_Pri =          95;
 
-        /// Maximum priority
-        Maximum_Pri             = SHRT_MAX
-    };
+    /// If we want to exit on this cycle, it's the very last thing
+    /// we do.
+    static const Priority Sim_Exit_Pri =               100;
+
+    /// Maximum priority
+    static const Priority Maximum_Pri =          SCHAR_MAX;
 
     /*
      * Event constructor
@@ -293,7 +295,7 @@ class Event : public Serializable, public FastAlloc
     Tick when() const { return _when; }
 
     /// Get the event priority
-    int priority() const { return _priority; }
+    Priority priority() const { return _priority; }
 
 #ifndef SWIG
     struct priority_compare
