@@ -46,9 +46,9 @@
 #include <sys/resource.h>
 #include <sys/times.h>
 
+#include "base/str.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/gems_common/PrioHeap.hh"
-#include "mem/gems_common/util.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
@@ -360,9 +360,12 @@ Profiler::printStats(ostream& out, bool short_stats)
             int temp_int =
                 m_requestProfileMap_ptr->lookup(requestProfileKeys[i]);
             double percent = (100.0 * double(temp_int)) / double(m_requests);
-            while (requestProfileKeys[i] != "") {
-                out << setw(10) << string_split(requestProfileKeys[i], ':');
-            }
+            vector<string> items;
+            tokenize(items, requestProfileKeys[i], ':');
+            vector<string>::iterator i = items.begin();
+            vector<string>::iterator end = items.end();
+            for (; i != end; ++i)
+                out << setw(10) << *i;
             out << setw(11) << temp_int;
             out << setw(14) << percent << endl;
         }

@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
+#include "base/str.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/H3BloomFilter.hh"
@@ -378,29 +380,26 @@ H3BloomFilter::H3BloomFilter(string str)
     adds_list[4] = 7777;
     adds_list[5] = 65931;
 
-    string tail(str);
-    string head = string_split(tail, '_');
+    vector<string> items;
+    tokenize(items, str, '_');
+    assert(items.size() == 3);
 
     // head contains filter size, tail contains bit offset from block number
-    m_filter_size = atoi(head.c_str());
+    m_filter_size = atoi(items[0].c_str());
+    m_num_hashes = atoi(items[1].c_str());
 
-    head = string_split(tail, '_');
-    m_num_hashes = atoi(head.c_str());
-
-    if(tail == "Regular") {
+    if (items[2] == "Regular") {
         isParallel = false;
-    } else if (tail == "Parallel") {
+    } else if (items[2] == "Parallel") {
         isParallel = true;
     } else {
-        cout << "ERROR: Incorrect config string for MultiHash Bloom! :"
-             << str << endl;
-        assert(0);
+        panic("ERROR: Incorrect config string for MultiHash Bloom! :%s", str);
     }
 
-    m_filter_size_bits = log_int(m_filter_size);
+    m_filter_size_bits = floorLog2(m_filter_size);
 
-    m_par_filter_size = m_filter_size/m_num_hashes;
-    m_par_filter_size_bits = log_int(m_par_filter_size);
+    m_par_filter_size = m_filter_size / m_num_hashes;
+    m_par_filter_size_bits = floorLog2(m_par_filter_size);
 
     m_filter.setSize(m_filter_size);
     clear();

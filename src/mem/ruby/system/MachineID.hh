@@ -32,7 +32,7 @@
 #include <iostream>
 #include <string>
 
-#include "mem/gems_common/util.hh"
+#include "base/cprintf.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Global.hh"
 
@@ -45,7 +45,7 @@ struct MachineID
 inline std::string
 MachineIDToString(MachineID machine)
 {
-    return MachineType_to_string(machine.type)+"_"+int_to_string(machine.num);
+    return csprintf("%s_%d", MachineType_to_string(machine.type), machine.num);
 }
 
 inline bool

@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/gems_common/util.hh"
+#include "base/intmath.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/system/System.hh"
@@ -43,7 +43,7 @@ DirectoryMemory::DirectoryMemory(const Params *p)
 {
     m_version = p->version;
     m_size_bytes = p->size;
-    m_size_bits = log_int(m_size_bytes);
+    m_size_bits = floorLog2(m_size_bytes);
     m_num_entries = 0;
     m_use_map = p->use_map;
     m_map_levels = p->map_levels;
@@ -56,7 +56,7 @@ DirectoryMemory::init()
     m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
 
     if (m_use_map) {
-        int entry_bits = log_int(m_num_entries);
+        int entry_bits = floorLog2(m_num_entries);
         assert(entry_bits >= m_map_levels);
         m_sparseMemory = new SparseMemory(entry_bits, m_map_levels);
     } else {
@@ -67,7 +67,7 @@ DirectoryMemory::init()
     }
 
     m_num_directories++;
-    m_num_directories_bits = log_int(m_num_directories);
+    m_num_directories_bits = floorLog2(m_num_directories);
     m_total_size_bytes += m_size_bytes;
 
     if (m_numa_high_bit == 0) {
@@ -116,7 +116,7 @@ DirectoryMemory::printGlobalConfig(ostream & out)
             << endl;
     }
     out << "  total memory size bytes: " << m_total_size_bytes << endl;
-    out << "  total memory bits: " << log_int(m_total_size_bytes) << endl;
+    out << "  total memory bits: " << floorLog2(m_total_size_bytes) << endl;
 }
 
 uint64

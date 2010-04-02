@@ -31,7 +31,7 @@
 
 #include <string>
 
-#include "mem/gems_common/util.hh"
+#include "base/str.hh"
 #include "mem/ruby/common/Global.hh"
 
 typedef int NodeID;
@@ -39,7 +39,7 @@ typedef int NodeID;
 inline std::string
 NodeIDToString(NodeID node)
 {
-    return int_to_string(node);
+    return to_string(node);
 }
 
 #endif // __MEM_RUBY_SYSTEM_NODEID_HH__

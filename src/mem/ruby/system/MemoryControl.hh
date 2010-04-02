@@ -34,7 +34,6 @@
 #include <string>
 
 #include "mem/gems_common/Map.hh"
-#include "mem/gems_common/util.hh"
 #include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"

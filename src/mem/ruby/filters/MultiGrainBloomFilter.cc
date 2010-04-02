@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
+#include "base/str.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/MultiGrainBloomFilter.hh"
@@ -34,19 +36,21 @@ using namespace std;
 
 MultiGrainBloomFilter::MultiGrainBloomFilter(string str)
 {
-    string tail(str);
-
-    // split into the 2 filter sizes
-    string head = string_split(tail, '_');
+    string head, tail;
+#ifndef NDEBUG
+    bool success =
+#endif
+        split_first(str, head, tail, '_');
+    assert(success);
 
     // head contains size of 1st bloom filter, tail contains size of
     // 2nd bloom filter
 
     m_filter_size = atoi(head.c_str());
-    m_filter_size_bits = log_int(m_filter_size);
+    m_filter_size_bits = floorLog2(m_filter_size);
 
     m_page_filter_size = atoi(tail.c_str());
-    m_page_filter_size_bits = log_int(m_page_filter_size);
+    m_page_filter_size_bits = floorLog2(m_page_filter_size);
 
     m_filter.setSize(m_filter_size);
     m_page_filter.setSize(m_page_filter_size);

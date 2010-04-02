@@ -330,12 +330,13 @@ static int m_num_controllers;
 #include <sstream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
+#include "base/cprintf.hh"
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/Types.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
@@ -526,7 +527,7 @@ if (m_buffer_size > 0) {
 
                 # set description (may be overriden later by port def)
                 code('''
-$vid->setDescription("[Version " + int_to_string(m_version) + ", ${ident}, name=${{var.c_ident}}]");
+$vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{var.c_ident}}]");
 
 ''')
 
@@ -538,7 +539,7 @@ $vid->setDescription("[Version " + int_to_string(m_version) + ", ${ident}, name=
         # Set the queue descriptions
         code.insert_newline()
         for port in self.in_ports:
-            code('${{port.code}}.setDescription("[Version " + int_to_string(m_version) + ", $ident, $port]");')
+            code('${{port.code}}.setDescription("[Version " + to_string(m_version) + ", $ident, $port]");')
 
         # Initialize the transition profiling
         code.insert_newline()

@@ -30,7 +30,6 @@
 #include <stdarg.h>
 
 #include "base/misc.hh"
-#include "mem/gems_common/util.hh"
 #include "mem/ruby/common/Debug.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"

@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
 #include "base/output.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Address.hh"
@@ -63,14 +64,14 @@ RubySystem::RubySystem(const Params *p)
     m_clock = p->clock;
 
     m_block_size_bytes = p->block_size_bytes;
-    assert(is_power_of_2(m_block_size_bytes));
-    m_block_size_bits = log_int(m_block_size_bytes);
+    assert(isPowerOf2(m_block_size_bytes));
+    m_block_size_bits = floorLog2(m_block_size_bytes);
 
     m_memory_size_bytes = p->mem_size;
     if (m_memory_size_bytes == 0) {
         m_memory_size_bits = 0;
     } else {
-        m_memory_size_bits = log_int(m_memory_size_bytes);
+        m_memory_size_bits = floorLog2(m_memory_size_bytes);
     }
 
     m_network_ptr = p->network;

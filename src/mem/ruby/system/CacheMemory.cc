@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 
 using namespace std;
@@ -60,7 +61,7 @@ CacheMemory::init()
     m_cache_num_sets = (m_cache_size / m_cache_assoc) /
         RubySystem::getBlockSizeBytes();
     assert(m_cache_num_sets > 1);
-    m_cache_num_set_bits = log_int(m_cache_num_sets);
+    m_cache_num_set_bits = floorLog2(m_cache_num_sets);
     assert(m_cache_num_set_bits > 0);
 
     if (m_policy == "PSEUDO_LRU")

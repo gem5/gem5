@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
+#include "base/str.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/NonCountingBloomFilter.hh"
@@ -34,13 +36,17 @@ using namespace std;
 
 NonCountingBloomFilter::NonCountingBloomFilter(string str)
 {
-    string tail(str);
-    string head = string_split(tail, '_');
+    string head, tail;
+#ifndef NDEBUG
+    bool success =
+#endif
+        split_first(str, head, tail, '_');
+    assert(success);
 
     // head contains filter size, tail contains bit offset from block number
     m_filter_size = atoi(head.c_str());
     m_offset = atoi(tail.c_str());
-    m_filter_size_bits = log_int(m_filter_size);
+    m_filter_size_bits = floorLog2(m_filter_size);
 
     m_filter.setSize(m_filter_size);
     clear();

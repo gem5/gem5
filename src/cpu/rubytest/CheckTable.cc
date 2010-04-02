@@ -27,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/intmath.hh"
 #include "cpu/rubytest/Check.hh"
 #include "cpu/rubytest/CheckTable.hh"
 #include "cpu/rubytest/CheckTable.hh"
@@ -81,7 +82,7 @@ CheckTable::~CheckTable()
 void
 CheckTable::addCheck(const Address& address)
 {
-    if (log_int(CHECK_SIZE) != 0) {
+    if (floorLog2(CHECK_SIZE) != 0) {
         if (address.bitSelect(0, CHECK_SIZE_BITS - 1) != 0) {
             ERROR_MSG("Check not aligned");
         }

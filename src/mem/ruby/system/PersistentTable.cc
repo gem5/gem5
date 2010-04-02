@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/gems_common/util.hh"
 #include "mem/ruby/system/PersistentTable.hh"
 
 using namespace std;

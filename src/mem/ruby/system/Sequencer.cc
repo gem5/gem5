@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/str.hh"
 #include "cpu/rubytest/RubyTester.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/protocol/CacheMsg.hh"

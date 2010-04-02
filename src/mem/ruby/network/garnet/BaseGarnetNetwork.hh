@@ -37,7 +37,6 @@
 #define BASEGARNETNETWORK_H
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/gems_common/util.hh"
 #include "mem/ruby/network/Network.hh"
 #include "params/BaseGarnetNetwork.hh"
 

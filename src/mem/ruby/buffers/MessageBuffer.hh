@@ -38,7 +38,6 @@
 #include <string>
 
 #include "mem/gems_common/PrioHeap.hh"
-#include "mem/gems_common/util.hh"
 #include "mem/ruby/buffers/MessageBufferNode.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"

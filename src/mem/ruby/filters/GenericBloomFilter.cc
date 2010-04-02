@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/str.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/BlockBloomFilter.hh"
@@ -41,8 +42,12 @@ using namespace std;
 
 GenericBloomFilter::GenericBloomFilter(string config)
 {
-    string tail(config);
-    string head = string_split(tail,'_');
+    string head, tail;
+#ifndef NDEBUG
+    bool success =
+#endif
+        split_first(config, head, tail, '_');
+    assert(success);
 
     if (head == "LSB_Counting" ) {
         m_filter = new LSB_CountingBloomFilter(tail);

@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/cprintf.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 
@@ -123,8 +124,8 @@ MessageBuffer::peekAtHeadOfQueue() const
     DEBUG_NEWLINE(QUEUE_COMP, MedPrio);
 
     DEBUG_MSG(QUEUE_COMP, MedPrio,
-              "Peeking at head of queue " + m_name + " time: "
-              + int_to_string(g_eventQueue_ptr->getTime()) + ".");
+              csprintf("Peeking at head of queue %s time: %d.",
+                       m_name, g_eventQueue_ptr->getTime()));
     assert(isReady());
 
     msg_ptr = m_prio_heap.peekMin().m_msgptr.ref();
@@ -151,8 +152,9 @@ void
 MessageBuffer::enqueue(const MsgPtr& message, Time delta)
 {
     DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
-    DEBUG_MSG(QUEUE_COMP, HighPrio, "enqueue " + m_name + " time: "
-              + int_to_string(g_eventQueue_ptr->getTime()) + ".");
+    DEBUG_MSG(QUEUE_COMP, HighPrio,
+              csprintf("enqueue %s time: %d.", m_name,
+                       g_eventQueue_ptr->getTime()));
     DEBUG_EXPR(QUEUE_COMP, MedPrio, message);
     DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
 
@@ -228,10 +230,9 @@ MessageBuffer::enqueue(const MsgPtr& message, Time delta)
     m_prio_heap.insert(thisNode);
 
     DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
-    DEBUG_MSG(QUEUE_COMP, HighPrio, "enqueue " + m_name
-              + " with arrival_time " + int_to_string(arrival_time)
-              + " cur_time: " + int_to_string(g_eventQueue_ptr->getTime())
-              + ".");
+    DEBUG_MSG(QUEUE_COMP, HighPrio,
+              csprintf("enqueue %s with arrival_time %d cur_time: %d.",
+                       m_name, arrival_time, g_eventQueue_ptr->getTime()));
     DEBUG_EXPR(QUEUE_COMP, MedPrio, message);
     DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
 

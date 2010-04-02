@@ -33,6 +33,4 @@ Import('*')
 if not env['RUBY']:
     Return()
 
-Source('util.cc')
-
 TraceFlag('GemsCommon')
