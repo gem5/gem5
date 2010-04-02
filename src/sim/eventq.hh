@@ -440,6 +440,11 @@ class EventManager
         return eventq;
     }
 
+    operator EventQueue *() const
+    {
+        return eventq;
+    }
+
     void
     schedule(Event &event, Tick when)
     {
