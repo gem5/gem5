@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  50762                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 156288                       # Number of bytes of host memory used
-host_seconds                                  1810.49                       # Real time elapsed on the host
-host_tick_rate                               54563823                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  45830                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 156280                       # Number of bytes of host memory used
+host_seconds                                  2005.28                       # Real time elapsed on the host
+host_tick_rate                               49263361                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    91903056                       # Number of instructions simulated
 sim_seconds                                  0.098787                       # Number of seconds simulated
@@ -30,7 +30,7 @@ system.cpu.Graduation-Unit.instReqsProcessed     91903056                       
 system.cpu.Mult-Div-Unit.divInstReqsProcessed            0                       # Number of Divide Requests Processed.
 system.cpu.Mult-Div-Unit.instReqsProcessed       916504                       # Number of Instructions Requests that completed in this resource.
 system.cpu.Mult-Div-Unit.multInstReqsProcessed       458252                       # Number of Multiply Requests Processed.
-system.cpu.RegFile-Manager.instReqsProcessed    196150555                       # Number of Instructions Requests that completed in this resource.
+system.cpu.RegFile-Manager.instReqsProcessed    196150553                       # Number of Instructions Requests that completed in this resource.
 system.cpu.activity                         96.136450                       # Percentage of cycles cpu is active
 system.cpu.committedInsts                    91903056                       # Number of Instructions Simulated (Per-Thread)
 system.cpu.committedInsts_total              91903056                       # Number of Instructions Simulated (Total)
@@ -284,9 +284,9 @@ system.cpu.stage-0.utilization              52.274318                       # Pe
 system.cpu.stage-1.idleCycles               105572319                       # Number of cycles 0 instructions are processed.
 system.cpu.stage-1.runCycles                 92001832                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage-1.utilization              46.565723                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.stage-2.idleCycles               104081665                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-2.runCycles                 93492486                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-2.utilization              47.320201                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage-2.idleCycles               104081667                       # Number of cycles 0 instructions are processed.
+system.cpu.stage-2.runCycles                 93492484                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage-2.utilization              47.320200                       # Percentage of cycles stage was utilized (processing insts).
 system.cpu.stage-3.idleCycles               171037020                       # Number of cycles 0 instructions are processed.
 system.cpu.stage-3.runCycles                 26537131                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage-3.utilization              13.431479                       # Percentage of cycles stage was utilized (processing insts).

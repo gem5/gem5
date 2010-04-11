@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  49066                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 166880                       # Number of bytes of host memory used
-host_seconds                                  1800.43                       # Real time elapsed on the host
-host_tick_rate                               58870361                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  44191                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 166876                       # Number of bytes of host memory used
+host_seconds                                  1999.07                       # Real time elapsed on the host
+host_tick_rate                               53020649                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    88340673                       # Number of instructions simulated
 sim_seconds                                  0.105992                       # Number of seconds simulated
@@ -30,8 +30,8 @@ system.cpu.Graduation-Unit.instReqsProcessed     88340673                       
 system.cpu.Mult-Div-Unit.divInstReqsProcessed            0                       # Number of Divide Requests Processed.
 system.cpu.Mult-Div-Unit.instReqsProcessed        82202                       # Number of Instructions Requests that completed in this resource.
 system.cpu.Mult-Div-Unit.multInstReqsProcessed        41101                       # Number of Multiply Requests Processed.
-system.cpu.RegFile-Manager.instReqsProcessed    165553324                       # Number of Instructions Requests that completed in this resource.
-system.cpu.activity                         85.622201                       # Percentage of cycles cpu is active
+system.cpu.RegFile-Manager.instReqsProcessed    165543786                       # Number of Instructions Requests that completed in this resource.
+system.cpu.activity                         85.618119                       # Percentage of cycles cpu is active
 system.cpu.committedInsts                    88340673                       # Number of Instructions Simulated (Per-Thread)
 system.cpu.committedInsts_total              88340673                       # Number of Instructions Simulated (Total)
 system.cpu.contextSwitches                          1                       # Number of context switches
@@ -176,7 +176,7 @@ system.cpu.icache.total_refs                 99013611                       # To
 system.cpu.icache.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.writebacks                        0                       # number of writebacks
 system.cpu.icache_port.instReqsProcessed     99096235                       # Number of Instructions Requests that completed in this resource.
-system.cpu.idleCycles                        30478636                       # Number of cycles cpu's stages were not processed
+system.cpu.idleCycles                        30487290                       # Number of cycles cpu's stages were not processed
 system.cpu.ipc                               0.416733                       # IPC: Instructions Per Cycle (Per-Thread)
 system.cpu.ipc_total                         0.416733                       # IPC: Total IPC of All Threads
 system.cpu.itb.data_accesses                        0                       # DTB accesses
@@ -273,7 +273,7 @@ system.cpu.l2cache.total_refs                  111144                       # To
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                  120636                       # number of writebacks
 system.cpu.numCycles                        211984025                       # number of cpu cycles simulated
-system.cpu.runCycles                        181505389                       # Number of cycles cpu stages are processed.
+system.cpu.runCycles                        181496735                       # Number of cycles cpu stages are processed.
 system.cpu.smtCommittedInsts                        0                       # Number of SMT Instructions Simulated (Per-Thread)
 system.cpu.smtCycles                                0                       # Total number of cycles that the CPU was in SMT-mode
 system.cpu.smt_cpi                           no_value                       # CPI: Total SMT-CPI
@@ -284,9 +284,9 @@ system.cpu.stage-0.utilization              46.748815                       # Pe
 system.cpu.stage-1.idleCycles               123634464                       # Number of cycles 0 instructions are processed.
 system.cpu.stage-1.runCycles                 88349561                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage-1.utilization              41.677462                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.stage-2.idleCycles               122158701                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-2.runCycles                 89825324                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-2.utilization              42.373629                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage-2.idleCycles               122168239                       # Number of cycles 0 instructions are processed.
+system.cpu.stage-2.runCycles                 89815786                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage-2.utilization              42.369129                       # Percentage of cycles stage was utilized (processing insts).
 system.cpu.stage-3.idleCycles               176752755                       # Number of cycles 0 instructions are processed.
 system.cpu.stage-3.runCycles                 35231270                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage-3.utilization              16.619776                       # Percentage of cycles stage was utilized (processing insts).

@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 23 2010 00:24:02
-M5 revision ba1ff0a71710 7040 default tip
-M5 started Mar 23 2010 00:24:03
+M5 compiled Apr 10 2010 23:42:32
+M5 revision 1633bdfc3b0a 7062 default qtip regression_update tip
+M5 started Apr 10 2010 23:42:34
 M5 executing on zooks
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
