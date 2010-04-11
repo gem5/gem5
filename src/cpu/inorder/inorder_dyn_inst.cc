@@ -534,6 +534,10 @@ InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     instResult[idx].type = Integer;
     instResult[idx].val.integer = val;
     instResult[idx].tick = curTick;
+
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Int Reg. %i "
+            "being set to %#x (result-tick:%i).\n",
+            threadNumber, seqNum, idx, val, instResult[idx].tick);
 }
 
 /** Sets a FP register. */
@@ -542,8 +546,11 @@ InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
 {
     instResult[idx].val.dbl = val;
     instResult[idx].type = Float;
-
     instResult[idx].tick = curTick;
+
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Float Reg. %i "
+            "being set to %#x (result-tick:%i).\n",
+            threadNumber, seqNum, idx, val, instResult[idx].tick);
 }
 
 /** Sets a FP register as a integer. */
@@ -554,6 +561,10 @@ InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
     instResult[idx].type = Integer;
     instResult[idx].val.integer = val;
     instResult[idx].tick = curTick;
+
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Float Reg. %i "
+            "being set to %#x (result-tick:%i).\n",
+            threadNumber, seqNum, idx, val, instResult[idx].tick);
 }
 
 /** Sets a misc. register. */
@@ -655,7 +666,7 @@ InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
     storeData  = data;
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting store data to %#x.\n",
-            threadNumber, seqNum, memData);
+            threadNumber, seqNum, storeData);
     return cpu->write(this, data, addr, flags, res);
 }
 

@@ -161,7 +161,7 @@ RegDepMap::canRead(unsigned idx, DynInstPtr inst)
 }
 
 ThePipeline::DynInstPtr
-RegDepMap::canForward(unsigned reg_idx, unsigned src_idx, DynInstPtr inst)
+RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst)
 {
     std::list<DynInstPtr>::iterator list_it = regMap[reg_idx].begin();
     std::list<DynInstPtr>::iterator list_end = regMap[reg_idx].end();
@@ -176,13 +176,23 @@ RegDepMap::canForward(unsigned reg_idx, unsigned src_idx, DynInstPtr inst)
     }
 
     if (forward_inst) {
+        int dest_reg_idx = forward_inst->getDestIdxNum(reg_idx);
+        assert(dest_reg_idx != -1);
+
         if (forward_inst->isExecuted() &&
-            forward_inst->readResultTime(src_idx) < curTick) {
+            forward_inst->readResultTime(dest_reg_idx) < curTick) {
             return forward_inst;
         } else {
-            DPRINTF(RegDepMap, "[sn:%i] Can't get value through forwarding, "
-                    " [sn:%i] has not been executed yet.\n",
-                    inst->seqNum, forward_inst->seqNum);
+            if (!forward_inst->isExecuted()) {
+                DPRINTF(RegDepMap, "[sn:%i] Can't get value through forwarding, "
+                        " [sn:%i] has not been executed yet.\n",
+                        inst->seqNum, forward_inst->seqNum);
+            } else if (forward_inst->readResultTime(dest_reg_idx) >= curTick) {
+                DPRINTF(RegDepMap, "[sn:%i] Can't get value through forwarding, "
+                        " [sn:%i] executed on tick:%i.\n",
+                        inst->seqNum, forward_inst->seqNum, forward_inst->readResultTime(dest_reg_idx));
+            }
+
             return NULL;
         }
     } else {

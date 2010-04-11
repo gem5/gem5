@@ -196,8 +196,7 @@ UseDefUnit::execute(int slot_idx)
 
             } else {
                 // Look for forwarding opportunities
-                DynInstPtr forward_inst = regDepMap[tid]->canForward(reg_idx, 
-                                                                     ud_idx, 
+                DynInstPtr forward_inst = regDepMap[tid]->canForward(reg_idx,
                                                                      inst);
 
                 if (forward_inst) {
