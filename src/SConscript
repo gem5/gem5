@@ -88,7 +88,7 @@ class SourceFile(object):
 
         for base in type(self).__mro__:
             if issubclass(base, SourceFile):
-                bisect.insort_right(base.all, self)       
+                base.all.append(self)
 
     def __lt__(self, other): return self.filename < other.filename
     def __le__(self, other): return self.filename <= other.filename
