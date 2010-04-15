@@ -370,10 +370,11 @@ class EventQueue : public Serializable
     void insert(Event *event);
     void remove(Event *event);
 
+    EventQueue(const EventQueue &);
+    const EventQueue &operator=(const EventQueue &);
+
   public:
-    EventQueue(const std::string &n)
-        : objName(n), head(NULL)
-    {}
+    EventQueue(const std::string &n);
 
     virtual const std::string name() const { return objName; }
 

@@ -408,3 +408,7 @@ Event::dump() const
         cprintf("Not Scheduled\n");
     }
 }
+
+EventQueue::EventQueue(const string &n)
+    : objName(n), head(NULL)
+{}
