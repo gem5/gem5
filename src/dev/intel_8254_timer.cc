@@ -255,7 +255,7 @@ Intel8254Timer::Counter::unserialize(const string &base, Checkpoint *cp,
 
 Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
 {
-    interval = (Tick)(Clock::Float::s / 1193180.0);
+    interval = (Tick)(SimClock::Float::s / 1193180.0);
     counter = c_ptr;
 }
 

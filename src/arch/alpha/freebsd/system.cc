@@ -77,7 +77,7 @@ FreebsdAlphaSystem::doCalibrateClocks(ThreadContext *tc)
     ppc_vaddr = (Addr)tc->readIntReg(17);
     timer_vaddr = (Addr)tc->readIntReg(18);
 
-    virtPort.write(ppc_vaddr, (uint32_t)Clock::Frequency);
+    virtPort.write(ppc_vaddr, (uint32_t)SimClock::Frequency);
     virtPort.write(timer_vaddr, (uint32_t)TIMER_FREQUENCY);
 }
 

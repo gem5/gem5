@@ -106,7 +106,7 @@ Global::Global()
         ;
 
     simFreq
-        .scalar(Clock::Frequency)
+        .scalar(SimClock::Frequency)
         .name("sim_freq")
         .desc("Frequency of simulated ticks")
         ;

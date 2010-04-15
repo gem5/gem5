@@ -98,7 +98,7 @@ class BaseCPU : public MemObject
     int cpuId() { return _cpuId; }
 
 //    Tick currentTick;
-    inline Tick frequency() const { return Clock::Frequency / clock; }
+    inline Tick frequency() const { return SimClock::Frequency / clock; }
     inline Tick ticks(int numCycles) const { return clock * numCycles; }
     inline Tick curCycle() const { return curTick / clock; }
     inline Tick tickToCycles(Tick val) const { return val / clock; }

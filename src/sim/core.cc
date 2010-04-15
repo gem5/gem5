@@ -40,7 +40,7 @@ using namespace std;
 
 Tick curTick = 0;
 
-namespace Clock {
+namespace SimClock {
 /// The simulated frequency of curTick. (In ticks per second)
 Tick Frequency;
 
@@ -65,12 +65,12 @@ Tick ns;
 Tick ps;
 /* namespace Float */ }
 
-/* namespace Clock */ }
+/* namespace SimClock */ }
 
 void
 setClockFrequency(Tick ticksPerSecond)
 {
-    using namespace Clock;
+    using namespace SimClock;
     Frequency = ticksPerSecond;
     Float::s = static_cast<double>(Frequency);
     Float::ms = Float::s / 1.0e3;

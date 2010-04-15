@@ -40,7 +40,7 @@
 extern Tick curTick;
 const Tick retryTime = 1000;
 
-namespace Clock {
+namespace SimClock {
 /// The simulated frequency of curTick.
 extern Tick Frequency;
 
@@ -64,7 +64,7 @@ extern Tick us;
 extern Tick ns;
 extern Tick ps;
 /* namespace Int */ }
-/* namespace Clock */ }
+/* namespace SimClock */ }
 
 void setClockFrequency(Tick ticksPerSecond);
 

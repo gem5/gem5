@@ -93,7 +93,7 @@ quiesceNs(ThreadContext *tc, uint64_t ns)
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick + Clock::Int::ns * ns;
+    Tick resume = curTick + SimClock::Int::ns * ns;
 
     mainEventQueue.reschedule(quiesceEvent, resume, true);
 
@@ -128,7 +128,8 @@ quiesceCycles(ThreadContext *tc, uint64_t cycles)
 uint64_t
 quiesceTime(ThreadContext *tc)
 {
-    return (tc->readLastActivate() - tc->readLastSuspend()) / Clock::Int::ns;
+    return (tc->readLastActivate() - tc->readLastSuspend()) /
+        SimClock::Int::ns;
 }
 
 #endif
@@ -136,7 +137,7 @@ quiesceTime(ThreadContext *tc)
 uint64_t
 rpns(ThreadContext *tc)
 {
-    return curTick / Clock::Int::ns;
+    return curTick / SimClock::Int::ns;
 }
 
 void
@@ -151,7 +152,7 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
 void
 m5exit(ThreadContext *tc, Tick delay)
 {
-    Tick when = curTick + delay * Clock::Int::ns;
+    Tick when = curTick + delay * SimClock::Int::ns;
     Event *event = new SimLoopExitEvent("m5_exit instruction encountered", 0);
     mainEventQueue.schedule(event, when);
 }
@@ -229,8 +230,8 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick + delay * Clock::Int::ns;
-    Tick repeat = period * Clock::Int::ns;
+    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick repeat = period * SimClock::Int::ns;
 
     Stats::StatEvent(false, true, when, repeat);
 }
@@ -242,8 +243,8 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick + delay * Clock::Int::ns;
-    Tick repeat = period * Clock::Int::ns;
+    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick repeat = period * SimClock::Int::ns;
 
     Stats::StatEvent(true, false, when, repeat);
 }
@@ -255,8 +256,8 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick + delay * Clock::Int::ns;
-    Tick repeat = period * Clock::Int::ns;
+    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick repeat = period * SimClock::Int::ns;
 
     Stats::StatEvent(true, true, when, repeat);
 }
@@ -267,8 +268,8 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     if (!tc->getCpuPtr()->params()->do_checkpoint_insts)
         return;
 
-    Tick when = curTick + delay * Clock::Int::ns;
-    Tick repeat = period * Clock::Int::ns;
+    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick repeat = period * SimClock::Int::ns;
 
     Event *event = new SimLoopExitEvent("checkpoint", 0, repeat);
     mainEventQueue.schedule(event, when);

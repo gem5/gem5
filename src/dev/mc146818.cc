@@ -271,7 +271,7 @@ void
 MC146818::RTCTickEvent::process()
 {
     DPRINTF(MC146818, "RTC clock tick\n");
-    parent->schedule(this, curTick + Clock::Int::s);
+    parent->schedule(this, curTick + SimClock::Int::s);
     parent->tickClock();
 }
 

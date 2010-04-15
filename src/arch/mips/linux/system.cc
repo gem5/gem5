@@ -85,7 +85,7 @@ LinuxMipsSystem::LinuxMipsSystem(Params *p)
      * calculated it by using the PIT, RTC, etc.
      */
     if (kernelSymtab->findAddress("est_cycle_freq", addr))
-        virtPort.write(addr, (uint64_t)(Clock::Frequency /
+        virtPort.write(addr, (uint64_t)(SimClock::Frequency /
                     p->boot_cpu_frequency));
 
     /**

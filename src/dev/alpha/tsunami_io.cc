@@ -80,7 +80,7 @@ TsunamiIO::TsunamiIO(const Params *p)
 Tick
 TsunamiIO::frequency() const
 {
-    return Clock::Frequency / params()->frequency;
+    return SimClock::Frequency / params()->frequency;
 }
 
 Tick
