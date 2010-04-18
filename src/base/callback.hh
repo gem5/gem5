@@ -28,10 +28,11 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __CALLBACK_HH__
-#define __CALLBACK_HH__
+#ifndef __BASE_CALLBACK_HH__
+#define __BASE_CALLBACK_HH__
 
 #include <list>
+#include <string>
 
 /**
  * Generic callback class.  This base class provides a virtual process
@@ -39,6 +40,10 @@
  */
 class Callback
 {
+  protected:
+    friend class CallbackQueue;
+    virtual void autoDestruct() {}
+
   public:
     /**
      * virtualize the destructor to make sure that the correct one
@@ -51,6 +56,29 @@ class Callback
      * queue is executed.
      */
     virtual void process() = 0;
+};
+
+/// Helper template class to turn a simple class member function into
+/// a callback.
+template <class T, void (T::* F)()>
+class MakeCallback : public Callback
+{
+  protected:
+    T *object;
+    const bool autoDestroy;
+
+    void autoDestruct() { if (autoDestroy) delete this; }
+
+  public:
+    MakeCallback(T *o, bool auto_destroy = false)
+        : object(o), autoDestroy(auto_destroy)
+    { }
+
+    MakeCallback(T &o, bool auto_destroy = false)
+        : object(&o), autoDestroy(auto_destroy)
+    { }
+
+    void process() { (object->*F)(); }
 };
 
 class CallbackQueue
@@ -68,13 +96,31 @@ class CallbackQueue
     queue callbacks;
 
   public:
+    ~CallbackQueue();
+    std::string name() const { return "CallbackQueue"; }
+
     /**
      * Add a callback to the end of the queue
      * @param callback the callback to be added to the queue
      */
-    void add(Callback *callback)
+    void
+    add(Callback *callback)
     {
         callbacks.push_back(callback);
+    }
+
+    template <class T, void (T::* F)()>
+    void
+    add(T *obj)
+    {
+        add(new MakeCallback<T, F>(obj, true));
+    }
+
+    template <class T, void (T::* F)()>
+    void
+    add(T &obj)
+    {
+        add(new MakeCallback<T, F>(&obj, true));
     }
 
     /**
@@ -85,7 +131,8 @@ class CallbackQueue
     /**
      * process all callbacks
      */
-    void process()
+    void
+    process()
     {
         queue::iterator i = callbacks.begin();
         queue::iterator end = callbacks.end();
@@ -99,26 +146,11 @@ class CallbackQueue
     /**
      * clear the callback queue
      */
-    void clear()
+    void
+    clear()
     {
         callbacks.clear();
     }
 };
 
-/// Helper template class to turn a simple class member function into
-/// a callback.
-template <class T, void (T::* F)()>
-class MakeCallback : public Callback
-{
-  private:
-    T *object;
-
-  public:
-    MakeCallback(T *o)
-        : object(o)
-    { }
-
-    void process() { (object->*F)(); }
-};
-
-#endif // __CALLBACK_HH__
+#endif // __BASE_CALLBACK_HH__
