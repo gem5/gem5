@@ -577,6 +577,13 @@ class EventWrapper : public Event
             setFlags(AutoDelete);
     }
 
+    EventWrapper(T &obj, bool del = false, Priority p = Default_Pri)
+        : Event(p), object(&obj)
+    {
+        if (del)
+            setFlags(AutoDelete);
+    }
+
     void process() { (object->*F)(); }
 
     const std::string
