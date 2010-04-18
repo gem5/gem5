@@ -45,6 +45,8 @@
 using namespace std;
 
 Stats::Formula simSeconds;
+Stats::Value simTicks;
+Stats::Value simFreq;
 
 namespace Stats {
 
@@ -83,9 +85,7 @@ struct Global
     Stats::Value hostMemory;
     Stats::Value hostSeconds;
 
-    Stats::Value simTicks;
     Stats::Value simInsts;
-    Stats::Value simFreq;
 
     Global();
 };
