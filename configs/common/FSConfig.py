@@ -315,7 +315,7 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None):
 
     # We assume below that there's at least 1MB of memory. We'll require 2
     # just to avoid corner cases.
-    assert(self.physmem.range.second >= 0x200000)
+    assert(self.physmem.range.second.getValue() >= 0x200000)
 
     # Mark the first megabyte of memory as reserved
     self.e820_table.entries.append(X86E820Entry(
