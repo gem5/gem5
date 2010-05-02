@@ -767,7 +767,8 @@
                 0x1: pop_fs();
                 0x2: CPUIDInst::CPUID({{
                     CpuidResult result;
-                    success = doCpuid(xc->tcBase(), bits(Rax, 31, 0), result);
+                    success = doCpuid(xc->tcBase(), bits(Rax, 31, 0),
+                        bits(Rcx, 31, 0), result);
                     Rax = result.rax;
                     Rbx = result.rbx;
                     Rcx = result.rcx;

@@ -55,7 +55,8 @@ namespace X86ISA
         {}
     };
 
-    bool doCpuid(ThreadContext * tc, uint32_t function, CpuidResult &result);
+    bool doCpuid(ThreadContext * tc, uint32_t function,
+            uint32_t index, CpuidResult &result);
 } // namespace X86ISA
 
 #endif

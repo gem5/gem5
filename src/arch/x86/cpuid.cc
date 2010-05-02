@@ -79,7 +79,8 @@ namespace X86ISA {
     }
 
     bool
-    doCpuid(ThreadContext * tc, uint32_t function, CpuidResult &result)
+    doCpuid(ThreadContext * tc, uint32_t function,
+            uint32_t index, CpuidResult &result)
     {
         uint16_t family = bits(function, 31, 16);
         uint16_t funcNum = bits(function, 15, 0);
