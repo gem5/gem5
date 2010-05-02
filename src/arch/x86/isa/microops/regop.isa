@@ -612,15 +612,36 @@ let {{
             //If we overshot, do nothing. This lets us unrool division loops a
             //little.
             if (remaining) {
-                //Shift in bits from the low order portion of the dividend
-                while(dividend < divisor && remaining) {
-                    dividend = (dividend << 1) | bits(SrcReg1, remaining - 1);
-                    quotient <<= 1;
-                    remaining--;
+                if (divisor & (ULL(1) << 63)) {
+                    while (remaining && !(dividend & (ULL(1) << 63))) {
+                        dividend = (dividend << 1) |
+                            bits(SrcReg1, remaining - 1);
+                        quotient <<= 1;
+                        remaining--;
+                    }
+                    if (dividend & (ULL(1) << 63)) {
+                        if (dividend < divisor && remaining) {
+                            dividend = (dividend << 1) |
+                                bits(SrcReg1, remaining - 1);
+                            quotient <<= 1;
+                            remaining--;
+                        }
+                        quotient++;
+                        dividend -= divisor;
+                    }
+                    remainder = dividend;
+                } else {
+                    //Shift in bits from the low order portion of the dividend
+                    while (dividend < divisor && remaining) {
+                        dividend = (dividend << 1) |
+                            bits(SrcReg1, remaining - 1);
+                        quotient <<= 1;
+                        remaining--;
+                    }
+                    remainder = dividend;
+                    //Do the division.
+                    divide(dividend, divisor, quotient, remainder);
                 }
-                remainder = dividend;
-                //Do the division.
-                divide(dividend, divisor, quotient, remainder);
             }
             //Keep track of how many bits there are still to pull in.
             DestReg = merge(DestReg, remaining, dataSize);
