@@ -88,7 +88,7 @@ class AMD64TraceChild : public TraceChild
     };
   private:
     char printBuffer [256];
-    static char * regNames[numregs];
+    static const char * regNames[numregs];
     int64_t getRegs(user_regs_struct & myregs,
             user_fpregs_struct &myfpregs,int num);
     user_regs_struct regs;

@@ -33,12 +33,13 @@
 #include <errno.h>
 #include <sys/ptrace.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "tracechild_amd64.hh"
 
 using namespace std;
 
-char * AMD64TraceChild::regNames[numregs] = {
+const char * AMD64TraceChild::regNames[numregs] = {
                 //GPRs
                 "rax", "rbx", "rcx", "rdx",
                 //Index registers
@@ -288,7 +289,7 @@ int64_t AMD64TraceChild::getOldRegVal(int num)
 
 char * AMD64TraceChild::printReg(int num)
 {
-        sprintf(printBuffer, "0x%08X", getRegVal(num));
+        sprintf(printBuffer, "0x%016lX", getRegVal(num));
         return printBuffer;
 }
 
@@ -298,14 +299,14 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
     uint64_t pc = getPC();
     uint64_t highestInfo = 0;
     char obuf[1024];
-    sprintf(obuf, "Initial stack pointer = 0x%016llx\n", sp);
+    sprintf(obuf, "Initial stack pointer = 0x%016lx\n", sp);
     os << obuf;
-    sprintf(obuf, "Initial program counter = 0x%016llx\n", pc);
+    sprintf(obuf, "Initial program counter = 0x%016lx\n", pc);
     os << obuf;
 
     //Output the argument count
     uint64_t cargc = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-    sprintf(obuf, "0x%016llx: Argc = 0x%016llx\n", sp, cargc);
+    sprintf(obuf, "0x%016lx: Argc = 0x%016lx\n", sp, cargc);
     os << obuf;
     sp += 8;
 
@@ -315,7 +316,7 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
     do
     {
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(obuf, "0x%016llx: argv[%d] = 0x%016llx\n",
+        sprintf(obuf, "0x%016lx: argv[%d] = 0x%016lx\n",
                 sp, argCount++, cargv);
         if(cargv)
             if(highestInfo < cargv)
@@ -330,7 +331,7 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
     do
     {
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
-        sprintf(obuf, "0x%016llx: envp[%d] = 0x%016llx\n",
+        sprintf(obuf, "0x%016lx: envp[%d] = 0x%016lx\n",
                 sp, envCount++, cenvp);
         os << obuf;
         sp += 8;
@@ -342,7 +343,7 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
         sp += 8;
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sp += 8;
-        sprintf(obuf, "0x%016llx: Auxiliary vector = {0x%016llx, 0x%016llx}\n",
+        sprintf(obuf, "0x%016lx: Auxiliary vector = {0x%016lx, 0x%016lx}\n",
                 sp - 16, auxType, auxVal);
         os << obuf;
     } while(auxType != 0 || auxVal != 0);
@@ -361,7 +362,7 @@ ostream & AMD64TraceChild::outputStartState(ostream & os)
                 current += cbuf[x];
             else
             {
-                sprintf(obuf, "0x%016llx: \"%s\"\n",
+                sprintf(obuf, "0x%016lx: \"%s\"\n",
                         currentStart, current.c_str());
                 os << obuf;
                 current = "";
