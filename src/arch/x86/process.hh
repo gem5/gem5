@@ -66,6 +66,10 @@ class SyscallDesc;
 
 namespace X86ISA
 {
+    enum X86AuxiliaryVectorTypes {
+        M5_AT_SYSINFO = 32,
+        M5_AT_SYSINFO_EHDR = 33
+    };
 
     class X86LiveProcess : public LiveProcess
     {

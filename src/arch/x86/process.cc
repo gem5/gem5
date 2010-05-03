@@ -550,7 +550,11 @@ X86LiveProcess::argsInit(int pageSize,
         auxv.push_back(auxv_t(M5_AT_EGID, egid()));
         //Whether to enable "secure mode" in the executable
         auxv.push_back(auxv_t(M5_AT_SECURE, 0));
-        //The string "x86_64" with unknown meaning
+        //The address of 16 "random" bytes.
+        auxv.push_back(auxv_t(M5_AT_RANDOM, 0));
+        //The name of the program
+        auxv.push_back(auxv_t(M5_AT_EXECFN, 0));
+        //The platform string
         auxv.push_back(auxv_t(M5_AT_PLATFORM, 0));
     }
 
@@ -563,8 +567,11 @@ X86LiveProcess::argsInit(int pageSize,
     //It's purpose is to let the user space linker examine the original file.
     int file_name_size = filename.size() + 1;
 
+    const int numRandomBytes = 16;
+    int aux_data_size = numRandomBytes;
+
     string platform = "x86_64";
-    int aux_data_size = platform.size() + 1;
+    aux_data_size += platform.size() + 1;
 
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
@@ -657,9 +664,13 @@ X86LiveProcess::argsInit(int pageSize,
     //Write the file name
     initVirtMem->writeString(file_name_base, filename.c_str());
 
-    //Fix up the aux vector which points to the "platform" string
-    assert(auxv[auxv.size() - 1].a_type = M5_AT_PLATFORM);
-    auxv[auxv.size() - 1].a_val = aux_data_base;
+    //Fix up the aux vectors which point to data
+    assert(auxv[auxv.size() - 3].a_type == M5_AT_RANDOM);
+    auxv[auxv.size() - 3].a_val = aux_data_base;
+    assert(auxv[auxv.size() - 2].a_type == M5_AT_EXECFN);
+    auxv[auxv.size() - 2].a_val = argv_array_base;
+    assert(auxv[auxv.size() - 1].a_type == M5_AT_PLATFORM);
+    auxv[auxv.size() - 1].a_val = aux_data_base + numRandomBytes;
 
     //Copy the aux stuff
     for(int x = 0; x < auxv.size(); x++)
@@ -701,6 +712,8 @@ void
 X86_64LiveProcess::argsInit(int intSize, int pageSize)
 {
     std::vector<AuxVector<uint64_t> > extraAuxvs;
+    extraAuxvs.push_back(AuxVector<uint64_t>(M5_AT_SYSINFO_EHDR,
+                vsyscallPage.base));
     X86LiveProcess::argsInit<uint64_t>(pageSize, extraAuxvs);
 }
 
@@ -709,9 +722,10 @@ I386LiveProcess::argsInit(int intSize, int pageSize)
 {
     std::vector<AuxVector<uint32_t> > extraAuxvs;
     //Tell the binary where the vsyscall part of the vsyscall page is.
-    extraAuxvs.push_back(AuxVector<uint32_t>(0x20,
+    extraAuxvs.push_back(AuxVector<uint32_t>(M5_AT_SYSINFO,
                 vsyscallPage.base + vsyscallPage.vsyscallOffset));
-    extraAuxvs.push_back(AuxVector<uint32_t>(0x21, vsyscallPage.base));
+    extraAuxvs.push_back(AuxVector<uint32_t>(M5_AT_SYSINFO_EHDR,
+                vsyscallPage.base));
     X86LiveProcess::argsInit<uint32_t>(pageSize, extraAuxvs);
 }
 
