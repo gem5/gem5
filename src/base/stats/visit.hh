@@ -31,11 +31,6 @@
 #ifndef __BASE_STATS_VISIT_HH__
 #define __BASE_STATS_VISIT_HH__
 
-#include <string>
-
-#include "base/time.hh"
-#include "base/types.hh"
-
 namespace Stats {
 
 class Info;
