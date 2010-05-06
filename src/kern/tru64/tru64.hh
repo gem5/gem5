@@ -437,7 +437,7 @@ class Tru64 : public OperatingSystem
     {
         using namespace TheISA;
 
-#ifdef __CYGWIN__
+#if defined(__APPLE__) || defined(__CYGWIN__)
         panic("getdirent not implemented on cygwin!");
 #else
         int index = 0;
