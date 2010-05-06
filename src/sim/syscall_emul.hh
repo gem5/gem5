@@ -41,14 +41,16 @@
 /// This file defines objects used to emulate syscalls from the target
 /// application on the host machine.
 
-#include <errno.h>
-#include <string>
 #ifdef __CYGWIN32__
 #include <sys/fcntl.h>  // for O_BINARY
 #endif
 #include <sys/stat.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/uio.h>
+#include <sys/time.h>
+
+#include <string>
 
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"      // for RoundUp
