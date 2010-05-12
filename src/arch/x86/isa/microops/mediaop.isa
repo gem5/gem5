@@ -1294,7 +1294,8 @@ let {{
                 int srcLoIndex = srcStart + (i + 0) * srcSizeBits;
                 uint64_t argBits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
 
-                int64_t sArg = argBits | (0 - (argBits & (ULL(1) << srcHiIndex)));
+                int64_t sArg = argBits |
+                    (0 - (argBits & (ULL(1) << (srcSizeBits - 1))));
                 double arg = sArg;
 
                 if (destSize == 4) {
