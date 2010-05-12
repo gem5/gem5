@@ -620,14 +620,18 @@ let {{
                         remaining--;
                     }
                     if (dividend & (ULL(1) << 63)) {
+                        bool highBit = false;
                         if (dividend < divisor && remaining) {
+                            highBit = true;
                             dividend = (dividend << 1) |
                                 bits(SrcReg1, remaining - 1);
                             quotient <<= 1;
                             remaining--;
                         }
-                        quotient++;
-                        dividend -= divisor;
+                        if (highBit || divisor <= dividend) {
+                            quotient++;
+                            dividend -= divisor;
+                        }
                     }
                     remainder = dividend;
                 } else {
