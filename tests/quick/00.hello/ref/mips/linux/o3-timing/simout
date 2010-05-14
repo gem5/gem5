@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:13:04
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 03:11:23
-M5 executing on SC2B0619
+M5 compiled May 12 2010 02:40:58
+M5 revision 3f044cf767ee 7080 default qtip bp_regress.patch tip
+M5 started May 12 2010 02:41:01
+M5 executing on zizzer
 command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/o3-timing -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 14060500 because target called exit()
+Exiting @ tick 14021500 because target called exit()

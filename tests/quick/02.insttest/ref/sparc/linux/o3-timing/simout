@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 25 2010 03:11:27
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 03:38:00
-M5 executing on SC2B0619
+M5 compiled May 12 2010 02:45:56
+M5 revision 3f044cf767ee 7080 default qtip bp_regress.patch tip
+M5 started May 12 2010 02:47:29
+M5 executing on zizzer
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -23,4 +23,4 @@ LDTX:		Passed
 LDTW:		Passed
 STTW:		Passed
 Done
-Exiting @ tick 27756500 because target called exit()
+Exiting @ tick 27640500 because target called exit()
