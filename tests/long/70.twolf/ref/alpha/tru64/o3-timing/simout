@@ -5,11 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:12:40
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 02:44:07
-M5 executing on SC2B0619
+M5 compiled May 12 2010 01:43:39
+M5 revision 3f044cf767ee 7080 default qtip bp_regress.patch tip
+M5 started May 12 2010 01:45:37
+M5 executing on zizzer
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing
+Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing/smred.sav
+Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
