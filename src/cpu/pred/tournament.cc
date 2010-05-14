@@ -104,7 +104,6 @@ TournamentBP::TournamentBP(unsigned _localPredictorSize,
 
     // @todo: Allow for different thresholds between the predictors.
     threshold = (1 << (localCtrBits - 1)) - 1;
-    threshold = threshold / 2;
 }
 
 inline
