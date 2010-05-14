@@ -395,7 +395,33 @@ decode OP default Unknown::unknown()
             }});
             0x2C: decode MOVCC3
             {
-                0x0: Trap::movccfcc({{fault = new FpDisabled;}});
+                0x0: decode CC
+                {
+                    0x0: movccfcc0({{
+                        if(passesCondition(Fsr<11:10>, COND4))
+                            Rd = Rs2_or_imm11;
+                        else
+                            Rd = Rd;
+                    }});
+                    0x1: movccfcc1({{
+                        if(passesCondition(Fsr<33:32>, COND4))
+                            Rd = Rs2_or_imm11;
+                        else
+                            Rd = Rd;
+                    }});
+                    0x2: movccfcc2({{
+                        if(passesCondition(Fsr<35:34>, COND4))
+                            Rd = Rs2_or_imm11;
+                        else
+                            Rd = Rd;
+                    }});
+                    0x3: movccfcc3({{
+                        if(passesCondition(Fsr<37:36>, COND4))
+                            Rd = Rs2_or_imm11;
+                        else
+                            Rd = Rd;
+                    }});
+                }
                 0x1: decode CC
                 {
                     0x0: movcci({{
