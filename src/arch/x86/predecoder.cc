@@ -2,43 +2,25 @@
  * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
- * Redistribution and use of this software in source and binary forms,
- * with or without modification, are permitted provided that the
- * following conditions are met:
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
- * The software must be used only for Non-Commercial Use which means any
- * use which is NOT directed to receiving any direct monetary
- * compensation for, or commercial advantage from such use.  Illustrative
- * examples of non-commercial use are academic research, personal study,
- * teaching, education and corporate research & development.
- * Illustrative examples of commercial use are distributing products for
- * commercial advantage and providing services using the software for
- * commercial advantage.
- *
- * If you wish to use this software or functionality therein that may be
- * covered by patents for commercial use, please contact:
- *     Director of Intellectual Property Licensing
- *     Office of Strategy and Technology
- *     Hewlett-Packard Company
- *     1501 Page Mill Road
- *     Palo Alto, California  94304
- *
- * Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.  Redistributions
- * in binary form must reproduce the above copyright notice, this list of
- * conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.  Neither the name of
- * the COPYRIGHT HOLDER(s), HEWLETT-PACKARD COMPANY, nor the names of its
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
  * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.  No right of
- * sublicense is granted herewith.  Derivatives of the software and
- * output created using the software may be prepared, but only for
- * Non-Commercial Uses.  Derivatives of the software may be shared with
- * others provided: (i) the others agree to abide by the list of
- * conditions herein which includes the Non-Commercial Use restrictions;
- * and (ii) such Derivatives of the software include the above copyright
- * notice to acknowledge the contribution from this software where
- * applicable, this list of conditions and the disclaimer below.
+ * this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
