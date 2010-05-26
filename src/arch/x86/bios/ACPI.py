@@ -33,6 +33,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.params import *
+from m5.SimObject import SimObject
+
+# ACPI description table header. Subclasses contain and handle the actual
+# contents as appropriate for that type of table.
+class X86ACPISysDescTable(SimObject):
+    type = 'X86ACPISysDescTable'
+    cxx_class = 'X86ISA::ACPI::SysDescTable'
+    abstract = True
+
+    oem_id = Param.String('', 'string identifying the oem')
+    oem_table_id = Param.String('', 'oem table ID')
+    oem_revision = Param.UInt32(0, 'oem revision number for the table')
+
+    creator_id = Param.String('',
+            'string identifying the generator of the table')
+    creator_revision = Param.UInt32(0,
+            'revision number for the creator of the table')
+
+class X86ACPIRSDT(X86ACPISysDescTable):
+    type = 'X86ACPIRSDT'
+    cxx_class = 'X86ISA::ACPI::RSDT'
+
+    entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
+
 class X86ACPIXSDT(X86ACPISysDescTable):
     type = 'X86ACPIXSDT'
     cxx_class = 'X86ISA::ACPI::XSDT'
