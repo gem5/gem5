@@ -222,7 +222,7 @@ NetDest::intersectionIsNotEmpty(const NetDest& other_netDest) const
 {
     assert(m_bits.size() == other_netDest.getSize());
     for (int i = 0; i < m_bits.size(); i++) {
-        if (m_bits[i].intersectionIsNotEmpty(other_netDest.m_bits[i])) {
+        if (!m_bits[i].intersectionIsEmpty(other_netDest.m_bits[i])) {
             return true;
         }
     }
