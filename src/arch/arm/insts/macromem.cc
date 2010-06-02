@@ -118,4 +118,64 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
     lastUop->setLastMicroop();
 }
 
+MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
+                             OpClass __opClass, IntRegIndex rn,
+                             RegIndex vd, bool single, bool up,
+                             bool writeback, bool load, uint32_t offset) :
+    PredMacroOp(mnem, machInst, __opClass)
+{
+    const int maxMicroops = 17;
+    microOps = new StaticInstPtr[maxMicroops];
+    int i = 0;
+
+    // The lowest order bit selects fldmx (set) or fldmd (clear). These seem
+    // to be functionally identical except that fldmx is deprecated. For now
+    // we'll assume they're otherwise interchangable.
+    int count = (single ? offset : (offset / 2));
+    if (count == 0 || count > NumFloatArchRegs)
+        warn_once("Bad offset field for VFP load/store multiple.\n");
+    if (count == 0) {
+        // Force there to be at least one microop so the macroop makes sense.
+        writeback = true;
+    }
+    if (count > NumFloatArchRegs)
+        count = NumFloatArchRegs;
+
+    uint32_t addr = 0;
+
+    if (up)
+        addr = -4 * offset;
+
+    for (int j = 0; j < count; j++) {
+        if (load) {
+            microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
+                                              true, addr);
+            if (!single)
+                microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
+                                                  true, addr + 4);
+        } else {
+            microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
+                                              true, addr);
+            if (!single)
+                microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
+                                                  true, addr + 4);
+        }
+        addr += (single ? 4 : 8);
+    }
+
+    if (writeback) {
+        if (up) {
+            microOps[i++] =
+                new MicroAddiUop(machInst, rn, rn, 4 * offset);
+        } else {
+            microOps[i++] =
+                new MicroSubiUop(machInst, rn, rn, 4 * offset);
+        }
+    }
+
+    numMicroops = i;
+    assert(numMicroops <= maxMicroops);
+    microOps[numMicroops - 1]->setLastMicroop();
+}
+
 }

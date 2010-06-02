@@ -101,6 +101,14 @@ class MacroMemOp : public PredMacroOp
                bool writeback, bool load, uint32_t reglist);
 };
 
+class MacroVFPMemOp : public PredMacroOp
+{
+  protected:
+    MacroVFPMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                  IntRegIndex rn, RegIndex vd, bool single, bool up,
+                  bool writeback, bool load, uint32_t offset);
+};
+
 }
 
 #endif //__ARCH_ARM_INSTS_MACROMEM_HH__
