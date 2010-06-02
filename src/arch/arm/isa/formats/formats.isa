@@ -67,3 +67,6 @@
 
 //Include the unknown format
 ##include "unknown.isa"
+
+//Include the formats for data processing instructions
+##include "data.isa"

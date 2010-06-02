@@ -93,24 +93,7 @@ format DataOp {
             0xb, 0xd, 0xf: AddrMode3::addrMode3();
         }
         0: decode IS_MISC {
-            0: decode OPCODE {
-                0x0: and({{ Rd = resTemp = Rn & op2; }});
-                0x1: eor({{ Rd = resTemp = Rn ^ op2; }});
-                0x2: sub({{ Rd = resTemp = Rn - op2; }}, sub);
-                0x3: rsb({{ Rd = resTemp = op2 - Rn; }}, rsb);
-                0x4: add({{ Rd = resTemp = Rn + op2; }}, add);
-                0x5: adc({{ Rd = resTemp = Rn + op2 + CondCodes<29:>; }}, add);
-                0x6: sbc({{ Rd = resTemp = Rn - op2 - !CondCodes<29:>; }}, sub);
-                0x7: rsc({{ Rd = resTemp = op2 - Rn - !CondCodes<29:>; }}, rsb);
-                0x8: tst({{ resTemp = Rn & op2; }});
-                0x9: teq({{ resTemp = Rn ^ op2; }});
-                0xa: cmp({{ resTemp = Rn - op2; }}, sub);
-                0xb: cmn({{ resTemp = Rn + op2; }}, add);
-                0xc: orr({{ Rd = resTemp = Rn | op2; }});
-                0xd: mov({{ Rd = resTemp = op2; }});
-                0xe: bic({{ Rd = resTemp = Rn & ~op2; }});
-                0xf: mvn({{ Rd = resTemp = ~op2; }});
-            }
+            0: ArmDataProcReg::armDataProcReg();
             1: decode MISC_OPCODE {
                 0x0: decode OPCODE {
                     0x8: PredOp::mrs_cpsr({{
@@ -195,32 +178,7 @@ format DataOp {
         }
     }
     0x1: decode IS_MISC {
-        0: decode OPCODE {
-            format DataImmOp {
-                0x0: andi({{ Rd = resTemp = Rn & rotated_imm; }});
-                0x1: eori({{ Rd = resTemp = Rn ^ rotated_imm; }});
-                0x2: subi({{ Rd = resTemp = Rn - rotated_imm; }}, sub);
-                0x3: rsbi({{ Rd = resTemp = rotated_imm - Rn; }}, rsb);
-                0x4: addi({{ Rd = resTemp = Rn + rotated_imm; }}, add);
-                0x5: adci({{
-                    Rd = resTemp = Rn + rotated_imm + CondCodes<29:>;
-                }}, add);
-                0x6: sbci({{
-                    Rd = resTemp = Rn -rotated_imm - !CondCodes<29:>;
-                }}, sub);
-                0x7: rsci({{
-                    Rd = resTemp = rotated_imm - Rn - !CondCodes<29:>;
-                }}, rsb);
-                0x8: tsti({{ resTemp = Rn & rotated_imm; }});
-                0x9: teqi({{ resTemp = Rn ^ rotated_imm; }});
-                0xa: cmpi({{ resTemp = Rn - rotated_imm; }}, sub);
-                0xb: cmni({{ resTemp = Rn + rotated_imm; }}, add);
-                0xc: orri({{ Rd = resTemp = Rn | rotated_imm; }});
-                0xd: movi({{ Rd = resTemp = rotated_imm; }});
-                0xe: bici({{ Rd = resTemp = Rn & ~rotated_imm; }});
-                0xf: mvni({{ Rd = resTemp = ~rotated_imm; }});
-            }
-        }
+        0: ArmDataProcImm::armDataProcImm();
         1: decode OPCODE {
             // The following two instructions aren't supposed to be defined
             0x8: DataOp::movw({{ Rd = IMMED_11_0 | (RN << 12) ; }});

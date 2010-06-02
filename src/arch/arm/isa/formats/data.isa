@@ -1,0 +1,151 @@
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+def format ArmDataProcReg() {{
+    instDecode = '''
+          case %(opcode)#x:
+            if (immShift) {
+                if (setCc) {
+                    return new %(className)sDRegCc(machInst,
+                                                   rd, rn, rm, imm5, type);
+                } else {
+                    return new %(className)sDReg(machInst,
+                                                 rd, rn, rm, imm5, type);
+                }
+            } else {
+                if (setCc) {
+                    return new %(className)sDRegRegCc(machInst,
+                                                      rd, rn, rm, rs, type);
+                } else {
+                    return new %(className)sDRegReg(machInst,
+                                                    rd, rn, rm, rs, type);
+                }
+            }
+            break;
+    '''
+
+    def instCode(opcode, mnem):
+        global instDecode
+        return instDecode % { "className": mnem.capitalize(),
+                              "opcode": opcode }
+
+    decode_block = '''
+    {
+        const bool immShift = (bits(machInst, 4) == 0);
+        const bool setCc = (bits(machInst, 20) == 1);
+        const uint32_t imm5 = bits(machInst, 11, 7);
+        const ArmShiftType type = (ArmShiftType)(uint32_t)bits(machInst, 6, 5);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)RD;
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)RN;
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)RM;
+        const IntRegIndex rs = (IntRegIndex)(uint32_t)RS;
+        switch (OPCODE) {
+    '''
+    decode_block += instCode(0x0, "and")
+    decode_block += instCode(0x1, "eor")
+    decode_block += instCode(0x2, "sub")
+    decode_block += instCode(0x3, "rsb")
+    decode_block += instCode(0x4, "add")
+    decode_block += instCode(0x5, "adc")
+    decode_block += instCode(0x6, "sbc")
+    decode_block += instCode(0x7, "rsc")
+    decode_block += instCode(0x8, "tst")
+    decode_block += instCode(0x9, "teq")
+    decode_block += instCode(0xa, "cmp")
+    decode_block += instCode(0xb, "cmn")
+    decode_block += instCode(0xc, "orr")
+    decode_block += instCode(0xd, "mov")
+    decode_block += instCode(0xe, "bic")
+    decode_block += instCode(0xf, "mvn")
+    decode_block += '''
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
+
+def format ArmDataProcImm() {{
+    instDecode = '''
+          case %(opcode)#x:
+            if (setCc) {
+                return new %(className)sDImmCc(machInst, rd, rn, imm, rotC);
+            } else {
+                return new %(className)sDImm(machInst, rd, rn, imm, rotC);
+            }
+            break;
+    '''
+
+    def instCode(opcode, mnem):
+        global instDecode
+        return instDecode % { "className": mnem.capitalize(),
+                              "opcode": opcode }
+
+    decode_block = '''
+    {
+        const bool setCc = (bits(machInst, 20) == 1);
+        const uint32_t unrotated = bits(machInst, 7, 0);
+        const uint32_t rotation = (bits(machInst, 11, 8) << 1);
+        const bool rotC = (rotation != 0);
+        const uint32_t imm = rotate_imm(unrotated, rotation);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)RD;
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)RN;
+        switch (OPCODE) {
+    '''
+    decode_block += instCode(0x0, "and")
+    decode_block += instCode(0x1, "eor")
+    decode_block += instCode(0x2, "sub")
+    decode_block += instCode(0x3, "rsb")
+    decode_block += instCode(0x4, "add")
+    decode_block += instCode(0x5, "adc")
+    decode_block += instCode(0x6, "sbc")
+    decode_block += instCode(0x7, "rsc")
+    decode_block += instCode(0x8, "tst")
+    decode_block += instCode(0x9, "teq")
+    decode_block += instCode(0xa, "cmp")
+    decode_block += instCode(0xb, "cmn")
+    decode_block += instCode(0xc, "orr")
+    decode_block += instCode(0xd, "mov")
+    decode_block += instCode(0xe, "bic")
+    decode_block += instCode(0xf, "mvn")
+    decode_block += '''
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
