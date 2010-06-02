@@ -129,7 +129,7 @@ format DataOp {
                     }
                 }
                 0x1: decode OPCODE {
-                    0x9: BranchExchange::oldbx({{ }});
+                    0x9: ArmBx::armBx();
                     0xb: PredOp::clz({{
                         Rd = ((Rm == 0) ? 32 : (31 - findMsbSet(Rm)));
                     }});
@@ -138,7 +138,7 @@ format DataOp {
                     0x9: WarnUnimpl::bxj();
                 }
                 0x3: decode OPCODE {
-                    0x9: BranchExchange::oldblx({{ }}, Link);
+                    0x9: ArmBlxReg::armBlxReg();
                 }
                 0x5: decode OPCODE {
                     0x8: WarnUnimpl::qadd();
@@ -264,9 +264,8 @@ format DataOp {
     }
     0x4: ArmMacroMem::armMacroMem();
     0x5: decode OPCODE_24 {
-        // Branch (and Link) Instructions
-        0: Branch::oldb({{ }});
-        1: Branch::oldbl({{ }}, Link);
+        0: ArmBBlxImm::armBBlxImm();
+        1: ArmBlBlxImm::armBlBlxImm();
     }
     0x6: decode CPNUM {
         0xb: decode LOADOP {
