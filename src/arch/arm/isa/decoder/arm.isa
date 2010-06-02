@@ -148,32 +148,6 @@ format DataOp {
                 0xa, 0xb: VfpData::vfpData();
             } // CPNUM
             1: decode CPNUM { // 27-24=1110,4 ==1
-                1: decode OPCODE_15_12 {
-                    format FloatOp {
-                        0xf: decode OPCODE_23_21 {
-                            format FloatCmp {
-                                0x4: cmf({{ Fn.df }}, {{ Fm.df }});
-                                0x5: cnf({{ Fn.df }}, {{ -Fm.df }});
-                                0x6: cmfe({{ Fn.df }}, {{ Fm.df}});
-                                0x7: cnfe({{ Fn.df }}, {{ -Fm.df}});
-                            }
-                        }
-                        default: decode OPCODE_23_20 {
-                            0x0: decode OPCODE_7 {
-                                0: flts({{ Fn.sf = (float) Rd.sw; }});
-                                1: fltd({{ Fn.df = (double) Rd.sw; }});
-                            }
-                            0x1: decode OPCODE_7 {
-                                0: fixs({{ Rd = (uint32_t) Fm.sf; }});
-                                1: fixd({{ Rd = (uint32_t) Fm.df; }});
-                            }
-                            0x2: wfs({{ Fpsr = Rd; }});
-                            0x3: rfs({{ Rd = Fpsr; }});
-                            0x4: FailUnimpl::wfc();
-                            0x5: FailUnimpl::rfc();
-                        }
-                    } // format FloatOp
-                }
                 0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                 0xf: McrMrc15::mcrMrc15();
             } // CPNUM  (OP4 == 1)
