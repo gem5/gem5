@@ -179,6 +179,7 @@ def operands {{
     'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 2),
     'Sctlr': ('ControlReg', 'uw', 'MISCREG_SCTLR', None, 2),
     'SevMailbox': ('ControlReg', 'uw', 'MISCREG_SEV_MAILBOX', None, 2),
+    'PC': ('PC', 'ud', None, None, 2),
     'NPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 2,
             readNPC, writeNPC),
     'FNPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 2,

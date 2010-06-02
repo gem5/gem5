@@ -1167,7 +1167,7 @@ def format Thumb16Misc() {{
                                   true, true, regList);
             }
           case 0xe:
-            return new WarnUnimplemented("bkpt", machInst);
+            return new BkptInst(machInst);
           case 0xf:
             if (bits(machInst, 3, 0) != 0)
                 return new ItInst(machInst);
