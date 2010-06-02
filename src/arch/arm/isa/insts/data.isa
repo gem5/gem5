@@ -428,4 +428,77 @@ let {{
             Dest = resTemp;
             resTemp = geBits;
         ''', flagType="ge", buildNonCc=False)
+
+    buildRegDataInst("uqadd16", '''
+            uint32_t midRes;
+            for (unsigned i = 0; i < 2; i++) {
+                int high = (i + 1) * 16 - 1;
+                int low = i * 16;
+                uint64_t arg1 = bits(Op1, high, low);
+                uint64_t arg2 = bits(Op2, high, low);
+                uSaturateOp<16>(midRes, arg1, arg2);
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uqadd8", '''
+            uint32_t midRes;
+            for (unsigned i = 0; i < 4; i++) {
+                int high = (i + 1) * 8 - 1;
+                int low = i * 8;
+                uint64_t arg1 = bits(Op1, high, low);
+                uint64_t arg2 = bits(Op2, high, low);
+                uSaturateOp<8>(midRes, arg1, arg2);
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uqsub16", '''
+            uint32_t midRes;
+            for (unsigned i = 0; i < 2; i++) {
+                 int high = (i + 1) * 16 - 1;
+                 int low = i * 16;
+                 uint64_t arg1 = bits(Op1, high, low);
+                 uint64_t arg2 = bits(Op2, high, low);
+                 uSaturateOp<16>(midRes, arg1, arg2, true);
+                 replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uqsub8", '''
+            uint32_t midRes;
+            for (unsigned i = 0; i < 4; i++) {
+                 int high = (i + 1) * 8 - 1;
+                 int low = i * 8;
+                 uint64_t arg1 = bits(Op1, high, low);
+                 uint64_t arg2 = bits(Op2, high, low);
+                 uSaturateOp<8>(midRes, arg1, arg2, true);
+                 replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uqasx", '''
+            uint32_t midRes;
+            uint64_t arg1Low = bits(Op1.sw, 15, 0);
+            uint64_t arg1High = bits(Op1.sw, 31, 16);
+            uint64_t arg2Low = bits(Op2.sw, 15, 0);
+            uint64_t arg2High = bits(Op2.sw, 31, 16);
+            uSaturateOp<16>(midRes, arg1Low, arg2High, true);
+            replaceBits(resTemp, 15, 0, midRes);
+            uSaturateOp<16>(midRes, arg1High, arg2Low);
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uqsax", '''
+            uint32_t midRes;
+            uint64_t arg1Low = bits(Op1.sw, 15, 0);
+            uint64_t arg1High = bits(Op1.sw, 31, 16);
+            uint64_t arg2Low = bits(Op2.sw, 15, 0);
+            uint64_t arg2High = bits(Op2.sw, 31, 16);
+            uSaturateOp<16>(midRes, arg1Low, arg2High);
+            replaceBits(resTemp, 15, 0, midRes);
+            uSaturateOp<16>(midRes, arg1High, arg2Low, true);
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
 }};

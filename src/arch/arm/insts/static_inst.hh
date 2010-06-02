@@ -77,6 +77,23 @@ class ArmStaticInst : public StaticInst
         }
     }
 
+    template<int width>
+    static bool
+    uSaturateOp(uint32_t &res, int64_t op1, int64_t op2, bool sub=false)
+    {
+        int64_t midRes = sub ? (op1 - op2) : (op1 + op2);
+        if (midRes >= (1 << width)) {
+            res = (1 << width) - 1;
+            return true;
+        } else if (midRes < 0) {
+            res = 0;
+            return true;
+        } else {
+            res = midRes;
+            return false;
+        }
+    }
+
     // Constructor
     ArmStaticInst(const char *mnem, ExtMachInst _machInst,
                   OpClass __opClass)
