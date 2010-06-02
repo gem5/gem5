@@ -649,15 +649,19 @@ def format Thumb16Misc() {{
                             (bits(machInst, 7, 3) << 1),
                             (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0xa:
-            switch (bits(machInst, 7, 5)) {
-              case 0x0:
-                return new WarnUnimplemented("rev", machInst);
-              case 0x1:
-                return new WarnUnimplemented("rev16", machInst);
-              case 0x3:
-                return new WarnUnimplemented("revsh", machInst);
-              default:
-                break;
+            {
+                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
+                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+                switch (bits(machInst, 7, 6)) {
+                  case 0x0:
+                    return new Rev(machInst, rd, rm);
+                  case 0x1:
+                    return new Rev16(machInst, rd, rm);
+                  case 0x3:
+                    return new Revsh(machInst, rd, rm);
+                  default:
+                    break;
+                }
             }
             break;
           case 0xb:
