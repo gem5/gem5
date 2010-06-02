@@ -792,4 +792,21 @@ let {{
             replaceBits(resTemp, 31, 16, midRes);
             Dest = resTemp;
         ''', flagType="none", buildCc=False)
+
+    buildRegDataInst("pkhbt", '''
+            uint32_t resTemp = 0;
+            uint16_t arg1Low = bits(Op1, 15, 0);
+            uint16_t arg2High = bits(secondOp, 31, 16);
+            replaceBits(resTemp, 15, 0, arg1Low);
+            replaceBits(resTemp, 31, 16, arg2High);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("pkhtb", '''
+            uint32_t resTemp = 0;
+            uint16_t arg1High = bits(Op1, 31, 16);
+            uint16_t arg2Low = bits(secondOp, 15, 0);
+            replaceBits(resTemp, 15, 0, arg2Low);
+            replaceBits(resTemp, 31, 16, arg1High);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
 }};
