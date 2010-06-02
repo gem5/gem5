@@ -282,4 +282,28 @@ let {{
     header_output += RegRegOpDeclare.subst(vnegDIop);
     decoder_output += RegRegOpConstructor.subst(vnegDIop);
     exec_output += PredOpExecute.subst(vnegDIop);
+
+    vabsSCode = '''
+        FpDest = fabsf(FpOp1);
+    '''
+    vabsSIop = InstObjParams("vabss", "VabsS", "RegRegOp",
+                                     { "code": vabsSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vabsSIop);
+    decoder_output += RegRegOpConstructor.subst(vabsSIop);
+    exec_output += PredOpExecute.subst(vabsSIop);
+
+    vabsDCode = '''
+        IntDoubleUnion cOp1, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cDest.fp = fabs(cOp1.fp);
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vabsDIop = InstObjParams("vabsd", "VabsD", "RegRegOp",
+                                     { "code": vabsDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vabsDIop);
+    decoder_output += RegRegOpConstructor.subst(vabsDIop);
+    exec_output += PredOpExecute.subst(vabsDIop);
 }};
