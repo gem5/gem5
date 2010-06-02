@@ -189,6 +189,23 @@ class RegRegRegOp : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+class RegRegImmOp : public PredOp
+{
+  protected:
+    IntRegIndex dest;
+    IntRegIndex op1;
+    uint64_t imm;
+
+    RegRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                IntRegIndex _dest, IntRegIndex _op1,
+                uint64_t _imm) :
+        PredOp(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), imm(_imm)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
 class RegRegImmImmOp : public PredOp
 {
   protected:
