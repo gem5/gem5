@@ -36,12 +36,21 @@
 // Authors: Gabe Black
 
 def format ArmDataProcReg() {{
+    pclr = '''
+        return new %(className)ssRegPclr(machInst, %(dest)s,
+                                        %(op1)s, rm, imm5,
+                                        type);
+    '''
     instDecode = '''
           case %(opcode)#x:
             if (immShift) {
                 if (setCc) {
-                    return new %(className)sRegCc(machInst, %(dest)s, %(op1)s,
-                                                   rm, imm5, type);
+                    if (%(dest)s == INTREG_PC) {
+                        %(pclr)s
+                    } else {
+                        return new %(className)sRegCc(machInst, %(dest)s,
+                                                      %(op1)s, rm, imm5, type);
+                    }
                 } else {
                     return new %(className)sReg(machInst, %(dest)s, %(op1)s,
                                                  rm, imm5, type);
@@ -58,12 +67,26 @@ def format ArmDataProcReg() {{
             break;
     '''
 
-    def instCode(opcode, mnem, dest="rd", op1="rn"):
-        global instDecode
-        return instDecode % { "className": mnem.capitalize(),
-                              "opcode": opcode,
-                              "dest": dest,
-                              "op1": op1 }
+    def instCode(opcode, mnem, useDest = True, useOp1 = True):
+        global pclr
+        if useDest:
+            dest = "rd"
+        else:
+            dest = "INTREG_ZERO"
+        if useOp1:
+            op1 = "rn"
+        else:
+            op1 = "INTREG_ZERO"
+        global instDecode, pclrCode
+        substDict = { "className": mnem.capitalize(),
+                      "opcode": opcode,
+                      "dest": dest,
+                      "op1": op1 }
+        if useDest:
+            substDict["pclr"] = pclr % substDict
+        else:
+            substDict["pclr"] = ""
+        return instDecode % substDict
 
     decode_block = '''
     {
@@ -85,14 +108,14 @@ def format ArmDataProcReg() {{
     decode_block += instCode(0x5, "adc")
     decode_block += instCode(0x6, "sbc")
     decode_block += instCode(0x7, "rsc")
-    decode_block += instCode(0x8, "tst", dest="INTREG_ZERO")
-    decode_block += instCode(0x9, "teq", dest="INTREG_ZERO")
-    decode_block += instCode(0xa, "cmp", dest="INTREG_ZERO")
-    decode_block += instCode(0xb, "cmn", dest="INTREG_ZERO")
+    decode_block += instCode(0x8, "tst", useDest = False)
+    decode_block += instCode(0x9, "teq", useDest = False)
+    decode_block += instCode(0xa, "cmp", useDest = False)
+    decode_block += instCode(0xb, "cmn", useDest = False)
     decode_block += instCode(0xc, "orr")
-    decode_block += instCode(0xd, "mov", op1="INTREG_ZERO")
+    decode_block += instCode(0xd, "mov", useOp1 = False)
     decode_block += instCode(0xe, "bic")
-    decode_block += instCode(0xf, "mvn", op1="INTREG_ZERO")
+    decode_block += instCode(0xf, "mvn", useOp1 = False)
     decode_block += '''
           default:
             return new Unknown(machInst);
@@ -102,43 +125,70 @@ def format ArmDataProcReg() {{
 }};
 
 def format ArmDataProcImm() {{
+    pclr = '''
+        return new %(className)ssImmPclr(machInst, %(dest)s,
+                                        %(op1)s, imm, false);
+    '''
+    adr = '''
+        return new AdrImm(machInst, %(dest)s, %(add)s,
+                                     imm, false);
+    '''
     instDecode = '''
+          case %(opcode)#x:
             if (setCc) {
-                return new %(className)sImmCc(machInst, %(dest)s, %(op1)s,
-                                               imm, rotC);
+                if (%(pclrInst)s && %(dest)s == INTREG_PC) {
+                    %(pclr)s
+                } else {
+                    return new %(className)sImmCc(machInst, %(dest)s, %(op1)s,
+                                                   imm, rotC);
+                }
             } else {
-                return new %(className)sImm(machInst, %(dest)s, %(op1)s,
-                                             imm, rotC);
+                if (%(adrInst)s && %(op1)s == INTREG_PC) {
+                    %(adr)s
+                } else {
+                    return new %(className)sImm(machInst, %(dest)s, %(op1)s,
+                                                 imm, rotC);
+                }
             }
             break;
     '''
 
-    def instCode(opcode, mnem, dest="rd", op1="rn"):
-        global instDecode
-        code = '''
-          case %(opcode)#x:
-        ''' + instDecode
-        return code % { "className": mnem.capitalize(),
-                        "opcode": opcode,
-                        "dest": dest,
-                        "op1": op1 }
+    def instCode(opcode, mnem, useDest = True, useOp1 = True):
+        global instDecode, pclr, adr
+        if useDest:
+            dest = "rd"
+        else:
+            dest = "INTREG_ZERO"
+        if useOp1:
+            op1 = "rn"
+        else:
+            op1 = "INTREG_ZERO"
+        substDict = { "className": mnem.capitalize(),
+                      "opcode": opcode,
+                      "dest": dest,
+                      "op1": op1,
+                      "adr": "",
+                      "adrInst": "false" }
+        if useDest:
+            substDict["pclrInst"] = "true"
+            substDict["pclr"] = pclr % substDict
+        else:
+            substDict["pclrInst"] = "false"
+            substDict["pclr"] = ""
+        return instDecode % substDict
 
-    def adrCode(opcode, mnem, dest="rd", op1="rn", add="1"):
-        global instDecode
-        code = '''
-          case %(opcode)#x:
-            if (rn == 0xf) {
-                return new AdrImm(machInst, %(dest)s, %(add)s,
-                                             imm, false);
-            } else {
-        ''' + instDecode + '''
-            }
-        '''
-        return code % { "className": mnem.capitalize(),
-                        "opcode": opcode,
-                        "dest": dest,
-                        "add": add,
-                        "op1": op1 }
+    def adrCode(opcode, mnem, add="1"):
+        global instDecode, pclr, adr
+        substDict = { "className": mnem.capitalize(),
+                      "opcode": opcode,
+                      "dest": "rd",
+                      "op1": "rn",
+                      "add": add,
+                      "pclrInst": "true",
+                      "adrInst": "true" }
+        substDict["pclr"] = pclr % substDict
+        substDict["adr"] = adr % substDict
+        return instDecode % substDict
 
     decode_block = '''
     {
@@ -159,14 +209,14 @@ def format ArmDataProcImm() {{
     decode_block += instCode(0x5, "adc")
     decode_block += instCode(0x6, "sbc")
     decode_block += instCode(0x7, "rsc")
-    decode_block += instCode(0x8, "tst", dest="INTREG_ZERO")
-    decode_block += instCode(0x9, "teq", dest="INTREG_ZERO")
-    decode_block += instCode(0xa, "cmp", dest="INTREG_ZERO")
-    decode_block += instCode(0xb, "cmn", dest="INTREG_ZERO")
+    decode_block += instCode(0x8, "tst", useDest = False)
+    decode_block += instCode(0x9, "teq", useDest = False)
+    decode_block += instCode(0xa, "cmp", useDest = False)
+    decode_block += instCode(0xb, "cmn", useDest = False)
     decode_block += instCode(0xc, "orr")
-    decode_block += instCode(0xd, "mov", op1="INTREG_ZERO")
+    decode_block += instCode(0xd, "mov", useOp1 = False)
     decode_block += instCode(0xe, "bic")
-    decode_block += instCode(0xf, "mvn", op1="INTREG_ZERO")
+    decode_block += instCode(0xf, "mvn", useOp1 = False)
     decode_block += '''
           default:
             return new Unknown(machInst);

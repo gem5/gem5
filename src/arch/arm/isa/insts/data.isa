@@ -98,8 +98,8 @@ let {{
     regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodes<29:>)"
     regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodes<29:>)"
 
-    def buildImmDataInst(mnem, code, flagType = "logic"):
-        global header_output, decoder_output, exec_output
+    def buildImmDataInst(mnem, code, flagType = "logic", \
+                         suffix = "Imm", buildCc = True):
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
@@ -114,22 +114,26 @@ let {{
                 "negBit": negBit
             }
         immCode = secondOpRe.sub(immOp2, code)
-        immIop = InstObjParams(mnem, mnem.capitalize() + "Imm", "DataImmOp",
+        immIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataImmOp",
                                {"code" : immCode,
                                 "predicate_test": predicateTest})
-        immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "ImmCc",
+        immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
                                  "DataImmOp",
                                  {"code" : immCode + immCcCode,
                                   "predicate_test": predicateTest})
-        header_output += DataImmDeclare.subst(immIop) + \
-                         DataImmDeclare.subst(immIopCc)
-        decoder_output += DataImmConstructor.subst(immIop) + \
-                          DataImmConstructor.subst(immIopCc)
-        exec_output += PredOpExecute.subst(immIop) + \
-                       PredOpExecute.subst(immIopCc)
 
-    def buildRegDataInst(mnem, code, flagType = "logic"):
-        global header_output, decoder_output, exec_output
+        def subst(iop):
+            global header_output, decoder_output, exec_output
+            header_output += DataImmDeclare.subst(iop)
+            decoder_output += DataImmConstructor.subst(iop)
+            exec_output += PredOpExecute.subst(iop)
+
+        subst(immIop)
+        if buildCc:
+            subst(immIopCc)
+
+    def buildRegDataInst(mnem, code, flagType = "logic", \
+                         suffix = "Reg", buildCc = True):
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
@@ -144,22 +148,26 @@ let {{
                 "negBit": negBit
             }
         regCode = secondOpRe.sub(regOp2, code)
-        regIop = InstObjParams(mnem, mnem.capitalize() + "Reg", "DataRegOp",
+        regIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataRegOp",
                                {"code" : regCode,
                                 "predicate_test": predicateTest})
-        regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "RegCc",
+        regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
                                  "DataRegOp",
                                  {"code" : regCode + regCcCode,
                                   "predicate_test": predicateTest})
-        header_output += DataRegDeclare.subst(regIop) + \
-                         DataRegDeclare.subst(regIopCc)
-        decoder_output += DataRegConstructor.subst(regIop) + \
-                          DataRegConstructor.subst(regIopCc)
-        exec_output += PredOpExecute.subst(regIop) + \
-                       PredOpExecute.subst(regIopCc)
 
-    def buildRegRegDataInst(mnem, code, flagType = "logic"):
-        global header_output, decoder_output, exec_output
+        def subst(iop):
+            global header_output, decoder_output, exec_output
+            header_output += DataRegDeclare.subst(iop)
+            decoder_output += DataRegConstructor.subst(iop)
+            exec_output += PredOpExecute.subst(iop)
+
+        subst(regIop)
+        if buildCc:
+            subst(regIopCc)
+
+    def buildRegRegDataInst(mnem, code, flagType = "logic", \
+                            suffix = "RegReg", buildCc = True):
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
@@ -174,53 +182,72 @@ let {{
                 "negBit": negBit
             }
         regRegCode = secondOpRe.sub(regRegOp2, code)
-        regRegIop = InstObjParams(mnem, mnem.capitalize() + "RegReg",
+        regRegIop = InstObjParams(mnem, mnem.capitalize() + suffix,
                                   "DataRegRegOp",
                                   {"code" : regRegCode,
                                    "predicate_test": predicateTest})
         regRegIopCc = InstObjParams(mnem + "s",
-                                    mnem.capitalize() + "RegRegCc",
+                                    mnem.capitalize() + suffix + "Cc",
                                     "DataRegRegOp",
                                     {"code" : regRegCode + regRegCcCode,
                                      "predicate_test": predicateTest})
-        header_output += DataRegRegDeclare.subst(regRegIop) + \
-                         DataRegRegDeclare.subst(regRegIopCc)
-        decoder_output += DataRegRegConstructor.subst(regRegIop) + \
-                          DataRegRegConstructor.subst(regRegIopCc)
-        exec_output += PredOpExecute.subst(regRegIop) + \
-                       PredOpExecute.subst(regRegIopCc)
 
-    def buildDataInst(mnem, code, flagType = "logic"):
-        buildImmDataInst(mnem, code, flagType)
-        buildRegDataInst(mnem, code, flagType)
-        buildRegRegDataInst(mnem, code, flagType)
+        def subst(iop):
+            global header_output, decoder_output, exec_output
+            header_output += DataRegRegDeclare.subst(iop)
+            decoder_output += DataRegRegConstructor.subst(iop)
+            exec_output += PredOpExecute.subst(iop)
 
-    buildDataInst("and", "AIWDest = resTemp = Op1 & secondOp;")
-    buildDataInst("eor", "AIWDest = resTemp = Op1 ^ secondOp;")
-    buildDataInst("sub", "AIWDest = resTemp = Op1 - secondOp;", "sub")
-    buildDataInst("rsb", "AIWDest = resTemp = secondOp - Op1;", "rsb")
-    buildDataInst("add", "AIWDest = resTemp = Op1 + secondOp;", "add")
+        subst(regRegIop)
+        if buildCc:
+            subst(regRegIopCc)
+
+    def buildDataInst(mnem, code, flagType = "logic", \
+                      aiw = True, regRegAiw = True,
+                      subsPcLr = True):
+        regRegCode = instCode = code
+        if aiw:
+            instCode = "AIW" + instCode
+            if regRegAiw:
+                regRegCode = "AIW" + regRegCode
+
+        buildImmDataInst(mnem, instCode, flagType)
+        buildRegDataInst(mnem, instCode, flagType)
+        buildRegRegDataInst(mnem, regRegCode, flagType)
+        if subsPcLr:
+            code += '''
+            uint32_t newCpsr =
+                cpsrWriteByInstr(Cpsr | CondCodes, Spsr, 0xF, true);
+            Cpsr = ~CondCodesMask & newCpsr;
+            CondCodes = CondCodesMask & newCpsr;
+            '''
+            buildImmDataInst(mnem + 's', code, flagType,
+                             suffix = "ImmPclr", buildCc = False)
+            buildRegDataInst(mnem + 's', code, flagType,
+                             suffix = "RegPclr", buildCc = False)
+
+    buildDataInst("and", "Dest = resTemp = Op1 & secondOp;")
+    buildDataInst("eor", "Dest = resTemp = Op1 ^ secondOp;")
+    buildDataInst("sub", "Dest = resTemp = Op1 - secondOp;", "sub")
+    buildDataInst("rsb", "Dest = resTemp = secondOp - Op1;", "rsb")
+    buildDataInst("add", "Dest = resTemp = Op1 + secondOp;", "add")
     buildImmDataInst("adr", '''
-                               AIWDest = resTemp = (readPC(xc) & ~0x3) +
+                               Dest = resTemp = (readPC(xc) & ~0x3) +
                                (op1 ? secondOp : -secondOp);
                             ''')
-    buildDataInst("adc", "AIWDest = resTemp = Op1 + secondOp + %s;" % oldC,
-                  "add")
-    buildDataInst("sbc", "AIWDest = resTemp = Op1 - secondOp - !%s;" % oldC,
-                  "sub")
-    buildDataInst("rsc", "AIWDest = resTemp = secondOp - Op1 - !%s;" % oldC,
-                  "rsb")
-    buildDataInst("tst", "resTemp = Op1 & secondOp;")
-    buildDataInst("teq", "resTemp = Op1 ^ secondOp;")
-    buildDataInst("cmp", "resTemp = Op1 - secondOp;", "sub")
-    buildDataInst("cmn", "resTemp = Op1 + secondOp;", "add")
-    buildDataInst("orr", "AIWDest = resTemp = Op1 | secondOp;")
-    buildDataInst("orn", "Dest = resTemp = Op1 | ~secondOp;")
-    buildImmDataInst("mov", "AIWDest = resTemp = secondOp;")
-    buildRegDataInst("mov", "AIWDest = resTemp = secondOp;")
-    buildRegRegDataInst("mov", "Dest = resTemp = secondOp;")
-    buildDataInst("bic", "AIWDest = resTemp = Op1 & ~secondOp;")
-    buildDataInst("mvn", "AIWDest = resTemp = ~secondOp;")
+    buildDataInst("adc", "Dest = resTemp = Op1 + secondOp + %s;" % oldC, "add")
+    buildDataInst("sbc", "Dest = resTemp = Op1 - secondOp - !%s;" % oldC, "sub")
+    buildDataInst("rsc", "Dest = resTemp = secondOp - Op1 - !%s;" % oldC, "rsb")
+    buildDataInst("tst", "resTemp = Op1 & secondOp;", aiw = False)
+    buildDataInst("teq", "resTemp = Op1 ^ secondOp;", aiw = False)
+    buildDataInst("cmp", "resTemp = Op1 - secondOp;", "sub", aiw = False)
+    buildDataInst("cmn", "resTemp = Op1 + secondOp;", "add", aiw = False)
+    buildDataInst("orr", "Dest = resTemp = Op1 | secondOp;")
+    buildDataInst("orn", "Dest = resTemp = Op1 | ~secondOp;", aiw = False)
+    buildDataInst("mov", "Dest = resTemp = secondOp;", regRegAiw = False)
+    buildDataInst("bic", "Dest = resTemp = Op1 & ~secondOp;")
+    buildDataInst("mvn", "Dest = resTemp = ~secondOp;")
     buildDataInst("movt",
-            "Dest = resTemp = insertBits(Op1, 31, 16, secondOp);")
+                  "Dest = resTemp = insertBits(Op1, 31, 16, secondOp);",
+                  aiw = False)
 }};
