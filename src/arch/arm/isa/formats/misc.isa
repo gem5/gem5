@@ -78,8 +78,14 @@ def format ArmMsrMrs() {{
     '''
 }};
 
-def format McrMrc15() {{
-    decode_block = '''
+let {{
+    header_output = '''
+    StaticInstPtr
+    decodeMcrMrc15(ExtMachInst machInst);
+    '''
+    decoder_output = '''
+    StaticInstPtr
+    decodeMcrMrc15(ExtMachInst machInst)
     {
         const uint32_t opc1 = bits(machInst, 23, 21);
         const uint32_t crn = bits(machInst, 19, 16);
@@ -178,5 +184,11 @@ def format McrMrc15() {{
             }
         }
     }
+    '''
+}};
+
+def format McrMrc15() {{
+    decode_block = '''
+    return decodeMcrMrc15(machInst);
     '''
 }};
