@@ -558,7 +558,21 @@ let {{
                 }
               case 0x1:
                 if (opc3 == 1) {
-                    return new WarnUnimplemented("vneg", machInst);
+                    uint32_t vd;
+                    uint32_t vm;
+                    if (bits(machInst, 8) == 0) {
+                        vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
+                        vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
+                        return new VnegS(machInst,
+                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    } else {
+                        vd = (bits(machInst, 22) << 5) |
+                             (bits(machInst, 15, 12) << 1);
+                        vm = (bits(machInst, 5) << 5) |
+                             (bits(machInst, 3, 0) << 1);
+                        return new VnegD(machInst,
+                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    }
                 } else {
                     return new WarnUnimplemented("vsqrt", machInst);
                 }
