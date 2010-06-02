@@ -284,29 +284,33 @@ let {{
                                   ''')
     buildMult4InstUnCc("smmla", '''Reg0 = resTemp =
                                        ((int64_t)(Reg3.ud << 32) +
-                                        Reg1.sw * Reg2.sw) >> 32;
+                                        (int64_t)Reg1.sw *
+                                        (int64_t)Reg2.sw) >> 32;
                                 ''')
     buildMult4InstUnCc("smmlar", '''Reg0 = resTemp =
                                         ((int64_t)(Reg3.ud << 32) +
-                                         Reg1.sw * Reg2.sw +
+                                         (int64_t)Reg1.sw *
+                                         (int64_t)Reg2.sw +
                                          ULL(0x80000000)) >> 32;
                                  ''')
     buildMult4InstUnCc("smmls", '''Reg0 = resTemp =
                                        ((int64_t)(Reg3.ud << 32) -
-                                        Reg1.sw * Reg2.sw) >> 32;
+                                        (int64_t)Reg1.sw *
+                                        (int64_t)Reg2.sw) >> 32;
                                 ''')
     buildMult4InstUnCc("smmlsr", '''Reg0 = resTemp =
                                         ((int64_t)(Reg3.ud << 32) -
-                                         Reg1.sw * Reg2.sw +
+                                         (int64_t)Reg1.sw *
+                                         (int64_t)Reg2.sw +
                                          ULL(0x80000000)) >> 32;
                                  ''')
     buildMult3InstUnCc("smmul", '''Reg0 = resTemp =
-                                       ((int64_t)Reg1 *
-                                        (int64_t)Reg2) >> 32;
+                                       ((int64_t)Reg1.sw *
+                                        (int64_t)Reg2.sw) >> 32;
                                 ''')
     buildMult3InstUnCc("smmulr", '''Reg0 = resTemp =
-                                        ((int64_t)Reg1 *
-                                         (int64_t)Reg2 +
+                                        ((int64_t)Reg1.sw *
+                                         (int64_t)Reg2.sw +
                                          ULL(0x80000000)) >> 32;
                                  ''')
     buildMult3InstCc  ("smuad", '''Reg0 = resTemp =
