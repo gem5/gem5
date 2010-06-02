@@ -110,21 +110,21 @@ vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
     feclearexcept(FeAllExceptions);
     if (isSigned) {
         if (half) {
-            if (val < (int16_t)(1 << 15)) {
+            if ((double)val < (int16_t)(1 << 15)) {
                 feraiseexcept(FeInvalid);
                 return (int16_t)(1 << 15);
             }
-            if (val > (int16_t)mask(15)) {
+            if ((double)val > (int16_t)mask(15)) {
                 feraiseexcept(FeInvalid);
                 return (int16_t)mask(15);
             }
             return (int16_t)val;
         } else {
-            if (val < (int32_t)(1 << 31)) {
+            if ((double)val < (int32_t)(1 << 31)) {
                 feraiseexcept(FeInvalid);
                 return (int32_t)(1 << 31);
             }
-            if (val > (int32_t)mask(31)) {
+            if ((double)val > (int32_t)mask(31)) {
                 feraiseexcept(FeInvalid);
                 return (int32_t)mask(31);
             }
@@ -132,21 +132,21 @@ vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
         }
     } else {
         if (half) {
-            if (val < 0) {
+            if ((double)val < 0) {
                 feraiseexcept(FeInvalid);
                 return 0;
             }
-            if (val > (mask(16))) {
+            if ((double)val > (mask(16))) {
                 feraiseexcept(FeInvalid);
                 return mask(16);
             }
             return (uint16_t)val;
         } else {
-            if (val < 0) {
+            if ((double)val < 0) {
                 feraiseexcept(FeInvalid);
                 return 0;
             }
-            if (val > (mask(32))) {
+            if ((double)val > (mask(32))) {
                 feraiseexcept(FeInvalid);
                 return mask(32);
             }
