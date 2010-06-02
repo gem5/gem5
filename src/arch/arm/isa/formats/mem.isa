@@ -268,6 +268,96 @@ def format Thumb32LoadWord() {{
     decode_block = decode % classNames
 }};
 
+def format Thumb32StoreSingle() {{
+    def buildPuwDecode(size):
+        puwDecode = '''
+                {
+                    uint32_t puw = bits(machInst, 10, 8);
+                    uint32_t imm = IMMED_7_0;
+                    switch (puw) {
+                      case 0:
+                      case 2:
+                        // If we're here, either P or W must have been set.
+                        panic("Neither P or W set, but that "
+                                "shouldn't be possible.\\n");
+                      case 1:
+                        return new %(imm_w)s(machInst, RT, RN, false, imm);
+                      case 3:
+                        return new %(imm_uw)s(machInst, RT, RN, true, imm);
+                      case 4:
+                        return new %(imm_p)s(machInst, RT, RN, false, imm);
+                      case 5:
+                        return new %(imm_pw)s(machInst, RT, RN, false, imm);
+                      case 6:
+                        return new %(imm_pu)s(machInst, RT, RN, true, imm);
+                      case 7:
+                        return new %(imm_puw)s(machInst, RT, RN, true, imm);
+                    }
+                }
+        '''
+        return puwDecode % {
+            "imm_w" : storeImmClassName(True, False, True, size=size),
+            "imm_uw" : storeImmClassName(True, True, True, size=size),
+            "imm_p" : storeImmClassName(False, False, False, size=size),
+            "imm_pw" : storeImmClassName(False, False, True, size=size),
+            "imm_pu" : storeImmClassName(False, True, False, size=size),
+            "imm_puw" : storeImmClassName(False, True, True, size=size)
+        }
+    decode = '''
+    {
+        uint32_t op1 = bits(machInst, 23, 21);
+        uint32_t op2 = bits(machInst, 11, 6);
+        bool op2Puw = ((op2 & 0x24) == 0x24 ||
+                       (op2 & 0x3c) == 0x30);
+        if (op1 == 4) {
+            return new %(strb_imm)s(machInst, RT, RN, true, IMMED_11_0);
+        } else if (op1 == 0 && op2Puw) {
+            %(strb_puw)s;
+        } else if (op1 == 0 && ((op2 & 0x3c) == 0x38)) {
+            return new %(strbt)s(machInst, RT, RN, true, IMMED_7_0);
+        } else if (op1 == 0 && op2 == 0) {
+            return new %(strb_reg)s(machInst, RT, RN, true,
+                                    bits(machInst, 5, 4), LSL, RM);
+        } else if (op1 == 5) {
+            return new %(strh_imm)s(machInst, RT, RN, true, IMMED_11_0);
+        } else if (op1 == 1 && op2Puw) {
+            %(strh_puw)s;
+        } else if (op1 == 1 && ((op2 & 0x3c) == 0x38)) {
+            return new %(strht)s(machInst, RT, RN, true, IMMED_7_0);
+        } else if (op1 == 1 && op2 == 0) {
+            return new %(strh_reg)s(machInst, RT, RN, true,
+                                    bits(machInst, 5, 4), LSL, RM);
+        } else if (op1 == 6) {
+            return new %(str_imm)s(machInst, RT, RN, true, IMMED_11_0);
+        } else if (op1 == 2 && op2Puw) {
+            %(str_puw)s;
+        } else if (op1 == 2 && ((op2 & 0x3c) == 0x38)) {
+            return new %(strt)s(machInst, RT, RN, true, IMMED_7_0);
+        } else if (op1 == 2 && op2 == 0) {
+            return new %(str_reg)s(machInst, RT, RN, true,
+                                   bits(machInst, 5, 4), LSL, RM);
+        } else {
+            return new Unknown(machInst);
+        }
+    }
+    '''
+    classNames = {
+        "strb_imm" : storeImmClassName(False, True, False, size=1),
+        "strb_puw" : buildPuwDecode(1),
+        "strbt" : storeImmClassName(False, True, False, user=True, size=1),
+        "strb_reg" : storeRegClassName(False, True, False, size=1),
+        "strh_imm" : storeImmClassName(False, True, False, size=2),
+        "strh_puw" : buildPuwDecode(2),
+        "strht" : storeImmClassName(False, True, False, user=True, size=2),
+        "strh_reg" : storeRegClassName(False, True, False, size=2),
+        "str_imm" : storeImmClassName(False, True, False),
+        "str_puw" : buildPuwDecode(4),
+        "strt" : storeImmClassName(False, True, False, user=True),
+        "str_reg" : storeRegClassName(False, True, False)
+    }
+    decode_block = decode % classNames
+}};
+
 def format ArmLoadMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},
                      mem_flags = [], inst_flags = []) {{
     ea_code = ArmGenericCodeSubs(ea_code)
