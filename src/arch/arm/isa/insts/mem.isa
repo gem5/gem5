@@ -39,7 +39,7 @@
 
 let {{
     def loadStoreBaseWork(name, Name, imm, swp, rfe, codeBlobs, memFlags,
-                          instFlags, double, base = 'Memory',
+                          instFlags, double, strex, base = 'Memory',
                           execTemplateBase = ''):
         # Make sure flags are in lists (convert to lists if not).
         memFlags = makeList(memFlags)
@@ -70,6 +70,12 @@ let {{
             if double:
                 declareTemplate = LoadStoreDImmDeclare
                 constructTemplate = LoadStoreDImmConstructor
+                if strex:
+                    declareTemplate = StoreExDImmDeclare
+                    constructTemplate = StoreExDImmConstructor
+            elif strex:
+                declareTemplate = StoreExImmDeclare
+                constructTemplate = StoreExImmConstructor
             else:
                 declareTemplate = LoadStoreImmDeclare
                 constructTemplate = LoadStoreImmConstructor
@@ -88,14 +94,15 @@ let {{
                 + initiateAccTemplate.subst(iop)
                 + completeAccTemplate.subst(iop))
 
-    def loadStoreBase(name, Name, imm, eaCode, accCode, memFlags,
-                      instFlags, double, base = 'Memory',
+    def loadStoreBase(name, Name, imm, eaCode, accCode, postAccCode,
+                      memFlags, instFlags, double, strex, base = 'Memory',
                       execTemplateBase = ''):
         codeBlobs = { "ea_code": eaCode,
                       "memacc_code": accCode,
+                      "postacc_code": postAccCode,
                       "predicate_test": predicateTest }
         return loadStoreBaseWork(name, Name, imm, False, False, codeBlobs,
-                                 memFlags, instFlags, double, base,
+                                 memFlags, instFlags, double, strex, base,
                                  execTemplateBase)
 
     def RfeBase(name, Name, eaCode, accCode, memFlags, instFlags):
@@ -103,7 +110,8 @@ let {{
                       "memacc_code": accCode,
                       "predicate_test": predicateTest }
         return loadStoreBaseWork(name, Name, False, False, True, codeBlobs,
-                                 memFlags, instFlags, False, 'RfeOp', 'Load')
+                                 memFlags, instFlags, False, False,
+                                 'RfeOp', 'Load')
 
     def SwapBase(name, Name, eaCode, preAccCode, postAccCode, memFlags,
                  instFlags):
@@ -112,7 +120,8 @@ let {{
                       "postacc_code": postAccCode,
                       "predicate_test": predicateTest }
         return loadStoreBaseWork(name, Name, False, True, False, codeBlobs,
-                                 memFlags, instFlags, False, 'Swap', 'Swap')
+                                 memFlags, instFlags, False, False,
+                                 'Swap', 'Swap')
 
     def memClassName(base, post, add, writeback, \
                      size=4, sign=False, user=False):

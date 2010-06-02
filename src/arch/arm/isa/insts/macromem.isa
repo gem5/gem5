@@ -87,6 +87,7 @@ let {{
     microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
                                    'MicroMemOp',
                                    {'memacc_code': microStrUopCode,
+                                    'postacc_code': "",
                                     'ea_code': 'EA = Rb + (up ? imm : -imm);',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
@@ -95,6 +96,7 @@ let {{
     microStrFpUopIop = InstObjParams('strfp_uop', 'MicroStrFpUop',
                                      'MicroMemOp',
                                      {'memacc_code': microStrFpUopCode,
+                                      'postacc_code': "",
                                       'ea_code': 'EA = Rb + (up ? imm : -imm);',
                                       'predicate_test': predicateTest},
                                      ['IsMicroop'])

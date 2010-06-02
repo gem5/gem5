@@ -91,6 +91,8 @@ def operands {{
     #Abstracted integer reg operands
     'Dest': ('IntReg', 'uw', 'dest', 'IsInteger', 2,
              maybePCRead, maybePCWrite),
+    'Result': ('IntReg', 'uw', 'result', 'IsInteger', 2,
+               maybePCRead, maybePCWrite),
     'Dest2': ('IntReg', 'uw', 'dest2', 'IsInteger', 2,
               maybePCRead, maybePCWrite),
     'IWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 2,

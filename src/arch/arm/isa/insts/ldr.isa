@@ -66,8 +66,8 @@ let {{
         (newHeader,
          newDecoder,
          newExec) = loadStoreBase(name, Name, imm,
-                                  eaCode, accCode,
-                                  memFlags, instFlags, double,
+                                  eaCode, accCode, "",
+                                  memFlags, instFlags, double, False,
                                   base, execTemplateBase = 'Load')
 
         header_output += newHeader

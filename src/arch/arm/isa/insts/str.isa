@@ -61,23 +61,24 @@ let {{
         return memClassName("STORE_REGD", post, add, writeback,
                             4, False, False)
 
-    def emitStore(name, Name, imm, eaCode, accCode, \
-                  memFlags, instFlags, base, double=False):
+    def emitStore(name, Name, imm, eaCode, accCode, postAccCode, \
+                  memFlags, instFlags, base, double=False, strex=False,
+                  execTemplateBase = 'Store'):
         global header_output, decoder_output, exec_output
 
         (newHeader,
          newDecoder,
          newExec) = loadStoreBase(name, Name, imm,
-                                  eaCode, accCode,
-                                  memFlags, instFlags, double,
-                                  base, execTemplateBase = 'Store')
+                                  eaCode, accCode, postAccCode,
+                                  memFlags, instFlags, double, strex,
+                                  base, execTemplateBase = execTemplateBase)
 
         header_output += newHeader
         decoder_output += newDecoder
         exec_output += newExec
 
     def buildImmStore(mnem, post, add, writeback, \
-                      size=4, sign=False, user=False):
+                      size=4, sign=False, user=False, strex=False):
         name = mnem
         Name = storeImmClassName(post, add, writeback, \
                                  size, sign, user)
@@ -97,15 +98,26 @@ let {{
             { "suffix" : buildMemSuffix(sign, size) }
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryImm", post, writeback)
 
-        emitStore(name, Name, True, eaCode, accCode, \
-                ["ArmISA::TLB::MustBeOne", \
-                 "ArmISA::TLB::AllowUnaligned", \
-                 "%d" % (size - 1)], [], base)
+        memFlags = ["ArmISA::TLB::MustBeOne", "%d" % (size - 1)]
+        if strex:
+            memFlags.append("Request::LLSC")
+            Name = "%s_%s" % (mnem.upper(), Name)
+            base = buildMemBase("MemoryExImm", post, writeback)
+            postAccCode = "Result = !writeResult;"
+            execTemplateBase = 'StoreEx'
+        else:
+            memFlags.append("ArmISA::TLB::AllowUnaligned")
+            base = buildMemBase("MemoryImm", post, writeback)
+            postAccCode = ""
+            execTemplateBase = 'Store'
+
+        emitStore(name, Name, True, eaCode, accCode, postAccCode, \
+                  memFlags, [], base, strex=strex,
+                  execTemplateBase = execTemplateBase)
 
     def buildRegStore(mnem, post, add, writeback, \
-                      size=4, sign=False, user=False):
+                      size=4, sign=False, user=False, strex=False):
         name = mnem
         Name = storeRegClassName(post, add, writeback,
                                  size, sign, user)
@@ -128,12 +140,12 @@ let {{
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryReg", post, writeback)
 
-        emitStore(name, Name, False, eaCode, accCode, \
+        emitStore(name, Name, False, eaCode, accCode, "",\
                 ["ArmISA::TLB::MustBeOne", \
                  "ArmISA::TLB::AllowUnaligned", \
                  "%d" % (size - 1)], [], base)
 
-    def buildDoubleImmStore(mnem, post, add, writeback):
+    def buildDoubleImmStore(mnem, post, add, writeback, strex=False):
         name = mnem
         Name = storeDoubleImmClassName(post, add, writeback)
 
@@ -155,11 +167,20 @@ let {{
         '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryDImm", post, writeback)
 
-        emitStore(name, Name, True, eaCode, accCode, \
-                ["ArmISA::TLB::MustBeOne",
-                 "ArmISA::TLB::AlignWord"], [], base, double=True)
+        memFlags = ["ArmISA::TLB::MustBeOne",
+                    "ArmISA::TLB::AlignWord"]
+        if strex:
+            memFlags.append("Request::LLSC")
+            Name = "%s_%s" % (mnem.upper(), Name)
+            base = buildMemBase("MemoryExDImm", post, writeback)
+            postAccCode = "Result = !writeResult;"
+        else:
+            base = buildMemBase("MemoryDImm", post, writeback)
+            postAccCode = ""
+
+        emitStore(name, Name, True, eaCode, accCode, postAccCode, \
+                  memFlags, [], base, double=True, strex=strex)
 
     def buildDoubleRegStore(mnem, post, add, writeback):
         name = mnem
@@ -186,9 +207,11 @@ let {{
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryDReg", post, writeback)
 
-        emitStore(name, Name, False, eaCode, accCode, \
-                ["ArmISA::TLB::MustBeOne", \
-                 "ArmISA::TLB::AlignWord"], [], base, double=True)
+        memFlags = ["ArmISA::TLB::MustBeOne",
+                    "ArmISA::TLB::AlignWord"]
+
+        emitStore(name, Name, False, eaCode, accCode, "", \
+                  memFlags, [], base, double=True)
 
     def buildStores(mnem, size=4, sign=False, user=False):
         buildImmStore(mnem, True, True, True, size, sign, user)
@@ -226,4 +249,9 @@ let {{
     buildStores("strht", size=2, user=True)
 
     buildDoubleStores("strd")
+
+    buildImmStore("strex", False, True, False, size=4, strex=True)
+    buildImmStore("strexh", False, True, False, size=2, strex=True)
+    buildImmStore("strexb", False, True, False, size=1, strex=True)
+    buildDoubleImmStore("strexd", False, True, False, strex=True)
 }};
