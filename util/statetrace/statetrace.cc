@@ -49,7 +49,13 @@ using namespace std;
 
 void printUsage(const char * execName)
 {
-    cout << execName << " -h | -r -- <command> <arguments>" << endl;
+    cout << execName << " <options> -- <command> <arguments>" << endl;
+    cout << "options:" << endl;
+    cout << "         -h          print this help" << endl;
+    cout << "         --host      remote m5 host to connect to" << endl;
+    cout << "         -r          print register names" << endl;
+    cout << "         -i          print initial stack state" << endl;
+    cout << "         -nt         don't print an instruction trace" << endl;
 }
 
 int main(int argc, char * argv[], char * envp[])
@@ -62,6 +68,11 @@ int main(int argc, char * argv[], char * envp[])
     bool printInitial = false;
     bool printTrace = true;
     string host = "localhost";
+
+    if (argc == 1) {
+        printUsage(argv[0]);
+        return 0;
+    }
     for(int x = 1; x < argc; x++)
     {
         if(!strcmp(argv[x], "-h"))

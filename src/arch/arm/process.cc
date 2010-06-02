@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Stephen Hines
+ *          Ali Saidi
  */
 
 #include "arch/arm/isa_traits.hh"
@@ -118,7 +131,11 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
         Arm_Edsp = 1 << 7,
         Arm_Java = 1 << 8,
         Arm_Iwmmxt = 1 << 9,
-        Arm_Crunch = 1 << 10
+        Arm_Crunch = 1 << 10,
+        Arm_ThumbEE = 1 << 11,
+        Arm_Neon = 1 << 12,
+        Arm_Vfpv3 = 1 << 13,
+        Arm_Vfpv3d16 = 1 << 14
     };
 
     //Setup the auxilliary vectors. These will already have endian conversion.
@@ -134,9 +151,13 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 //            Arm_Fpa |
             Arm_Vfp |
             Arm_Edsp |
-            Arm_Java |
+//            Arm_Java |
 //            Arm_Iwmmxt |
 //            Arm_Crunch |
+            Arm_ThumbEE |
+            Arm_Neon |
+            Arm_Vfpv3 |
+            Arm_Vfpv3d16 |
             0;
 
         //Bits which describe the system hardware capabilities
@@ -169,9 +190,13 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
         auxv.push_back(auxv_t(M5_AT_EGID, egid()));
         //Whether to enable "secure mode" in the executable
         auxv.push_back(auxv_t(M5_AT_SECURE, 0));
+
+        // Pointer to 16 bytes of random data
+        auxv.push_back(auxv_t(M5_AT_RANDOM, 0));
+
         //The filename of the program
         auxv.push_back(auxv_t(M5_AT_EXECFN, 0));
-        //The string "v51" with unknown meaning
+        //The string "v71" -- ARM v7 architecture
         auxv.push_back(auxv_t(M5_AT_PLATFORM, 0));
     }
 
@@ -180,8 +205,11 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     // A sentry NULL void pointer at the top of the stack.
     int sentry_size = intSize;
 
-    string platform = "v51";
+    string platform = "v71";
     int platform_size = platform.size() + 1;
+
+    // Bytes for AT_RANDOM above, we'll just keep them 0
+    int aux_random_size = 16; // as per the specification
 
     // The aux vectors are put on the stack in two groups. The first group are
     // the vectors that are generated as the elf is loaded. The second group
@@ -200,7 +228,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 
     int info_block_size =
         sentry_size + env_data_size + arg_data_size +
-        aux_data_size + platform_size;
+        aux_data_size + platform_size + aux_random_size;
 
     //Each auxilliary vector is two 4 byte words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
@@ -240,7 +268,8 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     uint32_t env_data_base = aux_data_base - env_data_size;
     uint32_t arg_data_base = env_data_base - arg_data_size;
     uint32_t platform_base = arg_data_base - platform_size;
-    uint32_t auxv_array_base = platform_base - aux_array_size - aux_padding;
+    uint32_t aux_random_base = platform_base - aux_random_size;
+    uint32_t auxv_array_base = aux_random_base - aux_array_size - aux_padding;
     uint32_t envp_array_base = auxv_array_base - envp_array_size;
     uint32_t argv_array_base = envp_array_base - argv_array_size;
     uint32_t argc_base = argv_array_base - argc_size;
@@ -249,6 +278,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     DPRINTF(Stack, "0x%x - aux data\n", aux_data_base);
     DPRINTF(Stack, "0x%x - env data\n", env_data_base);
     DPRINTF(Stack, "0x%x - arg data\n", arg_data_base);
+    DPRINTF(Stack, "0x%x - random data\n", aux_random_base);
     DPRINTF(Stack, "0x%x - platform base\n", platform_base);
     DPRINTF(Stack, "0x%x - auxv array\n", auxv_array_base);
     DPRINTF(Stack, "0x%x - envp array\n", envp_array_base);
@@ -275,6 +305,9 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
         } else if (auxv[i].a_type == M5_AT_EXECFN) {
             auxv[i].a_val = aux_data_base;
             initVirtMem->writeString(aux_data_base, filename.c_str());
+        } else if (auxv[i].a_type == M5_AT_RANDOM) {
+            auxv[i].a_val = aux_random_base;
+            // Just leave the value 0, we don't want randomness
         }
     }
 

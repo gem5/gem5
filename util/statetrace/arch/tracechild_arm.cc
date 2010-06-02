@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006-2009 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -33,6 +45,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <cstring>
+#include <cstdio>
 
 #include "tracechild_arm.hh"
 
@@ -46,6 +59,8 @@ const char* ARMTraceChild::regNames[numregs] = {
 
 ARMTraceChild::ARMTraceChild()
 {
+    foundMvn = false;
+
     for (int x = 0; x < numregs; x++) {
         memset(&regs, 0, sizeof(regs));
         memset(&oldregs, 0, sizeof(regs));
@@ -79,7 +94,7 @@ bool ARMTraceChild::sendState(int socket)
         toSend -= sent;
         messagePtr += sent;
     }
-    
+
     return true;
 }
 
@@ -97,7 +112,7 @@ bool ARMTraceChild::update(int pid)
         cerr << "update: " << strerror(errno) << endl;
         return false;
     }
- 
+
     for(unsigned int x = 0; x < numregs; x++)
         regDiffSinceUpdate[x] = (getRegVal(x) != getOldRegVal(x));
     return true;
@@ -207,25 +222,39 @@ bool ARMTraceChild::step()
 
     uint32_t lr = getRegVal(14);
     uint32_t pc = getPC();
-    uint32_t lrOp;
+    uint32_t lrOp, subsOp;
+    char obuf[128];
+    bool patch = false;
 
     // Since ARM uses software breakpoints behind the scenes, they don't work
     // in read only areas like the page of routines provided by the kernel. The
     // link register generally holds the address the process wants to the
     // kernel to return to after it's done, so we'll install a software
-    // breakpoint there. If the lr happens to point to the next instruction
-    // we'll leave out our breakpoint to avoid an infinite loop. This isn't a
-    // fool proof strategy, but it should work well in all the reasonable
-    // scenarios I can think of right now.
+    // breakpoint there.
+    //
+    // Calls into the kernel user page always follow the form:
+    //  MVN ...
+    //  <possible MOV lr,...>
+    //  SUB PC, ...
+    //
+    //  So we look for this pattern and set a breakpoint on the LR at the SUB
+    //  instruction.
 
-    if (pc != lr) {
+
+    subsOp = ptrace(PTRACE_PEEKDATA, pid, pc, 0);
+    if ((subsOp & 0xFFFF0FFF) == 0xe3e00a0f)
+        foundMvn = true;
+
+    if (foundMvn && ((subsOp & 0xFFF0F000) == 0xe240f000)) {
+        foundMvn = false;
         lrOp = ptrace(PTRACE_PEEKDATA, pid, lr, 0);
         ptrace(PTRACE_POKEDATA, pid, lr, bkpt_inst);
+        patch = true;
     }
     ptraceSingleStep();
-    if (pc != lr) {
+
+    if (patch)
         ptrace(PTRACE_POKEDATA, pid, lr, lrOp);
-    }
 }
 
 
