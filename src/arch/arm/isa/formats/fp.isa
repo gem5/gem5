@@ -621,16 +621,43 @@ let {{
                 }
                 break;
               case 0x8:
-                // Between FP and int.
-                return new WarnUnimplemented("vcvt, vcvtr", machInst);
+                if (bits(machInst, 7) == 0) {
+                    if (single) {
+                        return new VcvtUIntFpS(machInst, vd, vm);
+                    } else {
+                        vm = (IntRegIndex)(bits(machInst, 5) |
+                                (bits(machInst, 3, 0) << 1));
+                        return new VcvtUIntFpD(machInst, vd, vm);
+                    }
+                } else {
+                    if (single) {
+                        return new VcvtSIntFpS(machInst, vd, vm);
+                    } else {
+                        vm = (IntRegIndex)(bits(machInst, 5) |
+                                (bits(machInst, 3, 0) << 1));
+                        return new VcvtSIntFpD(machInst, vd, vm);
+                    }
+                }
               case 0xa:
               case 0xb:
                 // Between FP and fixed point.
                 return new WarnUnimplemented("vcvt", machInst);
               case 0xc:
+                if (single) {
+                    return new VcvtFpUIntS(machInst, vd, vm);
+                } else {
+                    vd = (IntRegIndex)(bits(machInst, 22) |
+                            (bits(machInst, 15, 12) << 1));
+                    return new VcvtFpUIntD(machInst, vd, vm);
+                }
               case 0xd:
-                // Between FP and int.
-                return new WarnUnimplemented("vcvt, vcvtr", machInst);
+                if (single) {
+                    return new VcvtFpSIntS(machInst, vd, vm);
+                } else {
+                    vd = (IntRegIndex)(bits(machInst, 22) |
+                            (bits(machInst, 15, 12) << 1));
+                    return new VcvtFpSIntD(machInst, vd, vm);
+                }
               case 0xe:
               case 0xf:
                 // Between FP and fixed point.

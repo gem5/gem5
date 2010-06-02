@@ -586,4 +586,96 @@ let {{
     header_output += RegRegRegOpDeclare.subst(vnmulDIop);
     decoder_output += RegRegRegOpConstructor.subst(vnmulDIop);
     exec_output += PredOpExecute.subst(vnmulDIop);
+
+    vcvtUIntFpSCode = '''
+        FpDest = FpOp1.uw;
+    '''
+    vcvtUIntFpSIop = InstObjParams("vcvt", "VcvtUIntFpS", "RegRegOp",
+                                     { "code": vcvtUIntFpSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtUIntFpSIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtUIntFpSIop);
+    exec_output += PredOpExecute.subst(vcvtUIntFpSIop);
+
+    vcvtUIntFpDCode = '''
+        IntDoubleUnion cDest;
+        cDest.fp = (uint64_t)FpOp1P0.uw;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vcvtUIntFpDIop = InstObjParams("vcvt", "VcvtUIntFpD", "RegRegOp",
+                                     { "code": vcvtUIntFpDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtUIntFpDIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtUIntFpDIop);
+    exec_output += PredOpExecute.subst(vcvtUIntFpDIop);
+
+    vcvtSIntFpSCode = '''
+        FpDest = FpOp1.sw;
+    '''
+    vcvtSIntFpSIop = InstObjParams("vcvt", "VcvtSIntFpS", "RegRegOp",
+                                     { "code": vcvtSIntFpSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtSIntFpSIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtSIntFpSIop);
+    exec_output += PredOpExecute.subst(vcvtSIntFpSIop);
+
+    vcvtSIntFpDCode = '''
+        IntDoubleUnion cDest;
+        cDest.fp = FpOp1P0.sw;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vcvtSIntFpDIop = InstObjParams("vcvt", "VcvtSIntFpD", "RegRegOp",
+                                     { "code": vcvtSIntFpDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtSIntFpDIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtSIntFpDIop);
+    exec_output += PredOpExecute.subst(vcvtSIntFpDIop);
+
+    vcvtFpUIntSCode = '''
+        FpDest.uw = FpOp1;
+    '''
+    vcvtFpUIntSIop = InstObjParams("vcvt", "VcvtFpUIntS", "RegRegOp",
+                                     { "code": vcvtFpUIntSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtFpUIntSIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtFpUIntSIop);
+    exec_output += PredOpExecute.subst(vcvtFpUIntSIop);
+
+    vcvtFpUIntDCode = '''
+        IntDoubleUnion cOp1;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        uint64_t result = cOp1.fp;
+        FpDestP0.uw = result;
+    '''
+    vcvtFpUIntDIop = InstObjParams("vcvt", "VcvtFpUIntD", "RegRegOp",
+                                     { "code": vcvtFpUIntDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtFpUIntDIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtFpUIntDIop);
+    exec_output += PredOpExecute.subst(vcvtFpUIntDIop);
+
+    vcvtFpSIntSCode = '''
+        FpDest.sw = FpOp1;
+    '''
+    vcvtFpSIntSIop = InstObjParams("vcvt", "VcvtFpSIntS", "RegRegOp",
+                                     { "code": vcvtFpSIntSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtFpSIntSIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtFpSIntSIop);
+    exec_output += PredOpExecute.subst(vcvtFpSIntSIop);
+
+    vcvtFpSIntDCode = '''
+        IntDoubleUnion cOp1;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        int64_t result = cOp1.fp;
+        FpDestP0.uw = result;
+    '''
+    vcvtFpSIntDIop = InstObjParams("vcvt", "VcvtFpSIntD", "RegRegOp",
+                                     { "code": vcvtFpSIntDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtFpSIntDIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtFpSIntDIop);
+    exec_output += PredOpExecute.subst(vcvtFpSIntDIop);
 }};
