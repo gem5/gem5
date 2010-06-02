@@ -40,42 +40,55 @@
 //
 // Authors: Stephen Hines
 
-//Templates from this format are used later
-//Include the basic format
-##include "basic.isa"
+////////////////////////////////////////////////////////////////////
+//
+// Breakpoint instructions
+//
 
-//Include support for predicated instructions
-##include "pred.isa"
+output header {{
+    /**
+     * Static instruction class for Breakpoint (illegal) instructions.
+     * These cause simulator termination if they are executed in a
+     * non-speculative mode.  This is a leaf class.
+     */
+    class Breakpoint : public ArmStaticInst
+    {
+      public:
+        /// Constructor
+        Breakpoint(ExtMachInst _machInst)
+            : ArmStaticInst("Breakpoint", _machInst, No_OpClass)
+        {
+            // don't call execute() (which panics) if we're on a
+            // speculative path
+            flags[IsNonSpeculative] = true;
+        }
 
-//Include the float formats
-##include "fp.isa"
+        %(BasicExecDeclare)s
 
-//Include the mem format
-##include "mem.isa"
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+}};
 
-//Include the macro-mem format
-##include "macromem.isa"
+output decoder {{
+    std::string
+    Breakpoint::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s (inst 0x%x, opcode 0x%x, binary:%s)",
+                        "Breakpoint", machInst, OPCODE, inst2string(machInst));
+    }
+}};
 
-//Include the branch format
-##include "branch.isa"
+output exec {{
+    Fault
+    Breakpoint::execute(%(CPU_exec_context)s *xc,
+                     Trace::InstRecord *traceData) const
+    {
+        return new PrefetchAbort(xc->readPC(), ArmFault::DebugEvent);
+    }
+}};
 
-//Miscellaneous instructions that don't fit elsewhere
-##include "misc.isa"
+def format Breakpoint() {{
+    decode_block = 'return new Breakpoint(machInst);\n'
+}};
 
-//Include the unimplemented format
-##include "unimp.isa"
-
-//Include the unknown format
-##include "unknown.isa"
-
-//Include the breakpoint format
-##include "breakpoint.isa"
-
-//Include the formats for data processing instructions
-##include "data.isa"
-
-//Include the formats for multiply instructions
-##include "mult.isa"
-
-//Unconditional instructions
-##include "uncond.isa"

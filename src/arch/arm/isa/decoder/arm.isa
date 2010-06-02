@@ -73,6 +73,7 @@ format DataOp {
                         0x9: ArmBlxReg::armBlxReg();
                     }
                     0x5: ArmSatAddSub::armSatAddSub();
+                    0x7: Breakpoint::bkpt();
                 }
                 0x1: ArmHalfWordMultAndMultAcc::armHalfWordMultAndMultAcc();
             }
