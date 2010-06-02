@@ -118,6 +118,26 @@ def template ImmOpConstructor {{
     }
 }};
 
+def template RegImmOpDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, uint64_t _imm);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template RegImmOpConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+            IntRegIndex _dest, uint64_t _imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
 def template RegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
