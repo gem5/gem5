@@ -90,9 +90,12 @@
                     }
                     0x1: decode LTCOPROC {
                         0xa, 0xb: WarnUnimpl::Core_to_extension_transfer();
-                        default: decode HTOPCODE_4 {
-                            0x0: WarnUnimpl::mcr(); // mcr2
-                            0x1: WarnUnimpl::mrc(); // mrc2
+                        default: decode CPNUM {
+                            15: McrMrc15::mcrMrc15();
+                            default: decode HTOPCODE_4 {
+                                0x0: WarnUnimpl::mcr();
+                                0x1: WarnUnimpl::mrc();
+                            }
                         }
                     }
                 }
@@ -155,9 +158,12 @@
                     }
                     0x1: decode LTCOPROC {
                         0xa, 0xb: WarnUnimpl::Core_to_extension_transfer();
-                        default: decode HTOPCODE_4 {
-                            0x0: WarnUnimpl::mcr(); // mcr2
-                            0x1: WarnUnimpl::mrc(); // mrc2
+                        default: decode CPNUM {
+                            15: McrMrc15::mcr2Mrc215();
+                            default: decode HTOPCODE_4 {
+                                0x0: WarnUnimpl::mcr2();
+                                0x1: WarnUnimpl::mrc2();
+                            }
                         }
                     }
                 }

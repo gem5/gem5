@@ -77,3 +77,30 @@ def format ArmMsrMrs() {{
     }
     '''
 }};
+
+def format McrMrc15() {{
+    decode_block = '''
+    {
+        const uint32_t opc1 = bits(machInst, 23, 21);
+        const uint32_t crn = bits(machInst, 19, 16);
+        const uint32_t opc2 = bits(machInst, 7, 5);
+        const uint32_t crm = bits(machInst, 3, 0);
+        const MiscRegIndex miscReg = decodeCP15Reg(crn, opc1, crm, opc2);
+        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+
+        const bool isRead = bits(machInst, 20);
+
+        if (miscReg == MISCREG_NOP) {
+            return new NopInst(machInst);
+        } else if (miscReg == NUM_MISCREGS) {
+            return new Unknown(machInst);
+        } else {
+            if (isRead) {
+                return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
+            } else {
+                return new Mcr15(machInst, (IntRegIndex)miscReg, rt);
+            }
+        }
+    }
+    '''
+}};
