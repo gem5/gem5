@@ -423,4 +423,9 @@ let {{
     header_output += RegRegRegRegOpDeclare.subst(usada8Iop)
     decoder_output += RegRegRegRegOpConstructor.subst(usada8Iop)
     exec_output += PredOpExecute.subst(usada8Iop)
+
+    nopIop = InstObjParams("nop", "NopInst", "ArmStaticInst", "", [])
+    header_output += BasicDeclare.subst(nopIop)
+    decoder_output += BasicConstructor.subst(nopIop)
+    exec_output += BasicExecute.subst(nopIop)
 }};
