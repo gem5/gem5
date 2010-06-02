@@ -1,5 +1,17 @@
 // -*- mode:c++ -*-
 
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
 // Copyright (c) 2007-2008 The Florida State University
 // All rights reserved.
 //
@@ -165,6 +177,9 @@ let {{
         elif flagtype == "rsb":
             icValue = 'findCarry(32, resTemp, rotated_imm, ~Rn)'
             ivValue = 'findOverflow(32, resTemp, rotated_imm, ~Rn)'
+        elif flagtype == "modImm":
+            icValue = 'rotated_carry'
+            ivValue = 'CondCodes<28:>'
         else:
             icValue = '(rotate ? rotated_carry:CondCodes<29:>)'
             ivValue = 'CondCodes<28:>'
@@ -212,6 +227,23 @@ def format DataImmOp(code, flagtype = logic) {{
                         {"code": code,
                          "predicate_test": predicateTest})
     ccIop = InstObjParams(name, Name + "Cc", 'PredImmOp',
+                          {"code": code + getImmCcCode(flagtype),
+                           "predicate_test": predicateTest})
+    header_output = BasicDeclare.subst(iop) + \
+                    BasicDeclare.subst(ccIop)
+    decoder_output = BasicConstructor.subst(iop) + \
+                     BasicConstructor.subst(ccIop)
+    exec_output = PredOpExecute.subst(iop) + \
+                  PredOpExecute.subst(ccIop)
+    decode_block = DataImmDecode.subst(iop)
+}};
+
+def format DataModImmOp(code, flagtype = modImm) {{
+    code += "resTemp = resTemp;"
+    iop = InstObjParams(name, Name + "ModImm", 'PredModImmOp',
+                        {"code": code,
+                         "predicate_test": predicateTest})
+    ccIop = InstObjParams(name, Name + "ModImmCc", 'PredModImmOp',
                           {"code": code + getImmCcCode(flagtype),
                            "predicate_test": predicateTest})
     header_output = BasicDeclare.subst(iop) + \

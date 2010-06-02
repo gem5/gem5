@@ -1,4 +1,17 @@
-/* Copyright (c) 2007-2008 The Florida State University
+/*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,27 +74,65 @@ class PredOp : public ArmStaticInst
 /**
  * Base class for predicated immediate operations.
  */
-class PredImmOp : public PredOp
+class PredImmOpBase : public PredOp
 {
     protected:
 
     uint32_t imm;
-    uint32_t rotate;
     uint32_t rotated_imm;
     uint32_t rotated_carry;
 
     /// Constructor
-    PredImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-              PredOp(mnem, _machInst, __opClass),
-              imm(machInst.imm), rotate(machInst.rotate << 1),
-              rotated_imm(0), rotated_carry(0)
+    PredImmOpBase(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                  PredOp(mnem, _machInst, __opClass),
+                  imm(machInst.imm), rotated_imm(0), rotated_carry(0)
     {
-        rotated_imm = rotate_imm(imm, rotate);
-        if (rotate != 0)
-            rotated_carry = (rotated_imm >> 31) & 1;
     }
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+/**
+ * Base class for regular predicated immediate operations.
+ */
+class PredImmOp : public PredImmOpBase
+{
+    protected:
+
+    uint32_t rotate;
+
+    /// Constructor
+    PredImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+              PredImmOpBase(mnem, _machInst, __opClass),
+              rotate(machInst.rotate << 1)
+    {
+        rotated_imm = rotate_imm(imm, rotate);
+        if (rotate != 0)
+            rotated_carry = bits(rotated_imm, 31);
+    }
+};
+
+/**
+ * Base class for modified predicated immediate operations.
+ */
+class PredModImmOp : public PredImmOpBase
+{
+    protected:
+
+    uint8_t ctrlImm;
+    uint8_t dataImm;
+
+
+    /// Constructor
+    PredModImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                 PredImmOpBase(mnem, _machInst, __opClass),
+                 ctrlImm(bits(machInst.instBits, 26) << 3 |
+                         bits(machInst.instBits, 14, 12)),
+                 dataImm(bits(machInst.instBits, 7, 0))
+    {
+        rotated_imm = modified_imm(ctrlImm, dataImm);
+        rotated_carry = bits(rotated_imm, 31);
+    }
 };
 
 /**
