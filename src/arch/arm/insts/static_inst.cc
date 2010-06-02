@@ -50,7 +50,7 @@ namespace ArmISA
 {
 // Shift Rm by an immediate value
 int32_t
-ArmStaticInstBase::shift_rm_imm(uint32_t base, uint32_t shamt,
+ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
                                 uint32_t type, uint32_t cfval) const
 {
     assert(shamt < 32);
@@ -86,7 +86,7 @@ ArmStaticInstBase::shift_rm_imm(uint32_t base, uint32_t shamt,
 
 // Shift Rm by Rs
 int32_t
-ArmStaticInstBase::shift_rm_rs(uint32_t base, uint32_t shamt,
+ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
                                uint32_t type, uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
@@ -126,7 +126,7 @@ ArmStaticInstBase::shift_rm_rs(uint32_t base, uint32_t shamt,
 
 // Generate C for a shift by immediate
 bool
-ArmStaticInstBase::shift_carry_imm(uint32_t base, uint32_t shamt,
+ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
                                    uint32_t type, uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
@@ -166,7 +166,7 @@ ArmStaticInstBase::shift_carry_imm(uint32_t base, uint32_t shamt,
 
 // Generate C for a shift by Rs
 bool
-ArmStaticInstBase::shift_carry_rs(uint32_t base, uint32_t shamt,
+ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
                                   uint32_t type, uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
@@ -206,7 +206,7 @@ ArmStaticInstBase::shift_carry_rs(uint32_t base, uint32_t shamt,
 
 
 void
-ArmStaticInstBase::printReg(std::ostream &os, int reg) const
+ArmStaticInst::printReg(std::ostream &os, int reg) const
 {
     if (reg < FP_Base_DepTag) {
         switch (reg) {
@@ -236,7 +236,7 @@ ArmStaticInstBase::printReg(std::ostream &os, int reg) const
 }
 
 void
-ArmStaticInstBase::printMnemonic(std::ostream &os,
+ArmStaticInst::printMnemonic(std::ostream &os,
                              const std::string &suffix,
                              bool withPred) const
 {
@@ -303,7 +303,7 @@ ArmStaticInstBase::printMnemonic(std::ostream &os,
 }
 
 void
-ArmStaticInstBase::printMemSymbol(std::ostream &os,
+ArmStaticInst::printMemSymbol(std::ostream &os,
                               const SymbolTable *symtab,
                               const std::string &prefix,
                               const Addr addr,
@@ -320,7 +320,7 @@ ArmStaticInstBase::printMemSymbol(std::ostream &os,
 }
 
 void
-ArmStaticInstBase::printShiftOperand(std::ostream &os,
+ArmStaticInst::printShiftOperand(std::ostream &os,
                                      IntRegIndex rm,
                                      bool immShift,
                                      uint32_t shiftAmt,
@@ -384,7 +384,7 @@ ArmStaticInstBase::printShiftOperand(std::ostream &os,
 }
 
 void
-ArmStaticInstBase::printDataInst(std::ostream &os, bool withImm,
+ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
         bool immShift, bool s, IntRegIndex rd, IntRegIndex rn,
         IntRegIndex rm, IntRegIndex rs, uint32_t shiftAmt,
         ArmShiftType type, uint32_t imm) const
@@ -416,7 +416,7 @@ ArmStaticInstBase::printDataInst(std::ostream &os, bool withImm,
 }
 
 std::string
-ArmStaticInstBase::generateDisassembly(Addr pc,
+ArmStaticInst::generateDisassembly(Addr pc,
                                    const SymbolTable *symtab) const
 {
     std::stringstream ss;

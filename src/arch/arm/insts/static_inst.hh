@@ -47,7 +47,7 @@
 
 namespace ArmISA
 {
-class ArmStaticInstBase : public StaticInst
+class ArmStaticInst : public StaticInst
 {
   protected:
     int32_t shift_rm_imm(uint32_t base, uint32_t shamt,
@@ -61,8 +61,8 @@ class ArmStaticInstBase : public StaticInst
                         uint32_t type, uint32_t cfval) const;
 
     // Constructor
-    ArmStaticInstBase(const char *mnem, ExtMachInst _machInst,
-            OpClass __opClass)
+    ArmStaticInst(const char *mnem, ExtMachInst _machInst,
+                  OpClass __opClass)
         : StaticInst(mnem, _machInst, __opClass)
     {
     }
@@ -151,6 +151,7 @@ class ArmStaticInstBase : public StaticInst
             return pc + 8;
     }
 
+    // Perform an regular branch.
     template<class XC>
     static void
     setNextPC(XC *xc, Addr val)
@@ -158,36 +159,11 @@ class ArmStaticInstBase : public StaticInst
         xc->setNextPC((xc->readNextPC() & PcModeMask) |
                       (val & ~PcModeMask));
     }
-};
 
-class ArmStaticInst : public ArmStaticInstBase
-{
-  protected:
-    ArmStaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : ArmStaticInstBase(mnem, _machInst, __opClass)
-    {
-    }
-
+    // Perform an interworking branch.
     template<class XC>
     static void
-    setNextPC(XC *xc, Addr val)
-    {
-        xc->setNextPC((xc->readNextPC() & PcModeMask) |
-                      (val & ~PcModeMask));
-    }
-};
-
-class ArmInterWorking : public ArmStaticInstBase
-{
-  protected:
-    ArmInterWorking(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : ArmStaticInstBase(mnem, _machInst, __opClass)
-    {
-    }
-
-    template<class XC>
-    static void
-    setNextPC(XC *xc, Addr val)
+    setIWNextPC(XC *xc, Addr val)
     {
         Addr stateBits = xc->readPC() & PcModeMask;
         Addr jBit = (ULL(1) << PcJBitShift);
@@ -213,6 +189,22 @@ class ArmInterWorking : public ArmStaticInstBase
         }
         newPc = newPc | stateBits;
         xc->setNextPC(newPc);
+    }
+
+    // Perform an interworking branch in ARM mode, a regular branch
+    // otherwise.
+    template<class XC>
+    static void
+    setAIWNextPC(XC *xc, Addr val)
+    {
+        Addr stateBits = xc->readPC() & PcModeMask;
+        Addr jBit = (ULL(1) << PcJBitShift);
+        Addr tBit = (ULL(1) << PcTBitShift);
+        if (!jBit && !tBit) {
+            setIWNextPC(xc, val);
+        } else {
+            setNextPC(xc, val);
+        }
     }
 };
 }

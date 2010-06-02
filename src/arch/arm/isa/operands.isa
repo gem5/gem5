@@ -60,15 +60,24 @@ let {{
         ((%(reg_idx)s == PCReg) ? setNextPC(xc, %(final_val)s) :
          xc->%(func)s(this, %(op_idx)s, %(final_val)s))
     '''
+    maybeIWPCWrite = '''
+        ((%(reg_idx)s == PCReg) ? setIWNextPC(xc, %(final_val)s) :
+         xc->%(func)s(this, %(op_idx)s, %(final_val)s))
+    '''
 
     readNPC = 'xc->readNextPC() & ~PcModeMask'
     writeNPC = 'setNextPC(xc, %(final_val)s)'
+    writeIWNPC = 'setIWNextPC(xc, %(final_val)s)'
 }};
 
 def operands {{
     #Abstracted integer reg operands
     'Dest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
              maybePCRead, maybePCWrite),
+    'IWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
+               maybePCRead, maybeIWPCWrite),
+    'AIWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
+                maybePCRead, maybeIWPCWrite),
     'Base': ('IntReg', 'uw', 'base', 'IsInteger', 1,
              maybePCRead, maybePCWrite),
     'Index': ('IntReg', 'uw', 'index', 'IsInteger', 2,
@@ -116,4 +125,6 @@ def operands {{
     'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 45),
     'NPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 51,
             readNPC, writeNPC),
+    'IWNPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 51,
+              readNPC, writeIWNPC),
 }};
