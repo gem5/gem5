@@ -143,6 +143,7 @@ ArmFault::invoke(ThreadContext *tc)
     tc->setPC(newPc);
     tc->setNextPC(newPc + cpsr.t ? 2 : 4 );
     tc->setMicroPC(0);
+    tc->setNextMicroPC(1);
 }
 
 void
@@ -189,6 +190,8 @@ SupervisorCall::invoke(ThreadContext *tc)
     // Advance the PC since that won't happen automatically.
     tc->setPC(tc->readNextPC());
     tc->setNextPC(tc->readNextNPC());
+    tc->setMicroPC(0);
+    tc->setNextMicroPC(1);
 }
 
 #endif // FULL_SYSTEM
