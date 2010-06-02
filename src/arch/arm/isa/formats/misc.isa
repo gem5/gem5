@@ -137,6 +137,8 @@ let {{
           case MISCREG_BPIALL:
             return new WarnUnimplemented(
                     isRead ? "mrc bpiall" : "mcr bpiall", machInst);
+
+            // Write only.
           case MISCREG_TLBIALLIS:
           case MISCREG_TLBIMVAIS:
           case MISCREG_TLBIASIDIS:
@@ -157,6 +159,23 @@ let {{
                 return new Mcr15(machInst, (IntRegIndex)miscReg, rt);
             }
 
+            // Read only in user mode.
+          case MISCREG_TPIDRURO:
+            if (isRead) {
+                return new Mrc15User(machInst, rt, (IntRegIndex)miscReg);
+            } else {
+                return new Mcr15(machInst, (IntRegIndex)miscReg, rt);
+            }
+
+            // Read/write in user mode.
+          case MISCREG_TPIDRURW:
+            if (isRead) {
+                return new Mrc15User(machInst, rt, (IntRegIndex)miscReg);
+            } else {
+                return new Mcr15User(machInst, (IntRegIndex)miscReg, rt);
+            }
+
+            // Read/write, priveleged only.
           default:
             if (isRead) {
                 return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
