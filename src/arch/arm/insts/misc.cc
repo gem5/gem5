@@ -144,7 +144,7 @@ MsrRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-RevOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+RegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);

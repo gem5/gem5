@@ -122,11 +122,11 @@ let {{
     uint32_t val = Op1;
     Dest = swap_byte(val);
     '''
-    revIop = InstObjParams("rev", "Rev", "RevOp",
+    revIop = InstObjParams("rev", "Rev", "RegRegOp",
                            { "code": revCode,
                              "predicate_test": predicateTest }, [])
-    header_output += RevOpDeclare.subst(revIop)
-    decoder_output += RevOpConstructor.subst(revIop)
+    header_output += RegRegOpDeclare.subst(revIop)
+    decoder_output += RegRegOpConstructor.subst(revIop)
     exec_output += PredOpExecute.subst(revIop)
 
     rev16Code = '''
@@ -136,22 +136,22 @@ let {{
            (bits(val, 31, 24) << 16) |
            (bits(val, 23, 16) << 24);
     '''
-    rev16Iop = InstObjParams("rev16", "Rev16", "RevOp",
+    rev16Iop = InstObjParams("rev16", "Rev16", "RegRegOp",
                              { "code": rev16Code,
                                "predicate_test": predicateTest }, [])
-    header_output += RevOpDeclare.subst(rev16Iop)
-    decoder_output += RevOpConstructor.subst(rev16Iop)
+    header_output += RegRegOpDeclare.subst(rev16Iop)
+    decoder_output += RegRegOpConstructor.subst(rev16Iop)
     exec_output += PredOpExecute.subst(rev16Iop)
 
     revshCode = '''
     uint16_t val = Op1;
     Dest = sext<16>(swap_byte(val));
     '''
-    revshIop = InstObjParams("revsh", "Revsh", "RevOp",
+    revshIop = InstObjParams("revsh", "Revsh", "RegRegOp",
                              { "code": revshCode,
                                "predicate_test": predicateTest }, [])
-    header_output += RevOpDeclare.subst(revshIop)
-    decoder_output += RevOpConstructor.subst(revshIop)
+    header_output += RegRegOpDeclare.subst(revshIop)
+    decoder_output += RegRegOpConstructor.subst(revshIop)
     exec_output += PredOpExecute.subst(revshIop)
 
     rbitCode = '''
@@ -167,21 +167,21 @@ let {{
     }
     Dest = resTemp;
     '''
-    rbitIop = InstObjParams("rbit", "Rbit", "RevOp",
+    rbitIop = InstObjParams("rbit", "Rbit", "RegRegOp",
                             { "code": rbitCode,
                               "predicate_test": predicateTest }, [])
-    header_output += RevOpDeclare.subst(rbitIop)
-    decoder_output += RevOpConstructor.subst(rbitIop)
+    header_output += RegRegOpDeclare.subst(rbitIop)
+    decoder_output += RegRegOpConstructor.subst(rbitIop)
     exec_output += PredOpExecute.subst(rbitIop)
 
     clzCode = '''
         Dest = (Op1 == 0) ? 32 : (31 - findMsbSet(Op1));
     '''
-    clzIop = InstObjParams("clz", "Clz", "RevOp",
+    clzIop = InstObjParams("clz", "Clz", "RegRegOp",
                            { "code": clzCode,
                              "predicate_test": predicateTest }, [])
-    header_output += RevOpDeclare.subst(clzIop)
-    decoder_output += RevOpConstructor.subst(clzIop)
+    header_output += RegRegOpDeclare.subst(clzIop)
+    decoder_output += RegRegOpConstructor.subst(clzIop)
     exec_output += PredOpExecute.subst(clzIop)
 
     ssatCode = '''
