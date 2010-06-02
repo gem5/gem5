@@ -306,4 +306,29 @@ let {{
     header_output += RegRegOpDeclare.subst(vabsDIop);
     decoder_output += RegRegOpConstructor.subst(vabsDIop);
     exec_output += PredOpExecute.subst(vabsDIop);
+
+    vaddSCode = '''
+        FpDest = FpOp1 + FpOp2;
+    '''
+    vaddSIop = InstObjParams("vadds", "VaddS", "RegRegRegOp",
+                                     { "code": vaddSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vaddSIop);
+    decoder_output += RegRegRegOpConstructor.subst(vaddSIop);
+    exec_output += PredOpExecute.subst(vaddSIop);
+
+    vaddDCode = '''
+        IntDoubleUnion cOp1, cOp2, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        cDest.fp = cOp1.fp + cOp2.fp;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vaddDIop = InstObjParams("vaddd", "VaddD", "RegRegRegOp",
+                                     { "code": vaddDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vaddDIop);
+    decoder_output += RegRegRegOpConstructor.subst(vaddDIop);
+    exec_output += PredOpExecute.subst(vaddDIop);
 }};
