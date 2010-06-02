@@ -394,7 +394,22 @@
                 0x1: decode HTOPCODE_6_5 {
                     0x0: WarnUnimpl::Load_byte_memory_hints();
                     0x1: WarnUnimpl::Load_halfword_memory_hints();
-                    0x2: WarnUnimpl::Load_word();
+                    0x2: decode HTOPCODE_8 {
+                        0x0: decode HTRN {
+                            0xf: WarnUnimpl::ldr(); // literal A8-122
+                            default: decode HTOPCODE_7 {
+                                0x0: decode LTOPCODE_11_8 {
+                                    0x0: decode LTOPCODE_7_6 {
+                                        0x0: WarnUnimpl::ldr(); // register A8-122
+                                    }
+                                    0x9, 0xb, 0xc, 0xd, 0xf:
+                                        WarnUnimpl::ldr(); // immediate thumb A8-118
+                                    0xe: WarnUnimpl::ldrt(); // A8-176
+                                }
+                                0x1: WarnUnimpl::ldr(); // immediate thumb A8-118
+                            }
+                        }
+                    }
                     0x3: WarnUnimpl::undefined();
                 }
             }
