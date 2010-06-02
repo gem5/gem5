@@ -229,19 +229,19 @@ def format ArmSyncMem() {{
           case 0x14:
             return new Swpb(machInst, rt, rt2, rn);
           case 0x18:
-            return new WarnUnimplemented("strex", machInst);
+            return new %(strex)s(machInst, rt, rt2, rn, true, 0);
           case 0x19:
             return new %(ldrex)s(machInst, rt, rn, true, 0);
           case 0x1a:
-            return new WarnUnimplemented("strexd", machInst);
+            return new %(strexd)s(machInst, rt, rt2, rt2 + 1, rn, true, 0);
           case 0x1b:
             return new WarnUnimplemented("ldrexd", machInst);
           case 0x1c:
-            return new WarnUnimplemented("strexb", machInst);
+            return new %(strexb)s(machInst, rt, rt2, rn, true, 0);
           case 0x1d:
             return new %(ldrexb)s(machInst, rt, rn, true, 0);
           case 0x1e:
-            return new WarnUnimplemented("strexh", machInst);
+            return new %(strexh)s(machInst, rt, rt2, rn, true, 0);
           case 0x1f:
             return new %(ldrexh)s(machInst, rt, rn, true, 0);
           default:
@@ -251,7 +251,11 @@ def format ArmSyncMem() {{
     ''' % {
         "ldrex" : "LDREX_" + loadImmClassName(False, True, False, size=4),
         "ldrexb" : "LDREXB_" + loadImmClassName(False, True, False, size=1),
-        "ldrexh" : "LDREXH_" + loadImmClassName(False, True, False, size=2)
+        "ldrexh" : "LDREXH_" + loadImmClassName(False, True, False, size=2),
+        "strex" : "STREX_" + storeImmClassName(False, True, False, size=4),
+        "strexb" : "STREXB_" + storeImmClassName(False, True, False, size=1),
+        "strexh" : "STREXH_" + storeImmClassName(False, True, False, size=2),
+        "strexd" : "STREXD_" + storeDoubleImmClassName(False, True, False)
     }
 }};
 
@@ -294,12 +298,13 @@ def format Thumb32LdrStrDExTbh() {{
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
         const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
         const IntRegIndex rt2 = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
         const uint32_t imm8 = bits(machInst, 7, 0);
         if (bits(op1, 1) == 0 && bits(op2, 1) == 0) {
             if (op1 == 0) {
                 const uint32_t imm = bits(machInst, 7, 0) << 2;
                 if (op2 == 0) {
-                    return new WarnUnimplemented("strex", machInst);
+                    return new %(strex)s(machInst, rt2, rt, rn, true, imm);
                 } else {
                     return new %(ldrex)s(machInst, rt, rn, true, imm);
                 }
@@ -307,11 +312,12 @@ def format Thumb32LdrStrDExTbh() {{
                 if (op2 == 0) {
                     switch (op3) {
                       case 0x4:
-                        return new WarnUnimplemented("strexb", machInst);
+                        return new %(strexb)s(machInst, rd, rt, rn, true, 0);
                       case 0x5:
-                        return new WarnUnimplemented("strexh", machInst);
+                        return new %(strexh)s(machInst, rd, rt, rn, true, 0);
                       case 0x7:
-                        return new WarnUnimplemented("strexd", machInst);
+                        return new %(strexd)s(machInst, rd, rt,
+                                              rt2, rn, true, 0);
                       default:
                         return new Unknown(machInst);
                     }
@@ -378,6 +384,10 @@ def format Thumb32LdrStrDExTbh() {{
         "ldrexb" : "LDREXB_" + loadImmClassName(False, True, False, size=1),
         "ldrexh" : "LDREXH_" + loadImmClassName(False, True, False, size=2),
         "ldrexd" : "LDREXD_" + loadDoubleImmClassName(False, True, False),
+        "strex" : "STREX_" + storeImmClassName(False, True, False, size=4),
+        "strexb" : "STREXB_" + storeImmClassName(False, True, False, size=1),
+        "strexh" : "STREXH_" + storeImmClassName(False, True, False, size=2),
+        "strexd" : "STREXD_" + storeDoubleImmClassName(False, True, False),
         "ldrd_w" : loadDoubleImmClassName(True, False, True),
         "ldrd_uw" : loadDoubleImmClassName(True, True, True),
         "ldrd_p" : loadDoubleImmClassName(False, False, False),
