@@ -74,7 +74,7 @@ let {{
         exec_output += newExec
 
     def buildImmLoad(mnem, post, add, writeback, \
-                     size=4, sign=False, user=False):
+                     size=4, sign=False, user=False, prefetch=False):
         name = mnem
         Name = loadImmClassName(post, add, writeback, \
                                 size, sign, user)
@@ -90,15 +90,24 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
+        if prefetch:
+            Name = "%s_%s" % (mnem.upper(), Name)
+            memFlags = ["Request::PREFETCH"]
+            accCode = '''
+            uint64_t temp = Mem%s;\n
+            temp = temp;
+            ''' % buildMemSuffix(sign, size)
+        else:
+            memFlags = []
+            accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryImm", post, writeback)
 
-        emitLoad(name, Name, True, eaCode, accCode, [], [], base)
+        emitLoad(name, Name, True, eaCode, accCode, memFlags, [], base)
 
     def buildRegLoad(mnem, post, add, writeback, \
-                     size=4, sign=False, user=False):
+                     size=4, sign=False, user=False, prefetch=False):
         name = mnem
         Name = loadRegClassName(post, add, writeback,
                                 size, sign, user)
@@ -115,12 +124,21 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
+        if prefetch:
+            Name = "%s_%s" % (mnem.upper(), Name)
+            memFlags = ["Request::PREFETCH"]
+            accCode = '''
+            uint64_t temp = Mem%s;\n
+            temp = temp;
+            ''' % buildMemSuffix(sign, size)
+        else:
+            memFlags = []
+            accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryReg", post, writeback)
 
-        emitLoad(name, Name, False, eaCode, accCode, [], [], base)
+        emitLoad(name, Name, False, eaCode, accCode, memFlags, [], base)
 
     def buildDoubleImmLoad(mnem, post, add, writeback):
         name = mnem
@@ -201,6 +219,12 @@ let {{
         buildDoubleImmLoad(mnem, False, False, False)
         buildDoubleRegLoad(mnem, False, False, False)
 
+    def buildPrefetches(mnem):
+        buildRegLoad(mnem, False, False, False, size=1, prefetch=True)
+        buildImmLoad(mnem, False, False, False, size=1, prefetch=True)
+        buildRegLoad(mnem, False, True, False, size=1, prefetch=True)
+        buildImmLoad(mnem, False, True, False, size=1, prefetch=True)
+
     buildLoads("ldr")
     buildLoads("ldrt", user=True)
     buildLoads("ldrb", size=1)
@@ -213,4 +237,8 @@ let {{
     buildLoads("ldrsht", size=2, sign=True, user=True)
 
     buildDoubleLoads("ldrd")
+
+    buildPrefetches("pld")
+    buildPrefetches("pldw")
+    buildPrefetches("pli")
 }};

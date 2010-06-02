@@ -60,11 +60,38 @@ def format ArmUnconditional() {{
                     // Unallocated memory hint
                     return new WarnUnimplemented("nop", machInst);
                 } else if (bits(op1, 2, 0) == 5) {
-                    return new WarnUnimplemented("pli", machInst);
+                    const bool add = bits(machInst, 23);
+                    const uint32_t imm12 = bits(machInst, 11, 0);
+                    if (add) {
+                        return new %(pli_iadd)s(machInst, INTREG_ZERO,
+                                                rn, add, imm12);
+                    } else {
+                        return new %(pli_isub)s(machInst, INTREG_ZERO,
+                                                rn, add, imm12);
+                    }
                 }
             } else if (bits(op1, 6, 4) == 0x5) {
                 if (bits(op1, 1, 0) == 0x1) {
-                    return new WarnUnimplemented("pld", machInst);
+                    const bool add = bits(machInst, 23);
+                    const bool pldw = bits(machInst, 22);
+                    const uint32_t imm12 = bits(machInst, 11, 0);
+                    if (pldw) {
+                        if (add) {
+                            return new %(pldw_iadd)s(machInst, INTREG_ZERO,
+                                                     rn, add, imm12);
+                        } else {
+                            return new %(pldw_isub)s(machInst, INTREG_ZERO,
+                                                     rn, add, imm12);
+                        }
+                    } else {
+                        if (add) {
+                            return new %(pld_iadd)s(machInst, INTREG_ZERO,
+                                                    rn, add, imm12);
+                        } else {
+                            return new %(pld_isub)s(machInst, INTREG_ZERO,
+                                                    rn, add, imm12);
+                        }
+                    }
                 } else if (op1 == 0x57) {
                     switch (op2) {
                       case 0x1:
@@ -83,9 +110,51 @@ def format ArmUnconditional() {{
                     // Unallocated memory hint
                     return new WarnUnimplemented("nop", machInst);
                   case 0x65:
-                    return new WarnUnimplemented("pli", machInst);
+                    {
+                        const uint32_t imm5 = bits(machInst, 11, 7);
+                        const uint32_t type = bits(machInst, 6, 5);
+                        const bool add = bits(machInst, 23);
+                        const IntRegIndex rm =
+                            (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                        if (add) {
+                            return new %(pli_radd)s(machInst, INTREG_ZERO, rn,
+                                                    add, imm5, type, rm);
+                        } else {
+                            return new %(pli_rsub)s(machInst, INTREG_ZERO, rn,
+                                                    add, imm5, type, rm);
+                        }
+                    }
                   case 0x71:
-                    return new WarnUnimplemented("pld", machInst);
+                  case 0x75:
+                    {
+                        const uint32_t imm5 = bits(machInst, 11, 7);
+                        const uint32_t type = bits(machInst, 6, 5);
+                        const bool add = bits(machInst, 23);
+                        const bool pldw = bits(machInst, 22);
+                        const IntRegIndex rm =
+                            (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                        if (pldw) {
+                            if (add) {
+                                return new %(pldw_radd)s(machInst, INTREG_ZERO,
+                                                         rn, add, imm5,
+                                                         type, rm);
+                            } else {
+                                return new %(pldw_rsub)s(machInst, INTREG_ZERO,
+                                                         rn, add, imm5,
+                                                         type, rm);
+                            }
+                        } else {
+                            if (add) {
+                                return new %(pld_radd)s(machInst, INTREG_ZERO,
+                                                        rn, add, imm5,
+                                                        type, rm);
+                            } else {
+                                return new %(pld_rsub)s(machInst, INTREG_ZERO,
+                                                        rn, add, imm5,
+                                                        type, rm);
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -151,5 +220,18 @@ def format ArmUnconditional() {{
         }
         return new Unknown(machInst);
     }
-    '''
+    ''' % {
+        "pli_iadd" : "PLI_" + loadImmClassName(False, True, False, 1),
+        "pli_isub" : "PLI_" + loadImmClassName(False, False, False, 1),
+        "pld_iadd" : "PLD_" + loadImmClassName(False, True, False, 1),
+        "pld_isub" : "PLD_" + loadImmClassName(False, False, False, 1),
+        "pldw_iadd" : "PLDW_" + loadImmClassName(False, True, False, 1),
+        "pldw_isub" : "PLDW_" + loadImmClassName(False, False, False, 1),
+        "pli_radd" : "PLI_" + loadRegClassName(False, True, False, 1),
+        "pli_rsub" : "PLI_" + loadRegClassName(False, False, False, 1),
+        "pld_radd" : "PLD_" + loadRegClassName(False, True, False, 1),
+        "pld_rsub" : "PLD_" + loadRegClassName(False, False, False, 1),
+        "pldw_radd" : "PLDW_" + loadRegClassName(False, True, False, 1),
+        "pldw_rsub" : "PLDW_" + loadRegClassName(False, False, False, 1)
+    };
 }};
