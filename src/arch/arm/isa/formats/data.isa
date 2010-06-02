@@ -151,10 +151,18 @@ def format ArmPackUnpackSatReverse() {{
         switch (op1) {
           case 0x0:
             if (op2 == 0x3) {
+                const IntRegIndex rn =
+                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const uint32_t rotation =
+                    (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
-                    return new WarnUnimplemented("sxtb16", machInst);
+                    return new Sxtb16(machInst, rd, rotation, rm);
                 } else {
-                    return new WarnUnimplemented("sxtab16", machInst);
+                    return new Sxtab16(machInst, rd, rn, rm, rotation);
                 }
             } else if (op2 == 0x5) {
                 return new WarnUnimplemented("sel", machInst);
@@ -169,10 +177,18 @@ def format ArmPackUnpackSatReverse() {{
                 const uint32_t satImm = bits(machInst, 20, 16);
                 return new Ssat16(machInst, rd, satImm + 1, rn);
             } else if (op2 == 0x3) {
+                const IntRegIndex rn =
+                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const uint32_t rotation =
+                    (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
-                    return new WarnUnimplemented("sxtb", machInst);
+                    return new Sxtb(machInst, rd, rotation, rm);
                 } else {
-                    return new WarnUnimplemented("sxtab", machInst);
+                    return new Sxtab(machInst, rd, rn, rm, rotation);
                 }
             }
             break;
@@ -182,10 +198,18 @@ def format ArmPackUnpackSatReverse() {{
                 IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
                 return new Rev(machInst, rd, rm);
             } else if (op2 == 0x3) {
+                const IntRegIndex rn =
+                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const uint32_t rotation =
+                    (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
-                    return new WarnUnimplemented("sxth", machInst);
+                    return new Sxth(machInst, rd, rotation, rm);
                 } else {
-                    return new WarnUnimplemented("sxtah", machInst);
+                    return new Sxtah(machInst, rd, rn, rm, rotation);
                 }
             } else if (op2 == 0x5) {
                 IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
@@ -195,10 +219,18 @@ def format ArmPackUnpackSatReverse() {{
             break;
           case 0x4:
             if (op2 == 0x3) {
+                const IntRegIndex rn =
+                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const uint32_t rotation =
+                    (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
-                    return new WarnUnimplemented("uxtb16", machInst);
+                    return new Uxtb16(machInst, rd, rotation, rm);
                 } else {
-                    return new WarnUnimplemented("uxtab16", machInst);
+                    return new Uxtab16(machInst, rd, rn, rm, rotation);
                 }
             }
             break;
@@ -211,10 +243,18 @@ def format ArmPackUnpackSatReverse() {{
                 const uint32_t satImm = bits(machInst, 20, 16);
                 return new Usat16(machInst, rd, satImm, rn);
             } else if (op2 == 0x3) {
+                const IntRegIndex rn =
+                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const uint32_t rotation =
+                    (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
-                    return new WarnUnimplemented("uxtb", machInst);
+                    return new Uxtb(machInst, rd, rotation, rm);
                 } else {
-                    return new WarnUnimplemented("uxtab", machInst);
+                    return new Uxtab(machInst, rd, rn, rm, rotation);
                 }
             }
             break;
@@ -222,10 +262,18 @@ def format ArmPackUnpackSatReverse() {{
             if (op2 == 0x1) {
                 return new WarnUnimplemented("rbit", machInst);
             } else if (op2 == 0x3) {
+                const IntRegIndex rn =
+                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const uint32_t rotation =
+                    (uint32_t)bits(machInst, 11, 10) << 3;
                 if (a == 0xf) {
-                    return new WarnUnimplemented("uxth", machInst);
+                    return new Uxth(machInst, rd, rotation, rm);
                 } else {
-                    return new WarnUnimplemented("uxtah", machInst);
+                    return new Uxtah(machInst, rd, rn, rm, rotation);
                 }
             } else if (op2 == 0x5) {
                 IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
@@ -515,45 +563,53 @@ def format Thumb32DataProcReg() {{
                             INTREG_ZERO, rn, rm, ROR);
                 }
             }
-            switch (bits(op1, 2, 0)) {
-              case 0x0:
-                if (rn == 0xf) {
-                    return new WarnUnimplemented("sxth", machInst);
-                } else {
-                    return new WarnUnimplemented("sxtah", machInst);
+            {
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                const uint32_t rotation =
+                    (uint32_t)bits(machInst, 5, 4) << 3;
+                switch (bits(op1, 2, 0)) {
+                  case 0x0:
+                    if (rn == 0xf) {
+                        return new Sxth(machInst, rd, rotation, rm);
+                    } else {
+                        return new Sxtah(machInst, rd, rn, rm, rotation);
+                    }
+                  case 0x1:
+                    if (rn == 0xf) {
+                        return new Uxth(machInst, rd, rotation, rm);
+                    } else {
+                        return new Uxtah(machInst, rd, rn, rm, rotation);
+                    }
+                  case 0x2:
+                    if (rn == 0xf) {
+                        return new Sxtb16(machInst, rd, rotation, rm);
+                    } else {
+                        return new Sxtab16(machInst, rd, rn, rm, rotation);
+                    }
+                  case 0x3:
+                    if (rn == 0xf) {
+                        return new Uxtb16(machInst, rd, rotation, rm);
+                    } else {
+                        return new Uxtab16(machInst, rd, rn, rm, rotation);
+                    }
+                  case 0x4:
+                    if (rn == 0xf) {
+                        return new Sxtb(machInst, rd, rotation, rm);
+                    } else {
+                        return new Sxtab(machInst, rd, rn, rm, rotation);
+                    }
+                  case 0x5:
+                    if (rn == 0xf) {
+                        return new Uxtb(machInst, rd, rotation, rm);
+                    } else {
+                        return new Uxtab(machInst, rd, rn, rm, rotation);
+                    }
+                  default:
+                    return new Unknown(machInst);
                 }
-              case 0x1:
-                if (rn == 0xf) {
-                    return new WarnUnimplemented("uxth", machInst);
-                } else {
-                    return new WarnUnimplemented("uxtah", machInst);
-                }
-              case 0x2:
-                if (rn == 0xf) {
-                    return new WarnUnimplemented("sxtb16", machInst);
-                } else {
-                    return new WarnUnimplemented("sxtab16", machInst);
-                }
-              case 0x3:
-                if (rn == 0xf) {
-                    return new WarnUnimplemented("uxtb16", machInst);
-                } else {
-                    return new WarnUnimplemented("uxtab16", machInst);
-                }
-              case 0x4:
-                if (rn == 0xf) {
-                    return new WarnUnimplemented("sxtb", machInst);
-                } else {
-                    return new WarnUnimplemented("sxtab", machInst);
-                }
-              case 0x5:
-                if (rn == 0xf) {
-                    return new WarnUnimplemented("uxtb", machInst);
-                } else {
-                    return new WarnUnimplemented("uxtab", machInst);
-                }
-              default:
-                return new Unknown(machInst);
             }
         } else {
             if (bits(op2, 3) == 0) {
@@ -891,15 +947,21 @@ def format Thumb16Misc() {{
                            (bits(machInst, 7, 3) << 1),
                            (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0x2:
-            switch (bits(machInst, 7, 6)) {
-              case 0x0:
-                return new WarnUnimplemented("sxth", machInst);
-              case 0x1:
-                return new WarnUnimplemented("sxtb", machInst);
-              case 0x2:
-                return new WarnUnimplemented("uxth", machInst);
-              case 0x3:
-                return new WarnUnimplemented("uxtb", machInst);
+            {
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+                switch (bits(machInst, 7, 6)) {
+                  case 0x0:
+                    return new Sxth(machInst, rd, 0, rm);
+                  case 0x1:
+                    return new Sxtb(machInst, rd, 0, rm);
+                  case 0x2:
+                    return new Uxth(machInst, rd, 0, rm);
+                  case 0x3:
+                    return new Uxtb(machInst, rd, 0, rm);
+                }
             }
           case 0x3:
             return new Cbz(machInst,
