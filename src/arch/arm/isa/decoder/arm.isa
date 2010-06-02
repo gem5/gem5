@@ -50,7 +50,7 @@
 //
 //
 
-0: decode COND_CODE {
+decode COND_CODE {
 0xF: ArmUnconditional::armUnconditional();
 default: decode ENCODING {
 format DataOp {

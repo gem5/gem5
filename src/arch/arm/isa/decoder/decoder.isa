@@ -41,6 +41,8 @@
 // Authors: Gabe Black
 
 decode THUMB default Unknown::unknown() {
+0:
 ##include "arm.isa"
+1:
 ##include "thumb.isa"
 }

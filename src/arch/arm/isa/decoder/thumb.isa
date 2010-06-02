@@ -40,7 +40,7 @@
 //
 // Authors: Gabe Black
 
-1: decode BIGTHUMB {
+decode BIGTHUMB {
     // 16 bit thumb instructions.
     0: decode TOPCODE_15_13 {
         0x0, 0x1: Thumb16ShiftAddSubMoveCmp::thumb16ShiftAddMoveCmp();
