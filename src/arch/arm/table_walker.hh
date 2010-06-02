@@ -313,7 +313,7 @@ class TableWalker : public MemObject
             TLB::Translation *_trans, bool timing);
 
     void setTlb(TLB *_tlb) { tlb = _tlb; }
-    void memAttrs(TlbEntry &te, uint8_t texcb, bool s);
+    void memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s);
 
   private:
 

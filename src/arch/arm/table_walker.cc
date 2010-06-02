@@ -150,8 +150,9 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
 }
 
 void
-TableWalker::memAttrs(TlbEntry &te, uint8_t texcb, bool s)
+TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s)
 {
+    // Note: tc local variable is hiding tc class variable
     DPRINTF(TLBVerbose, "memAttrs texcb:%d s:%d\n", texcb, s);
     te.shareable = false; // default value
     bool outer_shareable = false;
@@ -221,6 +222,7 @@ TableWalker::memAttrs(TlbEntry &te, uint8_t texcb, bool s)
             panic("More than 32 states for 5 bits?\n");
         }
     } else {
+        assert(tc);
         PRRR prrr = tc->readMiscReg(MISCREG_PRRR);
         NMRR nmrr = tc->readMiscReg(MISCREG_NMRR);
         DPRINTF(TLBVerbose, "memAttrs PRRR:%08x NMRR:%08x\n", prrr, nmrr);
@@ -415,7 +417,7 @@ TableWalker::doL1Descriptor()
         te.ap =  l1Desc.ap();
         te.domain = l1Desc.domain();
         te.asid = contextId;
-        memAttrs(te, l1Desc.texcb(), l1Desc.shareable());
+        memAttrs(tc, te, l1Desc.texcb(), l1Desc.shareable());
 
         DPRINTF(TLB, "Inserting Section Descriptor into TLB\n");
         DPRINTF(TLB, " - N%d pfn:%#x size: %#x global:%d valid: %d\n",
@@ -510,7 +512,7 @@ TableWalker::doL2Descriptor()
     te.xn = l2Desc.xn();
     te.ap = l2Desc.ap();
     te.domain = l1Desc.domain();
-    memAttrs(te, l2Desc.texcb(), l2Desc.shareable());
+    memAttrs(tc, te, l2Desc.texcb(), l2Desc.shareable());
 
     if (!delayed) {
         tc = NULL;
