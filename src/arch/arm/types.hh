@@ -125,6 +125,22 @@ namespace ArmISA
         Bitfield<24, 20> punwl;
 
         Bitfield<7,  0>  m5Func;
+
+        // 16 bit thumb bitfields
+        Bitfield<15, 13> topcode15_13;
+        Bitfield<13, 11> topcode13_11;
+        Bitfield<12, 11> topcode12_11;
+        Bitfield<12, 10> topcode12_10;
+        Bitfield<11, 9>  topcode11_9;
+        Bitfield<11, 8>  topcode11_8;
+        Bitfield<10, 9>  topcode10_9;
+        Bitfield<10, 8>  topcode10_8;
+        Bitfield<9,  6>  topcode9_6;
+        Bitfield<7>      topcode7;
+        Bitfield<7, 6>   topcode7_6;
+        Bitfield<7, 5>   topcode7_5;
+        Bitfield<7, 4>   topcode7_4;
+        Bitfield<3, 0>   topcode3_0;
     EndBitUnion(ExtMachInst)
 
     // Shift types for ARM instructions

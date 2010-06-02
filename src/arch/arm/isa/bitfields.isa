@@ -114,3 +114,18 @@ def bitfield PUNWL	   punwl;
 // M5 instructions
 def bitfield M5FUNC        m5Func;
 
+// Thumb bitfields
+def bitfield TOPCODE_15_13  topcode15_13;
+def bitfield TOPCODE_13_11  topcode13_11;
+def bitfield TOPCODE_12_11  topcode12_11;
+def bitfield TOPCODE_12_10  topcode12_10;
+def bitfield TOPCODE_11_9   topcode11_9;
+def bitfield TOPCODE_11_8   topcode11_8;
+def bitfield TOPCODE_10_9   topcode10_9;
+def bitfield TOPCODE_10_8   topcode10_8;
+def bitfield TOPCODE_9_6    topcode9_6;
+def bitfield TOPCODE_7      topcode7;
+def bitfield TOPCODE_7_6    topcode7_6;
+def bitfield TOPCODE_7_5    topcode7_5;
+def bitfield TOPCODE_7_4    topcode7_4;
+def bitfield TOPCODE_3_0    topcode3_0;
