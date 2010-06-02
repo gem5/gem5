@@ -912,6 +912,75 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpDFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
 
+    vcvtFpHTFpSCode = '''
+        FPSCR fpscr = Fpscr;
+        vfpFlushToZero(fpscr, FpOp1);
+        VfpSavedState state = prepFpState(fpscr.rMode);
+        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
+        FpDest = vcvtFpHFpS(fpscr, FpOp1, true);
+        __asm__ __volatile__("" :: "m" (FpDest));
+        finishVfp(fpscr, state);
+        Fpscr = fpscr;
+    '''
+    vcvtFpHTFpSIop = InstObjParams("vcvtt", "VcvtFpHTFpS", "FpRegRegOp",
+                                   { "code": vcvtFpHTFpSCode,
+                                     "predicate_test": predicateTest }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpHTFpSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpHTFpSIop);
+    exec_output += PredOpExecute.subst(vcvtFpHTFpSIop);
+
+    vcvtFpHBFpSCode = '''
+        FPSCR fpscr = Fpscr;
+        VfpSavedState state = prepFpState(fpscr.rMode);
+        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
+        FpDest = vcvtFpHFpS(fpscr, FpOp1, false);
+        __asm__ __volatile__("" :: "m" (FpDest));
+        finishVfp(fpscr, state);
+        Fpscr = fpscr;
+    '''
+    vcvtFpHBFpSIop = InstObjParams("vcvtb", "VcvtFpHBFpS", "FpRegRegOp",
+                                   { "code": vcvtFpHBFpSCode,
+                                     "predicate_test": predicateTest }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpHBFpSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpHBFpSIop);
+    exec_output += PredOpExecute.subst(vcvtFpHBFpSIop);
+
+    vcvtFpSFpHTCode = '''
+        FPSCR fpscr = Fpscr;
+        vfpFlushToZero(fpscr, FpOp1);
+        VfpSavedState state = prepFpState(fpscr.rMode);
+        __asm__ __volatile__("" : "=m" (FpOp1), "=m" (FpDest)
+                                : "m" (FpOp1), "m" (FpDest));
+        FpDest = vcvtFpSFpH(fpscr, FpOp1, FpDest, true);
+        __asm__ __volatile__("" :: "m" (FpDest));
+        finishVfp(fpscr, state);
+        Fpscr = fpscr;
+    '''
+    vcvtFpSFpHTIop = InstObjParams("vcvtt", "VcvtFpSFpHT", "FpRegRegOp",
+                                    { "code": vcvtFpHTFpSCode,
+                                      "predicate_test": predicateTest }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSFpHTIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHTIop);
+    exec_output += PredOpExecute.subst(vcvtFpSFpHTIop);
+
+    vcvtFpSFpHBCode = '''
+        FPSCR fpscr = Fpscr;
+        vfpFlushToZero(fpscr, FpOp1);
+        VfpSavedState state = prepFpState(fpscr.rMode);
+        __asm__ __volatile__("" : "=m" (FpOp1), "=m" (FpDest)
+                                : "m" (FpOp1), "m" (FpDest));
+        FpDest = vcvtFpSFpH(fpscr, FpOp1, FpDest, false);
+        __asm__ __volatile__("" :: "m" (FpDest));
+        finishVfp(fpscr, state);
+        Fpscr = fpscr;
+    '''
+    vcvtFpSFpHBIop = InstObjParams("vcvtb", "VcvtFpSFpHB", "FpRegRegOp",
+                                   { "code": vcvtFpSFpHBCode,
+                                     "predicate_test": predicateTest }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSFpHBIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHBIop);
+    exec_output += PredOpExecute.subst(vcvtFpSFpHBIop);
+
     vcmpSCode = '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpDest, FpOp1);

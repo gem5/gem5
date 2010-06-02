@@ -396,6 +396,223 @@ fixFpSFpDDest(FPSCR fpscr, float val)
     return mid;
 }
 
+static inline float
+vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
+{
+    float junk = 0.0;
+    uint32_t destBits = fpToBits(dest);
+    uint32_t opBits = fpToBits(op);
+    // Extract the operand.
+    bool neg = bits(opBits, 31);
+    uint32_t exponent = bits(opBits, 30, 23);
+    uint32_t oldMantissa = bits(opBits, 22, 0);
+    uint32_t mantissa = oldMantissa >> (23 - 10);
+    // Do the conversion.
+    uint32_t extra = oldMantissa & mask(23 - 10);
+    if (exponent == 0xff) {
+        if (oldMantissa != 0) {
+            // Nans.
+            if (bits(mantissa, 9) == 0) {
+                // Signalling nan.
+                fpscr.ioc = 1;
+            }
+            if (fpscr.ahp) {
+                mantissa = 0;
+                exponent = 0;
+                fpscr.ioc = 1;
+            } else if (fpscr.dn) {
+                mantissa = (1 << 9);
+                exponent = 0x1f;
+                neg = false;
+            } else {
+                exponent = 0x1f;
+                mantissa |= (1 << 9);
+            }
+        } else {
+            // Infinities.
+            exponent = 0x1F;
+            if (fpscr.ahp) {
+                fpscr.ioc = 1;
+                mantissa = 0x3ff;
+            } else {
+                mantissa = 0;
+            }
+        }
+    } else if (exponent == 0 && oldMantissa == 0) {
+        // Zero, don't need to do anything.
+    } else {
+        // Normalized or denormalized numbers.
+
+        bool inexact = (extra != 0);
+
+        if (exponent == 0) {
+            // Denormalized.
+
+            // If flush to zero is on, this shouldn't happen.
+            assert(fpscr.fz == 0);
+
+            // Check for underflow
+            if (inexact || fpscr.ufe)
+                fpscr.ufc = 1;
+
+            // Handle rounding.
+            unsigned mode = fpscr.rMode;
+            if ((mode == VfpRoundUpward && !neg && extra) ||
+                (mode == VfpRoundDown && neg && extra) ||
+                (mode == VfpRoundNearest &&
+                 (extra > (1 << 9) ||
+                  (extra == (1 << 9) && bits(mantissa, 0))))) {
+                mantissa++;
+            }
+
+            // See if the number became normalized after rounding.
+            if (mantissa == (1 << 10)) {
+                mantissa = 0;
+                exponent = 1;
+            }
+        } else {
+            // Normalized.
+
+            // We need to track the dropped bits differently since
+            // more can be dropped by denormalizing.
+            bool topOne = bits(extra, 12);
+            bool restZeros = bits(extra, 11, 0) == 0;
+
+            if (exponent <= (127 - 15)) {
+                // The result is too small. Denormalize.
+                mantissa |= (1 << 10);
+                while (mantissa && exponent <= (127 - 15)) {
+                    restZeros = restZeros && !topOne;
+                    topOne = bits(mantissa, 0);
+                    mantissa = mantissa >> 1;
+                    exponent++;
+                }
+                if (topOne || !restZeros)
+                    inexact = true;
+                exponent = 0;
+            } else {
+                // Change bias.
+                exponent -= (127 - 15);
+            }
+
+            if (exponent == 0 && (inexact || fpscr.ufe)) {
+                // Underflow
+                fpscr.ufc = 1;
+            }
+
+            // Handle rounding.
+            unsigned mode = fpscr.rMode;
+            bool nonZero = topOne || !restZeros;
+            if ((mode == VfpRoundUpward && !neg && nonZero) ||
+                (mode == VfpRoundDown && neg && nonZero) ||
+                (mode == VfpRoundNearest && topOne &&
+                 (!restZeros || bits(mantissa, 0)))) {
+                mantissa++;
+            }
+
+            // See if we rounded up and need to bump the exponent.
+            if (mantissa == (1 << 10)) {
+                mantissa = 0;
+                exponent++;
+            }
+
+            // Deal with overflow
+            if (fpscr.ahp) {
+                if (exponent >= 0x20) {
+                    exponent = 0x1f;
+                    mantissa = 0x3ff;
+                    fpscr.ioc = 1;
+                    // Supress inexact exception.
+                    inexact = false;
+                }
+            } else {
+                if (exponent >= 0x1f) {
+                    if ((mode == VfpRoundNearest) ||
+                        (mode == VfpRoundUpward && !neg) ||
+                        (mode == VfpRoundDown && neg)) {
+                        // Overflow to infinity.
+                        exponent = 0x1f;
+                        mantissa = 0;
+                    } else {
+                        // Overflow to max normal.
+                        exponent = 0x1e;
+                        mantissa = 0x3ff;
+                    }
+                    fpscr.ofc = 1;
+                    inexact = true;
+                }
+            }
+        }
+
+        if (inexact) {
+            fpscr.ixc = 1;
+        }
+    }
+    // Reassemble and install the result.
+    uint32_t result = bits(mantissa, 9, 0);
+    replaceBits(result, 14, 10, exponent);
+    if (neg)
+        result |= (1 << 15);
+    if (top)
+        replaceBits(destBits, 31, 16, result);
+    else
+        replaceBits(destBits, 15, 0, result);
+    return bitsToFp(destBits, junk);
+}
+
+static inline float
+vcvtFpHFpS(FPSCR &fpscr, float op, bool top)
+{
+    float junk = 0.0;
+    uint32_t opBits = fpToBits(op);
+    // Extract the operand.
+    if (top)
+        opBits = bits(opBits, 31, 16);
+    else
+        opBits = bits(opBits, 15, 0);
+    // Extract the bitfields.
+    bool neg = bits(opBits, 15);
+    uint32_t exponent = bits(opBits, 14, 10);
+    uint32_t mantissa = bits(opBits, 9, 0);
+    // Do the conversion.
+    if (exponent == 0) {
+        if (mantissa != 0) {
+            // Normalize the value.
+            exponent = exponent + (127 - 15) + 1;
+            while (mantissa < (1 << 10)) {
+                mantissa = mantissa << 1;
+                exponent--;
+            }
+        }
+        mantissa = mantissa << (23 - 10);
+    } else if (exponent == 0x1f && !fpscr.ahp) {
+        // Infinities and nans.
+        exponent = 0xff;
+        if (mantissa != 0) {
+            // Nans.
+            mantissa = mantissa << (23 - 10);
+            if (bits(mantissa, 22) == 0) {
+                // Signalling nan.
+                fpscr.ioc = 1;
+                mantissa |= (1 << 22);
+            }
+            if (fpscr.dn) {
+                mantissa &= ~mask(22);
+                neg = false;
+            }
+        }
+    } else {
+        exponent = exponent + (127 - 15);
+        mantissa = mantissa << (23 - 10);
+    }
+    // Reassemble the result.
+    uint32_t result = bits(mantissa, 22, 0);
+    replaceBits(result, 30, 23, exponent);
+    if (neg)
+        result |= (1 << 31);
+    return bitsToFp(result, junk);
+}
+
 static inline double
 makeDouble(uint32_t low, uint32_t high)
 {

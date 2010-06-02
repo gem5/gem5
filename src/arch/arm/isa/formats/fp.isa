@@ -655,8 +655,23 @@ let {{
                 }
               case 0x2:
               case 0x3:
-                // Between half and single precision.
-                return new WarnUnimplemented("vcvtb, vcvtt", machInst);
+                {
+                    const bool toHalf = bits(machInst, 16);
+                    const bool top = bits(machInst, 7);
+                    if (top) {
+                        if (toHalf) {
+                            return new VcvtFpSFpHT(machInst, vd, vm);
+                        } else {
+                            return new VcvtFpHTFpS(machInst, vd, vm);
+                        }
+                    } else {
+                        if (toHalf) {
+                            return new VcvtFpSFpHB(machInst, vd, vm);
+                        } else {
+                            return new VcvtFpHBFpS(machInst, vd, vm);
+                        }
+                    }
+                }
               case 0x4:
                 if (single) {
                     if (e) {
