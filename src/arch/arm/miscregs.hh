@@ -320,6 +320,28 @@ namespace ArmISA
         Bitfield<30> z;
         Bitfield<31> n;
     EndBitUnion(FPSCR)
+
+    BitUnion32(MVFR0)
+        Bitfield<3, 0> advSimdRegisters;
+        Bitfield<7, 4> singlePrecision;
+        Bitfield<11, 8> doublePrecision;
+        Bitfield<15, 12> vfpExceptionTrapping;
+        Bitfield<19, 16> divide;
+        Bitfield<23, 20> squareRoot;
+        Bitfield<27, 24> shortVectors;
+        Bitfield<31, 28> roundingModes;
+    EndBitUnion(MVFR0)
+
+    BitUnion32(MVFR1)
+        Bitfield<3, 0> flushToZero;
+        Bitfield<7, 4> defaultNaN;
+        Bitfield<11, 8> advSimdLoadStore;
+        Bitfield<15, 12> advSimdInteger;
+        Bitfield<19, 16> advSimdSinglePrecision;
+        Bitfield<23, 20> advSimdHalfPrecision;
+        Bitfield<27, 24> vfpHalfPrecision;
+        Bitfield<31, 28> raz;
+    EndBitUnion(MVFR1)
 };
 
 #endif // __ARCH_ARM_MISCREGS_HH__

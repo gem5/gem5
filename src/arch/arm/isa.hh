@@ -134,6 +134,27 @@ namespace ArmISA
             // Separate Instruction and Data TLBs.
             miscRegs[MISCREG_TLBTR] = 1;
 
+            MVFR0 mvfr0 = 0;
+            mvfr0.advSimdRegisters = 2;
+            mvfr0.singlePrecision = 2;
+            mvfr0.doublePrecision = 2;
+            mvfr0.vfpExceptionTrapping = 0;
+            mvfr0.divide = 1;
+            mvfr0.squareRoot = 1;
+            mvfr0.shortVectors = 1;
+            mvfr0.roundingModes = 1;
+            miscRegs[MISCREG_MVFR0] = mvfr0;
+
+            MVFR1 mvfr1 = 0;
+            mvfr1.flushToZero = 1;
+            mvfr1.defaultNaN = 1;
+            mvfr1.advSimdLoadStore = 1;
+            mvfr1.advSimdInteger = 1;
+            mvfr1.advSimdSinglePrecision = 1;
+            mvfr1.advSimdHalfPrecision = 1;
+            mvfr1.vfpHalfPrecision = 1;
+            miscRegs[MISCREG_MVFR1] = mvfr1;
+
             //XXX We need to initialize the rest of the state.
         }
 
@@ -273,6 +294,8 @@ namespace ArmISA
                 warn("The csselr register isn't implemented.\n");
                 break;
               case MISCREG_TLBTR:
+              case MISCREG_MVFR0:
+              case MISCREG_MVFR1:
                 return;
             }
             return setMiscRegNoEffect(misc_reg, newVal);
