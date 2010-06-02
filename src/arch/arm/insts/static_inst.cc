@@ -338,8 +338,8 @@ ArmStaticInstBase::printMnemonic(std::ostream &os,
           case COND_AL:
             // This one is implicit.
             break;
-          case COND_NV:
-            os << "nv";
+          case COND_UC:
+            // Unconditional.
             break;
           default:
             panic("Unrecognized condition code %d.\n", condCode);

@@ -62,7 +62,7 @@ namespace ArmISA
         COND_GT, // 12
         COND_LE, // 13
         COND_AL, // 14
-        COND_NV  // 15
+        COND_UC  // 15
     };
 
     enum MiscRegIndex {

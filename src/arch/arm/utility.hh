@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
@@ -70,7 +82,7 @@ namespace ArmISA {
             case COND_GT: return !(cpsr.n ^ cpsr.v || cpsr.z);
             case COND_LE: return  (cpsr.n ^ cpsr.v || cpsr.z);
             case COND_AL: return true;
-            case COND_NV: return false;
+            case COND_UC: return true;
             default:
                 panic("Unhandled predicate condition: %d\n", code);
         }
