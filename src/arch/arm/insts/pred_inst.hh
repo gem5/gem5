@@ -77,6 +77,73 @@ modified_imm(uint8_t ctrlImm, uint8_t dataImm)
     return bigData << (32 - bigCtrl);
 }
 
+static inline uint64_t
+simd_modified_imm(bool op, uint8_t cmode, uint8_t data)
+{
+    uint64_t bigData = data;
+    switch (cmode) {
+      case 0x0:
+      case 0x1:
+        bigData = (bigData << 0) | (bigData << 32);
+        break;
+      case 0x2:
+      case 0x3:
+        bigData = (bigData << 8) | (bigData << 40);
+        break;
+      case 0x4:
+      case 0x5:
+        bigData = (bigData << 16) | (bigData << 48);
+        break;
+      case 0x6:
+      case 0x7:
+        bigData = (bigData << 24) | (bigData << 56);
+        break;
+      case 0x8:
+      case 0x9:
+        bigData = (bigData << 0) | (bigData << 16) |
+                  (bigData << 32) | (bigData << 48);
+        break;
+      case 0xa:
+      case 0xb:
+        bigData = (bigData << 8) | (bigData << 24) |
+                  (bigData << 40) | (bigData << 56);
+        break;
+      case 0xc:
+        bigData = (0xffULL << 0) | (bigData << 8) |
+                  (0xffULL << 32) | (bigData << 40);
+        break;
+      case 0xd:
+        bigData = (0xffffULL << 0) | (bigData << 16) |
+                  (0xffffULL << 32) | (bigData << 48);
+        break;
+      case 0xe:
+        if (op) {
+            bigData = (bigData << 0)  | (bigData << 8)  |
+                      (bigData << 16) | (bigData << 24) |
+                      (bigData << 32) | (bigData << 40) |
+                      (bigData << 48) | (bigData << 56);
+        } else {
+            bigData = 0;
+            for (int i = 7; i >= 0; i--) {
+                if (bits(data, i)) {
+                    bigData |= (0xFF << (i * 8));
+                }
+            }
+        }
+      case 0xf:
+        if (!op) {
+            uint64_t bVal = bits(bigData, 6) ? (0x1F) : (0x20);
+            bigData = (bits(bigData, 5, 0) << 19) |
+                      (bVal << 25) | (bits(bigData, 7) << 31);
+            bigData |= (bigData << 32);
+        }
+        // Fall through
+      default:
+        panic("Illegal modified SIMD immediate parameters.\n");
+    }
+    return bigData;
+}
+
 
 /**
  * Base class for predicated integer operations.
