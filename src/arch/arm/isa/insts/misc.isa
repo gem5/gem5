@@ -546,4 +546,35 @@ let {{
     header_output += ImmOpDeclare.subst(setendIop)
     decoder_output += ImmOpConstructor.subst(setendIop)
     exec_output += PredOpExecute.subst(setendIop)
+
+    cpsCode = '''
+    uint32_t mode = bits(imm, 4, 0);
+    uint32_t f = bits(imm, 5);
+    uint32_t i = bits(imm, 6);
+    uint32_t a = bits(imm, 7);
+    bool setMode = bits(imm, 8);
+    bool enable = bits(imm, 9);
+    CPSR cpsr = Cpsr;
+    if (cpsr.mode != MODE_USER) {
+        if (enable) {
+            if (f) cpsr.f = 0;
+            if (i) cpsr.i = 0;
+            if (a) cpsr.a = 0;
+        } else {
+            if (f) cpsr.f = 1;
+            if (i) cpsr.i = 1;
+            if (a) cpsr.a = 1;
+        }
+        if (setMode) {
+            cpsr.mode = mode;
+        }
+    }
+    Cpsr = cpsr;
+    '''
+    cpsIop = InstObjParams("cps", "Cps", "ImmOp",
+                           { "code": cpsCode,
+                             "predicate_test": predicateTest }, [])
+    header_output += ImmOpDeclare.subst(cpsIop)
+    decoder_output += ImmOpConstructor.subst(cpsIop)
+    exec_output += PredOpExecute.subst(cpsIop)
 }};
