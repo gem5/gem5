@@ -35,6 +35,22 @@
 //
 // Authors: Gabe Black
 
+def format ArmUsad() {{
+    decode_block = '''
+    {
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        if (ra == 0xf) {
+            return new Usad8(machInst, rd, rn, rm);
+        } else {
+            return new Usada8(machInst, rd, rn, rm, ra);
+        }
+    }
+    '''
+}};
+
 def format ArmDataProcReg() {{
     pclr = '''
         return new %(className)ssRegPclr(machInst, %(dest)s,

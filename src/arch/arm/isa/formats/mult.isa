@@ -267,9 +267,9 @@ def format Thumb32MulMulAccAndAbsDiff() {{
             if (op2 != 0x0) {
                 return new Unknown(machInst);
             } else if (ra == 0xf) {
-                return new WarnUnimplemented("usada8", machInst);
+                return new Usad8(machInst, rd, rn, rm);
             } else {
-                return new WarnUnimplemented("usad8", machInst);
+                return new Usada8(machInst, rd, rn, rm, ra);
             }
         }
     }
