@@ -71,6 +71,7 @@ namespace ArmISA
         Bitfield<23, 21> opcode23_21;
         Bitfield<20>     opcode20;
         Bitfield<22>     opcode22;
+        Bitfield<19, 16> opcode19_16;
         Bitfield<19>     opcode19;
         Bitfield<18>     opcode18;
         Bitfield<15, 12> opcode15_12;
@@ -78,6 +79,7 @@ namespace ArmISA
         Bitfield<7,  4>  miscOpcode;
         Bitfield<7,5>    opc2;
         Bitfield<7>      opcode7;
+        Bitfield<6>      opcode6;
         Bitfield<4>      opcode4;
 
         Bitfield<31, 28> condCode;

@@ -51,18 +51,20 @@ def bitfield OPCODE        opcode;
 def bitfield MEDIA_OPCODE  mediaOpcode;
 def bitfield MEDIA_OPCODE2 mediaOpcode2;
 def bitfield USEIMM        useImm;
-def bitfield OPCODE_24	   opcode24;
+def bitfield OPCODE_24     opcode24;
 def bitfield OPCODE_23_20  opcode23_20;
 def bitfield OPCODE_23_21  opcode23_21;
 def bitfield OPCODE_22     opcode22;
-def bitfield OPCODE_20	   opcode20;
-def bitfield OPCODE_19	   opcode19;
-def bitfield OPCODE_18	   opcode18;
+def bitfield OPCODE_20     opcode20;
+def bitfield OPCODE_19_16  opcode19_16;
+def bitfield OPCODE_19     opcode19;
+def bitfield OPCODE_18     opcode18;
 def bitfield OPCODE_15_12  opcode15_12;
-def bitfield OPCODE_15	   opcode15;
+def bitfield OPCODE_15     opcode15;
 def bitfield MISC_OPCODE   miscOpcode;
 def bitfield OPC2          opc2; 
 def bitfield OPCODE_7      opcode7;
+def bitfield OPCODE_6      opcode6;
 def bitfield OPCODE_4      opcode4;
 
 def bitfield IS_MISC       isMisc;
@@ -100,16 +102,16 @@ def bitfield IMMED_LO_3_0  immedLo3_0;
 
 def bitfield IMMED_23_0    immed23_0;
 
-def bitfield CPNUM	   cpNum;
+def bitfield CPNUM         cpNum;
 // Note that FP Regs are only 3 bits
-def bitfield FN		   fn;
-def bitfield FD		   fd;
-def bitfield FPREGIMM	   fpRegImm;
+def bitfield FN            fn;
+def bitfield FD            fd;
+def bitfield FPREGIMM      fpRegImm;
 // We can just use 3:0 for FM since the hard-wired FP regs are handled in
 // float_regfile.hh
-def bitfield FM		   fm;
-def bitfield FPIMM	   fpImm;
-def bitfield PUNWL	   punwl;
+def bitfield FM            fm;
+def bitfield FPIMM         fpImm;
+def bitfield PUNWL         punwl;
 
 // M5 instructions
 def bitfield M5FUNC        m5Func;
