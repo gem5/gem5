@@ -107,33 +107,6 @@ class BranchExchange : public PredOp
     generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-
-/**
- * Base class for jumps (register-indirect control transfers).  In
- * the Arm ISA, these are always unconditional.
- */
-class Jump : public PCDependentDisassembly
-{
-  protected:
-
-    /// Displacement to target address (signed).
-    int32_t disp;
-
-    uint32_t target;
-
-  public:
-    /// Constructor
-    Jump(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : PCDependentDisassembly(mnem, _machInst, __opClass),
-          disp(machInst.offset << 2)
-    {
-    }
-
-    Addr branchTarget(ThreadContext *tc) const;
-
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-};
 }
 
 #endif //__ARCH_ARM_INSTS_BRANCH_HH__

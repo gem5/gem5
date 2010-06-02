@@ -38,14 +38,6 @@ Branch::branchTarget(Addr branchPC) const
     return branchPC + 8 + disp;
 }
 
-Addr
-Jump::branchTarget(ThreadContext *tc) const
-{
-    Addr NPC = tc->readPC() + 8;
-    uint64_t Rb = tc->readIntReg(_srcRegIdx[0]);
-    return (Rb & ~3) | (NPC & 1);
-}
-
 const std::string &
 PCDependentDisassembly::disassemble(Addr pc,
                                     const SymbolTable *symtab) const
@@ -88,14 +80,6 @@ BranchExchange::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     if (_numSrcRegs > 0) {
         printReg(ss, _srcRegIdx[0]);
     }
-    return ss.str();
-}
-
-std::string
-Jump::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    printMnemonic(ss);
     return ss.str();
 }
 }

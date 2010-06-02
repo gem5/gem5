@@ -108,24 +108,3 @@ def format BranchExchange(code,*opt_flags) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
-def format Jump(code, *opt_flags) {{
-    #Build Instruction Flags
-    #Use Link Flag to Add Link Code
-    inst_flags = ('IsIndirectControl', 'IsUncondControl')
-    for x in opt_flags:
-        if x == 'Link':
-            code = 'LR = NPC;\n' + code
-        elif x == 'ClearHazards':
-            code += '/* Code Needed to Clear Execute & Inst Hazards */\n'
-        else:
-            inst_flags += (x, )
-
-    iop = InstObjParams(name, Name, 'Jump', code, inst_flags)
-    header_output = BasicDeclare.subst(iop)
-    decoder_output = BasicConstructor.subst(iop)
-    decode_block = BasicDecode.subst(iop)
-    exec_output = BasicExecute.subst(iop)
-    #exec_output = PredOpExecute.subst(iop)
-}};
-
-
