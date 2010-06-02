@@ -233,8 +233,9 @@ let {{
         buildRegRegDataInst(mnem, regRegCode, flagType)
         if subsPcLr:
             code += '''
+            SCTLR sctlr = Sctlr;
             uint32_t newCpsr =
-                cpsrWriteByInstr(Cpsr | CondCodes, Spsr, 0xF, true);
+                cpsrWriteByInstr(Cpsr | CondCodes, Spsr, 0xF, true, sctlr.nmfi);
             Cpsr = ~CondCodesMask & newCpsr;
             CondCodes = CondCodesMask & newCpsr;
             '''

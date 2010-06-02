@@ -80,6 +80,7 @@ namespace ArmISA
         MISCREG_FPEXC,
         MISCREG_MVFR0,
         MISCREG_MVFR1,
+        MISCREG_SCTLR_RST,
         MISCREG_SEV_MAILBOX,
 
         // CP15 registers
@@ -191,7 +192,7 @@ namespace ArmISA
         "cpsr", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
         "spsr_mon", "spsr_und", "spsr_abt",
         "fpsr", "fpsid", "fpscr", "fpexc", "mvfr0", "mvfr1",
-        "sev_mailbox",
+        "sctlr_rst", "sev_mailbox",
         "sctlr", "dccisw", "dccimvac", "dccmvac",
         "contextidr", "tpidrurw", "tpidruro", "tpidrprw",
         "cp15isb", "cp15dsb", "cp15dmb", "cpacr",

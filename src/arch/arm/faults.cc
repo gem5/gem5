@@ -77,11 +77,11 @@ ArmFault::getVector(ThreadContext *tc)
     // ARM ARM B1-3
 
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
-    
+
     // panic if SCTLR.VE because I have no idea what to do with vectored
     // interrupts
     assert(!sctlr.ve);
-    
+
     if (!sctlr.v)
         return offset();
     return offset() + HighVecs;
@@ -137,12 +137,20 @@ ArmFault::invoke(ThreadContext *tc)
     }
 
     Addr pc = tc->readPC();
-    DPRINTF(Faults, "Invoking Fault: %s cpsr: %#x PC: %#x lr: %#x\n",
-            name(), cpsr, pc, tc->readIntReg(INTREG_LR));
     Addr newPc = getVector(tc) | (sctlr.te ? (ULL(1) << PcTBitShift) : 0);
+    DPRINTF(Faults, "Invoking Fault: %s cpsr: %#x PC: %#x lr: %#x newVector: %#x\n",
+            name(), cpsr, pc, tc->readIntReg(INTREG_LR), newPc);
     tc->setPC(newPc);
     tc->setNextPC(newPc + cpsr.t ? 2 : 4 );
     tc->setMicroPC(0);
+}
+
+void
+Reset::invoke(ThreadContext *tc)
+{
+    tc->getCpuPtr()->clearInterrupts();
+    tc->clearArchRegs();
+    ArmFault::invoke(tc);
 }
 
 #else

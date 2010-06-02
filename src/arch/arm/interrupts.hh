@@ -1,6 +1,17 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2009 ARM Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +45,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
+#include "arch/arm/miscregs.hh"
 #include "arch/arm/registers.hh"
 #include "cpu/thread_context.hh"
 #include "params/ArmInterrupts.hh"
@@ -47,6 +59,7 @@ class Interrupts : public SimObject
   private:
     BaseCPU * cpu;
 
+    bool interrupts[NumInterruptTypes];
     uint64_t intStatus;
 
   public:
@@ -74,46 +87,95 @@ class Interrupts : public SimObject
     void
     post(int int_num, int index)
     {
+        DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
+
+        if (int_num < 0 || int_num >= NumInterruptTypes)
+            panic("int_num out of bounds\n");
+
+        if (index != 0)
+            panic("No support for other interrupt indexes\n");
+
+        interrupts[int_num] = true;
+        intStatus |= ULL(1) << int_num;
     }
 
     void
     clear(int int_num, int index)
     {
+        DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
+
+        if (int_num < 0 || int_num >= NumInterruptTypes)
+            panic("int_num out of bounds\n");
+
+        if (index != 0)
+            panic("No support for other interrupt indexes\n");
+
+        interrupts[int_num] = false;
+        intStatus &= ~(ULL(1) << int_num);
+
     }
 
     void
     clearAll()
     {
+        DPRINTF(Interrupt, "Interrupts all cleared\n");
         intStatus = 0;
+        memset(interrupts, 0, sizeof(interrupts));
     }
 
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        return intStatus;
+        if (!intStatus)
+            return false;
+
+        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+
+        return ((interrupts[INT_IRQ] && !cpsr.i) ||
+                (interrupts[INT_FIQ] && !cpsr.f) ||
+                (interrupts[INT_ABT] && !cpsr.a) ||
+                (interrupts[INT_RST]));
     }
 
     Fault
     getInterrupt(ThreadContext *tc)
     {
-        warn_once("ARM  Interrupts not handled\n");
-        return NoFault;
+        if (!intStatus)
+            return NoFault;
+
+        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+
+        if (interrupts[INT_IRQ] && !cpsr.i)
+            return new Interrupt;
+        if (interrupts[INT_FIQ] && !cpsr.f)
+            return new FastInterrupt;
+        if (interrupts[INT_ABT] && !cpsr.a)
+            return new DataAbort(0, false, 0,
+                    ArmFault::AsynchronousExternalAbort);
+        if (interrupts[INT_RST])
+           return new Reset;
+
+        panic("intStatus and interrupts not in sync\n");
     }
 
     void
     updateIntrInfo(ThreadContext *tc)
     {
-
+        ; // nothing to do
     }
 
     void
     serialize(std::ostream &os)
     {
+        SERIALIZE_ARRAY(interrupts, NumInterruptTypes);
+        SERIALIZE_SCALAR(intStatus);
     }
 
     void
     unserialize(Checkpoint *cp, const std::string &section)
     {
+        UNSERIALIZE_ARRAY(interrupts, NumInterruptTypes);
+        UNSERIALIZE_SCALAR(intStatus);
     }
 };
 } // namespace ARM_ISA

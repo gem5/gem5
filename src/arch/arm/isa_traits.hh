@@ -110,6 +110,7 @@ namespace ArmISA
     const int LogVMPageSize = 12;	// 4K bytes
     const int VMPageSize = (1 << LogVMPageSize);
 
+    // Shouldn't this be 1 because of Thumb?! Dynamic? --Ali
     const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
 
     const int MachineBytes = 4;
@@ -121,6 +122,15 @@ namespace ArmISA
 
     // Memory accesses cannot be unaligned
     const bool HasUnalignedMemAcc = false;
+
+    enum InterruptTypes
+    {
+        INT_RST,
+        INT_ABT,
+        INT_IRQ,
+        INT_FIQ,
+        NumInterruptTypes
+    };
 
     // These otherwise unused bits of the PC are used to select a mode
     // like the J and T bits of the CPSR.

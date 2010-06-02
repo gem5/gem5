@@ -128,8 +128,15 @@ class ArmFaultVals : public ArmFault
     bool fiqDisable() { return vals.fiqDisable; }
 };
 
-
-class Reset : public ArmFaultVals<Reset> {};
+class Reset : public ArmFaultVals<Reset>
+#if FULL_SYSTEM
+{
+  public:
+    void invoke(ThreadContext *tc);
+};
+#else
+{};
+#endif //FULL_SYSTEM
 
 class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
 {

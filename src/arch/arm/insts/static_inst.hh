@@ -156,7 +156,7 @@ class ArmStaticInst : public StaticInst
 
     static uint32_t
     cpsrWriteByInstr(CPSR cpsr, uint32_t val,
-            uint8_t byteMask, bool affectState)
+            uint8_t byteMask, bool affectState, bool nmfi)
     {
         bool privileged = (cpsr.mode != MODE_USER);
 
@@ -187,7 +187,11 @@ class ArmStaticInst : public StaticInst
                 bitMask = bitMask | (1 << 5);
         }
 
-        return ((uint32_t)cpsr & ~bitMask) | (val & bitMask);
+        bool cpsr_f = cpsr.f;
+        uint32_t new_cpsr = ((uint32_t)cpsr & ~bitMask) | (val & bitMask);
+        if (nmfi && !cpsr_f)
+            new_cpsr &= ~(1 << 6);
+        return new_cpsr;
     }
 
     static uint32_t

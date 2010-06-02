@@ -254,6 +254,7 @@ class SimpleThread : public ThreadState
         PC = nextPC = nextNPC = 0;
         memset(intRegs, 0, sizeof(intRegs));
         memset(floatRegs.i, 0, sizeof(floatRegs.i));
+        isa.clear();
     }
 
     //

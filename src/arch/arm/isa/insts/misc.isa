@@ -77,8 +77,9 @@ let {{
     exec_output += PredOpExecute.subst(mrsSpsrIop)
 
     msrCpsrRegCode = '''
+        SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(Cpsr | CondCodes, Op1, byteMask, false);
+            cpsrWriteByInstr(Cpsr | CondCodes, Op1, byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
     '''
@@ -98,8 +99,9 @@ let {{
     exec_output += PredOpExecute.subst(msrSpsrRegIop)
 
     msrCpsrImmCode = '''
+        SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(Cpsr | CondCodes, imm, byteMask, false);
+            cpsrWriteByInstr(Cpsr | CondCodes, imm, byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
     '''
@@ -577,13 +579,14 @@ let {{
     bool setMode = bits(imm, 8);
     bool enable = bits(imm, 9);
     CPSR cpsr = Cpsr;
+    SCTLR sctlr = Sctlr;
     if (cpsr.mode != MODE_USER) {
         if (enable) {
             if (f) cpsr.f = 0;
             if (i) cpsr.i = 0;
             if (a) cpsr.a = 0;
         } else {
-            if (f) cpsr.f = 1;
+            if (f && !sctlr.nmfi) cpsr.f = 1;
             if (i) cpsr.i = 1;
             if (a) cpsr.a = 1;
         }

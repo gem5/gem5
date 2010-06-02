@@ -69,8 +69,9 @@ let {{
 
     microLdrRetUopCode = '''
         CPSR cpsr = Cpsr;
+        SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(cpsr | CondCodes, Spsr, 0xF, true);
+            cpsrWriteByInstr(cpsr | CondCodes, Spsr, 0xF, true, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
         IWNPC = cSwap(Mem.uw, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);

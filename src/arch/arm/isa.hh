@@ -92,6 +92,8 @@ namespace ArmISA
       public:
         void clear()
         {
+            SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
+
             memset(miscRegs, 0, sizeof(miscRegs));
             CPSR cpsr = 0;
             cpsr.mode = MODE_USER;
@@ -99,12 +101,16 @@ namespace ArmISA
             updateRegMap(cpsr);
 
             SCTLR sctlr = 0;
-            sctlr.nmfi = 1;
+            sctlr.nmfi = (bool)sctlr_rst.nmfi;
+            sctlr.v = (bool)sctlr_rst.v;
+            sctlr.u    = 1;
             sctlr.rao1 = 1;
             sctlr.rao2 = 1;
             sctlr.rao3 = 1;
             sctlr.rao4 = 1;
             miscRegs[MISCREG_SCTLR] = sctlr;
+            miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
+
 
             /*
              * Technically this should be 0, but we don't support those
@@ -327,6 +333,14 @@ namespace ArmISA
                              (miscRegs[MISCREG_FPEXC] & ~fpexcMask);
                 }
                 break;
+              case MISCREG_SCTLR:
+                {
+                    SCTLR sctlr = miscRegs[MISCREG_SCTLR];
+                    SCTLR new_sctlr = newVal;
+                    new_sctlr.nmfi =  (bool)sctlr.nmfi;
+                    miscRegs[MISCREG_SCTLR] = (MiscReg)new_sctlr;
+                    return;
+                }
               case MISCREG_TLBTR:
               case MISCREG_MVFR0:
               case MISCREG_MVFR1:
@@ -334,7 +348,7 @@ namespace ArmISA
               case MISCREG_FPSID:
                 return;
             }
-            return setMiscRegNoEffect(misc_reg, newVal);
+            setMiscRegNoEffect(misc_reg, newVal);
         }
 
         int
@@ -384,6 +398,10 @@ namespace ArmISA
 
         ISA()
         {
+            SCTLR sctlr;
+            sctlr = 0;
+            miscRegs[MISCREG_SCTLR_RST] = sctlr;
+
             clear();
         }
     };

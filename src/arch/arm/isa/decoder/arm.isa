@@ -109,9 +109,10 @@ format DataOp {
 #endif
                 }
                 default: PredImmOp::msr_i_cpsr({{
+                            SCTLR sctlr = Sctlr;
                             uint32_t newCpsr =
                                 cpsrWriteByInstr(Cpsr | CondCodes,
-                                                 rotated_imm, RN, false);
+                                                 rotated_imm, RN, false, sctlr.nmfi);
                             Cpsr = ~CondCodesMask & newCpsr;
                             CondCodes = CondCodesMask & newCpsr;
                 }});

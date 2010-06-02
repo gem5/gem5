@@ -137,11 +137,12 @@ let {{
             wbDiff = 8
         accCode = '''
         CPSR cpsr = Cpsr;
+        SCTLR sctlr = Sctlr;
         NPC = cSwap<uint32_t>(Mem.ud, cpsr.e);
         uint32_t newCpsr =
             cpsrWriteByInstr(cpsr | CondCodes,
                              cSwap<uint32_t>(Mem.ud >> 32, cpsr.e),
-                             0xF, true);
+                             0xF, true, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
         '''
