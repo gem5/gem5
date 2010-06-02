@@ -117,23 +117,7 @@ format DataOp {
         0: AddrMode2::addrMode2(False);
         1: decode OPCODE_24_23 {
             0x0: ArmParallelAddSubtract::armParallelAddSubtract();
-            0x1: decode MEDIA_OPCODE {
-                0x8: decode MISC_OPCODE {
-                    0x1, 0x9: WarnUnimpl::pkhbt();
-                    0x7: WarnUnimpl::sxtab16();
-                    0xb: WarnUnimpl::sel();
-                    0x5, 0xd: WarnUnimpl::pkhtb();
-                    0x3: WarnUnimpl::sign_zero_extend_add();
-                }
-                0xa, 0xb: decode SHIFT {
-                    0x0, 0x2: WarnUnimpl::ssat();
-                    0x1: WarnUnimpl::ssat16();
-                }
-                0xe, 0xf: decode SHIFT {
-                    0x0, 0x2: WarnUnimpl::usat();
-                    0x1: WarnUnimpl::usat16();
-                }
-            }
+            0x1: ArmPackUnpackSatReverse::armPackUnpackSatReverse();
             0x2: ArmSignedMultiplies::armSignedMultiplies();
             0x3: decode MEDIA_OPCODE {
                 0x18: decode RN {
