@@ -78,6 +78,7 @@ def bitfield COND_CODE     condCode;
 def bitfield S_FIELD       sField;
 def bitfield RN            rn;
 def bitfield RD            rd;
+def bitfield RT            rt;
 def bitfield SHIFT_SIZE    shiftSize;
 def bitfield SHIFT         shift;
 def bitfield RM            rm;
@@ -96,6 +97,7 @@ def bitfield PUBWL         pubwl;
 def bitfield IMM           imm;
 
 def bitfield IMMED_11_0    immed11_0;
+def bitfield IMMED_7_0     immed7_0;
 
 def bitfield IMMED_HI_11_8 immedHi11_8;
 def bitfield IMMED_LO_3_0  immedLo3_0;

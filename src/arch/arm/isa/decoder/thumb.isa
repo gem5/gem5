@@ -419,58 +419,7 @@
                 0x1: decode HTOPCODE_6_5 {
                     0x0: WarnUnimpl::Load_byte_memory_hints();
                     0x1: WarnUnimpl::Load_halfword_memory_hints();
-                    0x2: decode HTOPCODE_8 {
-                        0x0: decode HTRN {
-                            0xf: ArmLoadMemory::ldr1(
-                                {{ Rd.uw = Mem.uw }},
-                                {{ EA = roundUp(PC, 4) +
-                                    (UP ? IMMED_11_0 : -IMMED_11_0); }});
-                            default: decode HTOPCODE_7 {
-                                0x0: decode LTOPCODE_11_8 {
-                                    0x0: decode LTOPCODE_7_6 {
-                                        0x0: ArmLoadMemory::ldr2(
-                                            {{ Rd = Mem; }},
-                                            {{ EA = Rn +
-                                                   (Rm <<
-                                                    bits(machInst, 5, 4)); }}
-                                        );
-                                    }
-                                    0x9: ArmLoadMemory::ldr3(
-                                        {{ Rd = Mem;
-                                           Rn = Rn - IMMED_11_0; }},
-                                        {{ EA = Rn; }}
-                                    );
-                                    0xb: ArmLoadMemory::ldr4(
-                                        {{ Rd = Mem;
-                                           Rn = Rn + IMMED_11_0; }},
-                                        {{ EA = Rn; }}
-                                    );
-                                    0xc: ArmLoadMemory::ldr5(
-                                        {{ Rd = Mem; }},
-                                        {{ EA = Rn - IMMED_11_0; }}
-                                    );
-                                    0xd: ArmLoadMemory::ldr6(
-                                        {{ Rd = Mem;
-                                           Rn = Rn - IMMED_11_0; }},
-                                        {{ EA = Rn - IMMED_11_0; }}
-                                    );
-                                    0xf: ArmLoadMemory::ldr7(
-                                        {{ Rd = Mem;
-                                           Rn = Rn + IMMED_11_0; }},
-                                        {{ EA = Rn + IMMED_11_0; }}
-                                    );
-                                    0xe: ArmLoadMemory::ldrt(
-                                        {{ Rd = Mem; }},
-                                        {{ EA = Rn + IMMED_11_0; }}
-                                    ); // This should force user level access
-                                }
-                                0x1: ArmLoadMemory::ldr8(
-                                    {{ Rd = Mem; }},
-                                    {{ EA = Rn + IMMED_11_0; }}
-                                );
-                            }
-                        }
-                    }
+                    0x2: Thumb32LoadWord::thumb32LoadWord();
                     0x3: WarnUnimpl::undefined();
                 }
             }

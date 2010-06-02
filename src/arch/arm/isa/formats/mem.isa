@@ -203,6 +203,71 @@ def format AddrMode3(l0Type, l0Code, l1Type, l1Code) {{
     }'''
 }};
 
+def format Thumb32LoadWord() {{
+    decode = '''
+    {
+        uint32_t op1 = bits(machInst, 24, 23);
+        if (bits(op1, 1) == 0) {
+            uint32_t op2 = bits(machInst, 11, 6);
+            if (HTRN == 0xF) {
+                if (UP) {
+                    return new %(literal_u)s(machInst, RT, INTREG_PC,
+                                             true, IMMED_11_0);
+                } else {
+                    return new %(literal)s(machInst, RT, INTREG_PC,
+                                           false, IMMED_11_0);
+                }
+            } else if (op1 == 0x1) {
+                return new %(imm_pu)s(machInst, RT, RN, true, IMMED_11_0);
+            } else if (op2 == 0) {
+                return new %(register)s(machInst, RT, RN, UP,
+                                        bits(machInst, 5, 4), LSL, RM);
+            } else if ((op2 & 0x3c) == 0x38) {
+                return new %(ldrt)s(machInst, RT, RN, true, IMMED_7_0);
+            } else if ((op2 & 0x3c) == 0x30 || //P
+                       (op2 & 0x24) == 0x24) { //W
+                uint32_t puw = bits(machInst, 10, 8);
+                uint32_t imm = IMMED_7_0;
+                switch (puw) {
+                  case 0:
+                  case 2:
+                    // If we're here, either P or W must have been set.
+                    panic("Neither P or W set, but that "
+                            "shouldn't be possible.\\n");
+                  case 1:
+                    return new %(imm_w)s(machInst, RT, RN, false, imm);
+                  case 3:
+                    return new %(imm_uw)s(machInst, RT, RN, true, imm);
+                  case 4:
+                    return new %(imm_p)s(machInst, RT, RN, false, imm);
+                  case 5:
+                    return new %(imm_pw)s(machInst, RT, RN, false, imm);
+                  case 6:
+                    return new %(imm_pu)s(machInst, RT, RN, true, imm);
+                  case 7:
+                    return new %(imm_puw)s(machInst, RT, RN, true, imm);
+                }
+            }
+        } else {
+            return new Unknown(machInst);
+        }
+    }
+    '''
+    classNames = {
+        "literal_u" : loadImmClassName(False, True, False),
+        "literal" : loadImmClassName(False, False, False),
+        "register" : loadRegClassName(False, True, False),
+        "ldrt" : loadImmClassName(False, True, False, user=True),
+        "imm_w" : loadImmClassName(True, False, True),
+        "imm_uw" : loadImmClassName(True, True, True),
+        "imm_p" : loadImmClassName(False, False, False),
+        "imm_pw" : loadImmClassName(False, False, True),
+        "imm_pu" : loadImmClassName(False, True, False),
+        "imm_puw" : loadImmClassName(False, True, True)
+    }
+    decode_block = decode % classNames
+}};
+
 def format ArmLoadMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},
                      mem_flags = [], inst_flags = []) {{
     ea_code = ArmGenericCodeSubs(ea_code)

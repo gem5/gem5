@@ -86,6 +86,7 @@ namespace ArmISA
         Bitfield<20>     sField;
         Bitfield<19, 16> rn;
         Bitfield<15, 12> rd;
+        Bitfield<15, 12> rt;
         Bitfield<11, 7>  shiftSize;
         Bitfield<6,  5>  shift;
         Bitfield<3,  0>  rm;
