@@ -155,6 +155,8 @@ namespace ArmISA
             mvfr1.vfpHalfPrecision = 1;
             miscRegs[MISCREG_MVFR1] = mvfr1;
 
+            miscRegs[MISCREG_MPIDR] = 0;
+
             //XXX We need to initialize the rest of the state.
         }
 
@@ -296,6 +298,7 @@ namespace ArmISA
               case MISCREG_TLBTR:
               case MISCREG_MVFR0:
               case MISCREG_MVFR1:
+              case MISCREG_MPIDR:
                 return;
             }
             return setMiscRegNoEffect(misc_reg, newVal);
