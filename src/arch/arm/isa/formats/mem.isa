@@ -325,9 +325,9 @@ def format Thumb32LdrStrDExTbh() {{
                 } else {
                     switch (op3) {
                       case 0x0:
-                        return new WarnUnimplemented("tbb", machInst);
+                        return new Tbb(machInst, rn, rd);
                       case 0x1:
-                        return new WarnUnimplemented("tbh", machInst);
+                        return new Tbh(machInst, rn, rd);
                       case 0x4:
                         return new %(ldrexb)s(machInst, rt, rn, true, 0);
                       case 0x5:
