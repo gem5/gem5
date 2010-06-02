@@ -309,11 +309,17 @@ fixFpDFpSDest(FPSCR fpscr, double val)
 }
 
 static inline uint64_t
-vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
+vfpFpSToFixed(float val, bool isSigned, bool half,
+              uint8_t imm, bool rzero = true)
 {
-    fesetround(FeRoundZero);
+    int rmode = fegetround();
+    fesetround(FeRoundNearest);
     val = val * powf(2.0, imm);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    if (rzero)
+        fesetround(FeRoundZero);
+    else
+        fesetround(rmode);
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
     float origVal = val;
@@ -410,12 +416,17 @@ vfpSFixedToFpS(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
 }
 
 static inline uint64_t
-vfpFpDToFixed(double val, bool isSigned, bool half, uint8_t imm)
+vfpFpDToFixed(double val, bool isSigned, bool half,
+              uint8_t imm, bool rzero = true)
 {
+    int rmode = fegetround();
     fesetround(FeRoundNearest);
     val = val * pow(2.0, imm);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
-    fesetround(FeRoundZero);
+    if (rzero)
+        fesetround(FeRoundZero);
+    else
+        fesetround(rmode);
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
     double origVal = val;
