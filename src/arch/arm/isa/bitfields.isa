@@ -148,6 +148,7 @@ def bitfield HTOPCODE_8_6   htopcode8_6;
 def bitfield HTOPCODE_8_5   htopcode8_5;
 def bitfield HTOPCODE_7     htopcode7;
 def bitfield HTOPCODE_7_5   htopcode7_5;
+def bitfield HTOPCODE_6     htopcode6;
 def bitfield HTOPCODE_6_5   htopcode6_5;
 def bitfield HTOPCODE_5_4   htopcode5_4;
 def bitfield HTOPCODE_4     htopcode4;

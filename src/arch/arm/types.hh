@@ -159,6 +159,7 @@ namespace ArmISA
         Bitfield<24, 21> htopcode8_5;
         Bitfield<23>     htopcode7;
         Bitfield<23, 21> htopcode7_5;
+        Bitfield<22>     htopcode6;
         Bitfield<22, 21> htopcode6_5;
         Bitfield<21, 20> htopcode5_4;
         Bitfield<20>     htopcode4;

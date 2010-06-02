@@ -68,50 +68,16 @@
     // 32 bit thumb instructions.
     1: decode HTOPCODE_12_11 {
         0x1: decode HTOPCODE_10_9 {
-            0x0: decode HTOPCODE_8_6 {
-                0x0, 0x6: decode HTOPCODE_4 {
-                    0x0: WarnUnimpl::srs();
-                    0x1: WarnUnimpl::rfe();
+            0x0: decode HTOPCODE_6 {
+                0x0: decode HTOPCODE_8_7 {
+                    0x0, 0x3: decode HTOPCODE_4 {
+                        0x0: WarnUnimpl::srs();
+                        0x1: WarnUnimpl::rfe();
+                    }
+                    // This uses the same encoding as regular ARM.
+                    default: ArmMacroMem::armMacroMem();
                 }
-                0x1: decode HTOPCODE_5_4 {
-                    0x0: WarnUnimpl::strex();
-                    0x1: WarnUnimpl::ldrex();
-                    0x2: WarnUnimpl::strd(); // immediate
-                    0x3: decode HTRN {
-                        0xf: WarnUnimpl::ldrd(); // literal
-                        default: WarnUnimpl::ldrd(); // immediate
-                    }
-                }
-                // This uses the same encoding as regular ARM.
-                0x2: ArmMacroMem::armMacroMem();
-                0x3: decode HTOPCODE_5_4 {
-                    0x0: decode LTOPCODE_7_4 {
-                        0x4: WarnUnimpl::strexb();
-                        0x5: WarnUnimpl::strexh();
-                        0x7: WarnUnimpl::strexd();
-                    }
-                    0x1: decode LTOPCODE_7_4 {
-                        0x0: WarnUnimpl::tbb();
-                        0x1: WarnUnimpl::tbh();
-                        0x4: WarnUnimpl::ldrexb();
-                        0x5: WarnUnimpl::ldrexh();
-                        0x7: WarnUnimpl::ldrexd();
-                    }
-                    0x2: WarnUnimpl::strd(); // immediate
-                    0x3: decode HTRN {
-                        0xf: WarnUnimpl::ldrd(); // literal
-                        default: WarnUnimpl::ldrd(); // immediate
-                    }
-                }
-                // This uses the same encoding as regular ARM.
-                0x4: ArmMacroMem::armMacroMem();
-                0x5, 0x7: decode HTOPCODE_4 {
-                    0x0: WarnUnimpl::strd(); // immediate
-                    0x1: decode HTRN {
-                        0xf: WarnUnimpl::ldrd(); // literal
-                        default: WarnUnimpl::ldrd(); // immediate
-                    }
-                }
+                0x1: Thumb32LdrStrDExTbh::thumb32LdrStrDExTbh();
             }
             0x1: Thumb32DataProcShiftReg::thumb32DataProcShiftReg();
             default: decode HTOPCODE_9_8 {

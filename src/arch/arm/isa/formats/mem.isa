@@ -235,6 +235,60 @@ def format ArmSyncMem() {{
     '''
 }};
 
+def format Thumb32LdrStrDExTbh() {{
+    decode_block = '''
+    {
+        const uint32_t op1 = bits(machInst, 24, 23);
+        const uint32_t op2 = bits(machInst, 21, 20);
+        const uint32_t op3 = bits(machInst, 7, 4);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        if (bits(op1, 1) == 0 && bits(op2, 1) == 0) {
+            if (op1 == 0) {
+                if (op2 == 0) {
+                    return new WarnUnimplemented("strex", machInst);
+                } else {
+                    return new WarnUnimplemented("ldrex", machInst);
+                }
+            } else {
+                if (op2 == 0) {
+                    switch (op3) {
+                      case 0x4:
+                        return new WarnUnimplemented("strexb", machInst);
+                      case 0x5:
+                        return new WarnUnimplemented("strexh", machInst);
+                      case 0x7:
+                        return new WarnUnimplemented("strexd", machInst);
+                      default:
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    switch (op3) {
+                      case 0x0:
+                        return new WarnUnimplemented("tbb", machInst);
+                      case 0x1:
+                        return new WarnUnimplemented("tbh", machInst);
+                      case 0x4:
+                        return new WarnUnimplemented("ldrexb", machInst);
+                      case 0x5:
+                        return new WarnUnimplemented("ldrexh", machInst);
+                      case 0x7:
+                        return new WarnUnimplemented("ldrexd", machInst);
+                      default:
+                        return new Unknown(machInst);
+                    }
+                }
+            }
+        } else {
+            if (bits(op2, 0) == 0) {
+                return new WarnUnimplemented("strd", machInst);
+            } else {
+                return new WarnUnimplemented("ldrd", machInst);
+            }
+        }
+    }
+    '''
+}};
+
 def format Thumb32LoadWord() {{
     decode = '''
     {
