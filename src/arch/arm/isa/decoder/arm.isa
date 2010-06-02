@@ -58,12 +58,7 @@ format DataOp {
         1: decode MISC_OPCODE {
             0x9: decode PREPOST {
                 0: ArmMultAndMultAcc::armMultAndMultAcc();
-                1: decode PUBWL {
-                    0x10: WarnUnimpl::swp();
-                    0x14: WarnUnimpl::swpb();
-                    0x18: WarnUnimpl::strex();
-                    0x19: WarnUnimpl::ldrex();
-                }
+                1: ArmSyncMem::armSyncMem();
             }
             0xb, 0xd, 0xf: AddrMode3::addrMode3();
         }
