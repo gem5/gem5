@@ -362,9 +362,29 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 ArmISA::IntReg
 ArmLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
-    assert(i < 4);
+    assert(i < 6);
     return tc->readIntReg(ArgumentReg0 + i++);
 }
+
+uint64_t
+ArmLiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+{
+    assert(width == 32 || width == 64);
+    if (width == 32)
+        return getSyscallArg(tc, i);
+
+    // 64 bit arguments are passed starting in an even register
+    if (i % 2 != 0)
+       i++;
+
+    // Registers r0-r6 can be used
+    assert(i < 5);
+    uint64_t val;
+    val = tc->readIntReg(ArgumentReg0 + i++);
+    val |= ((uint64_t)tc->readIntReg(ArgumentReg0 + i++) << 32);
+    return val;
+}
+
 
 void
 ArmLiveProcess::setSyscallArg(ThreadContext *tc,

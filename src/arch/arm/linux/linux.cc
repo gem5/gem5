@@ -56,14 +56,29 @@ OpenFlagTransTable ArmLinux::openFlagTable[] = {
   { ArmLinux::TGT_O_RDONLY,	O_RDONLY },
   { ArmLinux::TGT_O_WRONLY,	O_WRONLY },
   { ArmLinux::TGT_O_RDWR,	O_RDWR },
-  { ArmLinux::TGT_O_APPEND,	O_APPEND },
   { ArmLinux::TGT_O_CREAT,	O_CREAT },
-  { ArmLinux::TGT_O_TRUNC,	O_TRUNC },
   { ArmLinux::TGT_O_EXCL,	O_EXCL },
-  { ArmLinux::TGT_O_NONBLOCK,	O_NONBLOCK },
   { ArmLinux::TGT_O_NOCTTY,	O_NOCTTY },
+  { ArmLinux::TGT_O_TRUNC,	O_TRUNC },
+  { ArmLinux::TGT_O_APPEND,	O_APPEND },
+  { ArmLinux::TGT_O_NONBLOCK,	O_NONBLOCK },
 #ifdef O_SYNC
   { ArmLinux::TGT_O_SYNC,	O_SYNC },
+#endif
+#ifdef FASYNC
+  { ArmLinux::TGT_FASYNC,	FASYNC },
+#endif
+#ifdef O_DIRECT
+  { ArmLinux::TGT_O_DIRECT,	O_DIRECT },
+#endif
+#ifdef O_LARGEFILE
+  { ArmLinux::TGT_O_LARGEFILE,	O_LARGEFILE },
+#endif
+#ifdef O_DIRECTORY
+  { ArmLinux::TGT_O_DIRECTORY,	O_DIRECTORY },
+#endif
+#ifdef O_NOFOLLOW
+  { ArmLinux::TGT_O_NOFOLLOW,	O_NOFOLLOW },
 #endif
 #endif /* _MSC_VER */
 };

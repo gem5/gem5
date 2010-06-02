@@ -79,11 +79,14 @@ class ArmLinux : public Linux
     static const int TGT_O_NONBLOCK  = 00004000; //!< O_NONBLOCK
     static const int TGT_O_SYNC      = 00010000; //!< O_SYNC
     static const int TGT_FASYNC      = 00020000; //!< FASYNC
-    static const int TGT_O_DIRECTORY = 00040000; //!< O_DIRECTORY
-    static const int TGT_O_NOFOLLOW  = 00100000; //!< O_NOFOLLOW
-    static const int TGT_O_DIRECT    = 00200000; //!< O_DIRECT
-    static const int TGT_O_LARGEFILE = 00400000; //!< O_LARGEFILE
+    static const int TGT_O_DIRECT    = 00040000; //!< O_DIRECT
+    static const int TGT_O_LARGEFILE = 00100000; //!< O_LARGEFILE
+    static const int TGT_O_DIRECTORY = 00200000; //!< O_DIRECTORY
+    static const int TGT_O_NOFOLLOW  = 00400000; //!< O_NOFOLLOW
     static const int TGT_O_NOATIME   = 01000000; //!< O_NOATIME
+    static const int TGT_O_CLOEXEC   = 02000000; //!< O_NOATIME
+
+
     //@}
 
     /// For mmap().
@@ -106,7 +109,7 @@ class ArmLinux : public Linux
     static const unsigned FIONREAD_   = 0x4004667f;
     static const unsigned TIOCISATTY_ = 0x2000745e;
     static const unsigned TIOCGETS_   = 0x402c7413;
-    static const unsigned TIOCGETA_   = 0x40127417;
+    static const unsigned TIOCGETA_   = 0x5405;
     static const unsigned TCSETAW_    = 0x5407;     // 2.6.15 kernel
     //@}
 
