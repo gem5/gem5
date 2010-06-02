@@ -116,6 +116,40 @@ let {{
                   memFlags, [], base, strex=strex,
                   execTemplateBase = execTemplateBase)
 
+    def buildSrsStore(mnem, post, add, writeback):
+        name = mnem
+        Name = "SRS_" + storeImmClassName(post, add, writeback, 8)
+
+        offset = 0
+        if post != add:
+            offset += 4
+        if not add:
+            offset -= 8
+
+        eaCode = "EA = SpMode + %d;" % offset
+
+        wbDiff = -8
+        if add:
+            wbDiff = 8
+        accCode = '''
+        CPSR cpsr = Cpsr;
+        Mem.ud = (uint64_t)cSwap(LR.uw, cpsr.e) |
+                 ((uint64_t)cSwap(Spsr.uw, cpsr.e) << 32);
+        '''
+        if writeback:
+            accCode += "SpMode = SpMode + %s;\n" % wbDiff
+
+        global header_output, decoder_output, exec_output
+
+        (newHeader,
+         newDecoder,
+         newExec) = SrsBase(name, Name, eaCode, accCode,
+             ["ArmISA::TLB::AlignWord", "ArmISA::TLB::MustBeOne"], [])
+
+        header_output += newHeader
+        decoder_output += newDecoder
+        exec_output += newExec
+
     def buildRegStore(mnem, post, add, writeback, \
                       size=4, sign=False, user=False, strex=False):
         name = mnem
@@ -241,12 +275,24 @@ let {{
         buildDoubleImmStore(mnem, False, False, False)
         buildDoubleRegStore(mnem, False, False, False)
 
+    def buildSrsStores(mnem):
+        buildSrsStore(mnem, True, True, True)
+        buildSrsStore(mnem, True, True, False)
+        buildSrsStore(mnem, True, False, True)
+        buildSrsStore(mnem, True, False, False)
+        buildSrsStore(mnem, False, True, True)
+        buildSrsStore(mnem, False, True, False)
+        buildSrsStore(mnem, False, False, True)
+        buildSrsStore(mnem, False, False, False)
+
     buildStores("str")
     buildStores("strt", user=True)
     buildStores("strb", size=1)
     buildStores("strbt", size=1, user=True)
     buildStores("strh", size=2)
     buildStores("strht", size=2, user=True)
+
+    buildSrsStores("srs")
 
     buildDoubleStores("strd")
 

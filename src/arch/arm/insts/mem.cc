@@ -110,7 +110,7 @@ SrsOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         ss << "!";
     }
     ss << ", #";
-    switch (mode) {
+    switch (regMode) {
       case MODE_USER:
         ss << "user";
         break;
