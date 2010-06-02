@@ -79,8 +79,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
 
 output header {{
         std::string inst2string(MachInst machInst);
-        StaticInstPtr gen_ldrstr_uop(uint32_t baseinst, int loadop, uint32_t rd, int32_t disp);
-        int emit_ldfstf_uops(StaticInstPtr* microOps, int index, uint32_t baseinst, int loadop, int up, int32_t disp);
 }};
 
 output decoder {{
@@ -102,28 +100,6 @@ output decoder {{
 
         return str;
     }
-
-    // Emits uops for a double fp move
-    void
-    emit_ldfstf_uops(StaticInstPtr* microOps, int index, ExtMachInst machInst,
-                     bool loadop, bool up, int32_t disp)
-    {
-        if (loadop)
-        {
-            microOps[index++] = new MicroLdrUop(machInst, 19, RN, disp);
-            microOps[index++] =
-                new MicroLdrUop(machInst, 18, RN, disp + (up ? 4 : -4));
-            microOps[index++] = new MicroMvtdUop(machInst);
-        }
-        else
-        {
-            microOps[index++] = new MicroMvfdUop(machInst);
-            microOps[index++] = new MicroStrUop(machInst, 19, RN, disp);
-            microOps[index++] =
-                new MicroStrUop(machInst, 18, RN, disp + (up ? 4 : -4));
-        }
-    }
-
 }};
 
 

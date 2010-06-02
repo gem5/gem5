@@ -1,4 +1,17 @@
-/* Copyright (c) 2007-2008 The Florida State University
+/*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,71 +112,6 @@ class ArmMacroMemoryOp : public PredMacroOp
         ones = number_of_ones(reglist);
         numMicroops = ones + machInst.puswl.writeback + 1;
         // Remember that writeback adds a uop
-        microOps = new StaticInstPtr[numMicroops];
-    }
-};
-
-/**
- * Arm Macro FPA operations to fix ldfd and stfd instructions
- */
-class ArmMacroFPAOp : public PredMacroOp
-{
-  protected:
-    uint32_t puswl,
-             prepost,
-             up,
-             psruser,
-             writeback,
-             loadop;
-    int32_t disp8;
-
-    ArmMacroFPAOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : PredMacroOp(mnem, _machInst, __opClass),
-                      puswl(machInst.puswl),
-                      prepost(machInst.puswl.prepost),
-                      up(machInst.puswl.up),
-                      psruser(machInst.puswl.psruser),
-                      writeback(machInst.puswl.writeback),
-                      loadop(machInst.puswl.loadOp),
-                      disp8(machInst.immed7_0 << 2)
-    {
-        numMicroops = 3 + writeback;
-        microOps = new StaticInstPtr[numMicroops];
-    }
-};
-
-/**
- * Arm Macro FM operations to fix lfm and sfm
- */
-class ArmMacroFMOp : public PredMacroOp
-{
-  protected:
-    uint32_t punwl,
-             prepost,
-             up,
-             n1bit,
-             writeback,
-             loadop,
-             n0bit,
-             count;
-    int32_t disp8;
-
-    ArmMacroFMOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : PredMacroOp(mnem, _machInst, __opClass),
-                      punwl(machInst.punwl),
-                      prepost(machInst.puswl.prepost),
-                      up(machInst.puswl.up),
-                      n1bit(machInst.opcode22),
-                      writeback(machInst.puswl.writeback),
-                      loadop(machInst.puswl.loadOp),
-                      n0bit(machInst.opcode15),
-                      disp8(machInst.immed7_0 << 2)
-    {
-        // Transfer 1-4 registers based on n1 and n0 bits (with 00 repr. 4)
-        count = (n1bit << 1) | n0bit;
-        if (count == 0)
-            count = 4;
-        numMicroops = (3*count) + writeback;
         microOps = new StaticInstPtr[numMicroops];
     }
 };
