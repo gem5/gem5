@@ -59,14 +59,15 @@ let {{
     def loadDoubleRegClassName(post, add, writeback):
         return memClassName("LOAD_REGD", post, add, writeback, 4, False, False)
 
-    def emitLoad(name, Name, imm, eaCode, accCode, memFlags, instFlags, base):
+    def emitLoad(name, Name, imm, eaCode, accCode, \
+                 memFlags, instFlags, base, double=False):
         global header_output, decoder_output, exec_output
 
         (newHeader,
          newDecoder,
          newExec) = loadStoreBase(name, Name, imm,
                                   eaCode, accCode,
-                                  memFlags, instFlags,
+                                  memFlags, instFlags, double,
                                   base, execTemplateBase = 'Load')
 
         header_output += newHeader
@@ -143,7 +144,8 @@ let {{
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryReg", post, writeback)
 
-        emitLoad(name, Name, False, eaCode, accCode, memFlags, [], base)
+        emitLoad(name, Name, False, eaCode, accCode, \
+                 memFlags, [], base)
 
     def buildDoubleImmLoad(mnem, post, add, writeback, ldrex=False):
         name = mnem
@@ -161,8 +163,8 @@ let {{
         eaCode += ";"
 
         accCode = '''
-        Rdo = bits(Mem.ud, 31, 0);
-        Rde = bits(Mem.ud, 63, 32);
+        Dest = bits(Mem.ud, 31, 0);
+        Dest2 = bits(Mem.ud, 63, 32);
         '''
         if ldrex:
             memFlags = ["Request::LLSC"]
@@ -171,9 +173,10 @@ let {{
             memFlags = []
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryImm", post, writeback)
+        base = buildMemBase("MemoryDImm", post, writeback)
 
-        emitLoad(name, Name, True, eaCode, accCode, memFlags, [], base)
+        emitLoad(name, Name, True, eaCode, accCode, \
+                 memFlags, [], base, double=True)
 
     def buildDoubleRegLoad(mnem, post, add, writeback):
         name = mnem
@@ -192,14 +195,15 @@ let {{
         eaCode += ";"
 
         accCode = '''
-        Rdo = bits(Mem.ud, 31, 0);
-        Rde = bits(Mem.ud, 63, 32);
+        Dest = bits(Mem.ud, 31, 0);
+        Dest2 = bits(Mem.ud, 63, 32);
         '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryReg", post, writeback)
+        base = buildMemBase("MemoryDReg", post, writeback)
 
-        emitLoad(name, Name, False, eaCode, accCode, [], [], base)
+        emitLoad(name, Name, False, eaCode, accCode,
+                 [], [], base, double=True)
 
     def buildLoads(mnem, size=4, sign=False, user=False):
         buildImmLoad(mnem, True, True, True, size, sign, user)

@@ -150,6 +150,10 @@ def format AddrMode3() {{
             addStr = "true"
         else:
             addStr = "false"
+        if d:
+            dests = "RT & ~1, RT | 1"
+        else:
+            dests = "RT"
         if i:
             if load:
                 if d:
@@ -165,8 +169,8 @@ def format AddrMode3() {{
                     className = storeImmClassName(post, add, writeback, \
                                                   size=size, sign=sign, \
                                                   user=user)
-            decode += ("%s(machInst, RT, RN, %s, imm);\n" % \
-                       (className, addStr))
+            decode += ("%s(machInst, %s, RN, %s, imm);\n" % \
+                       (className, dests, addStr))
         else:
             if load:
                 if d:
@@ -182,8 +186,8 @@ def format AddrMode3() {{
                     className = storeRegClassName(post, add, writeback, \
                                                   size=size, sign=sign, \
                                                   user=user)
-            decode += ("%s(machInst, RT, RN, %s, 0, LSL, RM);\n" % \
-                       (className, addStr))
+            decode += ("%s(machInst, %s, RN, %s, 0, LSL, RM);\n" % \
+                       (className, dests, addStr))
         return decode
 
     def decodePuiw(load, d, size=4, sign=False):

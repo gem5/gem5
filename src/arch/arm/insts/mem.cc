@@ -66,7 +66,7 @@ void
 Memory::printInst(std::ostream &os, AddrMode addrMode) const
 {
     printMnemonic(os);
-    printReg(os, dest);
+    printDest(os);
     os << ", [";
     printReg(os, base);
     if (addrMode != AddrMd_PostIndex) {

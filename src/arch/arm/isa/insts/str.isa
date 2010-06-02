@@ -61,14 +61,15 @@ let {{
         return memClassName("STORE_REGD", post, add, writeback,
                             4, False, False)
 
-    def emitStore(name, Name, imm, eaCode, accCode, memFlags, instFlags, base):
+    def emitStore(name, Name, imm, eaCode, accCode, \
+                  memFlags, instFlags, base, double=False):
         global header_output, decoder_output, exec_output
 
         (newHeader,
          newDecoder,
          newExec) = loadStoreBase(name, Name, imm,
                                   eaCode, accCode,
-                                  memFlags, instFlags,
+                                  memFlags, instFlags, double,
                                   base, execTemplateBase = 'Store')
 
         header_output += newHeader
@@ -139,12 +140,13 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = 'Mem.ud = (Rdo.ud & mask(32)) | (Rde.ud << 32);'
+        accCode = 'Mem.ud = (Dest.ud & mask(32)) | (Dest2.ud << 32);'
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryImm", post, writeback)
+        base = buildMemBase("MemoryDImm", post, writeback)
 
-        emitStore(name, Name, True, eaCode, accCode, [], [], base)
+        emitStore(name, Name, True, eaCode, accCode, \
+                  [], [], base, double=True)
 
     def buildDoubleRegStore(mnem, post, add, writeback):
         name = mnem
@@ -162,12 +164,13 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = 'Mem.ud = (Rdo.ud & mask(32)) | (Rde.ud << 32);'
+        accCode = 'Mem.ud = (Dest.ud & mask(32)) | (Dest2.ud << 32);'
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryReg", post, writeback)
+        base = buildMemBase("MemoryDReg", post, writeback)
 
-        emitStore(name, Name, False, eaCode, accCode, [], [], base)
+        emitStore(name, Name, False, eaCode, accCode, \
+                  [], [], base, double=True)
 
     def buildStores(mnem, size=4, sign=False, user=False):
         buildImmStore(mnem, True, True, True, size, sign, user)

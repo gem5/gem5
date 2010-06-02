@@ -314,6 +314,27 @@ def template SwapDeclare {{
     };
 }};
 
+def template LoadStoreDImmDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                uint32_t _dest, uint32_t _dest2,
+                uint32_t _base, bool _add, int32_t _imm);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
 def template LoadStoreImmDeclare {{
     /**
      * Static instruction class for "%(mnemonic)s".
@@ -325,6 +346,29 @@ def template LoadStoreImmDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst,
                 uint32_t _dest, uint32_t _base, bool _add, int32_t _imm);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
+def template LoadStoreDRegDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                uint32_t _dest, uint32_t _dest2,
+                uint32_t _base, bool _add,
+                int32_t _shiftAmt, uint32_t _shiftType,
+                uint32_t _index);
 
         %(BasicExecDeclare)s
 
@@ -374,11 +418,37 @@ def template SwapConstructor {{
     }
 }};
 
+def template LoadStoreDImmConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+            uint32_t _dest, uint32_t _dest2,
+            uint32_t _base, bool _add, int32_t _imm)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                 (IntRegIndex)_dest, (IntRegIndex)_dest2,
+                 (IntRegIndex)_base, _add, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
 def template LoadStoreImmConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
             uint32_t _dest, uint32_t _base, bool _add, int32_t _imm)
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template LoadStoreDRegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+            uint32_t _dest, uint32_t _dest2, uint32_t _base, bool _add,
+            int32_t _shiftAmt, uint32_t _shiftType, uint32_t _index)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                 (IntRegIndex)_dest, (IntRegIndex)_dest2,
+                 (IntRegIndex)_base, _add,
+                 _shiftAmt, (ArmShiftType)_shiftType,
+                 (IntRegIndex)_index)
     {
         %(constructor)s;
     }

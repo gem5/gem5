@@ -39,7 +39,8 @@
 
 let {{
     def loadStoreBaseWork(name, Name, imm, swp, codeBlobs, memFlags,
-                          instFlags, base = 'Memory', execTemplateBase = ''):
+                          instFlags, double, base = 'Memory',
+                          execTemplateBase = ''):
         # Make sure flags are in lists (convert to lists if not).
         memFlags = makeList(memFlags)
         instFlags = makeList(instFlags)
@@ -66,11 +67,19 @@ let {{
             declareTemplate = SwapDeclare
             constructTemplate = SwapConstructor
         elif imm:
-            declareTemplate = LoadStoreImmDeclare
-            constructTemplate = LoadStoreImmConstructor
+            if double:
+                declareTemplate = LoadStoreDImmDeclare
+                constructTemplate = LoadStoreDImmConstructor
+            else:
+                declareTemplate = LoadStoreImmDeclare
+                constructTemplate = LoadStoreImmConstructor
         else:
-            declareTemplate = LoadStoreRegDeclare
-            constructTemplate = LoadStoreRegConstructor
+            if double:
+                declareTemplate = LoadStoreDRegDeclare
+                constructTemplate = LoadStoreDRegConstructor
+            else:
+                declareTemplate = LoadStoreRegDeclare
+                constructTemplate = LoadStoreRegConstructor
 
         # (header_output, decoder_output, decode_block, exec_output)
         return (declareTemplate.subst(iop),
@@ -80,12 +89,13 @@ let {{
                 + completeAccTemplate.subst(iop))
 
     def loadStoreBase(name, Name, imm, eaCode, accCode, memFlags,
-                      instFlags, base = 'Memory', execTemplateBase = ''):
+                      instFlags, double, base = 'Memory',
+                      execTemplateBase = ''):
         codeBlobs = { "ea_code": eaCode,
                       "memacc_code": accCode,
                       "predicate_test": predicateTest }
         return loadStoreBaseWork(name, Name, imm, False, codeBlobs, memFlags,
-                                 instFlags, base, execTemplateBase)
+                                 instFlags, double, base, execTemplateBase)
 
     def SwapBase(name, Name, eaCode, preAccCode, postAccCode, memFlags,
                  instFlags):
@@ -94,7 +104,7 @@ let {{
                       "postacc_code": postAccCode,
                       "predicate_test": predicateTest }
         return loadStoreBaseWork(name, Name, False, True, codeBlobs, memFlags,
-                                 instFlags, 'Swap', 'Swap')
+                                 instFlags, False, 'Swap', 'Swap')
 
     def memClassName(base, post, add, writeback, \
                      size=4, sign=False, user=False):

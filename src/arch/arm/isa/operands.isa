@@ -90,6 +90,8 @@ def operands {{
     #Abstracted integer reg operands
     'Dest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
              maybePCRead, maybePCWrite),
+    'Dest2': ('IntReg', 'uw', 'dest2', 'IsInteger', 0,
+              maybePCRead, maybePCWrite),
     'IWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
                maybePCRead, maybeIWPCWrite),
     'AIWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
@@ -123,10 +125,6 @@ def operands {{
     'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4, maybePCRead, maybePCWrite),
     'R7': ('IntReg', 'uw', '7', 'IsInteger', 5),
     'R0': ('IntReg', 'uw', '0', 'IsInteger', 0),
-
-    #Destination register for load/store double instructions
-    'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4, maybePCRead, maybePCWrite),
-    'Rde': ('IntReg', 'uw', '(RD | 1)', 'IsInteger', 5, maybePCRead, maybePCWrite),
 
     'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 9),
     'CondCodes': ('IntReg', 'uw', 'INTREG_CONDCODES', None, 10),
