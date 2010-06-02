@@ -107,6 +107,9 @@ let {{
           case MISCREG_DCCIMVAC:
             return new WarnUnimplemented(
                     isRead ? "mrc dccimvac" : "mcr dccimvac", machInst);
+          case MISCREG_DCIMVAC:
+            return new WarnUnimplemented(
+                    isRead ? "mrc dcimvac" : "mcr dcimvac", machInst);
           case MISCREG_DCCMVAC:
             return new WarnUnimplemented(
                     isRead ? "mrc dccmvac" : "mcr dccmvac", machInst);
