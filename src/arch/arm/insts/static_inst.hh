@@ -60,12 +60,6 @@ class ArmStaticInstBase : public StaticInst
     bool shift_carry_rs(uint32_t base, uint32_t shamt,
                         uint32_t type, uint32_t cfval) const;
 
-    bool arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const;
-    bool arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const;
-
-    bool arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
-    bool arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
-
     // Constructor
     ArmStaticInstBase(const char *mnem, ExtMachInst _machInst,
             OpClass __opClass)

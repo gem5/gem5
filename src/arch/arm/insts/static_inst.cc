@@ -205,32 +205,6 @@ ArmStaticInstBase::shift_carry_rs(uint32_t base, uint32_t shamt,
 }
 
 
-// Generate the appropriate carry bit for an addition operation
-bool
-ArmStaticInstBase::arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const
-{
-    return findCarry(32, result, lhs, rhs);
-}
-
-// Generate the appropriate carry bit for a subtraction operation
-bool
-ArmStaticInstBase::arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const
-{
-    return findCarry(32, result, lhs, ~rhs);
-}
-
-bool
-ArmStaticInstBase::arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const
-{
-    return findOverflow(32, result, lhs, rhs);
-}
-
-bool
-ArmStaticInstBase::arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const
-{
-    return findOverflow(32, result, lhs, ~rhs);
-}
-
 void
 ArmStaticInstBase::printReg(std::ostream &os, int reg) const
 {
