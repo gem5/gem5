@@ -110,7 +110,8 @@ CopyEngine::CopyEngineChannel::init()
 {
     Port *peer;
 
-    cePort = new DmaPort(ce, ce->sys);
+    cePort = new DmaPort(ce, ce->sys, ce->params()->min_backoff_delay,
+            ce->params()->max_backoff_delay);
     peer = ce->dmaPort->getPeer()->getOwner()->getPort("");
     peer->setPeer(cePort);
     cePort->setPeer(peer);

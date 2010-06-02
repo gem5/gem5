@@ -99,10 +99,11 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 }
 
 
-DmaPort::DmaPort(DmaDevice *dev, System *s)
+DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff)
     : Port(dev->name() + "-dmaport", dev), device(dev), sys(s),
       pendingCount(0), actionInProgress(0), drainEvent(NULL),
-      backoffTime(0), inRetry(false), backoffEvent(this)
+      backoffTime(0), minBackoffDelay(min_backoff),
+      maxBackoffDelay(max_backoff), inRetry(false), backoffEvent(this)
 { }
 
 bool
@@ -112,9 +113,9 @@ DmaPort::recvTiming(PacketPtr pkt)
         DPRINTF(DMA, "Received nacked %s addr %#x\n",
                 pkt->cmdString(), pkt->getAddr());
 
-        if (backoffTime < device->minBackoffDelay)
-            backoffTime = device->minBackoffDelay;
-        else if (backoffTime < device->maxBackoffDelay)
+        if (backoffTime < minBackoffDelay)
+            backoffTime = minBackoffDelay;
+        else if (backoffTime < maxBackoffDelay)
             backoffTime <<= 1;
 
         reschedule(backoffEvent, curTick + backoffTime, true);
@@ -138,10 +139,12 @@ DmaPort::recvTiming(PacketPtr pkt)
         state->numBytes += pkt->req->getSize();
         assert(state->totBytes >= state->numBytes);
         if (state->totBytes == state->numBytes) {
-            if (state->delay)
-                schedule(state->completionEvent, curTick + state->delay);
-            else
-                state->completionEvent->process();
+            if (state->completionEvent) {
+                if (state->delay)
+                    schedule(state->completionEvent, curTick + state->delay);
+                else
+                    state->completionEvent->process();
+            }
             delete state;
         }
         delete pkt->req;
@@ -159,8 +162,7 @@ DmaPort::recvTiming(PacketPtr pkt)
 }
 
 DmaDevice::DmaDevice(const Params *p)
-    : PioDevice(p), dmaPort(NULL), minBackoffDelay(p->min_backoff_delay),
-      maxBackoffDelay(p->max_backoff_delay)
+    : PioDevice(p), dmaPort(NULL)
 { }
 
 
@@ -221,8 +223,6 @@ void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay)
 {
-    assert(event);
-
     assert(device->getState() == SimObject::Running);
 
     DmaReqState *reqState = new DmaReqState(event, this, size, delay);
@@ -313,11 +313,14 @@ DmaPort::sendDma()
 
         DPRINTF(DMA, "--Received response for  DMA for addr: %#x size: %d nb: %d, tot: %d sched %d\n",
                 pkt->req->getPaddr(), pkt->req->getSize(), state->numBytes,
-                state->totBytes, state->completionEvent->scheduled());
+                state->totBytes,
+                state->completionEvent ? state->completionEvent->scheduled() : 0 );
 
         if (state->totBytes == state->numBytes) {
-            assert(!state->completionEvent->scheduled());
-            schedule(state->completionEvent, curTick + lat + state->delay);
+            if (state->completionEvent) {
+                assert(!state->completionEvent->scheduled());
+                schedule(state->completionEvent, curTick + lat + state->delay);
+            }
             delete state;
             delete pkt->req;
         }

@@ -92,13 +92,14 @@ class DmaPort : public Port
         /** Amount to delay completion of dma by */
         Tick delay;
 
+
         DmaReqState(Event *ce, Port *p, Addr tb, Tick _delay)
             : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0),
               delay(_delay)
         {}
     };
 
-    DmaDevice *device;
+    MemObject *device;
     std::list<PacketPtr> transmitList;
 
     /** The system that device/port are in. This is used to select which mode
@@ -118,6 +119,12 @@ class DmaPort : public Port
     /** time to wait between sending another packet, increases as NACKs are
      * recived, decreases as responses are recived. */
     Tick backoffTime;
+
+    /** Minimum time that device should back off for after failed sendTiming */
+    Tick minBackoffDelay;
+
+    /** Maximum time that device should back off for after failed sendTiming */
+    Tick maxBackoffDelay;
 
     /** If the port is currently waiting for a retry before it can send whatever
      * it is that it's sending. */
@@ -145,7 +152,7 @@ class DmaPort : public Port
     EventWrapper<DmaPort, &DmaPort::sendDma> backoffEvent;
 
   public:
-    DmaPort(DmaDevice *dev, System *s);
+    DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay);
@@ -256,8 +263,6 @@ class DmaDevice : public PioDevice
 {
    protected:
     DmaPort *dmaPort;
-    Tick minBackoffDelay;
-    Tick maxBackoffDelay;
 
   public:
     typedef DmaDeviceParams Params;
@@ -298,7 +303,8 @@ class DmaDevice : public PioDevice
             if (dmaPort != NULL)
                 fatal("%s: dma port already connected to %s",
                       name(), dmaPort->getPeer()->name());
-            dmaPort = new DmaPort(this, sys);
+            dmaPort = new DmaPort(this, sys, params()->min_backoff_delay,
+                    params()->max_backoff_delay);
             return dmaPort;
         } else
             return NULL;
