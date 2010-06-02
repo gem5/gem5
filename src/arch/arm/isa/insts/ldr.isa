@@ -74,7 +74,8 @@ let {{
         exec_output += newExec
 
     def buildImmLoad(mnem, post, add, writeback, \
-                     size=4, sign=False, user=False, prefetch=False):
+                     size=4, sign=False, user=False, \
+                     prefetch=False, ldrex=False):
         name = mnem
         Name = loadImmClassName(post, add, writeback, \
                                 size, sign, user)
@@ -98,7 +99,11 @@ let {{
             temp = temp;
             ''' % buildMemSuffix(sign, size)
         else:
-            memFlags = []
+            if ldrex:
+                memFlags = ["Request::LLSC"]
+                Name = "%s_%s" % (mnem.upper(), Name)
+            else:
+                memFlags = []
             accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
@@ -140,7 +145,7 @@ let {{
 
         emitLoad(name, Name, False, eaCode, accCode, memFlags, [], base)
 
-    def buildDoubleImmLoad(mnem, post, add, writeback):
+    def buildDoubleImmLoad(mnem, post, add, writeback, ldrex=False):
         name = mnem
         Name = loadDoubleImmClassName(post, add, writeback)
 
@@ -159,11 +164,16 @@ let {{
         Rdo = bits(Mem.ud, 31, 0);
         Rde = bits(Mem.ud, 63, 32);
         '''
+        if ldrex:
+            memFlags = ["Request::LLSC"]
+            Name = "%s_%s" % (mnem.upper(), Name)
+        else:
+            memFlags = []
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryImm", post, writeback)
 
-        emitLoad(name, Name, True, eaCode, accCode, [], [], base)
+        emitLoad(name, Name, True, eaCode, accCode, memFlags, [], base)
 
     def buildDoubleRegLoad(mnem, post, add, writeback):
         name = mnem
@@ -241,4 +251,9 @@ let {{
     buildPrefetches("pld")
     buildPrefetches("pldw")
     buildPrefetches("pli")
+
+    buildImmLoad("ldrex", False, True, False, size=4, ldrex=True)
+    buildImmLoad("ldrexh", False, True, False, size=2, ldrex=True)
+    buildImmLoad("ldrexb", False, True, False, size=1, ldrex=True)
+    buildDoubleImmLoad("ldrexd", False, True, False, ldrex=True)
 }};
