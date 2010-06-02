@@ -235,34 +235,39 @@ def format ArmUnconditional() {{
                     return new BlxImm(machInst, imm);
                 }
               case 0x2:
-                if (CPNUM == 0xa || CPNUM == 0xb) {
-                    return decodeExtensionRegLoadStore(machInst);
-                }
-                if (bits(op1, 0) == 1) {
-                    if (rn == INTREG_PC) {
-                        if (bits(op1, 4, 3) != 0x0) {
+                if (bits(op1, 4, 0) != 0) {
+                    if (CPNUM == 0xa || CPNUM == 0xb) {
+                        return decodeExtensionRegLoadStore(machInst);
+                    }
+                    if (bits(op1, 0) == 1) {
+                        if (rn == INTREG_PC) {
+                            if (bits(op1, 4, 3) != 0x0) {
+                                return new WarnUnimplemented(
+                                        "ldc, ldc2 (literal)", machInst);
+                            }
+                        } else {
+                            if (op1 == 0xC3 || op1 == 0xC7) {
+                                return new WarnUnimplemented(
+                                        "ldc, ldc2 (immediate)", machInst);
+                            }
+                        }
+                        if (op1 == 0xC5) {
                             return new WarnUnimplemented(
-                                    "ldc, ldc2 (literal)", machInst);
+                                    "mrrc, mrrc2", machInst);
                         }
                     } else {
-                        if (op1 == 0xC3 || op1 == 0xC7) {
+                        if (bits(op1, 4, 3) != 0 || bits(op1, 1) == 1) {
                             return new WarnUnimplemented(
-                                    "ldc, ldc2 (immediate)", machInst);
+                                    "stc, stc2", machInst);
+                        } else if (op1 == 0xC4) {
+                            return new WarnUnimplemented(
+                                    "mcrr, mcrrc", machInst);
                         }
-                    }
-                    if (op1 == 0xC5) {
-                        return new WarnUnimplemented("mrrc, mrrc2", machInst);
-                    }
-                } else {
-                    if (bits(op1, 4, 3) != 0 || bits(op1, 1) == 1) {
-                        return new WarnUnimplemented("stc, stc2", machInst);
-                    } else if (op1 == 0xC4) {
-                        return new WarnUnimplemented("mcrr, mcrrc", machInst);
                     }
                 }
                 break;
               case 0x3:
-                {
+                if (bits(op1, 4) == 0) {
                     if (CPNUM == 0xa || CPNUM == 0xb) {
                         return decodeShortFpTransfer(machInst);
                     } else if (CPNUM == 0xf) {
