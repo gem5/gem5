@@ -101,6 +101,150 @@ enum VfpRoundingMode
     VfpRoundZero = 3
 };
 
+static inline uint64_t
+vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
+{
+    fesetround(FeRoundZero);
+    val = val * powf(2.0, imm);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    feclearexcept(FeAllExceptions);
+    if (isSigned) {
+        if (half) {
+            if (val < (int16_t)(1 << 15)) {
+                feraiseexcept(FeInvalid);
+                return (int16_t)(1 << 15);
+            }
+            if (val > (int16_t)mask(15)) {
+                feraiseexcept(FeInvalid);
+                return (int16_t)mask(15);
+            }
+            return (int16_t)val;
+        } else {
+            if (val < (int32_t)(1 << 31)) {
+                feraiseexcept(FeInvalid);
+                return (int32_t)(1 << 31);
+            }
+            if (val > (int32_t)mask(31)) {
+                feraiseexcept(FeInvalid);
+                return (int32_t)mask(31);
+            }
+            return (int32_t)val;
+        }
+    } else {
+        if (half) {
+            if (val < 0) {
+                feraiseexcept(FeInvalid);
+                return 0;
+            }
+            if (val > (mask(16))) {
+                feraiseexcept(FeInvalid);
+                return mask(16);
+            }
+            return (uint16_t)val;
+        } else {
+            if (val < 0) {
+                feraiseexcept(FeInvalid);
+                return 0;
+            }
+            if (val > (mask(32))) {
+                feraiseexcept(FeInvalid);
+                return mask(32);
+            }
+            return (uint32_t)val;
+        }
+    }
+}
+
+static inline float
+vfpUFixedToFpS(uint32_t val, bool half, uint8_t imm)
+{
+    fesetround(FeRoundNearest);
+    if (half)
+        val = (uint16_t)val;
+    return val / powf(2.0, imm);
+}
+
+static inline float
+vfpSFixedToFpS(int32_t val, bool half, uint8_t imm)
+{
+    fesetround(FeRoundNearest);
+    if (half)
+        val = sext<16>(val & mask(16));
+    return val / powf(2.0, imm);
+}
+
+static inline uint64_t
+vfpFpDToFixed(double val, bool isSigned, bool half, uint8_t imm)
+{
+    fesetround(FeRoundZero);
+    val = val * pow(2.0, imm);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    feclearexcept(FeAllExceptions);
+    if (isSigned) {
+        if (half) {
+            if (val < (int16_t)(1 << 15)) {
+                feraiseexcept(FeInvalid);
+                return (int16_t)(1 << 15);
+            }
+            if (val > (int16_t)mask(15)) {
+                feraiseexcept(FeInvalid);
+                return (int16_t)mask(15);
+            }
+            return (int16_t)val;
+        } else {
+            if (val < (int32_t)(1 << 31)) {
+                feraiseexcept(FeInvalid);
+                return (int32_t)(1 << 31);
+            }
+            if (val > (int32_t)mask(31)) {
+                feraiseexcept(FeInvalid);
+                return (int32_t)mask(31);
+            }
+            return (int32_t)val;
+        }
+    } else {
+        if (half) {
+            if (val < 0) {
+                feraiseexcept(FeInvalid);
+                return 0;
+            }
+            if (val > mask(16)) {
+                feraiseexcept(FeInvalid);
+                return mask(16);
+            }
+            return (uint16_t)val;
+        } else {
+            if (val < 0) {
+                feraiseexcept(FeInvalid);
+                return 0;
+            }
+            if (val > mask(32)) {
+                feraiseexcept(FeInvalid);
+                return mask(32);
+            }
+            return (uint32_t)val;
+        }
+    }
+}
+
+static inline double
+vfpUFixedToFpD(uint32_t val, bool half, uint8_t imm)
+{
+    fesetround(FeRoundNearest);
+    if (half)
+        val = (uint16_t)val;
+    return val / pow(2.0, imm);
+}
+
+static inline double
+vfpSFixedToFpD(int32_t val, bool half, uint8_t imm)
+{
+    fesetround(FeRoundNearest);
+    if (half)
+        val = sext<16>(val & mask(16));
+    return val / pow(2.0, imm);
+}
+
 typedef int VfpSavedState;
 
 static inline VfpSavedState

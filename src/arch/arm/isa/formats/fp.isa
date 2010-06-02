@@ -683,9 +683,47 @@ let {{
                     }
                 }
               case 0xa:
+                {
+                    const bool half = (bits(machInst, 7) == 0);
+                    const uint32_t imm = bits(machInst, 5) |
+                                         (bits(machInst, 3, 0) << 1);
+                    const uint32_t size =
+                        (bits(machInst, 7) == 0 ? 16 : 32) - imm;
+                    if (single) {
+                        if (half) {
+                            return new VcvtSHFixedFpS(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtSFixedFpS(machInst, vd, vd, size);
+                        }
+                    } else {
+                        if (half) {
+                            return new VcvtSHFixedFpD(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtSFixedFpD(machInst, vd, vd, size);
+                        }
+                    }
+                }
               case 0xb:
-                // Between FP and fixed point.
-                return new WarnUnimplemented("vcvt", machInst);
+                {
+                    const bool half = (bits(machInst, 7) == 0);
+                    const uint32_t imm = bits(machInst, 5) |
+                                         (bits(machInst, 3, 0) << 1);
+                    const uint32_t size =
+                        (bits(machInst, 7) == 0 ? 16 : 32) - imm;
+                    if (single) {
+                        if (half) {
+                            return new VcvtUHFixedFpS(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtUFixedFpS(machInst, vd, vd, size);
+                        }
+                    } else {
+                        if (half) {
+                            return new VcvtUHFixedFpD(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtUFixedFpD(machInst, vd, vd, size);
+                        }
+                    }
+                }
               case 0xc:
                 if (single) {
                     return new VcvtFpUIntS(machInst, vd, vm);
@@ -703,9 +741,47 @@ let {{
                     return new VcvtFpSIntD(machInst, vd, vm);
                 }
               case 0xe:
+                {
+                    const bool half = (bits(machInst, 7) == 0);
+                    const uint32_t imm = bits(machInst, 5) |
+                                         (bits(machInst, 3, 0) << 1);
+                    const uint32_t size =
+                        (bits(machInst, 7) == 0 ? 16 : 32) - imm;
+                    if (single) {
+                        if (half) {
+                            return new VcvtFpSHFixedS(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtFpSFixedS(machInst, vd, vd, size);
+                        }
+                    } else {
+                        if (half) {
+                            return new VcvtFpSHFixedD(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtFpSFixedD(machInst, vd, vd, size);
+                        }
+                    }
+                }
               case 0xf:
-                // Between FP and fixed point.
-                return new WarnUnimplemented("vcvt", machInst);
+                {
+                    const bool half = (bits(machInst, 7) == 0);
+                    const uint32_t imm = bits(machInst, 5) |
+                                         (bits(machInst, 3, 0) << 1);
+                    const uint32_t size =
+                        (bits(machInst, 7) == 0 ? 16 : 32) - imm;
+                    if (single) {
+                        if (half) {
+                            return new VcvtFpUHFixedS(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtFpUFixedS(machInst, vd, vd, size);
+                        }
+                    } else {
+                        if (half) {
+                            return new VcvtFpUHFixedD(machInst, vd, vd, size);
+                        } else {
+                            return new VcvtFpUFixedD(machInst, vd, vd, size);
+                        }
+                    }
+                }
             }
             break;
         }
