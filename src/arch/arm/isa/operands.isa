@@ -64,6 +64,17 @@ let {{
         ((%(reg_idx)s == PCReg) ? setIWNextPC(xc, %(final_val)s) :
          xc->%(func)s(this, %(op_idx)s, %(final_val)s))
     '''
+    maybeAIWPCWrite = '''
+        if (%(reg_idx)s == PCReg) {
+            if (xc->readPC() & (ULL(1) << PcTBitShift)) {
+                setIWNextPC(xc, %(final_val)s);
+            } else {
+                setNextPC(xc, %(final_val)s);
+            }
+        } else {
+            xc->%(func)s(this, %(op_idx)s, %(final_val)s);
+        }
+    '''
 
     readNPC = 'xc->readNextPC() & ~PcModeMask'
     writeNPC = 'setNextPC(xc, %(final_val)s)'
@@ -78,7 +89,7 @@ def operands {{
     'IWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
                maybePCRead, maybeIWPCWrite),
     'AIWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
-                maybePCRead, maybeIWPCWrite),
+                maybePCRead, maybeAIWPCWrite),
     'Base': ('IntReg', 'uw', 'base', 'IsInteger', 1,
              maybePCRead, maybePCWrite),
     'Index': ('IntReg', 'uw', 'index', 'IsInteger', 2,
