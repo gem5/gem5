@@ -479,4 +479,25 @@ let {{
     header_output += RegRegImmImmOpDeclare.subst(sbfxIop)
     decoder_output += RegRegImmImmOpConstructor.subst(sbfxIop)
     exec_output += PredOpExecute.subst(sbfxIop)
+
+    bfcCode = '''
+        Dest = Op1 & ~(mask(imm2 - imm1 + 1) << imm1);
+    '''
+    bfcIop = InstObjParams("bfc", "Bfc", "RegRegImmImmOp",
+                           { "code": bfcCode,
+                             "predicate_test": predicateTest }, [])
+    header_output += RegRegImmImmOpDeclare.subst(bfcIop)
+    decoder_output += RegRegImmImmOpConstructor.subst(bfcIop)
+    exec_output += PredOpExecute.subst(bfcIop)
+
+    bfiCode = '''
+        uint32_t bitMask = (mask(imm2 - imm1 + 1) << imm1);
+        Dest = ((Op1 << imm1) & bitMask) | (Dest & ~bitMask);
+    '''
+    bfiIop = InstObjParams("bfi", "Bfi", "RegRegImmImmOp",
+                           { "code": bfiCode,
+                             "predicate_test": predicateTest }, [])
+    header_output += RegRegImmImmOpDeclare.subst(bfiIop)
+    decoder_output += RegRegImmImmOpConstructor.subst(bfiIop)
+    exec_output += PredOpExecute.subst(bfiIop)
 }};
