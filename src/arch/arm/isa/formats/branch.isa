@@ -91,7 +91,7 @@ def format Thumb16CondBranchAndSvc() {{
             return new B(machInst, sext<9>(bits(machInst, 7, 0) << 1),
                          (ConditionCode)(uint32_t)bits(machInst, 11, 8));
         } else if (bits(machInst, 8)) {
-            return new WarnUnimplemented("svc", machInst);
+            return new Svc(machInst);
         } else {
             // This space will not be allocated in the future.
             return new WarnUnimplemented("unimplemented", machInst);
