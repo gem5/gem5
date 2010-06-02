@@ -166,13 +166,8 @@
                         default: WarnUnimpl::ldrd(); // immediate
                     }
                 }
-                0x2: decode HTOPCODE_4 {
-                    0x0: WarnUnimpl::stm(); // stmia, stmea
-                    0x1: decode HTRN {
-                        0xd: WarnUnimpl::pop();
-                        default: WarnUnimpl::ldm(); // ldmia, ldmfd
-                    }
-                }
+                // This uses the same encoding as regular ARM.
+                0x2: ArmMacroMem::armMacroMem();
                 0x3: decode HTOPCODE_5_4 {
                     0x0: decode LTOPCODE_7_4 {
                         0x4: WarnUnimpl::strexb();
@@ -192,13 +187,8 @@
                         default: WarnUnimpl::ldrd(); // immediate
                     }
                 }
-                0x4: decode HTOPCODE_4 {
-                    0x0: decode HTRN {
-                        0xd: WarnUnimpl::push();
-                        default: WarnUnimpl::stmdb(); // stmfd
-                    }
-                    0x1: WarnUnimpl::ldmdb(); // ldmea
-                }
+                // This uses the same encoding as regular ARM.
+                0x4: ArmMacroMem::armMacroMem();
                 0x5, 0x7: decode HTOPCODE_4 {
                     0x0: WarnUnimpl::strd(); // immediate
                     0x1: decode HTRN {
