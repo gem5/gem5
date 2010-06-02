@@ -122,8 +122,10 @@ def format AddrMode3() {{
           case 0x2:
             if (op1 & 0x1) {
                 %(ldrsb)s
-            } else {
+            } else if ((RT %% 2) == 0) {
                 %(ldrd)s
+            } else {
+                return new Unknown(machInst);
             }
           case 0x3:
             if (op1 & 0x1) {
