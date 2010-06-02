@@ -43,6 +43,7 @@
 #include "arch/arm/insts/misc.hh"
 #include "arch/arm/miscregs.hh"
 #include <fenv.h>
+#include <cmath>
 
 enum VfpMicroMode {
     VfpNotAMicroop,
@@ -101,6 +102,26 @@ enum VfpRoundingMode
     VfpRoundZero = 3
 };
 
+template <class fpType>
+static inline void
+vfpFlushToZero(uint32_t &_fpscr, fpType &op)
+{
+    FPSCR fpscr = _fpscr;
+    if (fpscr.fz == 1 && (std::fpclassify(op) == FP_SUBNORMAL)) {
+        fpscr.idc = 1;
+        op = 0;
+    }
+    _fpscr = fpscr;
+}
+
+template <class fpType>
+static inline void
+vfpFlushToZero(uint32_t &fpscr, fpType &op1, fpType &op2)
+{
+    vfpFlushToZero(fpscr, op1);
+    vfpFlushToZero(fpscr, op2);
+}
+
 static inline uint64_t
 vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
 {
@@ -108,24 +129,41 @@ vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
     val = val * powf(2.0, imm);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
     feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    float origVal = val;
+    val = rintf(val);
+    int fpType = std::fpclassify(val);
+    if (fpType == FP_SUBNORMAL || fpType == FP_NAN) {
+        if (fpType == FP_NAN) {
+            feraiseexcept(FeInvalid);
+        }
+        val = 0.0;
+    } else if (origVal != val) {
+        feraiseexcept(FeInexact);
+    }
+
     if (isSigned) {
         if (half) {
             if ((double)val < (int16_t)(1 << 15)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int16_t)(1 << 15);
             }
             if ((double)val > (int16_t)mask(15)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int16_t)mask(15);
             }
             return (int16_t)val;
         } else {
             if ((double)val < (int32_t)(1 << 31)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int32_t)(1 << 31);
             }
             if ((double)val > (int32_t)mask(31)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int32_t)mask(31);
             }
             return (int32_t)val;
@@ -134,20 +172,24 @@ vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
         if (half) {
             if ((double)val < 0) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return 0;
             }
             if ((double)val > (mask(16))) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return mask(16);
             }
             return (uint16_t)val;
         } else {
             if ((double)val < 0) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return 0;
             }
             if ((double)val > (mask(32))) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return mask(32);
             }
             return (uint32_t)val;
@@ -161,7 +203,11 @@ vfpUFixedToFpS(uint32_t val, bool half, uint8_t imm)
     fesetround(FeRoundNearest);
     if (half)
         val = (uint16_t)val;
-    return val / powf(2.0, imm);
+    float scale = powf(2.0, imm);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    return val / scale;
 }
 
 static inline float
@@ -170,34 +216,55 @@ vfpSFixedToFpS(int32_t val, bool half, uint8_t imm)
     fesetround(FeRoundNearest);
     if (half)
         val = sext<16>(val & mask(16));
-    return val / powf(2.0, imm);
+    float scale = powf(2.0, imm);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    return val / scale;
 }
 
 static inline uint64_t
 vfpFpDToFixed(double val, bool isSigned, bool half, uint8_t imm)
 {
-    fesetround(FeRoundZero);
+    fesetround(FeRoundNearest);
     val = val * pow(2.0, imm);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    fesetround(FeRoundZero);
     feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    double origVal = val;
+    val = rint(val);
+    int fpType = std::fpclassify(val);
+    if (fpType == FP_SUBNORMAL || fpType == FP_NAN) {
+        if (fpType == FP_NAN) {
+            feraiseexcept(FeInvalid);
+        }
+        val = 0.0;
+    } else if (origVal != val) {
+        feraiseexcept(FeInexact);
+    }
     if (isSigned) {
         if (half) {
             if (val < (int16_t)(1 << 15)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int16_t)(1 << 15);
             }
             if (val > (int16_t)mask(15)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int16_t)mask(15);
             }
             return (int16_t)val;
         } else {
             if (val < (int32_t)(1 << 31)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int32_t)(1 << 31);
             }
             if (val > (int32_t)mask(31)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return (int32_t)mask(31);
             }
             return (int32_t)val;
@@ -206,20 +273,24 @@ vfpFpDToFixed(double val, bool isSigned, bool half, uint8_t imm)
         if (half) {
             if (val < 0) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return 0;
             }
             if (val > mask(16)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return mask(16);
             }
             return (uint16_t)val;
         } else {
             if (val < 0) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return 0;
             }
             if (val > mask(32)) {
                 feraiseexcept(FeInvalid);
+                feclearexcept(FeInexact);
                 return mask(32);
             }
             return (uint32_t)val;
@@ -233,7 +304,11 @@ vfpUFixedToFpD(uint32_t val, bool half, uint8_t imm)
     fesetround(FeRoundNearest);
     if (half)
         val = (uint16_t)val;
-    return val / pow(2.0, imm);
+    double scale = pow(2.0, imm);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    return val / scale;
 }
 
 static inline double
@@ -242,7 +317,11 @@ vfpSFixedToFpD(int32_t val, bool half, uint8_t imm)
     fesetround(FeRoundNearest);
     if (half)
         val = sext<16>(val & mask(16));
-    return val / pow(2.0, imm);
+    double scale = pow(2.0, imm);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
+    return val / scale;
 }
 
 typedef int VfpSavedState;
