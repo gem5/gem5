@@ -263,8 +263,8 @@ def format Thumb32LdrStrDExTbh() {{
         const uint32_t op3 = bits(machInst, 7, 4);
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
         const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        /* This isn't used yet, and that makes gcc upset. */
-        //const IntRegIndex rt2 = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex rt2 = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const uint32_t imm8 = bits(machInst, 7, 0);
         if (bits(op1, 1) == 0 && bits(op2, 1) == 0) {
             if (op1 == 0) {
                 const uint32_t imm = bits(machInst, 7, 0) << 2;
@@ -296,24 +296,70 @@ def format Thumb32LdrStrDExTbh() {{
                       case 0x5:
                         return new %(ldrexh)s(machInst, rt, rn, true, 0);
                       case 0x7:
-                        return new WarnUnimplemented("ldrexd", machInst);
+                        return new %(ldrexd)s(machInst, rt, rt2, rn, true, 0);
                       default:
                         return new Unknown(machInst);
                     }
                 }
             }
         } else {
+            const uint32_t puw = (bits(machInst, 24, 23) << 1) |
+                                  bits(machInst, 21);
+            const uint32_t dimm = imm8 << 2;
             if (bits(op2, 0) == 0) {
-                return new WarnUnimplemented("strd", machInst);
+                switch (puw) {
+                  case 0x1:
+                    return new %(strd_w)s(machInst, rt, rt2, rn, false, dimm);
+                  case 0x3:
+                    return new %(strd_uw)s(machInst, rt, rt2, rn, true, dimm);
+                  case 0x4:
+                    return new %(strd_p)s(machInst, rt, rt2, rn, false, dimm);
+                  case 0x5:
+                    return new %(strd_pw)s(machInst, rt, rt2, rn, false, dimm);
+                  case 0x6:
+                    return new %(strd_pu)s(machInst, rt, rt2, rn, true, dimm);
+                  case 0x7:
+                    return new %(strd_puw)s(machInst, rt, rt2, rn, true, dimm);
+                  default:
+                    return new Unknown(machInst);
+                }
             } else {
-                return new WarnUnimplemented("ldrd", machInst);
+                switch (puw) {
+                  case 0x1:
+                    return new %(ldrd_w)s(machInst, rt, rt2, rn, false, dimm);
+                  case 0x3:
+                    return new %(ldrd_uw)s(machInst, rt, rt2, rn, true, dimm);
+                  case 0x4:
+                    return new %(ldrd_p)s(machInst, rt, rt2, rn, false, dimm);
+                  case 0x5:
+                    return new %(ldrd_pw)s(machInst, rt, rt2, rn, false, dimm);
+                  case 0x6:
+                    return new %(ldrd_pu)s(machInst, rt, rt2, rn, true, dimm);
+                  case 0x7:
+                    return new %(ldrd_puw)s(machInst, rt, rt2, rn, true, dimm);
+                  default:
+                    return new Unknown(machInst);
+                }
             }
         }
     }
     ''' % {
         "ldrex" : "LDREX_" + loadImmClassName(False, True, False, size=4),
         "ldrexb" : "LDREXB_" + loadImmClassName(False, True, False, size=1),
-        "ldrexh" : "LDREXH_" + loadImmClassName(False, True, False, size=2)
+        "ldrexh" : "LDREXH_" + loadImmClassName(False, True, False, size=2),
+        "ldrexd" : "LDREXD_" + loadDoubleImmClassName(False, True, False),
+        "ldrd_w" : loadDoubleImmClassName(True, False, True),
+        "ldrd_uw" : loadDoubleImmClassName(True, True, True),
+        "ldrd_p" : loadDoubleImmClassName(False, False, False),
+        "ldrd_pw" : loadDoubleImmClassName(False, False, True),
+        "ldrd_pu" : loadDoubleImmClassName(False, True, False),
+        "ldrd_puw" : loadDoubleImmClassName(False, True, True),
+        "strd_w" : storeDoubleImmClassName(True, False, True),
+        "strd_uw" : storeDoubleImmClassName(True, True, True),
+        "strd_p" : storeDoubleImmClassName(False, False, False),
+        "strd_pw" : storeDoubleImmClassName(False, False, True),
+        "strd_pu" : storeDoubleImmClassName(False, True, False),
+        "strd_puw" : storeDoubleImmClassName(False, True, True)
     }
 }};
 
