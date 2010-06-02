@@ -60,11 +60,11 @@ def template MicroMemDeclare {{
 }};
 
 def template MicroMemConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          RegIndex _ura,
-                                          RegIndex _urb,
-                                          bool _up,
-                                          uint8_t _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                   RegIndex _ura,
+                                   RegIndex _urb,
+                                   bool _up,
+                                   uint8_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _ura, _urb, _up, _imm)
     {
@@ -89,10 +89,10 @@ def template MicroIntDeclare {{
 }};
 
 def template MicroIntConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          RegIndex _ura,
-                                          RegIndex _urb,
-                                          uint8_t _imm)
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                   RegIndex _ura,
+                                   RegIndex _urb,
+                                   uint8_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _ura, _urb, _imm)
     {
@@ -121,74 +121,13 @@ class %(class_name)s : public %(base_class)s
 }};
 
 def template MacroMemConstructor {{
-inline %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex rn,
+%(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex rn,
         bool index, bool up, bool user, bool writeback, bool load,
         uint32_t reglist)
-    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, rn,
+                     index, up, user, writeback, load, reglist)
 {
     %(constructor)s;
-    uint32_t regs = reglist;
-    uint32_t ones = number_of_ones(reglist);
-    // Remember that writeback adds a uop
-    numMicroops = ones + (writeback ? 1 : 0) + 1;
-    microOps = new StaticInstPtr[numMicroops];
-    uint32_t addr = 0;
-
-    if (!up)
-        addr = (ones << 2) - 4;
-
-    if (!index)
-        addr += 4;
-
-    // Add 0 to Rn and stick it in ureg0.
-    // This is equivalent to a move.
-    microOps[0] = new MicroAddiUop(machInst, INTREG_UREG0, rn, 0);
-
-    unsigned reg = 0;
-    bool force_user = user & !bits(reglist, 15);
-    bool exception_ret = user & bits(reglist, 15);
-
-    for (int i = 1; i < ones + 1; i++) {
-        // Find the next register.
-        while (!bits(regs, reg))
-            reg++;
-        replaceBits(regs, reg, 0);
-
-        unsigned regIdx = reg;
-        if (force_user) {
-            regIdx = intRegForceUser(regIdx);
-        }
-
-        if (load) {
-            if (reg == INTREG_PC && exception_ret) {
-                // This must be the exception return form of ldm.
-                microOps[i] =
-                    new MicroLdrRetUop(machInst, regIdx,
-                                       INTREG_UREG0, up, addr);
-            } else {
-                microOps[i] =
-                    new MicroLdrUop(machInst, regIdx, INTREG_UREG0, up, addr);
-            }
-        } else {
-            microOps[i] =
-                new MicroStrUop(machInst, regIdx, INTREG_UREG0, up, addr);
-        }
-
-        if (up)
-            addr += 4;
-        else
-            addr -= 4;
-    }
-
-    StaticInstPtr &lastUop = microOps[numMicroops - 1];
-    if (writeback) {
-        if (up) {
-            lastUop = new MicroAddiUop(machInst, rn, rn, ones * 4);
-        } else {
-            lastUop = new MicroSubiUop(machInst, rn, rn, ones * 4);
-        }
-    }
-    lastUop->setLastMicroop();
 }
 
 }};

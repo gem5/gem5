@@ -124,7 +124,7 @@ let {{
 }};
 
 let {{
-    iop = InstObjParams("ldmstm", "LdmStm", 'PredMacroOp', "", [])
+    iop = InstObjParams("ldmstm", "LdmStm", 'MacroMemOp', "", [])
     header_output = MacroMemDeclare.subst(iop)
     decoder_output = MacroMemConstructor.subst(iop)
 }};

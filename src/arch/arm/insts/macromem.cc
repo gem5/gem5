@@ -39,68 +39,83 @@
  *
  * Authors: Stephen Hines
  */
-#ifndef __ARCH_ARM_MACROMEM_HH__
-#define __ARCH_ARM_MACROMEM_HH__
 
-#include "arch/arm/insts/pred_inst.hh"
+#include "arch/arm/insts/macromem.hh"
+#include "arch/arm/decoder.hh"
+
+using namespace ArmISAInst;
 
 namespace ArmISA
 {
 
-static inline unsigned int
-number_of_ones(int32_t val)
+MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
+                       OpClass __opClass, IntRegIndex rn,
+                       bool index, bool up, bool user, bool writeback,
+                       bool load, uint32_t reglist) :
+    PredMacroOp(mnem, machInst, __opClass)
 {
-    uint32_t ones = 0;
-    for (int i = 0; i < 32; i++ )
-    {
-        if ( val & (1<<i) )
-            ones++;
+    uint32_t regs = reglist;
+    uint32_t ones = number_of_ones(reglist);
+    // Remember that writeback adds a uop
+    numMicroops = ones + (writeback ? 1 : 0) + 1;
+    microOps = new StaticInstPtr[numMicroops];
+    uint32_t addr = 0;
+
+    if (!up)
+        addr = (ones << 2) - 4;
+
+    if (!index)
+        addr += 4;
+
+    // Add 0 to Rn and stick it in ureg0.
+    // This is equivalent to a move.
+    microOps[0] = new MicroAddiUop(machInst, INTREG_UREG0, rn, 0);
+
+    unsigned reg = 0;
+    bool force_user = user & !bits(reglist, 15);
+    bool exception_ret = user & bits(reglist, 15);
+
+    for (int i = 1; i < ones + 1; i++) {
+        // Find the next register.
+        while (!bits(regs, reg))
+            reg++;
+        replaceBits(regs, reg, 0);
+
+        unsigned regIdx = reg;
+        if (force_user) {
+            regIdx = intRegForceUser(regIdx);
+        }
+
+        if (load) {
+            if (reg == INTREG_PC && exception_ret) {
+                // This must be the exception return form of ldm.
+                microOps[i] =
+                    new MicroLdrRetUop(machInst, regIdx,
+                                       INTREG_UREG0, up, addr);
+            } else {
+                microOps[i] =
+                    new MicroLdrUop(machInst, regIdx, INTREG_UREG0, up, addr);
+            }
+        } else {
+            microOps[i] =
+                new MicroStrUop(machInst, regIdx, INTREG_UREG0, up, addr);
+        }
+
+        if (up)
+            addr += 4;
+        else
+            addr -= 4;
     }
-    return ones;
+
+    StaticInstPtr &lastUop = microOps[numMicroops - 1];
+    if (writeback) {
+        if (up) {
+            lastUop = new MicroAddiUop(machInst, rn, rn, ones * 4);
+        } else {
+            lastUop = new MicroSubiUop(machInst, rn, rn, ones * 4);
+        }
+    }
+    lastUop->setLastMicroop();
 }
 
-/**
- * Microops of the form IntRegA = IntRegB op Imm
- */
-class MicroIntOp : public PredOp
-{
-  protected:
-    RegIndex ura, urb;
-    uint8_t imm;
-
-    MicroIntOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               RegIndex _ura, RegIndex _urb, uint8_t _imm)
-            : PredOp(mnem, machInst, __opClass),
-              ura(_ura), urb(_urb), imm(_imm)
-    {
-    }
-};
-
-/**
- * Memory microops which use IntReg + Imm addressing
- */
-class MicroMemOp : public MicroIntOp
-{
-  protected:
-    bool up;
-    unsigned memAccessFlags;
-
-    MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
-            : MicroIntOp(mnem, machInst, __opClass, _ura, _urb, _imm),
-              up(_up), memAccessFlags(0)
-    {
-    }
-};
-
-class MacroMemOp : public PredMacroOp
-{
-  protected:
-    MacroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               IntRegIndex rn, bool index, bool up, bool user,
-               bool writeback, bool load, uint32_t reglist);
-};
-
 }
-
-#endif //__ARCH_ARM_INSTS_MACROMEM_HH__
