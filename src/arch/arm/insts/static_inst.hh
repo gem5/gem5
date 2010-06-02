@@ -140,6 +140,18 @@ class ArmStaticInstBase : public StaticInst
     }
 
     template<class XC>
+    static Addr
+    readPC(XC *xc)
+    {
+        Addr pc = xc->readPC();
+        Addr tBit = pc & (ULL(1) << PcTBitShift);
+        if (tBit)
+            return pc + 4;
+        else
+            return pc + 8;
+    }
+
+    template<class XC>
     static void
     setNextPC(XC *xc, Addr val)
     {
