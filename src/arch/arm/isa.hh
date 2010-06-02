@@ -91,88 +91,11 @@ namespace ArmISA
         }
 
       public:
-        void clear()
-        {
-            SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
-
-            memset(miscRegs, 0, sizeof(miscRegs));
-            CPSR cpsr = 0;
-            cpsr.mode = MODE_USER;
-            miscRegs[MISCREG_CPSR] = cpsr;
-            updateRegMap(cpsr);
-
-            SCTLR sctlr = 0;
-            sctlr.nmfi = (bool)sctlr_rst.nmfi;
-            sctlr.v = (bool)sctlr_rst.v;
-            sctlr.u    = 1;
-            sctlr.xp = 1;
-            sctlr.rao2 = 1;
-            sctlr.rao3 = 1;
-            sctlr.rao4 = 1;
-            miscRegs[MISCREG_SCTLR] = sctlr;
-            miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
-
-
-            /*
-             * Technically this should be 0, but we don't support those
-             * settings.
-             */
-            CPACR cpacr = 0;
-            // Enable CP 10, 11
-            cpacr.cp10 = 0x3;
-            cpacr.cp11 = 0x3;
-            miscRegs[MISCREG_CPACR] = cpacr;
-
-            /* Start with an event in the mailbox */
-            miscRegs[MISCREG_SEV_MAILBOX] = 1;
-
-            /*
-             * Implemented = '5' from "M5",
-             * Variant = 0,
-             */
-            miscRegs[MISCREG_MIDR] =
-                (0x35 << 24) | //Implementor is '5' from "M5"
-                (0 << 20)    | //Variant
-                (0xf << 16)  | //Architecture from CPUID scheme
-                (0 << 4)     | //Primary part number
-                (0 << 0)     | //Revision
-                0;
-
-            // Separate Instruction and Data TLBs.
-            miscRegs[MISCREG_TLBTR] = 1;
-
-            MVFR0 mvfr0 = 0;
-            mvfr0.advSimdRegisters = 2;
-            mvfr0.singlePrecision = 2;
-            mvfr0.doublePrecision = 2;
-            mvfr0.vfpExceptionTrapping = 0;
-            mvfr0.divide = 1;
-            mvfr0.squareRoot = 1;
-            mvfr0.shortVectors = 1;
-            mvfr0.roundingModes = 1;
-            miscRegs[MISCREG_MVFR0] = mvfr0;
-
-            MVFR1 mvfr1 = 0;
-            mvfr1.flushToZero = 1;
-            mvfr1.defaultNaN = 1;
-            mvfr1.advSimdLoadStore = 1;
-            mvfr1.advSimdInteger = 1;
-            mvfr1.advSimdSinglePrecision = 1;
-            mvfr1.advSimdHalfPrecision = 1;
-            mvfr1.vfpHalfPrecision = 1;
-            miscRegs[MISCREG_MVFR1] = mvfr1;
-
-            miscRegs[MISCREG_MPIDR] = 0;
-
-            //XXX We need to initialize the rest of the state.
-        }
+        void clear();
 
         MiscReg readMiscRegNoEffect(int misc_reg);
-
         MiscReg readMiscReg(int misc_reg, ThreadContext *tc);
-
         void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
-
         void setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc);
 
         int
