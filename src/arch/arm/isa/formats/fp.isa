@@ -1,5 +1,17 @@
 // -*- mode:c++ -*-
 
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
 // Copyright (c) 2007-2008 The Florida State University
 // All rights reserved.
 //
@@ -136,4 +148,62 @@ def format FloatCmp(fReg1, fReg2, *flags) {{
         exec_output = FPAExecute.subst(iop)
 }};
 
-
+def format ExtensionRegLoadStore() {{
+    decode_block = '''
+    {
+        const uint32_t opcode = bits(machInst, 24, 20);
+        const uint32_t offset = bits(machInst, 7, 0);
+        const bool single = bits(machInst, 22);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        RegIndex vd;
+        if (single) {
+            vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
+                                      bits(machInst, 22));
+        } else {
+            vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
+                                      (bits(machInst, 22) << 5));
+        }
+        switch (bits(opcode, 4, 3)) {
+          case 0x0:
+            if (bits(opcode, 4, 1) == 0x2) {
+                return new WarnUnimplemented("core-to-extension-transfer",
+                                             machInst);
+            }
+            break;
+          case 0x1:
+            switch (bits(opcode, 1, 0)) {
+              case 0x0:
+                return new VLdmStm(machInst, rn, vd, single,
+                                   true, false, false, offset);
+              case 0x1:
+                return new VLdmStm(machInst, rn, vd, single,
+                                   true, false, true, offset);
+              case 0x2:
+                return new VLdmStm(machInst, rn, vd, single,
+                                   true, true, false, offset);
+              case 0x3:
+                // If rn == sp, then this is called vpop.
+                return new VLdmStm(machInst, rn, vd, single,
+                                   true, true, true, offset);
+            }
+          case 0x2:
+            if (bits(opcode, 1, 0) == 0x2) {
+                // If rn == sp, then this is called vpush.
+                return new VLdmStm(machInst, rn, vd, single,
+                                   false, true, false, offset);
+            } else if (bits(opcode, 1, 0) == 0x3) {
+                return new VLdmStm(machInst, rn, vd, single,
+                                   false, true, true, offset);
+            }
+            // Fall through on purpose
+          case 0x3:
+            if (bits(opcode, 1, 0) == 0x0) {
+                return new WarnUnimplemented("vstr", machInst);
+            } else if (bits(opcode, 1, 0) == 0x1) {
+                return new WarnUnimplemented("vldr", machInst);
+            }
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};
