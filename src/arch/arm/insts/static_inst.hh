@@ -50,11 +50,6 @@ namespace ArmISA
 class ArmStaticInst : public StaticInst
 {
   protected:
-    union IntDoubleUnion {
-        uint64_t bits;
-        double fp;
-    };
-
     int32_t shift_rm_imm(uint32_t base, uint32_t shamt,
                          uint32_t type, uint32_t cfval) const;
     int32_t shift_rm_rs(uint32_t base, uint32_t shamt,

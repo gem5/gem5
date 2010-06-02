@@ -106,28 +106,6 @@ enum VfpRoundingMode
 };
 
 template <class fpType>
-static inline void
-vfpFlushToZero(uint32_t &_fpscr, fpType &op)
-{
-    FPSCR fpscr = _fpscr;
-    fpType junk = 0.0;
-    if (fpscr.fz == 1 && (std::fpclassify(op) == FP_SUBNORMAL)) {
-        fpscr.idc = 1;
-        uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
-        op = bitsToFp(fpToBits(op) & bitMask, junk);
-    }
-    _fpscr = fpscr;
-}
-
-template <class fpType>
-static inline void
-vfpFlushToZero(uint32_t &fpscr, fpType &op1, fpType &op2)
-{
-    vfpFlushToZero(fpscr, op1);
-    vfpFlushToZero(fpscr, op2);
-}
-
-template <class fpType>
 static inline bool
 flushToZero(fpType &op)
 {
@@ -147,6 +125,23 @@ flushToZero(fpType &op1, fpType &op2)
     bool flush1 = flushToZero(op1);
     bool flush2 = flushToZero(op2);
     return flush1 || flush2;
+}
+
+template <class fpType>
+static inline void
+vfpFlushToZero(FPSCR &fpscr, fpType &op)
+{
+    if (fpscr.fz == 1 && flushToZero(op)) {
+        fpscr.idc = 1;
+    }
+}
+
+template <class fpType>
+static inline void
+vfpFlushToZero(FPSCR &fpscr, fpType &op1, fpType &op2)
+{
+    vfpFlushToZero(fpscr, op1);
+    vfpFlushToZero(fpscr, op2);
 }
 
 static inline uint32_t
@@ -200,28 +195,6 @@ bitsToFp(uint64_t bits, double junk)
 typedef int VfpSavedState;
 
 static inline VfpSavedState
-prepVfpFpscr(FPSCR fpscr)
-{
-    int roundingMode = fegetround();
-    feclearexcept(FeAllExceptions);
-    switch (fpscr.rMode) {
-      case VfpRoundNearest:
-        fesetround(FeRoundNearest);
-        break;
-      case VfpRoundUpward:
-        fesetround(FeRoundUpward);
-        break;
-      case VfpRoundDown:
-        fesetround(FeRoundDown);
-        break;
-      case VfpRoundZero:
-        fesetround(FeRoundZero);
-        break;
-    }
-    return roundingMode;
-}
-
-static inline VfpSavedState
 prepFpState(uint32_t rMode)
 {
     int roundingMode = fegetround();
@@ -241,29 +214,6 @@ prepFpState(uint32_t rMode)
         break;
     }
     return roundingMode;
-}
-
-static inline FPSCR
-setVfpFpscr(FPSCR fpscr, VfpSavedState state)
-{
-    int exceptions = fetestexcept(FeAllExceptions);
-    if (exceptions & FeInvalid) {
-        fpscr.ioc = 1;
-    }
-    if (exceptions & FeDivByZero) {
-        fpscr.dzc = 1;
-    }
-    if (exceptions & FeOverflow) {
-        fpscr.ofc = 1;
-    }
-    if (exceptions & FeUnderflow) {
-        fpscr.ufc = 1;
-    }
-    if (exceptions & FeInexact) {
-        fpscr.ixc = 1;
-    }
-    fesetround(state);
-    return fpscr;
 }
 
 static inline void
