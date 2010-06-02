@@ -48,7 +48,6 @@ if env['TARGET_ISA'] == 'arm':
 # Scons bug id: 2006 M5 Bug id: 308 
     Dir('isa/formats')
     Source('faults.cc')
-    Source('insts/branch.cc')
     Source('insts/macromem.cc')
     Source('insts/mem.cc')
     Source('insts/misc.cc')
