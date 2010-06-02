@@ -1,0 +1,188 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    calcQCode = '''
+        cprintf("canOverflow: %%d\\n", Dest < resTemp);
+        replaceBits(CondCodes, 27, Dest < resTemp);
+    '''
+
+    calcCcCode = '''
+        uint16_t _ic, _iv, _iz, _in;
+        _in = (resTemp >> %(negBit)d) & 1;
+        _iz = (resTemp == 0);
+        _iv = %(ivValue)s & 1;
+        _ic = %(icValue)s & 1;
+
+        CondCodes =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28 |
+                    (CondCodes & 0x0FFFFFFF);
+
+        DPRINTF(Arm, "(in, iz, ic, iv) = (%%d, %%d, %%d, %%d)\\n",
+                     _in, _iz, _ic, _iv);
+       '''
+
+    # Dict of code to set the carry flag. (imm, reg, reg-reg)
+    oldC = 'CondCodes<29:>'
+    oldV = 'CondCodes<28:>'
+    carryCode = {
+        "none": (oldC, oldC, oldC),
+        "llbit": (oldC, oldC, oldC),
+        "overflow": ('0', '0', '0'),
+        "add": ('findCarry(32, resTemp, Op1, secondOp)',
+                'findCarry(32, resTemp, Op1, secondOp)',
+                'findCarry(32, resTemp, Op1, secondOp)'),
+        "sub": ('findCarry(32, resTemp, Op1, ~secondOp)',
+                'findCarry(32, resTemp, Op1, ~secondOp)',
+                'findCarry(32, resTemp, Op1, ~secondOp)'),
+        "rsb": ('findCarry(32, resTemp, secondOp, ~Op1)',
+                'findCarry(32, resTemp, secondOp, ~Op1)',
+                'findCarry(32, resTemp, secondOp, ~Op1)'),
+        "logic": ('(rotC ? bits(secondOp, 31) : %s)' % oldC,
+                  'shift_carry_imm(Op2, shiftAmt, shiftType, %s)' % oldC,
+                  'shift_carry_rs(Op2, Shift<7:0>, shiftType, %s)' % oldC)
+    }
+    # Dict of code to set the overflow flag.
+    overflowCode = {
+        "none": oldV,
+        "llbit": oldV,
+        "overflow": '0',
+        "add": 'findOverflow(32, resTemp, Op1, secondOp)',
+        "sub": 'findOverflow(32, resTemp, Op1, ~secondOp)',
+        "rsb": 'findOverflow(32, resTemp, secondOp, ~Op1)',
+        "logic": oldV
+    }
+
+    secondOpRe = re.compile("secondOp")
+    immOp2 = "imm"
+    regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodes<29:>)"
+    regRegOp2 = "shift_rm_rs(Op2, Shift, shiftType, CondCodes<29:>)"
+
+    def buildDataInst(mnem, code, flagType = "logic"):
+        global header_output, decoder_output, exec_output
+        cCode = carryCode[flagType]
+        vCode = overflowCode[flagType]
+        negBit = 31
+        if flagType == "llbit":
+            negBit = 63
+        if flagType == "overflow":
+            immCcCode = regCcCode = regRegCcCode = calcQCode
+        else:
+            immCcCode = calcCcCode % {
+                "icValue": secondOpRe.sub(immOp2, cCode[0]),
+                "ivValue": secondOpRe.sub(immOp2, vCode),
+                "negBit": negBit
+            }
+            regCcCode = calcCcCode % {
+                "icValue": secondOpRe.sub(regOp2, cCode[1]),
+                "ivValue": secondOpRe.sub(regOp2, vCode),
+                "negBit": negBit
+            }
+            regRegCcCode = calcCcCode % {
+                "icValue": secondOpRe.sub(regRegOp2, cCode[2]),
+                "ivValue": secondOpRe.sub(regRegOp2, vCode),
+                "negBit": negBit
+            }
+        immCode = secondOpRe.sub(immOp2, code)
+        regCode = secondOpRe.sub(regOp2, code)
+        regRegCode = secondOpRe.sub(regRegOp2, code)
+        immIop = InstObjParams(mnem, mnem.capitalize() + "DImm", "DataImmOp",
+                               {"code" : immCode,
+                                "predicate_test": predicateTest})
+        regIop = InstObjParams(mnem, mnem.capitalize() + "DReg", "DataRegOp",
+                               {"code" : regCode,
+                                "predicate_test": predicateTest})
+        regRegIop = InstObjParams(mnem, mnem.capitalize() + "DRegReg",
+                                  "DataRegRegOp",
+                                  {"code" : regRegCode,
+                                   "predicate_test": predicateTest})
+        immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "DImmCc",
+                                 "DataImmOp",
+                                 {"code" : immCode + immCcCode,
+                                  "predicate_test": predicateTest})
+        regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "DRegCc",
+                                 "DataRegOp",
+                                 {"code" : regCode + regCcCode,
+                                  "predicate_test": predicateTest})
+        regRegIopCc = InstObjParams(mnem + "s",
+                                    mnem.capitalize() + "DRegRegCc",
+                                    "DataRegRegOp",
+                                    {"code" : regRegCode + regRegCcCode,
+                                     "predicate_test": predicateTest})
+        header_output += DataImmDeclare.subst(immIop) + \
+                         DataImmDeclare.subst(immIopCc) + \
+                         DataRegDeclare.subst(regIop) + \
+                         DataRegDeclare.subst(regIopCc) + \
+                         DataRegRegDeclare.subst(regRegIop) + \
+                         DataRegRegDeclare.subst(regRegIopCc)
+        decoder_output += DataImmConstructor.subst(immIop) + \
+                          DataImmConstructor.subst(immIopCc) + \
+                          DataRegConstructor.subst(regIop) + \
+                          DataRegConstructor.subst(regIopCc) + \
+                          DataRegRegConstructor.subst(regRegIop) + \
+                          DataRegRegConstructor.subst(regRegIopCc)
+        exec_output += PredOpExecute.subst(immIop) + \
+                       PredOpExecute.subst(immIopCc) + \
+                       PredOpExecute.subst(regIop) + \
+                       PredOpExecute.subst(regIopCc) + \
+                       PredOpExecute.subst(regRegIop) + \
+                       PredOpExecute.subst(regRegIopCc)
+
+    buildDataInst("and", "Dest = resTemp = Op1 & secondOp;")
+    buildDataInst("eor", "Dest = resTemp = Op1 ^ secondOp;")
+    buildDataInst("sub", "Dest = resTemp = Op1 - secondOp;", "sub")
+    buildDataInst("rsb", "Dest = resTemp = secondOp - Op1;", "rsb")
+    buildDataInst("add", "Dest = resTemp = Op1 + secondOp;", "add")
+    buildDataInst("adc", "Dest = resTemp = Op1 + secondOp + %s;" % oldC, "add")
+    buildDataInst("sbc", "Dest = resTemp = Op1 - secondOp - !%s;" % oldC, "sub")
+    buildDataInst("rsc", "Dest = resTemp = secondOp - Op1 - !%s;" % oldC, "rsb")
+    buildDataInst("tst", "resTemp = Op1 & secondOp;")
+    buildDataInst("teq", "resTemp = Op1 ^ secondOp;")
+    buildDataInst("cmp", "resTemp = Op1 - secondOp;", "sub")
+    buildDataInst("cmn", "resTemp = Op1 + secondOp;", "add")
+    buildDataInst("orr", "Dest = resTemp = Op1 | secondOp;")
+    buildDataInst("orn", "Dest = resTemp = Op1 | ~secondOp;")
+    buildDataInst("mov", "Dest = resTemp = secondOp;")
+    buildDataInst("bic", "Dest = resTemp = Op1 & ~secondOp;")
+    buildDataInst("mvn", "Dest = resTemp = ~secondOp;")
+}};

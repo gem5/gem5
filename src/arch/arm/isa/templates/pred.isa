@@ -49,6 +49,82 @@ let {{
     predicateTest = 'testPredicate(CondCodes, condCode)'
 }};
 
+def template DataImmDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                IntRegIndex _op1, uint32_t _imm, bool _rotC=true);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataImmConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          uint32_t _imm,
+                                          bool _rotC)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _imm, _rotC)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataRegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                IntRegIndex _op1, IntRegIndex _op2,
+                int32_t _shiftAmt, ArmShiftType _shiftType);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataRegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          int32_t _shiftAmt,
+                                          ArmShiftType _shiftType)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _shiftAmt, _shiftType)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template DataRegRegDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+                IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _shift,
+                ArmShiftType _shiftType);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template DataRegRegConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          IntRegIndex _op1,
+                                          IntRegIndex _op2,
+                                          IntRegIndex _shift,
+                                          ArmShiftType _shiftType)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _shift, _shiftType)
+    {
+        %(constructor)s;
+    }
+}};
+
 def template PredOpExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
     {

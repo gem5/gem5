@@ -51,3 +51,6 @@
 
 //Load/store multiple
 ##include "macromem.isa"
+
+//Data processing instructions
+##include "data.isa"
