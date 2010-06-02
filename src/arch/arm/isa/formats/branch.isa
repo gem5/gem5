@@ -172,13 +172,13 @@ def format Thumb32BranchesAndMiscCtrl() {{
                               case 0x0:
                                 return new NopInst(machInst);
                               case 0x1:
-                                return new WarnUnimplemented("yield", machInst);
+                                return new YieldInst(machInst);
                               case 0x2:
-                                return new WarnUnimplemented("wfe", machInst);
+                                return new WfeInst(machInst);
                               case 0x3:
-                                return new WarnUnimplemented("wfi", machInst);
+                                return new WfiInst(machInst);
                               case 0x4:
-                                return new WarnUnimplemented("sev", machInst);
+                                return new SevInst(machInst);
                               default:
                                 break;
                             }
