@@ -60,18 +60,10 @@ MemoryReg::printOffset(std::ostream &os) const
             ccprintf(os, " LSL #%d", shiftAmt);
             break;
           case LSR:
-            if (shiftAmt == 0) {
-                ccprintf(os, " LSR #%d", 32);
-            } else {
-                ccprintf(os, " LSR #%d", shiftAmt);
-            }
+            ccprintf(os, " LSR #%d", (shiftAmt == 0) ? 32 : shiftAmt);
             break;
           case ASR:
-            if (shiftAmt == 0) {
-                ccprintf(os, " ASR #%d", 32);
-            } else {
-                ccprintf(os, " ASR #%d", shiftAmt);
-            }
+            ccprintf(os, " ASR #%d", (shiftAmt == 0) ? 32 : shiftAmt);
             break;
           case ROR:
             if (shiftAmt == 0) {
