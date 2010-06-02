@@ -301,17 +301,17 @@ def format ArmParallelAddSubtract() {{
               case 0x2:
                 switch (op2) {
                   case 0x0:
-                    return new WarnUnimplemented("uqadd16", machInst);
+                    return new Uqadd16Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x1:
-                    return new WarnUnimplemented("uqasx", machInst);
+                    return new UqasxReg(machInst, rd, rn, rm, 0, LSL);
                   case 0x2:
-                    return new WarnUnimplemented("uqsax", machInst);
+                    return new UqsaxReg(machInst, rd, rn, rm, 0, LSL);
                   case 0x3:
-                    return new WarnUnimplemented("uqsub16", machInst);
+                    return new Uqsub16Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x4:
-                    return new WarnUnimplemented("uqadd8", machInst);
+                    return new Uqadd8Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x7:
-                    return new WarnUnimplemented("uqsub8", machInst);
+                    return new Uqsub8Reg(machInst, rd, rn, rm, 0, LSL);
                 }
                 break;
               case 0x3:
@@ -539,13 +539,13 @@ def format Thumb32DataProcReg() {{
             }
         } else {
             if (bits(op2, 3) == 0) {
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
                 if (bits(op2, 2) == 0x0) {
                     const uint32_t op1 = bits(machInst, 22, 20);
                     const uint32_t op2 = bits(machInst, 5, 4);
-                    const IntRegIndex rd =
-                        (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                    const IntRegIndex rm =
-                        (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
                     switch (op2) {
                       case 0x0:
                         switch (op1) {
@@ -623,17 +623,17 @@ def format Thumb32DataProcReg() {{
                       case 0x1:
                         switch (op1) {
                           case 0x1:
-                            return new WarnUnimplemented("uqadd16", machInst);
+                            return new Uqadd16Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x2:
-                            return new WarnUnimplemented("uqasx", machInst);
+                            return new UqasxReg(machInst, rd, rn, rm, 0, LSL);
                           case 0x6:
-                            return new WarnUnimplemented("uqsax", machInst);
+                            return new UqsaxReg(machInst, rd, rn, rm, 0, LSL);
                           case 0x5:
-                            return new WarnUnimplemented("uqsub16", machInst);
+                            return new Uqsub16Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x0:
-                            return new WarnUnimplemented("uqadd8", machInst);
+                            return new Uqadd8Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x4:
-                            return new WarnUnimplemented("uqsub8", machInst);
+                            return new Uqsub8Reg(machInst, rd, rn, rm, 0, LSL);
                         }
                         break;
                       case 0x2:
