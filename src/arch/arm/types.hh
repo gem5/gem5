@@ -234,6 +234,24 @@ namespace ArmISA
         MODE_SYSTEM = 31
     };
 
+    static inline bool
+    badMode(OperatingMode mode)
+    {
+        switch (mode) {
+          case MODE_USER:
+          case MODE_FIQ:
+          case MODE_IRQ:
+          case MODE_SVC:
+          case MODE_MON:
+          case MODE_ABORT:
+          case MODE_UNDEFINED:
+          case MODE_SYSTEM:
+            return false;
+          default:
+            return true;
+        }
+    }
+
     struct CoreSpecific {
         // Empty for now on the ARM
     };
