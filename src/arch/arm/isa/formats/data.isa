@@ -283,26 +283,26 @@ def format ArmPackUnpackSatReverse() {{
             }
             break;
           case 0x7:
-            if (op2 == 0x1) {
-                return new WarnUnimplemented("rbit", machInst);
-            } else if (op2 == 0x3) {
+            {
                 const IntRegIndex rn =
                     (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
                 const IntRegIndex rd =
                     (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
                 const IntRegIndex rm =
                     (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-                const uint32_t rotation =
-                    (uint32_t)bits(machInst, 11, 10) << 3;
-                if (a == 0xf) {
-                    return new Uxth(machInst, rd, rotation, rm);
-                } else {
-                    return new Uxtah(machInst, rd, rn, rm, rotation);
+                if (op2 == 0x1) {
+                    return new Rbit(machInst, rd, rm);
+                } else if (op2 == 0x3) {
+                    const uint32_t rotation =
+                        (uint32_t)bits(machInst, 11, 10) << 3;
+                    if (a == 0xf) {
+                        return new Uxth(machInst, rd, rotation, rm);
+                    } else {
+                        return new Uxtah(machInst, rd, rn, rm, rotation);
+                    }
+                } else if (op2 == 0x5) {
+                    return new Revsh(machInst, rd, rm);
                 }
-            } else if (op2 == 0x5) {
-                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-                return new Revsh(machInst, rd, rm);
             }
             break;
         }
@@ -791,7 +791,7 @@ def format Thumb32DataProcReg() {{
                       case 0x1:
                         return new Rev16(machInst, rd, rn);
                       case 0x2:
-                        return new WarnUnimplemented("rbit", machInst);
+                        return new Rbit(machInst, rd, rm);
                       case 0x3:
                         return new Revsh(machInst, rd, rn);
                     }
