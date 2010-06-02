@@ -161,13 +161,11 @@ UndefinedInstruction::invoke(ThreadContext *tc)
 {
     assert(unknown || mnemonic != NULL);
     if (unknown) {
-        panic("Attempted to execute unknown instruction "
-              "(inst 0x%08x, opcode 0x%x, binary:%s)",
-              machInst, machInst.opcode, inst2string(machInst));
+        panic("Attempted to execute unknown instruction (inst 0x%08x)",
+              machInst);
     } else {
-        panic("Attempted to execute unimplemented instruction '%s' "
-              "(inst 0x%08x, opcode 0x%x, binary:%s)",
-              mnemonic, machInst, machInst.opcode, inst2string(machInst));
+        panic("Attempted to execute unimplemented instruction "
+                "'%s' (inst 0x%08x)", mnemonic, machInst);
     }
 }
 

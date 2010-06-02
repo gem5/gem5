@@ -74,8 +74,7 @@ output decoder {{
     std::string
     Breakpoint::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
-        return csprintf("%-10s (inst 0x%x, opcode 0x%x, binary:%s)",
-                        "Breakpoint", machInst, OPCODE, inst2string(machInst));
+        return csprintf("%-10s (inst 0x%x)", "Breakpoint", machInst);
     }
 }};
 
