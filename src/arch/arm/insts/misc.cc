@@ -155,23 +155,23 @@ RevOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-SatOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+RegImmRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
     printReg(ss, dest);
-    ccprintf(ss, ", #%d, ", satImm);
+    ccprintf(ss, ", #%d, ", imm);
     printReg(ss, op1);
     return ss.str();
 }
 
 std::string
-SatShiftOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+RegImmRegShiftOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
     printReg(ss, dest);
-    ccprintf(ss, ", #%d, ", satImm);
+    ccprintf(ss, ", #%d, ", imm);
     printShiftOperand(ss, op1, true, shiftAmt, INTREG_ZERO, shiftType);
     printReg(ss, op1);
     return ss.str();

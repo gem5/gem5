@@ -108,36 +108,36 @@ class RevOp : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-class SatOp : public PredOp
+class RegImmRegOp : public PredOp
 {
   protected:
     IntRegIndex dest;
-    uint32_t satImm;
+    uint32_t imm;
     IntRegIndex op1;
 
-    SatOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-          IntRegIndex _dest, uint32_t _satImm, IntRegIndex _op1) :
+    RegImmRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                IntRegIndex _dest, uint32_t _imm, IntRegIndex _op1) :
         PredOp(mnem, _machInst, __opClass),
-        dest(_dest), satImm(_satImm), op1(_op1)
+        dest(_dest), imm(_imm), op1(_op1)
     {}
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-class SatShiftOp : public PredOp
+class RegImmRegShiftOp : public PredOp
 {
   protected:
     IntRegIndex dest;
-    uint32_t satImm;
+    uint32_t imm;
     IntRegIndex op1;
     int32_t shiftAmt;
     ArmShiftType shiftType;
 
-    SatShiftOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-               IntRegIndex _dest, uint32_t _satImm, IntRegIndex _op1,
-               int32_t _shiftAmt, ArmShiftType _shiftType) :
+    RegImmRegShiftOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                     IntRegIndex _dest, uint32_t _imm, IntRegIndex _op1,
+                     int32_t _shiftAmt, ArmShiftType _shiftType) :
         PredOp(mnem, _machInst, __opClass),
-        dest(_dest), satImm(_satImm), op1(_op1),
+        dest(_dest), imm(_imm), op1(_op1),
         shiftAmt(_shiftAmt), shiftType(_shiftType)
     {}
 
