@@ -140,7 +140,13 @@ def format ArmPackUnpackSatReverse() {{
             const ArmShiftType type =
                 (ArmShiftType)(uint32_t)bits(machInst, 6, 5);
             if (op1 == 0) {
-                return new WarnUnimplemented("pkh", machInst);
+                if (type) {
+                    return new PkhtbReg(machInst, rd, (IntRegIndex)a,
+                                        rn, imm, type);
+                } else {
+                    return new PkhbtReg(machInst, rd, (IntRegIndex)a,
+                                        rn, imm, type);
+                }
             } else if (bits(op1, 2, 1) == 1) {
                 return new Ssat(machInst, rd, satImm + 1, rn, imm, type);
             } else if (bits(op1, 2, 1) == 3) {
@@ -1284,7 +1290,11 @@ def format Thumb32DataProcShiftReg() {{
                 %(eor)s
             }
           case 0x6:
-            return new WarnUnimplemented("pkh", machInst);
+            if (type) {
+                return new PkhtbReg(machInst, rd, rn, rm, amt, type);
+            } else {
+                return new PkhbtReg(machInst, rd, rn, rm, amt, type);
+            }
           case 0x8:
             if (rd == INTREG_PC) {
                 %(cmn)s
