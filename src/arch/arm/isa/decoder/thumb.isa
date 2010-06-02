@@ -90,16 +90,7 @@
                 0xe, 0xf: WarnUnimpl::blx(); //register
             }
             0x2, 0x3: WarnUnimpl::ldr();
-            default: decode TOPCODE_11_9 {
-                0x0: WarnUnimpl::str(); //register
-                0x1: WarnUnimpl::strh(); //register
-                0x2: WarnUnimpl::strb(); //register
-                0x3: WarnUnimpl::ldrsb(); //register
-                0x4: WarnUnimpl::ldr(); //register
-                0x5: WarnUnimpl::ldrh(); //register
-                0x6: WarnUnimpl::ldrb(); //register
-                0x7: WarnUnimpl::ldrsh(); //register
-            }
+            default: Thumb16MemReg::thumb16MemReg();
         }
         0x3: decode TOPCODE_12_11 {
             0x0: WarnUnimpl::str(); //immediate, thumb
