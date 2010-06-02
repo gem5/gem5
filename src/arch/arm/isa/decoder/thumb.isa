@@ -92,7 +92,8 @@
                 }
                 0x3: WarnUnimpl::Advanced_SIMD();
                 default: decode LTCOPROC {
-                    0xa, 0xb: decode HTOPCODE_9_4 {
+                    0xa, 0xb: ExtensionRegLoadStore::extensionRegLoadStre();
+                    0xf: decode HTOPCODE_9_4 {
                         0x00: Unknown::undefined();
                         0x04: WarnUnimpl::mcrr(); // mcrr2
                         0x05: WarnUnimpl::mrrc(); // mrrc2
@@ -105,13 +106,6 @@
                                 0xf: WarnUnimpl::ldc(); // ldc2 (literal)
                                 default: WarnUnimpl::ldc(); // ldc2 (immediate)
                             }
-                    }
-                    default: decode HTOPCODE_9_5 {
-                        0x00: Unknown::undefined();
-                        0x02: WarnUnimpl::SIMD_VFP_64_bit_core_extension_transfer();
-                        0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f:
-                            WarnUnimpl::Extension_register_load_store_instruction();
                     }
                 }
             }
@@ -144,23 +138,20 @@
             default: decode HTOPCODE_9_8 {
                 0x2: decode LTOPCODE_4 {
                     0x0: decode LTCOPROC {
-                        0xa, 0xb: WarnUnimpl::VFP_Inst();
+                        0xa, 0xb: decode OPCODE_23_20 {
+##include "vfp.isa"
+                        }
                         default: WarnUnimpl::cdp(); // cdp2
                     }
                     0x1: decode LTCOPROC {
-                        0xa, 0xb: WarnUnimpl::Core_to_extension_transfer();
-                        default: decode CPNUM {
-                            15: McrMrc15::mcr2Mrc215();
-                            default: decode HTOPCODE_4 {
-                                0x0: WarnUnimpl::mcr2();
-                                0x1: WarnUnimpl::mrc2();
-                            }
-                        }
+                        0xa, 0xb: ShortFpTransfer::shortFpTransfer();
+                        0xf: McrMrc15::mcrMrc15();
                     }
                 }
                 0x3: WarnUnimpl::Advanced_SIMD();
                 default: decode LTCOPROC {
-                    0xa, 0xb: decode HTOPCODE_9_4 {
+                    0xa, 0xb: ExtensionRegLoadStore::extensionRegLoadStre();
+                    0xf: decode HTOPCODE_9_4 {
                         0x00: Unknown::undefined();
                         0x04: WarnUnimpl::mcrr(); // mcrr2
                         0x05: WarnUnimpl::mrrc(); // mrrc2
@@ -173,13 +164,6 @@
                                 0xf: WarnUnimpl::ldc(); // ldc2 (literal)
                                 default: WarnUnimpl::ldc(); // ldc2 (immediate)
                             }
-                    }
-                    default: decode HTOPCODE_9_5 {
-                        0x00: Unknown::undefined();
-                        0x02: WarnUnimpl::SIMD_VFP_64_bit_core_extension_transfer();
-                        0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f:
-                            WarnUnimpl::Extension_register_load_store_instruction();
                     }
                 }
             }
