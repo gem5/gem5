@@ -102,7 +102,7 @@
                 0x3: WarnUnimpl::Advanced_SIMD();
                 default: decode LTCOPROC {
                     0xa, 0xb: decode HTOPCODE_9_4 {
-                        0x00: WarnUnimpl::undefined();
+                        0x00: Unknown::undefined();
                         0x04: WarnUnimpl::mcrr(); // mcrr2
                         0x05: WarnUnimpl::mrrc(); // mrrc2
                         0x02, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10,
@@ -116,7 +116,7 @@
                             }
                     }
                     default: decode HTOPCODE_9_5 {
-                        0x00: WarnUnimpl::undefined();
+                        0x00: Unknown::undefined();
                         0x02: WarnUnimpl::SIMD_VFP_64_bit_core_extension_transfer();
                         0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                         0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f:
@@ -142,7 +142,7 @@
                     0x0: LoadByteMemoryHints::loadByteMemoryHints();
                     0x1: LoadHalfwordMemoryHints::loadHalfwordMemoryHints();
                     0x2: Thumb32LoadWord::thumb32LoadWord();
-                    0x3: WarnUnimpl::undefined();
+                    0x3: Unknown::undefined();
                 }
             }
             0x1: decode HTOPCODE_8_7 {
@@ -170,7 +170,7 @@
                 0x3: WarnUnimpl::Advanced_SIMD();
                 default: decode LTCOPROC {
                     0xa, 0xb: decode HTOPCODE_9_4 {
-                        0x00: WarnUnimpl::undefined();
+                        0x00: Unknown::undefined();
                         0x04: WarnUnimpl::mcrr(); // mcrr2
                         0x05: WarnUnimpl::mrrc(); // mrrc2
                         0x02, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10,
@@ -184,7 +184,7 @@
                             }
                     }
                     default: decode HTOPCODE_9_5 {
-                        0x00: WarnUnimpl::undefined();
+                        0x00: Unknown::undefined();
                         0x02: WarnUnimpl::SIMD_VFP_64_bit_core_extension_transfer();
                         0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                         0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f:

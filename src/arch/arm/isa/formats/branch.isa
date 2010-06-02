@@ -104,7 +104,7 @@ def format Thumb16CondBranchAndSvc() {{
             return new Svc(machInst);
         } else {
             // This space will not be allocated in the future.
-            return new WarnUnimplemented("unimplemented", machInst);
+            return new Unknown(machInst);
         }
     '''
 }};
@@ -124,8 +124,8 @@ def format Thumb32BranchesAndMiscCtrl() {{
           case 0x0:
             if (op == 127) {
                 if (op1 & 0x2) {
-                    // Permanentl undefined.
-                    return new WarnUnimplemented("undefined", machInst);
+                    // Permanently undefined.
+                    return new Unknown(machInst);
                 } else {
                     return new WarnUnimplemented("smc", machInst);
                 }
