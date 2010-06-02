@@ -161,7 +161,10 @@ def format Thumb32BranchesAndMiscCtrl() {{
                         const uint32_t op1 = bits(machInst, 10, 8);
                         const uint32_t op2 = bits(machInst, 7, 0);
                         if (op1 != 0) {
-                            return new WarnUnimplemented("cps", machInst);
+                            const bool enable = bits(machInst, 10, 9) == 0x2;
+                            const uint32_t mods = bits(machInst, 8, 0) |
+                                                  ((enable ? 1 : 0) << 9);
+                            return new Cps(machInst, mods);
                         } else if ((op2 & 0xf0) == 0xf0) {
                             return new WarnUnimplemented("dbg", machInst);
                         } else {

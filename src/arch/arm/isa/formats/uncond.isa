@@ -46,7 +46,12 @@ def format ArmUnconditional() {{
                 if (bits((uint32_t)rn, 0) == 1 && op2 == 0) {
                     return new Setend(machInst, bits(machInst, 9));
                 } else if (bits((uint32_t)rn, 0) == 0 && bits(op2, 1) == 0) {
-                    return new WarnUnimplemented("cps", machInst);
+                    const bool enable = bits(machInst, 19, 18) == 0x2;
+                    const uint32_t mods = bits(machInst, 4, 0) |
+                                          (bits(machInst, 8, 6) << 5) |
+                                          (bits(machInst, 17) << 8) |
+                                          ((enable ? 1 : 0) << 9);
+                    return new Cps(machInst, mods);
                 }
             } else if (bits(op1, 6, 5) == 0x1) {
                 return new WarnUnimplemented(

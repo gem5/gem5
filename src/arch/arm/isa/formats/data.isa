@@ -1026,7 +1026,10 @@ def format Thumb16Misc() {{
                 if (opBits == 2) {
                     return new Setend(machInst, bits(machInst, 3));
                 } else if (opBits == 3) {
-                    return new WarnUnimplemented("cps", machInst);
+                    const bool enable = (bits(machInst, 4) == 0);
+                    const uint32_t mods = (bits(machInst, 2, 0) << 5) |
+                                          ((enable ? 1 : 0) << 9);
+                    return new Cps(machInst, mods);
                 }
             }
           case 0x9:
