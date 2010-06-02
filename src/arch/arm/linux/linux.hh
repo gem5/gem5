@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
@@ -26,7 +38,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephen Hines
+ * Authors: Ali Saidi
+ *          Stephen Hines
  */
 
 #ifndef __ARCH_ARM_LINUX_LINUX_HH__
@@ -44,6 +57,14 @@ class ArmLinux : public Linux
 
     /// Number of entries in openFlagTable[].
     static const int NUM_OPEN_FLAGS;
+
+    //@{
+    /// Basic ARM Linux types
+    typedef uint32_t size_t;
+    typedef uint32_t off_t;
+    typedef int32_t time_t;
+    typedef int32_t clock_t;
+    //@}
 
     //@{
     /// open(2) flag values.
@@ -107,6 +128,25 @@ class ArmLinux : public Linux
         TGT_RLIMIT_LOCKS = 10
     };
 
+    /// Limit struct for getrlimit/setrlimit.
+    struct rlimit {
+        uint32_t  rlim_cur;     //!< soft limit
+        uint32_t  rlim_max;     //!< hard limit
+    };
+
+    /// For gettimeofday().
+    struct timeval {
+        int32_t tv_sec;         //!< seconds
+        int32_t tv_usec;        //!< microseconds
+    };
+
+    // For writev/readv
+    struct tgt_iovec {
+        uint32_t iov_base; // void *
+        uint32_t iov_len;
+    };
+
+
     typedef struct {
         uint32_t st_dev;
         uint32_t st_ino;
@@ -163,6 +203,34 @@ class ArmLinux : public Linux
         uint32_t mem_unit;  /* Memory unit size in bytes */
     } tgt_sysinfo;
    
+    /// For getrusage().
+    struct rusage {
+        struct timeval ru_utime;        //!< user time used
+        struct timeval ru_stime;        //!< system time used
+        int32_t ru_maxrss;              //!< max rss
+        int32_t ru_ixrss;               //!< integral shared memory size
+        int32_t ru_idrss;               //!< integral unshared data "
+        int32_t ru_isrss;               //!< integral unshared stack "
+        int32_t ru_minflt;              //!< page reclaims - total vmfaults
+        int32_t ru_majflt;              //!< page faults
+        int32_t ru_nswap;               //!< swaps
+        int32_t ru_inblock;             //!< block input operations
+        int32_t ru_oublock;             //!< block output operations
+        int32_t ru_msgsnd;              //!< messages sent
+        int32_t ru_msgrcv;              //!< messages received
+        int32_t ru_nsignals;            //!< signals received
+        int32_t ru_nvcsw;               //!< voluntary context switches
+        int32_t ru_nivcsw;              //!< involuntary "
+    };
+
+    /// For times().
+    struct tms {
+        int32_t tms_utime;      //!< user time
+        int32_t tms_stime;      //!< system time
+        int32_t tms_cutime;     //!< user time of children
+        int32_t tms_cstime;     //!< system time of children
+    };
+
 
 };
 

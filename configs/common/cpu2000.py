@@ -663,7 +663,7 @@ class vortex(Benchmark):
     stdin = None
 
     def __init__(self, isa, os, input_set):
-        if isa == 'alpha':
+        if (isa == 'alpha' or isa == 'arm'):
             self.endian = 'lendian'
         elif (isa == 'sparc' or isa == 'sparc32'):
             self.endian = 'bendian'
