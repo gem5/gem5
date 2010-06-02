@@ -47,7 +47,6 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/pagetable.hh"
-#include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/utility.hh"
 #include "base/inifile.hh"
@@ -57,6 +56,10 @@
 #include "mem/page_table.hh"
 #include "params/ArmTLB.hh"
 #include "sim/process.hh"
+
+#if FULL_SYSTEM
+#include "arch/arm/table_walker.hh"
+#endif
 
 using namespace std;
 using namespace ArmISA;
@@ -70,7 +73,9 @@ TLB::TLB(const Params *p)
     table = new TlbEntry[size];
     memset(table, 0, sizeof(TlbEntry[size]));
 
+#if FULL_SYSTEM
     tableWalker->setTlb(this);
+#endif
 }
 
 TLB::~TLB()
@@ -292,19 +297,6 @@ TLB::regStats()
     accesses = read_accesses + write_accesses;
 }
 
-Fault
-TLB::trickBoxCheck(RequestPtr req, Mode mode, uint8_t domain, bool sNp)
-{
-    return NoFault;
-}
-
-Fault
-TLB::walkTrickBoxCheck(Addr pa, Addr va, Addr sz, bool is_exec,
-        uint8_t domain, bool sNp)
-{
-    return NoFault;
-}
-
 #if !FULL_SYSTEM
 Fault
 TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
@@ -338,6 +330,19 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
 }
 
 #else // FULL_SYSTEM
+
+Fault
+TLB::trickBoxCheck(RequestPtr req, Mode mode, uint8_t domain, bool sNp)
+{
+    return NoFault;
+}
+
+Fault
+TLB::walkTrickBoxCheck(Addr pa, Addr va, Addr sz, bool is_exec,
+        bool is_write, uint8_t domain, bool sNp)
+{
+    return NoFault;
+}
 
 Fault
 TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
@@ -435,9 +440,29 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
     bool abt;
 
+   /* if (!sctlr.xp)
+        ap &= 0x3;
+*/
     switch (ap) {
       case 0:
-        abt = true;
+        DPRINTF(TLB, "Access permissions 0, checking rs:%#x\n", (int)sctlr.rs);
+        if (!sctlr.xp) {
+            switch ((int)sctlr.rs) {
+              case 2:
+                abt = is_write;
+                break;
+              case 1:
+                abt = is_write || !is_priv;
+                break;
+              case 0:
+              case 3:
+              default:
+                abt = true;
+                break;
+            }
+        } else {
+            abt = true;
+        }
         break;
       case 1:
         abt = !is_priv;

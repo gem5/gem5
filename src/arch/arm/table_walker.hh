@@ -100,7 +100,7 @@ class TableWalker : public MemObject
         /** Is the translation global (no asid used)? */
         bool global() const
         {
-            return bits(data, 17);
+            return bits(data, 4);
         }
 
         /** Is the translation not allow execution? */
@@ -130,7 +130,7 @@ class TableWalker : public MemObject
         /** Memory region attributes: ARM DDI 0406B: B3-32 */
         uint8_t texcb() const
         {
-            return bits(data, 2) | bits(data,3) << 1 | bits(data, 12, 14) << 2;
+            return bits(data, 2) | bits(data,3) << 1 | bits(data, 14, 12) << 2;
         }
 
     };
@@ -174,8 +174,8 @@ class TableWalker : public MemObject
         uint8_t texcb() const
         {
             return large() ?
-                (bits(data, 2) | (bits(data,3) << 1) | (bits(data, 12, 14) << 2)) :
-                (bits(data, 2) | (bits(data,3) << 1) | (bits(data, 6, 8) << 2));
+                (bits(data, 2) | (bits(data,3) << 1) | (bits(data, 14, 12) << 2)) :
+                (bits(data, 2) | (bits(data,3) << 1) | (bits(data, 8, 6) << 2));
         }
 
         /** Return the physical frame, bits shifted right */

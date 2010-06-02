@@ -87,7 +87,10 @@ class TLB : public BaseTLB
     TlbEntry *table;	// the Page Table
     int size;			// TLB Size
     int nlu;			// not last used entry (for replacement)
+
+#if FULL_SYSTEM
     TableWalker *tableWalker;
+#endif
 
     void nextnlu() { if (++nlu >= size) nlu = 0; }
     TlbEntry *lookup(Addr vpn, uint8_t asn);
@@ -136,8 +139,8 @@ class TLB : public BaseTLB
     void flushMva(Addr mva);
 
     Fault trickBoxCheck(RequestPtr req, Mode mode, uint8_t domain, bool sNp);
-    Fault walkTrickBoxCheck(Addr pa, Addr va, Addr sz, bool is_exec, uint8_t
-            domain, bool sNp);
+    Fault walkTrickBoxCheck(Addr pa, Addr va, Addr sz, bool is_exec,
+            bool is_write, uint8_t domain, bool sNp);
 
     void printTlb();
 

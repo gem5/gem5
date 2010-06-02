@@ -105,7 +105,7 @@ namespace ArmISA
             sctlr.nmfi = (bool)sctlr_rst.nmfi;
             sctlr.v = (bool)sctlr_rst.v;
             sctlr.u    = 1;
-            sctlr.rao1 = 1;
+            sctlr.xp = 1;
             sctlr.rao2 = 1;
             sctlr.rao3 = 1;
             sctlr.rao4 = 1;

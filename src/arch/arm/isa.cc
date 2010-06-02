@@ -215,6 +215,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         break;
       case MISCREG_SCTLR:
         {
+            DPRINTF(MiscRegs, "Writing SCTLR: %#x\n", newVal);
             SCTLR sctlr = miscRegs[MISCREG_SCTLR];
             SCTLR new_sctlr = newVal;
             new_sctlr.nmfi =  (bool)sctlr.nmfi;

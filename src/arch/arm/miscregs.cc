@@ -153,7 +153,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         }
         break;
       case 2:
-        if (opc2 == 0 && crm == 0) {
+        if (opc1 == 0 && crm == 0) {
             switch (opc2) {
               case 0:
                 return MISCREG_TTBR0;
@@ -408,7 +408,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
       case 13:
         if (opc1 == 0) {
             if (crm == 0) {
-                switch (crm) {
+                switch (opc2) {
                   case 0:
                     return MISCREG_FCEIDR;
                   case 1:

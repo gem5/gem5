@@ -111,21 +111,25 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode m
     // If translation isn't enabled, we shouldn't be here
     assert(sctlr.m);
 
-    if (N == 0 || mbits(vaddr, 31, 32-N)) {
+    DPRINTF(TLB, "Begining table walk for address %#x, TTBCR: %#x, bits:%#x\n",
+            vaddr, N, mbits(vaddr, 31, 32-N));
+
+    if (N == 0 || !mbits(vaddr, 31, 32-N)) {
+        DPRINTF(TLB, " - Selecting TTBR0\n");
         ttbr = tc->readMiscReg(MISCREG_TTBR0);
     } else {
-        ttbr = tc->readMiscReg(MISCREG_TTBR0);
+        DPRINTF(TLB, " - Selecting TTBR1\n");
+        ttbr = tc->readMiscReg(MISCREG_TTBR1);
         N = 0;
     }
 
     Addr l1desc_addr = mbits(ttbr, 31, 14-N) | (bits(vaddr,31-N,20) << 2);
-    DPRINTF(TLB, "Begining table walk for address %#x at descriptor %#x\n",
-            vaddr, l1desc_addr);
+    DPRINTF(TLB, " - Descriptor at address %#x\n", l1desc_addr);
 
 
     // Trickbox address check
     fault = tlb->walkTrickBoxCheck(l1desc_addr, vaddr, sizeof(uint32_t),
-            isFetch, 0, true);
+            isFetch, isWrite, 0, true);
     if (fault) {
        tc = NULL;
        req = NULL;
@@ -210,7 +214,11 @@ TableWalker::doL1Descriptor()
       case L1Descriptor::Reserved:
         tc = NULL;
         req = NULL;
-        fault = new DataAbort(vaddr, NULL, isWrite, ArmFault::Translation0);
+        DPRINTF(TLB, "L1 Descriptor Reserved/Ignore, causing fault\n");
+        if (isFetch)
+            fault = new PrefetchAbort(vaddr, ArmFault::Translation0);
+        else
+            fault = new DataAbort(vaddr, NULL, isWrite, ArmFault::Translation0);
         return;
       case L1Descriptor::Section:
         if (sctlr.afe && bits(l1Desc.ap(), 0) == 0)
@@ -252,7 +260,7 @@ TableWalker::doL1Descriptor()
 
         // Trickbox address check
         fault = tlb->walkTrickBoxCheck(l2desc_addr, vaddr, sizeof(uint32_t),
-                isFetch, l1Desc.domain(), false);
+                isFetch, isWrite, l1Desc.domain(), false);
         if (fault) {
            tc = NULL;
            req = NULL;
@@ -287,7 +295,10 @@ TableWalker::doL2Descriptor()
         DPRINTF(TLB, "L2 descriptor invalid, causing fault\n");
         tc = NULL;
         req = NULL;
-        fault = new DataAbort(vaddr, l1Desc.domain(), isWrite, ArmFault::Translation1);
+        if (isFetch)
+            fault = new PrefetchAbort(vaddr, ArmFault::Translation1);
+        else
+            fault = new DataAbort(vaddr, l1Desc.domain(), isWrite, ArmFault::Translation1);
         return;
     }
 

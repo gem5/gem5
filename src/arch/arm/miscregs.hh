@@ -134,9 +134,11 @@ namespace ArmISA
         MISCREG_NMRR,
         MISCREG_TTBCR,
         MISCREG_ID_PFR0,
+        MISCREG_CTR,
+        MISCREG_SCR,
+        MISCREG_SDER,
         MISCREG_CP15_UNIMP_START,
-        MISCREG_CTR = MISCREG_CP15_UNIMP_START,
-        MISCREG_TCMTR,
+        MISCREG_TCMTR = MISCREG_CP15_UNIMP_START,
         MISCREG_ID_PFR1,
         MISCREG_ID_DFR0,
         MISCREG_ID_AFR0,
@@ -159,8 +161,6 @@ namespace ArmISA
         MISCREG_DCISW,
         MISCREG_MCCSW,
         MISCREG_DCCMVAU,
-        MISCREG_SCR,
-        MISCREG_SDER,
         MISCREG_NSACR,
         MISCREG_V2PCWPR,
         MISCREG_V2PCWPW,
@@ -205,9 +205,10 @@ namespace ArmISA
         "dtlbiall", "dtlbimva", "dtlbiasid",
         "tlbiall", "tlbimva", "tlbiasid", "tlbimvaa",
         "dfsr", "ifsr", "dfar", "ifar", "mpidr",
-        "prrr", "nmrr",  "ttbcr", "id_pfr0",
+        "prrr", "nmrr",  "ttbcr", "id_pfr0", "ctr"
+        "scr", "sder"
         // Unimplemented below
-        "ctr", "tcmtr",
+        "tcmtr",
         "id_pfr1", "id_dfr0", "id_afr0",
         "id_mmfr0", "id_mmfr1", "id_mmfr2", "id_mmfr3",
         "id_isar0", "id_isar1", "id_isar2", "id_isar3", "id_isar4", "id_isar5",
@@ -215,7 +216,7 @@ namespace ArmISA
         "adfsr", "aifsr",
         "dcimvac", "dcisw", "mccsw",
         "dccmvau",
-        "scr", "sder", "nsacr",
+        "nsacr",
         "v2pcwpr", "v2pcwpw", "v2pcwur", "v2pcwuw",
         "v2powpr", "v2powpw", "v2powur", "v2powuw",
         "vbar", "mvbar", "isr", "fceidr",
@@ -252,7 +253,7 @@ namespace ArmISA
         Bitfield<27> nmfi;// Non-maskable fast interrupts enable
         Bitfield<25> ee;  // Exception Endianness bit
         Bitfield<24> ve;  // Interrupt vectors enable
-        Bitfield<23> rao1;// Read as one
+        Bitfield<23> xp; //  Extended page table enable bit
         Bitfield<22> u;   // Alignment (now unused)
         Bitfield<21> fi;  // Fast interrupts configuration enable
         Bitfield<19> dz;  // Divide by Zero fault enable bit
@@ -264,6 +265,7 @@ namespace ArmISA
         Bitfield<12> i;   // instruction cache enable
         Bitfield<11> z;   // branch prediction enable bit
         Bitfield<10> sw;  // Enable swp/swpb
+        Bitfield<9,8> rs;   // deprecated protection bits
         Bitfield<6,3> rao4;// Read as one
         Bitfield<7>  b;   // Endianness support (unused)  
         Bitfield<2>  c;   // Cache enable bit
