@@ -30,17 +30,6 @@
 
 let {{
 
-# Generic substitutions for Arm instructions
-def ArmGenericCodeSubs(code):
-    # Substitute in the shifted portion of operations
-    new_code = re.sub(r'Rm_Imm',
-            'shift_rm_imm(Rm, shift_size, shift, CondCodes<29:>)', code)
-    new_code = re.sub(r'Rm_Rs',
-            'shift_rm_rs(Rm, Rs, shift, CondCodes<29:>)', new_code)
-    return new_code
-}};
-
-
 output header {{
         std::string inst2string(MachInst machInst);
 }};
