@@ -293,7 +293,7 @@ def format Thumb32LongMulMulAccAndDiv() {{
             break;
           case 0x1:
             if (op2 == 0xf) {
-                return new WarnUnimplemented("sdiv", machInst);
+                return new Sdiv(machInst, rdhi, rn, rm);
             }
             break;
           case 0x2:
