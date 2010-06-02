@@ -53,6 +53,7 @@ class ObjectFile
         X86_64,
         I386,
         Arm,
+        Thumb,
         Power
     };
 

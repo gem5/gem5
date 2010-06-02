@@ -34,6 +34,7 @@
 
 #include "gelf.h"
 
+#include "base/bitfield.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
@@ -96,7 +97,11 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
             arch = ObjectFile::Alpha;
         } else if (ehdr.e_machine == EM_ARM) {
-            arch = ObjectFile::Arm;
+            if (bits(ehdr.e_entry, 0)) {
+                arch = ObjectFile::Thumb;
+            } else {
+                arch = ObjectFile::Arm;
+            }
         } else if (ehdr.e_machine == EM_PPC &&
                 ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
           if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB) {
