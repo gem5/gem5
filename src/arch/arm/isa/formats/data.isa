@@ -40,28 +40,30 @@ def format ArmDataProcReg() {{
           case %(opcode)#x:
             if (immShift) {
                 if (setCc) {
-                    return new %(className)sDRegCc(machInst,
-                                                   rd, rn, rm, imm5, type);
+                    return new %(className)sDRegCc(machInst, %(dest)s, %(op1)s,
+                                                   rm, imm5, type);
                 } else {
-                    return new %(className)sDReg(machInst,
-                                                 rd, rn, rm, imm5, type);
+                    return new %(className)sDReg(machInst, %(dest)s, %(op1)s,
+                                                 rm, imm5, type);
                 }
             } else {
                 if (setCc) {
-                    return new %(className)sDRegRegCc(machInst,
-                                                      rd, rn, rm, rs, type);
+                    return new %(className)sDRegRegCc(machInst, %(dest)s,
+                                                      %(op1)s, rm, rs, type);
                 } else {
-                    return new %(className)sDRegReg(machInst,
-                                                    rd, rn, rm, rs, type);
+                    return new %(className)sDRegReg(machInst, %(dest)s,
+                                                    %(op1)s, rm, rs, type);
                 }
             }
             break;
     '''
 
-    def instCode(opcode, mnem):
+    def instCode(opcode, mnem, dest="rd", op1="rn"):
         global instDecode
         return instDecode % { "className": mnem.capitalize(),
-                              "opcode": opcode }
+                              "opcode": opcode,
+                              "dest": dest,
+                              "op1": op1 }
 
     decode_block = '''
     {
@@ -83,14 +85,14 @@ def format ArmDataProcReg() {{
     decode_block += instCode(0x5, "adc")
     decode_block += instCode(0x6, "sbc")
     decode_block += instCode(0x7, "rsc")
-    decode_block += instCode(0x8, "tst")
-    decode_block += instCode(0x9, "teq")
-    decode_block += instCode(0xa, "cmp")
-    decode_block += instCode(0xb, "cmn")
+    decode_block += instCode(0x8, "tst", dest="INTREG_ZERO")
+    decode_block += instCode(0x9, "teq", dest="INTREG_ZERO")
+    decode_block += instCode(0xa, "cmp", dest="INTREG_ZERO")
+    decode_block += instCode(0xb, "cmn", dest="INTREG_ZERO")
     decode_block += instCode(0xc, "orr")
-    decode_block += instCode(0xd, "mov")
+    decode_block += instCode(0xd, "mov", op1="INTREG_ZERO")
     decode_block += instCode(0xe, "bic")
-    decode_block += instCode(0xf, "mvn")
+    decode_block += instCode(0xf, "mvn", op1="INTREG_ZERO")
     decode_block += '''
           default:
             return new Unknown(machInst);
@@ -103,17 +105,21 @@ def format ArmDataProcImm() {{
     instDecode = '''
           case %(opcode)#x:
             if (setCc) {
-                return new %(className)sDImmCc(machInst, rd, rn, imm, rotC);
+                return new %(className)sDImmCc(machInst, %(dest)s, %(op1)s,
+                                               imm, rotC);
             } else {
-                return new %(className)sDImm(machInst, rd, rn, imm, rotC);
+                return new %(className)sDImm(machInst, %(dest)s, %(op1)s,
+                                             imm, rotC);
             }
             break;
     '''
 
-    def instCode(opcode, mnem):
+    def instCode(opcode, mnem, dest="rd", op1="rn"):
         global instDecode
         return instDecode % { "className": mnem.capitalize(),
-                              "opcode": opcode }
+                              "opcode": opcode,
+                              "dest": dest,
+                              "op1": op1 }
 
     decode_block = '''
     {
@@ -134,18 +140,419 @@ def format ArmDataProcImm() {{
     decode_block += instCode(0x5, "adc")
     decode_block += instCode(0x6, "sbc")
     decode_block += instCode(0x7, "rsc")
-    decode_block += instCode(0x8, "tst")
-    decode_block += instCode(0x9, "teq")
-    decode_block += instCode(0xa, "cmp")
-    decode_block += instCode(0xb, "cmn")
+    decode_block += instCode(0x8, "tst", dest="INTREG_ZERO")
+    decode_block += instCode(0x9, "teq", dest="INTREG_ZERO")
+    decode_block += instCode(0xa, "cmp", dest="INTREG_ZERO")
+    decode_block += instCode(0xb, "cmn", dest="INTREG_ZERO")
     decode_block += instCode(0xc, "orr")
-    decode_block += instCode(0xd, "mov")
+    decode_block += instCode(0xd, "mov", op1="INTREG_ZERO")
     decode_block += instCode(0xe, "bic")
-    decode_block += instCode(0xf, "mvn")
+    decode_block += instCode(0xf, "mvn", op1="INTREG_ZERO")
     decode_block += '''
           default:
             return new Unknown(machInst);
         }
     }
     '''
+}};
+
+def format Thumb16ShiftAddSubMoveCmp() {{
+    decode_block = '''
+    {
+        const uint32_t imm5 = bits(machInst, 10, 6);
+        const uint32_t imm3 = bits(machInst, 8, 6);
+        const uint32_t imm8 = bits(machInst, 7, 0);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
+        const IntRegIndex rd8 = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 8, 6);
+        switch (bits(machInst, 13, 11)) {
+          case 0x0: // lsl
+            return new MovDReg(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
+          case 0x1: // lsr
+            return new MovDReg(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
+          case 0x2: // asr
+            return new MovDReg(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
+          case 0x3:
+            switch (bits(machInst, 10, 9)) {
+              case 0x0:
+                return new AddDReg(machInst, rd, rn, rm, 0, LSL);
+              case 0x1:
+                return new SubDReg(machInst, rd, rn, rm, 0, LSL);
+              case 0x2:
+                return new AddDImm(machInst, rd, rn, imm3, true);
+              case 0x3:
+                return new SubDImm(machInst, rd, rn, imm3, true);
+            }
+          case 0x4:
+            return new MovDImm(machInst, rd8, INTREG_ZERO, imm8, true);
+          case 0x5:
+            return new CmpDImmCc(machInst, INTREG_ZERO, rd8, imm8, true);
+          case 0x6:
+            return new AddDImm(machInst, rd8, rd8, imm8, true);
+          case 0x7:
+            return new SubDImm(machInst, rd8, rd8, imm8, true);
+        }
+    }
+    '''
+}};
+
+def format Thumb16DataProcessing() {{
+    decode_block = '''
+    {
+        const IntRegIndex rdn = (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
+        switch (bits(machInst, 9, 6)) {
+          case 0x0:
+            return new AndDReg(machInst, rdn, rdn, rm, 0, LSL);
+          case 0x1:
+            return new EorDReg(machInst, rdn, rdn, rm, 0, LSL);
+          case 0x2: //lsl
+            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, LSL);
+          case 0x3: //lsr
+            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, LSR);
+          case 0x4: //asr
+            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, ASR);
+          case 0x5:
+            return new AdcDReg(machInst, rdn, rdn, rm, 0, LSL);
+          case 0x6:
+            return new SbcDReg(machInst, rdn, rdn, rm, 0, LSL);
+          case 0x7: // ror
+            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, ROR);
+          case 0x8:
+            return new TstDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+          case 0x9:
+            return new RsbDImm(machInst, rdn, rm, 0, true);
+          case 0xa:
+            return new CmpDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+          case 0xb:
+            return new CmnDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+          case 0xc:
+            return new OrrDReg(machInst, rdn, rdn, rm, 0, LSL);
+          case 0xd:
+            //XXX Implement me!
+            return new WarnUnimplemented("mul", machInst);
+          case 0xe:
+            return new BicDReg(machInst, rdn, rdn, rm, 0, LSL);
+          case 0xf:
+            return new MvnDReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+        }
+    }
+    '''
+}};
+
+def format Thumb16SpecDataAndBx() {{
+    decode_block = '''
+    {
+        const IntRegIndex rdn =
+            (IntRegIndex)(uint32_t)(bits(machInst, 2, 0) |
+                                    (bits(machInst, 7) << 3));
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 6, 3);
+        switch (bits(machInst, 9, 8)) {
+          case 0x0:
+            return new AddDReg(machInst, rdn, rdn, rm, 0, LSL);
+          case 0x1:
+            return new CmpDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+          case 0x2:
+            return new MovDReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+          case 0x3:
+            if (bits(machInst, 7) == 0)
+                return new WarnUnimplemented("bx", machInst);
+            else
+                // The register version.
+                return new WarnUnimplemented("blx", machInst);
+        }
+    }
+    '''
+}};
+
+def format Thumb16Adr() {{
+    decode_block = '''
+    {
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
+        const uint32_t imm8 = bits(machInst, 7, 0) << 2;
+        return new AddDImm(machInst, rd, INTREG_PC, imm8, true);
+    }
+    '''
+}};
+
+def format Thumb16AddSp() {{
+    decode_block = '''
+    {
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
+        const uint32_t imm8 = bits(machInst, 7, 0) << 2;
+        return new AddDImm(machInst, rd, INTREG_SP, imm8, true);
+    }
+    '''
+}};
+
+def format Thumb16Misc() {{
+    decode_block = '''
+    {
+        switch (bits(machInst, 11, 8)) {
+          case 0x0:
+            if (bits(machInst, 7)) {
+                return new SubDImm(machInst, INTREG_SP, INTREG_SP,
+                                   bits(machInst, 6, 0) << 2, true);
+            } else {
+                return new AddDImm(machInst, INTREG_SP, INTREG_SP,
+                                   bits(machInst, 6, 0) << 2, true);
+            }
+          case 0x1:
+            return new WarnUnimplemented("cbz", machInst);
+          case 0x2:
+            switch (bits(machInst, 7, 6)) {
+              case 0x0:
+                return new WarnUnimplemented("sxth", machInst);
+              case 0x1:
+                return new WarnUnimplemented("sxtb", machInst);
+              case 0x2:
+                return new WarnUnimplemented("uxth", machInst);
+              case 0x3:
+                return new WarnUnimplemented("uxtb", machInst);
+            }
+          case 0x3:
+            return new WarnUnimplemented("cbnz", machInst);
+          case 0x4:
+          case 0x5:
+            return new WarnUnimplemented("push", machInst);
+          case 0x6:
+            {
+                const uint32_t opBits = bits(machInst, 7, 5);
+                if (opBits == 2) {
+                    return new WarnUnimplemented("setend", machInst);
+                } else if (opBits == 3) {
+                    return new WarnUnimplemented("cps", machInst);
+                }
+            }
+          case 0x9:
+            return new WarnUnimplemented("cbz", machInst);
+          case 0xa:
+            switch (bits(machInst, 7, 5)) {
+              case 0x0:
+                return new WarnUnimplemented("rev", machInst);
+              case 0x1:
+                return new WarnUnimplemented("rev16", machInst);
+              case 0x3:
+                return new WarnUnimplemented("revsh", machInst);
+              default:
+                break;
+            }
+            break;
+          case 0xb:
+            return new WarnUnimplemented("cbnz", machInst);
+          case 0xc:
+          case 0xd:
+            return new WarnUnimplemented("pop", machInst);
+          case 0xe:
+            return new WarnUnimplemented("bkpt", machInst);
+          case 0xf:
+            if (bits(machInst, 3, 0) != 0)
+                return new WarnUnimplemented("it", machInst);
+            switch (bits(machInst, 7, 4)) {
+              case 0x0:
+                return new WarnUnimplemented("nop", machInst);
+              case 0x1:
+                return new WarnUnimplemented("yield", machInst);
+              case 0x2:
+                return new WarnUnimplemented("wfe", machInst);
+              case 0x3:
+                return new WarnUnimplemented("wfi", machInst);
+              case 0x4:
+                return new WarnUnimplemented("sev", machInst);
+              default:
+                return new WarnUnimplemented("unallocated_hint", machInst);
+            }
+          default:
+            break;
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};
+
+def format Thumb32DataProcModImm() {{
+
+    def decInst(mnem, dest="rd", op1="rn"):
+        return '''
+            if (s) {
+                return new %(mnem)sDImmCc(machInst, %(dest)s,
+                                          %(op1)s, imm, true);
+            } else {
+                return new %(mnem)sDImm(machInst, %(dest)s,
+                                        %(op1)s, imm, true);
+            }
+        ''' % {"mnem" : mnem, "dest" : dest, "op1" : op1}
+
+    decode_block = '''
+    {
+        const uint32_t op = bits(machInst, 24, 21);
+        const bool s = (bits(machInst, 20) == 1);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const uint32_t ctrlImm = bits(machInst.instBits, 26) << 3 |
+                                 bits(machInst, 14, 12);
+        const uint32_t dataImm = bits(machInst, 7, 0);
+        const uint32_t imm = modified_imm(ctrlImm, dataImm);
+        switch (op) {
+          case 0x0:
+            if (rd == INTREG_PC) {
+                %(tst)s
+            } else {
+                %(and)s
+            }
+          case 0x1:
+            %(bic)s
+          case 0x2:
+            if (rn == INTREG_PC) {
+                %(mov)s
+            } else {
+                %(orr)s
+            }
+          case 0x3:
+            if (rn == INTREG_PC) {
+                %(mvn)s
+            } else {
+                %(orn)s
+            }
+          case 0x4:
+            if (rd == INTREG_PC) {
+                %(teq)s
+            } else {
+                %(eor)s
+            }
+          case 0x8:
+            if (rd == INTREG_PC) {
+                %(cmn)s
+            } else {
+                %(add)s
+            }
+          case 0xa:
+            %(adc)s
+          case 0xb:
+            %(sbc)s
+          case 0xd:
+            if (rd == INTREG_PC) {
+                %(cmp)s
+            } else {
+                %(sub)s
+            }
+          case 0xe:
+            %(rsb)s
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    ''' % {
+        "tst" : decInst("Tst", "INTREG_ZERO"),
+        "and" : decInst("And"),
+        "bic" : decInst("Bic"),
+        "mov" : decInst("Mov", op1="INTREG_ZERO"),
+        "orr" : decInst("Orr"),
+        "mvn" : decInst("Mvn", op1="INTREG_ZERO"),
+        "orn" : decInst("Orn"),
+        "teq" : decInst("Teq", dest="INTREG_ZERO"),
+        "eor" : decInst("Eor"),
+        "cmn" : decInst("Cmn", dest="INTREG_ZERO"),
+        "add" : decInst("Add"),
+        "adc" : decInst("Adc"),
+        "sbc" : decInst("Sbc"),
+        "cmp" : decInst("Cmp", dest="INTREG_ZERO"),
+        "sub" : decInst("Sub"),
+        "rsb" : decInst("Rsb")
+    }
+}};
+
+def format Thumb32DataProcShiftReg() {{
+
+    def decInst(mnem, dest="rd", op1="rn"):
+        return '''
+            if (s) {
+                return new %(mnem)sDRegCc(machInst, %(dest)s,
+                                          %(op1)s, rm, amt, type);
+            } else {
+                return new %(mnem)sDReg(machInst, %(dest)s,
+                                        %(op1)s, rm, amt, type);
+            }
+        ''' % {"mnem" : mnem, "dest" : dest, "op1" : op1}
+
+    decode_block = '''
+    {
+        const uint32_t op = bits(machInst, 24, 21);
+        const bool s = (bits(machInst, 20) == 1);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const uint32_t amt = (bits(machInst, 14, 12) << 2) |
+                              bits(machInst, 7, 6);
+        const ArmShiftType type = (ArmShiftType)(uint32_t)bits(machInst, 5, 4);
+        switch (op) {
+          case 0x0:
+            if (rd == INTREG_PC) {
+                %(tst)s
+            } else {
+                %(and)s
+            }
+          case 0x1:
+            %(bic)s
+          case 0x2:
+            if (rn == INTREG_PC) {
+                %(mov)s
+            } else {
+                %(orr)s
+            }
+          case 0x3:
+            if (rn == INTREG_PC) {
+                %(mvn)s
+            } else {
+                %(orn)s
+            }
+          case 0x4:
+            if (rd == INTREG_PC) {
+                %(teq)s
+            } else {
+                %(eor)s
+            }
+          case 0x6:
+            return new WarnUnimplemented("pkh", machInst);
+          case 0x8:
+            if (rd == INTREG_PC) {
+                %(cmn)s
+            } else {
+                %(add)s
+            }
+          case 0xa:
+            %(adc)s
+          case 0xb:
+            %(sbc)s
+          case 0xd:
+            if (rd == INTREG_PC) {
+                %(cmp)s
+            } else {
+                %(sub)s
+            }
+          case 0xe:
+            %(rsb)s
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    ''' % {
+        "tst" : decInst("Tst", "INTREG_ZERO"),
+        "and" : decInst("And"),
+        "bic" : decInst("Bic"),
+        "mov" : decInst("Mov", op1="INTREG_ZERO"),
+        "orr" : decInst("Orr"),
+        "mvn" : decInst("Mvn", op1="INTREG_ZERO"),
+        "orn" : decInst("Orn"),
+        "teq" : decInst("Teq", "INTREG_ZERO"),
+        "eor" : decInst("Eor"),
+        "cmn" : decInst("Cmn", "INTREG_ZERO"),
+        "add" : decInst("Add"),
+        "adc" : decInst("Adc"),
+        "sbc" : decInst("Sbc"),
+        "cmp" : decInst("Cmp", "INTREG_ZERO"),
+        "sub" : decInst("Sub"),
+        "rsb" : decInst("Rsb")
+    }
 }};
