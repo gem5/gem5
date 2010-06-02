@@ -238,6 +238,8 @@ namespace ArmISA
             if (misc_reg == MISCREG_CPSR) {
                 updateRegMap(val);
                 CPSR cpsr = val;
+                DPRINTF(Arm, "Updating CPSR to %#x f:%d i:%d a:%d mode:%#x\n",
+                        cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
                 Addr npc = tc->readNextPC() & ~PcModeMask;
                 if (cpsr.j)
                     npc = npc | (ULL(1) << PcJBitShift);
