@@ -78,6 +78,8 @@ namespace ArmISA
         MISCREG_FPSID,
         MISCREG_FPSCR,
         MISCREG_FPEXC,
+        MISCREG_MVFR0,
+        MISCREG_MVFR1,
 
         // CP15 registers
         MISCREG_CP15_START,
