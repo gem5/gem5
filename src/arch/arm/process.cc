@@ -57,7 +57,7 @@ ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile,
     brk_point = roundUp(brk_point, VMPageSize);
 
     // Set up region for mmaps. For now, start at bottom of kuseg space.
-    mmap_start = mmap_end = 0x70000000L;
+    mmap_start = mmap_end = 0x40000000L;
 }
 
 void
