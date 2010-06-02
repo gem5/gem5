@@ -1,5 +1,16 @@
 // -*- mode:c++ -*-
-
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
 // Copyright (c) 2007-2008 The Florida State University
 // All rights reserved.
 //
@@ -67,7 +78,7 @@ def operands {{
     'Rhi': ('IntReg', 'uw', 'INTREG_RHI', 'IsInteger', 7),
     'Rlo': ('IntReg', 'uw', 'INTREG_RLO', 'IsInteger', 8),
     'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 9),
-    'CondCodes': ('IntReg', 'uw', 'INTREG_CONDCODES', 'IsInteger', 10),
+    'CondCodes': ('IntReg', 'uw', 'INTREG_CONDCODES', None, 10),
 
     #Register fields for microops
     'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 11, maybePCRead, maybePCWrite),
@@ -81,12 +92,12 @@ def operands {{
     #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 30),
 
-    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', (None, None, 'IsControl'), 40),
-    'Spsr': ('ControlReg', 'uw', 'MISCREG_SPSR', (None, None, 'IsControl'), 41),
-    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', (None, None, 'IsControl'), 42),
-    'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', (None, None, 'IsControl'), 43),
-    'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', (None, None, 'IsControl'), 44),
-    'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', (None, None, 'IsControl'), 45),
+    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', None, 40),
+    'Spsr': ('ControlReg', 'uw', 'MISCREG_SPSR', None, 41),
+    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', None, 42),
+    'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', None, 43),
+    'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', None, 44),
+    'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 45),
     'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 50),
     'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 51)
 
