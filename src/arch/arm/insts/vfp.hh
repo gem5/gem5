@@ -175,16 +175,17 @@ bitsToFp(uint64_t bits, double junk)
 
 template <class fpType>
 static inline fpType
-fixNan(FPSCR fpscr, fpType val, fpType op1, fpType op2)
+fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
 {
-    if (std::isnan(val)) {
+    int fpClass = std::fpclassify(val);
+    fpType junk = 0.0;
+    if (fpClass == FP_NAN) {
         const bool single = (sizeof(val) == sizeof(float));
         const uint64_t qnan = single ? 0x7fc00000 : ULL(0x7ff8000000000000);
         const bool nan1 = std::isnan(op1);
         const bool nan2 = std::isnan(op2);
         const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
         const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
-        fpType junk = 0.0;
         if ((!nan1 && !nan2) || (fpscr.dn == 1)) {
             val = bitsToFp(qnan, junk);
         } else if (signal1) {
@@ -196,6 +197,11 @@ fixNan(FPSCR fpscr, fpType val, fpType op1, fpType op2)
         } else if (nan2) {
             val = op2;
         }
+    } else if (fpClass == FP_SUBNORMAL && fpscr.fz == 1) {
+        // Turn val into a zero with the correct sign;
+        uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
+        val = bitsToFp(fpToBits(val) & bitMask, junk);
+        feraiseexcept(FeUnderflow);
     }
     return val;
 }
