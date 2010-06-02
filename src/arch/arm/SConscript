@@ -55,6 +55,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/pred_inst.cc')
     Source('insts/static_inst.cc')
     Source('insts/vfp.cc')
+    Source('isa.cc')
     Source('miscregs.cc')
     Source('nativetrace.cc')
     Source('tlb.cc')

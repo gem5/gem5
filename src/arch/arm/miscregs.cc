@@ -35,8 +35,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Ali Saidi
  */
 
+#include "arch/arm/isa.hh"
 #include "arch/arm/miscregs.hh"
 #include "base/misc.hh"
 
