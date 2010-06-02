@@ -246,41 +246,7 @@ class MemoryReg : public Memory
           shiftAmt(_shiftAmt), shiftType(_shiftType), index(_index)
     {}
 
-    void
-    printOffset(std::ostream &os) const
-    {
-        if (!add)
-            os << "-";
-        printReg(os, index);
-        if (shiftType != LSL || shiftAmt != 0) {
-            switch (shiftType) {
-              case LSL:
-                ccprintf(os, " LSL #%d", shiftAmt);
-                break;
-              case LSR:
-                if (shiftAmt == 0) {
-                    ccprintf(os, " LSR #%d", 32);
-                } else {
-                    ccprintf(os, " LSR #%d", shiftAmt);
-                }
-                break;
-              case ASR:
-                if (shiftAmt == 0) {
-                    ccprintf(os, " ASR #%d", 32);
-                } else {
-                    ccprintf(os, " ASR #%d", shiftAmt);
-                }
-                break;
-              case ROR:
-                if (shiftAmt == 0) {
-                    ccprintf(os, " RRX");
-                } else {
-                    ccprintf(os, " ROR #%d", shiftAmt);
-                }
-                break;
-            }
-        }
-    }
+    void printOffset(std::ostream &os) const;
 };
 
 class MemoryDReg : public MemoryReg
