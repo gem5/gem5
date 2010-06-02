@@ -137,8 +137,7 @@
             }
         }
         0x6: decode TOPCODE_12_11 {
-            0x0: WarnUnimpl::stm(); // also stmia, stmea
-            0x1: WarnUnimpl::ldm(); // also ldmia, ldmea
+            0x0, 0x1: Thumb16MacroMem::thumb16MacroMem();
             default: decode TOPCODE_11_8 {
                 0xe: WarnUnimpl::undefined(); // permanently undefined
                 0xf: WarnUnimpl::svc(); // formerly swi

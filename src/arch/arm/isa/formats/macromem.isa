@@ -43,3 +43,16 @@ def format ArmMacroMem() {{
                       PSRUSER, WRITEBACK, LOADOP, machInst.regList);
     '''
 }};
+
+def format Thumb16MacroMem() {{
+    decode_block = '''
+    {
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
+        const bool load = (bits(machInst, 11) == 1);
+        const uint32_t regList = bits(machInst, 7, 0);
+        const bool writeback = (!load || bits(regList, rn) == 0);
+        return new LdmStm(machInst, rn, true, true, false,
+                          writeback, load, regList);
+    }
+    '''
+}};
