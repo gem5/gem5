@@ -271,7 +271,7 @@
                 0x2: decode LTOPCODE_4 {
                     0x0: decode LTCOPROC {
                         0xa, 0xb: decode OPCODE_23_20 {
-##include "vfpdecode.isa"
+##include "vfp.isa"
                         }
                         default: WarnUnimpl::cdp(); // cdp2
                     }

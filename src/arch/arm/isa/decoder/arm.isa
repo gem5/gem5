@@ -397,7 +397,7 @@ format DataOp {
         0: decode OPCODE_4 {
             0: decode CPNUM {
                 0xa, 0xb: decode OPCODE_23_20 {
-##include "vfpdecode.isa"
+##include "vfp.isa"
                 }
             } // CPNUM
             1: decode CPNUM { // 27-24=1110,4 ==1

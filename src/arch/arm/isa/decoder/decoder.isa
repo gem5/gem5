@@ -41,6 +41,6 @@
 // Authors: Gabe Black
 
 decode THUMB default Unknown::unknown() {
-##include "armdecode.isa"
-##include "thumbdecode.isa"
+##include "arm.isa"
+##include "thumb.isa"
 }
