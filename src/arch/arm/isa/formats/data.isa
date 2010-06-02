@@ -460,6 +460,266 @@ def format ArmSatAddSub() {{
     '''
 }};
 
+def format Thumb32DataProcReg() {{
+    decode_block = '''
+    {
+        const uint32_t op1 = bits(machInst, 23, 20);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const uint32_t op2 = bits(machInst, 7, 4);
+        if (bits(op1, 3) != 1) {
+            if (op2 == 0) {
+                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                switch (bits(op1, 2, 0)) {
+                  case 0x0:
+                    return new MovRegReg(machInst, rd,
+                            INTREG_ZERO, rn, rm, LSL);
+                  case 0x1:
+                    return new MovRegRegCc(machInst, rd,
+                            INTREG_ZERO, rn, rm, LSL);
+                  case 0x2:
+                    return new MovRegReg(machInst, rd,
+                            INTREG_ZERO, rn, rm, LSR);
+                  case 0x3:
+                    return new MovRegRegCc(machInst, rd,
+                            INTREG_ZERO, rn, rm, LSR);
+                  case 0x4:
+                    return new MovRegReg(machInst, rd,
+                            INTREG_ZERO, rn, rm, ASR);
+                  case 0x5:
+                    return new MovRegRegCc(machInst, rd,
+                            INTREG_ZERO, rn, rm, ASR);
+                  case 0x6:
+                    return new MovRegReg(machInst, rd,
+                            INTREG_ZERO, rn, rm, ROR);
+                  case 0x7:
+                    return new MovRegRegCc(machInst, rd,
+                            INTREG_ZERO, rn, rm, ROR);
+                }
+            }
+            switch (bits(op1, 2, 0)) {
+              case 0x0:
+                if (rn == 0xf) {
+                    return new WarnUnimplemented("sxth", machInst);
+                } else {
+                    return new WarnUnimplemented("sxtah", machInst);
+                }
+              case 0x1:
+                if (rn == 0xf) {
+                    return new WarnUnimplemented("uxth", machInst);
+                } else {
+                    return new WarnUnimplemented("uxtah", machInst);
+                }
+              case 0x2:
+                if (rn == 0xf) {
+                    return new WarnUnimplemented("sxtb16", machInst);
+                } else {
+                    return new WarnUnimplemented("sxtab16", machInst);
+                }
+              case 0x3:
+                if (rn == 0xf) {
+                    return new WarnUnimplemented("uxtb16", machInst);
+                } else {
+                    return new WarnUnimplemented("uxtab16", machInst);
+                }
+              case 0x4:
+                if (rn == 0xf) {
+                    return new WarnUnimplemented("sxtb", machInst);
+                } else {
+                    return new WarnUnimplemented("sxtab", machInst);
+                }
+              case 0x5:
+                if (rn == 0xf) {
+                    return new WarnUnimplemented("uxtb", machInst);
+                } else {
+                    return new WarnUnimplemented("uxtab", machInst);
+                }
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            if (bits(op2, 3) == 0) {
+                if (bits(op2, 2) == 0x0) {
+                    const uint32_t op1 = bits(machInst, 22, 20);
+                    const uint32_t op2 = bits(machInst, 5, 4);
+                    switch (op2) {
+                      case 0x0:
+                        switch (op1) {
+                          case 0x1:
+                            return new WarnUnimplemented("sadd16", machInst);
+                          case 0x2:
+                            return new WarnUnimplemented("sasx", machInst);
+                          case 0x6:
+                            return new WarnUnimplemented("ssax", machInst);
+                          case 0x5:
+                            return new WarnUnimplemented("ssub16", machInst);
+                          case 0x0:
+                            return new WarnUnimplemented("sadd8", machInst);
+                          case 0x4:
+                            return new WarnUnimplemented("ssub8", machInst);
+                        }
+                        break;
+                      case 0x1:
+                        {
+                            IntRegIndex rn =
+                                (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                            IntRegIndex rd =
+                                (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                            IntRegIndex rm =
+                                (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                            switch (op1) {
+                              case 0x1:
+                                return new Qadd16Reg(machInst, rd,
+                                                     rn, rm, 0, LSL);
+                              case 0x2:
+                                return new QasxReg(machInst, rd,
+                                                   rn, rm, 0, LSL);
+                              case 0x6:
+                                return new QsaxReg(machInst, rd,
+                                                   rn, rm, 0, LSL);
+                              case 0x5:
+                                return new Qsub16Reg(machInst, rd,
+                                                     rn, rm, 0, LSL);
+                              case 0x0:
+                                return new Qsub8Reg(machInst, rd,
+                                                    rn, rm, 0, LSL);
+                              case 0x4:
+                                return new Qsub8Reg(machInst, rd,
+                                                    rn, rm, 0, LSL);
+                            }
+                        }
+                        break;
+                      case 0x2:
+                        switch (op1) {
+                          case 0x1:
+                            return new WarnUnimplemented("shadd16", machInst);
+                          case 0x2:
+                            return new WarnUnimplemented("shasx", machInst);
+                          case 0x6:
+                            return new WarnUnimplemented("shsax", machInst);
+                          case 0x5:
+                            return new WarnUnimplemented("shsub16", machInst);
+                          case 0x0:
+                            return new WarnUnimplemented("shadd8", machInst);
+                          case 0x4:
+                            return new WarnUnimplemented("shsub8", machInst);
+                        }
+                        break;
+                    }
+                } else {
+                    const uint32_t op1 = bits(machInst, 22, 20);
+                    const uint32_t op2 = bits(machInst, 5, 4);
+                    switch (op2) {
+                      case 0x0:
+                        switch (op1) {
+                          case 0x1:
+                            return new WarnUnimplemented("uadd16", machInst);
+                          case 0x2:
+                            return new WarnUnimplemented("uasx", machInst);
+                          case 0x6:
+                            return new WarnUnimplemented("usax", machInst);
+                          case 0x5:
+                            return new WarnUnimplemented("usub16", machInst);
+                          case 0x0:
+                            return new WarnUnimplemented("uadd8", machInst);
+                          case 0x4:
+                            return new WarnUnimplemented("usub8", machInst);
+                        }
+                        break;
+                      case 0x1:
+                        switch (op1) {
+                          case 0x1:
+                            return new WarnUnimplemented("uqadd16", machInst);
+                          case 0x2:
+                            return new WarnUnimplemented("uqasx", machInst);
+                          case 0x6:
+                            return new WarnUnimplemented("uqsax", machInst);
+                          case 0x5:
+                            return new WarnUnimplemented("uqsub16", machInst);
+                          case 0x0:
+                            return new WarnUnimplemented("uqadd8", machInst);
+                          case 0x4:
+                            return new WarnUnimplemented("uqsub8", machInst);
+                        }
+                        break;
+                      case 0x2:
+                        switch (op1) {
+                          case 0x1:
+                            return new WarnUnimplemented("uhadd16", machInst);
+                          case 0x2:
+                            return new WarnUnimplemented("uhasx", machInst);
+                          case 0x6:
+                            return new WarnUnimplemented("uhsax", machInst);
+                          case 0x5:
+                            return new WarnUnimplemented("uhsub16", machInst);
+                          case 0x0:
+                            return new WarnUnimplemented("uhadd8", machInst);
+                          case 0x4:
+                            return new WarnUnimplemented("uhsub8", machInst);
+                        }
+                        break;
+                    }
+                }
+            } else if (bits(op1, 3, 2) == 0x2 && bits(op2, 3, 2) == 0x2) {
+                const uint32_t op1 = bits(machInst, 21, 20);
+                const uint32_t op2 = bits(machInst, 5, 4);
+                switch (op1) {
+                  case 0x0:
+                    {
+                        IntRegIndex rd =
+                            (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                        IntRegIndex rm =
+                            (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                        switch (op2) {
+                          case 0x0:
+                            return new QaddRegCc(machInst, rd,
+                                                 rm, rn, 0, LSL);
+                          case 0x1:
+                            return new QdaddRegCc(machInst, rd,
+                                                  rm, rn, 0, LSL);
+                          case 0x2:
+                            return new QsubRegCc(machInst, rd,
+                                                 rm, rn, 0, LSL);
+                          case 0x3:
+                            return new QdsubRegCc(machInst, rd,
+                                                  rm, rn, 0, LSL);
+                        }
+                    }
+                    break;
+                  case 0x1:
+                    {
+                        IntRegIndex rd =
+                            (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                        IntRegIndex rm = rn;
+                        switch (op2) {
+                          case 0x0:
+                            return new Rev(machInst, rd, rm);
+                          case 0x1:
+                            return new Rev16(machInst, rd, rm);
+                          case 0x2:
+                            return new WarnUnimplemented("rbit", machInst);
+                          case 0x3:
+                            return new Revsh(machInst, rd, rm);
+                        }
+                    }
+                    break;
+                  case 0x2:
+                    if (op2 == 0) {
+                        return new WarnUnimplemented("sel", machInst);
+                    }
+                    break;
+                  case 0x3:
+                    if (op2 == 0) {
+                        return new WarnUnimplemented("clz", machInst);
+                    }
+                }
+            }
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
+
 def format Thumb16ShiftAddSubMoveCmp() {{
     decode_block = '''
     {

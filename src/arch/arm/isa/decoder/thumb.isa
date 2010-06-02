@@ -179,7 +179,7 @@
             0x1: decode HTOPCODE_8_7 {
                 0x2: Thumb32MulMulAccAndAbsDiff::thumb32MulMulAccAndAbsDiff();
                 0x3: Thumb32LongMulMulAccAndDiv::thumb32LongMulMulAccAndDiv();
-                default: WarnUnimpl::Data_processing_register();
+                default: Thumb32DataProcReg::thumb32DataProcReg();
             }
             default: decode HTOPCODE_9_8 {
                 0x2: decode LTOPCODE_4 {
