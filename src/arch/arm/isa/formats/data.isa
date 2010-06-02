@@ -61,10 +61,12 @@ def format ArmMiscMedia() {{
                 return new Sbfx(machInst, ra, rn, lsb, msb);
             }
         } else if (bits(op2, 1, 0) == 0x0 && bits(op1, 2, 1) == 0x2) {
+            const uint32_t lsb = bits(machInst, 11, 7);
+            const uint32_t msb = bits(machInst, 20, 16);
             if (rn == 0xf) {
-                return new WarnUnimplemented("bfc", machInst);
+                return new Bfc(machInst, ra, ra, lsb, msb);
             } else {
-                return new WarnUnimplemented("bfi", machInst);
+                return new Bfi(machInst, ra, rn, lsb, msb);
             }
         }
         return new Unknown(machInst);
@@ -1247,10 +1249,15 @@ def format Thumb32DataProcPlainBin() {{
                 return new Sbfx(machInst, rd, rn, lsb, msb);
             }
           case 0x16:
-            if (rn == 0xf) {
-                return new WarnUnimplemented("bfc", machInst);
-            } else {
-                return new WarnUnimplemented("bfi", machInst);
+            {
+                const uint32_t lsb = bits(machInst, 7, 6) |
+                                     (bits(machInst, 14, 12) << 2);
+                const uint32_t msb = bits(machInst, 4, 0);
+                if (rn == 0xf) {
+                    return new Bfc(machInst, rd, rd, lsb, msb);
+                } else {
+                    return new Bfi(machInst, rd, rn, lsb, msb);
+                }
             }
           case 0x1a:
             if (!(bits(machInst, 14, 12) || bits(machInst, 7, 6))) {
