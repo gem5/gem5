@@ -177,7 +177,7 @@ let {{
     clzCode = '''
         Dest = (Op1 == 0) ? 32 : (31 - findMsbSet(Op1));
     '''
-    clzIop = InstObjParams("clz", "ClzInst", "RevOp",
+    clzIop = InstObjParams("clz", "Clz", "RevOp",
                            { "code": clzCode,
                              "predicate_test": predicateTest }, [])
     header_output += RevOpDeclare.subst(clzIop)

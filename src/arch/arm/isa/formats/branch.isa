@@ -71,10 +71,20 @@ def format ArmBlBlxImm() {{
     '''
 }};
 
-def format ArmBx() {{
+def format ArmBxClz() {{
     decode_block = '''
-        return new BxReg(machInst, (IntRegIndex)(uint32_t)bits(machInst, 3, 0),
-                         (ConditionCode)(uint32_t)machInst.condCode);
+    {
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        if (OPCODE == 0x9) {
+            return new BxReg(machInst, rm,
+                    (ConditionCode)(uint32_t)machInst.condCode);
+        } else if (OPCODE == 0xb) {
+            return new Clz(machInst, rd, rm);
+        } else {
+            return new Unknown(machInst);
+        }
+    }
     '''
 }};
 

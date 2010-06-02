@@ -67,12 +67,7 @@ format DataOp {
             1: decode OPCODE_7 {
                 0x0: decode MISC_OPCODE {
                     0x0: ArmMsrMrs::armMsrMrs();
-                    0x1: decode OPCODE {
-                        0x9: ArmBx::armBx();
-                        0xb: PredOp::clz({{
-                            Rd = ((Rm == 0) ? 32 : (31 - findMsbSet(Rm)));
-                        }});
-                    }
+                    0x1: ArmBxClz::armBxClz();
                     0x2: decode OPCODE {
                         0x9: WarnUnimpl::bxj();
                     }
