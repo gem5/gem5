@@ -68,7 +68,12 @@ class TableWalker : public MemObject
             Reserved
         };
 
+        /** The raw bits of the entry */
         uint32_t data;
+
+        /** This entry has been modified (access flag set) and needs to be
+         * written back to memory */
+        bool _dirty;
 
         EntryType type() const
         {
@@ -127,18 +132,47 @@ class TableWalker : public MemObject
             return mbits(data, 31,10);
         }
 
-        /** Memory region attributes: ARM DDI 0406B: B3-32 */
+        /** Memory region attributes: ARM DDI 0406B: B3-32.
+         * These bits are largly ignored by M5 and only used to
+         * provide the illusion that the memory system cares about
+         * anything but cachable vs. uncachable.
+         */
         uint8_t texcb() const
         {
             return bits(data, 2) | bits(data,3) << 1 | bits(data, 14, 12) << 2;
         }
 
+        /** If the section is shareable. See texcb() comment. */
+        bool shareable() const
+        {
+            return bits(data, 16);
+        }
+
+        /** Set access flag that this entry has been touched. Mark
+         * the entry as requiring a writeback, in the future.
+         */
+        void setAp0()
+        {
+            data |= 1 << 10;
+            _dirty = true;
+        }
+
+        /** This entry needs to be written back to memory */
+        bool dirty() const
+        {
+            return _dirty;
+        }
     };
 
     /** Level 2 page table descriptor */
     struct L2Descriptor {
 
+        /** The raw bits of the entry. */
         uint32_t data;
+
+        /** This entry has been modified (access flag set) and needs to be
+         * written back to memory */
+        bool _dirty;
 
         /** Is the entry invalid */
         bool invalid() const
@@ -182,6 +216,27 @@ class TableWalker : public MemObject
         Addr pfn() const
         {
             return large() ? bits(data, 31, 16) : bits(data, 31, 12);
+        }
+
+        /** If the section is shareable. See texcb() comment. */
+        bool shareable() const
+        {
+            return bits(data, 10);
+        }
+
+        /** Set access flag that this entry has been touched. Mark
+         * the entry as requiring a writeback, in the future.
+         */
+        void setAp0()
+        {
+            data |= 1 << 4;
+            _dirty = true;
+        }
+
+        /** This entry needs to be written back to memory */
+        bool dirty() const
+        {
+            return _dirty;
         }
 
     };
@@ -252,9 +307,9 @@ class TableWalker : public MemObject
             TLB::Translation *_trans, bool timing);
 
     void setTlb(TLB *_tlb) { tlb = _tlb; }
+    void memAttrs(TlbEntry &te, uint8_t texcb, bool s);
 
   private:
-    void memAttrs(TlbEntry &te, uint8_t texcb);
 
     void doL1Descriptor();
     EventWrapper<TableWalker, &TableWalker::doL1Descriptor> doL1DescEvent;

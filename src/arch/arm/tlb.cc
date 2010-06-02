@@ -384,6 +384,16 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             if (nmrr.ir0 == 0 || nmrr.or0 == 0 || prrr.tr0 != 0x2)
                req->setFlags(Request::UNCACHEABLE);
         }
+
+        // Set memory attributes
+        TlbEntry temp_te;
+        tableWalker->memAttrs(temp_te, 0, 1);
+        temp_te.shareable = true;
+        DPRINTF(TLBVerbose, "(No MMU) setting memory attributes: shareable:\
+                %d, innerAttrs: %d, outerAttrs: %d\n", temp_te.shareable,
+                temp_te.innerAttrs, temp_te.outerAttrs);
+        setAttr(temp_te.attributes);
+
         return trickBoxCheck(req, mode, 0, false);
     }
 
@@ -408,6 +418,13 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             printTlb();
         assert(te);
     }
+
+    // Set memory attributes
+    DPRINTF(TLBVerbose,
+            "Setting memory attributes: shareable: %d, innerAttrs: %d, \
+            outerAttrs: %d\n",
+            te->shareable, te->innerAttrs, te->outerAttrs);
+    setAttr(te->attributes);
 
     uint32_t dacr = tc->readMiscReg(MISCREG_DACR);
     switch ( (dacr >> (te->domain * 2)) & 0x3) {

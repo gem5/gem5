@@ -96,8 +96,8 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode m
     contextId = _cid;
     timing = _timing;
 
-    // XXX These should be cached or grabbed from cached copies in
-    // the TLB, all these miscreg reads are expensive
+    /** @todo These should be cached or grabbed from cached copies in
+     the TLB, all these miscreg reads are expensive */
     vaddr = req->getVaddr() & ~PcModeMask;
     sctlr = tc->readMiscReg(MISCREG_SCTLR);
     cpsr = tc->readMiscReg(MISCREG_CPSR);
@@ -149,58 +149,224 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode m
 }
 
 void
-TableWalker::memAttrs(TlbEntry &te, uint8_t texcb)
+TableWalker::memAttrs(TlbEntry &te, uint8_t texcb, bool s)
 {
-
+    DPRINTF(TLBVerbose, "memAttrs texcb:%d s:%d\n", texcb, s);
+    te.shareable = false; // default value
+    bool outer_shareable = false;
     if (sctlr.tre == 0) {
         switch(texcb) {
-          case 0:
-          case 1:
-          case 4:
-          case 8:
+          case 0: // Stongly-ordered
             te.nonCacheable = true;
+            te.mtype = TlbEntry::StronglyOrdered;
+            te.shareable = true;
+            te.innerAttrs = 1;
+            te.outerAttrs = 0;
             break;
-          case 16:
+          case 1: // Shareable Device
+            te.nonCacheable = true;
+            te.mtype = TlbEntry::Device;
+            te.shareable = true;
+            te.innerAttrs = 3;
+            te.outerAttrs = 0;
+            break;
+          case 2: // Outer and Inner Write-Through, no Write-Allocate
+            te.mtype = TlbEntry::Normal;
+            te.shareable = s;
+            te.innerAttrs = 6;
+            te.outerAttrs = bits(texcb, 1, 0);
+            break;
+          case 3: // Outer and Inner Write-Back, no Write-Allocate
+            te.mtype = TlbEntry::Normal;
+            te.shareable = s;
+            te.innerAttrs = 7;
+            te.outerAttrs = bits(texcb, 1, 0);
+            break;
+          case 4: // Outer and Inner Non-cacheable
+            te.nonCacheable = true;
+            te.mtype = TlbEntry::Normal;
+            te.shareable = s;
+            te.innerAttrs = 0;
+            te.outerAttrs = bits(texcb, 1, 0);
+            break;
+          case 5: // Reserved
+            break;
+          case 6: // Implementation Defined
+            break;
+          case 7: // Outer and Inner Write-Back, Write-Allocate
+            te.mtype = TlbEntry::Normal;
+            te.shareable = s;
+            te.innerAttrs = 5;
+            te.outerAttrs = 1;
+            break;
+          case 8: // Non-shareable Device
+            te.nonCacheable = true;
+            te.mtype = TlbEntry::Device;
+            te.shareable = false;
+            te.innerAttrs = 3;
+            te.outerAttrs = 0;
+            break;
+          case 9 ... 15:  // Reserved
+            break;
+          case 16 ... 31: // Cacheable Memory
+            te.mtype = TlbEntry::Normal;
+            te.shareable = s;
             if (bits(texcb, 1,0) == 0 || bits(texcb, 3,2) == 0)
                 te.nonCacheable = true;
+            te.innerAttrs = bits(texcb, 1, 0);
+            te.outerAttrs = bits(texcb, 3, 2);
             break;
+          default:
+            panic("More than 32 states for 5 bits?\n");
         }
     } else {
         PRRR prrr = tc->readMiscReg(MISCREG_PRRR);
         NMRR nmrr = tc->readMiscReg(MISCREG_NMRR);
+        DPRINTF(TLBVerbose, "memAttrs PRRR:%08x NMRR:%08x\n", prrr, nmrr);
+        uint8_t curr_tr, curr_ir, curr_or;
         switch(bits(texcb, 2,0)) {
           case 0:
-            if (nmrr.ir0 == 0 || nmrr.or0 == 0 || prrr.tr0 != 0x2)
-                te.nonCacheable = true;
+            curr_tr = prrr.tr0;
+            curr_ir = nmrr.ir0;
+            curr_or = nmrr.or0;
+            outer_shareable = (prrr.nos0 == 0);
             break;
           case 1:
-            if (nmrr.ir1 == 0 || nmrr.or1 == 0 || prrr.tr1 != 0x2)
-                te.nonCacheable = true;
+            curr_tr = prrr.tr1;
+            curr_ir = nmrr.ir1;
+            curr_or = nmrr.or1;
+            outer_shareable = (prrr.nos1 == 0);
             break;
           case 2:
-            if (nmrr.ir2 == 0 || nmrr.or2 == 0 || prrr.tr2 != 0x2)
-                te.nonCacheable = true;
+            curr_tr = prrr.tr2;
+            curr_ir = nmrr.ir2;
+            curr_or = nmrr.or2;
+            outer_shareable = (prrr.nos2 == 0);
             break;
           case 3:
-            if (nmrr.ir3 == 0 || nmrr.or3 == 0 || prrr.tr3 != 0x2)
-                te.nonCacheable = true;
+            curr_tr = prrr.tr3;
+            curr_ir = nmrr.ir3;
+            curr_or = nmrr.or3;
+            outer_shareable = (prrr.nos3 == 0);
             break;
           case 4:
-            if (nmrr.ir4 == 0 || nmrr.or4 == 0 || prrr.tr4 != 0x2)
-                te.nonCacheable = true;
+            curr_tr = prrr.tr4;
+            curr_ir = nmrr.ir4;
+            curr_or = nmrr.or4;
+            outer_shareable = (prrr.nos4 == 0);
             break;
           case 5:
-            if (nmrr.ir5 == 0 || nmrr.or5 == 0 || prrr.tr5 != 0x2)
-                te.nonCacheable = true;
+            curr_tr = prrr.tr5;
+            curr_ir = nmrr.ir5;
+            curr_or = nmrr.or5;
+            outer_shareable = (prrr.nos5 == 0);
             break;
           case 6:
             panic("Imp defined type\n");
           case 7:
-            if (nmrr.ir7 == 0 || nmrr.or7 == 0 || prrr.tr7 != 0x2)
-                te.nonCacheable = true;
+            curr_tr = prrr.tr7;
+            curr_ir = nmrr.ir7;
+            curr_or = nmrr.or7;
+            outer_shareable = (prrr.nos7 == 0);
             break;
         }
+
+        switch(curr_tr) {
+          case 0:
+            DPRINTF(TLBVerbose, "StronglyOrdered\n");
+            te.mtype = TlbEntry::StronglyOrdered;
+            te.nonCacheable = true;
+            te.innerAttrs = 1;
+            te.outerAttrs = 0;
+            te.shareable = true;
+            break;
+          case 1:
+            DPRINTF(TLBVerbose, "Device ds1:%d ds0:%d s:%d\n",
+                    prrr.ds1, prrr.ds0, s);
+            te.mtype = TlbEntry::Device;
+            te.nonCacheable = true;
+            te.innerAttrs = 3;
+            te.outerAttrs = 0;
+            if (prrr.ds1 && s)
+                te.shareable = true;
+            if (prrr.ds0 && !s)
+                te.shareable = true;
+            break;
+          case 2:
+            DPRINTF(TLBVerbose, "Normal ns1:%d ns0:%d s:%d\n",
+                    prrr.ns1, prrr.ns0, s);
+            te.mtype = TlbEntry::Normal;
+            if (prrr.ns1 && s)
+                te.shareable = true;
+            if (prrr.ns0 && !s)
+                te.shareable = true;
+            //te.shareable = outer_shareable;
+            break;
+          case 3:
+            panic("Reserved type");
+        }
+
+        if (te.mtype == TlbEntry::Normal){
+            switch(curr_ir) {
+              case 0:
+                te.nonCacheable = true;
+                te.innerAttrs = 0;
+                break;
+              case 1:
+                te.innerAttrs = 5;
+                break;
+              case 2:
+                te.innerAttrs = 6;
+                break;
+              case 3:
+                te.innerAttrs = 7;
+                break;
+            }
+
+            switch(curr_or) {
+              case 0:
+                te.nonCacheable = true;
+                te.outerAttrs = 0;
+                break;
+              case 1:
+                te.outerAttrs = 1;
+                break;
+              case 2:
+                te.outerAttrs = 2;
+                break;
+              case 3:
+                te.outerAttrs = 3;
+                break;
+            }
+        }
     }
+
+    /** Formatting for Physical Address Register (PAR)
+     *  Only including lower bits (TLB info here)
+     *  PAR:
+     *  PA [31:12]
+     *  Reserved [11]
+     *  TLB info [10:1]
+     *      NOS  [10] (Not Outer Sharable)
+     *      NS   [9]  (Non-Secure)
+     *      --   [8]  (Implementation Defined)
+     *      SH   [7]  (Sharable)
+     *      Inner[6:4](Inner memory attributes)
+     *      Outer[3:2](Outer memory attributes)
+     *      SS   [1]  (SuperSection)
+     *      F    [0]  (Fault, Fault Status in [6:1] if faulted)
+     */
+    te.attributes = (
+                ((outer_shareable ? 0:1) << 10) |
+                // TODO: NS Bit
+                ((te.shareable ? 1:0) << 7) |
+                (te.innerAttrs << 4) |
+                (te.outerAttrs << 2)
+                // TODO: Supersection bit
+                // TODO: Fault bit
+                );
+
+
 }
 
 void
@@ -218,11 +384,19 @@ TableWalker::doL1Descriptor()
         if (isFetch)
             fault = new PrefetchAbort(vaddr, ArmFault::Translation0);
         else
-            fault = new DataAbort(vaddr, NULL, isWrite, ArmFault::Translation0);
+            fault = new DataAbort(vaddr, NULL, isWrite,
+                                  ArmFault::Translation0);
         return;
       case L1Descriptor::Section:
-        if (sctlr.afe && bits(l1Desc.ap(), 0) == 0)
-            panic("Haven't implemented AFE\n");
+        if (sctlr.afe && bits(l1Desc.ap(), 0) == 0) {
+            /** @todo: check sctlr.ha (bit[17]) if Hardware Access Flag is
+              * enabled if set, do l1.Desc.setAp0() instead of generating
+              * AccessFlag0
+              */
+
+            fault = new DataAbort(vaddr, NULL, isWrite,
+                                    ArmFault::AccessFlag0);
+        }
 
         if (l1Desc.supersection()) {
             panic("Haven't implemented supersections\n");
@@ -238,7 +412,7 @@ TableWalker::doL1Descriptor()
         te.ap =  l1Desc.ap();
         te.domain = l1Desc.domain();
         te.asid = contextId;
-        memAttrs(te, l1Desc.texcb());
+        memAttrs(te, l1Desc.texcb(), l1Desc.shareable());
 
         DPRINTF(TLB, "Inserting Section Descriptor into TLB\n");
         DPRINTF(TLB, " - N%d pfn:%#x size: %#x global:%d valid: %d\n",
@@ -256,7 +430,8 @@ TableWalker::doL1Descriptor()
       case L1Descriptor::PageTable:
         Addr l2desc_addr;
         l2desc_addr = l1Desc.l2Addr() | (bits(vaddr, 19,12) << 2);
-        DPRINTF(TLB, "L1 descriptor points to page table at: %#x\n", l2desc_addr);
+        DPRINTF(TLB, "L1 descriptor points to page table at: %#x\n",
+                l2desc_addr);
 
         // Trickbox address check
         fault = tlb->walkTrickBoxCheck(l2desc_addr, vaddr, sizeof(uint32_t),
@@ -288,9 +463,6 @@ TableWalker::doL2Descriptor()
     DPRINTF(TLB, "L2 descriptor for %#x is %#x\n", vaddr, l2Desc.data);
     TlbEntry te;
 
-    if (sctlr.afe && bits(l1Desc.ap(), 0) == 0)
-        panic("Haven't implemented AFE\n");
-
     if (l2Desc.invalid()) {
         DPRINTF(TLB, "L2 descriptor invalid, causing fault\n");
         tc = NULL;
@@ -298,8 +470,17 @@ TableWalker::doL2Descriptor()
         if (isFetch)
             fault = new PrefetchAbort(vaddr, ArmFault::Translation1);
         else
-            fault = new DataAbort(vaddr, l1Desc.domain(), isWrite, ArmFault::Translation1);
+            fault = new DataAbort(vaddr, l1Desc.domain(), isWrite,
+                                    ArmFault::Translation1);
         return;
+    }
+
+    if (sctlr.afe && bits(l2Desc.ap(), 0) == 0) {
+        /** @todo: check sctlr.ha (bit[17]) if Hardware Access Flag is enabled
+          * if set, do l2.Desc.setAp0() instead of generating AccessFlag0
+          */
+
+        fault = new DataAbort(vaddr, NULL, isWrite, ArmFault::AccessFlag1);
     }
 
     if (l2Desc.large()) {
@@ -319,7 +500,7 @@ TableWalker::doL2Descriptor()
     te.xn = l2Desc.xn();
     te.ap = l2Desc.ap();
     te.domain = l1Desc.domain();
-    memAttrs(te, l2Desc.texcb());
+    memAttrs(te, l2Desc.texcb(), l2Desc.shareable());
 
     tc = NULL;
     req = NULL;

@@ -133,6 +133,14 @@ struct TlbEntry
     bool nonCacheable;     // Can we wrap this in mtype?
     bool sNp;      // Section descriptor
 
+    // Memory Attributes
+    MemoryType mtype;
+    uint8_t innerAttrs;
+    uint8_t outerAttrs;
+    bool shareable;
+    uint32_t attributes;    // Memory attributes formatted for PAR
+
+
     // Access permissions
     bool xn;                // Execute Never
     uint8_t ap:3;           // Access permissions bits

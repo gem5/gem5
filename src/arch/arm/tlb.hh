@@ -88,6 +88,8 @@ class TLB : public BaseTLB
     int size;			// TLB Size
     int nlu;			// not last used entry (for replacement)
 
+    uint32_t _attr;      // Memory attributes for last accessed TLB entry
+
 #if FULL_SYSTEM
     TableWalker *tableWalker;
 #endif
@@ -150,6 +152,19 @@ class TLB : public BaseTLB
     }
 
     static bool validVirtualAddress(Addr vaddr);
+
+    /** Accessor functions for memory attributes for last accessed TLB entry
+     */
+    void
+    setAttr(uint32_t attr)
+    {
+        _attr = attr;
+    }
+    uint32_t
+    getAttr() const
+    {
+        return _attr;
+    }
 
 #if FULL_SYSTEM
     Fault translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
