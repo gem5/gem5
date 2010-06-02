@@ -60,6 +60,23 @@ class ArmStaticInst : public StaticInst
     bool shift_carry_rs(uint32_t base, uint32_t shamt,
                         uint32_t type, uint32_t cfval) const;
 
+    template<int width>
+    static bool
+    saturateOp(int32_t &res, int64_t op1, int64_t op2, bool sub=false)
+    {
+        int64_t midRes = sub ? (op1 - op2) : (op1 + op2);
+        if (bits(midRes, width) != bits(midRes, width - 1)) {
+            if (midRes > 0)
+                res = (1LL << (width - 1)) - 1;
+            else
+                res = -(1LL << (width - 1));
+            return true;
+        } else {
+            res = midRes;
+            return false;
+        }
+    }
+
     // Constructor
     ArmStaticInst(const char *mnem, ExtMachInst _machInst,
                   OpClass __opClass)
