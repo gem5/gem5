@@ -346,14 +346,20 @@ ArmStaticInstBase::printMemSymbol(std::ostream &os,
 }
 
 void
-ArmStaticInstBase::printShiftOperand(std::ostream &os) const
+ArmStaticInstBase::printShiftOperand(std::ostream &os,
+                                     IntRegIndex rm,
+                                     bool immShift,
+                                     uint32_t shiftAmt,
+                                     IntRegIndex rs,
+                                     ArmShiftType type) const
 {
-    printReg(os, machInst.rm);
+    bool firstOp = false;
 
-    bool immShift = (machInst.opcode4 == 0);
+    if (rm != INTREG_ZERO) {
+        printReg(os, rm);
+    }
+
     bool done = false;
-    unsigned shiftAmt = (machInst.shiftSize);
-    ArmShiftType type = (ArmShiftType)(uint32_t)machInst.shift;
 
     if ((type == LSR || type == ASR) && immShift && shiftAmt == 0)
         shiftAmt = 32;
@@ -364,66 +370,74 @@ ArmStaticInstBase::printShiftOperand(std::ostream &os) const
             done = true;
             break;
         }
-        os << ", LSL";
+        if (!firstOp)
+            os << ", ";
+        os << "LSL";
         break;
       case LSR:
-        os << ", LSR";
+        if (!firstOp)
+            os << ", ";
+        os << "LSR";
         break;
       case ASR:
-        os << ", ASR";
+        if (!firstOp)
+            os << ", ";
+        os << "ASR";
         break;
       case ROR:
         if (immShift && shiftAmt == 0) {
-            os << ", RRX";
+            if (!firstOp)
+                os << ", ";
+            os << "RRX";
             done = true;
             break;
         }
-        os << ", ROR";
+        if (!firstOp)
+            os << ", ";
+        os << "ROR";
         break;
       default:
         panic("Tried to disassemble unrecognized shift type.\n");
     }
     if (!done) {
-        os << " ";
+        if (!firstOp)
+            os << " ";
         if (immShift)
             os << "#" << shiftAmt;
         else
-            printReg(os, machInst.rs);
+            printReg(os, rs);
     }
 }
 
 void
-ArmStaticInstBase::printDataInst(std::ostream &os, bool withImm) const
+ArmStaticInstBase::printDataInst(std::ostream &os, bool withImm,
+        bool immShift, bool s, IntRegIndex rd, IntRegIndex rn,
+        IntRegIndex rm, IntRegIndex rs, uint32_t shiftAmt,
+        ArmShiftType type, uint32_t imm) const
 {
-    printMnemonic(os, machInst.sField ? "s" : "");
-    //XXX It would be nice if the decoder figured this all out for us.
-    unsigned opcode = machInst.opcode;
+    printMnemonic(os, s ? "s" : "");
     bool firstOp = true;
 
     // Destination
-    // Cmp, cmn, teq, and tst don't have one.
-    if (opcode < 8 || opcode > 0xb) {
+    if (rd != INTREG_ZERO) {
         firstOp = false;
-        printReg(os, machInst.rd);
+        printReg(os, rd);
     }
 
     // Source 1.
-    // Mov and Movn don't have one of these.
-    if (opcode != 0xd && opcode != 0xf) {
+    if (rn != INTREG_ZERO) {
         if (!firstOp)
             os << ", ";
         firstOp = false;
-        printReg(os, machInst.rn);
+        printReg(os, rn);
     }
 
     if (!firstOp)
         os << ", ";
     if (withImm) {
-        unsigned rotate = machInst.rotate * 2;
-        uint32_t imm = machInst.imm;
-        ccprintf(os, "#%#x", (imm << (32 - rotate)) | (imm >> rotate));
+        ccprintf(os, "#%d", imm);
     } else {
-        printShiftOperand(os);
+        printShiftOperand(os, rm, immShift, shiftAmt, rs, type);
     }
 }
 

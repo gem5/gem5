@@ -193,6 +193,8 @@ class DataImmOp : public PredOp
         PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm(_imm), rotC(_rotC)
     {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 class DataRegOp : public PredOp
@@ -209,6 +211,8 @@ class DataRegOp : public PredOp
         dest(_dest), op1(_op1), op2(_op2),
         shiftAmt(_shiftAmt), shiftType(_shiftType)
     {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 class DataRegRegOp : public PredOp
@@ -224,6 +228,8 @@ class DataRegRegOp : public PredOp
         dest(_dest), op1(_op1), op2(_op2), shift(_shift),
         shiftType(_shiftType)
     {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
