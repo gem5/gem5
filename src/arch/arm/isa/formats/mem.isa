@@ -450,6 +450,16 @@ def format Thumb16MemImm() {{
     decode_block = decode % classNames
 }};
 
+def format Thumb16MemLit() {{
+    decode_block = '''
+    {
+        const uint32_t rt = bits(machInst, 10, 8);
+        const uint32_t imm8 = bits(machInst, 7, 0);
+        return new %s(machInst, rt, INTREG_PC, true, imm8 << 2);
+    }
+    ''' % loadImmClassName(False, True, False)
+}};
+
 def format ArmLoadMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},
                      mem_flags = [], inst_flags = []) {{
     ea_code = ArmGenericCodeSubs(ea_code)

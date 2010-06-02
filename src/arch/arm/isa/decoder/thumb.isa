@@ -89,7 +89,7 @@
                 0xc, 0xd: WarnUnimpl::bx();
                 0xe, 0xf: WarnUnimpl::blx(); //register
             }
-            0x2, 0x3: WarnUnimpl::ldr();
+            0x2, 0x3: Thumb16MemLit::thumb16MemLit();
             default: Thumb16MemReg::thumb16MemReg();
         }
         0x3, 0x4: Thumb16MemImm::thumb16MemImm();
