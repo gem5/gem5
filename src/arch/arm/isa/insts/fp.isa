@@ -933,7 +933,7 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest.uw = FpOp1;
+        FpDest.uw = vfpFpSToFixed(FpOp1, false, false, 0);
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -950,7 +950,7 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        uint64_t result = cOp1.fp;
+        uint64_t result = vfpFpDToFixed(cOp1.fp, false, false, 0);
         __asm__ __volatile__("" :: "m" (result));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
@@ -966,7 +966,7 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest.sw = FpOp1;
+        FpDest.sw = vfpFpSToFixed(FpOp1, true, false, 0);
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -983,7 +983,7 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        int64_t result = cOp1.fp;
+        int64_t result = vfpFpDToFixed(cOp1.fp, true, false, 0);
         __asm__ __volatile__("" :: "m" (result));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
@@ -1000,7 +1000,7 @@ let {{
         VfpSavedState state = prepVfpFpscr(Fpscr);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest.uw = FpOp1;
+        FpDest.uw = vfpFpSToFixed(FpOp1, false, false, 0);
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -1018,7 +1018,7 @@ let {{
         VfpSavedState state = prepVfpFpscr(Fpscr);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        uint64_t result = cOp1.fp;
+        uint64_t result = vfpFpDToFixed(cOp1.fp, false, false, 0);
         __asm__ __volatile__("" :: "m" (result));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
@@ -1035,7 +1035,7 @@ let {{
         VfpSavedState state = prepVfpFpscr(Fpscr);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest.sw = FpOp1;
+        FpDest.sw = vfpFpSToFixed(FpOp1, true, false, 0);
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -1053,7 +1053,7 @@ let {{
         VfpSavedState state = prepVfpFpscr(Fpscr);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        int64_t result = cOp1.fp;
+        int64_t result = vfpFpDToFixed(cOp1.fp, true, false, 0);
         __asm__ __volatile__("" :: "m" (result));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
