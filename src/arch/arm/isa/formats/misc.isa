@@ -101,6 +101,9 @@ def format McrMrc15() {{
           case MISCREG_DCCIMVAC:
             return new WarnUnimplemented(
                     isRead ? "mrc dccimvac" : "mcr dcimvac", machInst);
+          case MISCREG_CP15ISB:
+            return new WarnUnimplemented(
+                    isRead ? "mrc cp15isb" : "mcr cp15isb", machInst);
           default:
             if (isRead) {
                 return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
