@@ -236,9 +236,9 @@ def format ArmParallelAddSubtract() {{
                   case 0x0:
                     return new Sadd16RegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x1:
-                    return new WarnUnimplemented("sasx", machInst);
+                    return new SasxRegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x2:
-                    return new WarnUnimplemented("ssax", machInst);
+                    return new SsaxRegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x3:
                     return new Ssub16RegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x4:
@@ -553,9 +553,11 @@ def format Thumb32DataProcReg() {{
                             return new Sadd16RegCc(machInst, rd,
                                                    rn, rm, 0, LSL);
                           case 0x2:
-                            return new WarnUnimplemented("sasx", machInst);
+                            return new SasxRegCc(machInst, rd,
+                                                 rn, rm, 0, LSL);
                           case 0x6:
-                            return new WarnUnimplemented("ssax", machInst);
+                            return new SsaxRegCc(machInst, rd,
+                                                 rn, rm, 0, LSL);
                           case 0x5:
                             return new Ssub16RegCc(machInst, rd,
                                                    rn, rm, 0, LSL);
