@@ -52,7 +52,7 @@ class PCDependentDisassembly : public PredOp
     mutable const SymbolTable *cachedSymtab;
 
     /// Constructor
-    PCDependentDisassembly(const char *mnem, MachInst _machInst,
+    PCDependentDisassembly(const char *mnem, ExtMachInst _machInst,
                            OpClass __opClass)
         : PredOp(mnem, _machInst, __opClass),
           cachedPC(0), cachedSymtab(0)
@@ -74,7 +74,7 @@ class Branch : public PCDependentDisassembly
     int32_t disp;
 
     /// Constructor.
-    Branch(const char *mnem, MachInst _machInst, OpClass __opClass)
+    Branch(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : PCDependentDisassembly(mnem, _machInst, __opClass),
           disp(machInst.offset << 2)
     {
@@ -97,7 +97,7 @@ class BranchExchange : public PredOp
 {
   protected:
     /// Constructor
-    BranchExchange(const char *mnem, MachInst _machInst,
+    BranchExchange(const char *mnem, ExtMachInst _machInst,
                            OpClass __opClass)
         : PredOp(mnem, _machInst, __opClass)
     {
@@ -123,7 +123,7 @@ class Jump : public PCDependentDisassembly
 
   public:
     /// Constructor
-    Jump(const char *mnem, MachInst _machInst, OpClass __opClass)
+    Jump(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : PCDependentDisassembly(mnem, _machInst, __opClass),
           disp(machInst.offset << 2)
     {

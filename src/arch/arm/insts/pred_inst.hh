@@ -51,7 +51,7 @@ class PredOp : public ArmStaticInst
     ConditionCode condCode;
 
     /// Constructor
-    PredOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+    PredOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
            ArmStaticInst(mnem, _machInst, __opClass),
            condCode((ConditionCode)(unsigned)machInst.condCode)
     {
@@ -71,7 +71,7 @@ class PredImmOp : public PredOp
     uint32_t rotated_carry;
 
     /// Constructor
-    PredImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+    PredImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
               PredOp(mnem, _machInst, __opClass),
               imm(machInst.imm), rotate(machInst.rotate << 1),
               rotated_imm(0), rotated_carry(0)
@@ -95,7 +95,7 @@ class PredIntOp : public PredOp
     uint32_t shift;
 
     /// Constructor
-    PredIntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+    PredIntOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
               PredOp(mnem, _machInst, __opClass),
               shift_size(machInst.shiftSize), shift(machInst.shift)
     {
@@ -115,7 +115,7 @@ class PredMacroOp : public PredOp
     StaticInstPtr * microOps;
 
     /// Constructor
-    PredMacroOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+    PredMacroOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 PredOp(mnem, _machInst, __opClass),
                 numMicroops(0)
     {
@@ -147,7 +147,7 @@ class PredMacroOp : public PredOp
 class PredMicroop : public PredOp
 {
     /// Constructor
-    PredMicroop(const char *mnem, MachInst _machInst, OpClass __opClass) :
+    PredMicroop(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
                 PredOp(mnem, _machInst, __opClass)
     {
         flags[IsMicroop] = true;

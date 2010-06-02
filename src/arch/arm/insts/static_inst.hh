@@ -67,7 +67,8 @@ class ArmStaticInstBase : public StaticInst
     bool arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
 
     // Constructor
-    ArmStaticInstBase(const char *mnem, MachInst _machInst, OpClass __opClass)
+    ArmStaticInstBase(const char *mnem, ExtMachInst _machInst,
+            OpClass __opClass)
         : StaticInst(mnem, _machInst, __opClass)
     {
     }
@@ -150,7 +151,7 @@ class ArmStaticInstBase : public StaticInst
 class ArmStaticInst : public ArmStaticInstBase
 {
   protected:
-    ArmStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
+    ArmStaticInst(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : ArmStaticInstBase(mnem, _machInst, __opClass)
     {
     }
@@ -167,7 +168,7 @@ class ArmStaticInst : public ArmStaticInstBase
 class ArmInterWorking : public ArmStaticInstBase
 {
   protected:
-    ArmInterWorking(const char *mnem, MachInst _machInst, OpClass __opClass)
+    ArmInterWorking(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : ArmStaticInstBase(mnem, _machInst, __opClass)
     {
     }
