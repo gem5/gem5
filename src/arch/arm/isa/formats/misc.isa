@@ -37,29 +37,6 @@
 //
 // Authors: Gabe Black
 
-//Basic forms of various templates
-##include "basic.isa"
-
-//Useful bits shared by memory instructions
-##include "mem.isa"
-
-//Loads of a single item
-##include "ldr.isa"
-
-//Miscellaneous instructions that don't fit elsewhere
-##include "misc.isa"
-
-//Stores of a single item
-##include "str.isa"
-
-//Load/store multiple
-##include "macromem.isa"
-
-//Data processing instructions
-##include "data.isa"
-
-//Branches
-##include "branch.isa"
-
-//Multiply
-##include "mult.isa"
+def format Svc() {{
+    decode_block = "return new Svc(machInst);"
+}};

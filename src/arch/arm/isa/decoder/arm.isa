@@ -286,13 +286,7 @@ format DataOp {
             } // CPNUM  (OP4 == 1)
         } //OPCODE_4
 
-        1: PredOp::swi({{
-#if FULL_SYSTEM
-            fault = new SupervisorCall();
-#else
-            fault = new SupervisorCall(machInst);
-#endif
-        }}, IsSyscall);
+        1: Svc::svc();
     } // OPCODE_24
 
 }

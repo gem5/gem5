@@ -37,29 +37,21 @@
 //
 // Authors: Gabe Black
 
-//Basic forms of various templates
-##include "basic.isa"
+let {{
 
-//Useful bits shared by memory instructions
-##include "mem.isa"
+    svcCode = '''
+#if FULL_SYSTEM
+    fault = new SupervisorCall;
+#else
+    fault = new SupervisorCall(machInst);
+#endif
+    '''
 
-//Loads of a single item
-##include "ldr.isa"
+    svcIop = InstObjParams("svc", "Svc", "PredOp",
+                           { "code": svcCode,
+                             "predicate_test": predicateTest }, ["IsSyscall"])
+    header_output = BasicDeclare.subst(svcIop)
+    decoder_output = BasicConstructor.subst(svcIop)
+    exec_output = PredOpExecute.subst(svcIop)
 
-//Miscellaneous instructions that don't fit elsewhere
-##include "misc.isa"
-
-//Stores of a single item
-##include "str.isa"
-
-//Load/store multiple
-##include "macromem.isa"
-
-//Data processing instructions
-##include "data.isa"
-
-//Branches
-##include "branch.isa"
-
-//Multiply
-##include "mult.isa"
+}};

@@ -59,6 +59,9 @@
 //Include the branch format
 ##include "branch.isa"
 
+//Miscellaneous instructions that don't fit elsewhere
+##include "misc.isa"
+
 //Include the unimplemented format
 ##include "unimp.isa"
 
