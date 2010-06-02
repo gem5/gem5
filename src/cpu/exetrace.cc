@@ -33,6 +33,7 @@
 
 #include <iomanip>
 
+#include "arch/isa_traits.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -70,18 +71,22 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 
     std::string sym_str;
     Addr sym_addr;
+    Addr cur_pc = PC;
+#if THE_ISA == ARM_ISA
+    cur_pc &= ~PcModeMask;
+#endif
     if (debugSymbolTable
         && IsOn(ExecSymbol)
 #if FULL_SYSTEM
         && !inUserMode(thread)
 #endif
-        && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
-        if (PC != sym_addr)
-            sym_str += csprintf("+%d", PC - sym_addr);
+        && debugSymbolTable->findNearestSymbol(cur_pc, sym_str, sym_addr)) {
+        if (cur_pc != sym_addr)
+            sym_str += csprintf("+%d",cur_pc - sym_addr);
         outs << "@" << sym_str;
     }
     else {
-        outs << "0x" << hex << PC;
+        outs << "0x" << hex << cur_pc;
     }
 
     if (inst->isMicroop()) {
@@ -97,7 +102,7 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
     //
 
     outs << setw(26) << left;
-    outs << inst->disassemble(PC, debugSymbolTable);
+    outs << inst->disassemble(cur_pc, debugSymbolTable);
 
     if (ran) {
         outs << " : ";

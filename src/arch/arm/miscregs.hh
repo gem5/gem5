@@ -201,13 +201,6 @@ namespace ArmISA
     // integer register to allow renaming.
     static const uint32_t CondCodesMask = 0xF80F0000;
 
-    // These otherwise unused bits of the PC are used to select a mode
-    // like the J and T bits of the CPSR.
-    static const Addr PcJBitShift = 33;
-    static const Addr PcTBitShift = 34;
-    static const Addr PcModeMask = (ULL(1) << PcJBitShift) |
-                                   (ULL(1) << PcTBitShift);
-
     BitUnion32(SCTLR)
         Bitfield<30> te;  // Thumb Exception Enable
         Bitfield<29> afe; // Access flag enable

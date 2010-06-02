@@ -121,6 +121,13 @@ namespace ArmISA
 
     // Memory accesses cannot be unaligned
     const bool HasUnalignedMemAcc = false;
+
+    // These otherwise unused bits of the PC are used to select a mode
+    // like the J and T bits of the CPSR.
+    static const Addr PcJBitShift = 33;
+    static const Addr PcTBitShift = 34;
+    static const Addr PcModeMask = (ULL(1) << PcJBitShift) |
+                                   (ULL(1) << PcTBitShift);
 };
 
 using namespace ArmISA;
