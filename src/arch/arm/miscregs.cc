@@ -56,8 +56,8 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_CTR;
                   case 2:
                     return MISCREG_TCMTR;
-                  case 4:
-                    return MISCREG_MPUIR;
+                  case 3:
+                    return MISCREG_TLBTR;
                   case 5:
                     return MISCREG_MPIDR;
                   default:
@@ -127,15 +127,43 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         }
         break;
       case 1:
-        if (opc1 == 0 && crm == 0) {
+        if (opc1 == 0) {
+            if (crm == 0) {
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_SCTLR;
+                  case 1:
+                    return MISCREG_ACTLR;
+                  case 0x2:
+                    return MISCREG_CPACR;
+                }
+            } else if (crm == 1) {
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_SCR;
+                  case 1:
+                    return MISCREG_SDER;
+                  case 2:
+                    return MISCREG_NSACR;
+                }
+            }
+        }
+        break;
+      case 2:
+        if (opc2 == 0 && crm == 0) {
             switch (opc2) {
               case 0:
-                return MISCREG_SCTLR;
+                return MISCREG_TTBR0;
               case 1:
-                return MISCREG_ACTLR;
-              case 0x2:
-                return MISCREG_CPACR;
+                return MISCREG_TTBR1;
+              case 2:
+                return MISCREG_TTBCR;
             }
+        }
+        break;
+      case 3:
+        if (opc1 == 0 && crm == 0 && opc2 == 0) {
+            return MISCREG_DACR;
         }
         break;
       case 5:
@@ -156,36 +184,12 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         }
         break;
       case 6:
-        if (opc1 == 0) {
-            switch (crm) {
+        if (opc1 == 0 && crm == 0) {
+            switch (opc2) {
               case 0:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_DFAR;
-                  case 2:
-                    return MISCREG_IFAR;
-                }
-                break;
-              case 1:
-                switch (opc2) {
-                  case 0:
-                    return MISCREG_DRBAR;
-                  case 1:
-                    return MISCREG_IRBAR;
-                  case 2:
-                    return MISCREG_DRSR;
-                  case 3:
-                    return MISCREG_IRSR;
-                  case 4:
-                    return MISCREG_DRACR;
-                  case 5:
-                    return MISCREG_IRACR;
-                }
-                break;
+                return MISCREG_DFAR;
               case 2:
-                if (opc2 == 0) {
-                    return MISCREG_RGNR;
-                }
+                return MISCREG_IFAR;
             }
         }
         break;
@@ -203,6 +207,11 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_ICIALLUIS;
                   case 6:
                     return MISCREG_BPIALLIS;
+                }
+                break;
+              case 4:
+                if (opc2 == 0) {
+                    return MISCREG_PAR;
                 }
                 break;
               case 5:
@@ -224,6 +233,26 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_DCIMVAC;
                 } else if (opc2 == 2) {
                     return MISCREG_DCISW;
+                }
+                break;
+              case 8:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_V2PCWPR;
+                  case 1:
+                    return MISCREG_V2PCWPW;
+                  case 2:
+                    return MISCREG_V2PCWUR;
+                  case 3:
+                    return MISCREG_V2PCWUW;
+                  case 4:
+                    return MISCREG_V2POWPR;
+                  case 5:
+                    return MISCREG_V2POWPW;
+                  case 6:
+                    return MISCREG_V2POWUR;
+                  case 7:
+                    return MISCREG_V2POWUW;
                 }
                 break;
               case 10:
@@ -258,6 +287,56 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
             }
         }
         break;
+      case 8:
+        if (opc1 == 0) {
+            switch (crm) {
+              case 3:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_TLBIALLIS;
+                  case 1:
+                    return MISCREG_TLBIMVAIS;
+                  case 2:
+                    return MISCREG_TLBIASIDIS;
+                  case 3:
+                    return MISCREG_TLBIMVAAIS;
+                }
+                break;
+              case 5:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_ITLBIALL;
+                  case 1:
+                    return MISCREG_ITLBIMVA;
+                  case 2:
+                    return MISCREG_ITLBIASID;
+                }
+                break;
+              case 6:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_DTLBIALL;
+                  case 1:
+                    return MISCREG_DTLBIMVA;
+                  case 2:
+                    return MISCREG_DTLBIASID;
+                }
+                break;
+              case 7:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_TLBIALL;
+                  case 1:
+                    return MISCREG_TLBIMVA;
+                  case 2:
+                    return MISCREG_TLBIASID;
+                  case 3:
+                    return MISCREG_TLBIMVAA;
+                }
+                break;
+            }
+        }
+        break;
       case 9:
         if (opc1 >= 0 && opc1 <= 7) {
             switch (crm) {
@@ -275,6 +354,18 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
               case 15:
                 // Reserved for Performance monitors
                 break;
+            }
+        }
+        break;
+      case 10:
+        if (opc1 == 0) {
+            // crm 0, 1, 4, and 8, with op2 0 - 7, reserved for TLB lockdown
+            if (crm == 2) { // TEX Remap Registers
+                if (opc2 == 0) {
+                    return MISCREG_PRRR;
+                } else if (opc2 == 1) {
+                    return MISCREG_NMRR;
+                }
             }
         }
         break;
@@ -296,10 +387,27 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
             }
         }
         break;
+      case 12:
+        if (opc1 == 0) {
+            if (crm == 0) {
+                if (opc2 == 0) {
+                    return MISCREG_VBAR;
+                } else if (opc2 == 1) {
+                    return MISCREG_MVBAR;
+                }
+            } else if (crm == 1) {
+                if (opc2 == 0) {
+                    return MISCREG_ISR;
+                }
+            }
+        }
+        break;
       case 13:
         if (opc1 == 0) {
             if (crm == 0) {
                 switch (crm) {
+                  case 0:
+                    return MISCREG_FCEIDR;
                   case 1:
                     return MISCREG_CONTEXTIDR;
                   case 2:

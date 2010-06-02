@@ -116,9 +116,6 @@ namespace ArmISA
             cpacr.cp11 = 0x3;
             miscRegs[MISCREG_CPACR] = cpacr;
 
-            /* One region, unified map. */
-            miscRegs[MISCREG_MPUIR] = 0x100;
-
             /* Start with an event in the mailbox */
             miscRegs[MISCREG_SEV_MAILBOX] = 1;
 
