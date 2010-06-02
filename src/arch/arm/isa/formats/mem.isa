@@ -39,50 +39,6 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Gabe Black
-//          Stephen Hines
-
-////////////////////////////////////////////////////////////////////
-//
-// Memory-format instructions
-//
-
-def template LoadStoreDeclare {{
-    /**
-     * Static instruction class for "%(mnemonic)s".
-     */
-    class %(class_name)s : public %(base_class)s
-    {
-      public:
-
-        /// Constructor.
-        %(class_name)s(ExtMachInst machInst);
-
-        %(BasicExecDeclare)s
-
-        %(InitiateAccDeclare)s
-
-        %(CompleteAccDeclare)s
-    };
-}};
-
-
-def template InitiateAccDeclare {{
-    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
-}};
-
-
-def template CompleteAccDeclare {{
-    Fault completeAcc(PacketPtr,  %(CPU_exec_context)s *, Trace::InstRecord *) const;
-}};
-
-
-def template LoadStoreConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-    {
-        %(constructor)s;
-    }
-}};
 
 def format AddrMode2(imm) {{
     if eval(imm):
@@ -512,24 +468,5 @@ def format Thumb16MemLit() {{
         return new %s(machInst, rt, INTREG_PC, true, imm8 << 2);
     }
     ''' % loadImmClassName(False, True, False)
-}};
-
-def format ArmLoadMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},
-                     mem_flags = [], inst_flags = []) {{
-    ea_code = ArmGenericCodeSubs(ea_code)
-    memacc_code = ArmGenericCodeSubs(memacc_code)
-    (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      decode_template = BasicDecode,
-                      exec_template_base = 'Load')
-}};
-
-def format ArmStoreMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},
-                     mem_flags = [], inst_flags = []) {{
-    ea_code = ArmGenericCodeSubs(ea_code)
-    memacc_code = ArmGenericCodeSubs(memacc_code)
-    (header_output, decoder_output, decode_block, exec_output) = \
-        LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
-                      exec_template_base = 'Store')
 }};
 

@@ -67,23 +67,4 @@ MemoryNew::printInst(std::ostream &os, AddrMode addrMode) const
     }
 }
 
-std::string
-Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    printMnemonic(ss);
-    printReg(ss, machInst.rd);
-    ss << ", [";
-    printReg(ss, machInst.rn);
-    ss << ", ";
-    if (machInst.puswl.prepost == 1)
-        printOffset(ss);
-    ss << "]";
-    if (machInst.puswl.prepost == 0)
-        printOffset(ss);
-    else if (machInst.puswl.writeback)
-        ss << "!";
-    return ss.str();
-}
-
 }
