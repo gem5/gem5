@@ -165,6 +165,8 @@ let {{
                                         sext<16>(bits(Reg1, 15, 0)) *
                                         sext<16>(bits(Reg2, 15, 0)) +
                                         Reg3.sw;
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                 ''', "overflow")
     buildMult4InstCc  ("smladx", '''Reg0 = resTemp =
                                          sext<16>(bits(Reg1, 31, 16)) *
@@ -172,6 +174,8 @@ let {{
                                          sext<16>(bits(Reg1, 15, 0)) *
                                          sext<16>(bits(Reg2, 31, 16)) +
                                          Reg3.sw;
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4Inst    ("smlal", '''resTemp = sext<32>(Reg2) * sext<32>(Reg3) +
                                        (int64_t)((Reg1.ud << 32) | Reg0.ud);
@@ -246,6 +250,8 @@ let {{
                                        sext<16>(bits(Reg1, 31, 16)) *
                                        sext<16>(bits(Reg2, 31, 16)) +
                                        Reg3.sw;
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                 ''', "overflow")
     buildMult4InstCc  ("smlsdx", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 15, 0)) *
@@ -253,6 +259,8 @@ let {{
                                         sext<16>(bits(Reg1, 31, 16)) *
                                         sext<16>(bits(Reg2, 15, 0)) +
                                         Reg3.sw;
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstUnCc("smlsld", '''resTemp =
                                         sext<16>(bits(Reg2, 15, 0)) *
@@ -306,12 +314,16 @@ let {{
                                         sext<16>(bits(Reg2, 15, 0)) +
                                         sext<16>(bits(Reg1, 31, 16)) *
                                         sext<16>(bits(Reg2, 31, 16));
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                 ''', "overflow")
     buildMult3InstCc  ("smuadx", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 15, 0)) *
                                         sext<16>(bits(Reg2, 31, 16)) +
                                         sext<16>(bits(Reg1, 31, 16)) *
                                         sext<16>(bits(Reg2, 15, 0));
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                  ''', "overflow")
     buildMult3InstUnCc("smulbb", '''Reg0 = resTemp =
                                          sext<16>(bits(Reg1, 15, 0)) *
