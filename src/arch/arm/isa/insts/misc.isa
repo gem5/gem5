@@ -534,4 +534,16 @@ let {{
     header_output += BasicDeclare.subst(leavexIop)
     decoder_output += BasicConstructor.subst(leavexIop)
     exec_output += PredOpExecute.subst(leavexIop)
+
+    setendCode = '''
+        CPSR cpsr = Cpsr;
+        cpsr.e = imm;
+        Cpsr = cpsr;
+    '''
+    setendIop = InstObjParams("setend", "Setend", "ImmOp",
+                              { "code": setendCode,
+                                "predicate_test": predicateTest }, [])
+    header_output += ImmOpDeclare.subst(setendIop)
+    decoder_output += ImmOpConstructor.subst(setendIop)
+    exec_output += PredOpExecute.subst(setendIop)
 }};
