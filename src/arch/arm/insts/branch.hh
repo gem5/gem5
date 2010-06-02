@@ -46,36 +46,6 @@
 
 namespace ArmISA
 {
-/**
- * Base class for instructions whose disassembly is not purely a
- * function of the machine instruction (i.e., it depends on the
- * PC).  This class overrides the disassemble() method to check
- * the PC and symbol table values before re-using a cached
- * disassembly string.  This is necessary for branches and jumps,
- * where the disassembly string includes the target address (which
- * may depend on the PC and/or symbol table).
- */
-class PCDependentDisassembly : public PredOp
-{
-  protected:
-    /// Cached program counter from last disassembly
-    mutable Addr cachedPC;
-
-    /// Cached symbol table pointer from last disassembly
-    mutable const SymbolTable *cachedSymtab;
-
-    /// Constructor
-    PCDependentDisassembly(const char *mnem, ExtMachInst _machInst,
-                           OpClass __opClass)
-        : PredOp(mnem, _machInst, __opClass),
-          cachedPC(0), cachedSymtab(0)
-    {
-    }
-
-    const std::string &
-    disassemble(Addr pc, const SymbolTable *symtab) const;
-};
-
 // Branch to a target computed with an immediate
 class BranchImm : public PredOp
 {
@@ -158,50 +128,6 @@ class BranchImmReg : public PredOp
                  int32_t _imm, IntRegIndex _op1) :
         PredOp(mnem, _machInst, __opClass), imm(_imm), op1(_op1)
     {}
-};
-
-/**
- * Base class for branches (PC-relative control transfers),
- * conditional or unconditional.
- */
-class Branch : public PCDependentDisassembly
-{
-  protected:
-    /// target address (signed) Displacement .
-    int32_t disp;
-
-    /// Constructor.
-    Branch(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : PCDependentDisassembly(mnem, _machInst, __opClass),
-          disp(machInst.offset << 2)
-    {
-        //If Bit 26 is 1 then Sign Extend
-        if ( (disp & 0x02000000) > 0  ) {
-            disp |=  0xFC000000;
-        }
-    }
-
-    Addr branchTarget(Addr branchPC) const;
-
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-};
-
-/**
- * Base class for branch and exchange instructions on the ARM
- */
-class BranchExchange : public PredOp
-{
-  protected:
-    /// Constructor
-    BranchExchange(const char *mnem, ExtMachInst _machInst,
-                           OpClass __opClass)
-        : PredOp(mnem, _machInst, __opClass)
-    {
-    }
-
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 }
