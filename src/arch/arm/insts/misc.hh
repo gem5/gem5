@@ -94,6 +94,19 @@ class MsrRegOp : public MsrBase
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+class ImmOp : public PredOp
+{
+  protected:
+    uint32_t imm;
+
+    ImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+             uint32_t _imm) :
+        PredOp(mnem, _machInst, __opClass), imm(_imm)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
 class RegRegOp : public PredOp
 {
   protected:
