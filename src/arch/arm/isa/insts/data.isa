@@ -185,4 +185,6 @@ let {{
     buildDataInst("mov", "Dest = resTemp = secondOp;")
     buildDataInst("bic", "Dest = resTemp = Op1 & ~secondOp;")
     buildDataInst("mvn", "Dest = resTemp = ~secondOp;")
+    buildDataInst("movt",
+            "Dest = resTemp = insertBits(Op1, 31, 16, secondOp);")
 }};
