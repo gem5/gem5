@@ -67,15 +67,33 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
     if (!index)
         addr += 4;
 
+    StaticInstPtr *uop = microOps;
+    StaticInstPtr wbUop;
+    if (writeback) {
+        if (up) {
+            wbUop = new MicroAddiUop(machInst, rn, rn, ones * 4);
+        } else {
+            wbUop = new MicroSubiUop(machInst, rn, rn, ones * 4);
+        }
+    }
+
     // Add 0 to Rn and stick it in ureg0.
     // This is equivalent to a move.
-    microOps[0] = new MicroAddiUop(machInst, INTREG_UREG0, rn, 0);
+    *uop = new MicroAddiUop(machInst, INTREG_UREG0, rn, 0);
+
+    // Write back at the start for loads. This covers the ldm exception return
+    // case where the base needs to be written in the old mode. Stores may need
+    // the original value of the base, but they don't change mode and can
+    // write back at the end like before.
+    if (load && writeback) {
+        *++uop = wbUop;
+    }
 
     unsigned reg = 0;
     bool force_user = user & !bits(reglist, 15);
     bool exception_ret = user & bits(reglist, 15);
 
-    for (int i = 1; i < ones + 1; i++) {
+    for (int i = 0; i < ones; i++) {
         // Find the next register.
         while (!bits(regs, reg))
             reg++;
@@ -89,16 +107,14 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
         if (load) {
             if (reg == INTREG_PC && exception_ret) {
                 // This must be the exception return form of ldm.
-                microOps[i] =
-                    new MicroLdrRetUop(machInst, regIdx,
-                                       INTREG_UREG0, up, addr);
+                *++uop = new MicroLdrRetUop(machInst, regIdx,
+                                           INTREG_UREG0, up, addr);
             } else {
-                microOps[i] =
-                    new MicroLdrUop(machInst, regIdx, INTREG_UREG0, up, addr);
+                *++uop = new MicroLdrUop(machInst, regIdx,
+                                        INTREG_UREG0, up, addr);
             }
         } else {
-            microOps[i] =
-                new MicroStrUop(machInst, regIdx, INTREG_UREG0, up, addr);
+            *++uop = new MicroStrUop(machInst, regIdx, INTREG_UREG0, up, addr);
         }
 
         if (up)
@@ -107,15 +123,11 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
             addr -= 4;
     }
 
-    StaticInstPtr &lastUop = microOps[numMicroops - 1];
-    if (writeback) {
-        if (up) {
-            lastUop = new MicroAddiUop(machInst, rn, rn, ones * 4);
-        } else {
-            lastUop = new MicroSubiUop(machInst, rn, rn, ones * 4);
-        }
+    if (!load && writeback) {
+        *++uop = wbUop;
     }
-    lastUop->setLastMicroop();
+
+    (*uop)->setLastMicroop();
 }
 
 MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
