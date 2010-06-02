@@ -94,6 +94,9 @@ def format McrMrc15() {{
             return new NopInst(machInst);
         } else if (miscReg == NUM_MISCREGS) {
             return new Unknown(machInst);
+        } else if (miscReg == MISCREG_DCCISW) {
+            return new WarnUnimplemented(isRead ? "mrc dccisw" : "mcr dcisw",
+                                         machInst);
         } else {
             if (isRead) {
                 return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
