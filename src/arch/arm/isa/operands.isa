@@ -76,6 +76,12 @@ def operands {{
              maybePCRead, maybePCWrite),
     'Index': ('IntReg', 'uw', 'index', 'IsInteger', 2,
               maybePCRead, maybePCWrite),
+    'Op1': ('IntReg', 'uw', 'op1', 'IsInteger', 3,
+              maybePCRead, maybePCWrite),
+    'Op2': ('IntReg', 'uw', 'op2', 'IsInteger', 4,
+              maybePCRead, maybePCWrite),
+    'Shift': ('IntReg', 'uw', 'shift', 'IsInteger', 5,
+              maybePCRead, maybePCWrite),
     #General Purpose Integer Reg Operands
     'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1, maybePCRead, maybePCWrite),
     'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 2, maybePCRead, maybePCWrite),

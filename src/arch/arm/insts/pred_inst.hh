@@ -155,6 +155,53 @@ class PredIntOp : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+class DataImmOp : public PredOp
+{
+  protected:
+    IntRegIndex dest, op1;
+    uint32_t imm;
+    // Whether the carry flag should be modified if that's an option for
+    // this instruction.
+    bool rotC;
+
+    DataImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+              IntRegIndex _dest, IntRegIndex _op1, uint32_t _imm, bool _rotC) :
+        PredOp(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), imm(_imm), rotC(_rotC)
+    {}
+};
+
+class DataRegOp : public PredOp
+{
+  protected:
+    IntRegIndex dest, op1, op2;
+    int32_t shiftAmt;
+    ArmShiftType shiftType;
+
+    DataRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+              IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+              int32_t _shiftAmt, ArmShiftType _shiftType) :
+        PredOp(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), op2(_op2),
+        shiftAmt(_shiftAmt), shiftType(_shiftType)
+    {}
+};
+
+class DataRegRegOp : public PredOp
+{
+  protected:
+    IntRegIndex dest, op1, op2, shift;
+    ArmShiftType shiftType;
+
+    DataRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                 IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+                 IntRegIndex _shift, ArmShiftType _shiftType) :
+        PredOp(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), op2(_op2), shift(_shift),
+        shiftType(_shiftType)
+    {}
+};
+
 /**
  * Base class for predicated macro-operations.
  */
