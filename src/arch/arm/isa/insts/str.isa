@@ -93,7 +93,8 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = "Mem%s = Dest;\n" % buildMemSuffix(sign, size)
+        accCode = "Mem%(suffix)s = cSwap(Dest%(suffix)s, ((CPSR)Cpsr).e);" % \
+            { "suffix" : buildMemSuffix(sign, size) }
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryImm", post, writeback)
@@ -121,7 +122,8 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = "Mem%s = Dest;\n" % buildMemSuffix(sign, size)
+        accCode = "Mem%(suffix)s = cSwap(Dest%(suffix)s, ((CPSR)Cpsr).e);" % \
+            { "suffix" : buildMemSuffix(sign, size) }
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryReg", post, writeback)
@@ -146,7 +148,11 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = 'Mem.ud = (Dest.ud & mask(32)) | (Dest2.ud << 32);'
+        accCode = '''
+        CPSR cpsr = Cpsr;
+        Mem.ud = (uint64_t)cSwap(Dest.uw, cpsr.e) |
+                 ((uint64_t)cSwap(Dest2.uw, cpsr.e) << 32);
+        '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryDImm", post, writeback)
@@ -171,7 +177,11 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = 'Mem.ud = (Dest.ud & mask(32)) | (Dest2.ud << 32);'
+        accCode = '''
+        CPSR cpsr = Cpsr;
+        Mem.ud = (uint64_t)cSwap(Dest.uw, cpsr.e) |
+                 ((uint64_t)cSwap(Dest2.uw, cpsr.e) << 32);
+        '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryDReg", post, writeback)

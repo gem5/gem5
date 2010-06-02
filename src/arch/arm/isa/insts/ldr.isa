@@ -104,7 +104,8 @@ let {{
             if ldrex:
                 memFlags.append("Request::LLSC")
                 Name = "%s_%s" % (mnem.upper(), Name)
-            accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
+            accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);" % \
+                buildMemSuffix(sign, size)
 
         if not prefetch and not ldrex:
             memFlags.append("ArmISA::TLB::AllowUnaligned")
@@ -131,10 +132,12 @@ let {{
         if add:
             wbDiff = 8
         accCode = '''
-        NPC = bits(Mem.ud, 31, 0);
-        uint32_t newCpsr = cpsrWriteByInstr(Cpsr | CondCodes,
-                                            bits(Mem.ud, 63, 32),
-                                            0xF, true);
+        CPSR cpsr = Cpsr;
+        NPC = cSwap<uint32_t>(Mem.ud, cpsr.e);
+        uint32_t newCpsr =
+            cpsrWriteByInstr(cpsr | CondCodes,
+                             cSwap<uint32_t>(Mem.ud >> 32, cpsr.e),
+                             0xF, true);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
         '''
@@ -179,7 +182,8 @@ let {{
             temp = temp;
             ''' % buildMemSuffix(sign, size)
         else:
-            accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
+            accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);" % \
+                buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
 
@@ -207,8 +211,9 @@ let {{
         eaCode += ";"
 
         accCode = '''
-        Dest = bits(Mem.ud, 31, 0);
-        Dest2 = bits(Mem.ud, 63, 32);
+        CPSR cpsr = Cpsr;
+        Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
+        Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
         '''
         if ldrex:
             memFlags = ["Request::LLSC"]
@@ -242,8 +247,9 @@ let {{
         eaCode += ";"
 
         accCode = '''
-        Dest = bits(Mem.ud, 31, 0);
-        Dest2 = bits(Mem.ud, 63, 32);
+        CPSR cpsr = Cpsr;
+        Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
+        Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
         '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset

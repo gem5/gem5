@@ -44,7 +44,8 @@ let {{
     (newHeader,
      newDecoder,
      newExec) = SwapBase("swp", "Swp", "EA = Base;",
-                         "Mem = Op1;", "Dest = memData;",
+                         "Mem = cSwap(Op1.uw, ((CPSR)Cpsr).e);",
+                         "Dest = cSwap((uint32_t)memData, ((CPSR)Cpsr).e);",
                          ["Request::MEM_SWAP",
                           "ArmISA::TLB::AlignWord",
                           "ArmISA::TLB::MustBeOne"], [])
@@ -55,7 +56,8 @@ let {{
     (newHeader,
      newDecoder,
      newExec) = SwapBase("swpb", "Swpb", "EA = Base;",
-                         "Mem.ub = Op1.ub;", "Dest.ub = (uint8_t)memData;",
+                         "Mem.ub = cSwap(Op1.ub, ((CPSR)Cpsr).e);",
+                         "Dest.ub = cSwap((uint8_t)memData, ((CPSR)Cpsr).e);",
                          ["Request::MEM_SWAP",
                           "ArmISA::TLB::AlignByte",
                           "ArmISA::TLB::MustBeOne"], [])

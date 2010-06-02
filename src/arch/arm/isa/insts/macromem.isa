@@ -51,26 +51,29 @@ let {{
 }};
 
 let {{
+    microLdrUopCode = "IWRa = cSwap(Mem.uw, ((CPSR)Cpsr).e);"
     microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
                                    'MicroMemOp',
-                                   {'memacc_code': 'IWRa = Mem;',
+                                   {'memacc_code': microLdrUopCode,
                                     'ea_code': 'EA = Rb + (up ? imm : -imm);',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
+    microLdrFpUopCode = "Fa = cSwap(Mem.uw, ((CPSR)Cpsr).e);"
     microLdrFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrFpUop',
                                      'MicroMemOp',
-                                     {'memacc_code': 'Fa = Mem;',
+                                     {'memacc_code': microLdrFpUopCode,
                                       'ea_code': 'EA = Rb + (up ? imm : -imm);',
                                       'predicate_test': predicateTest},
                                      ['IsMicroop'])
 
     microLdrRetUopCode = '''
+        CPSR cpsr = Cpsr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(Cpsr | CondCodes, Spsr, 0xF, true);
+            cpsrWriteByInstr(cpsr | CondCodes, Spsr, 0xF, true);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
-        IWNPC = Mem | ((Spsr & 0x20) ? 1 : 0);
+        IWNPC = cSwap(Mem.uw, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
     '''
     microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
                                       'MicroMemOp',
@@ -80,16 +83,18 @@ let {{
                                        'predicate_test': predicateTest},
                                       ['IsMicroop'])
 
+    microStrUopCode = "Mem = cSwap(Ra.uw, ((CPSR)Cpsr).e);"
     microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
                                    'MicroMemOp',
-                                   {'memacc_code': 'Mem = Ra;',
+                                   {'memacc_code': microStrUopCode,
                                     'ea_code': 'EA = Rb + (up ? imm : -imm);',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
+    microStrFpUopCode = "Mem = cSwap(Fa.uw, ((CPSR)Cpsr).e);"
     microStrFpUopIop = InstObjParams('strfp_uop', 'MicroStrFpUop',
                                      'MicroMemOp',
-                                     {'memacc_code': 'Mem = Fa;',
+                                     {'memacc_code': microStrFpUopCode,
                                       'ea_code': 'EA = Rb + (up ? imm : -imm);',
                                       'predicate_test': predicateTest},
                                      ['IsMicroop'])

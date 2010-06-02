@@ -231,6 +231,17 @@ class ArmStaticInst : public StaticInst
                       (val & ~PcModeMask));
     }
 
+    template<class T>
+    static T
+    cSwap(T val, bool big)
+    {
+        if (big) {
+            return gtobe(val);
+        } else {
+            return gtole(val);
+        }
+    }
+
     // Perform an interworking branch.
     template<class XC>
     static void
