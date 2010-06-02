@@ -73,6 +73,7 @@ let {{
         "llbit": (oldC, oldC, oldC),
         "saturate": ('0', '0', '0'),
         "overflow": ('0', '0', '0'),
+        "ge": ('0', '0', '0'),
         "add": ('findCarry(32, resTemp, Op1, secondOp)',
                 'findCarry(32, resTemp, Op1, secondOp)',
                 'findCarry(32, resTemp, Op1, secondOp)'),
@@ -92,6 +93,7 @@ let {{
         "llbit": oldV,
         "saturate": '0',
         "overflow": '0',
+        "ge": '0',
         "add": 'findOverflow(32, resTemp, Op1, secondOp)',
         "sub": 'findOverflow(32, resTemp, Op1, ~secondOp)',
         "rsb": 'findOverflow(32, resTemp, secondOp, ~Op1)',
@@ -150,7 +152,7 @@ let {{
         if flagType == "saturate":
             regCcCode = calcQCode
         elif flagType == "ge":
-            immCcCode = calcGECode
+            regCcCode = calcGECode
         else:
             regCcCode = calcCcCode % {
                 "icValue": secondOpRe.sub(regOp2, cCode[1]),
@@ -188,7 +190,7 @@ let {{
         if flagType == "saturate":
             regRegCcCode = calcQCode
         elif flagType == "ge":
-            immCcCode = calcGECode
+            regRegCcCode = calcGECode
         else:
             regRegCcCode = calcCcCode % {
                 "icValue": secondOpRe.sub(regRegOp2, cCode[2]),
@@ -360,4 +362,37 @@ let {{
             replaceBits(resTemp, 31, 16, midRes);
             Dest = resTemp;
         ''', flagType="none", buildCc=False)
+
+    buildRegDataInst("sadd8", '''
+            uint32_t geBits = 0;
+            resTemp = 0;
+            for (unsigned i = 0; i < 4; i++) {
+                int high = (i + 1) * 8 - 1;
+                int low = i * 8;
+                int32_t midRes = sext<8>(bits(Op1, high, low)) +
+                                 sext<8>(bits(Op2, high, low));
+                replaceBits(resTemp, high, low, midRes);
+                if (midRes >= 0) {
+                    geBits = geBits | (1 << i);
+                }
+            }
+            Dest = resTemp;
+            resTemp = geBits;
+        ''', flagType="ge", buildNonCc=False)
+    buildRegDataInst("sadd16", '''
+            uint32_t geBits = 0;
+            resTemp = 0;
+            for (unsigned i = 0; i < 2; i++) {
+                int high = (i + 1) * 16 - 1;
+                int low = i * 16;
+                int32_t midRes = sext<16>(bits(Op1, high, low)) +
+                                 sext<16>(bits(Op2, high, low));
+                replaceBits(resTemp, high, low, midRes);
+                if (midRes >= 0) {
+                    geBits = geBits | (0x3 << (i * 2));
+                }
+            }
+            Dest = resTemp;
+            resTemp = geBits;
+        ''', flagType="ge", buildNonCc=False)
 }};
