@@ -388,12 +388,14 @@ class Operand(object):
     type (e.g., "32-bit integer register").'''
 
     def buildReadCode(self, func = None):
-        code = self.read_code % {"name": self.base_name,
-                                 "func": func,
-                                 "op_idx": self.src_reg_idx,
-                                 "reg_idx": self.reg_spec,
-                                 "size": self.size,
-                                 "ctype": self.ctype}
+        subst_dict = {"name": self.base_name,
+                      "func": func,
+                      "reg_idx": self.reg_spec,
+                      "size": self.size,
+                      "ctype": self.ctype}
+        if hasattr(self, 'src_reg_idx'):
+            subst_dict['op_idx'] = self.src_reg_idx
+        code = self.read_code % subst_dict
         if self.size != self.dflt_size:
             return '%s = bits(%s, %d, 0);\n' % \
                    (self.base_name, code, self.size-1)
@@ -406,13 +408,15 @@ class Operand(object):
             final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
         else:
             final_val = self.base_name
-        code = self.write_code % {"name": self.base_name,
-                                  "func": func,
-                                  "op_idx": self.dest_reg_idx,
-                                  "reg_idx": self.reg_spec,
-                                  "size": self.size,
-                                  "ctype": self.ctype,
-                                  "final_val": final_val}
+        subst_dict = {"name": self.base_name,
+                      "func": func,
+                      "reg_idx": self.reg_spec,
+                      "size": self.size,
+                      "ctype": self.ctype,
+                      "final_val": final_val}
+        if hasattr(self, 'dest_reg_idx'):
+            subst_dict['op_idx'] = self.dest_reg_idx
+        code = self.write_code % subst_dict
         return '''
         {
             %s final_val = %s;
