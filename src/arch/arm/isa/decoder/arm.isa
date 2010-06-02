@@ -123,7 +123,7 @@ format DataOp {
         1: ArmBlBlxImm::armBlBlxImm();
     }
     0x6: decode CPNUM {
-        0xb: ExtensionRegLoadStore::extensionRegLoadStore();
+        0xa, 0xb: ExtensionRegLoadStore::extensionRegLoadStore();
     }
     0x7: decode OPCODE_24 {
         0: decode OPCODE_4 {
