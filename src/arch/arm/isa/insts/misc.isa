@@ -55,3 +55,66 @@ let {{
     exec_output = PredOpExecute.subst(svcIop)
 
 }};
+
+let {{
+
+    header_output = decoder_output = exec_output = ""
+
+    mrsCpsrCode = "Dest = (Cpsr | CondCodes) & 0xF8FF03DF"
+    mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
+                               { "code": mrsCpsrCode,
+                                 "predicate_test": predicateTest }, [])
+    header_output += MrsDeclare.subst(mrsCpsrIop)
+    decoder_output += MrsConstructor.subst(mrsCpsrIop)
+    exec_output += PredOpExecute.subst(mrsCpsrIop)
+
+    mrsSpsrCode = "Dest = Spsr"
+    mrsSpsrIop = InstObjParams("mrs", "MrsSpsr", "MrsOp",
+                               { "code": mrsSpsrCode,
+                                 "predicate_test": predicateTest }, [])
+    header_output += MrsDeclare.subst(mrsSpsrIop)
+    decoder_output += MrsConstructor.subst(mrsSpsrIop)
+    exec_output += PredOpExecute.subst(mrsSpsrIop)
+
+    msrCpsrRegCode = '''
+        uint32_t newCpsr =
+            cpsrWriteByInstr(Cpsr | CondCodes, Op1, byteMask, false);
+        Cpsr = ~CondCodesMask & newCpsr;
+        CondCodes = CondCodesMask & newCpsr;
+    '''
+    msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
+                                  { "code": msrCpsrRegCode,
+                                    "predicate_test": predicateTest }, [])
+    header_output += MsrRegDeclare.subst(msrCpsrRegIop)
+    decoder_output += MsrRegConstructor.subst(msrCpsrRegIop)
+    exec_output += PredOpExecute.subst(msrCpsrRegIop)
+
+    msrSpsrRegCode = "Spsr = spsrWriteByInstr(Spsr, Op1, byteMask, false);"
+    msrSpsrRegIop = InstObjParams("msr", "MsrSpsrReg", "MsrRegOp",
+                                  { "code": msrSpsrRegCode,
+                                    "predicate_test": predicateTest }, [])
+    header_output += MsrRegDeclare.subst(msrSpsrRegIop)
+    decoder_output += MsrRegConstructor.subst(msrSpsrRegIop)
+    exec_output += PredOpExecute.subst(msrSpsrRegIop)
+
+    msrCpsrImmCode = '''
+        uint32_t newCpsr =
+            cpsrWriteByInstr(Cpsr | CondCodes, imm, byteMask, false);
+        Cpsr = ~CondCodesMask & newCpsr;
+        CondCodes = CondCodesMask & newCpsr;
+    '''
+    msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
+                                  { "code": msrCpsrImmCode,
+                                    "predicate_test": predicateTest }, [])
+    header_output += MsrImmDeclare.subst(msrCpsrImmIop)
+    decoder_output += MsrImmConstructor.subst(msrCpsrImmIop)
+    exec_output += PredOpExecute.subst(msrCpsrImmIop)
+
+    msrSpsrImmCode = "Spsr = spsrWriteByInstr(Spsr, imm, byteMask, false);"
+    msrSpsrImmIop = InstObjParams("msr", "MsrSpsrImm", "MsrImmOp",
+                                  { "code": msrSpsrImmCode,
+                                    "predicate_test": predicateTest }, [])
+    header_output += MsrImmDeclare.subst(msrSpsrImmIop)
+    decoder_output += MsrImmConstructor.subst(msrSpsrImmIop)
+    exec_output += PredOpExecute.subst(msrSpsrImmIop)
+}};

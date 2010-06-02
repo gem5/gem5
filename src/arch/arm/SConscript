@@ -51,6 +51,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/branch.cc')
     Source('insts/macromem.cc')
     Source('insts/mem.cc')
+    Source('insts/misc.cc')
     Source('insts/pred_inst.cc')
     Source('insts/static_inst.cc')
     Source('nativetrace.cc')

@@ -52,6 +52,7 @@ output header {{
 #include "arch/arm/insts/branch.hh"
 #include "arch/arm/insts/macromem.hh"
 #include "arch/arm/insts/mem.hh"
+#include "arch/arm/insts/misc.hh"
 #include "arch/arm/insts/mult.hh"
 #include "arch/arm/insts/pred_inst.hh"
 #include "arch/arm/insts/static_inst.hh"
