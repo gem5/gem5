@@ -56,6 +56,10 @@ let {{
         ((%(reg_idx)s == PCReg) ? (readPC(xc) & ~PcModeMask) :
          xc->%(func)s(this, %(op_idx)s))
     '''
+    maybeAlignedPCRead = '''
+        ((%(reg_idx)s == PCReg) ? (roundDown(readPC(xc) & ~PcModeMask, 4)) :
+         xc->%(func)s(this, %(op_idx)s))
+    '''
     maybePCWrite = '''
         ((%(reg_idx)s == PCReg) ? setNextPC(xc, %(final_val)s) :
          xc->%(func)s(this, %(op_idx)s, %(final_val)s))
@@ -91,7 +95,7 @@ def operands {{
     'AIWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
                 maybePCRead, maybeAIWPCWrite),
     'Base': ('IntReg', 'uw', 'base', 'IsInteger', 1,
-             maybePCRead, maybePCWrite),
+             maybeAlignedPCRead, maybePCWrite),
     'Index': ('IntReg', 'uw', 'index', 'IsInteger', 2,
               maybePCRead, maybePCWrite),
     'Op1': ('IntReg', 'uw', 'op1', 'IsInteger', 3,
