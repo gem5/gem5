@@ -43,6 +43,10 @@ let {{
     decoder_output = ""
     exec_output = ""
 
+    calcGECode = '''
+        CondCodes = insertBits(CondCodes, 19, 16, resTemp);
+    '''
+
     calcQCode = '''
         CondCodes = CondCodes | ((resTemp & 1) << 27);
     '''
@@ -108,6 +112,8 @@ let {{
             negBit = 63
         if flagType == "saturate":
             immCcCode = calcQCode
+        elif flagType == "ge":
+            immCcCode = calcGECode
         else:
             immCcCode = calcCcCode % {
                 "icValue": secondOpRe.sub(immOp2, cCode[0]),
@@ -143,6 +149,8 @@ let {{
             negBit = 63
         if flagType == "saturate":
             regCcCode = calcQCode
+        elif flagType == "ge":
+            immCcCode = calcGECode
         else:
             regCcCode = calcCcCode % {
                 "icValue": secondOpRe.sub(regOp2, cCode[1]),
@@ -179,6 +187,8 @@ let {{
             negBit = 63
         if flagType == "saturate":
             regRegCcCode = calcQCode
+        elif flagType == "ge":
+            immCcCode = calcGECode
         else:
             regRegCcCode = calcCcCode % {
                 "icValue": secondOpRe.sub(regRegOp2, cCode[2]),
