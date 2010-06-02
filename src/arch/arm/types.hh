@@ -51,6 +51,12 @@ namespace ArmISA
     typedef uint32_t MachInst;
 
     BitUnion64(ExtMachInst)
+        Bitfield<63, 56> newItstate;
+        // ITSTATE bits
+        Bitfield<55, 48> itstate;
+        Bitfield<55, 52> itstateCond;
+        Bitfield<51, 48> itstateMask;
+
         // FPSCR fields
         Bitfield<41, 40> fpscrStride;
         Bitfield<39, 37> fpscrLen;

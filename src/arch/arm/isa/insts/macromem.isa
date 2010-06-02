@@ -47,10 +47,6 @@
 //
 
 let {{
-    predicateTest = 'testPredicate(CondCodes, condCode)'
-}};
-
-let {{
     microLdrUopCode = "IWRa = cSwap(Mem.uw, ((CPSR)Cpsr).e);"
     microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
                                    'MicroMemOp',

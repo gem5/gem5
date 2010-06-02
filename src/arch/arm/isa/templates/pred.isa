@@ -46,7 +46,11 @@
 //
 
 let {{
-    predicateTest = 'testPredicate(CondCodes, condCode)'
+    predicateTest = '''
+        testPredicate(CondCodes, machInst.itstateMask ?
+            (ConditionCode)(uint8_t)machInst.itstateCond :
+            condCode)
+    '''
 }};
 
 def template DataImmDeclare {{
@@ -141,6 +145,10 @@ def template PredOpExecute {{
             {
                 %(op_wb)s;
             }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;

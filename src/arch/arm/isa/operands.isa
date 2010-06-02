@@ -171,6 +171,7 @@ def operands {{
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 2),
 
     'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', (None, None, 'IsControl'), 1),
+    'Itstate': ('ControlReg', 'ub', 'MISCREG_ITSTATE', None, 2),
     'Spsr': ('ControlReg', 'uw', 'MISCREG_SPSR', None, 2),
     'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', None, 2),
     'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', None, 2),

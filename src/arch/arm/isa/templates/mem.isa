@@ -71,6 +71,10 @@ def template SwapExecute {{
             }
         }
 
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
         return fault;
     }
 }};
@@ -101,6 +105,10 @@ def template SwapInitiateAcc {{
             }
         }
 
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
         return fault;
     }
 }};
@@ -125,6 +133,10 @@ def template SwapCompleteAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -152,6 +164,10 @@ def template LoadExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -184,6 +200,10 @@ def template StoreExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -224,6 +244,10 @@ def template StoreExExecute {{
             }
         }
 
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
         return fault;
     }
 }};
@@ -257,6 +281,10 @@ def template StoreExInitiateAcc {{
             }
         }
 
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
         return fault;
     }
 }};
@@ -288,6 +316,10 @@ def template StoreInitiateAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -340,6 +372,10 @@ def template LoadCompleteAcc {{
             }
         }
 
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
         return fault;
     }
 }};
@@ -359,6 +395,10 @@ def template StoreCompleteAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -383,6 +423,10 @@ def template StoreExCompleteAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;

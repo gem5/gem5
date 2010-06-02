@@ -357,10 +357,10 @@ BaseSimpleCPU::checkForInterrupts()
         Fault interrupt = interrupts->getInterrupt(tc);
 
         if (interrupt != NoFault) {
-            predecoder.reset();
             fetchOffset = 0;
             interrupts->updateIntrInfo(tc);
             interrupt->invoke(tc);
+            predecoder.reset();
         }
     }
 #endif
@@ -508,8 +508,8 @@ BaseSimpleCPU::advancePC(Fault fault)
     fetchOffset = 0;
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
-        predecoder.reset();
         fault->invoke(tc);
+        predecoder.reset();
     } else {
         //If we're at the last micro op for this instruction
         if (curStaticInst && curStaticInst->isLastMicroop()) {

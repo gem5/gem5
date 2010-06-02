@@ -67,6 +67,7 @@ namespace ArmISA
 
     enum MiscRegIndex {
         MISCREG_CPSR = 0,
+        MISCREG_ITSTATE,
         MISCREG_SPSR,
         MISCREG_SPSR_FIQ,
         MISCREG_SPSR_IRQ,
@@ -189,7 +190,7 @@ namespace ArmISA
                                unsigned crm, unsigned opc2);
 
     const char * const miscRegName[NUM_MISCREGS] = {
-        "cpsr", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
+        "cpsr", "itstate", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
         "spsr_mon", "spsr_und", "spsr_abt",
         "fpsr", "fpsid", "fpscr", "fpexc", "mvfr0", "mvfr1",
         "sctlr_rst", "sev_mailbox",
@@ -240,6 +241,14 @@ namespace ArmISA
         Bitfield<5> t;
         Bitfield<4, 0> mode;
     EndBitUnion(CPSR)
+
+    BitUnion8(ITSTATE)
+        Bitfield<7, 4> cond;
+        Bitfield<3, 0> mask;
+        // Bitfields for moving to/from CPSR
+        Bitfield<7, 2> top6;
+        Bitfield<1, 0> bottom2;
+    EndBitUnion(ITSTATE)
 
     // This mask selects bits of the CPSR that actually go in the CondCodes
     // integer register to allow renaming.

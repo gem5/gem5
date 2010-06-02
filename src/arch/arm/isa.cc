@@ -159,121 +159,133 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             npc = npc | (ULL(1) << PcTBitShift);
 
         tc->setNextPC(npc);
-    }
-    if (misc_reg >= MISCREG_CP15_UNIMP_START &&
+    } else if (misc_reg >= MISCREG_CP15_UNIMP_START &&
         misc_reg < MISCREG_CP15_END) {
         panic("Unimplemented CP15 register %s wrote with %#x.\n",
               miscRegName[misc_reg], val);
-    }
-    switch (misc_reg) {
-      case MISCREG_CPACR:
-        {
-            CPACR newCpacr = 0;
-            CPACR valCpacr = val;
-            newCpacr.cp10 = valCpacr.cp10;
-            newCpacr.cp11 = valCpacr.cp11;
-            if (newCpacr.cp10 != 0x3 || newCpacr.cp11 != 3) {
-                panic("Disabling coprocessors isn't implemented.\n");
+    } else {
+        switch (misc_reg) {
+          case MISCREG_ITSTATE:
+            {
+                ITSTATE itstate = newVal;
+                CPSR cpsr = miscRegs[MISCREG_CPSR];
+                cpsr.it1 = itstate.bottom2;
+                cpsr.it2 = itstate.top6;
+                miscRegs[MISCREG_CPSR] = cpsr;
+                DPRINTF(MiscRegs,
+                        "Updating ITSTATE -> %#x in CPSR -> %#x.\n",
+                        (uint8_t)itstate, (uint32_t)cpsr);
             }
-            newVal = newCpacr;
-        }
-        break;
-      case MISCREG_CSSELR:
-        warn("The csselr register isn't implemented.\n");
-        break;
-      case MISCREG_FPSCR:
-        {
-            const uint32_t ones = (uint32_t)(-1);
-            FPSCR fpscrMask = 0;
-            fpscrMask.ioc = ones;
-            fpscrMask.dzc = ones;
-            fpscrMask.ofc = ones;
-            fpscrMask.ufc = ones;
-            fpscrMask.ixc = ones;
-            fpscrMask.idc = ones;
-            fpscrMask.len = ones;
-            fpscrMask.stride = ones;
-            fpscrMask.rMode = ones;
-            fpscrMask.fz = ones;
-            fpscrMask.dn = ones;
-            fpscrMask.ahp = ones;
-            fpscrMask.qc = ones;
-            fpscrMask.v = ones;
-            fpscrMask.c = ones;
-            fpscrMask.z = ones;
-            fpscrMask.n = ones;
-            newVal = (newVal & (uint32_t)fpscrMask) |
-                     (miscRegs[MISCREG_FPSCR] & ~(uint32_t)fpscrMask);
-        }
-        break;
-      case MISCREG_FPEXC:
-        {
-            const uint32_t fpexcMask = 0x60000000;
-            newVal = (newVal & fpexcMask) |
-                     (miscRegs[MISCREG_FPEXC] & ~fpexcMask);
-        }
-        break;
-      case MISCREG_SCTLR:
-        {
-            DPRINTF(MiscRegs, "Writing SCTLR: %#x\n", newVal);
-            SCTLR sctlr = miscRegs[MISCREG_SCTLR];
-            SCTLR new_sctlr = newVal;
-            new_sctlr.nmfi =  (bool)sctlr.nmfi;
-            miscRegs[MISCREG_SCTLR] = (MiscReg)new_sctlr;
+            break;
+          case MISCREG_CPACR:
+            {
+                CPACR newCpacr = 0;
+                CPACR valCpacr = val;
+                newCpacr.cp10 = valCpacr.cp10;
+                newCpacr.cp11 = valCpacr.cp11;
+                if (newCpacr.cp10 != 0x3 || newCpacr.cp11 != 3) {
+                    panic("Disabling coprocessors isn't implemented.\n");
+                }
+                newVal = newCpacr;
+            }
+            break;
+          case MISCREG_CSSELR:
+            warn("The csselr register isn't implemented.\n");
+            break;
+          case MISCREG_FPSCR:
+            {
+                const uint32_t ones = (uint32_t)(-1);
+                FPSCR fpscrMask = 0;
+                fpscrMask.ioc = ones;
+                fpscrMask.dzc = ones;
+                fpscrMask.ofc = ones;
+                fpscrMask.ufc = ones;
+                fpscrMask.ixc = ones;
+                fpscrMask.idc = ones;
+                fpscrMask.len = ones;
+                fpscrMask.stride = ones;
+                fpscrMask.rMode = ones;
+                fpscrMask.fz = ones;
+                fpscrMask.dn = ones;
+                fpscrMask.ahp = ones;
+                fpscrMask.qc = ones;
+                fpscrMask.v = ones;
+                fpscrMask.c = ones;
+                fpscrMask.z = ones;
+                fpscrMask.n = ones;
+                newVal = (newVal & (uint32_t)fpscrMask) |
+                         (miscRegs[MISCREG_FPSCR] & ~(uint32_t)fpscrMask);
+            }
+            break;
+          case MISCREG_FPEXC:
+            {
+                const uint32_t fpexcMask = 0x60000000;
+                newVal = (newVal & fpexcMask) |
+                         (miscRegs[MISCREG_FPEXC] & ~fpexcMask);
+            }
+            break;
+          case MISCREG_SCTLR:
+            {
+                DPRINTF(MiscRegs, "Writing SCTLR: %#x\n", newVal);
+                SCTLR sctlr = miscRegs[MISCREG_SCTLR];
+                SCTLR new_sctlr = newVal;
+                new_sctlr.nmfi =  (bool)sctlr.nmfi;
+                miscRegs[MISCREG_SCTLR] = (MiscReg)new_sctlr;
+                return;
+            }
+          case MISCREG_TLBTR:
+          case MISCREG_MVFR0:
+          case MISCREG_MVFR1:
+          case MISCREG_MPIDR:
+          case MISCREG_FPSID:
+            return;
+          case MISCREG_TLBIALLIS:
+          case MISCREG_TLBIALL:
+            warn("Need to flush all TLBs in MP\n");
+            tc->getITBPtr()->flushAll();
+            tc->getDTBPtr()->flushAll();
+            return;
+          case MISCREG_ITLBIALL:
+            tc->getITBPtr()->flushAll();
+            return;
+          case MISCREG_DTLBIALL:
+            tc->getDTBPtr()->flushAll();
+            return;
+          case MISCREG_TLBIMVAIS:
+          case MISCREG_TLBIMVA:
+            warn("Need to flush all TLBs in MP\n");
+            tc->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                    bits(newVal, 7,0));
+            tc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                    bits(newVal, 7,0));
+            return;
+          case MISCREG_TLBIASIDIS:
+          case MISCREG_TLBIASID:
+            warn("Need to flush all TLBs in MP\n");
+            tc->getITBPtr()->flushAsid(bits(newVal, 7,0));
+            tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
+            return;
+          case MISCREG_TLBIMVAAIS:
+          case MISCREG_TLBIMVAA:
+            warn("Need to flush all TLBs in MP\n");
+            tc->getITBPtr()->flushMva(mbits(newVal, 31,12));
+            tc->getDTBPtr()->flushMva(mbits(newVal, 31,12));
+            return;
+          case MISCREG_ITLBIMVA:
+            tc->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                    bits(newVal, 7,0));
+            return;
+          case MISCREG_DTLBIMVA:
+            tc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                    bits(newVal, 7,0));
+            return;
+          case MISCREG_ITLBIASID:
+            tc->getITBPtr()->flushAsid(bits(newVal, 7,0));
+            return;
+          case MISCREG_DTLBIASID:
+            tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
             return;
         }
-      case MISCREG_TLBTR:
-      case MISCREG_MVFR0:
-      case MISCREG_MVFR1:
-      case MISCREG_MPIDR:
-      case MISCREG_FPSID:
-        return;
-      case MISCREG_TLBIALLIS:
-      case MISCREG_TLBIALL:
-        warn("Need to flush all TLBs in MP\n");
-        tc->getITBPtr()->flushAll();
-        tc->getDTBPtr()->flushAll();
-        return;
-      case MISCREG_ITLBIALL:
-        tc->getITBPtr()->flushAll();
-        return;
-      case MISCREG_DTLBIALL:
-        tc->getDTBPtr()->flushAll();
-        return;
-      case MISCREG_TLBIMVAIS:
-      case MISCREG_TLBIMVA:
-        warn("Need to flush all TLBs in MP\n");
-        tc->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
-                bits(newVal, 7,0));
-        tc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
-                bits(newVal, 7,0));
-        return;
-      case MISCREG_TLBIASIDIS:
-      case MISCREG_TLBIASID:
-        warn("Need to flush all TLBs in MP\n");
-        tc->getITBPtr()->flushAsid(bits(newVal, 7,0));
-        tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
-        return;
-      case MISCREG_TLBIMVAAIS:
-      case MISCREG_TLBIMVAA:
-        warn("Need to flush all TLBs in MP\n");
-        tc->getITBPtr()->flushMva(mbits(newVal, 31,12));
-        tc->getDTBPtr()->flushMva(mbits(newVal, 31,12));
-        return;
-      case MISCREG_ITLBIMVA:
-        tc->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
-                bits(newVal, 7,0));
-        return;
-      case MISCREG_DTLBIMVA:
-        tc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
-                bits(newVal, 7,0));
-        return;
-      case MISCREG_ITLBIASID:
-        tc->getITBPtr()->flushAsid(bits(newVal, 7,0));
-        return;
-      case MISCREG_DTLBIASID:
-        tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
-        return;
     }
     setMiscRegNoEffect(misc_reg, newVal);
 }

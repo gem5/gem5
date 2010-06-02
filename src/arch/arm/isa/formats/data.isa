@@ -852,30 +852,70 @@ def format Thumb16ShiftAddSubMoveCmp() {{
         const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 8, 6);
         switch (bits(machInst, 13, 11)) {
           case 0x0: // lsl
-            return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
+            if (machInst.itstateMask) {
+                return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
+            } else {
+                return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
+            }
           case 0x1: // lsr
-            return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
+            if (machInst.itstateMask) {
+                return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
+            } else {
+                return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
+            }
           case 0x2: // asr
-            return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
+            if (machInst.itstateMask) {
+                return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
+            } else {
+                return new MovRegCc(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
+            }
           case 0x3:
             switch (bits(machInst, 10, 9)) {
               case 0x0:
-                return new AddRegCc(machInst, rd, rn, rm, 0, LSL);
+                if (machInst.itstateMask) {
+                    return new AddReg(machInst, rd, rn, rm, 0, LSL);
+                } else {
+                    return new AddRegCc(machInst, rd, rn, rm, 0, LSL);
+                }
               case 0x1:
-                return new SubRegCc(machInst, rd, rn, rm, 0, LSL);
+                if (machInst.itstateMask) {
+                    return new SubReg(machInst, rd, rn, rm, 0, LSL);
+                } else {
+                    return new SubRegCc(machInst, rd, rn, rm, 0, LSL);
+                }
               case 0x2:
-                return new AddImmCc(machInst, rd, rn, imm3, true);
+                if (machInst.itstateMask) {
+                    return new AddImm(machInst, rd, rn, imm3, true);
+                } else {
+                    return new AddImmCc(machInst, rd, rn, imm3, true);
+                }
               case 0x3:
-                return new SubImmCc(machInst, rd, rn, imm3, true);
+                if (machInst.itstateMask) {
+                    return new SubImm(machInst, rd, rn, imm3, true);
+                } else {
+                    return new SubImmCc(machInst, rd, rn, imm3, true);
+                }
             }
           case 0x4:
-            return new MovImmCc(machInst, rd8, INTREG_ZERO, imm8, false);
+            if (machInst.itstateMask) {
+                return new MovImm(machInst, rd8, INTREG_ZERO, imm8, false);
+            } else {
+                return new MovImmCc(machInst, rd8, INTREG_ZERO, imm8, false);
+            }
           case 0x5:
             return new CmpImmCc(machInst, INTREG_ZERO, rd8, imm8, true);
           case 0x6:
-            return new AddImmCc(machInst, rd8, rd8, imm8, true);
+            if (machInst.itstateMask) {
+                return new AddImm(machInst, rd8, rd8, imm8, true);
+            } else {
+                return new AddImmCc(machInst, rd8, rd8, imm8, true);
+            }
           case 0x7:
-            return new SubImmCc(machInst, rd8, rd8, imm8, true);
+            if (machInst.itstateMask) {
+                return new SubImm(machInst, rd8, rd8, imm8, true);
+            } else {
+                return new SubImmCc(machInst, rd8, rd8, imm8, true);
+            }
         }
     }
     '''
@@ -888,37 +928,97 @@ def format Thumb16DataProcessing() {{
         const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
         switch (bits(machInst, 9, 6)) {
           case 0x0:
-            return new AndRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            if (machInst.itstateMask) {
+                return new AndReg(machInst, rdn, rdn, rm, 0, LSL);
+            } else {
+                return new AndRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            }
           case 0x1:
-            return new EorRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            if (machInst.itstateMask) {
+                return new EorReg(machInst, rdn, rdn, rm, 0, LSL);
+            } else {
+                return new EorRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            }
           case 0x2: //lsl
-            return new MovRegRegCc(machInst, rdn, INTREG_ZERO, rdn, rm, LSL);
+            if (machInst.itstateMask) {
+                return new MovRegReg(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, LSL);
+            } else {
+                return new MovRegRegCc(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, LSL);
+            }
           case 0x3: //lsr
-            return new MovRegRegCc(machInst, rdn, INTREG_ZERO, rdn, rm, LSR);
+            if (machInst.itstateMask) {
+                return new MovRegReg(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, LSR);
+            } else {
+                return new MovRegRegCc(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, LSR);
+            }
           case 0x4: //asr
-            return new MovRegRegCc(machInst, rdn, INTREG_ZERO, rdn, rm, ASR);
+            if (machInst.itstateMask) {
+                return new MovRegReg(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, ASR);
+            } else {
+                return new MovRegRegCc(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, ASR);
+            }
           case 0x5:
-            return new AdcRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            if (machInst.itstateMask) {
+                return new AdcReg(machInst, rdn, rdn, rm, 0, LSL);
+            } else {
+                return new AdcRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            }
           case 0x6:
-            return new SbcRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            if (machInst.itstateMask) {
+                return new SbcReg(machInst, rdn, rdn, rm, 0, LSL);
+            } else {
+                return new SbcRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            }
           case 0x7: // ror
-            return new MovRegRegCc(machInst, rdn, INTREG_ZERO, rdn, rm, ROR);
+            if (machInst.itstateMask) {
+                return new MovRegReg(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, ROR);
+            } else {
+                return new MovRegRegCc(machInst, rdn,
+                        INTREG_ZERO, rdn, rm, ROR);
+            }
           case 0x8:
             return new TstRegCc(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
           case 0x9:
-            return new RsbImmCc(machInst, rdn, rm, 0, true);
+            if (machInst.itstateMask) {
+                return new RsbImm(machInst, rdn, rm, 0, true);
+            } else {
+                return new RsbImmCc(machInst, rdn, rm, 0, true);
+            }
           case 0xa:
             return new CmpRegCc(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
           case 0xb:
             return new CmnRegCc(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
           case 0xc:
-            return new OrrRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            if (machInst.itstateMask) {
+                return new OrrReg(machInst, rdn, rdn, rm, 0, LSL);
+            } else {
+                return new OrrRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            }
           case 0xd:
-            return new MulCc(machInst, rdn, rm, rdn);
+            if (machInst.itstateMask) {
+                return new Mul(machInst, rdn, rm, rdn);
+            } else {
+                return new MulCc(machInst, rdn, rm, rdn);
+            }
           case 0xe:
-            return new BicRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            if (machInst.itstateMask) {
+                return new BicReg(machInst, rdn, rdn, rm, 0, LSL);
+            } else {
+                return new BicRegCc(machInst, rdn, rdn, rm, 0, LSL);
+            }
           case 0xf:
-            return new MvnRegCc(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+            if (machInst.itstateMask) {
+                return new MvnReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+            } else {
+                return new MvnRegCc(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+            }
         }
     }
     '''
@@ -1070,7 +1170,7 @@ def format Thumb16Misc() {{
             return new WarnUnimplemented("bkpt", machInst);
           case 0xf:
             if (bits(machInst, 3, 0) != 0)
-                return new WarnUnimplemented("it", machInst);
+                return new ItInst(machInst);
             switch (bits(machInst, 7, 4)) {
               case 0x0:
                 return new NopInst(machInst);

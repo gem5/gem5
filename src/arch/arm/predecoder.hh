@@ -62,11 +62,21 @@ namespace ArmISA
         MachInst data;
         bool bigThumb;
         int offset;
+        ITSTATE itstate;
 
       public:
+        void reset()
+        {
+            bigThumb = false;
+            offset = 0;
+            emi = 0;
+        }
+
         Predecoder(ThreadContext * _tc) :
-            tc(_tc), data(0), bigThumb(false), offset(0)
-        {}
+            tc(_tc), data(0)
+        {
+            reset();
+        }
 
         ThreadContext * getTC()
         {
@@ -78,11 +88,24 @@ namespace ArmISA
             tc = _tc;
         }
 
-        void reset()
+        void advanceThumbCond()
         {
-            bigThumb = false;
-            offset = 0;
-            emi = 0;
+            uint8_t condMask = itstate.mask;
+            uint8_t thumbCond = itstate.cond;
+            DPRINTF(Predecoder, "Advancing ITSTATE from %#x, %#x.\n",
+                    thumbCond, condMask);
+            condMask = condMask << 1;
+            uint8_t newBit = bits(condMask, 4);
+            condMask &= mask(4);
+            if (condMask == 0) {
+                thumbCond = 0;
+            } else {
+                replaceBits(thumbCond, 0, newBit);
+            }
+            DPRINTF(Predecoder, "Advancing ITSTATE to %#x, %#x.\n",
+                    thumbCond, condMask);
+            itstate.mask = condMask;
+            itstate.cond = thumbCond;
         }
 
         void process()
@@ -92,7 +115,7 @@ namespace ArmISA
                 emi.sevenAndFour = bits(data, 7) && bits(data, 4);
                 emi.isMisc = (bits(data, 24, 23) == 0x2 &&
                               bits(data, 20) == 0);
-                DPRINTF(Predecoder, "Arm inst.\n");
+                DPRINTF(Predecoder, "Arm inst: %#x.\n", (uint64_t)emi);
             } else {
                 uint16_t word = (data >> (offset * 8));
                 if (bigThumb) {
@@ -102,6 +125,11 @@ namespace ArmISA
                     offset += 2;
                     DPRINTF(Predecoder, "Second half of 32 bit Thumb: %#x.\n",
                             emi.instBits);
+                    if (itstate.mask) {
+                        emi.itstate = itstate;
+                        advanceThumbCond();
+                        emi.newItstate = itstate;
+                    }
                 } else {
                     uint16_t highBits = word & 0xF800;
                     if (highBits == 0xE800 || highBits == 0xF000 ||
@@ -114,6 +142,11 @@ namespace ArmISA
                             DPRINTF(Predecoder, "All of 32 bit Thumb: %#x.\n",
                                     emi.instBits);
                             offset += 4;
+                            if (itstate.mask) {
+                                emi.itstate = itstate;
+                                advanceThumbCond();
+                                emi.newItstate = itstate;
+                            }
                         } else {
                             // We only have the first half word.
                             DPRINTF(Predecoder,
@@ -130,6 +163,19 @@ namespace ArmISA
                         emi.condCode = COND_UC;
                         DPRINTF(Predecoder, "16 bit Thumb: %#x.\n",
                                 emi.instBits);
+                        if (bits(word, 15, 8) == 0xbf &&
+                                bits(word, 3, 0) != 0x0) {
+                            emi.itstate = itstate;
+                            itstate = bits(word, 7, 0);
+                            emi.newItstate = itstate;
+                            DPRINTF(Predecoder,
+                                    "IT detected, cond = %#x, mask = %#x\n",
+                                    itstate.cond, itstate.mask);
+                        } else if (itstate.mask) {
+                            emi.itstate = itstate;
+                            advanceThumbCond();
+                            emi.newItstate = itstate;
+                        }
                     }
                 }
             }
@@ -145,6 +191,9 @@ namespace ArmISA
             FPSCR fpscr = tc->readMiscReg(MISCREG_FPSCR);
             emi.fpscrLen = fpscr.len;
             emi.fpscrStride = fpscr.stride;
+            CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+            itstate.top6 = cpsr.it2;
+            itstate.bottom2 = cpsr.it1;
             process();
         }
 
