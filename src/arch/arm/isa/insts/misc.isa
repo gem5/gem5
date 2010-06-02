@@ -458,4 +458,25 @@ let {{
     header_output += BasicDeclare.subst(nopIop)
     decoder_output += BasicConstructor.subst(nopIop)
     exec_output += BasicExecute.subst(nopIop)
+
+    ubfxCode = '''
+        Dest = bits(Op1, imm2, imm1);
+    '''
+    ubfxIop = InstObjParams("ubfx", "Ubfx", "RegRegImmImmOp",
+                            { "code": ubfxCode,
+                              "predicate_test": predicateTest }, [])
+    header_output += RegRegImmImmOpDeclare.subst(ubfxIop)
+    decoder_output += RegRegImmImmOpConstructor.subst(ubfxIop)
+    exec_output += PredOpExecute.subst(ubfxIop)
+
+    sbfxCode = '''
+        int32_t resTemp = bits(Op1, imm2, imm1);
+        Dest = resTemp | -(resTemp & (1 << (imm2 - imm1)));
+    '''
+    sbfxIop = InstObjParams("sbfx", "Sbfx", "RegRegImmImmOp",
+                            { "code": sbfxCode,
+                              "predicate_test": predicateTest }, [])
+    header_output += RegRegImmImmOpDeclare.subst(sbfxIop)
+    decoder_output += RegRegImmImmOpConstructor.subst(sbfxIop)
+    exec_output += PredOpExecute.subst(sbfxIop)
 }};
