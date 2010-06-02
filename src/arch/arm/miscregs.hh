@@ -124,6 +124,10 @@ namespace ArmISA
         MISCREG_TLBIMVA,
         MISCREG_TLBIASID,
         MISCREG_TLBIMVAA,
+        MISCREG_DFSR,
+        MISCREG_IFSR,
+        MISCREG_DFAR,
+        MISCREG_IFAR,
         MISCREG_CP15_UNIMP_START,
         MISCREG_CTR = MISCREG_CP15_UNIMP_START,
         MISCREG_TCMTR,
@@ -145,12 +149,8 @@ namespace ArmISA
         MISCREG_PAR,
         MISCREG_AIDR,
         MISCREG_ACTLR,
-        MISCREG_DFSR,
-        MISCREG_IFSR,
         MISCREG_ADFSR,
         MISCREG_AIFSR,
-        MISCREG_DFAR,
-        MISCREG_IFAR,
         MISCREG_DCIMVAC,
         MISCREG_DCISW,
         MISCREG_MCCSW,
@@ -203,12 +203,13 @@ namespace ArmISA
         "itlbiall", "itlbimva", "itlbiasid",
         "dtlbiall", "dtlbimva", "dtlbiasid",
         "tlbiall", "tlbimva", "tlbiasid", "tlbimvaa",
+        "dfsr", "ifsr", "dfar", "ifar",
         "ctr", "tcmtr", "mpidr",
         "id_pfr0", "id_pfr1", "id_dfr0", "id_afr0",
         "id_mmfr0", "id_mmfr1", "id_mmfr2", "id_mmfr3",
         "id_isar0", "id_isar1", "id_isar2", "id_isar3", "id_isar4", "id_isar5",
         "par", "aidr", "actlr",
-        "dfsr", "ifsr", "adfsr", "aifsr", "dfar", "ifar",
+        "adfsr", "aifsr",
         "dcimvac", "dcisw", "mccsw",
         "dccmvau",
         "scr", "sder", "nsacr", "ttbcr",
@@ -285,6 +286,14 @@ namespace ArmISA
         Bitfield<30> d32dis;
         Bitfield<31> asedis;
     EndBitUnion(CPACR)
+
+    BitUnion32(FSR)
+        Bitfield<3, 0> fsLow;
+        Bitfield<7, 4> domain;
+        Bitfield<10> fsHigh;
+        Bitfield<11> wnr;
+        Bitfield<12> ext;
+    EndBitUnion(FSR)
 };
 
 #endif // __ARCH_ARM_MISCREGS_HH__

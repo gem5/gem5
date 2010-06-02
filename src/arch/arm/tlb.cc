@@ -299,7 +299,8 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 
         if (sctlr.a || (flags & AllowUnaligned) == 0) {
             if ((vaddr & flags & AlignmentMask) != 0) {
-                return new DataAbort;
+                return new DataAbort(vaddr, (mode == Write), 0,
+                            ArmFault::AlignmentFault);
             }
         }
     }

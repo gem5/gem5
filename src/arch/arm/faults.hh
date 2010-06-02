@@ -45,6 +45,7 @@
 #ifndef __ARM_FAULTS_HH__
 #define __ARM_FAULTS_HH__
 
+#include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
 #include "config/full_system.hh"
 #include "sim/faults.hh"
@@ -55,12 +56,37 @@ namespace ArmISA
 {
 typedef const Addr FaultOffset;
 
-class ArmFaultBase : public FaultBase
+class ArmFault : public FaultBase
 {
   protected:
     Addr getVector(ThreadContext *tc);
 
   public:
+    enum StatusEncoding
+    {
+        // Fault Status register encodings
+        // ARM ARM B3.9.4
+        AlignmentFault = 0x1,
+        DebugEvent = 0x2,
+        AccessFlag0 = 0x3,
+        InstructionCacheMaintenance = 0x4,
+        Translation0 = 0x5,
+        AccessFlag1 = 0x6,
+        Translation1 = 0x7,
+        SynchronousExternalAbort0 = 0x8,
+        Domain0 = 0x9,
+        Domain1 = 0xb,
+        TranslationTableWalk0 = 0xc,
+        Permission0 = 0xd,
+        SynchronousExternalAbort1 = 0xe,
+        Permission1 = 0xf,
+        AsynchronousExternalAbort = 0x16,
+        MemoryAccessAsynchronousParityError = 0x18,
+        MemoryAccessSynchronousParityError = 0x19,
+        TranslationTableWalk1 = 0x1c,
+        SynchronousParityError = 0x1e
+    };
+
     struct FaultVals
     {
         const FaultName name;
@@ -86,7 +112,7 @@ class ArmFaultBase : public FaultBase
 };
 
 template<typename T>
-class ArmFault : public ArmFaultBase
+class ArmFaultVals : public ArmFault
 {
   protected:
     static FaultVals vals;
@@ -103,9 +129,9 @@ class ArmFault : public ArmFaultBase
 };
 
 
-class Reset                : public ArmFault<Reset> {};
+class Reset : public ArmFaultVals<Reset> {};
 
-class UndefinedInstruction : public ArmFault<UndefinedInstruction>
+class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
 {
 #if !FULL_SYSTEM
   protected:
@@ -125,7 +151,7 @@ class UndefinedInstruction : public ArmFault<UndefinedInstruction>
 #endif
 };
 
-class SupervisorCall       : public ArmFault<SupervisorCall>
+class SupervisorCall : public ArmFaultVals<SupervisorCall>
 {
 #if !FULL_SYSTEM
   protected:
@@ -138,10 +164,50 @@ class SupervisorCall       : public ArmFault<SupervisorCall>
     void invoke(ThreadContext *tc);
 #endif
 };
-class PrefetchAbort        : public ArmFault<PrefetchAbort> {};
-class DataAbort            : public ArmFault<DataAbort> {};
-class Interrupt            : public ArmFault<Interrupt> {};
-class FastInterrupt        : public ArmFault<FastInterrupt> {};
+
+template <class T>
+class AbortFault : public ArmFaultVals<T>
+{
+  protected:
+    Addr faultAddr;
+    bool write;
+    uint8_t domain;
+    uint8_t status;
+
+  public:
+    AbortFault(Addr _faultAddr, bool _write,
+            uint8_t _domain, uint8_t _status) :
+        faultAddr(_faultAddr), write(_write),
+        domain(_domain), status(_status)
+    {}
+
+    void invoke(ThreadContext *tc);
+};
+
+class PrefetchAbort : public AbortFault<PrefetchAbort>
+{
+  public:
+    static const MiscRegIndex FsrIndex = MISCREG_IFSR;
+    static const MiscRegIndex FarIndex = MISCREG_IFAR;
+
+    PrefetchAbort(Addr _addr, uint8_t _status) :
+        AbortFault<PrefetchAbort>(_addr, false, 0, _status)
+    {}
+};
+
+class DataAbort : public AbortFault<DataAbort>
+{
+  public:
+    static const MiscRegIndex FsrIndex = MISCREG_DFSR;
+    static const MiscRegIndex FarIndex = MISCREG_DFAR;
+
+    DataAbort(Addr _addr, bool _write, uint8_t _domain, uint8_t _status) :
+        AbortFault<DataAbort>(_addr, _write, _domain, _status)
+    {}
+};
+
+class Interrupt : public ArmFaultVals<Interrupt> {};
+class FastInterrupt : public ArmFaultVals<FastInterrupt> {};
 
 
 } // ArmISA namespace

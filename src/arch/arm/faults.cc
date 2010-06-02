@@ -50,29 +50,29 @@
 namespace ArmISA
 {
 
-template<> ArmFaultBase::FaultVals ArmFault<Reset>::vals = 
+template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals =
     {"reset", 0x00, MODE_SVC, 0, 0, true, true};
 
-template<> ArmFaultBase::FaultVals ArmFault<UndefinedInstruction>::vals = 
+template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals =
     {"Undefined Instruction", 0x04, MODE_UNDEFINED, 4 ,2, false, false} ;
 
-template<> ArmFaultBase::FaultVals ArmFault<SupervisorCall>::vals = 
+template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals =
     {"Supervisor Call", 0x08, MODE_SVC, 4, 2, false, false};
 
-template<> ArmFaultBase::FaultVals ArmFault<PrefetchAbort>::vals = 
+template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals =
     {"Prefetch Abort", 0x0C, MODE_ABORT, 4, 4, true, false};
 
-template<> ArmFaultBase::FaultVals ArmFault<DataAbort>::vals = 
+template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals =
     {"Data Abort", 0x10, MODE_ABORT, 8, 8, true, false};
 
-template<> ArmFaultBase::FaultVals ArmFault<Interrupt>::vals = 
+template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals =
     {"IRQ", 0x18, MODE_IRQ, 4, 4, true, false};
 
-template<> ArmFaultBase::FaultVals ArmFault<FastInterrupt>::vals = 
+template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals =
     {"FIQ", 0x1C, MODE_FIQ, 4, 4, true, true};
 
 Addr 
-ArmFaultBase::getVector(ThreadContext *tc)
+ArmFault::getVector(ThreadContext *tc)
 {
     // ARM ARM B1-3
 
@@ -91,7 +91,7 @@ ArmFaultBase::getVector(ThreadContext *tc)
 #if FULL_SYSTEM
 
 void 
-ArmFaultBase::invoke(ThreadContext *tc)
+ArmFault::invoke(ThreadContext *tc)
 {
     // ARM ARM B1.6.3
     FaultBase::invoke(tc);
@@ -184,6 +184,24 @@ SupervisorCall::invoke(ThreadContext *tc)
 }
 
 #endif // FULL_SYSTEM
+
+template<class T>
+void
+AbortFault<T>::invoke(ThreadContext *tc)
+{
+    ArmFaultVals<T>::invoke(tc);
+    FSR fsr = 0;
+    fsr.fsLow = bits(status, 3, 0);
+    fsr.fsHigh = bits(status, 4);
+    fsr.domain = domain;
+    fsr.wnr = (write ? 1 : 0);
+    fsr.ext = 0;
+    tc->setMiscReg(T::FsrIndex, fsr);
+    tc->setMiscReg(T::FarIndex, faultAddr);
+}
+
+template void AbortFault<PrefetchAbort>::invoke(ThreadContext *tc);
+template void AbortFault<DataAbort>::invoke(ThreadContext *tc);
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm
 
