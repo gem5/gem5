@@ -39,6 +39,12 @@
 
 #include "arch/arm/insts/vfp.hh"
 
+/*
+ * The asm statements below are to keep gcc from reordering code. Otherwise
+ * the rounding mode might be set after the operation it was intended for, the
+ * exception bits read before it, etc.
+ */
+
 std::string
 FpRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
