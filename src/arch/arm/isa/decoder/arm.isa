@@ -158,7 +158,7 @@ format DataOp {
     0x3: decode OPCODE_4 {
         0: AddrMode2::addrMode2(False);
         1: decode OPCODE_24_23 {
-            0x0: WarnUnimpl::parallel_add_subtract_instructions();
+            0x0: ArmParallelAddSubtract::armParallelAddSubtract();
             0x1: decode MEDIA_OPCODE {
                 0x8: decode MISC_OPCODE {
                     0x1, 0x9: WarnUnimpl::pkhbt();

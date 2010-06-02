@@ -124,6 +124,122 @@ def format ArmDataProcReg() {{
     '''
 }};
 
+def format ArmParallelAddSubtract() {{
+    decode_block='''
+    {
+        const uint32_t op1 = bits(machInst, 21, 20);
+        const uint32_t op2 = bits(machInst, 7, 5);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        if (bits(machInst, 22) == 0) {
+            switch (op1) {
+              case 0x1:
+                switch (op2) {
+                  case 0x0:
+                    return new WarnUnimplemented("sadd16", machInst);
+                  case 0x1:
+                    return new WarnUnimplemented("sasx", machInst);
+                  case 0x2:
+                    return new WarnUnimplemented("ssax", machInst);
+                  case 0x3:
+                    return new WarnUnimplemented("ssub16", machInst);
+                  case 0x4:
+                    return new WarnUnimplemented("sadd8", machInst);
+                  case 0x7:
+                    return new WarnUnimplemented("ssub8", machInst);
+                }
+                break;
+              case 0x2:
+                switch (op2) {
+                  case 0x0:
+                    return new Qadd16Reg(machInst, rd, rn, rm, 0, LSL);
+                  case 0x1:
+                    return new QasxReg(machInst, rd, rn, rm, 0, LSL);
+                  case 0x2:
+                    return new QsaxReg(machInst, rd, rn, rm, 0, LSL);
+                  case 0x3:
+                    return new Qsub16Reg(machInst, rd, rn, rm, 0, LSL);
+                  case 0x4:
+                    return new Qadd8Reg(machInst, rd, rn, rm, 0, LSL);
+                  case 0x7:
+                    return new Qsub8Reg(machInst, rd, rn, rm, 0, LSL);
+                }
+                break;
+              case 0x3:
+                switch (op2) {
+                  case 0x0:
+                    return new WarnUnimplemented("shadd16", machInst);
+                  case 0x1:
+                    return new WarnUnimplemented("shasx", machInst);
+                  case 0x2:
+                    return new WarnUnimplemented("shsax", machInst);
+                  case 0x3:
+                    return new WarnUnimplemented("shsub16", machInst);
+                  case 0x4:
+                    return new WarnUnimplemented("shadd8", machInst);
+                  case 0x7:
+                    return new WarnUnimplemented("shsub8", machInst);
+                }
+                break;
+            }
+        } else {
+            switch (op1) {
+              case 0x1:
+                switch (op2) {
+                  case 0x0:
+                    return new WarnUnimplemented("uadd16", machInst);
+                  case 0x1:
+                    return new WarnUnimplemented("uasx", machInst);
+                  case 0x2:
+                    return new WarnUnimplemented("usax", machInst);
+                  case 0x3:
+                    return new WarnUnimplemented("usub16", machInst);
+                  case 0x4:
+                    return new WarnUnimplemented("uadd8", machInst);
+                  case 0x7:
+                    return new WarnUnimplemented("usub8", machInst);
+                }
+                break;
+              case 0x2:
+                switch (op2) {
+                  case 0x0:
+                    return new WarnUnimplemented("uqadd16", machInst);
+                  case 0x1:
+                    return new WarnUnimplemented("uqasx", machInst);
+                  case 0x2:
+                    return new WarnUnimplemented("uqsax", machInst);
+                  case 0x3:
+                    return new WarnUnimplemented("uqsub16", machInst);
+                  case 0x4:
+                    return new WarnUnimplemented("uqadd8", machInst);
+                  case 0x7:
+                    return new WarnUnimplemented("uqsub8", machInst);
+                }
+                break;
+              case 0x3:
+                switch (op2) {
+                  case 0x0:
+                    return new WarnUnimplemented("uhadd16", machInst);
+                  case 0x1:
+                    return new WarnUnimplemented("uhasx", machInst);
+                  case 0x2:
+                    return new WarnUnimplemented("uhsax", machInst);
+                  case 0x3:
+                    return new WarnUnimplemented("uhsub16", machInst);
+                  case 0x4:
+                    return new WarnUnimplemented("uhadd8", machInst);
+                  case 0x7:
+                    return new WarnUnimplemented("uhsub8", machInst);
+                }
+                break;
+            }
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};
+
 def format ArmDataProcImm() {{
     pclr = '''
         return new %(className)ssImmPclr(machInst, %(dest)s,
