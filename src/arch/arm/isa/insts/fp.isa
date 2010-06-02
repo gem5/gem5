@@ -678,4 +678,29 @@ let {{
     header_output += RegRegOpDeclare.subst(vcvtFpSIntDIop);
     decoder_output += RegRegOpConstructor.subst(vcvtFpSIntDIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDIop);
+
+    vcvtFpSFpDCode = '''
+        IntDoubleUnion cDest;
+        cDest.fp = FpOp1;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vcvtFpSFpDIop = InstObjParams("vcvt", "VcvtFpSFpD", "RegRegOp",
+                                     { "code": vcvtFpSFpDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtFpSFpDIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtFpSFpDIop);
+    exec_output += PredOpExecute.subst(vcvtFpSFpDIop);
+
+    vcvtFpDFpSCode = '''
+        IntDoubleUnion cOp1;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        FpDest = cOp1.fp;
+    '''
+    vcvtFpDFpSIop = InstObjParams("vcvt", "VcvtFpDFpS", "RegRegOp",
+                                     { "code": vcvtFpDFpSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vcvtFpDFpSIop);
+    decoder_output += RegRegOpConstructor.subst(vcvtFpDFpSIop);
+    exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
 }};
