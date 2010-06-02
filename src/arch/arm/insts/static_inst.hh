@@ -47,6 +47,7 @@
 
 namespace ArmISA
 {
+
 class ArmStaticInst : public StaticInst
 {
   protected:
@@ -61,7 +62,7 @@ class ArmStaticInst : public StaticInst
                         uint32_t type, uint32_t cfval) const;
 
     template<int width>
-    static bool
+    static inline bool
     saturateOp(int32_t &res, int64_t op1, int64_t op2, bool sub=false)
     {
         int64_t midRes = sub ? (op1 - op2) : (op1 + op2);
@@ -77,7 +78,7 @@ class ArmStaticInst : public StaticInst
         }
     }
 
-    static bool
+    static inline bool
     satInt(int32_t &res, int64_t op, int width)
     {
         width--;
@@ -94,7 +95,7 @@ class ArmStaticInst : public StaticInst
     }
 
     template<int width>
-    static bool
+    static inline bool
     uSaturateOp(uint32_t &res, int64_t op1, int64_t op2, bool sub=false)
     {
         int64_t midRes = sub ? (op1 - op2) : (op1 + op2);
@@ -110,7 +111,7 @@ class ArmStaticInst : public StaticInst
         }
     }
 
-    static bool
+    static inline bool
     uSatInt(int32_t &res, int64_t op, int width)
     {
         if (op >= (LL(1) << width)) {
@@ -154,7 +155,7 @@ class ArmStaticInst : public StaticInst
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
-    static uint32_t
+    static inline uint32_t
     cpsrWriteByInstr(CPSR cpsr, uint32_t val,
             uint8_t byteMask, bool affectState, bool nmfi)
     {
@@ -194,7 +195,7 @@ class ArmStaticInst : public StaticInst
         return new_cpsr;
     }
 
-    static uint32_t
+    static inline uint32_t
     spsrWriteByInstr(uint32_t spsr, uint32_t val,
             uint8_t byteMask, bool affectState)
     {
@@ -213,7 +214,7 @@ class ArmStaticInst : public StaticInst
     }
 
     template<class XC>
-    static Addr
+    static inline Addr
     readPC(XC *xc)
     {
         Addr pc = xc->readPC();
@@ -226,7 +227,7 @@ class ArmStaticInst : public StaticInst
 
     // Perform an regular branch.
     template<class XC>
-    static void
+    static inline void
     setNextPC(XC *xc, Addr val)
     {
         Addr npc = xc->readNextPC();
@@ -240,7 +241,7 @@ class ArmStaticInst : public StaticInst
     }
 
     template<class T>
-    static T
+    static inline T
     cSwap(T val, bool big)
     {
         if (big) {
@@ -252,7 +253,7 @@ class ArmStaticInst : public StaticInst
 
     // Perform an interworking branch.
     template<class XC>
-    static void
+    static inline void
     setIWNextPC(XC *xc, Addr val)
     {
         Addr stateBits = xc->readPC() & PcModeMask;
@@ -284,7 +285,7 @@ class ArmStaticInst : public StaticInst
     // Perform an interworking branch in ARM mode, a regular branch
     // otherwise.
     template<class XC>
-    static void
+    static inline void
     setAIWNextPC(XC *xc, Addr val)
     {
         Addr stateBits = xc->readPC() & PcModeMask;
