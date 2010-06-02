@@ -128,6 +128,13 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
     }
 
     (*uop)->setLastMicroop();
+
+    for (StaticInstPtr *curUop = microOps;
+            !(*curUop)->isLastMicroop(); curUop++) {
+        MicroOp * uopPtr = dynamic_cast<MicroOp *>(curUop->get());
+        assert(uopPtr);
+        uopPtr->setDelayedCommit();
+    }
 }
 
 MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
@@ -198,6 +205,13 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
 
     assert(numMicroops == i);
     microOps[numMicroops - 1]->setLastMicroop();
+
+    for (StaticInstPtr *curUop = microOps;
+            !(*curUop)->isLastMicroop(); curUop++) {
+        MicroOp * uopPtr = dynamic_cast<MicroOp *>(curUop->get());
+        assert(uopPtr);
+        uopPtr->setDelayedCommit();
+    }
 }
 
 }

@@ -60,10 +60,26 @@ number_of_ones(int32_t val)
     return ones;
 }
 
+class MicroOp : public PredOp
+{
+  protected:
+    MicroOp(const char *mnem, ExtMachInst machInst, OpClass __opClass)
+            : PredOp(mnem, machInst, __opClass)
+    {
+    }
+
+  public:
+    void
+    setDelayedCommit()
+    {
+        flags[IsDelayedCommit] = true;
+    }
+};
+
 /**
  * Microops of the form IntRegA = IntRegB op Imm
  */
-class MicroIntOp : public PredOp
+class MicroIntOp : public MicroOp
 {
   protected:
     RegIndex ura, urb;
@@ -71,7 +87,7 @@ class MicroIntOp : public PredOp
 
     MicroIntOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                RegIndex _ura, RegIndex _urb, uint8_t _imm)
-            : PredOp(mnem, machInst, __opClass),
+            : MicroOp(mnem, machInst, __opClass),
               ura(_ura), urb(_urb), imm(_imm)
     {
     }
