@@ -114,6 +114,7 @@ def operands {{
 
     #Register fields for microops
     'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 11, maybePCRead, maybePCWrite),
+    'Fa' : ('FloatReg', 'sf', 'ura', 'IsFloating', 11),
     'Rb' : ('IntReg', 'uw', 'urb', 'IsInteger', 12, maybePCRead, maybePCWrite),
 
     #General Purpose Floating Point Reg Operands
