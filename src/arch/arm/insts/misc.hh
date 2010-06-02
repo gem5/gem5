@@ -258,4 +258,15 @@ class RegImmRegShiftOp : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+class UnknownOp : public PredOp
+{
+  protected:
+
+    UnknownOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        PredOp(mnem, _machInst, __opClass)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
 #endif

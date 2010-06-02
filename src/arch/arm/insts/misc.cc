@@ -261,3 +261,11 @@ RegImmRegShiftOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     printReg(ss, op1);
     return ss.str();
 }
+
+std::string
+UnknownOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    return csprintf("%-10s (inst 0x%x, opcode 0x%x, binary:%s)",
+                    "unknown", machInst, machInst.opcode,
+                    inst2string(machInst));
+}

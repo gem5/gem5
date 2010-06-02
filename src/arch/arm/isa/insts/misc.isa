@@ -468,6 +468,19 @@ let {{
     header_output += BasicDeclare.subst(itIop)
     decoder_output += BasicConstructor.subst(itIop)
     exec_output += PredOpExecute.subst(itIop)
+    unknownCode = '''
+#if FULL_SYSTEM
+            return new UndefinedInstruction;
+#else
+            return new UndefinedInstruction(machInst, true);
+#endif
+    '''
+    unknownIop = InstObjParams("unknown", "Unknown", "UnknownOp", \
+                               { "code": unknownCode,
+                                 "predicate_test": predicateTest })
+    header_output += BasicDeclare.subst(unknownIop)
+    decoder_output += BasicConstructor.subst(unknownIop)
+    exec_output += PredOpExecute.subst(unknownIop)
 
     ubfxCode = '''
         Dest = bits(Op1, imm2, imm1);
