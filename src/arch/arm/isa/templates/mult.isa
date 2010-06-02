@@ -37,17 +37,50 @@
 //
 // Authors: Gabe Black
 
-//Templates for predicated instructions
-##include "pred.isa"
+def template Mult3Declare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex _reg0,
+                       IntRegIndex _reg1, IntRegIndex _reg2);
+        %(BasicExecDeclare)s
+};
+}};
 
-//Templates for memory instructions
-##include "mem.isa"
+def template Mult3Constructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _reg0,
+                                          IntRegIndex _reg1,
+                                          IntRegIndex _reg2)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _reg0, _reg1, _reg2)
+    {
+        %(constructor)s;
+    }
+}};
 
-//Templates for microcoded memory instructions
-##include "macromem.isa"
+def template Mult4Declare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst,
+                       IntRegIndex _reg0, IntRegIndex _reg1,
+                       IntRegIndex _reg2, IntRegIndex _reg3);
+        %(BasicExecDeclare)s
+};
+}};
 
-//Templates for branches
-##include "branch.isa"
-
-//Templates for multiplies
-##include "mult.isa"
+def template Mult4Constructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _reg0,
+                                          IntRegIndex _reg1,
+                                          IntRegIndex _reg2,
+                                          IntRegIndex _reg3)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _reg0, _reg1, _reg2, _reg3)
+    {
+        %(constructor)s;
+    }
+}};
