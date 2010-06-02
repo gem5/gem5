@@ -60,6 +60,9 @@ number_of_ones(int32_t val)
     return ones;
 }
 
+/**
+ * Base class for Memory microops
+ */
 class MicroOp : public PredOp
 {
   protected:
@@ -110,6 +113,9 @@ class MicroMemOp : public MicroIntOp
     }
 };
 
+/**
+ * Base class for microcoded integer memory instructions.
+ */
 class MacroMemOp : public PredMacroOp
 {
   protected:
@@ -118,6 +124,9 @@ class MacroMemOp : public PredMacroOp
                bool writeback, bool load, uint32_t reglist);
 };
 
+/**
+ * Base class for microcoded floating point memory instructions.
+ */
 class MacroVFPMemOp : public PredMacroOp
 {
   protected:
