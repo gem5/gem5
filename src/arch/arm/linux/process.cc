@@ -141,7 +141,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 74 */ SyscallDesc("sethostname", ignoreFunc),
     /* 75 */ SyscallDesc("setrlimit", unimplementedFunc),
     /* 76 */ SyscallDesc("getrlimit", unimplementedFunc),
-    /* 77 */ SyscallDesc("getrusage", unimplementedFunc),
+    /* 77 */ SyscallDesc("getrusage", getrusageFunc<ArmLinux>),
     /* 78 */ SyscallDesc("gettimeofday", unimplementedFunc),
     /* 79 */ SyscallDesc("settimeofday", unimplementedFunc),
     /* 80 */ SyscallDesc("getgroups", unimplementedFunc),
