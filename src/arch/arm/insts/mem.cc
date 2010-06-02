@@ -62,6 +62,31 @@ Swap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     return ss.str();
 }
 
+string
+RfeOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    stringstream ss;
+    switch (mode) {
+      case DecrementAfter:
+        printMnemonic(ss, "da");
+        break;
+      case DecrementBefore:
+        printMnemonic(ss, "db");
+        break;
+      case IncrementAfter:
+        printMnemonic(ss, "ia");
+        break;
+      case IncrementBefore:
+        printMnemonic(ss, "ib");
+        break;
+    }
+    printReg(ss, base);
+    if (wb) {
+        ss << "!";
+    }
+    return ss.str();
+}
+
 void
 Memory::printInst(std::ostream &os, AddrMode addrMode) const
 {

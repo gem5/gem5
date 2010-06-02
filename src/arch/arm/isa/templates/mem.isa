@@ -294,6 +294,26 @@ def template StoreCompleteAcc {{
     }
 }};
 
+def template RfeDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                uint32_t _base, int _mode, bool _wb);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
 def template SwapDeclare {{
     /**
      * Static instruction class for "%(mnemonic)s".
@@ -406,6 +426,16 @@ def template InitiateAccDeclare {{
 
 def template CompleteAccDeclare {{
     Fault completeAcc(PacketPtr,  %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+def template RfeConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+            uint32_t _base, int _mode, bool _wb)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                 (IntRegIndex)_base, (AddrMode)_mode, _wb)
+    {
+        %(constructor)s;
+    }
 }};
 
 def template SwapConstructor {{

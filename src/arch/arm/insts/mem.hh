@@ -63,6 +63,30 @@ class Swap : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+// The address is a base register plus an immediate.
+class RfeOp : public PredOp
+{
+  public:
+    enum AddrMode {
+        DecrementAfter,
+        DecrementBefore,
+        IncrementAfter,
+        IncrementBefore
+    };
+  protected:
+    IntRegIndex base;
+    AddrMode mode;
+    bool wb;
+
+    RfeOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+          IntRegIndex _base, AddrMode _mode, bool _wb)
+        : PredOp(mnem, _machInst, __opClass),
+          base(_base), mode(_mode), wb(_wb)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
 class Memory : public PredOp
 {
   public:
