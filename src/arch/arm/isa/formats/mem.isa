@@ -235,7 +235,7 @@ def format ArmSyncMem() {{
           case 0x1a:
             return new %(strexd)s(machInst, rt, rt2, rt2 + 1, rn, true, 0);
           case 0x1b:
-            return new WarnUnimplemented("ldrexd", machInst);
+            return new %(ldrexd)s(machInst, rt, rt + 1, rn, true, 0);
           case 0x1c:
             return new %(strexb)s(machInst, rt, rt2, rn, true, 0);
           case 0x1d:
@@ -252,6 +252,7 @@ def format ArmSyncMem() {{
         "ldrex" : "LDREX_" + loadImmClassName(False, True, False, size=4),
         "ldrexb" : "LDREXB_" + loadImmClassName(False, True, False, size=1),
         "ldrexh" : "LDREXH_" + loadImmClassName(False, True, False, size=2),
+        "ldrexd" : "LDREXD_" + loadDoubleImmClassName(False, True, False),
         "strex" : "STREX_" + storeImmClassName(False, True, False, size=4),
         "strexb" : "STREXB_" + storeImmClassName(False, True, False, size=1),
         "strexh" : "STREXH_" + storeImmClassName(False, True, False, size=2),
