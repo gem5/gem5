@@ -256,11 +256,15 @@ def format Thumb16SpecDataAndBx() {{
           case 0x2:
             return new MovReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
           case 0x3:
-            if (bits(machInst, 7) == 0)
-                return new WarnUnimplemented("bx", machInst);
-            else
-                // The register version.
-                return new WarnUnimplemented("blx", machInst);
+            if (bits(machInst, 7) == 0) {
+                return new BxReg(machInst,
+                                 (IntRegIndex)(uint32_t)bits(machInst, 6, 3),
+                                 COND_UC);
+            } else {
+                return new BlxReg(machInst,
+                                  (IntRegIndex)(uint32_t)bits(machInst, 6, 3),
+                                  COND_UC);
+            }
         }
     }
     '''
@@ -299,7 +303,10 @@ def format Thumb16Misc() {{
                                    bits(machInst, 6, 0) << 2, true);
             }
           case 0x1:
-            return new WarnUnimplemented("cbz", machInst);
+            return new Cbz(machInst,
+                           (bits(machInst, 9) << 6) |
+                           (bits(machInst, 7, 3) << 1),
+                           (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0x2:
             switch (bits(machInst, 7, 6)) {
               case 0x0:
@@ -312,7 +319,10 @@ def format Thumb16Misc() {{
                 return new WarnUnimplemented("uxtb", machInst);
             }
           case 0x3:
-            return new WarnUnimplemented("cbnz", machInst);
+            return new Cbz(machInst,
+                           (bits(machInst, 9) << 6) |
+                           (bits(machInst, 7, 3) << 1),
+                           (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0x4:
           case 0x5:
             return new WarnUnimplemented("push", machInst);
@@ -326,7 +336,10 @@ def format Thumb16Misc() {{
                 }
             }
           case 0x9:
-            return new WarnUnimplemented("cbz", machInst);
+            return new Cbnz(machInst,
+                            (bits(machInst, 9) << 6) |
+                            (bits(machInst, 7, 3) << 1),
+                            (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0xa:
             switch (bits(machInst, 7, 5)) {
               case 0x0:
@@ -340,7 +353,10 @@ def format Thumb16Misc() {{
             }
             break;
           case 0xb:
-            return new WarnUnimplemented("cbnz", machInst);
+            return new Cbnz(machInst,
+                            (bits(machInst, 9) << 6) |
+                            (bits(machInst, 7, 3) << 1),
+                            (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0xc:
           case 0xd:
             return new WarnUnimplemented("pop", machInst);

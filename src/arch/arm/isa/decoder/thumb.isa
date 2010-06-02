@@ -58,14 +58,10 @@
         }
         0x6: decode TOPCODE_12_11 {
             0x0, 0x1: Thumb16MacroMem::thumb16MacroMem();
-            default: decode TOPCODE_11_8 {
-                0xe: WarnUnimpl::undefined(); // permanently undefined
-                0xf: WarnUnimpl::svc(); // formerly swi
-                default: WarnUnimpl::b(); // conditional
-            }
+            0x2, 0x3: Thumb16CondBranchAndSvc::thumb16CondBranchAndSvc();
         }
         0x7: decode TOPCODE_12_11 {
-            0x0: WarnUnimpl::b(); // unconditional
+            0x0: Thumb16UncondBranch::thumb16UncondBranch();
         }
     }
 
@@ -165,7 +161,7 @@
                 0x0: Thumb32DataProcModImm::thumb32DataProcModImm();
                 0x1: WarnUnimpl::Data_processing_plain_binary_immediate();
             }
-            0x1: WarnUnimpl::Branches_and_miscellaneous_control();
+            0x1: BranchesAndMiscCtrl::branchesAndMiscCtrl();
         }
         0x3: decode HTOPCODE_10_9 {
             0x0: decode HTOPCODE_4 {
