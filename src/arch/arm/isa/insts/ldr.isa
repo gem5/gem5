@@ -64,10 +64,10 @@ let {{
 
         (newHeader,
          newDecoder,
-         newExec) = newLoadStoreBase(name, Name, imm,
-                                     eaCode, accCode,
-                                     memFlags, instFlags,
-                                     base, execTemplateBase = 'Load')
+         newExec) = loadStoreBase(name, Name, imm,
+                                  eaCode, accCode,
+                                  memFlags, instFlags,
+                                  base, execTemplateBase = 'Load')
 
         header_output += newHeader
         decoder_output += newDecoder
@@ -93,7 +93,7 @@ let {{
         accCode = "Dest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewImm", post, writeback)
+        base = buildMemBase("MemoryImm", post, writeback)
 
         emitLoad(name, Name, True, eaCode, accCode, [], [], base)
 
@@ -118,7 +118,7 @@ let {{
         accCode = "Dest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewReg", post, writeback)
+        base = buildMemBase("MemoryReg", post, writeback)
 
         emitLoad(name, Name, False, eaCode, accCode, [], [], base)
 
@@ -143,7 +143,7 @@ let {{
         '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewImm", post, writeback)
+        base = buildMemBase("MemoryImm", post, writeback)
 
         emitLoad(name, Name, True, eaCode, accCode, [], [], base)
 
@@ -169,7 +169,7 @@ let {{
         '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewReg", post, writeback)
+        base = buildMemBase("MemoryReg", post, writeback)
 
         emitLoad(name, Name, False, eaCode, accCode, [], [], base)
 

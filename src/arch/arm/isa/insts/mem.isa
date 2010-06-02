@@ -38,8 +38,8 @@
 // Authors: Gabe Black
 
 let {{
-    def newLoadStoreBase(name, Name, imm, eaCode, accCode, memFlags,
-                        instFlags, base = 'MemoryNew', execTemplateBase = ''):
+    def loadStoreBase(name, Name, imm, eaCode, accCode, memFlags,
+                      instFlags, base = 'Memory', execTemplateBase = ''):
         # Make sure flags are in lists (convert to lists if not).
         memFlags = makeList(memFlags)
         instFlags = makeList(instFlags)
@@ -131,11 +131,11 @@ let {{
 
     def buildMemBase(base, post, writeback):
         if post and writeback:
-            base = "MemoryNewPostIndex<%s>" % base
+            base = "MemoryPostIndex<%s>" % base
         elif not post and writeback:
-            base = "MemoryNewPreIndex<%s>" % base
+            base = "MemoryPreIndex<%s>" % base
         elif not post and not writeback:
-            base = "MemoryNewOffset<%s>" % base
+            base = "MemoryOffset<%s>" % base
         else:
             raise Exception, "Illegal combination of post and writeback"
         return base

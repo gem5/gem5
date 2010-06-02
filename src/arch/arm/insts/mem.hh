@@ -47,7 +47,7 @@
 namespace ArmISA
 {
 
-class MemoryNew : public PredOp
+class Memory : public PredOp
 {
   public:
     enum AddrMode {
@@ -62,8 +62,8 @@ class MemoryNew : public PredOp
     IntRegIndex base;
     bool add;
 
-    MemoryNew(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-              IntRegIndex _dest, IntRegIndex _base, bool _add)
+    Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+           IntRegIndex _dest, IntRegIndex _base, bool _add)
         : PredOp(mnem, _machInst, __opClass),
           dest(_dest), base(_base), add(_add)
     {}
@@ -76,14 +76,14 @@ class MemoryNew : public PredOp
 };
 
 // The address is a base register plus an immediate.
-class MemoryNewImm : public MemoryNew
+class MemoryImm : public Memory
 {
   protected:
     int32_t imm;
 
-    MemoryNewImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 IntRegIndex _dest, IntRegIndex _base, bool _add, int32_t _imm)
-        : MemoryNew(mnem, _machInst, __opClass, _dest, _base, _add), imm(_imm)
+    MemoryImm(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+              IntRegIndex _dest, IntRegIndex _base, bool _add, int32_t _imm)
+        : Memory(mnem, _machInst, __opClass, _dest, _base, _add), imm(_imm)
     {}
 
     void
@@ -97,18 +97,18 @@ class MemoryNewImm : public MemoryNew
 };
 
 // The address is a shifted register plus an immediate
-class MemoryNewReg : public MemoryNew
+class MemoryReg : public Memory
 {
   protected:
     int32_t shiftAmt;
     ArmShiftType shiftType;
     IntRegIndex index;
 
-    MemoryNewReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 IntRegIndex _dest, IntRegIndex _base, bool _add,
-                 int32_t _shiftAmt, ArmShiftType _shiftType,
-                 IntRegIndex _index)
-        : MemoryNew(mnem, _machInst, __opClass, _dest, _base, _add),
+    MemoryReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+              IntRegIndex _dest, IntRegIndex _base, bool _add,
+              int32_t _shiftAmt, ArmShiftType _shiftType,
+              IntRegIndex _index)
+        : Memory(mnem, _machInst, __opClass, _dest, _base, _add),
           shiftAmt(_shiftAmt), shiftType(_shiftType), index(_index)
     {}
 
@@ -150,16 +150,70 @@ class MemoryNewReg : public MemoryNew
 };
 
 template<class Base>
-class MemoryNewOffset : public Base
+class MemoryOffset : public Base
 {
   protected:
-    MemoryNewOffset(const char *mnem, ExtMachInst _machInst,
+    MemoryOffset(const char *mnem, ExtMachInst _machInst,
+                 OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
+                 bool _add, int32_t _imm)
+        : Base(mnem, _machInst, __opClass, _dest, _base, _add, _imm)
+    {}
+
+    MemoryOffset(const char *mnem, ExtMachInst _machInst,
+                 OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
+                 bool _add, int32_t _shiftAmt, ArmShiftType _shiftType,
+                 IntRegIndex _index)
+        : Base(mnem, _machInst, __opClass, _dest, _base, _add,
+                _shiftAmt, _shiftType, _index)
+    {}
+
+    std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        this->printInst(ss, Memory::AddrMd_Offset);
+        return ss.str();
+    }
+};
+
+template<class Base>
+class MemoryPreIndex : public Base
+{
+  protected:
+    MemoryPreIndex(const char *mnem, ExtMachInst _machInst,
+                   OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
+                   bool _add, int32_t _imm)
+        : Base(mnem, _machInst, __opClass, _dest, _base, _add, _imm)
+    {}
+
+    MemoryPreIndex(const char *mnem, ExtMachInst _machInst,
+                   OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
+                   bool _add, int32_t _shiftAmt, ArmShiftType _shiftType,
+                   IntRegIndex _index)
+        : Base(mnem, _machInst, __opClass, _dest, _base, _add,
+                _shiftAmt, _shiftType, _index)
+    {}
+
+    std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        this->printInst(ss, Memory::AddrMd_PreIndex);
+        return ss.str();
+    }
+};
+
+template<class Base>
+class MemoryPostIndex : public Base
+{
+  protected:
+    MemoryPostIndex(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
                     bool _add, int32_t _imm)
         : Base(mnem, _machInst, __opClass, _dest, _base, _add, _imm)
     {}
 
-    MemoryNewOffset(const char *mnem, ExtMachInst _machInst,
+    MemoryPostIndex(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
                     bool _add, int32_t _shiftAmt, ArmShiftType _shiftType,
                     IntRegIndex _index)
@@ -171,61 +225,7 @@ class MemoryNewOffset : public Base
     generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
         std::stringstream ss;
-        this->printInst(ss, MemoryNew::AddrMd_Offset);
-        return ss.str();
-    }
-};
-
-template<class Base>
-class MemoryNewPreIndex : public Base
-{
-  protected:
-    MemoryNewPreIndex(const char *mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
-                      bool _add, int32_t _imm)
-        : Base(mnem, _machInst, __opClass, _dest, _base, _add, _imm)
-    {}
-
-    MemoryNewPreIndex(const char *mnem, ExtMachInst _machInst,
-                      OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
-                      bool _add, int32_t _shiftAmt, ArmShiftType _shiftType,
-                      IntRegIndex _index)
-        : Base(mnem, _machInst, __opClass, _dest, _base, _add,
-                _shiftAmt, _shiftType, _index)
-    {}
-
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        std::stringstream ss;
-        this->printInst(ss, MemoryNew::AddrMd_PreIndex);
-        return ss.str();
-    }
-};
-
-template<class Base>
-class MemoryNewPostIndex : public Base
-{
-  protected:
-    MemoryNewPostIndex(const char *mnem, ExtMachInst _machInst,
-                       OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
-                       bool _add, int32_t _imm)
-        : Base(mnem, _machInst, __opClass, _dest, _base, _add, _imm)
-    {}
-
-    MemoryNewPostIndex(const char *mnem, ExtMachInst _machInst,
-                       OpClass __opClass, IntRegIndex _dest, IntRegIndex _base,
-                       bool _add, int32_t _shiftAmt, ArmShiftType _shiftType,
-                       IntRegIndex _index)
-        : Base(mnem, _machInst, __opClass, _dest, _base, _add,
-                _shiftAmt, _shiftType, _index)
-    {}
-
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        std::stringstream ss;
-        this->printInst(ss, MemoryNew::AddrMd_PostIndex);
+        this->printInst(ss, Memory::AddrMd_PostIndex);
         return ss.str();
     }
 };

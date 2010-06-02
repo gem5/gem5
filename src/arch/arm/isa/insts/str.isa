@@ -66,10 +66,10 @@ let {{
 
         (newHeader,
          newDecoder,
-         newExec) = newLoadStoreBase(name, Name, imm,
-                                     eaCode, accCode,
-                                     memFlags, instFlags,
-                                     base, execTemplateBase = 'Store')
+         newExec) = loadStoreBase(name, Name, imm,
+                                  eaCode, accCode,
+                                  memFlags, instFlags,
+                                  base, execTemplateBase = 'Store')
 
         header_output += newHeader
         decoder_output += newDecoder
@@ -95,7 +95,7 @@ let {{
         accCode = "Mem%s = Dest;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewImm", post, writeback)
+        base = buildMemBase("MemoryImm", post, writeback)
 
         emitStore(name, Name, True, eaCode, accCode, [], [], base)
 
@@ -120,7 +120,7 @@ let {{
         accCode = "Mem%s = Dest;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewReg", post, writeback)
+        base = buildMemBase("MemoryReg", post, writeback)
 
         emitStore(name, Name, False, eaCode, accCode, [], [], base)
 
@@ -142,7 +142,7 @@ let {{
         accCode = 'Mem.ud = (Rdo.ud & mask(32)) | (Rde.ud << 32);'
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewImm", post, writeback)
+        base = buildMemBase("MemoryImm", post, writeback)
 
         emitStore(name, Name, True, eaCode, accCode, [], [], base)
 
@@ -165,7 +165,7 @@ let {{
         accCode = 'Mem.ud = (Rdo.ud & mask(32)) | (Rde.ud << 32);'
         if writeback:
             accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryNewReg", post, writeback)
+        base = buildMemBase("MemoryReg", post, writeback)
 
         emitStore(name, Name, False, eaCode, accCode, [], [], base)
 

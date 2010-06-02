@@ -47,7 +47,7 @@ namespace ArmISA
 {
 
 void
-MemoryNew::printInst(std::ostream &os, AddrMode addrMode) const
+Memory::printInst(std::ostream &os, AddrMode addrMode) const
 {
     printMnemonic(os);
     printReg(os, dest);
