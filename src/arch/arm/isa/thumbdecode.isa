@@ -311,7 +311,44 @@
         }
         0x2: decode LTOPCODE_15 {
             0x0: decode HTOPCODE_9 {
-                0x0: WarnUnimpl::Data_processing_modified_immediate();
+                0x0: decode HTOPCODE_8_5 {
+                    0x0: decode LTRD {
+                        0xf: decode HTS {
+                            0x1: WarnUnimpl::tst(); // mod imm
+                        }
+                        default: WarnUnimpl::and(); // mod imm
+                    }
+                    0x1: WarnUnimpl::bic(); // mod imm
+                    0x2: decode HTRN {
+                        0xf: WarnUnimpl::mov(); // mod imm
+                        default: WarnUnimpl::orr(); // mod imm
+                    }
+                    0x3: decode HTRN {
+                        0xf: WarnUnimpl::mvn(); // mod imm
+                        default: WarnUnimpl::orn(); // mod imm
+                    }
+                    0x4: decode LTRD {
+                        0xf: decode HTS {
+                            0x1: WarnUnimpl::teq(); // mod imm
+                        }
+                        default: WarnUnimpl::eor(); // mod imm
+                    }
+                    0x8: decode LTRD {
+                        0xf: decode HTS {
+                            0x1: WarnUnimpl::cmn(); // mod imm
+                        }
+                        default: WarnUnimpl::add(); // mod imm
+                    }
+                    0xa: WarnUnimpl::adc(); // mod imm
+                    0xb: WarnUnimpl::sbc(); // mod imm
+                    0xd: decode LTRD {
+                        0xf: decode HTS {
+                            0x1: WarnUnimpl::cmp(); // mod imm
+                        }
+                        default: WarnUnimpl::sub(); // mod imm
+                    }
+                    0xe: WarnUnimpl::rsb(); // mod imm
+                }
                 0x1: WarnUnimpl::Data_processing_plain_binary_immediate();
             }
             0x1: WarnUnimpl::Branches_and_miscellaneous_control();
