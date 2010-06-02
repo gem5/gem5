@@ -41,6 +41,133 @@
 // Authors: Gabe Black
 
 1: decode BIGTHUMB {
-    0: Unknown::unknown();
+    // 16 bit thumb instructions.
+    0: decode TOPCODE_15_13 {
+        0x0, 0x1: decode TOPCODE_13_11 {
+            0x0: WarnUnimpl::lsl(); //immediate
+            0x1: WarnUnimpl::lsr(); //immediate
+            0x2: WarnUnimpl::asr(); //immediate
+            0x3: decode TOPCODE_10_9 {
+                0x0: WarnUnimpl::add(); //register
+                0x1: WarnUnimpl::sub(); //register
+                0x2: WarnUnimpl::add(); //3 bit immediate
+                0x3: WarnUnimpl::sub(); //3 bit immediate
+            }
+            0x4: WarnUnimpl::mov(); //immediate
+            0x5: WarnUnimpl::cmp(); //immediate
+            0x6: WarnUnimpl::add(); //8 bit immediate, thumb
+            0x7: WarnUnimpl::sub(); //8 bit immediate, thumb
+        }
+        0x2: decode TOPCODE_12_10 {
+            // Data processing
+            0x0: decode TOPCODE_9_6 {
+                0x0: WarnUnimpl::and(); //register
+                0x1: WarnUnimpl::eor(); //register
+                0x2: WarnUnimpl::lsl(); //register
+                0x3: WarnUnimpl::lsr(); //register
+                0x4: WarnUnimpl::asr(); //register
+                0x5: WarnUnimpl::adc(); //register
+                0x6: WarnUnimpl::sbc(); //register
+                0x7: WarnUnimpl::ror(); //register
+                0x8: WarnUnimpl::tst(); //register
+                0x9: WarnUnimpl::rsb(); //immediate
+                0xa: WarnUnimpl::cmp(); //register (high registers)
+                0xb: WarnUnimpl::cmn(); //register
+                0xc: WarnUnimpl::orr(); //register
+                0xd: WarnUnimpl::mul();
+                0xe: WarnUnimpl::bic(); //register
+                0xf: WarnUnimpl::mvn(); //register
+            }
+            // Special data instructions and branch and exchange
+            0x1: decode TOPCODE_9_6 {
+                0x0: WarnUnimpl::add(); //register (low registers)
+                0x1, 0x2, 0x3: WarnUnimpl::add(); //register (high registers)
+                0x4: WarnUnimpl::unpredictable(); //?
+                0x5, 0x6, 0x7: WarnUnimpl::cmp(); //register
+                0x8: WarnUnimpl::mov(); //register (low registers)
+                0x9, 0xa, 0xb: WarnUnimpl::mov(); //register (high registers)
+                0xc, 0xd: WarnUnimpl::bx();
+                0xe, 0xf: WarnUnimpl::blx(); //register
+            }
+            0x2, 0x3: WarnUnimpl::ldr();
+            default: decode TOPCODE_11_9 {
+                0x0: WarnUnimpl::str(); //register
+                0x1: WarnUnimpl::strh(); //register
+                0x2: WarnUnimpl::strb(); //register
+                0x3: WarnUnimpl::ldrsb(); //register
+                0x4: WarnUnimpl::ldr(); //register
+                0x5: WarnUnimpl::ldrh(); //register
+                0x6: WarnUnimpl::ldrb(); //register
+                0x7: WarnUnimpl::ldrsh(); //register
+            }
+        }
+        0x3: decode TOPCODE_12_11 {
+            0x0: WarnUnimpl::str(); //immediate, thumb
+            0x1: WarnUnimpl::ldr(); //immediate, thumb
+            0x2: WarnUnimpl::strb(); //immediate, thumb
+            0x3: WarnUnimpl::ldrb(); //immediate, thumb
+        }
+        0x4: decode TOPCODE_12_11 {
+            0x0: WarnUnimpl::strh(); //immediate, thumb
+            0x1: WarnUnimpl::ldrh(); //immediate, thumb
+            0x2: WarnUnimpl::str(); //immediate, thumb
+            0x3: WarnUnimpl::ldr(); //immediate, thumb
+        }
+        0x5: decode TOPCODE_12_11 {
+            0x0: WarnUnimpl::adr();
+            0x1: WarnUnimpl::add(); //sp, immediate
+            0x2: decode TOPCODE_10_8 {
+                0x0: decode TOPCODE_7 {
+                    0x0: WarnUnimpl::add(); //sp, immediate
+                    0x1: WarnUnimpl::sub(); //sp, immediate
+                }
+                0x1, 0x3: WarnUnimpl::cbz(); //cbnz too...
+                0x2: decode TOPCODE_7_6 {
+                    0x0: WarnUnimpl::sxth();
+                    0x1: WarnUnimpl::sxtb();
+                    0x2: WarnUnimpl::uxth();
+                    0x3: WarnUnimpl::uxtb();
+                }
+                0x4, 0x5: WarnUnimpl::pop();
+                0x6: decode TOPCODE_7_5 {
+                    0x2: WarnUnimpl::setend();
+                    0x3: WarnUnimpl::cps();
+                }
+            }
+            0x3: decode TOPCODE_10_8 {
+                0x1, 0x3: WarnUnimpl::cbz(); //cbnz too...
+                0x2: decode TOPCODE_7_6 {
+                    0x0: WarnUnimpl::rev();
+                    0x1: WarnUnimpl::rev16();
+                    0x3: WarnUnimpl::revsh();
+                }
+                0x4, 0x5: WarnUnimpl::pop();
+                0x6: WarnUnimpl::bkpt();
+                0x7: decode TOPCODE_3_0 {
+                    0x0: WarnUnimpl::it();
+                    default: decode TOPCODE_7_4 {
+                        0x0: WarnUnimpl::nop();
+                        0x1: WarnUnimpl::yield();
+                        0x2: WarnUnimpl::wfe();
+                        0x3: WarnUnimpl::wfi();
+                        0x4: WarnUnimpl::sev();
+                        default: WarnUnimpl::unallocated_hint();
+                    }
+                }
+            }
+        }
+        0x6: decode TOPCODE_12_11 {
+            0x0: WarnUnimpl::stm(); // also stmia, stmea
+            0x1: WarnUnimpl::ldm(); // also ldmia, ldmea
+            default: decode TOPCODE_11_8 {
+                0xe: WarnUnimpl::undefined(); // permanently undefined
+                0xf: WarnUnimpl::svc(); // formerly swi
+                default: WarnUnimpl::b(); // conditional
+            }
+        }
+        0x7: decode TOPCODE_12_11 {
+            0x0: WarnUnimpl::b(); // unconditional
+        }
+    }
     1: Unknown::unknown();
 }
