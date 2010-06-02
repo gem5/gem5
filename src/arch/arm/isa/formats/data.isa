@@ -103,7 +103,6 @@ def format ArmDataProcReg() {{
 
 def format ArmDataProcImm() {{
     instDecode = '''
-          case %(opcode)#x:
             if (setCc) {
                 return new %(className)sImmCc(machInst, %(dest)s, %(op1)s,
                                                imm, rotC);
@@ -116,10 +115,30 @@ def format ArmDataProcImm() {{
 
     def instCode(opcode, mnem, dest="rd", op1="rn"):
         global instDecode
-        return instDecode % { "className": mnem.capitalize(),
-                              "opcode": opcode,
-                              "dest": dest,
-                              "op1": op1 }
+        code = '''
+          case %(opcode)#x:
+        ''' + instDecode
+        return code % { "className": mnem.capitalize(),
+                        "opcode": opcode,
+                        "dest": dest,
+                        "op1": op1 }
+
+    def adrCode(opcode, mnem, dest="rd", op1="rn", add="1"):
+        global instDecode
+        code = '''
+          case %(opcode)#x:
+            if (rn == 0xf) {
+                return new AdrImm(machInst, %(dest)s, %(add)s,
+                                             imm, false);
+            } else {
+        ''' + instDecode + '''
+            }
+        '''
+        return code % { "className": mnem.capitalize(),
+                        "opcode": opcode,
+                        "dest": dest,
+                        "add": add,
+                        "op1": op1 }
 
     decode_block = '''
     {
@@ -134,9 +153,9 @@ def format ArmDataProcImm() {{
     '''
     decode_block += instCode(0x0, "and")
     decode_block += instCode(0x1, "eor")
-    decode_block += instCode(0x2, "sub")
+    decode_block += adrCode(0x2, "sub", add="(IntRegIndex)0")
     decode_block += instCode(0x3, "rsb")
-    decode_block += instCode(0x4, "add")
+    decode_block += adrCode(0x4, "add", add="(IntRegIndex)1")
     decode_block += instCode(0x5, "adc")
     decode_block += instCode(0x6, "sbc")
     decode_block += instCode(0x7, "rsc")
@@ -274,7 +293,7 @@ def format Thumb16Adr() {{
     {
         const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
         const uint32_t imm8 = bits(machInst, 7, 0) << 2;
-        return new AddImm(machInst, rd, INTREG_PC, imm8, true);
+        return new AdrImm(machInst, rd, (IntRegIndex)1, imm8, false);
     }
     '''
 }};
@@ -491,7 +510,12 @@ def format Thumb32DataProcPlainBin() {{
                 const uint32_t imm = bits(machInst, 7, 0) |
                                      (bits(machInst, 14, 12) << 8) |
                                      (bits(machInst, 26) << 11);
-                return new AddImm(machInst, rd, rn, imm, true);
+                if (rn == 0xf) {
+                    return new AdrImm(machInst, rd, (IntRegIndex)1,
+                                      imm, false);
+                } else {
+                    return new AddImm(machInst, rd, rn, imm, true);
+                }
             }
           case 0x4:
             {
@@ -506,7 +530,12 @@ def format Thumb32DataProcPlainBin() {{
                 const uint32_t imm = bits(machInst, 7, 0) |
                                      (bits(machInst, 14, 12) << 8) |
                                      (bits(machInst, 26) << 11);
-                return new SubImm(machInst, rd, rn, imm, true);
+                if (rn == 0xf) {
+                    return new AdrImm(machInst, rd, (IntRegIndex)0,
+                                      imm, false);
+                } else {
+                    return new SubImm(machInst, rd, rn, imm, true);
+                }
             }
           case 0xc:
             {

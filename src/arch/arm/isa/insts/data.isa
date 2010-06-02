@@ -200,6 +200,10 @@ let {{
     buildDataInst("sub", "AIWDest = resTemp = Op1 - secondOp;", "sub")
     buildDataInst("rsb", "AIWDest = resTemp = secondOp - Op1;", "rsb")
     buildDataInst("add", "AIWDest = resTemp = Op1 + secondOp;", "add")
+    buildImmDataInst("adr", '''
+                               AIWDest = resTemp = (readPC(xc) & ~0x3) +
+                               (op1 ? secondOp : -secondOp);
+                            ''')
     buildDataInst("adc", "AIWDest = resTemp = Op1 + secondOp + %s;" % oldC,
                   "add")
     buildDataInst("sbc", "AIWDest = resTemp = Op1 - secondOp - !%s;" % oldC,
