@@ -481,4 +481,109 @@ let {{
     header_output += RegRegRegOpDeclare.subst(vmlsDIop);
     decoder_output += RegRegRegOpConstructor.subst(vmlsDIop);
     exec_output += PredOpExecute.subst(vmlsDIop);
+
+    vnmlaSCode = '''
+        float mid = FpOp1 * FpOp2;
+        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
+            mid = NAN;
+        }
+        FpDest = -FpDest - mid;
+    '''
+    vnmlaSIop = InstObjParams("vnmlas", "VnmlaS", "RegRegRegOp",
+                                     { "code": vnmlaSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vnmlaSIop);
+    decoder_output += RegRegRegOpConstructor.subst(vnmlaSIop);
+    exec_output += PredOpExecute.subst(vnmlaSIop);
+
+    vnmlaDCode = '''
+        IntDoubleUnion cOp1, cOp2, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        double mid = cOp1.fp * cOp2.fp;
+        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
+                (isinf(cOp2.fp) && cOp1.fp == 0)) {
+            mid = NAN;
+        }
+        cDest.fp = -cDest.fp - mid;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vnmlaDIop = InstObjParams("vnmlad", "VnmlaD", "RegRegRegOp",
+                                     { "code": vnmlaDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vnmlaDIop);
+    decoder_output += RegRegRegOpConstructor.subst(vnmlaDIop);
+    exec_output += PredOpExecute.subst(vnmlaDIop);
+
+    vnmlsSCode = '''
+        float mid = FpOp1 * FpOp2;
+        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
+            mid = NAN;
+        }
+        FpDest = -FpDest + mid;
+    '''
+    vnmlsSIop = InstObjParams("vnmlss", "VnmlsS", "RegRegRegOp",
+                                     { "code": vnmlsSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vnmlsSIop);
+    decoder_output += RegRegRegOpConstructor.subst(vnmlsSIop);
+    exec_output += PredOpExecute.subst(vnmlsSIop);
+
+    vnmlsDCode = '''
+        IntDoubleUnion cOp1, cOp2, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        double mid = cOp1.fp * cOp2.fp;
+        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
+                (isinf(cOp2.fp) && cOp1.fp == 0)) {
+            mid = NAN;
+        }
+        cDest.fp = -cDest.fp + mid;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vnmlsDIop = InstObjParams("vnmlsd", "VnmlsD", "RegRegRegOp",
+                                     { "code": vnmlsDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vnmlsDIop);
+    decoder_output += RegRegRegOpConstructor.subst(vnmlsDIop);
+    exec_output += PredOpExecute.subst(vnmlsDIop);
+
+    vnmulSCode = '''
+        float mid = FpOp1 * FpOp2;
+        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
+            mid = NAN;
+        }
+        FpDest = -mid;
+    '''
+    vnmulSIop = InstObjParams("vnmuls", "VnmulS", "RegRegRegOp",
+                                     { "code": vnmulSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vnmulSIop);
+    decoder_output += RegRegRegOpConstructor.subst(vnmulSIop);
+    exec_output += PredOpExecute.subst(vnmulSIop);
+
+    vnmulDCode = '''
+        IntDoubleUnion cOp1, cOp2, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        double mid = cOp1.fp * cOp2.fp;
+        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
+                (isinf(cOp2.fp) && cOp1.fp == 0)) {
+            mid = NAN;
+        }
+        cDest.fp = -mid;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vnmulDIop = InstObjParams("vnmuld", "VnmulD", "RegRegRegOp",
+                                     { "code": vnmulDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vnmulDIop);
+    decoder_output += RegRegRegOpConstructor.subst(vnmulDIop);
+    exec_output += PredOpExecute.subst(vnmulDIop);
 }};
