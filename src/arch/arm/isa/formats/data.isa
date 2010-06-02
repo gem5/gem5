@@ -156,22 +156,24 @@ def format ArmPackUnpackSatReverse() {{
         }
         switch (op1) {
           case 0x0:
-            if (op2 == 0x3) {
+            {
                 const IntRegIndex rn =
                     (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
                 const IntRegIndex rd =
                     (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
                 const IntRegIndex rm =
                     (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-                const uint32_t rotation =
-                    (uint32_t)bits(machInst, 11, 10) << 3;
-                if (a == 0xf) {
-                    return new Sxtb16(machInst, rd, rotation, rm);
-                } else {
-                    return new Sxtab16(machInst, rd, rn, rm, rotation);
+                if (op2 == 0x3) {
+                    const uint32_t rotation =
+                        (uint32_t)bits(machInst, 11, 10) << 3;
+                    if (a == 0xf) {
+                        return new Sxtb16(machInst, rd, rotation, rm);
+                    } else {
+                        return new Sxtab16(machInst, rd, rn, rm, rotation);
+                    }
+                } else if (op2 == 0x5) {
+                    return new Sel(machInst, rd, rn, rm);
                 }
-            } else if (op2 == 0x5) {
-                return new WarnUnimplemented("sel", machInst);
             }
             break;
           case 0x2:
@@ -745,49 +747,42 @@ def format Thumb32DataProcReg() {{
             } else if (bits(op1, 3, 2) == 0x2 && bits(op2, 3, 2) == 0x2) {
                 const uint32_t op1 = bits(machInst, 21, 20);
                 const uint32_t op2 = bits(machInst, 5, 4);
+                const IntRegIndex rd =
+                    (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                const IntRegIndex rm =
+                    (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
                 switch (op1) {
                   case 0x0:
-                    {
-                        IntRegIndex rd =
-                            (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                        IntRegIndex rm =
-                            (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-                        switch (op2) {
-                          case 0x0:
-                            return new QaddRegCc(machInst, rd,
-                                                 rm, rn, 0, LSL);
-                          case 0x1:
-                            return new QdaddRegCc(machInst, rd,
-                                                  rm, rn, 0, LSL);
-                          case 0x2:
-                            return new QsubRegCc(machInst, rd,
-                                                 rm, rn, 0, LSL);
-                          case 0x3:
-                            return new QdsubRegCc(machInst, rd,
-                                                  rm, rn, 0, LSL);
-                        }
+                    switch (op2) {
+                      case 0x0:
+                        return new QaddRegCc(machInst, rd,
+                                             rm, rn, 0, LSL);
+                      case 0x1:
+                        return new QdaddRegCc(machInst, rd,
+                                              rm, rn, 0, LSL);
+                      case 0x2:
+                        return new QsubRegCc(machInst, rd,
+                                             rm, rn, 0, LSL);
+                      case 0x3:
+                        return new QdsubRegCc(machInst, rd,
+                                              rm, rn, 0, LSL);
                     }
                     break;
                   case 0x1:
-                    {
-                        IntRegIndex rd =
-                            (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
-                        IntRegIndex rm = rn;
-                        switch (op2) {
-                          case 0x0:
-                            return new Rev(machInst, rd, rm);
-                          case 0x1:
-                            return new Rev16(machInst, rd, rm);
-                          case 0x2:
-                            return new WarnUnimplemented("rbit", machInst);
-                          case 0x3:
-                            return new Revsh(machInst, rd, rm);
-                        }
+                    switch (op2) {
+                      case 0x0:
+                        return new Rev(machInst, rd, rn);
+                      case 0x1:
+                        return new Rev16(machInst, rd, rn);
+                      case 0x2:
+                        return new WarnUnimplemented("rbit", machInst);
+                      case 0x3:
+                        return new Revsh(machInst, rd, rn);
                     }
                     break;
                   case 0x2:
                     if (op2 == 0) {
-                        return new WarnUnimplemented("sel", machInst);
+                        return new Sel(machInst, rd, rn, rm);
                     }
                     break;
                   case 0x3:
