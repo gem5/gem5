@@ -153,7 +153,7 @@ def format ExtensionRegLoadStore() {{
     {
         const uint32_t opcode = bits(machInst, 24, 20);
         const uint32_t offset = bits(machInst, 7, 0);
-        const bool single = bits(machInst, 22);
+        const bool single = (bits(machInst, 8) == 0);
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
         RegIndex vd;
         if (single) {
@@ -177,7 +177,7 @@ def format ExtensionRegLoadStore() {{
                     (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
                 const bool op = bits(machInst, 20);
                 uint32_t vm;
-                if (bits(machInst, 8) == 0) {
+                if (single) {
                     vm = (bits(machInst, 3, 0) << 1) | bits(machInst, 5);
                 } else {
                     vm = (bits(machInst, 3, 0) << 1) |
@@ -222,12 +222,38 @@ def format ExtensionRegLoadStore() {{
             if (bits(opcode, 1, 0) == 0x0) {
                 return new WarnUnimplemented("vstr", machInst);
             } else if (bits(opcode, 1, 0) == 0x1) {
-                return new WarnUnimplemented("vldr", machInst);
+                const bool up = (bits(machInst, 23) == 1);
+                const uint32_t imm = bits(machInst, 7, 0) << 2;
+                RegIndex vd;
+                if (single) {
+                    vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
+                                              (bits(machInst, 22)));
+                    if (up) {
+                        return new %(vldr_us)s(machInst, vd, rn, up, imm);
+                    } else {
+                        return new %(vldr_s)s(machInst, vd, rn, up, imm);
+                    }
+                } else {
+                    vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
+                                              (bits(machInst, 22) << 5));
+                    if (up) {
+                        return new %(vldr_ud)s(machInst, vd, vd + 1,
+                                               rn, up, imm);
+                    } else {
+                        return new %(vldr_d)s(machInst, vd, vd + 1,
+                                              rn, up, imm);
+                    }
+                }
             }
         }
         return new Unknown(machInst);
     }
-    '''
+    ''' % {
+        "vldr_us" : "VLDR_" + loadImmClassName(False, True, False),
+        "vldr_s" : "VLDR_" + loadImmClassName(False, False, False),
+        "vldr_ud" : "VLDR_" + loadDoubleImmClassName(False, True, False),
+        "vldr_d" : "VLDR_" + loadDoubleImmClassName(False, False, False)
+    }
 }};
 
 def format ShortFpTransfer() {{
