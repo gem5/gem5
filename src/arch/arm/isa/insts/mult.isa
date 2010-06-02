@@ -44,8 +44,7 @@ let {{
     exec_output = ""
 
     calcQCode = '''
-        cprintf("canOverflow: %%d\\n", Reg0 < resTemp);
-        replaceBits(CondCodes, 27, Reg0 < resTemp);
+        CondCodes = CondCodes | ((resTemp & 1) << 27);
     '''
 
     calcCcCode = '''
@@ -134,23 +133,31 @@ let {{
     buildMult3Inst    ("mul", "Reg0 = resTemp = Reg1 * Reg2;")
     buildMult4InstCc  ("smlabb", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 15, 0)) *
-                                        sext<16>(bits(Reg2, 15, 0)) +
+                                        sext<16>(bits(Reg2.sw, 15, 0)) +
                                         Reg3.sw;
+                                 resTemp = bits(resTemp, 32) !=
+                                           bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlabt", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 15, 0)) *
-                                        sext<16>(bits(Reg2, 31, 16)) +
+                                        sext<16>(bits(Reg2.sw, 31, 16)) +
                                         Reg3.sw;
+                                 resTemp = bits(resTemp, 32) !=
+                                           bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlatb", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 31, 16)) *
-                                        sext<16>(bits(Reg2, 15, 0)) +
+                                        sext<16>(bits(Reg2.sw, 15, 0)) +
                                         Reg3.sw;
+                                 resTemp = bits(resTemp, 32) !=
+                                           bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlatt", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 31, 16)) *
-                                        sext<16>(bits(Reg2, 31, 16)) +
+                                        sext<16>(bits(Reg2.sw, 31, 16)) +
                                         Reg3.sw;
+                                 resTemp = bits(resTemp, 32) !=
+                                           bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlad", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 31, 16)) *
@@ -222,12 +229,16 @@ let {{
     buildMult4InstCc  ("smlawb", '''Reg0 = resTemp =
                                         (Reg1.sw *
                                          sext<16>(bits(Reg2, 15, 0)) +
-                                         (Reg3.sw << 16)) >> 16;
+                                         ((int64_t)Reg3.sw << 16)) >> 16;
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlawt", '''Reg0 = resTemp =
                                         (Reg1.sw *
                                          sext<16>(bits(Reg2, 31, 16)) +
-                                         (Reg3.sw << 16)) >> 16;
+                                         ((int64_t)Reg3.sw << 16)) >> 16;
+                                    resTemp = bits(resTemp, 32) !=
+                                              bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlsd", '''Reg0 = resTemp =
                                        sext<16>(bits(Reg1, 15, 0)) *
@@ -307,18 +318,19 @@ let {{
                                          sext<16>(bits(Reg2, 15, 0));
                                  ''')
     buildMult3InstUnCc("smulbt", '''Reg0 = resTemp =
-                                         sext<16>(bits(Reg1, 31, 16)) *
-                                         sext<16>(bits(Reg2, 15, 0));
-                                 ''')
-    buildMult3InstUnCc("smultb", '''Reg0 = resTemp =
                                          sext<16>(bits(Reg1, 15, 0)) *
                                          sext<16>(bits(Reg2, 31, 16));
+                                 ''')
+    buildMult3InstUnCc("smultb", '''Reg0 = resTemp =
+                                         sext<16>(bits(Reg1, 31, 16)) *
+                                         sext<16>(bits(Reg2, 15, 0));
                                  ''')
     buildMult3InstUnCc("smultt", '''Reg0 = resTemp =
                                          sext<16>(bits(Reg1, 31, 16)) *
                                          sext<16>(bits(Reg2, 31, 16));
                                  ''')
-    buildMult4Inst    ("smull", '''resTemp = Reg2.sw * Reg3.sw;
+    buildMult4Inst    ("smull", '''resTemp = (int64_t)Reg2.sw *
+                                             (int64_t)Reg3.sw;
                                    Reg0 = (int32_t)resTemp;
                                    Reg1 = (int32_t)(resTemp >> 32);
                                 ''', "llbit")
