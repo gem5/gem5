@@ -62,12 +62,9 @@ PredIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
-PredImmOpBase::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+PredImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
-    unsigned rotate = machInst.rotate * 2;
-    uint32_t imm = machInst.imm;
-    imm = (imm << (32 - rotate)) | (imm >> rotate);
     printDataInst(ss, true, machInst.opcode4 == 0, machInst.sField,
             (IntRegIndex)(uint32_t)machInst.rd,
             (IntRegIndex)(uint32_t)machInst.rn,

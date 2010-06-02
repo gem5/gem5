@@ -98,65 +98,27 @@ class PredOp : public ArmStaticInst
 /**
  * Base class for predicated immediate operations.
  */
-class PredImmOpBase : public PredOp
+class PredImmOp : public PredOp
 {
     protected:
 
     uint32_t imm;
     uint32_t rotated_imm;
     uint32_t rotated_carry;
-
-    /// Constructor
-    PredImmOpBase(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                  PredOp(mnem, _machInst, __opClass),
-                  imm(machInst.imm), rotated_imm(0), rotated_carry(0)
-    {
-    }
-
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-};
-
-/**
- * Base class for regular predicated immediate operations.
- */
-class PredImmOp : public PredImmOpBase
-{
-    protected:
-
     uint32_t rotate;
 
     /// Constructor
     PredImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-              PredImmOpBase(mnem, _machInst, __opClass),
+              PredOp(mnem, _machInst, __opClass),
+              imm(machInst.imm), rotated_imm(0), rotated_carry(0),
               rotate(machInst.rotate << 1)
     {
         rotated_imm = rotate_imm(imm, rotate);
         if (rotate != 0)
             rotated_carry = bits(rotated_imm, 31);
     }
-};
 
-/**
- * Base class for modified predicated immediate operations.
- */
-class PredModImmOp : public PredImmOpBase
-{
-    protected:
-
-    uint8_t ctrlImm;
-    uint8_t dataImm;
-
-
-    /// Constructor
-    PredModImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                 PredImmOpBase(mnem, _machInst, __opClass),
-                 ctrlImm(bits(machInst.instBits, 26) << 3 |
-                         bits(machInst.instBits, 14, 12)),
-                 dataImm(bits(machInst.instBits, 7, 0))
-    {
-        rotated_imm = modified_imm(ctrlImm, dataImm);
-        rotated_carry = bits(rotated_imm, 31);
-    }
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
