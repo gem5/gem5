@@ -53,10 +53,12 @@ def format ArmMiscMedia() {{
                 return new Usada8(machInst, rd, rn, rm, ra);
             }
         } else if (bits(op2, 1, 0) == 0x2) {
+            const uint32_t lsb = bits(machInst, 11, 7);
+            const uint32_t msb = lsb + bits(machInst, 20, 16);
             if (bits(op1, 2, 1) == 0x3) {
-                return new WarnUnimplemented("ubfx", machInst);
+                return new Ubfx(machInst, ra, rn, lsb, msb);
             } else if (bits(op1, 2, 1) == 0x1) {
-                return new WarnUnimplemented("sbfx", machInst);
+                return new Sbfx(machInst, ra, rn, lsb, msb);
             }
         } else if (bits(op2, 1, 0) == 0x0 && bits(op1, 2, 1) == 0x2) {
             if (rn == 0xf) {
@@ -1238,7 +1240,12 @@ def format Thumb32DataProcPlainBin() {{
                 return new Ssat(machInst, rd, satImm + 1, rn, imm, type);
             }
           case 0x14:
-            return new WarnUnimplemented("sbfx", machInst);
+            {
+                const uint32_t lsb = bits(machInst, 7, 6) |
+                                     (bits(machInst, 14, 12) << 2);
+                const uint32_t msb = lsb + bits(machInst, 4, 0);
+                return new Sbfx(machInst, rd, rn, lsb, msb);
+            }
           case 0x16:
             if (rn == 0xf) {
                 return new WarnUnimplemented("bfc", machInst);
@@ -1261,7 +1268,12 @@ def format Thumb32DataProcPlainBin() {{
                 return new Usat(machInst, rd, satImm, rn, imm, type);
             }
           case 0x1c:
-            return new WarnUnimplemented("ubfx", machInst);
+            {
+                const uint32_t lsb = bits(machInst, 7, 6) |
+                                     (bits(machInst, 14, 12) << 2);
+                const uint32_t msb = lsb + bits(machInst, 4, 0);
+                return new Ubfx(machInst, rd, rn, lsb, msb);
+            }
           default:
             return new Unknown(machInst);
         }
