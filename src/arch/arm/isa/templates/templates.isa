@@ -45,3 +45,6 @@
 
 //Templates for microcoded memory instructions
 ##include "macromem.isa"
+
+//Templates for branches
+##include "branch.isa"
