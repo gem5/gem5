@@ -43,8 +43,24 @@
 #include "arch/arm/insts/mem.hh"
 #include "base/loader/symtab.hh"
 
+using namespace std;
+
 namespace ArmISA
 {
+
+string
+Swap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, dest);
+    ss << ", ";
+    printReg(ss, op1);
+    ss << ", [";
+    printReg(ss, base);
+    ss << "]";
+    return ss.str();
+}
 
 void
 Memory::printInst(std::ostream &os, AddrMode addrMode) const

@@ -37,32 +37,25 @@
 //
 // Authors: Gabe Black
 
-//Basic forms of various templates
-##include "basic.isa"
+let {{
 
-//Useful bits shared by memory instructions
-##include "mem.isa"
+    header_output = decoder_output = exec_output = ""
 
-//Loads of a single item
-##include "ldr.isa"
+    (newHeader,
+     newDecoder,
+     newExec) = SwapBase("swp", "Swp", "EA = Base;",
+                         "Mem = Op1;", "Dest = memData;",
+                         ["Request::MEM_SWAP"], [])
+    header_output += newHeader
+    decoder_output += newDecoder
+    exec_output += newExec
 
-//Miscellaneous instructions that don't fit elsewhere
-##include "misc.isa"
-
-//Stores of a single item
-##include "str.isa"
-
-//Swaps
-##include "swap.isa"
-
-//Load/store multiple
-##include "macromem.isa"
-
-//Data processing instructions
-##include "data.isa"
-
-//Branches
-##include "branch.isa"
-
-//Multiply
-##include "mult.isa"
+    (newHeader,
+     newDecoder,
+     newExec) = SwapBase("swpb", "Swpb", "EA = Base;",
+                         "Mem.ub = Op1.ub;", "Dest.ub = (uint8_t)memData;",
+                         ["Request::MEM_SWAP"], [])
+    header_output += newHeader
+    decoder_output += newDecoder
+    exec_output += newExec
+}};

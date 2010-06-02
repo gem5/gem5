@@ -41,6 +41,96 @@
 // Authors: Stephen Hines
 
 
+def template SwapExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        uint64_t memData = 0;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (%(predicate_test)s)
+        {
+            %(preacc_code)s;
+
+            if (fault == NoFault) {
+                fault = xc->write((uint%(mem_acc_size)d_t&)Mem,
+                        EA, memAccessFlags, &memData);
+            }
+
+            if (fault == NoFault) {
+                %(postacc_code)s;
+            }
+
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+
+        return fault;
+    }
+}};
+
+def template SwapInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        uint64_t memData = 0;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (%(predicate_test)s)
+        {
+            %(preacc_code)s;
+
+            if (fault == NoFault) {
+                fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
+                                  memAccessFlags, &memData);
+            }
+
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+
+        return fault;
+    }
+}};
+
+def template SwapCompleteAcc {{
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+                                      %(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        if (%(predicate_test)s)
+        {
+            // ARM instructions will not have a pkt if the predicate is false
+            uint64_t memData = pkt->get<typeof(Mem)>();
+
+            %(postacc_code)s;
+
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+
+        return fault;
+    }
+}};
+
 def template LoadExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
@@ -204,6 +294,26 @@ def template StoreCompleteAcc {{
     }
 }};
 
+def template SwapDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                uint32_t _dest, uint32_t _op1, uint32_t _base);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
 def template LoadStoreImmDeclare {{
     /**
      * Static instruction class for "%(mnemonic)s".
@@ -252,6 +362,16 @@ def template InitiateAccDeclare {{
 
 def template CompleteAccDeclare {{
     Fault completeAcc(PacketPtr,  %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+def template SwapConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+            uint32_t _dest, uint32_t _op1, uint32_t _base)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                 (IntRegIndex)_dest, (IntRegIndex)_op1, (IntRegIndex)_base)
+    {
+        %(constructor)s;
+    }
 }};
 
 def template LoadStoreImmConstructor {{
