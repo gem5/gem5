@@ -579,6 +579,9 @@ def format Thumb32DataProcReg() {{
         const uint32_t op1 = bits(machInst, 23, 20);
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
         const uint32_t op2 = bits(machInst, 7, 4);
+        if (bits(machInst, 15, 12) != 0xf) {
+            return new Unknown(machInst);
+        }
         if (bits(op1, 3) != 1) {
             if (op2 == 0) {
                 IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
@@ -609,8 +612,9 @@ def format Thumb32DataProcReg() {{
                     return new MovRegRegCc(machInst, rd,
                             INTREG_ZERO, rn, rm, ROR);
                 }
-            }
-            {
+            } else if (bits(op2, 3) == 0) {
+                return new Unknown(machInst);
+            } else {
                 const IntRegIndex rd =
                     (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
                 const IntRegIndex rm =

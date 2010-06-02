@@ -336,6 +336,7 @@ def format Thumb32LongMulMulAccAndDiv() {{
                     return new Smlsld(machInst, rdlo, rdhi, rn, rm);
                 }
             }
+            break;
           case 0x6:
             if (op2 == 0) {
                 return new Umlal(machInst, rdlo, rdhi, rn, rm);

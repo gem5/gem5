@@ -469,6 +469,9 @@ def format Thumb32StoreSingle() {{
         uint32_t op2 = bits(machInst, 11, 6);
         bool op2Puw = ((op2 & 0x24) == 0x24 ||
                        (op2 & 0x3c) == 0x30);
+        if (RN == 0xf) {
+            return new Unknown(machInst);
+        }
         if (op1 == 4) {
             return new %(strb_imm)s(machInst, RT, RN, true, IMMED_11_0);
         } else if (op1 == 0 && op2Puw) {
