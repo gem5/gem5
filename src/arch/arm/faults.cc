@@ -141,6 +141,7 @@ ArmFaultBase::invoke(ThreadContext *tc)
     Addr newPc = getVector(tc) | (sctlr.te ? (ULL(1) << PcTBitShift) : 0);
     tc->setPC(newPc);
     tc->setNextPC(newPc + cpsr.t ? 2 : 4 );
+    tc->setMicroPC(0);
 }
 
 #else
