@@ -80,6 +80,7 @@ namespace ArmISA
         MISCREG_FPEXC,
         MISCREG_MVFR0,
         MISCREG_MVFR1,
+        MISCREG_SEV_MAILBOX,
 
         // CP15 registers
         MISCREG_CP15_START,
@@ -159,7 +160,7 @@ namespace ArmISA
     const char * const miscRegName[NUM_MISCREGS] = {
         "cpsr", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
         "spsr_mon", "spsr_und", "spsr_abt",
-        "fpsr", "fpsid", "fpscr", "fpexc",
+        "fpsr", "fpsid", "fpscr", "fpexc", "sev_mailbox",
         "sctlr", "dccisw", "dccimvac", "dccmvac",
         "contextidr", "tpidrurw", "tpidruro", "tpidrprw",
         "cp15isb", "cp15dsb", "cp15dmb", "cpacr",

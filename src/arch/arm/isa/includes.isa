@@ -76,6 +76,7 @@ output exec {{
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "base/condcodes.hh"
+#include "sim/pseudo_inst.hh"
 
 #include <cmath>
 #if defined(linux)

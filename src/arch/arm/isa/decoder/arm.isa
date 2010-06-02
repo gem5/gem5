@@ -86,10 +86,27 @@ format DataOp {
             0x9: decode RN {
                 0: decode IMM {
                     0: PredImmOp::nop({{ ; }});
-                    1: WarnUnimpl::yield();
-                    2: WarnUnimpl::wfe();
-                    3: WarnUnimpl::wfi();
-                    4: WarnUnimpl::sev();
+#if FULL_SYSTEM
+                    1: PredImmOp::yield({{ ; }});
+                    2: PredImmOp::wfe({{
+                        if (SevMailbox)
+                            SevMailbox = 0;
+                        else
+                            PseudoInst::quiesce(xc->tcBase());
+                    }}, IsNonSpeculative, IsQuiesce);
+                    3: PredImmOp::wfi({{
+                            PseudoInst::quiesce(xc->tcBase());
+                    }}, IsNonSpeculative, IsQuiesce);
+                    4: PredImmOp::sev({{
+                        // Need a way for O3 to not scoreboard these
+                        // accesses as pipeflushs
+                        System *sys = xc->tcBase()->getSystemPtr();
+                        for (int x = 0; x < sys->numContexts(); x++) {
+                            ThreadContext *oc = sys->getThreadContext(x);
+                            oc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
+                        }
+                    }});
+#endif
                 }
                 default: PredImmOp::msr_i_cpsr({{
                             uint32_t newCpsr =

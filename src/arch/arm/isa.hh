@@ -119,6 +119,9 @@ namespace ArmISA
             /* One region, unified map. */
             miscRegs[MISCREG_MPUIR] = 0x100;
 
+            /* Start with an event in the mailbox */
+            miscRegs[MISCREG_SEV_MAILBOX] = 1;
+
             /*
              * Implemented = '5' from "M5",
              * Variant = 0,
