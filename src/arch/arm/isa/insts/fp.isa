@@ -49,4 +49,11 @@ let {{
     header_output += RegRegOpDeclare.subst(vmsrIop);
     decoder_output += RegRegOpConstructor.subst(vmsrIop);
     exec_output += PredOpExecute.subst(vmsrIop);
+
+    vmrsIop = InstObjParams("vmrs", "Vmrs", "RegRegOp",
+                            { "code": "Dest = MiscOp1;",
+                              "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vmrsIop);
+    decoder_output += RegRegOpConstructor.subst(vmrsIop);
+    exec_output += PredOpExecute.subst(vmrsIop);
 }};
