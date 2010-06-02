@@ -501,15 +501,37 @@ let {{
     decoder_output += RegRegImmImmOpConstructor.subst(bfiIop)
     exec_output += PredOpExecute.subst(bfiIop)
 
+    mrc15code = '''
+    CPSR cpsr = Cpsr;
+    if (cpsr.mode == MODE_USER)
+#if FULL_SYSTEM
+        return new UndefinedInstruction;
+#else
+        return new UndefinedInstruction(false, mnemonic);
+#endif
+    Dest = MiscOp1;
+    '''
+
     mrc15Iop = InstObjParams("mrc", "Mrc15", "RegRegOp",
-                             { "code": "Dest = MiscOp1;",
+                             { "code": mrc15code,
                                "predicate_test": predicateTest }, [])
     header_output += RegRegOpDeclare.subst(mrc15Iop)
     decoder_output += RegRegOpConstructor.subst(mrc15Iop)
     exec_output += PredOpExecute.subst(mrc15Iop)
 
+
+    mcr15code = '''
+    CPSR cpsr = Cpsr;
+    if (cpsr.mode == MODE_USER)
+#if FULL_SYSTEM
+        return new UndefinedInstruction;
+#else
+        return new UndefinedInstruction(false, mnemonic);
+#endif
+    MiscDest = Op1;
+    '''
     mcr15Iop = InstObjParams("mcr", "Mcr15", "RegRegOp",
-                             { "code": "MiscDest = Op1;",
+                             { "code": mcr15code,
                                "predicate_test": predicateTest }, [])
     header_output += RegRegOpDeclare.subst(mcr15Iop)
     decoder_output += RegRegOpConstructor.subst(mcr15Iop)
