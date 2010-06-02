@@ -119,3 +119,54 @@ def template RevOpConstructor {{
         %(constructor)s;
     }
 }};
+
+def template SatOpDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst,
+                       IntRegIndex _dest, uint32_t _satImm, IntRegIndex _op1);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template SatOpConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          uint32_t _satImm,
+                                          IntRegIndex _op1)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _satImm, _op1)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template SatShiftOpDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+  protected:
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst,
+                       IntRegIndex _dest, uint32_t _satImm, IntRegIndex _op1,
+                       int32_t _shiftAmt, ArmShiftType _shiftType);
+        %(BasicExecDeclare)s
+};
+}};
+
+def template SatShiftOpConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          IntRegIndex _dest,
+                                          uint32_t _satImm,
+                                          IntRegIndex _op1,
+                                          int32_t _shiftAmt,
+                                          ArmShiftType _shiftType)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _satImm, _op1, _shiftAmt, _shiftType)
+    {
+        %(constructor)s;
+    }
+}};
