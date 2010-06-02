@@ -128,6 +128,48 @@ def format McrMrc15() {{
           case MISCREG_BPIALL:
             return new WarnUnimplemented(
                     isRead ? "mrc bpiall" : "mcr bpiall", machInst);
+          case MISCREG_TLBIALLIS:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbiallis" : "mcr tlbiallis", machInst);
+          case MISCREG_TLBIMVAIS:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbimvais" : "mcr tlbimvais", machInst);
+          case MISCREG_TLBIASIDIS:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbiasidis" : "mcr tlbiasidis", machInst);
+          case MISCREG_TLBIMVAAIS:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbimvaais" : "mcr tlbimvaais", machInst);
+          case MISCREG_ITLBIALL:
+            return new WarnUnimplemented(
+                    isRead ? "mrc itlbiall" : "mcr itlbiall", machInst);
+          case MISCREG_ITLBIMVA:
+            return new WarnUnimplemented(
+                    isRead ? "mrc itlbimva" : "mcr itlbimva", machInst);
+          case MISCREG_ITLBIASID:
+            return new WarnUnimplemented(
+                    isRead ? "mrc itlbiasid" : "mcr itlbiasid", machInst);
+          case MISCREG_DTLBIALL:
+            return new WarnUnimplemented(
+                    isRead ? "mrc dtlbiall" : "mcr dtlbiall", machInst);
+          case MISCREG_DTLBIMVA:
+            return new WarnUnimplemented(
+                    isRead ? "mrc dtlbimva" : "mcr dtlbimva", machInst);
+          case MISCREG_DTLBIASID:
+            return new WarnUnimplemented(
+                    isRead ? "mrc dtlbiasid" : "mcr dtlbiasid", machInst);
+          case MISCREG_TLBIALL:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbiall" : "mcr tlbiall", machInst);
+          case MISCREG_TLBIMVA:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbimva" : "mcr tlbimva", machInst);
+          case MISCREG_TLBIASID:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbiasid" : "mcr tlbiasid", machInst);
+          case MISCREG_TLBIMVAA:
+            return new WarnUnimplemented(
+                    isRead ? "mrc tlbimvaa" : "mcr tlbimvaa", machInst);
           default:
             if (isRead) {
                 return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
