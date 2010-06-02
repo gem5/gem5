@@ -47,9 +47,6 @@
 //Include support for predicated instructions
 ##include "pred.isa"
 
-//Include utility functions
-##include "util.isa"
-
 //Include the float formats
 ##include "fp.isa"
 
