@@ -105,9 +105,141 @@ def format Thumb16UncondBranch() {{
     '''
 }};
 
-def format Thumb32 BranchesAndMiscCtrl() {{
+def format Thumb32BranchesAndMiscCtrl() {{
     decode_block = '''
-        return new WarnUnimplemented("Branches_and_miscellaneous_control",
-                                     machInst);
+    {
+        const uint32_t op = bits(machInst, 26, 20);
+        const uint32_t op1 = bits(machInst, 14, 12);
+        const uint32_t op2 = bits(machInst, 11, 8);
+        switch (op1 & 0x5) {
+          case 0x0:
+            if (op == 127) {
+                if (op1 & 0x2) {
+                    // Permanentl undefined.
+                    return new WarnUnimplemented("undefined", machInst);
+                } else {
+                    return new WarnUnimplemented("smc", machInst);
+                }
+            } else if ((op & 0x38) != 0x38) {
+                const uint32_t s = bits(machInst, 26);
+                const uint32_t j1 = bits(machInst, 13);
+                const uint32_t j2 = bits(machInst, 11);
+                const uint32_t imm6 = bits(machInst, 21, 16);
+                const uint32_t imm11 = bits(machInst, 10, 0);
+                const int32_t imm = sext<21>((s << 20) |
+                                             (j2 << 19) | (j1 << 18) |
+                                             (imm6 << 12) | (imm11 << 1));
+                return new B(machInst, imm,
+                             (ConditionCode)(uint32_t)bits(machInst, 25, 22));
+            } else {
+                switch (op) {
+                  case 0x38:
+                    if ((op2 & 0x3) == 0) {
+                        // Application level
+                        return new WarnUnimplemented("msr", machInst);
+                    }
+                    // Fall through on purpose...
+                  case 0x39:
+                    // System level
+                    return new WarnUnimplemented("msr", machInst);
+                  case 0x3a:
+                    {
+                        const uint32_t op1 = bits(machInst, 10, 8);
+                        const uint32_t op2 = bits(machInst, 7, 0);
+                        if (op1 != 0) {
+                            return new WarnUnimplemented("cps", machInst);
+                        } else if ((op2 & 0xf0) == 0xf0) {
+                            return new WarnUnimplemented("dbg", machInst);
+                        } else {
+                            switch (op2) {
+                              case 0x0:
+                                return new WarnUnimplemented("nop", machInst);
+                              case 0x1:
+                                return new WarnUnimplemented("yield", machInst);
+                              case 0x2:
+                                return new WarnUnimplemented("wfe", machInst);
+                              case 0x3:
+                                return new WarnUnimplemented("wfi", machInst);
+                              case 0x4:
+                                return new WarnUnimplemented("sev", machInst);
+                              default:
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                  case 0x3b:
+                    {
+                        const uint32_t op = bits(machInst, 7, 4);
+                        switch (op) {
+                          case 0x0:
+                            return new WarnUnimplemented("leavex", machInst);
+                          case 0x1:
+                            return new WarnUnimplemented("enterx", machInst);
+                          case 0x2:
+                            return new WarnUnimplemented("clrex", machInst);
+                          case 0x4:
+                            return new WarnUnimplemented("dsb", machInst);
+                          case 0x5:
+                            return new WarnUnimplemented("dmb", machInst);
+                          case 0x6:
+                            return new WarnUnimplemented("isb", machInst);
+                          default:
+                            break;
+                        }
+                        break;
+                    }
+                  case 0x3c:
+                    return new WarnUnimplemented("bxj", machInst);
+                  case 0x3d:
+                    return new WarnUnimplemented("subs_pc_lr_and_rel_insts",
+                                                 machInst);
+                  case 0x3e:
+                  case 0x3f:
+                    return new WarnUnimplemented("mrs", machInst);
+                }
+                break;
+            }
+          case 0x1:
+            {
+                const uint32_t s = bits(machInst, 26);
+                const uint32_t i1 = !(bits(machInst, 13) ^ s);
+                const uint32_t i2 = !(bits(machInst, 11) ^ s);
+                const uint32_t imm10 = bits(machInst, 25, 16);
+                const uint32_t imm11 = bits(machInst, 10, 0);
+                const int32_t imm = sext<25>((s << 24) |
+                                             (i1 << 23) | (i2 << 22) |
+                                             (imm10 << 12) | (imm11 << 1));
+                return new B(machInst, imm, COND_UC);
+            }
+          case 0x4:
+            {
+                const uint32_t s = bits(machInst, 26);
+                const uint32_t i1 = !(bits(machInst, 13) ^ s);
+                const uint32_t i2 = !(bits(machInst, 11) ^ s);
+                const uint32_t imm10h = bits(machInst, 25, 16);
+                const uint32_t imm10l = bits(machInst, 10, 1);
+                const int32_t imm = sext<25>((s << 24) |
+                                             (i1 << 23) | (i2 << 22) |
+                                             (imm10h << 12) | (imm10l << 2));
+                return new BlxImm(machInst, imm);
+            }
+          case 0x5:
+            {
+                const uint32_t s = bits(machInst, 26);
+                const uint32_t i1 = !(bits(machInst, 13) ^ s);
+                const uint32_t i2 = !(bits(machInst, 11) ^ s);
+                const uint32_t imm10 = bits(machInst, 25, 16);
+                const uint32_t imm11 = bits(machInst, 10, 0);
+                const int32_t imm = sext<25>((s << 24) |
+                                             (i1 << 23) | (i2 << 22) |
+                                             (imm10 << 12) | (imm11 << 1));
+                return new Bl(machInst, imm, COND_UC);
+            }
+          default:
+            break;
+        }
+        return new Unknown(machInst);
+    }
     '''
 }};
