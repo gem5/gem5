@@ -78,7 +78,8 @@ let {{
         exec_output += newExec
 
     def buildImmStore(mnem, post, add, writeback, \
-                      size=4, sign=False, user=False, strex=False):
+                      size=4, sign=False, user=False, \
+                      strex=False, vstr=False):
         name = mnem
         Name = storeImmClassName(post, add, writeback, \
                                  size, sign, user)
@@ -94,8 +95,14 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = "Mem%(suffix)s = cSwap(Dest%(suffix)s, ((CPSR)Cpsr).e);" % \
-            { "suffix" : buildMemSuffix(sign, size) }
+        if vstr:
+            accCode = '''
+            Mem%(suffix)s = cSwap(FpDest.uw, ((CPSR)Cpsr).e);
+            ''' % { "suffix" : buildMemSuffix(sign, size) }
+        else:
+            accCode = '''
+            Mem%(suffix)s = cSwap(Dest%(suffix)s, ((CPSR)Cpsr).e);
+            ''' % { "suffix" : buildMemSuffix(sign, size) }
         if writeback:
             accCode += "Base = Base %s;\n" % offset
 
@@ -107,7 +114,10 @@ let {{
             postAccCode = "Result = !writeResult;"
             execTemplateBase = 'StoreEx'
         else:
-            memFlags.append("ArmISA::TLB::AllowUnaligned")
+            if vstr:
+                Name = "%s_%s" % (mnem.upper(), Name)
+            else:
+                memFlags.append("ArmISA::TLB::AllowUnaligned")
             base = buildMemBase("MemoryImm", post, writeback)
             postAccCode = ""
             execTemplateBase = 'Store'
@@ -179,7 +189,8 @@ let {{
                  "ArmISA::TLB::AllowUnaligned", \
                  "%d" % (size - 1)], [], base)
 
-    def buildDoubleImmStore(mnem, post, add, writeback, strex=False):
+    def buildDoubleImmStore(mnem, post, add, writeback, \
+                            strex=False, vstr=False):
         name = mnem
         Name = storeDoubleImmClassName(post, add, writeback)
 
@@ -194,11 +205,18 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = '''
-        CPSR cpsr = Cpsr;
-        Mem.ud = (uint64_t)cSwap(Dest.uw, cpsr.e) |
-                 ((uint64_t)cSwap(Dest2.uw, cpsr.e) << 32);
-        '''
+        if vstr:
+            accCode = '''
+            uint64_t swappedMem  = (uint64_t)FpDest.uw |
+                                   ((uint64_t)FpDest2.uw << 32);
+            Mem.ud = cSwap(swappedMem, ((CPSR)Cpsr).e);
+            '''
+        else:
+            accCode = '''
+            CPSR cpsr = Cpsr;
+            Mem.ud = (uint64_t)cSwap(Dest.uw, cpsr.e) |
+                     ((uint64_t)cSwap(Dest2.uw, cpsr.e) << 32);
+            '''
         if writeback:
             accCode += "Base = Base %s;\n" % offset
 
@@ -206,12 +224,13 @@ let {{
                     "ArmISA::TLB::AlignWord"]
         if strex:
             memFlags.append("Request::LLSC")
-            Name = "%s_%s" % (mnem.upper(), Name)
             base = buildMemBase("MemoryExDImm", post, writeback)
             postAccCode = "Result = !writeResult;"
         else:
             base = buildMemBase("MemoryDImm", post, writeback)
             postAccCode = ""
+        if vstr or strex:
+            Name = "%s_%s" % (mnem.upper(), Name)
 
         emitStore(name, Name, True, eaCode, accCode, postAccCode, \
                   memFlags, [], base, double=True, strex=strex)
@@ -300,4 +319,9 @@ let {{
     buildImmStore("strexh", False, True, False, size=2, strex=True)
     buildImmStore("strexb", False, True, False, size=1, strex=True)
     buildDoubleImmStore("strexd", False, True, False, strex=True)
+
+    buildImmStore("vstr", False, True, False, size=4, vstr=True)
+    buildImmStore("vstr", False, False, False, size=4, vstr=True)
+    buildDoubleImmStore("vstr", False, True, False, vstr=True)
+    buildDoubleImmStore("vstr", False, False, False, vstr=True)
 }};
