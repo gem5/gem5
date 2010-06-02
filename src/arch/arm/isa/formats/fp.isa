@@ -165,9 +165,31 @@ def format ExtensionRegLoadStore() {{
         }
         switch (bits(opcode, 4, 3)) {
           case 0x0:
-            if (bits(opcode, 4, 1) == 0x2) {
-                return new WarnUnimplemented("core-to-extension-transfer",
-                                             machInst);
+            if (bits(opcode, 4, 1) == 0x2 &&
+                    !(machInst.thumb == 1 && bits(machInst, 28) == 1) &&
+                    !(machInst.thumb == 0 && machInst.condCode == 0xf)) {
+                if ((bits(machInst, 7, 4) & 0xd) != 1) {
+                    break;
+                }
+                const IntRegIndex rt =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                const IntRegIndex rt2 =
+                    (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                const bool op = bits(machInst, 20);
+                uint32_t vm;
+                if (bits(machInst, 8) == 0) {
+                    vm = (bits(machInst, 3, 0) << 1) | bits(machInst, 5);
+                } else {
+                    vm = (bits(machInst, 3, 0) << 1) |
+                         (bits(machInst, 5) << 5);
+                }
+                if (op) {
+                    return new Vmov2Core2Reg(machInst, rt, rt2,
+                                             (IntRegIndex)vm);
+                } else {
+                    return new Vmov2Reg2Core(machInst, (IntRegIndex)vm,
+                                             rt, rt2);
+                }
             }
             break;
           case 0x1:
@@ -221,8 +243,15 @@ def format ShortFpTransfer() {{
         }
         if (l == 0 && c == 0) {
             if (a == 0) {
-                // A8-648
-                return new WarnUnimplemented("vmov", machInst);
+                const uint32_t vn = (bits(machInst, 19, 16) << 1) |
+                                    bits(machInst, 7);
+                const IntRegIndex rt =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                if (bits(machInst, 20) == 1) {
+                    return new VmovRegCoreW(machInst, rt, (IntRegIndex)vn);
+                } else {
+                    return new VmovCoreRegW(machInst, (IntRegIndex)vn, rt);
+                }
             } else if (a == 0x7) {
                 const IntRegIndex rt =
                     (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
@@ -244,16 +273,54 @@ def format ShortFpTransfer() {{
             }
         } else if (l == 0 && c == 1) {
             if (bits(a, 2) == 0) {
-                // A8-644
-                return new WarnUnimplemented("vmov", machInst);
+                uint32_t vd = (bits(machInst, 7) << 5) |
+                              (bits(machInst, 19, 16) << 1);
+                uint32_t index, size;
+                const IntRegIndex rt =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                if (bits(machInst, 22) == 1) {
+                    size = 8;
+                    index = (bits(machInst, 21) << 2) |
+                            bits(machInst, 6, 5);
+                } else if (bits(machInst, 5) == 1) {
+                    size = 16;
+                    index = (bits(machInst, 21) << 1) |
+                            bits(machInst, 6);
+                } else if (bits(machInst, 6) == 0) {
+                    size = 32;
+                    index = bits(machInst, 21);
+                } else {
+                    return new Unknown(machInst);
+                }
+                if (index >= (32 / size)) {
+                    index -= (32 / size);
+                    vd++;
+                }
+                switch (size) {
+                  case 8:
+                    return new VmovCoreRegB(machInst, (IntRegIndex)vd,
+                                            rt, index);
+                  case 16:
+                    return new VmovCoreRegH(machInst, (IntRegIndex)vd,
+                                            rt, index);
+                  case 32:
+                    return new VmovCoreRegW(machInst, (IntRegIndex)vd, rt);
+                }
             } else if (bits(b, 1) == 0) {
                 // A8-594
                 return new WarnUnimplemented("vdup", machInst);
             }
         } else if (l == 1 && c == 0) {
             if (a == 0) {
-                // A8-648
-                return new WarnUnimplemented("vmov", machInst);
+                const uint32_t vn = (bits(machInst, 19, 16) << 1) |
+                                    bits(machInst, 7);
+                const IntRegIndex rt =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                if (bits(machInst, 20) == 1) {
+                    return new VmovRegCoreW(machInst, rt, (IntRegIndex)vn);
+                } else {
+                    return new VmovCoreRegW(machInst, (IntRegIndex)vn, rt);
+                }
             } else if (a == 7) {
                 const IntRegIndex rt =
                     (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
@@ -280,8 +347,50 @@ def format ShortFpTransfer() {{
                 return new Vmrs(machInst, rt, (IntRegIndex)specReg);
             }
         } else {
-            // A8-646
-            return new WarnUnimplemented("vmov", machInst);
+            uint32_t vd = (bits(machInst, 7) << 5) |
+                          (bits(machInst, 19, 16) << 1);
+            uint32_t index, size;
+            const IntRegIndex rt =
+                (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+            const bool u = (bits(machInst, 23) == 1);
+            if (bits(machInst, 22) == 1) {
+                size = 8;
+                index = (bits(machInst, 21) << 2) |
+                        bits(machInst, 6, 5);
+            } else if (bits(machInst, 5) == 1) {
+                size = 16;
+                index = (bits(machInst, 21) << 1) |
+                        bits(machInst, 6);
+            } else if (bits(machInst, 6) == 0 && !u) {
+                size = 32;
+                index = bits(machInst, 21);
+            } else {
+                return new Unknown(machInst);
+            }
+            if (index >= (32 / size)) {
+                index -= (32 / size);
+                vd++;
+            }
+            switch (size) {
+              case 8:
+                if (u) {
+                    return new VmovRegCoreUB(machInst, rt,
+                                             (IntRegIndex)vd, index);
+                } else {
+                    return new VmovRegCoreSB(machInst, rt,
+                                             (IntRegIndex)vd, index);
+                }
+              case 16:
+                if (u) {
+                    return new VmovRegCoreUH(machInst, rt,
+                                             (IntRegIndex)vd, index);
+                } else {
+                    return new VmovRegCoreSH(machInst, rt,
+                                             (IntRegIndex)vd, index);
+                }
+              case 32:
+                return new VmovRegCoreW(machInst, rt, (IntRegIndex)vd);
+            }
         }
         return new Unknown(machInst);
     }
