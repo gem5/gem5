@@ -469,6 +469,81 @@ let {{
             resTemp = geBits;
         ''', flagType="ge", buildNonCc=True)
 
+    buildRegDataInst("shadd8", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 4; i++) {
+                int high = (i + 1) * 8 - 1;
+                int low = i * 8;
+                int32_t midRes =
+                    (uint64_t)(sext<8>(bits(Op1.sw, high, low)) +
+                               sext<8>(bits(Op2.sw, high, low))) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("shadd16", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 2; i++) {
+                int high = (i + 1) * 16 - 1;
+                int low = i * 16;
+                int32_t midRes =
+                    (uint64_t)(sext<16>(bits(Op1.sw, high, low)) +
+                               sext<16>(bits(Op2.sw, high, low))) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("shsub8", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 4; i++) {
+                int high = (i + 1) * 8 - 1;
+                int low = i * 8;
+                int32_t midRes =
+                    (uint64_t)(sext<8>(bits(Op1.sw, high, low)) -
+                               sext<8>(bits(Op2.sw, high, low))) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("shsub16", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 2; i++) {
+                int high = (i + 1) * 16 - 1;
+                int low = i * 16;
+                int32_t midRes =
+                    (uint64_t)(sext<16>(bits(Op1.sw, high, low)) -
+                               sext<16>(bits(Op2.sw, high, low))) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("shasx", '''
+            int32_t midRes;
+            resTemp = 0;
+            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            midRes = (uint64_t)(arg1Low - arg2High) >> 1;
+            replaceBits(resTemp, 15, 0, midRes);
+            midRes = (arg1High + arg2Low) >> 1;
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=True)
+    buildRegDataInst("shsax", '''
+            int32_t midRes;
+            resTemp = 0;
+            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            midRes = (uint64_t)(arg1Low + arg2High) >> 1;
+            replaceBits(resTemp, 15, 0, midRes);
+            midRes = (uint64_t)(arg1High - arg2Low) >> 1;
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=True)
+
     buildRegDataInst("uqadd16", '''
             uint32_t midRes;
             for (unsigned i = 0; i < 2; i++) {
@@ -646,4 +721,75 @@ let {{
             Dest = resTemp;
             resTemp = geBits;
         ''', flagType="ge", buildNonCc=False)
+
+    buildRegDataInst("uhadd16", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 2; i++) {
+                int high = (i + 1) * 16 - 1;
+                int low = i * 16;
+                int32_t midRes = (bits(Op1, high, low) +
+                                  bits(Op2, high, low)) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uhadd8", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 4; i++) {
+                int high = (i + 1) * 8 - 1;
+                int low = i * 8;
+                int32_t midRes = (bits(Op1, high, low) +
+                                  bits(Op2, high, low)) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uhsub16", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 2; i++) {
+                int high = (i + 1) * 16 - 1;
+                int low = i * 16;
+                int32_t midRes = (bits(Op1, high, low) -
+                                  bits(Op2, high, low)) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uhsub8", '''
+            resTemp = 0;
+            for (unsigned i = 0; i < 4; i++) {
+                int high = (i + 1) * 8 - 1;
+                int low = i * 8;
+                int32_t midRes = (bits(Op1, high, low) -
+                                  bits(Op2, high, low)) >> 1;
+                replaceBits(resTemp, high, low, midRes);
+            }
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uhasx", '''
+            int32_t midRes;
+            resTemp = 0;
+            int64_t arg1Low = bits(Op1.sw, 15, 0);
+            int64_t arg1High = bits(Op1.sw, 31, 16);
+            int64_t arg2Low = bits(Op2.sw, 15, 0);
+            int64_t arg2High = bits(Op2.sw, 31, 16);
+            midRes = (arg1Low - arg2High) >> 1;
+            replaceBits(resTemp, 15, 0, midRes);
+            midRes = (arg1High + arg2Low) >> 1;
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
+    buildRegDataInst("uhsax", '''
+            int32_t midRes;
+            resTemp = 0;
+            int64_t arg1Low = bits(Op1.sw, 15, 0);
+            int64_t arg1High = bits(Op1.sw, 31, 16);
+            int64_t arg2Low = bits(Op2.sw, 15, 0);
+            int64_t arg2High = bits(Op2.sw, 31, 16);
+            midRes = (arg1Low + arg2High) >> 1;
+            replaceBits(resTemp, 15, 0, midRes);
+            midRes = (arg1High - arg2Low) >> 1;
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+        ''', flagType="none", buildCc=False)
 }};
