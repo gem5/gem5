@@ -153,14 +153,23 @@ let {{
     #TBB, TBH
     for isTbh in (0, 1):
         if isTbh:
-            eaCode = "EA = Op1 + Op2 * 2"
+            eaCode = '''
+            unsigned memAccessFlags = ArmISA::TLB::AllowUnaligned |
+                                      ArmISA::TLB::AlignHalfWord |
+                                      ArmISA::TLB::MustBeOne;
+            EA = Op1 + Op2 * 2
+            '''
             accCode = "NPC = readPC(xc) + 2 * (Mem.uh);"
             mnem = "tbh"
         else:
-            eaCode = "EA = Op1 + Op2"
+            eaCode = '''
+            unsigned memAccessFlags = ArmISA::TLB::AllowUnaligned |
+                                      ArmISA::TLB::AlignByte |
+                                      ArmISA::TLB::MustBeOne;
+            EA = Op1 + Op2
+            '''
             accCode = "NPC = readPC(xc) + 2 * (Mem.ub);"
             mnem = "tbb"
-        eaCode = "unsigned memAccessFlags = 0;\n" + eaCode
         iop = InstObjParams(mnem, mnem.capitalize(), "BranchRegReg",
                             {'ea_code': eaCode,
                              'memacc_code': accCode,

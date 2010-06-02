@@ -45,7 +45,9 @@ let {{
      newDecoder,
      newExec) = SwapBase("swp", "Swp", "EA = Base;",
                          "Mem = Op1;", "Dest = memData;",
-                         ["Request::MEM_SWAP"], [])
+                         ["Request::MEM_SWAP",
+                          "ArmISA::TLB::AlignWord",
+                          "ArmISA::TLB::MustBeOne"], [])
     header_output += newHeader
     decoder_output += newDecoder
     exec_output += newExec
@@ -54,7 +56,9 @@ let {{
      newDecoder,
      newExec) = SwapBase("swpb", "Swpb", "EA = Base;",
                          "Mem.ub = Op1.ub;", "Dest.ub = (uint8_t)memData;",
-                         ["Request::MEM_SWAP"], [])
+                         ["Request::MEM_SWAP",
+                          "ArmISA::TLB::AlignByte",
+                          "ArmISA::TLB::MustBeOne"], [])
     header_output += newHeader
     decoder_output += newDecoder
     exec_output += newExec

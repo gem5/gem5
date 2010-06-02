@@ -98,7 +98,10 @@ let {{
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryImm", post, writeback)
 
-        emitStore(name, Name, True, eaCode, accCode, [], [], base)
+        emitStore(name, Name, True, eaCode, accCode, \
+                ["ArmISA::TLB::MustBeOne", \
+                 "ArmISA::TLB::AllowUnaligned", \
+                 "%d" % (size - 1)], [], base)
 
     def buildRegStore(mnem, post, add, writeback, \
                       size=4, sign=False, user=False):
@@ -123,7 +126,10 @@ let {{
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryReg", post, writeback)
 
-        emitStore(name, Name, False, eaCode, accCode, [], [], base)
+        emitStore(name, Name, False, eaCode, accCode, \
+                ["ArmISA::TLB::MustBeOne", \
+                 "ArmISA::TLB::AllowUnaligned", \
+                 "%d" % (size - 1)], [], base)
 
     def buildDoubleImmStore(mnem, post, add, writeback):
         name = mnem
@@ -146,7 +152,8 @@ let {{
         base = buildMemBase("MemoryDImm", post, writeback)
 
         emitStore(name, Name, True, eaCode, accCode, \
-                  [], [], base, double=True)
+                ["ArmISA::TLB::MustBeOne",
+                 "ArmISA::TLB::AlignWord"], [], base, double=True)
 
     def buildDoubleRegStore(mnem, post, add, writeback):
         name = mnem
@@ -170,7 +177,8 @@ let {{
         base = buildMemBase("MemoryDReg", post, writeback)
 
         emitStore(name, Name, False, eaCode, accCode, \
-                  [], [], base, double=True)
+                ["ArmISA::TLB::MustBeOne", \
+                 "ArmISA::TLB::AlignWord"], [], base, double=True)
 
     def buildStores(mnem, size=4, sign=False, user=False):
         buildImmStore(mnem, True, True, True, size, sign, user)

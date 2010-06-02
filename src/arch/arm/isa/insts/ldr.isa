@@ -92,20 +92,23 @@ let {{
             eaCode += offset
         eaCode += ";"
 
+        memFlags = ["ArmISA::TLB::MustBeOne", "%d" % (size - 1)]
         if prefetch:
             Name = "%s_%s" % (mnem.upper(), Name)
-            memFlags = ["Request::PREFETCH"]
+            memFlags.append("Request::PREFETCH")
             accCode = '''
             uint64_t temp = Mem%s;\n
             temp = temp;
             ''' % buildMemSuffix(sign, size)
         else:
             if ldrex:
-                memFlags = ["Request::LLSC"]
+                memFlags.append("Request::LLSC")
                 Name = "%s_%s" % (mnem.upper(), Name)
-            else:
-                memFlags = []
             accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
+
+        if not prefetch and not ldrex:
+            memFlags.append("ArmISA::TLB::AllowUnaligned")
+
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryImm", post, writeback)
@@ -142,7 +145,8 @@ let {{
 
         (newHeader,
          newDecoder,
-         newExec) = RfeBase(name, Name, eaCode, accCode, [], [])
+         newExec) = RfeBase(name, Name, eaCode, accCode,
+             ["ArmISA::TLB::AlignWord", "ArmISA::TLB::MustBeOne"], [])
 
         header_output += newHeader
         decoder_output += newDecoder
@@ -166,18 +170,22 @@ let {{
             eaCode += offset
         eaCode += ";"
 
+        memFlags = ["%d" % (size - 1), "ArmISA::TLB::MustBeOne"]
         if prefetch:
             Name = "%s_%s" % (mnem.upper(), Name)
-            memFlags = ["Request::PREFETCH"]
+            memFlags.append("Request::PREFETCH")
             accCode = '''
             uint64_t temp = Mem%s;\n
             temp = temp;
             ''' % buildMemSuffix(sign, size)
         else:
-            memFlags = []
             accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
+
+        if not prefetch:
+            memFlags.append("ArmISA::TLB::AllowUnaligned")
+
         base = buildMemBase("MemoryReg", post, writeback)
 
         emitLoad(name, Name, False, eaCode, accCode, \
@@ -211,6 +219,9 @@ let {{
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryDImm", post, writeback)
 
+        memFlags.extend(["ArmISA::TLB::MustBeOne",
+                         "ArmISA::TLB::AlignWord"])
+
         emitLoad(name, Name, True, eaCode, accCode, \
                  memFlags, [], base, double=True)
 
@@ -239,7 +250,8 @@ let {{
         base = buildMemBase("MemoryDReg", post, writeback)
 
         emitLoad(name, Name, False, eaCode, accCode,
-                 [], [], base, double=True)
+                 ["ArmISA::TLB::MustBeOne", "ArmISA::TLB::AlignWord"],
+                 [], base, double=True)
 
     def buildLoads(mnem, size=4, sign=False, user=False):
         buildImmLoad(mnem, True, True, True, size, sign, user)

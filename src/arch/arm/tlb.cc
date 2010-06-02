@@ -291,6 +291,18 @@ Fault
 TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 {
     Addr vaddr = req->getVaddr() & ~PcModeMask;
+    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
+    uint32_t flags = req->getFlags();
+
+    if (mode != Execute) {
+        assert(flags & MustBeOne);
+
+        if (sctlr.a || (flags & AllowUnaligned) == 0) {
+            if ((vaddr & flags & AlignmentMask) != 0) {
+                return new DataAbort;
+            }
+        }
+    }
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
 
@@ -301,7 +313,6 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 
     return NoFault;
 #else
-    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     if (!sctlr.m) {
         req->setPaddr(vaddr);
         return NoFault;

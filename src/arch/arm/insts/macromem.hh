@@ -43,6 +43,7 @@
 #define __ARCH_ARM_MACROMEM_HH__
 
 #include "arch/arm/insts/pred_inst.hh"
+#include "arch/arm/tlb.hh"
 
 namespace ArmISA
 {
@@ -88,7 +89,7 @@ class MicroMemOp : public MicroIntOp
     MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
             : MicroIntOp(mnem, machInst, __opClass, _ura, _urb, _imm),
-              up(_up), memAccessFlags(0)
+              up(_up), memAccessFlags(TLB::MustBeOne | TLB::AlignWord)
     {
     }
 };
