@@ -96,7 +96,7 @@ let {{
     secondOpRe = re.compile("secondOp")
     immOp2 = "imm"
     regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodes<29:>)"
-    regRegOp2 = "shift_rm_rs(Op2, Shift, shiftType, CondCodes<29:>)"
+    regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodes<29:>)"
 
     def buildDataInst(mnem, code, flagType = "logic"):
         global header_output, decoder_output, exec_output
