@@ -224,9 +224,23 @@ def format ShortFpTransfer() {{
                 // A8-648
                 return new WarnUnimplemented("vmov", machInst);
             } else if (a == 0x7) {
-                // A8-660
-                // B6-29
-                return new WarnUnimplemented("vmsr", machInst);
+                const IntRegIndex rt =
+                    (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                uint32_t specReg = bits(machInst, 19, 16);
+                switch (specReg) {
+                  case 0:
+                    specReg = MISCREG_FPSID;
+                    break;
+                  case 1:
+                    specReg = MISCREG_FPSCR;
+                    break;
+                  case 8:
+                    specReg = MISCREG_FPEXC;
+                    break;
+                  default:
+                    return new Unknown(machInst);
+                }
+                return new Vmsr(machInst, (IntRegIndex)specReg, rt);
             }
         } else if (l == 0 && c == 1) {
             if (bits(a, 2) == 0) {
