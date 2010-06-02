@@ -57,3 +57,6 @@
 
 //Branches
 ##include "branch.isa"
+
+//Multiply
+##include "mult.isa"
