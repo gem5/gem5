@@ -70,10 +70,11 @@ let {{
     '''
     maybeAIWPCWrite = '''
         if (%(reg_idx)s == PCReg) {
-            if (xc->readPC() & (ULL(1) << PcTBitShift)) {
-                setIWNextPC(xc, %(final_val)s);
-            } else {
+            bool thumb = THUMB;
+            if (thumb) {
                 setNextPC(xc, %(final_val)s);
+            } else {
+                setIWNextPC(xc, %(final_val)s);
             }
         } else {
             xc->%(func)s(this, %(op_idx)s, %(final_val)s);

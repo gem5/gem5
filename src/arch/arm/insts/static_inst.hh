@@ -221,7 +221,13 @@ class ArmStaticInst : public StaticInst
     static void
     setNextPC(XC *xc, Addr val)
     {
-        xc->setNextPC((xc->readNextPC() & PcModeMask) |
+        Addr npc = xc->readNextPC();
+        if (npc & (ULL(1) << PcTBitShift)) {
+            val &= ~mask(1);
+        } else {
+            val &= ~mask(2);
+        }
+        xc->setNextPC((npc & PcModeMask) |
                       (val & ~PcModeMask));
     }
 
