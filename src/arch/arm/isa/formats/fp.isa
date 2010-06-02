@@ -467,3 +467,121 @@ def format ShortFpTransfer() {{
     return decodeShortFpTransfer(machInst);
     '''
 }};
+
+let {{
+    header_output = '''
+    StaticInstPtr
+    decodeVfpData(ExtMachInst machInst);
+    '''
+    decoder_output = '''
+    StaticInstPtr
+    decodeVfpData(ExtMachInst machInst)
+    {
+        const uint32_t opc1 = bits(machInst, 23, 20);
+        const uint32_t opc2 = bits(machInst, 19, 16);
+        const uint32_t opc3 = bits(machInst, 7, 6);
+        //const uint32_t opc4 = bits(machInst, 3, 0);
+        switch (opc1 & 0xb /* 1011 */) {
+          case 0x0:
+            return new WarnUnimplemented("vmla, vmls", machInst);
+          case 0x2:
+            if ((opc3 & 0x1) == 0) {
+                return new WarnUnimplemented("vmul", machInst);
+            }
+          case 0x1:
+            return new WarnUnimplemented("vnmla, vnmls, vnmul", machInst);
+          case 0x3:
+            if ((opc3 & 0x1) == 0) {
+                return new WarnUnimplemented("vadd", machInst);
+            } else {
+                return new WarnUnimplemented("vsub", machInst);
+            }
+          case 0x8:
+            if ((opc3 & 0x1) == 0) {
+                return new WarnUnimplemented("vdiv", machInst);
+            }
+            break;
+          case 0xb:
+            if ((opc3 & 0x1) == 0) {
+                uint32_t vd;
+                const uint32_t baseImm =
+                    bits(machInst, 3, 0) | (bits(machInst, 19, 16) << 4);
+                if (bits(machInst, 8) == 0) {
+                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
+                    uint32_t imm = vfp_modified_imm(baseImm, false);
+                    return new VmovImmS(machInst, (IntRegIndex)vd, imm);
+                } else {
+                    vd = (bits(machInst, 22) << 5) |
+                         (bits(machInst, 15, 12) << 1);
+                    uint64_t imm = vfp_modified_imm(baseImm, true);
+                    return new VmovImmD(machInst, (IntRegIndex)vd, imm);
+                }
+            }
+            switch (opc2) {
+              case 0x0:
+                if (opc3 == 1) {
+                    uint32_t vd;
+                    uint32_t vm;
+                    if (bits(machInst, 8) == 0) {
+                        vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
+                        vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
+                        return new VmovRegS(machInst,
+                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    } else {
+                        vd = (bits(machInst, 22) << 5) |
+                             (bits(machInst, 15, 12) << 1);
+                        vm = (bits(machInst, 5) << 5) |
+                             (bits(machInst, 3, 0) << 1);
+                        return new VmovRegD(machInst,
+                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    }
+                } else {
+                    return new WarnUnimplemented("vabs", machInst);
+                }
+              case 0x1:
+                if (opc3 == 1) {
+                    return new WarnUnimplemented("vneg", machInst);
+                } else {
+                    return new WarnUnimplemented("vsqrt", machInst);
+                }
+              case 0x2:
+              case 0x3:
+                // Between half and single precision.
+                return new WarnUnimplemented("vcvtb, vcvtt", machInst);
+              case 0x4:
+              case 0x5:
+                return new WarnUnimplemented("vcmp, vcmpe", machInst);
+              case 0x7:
+                if (opc3 == 0x3) {
+                    // Between double and single precision.
+                    return new WarnUnimplemented("vcvt", machInst);
+                }
+                break;
+              case 0x8:
+                // Between FP and int.
+                return new WarnUnimplemented("vcvt, vcvtr", machInst);
+              case 0xa:
+              case 0xb:
+                // Between FP and fixed point.
+                return new WarnUnimplemented("vcvt", machInst);
+              case 0xc:
+              case 0xd:
+                // Between FP and int.
+                return new WarnUnimplemented("vcvt, vcvtr", machInst);
+              case 0xe:
+              case 0xf:
+                // Between FP and fixed point.
+                return new WarnUnimplemented("vcvt", machInst);
+            }
+            break;
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};
+
+def format VfpData() {{
+    decode_block = '''
+    return decodeVfpData(machInst);
+    '''
+}};
