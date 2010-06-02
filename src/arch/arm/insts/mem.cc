@@ -1,4 +1,17 @@
-/* Copyright (c) 2007-2008 The Florida State University
+/*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +45,28 @@
 
 namespace ArmISA
 {
+
+void
+MemoryNew::printInst(std::ostream &os, AddrMode addrMode) const
+{
+    printMnemonic(os);
+    printReg(os, dest);
+    os << ", [";
+    printReg(os, base);
+    if (addrMode != AddrMd_PostIndex) {
+        os << ", ";
+        printOffset(os);
+        os << "]";
+        if (addrMode == AddrMd_PreIndex) {
+            os << "!";
+        }
+    } else {
+        os << "] ";
+        printOffset(os);
+
+    }
+}
+
 std::string
 Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
@@ -50,4 +85,5 @@ Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         ss << "!";
     return ss.str();
 }
+
 }
