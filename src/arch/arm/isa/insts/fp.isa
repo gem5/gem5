@@ -356,4 +356,59 @@ let {{
     header_output += RegRegRegOpDeclare.subst(vsubDIop);
     decoder_output += RegRegRegOpConstructor.subst(vsubDIop);
     exec_output += PredOpExecute.subst(vsubDIop);
+
+    vdivSCode = '''
+        FpDest = FpOp1 / FpOp2;
+    '''
+    vdivSIop = InstObjParams("vdivs", "VdivS", "RegRegRegOp",
+                                     { "code": vdivSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vdivSIop);
+    decoder_output += RegRegRegOpConstructor.subst(vdivSIop);
+    exec_output += PredOpExecute.subst(vdivSIop);
+
+    vdivDCode = '''
+        IntDoubleUnion cOp1, cOp2, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        cDest.fp = cOp1.fp / cOp2.fp;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vdivDIop = InstObjParams("vdivd", "VdivD", "RegRegRegOp",
+                                     { "code": vdivDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vdivDIop);
+    decoder_output += RegRegRegOpConstructor.subst(vdivDIop);
+    exec_output += PredOpExecute.subst(vdivDIop);
+
+    vsqrtSCode = '''
+        FpDest = sqrtf(FpOp1);
+        if (FpOp1 < 0) {
+            FpDest = NAN;
+        }
+    '''
+    vsqrtSIop = InstObjParams("vsqrts", "VsqrtS", "RegRegOp",
+                                     { "code": vsqrtSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vsqrtSIop);
+    decoder_output += RegRegOpConstructor.subst(vsqrtSIop);
+    exec_output += PredOpExecute.subst(vsqrtSIop);
+
+    vsqrtDCode = '''
+        IntDoubleUnion cOp1, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cDest.fp = sqrt(cOp1.fp);
+        if (cOp1.fp < 0) {
+            cDest.fp = NAN;
+        }
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vsqrtDIop = InstObjParams("vsqrtd", "VsqrtD", "RegRegOp",
+                                     { "code": vsqrtDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vsqrtDIop);
+    decoder_output += RegRegOpConstructor.subst(vsqrtDIop);
+    exec_output += PredOpExecute.subst(vsqrtDIop);
 }};
