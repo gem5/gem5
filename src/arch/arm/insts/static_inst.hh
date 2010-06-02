@@ -47,7 +47,7 @@
 
 namespace ArmISA
 {
-class ArmStaticInst : public StaticInst
+class ArmStaticInstBase : public StaticInst
 {
   protected:
     int32_t shift_rm_imm(uint32_t base, uint32_t shamt,
@@ -67,7 +67,7 @@ class ArmStaticInst : public StaticInst
     bool arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
 
     // Constructor
-    ArmStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
+    ArmStaticInstBase(const char *mnem, MachInst _machInst, OpClass __opClass)
         : StaticInst(mnem, _machInst, __opClass)
     {
     }
@@ -144,6 +144,62 @@ class ArmStaticInst : public StaticInst
     {
         xc->setNextPC((xc->readNextPC() & PcModeMask) |
                       (val & ~PcModeMask));
+    }
+};
+
+class ArmStaticInst : public ArmStaticInstBase
+{
+  protected:
+    ArmStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : ArmStaticInstBase(mnem, _machInst, __opClass)
+    {
+    }
+
+    template<class XC>
+    static void
+    setNextPC(XC *xc, Addr val)
+    {
+        xc->setNextPC((xc->readNextPC() & PcModeMask) |
+                      (val & ~PcModeMask));
+    }
+};
+
+class ArmInterWorking : public ArmStaticInstBase
+{
+  protected:
+    ArmInterWorking(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : ArmStaticInstBase(mnem, _machInst, __opClass)
+    {
+    }
+
+    template<class XC>
+    static void
+    setNextPC(XC *xc, Addr val)
+    {
+        Addr stateBits = xc->readPC() & PcModeMask;
+        Addr jBit = (ULL(1) << PcJBitShift);
+        Addr tBit = (ULL(1) << PcTBitShift);
+        bool thumbEE = (stateBits == (tBit | jBit));
+
+        Addr newPc = (val & ~PcModeMask);
+        if (thumbEE) {
+            if (bits(newPc, 0)) {
+                warn("Bad thumbEE interworking branch address %#x.\n", newPc);
+            } else {
+                newPc = newPc & ~mask(1);
+            }
+        } else {
+            if (bits(newPc, 0)) {
+                stateBits = tBit;
+                newPc = newPc & ~mask(1);
+            } else if (!bits(newPc, 1)) {
+                stateBits = 0;
+            } else {
+                warn("Bad interworking branch address %#x.\n", newPc);
+            }
+        }
+        newPc = newPc | stateBits;
+        xc->setNextPC(newPc);
     }
 };
 }

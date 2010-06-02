@@ -1,4 +1,17 @@
-/* Copyright (c) 2007-2008 The Florida State University
+/*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,8 +50,8 @@ namespace ArmISA
 {
 // Shift Rm by an immediate value
 int32_t
-ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
-                            uint32_t type, uint32_t cfval) const
+ArmStaticInstBase::shift_rm_imm(uint32_t base, uint32_t shamt,
+                                uint32_t type, uint32_t cfval) const
 {
     assert(shamt < 32);
     ArmShiftType shiftType;
@@ -73,8 +86,8 @@ ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
 
 // Shift Rm by Rs
 int32_t
-ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
-                           uint32_t type, uint32_t cfval) const
+ArmStaticInstBase::shift_rm_rs(uint32_t base, uint32_t shamt,
+                               uint32_t type, uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
     shiftType = (enum ArmShiftType) type;
@@ -113,8 +126,8 @@ ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
 
 // Generate C for a shift by immediate
 bool
-ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
-                               uint32_t type, uint32_t cfval) const
+ArmStaticInstBase::shift_carry_imm(uint32_t base, uint32_t shamt,
+                                   uint32_t type, uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
     shiftType = (enum ArmShiftType) type;
@@ -153,8 +166,8 @@ ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
 
 // Generate C for a shift by Rs
 bool
-ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
-                              uint32_t type, uint32_t cfval) const
+ArmStaticInstBase::shift_carry_rs(uint32_t base, uint32_t shamt,
+                                  uint32_t type, uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
     shiftType = (enum ArmShiftType) type;
@@ -194,32 +207,32 @@ ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
 
 // Generate the appropriate carry bit for an addition operation
 bool
-ArmStaticInst::arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const
+ArmStaticInstBase::arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const
 {
     return findCarry(32, result, lhs, rhs);
 }
 
 // Generate the appropriate carry bit for a subtraction operation
 bool
-ArmStaticInst::arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const
+ArmStaticInstBase::arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const
 {
     return findCarry(32, result, lhs, ~rhs);
 }
 
 bool
-ArmStaticInst::arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const
+ArmStaticInstBase::arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const
 {
     return findOverflow(32, result, lhs, rhs);
 }
 
 bool
-ArmStaticInst::arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const
+ArmStaticInstBase::arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const
 {
     return findOverflow(32, result, lhs, ~rhs);
 }
 
 void
-ArmStaticInst::printReg(std::ostream &os, int reg) const
+ArmStaticInstBase::printReg(std::ostream &os, int reg) const
 {
     if (reg < FP_Base_DepTag) {
         switch (reg) {
@@ -249,7 +262,7 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
 }
 
 void
-ArmStaticInst::printMnemonic(std::ostream &os,
+ArmStaticInstBase::printMnemonic(std::ostream &os,
                              const std::string &suffix,
                              bool withPred) const
 {
@@ -313,7 +326,7 @@ ArmStaticInst::printMnemonic(std::ostream &os,
 }
 
 void
-ArmStaticInst::printMemSymbol(std::ostream &os,
+ArmStaticInstBase::printMemSymbol(std::ostream &os,
                               const SymbolTable *symtab,
                               const std::string &prefix,
                               const Addr addr,
@@ -330,7 +343,7 @@ ArmStaticInst::printMemSymbol(std::ostream &os,
 }
 
 void
-ArmStaticInst::printShiftOperand(std::ostream &os) const
+ArmStaticInstBase::printShiftOperand(std::ostream &os) const
 {
     printReg(os, machInst.rm);
 
@@ -377,7 +390,7 @@ ArmStaticInst::printShiftOperand(std::ostream &os) const
 }
 
 void
-ArmStaticInst::printDataInst(std::ostream &os, bool withImm) const
+ArmStaticInstBase::printDataInst(std::ostream &os, bool withImm) const
 {
     printMnemonic(os, machInst.sField ? "s" : "");
     //XXX It would be nice if the decoder figured this all out for us.
@@ -412,7 +425,7 @@ ArmStaticInst::printDataInst(std::ostream &os, bool withImm) const
 }
 
 std::string
-ArmStaticInst::generateDisassembly(Addr pc,
+ArmStaticInstBase::generateDisassembly(Addr pc,
                                    const SymbolTable *symtab) const
 {
     std::stringstream ss;
