@@ -141,4 +141,8 @@ let {{
     iop = InstObjParams("ldmstm", "LdmStm", 'MacroMemOp', "", [])
     header_output = MacroMemDeclare.subst(iop)
     decoder_output = MacroMemConstructor.subst(iop)
+
+    vfpIop = InstObjParams("vldmstm", "VLdmStm", 'MacroVFPMemOp', "", [])
+    header_output += MacroVFPMemDeclare.subst(vfpIop)
+    decoder_output += MacroVFPMemConstructor.subst(vfpIop)
 }};

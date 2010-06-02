@@ -189,10 +189,7 @@ format DataOp {
         1: ArmBlBlxImm::armBlBlxImm();
     }
     0x6: decode CPNUM {
-        0xb: decode LOADOP {
-            0x0: WarnUnimpl::fstmx();
-            0x1: WarnUnimpl::fldmx();
-        }
+        0xb: ExtensionRegLoadStore::extensionRegLoadStore();
     }
     0x7: decode OPCODE_24 {
         0: decode OPCODE_4 {
