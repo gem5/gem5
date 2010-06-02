@@ -68,9 +68,9 @@ ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
             return base >> shamt;
       case ASR:
         if (shamt == 0)
-            return (int32_t)base >> 31;
+            return (base >> 31) | -((base & (1 << 31)) >> 31);
         else
-            return (int32_t)base >> shamt;
+            return (base >> shamt) | -((base & (1 << 31)) >> shamt);
       case ROR:
         if (shamt == 0)
             return (cfval << 31) | (base >> 1); // RRX
@@ -106,9 +106,9 @@ ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
             return base >> shamt;
       case ASR:
         if (shamt >= 32)
-            return (int32_t)base >> 31;
+            return (base >> 31) | -((base & (1 << 31)) >> 31);
         else
-            return (int32_t)base >> shamt;
+            return (base >> shamt) | -((base & (1 << 31)) >> shamt);
       case ROR:
         shamt = shamt & 0x1f;
         if (shamt == 0)
