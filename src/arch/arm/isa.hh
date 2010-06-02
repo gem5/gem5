@@ -168,6 +168,10 @@ namespace ArmISA
               case MISCREG_CLIDR:
                 warn("The clidr register always reports 0 caches.\n");
                 break;
+              case MISCREG_CCSIDR:
+                warn("The ccsidr register isn't implemented and "
+                        "always reads as 0.\n");
+                break;
             }
             return readMiscRegNoEffect(misc_reg);
         }
@@ -234,6 +238,9 @@ namespace ArmISA
                 if (newVal != 0x0fffffff) {
                     panic("Disabling coprocessors isn't implemented.\n");
                 }
+                break;
+              case MISCREG_CSSELR:
+                warn("The csselr register isn't implemented.\n");
                 break;
             }
             return setMiscRegNoEffect(misc_reg, newVal);
