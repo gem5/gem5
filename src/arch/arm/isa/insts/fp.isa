@@ -205,6 +205,14 @@ let {{
     decoder_output += VfpRegRegOpConstructor.subst(vmrsIop);
     exec_output += PredOpExecute.subst(vmrsIop);
 
+    vmrsApsrCode = "Dest = (MiscOp1 & imm) | (Dest & ~imm);"
+    vmrsApsrIop = InstObjParams("vmrs", "VmrsApsr", "VfpRegRegImmOp",
+                                { "code": vmrsApsrCode,
+                                  "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegImmOpDeclare.subst(vmrsApsrIop);
+    decoder_output += VfpRegRegImmOpConstructor.subst(vmrsApsrIop);
+    exec_output += PredOpExecute.subst(vmrsApsrIop);
+
     vmovImmSCode = '''
         FpDest.uw = bits(imm, 31, 0);
     '''

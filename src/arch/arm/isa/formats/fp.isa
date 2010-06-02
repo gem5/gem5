@@ -409,7 +409,17 @@ let {{
                   default:
                     return new Unknown(machInst);
                 }
-                return new Vmrs(machInst, rt, (IntRegIndex)specReg);
+                if (rt == 0xf) {
+                    CPSR cpsrMask = 0;
+                    cpsrMask.n = 1;
+                    cpsrMask.z = 1;
+                    cpsrMask.c = 1;
+                    cpsrMask.v = 1;
+                    return new VmrsApsr(machInst, INTREG_CONDCODES,
+                            (IntRegIndex)specReg, (uint32_t)cpsrMask);
+                } else {
+                    return new Vmrs(machInst, rt, (IntRegIndex)specReg);
+                }
             }
         } else {
             uint32_t vd = (bits(machInst, 7) << 5) |
