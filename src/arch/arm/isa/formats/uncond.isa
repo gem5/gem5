@@ -165,7 +165,33 @@ def format ArmUnconditional() {{
                     if (val == 0x4) {
                         return new WarnUnimplemented("srs", machInst);
                     } else if (val == 0x1) {
-                        return new WarnUnimplemented("rfe", machInst);
+                        switch (bits(machInst, 24, 21)) {
+                          case 0x0:
+                            return new %(rfe)s(machInst, rn,
+                                    RfeOp::DecrementAfter, false);
+                          case 0x1:
+                            return new %(rfe_w)s(machInst, rn,
+                                    RfeOp::DecrementAfter, true);
+                          case 0x4:
+                            return new %(rfe_u)s(machInst, rn,
+                                    RfeOp::IncrementAfter, false);
+                          case 0x5:
+                            return new %(rfe_uw)s(machInst, rn,
+                                    RfeOp::IncrementAfter, true);
+                          case 0x8:
+                            return new %(rfe_p)s(machInst, rn,
+                                    RfeOp::DecrementBefore, false);
+                          case 0x9:
+                            return new %(rfe_pw)s(machInst, rn,
+                                    RfeOp::DecrementBefore, true);
+                          case 0xc:
+                            return new %(rfe_pu)s(machInst, rn,
+                                    RfeOp::IncrementBefore, false);
+                          case 0xd:
+                            return new %(rfe_puw)s(machInst, rn,
+                                    RfeOp::IncrementBefore, true);
+                        }
+                        return new Unknown(machInst);
                     }
                 }
                 break;
@@ -232,6 +258,14 @@ def format ArmUnconditional() {{
         "pld_radd" : "PLD_" + loadRegClassName(False, True, False, 1),
         "pld_rsub" : "PLD_" + loadRegClassName(False, False, False, 1),
         "pldw_radd" : "PLDW_" + loadRegClassName(False, True, False, 1),
-        "pldw_rsub" : "PLDW_" + loadRegClassName(False, False, False, 1)
+        "pldw_rsub" : "PLDW_" + loadRegClassName(False, False, False, 1),
+        "rfe" : "RFE_" + loadImmClassName(True, False, False, 8),
+        "rfe_w" : "RFE_" + loadImmClassName(True, False, True, 8),
+        "rfe_u" : "RFE_" + loadImmClassName(True, True, False, 8),
+        "rfe_uw" : "RFE_" + loadImmClassName(True, True, True, 8),
+        "rfe_p" : "RFE_" + loadImmClassName(False, False, False, 8),
+        "rfe_pw" : "RFE_" + loadImmClassName(False, False, True, 8),
+        "rfe_pu" : "RFE_" + loadImmClassName(False, True, False, 8),
+        "rfe_puw" : "RFE_" + loadImmClassName(False, True, True, 8)
     };
 }};

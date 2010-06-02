@@ -70,10 +70,7 @@
         0x1: decode HTOPCODE_10_9 {
             0x0: decode HTOPCODE_6 {
                 0x0: decode HTOPCODE_8_7 {
-                    0x0, 0x3: decode HTOPCODE_4 {
-                        0x0: WarnUnimpl::srs();
-                        0x1: WarnUnimpl::rfe();
-                    }
+                    0x0, 0x3: Thumb32SrsRfe::thumb32SrsRfe();
                     // This uses the same encoding as regular ARM.
                     default: ArmMacroMem::armMacroMem();
                 }
