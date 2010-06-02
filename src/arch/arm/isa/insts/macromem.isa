@@ -77,7 +77,7 @@ let {{
                                       {'memacc_code': microLdrRetUopCode,
                                        'ea_code':
                                           'EA = Rb + (up ? imm : -imm);',
-                                       'predicate_test': predicateTest},
+                                       'predicate_test': condPredicateTest},
                                       ['IsMicroop'])
 
     microStrUopCode = "Mem = cSwap(Ra.uw, ((CPSR)Cpsr).e);"

@@ -176,7 +176,9 @@ class PredOp : public ArmStaticInst
     /// Constructor
     PredOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
            ArmStaticInst(mnem, _machInst, __opClass),
-           condCode((ConditionCode)(unsigned)machInst.condCode)
+           condCode(machInst.itstateMask ?
+                   (ConditionCode)(uint8_t)machInst.itstateCond :
+                   (ConditionCode)(unsigned)machInst.condCode)
     {
     }
 };

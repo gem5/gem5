@@ -150,10 +150,10 @@ def format DataOp(code, flagtype = logic) {{
                             "predicate_test": predicateTest})
     regCcIop = InstObjParams(name, Name + "Cc", 'PredIntOp',
                              {"code": regCode + regCcCode,
-                              "predicate_test": predicateTest})
+                              "predicate_test": condPredicateTest})
     immCcIop = InstObjParams(name, Name + "ImmCc", 'PredIntOp',
                              {"code": immCode + immCcCode,
-                              "predicate_test": predicateTest})
+                              "predicate_test": condPredicateTest})
     header_output = BasicDeclare.subst(regIop) + \
                     BasicDeclare.subst(immIop) + \
                     BasicDeclare.subst(regCcIop) + \
@@ -176,7 +176,7 @@ def format DataImmOp(code, flagtype = logic) {{
                          "predicate_test": predicateTest})
     ccIop = InstObjParams(name, Name + "Cc", 'PredImmOp',
                           {"code": code + getImmCcCode(flagtype),
-                           "predicate_test": predicateTest})
+                           "predicate_test": condPredicateTest})
     header_output = BasicDeclare.subst(iop) + \
                     BasicDeclare.subst(ccIop)
     decoder_output = BasicConstructor.subst(iop) + \

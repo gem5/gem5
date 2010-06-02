@@ -154,6 +154,9 @@ def operands {{
 
     'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 2),
     'CondCodes': ('IntReg', 'uw', 'INTREG_CONDCODES', None, 2),
+    'OptCondCodes': ('IntReg', 'uw',
+            '''(condCode == COND_AL || condCode == COND_UC) ?
+               INTREG_ZERO : INTREG_CONDCODES''', None, 2),
 
     #Register fields for microops
     'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 2, maybePCRead, maybePCWrite),

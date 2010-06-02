@@ -129,7 +129,7 @@ let {{
         immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
                                  "DataImmOp",
                                  {"code" : immCode + immCcCode,
-                                  "predicate_test": predicateTest})
+                                  "predicate_test": condPredicateTest})
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -166,7 +166,7 @@ let {{
         regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
                                  "DataRegOp",
                                  {"code" : regCode + regCcCode,
-                                  "predicate_test": predicateTest})
+                                  "predicate_test": condPredicateTest})
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -206,7 +206,7 @@ let {{
                                     mnem.capitalize() + suffix + "Cc",
                                     "DataRegRegOp",
                                     {"code" : regRegCode + regRegCcCode,
-                                     "predicate_test": predicateTest})
+                                     "predicate_test": condPredicateTest})
 
         def subst(iop):
             global header_output, decoder_output, exec_output

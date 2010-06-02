@@ -46,11 +46,8 @@
 //
 
 let {{
-    predicateTest = '''
-        testPredicate(CondCodes, machInst.itstateMask ?
-            (ConditionCode)(uint8_t)machInst.itstateCond :
-            condCode)
-    '''
+    predicateTest = 'testPredicate(OptCondCodes, condCode)'
+    condPredicateTest = 'testPredicate(CondCodes, condCode)'
 }};
 
 def template DataImmDeclare {{

@@ -97,21 +97,27 @@ let {{
                 + initiateAccTemplate.subst(iop)
                 + completeAccTemplate.subst(iop))
 
+    def pickPredicate(blobs):
+        for val in blobs.values():
+            if re.search('(?<!Opt)CondCodes', val):
+                return condPredicateTest
+        return predicateTest
+
     def loadStoreBase(name, Name, imm, eaCode, accCode, postAccCode,
                       memFlags, instFlags, double, strex, base = 'Memory',
                       execTemplateBase = ''):
         codeBlobs = { "ea_code": eaCode,
                       "memacc_code": accCode,
-                      "postacc_code": postAccCode,
-                      "predicate_test": predicateTest }
+                      "postacc_code": postAccCode }
+        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
         return loadStoreBaseWork(name, Name, imm, False, False, False,
                                  codeBlobs, memFlags, instFlags, double,
                                  strex, base, execTemplateBase)
 
     def RfeBase(name, Name, eaCode, accCode, memFlags, instFlags):
         codeBlobs = { "ea_code": eaCode,
-                      "memacc_code": accCode,
-                      "predicate_test": predicateTest }
+                      "memacc_code": accCode }
+        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
         return loadStoreBaseWork(name, Name, False, False, True, False,
                                  codeBlobs, memFlags, instFlags, False, False,
                                  'RfeOp', 'Load')
@@ -119,8 +125,8 @@ let {{
     def SrsBase(name, Name, eaCode, accCode, memFlags, instFlags):
         codeBlobs = { "ea_code": eaCode,
                       "memacc_code": accCode,
-                      "postacc_code": "",
-                      "predicate_test": predicateTest }
+                      "postacc_code": "" }
+        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
         return loadStoreBaseWork(name, Name, False, False, False, True,
                                  codeBlobs, memFlags, instFlags, False, False,
                                  'SrsOp', 'Store')
@@ -129,8 +135,8 @@ let {{
                  instFlags):
         codeBlobs = { "ea_code": eaCode,
                       "preacc_code": preAccCode,
-                      "postacc_code": postAccCode,
-                      "predicate_test": predicateTest }
+                      "postacc_code": postAccCode }
+        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
         return loadStoreBaseWork(name, Name, False, True, False, False,
                                  codeBlobs, memFlags, instFlags, False, False,
                                  'Swap', 'Swap')

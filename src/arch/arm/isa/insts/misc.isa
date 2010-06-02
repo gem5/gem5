@@ -63,7 +63,7 @@ let {{
     mrsCpsrCode = "Dest = (Cpsr | CondCodes) & 0xF8FF03DF"
     mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
                                { "code": mrsCpsrCode,
-                                 "predicate_test": predicateTest }, [])
+                                 "predicate_test": condPredicateTest }, [])
     header_output += MrsDeclare.subst(mrsCpsrIop)
     decoder_output += MrsConstructor.subst(mrsCpsrIop)
     exec_output += PredOpExecute.subst(mrsCpsrIop)
@@ -85,7 +85,7 @@ let {{
     '''
     msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
                                   { "code": msrCpsrRegCode,
-                                    "predicate_test": predicateTest }, [])
+                                    "predicate_test": condPredicateTest }, [])
     header_output += MsrRegDeclare.subst(msrCpsrRegIop)
     decoder_output += MsrRegConstructor.subst(msrCpsrRegIop)
     exec_output += PredOpExecute.subst(msrCpsrRegIop)
@@ -107,7 +107,7 @@ let {{
     '''
     msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
                                   { "code": msrCpsrImmCode,
-                                    "predicate_test": predicateTest }, [])
+                                    "predicate_test": condPredicateTest }, [])
     header_output += MsrImmDeclare.subst(msrCpsrImmIop)
     decoder_output += MsrImmConstructor.subst(msrCpsrImmIop)
     exec_output += PredOpExecute.subst(msrCpsrImmIop)
@@ -197,7 +197,7 @@ let {{
     '''
     ssatIop = InstObjParams("ssat", "Ssat", "RegImmRegShiftOp",
                             { "code": ssatCode,
-                              "predicate_test": predicateTest }, [])
+                              "predicate_test": condPredicateTest }, [])
     header_output += RegImmRegShiftOpDeclare.subst(ssatIop)
     decoder_output += RegImmRegShiftOpConstructor.subst(ssatIop)
     exec_output += PredOpExecute.subst(ssatIop)
@@ -213,7 +213,7 @@ let {{
     '''
     usatIop = InstObjParams("usat", "Usat", "RegImmRegShiftOp",
                             { "code": usatCode,
-                              "predicate_test": predicateTest }, [])
+                              "predicate_test": condPredicateTest }, [])
     header_output += RegImmRegShiftOpDeclare.subst(usatIop)
     decoder_output += RegImmRegShiftOpConstructor.subst(usatIop)
     exec_output += PredOpExecute.subst(usatIop)
@@ -234,7 +234,7 @@ let {{
     '''
     ssat16Iop = InstObjParams("ssat16", "Ssat16", "RegImmRegOp",
                               { "code": ssat16Code,
-                                "predicate_test": predicateTest }, [])
+                                "predicate_test": condPredicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(ssat16Iop)
     decoder_output += RegImmRegOpConstructor.subst(ssat16Iop)
     exec_output += PredOpExecute.subst(ssat16Iop)
@@ -255,7 +255,7 @@ let {{
     '''
     usat16Iop = InstObjParams("usat16", "Usat16", "RegImmRegOp",
                               { "code": usat16Code,
-                                "predicate_test": predicateTest }, [])
+                                "predicate_test": condPredicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(usat16Iop)
     decoder_output += RegImmRegOpConstructor.subst(usat16Iop)
     exec_output += PredOpExecute.subst(usat16Iop)
@@ -415,7 +415,7 @@ let {{
     '''
     selIop = InstObjParams("sel", "Sel", "RegRegRegOp",
                            { "code": selCode,
-                             "predicate_test": predicateTest }, [])
+                             "predicate_test": condPredicateTest }, [])
     header_output += RegRegRegOpDeclare.subst(selIop)
     decoder_output += RegRegRegOpConstructor.subst(selIop)
     exec_output += PredOpExecute.subst(selIop)

@@ -92,7 +92,7 @@ let {{
         if doCc:
             iopCc = InstObjParams(mnem + "s", Name + "Cc", base,
                                   {"code" : code + ccCode,
-                                   "predicate_test": predicateTest})
+                                   "predicate_test": condPredicateTest})
 
         if regs == 3:
             declare = Mult3Declare
