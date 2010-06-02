@@ -100,7 +100,10 @@ def format McrMrc15() {{
                     isRead ? "mrc dccisw" : "mcr dcisw", machInst);
           case MISCREG_DCCIMVAC:
             return new WarnUnimplemented(
-                    isRead ? "mrc dccimvac" : "mcr dcimvac", machInst);
+                    isRead ? "mrc dccimvac" : "mcr dccimvac", machInst);
+          case MISCREG_DCCMVAC:
+            return new WarnUnimplemented(
+                    isRead ? "mrc dccmvac" : "mcr dccmvac", machInst);
           case MISCREG_CP15ISB:
             return new WarnUnimplemented(
                     isRead ? "mrc cp15isb" : "mcr cp15isb", machInst);

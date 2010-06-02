@@ -84,6 +84,7 @@ namespace ArmISA
         MISCREG_SCTLR = MISCREG_CP15_START,
         MISCREG_DCCISW,
         MISCREG_DCCIMVAC,
+        MISCREG_DCCMVAC,
         MISCREG_CONTEXTIDR,
         MISCREG_TPIDRURW,
         MISCREG_TPIDRURO,
@@ -138,7 +139,6 @@ namespace ArmISA
         MISCREG_BPIMVA,
         MISCREG_DCIMVAC,
         MISCREG_DCISW,
-        MISCREG_DCCMVAC,
         MISCREG_MCCSW,
         MISCREG_DCCMVAU,
 
@@ -158,7 +158,7 @@ namespace ArmISA
         "cpsr", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
         "spsr_mon", "spsr_und", "spsr_abt",
         "fpsr", "fpsid", "fpscr", "fpexc",
-        "sctlr", "dccisw", "dccimvac",
+        "sctlr", "dccisw", "dccimvac", "dccmvac",
         "contextidr", "tpidrurw", "tpidruro", "tpidrprw",
         "cp15isb", "cp15dsb", "cp15dmb", "cpacr", "clidr",
         "icialluis", "iciallu", "icimvau",
@@ -170,7 +170,7 @@ namespace ArmISA
         "dfsr", "ifsr", "adfsr", "aifsr", "dfar", "ifar",
         "drbar", "irbar", "drsr", "irsr", "dracr", "iracr",
         "rgnr", "bpiallis",
-        "bpiall", "bpimva", "dcimvac", "dcisw", "dccmvac", "mccsw",
+        "bpiall", "bpimva", "dcimvac", "dcisw", "mccsw",
         "dccmvau",
         "nop", "raz"
     };
