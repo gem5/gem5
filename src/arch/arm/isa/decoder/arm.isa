@@ -67,10 +67,8 @@ format DataOp {
             1: decode OPCODE_7 {
                 0x0: decode MISC_OPCODE {
                     0x0: ArmMsrMrs::armMsrMrs();
-                    0x1: ArmBxClz::armBxClz();
-                    0x2: decode OPCODE {
-                        0x9: WarnUnimpl::bxj();
-                    }
+                    // bxj unimplemented, treated as bx
+                    0x1,0x2: ArmBxClz::armBxClz();
                     0x3: decode OPCODE {
                         0x9: ArmBlxReg::armBlxReg();
                     }

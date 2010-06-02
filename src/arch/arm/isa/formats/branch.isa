@@ -207,7 +207,12 @@ def format Thumb32BranchesAndMiscCtrl() {{
                         break;
                     }
                   case 0x3c:
-                    return new WarnUnimplemented("bxj", machInst);
+                    {
+                        // On systems that don't support bxj, bxj == bx
+                        return new BxReg(machInst,
+                                 (IntRegIndex)(uint32_t)bits(machInst, 19, 16),
+                                 COND_UC);
+                    }
                   case 0x3d:
                     {
                         const uint32_t imm32 = bits(machInst, 7, 0);
