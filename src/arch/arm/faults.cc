@@ -160,6 +160,27 @@ UndefinedInstruction::invoke(ThreadContext *tc)
     }
 }
 
+void
+SupervisorCall::invoke(ThreadContext *tc)
+{
+    // As of now, there isn't a 32 bit thumb version of this instruction.
+    assert(!machInst.bigThumb);
+    uint32_t callNum;
+    if (machInst.thumb) {
+        callNum = bits(machInst, 7, 0);
+    } else {
+        callNum = bits(machInst, 23, 0);
+    }
+    if (callNum == 0) {
+        callNum = tc->readIntReg(INTREG_R7);
+    }
+    tc->syscall(callNum);
+
+    // Advance the PC since that won't happen automatically.
+    tc->setPC(tc->readNextPC());
+    tc->setNextPC(tc->readNextNPC());
+}
+
 #endif // FULL_SYSTEM
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm

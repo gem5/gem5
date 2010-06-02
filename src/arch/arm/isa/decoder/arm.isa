@@ -286,18 +286,13 @@ format DataOp {
             } // CPNUM  (OP4 == 1)
         } //OPCODE_4
 
+        1: PredOp::swi({{
 #if FULL_SYSTEM
-        1: PredOp::swi({{ fault = new SupervisorCall; }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
+            fault = new SupervisorCall();
 #else
-        1: PredOp::swi({{ if (testPredicate(CondCodes, condCode))
-            {
-                if (IMMED_23_0)
-                    xc->syscall(IMMED_23_0);
-                else
-                    xc->syscall(R7);
-            }
-        }});
-#endif // FULL_SYSTEM
+            fault = new SupervisorCall(machInst);
+#endif
+        }}, IsSyscall);
     } // OPCODE_24
 
 }

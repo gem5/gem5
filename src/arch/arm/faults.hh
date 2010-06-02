@@ -125,7 +125,19 @@ class UndefinedInstruction : public ArmFault<UndefinedInstruction>
 #endif
 };
 
-class SupervisorCall       : public ArmFault<SupervisorCall> {};
+class SupervisorCall       : public ArmFault<SupervisorCall>
+{
+#if !FULL_SYSTEM
+  protected:
+    ExtMachInst machInst;
+
+  public:
+    SupervisorCall(ExtMachInst _machInst) : machInst(_machInst)
+    {}
+
+    void invoke(ThreadContext *tc);
+#endif
+};
 class PrefetchAbort        : public ArmFault<PrefetchAbort> {};
 class DataAbort            : public ArmFault<DataAbort> {};
 class Interrupt            : public ArmFault<Interrupt> {};
