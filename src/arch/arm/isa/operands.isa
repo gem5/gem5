@@ -69,6 +69,13 @@ let {{
 }};
 
 def operands {{
+    #Abstracted integer reg operands
+    'Dest': ('IntReg', 'uw', 'dest', 'IsInteger', 0,
+             maybePCRead, maybePCWrite),
+    'Base': ('IntReg', 'uw', 'base', 'IsInteger', 1,
+             maybePCRead, maybePCWrite),
+    'Index': ('IntReg', 'uw', 'index', 'IsInteger', 2,
+              maybePCRead, maybePCWrite),
     #General Purpose Integer Reg Operands
     'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1, maybePCRead, maybePCWrite),
     'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 2, maybePCRead, maybePCWrite),

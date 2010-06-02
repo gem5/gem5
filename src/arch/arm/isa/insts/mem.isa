@@ -1,0 +1,143 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+let {{
+    def newLoadStoreBase(name, Name, imm, eaCode, accCode, memFlags,
+                        instFlags, base = 'MemoryNew', execTemplateBase = ''):
+        # Make sure flags are in lists (convert to lists if not).
+        memFlags = makeList(memFlags)
+        instFlags = makeList(instFlags)
+
+        # This shouldn't be part of the eaCode, but until the exec templates
+        # are converted over it's the easiest place to put it.
+        eaCode += '\n    unsigned memAccessFlags = '
+        if memFlags:
+            eaCode += (string.join(memFlags, '|') + ';')
+        else:
+            eaCode += '0;'
+
+        predicateTest = 'testPredicate(CondCodes, condCode)'
+
+        iop = InstObjParams(name, Name, base,
+                            {'ea_code': eaCode,
+                             'memacc_code': accCode,
+                             'predicate_test': predicateTest},
+                            instFlags)
+
+        fullExecTemplate = eval(execTemplateBase + 'Execute')
+        initiateAccTemplate = eval(execTemplateBase + 'InitiateAcc')
+        completeAccTemplate = eval(execTemplateBase + 'CompleteAcc')
+
+        if imm:
+            declareTemplate = LoadStoreImmDeclare
+            constructTemplate = LoadStoreImmConstructor
+        else:
+            declareTemplate = LoadStoreRegDeclare
+            constructTemplate = LoadStoreRegConstructor
+
+        # (header_output, decoder_output, decode_block, exec_output)
+        return (declareTemplate.subst(iop),
+                constructTemplate.subst(iop),
+                fullExecTemplate.subst(iop)
+                + initiateAccTemplate.subst(iop)
+                + completeAccTemplate.subst(iop))
+
+    def memClassName(base, post, add, writeback, \
+                     size=4, sign=False, user=False):
+        Name = base
+
+        if post:
+            Name += '_PY'
+        else:
+            Name += '_PN'
+
+        if add:
+            Name += '_AY'
+        else:
+            Name += '_AN'
+
+        if writeback:
+            Name += '_WY'
+        else:
+            Name += '_WN'
+
+        Name += ('_SZ%d' % size)
+
+        if sign:
+            Name += '_SY'
+        else:
+            Name += '_SN'
+
+        if user:
+            Name += '_UY'
+        else:
+            Name += '_UN'
+
+        return Name
+
+    def buildMemSuffix(sign, size):
+        if size == 4:
+            memSuffix = ''
+        elif size == 2:
+            if sign:
+                memSuffix = '.sh'
+            else:
+                memSuffix = '.uh'
+        elif size == 1:
+            if sign:
+                memSuffix = '.sb'
+            else:
+                memSuffix = '.ub'
+        else:
+            raise Exception, "Unrecognized size for load %d" % size
+
+        return memSuffix
+
+    def buildMemBase(base, post, writeback):
+        if post and writeback:
+            base = "MemoryNewPostIndex<%s>" % base
+        elif not post and writeback:
+            base = "MemoryNewPreIndex<%s>" % base
+        elif not post and not writeback:
+            base = "MemoryNewOffset<%s>" % base
+        else:
+            raise Exception, "Illegal combination of post and writeback"
+        return base
+}};
+

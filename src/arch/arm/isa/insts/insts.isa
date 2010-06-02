@@ -12,9 +12,6 @@
 // unmodified and in its entirety in all distributions of the software,
 // modified or unmodified, in source code or in binary form.
 //
-// Copyright (c) 2007-2008 The Florida State University
-// All rights reserved.
-//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met: redistributions of source code must retain the above copyright
@@ -38,38 +35,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Authors: Stephen Hines
+// Authors: Gabe Black
 
-////////////////////////////////////////////////////////////////////
-//
-// ARM ISA description file.
-//
-////////////////////////////////////////////////////////////////////
+//Basic forms of various templates
+##include "basic.isa"
 
-//Include the C++ include directives
-##include "includes.isa"
+//Useful bits shared by memory instructions
+##include "mem.isa"
 
-////////////////////////////////////////////////////////////////////
-//
-// Namespace statement.  Everything below this line will be in the
-// ArmISAInst namespace.
-//
-namespace ArmISA;
-
-//Include the bitfield definitions
-##include "bitfields.isa"
-
-//Include the operand_types and operand definitions
-##include "operands.isa"
-
-//Templates for the C++ versions of the instructions
-##include "templates/templates.isa"
-
-//Include manually defined instructions
-##include "insts/insts.isa"
-
-//Include the definitions for the instruction formats
-##include "formats/formats.isa"
-
-//Include the decoder definition
-##include "decoder/decoder.isa"
+//Loads of a single item
+##include "ldr.isa"

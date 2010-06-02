@@ -255,9 +255,9 @@ format DataOp {
             }});
         }
     }
-    0x2: AddrMode2::addrMode2(Disp, disp);
+    0x2: AddrMode2::addrMode2(True, Disp, disp);
     0x3: decode OPCODE_4 {
-        0: AddrMode2::addrMode2(Shift, Rm_Imm);
+        0: AddrMode2::addrMode2(False, Shift, Rm_Imm);
         1: decode MEDIA_OPCODE {
             0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7: WarnUnimpl::parallel_add_subtract_instructions();
             0x8: decode MISC_OPCODE {
