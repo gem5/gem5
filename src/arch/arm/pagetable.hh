@@ -1,7 +1,17 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
- * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,8 +39,7 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
- *          Jaidev Patwardhan
- *          Stephen Hines
+ *          Ali Saidi
  */
 
 #ifndef __ARCH_ARM_PAGETABLE_H__
@@ -43,59 +52,65 @@
 
 namespace ArmISA {
 
-    struct VAddr
+struct VAddr
+{
+    VAddr(Addr a) { panic("not implemented yet."); }
+};
+
+
+// ITB/DTB page table entry
+struct PTE
+{
+    void serialize(std::ostream &os)
     {
-        static const int ImplBits = 43;
-        static const Addr ImplMask = (ULL(1) << ImplBits) - 1;
-        static const Addr UnImplMask = ~ImplMask;
+        panic("Need to implement PTE serialization\n");
+    }
 
-        VAddr(Addr a) : addr(a) {}
-        Addr addr;
-        operator Addr() const { return addr; }
-        const VAddr &operator=(Addr a) { addr = a; return *this; }
-
-        Addr vpn() const { return (addr & ImplMask) >> PageShift; }
-        Addr page() const { return addr & Page_Mask; }
-        Addr offset() const { return addr & PageOffset; }
-
-        Addr level3() const
-        { return ArmISA::PteAddr(addr >> PageShift); }
-        Addr level2() const
-        { return ArmISA::PteAddr(addr >> (NPtePageShift + PageShift)); }
-        Addr level1() const
-        { return ArmISA::PteAddr(addr >> (2 * NPtePageShift + PageShift)); }
-    };
-
-    // ITB/DTB page table entry
-    struct PTE
+    void unserialize(Checkpoint *cp, const std::string &section)
     {
-      Addr Mask; // What parts of the VAddr (from bits 28..11) should be used in translation (includes Mask and MaskX from PageMask)
-      Addr VPN; // Virtual Page Number (/2) (Includes VPN2 + VPN2X .. bits 31..11 from EntryHi)
-      uint8_t asid; // Address Space ID (8 bits) // Lower 8 bits of EntryHi
+        panic("Need to implement PTE serialization\n");
+    }
 
-      bool G;    // Global Bit - Obtained by an *AND* of EntryLo0 and EntryLo1 G bit
+};
 
-      /* Contents of Entry Lo0 */
-      Addr PFN0; // Physical Frame Number - Even
-      bool D0;   // Even entry Dirty Bit
-      bool V0;   // Even entry Valid Bit
-      uint8_t C0; // Cache Coherency Bits - Even
+// ITB/DTB table entry
+struct TlbEntry
+{
+    Addr tag;               // virtual page number tag
+    Addr ppn;               // physical page number
+    uint8_t asn;            // address space number
+    bool valid;             // valid page table entry
 
-      /* Contents of Entry Lo1 */
-      Addr PFN1; // Physical Frame Number - Odd
-      bool D1;   // Odd entry Dirty Bit
-      bool V1;   // Odd entry Valid Bit
-      uint8_t C1; // Cache Coherency Bits (3 bits)
 
-      /* The next few variables are put in as optimizations to reduce TLB lookup overheads */
-      /* For a given Mask, what is the address shift amount, and what is the OffsetMask */
-      int AddrShiftAmount;
-      int OffsetMask;
+    //Construct an entry that maps to physical address addr.
+    TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr)
+    {
+        tag = _vaddr >> PageShift;
+        ppn = _paddr >> PageShift;
+        asn = _asn;
+        valid = true;
+    }
 
-      bool Valid() { return (V0 | V1);};
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-    };
+    TlbEntry()
+    {}
+
+    void
+    updateVaddr(Addr new_vaddr)
+    {
+        tag = new_vaddr >> PageShift;
+    }
+
+    Addr
+    pageStart()
+    {
+        return ppn << PageShift;
+    }
+
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+
 
 };
 #endif // __ARCH_ARM_PAGETABLE_H__

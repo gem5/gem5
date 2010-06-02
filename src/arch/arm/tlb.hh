@@ -1,7 +1,17 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
- * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,9 +37,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
- *          Stephen Hines
+ * Authors: Ali Saidi
  */
 
 #ifndef __ARCH_ARM_TLB_HH__
@@ -49,40 +57,7 @@
 
 class ThreadContext;
 
-/* ARM does not distinguish between a DTLB and an ITLB -> unified TLB
-   However, to maintain compatibility with other architectures, we'll
-   simply create an ITLB and DTLB that will point to the real TLB */
 namespace ArmISA {
-
-// WARN: This particular TLB entry is not necessarily conformed to ARM ISA
-struct TlbEntry
-{
-    Addr _pageStart;
-    TlbEntry() {}
-    TlbEntry(Addr asn, Addr vaddr, Addr paddr) : _pageStart(paddr) {}
-
-    void
-    updateVaddr(Addr new_vaddr)
-    {
-        panic("unimplemented");
-    }
-
-    Addr pageStart()
-    {
-        return _pageStart;
-    }
-
-    void serialize(std::ostream &os)
-    {
-        SERIALIZE_SCALAR(_pageStart);
-    }
-
-    void unserialize(Checkpoint *cp, const std::string &section)
-    {
-        UNSERIALIZE_SCALAR(_pageStart);
-    }
-
-};
 
 class TLB : public BaseTLB
 {
@@ -112,6 +87,7 @@ class TLB : public BaseTLB
     void nextnlu() { if (++nlu >= size) nlu = 0; }
     ArmISA::PTE *lookup(Addr vpn, uint8_t asn) const;
 
+    // Access Stats
     mutable Stats::Scalar read_hits;
     mutable Stats::Scalar read_misses;
     mutable Stats::Scalar read_acv;
@@ -129,25 +105,17 @@ class TLB : public BaseTLB
     typedef ArmTLBParams Params;
     TLB(const Params *p);
 
-    int probeEntry(Addr vpn,uint8_t) const;
-    ArmISA::PTE *getEntry(unsigned) const;
     virtual ~TLB();
-    int smallPages;
     int getsize() const { return size; }
 
-    ArmISA::PTE &index(bool advance = true);
     void insert(Addr vaddr, ArmISA::PTE &pte);
-    void insertAt(ArmISA::PTE &pte, unsigned Index, int _smallPages);
     void flushAll();
     void demapPage(Addr vaddr, uint64_t asn)
     {
         panic("demapPage unimplemented.\n");
     }
 
-    // static helper functions... really
     static bool validVirtualAddress(Addr vaddr);
-
-    static Fault checkCacheability(RequestPtr &req);
 
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,

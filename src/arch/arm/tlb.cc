@@ -12,8 +12,6 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
- * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,10 +37,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Ali Saidi
+ *          Nathan Binkert
  *          Steve Reinhardt
- *          Jaidev Patwardhan
- *          Stephen Hines
  */
 
 #include <string>
@@ -64,19 +61,12 @@
 using namespace std;
 using namespace ArmISA;
 
-///////////////////////////////////////////////////////////////////////
-//
-//  ARM TLB
-//
-
-#define MODE2MASK(X)			(1 << (X))
-
 TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), nlu(0)
 {
     table = new ArmISA::PTE[size];
     memset(table, 0, sizeof(ArmISA::PTE[size]));
-    smallPages=0;
+
 }
 
 TLB::~TLB()
@@ -85,104 +75,10 @@ TLB::~TLB()
         delete [] table;
 }
 
-// look up an entry in the TLB
 ArmISA::PTE *
 TLB::lookup(Addr vpn, uint8_t asn) const
 {
-    // assume not found...
-    ArmISA::PTE *retval = NULL;
-    PageTable::const_iterator i = lookupTable.find(vpn);
-    if (i != lookupTable.end()) {
-        while (i->first == vpn) {
-            int index = i->second;
-            ArmISA::PTE *pte = &table[index];
-
-            /* 1KB TLB Lookup code - from ARM ARM Volume III - Rev. 2.50 */
-            Addr Mask = pte->Mask;
-            Addr InvMask = ~Mask;
-            Addr VPN  = pte->VPN;
-            //	    warn("Valid: %d - %d\n",pte->V0,pte->V1);
-            if(((vpn & InvMask) == (VPN & InvMask)) && (pte->G  || (asn == pte->asid)))
-              { // We have a VPN + ASID Match
-                retval = pte;
-                break;
-              }
-            ++i;
-        }
-    }
-
-    DPRINTF(TLB, "lookup %#x, asn %#x -> %s ppn %#x\n", vpn, (int)asn,
-            retval ? "hit" : "miss", retval ? retval->PFN1 : 0);
-    return retval;
-}
-
-ArmISA::PTE* TLB::getEntry(unsigned Index) const
-{
-    // Make sure that Index is valid
-    assert(Index<size);
-    return &table[Index];
-}
-
-int TLB::probeEntry(Addr vpn,uint8_t asn) const
-{
-    // assume not found...
-    ArmISA::PTE *retval = NULL;
-    int Ind=-1;
-    PageTable::const_iterator i = lookupTable.find(vpn);
-    if (i != lookupTable.end()) {
-        while (i->first == vpn) {
-            int index = i->second;
-            ArmISA::PTE *pte = &table[index];
-
-            /* 1KB TLB Lookup code - from ARM ARM Volume III - Rev. 2.50 */
-            Addr Mask = pte->Mask;
-            Addr InvMask = ~Mask;
-            Addr VPN  = pte->VPN;
-            if(((vpn & InvMask) == (VPN & InvMask)) && (pte->G  || (asn == pte->asid)))
-              { // We have a VPN + ASID Match
-                retval = pte;
-                Ind = index;
-                break;
-              }
-
-            ++i;
-        }
-    }
-    DPRINTF(Arm,"VPN: %x, asid: %d, Result of TLBP: %d\n",vpn,asn,Ind);
-    return Ind;
-}
-Fault inline
-TLB::checkCacheability(RequestPtr &req)
-{
-  Addr VAddrUncacheable = 0xA0000000;
-  // In ARM, cacheability is controlled by certain bits of the virtual address
-  // or by the TLB entry
-  if((req->getVaddr() & VAddrUncacheable) == VAddrUncacheable) {
-    // mark request as uncacheable
-    req->setFlags(Request::UNCACHEABLE);
-  }
-  return NoFault;
-}
-void TLB::insertAt(ArmISA::PTE &pte, unsigned Index, int _smallPages)
-{
-  smallPages=_smallPages;
-  if(Index > size){
-    warn("Attempted to write at index (%d) beyond TLB size (%d)",Index,size);
-  } else {
-    // Update TLB
-    DPRINTF(TLB,"TLB[%d]: %x %x %x %x\n",Index,pte.Mask<<11,((pte.VPN << 11) | pte.asid),((pte.PFN0 <<6) | (pte.C0 << 3) | (pte.D0 << 2) | (pte.V0 <<1) | pte.G),
-            ((pte.PFN1 <<6) | (pte.C1 << 3) | (pte.D1 << 2) | (pte.V1 <<1) | pte.G));
-    if(table[Index].V0 == true || table[Index].V1 == true){ // Previous entry is valid
-      PageTable::iterator i = lookupTable.find(table[Index].VPN);
-      lookupTable.erase(i);
-    }
-    table[Index]=pte;
-    // Update fast lookup table
-    lookupTable.insert(make_pair(table[Index].VPN, Index));
-    //    int TestIndex=probeEntry(pte.VPN,pte.asid);
-    //    warn("Inserted at: %d, Found at: %d (%x)\n",Index,TestIndex,pte.Mask);
-  }
-
+    panic("lookup() not implemented for ARM\n");
 }
 
 // insert a new TLB entry
@@ -219,11 +115,9 @@ TLB::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(size);
     UNSERIALIZE_SCALAR(nlu);
 
+    panic("Need to properly unserialize TLB\n");
     for (int i = 0; i < size; i++) {
         table[i].unserialize(cp, csprintf("%s.PTE%d", section, i));
-        if (table[i].V0 || table[i].V1) {
-            lookupTable.insert(make_pair(table[i].VPN, i));
-        }
     }
 }
 
@@ -332,17 +226,6 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 {
     assert(translation);
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
-}
-
-ArmISA::PTE &
-TLB::index(bool advance)
-{
-    ArmISA::PTE *pte = &table[nlu];
-
-    if (advance)
-        nextnlu();
-
-    return *pte;
 }
 
 ArmISA::TLB *
