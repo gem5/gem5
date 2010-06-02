@@ -435,8 +435,8 @@ SyscallDesc ArmLinuxProcess::privSyscallDescs[] = {
 };
 
 ArmLinuxProcess::ArmLinuxProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
-    : ArmLiveProcess(params, objFile),
+        ObjectFile *objFile, ObjectFile::Arch _arch)
+    : ArmLiveProcess(params, objFile, _arch),
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc)),
      Num_Priv_Syscall_Descs(sizeof(privSyscallDescs) / sizeof(SyscallDesc))
 { }

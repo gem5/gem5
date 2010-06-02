@@ -38,7 +38,8 @@
 class ArmLinuxProcess : public ArmLiveProcess
 {
   public:
-    ArmLinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+    ArmLinuxProcess(LiveProcessParams * params, ObjectFile *objFile,
+                    ObjectFile::Arch _arch);
 
     virtual SyscallDesc* getDesc(int callnum);
 

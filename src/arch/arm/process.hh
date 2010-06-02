@@ -33,6 +33,7 @@
 
 #include <string>
 #include <vector>
+#include "base/loader/object_file.hh"
 #include "sim/process.hh"
 
 class LiveProcess;
@@ -42,7 +43,9 @@ class System;
 class ArmLiveProcess : public LiveProcess
 {
   protected:
-    ArmLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+    ObjectFile::Arch arch;
+    ArmLiveProcess(LiveProcessParams * params, ObjectFile *objFile,
+                   ObjectFile::Arch _arch);
 
     void startup();
 

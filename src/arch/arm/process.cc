@@ -43,8 +43,9 @@
 using namespace std;
 using namespace ArmISA;
 
-ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile)
-    : LiveProcess(params, objFile)
+ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile,
+                               ObjectFile::Arch _arch)
+    : LiveProcess(params, objFile), arch(_arch)
 {
     stack_base = 0xbf000000L;
 
@@ -316,6 +317,8 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     }
 
     Addr prog_entry = objFile->entryPoint();
+    if (arch == ObjectFile::Thumb)
+        prog_entry = (prog_entry & ~mask(1)) | (ULL(1) << PcTBitShift);
     tc->setPC(prog_entry);
     tc->setNextPC(prog_entry + sizeof(MachInst));
 
