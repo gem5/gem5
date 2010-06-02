@@ -40,18 +40,18 @@ def format ArmDataProcReg() {{
           case %(opcode)#x:
             if (immShift) {
                 if (setCc) {
-                    return new %(className)sDRegCc(machInst, %(dest)s, %(op1)s,
+                    return new %(className)sRegCc(machInst, %(dest)s, %(op1)s,
                                                    rm, imm5, type);
                 } else {
-                    return new %(className)sDReg(machInst, %(dest)s, %(op1)s,
+                    return new %(className)sReg(machInst, %(dest)s, %(op1)s,
                                                  rm, imm5, type);
                 }
             } else {
                 if (setCc) {
-                    return new %(className)sDRegRegCc(machInst, %(dest)s,
+                    return new %(className)sRegRegCc(machInst, %(dest)s,
                                                       %(op1)s, rm, rs, type);
                 } else {
-                    return new %(className)sDRegReg(machInst, %(dest)s,
+                    return new %(className)sRegReg(machInst, %(dest)s,
                                                     %(op1)s, rm, rs, type);
                 }
             }
@@ -105,10 +105,10 @@ def format ArmDataProcImm() {{
     instDecode = '''
           case %(opcode)#x:
             if (setCc) {
-                return new %(className)sDImmCc(machInst, %(dest)s, %(op1)s,
+                return new %(className)sImmCc(machInst, %(dest)s, %(op1)s,
                                                imm, rotC);
             } else {
-                return new %(className)sDImm(machInst, %(dest)s, %(op1)s,
+                return new %(className)sImm(machInst, %(dest)s, %(op1)s,
                                              imm, rotC);
             }
             break;
@@ -168,30 +168,30 @@ def format Thumb16ShiftAddSubMoveCmp() {{
         const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 8, 6);
         switch (bits(machInst, 13, 11)) {
           case 0x0: // lsl
-            return new MovDReg(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
+            return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, LSL);
           case 0x1: // lsr
-            return new MovDReg(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
+            return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, LSR);
           case 0x2: // asr
-            return new MovDReg(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
+            return new MovReg(machInst, rd, INTREG_ZERO, rn, imm5, ASR);
           case 0x3:
             switch (bits(machInst, 10, 9)) {
               case 0x0:
-                return new AddDReg(machInst, rd, rn, rm, 0, LSL);
+                return new AddReg(machInst, rd, rn, rm, 0, LSL);
               case 0x1:
-                return new SubDReg(machInst, rd, rn, rm, 0, LSL);
+                return new SubReg(machInst, rd, rn, rm, 0, LSL);
               case 0x2:
-                return new AddDImm(machInst, rd, rn, imm3, true);
+                return new AddImm(machInst, rd, rn, imm3, true);
               case 0x3:
-                return new SubDImm(machInst, rd, rn, imm3, true);
+                return new SubImm(machInst, rd, rn, imm3, true);
             }
           case 0x4:
-            return new MovDImm(machInst, rd8, INTREG_ZERO, imm8, true);
+            return new MovImm(machInst, rd8, INTREG_ZERO, imm8, true);
           case 0x5:
-            return new CmpDImmCc(machInst, INTREG_ZERO, rd8, imm8, true);
+            return new CmpImmCc(machInst, INTREG_ZERO, rd8, imm8, true);
           case 0x6:
-            return new AddDImm(machInst, rd8, rd8, imm8, true);
+            return new AddImm(machInst, rd8, rd8, imm8, true);
           case 0x7:
-            return new SubDImm(machInst, rd8, rd8, imm8, true);
+            return new SubImm(machInst, rd8, rd8, imm8, true);
         }
     }
     '''
@@ -204,38 +204,38 @@ def format Thumb16DataProcessing() {{
         const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 5, 3);
         switch (bits(machInst, 9, 6)) {
           case 0x0:
-            return new AndDReg(machInst, rdn, rdn, rm, 0, LSL);
+            return new AndReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0x1:
-            return new EorDReg(machInst, rdn, rdn, rm, 0, LSL);
+            return new EorReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0x2: //lsl
-            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, LSL);
+            return new MovRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, LSL);
           case 0x3: //lsr
-            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, LSR);
+            return new MovRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, LSR);
           case 0x4: //asr
-            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, ASR);
+            return new MovRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, ASR);
           case 0x5:
-            return new AdcDReg(machInst, rdn, rdn, rm, 0, LSL);
+            return new AdcReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0x6:
-            return new SbcDReg(machInst, rdn, rdn, rm, 0, LSL);
+            return new SbcReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0x7: // ror
-            return new MovDRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, ROR);
+            return new MovRegReg(machInst, rdn, INTREG_ZERO, rdn, rm, ROR);
           case 0x8:
-            return new TstDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new TstReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
           case 0x9:
-            return new RsbDImm(machInst, rdn, rm, 0, true);
+            return new RsbImm(machInst, rdn, rm, 0, true);
           case 0xa:
-            return new CmpDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new CmpReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
           case 0xb:
-            return new CmnDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new CmnReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
           case 0xc:
-            return new OrrDReg(machInst, rdn, rdn, rm, 0, LSL);
+            return new OrrReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0xd:
             //XXX Implement me!
             return new WarnUnimplemented("mul", machInst);
           case 0xe:
-            return new BicDReg(machInst, rdn, rdn, rm, 0, LSL);
+            return new BicReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0xf:
-            return new MvnDReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+            return new MvnReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
         }
     }
     '''
@@ -250,11 +250,11 @@ def format Thumb16SpecDataAndBx() {{
         const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 6, 3);
         switch (bits(machInst, 9, 8)) {
           case 0x0:
-            return new AddDReg(machInst, rdn, rdn, rm, 0, LSL);
+            return new AddReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0x1:
-            return new CmpDReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
+            return new CmpReg(machInst, INTREG_ZERO, rdn, rm, 0, LSL);
           case 0x2:
-            return new MovDReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
+            return new MovReg(machInst, rdn, INTREG_ZERO, rm, 0, LSL);
           case 0x3:
             if (bits(machInst, 7) == 0)
                 return new WarnUnimplemented("bx", machInst);
@@ -271,7 +271,7 @@ def format Thumb16Adr() {{
     {
         const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
         const uint32_t imm8 = bits(machInst, 7, 0) << 2;
-        return new AddDImm(machInst, rd, INTREG_PC, imm8, true);
+        return new AddImm(machInst, rd, INTREG_PC, imm8, true);
     }
     '''
 }};
@@ -281,7 +281,7 @@ def format Thumb16AddSp() {{
     {
         const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 10, 8);
         const uint32_t imm8 = bits(machInst, 7, 0) << 2;
-        return new AddDImm(machInst, rd, INTREG_SP, imm8, true);
+        return new AddImm(machInst, rd, INTREG_SP, imm8, true);
     }
     '''
 }};
@@ -292,10 +292,10 @@ def format Thumb16Misc() {{
         switch (bits(machInst, 11, 8)) {
           case 0x0:
             if (bits(machInst, 7)) {
-                return new SubDImm(machInst, INTREG_SP, INTREG_SP,
+                return new SubImm(machInst, INTREG_SP, INTREG_SP,
                                    bits(machInst, 6, 0) << 2, true);
             } else {
-                return new AddDImm(machInst, INTREG_SP, INTREG_SP,
+                return new AddImm(machInst, INTREG_SP, INTREG_SP,
                                    bits(machInst, 6, 0) << 2, true);
             }
           case 0x1:
@@ -376,10 +376,10 @@ def format Thumb32DataProcModImm() {{
     def decInst(mnem, dest="rd", op1="rn"):
         return '''
             if (s) {
-                return new %(mnem)sDImmCc(machInst, %(dest)s,
+                return new %(mnem)sImmCc(machInst, %(dest)s,
                                           %(op1)s, imm, true);
             } else {
-                return new %(mnem)sDImm(machInst, %(dest)s,
+                return new %(mnem)sImm(machInst, %(dest)s,
                                         %(op1)s, imm, true);
             }
         ''' % {"mnem" : mnem, "dest" : dest, "op1" : op1}
@@ -468,10 +468,10 @@ def format Thumb32DataProcShiftReg() {{
     def decInst(mnem, dest="rd", op1="rn"):
         return '''
             if (s) {
-                return new %(mnem)sDRegCc(machInst, %(dest)s,
+                return new %(mnem)sRegCc(machInst, %(dest)s,
                                           %(op1)s, rm, amt, type);
             } else {
-                return new %(mnem)sDReg(machInst, %(dest)s,
+                return new %(mnem)sReg(machInst, %(dest)s,
                                         %(op1)s, rm, amt, type);
             }
         ''' % {"mnem" : mnem, "dest" : dest, "op1" : op1}

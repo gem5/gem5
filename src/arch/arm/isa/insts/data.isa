@@ -126,26 +126,26 @@ let {{
         immCode = secondOpRe.sub(immOp2, code)
         regCode = secondOpRe.sub(regOp2, code)
         regRegCode = secondOpRe.sub(regRegOp2, code)
-        immIop = InstObjParams(mnem, mnem.capitalize() + "DImm", "DataImmOp",
+        immIop = InstObjParams(mnem, mnem.capitalize() + "Imm", "DataImmOp",
                                {"code" : immCode,
                                 "predicate_test": predicateTest})
-        regIop = InstObjParams(mnem, mnem.capitalize() + "DReg", "DataRegOp",
+        regIop = InstObjParams(mnem, mnem.capitalize() + "Reg", "DataRegOp",
                                {"code" : regCode,
                                 "predicate_test": predicateTest})
-        regRegIop = InstObjParams(mnem, mnem.capitalize() + "DRegReg",
+        regRegIop = InstObjParams(mnem, mnem.capitalize() + "RegReg",
                                   "DataRegRegOp",
                                   {"code" : regRegCode,
                                    "predicate_test": predicateTest})
-        immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "DImmCc",
+        immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "ImmCc",
                                  "DataImmOp",
                                  {"code" : immCode + immCcCode,
                                   "predicate_test": predicateTest})
-        regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "DRegCc",
+        regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + "RegCc",
                                  "DataRegOp",
                                  {"code" : regCode + regCcCode,
                                   "predicate_test": predicateTest})
         regRegIopCc = InstObjParams(mnem + "s",
-                                    mnem.capitalize() + "DRegRegCc",
+                                    mnem.capitalize() + "RegRegCc",
                                     "DataRegRegOp",
                                     {"code" : regRegCode + regRegCcCode,
                                      "predicate_test": predicateTest})
