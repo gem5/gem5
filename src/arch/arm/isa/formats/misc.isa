@@ -119,6 +119,9 @@ def format McrMrc15() {{
           case MISCREG_ICIMVAU:
             return new WarnUnimplemented(
                     isRead ? "mrc icimvau" : "mcr icimvau", machInst);
+          case MISCREG_BPIMVA:
+            return new WarnUnimplemented(
+                    isRead ? "mrc bpimva" : "mcr bpimva", machInst);
           default:
             if (isRead) {
                 return new Mrc15(machInst, rt, (IntRegIndex)miscReg);

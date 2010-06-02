@@ -97,6 +97,7 @@ namespace ArmISA
         MISCREG_ICIALLUIS,
         MISCREG_ICIALLU,
         MISCREG_ICIMVAU,
+        MISCREG_BPIMVA,
         MISCREG_CP15_UNIMP_START,
         MISCREG_CTR = MISCREG_CP15_UNIMP_START,
         MISCREG_TCMTR,
@@ -136,7 +137,6 @@ namespace ArmISA
         MISCREG_RGNR,
         MISCREG_BPIALLIS,
         MISCREG_BPIALL,
-        MISCREG_BPIMVA,
         MISCREG_DCIMVAC,
         MISCREG_DCISW,
         MISCREG_MCCSW,
@@ -161,7 +161,7 @@ namespace ArmISA
         "sctlr", "dccisw", "dccimvac", "dccmvac",
         "contextidr", "tpidrurw", "tpidruro", "tpidrprw",
         "cp15isb", "cp15dsb", "cp15dmb", "cpacr", "clidr",
-        "icialluis", "iciallu", "icimvau",
+        "icialluis", "iciallu", "icimvau", "bpimva",
         "ctr", "tcmtr", "mpuir", "mpidr", "midr",
         "id_pfr0", "id_pfr1", "id_dfr0", "id_afr0",
         "id_mmfr0", "id_mmfr1", "id_mmfr2", "id_mmfr3",
@@ -170,7 +170,7 @@ namespace ArmISA
         "dfsr", "ifsr", "adfsr", "aifsr", "dfar", "ifar",
         "drbar", "irbar", "drsr", "irsr", "dracr", "iracr",
         "rgnr", "bpiallis",
-        "bpiall", "bpimva", "dcimvac", "dcisw", "mccsw",
+        "bpiall", "dcimvac", "dcisw", "mccsw",
         "dccmvau",
         "nop", "raz"
     };
