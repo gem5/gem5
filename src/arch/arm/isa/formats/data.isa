@@ -284,17 +284,17 @@ def format ArmParallelAddSubtract() {{
               case 0x3:
                 switch (op2) {
                   case 0x0:
-                    return new WarnUnimplemented("shadd16", machInst);
+                    return new Shadd16Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x1:
-                    return new WarnUnimplemented("shasx", machInst);
+                    return new ShasxReg(machInst, rd, rn, rm, 0, LSL);
                   case 0x2:
-                    return new WarnUnimplemented("shsax", machInst);
+                    return new ShsaxReg(machInst, rd, rn, rm, 0, LSL);
                   case 0x3:
-                    return new WarnUnimplemented("shsub16", machInst);
+                    return new Shsub16Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x4:
-                    return new WarnUnimplemented("shadd8", machInst);
+                    return new Shadd8Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x7:
-                    return new WarnUnimplemented("shsub8", machInst);
+                    return new Shsub8Reg(machInst, rd, rn, rm, 0, LSL);
                 }
                 break;
             }
@@ -335,17 +335,17 @@ def format ArmParallelAddSubtract() {{
               case 0x3:
                 switch (op2) {
                   case 0x0:
-                    return new WarnUnimplemented("uhadd16", machInst);
+                    return new Uhadd16Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x1:
-                    return new WarnUnimplemented("uhasx", machInst);
+                    return new UhasxReg(machInst, rd, rn, rm, 0, LSL);
                   case 0x2:
-                    return new WarnUnimplemented("uhsax", machInst);
+                    return new UhsaxReg(machInst, rd, rn, rm, 0, LSL);
                   case 0x3:
-                    return new WarnUnimplemented("uhsub16", machInst);
+                    return new Uhsub16Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x4:
-                    return new WarnUnimplemented("uhadd8", machInst);
+                    return new Uhadd8Reg(machInst, rd, rn, rm, 0, LSL);
                   case 0x7:
-                    return new WarnUnimplemented("uhsub8", machInst);
+                    return new Uhsub8Reg(machInst, rd, rn, rm, 0, LSL);
                 }
                 break;
             }
@@ -606,17 +606,17 @@ def format Thumb32DataProcReg() {{
                       case 0x2:
                         switch (op1) {
                           case 0x1:
-                            return new WarnUnimplemented("shadd16", machInst);
+                            return new Shadd16Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x2:
-                            return new WarnUnimplemented("shasx", machInst);
+                            return new ShasxReg(machInst, rd, rn, rm, 0, LSL);
                           case 0x6:
-                            return new WarnUnimplemented("shsax", machInst);
+                            return new ShsaxReg(machInst, rd, rn, rm, 0, LSL);
                           case 0x5:
-                            return new WarnUnimplemented("shsub16", machInst);
+                            return new Shsub16Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x0:
-                            return new WarnUnimplemented("shadd8", machInst);
+                            return new Shadd8Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x4:
-                            return new WarnUnimplemented("shsub8", machInst);
+                            return new Shsub8Reg(machInst, rd, rn, rm, 0, LSL);
                         }
                         break;
                     }
@@ -665,17 +665,17 @@ def format Thumb32DataProcReg() {{
                       case 0x2:
                         switch (op1) {
                           case 0x1:
-                            return new WarnUnimplemented("uhadd16", machInst);
+                            return new Uhadd16Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x2:
-                            return new WarnUnimplemented("uhasx", machInst);
+                            return new UhasxReg(machInst, rd, rn, rm, 0, LSL);
                           case 0x6:
-                            return new WarnUnimplemented("uhsax", machInst);
+                            return new UhsaxReg(machInst, rd, rn, rm, 0, LSL);
                           case 0x5:
-                            return new WarnUnimplemented("uhsub16", machInst);
+                            return new Uhsub16Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x0:
-                            return new WarnUnimplemented("uhadd8", machInst);
+                            return new Uhadd8Reg(machInst, rd, rn, rm, 0, LSL);
                           case 0x4:
-                            return new WarnUnimplemented("uhsub8", machInst);
+                            return new Uhsub8Reg(machInst, rd, rn, rm, 0, LSL);
                         }
                         break;
                     }
