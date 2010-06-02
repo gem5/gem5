@@ -110,7 +110,6 @@ def format Thumb32BranchesAndMiscCtrl() {{
     {
         const uint32_t op = bits(machInst, 26, 20);
         const uint32_t op1 = bits(machInst, 14, 12);
-        const uint32_t op2 = bits(machInst, 11, 8);
         switch (op1 & 0x5) {
           case 0x0:
             if (op == 127) {
@@ -134,14 +133,19 @@ def format Thumb32BranchesAndMiscCtrl() {{
             } else {
                 switch (op) {
                   case 0x38:
-                    if ((op2 & 0x3) == 0) {
-                        // Application level
-                        return new WarnUnimplemented("msr", machInst);
+                    {
+                        const IntRegIndex rn =
+                            (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                        const uint8_t byteMask = bits(machInst, 11, 8);
+                        return new MsrCpsrReg(machInst, rn, byteMask);
                     }
-                    // Fall through on purpose...
                   case 0x39:
-                    // System level
-                    return new WarnUnimplemented("msr", machInst);
+                    {
+                        const IntRegIndex rn =
+                            (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+                        const uint8_t byteMask = bits(machInst, 11, 8);
+                        return new MsrSpsrReg(machInst, rn, byteMask);
+                    }
                   case 0x3a:
                     {
                         const uint32_t op1 = bits(machInst, 10, 8);
@@ -198,8 +202,17 @@ def format Thumb32BranchesAndMiscCtrl() {{
                                                imm32, false);
                     }
                   case 0x3e:
+                    {
+                        const IntRegIndex rd =
+                            (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                        return new MrsCpsr(machInst, rd);
+                    }
                   case 0x3f:
-                    return new WarnUnimplemented("mrs", machInst);
+                    {
+                        const IntRegIndex rd =
+                            (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+                        return new MrsSpsr(machInst, rd);
+                    }
                 }
                 break;
             }
