@@ -328,6 +328,12 @@ let {{
                   case 1:
                     specReg = MISCREG_FPSCR;
                     break;
+                  case 6:
+                    specReg = MISCREG_MVFR1;
+                    break;
+                  case 7:
+                    specReg = MISCREG_MVFR0;
+                    break;
                   case 8:
                     specReg = MISCREG_FPEXC;
                     break;
