@@ -317,7 +317,8 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
         req->setPaddr(vaddr);
         return NoFault;
     }
-    panic("MMU translation not implemented\n");
+    warn_once("MPU translation not implemented\n");
+    req->setPaddr(vaddr);
     return NoFault;
     
 
