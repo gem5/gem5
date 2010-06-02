@@ -514,4 +514,24 @@ let {{
     header_output += RegRegOpDeclare.subst(mcr15Iop)
     decoder_output += RegRegOpConstructor.subst(mcr15Iop)
     exec_output += PredOpExecute.subst(mcr15Iop)
+
+    enterxCode = '''
+        FNPC = NPC | (1ULL << PcJBitShift) | (1ULL << PcTBitShift);
+    '''
+    enterxIop = InstObjParams("enterx", "Enterx", "PredOp",
+                              { "code": enterxCode,
+                                "predicate_test": predicateTest }, [])
+    header_output += BasicDeclare.subst(enterxIop)
+    decoder_output += BasicConstructor.subst(enterxIop)
+    exec_output += PredOpExecute.subst(enterxIop)
+
+    leavexCode = '''
+        FNPC = (NPC & ~(1ULL << PcJBitShift)) | (1ULL << PcTBitShift);
+    '''
+    leavexIop = InstObjParams("leavex", "Leavex", "PredOp",
+                              { "code": leavexCode,
+                                "predicate_test": predicateTest }, [])
+    header_output += BasicDeclare.subst(leavexIop)
+    decoder_output += BasicConstructor.subst(leavexIop)
+    exec_output += PredOpExecute.subst(leavexIop)
 }};
