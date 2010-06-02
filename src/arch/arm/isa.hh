@@ -106,6 +106,12 @@ namespace ArmISA
             sctlr.rao4 = 1;
             miscRegs[MISCREG_SCTLR] = sctlr;
 
+            /*
+             * Technically this should be 0, but we don't support those
+             * settings.
+             */
+            miscRegs[MISCREG_CPACR] = 0x0fffffff;
+
             //XXX We need to initialize the rest of the state.
         }
 
@@ -200,6 +206,7 @@ namespace ArmISA
         void
         setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         {
+            MiscReg newVal = val;
             if (misc_reg == MISCREG_CPSR) {
                 updateRegMap(val);
                 CPSR cpsr = val;
@@ -216,7 +223,15 @@ namespace ArmISA
                 panic("Unimplemented CP15 register %s wrote with %#x.\n",
                       miscRegName[misc_reg], val);
             }
-            return setMiscRegNoEffect(misc_reg, val);
+            switch (misc_reg) {
+              case MISCREG_CPACR:
+                newVal = bits(val, 27, 0);
+                if (newVal != 0x0fffffff) {
+                    panic("Disabling coprocessors isn't implemented.\n");
+                }
+                break;
+            }
+            return setMiscRegNoEffect(misc_reg, newVal);
         }
 
         int
