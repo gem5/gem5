@@ -227,4 +227,146 @@ let {{
     header_output += RegImmRegOpDeclare.subst(usat16Iop)
     decoder_output += RegImmRegOpConstructor.subst(usat16Iop)
     exec_output += PredOpExecute.subst(usat16Iop)
+
+    sxtbIop = InstObjParams("sxtb", "Sxtb", "RegImmRegOp",
+                            { "code":
+                              "Dest = sext<8>((uint8_t)(Op1.ud >> imm));",
+                              "predicate_test": predicateTest }, [])
+    header_output += RegImmRegOpDeclare.subst(sxtbIop)
+    decoder_output += RegImmRegOpConstructor.subst(sxtbIop)
+    exec_output += PredOpExecute.subst(sxtbIop)
+
+    sxtabIop = InstObjParams("sxtab", "Sxtab", "RegRegRegImmOp",
+                             { "code":
+                               '''
+                                   Dest = sext<8>((uint8_t)(Op2.ud >> imm)) +
+                                          Op1;
+                               ''',
+                               "predicate_test": predicateTest }, [])
+    header_output += RegRegRegImmOpDeclare.subst(sxtabIop)
+    decoder_output += RegRegRegImmOpConstructor.subst(sxtabIop)
+    exec_output += PredOpExecute.subst(sxtabIop)
+
+    sxtb16Code = '''
+    uint32_t resTemp = 0;
+    replaceBits(resTemp, 15, 0, sext<8>(bits(Op1, imm + 7, imm)));
+    replaceBits(resTemp, 31, 16,
+                sext<8>(bits(Op1, (imm + 23) % 32, (imm + 16) % 32)));
+    Dest = resTemp;
+    '''
+    sxtb16Iop = InstObjParams("sxtb16", "Sxtb16", "RegImmRegOp",
+                              { "code": sxtb16Code,
+                                "predicate_test": predicateTest }, [])
+    header_output += RegImmRegOpDeclare.subst(sxtb16Iop)
+    decoder_output += RegImmRegOpConstructor.subst(sxtb16Iop)
+    exec_output += PredOpExecute.subst(sxtb16Iop)
+
+    sxtab16Code = '''
+    uint32_t resTemp = 0;
+    replaceBits(resTemp, 15, 0, sext<8>(bits(Op2, imm + 7, imm)) +
+                                        bits(Op1, 15, 0));
+    replaceBits(resTemp, 31, 16,
+                sext<8>(bits(Op2, (imm + 23) % 32, (imm + 16) % 32)) +
+                bits(Op1, 31, 16));
+    Dest = resTemp;
+    '''
+    sxtab16Iop = InstObjParams("sxtab16", "Sxtab16", "RegRegRegImmOp",
+                               { "code": sxtab16Code,
+                                 "predicate_test": predicateTest }, [])
+    header_output += RegRegRegImmOpDeclare.subst(sxtab16Iop)
+    decoder_output += RegRegRegImmOpConstructor.subst(sxtab16Iop)
+    exec_output += PredOpExecute.subst(sxtab16Iop)
+
+    sxthCode = '''
+    uint64_t rotated = (uint32_t)Op1;
+    rotated = (rotated | (rotated << 32)) >> imm;
+    Dest = sext<16>((uint16_t)rotated);
+    '''
+    sxthIop = InstObjParams("sxth", "Sxth", "RegImmRegOp",
+                              { "code": sxthCode,
+                                "predicate_test": predicateTest }, [])
+    header_output += RegImmRegOpDeclare.subst(sxthIop)
+    decoder_output += RegImmRegOpConstructor.subst(sxthIop)
+    exec_output += PredOpExecute.subst(sxthIop)
+
+    sxtahCode = '''
+    uint64_t rotated = (uint32_t)Op2;
+    rotated = (rotated | (rotated << 32)) >> imm;
+    Dest = sext<16>((uint16_t)rotated) + Op1;
+    '''
+    sxtahIop = InstObjParams("sxtah", "Sxtah", "RegRegRegImmOp",
+                             { "code": sxtahCode,
+                               "predicate_test": predicateTest }, [])
+    header_output += RegRegRegImmOpDeclare.subst(sxtahIop)
+    decoder_output += RegRegRegImmOpConstructor.subst(sxtahIop)
+    exec_output += PredOpExecute.subst(sxtahIop)
+
+    uxtbIop = InstObjParams("uxtb", "Uxtb", "RegImmRegOp",
+                            { "code": "Dest = (uint8_t)(Op1.ud >> imm);",
+                              "predicate_test": predicateTest }, [])
+    header_output += RegImmRegOpDeclare.subst(uxtbIop)
+    decoder_output += RegImmRegOpConstructor.subst(uxtbIop)
+    exec_output += PredOpExecute.subst(uxtbIop)
+
+    uxtabIop = InstObjParams("uxtab", "Uxtab", "RegRegRegImmOp",
+                             { "code":
+                               "Dest = (uint8_t)(Op2.ud >> imm) + Op1;",
+                               "predicate_test": predicateTest }, [])
+    header_output += RegRegRegImmOpDeclare.subst(uxtabIop)
+    decoder_output += RegRegRegImmOpConstructor.subst(uxtabIop)
+    exec_output += PredOpExecute.subst(uxtabIop)
+
+    uxtb16Code = '''
+    uint32_t resTemp = 0;
+    replaceBits(resTemp, 15, 0, (uint8_t)(bits(Op1, imm + 7, imm)));
+    replaceBits(resTemp, 31, 16,
+                (uint8_t)(bits(Op1, (imm + 23) % 32, (imm + 16) % 32)));
+    Dest = resTemp;
+    '''
+    uxtb16Iop = InstObjParams("uxtb16", "Uxtb16", "RegImmRegOp",
+                              { "code": uxtb16Code,
+                                "predicate_test": predicateTest }, [])
+    header_output += RegImmRegOpDeclare.subst(uxtb16Iop)
+    decoder_output += RegImmRegOpConstructor.subst(uxtb16Iop)
+    exec_output += PredOpExecute.subst(uxtb16Iop)
+
+    uxtab16Code = '''
+    uint32_t resTemp = 0;
+    replaceBits(resTemp, 15, 0, (uint8_t)(bits(Op2, imm + 7, imm)) +
+                                        bits(Op1, 15, 0));
+    replaceBits(resTemp, 31, 16,
+                (uint8_t)(bits(Op2, (imm + 23) % 32, (imm + 16) % 32)) +
+                bits(Op1, 31, 16));
+    Dest = resTemp;
+    '''
+    uxtab16Iop = InstObjParams("uxtab16", "Uxtab16", "RegRegRegImmOp",
+                               { "code": uxtab16Code,
+                                 "predicate_test": predicateTest }, [])
+    header_output += RegRegRegImmOpDeclare.subst(uxtab16Iop)
+    decoder_output += RegRegRegImmOpConstructor.subst(uxtab16Iop)
+    exec_output += PredOpExecute.subst(uxtab16Iop)
+
+    uxthCode = '''
+    uint64_t rotated = (uint32_t)Op1;
+    rotated = (rotated | (rotated << 32)) >> imm;
+    Dest = (uint16_t)rotated;
+    '''
+    uxthIop = InstObjParams("uxth", "Uxth", "RegImmRegOp",
+                              { "code": uxthCode,
+                                "predicate_test": predicateTest }, [])
+    header_output += RegImmRegOpDeclare.subst(uxthIop)
+    decoder_output += RegImmRegOpConstructor.subst(uxthIop)
+    exec_output += PredOpExecute.subst(uxthIop)
+
+    uxtahCode = '''
+    uint64_t rotated = (uint32_t)Op2;
+    rotated = (rotated | (rotated << 32)) >> imm;
+    Dest = (uint16_t)rotated + Op1;
+    '''
+    uxtahIop = InstObjParams("uxtah", "Uxtah", "RegRegRegImmOp",
+                             { "code": uxtahCode,
+                               "predicate_test": predicateTest }, [])
+    header_output += RegRegRegImmOpDeclare.subst(uxtahIop)
+    decoder_output += RegRegRegImmOpConstructor.subst(uxtahIop)
+    exec_output += PredOpExecute.subst(uxtahIop)
 }};
