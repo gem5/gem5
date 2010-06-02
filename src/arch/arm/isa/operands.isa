@@ -61,6 +61,9 @@ let {{
          xc->%(func)s(this, %(op_idx)s, %(final_val)s))
     '''
 
+    readPC = 'xc->readPC() & ~PcModeMask'
+    writePC = 'setPC(xc, %(final_val)s)'
+
     readNPC = 'xc->readNextPC() & ~PcModeMask'
     writeNPC = 'setNextPC(xc, %(final_val)s)'
 }};
@@ -101,6 +104,8 @@ def operands {{
     'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', None, 43),
     'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', None, 44),
     'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 45),
-    'NPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 50,
+    'PC':  ('PC', 'ud', None, (None, None, 'IsControl'), 50,
+            readPC, writePC),
+    'NPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 51,
             readNPC, writeNPC),
 }};
