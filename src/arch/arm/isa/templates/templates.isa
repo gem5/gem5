@@ -42,3 +42,6 @@
 
 //Templates for memory instructions
 ##include "mem.isa"
+
+//Templates for microcoded memory instructions
+##include "macromem.isa"

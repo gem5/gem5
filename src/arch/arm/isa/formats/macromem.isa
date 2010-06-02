@@ -1,7 +1,16 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2007-2008 The Florida State University
-// All rights reserved.
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -26,232 +35,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Authors: Stephen Hines
-//          Gabe Black
+// Authors: Gabe Black
 
-////////////////////////////////////////////////////////////////////
-//
-// Common microop templates
-//
-
-def template MicroConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          RegIndex _ura,
-                                          RegIndex _urb,
-                                          uint8_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _ura, _urb, _imm)
-    {
-        %(constructor)s;
-    }
-}};
-
-////////////////////////////////////////////////////////////////////
-//
-// Load/store microops
-//
-
-def template MicroMemDeclare {{
-    class %(class_name)s : public %(base_class)s
-    {
-      public:
-        %(class_name)s(ExtMachInst machInst,
-                       RegIndex _ura, RegIndex _urb,
-                       uint8_t _imm);
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
-    };
-}};
-
-let {{
-    microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
-                                   'MicroMemOp',
-                                   {'memacc_code': 'Ra = Mem;',
-                                    'ea_code': 'EA = Rb + (UP ? imm : -imm);',
-                                    'predicate_test': predicateTest},
-                                   ['IsMicroop'])
-
-    microLdrRetUopCode = '''
-        Ra = Mem;
-        Cpsr = cpsrWriteByInstr(Cpsr, Spsr, 0xF, true);
+def format ArmMacroMem() {{
+    decode_block = '''
+    return new LdmStm(machInst, (IntRegIndex)(uint32_t)RN, !PREPOST, UP,
+                      PSRUSER, WRITEBACK, LOADOP, machInst.regList);
     '''
-    microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
-                                      'MicroMemOp',
-                                      {'memacc_code': microLdrRetUopCode,
-                                       'ea_code':
-                                          'EA = Rb + (UP ? imm : -imm);',
-                                       'predicate_test': predicateTest},
-                                      ['IsMicroop'])
-
-    microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
-                                   'MicroMemOp',
-                                   {'memacc_code': 'Mem = Ra;',
-                                    'ea_code': 'EA = Rb + (UP ? imm : -imm);',
-                                    'predicate_test': predicateTest},
-                                   ['IsMicroop'])
-
-    header_output = MicroMemDeclare.subst(microLdrUopIop) + \
-                    MicroMemDeclare.subst(microLdrRetUopIop) + \
-                    MicroMemDeclare.subst(microStrUopIop)
-    decoder_output = MicroConstructor.subst(microLdrUopIop) + \
-                     MicroConstructor.subst(microLdrRetUopIop) + \
-                     MicroConstructor.subst(microStrUopIop)
-    exec_output = LoadExecute.subst(microLdrUopIop) + \
-                  LoadExecute.subst(microLdrRetUopIop) + \
-                  StoreExecute.subst(microStrUopIop) + \
-                  LoadInitiateAcc.subst(microLdrUopIop) + \
-                  LoadInitiateAcc.subst(microLdrRetUopIop) + \
-                  StoreInitiateAcc.subst(microStrUopIop) + \
-                  LoadCompleteAcc.subst(microLdrUopIop) + \
-                  LoadCompleteAcc.subst(microLdrRetUopIop) + \
-                  StoreCompleteAcc.subst(microStrUopIop)
-}};
-
-////////////////////////////////////////////////////////////////////
-//
-// Integer = Integer op Immediate microops
-//
-
-def template MicroIntDeclare {{
-    class %(class_name)s : public %(base_class)s
-    {
-      public:
-        %(class_name)s(ExtMachInst machInst,
-                       RegIndex _ura, RegIndex _urb,
-                       uint8_t _imm);
-        %(BasicExecDeclare)s
-    };
-}};
-
-let {{
-    microAddiUopIop = InstObjParams('addi_uop', 'MicroAddiUop',
-                                    'MicroIntOp',
-                                    {'code': 'Ra = Rb + imm;',
-                                     'predicate_test': predicateTest},
-                                    ['IsMicroop'])
-
-    microSubiUopIop = InstObjParams('subi_uop', 'MicroSubiUop',
-                                    'MicroIntOp',
-                                    {'code': 'Ra = Rb - imm;',
-                                     'predicate_test': predicateTest},
-                                    ['IsMicroop'])
-
-    header_output = MicroIntDeclare.subst(microAddiUopIop) + \
-                    MicroIntDeclare.subst(microSubiUopIop)
-    decoder_output = MicroConstructor.subst(microAddiUopIop) + \
-                     MicroConstructor.subst(microSubiUopIop)
-    exec_output = PredOpExecute.subst(microAddiUopIop) + \
-                  PredOpExecute.subst(microSubiUopIop)
-}};
-
-////////////////////////////////////////////////////////////////////
-//
-// Macro Memory-format instructions
-//
-
-def template MacroStoreDeclare {{
-/**
- * Static instructions class for a store multiple instruction
- */
-class %(class_name)s : public %(base_class)s
-{
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst);
-        %(BasicExecDeclare)s
-};
-}};
-
-def template MacroStoreConstructor {{
-inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
-{
-    %(constructor)s;
-    uint32_t regs = reglist;
-    uint32_t addr = 0;
-    bool up = machInst.puswl.up;
-
-    if (!up)
-        addr = (ones << 2) - 4;
-
-    if (machInst.puswl.prepost)
-        addr += 4;
-
-    // Add 0 to Rn and stick it in ureg0.
-    // This is equivalent to a move.
-    microOps[0] = new MicroAddiUop(machInst, INTREG_UREG0, RN, 0);
-
-    unsigned reg = 0;
-    bool force_user = machInst.puswl.psruser & !OPCODE_15;
-    bool exception_ret = machInst.puswl.psruser & OPCODE_15;
-
-    for (int i = 1; i < ones + 1; i++) {
-        // Find the next register.
-        while (!bits(regs, reg))
-            reg++;
-        replaceBits(regs, reg, 0);
-
-        unsigned regIdx = reg;
-        if (force_user) {
-            regIdx = intRegForceUser(regIdx);
-        }
-
-        if (machInst.puswl.loadOp) {
-            if (reg == INTREG_PC && exception_ret) {
-                // This must be the exception return form of ldm.
-                microOps[i] =
-                    new MicroLdrRetUop(machInst, regIdx, INTREG_UREG0, addr);
-            } else {
-                microOps[i] =
-                    new MicroLdrUop(machInst, regIdx, INTREG_UREG0, addr);
-            }
-        } else {
-            microOps[i] =
-                new MicroStrUop(machInst, regIdx, INTREG_UREG0, addr);
-        }
-
-        if (up)
-            addr += 4;
-        else
-            addr -= 4;
-    }
-
-    StaticInstPtr &lastUop = microOps[numMicroops - 1];
-    if (machInst.puswl.writeback) {
-        if (up) {
-            lastUop = new MicroAddiUop(machInst, RN, RN, ones * 4);
-        } else {
-            lastUop = new MicroSubiUop(machInst, RN, RN, ones * 4);
-        }
-    }
-    lastUop->setLastMicroop();
-}
-
-}};
-
-def template MacroStoreExecute {{
-Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
-{
-    Fault fault = NoFault;
-
-    %(fp_enable_check)s;
-    %(op_decl)s;
-    %(op_rd)s;
-    %(code)s;
-    if (fault == NoFault)
-    {
-        %(op_wb)s;
-    }
-
-    return fault;
-}
-}};
-
-def format ArmMacroStore(code, mem_flags = [], inst_flag = [], *opt_flags) {{
-    iop = InstObjParams(name, Name, 'ArmMacroMemoryOp', code, opt_flags)
-    header_output = MacroStoreDeclare.subst(iop)
-    decoder_output = MacroStoreConstructor.subst(iop)
-    decode_block = BasicDecode.subst(iop)
-    exec_output = MacroStoreExecute.subst(iop)
 }};

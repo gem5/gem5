@@ -304,10 +304,7 @@ format DataOp {
             }
         }
     }
-    0x4: decode PUSWL {
-        // Right now we only handle cases when S (PSRUSER) is not set
-        default: ArmMacroStore::ldmstm({{ }});
-    }
+    0x4: ArmMacroMem::armMacroMem();
     0x5: decode OPCODE_24 {
         // Branch (and Link) Instructions
         0: Branch::b({{ }});

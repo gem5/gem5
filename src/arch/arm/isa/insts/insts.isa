@@ -48,3 +48,6 @@
 
 //Stores of a single item
 ##include "str.isa"
+
+//Load/store multiple
+##include "macromem.isa"

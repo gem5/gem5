@@ -82,39 +82,17 @@ class MicroIntOp : public PredOp
 class MicroMemOp : public MicroIntOp
 {
   protected:
+    bool up;
     unsigned memAccessFlags;
 
     MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               RegIndex _ura, RegIndex _urb, uint8_t _imm)
+               RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
             : MicroIntOp(mnem, machInst, __opClass, _ura, _urb, _imm),
-              memAccessFlags(0)
+              up(_up), memAccessFlags(0)
     {
     }
 };
 
-/**
- * Arm Macro Memory operations like LDM/STM
- */
-class ArmMacroMemoryOp : public PredMacroOp
-{
-  protected:
-    /// Memory request flags.  See mem_req_base.hh.
-    unsigned memAccessFlags;
-
-    uint32_t reglist;
-    uint32_t ones;
-
-    ArmMacroMemoryOp(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass)
-            : PredMacroOp(mnem, _machInst, __opClass), memAccessFlags(0),
-              reglist(machInst.regList), ones(0)
-    {
-        ones = number_of_ones(reglist);
-        numMicroops = ones + machInst.puswl.writeback + 1;
-        // Remember that writeback adds a uop
-        microOps = new StaticInstPtr[numMicroops];
-    }
-};
 }
 
 #endif //__ARCH_ARM_INSTS_MACROMEM_HH__
