@@ -1,0 +1,175 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+let {{
+
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    # B, BL
+    for (mnem, link) in (("b", False), ("bl", True)):
+        bCode = '''
+        Addr PC = readPC(xc);
+        NPC = ((PC + imm) & mask(32)) | (PC & ~mask(32));
+        '''
+        if (link):
+            bCode += '''
+                Addr tBit = PC & (ULL(1) << PcTBitShift);
+                if (!tBit)
+                    LR = PC - 4;
+                else
+                    LR = PC | 1;
+            '''
+
+        bIop = InstObjParams(mnem, mnem.capitalize(), "BranchImmCond",
+                             {"code": bCode,
+                              "predicate_test": predicateTest})
+        header_output += BranchImmCondDeclare.subst(bIop)
+        decoder_output += BranchImmCondConstructor.subst(bIop)
+        exec_output += PredOpExecute.subst(bIop)
+
+    # BX, BLX
+    blxCode = '''
+    Addr PC = readPC(xc);
+    Addr tBit = PC & (ULL(1) << PcTBitShift);
+    // Other than the assert below, jBit isn't used.
+#if !defined(NDEBUG)
+    Addr jBit = PC & (ULL(1) << PcJBitShift);
+#endif
+    // X isn't permitted in ThumbEE mode. We shouldn't be in jazzelle mode?
+    assert(!jBit);
+    bool arm = !tBit;
+    arm = arm; // In case it's not used otherwise.
+    Addr tempPc = ((%(newPC)s) & mask(32)) | (PC & ~mask(32));
+    %(link)s
+    // Switch modes
+    %(branch)s
+    '''
+
+    blxList = (("blx", True, True),
+               ("blx", False, True),
+               ("bx", False, False))
+
+    for (mnem, imm, link) in blxList:
+        Name = mnem.capitalize()
+        if imm and link: #blx with imm
+            branchStr = "FNPC = tempPc ^ (ULL(1) << PcTBitShift);"
+        else:
+            branchStr = "IWNPC = tempPc ^ (ULL(1) << PcTBitShift);"
+
+        if imm:
+            Name += "Imm"
+            # Since we're switching ISAs, the target ISA will be the opposite
+            # of the current ISA. !arm is whether the target is ARM.
+            newPC = '(!arm ? (roundDown(PC, 4) + imm) : (PC + imm))'
+            base = "BranchImm"
+            declare = BranchImmDeclare
+            constructor = BranchImmConstructor
+        else:
+            Name += "Reg"
+            newPC = '(PC & PcModeMask) | Op1'
+            base = "BranchRegCond"
+            declare = BranchRegCondDeclare
+            constructor = BranchRegCondConstructor
+        if link and imm:
+            linkStr = '''
+                // The immediate version of the blx thumb instruction
+                // is 32 bits wide, but "next pc" doesn't reflect that
+                // so we don't want to substract 2 from it at this point
+                if (arm)
+                    LR = PC - 4;
+                else
+                    LR = PC  | 1;
+            '''
+        elif link:
+            linkStr = '''
+                if (arm)
+                    LR = PC - 4;
+                else
+                    LR = (PC - 2) | 1;
+            '''
+        else:
+            linkStr = ""
+        code = blxCode % {"link": linkStr,
+                          "newPC": newPC,
+                          "branch": branchStr}
+        blxIop = InstObjParams(mnem, Name, base,
+                               {"code": code,
+                                "predicate_test": predicateTest})
+        header_output += declare.subst(blxIop)
+        decoder_output += constructor.subst(blxIop)
+        exec_output += PredOpExecute.subst(blxIop)
+
+    #Ignore BXJ for now
+
+    #CBNZ, CBZ. These are always unconditional as far as predicates
+    for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):
+        code = '''
+        Addr PC = readPC(xc);
+        NPC = ((PC + imm) & mask(32)) | (PC & ~mask(32));
+        '''
+        predTest = "Op1 %(test)s 0" % {"test": test}
+        iop = InstObjParams(mnem, mnem.capitalize(), "BranchImmReg",
+                            {"code": code, "predicate_test": predTest})
+        header_output += BranchImmRegDeclare.subst(iop)
+        decoder_output += BranchImmRegConstructor.subst(iop)
+        exec_output += PredOpExecute.subst(iop)
+
+    #TBB, TBH
+    for isTbh in (0, 1):
+        if isTbh:
+            eaCode = "EA = Op1 + Op2 * 2"
+            accCode = "NPC = readPC(xc) + 2 * (Mem.uh);"
+            mnem = "tbh"
+        else:
+            eaCode = "EA = Op1 + Op2"
+            accCode = "NPC = readPC(xc) + 2 * (Mem.ub);"
+            mnem = "tbb"
+        eaCode = "unsigned memAccessFlags = 0;\n" + eaCode
+        iop = InstObjParams(mnem, mnem.capitalize(), "BranchRegReg",
+                            {'ea_code': eaCode,
+                             'memacc_code': accCode,
+                             'predicate_test': predicateTest})
+        header_output += BranchTableDeclare.subst(iop)
+        decoder_output += BranchRegRegConstructor.subst(iop)
+        exec_output += LoadExecute.subst(iop) + \
+                       LoadInitiateAcc.subst(iop) + \
+                       LoadCompleteAcc.subst(iop)
+}};

@@ -54,3 +54,6 @@
 
 //Data processing instructions
 ##include "data.isa"
+
+//Branches
+##include "branch.isa"

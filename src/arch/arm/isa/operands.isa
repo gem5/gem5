@@ -68,6 +68,7 @@ let {{
     readNPC = 'xc->readNextPC() & ~PcModeMask'
     writeNPC = 'setNextPC(xc, %(final_val)s)'
     writeIWNPC = 'setIWNextPC(xc, %(final_val)s)'
+    forceNPC = 'xc->setNextPC(%(final_val)s)'
 }};
 
 def operands {{
@@ -125,6 +126,8 @@ def operands {{
     'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 45),
     'NPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 51,
             readNPC, writeNPC),
+    'FNPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 51,
+             readNPC, forceNPC),
     'IWNPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 51,
               readNPC, writeIWNPC),
 }};
