@@ -331,4 +331,29 @@ let {{
     header_output += RegRegRegOpDeclare.subst(vaddDIop);
     decoder_output += RegRegRegOpConstructor.subst(vaddDIop);
     exec_output += PredOpExecute.subst(vaddDIop);
+
+    vsubSCode = '''
+        FpDest = FpOp1 - FpOp2;
+    '''
+    vsubSIop = InstObjParams("vsubs", "VsubS", "RegRegRegOp",
+                                     { "code": vsubSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vsubSIop);
+    decoder_output += RegRegRegOpConstructor.subst(vsubSIop);
+    exec_output += PredOpExecute.subst(vsubSIop);
+
+    vsubDCode = '''
+        IntDoubleUnion cOp1, cOp2, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        cDest.fp = cOp1.fp - cOp2.fp;
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vsubDIop = InstObjParams("vsubd", "VsubD", "RegRegRegOp",
+                                     { "code": vsubDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vsubDIop);
+    decoder_output += RegRegRegOpConstructor.subst(vsubDIop);
+    exec_output += PredOpExecute.subst(vsubDIop);
 }};

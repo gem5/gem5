@@ -530,7 +530,25 @@ let {{
                             (IntRegIndex)vn, (IntRegIndex)vm);
                 }
             } else {
-                return new WarnUnimplemented("vsub", machInst);
+                uint32_t vd;
+                uint32_t vm;
+                uint32_t vn;
+                if (bits(machInst, 8) == 0) {
+                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
+                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
+                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
+                    return new VsubS(machInst, (IntRegIndex)vd,
+                            (IntRegIndex)vn, (IntRegIndex)vm);
+                } else {
+                    vd = (bits(machInst, 22) << 5) |
+                         (bits(machInst, 15, 12) << 1);
+                    vm = (bits(machInst, 5) << 5) |
+                         (bits(machInst, 3, 0) << 1);
+                    vn = (bits(machInst, 7) << 5) |
+                         (bits(machInst, 19, 16) << 1);
+                    return new VsubD(machInst, (IntRegIndex)vd,
+                            (IntRegIndex)vn, (IntRegIndex)vm);
+                }
             }
           case 0x8:
             if ((opc3 & 0x1) == 0) {
