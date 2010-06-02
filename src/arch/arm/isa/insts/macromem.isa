@@ -127,5 +127,4 @@ let {{
     iop = InstObjParams("ldmstm", "LdmStm", 'PredMacroOp', "", [])
     header_output = MacroMemDeclare.subst(iop)
     decoder_output = MacroMemConstructor.subst(iop)
-    exec_output = MacroMemExecute.subst(iop)
 }};

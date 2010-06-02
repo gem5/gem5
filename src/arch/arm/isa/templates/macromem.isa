@@ -116,7 +116,7 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, IntRegIndex rn,
                 bool index, bool up, bool user, bool writeback, bool load,
                 uint32_t reglist);
-        %(BasicExecDeclare)s
+        %(BasicExecPanic)s
 };
 }};
 
@@ -191,22 +191,4 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex rn,
     lastUop->setLastMicroop();
 }
 
-}};
-
-def template MacroMemExecute {{
-Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
-{
-    Fault fault = NoFault;
-
-    %(fp_enable_check)s;
-    %(op_decl)s;
-    %(op_rd)s;
-    %(code)s;
-    if (fault == NoFault)
-    {
-        %(op_wb)s;
-    }
-
-    return fault;
-}
 }};
