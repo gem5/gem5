@@ -35,18 +35,37 @@
 //
 // Authors: Gabe Black
 
-def format ArmUsad() {{
+def format ArmMiscMedia() {{
     decode_block = '''
     {
-        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const uint32_t op1 = bits(machInst, 22, 20);
+        const uint32_t op2 = bits(machInst, 7, 5);
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
         const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
-        if (ra == 0xf) {
-            return new Usad8(machInst, rd, rn, rm);
-        } else {
-            return new Usada8(machInst, rd, rn, rm, ra);
+        if (op1 == 0 && op2 == 0) {
+            const IntRegIndex rd =
+                (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+            const IntRegIndex rm =
+                (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+            if (ra == 0xf) {
+                return new Usad8(machInst, rd, rn, rm);
+            } else {
+                return new Usada8(machInst, rd, rn, rm, ra);
+            }
+        } else if (bits(op2, 1, 0) == 0x2) {
+            if (bits(op1, 2, 1) == 0x3) {
+                return new WarnUnimplemented("ubfx", machInst);
+            } else if (bits(op1, 2, 1) == 0x1) {
+                return new WarnUnimplemented("sbfx", machInst);
+            }
+        } else if (bits(op2, 1, 0) == 0x0 && bits(op1, 2, 1) == 0x2) {
+            if (rn == 0xf) {
+                return new WarnUnimplemented("bfc", machInst);
+            } else {
+                return new WarnUnimplemented("bfi", machInst);
+            }
         }
+        return new Unknown(machInst);
     }
     '''
 }};
