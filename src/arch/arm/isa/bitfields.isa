@@ -52,6 +52,7 @@ def bitfield MEDIA_OPCODE  mediaOpcode;
 def bitfield MEDIA_OPCODE2 mediaOpcode2;
 def bitfield USEIMM        useImm;
 def bitfield OPCODE_24     opcode24;
+def bitfield OPCODE_24_23  opcode24_23;
 def bitfield OPCODE_23_20  opcode23_20;
 def bitfield OPCODE_23_21  opcode23_21;
 def bitfield OPCODE_22     opcode22;

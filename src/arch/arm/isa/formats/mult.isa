@@ -1,0 +1,440 @@
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+def format ArmMultAndMultAcc() {{
+    decode_block = '''
+    {
+        // The manual defines this field as 23-20, but bit 20 is usually
+        // ignored.
+        const uint32_t op = bits(machInst, 23, 21);
+        const bool s = bits(machInst, 20);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        switch (op) {
+            case 0x0:
+              if (s) {
+                  return new NewMulCc(machInst, rd, rm, rn);
+              } else {
+                  return new NewMul(machInst, rd, rm, rn);
+              }
+            case 0x1:
+              if (s) {
+                  return new NewMlaCc(machInst, rd, rn, rm, ra);
+              } else {
+                  return new NewMla(machInst, rd, rn, rm, ra);
+              }
+            case 0x2:
+              return new NewUmaal(machInst, ra, rd, rn, rm);
+            case 0x3:
+              return new NewMls(machInst, rd, rn, rm, ra);
+            case 0x4:
+              if (s) {
+                  return new NewUmullCc(machInst, ra, rd, rn, rm);
+              } else {
+                  return new NewUmull(machInst, ra, rd, rn, rm);
+              }
+            case 0x5:
+              if (s) {
+                  return new NewUmlalCc(machInst, ra, rd, rn, rm);
+              } else {
+                  return new NewUmlal(machInst, ra, rd, rn, rm);
+              }
+            case 0x6:
+              if (s) {
+                  return new NewSmullCc(machInst, ra, rd, rn, rm);
+              } else {
+                  return new NewSmull(machInst, ra, rd, rn, rm);
+              }
+            case 0x7:
+              if (s) {
+                  return new NewSmlalCc(machInst, ra, rd, rn, rm);
+              } else {
+                  return new NewSmlal(machInst, ra, rd, rn, rm);
+              }
+        }
+    }
+    '''
+}};
+
+def format ArmHalfWordMultAndMultAcc() {{
+    decode_block = '''
+    {
+        const uint32_t op1 = bits(machInst, 22, 21);
+        const bool op = bits(machInst, 5);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        switch (op1) {
+          case 0x0:
+            switch (bits(machInst, 6, 5)) {
+              case 0x0:
+                return new NewSmlabbCc(machInst, rd, rn, rm, ra);
+              case 0x1:
+                return new NewSmlatbCc(machInst, rd, rn, rm, ra);
+              case 0x2:
+                return new NewSmlabtCc(machInst, rd, rn, rm, ra);
+              case 0x3:
+                return new NewSmlattCc(machInst, rd, rn, rm, ra);
+            }
+          case 0x1:
+            if (op) {
+                if (bits(machInst, 6)) {
+                    return new NewSmulwt(machInst, rd, rn, rm);
+                } else {
+                    return new NewSmulwb(machInst, rd, rn, rm);
+                }
+            } else {
+                if (bits(machInst, 6)) {
+                    return new NewSmlawtCc(machInst, rd, rn, rm, ra);
+                } else {
+                    return new NewSmlawbCc(machInst, rd, rn, rm, ra);
+                }
+            }
+          case 0x2:
+            switch (bits(machInst, 6, 5)) {
+              case 0x0:
+                return new NewSmlalbb(machInst, ra, rd, rn, rm);
+              case 0x1:
+                return new NewSmlaltb(machInst, ra, rd, rn, rm);
+              case 0x2:
+                return new NewSmlalbt(machInst, ra, rd, rn, rm);
+              case 0x3:
+                return new NewSmlaltt(machInst, ra, rd, rn, rm);
+            }
+          case 0x3:
+            switch (bits(machInst, 6, 5)) {
+              case 0x0:
+                return new NewSmulbb(machInst, rd, rn, rm);
+              case 0x1:
+                return new NewSmultb(machInst, rd, rn, rm);
+              case 0x2:
+                return new NewSmulbt(machInst, rd, rn, rm);
+              case 0x3:
+                return new NewSmultt(machInst, rd, rn, rm);
+            }
+        }
+    }
+    '''
+}};
+
+def format Thumb32MulMulAccAndAbsDiff() {{
+    decode_block = '''
+    {
+        const uint32_t op1 = bits(machInst, 22, 20);
+        const uint32_t op2 = bits(machInst, 5, 4);
+        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        if (op1 != 0x1 && bits(op2, 1) != 0) {
+            return new Unknown(machInst);
+        }
+        switch (op1) {
+          case 0x0:
+            if (op2 == 0) {
+                if (ra == 0xf) {
+                    return new NewMul(machInst, rd, rn, rm);
+                } else {
+                    return new NewMla(machInst, rd, rn, rm, ra);
+                }
+            } else {
+                return new NewMls(machInst, rd, rn, rm, ra);
+            }
+          case 0x1:
+            if (ra == 0xf) {
+                switch (bits(machInst, 5, 4)) {
+                  case 0x0:
+                    return new NewSmulbb(machInst, rd, rn, rm);
+                  case 0x1:
+                    return new NewSmulbt(machInst, rd, rn, rm);
+                  case 0x2:
+                    return new NewSmultb(machInst, rd, rn, rm);
+                  case 0x3:
+                    return new NewSmultt(machInst, rd, rn, rm);
+                }
+            } else {
+                switch (bits(machInst, 5, 4)) {
+                  case 0x0:
+                    return new NewSmlabbCc(machInst, rd, rn, rm, ra);
+                  case 0x1:
+                    return new NewSmlabtCc(machInst, rd, rn, rm, ra);
+                  case 0x2:
+                    return new NewSmlatbCc(machInst, rd, rn, rm, ra);
+                  case 0x3:
+                    return new NewSmlattCc(machInst, rd, rn, rm, ra);
+                }
+            }
+          case 0x2:
+            if (ra == 0xf) {
+                if (bits(machInst, 4)) {
+                    return new NewSmuadxCc(machInst, rd, rn, rm);
+                } else {
+                    return new NewSmuadCc(machInst, rd, rn, rm);
+                }
+            } else {
+                if (bits(machInst, 4)) {
+                    return new NewSmladxCc(machInst, rd, rn, rm, ra);
+                } else {
+                    return new NewSmladCc(machInst, rd, rn, rm, ra);
+                }
+            }
+          case 0x3:
+            if (ra == 0xf) {
+                if (bits(machInst, 4)) {
+                    return new NewSmulwt(machInst, rd, rn, rm);
+                } else {
+                    return new NewSmulwb(machInst, rd, rn, rm);
+                }
+            } else {
+                if (bits(machInst, 4)) {
+                    return new NewSmlawtCc(machInst, rd, rn, rm, ra);
+                } else {
+                    return new NewSmlawbCc(machInst, rd, rn, rm, ra);
+                }
+            }
+          case 0x4:
+            if (ra == 0xf) {
+                if (bits(machInst, 4)) {
+                    return new NewSmusdx(machInst, rd, rn, rm);
+                } else {
+                    return new NewSmusd(machInst, rd, rn, rm);
+                }
+            } else {
+                if (bits(machInst, 4)) {
+                    return new NewSmlsdxCc(machInst, rd, rn, rm, ra);
+                } else {
+                    return new NewSmlsdCc(machInst, rd, rn, rm, ra);
+                }
+            }
+          case 0x5:
+            if (ra == 0xf) {
+                if (bits(machInst, 4)) {
+                    return new NewSmmulr(machInst, rd, rn, rm);
+                } else {
+                    return new NewSmmul(machInst, rd, rn, rm);
+                }
+            } else {
+                if (bits(machInst, 4)) {
+                    return new NewSmmlar(machInst, rd, rn, rm, ra);
+                } else {
+                    return new NewSmmla(machInst, rd, rn, rm, ra);
+                }
+            }
+          case 0x6:
+            if (bits(machInst, 4)) {
+                return new NewSmmlsr(machInst, rd, rn, rm, ra);
+            } else {
+                return new NewSmmls(machInst, rd, rn, rm, ra);
+            }
+          case 0x7:
+            if (op2 != 0x0) {
+                return new Unknown(machInst);
+            } else if (ra == 0xf) {
+                return new WarnUnimplemented("usada8", machInst);
+            } else {
+                return new WarnUnimplemented("usad8", machInst);
+            }
+        }
+    }
+    '''
+}};
+
+def format Thumb32LongMulMulAccAndDiv() {{
+    decode_block = '''
+    {
+        const uint32_t op1 = bits(machInst, 22, 20);
+        const uint32_t op2 = bits(machInst, 7, 4);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rdlo = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const IntRegIndex rdhi = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        switch (op1) {
+          case 0x0:
+            if (op2 == 0x0) {
+                return new NewSmull(machInst, rdlo, rdhi, rn, rm);
+            }
+            break;
+          case 0x1:
+            if (op2 == 0xf) {
+                return new WarnUnimplemented("sdiv", machInst);
+            }
+            break;
+          case 0x2:
+            if (op2 == 0x0) {
+                return new NewUmull(machInst, rdlo, rdhi, rn, rm);
+            }
+            break;
+          case 0x3:
+            if (op2 == 0xf) {
+                return new WarnUnimplemented("udiv", machInst);
+            }
+            break;
+          case 0x4:
+            if (op2 == 0) {
+                return new NewSmlal(machInst, rdlo, rdhi, rn, rm);
+            } else if (bits(op2, 3, 2) == 0x2) {
+                switch (bits(machInst, 5, 4)) {
+                  case 0x0:
+                    return new NewSmlalbb(machInst, rdlo, rdhi, rn, rm);
+                  case 0x1:
+                    return new NewSmlalbt(machInst, rdlo, rdhi, rn, rm);
+                  case 0x2:
+                    return new NewSmlaltb(machInst, rdlo, rdhi, rn, rm);
+                  case 0x3:
+                    return new NewSmlaltt(machInst, rdlo, rdhi, rn, rm);
+                }
+            } else if (bits(op2, 3, 1) == 0x6) {
+                if (bits(machInst, 4)) {
+                    return new NewSmlaldx(machInst, rdlo, rdhi, rn, rm);
+                } else {
+                    return new NewSmlald(machInst, rdlo, rdhi, rn, rm);
+                }
+            }
+            break;
+          case 0x5:
+            if (bits(op2, 3, 1) == 0x6) {
+                if (bits(machInst, 4)) {
+                    return new NewSmlsldx(machInst, rdlo, rdhi, rn, rm);
+                } else {
+                    return new NewSmlsld(machInst, rdlo, rdhi, rn, rm);
+                }
+            }
+          case 0x6:
+            if (op2 == 0) {
+                return new NewUmlal(machInst, rdlo, rdhi, rn, rm);
+            } else if (op2 == 0x6) {
+                return new NewUmaal(machInst, rdlo, rdhi, rn, rm);
+            }
+            break;
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};
+
+def format ArmSignedMultiplies() {{
+    decode_block = '''
+    {
+        const uint32_t op1 = bits(machInst, 22, 20);
+        // This is 7-5 in the manual, but bit 5 is always ignored.
+        const uint32_t op2 = bits(machInst, 7, 6);
+        const bool aIsF = (bits(machInst, 15, 12) == 0xf);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        const IntRegIndex ra = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const bool m = bits(machInst, 5);
+        switch (op1) {
+          case 0x0:
+            if (op2 == 0) {
+                if (aIsF) {
+                    if (m) {
+                        return new NewSmuadxCc(machInst, rd, rn, rm);
+                    } else {
+                        return new NewSmuadCc(machInst, rd, rn, rm);
+                    }
+                } else {
+                    if (m) {
+                        return new NewSmladxCc(machInst, rd, rn, rm, ra);
+                    } else {
+                        return new NewSmladCc(machInst, rd, rn, rm, ra);
+                    }
+                }
+            } else if (op2 == 1) {
+                if (aIsF) {
+                    if (m) {
+                        return new NewSmusdx(machInst, rd, rn, rm);
+                    } else {
+                        return new NewSmusd(machInst, rd, rn, rm);
+                    }
+                } else {
+                    if (m) {
+                        return new NewSmlsdxCc(machInst, rd, rn, rm, ra);
+                    } else {
+                        return new NewSmlsdCc(machInst, rd, rn, rm, ra);
+                    }
+                }
+            }
+            break;
+          case 0x4:
+            if (op2 == 0) {
+                if (m) {
+                    return new NewSmlaldx(machInst, ra, rd, rn, rm);
+                } else {
+                    return new NewSmlald(machInst, ra, rd, rn, rm);
+                }
+            } else if (op2 == 1) {
+                if (m) {
+                    return new NewSmlsldx(machInst, ra, rd, rn, rm);
+                } else {
+                    return new NewSmlsld(machInst, ra, rd, rn, rm);
+                }
+            }
+            break;
+          case 0x5:
+            if (op2 == 0) {
+                if (aIsF) {
+                    if (m) {
+                        return new NewSmmulr(machInst, rd, rn, rm);
+                    } else {
+                        return new NewSmmul(machInst, rd, rn, rm);
+                    }
+                } else {
+                    if (m) {
+                        return new NewSmmlar(machInst, rd, rn, rm, ra);
+                    } else {
+                        return new NewSmmla(machInst, rd, rn, rm, ra);
+                    }
+                }
+            } else if (op2 == 0x3) {
+                if (m) {
+                    return new NewSmmlsr(machInst, rd, rn, rm, ra);
+                } else {
+                    return new NewSmmls(machInst, rd, rn, rm, ra);
+                }
+            }
+            break;
+          default:
+            break;
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};

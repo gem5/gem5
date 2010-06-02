@@ -70,3 +70,6 @@
 
 //Include the formats for data processing instructions
 ##include "data.isa"
+
+//Include the formats for multiply instructions
+##include "mult.isa"

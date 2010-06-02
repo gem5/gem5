@@ -177,8 +177,8 @@
                 }
             }
             0x1: decode HTOPCODE_8_7 {
-                0x2: WarnUnimpl::Multiply_multiply_accumulate_and_absolute_difference();
-                0x3: WarnUnimpl::Long_multiply_long_multiply_accumulate_and_divide();
+                0x2: Thumb32MulMulAccAndAbsDiff::thumb32MulMulAccAndAbsDiff();
+                0x3: Thumb32LongMulMulAccAndDiv::thumb32LongMulMulAccAndDiv();
                 default: WarnUnimpl::Data_processing_register();
             }
             default: decode HTOPCODE_9_8 {

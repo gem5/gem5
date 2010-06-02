@@ -55,34 +55,7 @@ format DataOp {
     0x0: decode SEVEN_AND_FOUR {
         1: decode MISC_OPCODE {
             0x9: decode PREPOST {
-                0: decode OPCODE {
-                    0x0: mul({{ Rn = resTemp = Rm * Rs; }}, none);
-                    0x1: mla({{ Rn = resTemp = (Rm * Rs) + Rd; }}, none);
-                    0x2: WarnUnimpl::umall();
-                    0x4: umull({{
-                        resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
-                        Rd = (uint32_t)(resTemp & 0xffffffff);
-                        Rn = (uint32_t)(resTemp >> 32);
-                    }}, llbit);
-                    0x5: smlal({{
-                        resTemp = ((int64_t)Rm) * ((int64_t)Rs);
-                        resTemp += (((uint64_t)Rn) << 32) | ((uint64_t)Rd);
-                        Rd = (uint32_t)(resTemp & 0xffffffff);
-                        Rn = (uint32_t)(resTemp >> 32);
-                    }}, llbit);
-                    0x6: smull({{
-                        resTemp = ((int64_t)(int32_t)Rm)*
-                                  ((int64_t)(int32_t)Rs);
-                        Rd = (int32_t)(resTemp & 0xffffffff);
-                        Rn = (int32_t)(resTemp >> 32);
-                    }}, llbit);
-                    0x7: umlal({{
-                        resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
-                        resTemp += ((uint64_t)Rn << 32)+((uint64_t)Rd);
-                        Rd = (uint32_t)(resTemp & 0xffffffff);
-                        Rn = (uint32_t)(resTemp >> 32);
-                    }}, llbit);
-                }
+                0: ArmMultAndMultAcc::armMultAndMultAcc();
                 1: decode PUBWL {
                     0x10: WarnUnimpl::swp();
                     0x14: WarnUnimpl::swpb();
@@ -94,86 +67,61 @@ format DataOp {
         }
         0: decode IS_MISC {
             0: ArmDataProcReg::armDataProcReg();
-            1: decode MISC_OPCODE {
-                0x0: decode OPCODE {
-                    0x8: PredOp::mrs_cpsr({{
-                        Rd = (Cpsr | CondCodes) & 0xF8FF03DF;
-                    }});
-                    0x9: decode USEIMM {
-                        // The mask field is the same as the RN index.
-                        0: PredOp::msr_cpsr_reg({{
-                            uint32_t newCpsr =
-                                cpsrWriteByInstr(Cpsr | CondCodes,
-                                                 Rm, RN, false);
-                            Cpsr = ~CondCodesMask & newCpsr;
-                            CondCodes = CondCodesMask & newCpsr;
+            1: decode OPCODE_7 {
+                0x0: decode MISC_OPCODE {
+                    0x0: decode OPCODE {
+                        0x8: PredOp::mrs_cpsr({{
+                            Rd = (Cpsr | CondCodes) & 0xF8FF03DF;
                         }});
-                        1: PredImmOp::msr_cpsr_imm({{
-                            uint32_t newCpsr =
-                                cpsrWriteByInstr(Cpsr | CondCodes,
-                                                 rotated_imm, RN, false);
-                            Cpsr = ~CondCodesMask & newCpsr;
-                            CondCodes = CondCodesMask & newCpsr;
+                        0x9: decode USEIMM {
+                            // The mask field is the same as the RN index.
+                            0: PredOp::msr_cpsr_reg({{
+                                uint32_t newCpsr =
+                                    cpsrWriteByInstr(Cpsr | CondCodes,
+                                                     Rm, RN, false);
+                                Cpsr = ~CondCodesMask & newCpsr;
+                                CondCodes = CondCodesMask & newCpsr;
+                            }});
+                            1: PredImmOp::msr_cpsr_imm({{
+                                uint32_t newCpsr =
+                                    cpsrWriteByInstr(Cpsr | CondCodes,
+                                                     rotated_imm, RN, false);
+                                Cpsr = ~CondCodesMask & newCpsr;
+                                CondCodes = CondCodesMask & newCpsr;
+                            }});
+                        }
+                        0xa: PredOp::mrs_spsr({{ Rd = Spsr; }});
+                        0xb: decode USEIMM {
+                            // The mask field is the same as the RN index.
+                            0: PredOp::msr_spsr_reg({{
+                                Spsr = spsrWriteByInstr(Spsr, Rm, RN, false);
+                            }});
+                            1: PredImmOp::msr_spsr_imm({{
+                                Spsr = spsrWriteByInstr(Spsr, rotated_imm,
+                                                        RN, false);
+                            }});
+                        }
+                    }
+                    0x1: decode OPCODE {
+                        0x9: ArmBx::armBx();
+                        0xb: PredOp::clz({{
+                            Rd = ((Rm == 0) ? 32 : (31 - findMsbSet(Rm)));
                         }});
                     }
-                    0xa: PredOp::mrs_spsr({{ Rd = Spsr; }});
-                    0xb: decode USEIMM {
-                        // The mask field is the same as the RN index.
-                        0: PredOp::msr_spsr_reg({{
-                            Spsr = spsrWriteByInstr(Spsr, Rm, RN, false);
-                        }});
-                        1: PredImmOp::msr_spsr_imm({{
-                            Spsr = spsrWriteByInstr(Spsr, rotated_imm,
-                                                    RN, false);
-                        }});
+                    0x2: decode OPCODE {
+                        0x9: WarnUnimpl::bxj();
+                    }
+                    0x3: decode OPCODE {
+                        0x9: ArmBlxReg::armBlxReg();
+                    }
+                    0x5: decode OPCODE {
+                        0x8: WarnUnimpl::qadd();
+                        0x9: WarnUnimpl::qsub();
+                        0xa: WarnUnimpl::qdadd();
+                        0xb: WarnUnimpl::qdsub();
                     }
                 }
-                0x1: decode OPCODE {
-                    0x9: ArmBx::armBx();
-                    0xb: PredOp::clz({{
-                        Rd = ((Rm == 0) ? 32 : (31 - findMsbSet(Rm)));
-                    }});
-                }
-                0x2: decode OPCODE {
-                    0x9: WarnUnimpl::bxj();
-                }
-                0x3: decode OPCODE {
-                    0x9: ArmBlxReg::armBlxReg();
-                }
-                0x5: decode OPCODE {
-                    0x8: WarnUnimpl::qadd();
-                    0x9: WarnUnimpl::qsub();
-                    0xa: WarnUnimpl::qdadd();
-                    0xb: WarnUnimpl::qdsub();
-                }
-                0x8: decode OPCODE {
-                    0x8: smlabb({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<15:0>) + Rd; }}, overflow);
-                    0x9: WarnUnimpl::smlalbb();
-                    0xa: WarnUnimpl::smlawb();
-                    0xb: smulbb({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<15:0>); }}, none);
-                }
-                0xa: decode OPCODE {
-                    0x8: smlatb({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<15:0>) + Rd; }}, overflow);
-                    0x9: smulwb({{
-                        Rn = resTemp = bits(sext<32>(Rm) * sext<16>(Rs<15:0>), 47, 16);
-                    }}, none);
-                    0xa: WarnUnimpl::smlaltb();
-                    0xb: smultb({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<15:0>); }}, none);
-                }
-                0xc: decode OPCODE {
-                    0x8: smlabt({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<31:16>) + Rd; }}, overflow);
-                    0x9: WarnUnimpl::smlawt();
-                    0xa: WarnUnimpl::smlalbt();
-                    0xb: smulbt({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<31:16>); }}, none);
-                }
-                0xe: decode OPCODE {
-                    0x8: smlatt({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<31:16>) + Rd; }}, overflow);
-                    0x9: smulwt({{
-                        Rn = resTemp = bits(sext<32>(Rm) * sext<16>(Rs<31:16>), 47, 16);
-                    }}, none);
-                    0xa: WarnUnimpl::smlaltt();
-                    0xb: smultt({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<31:16>); }}, none);
-                }
+                0x1: ArmHalfWordMultAndMultAcc::armHalfWordMultAndMultAcc();
             }
         }
     }
@@ -207,58 +155,31 @@ format DataOp {
     0x2: AddrMode2::addrMode2(True);
     0x3: decode OPCODE_4 {
         0: AddrMode2::addrMode2(False);
-        1: decode MEDIA_OPCODE {
-            0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7: WarnUnimpl::parallel_add_subtract_instructions();
-            0x8: decode MISC_OPCODE {
-                0x1, 0x9: WarnUnimpl::pkhbt();
-                0x7: WarnUnimpl::sxtab16();
-                0xb: WarnUnimpl::sel();
-                0x5, 0xd: WarnUnimpl::pkhtb();
-                0x3: WarnUnimpl::sign_zero_extend_add();
-            }
-            0xa, 0xb: decode SHIFT {
-                0x0, 0x2: WarnUnimpl::ssat();
-                0x1: WarnUnimpl::ssat16();
-            }
-            0xe, 0xf: decode SHIFT {
-                0x0, 0x2: WarnUnimpl::usat();
-                0x1: WarnUnimpl::usat16();
-            }
-            0x10: decode RN {
-                0xf: decode MISC_OPCODE {
-                    0x1: WarnUnimpl::smuad();
-                    0x3: WarnUnimpl::smuadx();
-                    0x5: WarnUnimpl::smusd();
-                    0x7: WarnUnimpl::smusdx();
+        1: decode OPCODE_24_23 {
+            0x0: WarnUnimpl::parallel_add_subtract_instructions();
+            0x1: decode MEDIA_OPCODE {
+                0x8: decode MISC_OPCODE {
+                    0x1, 0x9: WarnUnimpl::pkhbt();
+                    0x7: WarnUnimpl::sxtab16();
+                    0xb: WarnUnimpl::sel();
+                    0x5, 0xd: WarnUnimpl::pkhtb();
+                    0x3: WarnUnimpl::sign_zero_extend_add();
                 }
-                default: decode MISC_OPCODE {
-                    0x1: WarnUnimpl::smlad();
-                    0x3: WarnUnimpl::smladx();
-                    0x5: WarnUnimpl::smlsd();
-                    0x7: WarnUnimpl::smlsdx();
+                0xa, 0xb: decode SHIFT {
+                    0x0, 0x2: WarnUnimpl::ssat();
+                    0x1: WarnUnimpl::ssat16();
+                }
+                0xe, 0xf: decode SHIFT {
+                    0x0, 0x2: WarnUnimpl::usat();
+                    0x1: WarnUnimpl::usat16();
                 }
             }
-            0x14: decode MISC_OPCODE {
-                0x1: WarnUnimpl::smlald();
-                0x3: WarnUnimpl::smlaldx();
-                0x5: WarnUnimpl::smlsld();
-                0x7: WarnUnimpl::smlsldx();
-            }
-            0x15: decode RN {
-                0xf: decode MISC_OPCODE {
-                    0x1: WarnUnimpl::smmul();
-                    0x3: WarnUnimpl::smmulr();
+            0x2: ArmSignedMultiplies::armSignedMultiplies();
+            0x3: decode MEDIA_OPCODE {
+                0x18: decode RN {
+                    0xf: WarnUnimpl::usada8();
+                    default: WarnUnimpl::usad8();
                 }
-                default: decode MISC_OPCODE {
-                    0x1: WarnUnimpl::smmla();
-                    0x3: WarnUnimpl::smmlar();
-                    0xd: WarnUnimpl::smmls();
-                    0xf: WarnUnimpl::smmlsr();
-                }
-            }
-            0x18: decode RN {
-                0xf: WarnUnimpl::usada8();
-                default: WarnUnimpl::usad8();
             }
         }
     }

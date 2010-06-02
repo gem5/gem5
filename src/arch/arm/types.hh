@@ -67,6 +67,7 @@ namespace ArmISA
         Bitfield<24, 21> opcode;
         Bitfield<24, 20> mediaOpcode;
         Bitfield<24>     opcode24;
+        Bitfield<24, 23> opcode24_23;
         Bitfield<23, 20> opcode23_20;
         Bitfield<23, 21> opcode23_21;
         Bitfield<20>     opcode20;

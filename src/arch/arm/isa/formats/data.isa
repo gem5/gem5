@@ -230,8 +230,7 @@ def format Thumb16DataProcessing() {{
           case 0xc:
             return new OrrReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0xd:
-            //XXX Implement me!
-            return new WarnUnimplemented("mul", machInst);
+            return new NewMul(machInst, rdn, rm, rdn);
           case 0xe:
             return new BicReg(machInst, rdn, rdn, rm, 0, LSL);
           case 0xf:
