@@ -81,48 +81,7 @@ format DataOp {
     }
     0x1: decode IS_MISC {
         0: ArmDataProcImm::armDataProcImm();
-        1: decode OPCODE {
-            // The following two instructions aren't supposed to be defined
-            0x8: DataOp::movw({{ Rd = IMMED_11_0 | (RN << 12) ; }});
-            0x9: decode RN {
-                0: decode IMM {
-                    0: PredImmOp::nop({{ ; }});
-#if FULL_SYSTEM
-                    1: PredImmOp::yield({{ ; }});
-                    2: PredImmOp::wfe({{
-                        if (SevMailbox)
-                            SevMailbox = 0;
-                        else
-                            PseudoInst::quiesce(xc->tcBase());
-                    }}, IsNonSpeculative, IsQuiesce);
-                    3: PredImmOp::wfi({{
-                            PseudoInst::quiesce(xc->tcBase());
-                    }}, IsNonSpeculative, IsQuiesce);
-                    4: PredImmOp::sev({{
-                        // Need a way for O3 to not scoreboard these
-                        // accesses as pipeflushs
-                        System *sys = xc->tcBase()->getSystemPtr();
-                        for (int x = 0; x < sys->numContexts(); x++) {
-                            ThreadContext *oc = sys->getThreadContext(x);
-                            oc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
-                        }
-                    }});
-#endif
-                }
-                default: PredImmOp::msr_i_cpsr({{
-                            SCTLR sctlr = Sctlr;
-                            uint32_t newCpsr =
-                                cpsrWriteByInstr(Cpsr | CondCodes,
-                                                 rotated_imm, RN, false, sctlr.nmfi);
-                            Cpsr = ~CondCodesMask & newCpsr;
-                            CondCodes = CondCodesMask & newCpsr;
-                }});
-            }
-            0xa: PredOp::movt({{ Rd = IMMED_11_0 << 16 | RN << 28 | Rd<15:0>; }});
-            0xb: PredImmOp::msr_i_spsr({{
-                       Spsr = spsrWriteByInstr(Spsr, rotated_imm, RN, false);
-            }});
-        }
+        1: ArmMisc::armMisc();
     }
     0x2: AddrMode2::addrMode2(True);
     0x3: decode OPCODE_4 {

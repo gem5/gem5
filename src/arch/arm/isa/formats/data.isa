@@ -1073,6 +1073,56 @@ def format Thumb16AddSp() {{
     '''
 }};
 
+def format ArmMisc() {{
+    decode_block = '''
+    {
+        const uint32_t unrotated = bits(machInst, 7, 0);
+        const uint32_t rotation = (bits(machInst, 11, 8) << 1);
+        const uint32_t imm = rotate_imm(unrotated, rotation);
+        const uint8_t byteMask = bits(machInst, 19, 16);
+        switch (OPCODE) {
+          case 0x8:
+            return new MovImm(machInst, (IntRegIndex)(uint32_t)RD,
+                    (IntRegIndex)INTREG_ZERO,
+                    bits(machInst, 11, 0) | (bits(machInst, 19, 16) << 12),
+                    false);
+          case 0x9:
+            if (RN == 0) {
+                switch (IMM) {
+                  case 0x0:
+                    return new NopInst(machInst);
+#if FULL_SYSTEM
+                  case 0x1:
+                    return new YieldInst(machInst);
+                  case 0x2:
+                    return new WfeInst(machInst);
+                  case 0x3:
+                    return new WfiInst(machInst);
+                  case 0x4:
+                    return new SevInst(machInst);
+#endif
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                return new MsrCpsrImm(machInst, imm, byteMask);
+            }
+          case 0xa:
+            {
+                const uint32_t timm = (bits(machInst, 19, 16) << 12) |
+                                       bits(machInst, 11, 0);
+                return new MovtImm(machInst, (IntRegIndex)(uint32_t)RD,
+                                   (IntRegIndex)(uint32_t)RD, timm, true);
+            }
+          case 0xb:
+            return new MsrSpsrImm(machInst, imm, byteMask);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
+
 def format Thumb16Misc() {{
     decode_block = '''
     {
