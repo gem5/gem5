@@ -57,3 +57,6 @@
 
 //Templates for multiplies
 ##include "mult.isa"
+
+//Templates for VFP instructions
+##include "vfp.isa"
