@@ -76,7 +76,7 @@ let {{
 
     def buildImmLoad(mnem, post, add, writeback, \
                      size=4, sign=False, user=False, \
-                     prefetch=False, ldrex=False):
+                     prefetch=False, ldrex=False, vldr=False):
         name = mnem
         Name = loadImmClassName(post, add, writeback, \
                                 size, sign, user)
@@ -100,6 +100,10 @@ let {{
             uint64_t temp = Mem%s;\n
             temp = temp;
             ''' % buildMemSuffix(sign, size)
+        elif vldr:
+            Name = "%s_%s" % (mnem.upper(), Name)
+            accCode = "FpDest.uw = cSwap(Mem%s, ((CPSR)Cpsr).e);\n" % \
+                buildMemSuffix(sign, size)
         else:
             if ldrex:
                 memFlags.append("Request::LLSC")
@@ -107,7 +111,7 @@ let {{
             accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);" % \
                 buildMemSuffix(sign, size)
 
-        if not prefetch and not ldrex:
+        if not prefetch and not ldrex and not vldr:
             memFlags.append("ArmISA::TLB::AllowUnaligned")
 
         if writeback:
@@ -155,8 +159,8 @@ let {{
         decoder_output += newDecoder
         exec_output += newExec
 
-    def buildRegLoad(mnem, post, add, writeback, \
-                     size=4, sign=False, user=False, prefetch=False):
+    def buildRegLoad(mnem, post, add, writeback, size=4, sign=False, \
+                     user=False, prefetch=False):
         name = mnem
         Name = loadRegClassName(post, add, writeback,
                                 size, sign, user)
@@ -195,7 +199,8 @@ let {{
         emitLoad(name, Name, False, eaCode, accCode, \
                  memFlags, [], base)
 
-    def buildDoubleImmLoad(mnem, post, add, writeback, ldrex=False):
+    def buildDoubleImmLoad(mnem, post, add, writeback, \
+                           ldrex=False, vldr=False):
         name = mnem
         Name = loadDoubleImmClassName(post, add, writeback)
 
@@ -210,16 +215,24 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = '''
-        CPSR cpsr = Cpsr;
-        Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
-        Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
-        '''
+        if not vldr:
+            accCode = '''
+            CPSR cpsr = Cpsr;
+            Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
+            Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
+            '''
+        else:
+            accCode = '''
+            uint64_t swappedMem = cSwap(Mem.ud, ((CPSR)Cpsr).e);
+            FpDest.uw = (uint32_t)swappedMem;
+            FpDest2.uw = (uint32_t)(swappedMem >> 32);
+            '''
         if ldrex:
             memFlags = ["Request::LLSC"]
-            Name = "%s_%s" % (mnem.upper(), Name)
         else:
             memFlags = []
+        if ldrex or vldr:
+            Name = "%s_%s" % (mnem.upper(), Name)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryDImm", post, writeback)
@@ -326,4 +339,9 @@ let {{
     buildImmLoad("ldrexh", False, True, False, size=2, ldrex=True)
     buildImmLoad("ldrexb", False, True, False, size=1, ldrex=True)
     buildDoubleImmLoad("ldrexd", False, True, False, ldrex=True)
+
+    buildImmLoad("vldr", False, True, False, size=4, vldr=True)
+    buildImmLoad("vldr", False, False, False, size=4, vldr=True)
+    buildDoubleImmLoad("vldr", False, True, False, vldr=True)
+    buildDoubleImmLoad("vldr", False, False, False, vldr=True)
 }};
