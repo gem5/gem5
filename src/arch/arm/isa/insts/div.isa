@@ -53,4 +53,18 @@ let {{
     header_output = RegRegRegOpDeclare.subst(sdivIop)
     decoder_output = RegRegRegOpConstructor.subst(sdivIop)
     exec_output = PredOpExecute.subst(sdivIop)
+
+    udivCode = '''
+    if (Op2.uw == 0) {
+        Dest.uw = 0;
+    } else {
+        Dest.uw = Op1.uw / Op2.uw;
+    }
+    '''
+    udivIop = InstObjParams("udiv", "Udiv", "RegRegRegOp",
+                            { "code": udivCode,
+                              "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(udivIop)
+    decoder_output += RegRegRegOpConstructor.subst(udivIop)
+    exec_output += PredOpExecute.subst(udivIop)
 }};
