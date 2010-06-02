@@ -131,3 +131,30 @@ def template MacroMemConstructor {{
 }
 
 }};
+
+def template MacroVFPMemDeclare {{
+/**
+ * Static instructions class for a store multiple instruction
+ */
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, IntRegIndex rn,
+                RegIndex vd, bool single, bool up, bool writeback,
+                bool load, uint32_t offset);
+        %(BasicExecPanic)s
+};
+}};
+
+def template MacroVFPMemConstructor {{
+%(class_name)s::%(class_name)s(ExtMachInst machInst, IntRegIndex rn,
+        RegIndex vd, bool single, bool up, bool writeback, bool load,
+        uint32_t offset)
+    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, rn,
+                     vd, single, up, writeback, load, offset)
+{
+    %(constructor)s;
+}
+
+}};
