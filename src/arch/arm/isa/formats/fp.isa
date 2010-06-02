@@ -219,23 +219,40 @@ def format ExtensionRegLoadStore() {{
             }
             // Fall through on purpose
           case 0x3:
+            const bool up = (bits(machInst, 23) == 1);
+            const uint32_t imm = bits(machInst, 7, 0) << 2;
+            RegIndex vd;
+            if (single) {
+                vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
+                                          (bits(machInst, 22)));
+            } else {
+                vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
+                                          (bits(machInst, 22) << 5));
+            }
             if (bits(opcode, 1, 0) == 0x0) {
-                return new WarnUnimplemented("vstr", machInst);
-            } else if (bits(opcode, 1, 0) == 0x1) {
-                const bool up = (bits(machInst, 23) == 1);
-                const uint32_t imm = bits(machInst, 7, 0) << 2;
-                RegIndex vd;
                 if (single) {
-                    vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
-                                              (bits(machInst, 22)));
+                    if (up) {
+                        return new %(vstr_us)s(machInst, vd, rn, up, imm);
+                    } else {
+                        return new %(vstr_s)s(machInst, vd, rn, up, imm);
+                    }
+                } else {
+                    if (up) {
+                        return new %(vstr_ud)s(machInst, vd, vd + 1,
+                                               rn, up, imm);
+                    } else {
+                        return new %(vstr_d)s(machInst, vd, vd + 1,
+                                              rn, up, imm);
+                    }
+                }
+            } else if (bits(opcode, 1, 0) == 0x1) {
+                if (single) {
                     if (up) {
                         return new %(vldr_us)s(machInst, vd, rn, up, imm);
                     } else {
                         return new %(vldr_s)s(machInst, vd, rn, up, imm);
                     }
                 } else {
-                    vd = (RegIndex)(uint32_t)((bits(machInst, 15, 12) << 1) |
-                                              (bits(machInst, 22) << 5));
                     if (up) {
                         return new %(vldr_ud)s(machInst, vd, vd + 1,
                                                rn, up, imm);
@@ -252,7 +269,11 @@ def format ExtensionRegLoadStore() {{
         "vldr_us" : "VLDR_" + loadImmClassName(False, True, False),
         "vldr_s" : "VLDR_" + loadImmClassName(False, False, False),
         "vldr_ud" : "VLDR_" + loadDoubleImmClassName(False, True, False),
-        "vldr_d" : "VLDR_" + loadDoubleImmClassName(False, False, False)
+        "vldr_d" : "VLDR_" + loadDoubleImmClassName(False, False, False),
+        "vstr_us" : "VSTR_" + storeImmClassName(False, True, False),
+        "vstr_s" : "VSTR_" + storeImmClassName(False, False, False),
+        "vstr_ud" : "VSTR_" + storeDoubleImmClassName(False, True, False),
+        "vstr_d" : "VSTR_" + storeDoubleImmClassName(False, False, False)
     }
 }};
 
