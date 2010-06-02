@@ -479,6 +479,74 @@ def format Thumb32DataProcModImm() {{
     }
 }};
 
+def format Thumb32DataProcPlainBin() {{
+    decode_block = '''
+    {
+        const uint32_t op = bits(machInst, 24, 20);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
+        switch (op) {
+          case 0x0:
+            {
+                const uint32_t imm = bits(machInst, 7, 0) |
+                                     (bits(machInst, 14, 12) << 8) |
+                                     (bits(machInst, 26) << 11);
+                return new AddImm(machInst, rd, rn, imm, true);
+            }
+          case 0x4:
+            {
+                const uint32_t imm = bits(machInst, 7, 0) |
+                                     (bits(machInst, 14, 12) << 8) |
+                                     (bits(machInst, 26) << 11) |
+                                     (bits(machInst, 19, 16) << 12);
+                return new MovImm(machInst, rd, INTREG_ZERO, imm, true);
+            }
+          case 0xa:
+            {
+                const uint32_t imm = bits(machInst, 7, 0) |
+                                     (bits(machInst, 14, 12) << 8) |
+                                     (bits(machInst, 26) << 11);
+                return new SubImm(machInst, rd, rn, imm, true);
+            }
+          case 0xc:
+            {
+                const uint32_t imm = bits(machInst, 7, 0) |
+                                     (bits(machInst, 14, 12) << 8) |
+                                     (bits(machInst, 26) << 11) |
+                                     (bits(machInst, 19, 16) << 12);
+                return new MovtImm(machInst, rd, rd, imm, true);
+            }
+          case 0x12:
+            if (!(bits(machInst, 14, 12) || bits(machInst, 7, 6))) {
+                return new WarnUnimplemented("ssat16", machInst);
+            }
+            // Fall through on purpose...
+          case 0x10:
+            return new WarnUnimplemented("ssat", machInst);
+          case 0x14:
+            return new WarnUnimplemented("sbfx", machInst);
+          case 0x16:
+            if (rn == 0xf) {
+                return new WarnUnimplemented("bfc", machInst);
+            } else {
+                return new WarnUnimplemented("bfi", machInst);
+            }
+          case 0x1a:
+            if (!(bits(machInst, 14, 12) || bits(machInst, 7, 6))) {
+                return new WarnUnimplemented("usat16", machInst);
+            }
+            // Fall through on purpose...
+          case 0x18:
+            return new WarnUnimplemented("usat", machInst);
+          case 0x1c:
+            return new WarnUnimplemented("ubfx", machInst);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
+
 def format Thumb32DataProcShiftReg() {{
 
     def decInst(mnem, dest="rd", op1="rn"):

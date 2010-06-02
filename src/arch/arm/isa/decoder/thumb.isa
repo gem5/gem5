@@ -159,7 +159,7 @@
         0x2: decode LTOPCODE_15 {
             0x0: decode HTOPCODE_9 {
                 0x0: Thumb32DataProcModImm::thumb32DataProcModImm();
-                0x1: WarnUnimpl::Data_processing_plain_binary_immediate();
+                0x1: Thumb32DataProcPlainBin::thumb32DataProcPlainBin();
             }
             0x1: Thumb32BranchesAndMiscCtrl::thumb32BranchesAndMiscCtrl();
         }
