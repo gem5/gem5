@@ -409,6 +409,26 @@ def template RfeDeclare {{
     };
 }};
 
+def template SrsDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst,
+                uint32_t _regMode, int _mode, bool _wb);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
 def template SwapDeclare {{
     /**
      * Static instruction class for "%(mnemonic)s".
@@ -570,6 +590,16 @@ def template RfeConstructor {{
             uint32_t _base, int _mode, bool _wb)
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                  (IntRegIndex)_base, (AddrMode)_mode, _wb)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template SrsConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+            uint32_t _regMode, int _mode, bool _wb)
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                 (OperatingMode)_regMode, (AddrMode)_mode, _wb)
     {
         %(constructor)s;
     }

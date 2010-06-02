@@ -87,6 +87,61 @@ RfeOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     return ss.str();
 }
 
+string
+SrsOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    stringstream ss;
+    switch (mode) {
+      case DecrementAfter:
+        printMnemonic(ss, "da");
+        break;
+      case DecrementBefore:
+        printMnemonic(ss, "db");
+        break;
+      case IncrementAfter:
+        printMnemonic(ss, "ia");
+        break;
+      case IncrementBefore:
+        printMnemonic(ss, "ib");
+        break;
+    }
+    printReg(ss, INTREG_SP);
+    if (wb) {
+        ss << "!";
+    }
+    ss << ", #";
+    switch (mode) {
+      case MODE_USER:
+        ss << "user";
+        break;
+      case MODE_FIQ:
+        ss << "fiq";
+        break;
+      case MODE_IRQ:
+        ss << "irq";
+        break;
+      case MODE_SVC:
+        ss << "supervisor";
+        break;
+      case MODE_MON:
+        ss << "monitor";
+        break;
+      case MODE_ABORT:
+        ss << "abort";
+        break;
+      case MODE_UNDEFINED:
+        ss << "undefined";
+        break;
+      case MODE_SYSTEM:
+        ss << "system";
+        break;
+      default:
+        ss << "unrecognized";
+        break;
+    }
+    return ss.str();
+}
+
 void
 Memory::printInst(std::ostream &os, AddrMode addrMode) const
 {

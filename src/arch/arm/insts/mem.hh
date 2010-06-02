@@ -87,6 +87,30 @@ class RfeOp : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+// The address is a base register plus an immediate.
+class SrsOp : public PredOp
+{
+  public:
+    enum AddrMode {
+        DecrementAfter,
+        DecrementBefore,
+        IncrementAfter,
+        IncrementBefore
+    };
+  protected:
+    uint32_t regMode;
+    AddrMode mode;
+    bool wb;
+
+    SrsOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+          uint32_t _regMode, AddrMode _mode, bool _wb)
+        : PredOp(mnem, _machInst, __opClass),
+          regMode(_regMode), mode(_mode), wb(_wb)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
 class Memory : public PredOp
 {
   public:
