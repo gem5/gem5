@@ -112,6 +112,21 @@ namespace ArmISA
              */
             miscRegs[MISCREG_CPACR] = 0x0fffffff;
 
+            /* One region, unified map. */
+            miscRegs[MISCREG_MPUIR] = 0x100;
+
+            /*
+             * Implemented = '5' from "M5",
+             * Variant = 0,
+             */
+            miscRegs[MISCREG_MIDR] =
+                (0x35 << 24) | //Implementor is '5' from "M5"
+                (0 << 20)    | //Variant
+                (0xf << 16)  | //Architecture from CPUID scheme
+                (0 << 4)     | //Primary part number
+                (0 << 0)     | //Revision
+                0;
+
             //XXX We need to initialize the rest of the state.
         }
 
