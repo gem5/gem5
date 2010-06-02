@@ -481,281 +481,130 @@ let {{
         const uint32_t opc2 = bits(machInst, 19, 16);
         const uint32_t opc3 = bits(machInst, 7, 6);
         //const uint32_t opc4 = bits(machInst, 3, 0);
+        const bool single = (bits(machInst, 8) == 0);
+        IntRegIndex vd;
+        IntRegIndex vm;
+        IntRegIndex vn;
+        if (single) {
+            vd = (IntRegIndex)(bits(machInst, 22) |
+                    (bits(machInst, 15, 12) << 1));
+            vm = (IntRegIndex)(bits(machInst, 5) |
+                    (bits(machInst, 3, 0) << 1));
+            vn = (IntRegIndex)(bits(machInst, 7) |
+                    (bits(machInst, 19, 16) << 1));
+        } else {
+            vd = (IntRegIndex)((bits(machInst, 22) << 5) |
+                    (bits(machInst, 15, 12) << 1));
+            vm = (IntRegIndex)((bits(machInst, 5) << 5) |
+                    (bits(machInst, 3, 0) << 1));
+            vn = (IntRegIndex)((bits(machInst, 7) << 5) |
+                    (bits(machInst, 19, 16) << 1));
+        }
         switch (opc1 & 0xb /* 1011 */) {
           case 0x0:
             if (bits(machInst, 6) == 0) {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VmlaS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VmlaS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VmlaD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VmlaD(machInst, vd, vn, vm);
                 }
             } else {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VmlsS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VmlsS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VmlsD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VmlsD(machInst, vd, vn, vm);
                 }
             }
           case 0x1:
             if (bits(machInst, 6) == 1) {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VnmlaS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VnmlaS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VnmlaD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VnmlaD(machInst, vd, vn, vm);
                 }
             } else {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VnmlsS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VnmlsS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VnmlsD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VnmlsD(machInst, vd, vn, vm);
                 }
             }
           case 0x2:
             if ((opc3 & 0x1) == 0) {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VmulS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VmulS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VmulD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VmulD(machInst, vd, vn, vm);
                 }
             } else {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VnmulS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VnmulS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VnmulD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VnmulD(machInst, vd, vn, vm);
                 }
             }
           case 0x3:
             if ((opc3 & 0x1) == 0) {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VaddS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VaddS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VaddD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VaddD(machInst, vd, vn, vm);
                 }
             } else {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VsubS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VsubS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VsubD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VsubD(machInst, vd, vn, vm);
                 }
             }
           case 0x8:
             if ((opc3 & 0x1) == 0) {
-                uint32_t vd;
-                uint32_t vm;
-                uint32_t vn;
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
-                    return new VdivS(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                if (single) {
+                    return new VdivS(machInst, vd, vn, vm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
-                    vm = (bits(machInst, 5) << 5) |
-                         (bits(machInst, 3, 0) << 1);
-                    vn = (bits(machInst, 7) << 5) |
-                         (bits(machInst, 19, 16) << 1);
-                    return new VdivD(machInst, (IntRegIndex)vd,
-                            (IntRegIndex)vn, (IntRegIndex)vm);
+                    return new VdivD(machInst, vd, vn, vm);
                 }
             }
             break;
           case 0xb:
             if ((opc3 & 0x1) == 0) {
-                uint32_t vd;
                 const uint32_t baseImm =
                     bits(machInst, 3, 0) | (bits(machInst, 19, 16) << 4);
-                if (bits(machInst, 8) == 0) {
-                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
+                if (single) {
                     uint32_t imm = vfp_modified_imm(baseImm, false);
-                    return new VmovImmS(machInst, (IntRegIndex)vd, imm);
+                    return new VmovImmS(machInst, vd, imm);
                 } else {
-                    vd = (bits(machInst, 22) << 5) |
-                         (bits(machInst, 15, 12) << 1);
                     uint64_t imm = vfp_modified_imm(baseImm, true);
-                    return new VmovImmD(machInst, (IntRegIndex)vd, imm);
+                    return new VmovImmD(machInst, vd, imm);
                 }
             }
             switch (opc2) {
               case 0x0:
                 if (opc3 == 1) {
-                    uint32_t vd;
-                    uint32_t vm;
-                    if (bits(machInst, 8) == 0) {
-                        vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                        vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                        return new VmovRegS(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    if (single) {
+                        return new VmovRegS(machInst, vd, vm);
                     } else {
-                        vd = (bits(machInst, 22) << 5) |
-                             (bits(machInst, 15, 12) << 1);
-                        vm = (bits(machInst, 5) << 5) |
-                             (bits(machInst, 3, 0) << 1);
-                        return new VmovRegD(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                        return new VmovRegD(machInst, vd, vm);
                     }
                 } else {
-                    uint32_t vd;
-                    uint32_t vm;
-                    if (bits(machInst, 8) == 0) {
-                        vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                        vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                        return new VabsS(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    if (single) {
+                        return new VabsS(machInst, vd, vm);
                     } else {
-                        vd = (bits(machInst, 22) << 5) |
-                             (bits(machInst, 15, 12) << 1);
-                        vm = (bits(machInst, 5) << 5) |
-                             (bits(machInst, 3, 0) << 1);
-                        return new VabsD(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                        return new VabsD(machInst, vd, vm);
                     }
                 }
               case 0x1:
                 if (opc3 == 1) {
-                    uint32_t vd;
-                    uint32_t vm;
-                    if (bits(machInst, 8) == 0) {
-                        vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                        vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                        return new VnegS(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    if (single) {
+                        return new VnegS(machInst, vd, vm);
                     } else {
-                        vd = (bits(machInst, 22) << 5) |
-                             (bits(machInst, 15, 12) << 1);
-                        vm = (bits(machInst, 5) << 5) |
-                             (bits(machInst, 3, 0) << 1);
-                        return new VnegD(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                        return new VnegD(machInst, vd, vm);
                     }
                 } else {
-                    uint32_t vd;
-                    uint32_t vm;
-                    if (bits(machInst, 8) == 0) {
-                        vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
-                        vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
-                        return new VsqrtS(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                    if (single) {
+                        return new VsqrtS(machInst, vd, vm);
                     } else {
-                        vd = (bits(machInst, 22) << 5) |
-                             (bits(machInst, 15, 12) << 1);
-                        vm = (bits(machInst, 5) << 5) |
-                             (bits(machInst, 3, 0) << 1);
-                        return new VsqrtD(machInst,
-                                (IntRegIndex)vd, (IntRegIndex)vm);
+                        return new VsqrtD(machInst, vd, vm);
                     }
                 }
               case 0x2:
