@@ -90,16 +90,7 @@ format DataOp {
                     0x19: WarnUnimpl::ldrex();
                 }
             }
-            format AddrMode3 {
-                0xb: strh_ldrh(store, {{ Mem.uh = Rd; }},
-                               load,  {{ Rd = Mem.uh; }});
-                0xd: ldrd_ldrsb(load, {{ Rde = bits(Mem.ud, 31, 0);
-                                         Rdo = bits(Mem.ud, 63, 32); }},
-                                load, {{ Rd = Mem.sb; }});
-                0xf: strd_ldrsh(store, {{ Mem.ud = (Rde.ud & mask(32)) |
-                                                   (Rdo.ud << 32); }},
-                                load,  {{ Rd = Mem.sh; }});
-            }
+            0xb, 0xd, 0xf: AddrMode3::addrMode3();
         }
         0: decode IS_MISC {
             0: decode OPCODE {
