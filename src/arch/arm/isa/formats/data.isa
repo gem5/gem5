@@ -341,6 +341,28 @@ def format ArmDataProcImm() {{
     '''
 }};
 
+def format ArmSatAddSub() {{
+    decode_block = '''
+    {
+        IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        switch (OPCODE) {
+          case 0x8:
+            return new QaddRegCc(machInst, rd, rm, rn, 0, LSL);
+          case 0x9:
+            return new QsubRegCc(machInst, rd, rm, rn, 0, LSL);
+          case 0xa:
+            return new QdaddRegCc(machInst, rd, rm, rn, 0, LSL);
+          case 0xb:
+            return new QdsubRegCc(machInst, rd, rm, rn, 0, LSL);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
+
 def format Thumb16ShiftAddSubMoveCmp() {{
     decode_block = '''
     {

@@ -116,12 +116,7 @@ format DataOp {
                     0x3: decode OPCODE {
                         0x9: ArmBlxReg::armBlxReg();
                     }
-                    0x5: decode OPCODE {
-                        0x8: WarnUnimpl::qadd();
-                        0x9: WarnUnimpl::qsub();
-                        0xa: WarnUnimpl::qdadd();
-                        0xb: WarnUnimpl::qdsub();
-                    }
+                    0x5: ArmSatAddSub::armSatAddSub();
                 }
                 0x1: ArmHalfWordMultAndMultAcc::armHalfWordMultAndMultAcc();
             }
