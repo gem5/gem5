@@ -37,20 +37,19 @@
 //
 // Authors: Gabe Black
 
-def template VfpRegRegOpDeclare {{
+def template FpRegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-  protected:
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _dest, IntRegIndex _op1,
-                       VfpMicroMode mode = VfpNotAMicroop);
-        %(BasicExecDeclare)s
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   IntRegIndex _dest, IntRegIndex _op1,
+                   VfpMicroMode mode = VfpNotAMicroop);
+    %(BasicExecDeclare)s
 };
 }};
 
-def template VfpRegRegOpConstructor {{
+def template FpRegRegOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest, IntRegIndex _op1,
                                           VfpMicroMode mode)
@@ -61,19 +60,18 @@ def template VfpRegRegOpConstructor {{
     }
 }};
 
-def template VfpRegImmOpDeclare {{
+def template FpRegImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-  protected:
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
-                uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop);
-        %(BasicExecDeclare)s
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
+            uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop);
+    %(BasicExecDeclare)s
 };
 }};
 
-def template VfpRegImmOpConstructor {{
+def template FpRegImmOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
             IntRegIndex _dest, uint64_t _imm, VfpMicroMode mode)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
@@ -83,20 +81,19 @@ def template VfpRegImmOpConstructor {{
     }
 }};
 
-def template VfpRegRegImmOpDeclare {{
+def template FpRegRegImmOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-  protected:
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _dest, IntRegIndex _op1,
-                       uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop);
-        %(BasicExecDeclare)s
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   IntRegIndex _dest, IntRegIndex _op1,
+                   uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop);
+    %(BasicExecDeclare)s
 };
 }};
 
-def template VfpRegRegImmOpConstructor {{
+def template FpRegRegImmOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
@@ -109,20 +106,19 @@ def template VfpRegRegImmOpConstructor {{
     }
 }};
 
-def template VfpRegRegRegOpDeclare {{
+def template FpRegRegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {
-  protected:
-    public:
-        // Constructor
-        %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                       VfpMicroMode mode = VfpNotAMicroop);
-        %(BasicExecDeclare)s
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+                   VfpMicroMode mode = VfpNotAMicroop);
+    %(BasicExecDeclare)s
 };
 }};
 
-def template VfpRegRegRegOpConstructor {{
+def template FpRegRegRegOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,

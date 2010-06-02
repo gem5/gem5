@@ -191,47 +191,47 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    vmsrIop = InstObjParams("vmsr", "Vmsr", "VfpRegRegOp",
+    vmsrIop = InstObjParams("vmsr", "Vmsr", "FpRegRegOp",
                             { "code": "MiscDest = Op1;",
                               "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vmsrIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vmsrIop);
+    header_output += FpRegRegOpDeclare.subst(vmsrIop);
+    decoder_output += FpRegRegOpConstructor.subst(vmsrIop);
     exec_output += PredOpExecute.subst(vmsrIop);
 
-    vmrsIop = InstObjParams("vmrs", "Vmrs", "VfpRegRegOp",
+    vmrsIop = InstObjParams("vmrs", "Vmrs", "FpRegRegOp",
                             { "code": "Dest = MiscOp1;",
                               "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vmrsIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vmrsIop);
+    header_output += FpRegRegOpDeclare.subst(vmrsIop);
+    decoder_output += FpRegRegOpConstructor.subst(vmrsIop);
     exec_output += PredOpExecute.subst(vmrsIop);
 
     vmrsApsrCode = "Dest = (MiscOp1 & imm) | (Dest & ~imm);"
-    vmrsApsrIop = InstObjParams("vmrs", "VmrsApsr", "VfpRegRegImmOp",
+    vmrsApsrIop = InstObjParams("vmrs", "VmrsApsr", "FpRegRegImmOp",
                                 { "code": vmrsApsrCode,
                                   "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vmrsApsrIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vmrsApsrIop);
+    header_output += FpRegRegImmOpDeclare.subst(vmrsApsrIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrIop);
     exec_output += PredOpExecute.subst(vmrsApsrIop);
 
     vmovImmSCode = '''
         FpDest.uw = bits(imm, 31, 0);
     '''
-    vmovImmSIop = InstObjParams("vmov", "VmovImmS", "VfpRegImmOp",
+    vmovImmSIop = InstObjParams("vmov", "VmovImmS", "FpRegImmOp",
                                 { "code": vmovImmSCode,
                                   "predicate_test": predicateTest }, [])
-    header_output += VfpRegImmOpDeclare.subst(vmovImmSIop);
-    decoder_output += VfpRegImmOpConstructor.subst(vmovImmSIop);
+    header_output += FpRegImmOpDeclare.subst(vmovImmSIop);
+    decoder_output += FpRegImmOpConstructor.subst(vmovImmSIop);
     exec_output += PredOpExecute.subst(vmovImmSIop);
 
     vmovImmDCode = '''
         FpDestP0.uw = bits(imm, 31, 0);
         FpDestP1.uw = bits(imm, 63, 32);
     '''
-    vmovImmDIop = InstObjParams("vmov", "VmovImmD", "VfpRegImmOp",
+    vmovImmDIop = InstObjParams("vmov", "VmovImmD", "FpRegImmOp",
                                 { "code": vmovImmDCode,
                                   "predicate_test": predicateTest }, [])
-    header_output += VfpRegImmOpDeclare.subst(vmovImmDIop);
-    decoder_output += VfpRegImmOpConstructor.subst(vmovImmDIop);
+    header_output += FpRegImmOpDeclare.subst(vmovImmDIop);
+    decoder_output += FpRegImmOpConstructor.subst(vmovImmDIop);
     exec_output += PredOpExecute.subst(vmovImmDIop);
 
     vmovImmQCode = '''
@@ -240,32 +240,32 @@ let {{
         FpDestP2.uw = bits(imm, 31, 0);
         FpDestP3.uw = bits(imm, 63, 32);
     '''
-    vmovImmQIop = InstObjParams("vmov", "VmovImmQ", "VfpRegImmOp",
+    vmovImmQIop = InstObjParams("vmov", "VmovImmQ", "FpRegImmOp",
                                 { "code": vmovImmQCode,
                                   "predicate_test": predicateTest }, [])
-    header_output += VfpRegImmOpDeclare.subst(vmovImmQIop);
-    decoder_output += VfpRegImmOpConstructor.subst(vmovImmQIop);
+    header_output += FpRegImmOpDeclare.subst(vmovImmQIop);
+    decoder_output += FpRegImmOpConstructor.subst(vmovImmQIop);
     exec_output += PredOpExecute.subst(vmovImmQIop);
 
     vmovRegSCode = '''
         FpDest.uw = FpOp1.uw;
     '''
-    vmovRegSIop = InstObjParams("vmov", "VmovRegS", "VfpRegRegOp",
+    vmovRegSIop = InstObjParams("vmov", "VmovRegS", "FpRegRegOp",
                                 { "code": vmovRegSCode,
                                   "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vmovRegSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vmovRegSIop);
+    header_output += FpRegRegOpDeclare.subst(vmovRegSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vmovRegSIop);
     exec_output += PredOpExecute.subst(vmovRegSIop);
 
     vmovRegDCode = '''
         FpDestP0.uw = FpOp1P0.uw;
         FpDestP1.uw = FpOp1P1.uw;
     '''
-    vmovRegDIop = InstObjParams("vmov", "VmovRegD", "VfpRegRegOp",
+    vmovRegDIop = InstObjParams("vmov", "VmovRegD", "FpRegRegOp",
                                 { "code": vmovRegDCode,
                                   "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vmovRegDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vmovRegDIop);
+    header_output += FpRegRegOpDeclare.subst(vmovRegDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vmovRegDIop);
     exec_output += PredOpExecute.subst(vmovRegDIop);
 
     vmovRegQCode = '''
@@ -274,113 +274,113 @@ let {{
         FpDestP2.uw = FpOp1P2.uw;
         FpDestP3.uw = FpOp1P3.uw;
     '''
-    vmovRegQIop = InstObjParams("vmov", "VmovRegQ", "VfpRegRegOp",
+    vmovRegQIop = InstObjParams("vmov", "VmovRegQ", "FpRegRegOp",
                                 { "code": vmovRegQCode,
                                   "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegOpDeclare.subst(vmovRegQIop);
-    decoder_output  += VfpRegRegOpConstructor.subst(vmovRegQIop);
+    header_output  += FpRegRegOpDeclare.subst(vmovRegQIop);
+    decoder_output  += FpRegRegOpConstructor.subst(vmovRegQIop);
     exec_output += PredOpExecute.subst(vmovRegQIop);
 
     vmovCoreRegBCode = '''
         FpDest.uw = insertBits(FpDest.uw, imm * 8, imm * 8 + 7, Op1.ub);
     '''
-    vmovCoreRegBIop = InstObjParams("vmov", "VmovCoreRegB", "VfpRegRegImmOp",
+    vmovCoreRegBIop = InstObjParams("vmov", "VmovCoreRegB", "FpRegRegImmOp",
                                     { "code": vmovCoreRegBCode,
                                       "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegImmOpDeclare.subst(vmovCoreRegBIop);
-    decoder_output  += VfpRegRegImmOpConstructor.subst(vmovCoreRegBIop);
+    header_output  += FpRegRegImmOpDeclare.subst(vmovCoreRegBIop);
+    decoder_output  += FpRegRegImmOpConstructor.subst(vmovCoreRegBIop);
     exec_output += PredOpExecute.subst(vmovCoreRegBIop);
 
     vmovCoreRegHCode = '''
         FpDest.uw = insertBits(FpDest.uw, imm * 16, imm * 16 + 15, Op1.uh);
     '''
-    vmovCoreRegHIop = InstObjParams("vmov", "VmovCoreRegH", "VfpRegRegImmOp",
+    vmovCoreRegHIop = InstObjParams("vmov", "VmovCoreRegH", "FpRegRegImmOp",
                                     { "code": vmovCoreRegHCode,
                                       "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegImmOpDeclare.subst(vmovCoreRegHIop);
-    decoder_output  += VfpRegRegImmOpConstructor.subst(vmovCoreRegHIop);
+    header_output  += FpRegRegImmOpDeclare.subst(vmovCoreRegHIop);
+    decoder_output  += FpRegRegImmOpConstructor.subst(vmovCoreRegHIop);
     exec_output += PredOpExecute.subst(vmovCoreRegHIop);
 
     vmovCoreRegWCode = '''
         FpDest.uw = Op1.uw;
     '''
-    vmovCoreRegWIop = InstObjParams("vmov", "VmovCoreRegW", "VfpRegRegOp",
+    vmovCoreRegWIop = InstObjParams("vmov", "VmovCoreRegW", "FpRegRegOp",
                                     { "code": vmovCoreRegWCode,
                                       "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegOpDeclare.subst(vmovCoreRegWIop);
-    decoder_output  += VfpRegRegOpConstructor.subst(vmovCoreRegWIop);
+    header_output  += FpRegRegOpDeclare.subst(vmovCoreRegWIop);
+    decoder_output  += FpRegRegOpConstructor.subst(vmovCoreRegWIop);
     exec_output += PredOpExecute.subst(vmovCoreRegWIop);
 
     vmovRegCoreUBCode = '''
         Dest = bits(FpOp1.uw, imm * 8, imm * 8 + 7);
     '''
-    vmovRegCoreUBIop = InstObjParams("vmov", "VmovRegCoreUB", "VfpRegRegImmOp",
+    vmovRegCoreUBIop = InstObjParams("vmov", "VmovRegCoreUB", "FpRegRegImmOp",
                                      { "code": vmovRegCoreUBCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegImmOpDeclare.subst(vmovRegCoreUBIop);
-    decoder_output  += VfpRegRegImmOpConstructor.subst(vmovRegCoreUBIop);
+    header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreUBIop);
+    decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreUBIop);
     exec_output += PredOpExecute.subst(vmovRegCoreUBIop);
 
     vmovRegCoreUHCode = '''
         Dest = bits(FpOp1.uw, imm * 16, imm * 16 + 15);
     '''
-    vmovRegCoreUHIop = InstObjParams("vmov", "VmovRegCoreUH", "VfpRegRegImmOp",
+    vmovRegCoreUHIop = InstObjParams("vmov", "VmovRegCoreUH", "FpRegRegImmOp",
                                      { "code": vmovRegCoreUHCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegImmOpDeclare.subst(vmovRegCoreUHIop);
-    decoder_output  += VfpRegRegImmOpConstructor.subst(vmovRegCoreUHIop);
+    header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreUHIop);
+    decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreUHIop);
     exec_output += PredOpExecute.subst(vmovRegCoreUHIop);
 
     vmovRegCoreSBCode = '''
         Dest = sext<8>(bits(FpOp1.uw, imm * 8, imm * 8 + 7));
     '''
-    vmovRegCoreSBIop = InstObjParams("vmov", "VmovRegCoreSB", "VfpRegRegImmOp",
+    vmovRegCoreSBIop = InstObjParams("vmov", "VmovRegCoreSB", "FpRegRegImmOp",
                                      { "code": vmovRegCoreSBCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegImmOpDeclare.subst(vmovRegCoreSBIop);
-    decoder_output  += VfpRegRegImmOpConstructor.subst(vmovRegCoreSBIop);
+    header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreSBIop);
+    decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreSBIop);
     exec_output += PredOpExecute.subst(vmovRegCoreSBIop);
 
     vmovRegCoreSHCode = '''
         Dest = sext<16>(bits(FpOp1.uw, imm * 16, imm * 16 + 15));
     '''
-    vmovRegCoreSHIop = InstObjParams("vmov", "VmovRegCoreSH", "VfpRegRegImmOp",
+    vmovRegCoreSHIop = InstObjParams("vmov", "VmovRegCoreSH", "FpRegRegImmOp",
                                      { "code": vmovRegCoreSHCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegImmOpDeclare.subst(vmovRegCoreSHIop);
-    decoder_output  += VfpRegRegImmOpConstructor.subst(vmovRegCoreSHIop);
+    header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreSHIop);
+    decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreSHIop);
     exec_output += PredOpExecute.subst(vmovRegCoreSHIop);
 
     vmovRegCoreWCode = '''
         Dest = FpOp1.uw;
     '''
-    vmovRegCoreWIop = InstObjParams("vmov", "VmovRegCoreW", "VfpRegRegOp",
+    vmovRegCoreWIop = InstObjParams("vmov", "VmovRegCoreW", "FpRegRegOp",
                                      { "code": vmovRegCoreWCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegOpDeclare.subst(vmovRegCoreWIop);
-    decoder_output  += VfpRegRegOpConstructor.subst(vmovRegCoreWIop);
+    header_output  += FpRegRegOpDeclare.subst(vmovRegCoreWIop);
+    decoder_output  += FpRegRegOpConstructor.subst(vmovRegCoreWIop);
     exec_output += PredOpExecute.subst(vmovRegCoreWIop);
 
     vmov2Reg2CoreCode = '''
         FpDestP0.uw = Op1.uw;
         FpDestP1.uw = Op2.uw;
     '''
-    vmov2Reg2CoreIop = InstObjParams("vmov", "Vmov2Reg2Core", "VfpRegRegRegOp",
+    vmov2Reg2CoreIop = InstObjParams("vmov", "Vmov2Reg2Core", "FpRegRegRegOp",
                                      { "code": vmov2Reg2CoreCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vmov2Reg2CoreIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vmov2Reg2CoreIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vmov2Reg2CoreIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vmov2Reg2CoreIop);
     exec_output += PredOpExecute.subst(vmov2Reg2CoreIop);
 
     vmov2Core2RegCode = '''
         Dest.uw = FpOp2P0.uw;
         Op1.uw = FpOp2P1.uw;
     '''
-    vmov2Core2RegIop = InstObjParams("vmov", "Vmov2Core2Reg", "VfpRegRegRegOp",
+    vmov2Core2RegIop = InstObjParams("vmov", "Vmov2Core2Reg", "FpRegRegRegOp",
                                      { "code": vmov2Core2RegCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vmov2Core2RegIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vmov2Core2RegIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vmov2Core2RegIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vmov2Core2RegIop);
     exec_output += PredOpExecute.subst(vmov2Core2RegIop);
 }};
 
@@ -390,243 +390,104 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    vmulSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = fixMultDest(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
-            FpDest = NAN;
-        }
+    singleCode = '''
+        FPSCR fpscr = Fpscr;
+        FpDest = %(op)s;
+        Fpscr = fpscr;
     '''
-    vmulSIop = InstObjParams("vmuls", "VmulS", "VfpRegRegRegOp",
-                                     { "code": vmulSCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vmulSIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vmulSIop);
-    exec_output += PredOpExecute.subst(vmulSIop);
+    singleBinOp = "binaryOp(fpscr, FpOp1, FpOp2," + \
+                "%(func)s, fpscr.fz, fpscr.rMode)"
+    singleUnaryOp = "unaryOp(fpscr, FpOp1, %(func)s, fpscr.fz, fpscr.rMode)"
+    doubleCode = '''
+        FPSCR fpscr = Fpscr;
+        double dest = %(op)s;
+        Fpscr = fpscr;
+        FpDestP0.uw = dblLow(dest);
+        FpDestP1.uw = dblHi(dest);
+    '''
+    doubleBinOp = '''
+        binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
+                        dbl(FpOp2P0.uw, FpOp2P1.uw),
+                        %(func)s, fpscr.fz, fpscr.rMode);
+    '''
+    doubleUnaryOp = '''
+        unaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw), %(func)s,
+                fpscr.fz, fpscr.rMode)
+    '''
 
-    vmulDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        cDest.fp = fixMultDest(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
-                (isinf(cOp2.fp) && cOp1.fp == 0)) {
-            cDest.fp = NAN;
-        }
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
-    '''
-    vmulDIop = InstObjParams("vmuld", "VmulD", "VfpRegRegRegOp",
-                                     { "code": vmulDCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vmulDIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vmulDIop);
-    exec_output += PredOpExecute.subst(vmulDIop);
+    def buildBinFpOp(name, Name, base, singleOp, doubleOp):
+        global header_output, decoder_output, exec_output
 
-    vnegSCode = '''
-        FpDest = -FpOp1;
-    '''
-    vnegSIop = InstObjParams("vnegs", "VnegS", "VfpRegRegOp",
-                                     { "code": vnegSCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vnegSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vnegSIop);
-    exec_output += PredOpExecute.subst(vnegSIop);
+        code = singleCode % { "op": singleBinOp }
+        code = code % { "func": singleOp }
+        sIop = InstObjParams(name + "s", Name + "S", base,
+                { "code": code, "predicate_test": predicateTest }, [])
+        code = doubleCode % { "op": doubleBinOp }
+        code = code % { "func": doubleOp }
+        dIop = InstObjParams(name + "d", Name + "D", base,
+                { "code": code, "predicate_test": predicateTest }, [])
 
-    vnegDCode = '''
-        IntDoubleUnion cOp1, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cDest.fp = -cOp1.fp;
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
-    '''
-    vnegDIop = InstObjParams("vnegd", "VnegD", "VfpRegRegOp",
-                                     { "code": vnegDCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vnegDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vnegDIop);
-    exec_output += PredOpExecute.subst(vnegDIop);
+        declareTempl = eval(base + "Declare");
+        constructorTempl = eval(base + "Constructor");
 
-    vabsSCode = '''
-        FpDest = fabsf(FpOp1);
-    '''
-    vabsSIop = InstObjParams("vabss", "VabsS", "VfpRegRegOp",
-                                     { "code": vabsSCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vabsSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vabsSIop);
-    exec_output += PredOpExecute.subst(vabsSIop);
+        for iop in sIop, dIop:
+            header_output += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output += PredOpExecute.subst(iop)
 
-    vabsDCode = '''
-        IntDoubleUnion cOp1, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cDest.fp = fabs(cOp1.fp);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
-    '''
-    vabsDIop = InstObjParams("vabsd", "VabsD", "VfpRegRegOp",
-                                     { "code": vabsDCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vabsDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vabsDIop);
-    exec_output += PredOpExecute.subst(vabsDIop);
+    buildBinFpOp("vadd", "Vadd", "FpRegRegRegOp", "fpAddS", "fpAddD")
+    buildBinFpOp("vsub", "Vsub", "FpRegRegRegOp", "fpSubS", "fpSubD")
+    buildBinFpOp("vdiv", "Vdiv", "FpRegRegRegOp", "fpDivS", "fpDivD")
+    buildBinFpOp("vmul", "Vmul", "FpRegRegRegOp", "fpMulS", "fpMulD")
 
-    vaddSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = fixDest(Fpscr, FpOp1 + FpOp2, FpOp1, FpOp2);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
-    '''
-    vaddSIop = InstObjParams("vadds", "VaddS", "VfpRegRegRegOp",
-                                     { "code": vaddSCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vaddSIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vaddSIop);
-    exec_output += PredOpExecute.subst(vaddSIop);
+    def buildUnaryFpOp(name, Name, base, singleOp, doubleOp = None):
+        if doubleOp is None:
+            doubleOp = singleOp
+        global header_output, decoder_output, exec_output
 
-    vaddDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        DPRINTFN("cOp1.bits = %#x, cOp1.fp = %f.\\n", cOp1.bits, cOp1.fp);
-        DPRINTFN("cOp2.bits = %#x, cOp2.fp = %f.\\n", cOp2.bits, cOp2.fp);
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        cDest.fp = fixDest(Fpscr, cOp1.fp + cOp2.fp, cOp1.fp, cOp2.fp);
-        DPRINTFN("cDest.bits = %#x, cDest.fp = %f.\\n", cDest.bits, cDest.fp);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
-    '''
-    vaddDIop = InstObjParams("vaddd", "VaddD", "VfpRegRegRegOp",
-                                     { "code": vaddDCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vaddDIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vaddDIop);
-    exec_output += PredOpExecute.subst(vaddDIop);
+        code = singleCode % { "op": singleUnaryOp }
+        code = code % { "func": singleOp }
+        sIop = InstObjParams(name + "s", Name + "S", base,
+                { "code": code, "predicate_test": predicateTest }, [])
+        code = doubleCode % { "op": doubleUnaryOp }
+        code = code % { "func": doubleOp }
+        dIop = InstObjParams(name + "d", Name + "D", base,
+                { "code": code, "predicate_test": predicateTest }, [])
 
-    vsubSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = fixDest(Fpscr, FpOp1 - FpOp2, FpOp1, FpOp2);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state)
-    '''
-    vsubSIop = InstObjParams("vsubs", "VsubS", "VfpRegRegRegOp",
-                                     { "code": vsubSCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vsubSIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vsubSIop);
-    exec_output += PredOpExecute.subst(vsubSIop);
+        declareTempl = eval(base + "Declare");
+        constructorTempl = eval(base + "Constructor");
 
-    vsubDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        cDest.fp = fixDest(Fpscr, cOp1.fp - cOp2.fp, cOp1.fp, cOp2.fp);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
-    '''
-    vsubDIop = InstObjParams("vsubd", "VsubD", "VfpRegRegRegOp",
-                                     { "code": vsubDCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vsubDIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vsubDIop);
-    exec_output += PredOpExecute.subst(vsubDIop);
+        for iop in sIop, dIop:
+            header_output += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output += PredOpExecute.subst(iop)
 
-    vdivSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = fixDest(Fpscr, FpOp1 / FpOp2, FpOp1, FpOp2);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
-    '''
-    vdivSIop = InstObjParams("vdivs", "VdivS", "VfpRegRegRegOp",
-                                     { "code": vdivSCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vdivSIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vdivSIop);
-    exec_output += PredOpExecute.subst(vdivSIop);
+    buildUnaryFpOp("vsqrt", "Vsqrt", "FpRegRegOp", "sqrtf", "sqrt")
 
-    vdivDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cDest.fp));
-        cDest.fp = fixDest(Fpscr, cOp1.fp / cOp2.fp, cOp1.fp, cOp2.fp);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
-    '''
-    vdivDIop = InstObjParams("vdivd", "VdivD", "VfpRegRegRegOp",
-                                     { "code": vdivDCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vdivDIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vdivDIop);
-    exec_output += PredOpExecute.subst(vdivDIop);
+    def buildSimpleUnaryFpOp(name, Name, base, singleOp, doubleOp = None):
+        if doubleOp is None:
+            doubleOp = singleOp
+        global header_output, decoder_output, exec_output
 
-    vsqrtSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = sqrtf(FpOp1);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        if (FpOp1 < 0) {
-            FpDest = NAN;
-        }
-    '''
-    vsqrtSIop = InstObjParams("vsqrts", "VsqrtS", "VfpRegRegOp",
-                                     { "code": vsqrtSCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vsqrtSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vsqrtSIop);
-    exec_output += PredOpExecute.subst(vsqrtSIop);
+        sIop = InstObjParams(name + "s", Name + "S", base,
+                { "code": singleCode % { "op": singleOp },
+                  "predicate_test": predicateTest }, [])
+        dIop = InstObjParams(name + "d", Name + "D", base,
+                { "code": doubleCode % { "op": doubleOp },
+                  "predicate_test": predicateTest }, [])
 
-    vsqrtDCode = '''
-        IntDoubleUnion cOp1, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cDest.fp));
-        cDest.fp = sqrt(cOp1.fp);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        if (cOp1.fp < 0) {
-            cDest.fp = NAN;
-        }
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
-    '''
-    vsqrtDIop = InstObjParams("vsqrtd", "VsqrtD", "VfpRegRegOp",
-                                     { "code": vsqrtDCode,
-                                       "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegOpDeclare.subst(vsqrtDIop);
-    decoder_output  += VfpRegRegOpConstructor.subst(vsqrtDIop);
-    exec_output += PredOpExecute.subst(vsqrtDIop);
+        declareTempl = eval(base + "Declare");
+        constructorTempl = eval(base + "Constructor");
+
+        for iop in sIop, dIop:
+            header_output += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output += PredOpExecute.subst(iop)
+
+    buildSimpleUnaryFpOp("vneg", "Vneg", "FpRegRegOp",
+                         "-FpOp1", "-dbl(FpOp1P0.uw, FpOp1P1.uw)")
+    buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp",
+                         "fabsf(FpOp1)", "fabs(dbl(FpOp1P0.uw, FpOp1P1.uw))")
 }};
 
 let {{
@@ -636,236 +497,159 @@ let {{
     exec_output = ""
 
     vmlaSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = fixDest(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
-        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
-            mid = NAN;
-        }
-        vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = fixDest(Fpscr, FpDest + mid, FpDest, mid);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
+        FPSCR fpscr = Fpscr;
+        float mid = binaryOp(fpscr, FpOp1, FpOp2,
+                fpMulS, fpscr.fz, fpscr.rMode);
+        FpDest = binaryOp(fpscr, FpDest, mid, fpAddS, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
     '''
-    vmlaSIop = InstObjParams("vmlas", "VmlaS", "VfpRegRegRegOp",
+    vmlaSIop = InstObjParams("vmlas", "VmlaS", "FpRegRegRegOp",
                                      { "code": vmlaSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vmlaSIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vmlaSIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vmlaSIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vmlaSIop);
     exec_output += PredOpExecute.subst(vmlaSIop);
 
     vmlaDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = fixDest(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
-        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
-                (isinf(cOp2.fp) && cOp1.fp == 0)) {
-            mid = NAN;
-        }
-        vfpFlushToZero(Fpscr, cDest.fp, mid);
-        cDest.fp = fixDest(Fpscr, cDest.fp + mid, cDest.fp, mid);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
+        FPSCR fpscr = Fpscr;
+        double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
+                                     dbl(FpOp2P0.uw, FpOp2P1.uw),
+                                     fpMulD, fpscr.fz, fpscr.rMode);
+        double dest = binaryOp(fpscr, dbl(FpDestP0.uw, FpDestP1.uw),
+                                      mid, fpAddD, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
+        FpDestP0.uw = dblLow(dest);
+        FpDestP1.uw = dblHi(dest);
     '''
-    vmlaDIop = InstObjParams("vmlad", "VmlaD", "VfpRegRegRegOp",
+    vmlaDIop = InstObjParams("vmlad", "VmlaD", "FpRegRegRegOp",
                                      { "code": vmlaDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vmlaDIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vmlaDIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vmlaDIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vmlaDIop);
     exec_output += PredOpExecute.subst(vmlaDIop);
 
     vmlsSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = fixDest(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
-        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
-            mid = NAN;
-        }
-        vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = fixDest(Fpscr, FpDest - mid, FpDest, -mid);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
+        FPSCR fpscr = Fpscr;
+        float mid = binaryOp(fpscr, FpOp1, FpOp2,
+                fpMulS, fpscr.fz, fpscr.rMode);
+        FpDest = binaryOp(fpscr, FpDest, -mid, fpAddS, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
     '''
-    vmlsSIop = InstObjParams("vmlss", "VmlsS", "VfpRegRegRegOp",
+    vmlsSIop = InstObjParams("vmlss", "VmlsS", "FpRegRegRegOp",
                                      { "code": vmlsSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vmlsSIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vmlsSIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vmlsSIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vmlsSIop);
     exec_output += PredOpExecute.subst(vmlsSIop);
 
     vmlsDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = fixDest(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
-        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
-                (isinf(cOp2.fp) && cOp1.fp == 0)) {
-            mid = NAN;
-        }
-        cDest.fp = fixDest(Fpscr, cDest.fp - mid, cDest.fp, -mid);
-        vfpFlushToZero(Fpscr, cDest.fp, mid);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
+        FPSCR fpscr = Fpscr;
+        double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
+                                     dbl(FpOp2P0.uw, FpOp2P1.uw),
+                                     fpMulD, fpscr.fz, fpscr.rMode);
+        double dest = binaryOp(fpscr, dbl(FpDestP0.uw, FpDestP1.uw),
+                                      -mid, fpAddD, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
+        FpDestP0.uw = dblLow(dest);
+        FpDestP1.uw = dblHi(dest);
     '''
-    vmlsDIop = InstObjParams("vmlsd", "VmlsD", "VfpRegRegRegOp",
+    vmlsDIop = InstObjParams("vmlsd", "VmlsD", "FpRegRegRegOp",
                                      { "code": vmlsDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vmlsDIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vmlsDIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vmlsDIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vmlsDIop);
     exec_output += PredOpExecute.subst(vmlsDIop);
 
     vnmlaSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = fixDest(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
-        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
-            mid = NAN;
-        }
-        vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = fixDest(Fpscr, -FpDest - mid, -FpDest, -mid);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
+        FPSCR fpscr = Fpscr;
+        float mid = binaryOp(fpscr, FpOp1, FpOp2,
+                fpMulS, fpscr.fz, fpscr.rMode);
+        FpDest = binaryOp(fpscr, -FpDest, -mid, fpAddS, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
     '''
-    vnmlaSIop = InstObjParams("vnmlas", "VnmlaS", "VfpRegRegRegOp",
+    vnmlaSIop = InstObjParams("vnmlas", "VnmlaS", "FpRegRegRegOp",
                                      { "code": vnmlaSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vnmlaSIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vnmlaSIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vnmlaSIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vnmlaSIop);
     exec_output += PredOpExecute.subst(vnmlaSIop);
 
     vnmlaDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = fixDest(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
-        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
-                (isinf(cOp2.fp) && cOp1.fp == 0)) {
-            mid = NAN;
-        }
-        vfpFlushToZero(Fpscr, cDest.fp, mid);
-        cDest.fp = fixDest(Fpscr, -cDest.fp - mid, -cDest.fp, -mid);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
+        FPSCR fpscr = Fpscr;
+        double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
+                                     dbl(FpOp2P0.uw, FpOp2P1.uw),
+                                     fpMulD, fpscr.fz, fpscr.rMode);
+        double dest = binaryOp(fpscr, -dbl(FpDestP0.uw, FpDestP1.uw),
+                                      -mid, fpAddD, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
+        FpDestP0.uw = dblLow(dest);
+        FpDestP1.uw = dblHi(dest);
     '''
-    vnmlaDIop = InstObjParams("vnmlad", "VnmlaD", "VfpRegRegRegOp",
+    vnmlaDIop = InstObjParams("vnmlad", "VnmlaD", "FpRegRegRegOp",
                                      { "code": vnmlaDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vnmlaDIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vnmlaDIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vnmlaDIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vnmlaDIop);
     exec_output += PredOpExecute.subst(vnmlaDIop);
 
     vnmlsSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = fixDest(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
-        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
-            mid = NAN;
-        }
-        vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = fixDest(Fpscr, -FpDest + mid, -FpDest, mid);
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
+        FPSCR fpscr = Fpscr;
+        float mid = binaryOp(fpscr, FpOp1, FpOp2,
+                fpMulS, fpscr.fz, fpscr.rMode);
+        FpDest = binaryOp(fpscr, -FpDest, mid, fpAddS, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
     '''
-    vnmlsSIop = InstObjParams("vnmlss", "VnmlsS", "VfpRegRegRegOp",
+    vnmlsSIop = InstObjParams("vnmlss", "VnmlsS", "FpRegRegRegOp",
                                      { "code": vnmlsSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vnmlsSIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vnmlsSIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vnmlsSIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vnmlsSIop);
     exec_output += PredOpExecute.subst(vnmlsSIop);
 
     vnmlsDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = fixDest(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
-        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
-                (isinf(cOp2.fp) && cOp1.fp == 0)) {
-            mid = NAN;
-        }
-        vfpFlushToZero(Fpscr, cDest.fp, mid);
-        cDest.fp = fixDest(Fpscr, -cDest.fp + mid, -cDest.fp, mid);
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
+        FPSCR fpscr = Fpscr;
+        double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
+                                     dbl(FpOp2P0.uw, FpOp2P1.uw),
+                                     fpMulD, fpscr.fz, fpscr.rMode);
+        double dest = binaryOp(fpscr, -dbl(FpDestP0.uw, FpDestP1.uw),
+                                      mid, fpAddD, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
+        FpDestP0.uw = dblLow(dest);
+        FpDestP1.uw = dblHi(dest);
     '''
-    vnmlsDIop = InstObjParams("vnmlsd", "VnmlsD", "VfpRegRegRegOp",
+    vnmlsDIop = InstObjParams("vnmlsd", "VnmlsD", "FpRegRegRegOp",
                                      { "code": vnmlsDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vnmlsDIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vnmlsDIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vnmlsDIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vnmlsDIop);
     exec_output += PredOpExecute.subst(vnmlsDIop);
 
     vnmulSCode = '''
-        vfpFlushToZero(Fpscr, FpOp1, FpOp2);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = fixDest(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
-        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
-            mid = NAN;
-        }
-        FpDest = -mid;
-        __asm__ __volatile__("" :: "m" (FpDest));
-        Fpscr = setVfpFpscr(Fpscr, state);
+        FPSCR fpscr = Fpscr;
+        FpDest = -binaryOp(fpscr, FpOp1, FpOp2, fpMulS, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
     '''
-    vnmulSIop = InstObjParams("vnmuls", "VnmulS", "VfpRegRegRegOp",
+    vnmulSIop = InstObjParams("vnmuls", "VnmulS", "FpRegRegRegOp",
                                      { "code": vnmulSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output  += VfpRegRegRegOpDeclare.subst(vnmulSIop);
-    decoder_output  += VfpRegRegRegOpConstructor.subst(vnmulSIop);
+    header_output  += FpRegRegRegOpDeclare.subst(vnmulSIop);
+    decoder_output  += FpRegRegRegOpConstructor.subst(vnmulSIop);
     exec_output += PredOpExecute.subst(vnmulSIop);
 
     vnmulDCode = '''
-        IntDoubleUnion cOp1, cOp2, cDest;
-        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
-        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
-        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
-        vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
-        VfpSavedState state = prepVfpFpscr(Fpscr);
-        __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = fixDest(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
-        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
-                (isinf(cOp2.fp) && cOp1.fp == 0)) {
-            mid = NAN;
-        }
-        cDest.fp = -mid;
-        __asm__ __volatile__("" :: "m" (cDest.fp));
-        Fpscr = setVfpFpscr(Fpscr, state);
-        FpDestP0.uw = cDest.bits;
-        FpDestP1.uw = cDest.bits >> 32;
+        FPSCR fpscr = Fpscr;
+        double dest = -binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
+                                       dbl(FpOp2P0.uw, FpOp2P1.uw),
+                                       fpMulD, fpscr.fz, fpscr.rMode);
+        Fpscr = fpscr;
+        FpDestP0.uw = dblLow(dest);
+        FpDestP1.uw = dblHi(dest);
     '''
-    vnmulDIop = InstObjParams("vnmuld", "VnmulD", "VfpRegRegRegOp",
+    vnmulDIop = InstObjParams("vnmuld", "VnmulD", "FpRegRegRegOp",
                                      { "code": vnmulDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegRegOpDeclare.subst(vnmulDIop);
-    decoder_output += VfpRegRegRegOpConstructor.subst(vnmulDIop);
+    header_output += FpRegRegRegOpDeclare.subst(vnmulDIop);
+    decoder_output += FpRegRegRegOpConstructor.subst(vnmulDIop);
     exec_output += PredOpExecute.subst(vnmulDIop);
 }};
 
@@ -882,11 +666,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtUIntFpSIop = InstObjParams("vcvt", "VcvtUIntFpS", "VfpRegRegOp",
+    vcvtUIntFpSIop = InstObjParams("vcvt", "VcvtUIntFpS", "FpRegRegOp",
                                      { "code": vcvtUIntFpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtUIntFpSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtUIntFpSIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtUIntFpSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtUIntFpSIop);
     exec_output += PredOpExecute.subst(vcvtUIntFpSIop);
 
     vcvtUIntFpDCode = '''
@@ -899,11 +683,11 @@ let {{
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
-    vcvtUIntFpDIop = InstObjParams("vcvt", "VcvtUIntFpD", "VfpRegRegOp",
+    vcvtUIntFpDIop = InstObjParams("vcvt", "VcvtUIntFpD", "FpRegRegOp",
                                      { "code": vcvtUIntFpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtUIntFpDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtUIntFpDIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtUIntFpDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtUIntFpDIop);
     exec_output += PredOpExecute.subst(vcvtUIntFpDIop);
 
     vcvtSIntFpSCode = '''
@@ -913,11 +697,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtSIntFpSIop = InstObjParams("vcvt", "VcvtSIntFpS", "VfpRegRegOp",
+    vcvtSIntFpSIop = InstObjParams("vcvt", "VcvtSIntFpS", "FpRegRegOp",
                                      { "code": vcvtSIntFpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtSIntFpSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtSIntFpSIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtSIntFpSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtSIntFpSIop);
     exec_output += PredOpExecute.subst(vcvtSIntFpSIop);
 
     vcvtSIntFpDCode = '''
@@ -930,11 +714,11 @@ let {{
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
-    vcvtSIntFpDIop = InstObjParams("vcvt", "VcvtSIntFpD", "VfpRegRegOp",
+    vcvtSIntFpDIop = InstObjParams("vcvt", "VcvtSIntFpD", "FpRegRegOp",
                                      { "code": vcvtSIntFpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtSIntFpDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtSIntFpDIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtSIntFpDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtSIntFpDIop);
     exec_output += PredOpExecute.subst(vcvtSIntFpDIop);
 
     vcvtFpUIntSRCode = '''
@@ -945,11 +729,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtFpUIntSRIop = InstObjParams("vcvt", "VcvtFpUIntSR", "VfpRegRegOp",
+    vcvtFpUIntSRIop = InstObjParams("vcvt", "VcvtFpUIntSR", "FpRegRegOp",
                                      { "code": vcvtFpUIntSRCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpUIntSRIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpUIntSRIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpUIntSRIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntSRIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntSRIop);
 
     vcvtFpUIntDRCode = '''
@@ -963,11 +747,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
     '''
-    vcvtFpUIntDRIop = InstObjParams("vcvtr", "VcvtFpUIntDR", "VfpRegRegOp",
+    vcvtFpUIntDRIop = InstObjParams("vcvtr", "VcvtFpUIntDR", "FpRegRegOp",
                                      { "code": vcvtFpUIntDRCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpUIntDRIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpUIntDRIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpUIntDRIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntDRIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntDRIop);
 
     vcvtFpSIntSRCode = '''
@@ -978,11 +762,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtFpSIntSRIop = InstObjParams("vcvtr", "VcvtFpSIntSR", "VfpRegRegOp",
+    vcvtFpSIntSRIop = InstObjParams("vcvtr", "VcvtFpSIntSR", "FpRegRegOp",
                                      { "code": vcvtFpSIntSRCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpSIntSRIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpSIntSRIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSIntSRIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntSRIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntSRIop);
 
     vcvtFpSIntDRCode = '''
@@ -996,11 +780,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
     '''
-    vcvtFpSIntDRIop = InstObjParams("vcvtr", "VcvtFpSIntDR", "VfpRegRegOp",
+    vcvtFpSIntDRIop = InstObjParams("vcvtr", "VcvtFpSIntDR", "FpRegRegOp",
                                      { "code": vcvtFpSIntDRCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpSIntDRIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpSIntDRIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSIntDRIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDRIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDRIop);
 
     vcvtFpUIntSCode = '''
@@ -1012,11 +796,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtFpUIntSIop = InstObjParams("vcvt", "VcvtFpUIntS", "VfpRegRegOp",
+    vcvtFpUIntSIop = InstObjParams("vcvt", "VcvtFpUIntS", "FpRegRegOp",
                                      { "code": vcvtFpUIntSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpUIntSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpUIntSIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpUIntSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntSIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntSIop);
 
     vcvtFpUIntDCode = '''
@@ -1031,11 +815,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
     '''
-    vcvtFpUIntDIop = InstObjParams("vcvt", "VcvtFpUIntD", "VfpRegRegOp",
+    vcvtFpUIntDIop = InstObjParams("vcvt", "VcvtFpUIntD", "FpRegRegOp",
                                      { "code": vcvtFpUIntDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpUIntDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpUIntDIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpUIntDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntDIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntDIop);
 
     vcvtFpSIntSCode = '''
@@ -1047,11 +831,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtFpSIntSIop = InstObjParams("vcvt", "VcvtFpSIntS", "VfpRegRegOp",
+    vcvtFpSIntSIop = InstObjParams("vcvt", "VcvtFpSIntS", "FpRegRegOp",
                                      { "code": vcvtFpSIntSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpSIntSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpSIntSIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSIntSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntSIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntSIop);
 
     vcvtFpSIntDCode = '''
@@ -1066,11 +850,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
     '''
-    vcvtFpSIntDIop = InstObjParams("vcvt", "VcvtFpSIntD", "VfpRegRegOp",
+    vcvtFpSIntDIop = InstObjParams("vcvt", "VcvtFpSIntD", "FpRegRegOp",
                                      { "code": vcvtFpSIntDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpSIntDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpSIntDIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSIntDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDIop);
 
     vcvtFpSFpDCode = '''
@@ -1078,17 +862,17 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        cDest.fp = FpOp1;
+        cDest.fp = fixFpSFpDDest(Fpscr, FpOp1);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
-    vcvtFpSFpDIop = InstObjParams("vcvt", "VcvtFpSFpD", "VfpRegRegOp",
+    vcvtFpSFpDIop = InstObjParams("vcvt", "VcvtFpSFpD", "FpRegRegOp",
                                      { "code": vcvtFpSFpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpSFpDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpSFpDIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSFpDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpDIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpDIop);
 
     vcvtFpDFpSCode = '''
@@ -1101,11 +885,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtFpDFpSIop = InstObjParams("vcvt", "VcvtFpDFpS", "VfpRegRegOp",
+    vcvtFpDFpSIop = InstObjParams("vcvt", "VcvtFpDFpS", "FpRegRegOp",
                                      { "code": vcvtFpDFpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcvtFpDFpSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpDFpSIop);
+    header_output += FpRegRegOpDeclare.subst(vcvtFpDFpSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpDFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
 
     vcmpSCode = '''
@@ -1119,28 +903,21 @@ let {{
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             const uint32_t qnan = 0x7fc00000;
-            union
-            {
-                float fp;
-                uint32_t bits;
-            } cvtr;
-            cvtr.fp = FpDest;
             const bool nan1 = std::isnan(FpDest);
-            const bool signal1 = nan1 && ((cvtr.bits & qnan) != qnan);
-            cvtr.fp = FpOp1;
+            const bool signal1 = nan1 && ((fpToBits(FpDest) & qnan) != qnan);
             const bool nan2 = std::isnan(FpOp1);
-            const bool signal2 = nan2 && ((cvtr.bits & qnan) != qnan);
+            const bool signal2 = nan2 && ((fpToBits(FpOp1) & qnan) != qnan);
             if (signal1 || signal2)
                 fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
         Fpscr = fpscr;
     '''
-    vcmpSIop = InstObjParams("vcmps", "VcmpS", "VfpRegRegOp",
+    vcmpSIop = InstObjParams("vcmps", "VcmpS", "FpRegRegOp",
                                      { "code": vcmpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcmpSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcmpSIop);
+    header_output += FpRegRegOpDeclare.subst(vcmpSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcmpSIop);
     exec_output += PredOpExecute.subst(vcmpSIop);
 
     vcmpDCode = '''
@@ -1167,11 +944,11 @@ let {{
         }
         Fpscr = fpscr;
     '''
-    vcmpDIop = InstObjParams("vcmpd", "VcmpD", "VfpRegRegOp",
+    vcmpDIop = InstObjParams("vcmpd", "VcmpD", "FpRegRegOp",
                                      { "code": vcmpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcmpDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcmpDIop);
+    header_output += FpRegRegOpDeclare.subst(vcmpDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcmpDIop);
     exec_output += PredOpExecute.subst(vcmpDIop);
 
     vcmpZeroSCode = '''
@@ -1187,25 +964,19 @@ let {{
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
             const uint32_t qnan = 0x7fc00000;
-            union
-            {
-                float fp;
-                uint32_t bits;
-            } cvtr;
-            cvtr.fp = FpDest;
             const bool nan = std::isnan(FpDest);
-            const bool signal = nan && ((cvtr.bits & qnan) != qnan);
+            const bool signal = nan && ((fpToBits(FpDest) & qnan) != qnan);
             if (signal)
                 fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
         Fpscr = fpscr;
     '''
-    vcmpZeroSIop = InstObjParams("vcmpZeros", "VcmpZeroS", "VfpRegImmOp",
+    vcmpZeroSIop = InstObjParams("vcmpZeros", "VcmpZeroS", "FpRegImmOp",
                                      { "code": vcmpZeroSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegImmOpDeclare.subst(vcmpZeroSIop);
-    decoder_output += VfpRegImmOpConstructor.subst(vcmpZeroSIop);
+    header_output += FpRegImmOpDeclare.subst(vcmpZeroSIop);
+    decoder_output += FpRegImmOpConstructor.subst(vcmpZeroSIop);
     exec_output += PredOpExecute.subst(vcmpZeroSIop);
 
     vcmpZeroDCode = '''
@@ -1231,11 +1002,11 @@ let {{
         }
         Fpscr = fpscr;
     '''
-    vcmpZeroDIop = InstObjParams("vcmpZerod", "VcmpZeroD", "VfpRegImmOp",
+    vcmpZeroDIop = InstObjParams("vcmpZerod", "VcmpZeroD", "FpRegImmOp",
                                      { "code": vcmpZeroDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegImmOpDeclare.subst(vcmpZeroDIop);
-    decoder_output += VfpRegImmOpConstructor.subst(vcmpZeroDIop);
+    header_output += FpRegImmOpDeclare.subst(vcmpZeroDIop);
+    decoder_output += FpRegImmOpConstructor.subst(vcmpZeroDIop);
     exec_output += PredOpExecute.subst(vcmpZeroDIop);
 
     vcmpeSCode = '''
@@ -1253,11 +1024,11 @@ let {{
         }
         Fpscr = fpscr;
     '''
-    vcmpeSIop = InstObjParams("vcmpes", "VcmpeS", "VfpRegRegOp",
+    vcmpeSIop = InstObjParams("vcmpes", "VcmpeS", "FpRegRegOp",
                                      { "code": vcmpeSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcmpeSIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcmpeSIop);
+    header_output += FpRegRegOpDeclare.subst(vcmpeSIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcmpeSIop);
     exec_output += PredOpExecute.subst(vcmpeSIop);
 
     vcmpeDCode = '''
@@ -1278,11 +1049,11 @@ let {{
         }
         Fpscr = fpscr;
     '''
-    vcmpeDIop = InstObjParams("vcmped", "VcmpeD", "VfpRegRegOp",
+    vcmpeDIop = InstObjParams("vcmped", "VcmpeD", "FpRegRegOp",
                                      { "code": vcmpeDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegOpDeclare.subst(vcmpeDIop);
-    decoder_output += VfpRegRegOpConstructor.subst(vcmpeDIop);
+    header_output += FpRegRegOpDeclare.subst(vcmpeDIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcmpeDIop);
     exec_output += PredOpExecute.subst(vcmpeDIop);
 
     vcmpeZeroSCode = '''
@@ -1300,11 +1071,11 @@ let {{
         }
         Fpscr = fpscr;
     '''
-    vcmpeZeroSIop = InstObjParams("vcmpeZeros", "VcmpeZeroS", "VfpRegImmOp",
+    vcmpeZeroSIop = InstObjParams("vcmpeZeros", "VcmpeZeroS", "FpRegImmOp",
                                      { "code": vcmpeZeroSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegImmOpDeclare.subst(vcmpeZeroSIop);
-    decoder_output += VfpRegImmOpConstructor.subst(vcmpeZeroSIop);
+    header_output += FpRegImmOpDeclare.subst(vcmpeZeroSIop);
+    decoder_output += FpRegImmOpConstructor.subst(vcmpeZeroSIop);
     exec_output += PredOpExecute.subst(vcmpeZeroSIop);
 
     vcmpeZeroDCode = '''
@@ -1324,11 +1095,11 @@ let {{
         }
         Fpscr = fpscr;
     '''
-    vcmpeZeroDIop = InstObjParams("vcmpeZerod", "VcmpeZeroD", "VfpRegImmOp",
+    vcmpeZeroDIop = InstObjParams("vcmpeZerod", "VcmpeZeroD", "FpRegImmOp",
                                      { "code": vcmpeZeroDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegImmOpDeclare.subst(vcmpeZeroDIop);
-    decoder_output += VfpRegImmOpConstructor.subst(vcmpeZeroDIop);
+    header_output += FpRegImmOpDeclare.subst(vcmpeZeroDIop);
+    decoder_output += FpRegImmOpConstructor.subst(vcmpeZeroDIop);
     exec_output += PredOpExecute.subst(vcmpeZeroDIop);
 }};
 
@@ -1346,11 +1117,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtFpSFixedSIop = InstObjParams("vcvt", "VcvtFpSFixedS", "VfpRegRegImmOp",
+    vcvtFpSFixedSIop = InstObjParams("vcvt", "VcvtFpSFixedS", "FpRegRegImmOp",
                                      { "code": vcvtFpSFixedSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpSFixedSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpSFixedSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpSFixedSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpSFixedSIop);
 
     vcvtFpSFixedDCode = '''
@@ -1365,11 +1136,11 @@ let {{
         FpDestP0.uw = mid;
         FpDestP1.uw = mid >> 32;
     '''
-    vcvtFpSFixedDIop = InstObjParams("vcvt", "VcvtFpSFixedD", "VfpRegRegImmOp",
+    vcvtFpSFixedDIop = InstObjParams("vcvt", "VcvtFpSFixedD", "FpRegRegImmOp",
                                      { "code": vcvtFpSFixedDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpSFixedDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpSFixedDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpSFixedDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpSFixedDIop);
 
     vcvtFpUFixedSCode = '''
@@ -1380,11 +1151,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtFpUFixedSIop = InstObjParams("vcvt", "VcvtFpUFixedS", "VfpRegRegImmOp",
+    vcvtFpUFixedSIop = InstObjParams("vcvt", "VcvtFpUFixedS", "FpRegRegImmOp",
                                      { "code": vcvtFpUFixedSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpUFixedSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpUFixedSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpUFixedSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpUFixedSIop);
 
     vcvtFpUFixedDCode = '''
@@ -1399,11 +1170,11 @@ let {{
         FpDestP0.uw = mid;
         FpDestP1.uw = mid >> 32;
     '''
-    vcvtFpUFixedDIop = InstObjParams("vcvt", "VcvtFpUFixedD", "VfpRegRegImmOp",
+    vcvtFpUFixedDIop = InstObjParams("vcvt", "VcvtFpUFixedD", "FpRegRegImmOp",
                                      { "code": vcvtFpUFixedDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpUFixedDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpUFixedDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpUFixedDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpUFixedDIop);
 
     vcvtSFixedFpSCode = '''
@@ -1413,11 +1184,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtSFixedFpSIop = InstObjParams("vcvt", "VcvtSFixedFpS", "VfpRegRegImmOp",
+    vcvtSFixedFpSIop = InstObjParams("vcvt", "VcvtSFixedFpS", "FpRegRegImmOp",
                                      { "code": vcvtSFixedFpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtSFixedFpSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtSFixedFpSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtSFixedFpSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtSFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtSFixedFpSIop);
 
     vcvtSFixedFpDCode = '''
@@ -1431,11 +1202,11 @@ let {{
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
-    vcvtSFixedFpDIop = InstObjParams("vcvt", "VcvtSFixedFpD", "VfpRegRegImmOp",
+    vcvtSFixedFpDIop = InstObjParams("vcvt", "VcvtSFixedFpD", "FpRegRegImmOp",
                                      { "code": vcvtSFixedFpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtSFixedFpDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtSFixedFpDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtSFixedFpDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtSFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtSFixedFpDIop);
 
     vcvtUFixedFpSCode = '''
@@ -1445,11 +1216,11 @@ let {{
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
-    vcvtUFixedFpSIop = InstObjParams("vcvt", "VcvtUFixedFpS", "VfpRegRegImmOp",
+    vcvtUFixedFpSIop = InstObjParams("vcvt", "VcvtUFixedFpS", "FpRegRegImmOp",
                                      { "code": vcvtUFixedFpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtUFixedFpSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtUFixedFpSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtUFixedFpSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtUFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtUFixedFpSIop);
 
     vcvtUFixedFpDCode = '''
@@ -1463,11 +1234,11 @@ let {{
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
-    vcvtUFixedFpDIop = InstObjParams("vcvt", "VcvtUFixedFpD", "VfpRegRegImmOp",
+    vcvtUFixedFpDIop = InstObjParams("vcvt", "VcvtUFixedFpD", "FpRegRegImmOp",
                                      { "code": vcvtUFixedFpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtUFixedFpDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtUFixedFpDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtUFixedFpDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtUFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtUFixedFpDIop);
 
     vcvtFpSHFixedSCode = '''
@@ -1479,11 +1250,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtFpSHFixedSIop = InstObjParams("vcvt", "VcvtFpSHFixedS",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtFpSHFixedSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpSHFixedSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpSHFixedSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpSHFixedSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSHFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpSHFixedSIop);
 
     vcvtFpSHFixedDCode = '''
@@ -1499,11 +1270,11 @@ let {{
         FpDestP1.uw = result >> 32;
     '''
     vcvtFpSHFixedDIop = InstObjParams("vcvt", "VcvtFpSHFixedD",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtFpSHFixedDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpSHFixedDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpSHFixedDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpSHFixedDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSHFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpSHFixedDIop);
 
     vcvtFpUHFixedSCode = '''
@@ -1515,11 +1286,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtFpUHFixedSIop = InstObjParams("vcvt", "VcvtFpUHFixedS",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtFpUHFixedSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpUHFixedSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpUHFixedSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpUHFixedSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUHFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpUHFixedSIop);
 
     vcvtFpUHFixedDCode = '''
@@ -1535,11 +1306,11 @@ let {{
         FpDestP1.uw = mid >> 32;
     '''
     vcvtFpUHFixedDIop = InstObjParams("vcvt", "VcvtFpUHFixedD",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtFpUHFixedDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtFpUHFixedDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtFpUHFixedDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtFpUHFixedDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUHFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpUHFixedDIop);
 
     vcvtSHFixedFpSCode = '''
@@ -1550,11 +1321,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtSHFixedFpSIop = InstObjParams("vcvt", "VcvtSHFixedFpS",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtSHFixedFpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtSHFixedFpSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtSHFixedFpSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtSHFixedFpSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtSHFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtSHFixedFpSIop);
 
     vcvtSHFixedFpDCode = '''
@@ -1569,11 +1340,11 @@ let {{
         FpDestP1.uw = cDest.bits >> 32;
     '''
     vcvtSHFixedFpDIop = InstObjParams("vcvt", "VcvtSHFixedFpD",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtSHFixedFpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtSHFixedFpDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtSHFixedFpDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtSHFixedFpDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtSHFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtSHFixedFpDIop);
 
     vcvtUHFixedFpSCode = '''
@@ -1584,11 +1355,11 @@ let {{
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtUHFixedFpSIop = InstObjParams("vcvt", "VcvtUHFixedFpS",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtUHFixedFpSCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtUHFixedFpSIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtUHFixedFpSIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtUHFixedFpSIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtUHFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtUHFixedFpSIop);
 
     vcvtUHFixedFpDCode = '''
@@ -1603,10 +1374,10 @@ let {{
         FpDestP1.uw = cDest.bits >> 32;
     '''
     vcvtUHFixedFpDIop = InstObjParams("vcvt", "VcvtUHFixedFpD",
-                                      "VfpRegRegImmOp",
+                                      "FpRegRegImmOp",
                                      { "code": vcvtUHFixedFpDCode,
                                        "predicate_test": predicateTest }, [])
-    header_output += VfpRegRegImmOpDeclare.subst(vcvtUHFixedFpDIop);
-    decoder_output += VfpRegRegImmOpConstructor.subst(vcvtUHFixedFpDIop);
+    header_output += FpRegRegImmOpDeclare.subst(vcvtUHFixedFpDIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vcvtUHFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtUHFixedFpDIop);
 }};

@@ -110,9 +110,11 @@ static inline void
 vfpFlushToZero(uint32_t &_fpscr, fpType &op)
 {
     FPSCR fpscr = _fpscr;
+    fpType junk = 0.0;
     if (fpscr.fz == 1 && (std::fpclassify(op) == FP_SUBNORMAL)) {
         fpscr.idc = 1;
-        op = 0;
+        uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
+        op = bitsToFp(fpToBits(op) & bitMask, junk);
     }
     _fpscr = fpscr;
 }
@@ -123,6 +125,28 @@ vfpFlushToZero(uint32_t &fpscr, fpType &op1, fpType &op2)
 {
     vfpFlushToZero(fpscr, op1);
     vfpFlushToZero(fpscr, op2);
+}
+
+template <class fpType>
+static inline bool
+flushToZero(fpType &op)
+{
+    fpType junk = 0.0;
+    if (std::fpclassify(op) == FP_SUBNORMAL) {
+        uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
+        op = bitsToFp(fpToBits(op) & bitMask, junk);
+        return true;
+    }
+    return false;
+}
+
+template <class fpType>
+static inline bool
+flushToZero(fpType &op1, fpType &op2)
+{
+    bool flush1 = flushToZero(op1);
+    bool flush2 = flushToZero(op2);
+    return flush1 || flush2;
 }
 
 static inline uint32_t
@@ -173,6 +197,99 @@ bitsToFp(uint64_t bits, double junk)
     return val.fp;
 }
 
+typedef int VfpSavedState;
+
+static inline VfpSavedState
+prepVfpFpscr(FPSCR fpscr)
+{
+    int roundingMode = fegetround();
+    feclearexcept(FeAllExceptions);
+    switch (fpscr.rMode) {
+      case VfpRoundNearest:
+        fesetround(FeRoundNearest);
+        break;
+      case VfpRoundUpward:
+        fesetround(FeRoundUpward);
+        break;
+      case VfpRoundDown:
+        fesetround(FeRoundDown);
+        break;
+      case VfpRoundZero:
+        fesetround(FeRoundZero);
+        break;
+    }
+    return roundingMode;
+}
+
+static inline VfpSavedState
+prepFpState(uint32_t rMode)
+{
+    int roundingMode = fegetround();
+    feclearexcept(FeAllExceptions);
+    switch (rMode) {
+      case VfpRoundNearest:
+        fesetround(FeRoundNearest);
+        break;
+      case VfpRoundUpward:
+        fesetround(FeRoundUpward);
+        break;
+      case VfpRoundDown:
+        fesetround(FeRoundDown);
+        break;
+      case VfpRoundZero:
+        fesetround(FeRoundZero);
+        break;
+    }
+    return roundingMode;
+}
+
+static inline FPSCR
+setVfpFpscr(FPSCR fpscr, VfpSavedState state)
+{
+    int exceptions = fetestexcept(FeAllExceptions);
+    if (exceptions & FeInvalid) {
+        fpscr.ioc = 1;
+    }
+    if (exceptions & FeDivByZero) {
+        fpscr.dzc = 1;
+    }
+    if (exceptions & FeOverflow) {
+        fpscr.ofc = 1;
+    }
+    if (exceptions & FeUnderflow) {
+        fpscr.ufc = 1;
+    }
+    if (exceptions & FeInexact) {
+        fpscr.ixc = 1;
+    }
+    fesetround(state);
+    return fpscr;
+}
+
+static inline void
+finishVfp(FPSCR &fpscr, VfpSavedState state)
+{
+    int exceptions = fetestexcept(FeAllExceptions);
+    bool underflow = false;
+    if (exceptions & FeInvalid) {
+        fpscr.ioc = 1;
+    }
+    if (exceptions & FeDivByZero) {
+        fpscr.dzc = 1;
+    }
+    if (exceptions & FeOverflow) {
+        fpscr.ofc = 1;
+    }
+    if (exceptions & FeUnderflow) {
+        underflow = true;
+        fpscr.ufc = 1;
+    }
+    if ((exceptions & FeInexact) && !(underflow && fpscr.fz)) {
+        fpscr.ixc = 1;
+    }
+    fesetround(state);
+}
+
 template <class fpType>
 static inline fpType
 fixDest(FPSCR fpscr, fpType val, fpType op1)
@@ -192,6 +309,7 @@ fixDest(FPSCR fpscr, fpType val, fpType op1)
         // Turn val into a zero with the correct sign;
         uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
         val = bitsToFp(fpToBits(val) & bitMask, junk);
+        feclearexcept(FeInexact);
         feraiseexcept(FeUnderflow);
     }
     return val;
@@ -225,34 +343,10 @@ fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
         // Turn val into a zero with the correct sign;
         uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
         val = bitsToFp(fpToBits(val) & bitMask, junk);
+        feclearexcept(FeInexact);
         feraiseexcept(FeUnderflow);
     }
     return val;
-}
-
-template <class fpType>
-static inline fpType
-fixMultDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
-{
-    fpType mid = fixDest(fpscr, val, op1, op2);
-    const bool single = (sizeof(fpType) == sizeof(float));
-    const fpType junk = 0.0;
-    if ((single && (val == bitsToFp(0x00800000, junk) ||
-                    val == bitsToFp(0x80800000, junk))) ||
-        (!single && (val == bitsToFp(ULL(0x0010000000000000), junk) ||
-                     val == bitsToFp(ULL(0x8010000000000000), junk)))
-        ) {
-        __asm__ __volatile__("" : "=m" (op1) : "m" (op1));
-        fesetround(FeRoundZero);
-        fpType temp = 0.0;
-        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
-        temp = op1 * op2;
-        if (!std::isnormal(temp)) {
-            feraiseexcept(FeUnderflow);
-        }
-        __asm__ __volatile__("" :: "m" (temp));
-    }
-    return mid;
 }
 
 template <class fpType>
@@ -272,8 +366,12 @@ fixDivDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
         fpType temp = 0.0;
         __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
         temp = op1 / op2;
-        if (!std::isnormal(temp)) {
+        if (flushToZero(temp)) {
             feraiseexcept(FeUnderflow);
+            if (fpscr.fz) {
+                feclearexcept(FeInexact);
+                mid = temp;
+            }
         }
         __asm__ __volatile__("" :: "m" (temp));
     }
@@ -293,6 +391,10 @@ fixFpDFpSDest(FPSCR fpscr, double val)
         op1 = bitsToFp(op1Bits, junk);
     }
     float mid = fixDest(fpscr, (float)val, op1);
+    if (fpscr.fz && fetestexcept(FeUnderflow | FeInexact) ==
+                    (FeUnderflow | FeInexact)) {
+        feclearexcept(FeInexact);
+    }
     if (mid == bitsToFp(0x00800000, junk) ||
         mid == bitsToFp(0x80800000, junk)) {
         __asm__ __volatile__("" : "=m" (val) : "m" (val));
@@ -300,26 +402,79 @@ fixFpDFpSDest(FPSCR fpscr, double val)
         float temp = 0.0;
         __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
         temp = val;
-        if (!std::isnormal(temp)) {
+        if (flushToZero(temp)) {
             feraiseexcept(FeUnderflow);
+            if (fpscr.fz) {
+                feclearexcept(FeInexact);
+                mid = temp;
+            }
         }
         __asm__ __volatile__("" :: "m" (temp));
     }
     return mid;
 }
 
+static inline double
+fixFpSFpDDest(FPSCR fpscr, float val)
+{
+    const double junk = 0.0;
+    double op1 = 0.0;
+    if (std::isnan(val)) {
+        uint32_t valBits = fpToBits(val);
+        uint64_t op1Bits = ((uint64_t)bits(valBits, 21, 0) << 29) |
+                           (mask(12) << 51) |
+                           ((uint64_t)bits(valBits, 31) << 63);
+        op1 = bitsToFp(op1Bits, junk);
+    }
+    double mid = fixDest(fpscr, (double)val, op1);
+    if (mid == bitsToFp(ULL(0x0010000000000000), junk) ||
+        mid == bitsToFp(ULL(0x8010000000000000), junk)) {
+        __asm__ __volatile__("" : "=m" (val) : "m" (val));
+        fesetround(FeRoundZero);
+        double temp = 0.0;
+        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
+        temp = val;
+        if (flushToZero(temp)) {
+            feraiseexcept(FeUnderflow);
+            if (fpscr.fz) {
+                feclearexcept(FeInexact);
+                mid = temp;
+            }
+        }
+        __asm__ __volatile__("" :: "m" (temp));
+    }
+    return mid;
+}
+
+static inline double
+makeDouble(uint32_t low, uint32_t high)
+{
+    double junk = 0.0;
+    return bitsToFp((uint64_t)low | ((uint64_t)high << 32), junk);
+}
+
+static inline uint32_t
+lowFromDouble(double val)
+{
+    return fpToBits(val);
+}
+
+static inline uint32_t
+highFromDouble(double val)
+{
+    return fpToBits(val) >> 32;
+}
+
 static inline uint64_t
 vfpFpSToFixed(float val, bool isSigned, bool half,
               uint8_t imm, bool rzero = true)
 {
-    int rmode = fegetround();
+    int rmode = rzero ? FeRoundZero : fegetround();
+    __asm__ __volatile__("" : "=m" (rmode) : "m" (rmode));
     fesetround(FeRoundNearest);
     val = val * powf(2.0, imm);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
-    if (rzero)
-        fesetround(FeRoundZero);
-    else
-        fesetround(rmode);
+    fesetround(rmode);
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
     float origVal = val;
@@ -331,6 +486,22 @@ vfpFpSToFixed(float val, bool isSigned, bool half,
         }
         val = 0.0;
     } else if (origVal != val) {
+        switch (rmode) {
+          case FeRoundNearest:
+            if (origVal - val > 0.5)
+                val += 1.0;
+            else if (val - origVal > 0.5)
+                val -= 1.0;
+            break;
+          case FeRoundDown:
+            if (origVal < val)
+                val -= 1.0;
+            break;
+          case FeRoundUpward:
+            if (origVal > val)
+                val += 1.0;
+            break;
+        }
         feraiseexcept(FeInexact);
     }
 
@@ -419,14 +590,11 @@ static inline uint64_t
 vfpFpDToFixed(double val, bool isSigned, bool half,
               uint8_t imm, bool rzero = true)
 {
-    int rmode = fegetround();
+    int rmode = rzero ? FeRoundZero : fegetround();
     fesetround(FeRoundNearest);
     val = val * pow(2.0, imm);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
-    if (rzero)
-        fesetround(FeRoundZero);
-    else
-        fesetround(rmode);
+    fesetround(rmode);
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (val) : "m" (val));
     double origVal = val;
@@ -438,6 +606,22 @@ vfpFpDToFixed(double val, bool isSigned, bool half,
         }
         val = 0.0;
     } else if (origVal != val) {
+        switch (rmode) {
+          case FeRoundNearest:
+            if (origVal - val > 0.5)
+                val += 1.0;
+            else if (val - origVal > 0.5)
+                val -= 1.0;
+            break;
+          case FeRoundDown:
+            if (origVal < val)
+                val -= 1.0;
+            break;
+          case FeRoundUpward:
+            if (origVal > val)
+                val += 1.0;
+            break;
+        }
         feraiseexcept(FeInexact);
     }
     if (isSigned) {
@@ -521,53 +705,6 @@ vfpSFixedToFpD(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
     return fixDivDest(fpscr, val / scale, (double)val, scale);
 }
 
-typedef int VfpSavedState;
-
-static inline VfpSavedState
-prepVfpFpscr(FPSCR fpscr)
-{
-    int roundingMode = fegetround();
-    feclearexcept(FeAllExceptions);
-    switch (fpscr.rMode) {
-      case VfpRoundNearest:
-        fesetround(FeRoundNearest);
-        break;
-      case VfpRoundUpward:
-        fesetround(FeRoundUpward);
-        break;
-      case VfpRoundDown:
-        fesetround(FeRoundDown);
-        break;
-      case VfpRoundZero:
-        fesetround(FeRoundZero);
-        break;
-    }
-    return roundingMode;
-}
-
-static inline FPSCR
-setVfpFpscr(FPSCR fpscr, VfpSavedState state)
-{
-    int exceptions = fetestexcept(FeAllExceptions);
-    if (exceptions & FeInvalid) {
-        fpscr.ioc = 1;
-    }
-    if (exceptions & FeDivByZero) {
-        fpscr.dzc = 1;
-    }
-    if (exceptions & FeOverflow) {
-        fpscr.ofc = 1;
-    }
-    if (exceptions & FeUnderflow) {
-        fpscr.ufc = 1;
-    }
-    if (exceptions & FeInexact) {
-        fpscr.ixc = 1;
-    }
-    fesetround(state);
-    return fpscr;
-}
-
 class VfpMacroOp : public PredMacroOp
 {
   public:
@@ -630,52 +767,291 @@ class VfpMacroOp : public PredMacroOp
     }
 };
 
-class VfpRegRegOp : public RegRegOp
+static inline float
+fpAddS(float a, float b)
+{
+    return a + b;
+}
+
+static inline double
+fpAddD(double a, double b)
+{
+    return a + b;
+}
+
+static inline float
+fpSubS(float a, float b)
+{
+    return a - b;
+}
+
+static inline double
+fpSubD(double a, double b)
+{
+    return a - b;
+}
+
+static inline float
+fpDivS(float a, float b)
+{
+    return a / b;
+}
+
+static inline double
+fpDivD(double a, double b)
+{
+    return a / b;
+}
+
+static inline float
+fpMulS(float a, float b)
+{
+    return a * b;
+}
+
+static inline double
+fpMulD(double a, double b)
+{
+    return a * b;
+}
+
+class FpOp : public PredOp
 {
   protected:
-    VfpRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, IntRegIndex _op1,
-                VfpMicroMode mode = VfpNotAMicroop) :
-        RegRegOp(mnem, _machInst, __opClass, _dest, _op1)
+    FpOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+        PredOp(mnem, _machInst, __opClass)
+    {}
+
+    virtual float
+    doOp(float op1, float op2) const
     {
-        setVfpMicroFlags(mode, flags);
+        panic("Unimplemented version of doOp called.\n");
+    }
+
+    virtual float
+    doOp(float op1) const
+    {
+        panic("Unimplemented version of doOp called.\n");
+    }
+
+    virtual double
+    doOp(double op1, double op2) const
+    {
+        panic("Unimplemented version of doOp called.\n");
+    }
+
+    virtual double
+    doOp(double op1) const
+    {
+        panic("Unimplemented version of doOp called.\n");
+    }
+
+    double
+    dbl(uint32_t low, uint32_t high) const
+    {
+        double junk = 0.0;
+        return bitsToFp((uint64_t)low | ((uint64_t)high << 32), junk);
+    }
+
+    uint32_t
+    dblLow(double val) const
+    {
+        return fpToBits(val);
+    }
+
+    uint32_t
+    dblHi(double val) const
+    {
+        return fpToBits(val) >> 32;
+    }
+
+    template <class fpType>
+    fpType
+    binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
+            fpType (*func)(fpType, fpType),
+            bool flush, uint32_t rMode) const
+    {
+        const bool single = (sizeof(fpType) == sizeof(float));
+        fpType junk = 0.0;
+
+        if (flush && flushToZero(op1, op2))
+            fpscr.idc = 1;
+        VfpSavedState state = prepFpState(rMode);
+        __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2), "=m" (state)
+                                 : "m" (op1), "m" (op2), "m" (state));
+        fpType dest = func(op1, op2);
+        __asm__ __volatile__ ("" : "=m" (dest) : "m" (dest));
+
+        int fpClass = std::fpclassify(dest);
+        // Get NAN behavior right. This varies between x86 and ARM.
+        if (fpClass == FP_NAN) {
+            const bool single = (sizeof(fpType) == sizeof(float));
+            const uint64_t qnan =
+                single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+            const bool nan1 = std::isnan(op1);
+            const bool nan2 = std::isnan(op2);
+            const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
+            const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
+            if ((!nan1 && !nan2) || (fpscr.dn == 1)) {
+                dest = bitsToFp(qnan, junk);
+            } else if (signal1) {
+                dest = bitsToFp(fpToBits(op1) | qnan, junk);
+            } else if (signal2) {
+                dest = bitsToFp(fpToBits(op2) | qnan, junk);
+            } else if (nan1) {
+                dest = op1;
+            } else if (nan2) {
+                dest = op2;
+            }
+        } else if (flush && flushToZero(dest)) {
+            feraiseexcept(FeUnderflow);
+        } else if ((
+                    (single && (dest == bitsToFp(0x00800000, junk) ||
+                         dest == bitsToFp(0x80800000, junk))) ||
+                    (!single &&
+                        (dest == bitsToFp(ULL(0x0010000000000000), junk) ||
+                         dest == bitsToFp(ULL(0x8010000000000000), junk)))
+                   ) && rMode != VfpRoundZero) {
+            /*
+             * Correct for the fact that underflow is detected -before- rounding
+             * in ARM and -after- rounding in x86.
+             */
+            fesetround(FeRoundZero);
+            __asm__ __volatile__ ("" : "=m" (op1), "=m" (op2)
+                                     : "m" (op1), "m" (op2));
+            fpType temp = func(op1, op2);
+            __asm__ __volatile__ ("" : "=m" (temp) : "m" (temp));
+            if (flush && flushToZero(temp)) {
+                dest = temp;
+            }
+        }
+        finishVfp(fpscr, state);
+        return dest;
+    }
+
+    template <class fpType>
+    fpType
+    unaryOp(FPSCR &fpscr, fpType op1,
+            fpType (*func)(fpType),
+            bool flush, uint32_t rMode) const
+    {
+        const bool single = (sizeof(fpType) == sizeof(float));
+        fpType junk = 0.0;
+
+        if (flush && flushToZero(op1))
+            fpscr.idc = 1;
+        VfpSavedState state = prepFpState(rMode);
+        __asm__ __volatile__ ("" : "=m" (op1), "=m" (state)
+                                 : "m" (op1), "m" (state));
+        fpType dest = func(op1);
+        __asm__ __volatile__ ("" : "=m" (dest) : "m" (dest));
+
+        int fpClass = std::fpclassify(dest);
+        // Get NAN behavior right. This varies between x86 and ARM.
+        if (fpClass == FP_NAN) {
+            const bool single = (sizeof(fpType) == sizeof(float));
+            const uint64_t qnan =
+                single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+            const bool nan = std::isnan(op1);
+            if (!nan || fpscr.dn == 1) {
+                dest = bitsToFp(qnan, junk);
+            } else if (nan) {
+                dest = bitsToFp(fpToBits(op1) | qnan, junk);
+            }
+        } else if (flush && flushToZero(dest)) {
+            feraiseexcept(FeUnderflow);
+        } else if ((
+                    (single && (dest == bitsToFp(0x00800000, junk) ||
+                         dest == bitsToFp(0x80800000, junk))) ||
+                    (!single &&
+                        (dest == bitsToFp(ULL(0x0010000000000000), junk) ||
+                         dest == bitsToFp(ULL(0x8010000000000000), junk)))
+                   ) && rMode != VfpRoundZero) {
+            /*
+             * Correct for the fact that underflow is detected -before- rounding
+             * in ARM and -after- rounding in x86.
+             */
+            fesetround(FeRoundZero);
+            __asm__ __volatile__ ("" : "=m" (op1) : "m" (op1));
+            fpType temp = func(op1);
+            __asm__ __volatile__ ("" : "=m" (temp) : "m" (temp));
+            if (flush && flushToZero(temp)) {
+                dest = temp;
+            }
+        }
+        finishVfp(fpscr, state);
+        return dest;
     }
 };
 
-class VfpRegImmOp : public RegImmOp
+class FpRegRegOp : public FpOp
 {
   protected:
-    VfpRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, uint64_t _imm,
-                VfpMicroMode mode = VfpNotAMicroop) :
-        RegImmOp(mnem, _machInst, __opClass, _dest, _imm)
+    IntRegIndex dest;
+    IntRegIndex op1;
+
+    FpRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+               IntRegIndex _dest, IntRegIndex _op1,
+               VfpMicroMode mode = VfpNotAMicroop) :
+        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1)
     {
         setVfpMicroFlags(mode, flags);
     }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-class VfpRegRegImmOp : public RegRegImmOp
+class FpRegImmOp : public FpOp
 {
   protected:
-    VfpRegRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   IntRegIndex _dest, IntRegIndex _op1,
-                   uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop) :
-        RegRegImmOp(mnem, _machInst, __opClass, _dest, _op1, _imm)
+    IntRegIndex dest;
+    uint64_t imm;
+
+    FpRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+               IntRegIndex _dest, uint64_t _imm,
+               VfpMicroMode mode = VfpNotAMicroop) :
+        FpOp(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {
         setVfpMicroFlags(mode, flags);
     }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-class VfpRegRegRegOp : public RegRegRegOp
+class FpRegRegImmOp : public FpOp
 {
   protected:
-    VfpRegRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   VfpMicroMode mode = VfpNotAMicroop) :
-        RegRegRegOp(mnem, _machInst, __opClass, _dest, _op1, _op2)
+    IntRegIndex dest;
+    IntRegIndex op1;
+    uint64_t imm;
+
+    FpRegRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                  IntRegIndex _dest, IntRegIndex _op1,
+                  uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop) :
+        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), imm(_imm)
     {
         setVfpMicroFlags(mode, flags);
     }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class FpRegRegRegOp : public FpOp
+{
+  protected:
+    IntRegIndex dest;
+    IntRegIndex op1;
+    IntRegIndex op2;
+
+    FpRegRegRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                  IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
+                  VfpMicroMode mode = VfpNotAMicroop) :
+        FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2)
+    {
+        setVfpMicroFlags(mode, flags);
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 }
