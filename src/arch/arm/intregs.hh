@@ -96,8 +96,6 @@ enum IntRegIndex
 
     INTREG_ZERO, // Dummy zero reg since there has to be one.
     INTREG_UREG0,
-    INTREG_RHI,
-    INTREG_RLO,
     INTREG_CONDCODES,
 
     NUM_INTREGS,

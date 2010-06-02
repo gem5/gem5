@@ -109,8 +109,6 @@ def operands {{
     'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4, maybePCRead, maybePCWrite),
     'Rde': ('IntReg', 'uw', '(RD | 1)', 'IsInteger', 5, maybePCRead, maybePCWrite),
 
-    'Rhi': ('IntReg', 'uw', 'INTREG_RHI', 'IsInteger', 7),
-    'Rlo': ('IntReg', 'uw', 'INTREG_RLO', 'IsInteger', 8),
     'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 9),
     'CondCodes': ('IntReg', 'uw', 'INTREG_CONDCODES', None, 10),
 
