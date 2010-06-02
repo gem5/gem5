@@ -161,7 +161,7 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
     numMicroops = count * (single ? 1 : 2) + (writeback ? 1 : 0);
     microOps = new StaticInstPtr[numMicroops];
 
-    uint32_t addr = 0;
+    int64_t addr = 0;
 
     if (!up)
         addr = 4 * offset;
@@ -172,21 +172,22 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
             microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
                                               tempUp, addr);
             if (!single)
-                microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
-                                                  tempUp, addr + 4);
+                microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn, tempUp,
+                                                  addr + (up ? 4 : -4));
         } else {
             microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
                                               tempUp, addr);
             if (!single)
-                microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
-                                                  tempUp, addr + 4);
+                microOps[i++] = new MicroStrFpUop(machInst, vd++, rn, tempUp,
+                                                  addr + (up ? 4 : -4));
         }
         if (!tempUp) {
             addr -= (single ? 4 : 8);
             // The microops don't handle negative displacement, so turn if we
             // hit zero, flip polarity and start adding.
-            if (addr == 0) {
+            if (addr <= 0) {
                 tempUp = true;
+                addr = -addr;
             }
         } else {
             addr += (single ? 4 : 8);
