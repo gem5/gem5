@@ -1024,7 +1024,7 @@ def format Thumb16Misc() {{
             {
                 const uint32_t opBits = bits(machInst, 7, 5);
                 if (opBits == 2) {
-                    return new WarnUnimplemented("setend", machInst);
+                    return new Setend(machInst, bits(machInst, 3));
                 } else if (opBits == 3) {
                     return new WarnUnimplemented("cps", machInst);
                 }
