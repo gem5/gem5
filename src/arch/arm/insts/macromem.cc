@@ -136,8 +136,6 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
                              bool writeback, bool load, uint32_t offset) :
     PredMacroOp(mnem, machInst, __opClass)
 {
-    const int maxMicroops = 17;
-    microOps = new StaticInstPtr[maxMicroops];
     int i = 0;
 
     // The lowest order bit selects fldmx (set) or fldmd (clear). These seem
@@ -153,26 +151,39 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
     if (count > NumFloatArchRegs)
         count = NumFloatArchRegs;
 
+    numMicroops = count * (single ? 1 : 2) + (writeback ? 1 : 0);
+    microOps = new StaticInstPtr[numMicroops];
+
     uint32_t addr = 0;
 
-    if (up)
-        addr = -4 * offset;
+    if (!up)
+        addr = 4 * offset;
 
+    bool tempUp = up;
     for (int j = 0; j < count; j++) {
         if (load) {
             microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
-                                              true, addr);
+                                              tempUp, addr);
             if (!single)
                 microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
-                                                  true, addr + 4);
+                                                  tempUp, addr + 4);
         } else {
             microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
-                                              true, addr);
+                                              tempUp, addr);
             if (!single)
                 microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
-                                                  true, addr + 4);
+                                                  tempUp, addr + 4);
         }
-        addr += (single ? 4 : 8);
+        if (!tempUp) {
+            addr -= (single ? 4 : 8);
+            // The microops don't handle negative displacement, so turn if we
+            // hit zero, flip polarity and start adding.
+            if (addr == 0) {
+                tempUp = true;
+            }
+        } else {
+            addr += (single ? 4 : 8);
+        }
     }
 
     if (writeback) {
@@ -185,8 +196,7 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
         }
     }
 
-    numMicroops = i;
-    assert(numMicroops <= maxMicroops);
+    assert(numMicroops == i);
     microOps[numMicroops - 1]->setLastMicroop();
 }
 
