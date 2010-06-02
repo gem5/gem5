@@ -142,6 +142,9 @@ namespace ArmISA
             data = inst;
             offset = (fetchPC >= pc) ? 0 : pc - fetchPC;
             emi.thumb = (pc & (ULL(1) << PcTBitShift)) ? 1 : 0;
+            FPSCR fpscr = tc->readMiscReg(MISCREG_FPSCR);
+            emi.fpscrLen = fpscr.len;
+            emi.fpscrStride = fpscr.stride;
             process();
         }
 

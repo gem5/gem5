@@ -37,6 +37,154 @@
 //
 // Authors: Gabe Black
 
+output header {{
+
+template <class Micro>
+class VfpMacroRegRegOp : public VfpMacroOp
+{
+  public:
+    VfpMacroRegRegOp(ExtMachInst _machInst, IntRegIndex _dest,
+                     IntRegIndex _op1, bool _wide) :
+        VfpMacroOp("VfpMacroRegRegOp", _machInst, No_OpClass, _wide)
+    {
+        numMicroops = machInst.fpscrLen + 1;
+        assert(numMicroops > 1);
+        microOps = new StaticInstPtr[numMicroops];
+        for (unsigned i = 0; i < numMicroops; i++) {
+            VfpMicroMode mode = VfpMicroop;
+            if (i == 0)
+                mode = VfpFirstMicroop;
+            else if (i == numMicroops - 1)
+                mode = VfpLastMicroop;
+            microOps[i] = new Micro(_machInst, _dest, _op1, mode);
+            nextIdxs(_dest, _op1);
+        }
+    }
+
+    %(BasicExecPanic)s
+};
+
+template <class VfpOp>
+static StaticInstPtr
+decodeVfpRegRegOp(ExtMachInst machInst,
+        IntRegIndex dest, IntRegIndex op1, bool wide)
+{
+    if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
+        return new VfpOp(machInst, dest, op1);
+    } else {
+        return new VfpMacroRegRegOp<VfpOp>(machInst, dest, op1, wide);
+    }
+}
+
+template <class Micro>
+class VfpMacroRegImmOp : public VfpMacroOp
+{
+  public:
+    VfpMacroRegImmOp(ExtMachInst _machInst, IntRegIndex _dest, uint64_t _imm,
+                     bool _wide) :
+        VfpMacroOp("VfpMacroRegImmOp", _machInst, No_OpClass, _wide)
+    {
+        numMicroops = machInst.fpscrLen + 1;
+        microOps = new StaticInstPtr[numMicroops];
+        for (unsigned i = 0; i < numMicroops; i++) {
+            VfpMicroMode mode = VfpMicroop;
+            if (i == 0)
+                mode = VfpFirstMicroop;
+            else if (i == numMicroops - 1)
+                mode = VfpLastMicroop;
+            microOps[i] = new Micro(_machInst, _dest, _imm, mode);
+            nextIdxs(_dest);
+        }
+    }
+
+    %(BasicExecPanic)s
+};
+
+template <class VfpOp>
+static StaticInstPtr
+decodeVfpRegImmOp(ExtMachInst machInst,
+        IntRegIndex dest, uint64_t imm, bool wide)
+{
+    if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
+        return new VfpOp(machInst, dest, imm);
+    } else {
+        return new VfpMacroRegImmOp<VfpOp>(machInst, dest, imm, wide);
+    }
+}
+
+template <class Micro>
+class VfpMacroRegRegImmOp : public VfpMacroOp
+{
+  public:
+    VfpMacroRegRegImmOp(ExtMachInst _machInst, IntRegIndex _dest,
+                        IntRegIndex _op1, uint64_t _imm, bool _wide) :
+        VfpMacroOp("VfpMacroRegRegImmOp", _machInst, No_OpClass, _wide)
+    {
+        numMicroops = machInst.fpscrLen + 1;
+        microOps = new StaticInstPtr[numMicroops];
+        for (unsigned i = 0; i < numMicroops; i++) {
+            VfpMicroMode mode = VfpMicroop;
+            if (i == 0)
+                mode = VfpFirstMicroop;
+            else if (i == numMicroops - 1)
+                mode = VfpLastMicroop;
+            microOps[i] = new Micro(_machInst, _dest, _op1, _imm, mode);
+            nextIdxs(_dest, _op1);
+        }
+    }
+
+    %(BasicExecPanic)s
+};
+
+template <class VfpOp>
+static StaticInstPtr
+decodeVfpRegRegImmOp(ExtMachInst machInst, IntRegIndex dest,
+                     IntRegIndex op1, uint64_t imm, bool wide)
+{
+    if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
+        return new VfpOp(machInst, dest, op1, imm);
+    } else {
+        return new VfpMacroRegRegImmOp<VfpOp>(machInst, dest, op1, imm, wide);
+    }
+}
+
+template <class Micro>
+class VfpMacroRegRegRegOp : public VfpMacroOp
+{
+  public:
+    VfpMacroRegRegRegOp(ExtMachInst _machInst, IntRegIndex _dest,
+                        IntRegIndex _op1, IntRegIndex _op2, bool _wide) :
+        VfpMacroOp("VfpMacroRegRegRegOp", _machInst, No_OpClass, _wide)
+    {
+        numMicroops = machInst.fpscrLen + 1;
+        microOps = new StaticInstPtr[numMicroops];
+        for (unsigned i = 0; i < numMicroops; i++) {
+            VfpMicroMode mode = VfpMicroop;
+            if (i == 0)
+                mode = VfpFirstMicroop;
+            else if (i == numMicroops - 1)
+                mode = VfpLastMicroop;
+            microOps[i] = new Micro(_machInst, _dest, _op1, _op2, mode);
+            nextIdxs(_dest, _op1, _op2);
+        }
+    }
+
+    %(BasicExecPanic)s
+};
+
+template <class VfpOp>
+static StaticInstPtr
+decodeVfpRegRegRegOp(ExtMachInst machInst, IntRegIndex dest,
+                     IntRegIndex op1, IntRegIndex op2, bool wide)
+{
+    if (machInst.fpscrLen == 0 || VfpMacroOp::inScalarBank(dest)) {
+        return new VfpOp(machInst, dest, op1, op2);
+    } else {
+        return new VfpMacroRegRegRegOp<VfpOp>(machInst, dest, op1, op2, wide);
+    }
+}
+}};
+
 let {{
 
     header_output = ""

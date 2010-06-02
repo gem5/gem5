@@ -294,6 +294,32 @@ namespace ArmISA
         Bitfield<11> wnr;
         Bitfield<12> ext;
     EndBitUnion(FSR)
+
+    BitUnion32(FPSCR)
+        Bitfield<0> ioc;
+        Bitfield<1> dzc;
+        Bitfield<2> ofc;
+        Bitfield<3> ufc;
+        Bitfield<4> ixc;
+        Bitfield<7> idc;
+        Bitfield<8> ioe;
+        Bitfield<9> dze;
+        Bitfield<10> ofe;
+        Bitfield<11> ufe;
+        Bitfield<12> ixe;
+        Bitfield<15> ide;
+        Bitfield<18, 16> len;
+        Bitfield<21, 20> stride;
+        Bitfield<23, 22> rMode;
+        Bitfield<24> fz;
+        Bitfield<25> dn;
+        Bitfield<26> ahp;
+        Bitfield<27> qc;
+        Bitfield<28> v;
+        Bitfield<29> c;
+        Bitfield<30> z;
+        Bitfield<31> n;
+    EndBitUnion(FPSCR)
 };
 
 #endif // __ARCH_ARM_MISCREGS_HH__

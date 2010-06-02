@@ -504,65 +504,83 @@ let {{
           case 0x0:
             if (bits(machInst, 6) == 0) {
                 if (single) {
-                    return new VmlaS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VmlaS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VmlaD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VmlaD>(
+                            machInst, vd, vn, vm, true);
                 }
             } else {
                 if (single) {
-                    return new VmlsS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VmlsS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VmlsD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VmlsD>(
+                            machInst, vd, vn, vm, true);
                 }
             }
           case 0x1:
             if (bits(machInst, 6) == 1) {
                 if (single) {
-                    return new VnmlaS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VnmlaS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VnmlaD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VnmlaD>(
+                            machInst, vd, vn, vm, true);
                 }
             } else {
                 if (single) {
-                    return new VnmlsS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VnmlsS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VnmlsD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VnmlsD>(
+                            machInst, vd, vn, vm, true);
                 }
             }
           case 0x2:
             if ((opc3 & 0x1) == 0) {
                 if (single) {
-                    return new VmulS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VmulS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VmulD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VmulD>(
+                            machInst, vd, vn, vm, true);
                 }
             } else {
                 if (single) {
-                    return new VnmulS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VnmulS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VnmulD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VnmulD>(
+                            machInst, vd, vn, vm, true);
                 }
             }
           case 0x3:
             if ((opc3 & 0x1) == 0) {
                 if (single) {
-                    return new VaddS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VaddS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VaddD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VaddD>(
+                            machInst, vd, vn, vm, true);
                 }
             } else {
                 if (single) {
-                    return new VsubS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VsubS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VsubD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VsubD>(
+                            machInst, vd, vn, vm, true);
                 }
             }
           case 0x8:
             if ((opc3 & 0x1) == 0) {
                 if (single) {
-                    return new VdivS(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VdivS>(
+                            machInst, vd, vn, vm, false);
                 } else {
-                    return new VdivD(machInst, vd, vn, vm);
+                    return decodeVfpRegRegRegOp<VdivD>(
+                            machInst, vd, vn, vm, true);
                 }
             }
             break;
@@ -572,39 +590,49 @@ let {{
                     bits(machInst, 3, 0) | (bits(machInst, 19, 16) << 4);
                 if (single) {
                     uint32_t imm = vfp_modified_imm(baseImm, false);
-                    return new VmovImmS(machInst, vd, imm);
+                    return decodeVfpRegImmOp<VmovImmS>(
+                            machInst, vd, imm, false);
                 } else {
                     uint64_t imm = vfp_modified_imm(baseImm, true);
-                    return new VmovImmD(machInst, vd, imm);
+                    return decodeVfpRegImmOp<VmovImmD>(
+                            machInst, vd, imm, true);
                 }
             }
             switch (opc2) {
               case 0x0:
                 if (opc3 == 1) {
                     if (single) {
-                        return new VmovRegS(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VmovRegS>(
+                                machInst, vd, vm, false);
                     } else {
-                        return new VmovRegD(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VmovRegD>(
+                                machInst, vd, vm, true);
                     }
                 } else {
                     if (single) {
-                        return new VabsS(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VabsS>(
+                                machInst, vd, vm, false);
                     } else {
-                        return new VabsD(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VabsD>(
+                                machInst, vd, vm, true);
                     }
                 }
               case 0x1:
                 if (opc3 == 1) {
                     if (single) {
-                        return new VnegS(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VnegS>(
+                                machInst, vd, vm, false);
                     } else {
-                        return new VnegD(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VnegD>(
+                                machInst, vd, vm, true);
                     }
                 } else {
                     if (single) {
-                        return new VsqrtS(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VsqrtS>(
+                                machInst, vd, vm, false);
                     } else {
-                        return new VsqrtD(machInst, vd, vm);
+                        return decodeVfpRegRegOp<VsqrtD>(
+                                machInst, vd, vm, true);
                     }
                 }
               case 0x2:

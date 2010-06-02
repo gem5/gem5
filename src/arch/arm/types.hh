@@ -51,6 +51,10 @@ namespace ArmISA
     typedef uint32_t MachInst;
 
     BitUnion64(ExtMachInst)
+        // FPSCR fields
+        Bitfield<41, 40> fpscrStride;
+        Bitfield<39, 37> fpscrLen;
+
         // Bitfields to select mode.
         Bitfield<36>     thumb;
         Bitfield<35>     bigThumb;

@@ -68,7 +68,72 @@ setVfpMicroFlags(VfpMicroMode mode, T &flags)
       case VfpNotAMicroop:
         break;
     }
+    if (mode == VfpMicroop || mode == VfpFirstMicroop) {
+        flags[StaticInst::IsDelayedCommit] = true;
+    }
 }
+
+class VfpMacroOp : public PredMacroOp
+{
+  public:
+    static bool
+    inScalarBank(IntRegIndex idx)
+    {
+        return (idx % 32) < 8;
+    }
+
+  protected:
+    bool wide;
+
+    VfpMacroOp(const char *mnem, ExtMachInst _machInst,
+            OpClass __opClass, bool _wide) :
+        PredMacroOp(mnem, _machInst, __opClass), wide(_wide)
+    {}
+
+    IntRegIndex
+    addStride(IntRegIndex idx, unsigned stride)
+    {
+        if (wide) {
+            stride *= 2;
+        }
+        unsigned offset = idx % 8;
+        idx = (IntRegIndex)(idx - offset);
+        offset += stride;
+        idx = (IntRegIndex)(idx + (offset % 8));
+        return idx;
+    }
+
+    void
+    nextIdxs(IntRegIndex &dest, IntRegIndex &op1, IntRegIndex &op2)
+    {
+        unsigned stride = (machInst.fpscrStride == 0) ? 1 : 2;
+        assert(!inScalarBank(dest));
+        dest = addStride(dest, stride);
+        op1 = addStride(op1, stride);
+        if (!inScalarBank(op2)) {
+            op2 = addStride(op2, stride);
+        }
+    }
+
+    void
+    nextIdxs(IntRegIndex &dest, IntRegIndex &op1)
+    {
+        unsigned stride = (machInst.fpscrStride == 0) ? 1 : 2;
+        assert(!inScalarBank(dest));
+        dest = addStride(dest, stride);
+        if (!inScalarBank(op1)) {
+            op1 = addStride(op1, stride);
+        }
+    }
+
+    void
+    nextIdxs(IntRegIndex &dest)
+    {
+        unsigned stride = (machInst.fpscrStride == 0) ? 1 : 2;
+        assert(!inScalarBank(dest));
+        dest = addStride(dest, stride);
+    }
+};
 
 class VfpRegRegOp : public RegRegOp
 {
