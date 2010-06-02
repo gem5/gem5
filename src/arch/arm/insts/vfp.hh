@@ -175,6 +175,30 @@ bitsToFp(uint64_t bits, double junk)
 
 template <class fpType>
 static inline fpType
+fixDest(FPSCR fpscr, fpType val, fpType op1)
+{
+    int fpClass = std::fpclassify(val);
+    fpType junk = 0.0;
+    if (fpClass == FP_NAN) {
+        const bool single = (sizeof(val) == sizeof(float));
+        const uint64_t qnan = single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+        const bool nan = std::isnan(op1);
+        if (!nan || (fpscr.dn == 1)) {
+            val = bitsToFp(qnan, junk);
+        } else if (nan) {
+            val = bitsToFp(fpToBits(op1) | qnan, junk);
+        }
+    } else if (fpClass == FP_SUBNORMAL && fpscr.fz == 1) {
+        // Turn val into a zero with the correct sign;
+        uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
+        val = bitsToFp(fpToBits(val) & bitMask, junk);
+        feraiseexcept(FeUnderflow);
+    }
+    return val;
+}
+
+template <class fpType>
+static inline fpType
 fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
 {
     int fpClass = std::fpclassify(val);
@@ -204,6 +228,84 @@ fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
         feraiseexcept(FeUnderflow);
     }
     return val;
+}
+
+template <class fpType>
+static inline fpType
+fixMultDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
+{
+    fpType mid = fixDest(fpscr, val, op1, op2);
+    const bool single = (sizeof(fpType) == sizeof(float));
+    const fpType junk = 0.0;
+    if ((single && (val == bitsToFp(0x00800000, junk) ||
+                    val == bitsToFp(0x80800000, junk))) ||
+        (!single && (val == bitsToFp(ULL(0x0010000000000000), junk) ||
+                     val == bitsToFp(ULL(0x8010000000000000), junk)))
+        ) {
+        __asm__ __volatile__("" : "=m" (op1) : "m" (op1));
+        fesetround(FeRoundZero);
+        fpType temp = 0.0;
+        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
+        temp = op1 * op2;
+        if (!std::isnormal(temp)) {
+            feraiseexcept(FeUnderflow);
+        }
+        __asm__ __volatile__("" :: "m" (temp));
+    }
+    return mid;
+}
+
+template <class fpType>
+static inline fpType
+fixDivDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
+{
+    fpType mid = fixDest(fpscr, val, op1, op2);
+    const bool single = (sizeof(fpType) == sizeof(float));
+    const fpType junk = 0.0;
+    if ((single && (val == bitsToFp(0x00800000, junk) ||
+                    val == bitsToFp(0x80800000, junk))) ||
+        (!single && (val == bitsToFp(ULL(0x0010000000000000), junk) ||
+                     val == bitsToFp(ULL(0x8010000000000000), junk)))
+        ) {
+        __asm__ __volatile__("" : "=m" (op1) : "m" (op1));
+        fesetround(FeRoundZero);
+        fpType temp = 0.0;
+        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
+        temp = op1 / op2;
+        if (!std::isnormal(temp)) {
+            feraiseexcept(FeUnderflow);
+        }
+        __asm__ __volatile__("" :: "m" (temp));
+    }
+    return mid;
+}
+
+static inline float
+fixFpDFpSDest(FPSCR fpscr, double val)
+{
+    const float junk = 0.0;
+    float op1 = 0.0;
+    if (std::isnan(val)) {
+        uint64_t valBits = fpToBits(val);
+        uint32_t op1Bits = bits(valBits, 50, 29) |
+                           (mask(9) << 22) |
+                           (bits(valBits, 63) << 31);
+        op1 = bitsToFp(op1Bits, junk);
+    }
+    float mid = fixDest(fpscr, (float)val, op1);
+    if (mid == bitsToFp(0x00800000, junk) ||
+        mid == bitsToFp(0x80800000, junk)) {
+        __asm__ __volatile__("" : "=m" (val) : "m" (val));
+        fesetround(FeRoundZero);
+        float temp = 0.0;
+        __asm__ __volatile__("" : "=m" (temp) : "m" (temp));
+        temp = val;
+        if (!std::isnormal(temp)) {
+            feraiseexcept(FeUnderflow);
+        }
+        __asm__ __volatile__("" :: "m" (temp));
+    }
+    return mid;
 }
 
 static inline uint64_t
@@ -282,7 +384,7 @@ vfpFpSToFixed(float val, bool isSigned, bool half, uint8_t imm)
 }
 
 static inline float
-vfpUFixedToFpS(uint32_t val, bool half, uint8_t imm)
+vfpUFixedToFpS(FPSCR fpscr, uint32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -291,11 +393,11 @@ vfpUFixedToFpS(uint32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return val / scale;
+    return fixDivDest(fpscr, val / scale, (float)val, scale);
 }
 
 static inline float
-vfpSFixedToFpS(int32_t val, bool half, uint8_t imm)
+vfpSFixedToFpS(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -304,7 +406,7 @@ vfpSFixedToFpS(int32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return val / scale;
+    return fixDivDest(fpscr, val / scale, (float)val, scale);
 }
 
 static inline uint64_t
@@ -383,7 +485,7 @@ vfpFpDToFixed(double val, bool isSigned, bool half, uint8_t imm)
 }
 
 static inline double
-vfpUFixedToFpD(uint32_t val, bool half, uint8_t imm)
+vfpUFixedToFpD(FPSCR fpscr, uint32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -392,11 +494,11 @@ vfpUFixedToFpD(uint32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return val / scale;
+    return fixDivDest(fpscr, val / scale, (double)val, scale);
 }
 
 static inline double
-vfpSFixedToFpD(int32_t val, bool half, uint8_t imm)
+vfpSFixedToFpD(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -405,7 +507,7 @@ vfpSFixedToFpD(int32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return val / scale;
+    return fixDivDest(fpscr, val / scale, (double)val, scale);
 }
 
 typedef int VfpSavedState;
