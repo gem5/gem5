@@ -398,6 +398,58 @@ def format Thumb16MemReg() {{
     decode_block = decode % classNames
 }};
 
+def format Thumb16MemImm() {{
+    decode = '''
+    {
+        const uint32_t opa = bits(machInst, 15, 12);
+        const uint32_t opb = bits(machInst, 11, 9);
+        const uint32_t lrt = bits(machInst, 2, 0);
+        const uint32_t lrn = bits(machInst, 5, 3);
+        const uint32_t hrt = bits(machInst, 10, 8);
+        const uint32_t imm5 = bits(machInst, 10, 6);
+        const uint32_t imm8 = bits(machInst, 7, 0);
+        const bool load = bits(opb, 2);
+        switch (opa) {
+          case 0x6:
+            if (load) {
+                return new %(ldr)s(machInst, lrt, lrn, true, imm5 << 2);
+            } else {
+                return new %(str)s(machInst, lrt, lrn, true, imm5 << 2);
+            }
+          case 0x7:
+            if (load) {
+                return new %(ldrb)s(machInst, lrt, lrn, true, imm5);
+            } else {
+                return new %(strb)s(machInst, lrt, lrn, true, imm5);
+            }
+          case 0x8:
+            if (load) {
+                return new %(ldrh)s(machInst, lrt, lrn, true, imm5 << 1);
+            } else {
+                return new %(strh)s(machInst, lrt, lrn, true, imm5 << 1);
+            }
+          case 0x9:
+            if (load) {
+                return new %(ldr)s(machInst, hrt, INTREG_SP, true, imm8 << 2);
+            } else {
+                return new %(str)s(machInst, hrt, INTREG_SP, true, imm8 << 2);
+            }
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+    classNames = {
+        "ldr" : loadImmClassName(False, True, False),
+        "str" : storeImmClassName(False, True, False),
+        "ldrh" : loadImmClassName(False, True, False, size=2),
+        "strh" : storeImmClassName(False, True, False, size=2),
+        "ldrb" : loadImmClassName(False, True, False, size=1),
+        "strb" : storeImmClassName(False, True, False, size=1),
+    }
+    decode_block = decode % classNames
+}};
+
 def format ArmLoadMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},
                      mem_flags = [], inst_flags = []) {{
     ea_code = ArmGenericCodeSubs(ea_code)

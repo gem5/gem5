@@ -92,18 +92,7 @@
             0x2, 0x3: WarnUnimpl::ldr();
             default: Thumb16MemReg::thumb16MemReg();
         }
-        0x3: decode TOPCODE_12_11 {
-            0x0: WarnUnimpl::str(); //immediate, thumb
-            0x1: WarnUnimpl::ldr(); //immediate, thumb
-            0x2: WarnUnimpl::strb(); //immediate, thumb
-            0x3: WarnUnimpl::ldrb(); //immediate, thumb
-        }
-        0x4: decode TOPCODE_12_11 {
-            0x0: WarnUnimpl::strh(); //immediate, thumb
-            0x1: WarnUnimpl::ldrh(); //immediate, thumb
-            0x2: WarnUnimpl::str(); //immediate, thumb
-            0x3: WarnUnimpl::ldr(); //immediate, thumb
-        }
+        0x3, 0x4: Thumb16MemImm::thumb16MemImm();
         0x5: decode TOPCODE_12_11 {
             0x0: WarnUnimpl::adr();
             0x1: WarnUnimpl::add(); //sp, immediate
