@@ -67,12 +67,28 @@ class ArmStaticInst : public StaticInst
         int64_t midRes = sub ? (op1 - op2) : (op1 + op2);
         if (bits(midRes, width) != bits(midRes, width - 1)) {
             if (midRes > 0)
-                res = (1LL << (width - 1)) - 1;
+                res = (LL(1) << (width - 1)) - 1;
             else
-                res = -(1LL << (width - 1));
+                res = -(LL(1) << (width - 1));
             return true;
         } else {
             res = midRes;
+            return false;
+        }
+    }
+
+    static bool
+    satInt(int32_t &res, int64_t op, int width)
+    {
+        width--;
+        if (op >= (LL(1) << width)) {
+            res = (LL(1) << width) - 1;
+            return true;
+        } else if (op < -(LL(1) << width)) {
+            res = -(LL(1) << width);
+            return true;
+        } else {
+            res = op;
             return false;
         }
     }
@@ -82,14 +98,29 @@ class ArmStaticInst : public StaticInst
     uSaturateOp(uint32_t &res, int64_t op1, int64_t op2, bool sub=false)
     {
         int64_t midRes = sub ? (op1 - op2) : (op1 + op2);
-        if (midRes >= (1 << width)) {
-            res = (1 << width) - 1;
+        if (midRes >= (LL(1) << width)) {
+            res = (LL(1) << width) - 1;
             return true;
         } else if (midRes < 0) {
             res = 0;
             return true;
         } else {
             res = midRes;
+            return false;
+        }
+    }
+
+    static bool
+    uSatInt(int32_t &res, int64_t op, int width)
+    {
+        if (op >= (LL(1) << width)) {
+            res = (LL(1) << width) - 1;
+            return true;
+        } else if (op < 0) {
+            res = 0;
+            return true;
+        } else {
+            res = op;
             return false;
         }
     }

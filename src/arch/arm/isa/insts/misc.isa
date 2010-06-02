@@ -153,4 +153,78 @@ let {{
     header_output += RevOpDeclare.subst(revshIop)
     decoder_output += RevOpConstructor.subst(revshIop)
     exec_output += PredOpExecute.subst(revshIop)
+
+    ssatCode = '''
+        int32_t operand = shift_rm_imm(Op1, shiftAmt, shiftType, 0);
+        int32_t res;
+        if (satInt(res, operand, satImm))
+            CondCodes = CondCodes | (1 << 27);
+        else
+            CondCodes = CondCodes;
+        Dest = res;
+    '''
+    ssatIop = InstObjParams("ssat", "Ssat", "SatShiftOp",
+                            { "code": ssatCode,
+                              "predicate_test": predicateTest }, [])
+    header_output += SatShiftOpDeclare.subst(ssatIop)
+    decoder_output += SatShiftOpConstructor.subst(ssatIop)
+    exec_output += PredOpExecute.subst(ssatIop)
+
+    usatCode = '''
+        int32_t operand = shift_rm_imm(Op1, shiftAmt, shiftType, 0);
+        int32_t res;
+        if (uSatInt(res, operand, satImm))
+            CondCodes = CondCodes | (1 << 27);
+        else
+            CondCodes = CondCodes;
+        Dest = res;
+    '''
+    usatIop = InstObjParams("usat", "Usat", "SatShiftOp",
+                            { "code": usatCode,
+                              "predicate_test": predicateTest }, [])
+    header_output += SatShiftOpDeclare.subst(usatIop)
+    decoder_output += SatShiftOpConstructor.subst(usatIop)
+    exec_output += PredOpExecute.subst(usatIop)
+
+    ssat16Code = '''
+        int32_t res;
+        uint32_t resTemp = 0;
+        CondCodes = CondCodes;
+        int32_t argLow = sext<16>(bits(Op1, 15, 0));
+        int32_t argHigh = sext<16>(bits(Op1, 31, 16));
+        if (satInt(res, argLow, satImm))
+            CondCodes = CondCodes | (1 << 27);
+        replaceBits(resTemp, 15, 0, res);
+        if (satInt(res, argHigh, satImm))
+            CondCodes = CondCodes | (1 << 27);
+        replaceBits(resTemp, 31, 16, res);
+        Dest = resTemp;
+    '''
+    ssat16Iop = InstObjParams("ssat16", "Ssat16", "SatOp",
+                              { "code": ssat16Code,
+                                "predicate_test": predicateTest }, [])
+    header_output += SatOpDeclare.subst(ssat16Iop)
+    decoder_output += SatOpConstructor.subst(ssat16Iop)
+    exec_output += PredOpExecute.subst(ssat16Iop)
+
+    usat16Code = '''
+        int32_t res;
+        uint32_t resTemp = 0;
+        CondCodes = CondCodes;
+        int32_t argLow = sext<16>(bits(Op1, 15, 0));
+        int32_t argHigh = sext<16>(bits(Op1, 31, 16));
+        if (uSatInt(res, argLow, satImm))
+            CondCodes = CondCodes | (1 << 27);
+        replaceBits(resTemp, 15, 0, res);
+        if (uSatInt(res, argHigh, satImm))
+            CondCodes = CondCodes | (1 << 27);
+        replaceBits(resTemp, 31, 16, res);
+        Dest = resTemp;
+    '''
+    usat16Iop = InstObjParams("usat16", "Usat16", "SatOp",
+                              { "code": usat16Code,
+                                "predicate_test": predicateTest }, [])
+    header_output += SatOpDeclare.subst(usat16Iop)
+    decoder_output += SatOpConstructor.subst(usat16Iop)
+    exec_output += PredOpExecute.subst(usat16Iop)
 }};
