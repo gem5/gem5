@@ -96,20 +96,25 @@ let {{
             }
             break;
           case 0x1:
-            switch (bits(opcode, 1, 0)) {
-              case 0x0:
-                return new VLdmStm(machInst, rn, vd, single,
-                                   true, false, false, offset);
-              case 0x1:
-                return new VLdmStm(machInst, rn, vd, single,
-                                   true, false, true, offset);
-              case 0x2:
-                return new VLdmStm(machInst, rn, vd, single,
-                                   true, true, false, offset);
-              case 0x3:
-                // If rn == sp, then this is called vpop.
-                return new VLdmStm(machInst, rn, vd, single,
-                                   true, true, true, offset);
+            {
+                if (offset == 0 || vd + offset > NumFloatArchRegs) {
+                    break;
+                }
+                switch (bits(opcode, 1, 0)) {
+                  case 0x0:
+                    return new VLdmStm(machInst, rn, vd, single,
+                                       true, false, false, offset);
+                  case 0x1:
+                    return new VLdmStm(machInst, rn, vd, single,
+                                       true, false, true, offset);
+                  case 0x2:
+                    return new VLdmStm(machInst, rn, vd, single,
+                                       true, true, false, offset);
+                  case 0x3:
+                    // If rn == sp, then this is called vpop.
+                    return new VLdmStm(machInst, rn, vd, single,
+                                       true, true, true, offset);
+                }
             }
           case 0x2:
             if (bits(opcode, 1, 0) == 0x2) {
