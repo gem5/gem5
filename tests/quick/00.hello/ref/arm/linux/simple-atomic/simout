@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 27 2010 16:56:18
-M5 revision 6429cd018766 7083 default qtip vfpmacromemstats.patch tip
-M5 started Feb 27 2010 16:56:19
+M5 compiled Feb 27 2010 17:02:03
+M5 revision 3ba6c6c19ddd 7101 default qtip syscallfromintstats.patch tip
+M5 started Feb 27 2010 17:02:04
 M5 executing on tater
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
