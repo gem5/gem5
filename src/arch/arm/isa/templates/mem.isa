@@ -342,6 +342,8 @@ def template LoadInitiateAcc {{
             if (fault == NoFault) {
                 fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
             }
+        } else if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
