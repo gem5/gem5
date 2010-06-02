@@ -238,9 +238,9 @@ class ArmStaticInst : public StaticInst
         Addr newPc = (val & ~PcModeMask);
         if (thumbEE) {
             if (bits(newPc, 0)) {
-                warn("Bad thumbEE interworking branch address %#x.\n", newPc);
-            } else {
                 newPc = newPc & ~mask(1);
+            } else {
+                panic("Bad thumbEE interworking branch address %#x.\n", newPc);
             }
         } else {
             if (bits(newPc, 0)) {

@@ -69,15 +69,8 @@ let {{
     blxCode = '''
     Addr PC = readPC(xc);
     Addr tBit = PC & (ULL(1) << PcTBitShift);
-    // Other than the assert below, jBit isn't used.
-#if !defined(NDEBUG)
-    Addr jBit = PC & (ULL(1) << PcJBitShift);
-#endif
-    // X isn't permitted in ThumbEE mode. We shouldn't be in jazzelle mode?
-    assert(!jBit);
     bool arm = !tBit;
     arm = arm; // In case it's not used otherwise.
-    Addr tempPc = ((%(newPC)s) & mask(32)) | (PC & ~mask(32));
     %(link)s
     // Switch modes
     %(branch)s
@@ -89,11 +82,6 @@ let {{
 
     for (mnem, imm, link) in blxList:
         Name = mnem.capitalize()
-        if imm and link: #blx with imm
-            branchStr = "FNPC = tempPc ^ (ULL(1) << PcTBitShift);"
-        else:
-            branchStr = "IWNPC = tempPc ^ (ULL(1) << PcTBitShift);"
-
         if imm:
             Name += "Imm"
             # Since we're switching ISAs, the target ISA will be the opposite
@@ -104,7 +92,7 @@ let {{
             constructor = BranchImmConstructor
         else:
             Name += "Reg"
-            newPC = '(PC & PcModeMask) | Op1'
+            newPC = 'Op1'
             base = "BranchRegCond"
             declare = BranchRegCondDeclare
             constructor = BranchRegCondConstructor
@@ -127,6 +115,16 @@ let {{
             '''
         else:
             linkStr = ""
+
+        if imm and link: #blx with imm
+            branchStr = '''
+                Addr tempPc = ((%(newPC)s) & mask(32)) | (PC & ~mask(32));
+                FNPC = tempPc ^ (ULL(1) << PcTBitShift);
+            '''
+        else:
+            branchStr = "IWNPC = %(newPC)s;"
+        branchStr = branchStr % { "newPC" : newPC }
+
         code = blxCode % {"link": linkStr,
                           "newPC": newPC,
                           "branch": branchStr}
