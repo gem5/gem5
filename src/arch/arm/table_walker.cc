@@ -80,7 +80,7 @@ TableWalker::getPort(const std::string &if_name, int idx)
 }
 
 Fault
-TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode mode,
+TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _mode,
             TLB::Translation *_trans, bool _timing)
 {
     // Right now 1 CPU == 1 TLB == 1 TLB walker
@@ -95,6 +95,7 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode m
     fault = NoFault;
     contextId = _cid;
     timing = _timing;
+    mode = _mode;
 
     /** @todo These should be cached or grabbed from cached copies in
      the TLB, all these miscreg reads are expensive */
@@ -378,8 +379,10 @@ TableWalker::doL1Descriptor()
     switch (l1Desc.type()) {
       case L1Descriptor::Ignore:
       case L1Descriptor::Reserved:
-        tc = NULL;
-        req = NULL;
+        if (!delayed) {
+            tc = NULL;
+            req = NULL;
+        }
         DPRINTF(TLB, "L1 Descriptor Reserved/Ignore, causing fault\n");
         if (isFetch)
             fault = new PrefetchAbort(vaddr, ArmFault::Translation0);
@@ -422,8 +425,10 @@ TableWalker::doL1Descriptor()
         DPRINTF(TLB, " - domain from l1 desc: %d data: %#x bits:%d\n",
                 l1Desc.domain(), l1Desc.data, (l1Desc.data >> 5) & 0xF );
 
-        tc = NULL;
-        req = NULL;
+        if (!timing) {
+            tc = NULL;
+            req = NULL;
+        }
         tlb->insert(vaddr, te);
 
         return;
@@ -437,13 +442,16 @@ TableWalker::doL1Descriptor()
         fault = tlb->walkTrickBoxCheck(l2desc_addr, vaddr, sizeof(uint32_t),
                 isFetch, isWrite, l1Desc.domain(), false);
         if (fault) {
-           tc = NULL;
-           req = NULL;
-           return;
+            if (!timing) {
+                tc = NULL;
+                req = NULL;
+            }
+            return;
         }
 
 
         if (timing) {
+            delayed = true;
             port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
                     &doL2DescEvent, (uint8_t*)&l2Desc.data, 0);
         } else {
@@ -465,8 +473,10 @@ TableWalker::doL2Descriptor()
 
     if (l2Desc.invalid()) {
         DPRINTF(TLB, "L2 descriptor invalid, causing fault\n");
-        tc = NULL;
-        req = NULL;
+        if (!delayed) {
+            tc = NULL;
+            req = NULL;
+        }
         if (isFetch)
             fault = new PrefetchAbort(vaddr, ArmFault::Translation1);
         else
@@ -502,9 +512,59 @@ TableWalker::doL2Descriptor()
     te.domain = l1Desc.domain();
     memAttrs(te, l2Desc.texcb(), l2Desc.shareable());
 
-    tc = NULL;
-    req = NULL;
+    if (!delayed) {
+        tc = NULL;
+        req = NULL;
+    }
     tlb->insert(vaddr, te);
+}
+
+void
+TableWalker::doL1DescriptorWrapper()
+{
+    delayed = false;
+
+    DPRINTF(TLBVerbose, "calling doL1Descriptor\n");
+    doL1Descriptor();
+
+    // Check if fault was generated
+    if (fault != NoFault) {
+        transState->finish(fault, req, tc, mode);
+
+        req = NULL;
+        tc = NULL;
+        delayed = false;
+    }
+    else if (!delayed) {
+        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        fault = tlb->translateTiming(req, tc, transState, mode);
+
+        req = NULL;
+        tc = NULL;
+        delayed = false;
+    }
+}
+
+void
+TableWalker::doL2DescriptorWrapper()
+{
+    assert(delayed);
+
+    DPRINTF(TLBVerbose, "calling doL2Descriptor\n");
+    doL2Descriptor();
+
+    // Check if fault was generated
+    if (fault != NoFault) {
+        transState->finish(fault, req, tc, mode);
+    }
+    else {
+        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        fault = tlb->translateTiming(req, tc, transState, mode);
+    }
+
+    req = NULL;
+    tc = NULL;
+    delayed = false;
 }
 
 ArmISA::TableWalker *

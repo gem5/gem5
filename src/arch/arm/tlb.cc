@@ -408,8 +408,11 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
                 vaddr, context_id);
         fault = tableWalker->walk(req, tc, context_id, mode, translation,
                 timing);
-        if (timing)
+        if (timing) {
             delay = true;
+            // for timing mode, return and wait for table walk
+            return fault;
+        }
         if (fault)
             return fault;
 

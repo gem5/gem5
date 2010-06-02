@@ -289,6 +289,12 @@ class TableWalker : public MemObject
     L1Descriptor l1Desc;
     L2Descriptor l2Desc;
 
+    /** Save mode for use in delayed response */
+    BaseTLB::Mode mode;
+
+    /** Whether L1/L2 descriptor response is delayed in timing mode */
+    bool delayed;
+
   public:
     typedef ArmTableWalkerParams Params;
     TableWalker(const Params *p);
@@ -312,10 +318,12 @@ class TableWalker : public MemObject
   private:
 
     void doL1Descriptor();
-    EventWrapper<TableWalker, &TableWalker::doL1Descriptor> doL1DescEvent;
+    void doL1DescriptorWrapper();
+    EventWrapper<TableWalker, &TableWalker::doL1DescriptorWrapper> doL1DescEvent;
 
     void doL2Descriptor();
-    EventWrapper<TableWalker, &TableWalker::doL2Descriptor> doL2DescEvent;
+    void doL2DescriptorWrapper();
+    EventWrapper<TableWalker, &TableWalker::doL2DescriptorWrapper> doL2DescEvent;
 
 
 };
