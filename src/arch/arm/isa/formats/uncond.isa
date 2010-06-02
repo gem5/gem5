@@ -1,0 +1,155 @@
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+def format ArmUnconditional() {{
+    decode_block = '''
+    {
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const uint32_t op1 = bits(machInst, 27, 20);
+        if (bits(op1, 7) == 0) {
+            const uint32_t op2 = bits(machInst, 7, 4);
+            if (op1 == 0x10) {
+                if (bits((uint32_t)rn, 0) == 1 && op2 == 0) {
+                    return new WarnUnimplemented("setend", machInst);
+                } else if (bits((uint32_t)rn, 0) == 0 && bits(op2, 1) == 0) {
+                    return new WarnUnimplemented("cps", machInst);
+                }
+            } else if (bits(op1, 6, 5) == 0x1) {
+                return new WarnUnimplemented(
+                        "Advanced SIMD data-processing", machInst);
+            } else if (bits(op1, 6, 4) == 0x4) {
+                if (bits(op1, 0) == 0) {
+                    return new WarnUnimplemented(
+                            "Advanced SIMD element or structure load/store",
+                            machInst);
+                } else if (bits(op1, 2, 0) == 1) {
+                    // Unallocated memory hint
+                    return new WarnUnimplemented("nop", machInst);
+                } else if (bits(op1, 2, 0) == 5) {
+                    return new WarnUnimplemented("pli", machInst);
+                }
+            } else if (bits(op1, 6, 4) == 0x5) {
+                if (bits(op1, 1, 0) == 0x1) {
+                    return new WarnUnimplemented("pld", machInst);
+                } else if (op1 == 0x57) {
+                    switch (op2) {
+                      case 0x1:
+                        return new WarnUnimplemented("clrex", machInst);
+                      case 0x4:
+                        return new WarnUnimplemented("dsb", machInst);
+                      case 0x5:
+                        return new WarnUnimplemented("dmb", machInst);
+                      case 0x6:
+                        return new WarnUnimplemented("isb", machInst);
+                    }
+                }
+            } else if (bits(op2, 0) == 0) {
+                switch (op1 & 0xf7) {
+                  case 0x61:
+                    // Unallocated memory hint
+                    return new WarnUnimplemented("nop", machInst);
+                  case 0x65:
+                    return new WarnUnimplemented("pli", machInst);
+                  case 0x71:
+                    return new WarnUnimplemented("pld", machInst);
+                }
+            }
+        } else {
+            switch (bits(machInst, 26, 25)) {
+              case 0x0:
+                {
+                    const uint32_t val = ((machInst >> 20) & 0x5);
+                    if (val == 0x4) {
+                        return new WarnUnimplemented("srs", machInst);
+                    } else if (val == 0x1) {
+                        return new WarnUnimplemented("rfe", machInst);
+                    }
+                }
+                break;
+              case 0x1:
+                {
+                    const uint32_t imm =
+                        (sext<26>(bits(machInst, 23, 0) << 2)) |
+                        (bits(machInst, 24) << 1);
+                    return new BlxImm(machInst, imm);
+                }
+              case 0x2:
+                if (bits(op1, 0) == 1) {
+                    if (rn == INTREG_PC) {
+                        if (bits(op1, 4, 3) != 0x0) {
+                            return new WarnUnimplemented(
+                                    "ldc, ldc2 (literal)", machInst);
+                        }
+                    } else {
+                        if (op1 == 0xC3 || op1 == 0xC7) {
+                            return new WarnUnimplemented(
+                                    "ldc, ldc2 (immediate)", machInst);
+                        }
+                    }
+                    if (op1 == 0xC5) {
+                        return new WarnUnimplemented("mrrc, mrrc2", machInst);
+                    }
+                } else {
+                    if (bits(op1, 4, 3) != 0 || bits(op1, 1) == 1) {
+                        return new WarnUnimplemented("stc, stc2", machInst);
+                    } else if (op1 == 0xC4) {
+                        return new WarnUnimplemented("mcrr, mcrrc", machInst);
+                    }
+                }
+                break;
+              case 0x3:
+                {
+                    const bool op = bits(machInst, 4);
+                    if (op) {
+                        if (bits(op1, 0)) {
+                            return new WarnUnimplemented(
+                                    "mrc, mrc2", machInst);
+                        } else {
+                            return new WarnUnimplemented(
+                                    "mcr, mcr2", machInst);
+                        }
+                    } else {
+                        return new WarnUnimplemented("cdp, cdp2", machInst);
+                    }
+                }
+                break;
+            }
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};

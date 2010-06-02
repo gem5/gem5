@@ -50,7 +50,9 @@
 //
 //
 
-0: decode ENCODING {
+0: decode COND_CODE {
+0xF: ArmUnconditional::armUnconditional();
+default: decode ENCODING {
 format DataOp {
     0x0: decode SEVEN_AND_FOUR {
         1: decode MISC_OPCODE {
@@ -303,6 +305,7 @@ format DataOp {
 #endif // FULL_SYSTEM
     } // OPCODE_24
 
+}
 }
 }
 
