@@ -66,8 +66,6 @@ class ArmStaticInstBase : public StaticInst
     bool arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
     bool arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
 
-    uint32_t modified_imm(uint8_t ctrlImm, uint8_t dataImm) const;
-
     // Constructor
     ArmStaticInstBase(const char *mnem, ExtMachInst _machInst,
             OpClass __opClass)

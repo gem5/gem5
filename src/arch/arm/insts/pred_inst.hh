@@ -54,6 +54,30 @@ rotate_imm(uint32_t immValue, int rotateValue)
             (immValue << (32 - (rotateValue & 31))));
 }
 
+static inline uint32_t
+modified_imm(uint8_t ctrlImm, uint8_t dataImm)
+{
+    uint32_t bigData = dataImm;
+    uint32_t bigCtrl = ctrlImm;
+    if (bigCtrl < 4) {
+        switch (bigCtrl) {
+          case 0:
+            return bigData;
+          case 1:
+            return bigData | (bigData << 16);
+          case 2:
+            return (bigData << 8) | (bigData << 24);
+          case 3:
+            return (bigData << 0) | (bigData << 8) |
+                   (bigData << 16) | (bigData << 24);
+        }
+    }
+    bigCtrl = (bigCtrl << 1) | ((bigData >> 7) & 0x1);
+    bigData |= (1 << 7);
+    return bigData << (32 - bigCtrl);
+}
+
+
 /**
  * Base class for predicated integer operations.
  */
