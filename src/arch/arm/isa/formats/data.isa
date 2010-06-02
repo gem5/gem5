@@ -165,7 +165,9 @@ def format ArmPackUnpackSatReverse() {{
             break;
           case 0x3:
             if (op2 == 0x1) {
-                return new WarnUnimplemented("rev", machInst);
+                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                return new Rev(machInst, rd, rm);
             } else if (op2 == 0x3) {
                 if (a == 0xf) {
                     return new WarnUnimplemented("sxth", machInst);
@@ -173,7 +175,9 @@ def format ArmPackUnpackSatReverse() {{
                     return new WarnUnimplemented("sxtah", machInst);
                 }
             } else if (op2 == 0x5) {
-                return new WarnUnimplemented("rev16", machInst);
+                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                return new Rev16(machInst, rd, rm);
             }
             break;
           case 0x4:
@@ -206,7 +210,9 @@ def format ArmPackUnpackSatReverse() {{
                     return new WarnUnimplemented("uxtah", machInst);
                 }
             } else if (op2 == 0x5) {
-                return new WarnUnimplemented("revsh", machInst);
+                IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+                return new Revsh(machInst, rd, rm);
             }
             break;
         }
