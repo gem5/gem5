@@ -53,6 +53,12 @@ let {{
         return memClassName("LOAD_REG", post, add, writeback,
                             size, sign, user)
 
+    def loadDoubleImmClassName(post, add, writeback):
+        return memClassName("LOAD_IMMD", post, add, writeback, 4, False, False)
+
+    def loadDoubleRegClassName(post, add, writeback):
+        return memClassName("LOAD_REGD", post, add, writeback, 4, False, False)
+
     def emitLoad(name, Name, imm, eaCode, accCode, memFlags, instFlags, base):
         global header_output, decoder_output, exec_output
 
@@ -116,6 +122,57 @@ let {{
 
         emitLoad(name, Name, False, eaCode, accCode, [], [], base)
 
+    def buildDoubleImmLoad(mnem, post, add, writeback):
+        name = mnem
+        Name = loadDoubleImmClassName(post, add, writeback)
+
+        if add:
+            op = " +"
+        else:
+            op = " -"
+
+        offset = op + " imm"
+        eaCode = "EA = Base"
+        if not post:
+            eaCode += offset
+        eaCode += ";"
+
+        accCode = '''
+        Rdo = bits(Mem.ud, 31, 0);
+        Rde = bits(Mem.ud, 63, 32);
+        '''
+        if writeback:
+            accCode += "Base = Base %s;\n" % offset
+        base = buildMemBase("MemoryNewImm", post, writeback)
+
+        emitLoad(name, Name, True, eaCode, accCode, [], [], base)
+
+    def buildDoubleRegLoad(mnem, post, add, writeback):
+        name = mnem
+        Name = loadDoubleRegClassName(post, add, writeback)
+
+        if add:
+            op = " +"
+        else:
+            op = " -"
+
+        offset = op + " shift_rm_imm(Index, shiftAmt," + \
+                      " shiftType, CondCodes<29:>)"
+        eaCode = "EA = Base"
+        if not post:
+            eaCode += offset
+        eaCode += ";"
+
+        accCode = '''
+        Rdo = bits(Mem.ud, 31, 0);
+        Rde = bits(Mem.ud, 63, 32);
+        '''
+        if writeback:
+            accCode += "Base = Base %s;\n" % offset
+        base = buildMemBase("MemoryNewReg", post, writeback)
+
+        emitLoad(name, Name, False, eaCode, accCode, [], [], base)
+
     def buildLoads(mnem, size=4, sign=False, user=False):
         buildImmLoad(mnem, True, True, True, size, sign, user)
         buildRegLoad(mnem, True, True, True, size, sign, user)
@@ -130,6 +187,20 @@ let {{
         buildImmLoad(mnem, False, False, False, size, sign, user)
         buildRegLoad(mnem, False, False, False, size, sign, user)
 
+    def buildDoubleLoads(mnem):
+        buildDoubleImmLoad(mnem, True, True, True)
+        buildDoubleRegLoad(mnem, True, True, True)
+        buildDoubleImmLoad(mnem, True, False, True)
+        buildDoubleRegLoad(mnem, True, False, True)
+        buildDoubleImmLoad(mnem, False, True, True)
+        buildDoubleRegLoad(mnem, False, True, True)
+        buildDoubleImmLoad(mnem, False, False, True)
+        buildDoubleRegLoad(mnem, False, False, True)
+        buildDoubleImmLoad(mnem, False, True, False)
+        buildDoubleRegLoad(mnem, False, True, False)
+        buildDoubleImmLoad(mnem, False, False, False)
+        buildDoubleRegLoad(mnem, False, False, False)
+
     buildLoads("ldr")
     buildLoads("ldrt", user=True)
     buildLoads("ldrb", size=1)
@@ -140,4 +211,6 @@ let {{
     buildLoads("ldrht", size=2, user=True)
     buildLoads("hdrsh", size=2, sign=True)
     buildLoads("ldrsht", size=2, sign=True, user=True)
+
+    buildDoubleLoads("ldrd")
 }};

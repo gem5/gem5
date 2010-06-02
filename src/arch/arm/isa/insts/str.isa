@@ -53,6 +53,14 @@ let {{
         return memClassName("STORE_REG", post, add, writeback,
                             size, sign, user)
 
+    def storeDoubleImmClassName(post, add, writeback):
+        return memClassName("STORE_IMMD", post, add, writeback,
+                            4, False, False)
+
+    def storeDoubleRegClassName(post, add, writeback):
+        return memClassName("STORE_REGD", post, add, writeback,
+                            4, False, False)
+
     def emitStore(name, Name, imm, eaCode, accCode, memFlags, instFlags, base):
         global header_output, decoder_output, exec_output
 
@@ -116,6 +124,51 @@ let {{
 
         emitStore(name, Name, False, eaCode, accCode, [], [], base)
 
+    def buildDoubleImmStore(mnem, post, add, writeback):
+        name = mnem
+        Name = storeDoubleImmClassName(post, add, writeback)
+
+        if add:
+            op = " +"
+        else:
+            op = " -"
+
+        offset = op + " imm"
+        eaCode = "EA = Base"
+        if not post:
+            eaCode += offset
+        eaCode += ";"
+
+        accCode = 'Mem.ud = (Rdo.ud & mask(32)) | (Rde.ud << 32);'
+        if writeback:
+            accCode += "Base = Base %s;\n" % offset
+        base = buildMemBase("MemoryNewImm", post, writeback)
+
+        emitStore(name, Name, True, eaCode, accCode, [], [], base)
+
+    def buildDoubleRegStore(mnem, post, add, writeback):
+        name = mnem
+        Name = storeDoubleRegClassName(post, add, writeback)
+
+        if add:
+            op = " +"
+        else:
+            op = " -"
+
+        offset = op + " shift_rm_imm(Index, shiftAmt," + \
+                      " shiftType, CondCodes<29:>)"
+        eaCode = "EA = Base"
+        if not post:
+            eaCode += offset
+        eaCode += ";"
+
+        accCode = 'Mem.ud = (Rdo.ud & mask(32)) | (Rde.ud << 32);'
+        if writeback:
+            accCode += "Base = Base %s;\n" % offset
+        base = buildMemBase("MemoryNewReg", post, writeback)
+
+        emitStore(name, Name, False, eaCode, accCode, [], [], base)
+
     def buildStores(mnem, size=4, sign=False, user=False):
         buildImmStore(mnem, True, True, True, size, sign, user)
         buildRegStore(mnem, True, True, True, size, sign, user)
@@ -130,10 +183,26 @@ let {{
         buildImmStore(mnem, False, False, False, size, sign, user)
         buildRegStore(mnem, False, False, False, size, sign, user)
 
+    def buildDoubleStores(mnem):
+        buildDoubleImmStore(mnem, True, True, True)
+        buildDoubleRegStore(mnem, True, True, True)
+        buildDoubleImmStore(mnem, True, False, True)
+        buildDoubleRegStore(mnem, True, False, True)
+        buildDoubleImmStore(mnem, False, True, True)
+        buildDoubleRegStore(mnem, False, True, True)
+        buildDoubleImmStore(mnem, False, False, True)
+        buildDoubleRegStore(mnem, False, False, True)
+        buildDoubleImmStore(mnem, False, True, False)
+        buildDoubleRegStore(mnem, False, True, False)
+        buildDoubleImmStore(mnem, False, False, False)
+        buildDoubleRegStore(mnem, False, False, False)
+
     buildStores("str")
     buildStores("strt", user=True)
     buildStores("strb", size=1)
     buildStores("strbt", size=1, user=True)
     buildStores("strh", size=2)
     buildStores("strht", size=2, user=True)
+
+    buildDoubleStores("strd")
 }};
