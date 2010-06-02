@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -96,6 +108,13 @@ namespace ArmISA
     // This mask selects bits of the CPSR that actually go in the CondCodes
     // integer register to allow renaming.
     static const uint32_t CondCodesMask = 0xF80F0000;
+
+    // These otherwise unused bits of the PC are used to select a mode
+    // like the J and T bits of the CPSR.
+    static const Addr PcJBitShift = 33;
+    static const Addr PcTBitShift = 34;
+    static const Addr PcModeMask = (ULL(1) << PcJBitShift) |
+                                   (ULL(1) << PcTBitShift);
 
     BitUnion32(SCTLR)
         Bitfield<30> te;  // Thumb Exception Enable

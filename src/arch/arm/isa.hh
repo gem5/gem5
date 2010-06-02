@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -127,6 +139,19 @@ namespace ArmISA
         MiscReg
         readMiscReg(int misc_reg, ThreadContext *tc)
         {
+            if (misc_reg == MISCREG_CPSR) {
+                CPSR cpsr = miscRegs[misc_reg];
+                Addr pc = tc->readPC();
+                if (pc & (ULL(1) << PcJBitShift))
+                    cpsr.j = 1;
+                else
+                    cpsr.j = 0;
+                if (pc & (ULL(1) << PcTBitShift))
+                    cpsr.t = 1;
+                else
+                    cpsr.t = 0;
+                return cpsr;
+            }
             return readMiscRegNoEffect(misc_reg);
         }
 
@@ -171,6 +196,14 @@ namespace ArmISA
         {
             if (misc_reg == MISCREG_CPSR) {
                 updateRegMap(val);
+                CPSR cpsr = val;
+                Addr npc = tc->readNextPC() & ~PcModeMask;
+                if (cpsr.j)
+                    npc = npc | (ULL(1) << PcJBitShift);
+                if (cpsr.t)
+                    npc = npc | (ULL(1) << PcTBitShift);
+
+                tc->setNextPC(npc);
             }
             return setMiscRegNoEffect(misc_reg, val);
         }

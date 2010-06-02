@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
@@ -95,8 +107,7 @@ ArmFaultBase::invoke(ThreadContext *tc)
     cpsr.it1 = cpsr.it2 = 0;
     cpsr.j = 0;
    
-    if (sctlr.te)
-       cpsr.t = 1;
+    cpsr.t = sctlr.te;
     cpsr.a = cpsr.a | abortDisable();
     cpsr.f = cpsr.f | fiqDisable();
     cpsr.i = 1;
@@ -122,12 +133,14 @@ ArmFaultBase::invoke(ThreadContext *tc)
         break;
       default:
         panic("unknown Mode\n");
-    } 
-   
-    DPRINTF(Faults, "Invoking Fault: %s cpsr: %#x PC: %#x lr: %#x\n", name(), cpsr,
-            tc->readPC(), tc->readIntReg(INTREG_LR)); 
-    tc->setPC(getVector(tc));
-    tc->setNextPC(getVector(tc) + cpsr.t ? 2 : 4 );
+    }
+
+    Addr pc = tc->readPC();
+    DPRINTF(Faults, "Invoking Fault: %s cpsr: %#x PC: %#x lr: %#x\n",
+            name(), cpsr, pc, tc->readIntReg(INTREG_LR));
+    Addr newPc = getVector(tc) | (sctlr.te ? (ULL(1) << PcTBitShift) : 0);
+    tc->setPC(newPc);
+    tc->setNextPC(newPc + cpsr.t ? 2 : 4 );
 }
 #endif // FULL_SYSTEM
 

@@ -53,13 +53,16 @@ def operand_types {{
 
 let {{
     maybePCRead = '''
-        ((%(reg_idx)s == PCReg) ? (xc->readPC() + 8) :
+        ((%(reg_idx)s == PCReg) ? ((xc->readPC() & ~PcModeMask) + 8) :
          xc->%(func)s(this, %(op_idx)s))
     '''
     maybePCWrite = '''
-        ((%(reg_idx)s == PCReg) ? xc->setNextPC(%(final_val)s) :
+        ((%(reg_idx)s == PCReg) ? setNextPC(xc, %(final_val)s) :
          xc->%(func)s(this, %(op_idx)s, %(final_val)s))
     '''
+
+    readNPC = 'xc->readNextPC() & ~PcModeMask'
+    writeNPC = 'setNextPC(xc, %(final_val)s)'
 }};
 
 def operands {{
@@ -92,13 +95,12 @@ def operands {{
     #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 30),
 
-    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', None, 40),
+    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', (None, None, 'IsControl'), 40),
     'Spsr': ('ControlReg', 'uw', 'MISCREG_SPSR', None, 41),
     'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', None, 42),
     'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', None, 43),
     'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', None, 44),
     'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 45),
-    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 50),
-    'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 51)
-
+    'NPC': ('NPC', 'ud', None, (None, None, 'IsControl'), 50,
+            readNPC, writeNPC),
 }};
