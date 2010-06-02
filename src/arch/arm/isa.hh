@@ -104,6 +104,7 @@ namespace ArmISA
             sctlr.rao2 = 1;
             sctlr.rao3 = 1;
             sctlr.rao4 = 1;
+            miscRegs[MISCREG_SCTLR] = sctlr;
 
             //XXX We need to initialize the rest of the state.
         }
