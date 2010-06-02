@@ -483,7 +483,47 @@ let {{
         //const uint32_t opc4 = bits(machInst, 3, 0);
         switch (opc1 & 0xb /* 1011 */) {
           case 0x0:
-            return new WarnUnimplemented("vmla, vmls", machInst);
+            if (bits(machInst, 6) == 0) {
+                uint32_t vd;
+                uint32_t vm;
+                uint32_t vn;
+                if (bits(machInst, 8) == 0) {
+                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
+                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
+                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
+                    return new VmlaS(machInst, (IntRegIndex)vd,
+                            (IntRegIndex)vn, (IntRegIndex)vm);
+                } else {
+                    vd = (bits(machInst, 22) << 5) |
+                         (bits(machInst, 15, 12) << 1);
+                    vm = (bits(machInst, 5) << 5) |
+                         (bits(machInst, 3, 0) << 1);
+                    vn = (bits(machInst, 7) << 5) |
+                         (bits(machInst, 19, 16) << 1);
+                    return new VmlaD(machInst, (IntRegIndex)vd,
+                            (IntRegIndex)vn, (IntRegIndex)vm);
+                }
+            } else {
+                uint32_t vd;
+                uint32_t vm;
+                uint32_t vn;
+                if (bits(machInst, 8) == 0) {
+                    vd = bits(machInst, 22) | (bits(machInst, 15, 12) << 1);
+                    vm = bits(machInst, 5) | (bits(machInst, 3, 0) << 1);
+                    vn = bits(machInst, 7) | (bits(machInst, 19, 16) << 1);
+                    return new VmlsS(machInst, (IntRegIndex)vd,
+                            (IntRegIndex)vn, (IntRegIndex)vm);
+                } else {
+                    vd = (bits(machInst, 22) << 5) |
+                         (bits(machInst, 15, 12) << 1);
+                    vm = (bits(machInst, 5) << 5) |
+                         (bits(machInst, 3, 0) << 1);
+                    vn = (bits(machInst, 7) << 5) |
+                         (bits(machInst, 19, 16) << 1);
+                    return new VmlsD(machInst, (IntRegIndex)vd,
+                            (IntRegIndex)vn, (IntRegIndex)vm);
+                }
+            }
           case 0x2:
             if ((opc3 & 0x1) == 0) {
                 uint32_t vd;
