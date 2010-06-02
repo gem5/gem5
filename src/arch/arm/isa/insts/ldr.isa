@@ -93,6 +93,9 @@ let {{
         eaCode += ";"
 
         memFlags = ["ArmISA::TLB::MustBeOne", "%d" % (size - 1)]
+        if user:
+            memFlags.append("ArmISA::TLB::UserMode")
+
         if prefetch:
             Name = "%s_%s" % (mnem.upper(), Name)
             memFlags.append("Request::PREFETCH")
@@ -179,6 +182,9 @@ let {{
         eaCode += ";"
 
         memFlags = ["%d" % (size - 1), "ArmISA::TLB::MustBeOne"]
+        if user:
+            memFlags.append("ArmISA::TLB::UserMode")
+
         if prefetch:
             Name = "%s_%s" % (mnem.upper(), Name)
             memFlags.append("Request::PREFETCH")

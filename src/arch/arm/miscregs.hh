@@ -130,10 +130,13 @@ namespace ArmISA
         MISCREG_DFAR,
         MISCREG_IFAR,
         MISCREG_MPIDR,
+        MISCREG_PRRR,
+        MISCREG_NMRR,
+        MISCREG_TTBCR,
+        MISCREG_ID_PFR0,
         MISCREG_CP15_UNIMP_START,
         MISCREG_CTR = MISCREG_CP15_UNIMP_START,
         MISCREG_TCMTR,
-        MISCREG_ID_PFR0,
         MISCREG_ID_PFR1,
         MISCREG_ID_DFR0,
         MISCREG_ID_AFR0,
@@ -159,7 +162,6 @@ namespace ArmISA
         MISCREG_SCR,
         MISCREG_SDER,
         MISCREG_NSACR,
-        MISCREG_TTBCR,
         MISCREG_V2PCWPR,
         MISCREG_V2PCWPW,
         MISCREG_V2PCWUR,
@@ -168,8 +170,6 @@ namespace ArmISA
         MISCREG_V2POWPW,
         MISCREG_V2POWUR,
         MISCREG_V2POWUW,
-        MISCREG_PRRR,
-        MISCREG_NMRR,
         MISCREG_VBAR,
         MISCREG_MVBAR,
         MISCREG_ISR,
@@ -205,18 +205,20 @@ namespace ArmISA
         "dtlbiall", "dtlbimva", "dtlbiasid",
         "tlbiall", "tlbimva", "tlbiasid", "tlbimvaa",
         "dfsr", "ifsr", "dfar", "ifar", "mpidr",
+        "prrr", "nmrr",  "ttbcr", "id_pfr0",
+        // Unimplemented below
         "ctr", "tcmtr",
-        "id_pfr0", "id_pfr1", "id_dfr0", "id_afr0",
+        "id_pfr1", "id_dfr0", "id_afr0",
         "id_mmfr0", "id_mmfr1", "id_mmfr2", "id_mmfr3",
         "id_isar0", "id_isar1", "id_isar2", "id_isar3", "id_isar4", "id_isar5",
         "par", "aidr", "actlr",
         "adfsr", "aifsr",
         "dcimvac", "dcisw", "mccsw",
         "dccmvau",
-        "scr", "sder", "nsacr", "ttbcr",
+        "scr", "sder", "nsacr",
         "v2pcwpr", "v2pcwpw", "v2pcwur", "v2pcwuw",
         "v2powpr", "v2powpw", "v2powur", "v2powuw",
-        "prrr", "nmrr", "vbar", "mvbar", "isr", "fceidr",
+        "vbar", "mvbar", "isr", "fceidr",
         "nop", "raz"
     };
 
@@ -343,6 +345,49 @@ namespace ArmISA
         Bitfield<27, 24> vfpHalfPrecision;
         Bitfield<31, 28> raz;
     EndBitUnion(MVFR1)
+
+    BitUnion32(PRRR)
+       Bitfield<1,0> tr0;
+       Bitfield<3,2> tr1;
+       Bitfield<5,4> tr2;
+       Bitfield<7,6> tr3;
+       Bitfield<9,8> tr4;
+       Bitfield<11,10> tr5;
+       Bitfield<13,12> tr6;
+       Bitfield<15,14> tr7;
+       Bitfield<16> ds0;
+       Bitfield<17> ds1;
+       Bitfield<18> ns0;
+       Bitfield<19> ns1;
+       Bitfield<24> nos0;
+       Bitfield<25> nos1;
+       Bitfield<26> nos2;
+       Bitfield<27> nos3;
+       Bitfield<28> nos4;
+       Bitfield<29> nos5;
+       Bitfield<30> nos6;
+       Bitfield<31> nos7;
+   EndBitUnion(PRRR)
+
+   BitUnion32(NMRR)
+       Bitfield<1,0> ir0;
+       Bitfield<3,2> ir1;
+       Bitfield<5,4> ir2;
+       Bitfield<7,6> ir3;
+       Bitfield<9,8> ir4;
+       Bitfield<11,10> ir5;
+       Bitfield<13,12> ir6;
+       Bitfield<15,14> ir7;
+       Bitfield<17,16> or0;
+       Bitfield<19,18> or1;
+       Bitfield<21,20> or2;
+       Bitfield<23,22> or3;
+       Bitfield<25,24> or4;
+       Bitfield<27,26> or5;
+       Bitfield<29,28> or6;
+       Bitfield<31,30> or7;
+   EndBitUnion(NMRR)
+
 };
 
 #endif // __ARCH_ARM_MISCREGS_HH__

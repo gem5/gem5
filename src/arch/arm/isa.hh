@@ -41,9 +41,10 @@
  */
 
 #ifndef __ARCH_ARM_ISA_HH__
-#define __ARCH_MRM_ISA_HH__
+#define __ARCH_ARM_ISA_HH__
 
 #include "arch/arm/registers.hh"
+#include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
 
 class ThreadContext;
@@ -223,6 +224,8 @@ namespace ArmISA
                 warn("The ccsidr register isn't implemented and "
                         "always reads as 0.\n");
                 break;
+              case MISCREG_ID_PFR0:
+                return 0x1031; // ThumbEE | !Jazelle | Thumb | ARM
             }
             return readMiscRegNoEffect(misc_reg);
         }
@@ -346,6 +349,52 @@ namespace ArmISA
               case MISCREG_MVFR1:
               case MISCREG_MPIDR:
               case MISCREG_FPSID:
+                return;
+              case MISCREG_TLBIALLIS:
+              case MISCREG_TLBIALL:
+                warn("Need to flush all TLBs in MP\n");
+                tc->getITBPtr()->flushAll();
+                tc->getDTBPtr()->flushAll();
+                return;
+              case MISCREG_ITLBIALL:
+                tc->getITBPtr()->flushAll();
+                return;
+              case MISCREG_DTLBIALL:
+                tc->getDTBPtr()->flushAll();
+                return;
+              case MISCREG_TLBIMVAIS:
+              case MISCREG_TLBIMVA:
+                warn("Need to flush all TLBs in MP\n");
+                tc->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                        bits(newVal, 7,0));
+                tc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                        bits(newVal, 7,0));
+                return;
+              case MISCREG_TLBIASIDIS:
+              case MISCREG_TLBIASID:
+                warn("Need to flush all TLBs in MP\n");
+                tc->getITBPtr()->flushAsid(bits(newVal, 7,0));
+                tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
+                return;
+              case MISCREG_TLBIMVAAIS:
+              case MISCREG_TLBIMVAA:
+                warn("Need to flush all TLBs in MP\n");
+                tc->getITBPtr()->flushMva(mbits(newVal, 31,12));
+                tc->getDTBPtr()->flushMva(mbits(newVal, 31,12));
+                return;
+              case MISCREG_ITLBIMVA:
+                tc->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                        bits(newVal, 7,0));
+                return;
+              case MISCREG_DTLBIMVA:
+                tc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                        bits(newVal, 7,0));
+                return;
+              case MISCREG_ITLBIASID:
+                tc->getITBPtr()->flushAsid(bits(newVal, 7,0));
+                return;
+              case MISCREG_DTLBIASID:
+                tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
                 return;
             }
             setMiscRegNoEffect(misc_reg, newVal);

@@ -107,6 +107,9 @@ let {{
             accCode += "Base = Base %s;\n" % offset
 
         memFlags = ["ArmISA::TLB::MustBeOne", "%d" % (size - 1)]
+        if user:
+            memFlags.append("ArmISA::TLB::UserMode")
+
         if strex:
             memFlags.append("Request::LLSC")
             Name = "%s_%s" % (mnem.upper(), Name)
@@ -184,10 +187,14 @@ let {{
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryReg", post, writeback)
 
-        emitStore(name, Name, False, eaCode, accCode, "",\
-                ["ArmISA::TLB::MustBeOne", \
+        memFlags = ["ArmISA::TLB::MustBeOne", \
                  "ArmISA::TLB::AllowUnaligned", \
-                 "%d" % (size - 1)], [], base)
+                 "%d" % (size - 1)]
+        if user:
+            memFlags.append("ArmISA::TLB::UserMode")
+
+        emitStore(name, Name, False, eaCode, accCode, "",\
+                memFlags, [], base)
 
     def buildDoubleImmStore(mnem, post, add, writeback, \
                             strex=False, vstr=False):

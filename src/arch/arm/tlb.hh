@@ -59,6 +59,8 @@ class ThreadContext;
 
 namespace ArmISA {
 
+class TableWalker;
+
 class TLB : public BaseTLB
 {
   public:
@@ -71,21 +73,24 @@ class TLB : public BaseTLB
         AlignDoubleWord = 0x7,
 
         AllowUnaligned = 0x8,
+        // Priv code operating as if it wasn't
+        UserMode = 0x10,
         // Because zero otherwise looks like a valid setting and may be used
         // accidentally, this bit must be non-zero to show it was used on
         // purpose.
-        MustBeOne = 0x10
+        MustBeOne = 0x20
     };
   protected:
     typedef std::multimap<Addr, int> PageTable;
     PageTable lookupTable;	// Quick lookup into page table
 
-    ArmISA::PTE *table;	// the Page Table
+    TlbEntry *table;	// the Page Table
     int size;			// TLB Size
     int nlu;			// not last used entry (for replacement)
+    TableWalker *tableWalker;
 
     void nextnlu() { if (++nlu >= size) nlu = 0; }
-    ArmISA::PTE *lookup(Addr vpn, uint8_t asn) const;
+    TlbEntry *lookup(Addr vpn, uint8_t asn);
 
     // Access Stats
     mutable Stats::Scalar read_hits;
@@ -101,6 +106,7 @@ class TLB : public BaseTLB
     Stats::Formula invalids;
     Stats::Formula accesses;
 
+
   public:
     typedef ArmTLBParams Params;
     TLB(const Params *p);
@@ -108,17 +114,49 @@ class TLB : public BaseTLB
     virtual ~TLB();
     int getsize() const { return size; }
 
-    void insert(Addr vaddr, ArmISA::PTE &pte);
+    void insert(Addr vaddr, TlbEntry &pte);
+
+    /** Reset the entire TLB */
     void flushAll();
+
+    /** Remove any entries that match both a va and asn
+     * @param mva virtual address to flush
+     * @param asn contextid/asn to flush on match
+     */
+    void flushMvaAsid(Addr mva, uint64_t asn);
+
+    /** Remove any entries that match the asn
+     * @param asn contextid/asn to flush on match
+     */
+    void flushAsid(uint64_t asn);
+
+    /** Remove all entries that match the va regardless of asn
+     * @param mva address to flush from cache
+     */
+    void flushMva(Addr mva);
+
+    Fault trickBoxCheck(RequestPtr req, Mode mode, uint8_t domain, bool sNp);
+    Fault walkTrickBoxCheck(Addr pa, Addr va, Addr sz, bool is_exec, uint8_t
+            domain, bool sNp);
+
+    void printTlb();
+
     void demapPage(Addr vaddr, uint64_t asn)
     {
-        panic("demapPage unimplemented.\n");
+        flushMvaAsid(vaddr, asn);
     }
 
     static bool validVirtualAddress(Addr vaddr);
 
+#if FULL_SYSTEM
+    Fault translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
+            Translation *translation, bool &delay, bool timing);
+#else
+    Fault translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
+            Translation *translation, bool &delay, bool timing);
+#endif
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
+    Fault translateTiming(RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode);
 
     // Checkpointing

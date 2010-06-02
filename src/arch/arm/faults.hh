@@ -75,16 +75,17 @@ class ArmFault : public FaultBase
         Translation1 = 0x7,
         SynchronousExternalAbort0 = 0x8,
         Domain0 = 0x9,
+        SynchronousExternalAbort1 = 0xa,
         Domain1 = 0xb,
-        TranslationTableWalk0 = 0xc,
+        TranslationTableWalkExtAbt0 = 0xc,
         Permission0 = 0xd,
-        SynchronousExternalAbort1 = 0xe,
+        TranslationTableWalkExtAbt1 = 0xe,
         Permission1 = 0xf,
         AsynchronousExternalAbort = 0x16,
         MemoryAccessAsynchronousParityError = 0x18,
         MemoryAccessSynchronousParityError = 0x19,
-        TranslationTableWalk1 = 0x1c,
-        SynchronousParityError = 0x1e
+        TranslationTableWalkPrtyErr0 = 0x1c,
+        TranslationTableWalkPrtyErr1 = 0x1e,
     };
 
     struct FaultVals
@@ -208,7 +209,7 @@ class DataAbort : public AbortFault<DataAbort>
     static const MiscRegIndex FsrIndex = MISCREG_DFSR;
     static const MiscRegIndex FarIndex = MISCREG_DFAR;
 
-    DataAbort(Addr _addr, bool _write, uint8_t _domain, uint8_t _status) :
+    DataAbort(Addr _addr, uint8_t _domain, bool _write, uint8_t _status) :
         AbortFault<DataAbort>(_addr, _write, _domain, _status)
     {}
 };

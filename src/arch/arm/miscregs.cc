@@ -38,6 +38,7 @@
  */
 
 #include "arch/arm/miscregs.hh"
+#include "base/misc.hh"
 
 namespace ArmISA
 {
@@ -424,6 +425,8 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         // Implementation defined
         break;
     }
+    warn("Unknown miscreg: CRn: %d Opc1: %d CRm: %d opc2: %d\n",
+            crn, opc1, crm, opc2);
     // Unrecognized register
     return NUM_MISCREGS;
 }

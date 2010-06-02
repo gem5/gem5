@@ -37,9 +37,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
- *          Ali Saidi
+ * Authors: Ali Saidi
  */
 
 #ifndef __ARCH_ARM_PAGETABLE_H__
@@ -73,22 +71,91 @@ struct PTE
 
 };
 
+struct TlbRange
+{
+    Addr va;
+    Addr size;
+    int contextId;
+    bool global;
+
+    inline bool
+    operator<(const TlbRange &r2) const
+    {
+        if (!(global || r2.global)) {
+            if (contextId < r2.contextId)
+                return true;
+            else if (contextId > r2.contextId)
+                return false;
+        }
+
+        if (va < r2.va)
+            return true;
+        return false;
+    }
+
+    inline bool
+    operator==(const TlbRange &r2) const
+    {
+        return va == r2.va &&
+               size == r2.size &&
+               contextId == r2.contextId &&
+               global == r2.global;
+    }
+};
+
+
 // ITB/DTB table entry
 struct TlbEntry
 {
-    Addr tag;               // virtual page number tag
-    Addr ppn;               // physical page number
-    uint8_t asn;            // address space number
-    bool valid;             // valid page table entry
+  public:
+    enum MemoryType {
+        StronglyOrdered,
+        Device,
+        Normal
+    };
+    enum DomainType {
+        DomainNoAccess = 0,
+        DomainClient,
+        DomainReserved,
+        DomainManager
+    };
 
+    // Matching variables
+    Addr pfn;
+    Addr size;              // Size of this entry, == Type of TLB Rec
+    Addr vpn;               // Virtual Page Number
+    uint32_t asid;          // Address Space Identifier
+    uint8_t N;              // Number of bits in pagesize
+    bool global;
+    bool valid;
 
-    //Construct an entry that maps to physical address addr.
+    // Type of memory
+    bool nonCacheable;     // Can we wrap this in mtype?
+    bool sNp;      // Section descriptor
+
+    // Access permissions
+    bool xn;                // Execute Never
+    uint8_t ap:3;           // Access permissions bits
+    uint8_t domain:4;       // Access Domain
+
+    TlbRange range;         // For fast TLB searching
+
+    //Construct an entry that maps to physical address addr for SE mode
     TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr)
     {
-        tag = _vaddr >> PageShift;
-        ppn = _paddr >> PageShift;
-        asn = _asn;
+        pfn = _paddr >> PageShift;
+        size = PageBytes - 1;
+        asid = _asn;
+        global = false;
         valid = true;
+
+        vpn = _vaddr >> PageShift;
+
+        nonCacheable = sNp = false;
+
+        xn = 0;
+        ap = 0; // ???
+        domain = DomainClient; //???
     }
 
     TlbEntry()
@@ -97,13 +164,28 @@ struct TlbEntry
     void
     updateVaddr(Addr new_vaddr)
     {
-        tag = new_vaddr >> PageShift;
+        vpn = new_vaddr >> PageShift;
     }
 
     Addr
     pageStart()
     {
-        return ppn << PageShift;
+        return pfn << PageShift;
+    }
+
+    bool
+    match(Addr va, uint8_t cid)
+    {
+        Addr v = vpn << N;
+        if (valid && va >= v && va <= v + size && (global || cid == asid))
+            return true;
+        return false;
+    }
+
+    Addr
+    pAddr(Addr va)
+    {
+        return (pfn << N) | (va & size);
     }
 
     void serialize(std::ostream &os) { panic("Need to Implement\n"); }

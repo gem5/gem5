@@ -114,7 +114,6 @@ class BaseCPU(MemObject):
             interrupts = Param.MipsInterrupts(
                     MipsInterrupts(), "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'arm':
-        UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
         itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
         if buildEnv['FULL_SYSTEM']:
@@ -158,6 +157,10 @@ class BaseCPU(MemObject):
                       "interrupts.pio",
                       "interrupts.int_port"]
 
+    if buildEnv['TARGET_ISA'] == 'arm' and buildEnv['FULL_SYSTEM']:
+        _mem_ports = ["itb.walker.port",
+                      "dtb.walker.port"]
+
     def connectMemPorts(self, bus):
         for p in self._mem_ports:
             if p != 'physmem_port':
@@ -170,8 +173,9 @@ class BaseCPU(MemObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
-        if buildEnv['TARGET_ISA'] == 'x86' and buildEnv['FULL_SYSTEM']:
-            self._mem_ports += ["itb.walker_port", "dtb.walker_port"]
+        if buildEnv['FULL_SYSTEM']:
+            if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
+                self._mem_ports += ["itb.walker.port", "dtb.walker.port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
         self.addPrivateSplitL1Caches(ic, dc)
