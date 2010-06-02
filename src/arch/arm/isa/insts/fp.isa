@@ -37,38 +37,16 @@
 //
 // Authors: Gabe Black
 
-//Basic forms of various templates
-##include "basic.isa"
+let {{
 
-//Useful bits shared by memory instructions
-##include "mem.isa"
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
 
-//Loads of a single item
-##include "ldr.isa"
-
-//Miscellaneous instructions that don't fit elsewhere
-##include "misc.isa"
-
-//Stores of a single item
-##include "str.isa"
-
-//Swaps
-##include "swap.isa"
-
-//Load/store multiple
-##include "macromem.isa"
-
-//Data processing instructions
-##include "data.isa"
-
-//Branches
-##include "branch.isa"
-
-//Multiply
-##include "mult.isa"
-
-//Divide
-##include "div.isa"
-
-//FP (VFP and Neon)
-##include "fp.isa"
+    vmsrIop = InstObjParams("vmsr", "Vmsr", "RegRegOp",
+                            { "code": "MiscDest = Op1;",
+                              "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vmsrIop);
+    decoder_output += RegRegOpConstructor.subst(vmsrIop);
+    exec_output += PredOpExecute.subst(vmsrIop);
+}};
