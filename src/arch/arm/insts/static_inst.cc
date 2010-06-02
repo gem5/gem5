@@ -344,7 +344,10 @@ ArmStaticInstBase::printMnemonic(std::ostream &os,
           default:
             panic("Unrecognized condition code %d.\n", condCode);
         }
-        os << suffix << "   ";
+        os << suffix;
+        if (machInst.bigThumb)
+            os << ".w";
+        os << "   ";
     }
 }
 
