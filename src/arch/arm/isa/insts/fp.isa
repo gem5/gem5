@@ -386,7 +386,7 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = FpOp1 * FpOp2;
+        FpDest = fixNan(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
@@ -407,7 +407,7 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        cDest.fp = cOp1.fp * cOp2.fp;
+        cDest.fp = fixNan(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
@@ -476,7 +476,7 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = FpOp1 + FpOp2;
+        FpDest = fixNan(Fpscr, FpOp1 + FpOp2, FpOp1, FpOp2);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -494,7 +494,7 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        cDest.fp = cOp1.fp + cOp2.fp;
+        cDest.fp = fixNan(Fpscr, cOp1.fp + cOp2.fp, cOp1.fp, cOp2.fp);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
@@ -511,7 +511,7 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = FpOp1 - FpOp2;
+        FpDest = fixNan(Fpscr, FpOp1 - FpOp2, FpOp1, FpOp2);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state)
     '''
@@ -529,7 +529,7 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        cDest.fp = cOp1.fp - cOp2.fp;
+        cDest.fp = fixNan(Fpscr, cOp1.fp - cOp2.fp, cOp1.fp, cOp2.fp);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
@@ -546,7 +546,7 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest = FpOp1 / FpOp2;
+        FpDest = fixNan(Fpscr, FpOp1 / FpOp2, FpOp1, FpOp2);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -564,7 +564,7 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cDest.fp));
-        cDest.fp = cOp1.fp / cOp2.fp;
+        cDest.fp = fixNan(Fpscr, cOp1.fp / cOp2.fp, cOp1.fp, cOp2.fp);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
@@ -628,12 +628,12 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = FpOp1 * FpOp2;
+        float mid = fixNan(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = FpDest + mid;
+        FpDest = fixNan(Fpscr, FpDest + mid, FpDest, mid);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -652,13 +652,13 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = cOp1.fp * cOp2.fp;
+        double mid = fixNan(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         vfpFlushToZero(Fpscr, cDest.fp, mid);
-        cDest.fp = cDest.fp + mid;
+        cDest.fp = fixNan(Fpscr, cDest.fp + mid, cDest.fp, mid);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
@@ -675,12 +675,12 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = FpOp1 * FpOp2;
+        float mid = fixNan(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = FpDest - mid;
+        FpDest = fixNan(Fpscr, FpDest - mid, FpDest, mid);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -699,12 +699,12 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = cOp1.fp * cOp2.fp;
+        double mid = fixNan(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
-        cDest.fp = cDest.fp - mid;
+        cDest.fp = fixNan(Fpscr, cDest.fp - mid, cDest.fp, mid);
         vfpFlushToZero(Fpscr, cDest.fp, mid);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
@@ -722,12 +722,12 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = FpOp1 * FpOp2;
+        float mid = fixNan(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = -FpDest - mid;
+        FpDest = fixNan(Fpscr, -FpDest - mid, FpDest, mid);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -746,13 +746,13 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = cOp1.fp * cOp2.fp;
+        double mid = fixNan(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         vfpFlushToZero(Fpscr, cDest.fp, mid);
-        cDest.fp = -cDest.fp - mid;
+        cDest.fp = fixNan(Fpscr, -cDest.fp - mid, cDest.fp, mid);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
@@ -769,12 +769,12 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = FpOp1 * FpOp2;
+        float mid = fixNan(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         vfpFlushToZero(Fpscr, FpDest, mid);
-        FpDest = -FpDest + mid;
+        FpDest = fixNan(Fpscr, -FpDest + mid, FpDest, mid);
         __asm__ __volatile__("" :: "m" (FpDest));
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -793,13 +793,13 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = cOp1.fp * cOp2.fp;
+        double mid = fixNan(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         vfpFlushToZero(Fpscr, cDest.fp, mid);
-        cDest.fp = -cDest.fp + mid;
+        cDest.fp = fixNan(Fpscr, -cDest.fp + mid, cDest.fp, mid);
         __asm__ __volatile__("" :: "m" (cDest.fp));
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
@@ -816,7 +816,7 @@ let {{
         vfpFlushToZero(Fpscr, FpOp1, FpOp2);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        float mid = FpOp1 * FpOp2;
+        float mid = fixNan(Fpscr, FpOp1 * FpOp2, FpOp1, FpOp2);
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
@@ -839,7 +839,7 @@ let {{
         vfpFlushToZero(Fpscr, cOp1.fp, cOp2.fp);
         VfpSavedState state = prepVfpFpscr(Fpscr);
         __asm__ __volatile__("" : "=m" (cOp1.fp) : "m" (cOp1.fp));
-        double mid = cOp1.fp * cOp2.fp;
+        double mid = fixNan(Fpscr, cOp1.fp * cOp2.fp, cOp1.fp, cOp2.fp);
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;

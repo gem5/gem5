@@ -45,6 +45,9 @@
 #include <fenv.h>
 #include <cmath>
 
+namespace ArmISA
+{
+
 enum VfpMicroMode {
     VfpNotAMicroop,
     VfpMicroop,
@@ -120,6 +123,81 @@ vfpFlushToZero(uint32_t &fpscr, fpType &op1, fpType &op2)
 {
     vfpFlushToZero(fpscr, op1);
     vfpFlushToZero(fpscr, op2);
+}
+
+static inline uint32_t
+fpToBits(float fp)
+{
+    union
+    {
+        float fp;
+        uint32_t bits;
+    } val;
+    val.fp = fp;
+    return val.bits;
+}
+
+static inline uint64_t
+fpToBits(double fp)
+{
+    union
+    {
+        double fp;
+        uint64_t bits;
+    } val;
+    val.fp = fp;
+    return val.bits;
+}
+
+static inline float
+bitsToFp(uint64_t bits, float junk)
+{
+    union
+    {
+        float fp;
+        uint32_t bits;
+    } val;
+    val.bits = bits;
+    return val.fp;
+}
+
+static inline double
+bitsToFp(uint64_t bits, double junk)
+{
+    union
+    {
+        double fp;
+        uint64_t bits;
+    } val;
+    val.bits = bits;
+    return val.fp;
+}
+
+template <class fpType>
+static inline fpType
+fixNan(FPSCR fpscr, fpType val, fpType op1, fpType op2)
+{
+    if (std::isnan(val)) {
+        const bool single = (sizeof(val) == sizeof(float));
+        const uint64_t qnan = single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+        const bool nan1 = std::isnan(op1);
+        const bool nan2 = std::isnan(op2);
+        const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
+        const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
+        fpType junk = 0.0;
+        if ((!nan1 && !nan2) || (fpscr.dn == 1)) {
+            val = bitsToFp(qnan, junk);
+        } else if (signal1) {
+            val = bitsToFp(fpToBits(op1) | qnan, junk);
+        } else if (signal2) {
+            val = bitsToFp(fpToBits(op2) | qnan, junk);
+        } else if (nan1) {
+            val = op1;
+        } else if (nan2) {
+            val = op2;
+        }
+    }
+    return val;
 }
 
 static inline uint64_t
@@ -480,5 +558,7 @@ class VfpRegRegRegOp : public RegRegRegOp
         setVfpMicroFlags(mode, flags);
     }
 };
+
+}
 
 #endif //__ARCH_ARM_INSTS_VFP_HH__
