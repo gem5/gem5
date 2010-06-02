@@ -53,7 +53,7 @@ let {{
 let {{
     microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
                                    'MicroMemOp',
-                                   {'memacc_code': 'Ra = Mem;',
+                                   {'memacc_code': 'IWRa = Mem;',
                                     'ea_code': 'EA = Rb + (up ? imm : -imm);',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
