@@ -84,7 +84,7 @@ let {{
         else:
             base = 'Mult4'
 
-        Name = "New" + mnem.capitalize()
+        Name = mnem.capitalize()
 
         if unCc:
             iop = InstObjParams(mnem, Name, base,

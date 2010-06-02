@@ -49,43 +49,43 @@ def format ArmMultAndMultAcc() {{
         switch (op) {
             case 0x0:
               if (s) {
-                  return new NewMulCc(machInst, rd, rm, rn);
+                  return new MulCc(machInst, rd, rm, rn);
               } else {
-                  return new NewMul(machInst, rd, rm, rn);
+                  return new Mul(machInst, rd, rm, rn);
               }
             case 0x1:
               if (s) {
-                  return new NewMlaCc(machInst, rd, rn, rm, ra);
+                  return new MlaCc(machInst, rd, rn, rm, ra);
               } else {
-                  return new NewMla(machInst, rd, rn, rm, ra);
+                  return new Mla(machInst, rd, rn, rm, ra);
               }
             case 0x2:
-              return new NewUmaal(machInst, ra, rd, rn, rm);
+              return new Umaal(machInst, ra, rd, rn, rm);
             case 0x3:
-              return new NewMls(machInst, rd, rn, rm, ra);
+              return new Mls(machInst, rd, rn, rm, ra);
             case 0x4:
               if (s) {
-                  return new NewUmullCc(machInst, ra, rd, rn, rm);
+                  return new UmullCc(machInst, ra, rd, rn, rm);
               } else {
-                  return new NewUmull(machInst, ra, rd, rn, rm);
+                  return new Umull(machInst, ra, rd, rn, rm);
               }
             case 0x5:
               if (s) {
-                  return new NewUmlalCc(machInst, ra, rd, rn, rm);
+                  return new UmlalCc(machInst, ra, rd, rn, rm);
               } else {
-                  return new NewUmlal(machInst, ra, rd, rn, rm);
+                  return new Umlal(machInst, ra, rd, rn, rm);
               }
             case 0x6:
               if (s) {
-                  return new NewSmullCc(machInst, ra, rd, rn, rm);
+                  return new SmullCc(machInst, ra, rd, rn, rm);
               } else {
-                  return new NewSmull(machInst, ra, rd, rn, rm);
+                  return new Smull(machInst, ra, rd, rn, rm);
               }
             case 0x7:
               if (s) {
-                  return new NewSmlalCc(machInst, ra, rd, rn, rm);
+                  return new SmlalCc(machInst, ra, rd, rn, rm);
               } else {
-                  return new NewSmlal(machInst, ra, rd, rn, rm);
+                  return new Smlal(machInst, ra, rd, rn, rm);
               }
         }
     }
@@ -105,49 +105,49 @@ def format ArmHalfWordMultAndMultAcc() {{
           case 0x0:
             switch (bits(machInst, 6, 5)) {
               case 0x0:
-                return new NewSmlabbCc(machInst, rd, rn, rm, ra);
+                return new SmlabbCc(machInst, rd, rn, rm, ra);
               case 0x1:
-                return new NewSmlatbCc(machInst, rd, rn, rm, ra);
+                return new SmlatbCc(machInst, rd, rn, rm, ra);
               case 0x2:
-                return new NewSmlabtCc(machInst, rd, rn, rm, ra);
+                return new SmlabtCc(machInst, rd, rn, rm, ra);
               case 0x3:
-                return new NewSmlattCc(machInst, rd, rn, rm, ra);
+                return new SmlattCc(machInst, rd, rn, rm, ra);
             }
           case 0x1:
             if (op) {
                 if (bits(machInst, 6)) {
-                    return new NewSmulwt(machInst, rd, rn, rm);
+                    return new Smulwt(machInst, rd, rn, rm);
                 } else {
-                    return new NewSmulwb(machInst, rd, rn, rm);
+                    return new Smulwb(machInst, rd, rn, rm);
                 }
             } else {
                 if (bits(machInst, 6)) {
-                    return new NewSmlawtCc(machInst, rd, rn, rm, ra);
+                    return new SmlawtCc(machInst, rd, rn, rm, ra);
                 } else {
-                    return new NewSmlawbCc(machInst, rd, rn, rm, ra);
+                    return new SmlawbCc(machInst, rd, rn, rm, ra);
                 }
             }
           case 0x2:
             switch (bits(machInst, 6, 5)) {
               case 0x0:
-                return new NewSmlalbb(machInst, ra, rd, rn, rm);
+                return new Smlalbb(machInst, ra, rd, rn, rm);
               case 0x1:
-                return new NewSmlaltb(machInst, ra, rd, rn, rm);
+                return new Smlaltb(machInst, ra, rd, rn, rm);
               case 0x2:
-                return new NewSmlalbt(machInst, ra, rd, rn, rm);
+                return new Smlalbt(machInst, ra, rd, rn, rm);
               case 0x3:
-                return new NewSmlaltt(machInst, ra, rd, rn, rm);
+                return new Smlaltt(machInst, ra, rd, rn, rm);
             }
           case 0x3:
             switch (bits(machInst, 6, 5)) {
               case 0x0:
-                return new NewSmulbb(machInst, rd, rn, rm);
+                return new Smulbb(machInst, rd, rn, rm);
               case 0x1:
-                return new NewSmultb(machInst, rd, rn, rm);
+                return new Smultb(machInst, rd, rn, rm);
               case 0x2:
-                return new NewSmulbt(machInst, rd, rn, rm);
+                return new Smulbt(machInst, rd, rn, rm);
               case 0x3:
-                return new NewSmultt(machInst, rd, rn, rm);
+                return new Smultt(machInst, rd, rn, rm);
             }
         }
     }
@@ -170,98 +170,98 @@ def format Thumb32MulMulAccAndAbsDiff() {{
           case 0x0:
             if (op2 == 0) {
                 if (ra == 0xf) {
-                    return new NewMul(machInst, rd, rn, rm);
+                    return new Mul(machInst, rd, rn, rm);
                 } else {
-                    return new NewMla(machInst, rd, rn, rm, ra);
+                    return new Mla(machInst, rd, rn, rm, ra);
                 }
             } else {
-                return new NewMls(machInst, rd, rn, rm, ra);
+                return new Mls(machInst, rd, rn, rm, ra);
             }
           case 0x1:
             if (ra == 0xf) {
                 switch (bits(machInst, 5, 4)) {
                   case 0x0:
-                    return new NewSmulbb(machInst, rd, rn, rm);
+                    return new Smulbb(machInst, rd, rn, rm);
                   case 0x1:
-                    return new NewSmulbt(machInst, rd, rn, rm);
+                    return new Smulbt(machInst, rd, rn, rm);
                   case 0x2:
-                    return new NewSmultb(machInst, rd, rn, rm);
+                    return new Smultb(machInst, rd, rn, rm);
                   case 0x3:
-                    return new NewSmultt(machInst, rd, rn, rm);
+                    return new Smultt(machInst, rd, rn, rm);
                 }
             } else {
                 switch (bits(machInst, 5, 4)) {
                   case 0x0:
-                    return new NewSmlabbCc(machInst, rd, rn, rm, ra);
+                    return new SmlabbCc(machInst, rd, rn, rm, ra);
                   case 0x1:
-                    return new NewSmlabtCc(machInst, rd, rn, rm, ra);
+                    return new SmlabtCc(machInst, rd, rn, rm, ra);
                   case 0x2:
-                    return new NewSmlatbCc(machInst, rd, rn, rm, ra);
+                    return new SmlatbCc(machInst, rd, rn, rm, ra);
                   case 0x3:
-                    return new NewSmlattCc(machInst, rd, rn, rm, ra);
+                    return new SmlattCc(machInst, rd, rn, rm, ra);
                 }
             }
           case 0x2:
             if (ra == 0xf) {
                 if (bits(machInst, 4)) {
-                    return new NewSmuadxCc(machInst, rd, rn, rm);
+                    return new SmuadxCc(machInst, rd, rn, rm);
                 } else {
-                    return new NewSmuadCc(machInst, rd, rn, rm);
+                    return new SmuadCc(machInst, rd, rn, rm);
                 }
             } else {
                 if (bits(machInst, 4)) {
-                    return new NewSmladxCc(machInst, rd, rn, rm, ra);
+                    return new SmladxCc(machInst, rd, rn, rm, ra);
                 } else {
-                    return new NewSmladCc(machInst, rd, rn, rm, ra);
+                    return new SmladCc(machInst, rd, rn, rm, ra);
                 }
             }
           case 0x3:
             if (ra == 0xf) {
                 if (bits(machInst, 4)) {
-                    return new NewSmulwt(machInst, rd, rn, rm);
+                    return new Smulwt(machInst, rd, rn, rm);
                 } else {
-                    return new NewSmulwb(machInst, rd, rn, rm);
+                    return new Smulwb(machInst, rd, rn, rm);
                 }
             } else {
                 if (bits(machInst, 4)) {
-                    return new NewSmlawtCc(machInst, rd, rn, rm, ra);
+                    return new SmlawtCc(machInst, rd, rn, rm, ra);
                 } else {
-                    return new NewSmlawbCc(machInst, rd, rn, rm, ra);
+                    return new SmlawbCc(machInst, rd, rn, rm, ra);
                 }
             }
           case 0x4:
             if (ra == 0xf) {
                 if (bits(machInst, 4)) {
-                    return new NewSmusdx(machInst, rd, rn, rm);
+                    return new Smusdx(machInst, rd, rn, rm);
                 } else {
-                    return new NewSmusd(machInst, rd, rn, rm);
+                    return new Smusd(machInst, rd, rn, rm);
                 }
             } else {
                 if (bits(machInst, 4)) {
-                    return new NewSmlsdxCc(machInst, rd, rn, rm, ra);
+                    return new SmlsdxCc(machInst, rd, rn, rm, ra);
                 } else {
-                    return new NewSmlsdCc(machInst, rd, rn, rm, ra);
+                    return new SmlsdCc(machInst, rd, rn, rm, ra);
                 }
             }
           case 0x5:
             if (ra == 0xf) {
                 if (bits(machInst, 4)) {
-                    return new NewSmmulr(machInst, rd, rn, rm);
+                    return new Smmulr(machInst, rd, rn, rm);
                 } else {
-                    return new NewSmmul(machInst, rd, rn, rm);
+                    return new Smmul(machInst, rd, rn, rm);
                 }
             } else {
                 if (bits(machInst, 4)) {
-                    return new NewSmmlar(machInst, rd, rn, rm, ra);
+                    return new Smmlar(machInst, rd, rn, rm, ra);
                 } else {
-                    return new NewSmmla(machInst, rd, rn, rm, ra);
+                    return new Smmla(machInst, rd, rn, rm, ra);
                 }
             }
           case 0x6:
             if (bits(machInst, 4)) {
-                return new NewSmmlsr(machInst, rd, rn, rm, ra);
+                return new Smmlsr(machInst, rd, rn, rm, ra);
             } else {
-                return new NewSmmls(machInst, rd, rn, rm, ra);
+                return new Smmls(machInst, rd, rn, rm, ra);
             }
           case 0x7:
             if (op2 != 0x0) {
@@ -288,7 +288,7 @@ def format Thumb32LongMulMulAccAndDiv() {{
         switch (op1) {
           case 0x0:
             if (op2 == 0x0) {
-                return new NewSmull(machInst, rdlo, rdhi, rn, rm);
+                return new Smull(machInst, rdlo, rdhi, rn, rm);
             }
             break;
           case 0x1:
@@ -298,7 +298,7 @@ def format Thumb32LongMulMulAccAndDiv() {{
             break;
           case 0x2:
             if (op2 == 0x0) {
-                return new NewUmull(machInst, rdlo, rdhi, rn, rm);
+                return new Umull(machInst, rdlo, rdhi, rn, rm);
             }
             break;
           case 0x3:
@@ -308,39 +308,39 @@ def format Thumb32LongMulMulAccAndDiv() {{
             break;
           case 0x4:
             if (op2 == 0) {
-                return new NewSmlal(machInst, rdlo, rdhi, rn, rm);
+                return new Smlal(machInst, rdlo, rdhi, rn, rm);
             } else if (bits(op2, 3, 2) == 0x2) {
                 switch (bits(machInst, 5, 4)) {
                   case 0x0:
-                    return new NewSmlalbb(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlalbb(machInst, rdlo, rdhi, rn, rm);
                   case 0x1:
-                    return new NewSmlalbt(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlalbt(machInst, rdlo, rdhi, rn, rm);
                   case 0x2:
-                    return new NewSmlaltb(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlaltb(machInst, rdlo, rdhi, rn, rm);
                   case 0x3:
-                    return new NewSmlaltt(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlaltt(machInst, rdlo, rdhi, rn, rm);
                 }
             } else if (bits(op2, 3, 1) == 0x6) {
                 if (bits(machInst, 4)) {
-                    return new NewSmlaldx(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlaldx(machInst, rdlo, rdhi, rn, rm);
                 } else {
-                    return new NewSmlald(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlald(machInst, rdlo, rdhi, rn, rm);
                 }
             }
             break;
           case 0x5:
             if (bits(op2, 3, 1) == 0x6) {
                 if (bits(machInst, 4)) {
-                    return new NewSmlsldx(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlsldx(machInst, rdlo, rdhi, rn, rm);
                 } else {
-                    return new NewSmlsld(machInst, rdlo, rdhi, rn, rm);
+                    return new Smlsld(machInst, rdlo, rdhi, rn, rm);
                 }
             }
           case 0x6:
             if (op2 == 0) {
-                return new NewUmlal(machInst, rdlo, rdhi, rn, rm);
+                return new Umlal(machInst, rdlo, rdhi, rn, rm);
             } else if (op2 == 0x6) {
-                return new NewUmaal(machInst, rdlo, rdhi, rn, rm);
+                return new Umaal(machInst, rdlo, rdhi, rn, rm);
             }
             break;
         }
@@ -366,29 +366,29 @@ def format ArmSignedMultiplies() {{
             if (op2 == 0) {
                 if (aIsF) {
                     if (m) {
-                        return new NewSmuadxCc(machInst, rd, rn, rm);
+                        return new SmuadxCc(machInst, rd, rn, rm);
                     } else {
-                        return new NewSmuadCc(machInst, rd, rn, rm);
+                        return new SmuadCc(machInst, rd, rn, rm);
                     }
                 } else {
                     if (m) {
-                        return new NewSmladxCc(machInst, rd, rn, rm, ra);
+                        return new SmladxCc(machInst, rd, rn, rm, ra);
                     } else {
-                        return new NewSmladCc(machInst, rd, rn, rm, ra);
+                        return new SmladCc(machInst, rd, rn, rm, ra);
                     }
                 }
             } else if (op2 == 1) {
                 if (aIsF) {
                     if (m) {
-                        return new NewSmusdx(machInst, rd, rn, rm);
+                        return new Smusdx(machInst, rd, rn, rm);
                     } else {
-                        return new NewSmusd(machInst, rd, rn, rm);
+                        return new Smusd(machInst, rd, rn, rm);
                     }
                 } else {
                     if (m) {
-                        return new NewSmlsdxCc(machInst, rd, rn, rm, ra);
+                        return new SmlsdxCc(machInst, rd, rn, rm, ra);
                     } else {
-                        return new NewSmlsdCc(machInst, rd, rn, rm, ra);
+                        return new SmlsdCc(machInst, rd, rn, rm, ra);
                     }
                 }
             }
@@ -396,15 +396,15 @@ def format ArmSignedMultiplies() {{
           case 0x4:
             if (op2 == 0) {
                 if (m) {
-                    return new NewSmlaldx(machInst, ra, rd, rn, rm);
+                    return new Smlaldx(machInst, ra, rd, rn, rm);
                 } else {
-                    return new NewSmlald(machInst, ra, rd, rn, rm);
+                    return new Smlald(machInst, ra, rd, rn, rm);
                 }
             } else if (op2 == 1) {
                 if (m) {
-                    return new NewSmlsldx(machInst, ra, rd, rn, rm);
+                    return new Smlsldx(machInst, ra, rd, rn, rm);
                 } else {
-                    return new NewSmlsld(machInst, ra, rd, rn, rm);
+                    return new Smlsld(machInst, ra, rd, rn, rm);
                 }
             }
             break;
@@ -412,22 +412,22 @@ def format ArmSignedMultiplies() {{
             if (op2 == 0) {
                 if (aIsF) {
                     if (m) {
-                        return new NewSmmulr(machInst, rd, rn, rm);
+                        return new Smmulr(machInst, rd, rn, rm);
                     } else {
-                        return new NewSmmul(machInst, rd, rn, rm);
+                        return new Smmul(machInst, rd, rn, rm);
                     }
                 } else {
                     if (m) {
-                        return new NewSmmlar(machInst, rd, rn, rm, ra);
+                        return new Smmlar(machInst, rd, rn, rm, ra);
                     } else {
-                        return new NewSmmla(machInst, rd, rn, rm, ra);
+                        return new Smmla(machInst, rd, rn, rm, ra);
                     }
                 }
             } else if (op2 == 0x3) {
                 if (m) {
-                    return new NewSmmlsr(machInst, rd, rn, rm, ra);
+                    return new Smmlsr(machInst, rd, rn, rm, ra);
                 } else {
-                    return new NewSmmls(machInst, rd, rn, rm, ra);
+                    return new Smmls(machInst, rd, rn, rm, ra);
                 }
             }
             break;
