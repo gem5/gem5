@@ -725,20 +725,40 @@ let {{
                     }
                 }
               case 0xc:
-                if (single) {
-                    return new VcvtFpUIntS(machInst, vd, vm);
+                if (bits(machInst, 7) == 0) {
+                    if (single) {
+                        return new VcvtFpUIntSR(machInst, vd, vm);
+                    } else {
+                        vd = (IntRegIndex)(bits(machInst, 22) |
+                                (bits(machInst, 15, 12) << 1));
+                        return new VcvtFpUIntDR(machInst, vd, vm);
+                    }
                 } else {
-                    vd = (IntRegIndex)(bits(machInst, 22) |
-                            (bits(machInst, 15, 12) << 1));
-                    return new VcvtFpUIntD(machInst, vd, vm);
+                    if (single) {
+                        return new VcvtFpUIntS(machInst, vd, vm);
+                    } else {
+                        vd = (IntRegIndex)(bits(machInst, 22) |
+                                (bits(machInst, 15, 12) << 1));
+                        return new VcvtFpUIntD(machInst, vd, vm);
+                    }
                 }
               case 0xd:
-                if (single) {
-                    return new VcvtFpSIntS(machInst, vd, vm);
+                if (bits(machInst, 7) == 0) {
+                    if (single) {
+                        return new VcvtFpSIntSR(machInst, vd, vm);
+                    } else {
+                        vd = (IntRegIndex)(bits(machInst, 22) |
+                                (bits(machInst, 15, 12) << 1));
+                        return new VcvtFpSIntDR(machInst, vd, vm);
+                    }
                 } else {
-                    vd = (IntRegIndex)(bits(machInst, 22) |
-                            (bits(machInst, 15, 12) << 1));
-                    return new VcvtFpSIntD(machInst, vd, vm);
+                    if (single) {
+                        return new VcvtFpSIntS(machInst, vd, vm);
+                    } else {
+                        vd = (IntRegIndex)(bits(machInst, 22) |
+                                (bits(machInst, 15, 12) << 1));
+                        return new VcvtFpSIntD(machInst, vd, vm);
+                    }
                 }
               case 0xe:
                 {

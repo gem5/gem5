@@ -829,8 +829,63 @@ let {{
     decoder_output += VfpRegRegOpConstructor.subst(vcvtSIntFpDIop);
     exec_output += PredOpExecute.subst(vcvtSIntFpDIop);
 
+    vcvtFpUIntSRCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
+        FpDest.uw = FpOp1;
+        Fpscr = setVfpFpscr(Fpscr, state);
+    '''
+    vcvtFpUIntSRIop = InstObjParams("vcvt", "VcvtFpUIntSR", "VfpRegRegOp",
+                                     { "code": vcvtFpUIntSRCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcvtFpUIntSRIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpUIntSRIop);
+    exec_output += PredOpExecute.subst(vcvtFpUIntSRIop);
+
+    vcvtFpUIntDRCode = '''
+        IntDoubleUnion cOp1;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
+        uint64_t result = cOp1.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
+        FpDestP0.uw = result;
+    '''
+    vcvtFpUIntDRIop = InstObjParams("vcvtr", "VcvtFpUIntDR", "VfpRegRegOp",
+                                     { "code": vcvtFpUIntDRCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcvtFpUIntDRIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpUIntDRIop);
+    exec_output += PredOpExecute.subst(vcvtFpUIntDRIop);
+
+    vcvtFpSIntSRCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
+        FpDest.sw = FpOp1;
+        Fpscr = setVfpFpscr(Fpscr, state);
+    '''
+    vcvtFpSIntSRIop = InstObjParams("vcvtr", "VcvtFpSIntSR", "VfpRegRegOp",
+                                     { "code": vcvtFpSIntSRCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcvtFpSIntSRIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpSIntSRIop);
+    exec_output += PredOpExecute.subst(vcvtFpSIntSRIop);
+
+    vcvtFpSIntDRCode = '''
+        IntDoubleUnion cOp1;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
+        int64_t result = cOp1.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
+        FpDestP0.uw = result;
+    '''
+    vcvtFpSIntDRIop = InstObjParams("vcvtr", "VcvtFpSIntDR", "VfpRegRegOp",
+                                     { "code": vcvtFpSIntDRCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcvtFpSIntDRIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcvtFpSIntDRIop);
+    exec_output += PredOpExecute.subst(vcvtFpSIntDRIop);
+
     vcvtFpUIntSCode = '''
         VfpSavedState state = prepVfpFpscr(Fpscr);
+        fesetround(FeRoundZero);
         FpDest.uw = FpOp1;
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -845,6 +900,7 @@ let {{
         IntDoubleUnion cOp1;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepVfpFpscr(Fpscr);
+        fesetround(FeRoundZero);
         uint64_t result = cOp1.fp;
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
@@ -858,6 +914,7 @@ let {{
 
     vcvtFpSIntSCode = '''
         VfpSavedState state = prepVfpFpscr(Fpscr);
+        fesetround(FeRoundZero);
         FpDest.sw = FpOp1;
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
@@ -872,6 +929,7 @@ let {{
         IntDoubleUnion cOp1;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepVfpFpscr(Fpscr);
+        fesetround(FeRoundZero);
         int64_t result = cOp1.fp;
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
@@ -1062,7 +1120,7 @@ let {{
 
     vcvtSFixedFpSCode = '''
         VfpSavedState state = prepVfpFpscr(Fpscr);
-        FpDest = vfpSFixedToFpS(FpOp1.sw, true, imm);
+        FpDest = vfpSFixedToFpS(FpOp1.sw, false, imm);
         Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtSFixedFpSIop = InstObjParams("vcvt", "VcvtSFixedFpS", "VfpRegRegImmOp",
@@ -1076,7 +1134,7 @@ let {{
         IntDoubleUnion cDest;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepVfpFpscr(Fpscr);
-        cDest.fp = vfpSFixedToFpD(mid, true, imm);
+        cDest.fp = vfpSFixedToFpD(mid, false, imm);
         Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
