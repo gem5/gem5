@@ -388,7 +388,32 @@
         0x3: decode HTOPCODE_10_9 {
             0x0: decode HTOPCODE_4 {
                 0x0: decode HTOPCODE_8 {
-                    0x0: WarnUnimpl::Store_single_data_item();
+                    0x0: decode HTOPCODE_7_5 {
+                        0x0: decode LTOPCODE_11_8 {
+                            0x0: decode LTOPCODE_7_6 {
+                                0x0: WarnUnimpl::strb(); // register
+                            }
+                            0x9, 0xb, 0xc, 0xd, 0xf: WarnUnimpl::strb(); // immediate thumb
+                            0xe: WarnUnimpl::strbt();
+                        }
+                        0x1: decode LTOPCODE_11_8 {
+                            0x0: decode LTOPCODE_7_6 {
+                                0x0: WarnUnimpl::strh(); // register
+                            }
+                            0x9, 0xb, 0xc, 0xd, 0xf: WarnUnimpl::strh(); // immediate thumb
+                            0xe: WarnUnimpl::strht();
+                        }
+                        0x2: decode LTOPCODE_11_8 {
+                            0x0: decode LTOPCODE_7_6 {
+                                0x0: WarnUnimpl::str(); // register
+                            }
+                            0x9, 0xb, 0xc, 0xd, 0xf: WarnUnimpl::str(); // immediate thumb
+                            0xe: WarnUnimpl::strt();
+                        }
+                        0x4: WarnUnimpl::strb(); // immediate, thumb
+                        0x5: WarnUnimpl::strh(); // immediate, thumb
+                        0x6: WarnUnimpl::str(); // immediate, thumb
+                    }
                     0x1: WarnUnimpl::Advanced_SIMD_or_structure_load_store();
                 }
                 0x1: decode HTOPCODE_6_5 {
