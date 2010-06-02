@@ -295,10 +295,43 @@ namespace ArmISA
               case MISCREG_CSSELR:
                 warn("The csselr register isn't implemented.\n");
                 break;
+              case MISCREG_FPSCR:
+                {
+                    const uint32_t ones = (uint32_t)(-1);
+                    FPSCR fpscrMask = 0;
+                    fpscrMask.ioc = ones;
+                    fpscrMask.dzc = ones;
+                    fpscrMask.ofc = ones;
+                    fpscrMask.ufc = ones;
+                    fpscrMask.ixc = ones;
+                    fpscrMask.idc = ones;
+                    fpscrMask.len = ones;
+                    fpscrMask.stride = ones;
+                    fpscrMask.rMode = ones;
+                    fpscrMask.fz = ones;
+                    fpscrMask.dn = ones;
+                    fpscrMask.ahp = ones;
+                    fpscrMask.qc = ones;
+                    fpscrMask.v = ones;
+                    fpscrMask.c = ones;
+                    fpscrMask.z = ones;
+                    fpscrMask.n = ones;
+                    newVal = (newVal & (uint32_t)fpscrMask) |
+                             (miscRegs[MISCREG_FPSCR] & ~(uint32_t)fpscrMask);
+                }
+                break;
+              case MISCREG_FPEXC:
+                {
+                    const uint32_t fpexcMask = 0x60000000;
+                    newVal = (newVal & fpexcMask) |
+                             (miscRegs[MISCREG_FPEXC] & ~fpexcMask);
+                }
+                break;
               case MISCREG_TLBTR:
               case MISCREG_MVFR0:
               case MISCREG_MVFR1:
               case MISCREG_MPIDR:
+              case MISCREG_FPSID:
                 return;
             }
             return setMiscRegNoEffect(misc_reg, newVal);
