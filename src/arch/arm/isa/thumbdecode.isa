@@ -314,40 +314,72 @@
                 0x0: decode HTOPCODE_8_5 {
                     0x0: decode LTRD {
                         0xf: decode HTS {
-                            0x1: WarnUnimpl::tst(); // mod imm
+                            0x1: DataModImmOp::tst({{
+                                resTemp = Rn & rotated_imm;
+                            }});
                         }
-                        default: WarnUnimpl::and(); // mod imm
+                        default: DataModImmOp::and({{
+                            Rs = resTemp = Rn & rotated_imm;
+                        }});
                     }
-                    0x1: WarnUnimpl::bic(); // mod imm
+                    0x1: DataModImmOp::bic({{
+                        Rs = resTemp = Rn & ~rotated_imm;
+                    }});
                     0x2: decode HTRN {
-                        0xf: WarnUnimpl::mov(); // mod imm
-                        default: WarnUnimpl::orr(); // mod imm
+                        0xf: DataModImmOp::mov({{
+                            Rs = resTemp = rotated_imm;
+                        }});
+                        default: DataModImmOp::orr({{
+                            Rs = resTemp = Rn | rotated_imm;
+                        }});
                     }
                     0x3: decode HTRN {
-                        0xf: WarnUnimpl::mvn(); // mod imm
-                        default: WarnUnimpl::orn(); // mod imm
+                        0xf: DataModImmOp::mvn({{
+                            Rs = resTemp = ~rotated_imm;
+                        }});
+                        default: DataModImmOp::orn({{
+                            Rs = resTemp = Rn | ~rotated_imm;
+                        }});
                     }
                     0x4: decode LTRD {
                         0xf: decode HTS {
-                            0x1: WarnUnimpl::teq(); // mod imm
+                            0x1: DataModImmOp::teq({{
+                                resTemp = Rn ^ rotated_imm;
+                            }});
                         }
-                        default: WarnUnimpl::eor(); // mod imm
+                        default: DataModImmOp::eor({{
+                            Rs = resTemp = Rn ^ rotated_imm;
+                        }});
                     }
                     0x8: decode LTRD {
                         0xf: decode HTS {
-                            0x1: WarnUnimpl::cmn(); // mod imm
+                            0x1: DataModImmOp::cmn({{
+                                resTemp = Rn + rotated_imm;
+                            }}, add);
                         }
-                        default: WarnUnimpl::add(); // mod imm
+                        default: DataModImmOp::add({{
+                            Rs = resTemp = Rn + rotated_imm;
+                        }}, add);
                     }
-                    0xa: WarnUnimpl::adc(); // mod imm
-                    0xb: WarnUnimpl::sbc(); // mod imm
+                    0xa: DataModImmOp::adc({{
+                        Rs = resTemp = Rn + rotated_imm + CondCodes<29:>;
+                    }}, add);
+                    0xb: DataModImmOp::sbc({{
+                        Rs = resTemp = Rn - rotated_imm - !CondCodes<29:>;
+                    }}, sub);
                     0xd: decode LTRD {
                         0xf: decode HTS {
-                            0x1: WarnUnimpl::cmp(); // mod imm
+                            0x1: DataModImmOp::cmp({{
+                                resTemp = Rn - rotated_imm;
+                            }}, sub);
                         }
-                        default: WarnUnimpl::sub(); // mod imm
+                        default: DataModImmOp::sub({{
+                            Rs = resTemp = Rn - rotated_imm;
+                        }}, sub);
                     }
-                    0xe: WarnUnimpl::rsb(); // mod imm
+                    0xe: DataModImmOp::rsb({{
+                        Rs = resTemp = rotated_imm - Rn;
+                    }}, rsb);
                 }
                 0x1: WarnUnimpl::Data_processing_plain_binary_immediate();
             }
