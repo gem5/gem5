@@ -369,8 +369,8 @@ let {{
             for (unsigned i = 0; i < 4; i++) {
                 int high = (i + 1) * 8 - 1;
                 int low = i * 8;
-                int32_t midRes = sext<8>(bits(Op1, high, low)) +
-                                 sext<8>(bits(Op2, high, low));
+                int32_t midRes = sext<8>(bits(Op1.sw, high, low)) +
+                                 sext<8>(bits(Op2.sw, high, low));
                 replaceBits(resTemp, high, low, midRes);
                 if (midRes >= 0) {
                     geBits = geBits | (1 << i);
@@ -385,8 +385,41 @@ let {{
             for (unsigned i = 0; i < 2; i++) {
                 int high = (i + 1) * 16 - 1;
                 int low = i * 16;
-                int32_t midRes = sext<16>(bits(Op1, high, low)) +
-                                 sext<16>(bits(Op2, high, low));
+                int32_t midRes = sext<16>(bits(Op1.sw, high, low)) +
+                                 sext<16>(bits(Op2.sw, high, low));
+                replaceBits(resTemp, high, low, midRes);
+                if (midRes >= 0) {
+                    geBits = geBits | (0x3 << (i * 2));
+                }
+            }
+            Dest = resTemp;
+            resTemp = geBits;
+        ''', flagType="ge", buildNonCc=False)
+
+    buildRegDataInst("ssub8", '''
+            uint32_t geBits = 0;
+            resTemp = 0;
+            for (unsigned i = 0; i < 4; i++) {
+                int high = (i + 1) * 8 - 1;
+                int low = i * 8;
+                int32_t midRes = sext<8>(bits(Op1.sw, high, low)) -
+                                 sext<8>(bits(Op2.sw, high, low));
+                replaceBits(resTemp, high, low, midRes);
+                if (midRes >= 0) {
+                    geBits = geBits | (1 << i);
+                }
+            }
+            Dest = resTemp;
+            resTemp = geBits;
+        ''', flagType="ge", buildNonCc=False)
+    buildRegDataInst("ssub16", '''
+            uint32_t geBits = 0;
+            resTemp = 0;
+            for (unsigned i = 0; i < 2; i++) {
+                int high = (i + 1) * 16 - 1;
+                int low = i * 16;
+                int32_t midRes = sext<16>(bits(Op1.sw, high, low)) -
+                                 sext<16>(bits(Op2.sw, high, low));
                 replaceBits(resTemp, high, low, midRes);
                 if (midRes >= 0) {
                     geBits = geBits | (0x3 << (i * 2));
