@@ -241,6 +241,7 @@ namespace ArmISA
     static const uint32_t CondCodesMask = 0xF80F0000;
 
     BitUnion32(SCTLR)
+        Bitfield<31> ie;  // Instruction endianness
         Bitfield<30> te;  // Thumb Exception Enable
         Bitfield<29> afe; // Access flag enable
         Bitfield<28> tre; // TEX Remap bit 
@@ -250,8 +251,9 @@ namespace ArmISA
         Bitfield<23> rao1;// Read as one
         Bitfield<22> u;   // Alignment (now unused)
         Bitfield<21> fi;  // Fast interrupts configuration enable
+        Bitfield<19> dz;  // Divide by Zero fault enable bit
         Bitfield<18> rao2;// Read as one
-        Bitfield<17> ha;  // Hardware access flag enable
+        Bitfield<17> br;  // Background region bit
         Bitfield<16> rao3;// Read as one
         Bitfield<14> rr;  // Round robin cache replacement
         Bitfield<13> v;   // Base address for exception vectors
