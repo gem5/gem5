@@ -146,6 +146,20 @@ namespace ArmISA {
         return (tc->readMiscRegNoEffect(MISCREG_CPSR) & 0x1f) == MODE_USER;
     }
 
+    static inline std::string
+    inst2string(MachInst machInst)
+    {
+        std::string str = "";
+        uint32_t mask = (1 << 31);
+
+        while (mask) {
+            str += ((machInst & mask) ? "1" : "0");
+            mask = mask >> 1;
+        }
+
+        return str;
+    }
+
 uint64_t getArgument(ThreadContext *tc, int number, bool fp);
     
 Fault setCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);

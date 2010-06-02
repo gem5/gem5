@@ -67,20 +67,6 @@ class ArmStaticInst : public StaticInst
     {
     }
 
-    inline static std::string
-    inst2string(MachInst machInst)
-    {
-        std::string str = "";
-        uint32_t mask = (1 << 31);
-
-        while (mask) {
-            str += ((machInst & mask) ? "1" : "0");
-            mask = mask >> 1;
-        }
-
-        return str;
-    }
-
     /// Print a register name for disassembly given the unique
     /// dependence tag number (FP or int).
     void printReg(std::ostream &os, int reg) const;

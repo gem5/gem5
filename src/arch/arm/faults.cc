@@ -142,6 +142,24 @@ ArmFaultBase::invoke(ThreadContext *tc)
     tc->setPC(newPc);
     tc->setNextPC(newPc + cpsr.t ? 2 : 4 );
 }
+
+#else
+
+void
+UndefinedInstruction::invoke(ThreadContext *tc)
+{
+    assert(unknown || mnemonic != NULL);
+    if (unknown) {
+        panic("Attempted to execute unknown instruction "
+              "(inst 0x%08x, opcode 0x%x, binary:%s)",
+              machInst, machInst.opcode, inst2string(machInst));
+    } else {
+        panic("Attempted to execute unimplemented instruction '%s' "
+              "(inst 0x%08x, opcode 0x%x, binary:%s)",
+              mnemonic, machInst, machInst.opcode, inst2string(machInst));
+    }
+}
+
 #endif // FULL_SYSTEM
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm
