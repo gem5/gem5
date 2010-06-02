@@ -177,7 +177,11 @@ class ArmStaticInst : public StaticInst
         if (bits(byteMask, 0)) {
             if (privileged) {
                 bitMask = bitMask | mask(7, 6);
-                bitMask = bitMask | mask(5);
+                if (!badMode((OperatingMode)(val & mask(5)))) {
+                    bitMask = bitMask | mask(5);
+                } else {
+                    warn_once("Ignoring write of bad mode to CPSR.\n");
+                }
             }
             if (affectState)
                 bitMask = bitMask | (1 << 5);
