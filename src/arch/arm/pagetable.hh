@@ -106,8 +106,9 @@ struct TlbEntry
         return ppn << PageShift;
     }
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(std::ostream &os) { panic("Need to Implement\n"); }
+    void unserialize(Checkpoint *cp, const std::string &section)
+                   { panic("Need to Implement\n");}
 };
 
 
