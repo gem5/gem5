@@ -102,6 +102,8 @@ def operands {{
               maybePCRead, maybePCWrite),
     'Op2': ('IntReg', 'uw', 'op2', 'IsInteger', 4,
               maybePCRead, maybePCWrite),
+    'Op3': ('IntReg', 'uw', 'op3', 'IsInteger', 4,
+              maybePCRead, maybePCWrite),
     'Shift': ('IntReg', 'uw', 'shift', 'IsInteger', 5,
               maybePCRead, maybePCWrite),
     'Reg0': ('IntReg', 'uw', 'reg0', 'IsInteger', 6,
