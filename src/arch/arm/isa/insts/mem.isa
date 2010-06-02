@@ -52,8 +52,6 @@ let {{
         else:
             eaCode += '0;'
 
-        predicateTest = 'testPredicate(CondCodes, condCode)'
-
         iop = InstObjParams(name, Name, base,
                             {'ea_code': eaCode,
                              'memacc_code': accCode,
