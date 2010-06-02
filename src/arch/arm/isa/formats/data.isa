@@ -531,7 +531,12 @@ def format Thumb16Misc() {{
                            (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0x4:
           case 0x5:
-            return new WarnUnimplemented("push", machInst);
+            {
+                const uint32_t m = bits(machInst, 8);
+                const uint32_t regList = bits(machInst, 7, 0) | (m << 14);
+                return new LdmStm(machInst, INTREG_SP, false, false, false,
+                                  true, false, regList);
+            }
           case 0x6:
             {
                 const uint32_t opBits = bits(machInst, 7, 5);
@@ -565,7 +570,12 @@ def format Thumb16Misc() {{
                             (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0xc:
           case 0xd:
-            return new WarnUnimplemented("pop", machInst);
+            {
+                const uint32_t p = bits(machInst, 8);
+                const uint32_t regList = bits(machInst, 7, 0) | (p << 15);
+                return new LdmStm(machInst, INTREG_SP, true, true, false,
+                                  true, true, regList);
+            }
           case 0xe:
             return new WarnUnimplemented("bkpt", machInst);
           case 0xf:
