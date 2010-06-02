@@ -482,6 +482,8 @@ let {{
         const uint32_t opc3 = bits(machInst, 7, 6);
         //const uint32_t opc4 = bits(machInst, 3, 0);
         const bool single = (bits(machInst, 8) == 0);
+        // Used to select between vcmp and vcmpe.
+        const bool e = (bits(machInst, 7) == 1);
         IntRegIndex vd;
         IntRegIndex vm;
         IntRegIndex vn;
@@ -641,15 +643,31 @@ let {{
                 return new WarnUnimplemented("vcvtb, vcvtt", machInst);
               case 0x4:
                 if (single) {
-                    return new VcmpS(machInst, vd, vm);
+                    if (e) {
+                        return new VcmpeS(machInst, vd, vm);
+                    } else {
+                        return new VcmpS(machInst, vd, vm);
+                    }
                 } else {
-                    return new VcmpD(machInst, vd, vm);
+                    if (e) {
+                        return new VcmpeD(machInst, vd, vm);
+                    } else {
+                        return new VcmpD(machInst, vd, vm);
+                    }
                 }
               case 0x5:
                 if (single) {
-                    return new VcmpZeroS(machInst, vd, 0);
+                    if (e) {
+                        return new VcmpeZeroS(machInst, vd, 0);
+                    } else {
+                        return new VcmpZeroS(machInst, vd, 0);
+                    }
                 } else {
-                    return new VcmpZeroD(machInst, vd, 0);
+                    if (e) {
+                        return new VcmpeZeroD(machInst, vd, 0);
+                    } else {
+                        return new VcmpZeroD(machInst, vd, 0);
+                    }
                 }
               case 0x7:
                 if (opc3 == 0x3) {

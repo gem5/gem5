@@ -1101,8 +1101,8 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
 
     vcmpSCode = '''
-        FPSCR fpscr = Fpscr;
         vfpFlushToZero(Fpscr, FpDest, FpOp1);
+        FPSCR fpscr = Fpscr;
         if (FpDest == FpOp1) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
         } else if (FpDest < FpOp1) {
@@ -1110,6 +1110,20 @@ let {{
         } else if (FpDest > FpOp1) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
+            const uint32_t qnan = 0x7fc00000;
+            union
+            {
+                float fp;
+                uint32_t bits;
+            } cvtr;
+            cvtr.fp = FpDest;
+            const bool nan1 = std::isnan(FpDest);
+            const bool signal1 = nan1 && ((cvtr.bits & qnan) != qnan);
+            cvtr.fp = FpOp1;
+            const bool nan2 = std::isnan(FpOp1);
+            const bool signal2 = nan2 && ((cvtr.bits & qnan) != qnan);
+            if (signal1 || signal2)
+                fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
         Fpscr = fpscr;
@@ -1134,6 +1148,13 @@ let {{
         } else if (cDest.fp > cOp1.fp) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
+            const uint64_t qnan = ULL(0x7ff8000000000000);
+            const bool nan1 = std::isnan(cDest.fp);
+            const bool signal1 = nan1 && ((cDest.bits & qnan) != qnan);
+            const bool nan2 = std::isnan(cOp1.fp);
+            const bool signal2 = nan2 && ((cOp1.bits & qnan) != qnan);
+            if (signal1 || signal2)
+                fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
         Fpscr = fpscr;
@@ -1146,8 +1167,10 @@ let {{
     exec_output += PredOpExecute.subst(vcmpDIop);
 
     vcmpZeroSCode = '''
-        FPSCR fpscr = Fpscr;
         vfpFlushToZero(Fpscr, FpDest);
+        FPSCR fpscr = Fpscr;
+        // This only handles imm == 0 for now.
+        assert(imm == 0);
         if (FpDest == imm) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
         } else if (FpDest < imm) {
@@ -1155,6 +1178,17 @@ let {{
         } else if (FpDest > imm) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
+            const uint32_t qnan = 0x7fc00000;
+            union
+            {
+                float fp;
+                uint32_t bits;
+            } cvtr;
+            cvtr.fp = FpDest;
+            const bool nan = std::isnan(FpDest);
+            const bool signal = nan && ((cvtr.bits & qnan) != qnan);
+            if (signal)
+                fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
         Fpscr = fpscr;
@@ -1168,6 +1202,8 @@ let {{
 
     vcmpZeroDCode = '''
         IntDoubleUnion cDest;
+        // This only handles imm == 0 for now.
+        assert(imm == 0);
         cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
         vfpFlushToZero(Fpscr, cDest.fp);
         FPSCR fpscr = Fpscr;
@@ -1178,6 +1214,11 @@ let {{
         } else if (cDest.fp > imm) {
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
         } else {
+            const uint64_t qnan = ULL(0x7ff8000000000000);
+            const bool nan = std::isnan(cDest.fp);
+            const bool signal = nan && ((cDest.bits & qnan) != qnan);
+            if (signal)
+                fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
         Fpscr = fpscr;
@@ -1188,6 +1229,99 @@ let {{
     header_output += VfpRegImmOpDeclare.subst(vcmpZeroDIop);
     decoder_output += VfpRegImmOpConstructor.subst(vcmpZeroDIop);
     exec_output += PredOpExecute.subst(vcmpZeroDIop);
+
+    vcmpeSCode = '''
+        vfpFlushToZero(Fpscr, FpDest, FpOp1);
+        FPSCR fpscr = Fpscr;
+        if (FpDest == FpOp1) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (FpDest < FpOp1) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (FpDest > FpOp1) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.ioc = 1;
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpeSIop = InstObjParams("vcmpes", "VcmpeS", "VfpRegRegOp",
+                                     { "code": vcmpeSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcmpeSIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcmpeSIop);
+    exec_output += PredOpExecute.subst(vcmpeSIop);
+
+    vcmpeDCode = '''
+        IntDoubleUnion cOp1, cDest;
+        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        vfpFlushToZero(Fpscr, cDest.fp, cOp1.fp);
+        FPSCR fpscr = Fpscr;
+        if (cDest.fp == cOp1.fp) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (cDest.fp < cOp1.fp) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (cDest.fp > cOp1.fp) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.ioc = 1;
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpeDIop = InstObjParams("vcmped", "VcmpeD", "VfpRegRegOp",
+                                     { "code": vcmpeDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcmpeDIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcmpeDIop);
+    exec_output += PredOpExecute.subst(vcmpeDIop);
+
+    vcmpeZeroSCode = '''
+        vfpFlushToZero(Fpscr, FpDest);
+        FPSCR fpscr = Fpscr;
+        if (FpDest == imm) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (FpDest < imm) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (FpDest > imm) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.ioc = 1;
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpeZeroSIop = InstObjParams("vcmpeZeros", "VcmpeZeroS", "VfpRegImmOp",
+                                     { "code": vcmpeZeroSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegImmOpDeclare.subst(vcmpeZeroSIop);
+    decoder_output += VfpRegImmOpConstructor.subst(vcmpeZeroSIop);
+    exec_output += PredOpExecute.subst(vcmpeZeroSIop);
+
+    vcmpeZeroDCode = '''
+        IntDoubleUnion cDest;
+        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        vfpFlushToZero(Fpscr, cDest.fp);
+        FPSCR fpscr = Fpscr;
+        if (cDest.fp == imm) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (cDest.fp < imm) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (cDest.fp > imm) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.ioc = 1;
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpeZeroDIop = InstObjParams("vcmpeZerod", "VcmpeZeroD", "VfpRegImmOp",
+                                     { "code": vcmpeZeroDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegImmOpDeclare.subst(vcmpeZeroDIop);
+    decoder_output += VfpRegImmOpConstructor.subst(vcmpeZeroDIop);
+    exec_output += PredOpExecute.subst(vcmpeZeroDIop);
 }};
 
 let {{
