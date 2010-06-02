@@ -159,20 +159,7 @@ format DataOp {
                         }
                     } // format FloatOp
                 }
-                0xa: decode MISC_OPCODE {
-                    0x1: decode MEDIA_OPCODE {
-                        0xf: decode RN {
-                            0x0: FloatOp::fmrx_fpsid({{ Rd = Fpsid; }});
-                            0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
-                            0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
-                        }
-                        0xe: decode RN {
-                            0x0: FloatOp::fmxr_fpsid({{ Fpsid = Rd; }});
-                            0x1: FloatOp::fmxr_fpscr({{ Fpscr = Rd; }});
-                            0x8: FloatOp::fmxr_fpexc({{ Fpexc = Rd; }});
-                        }
-                    } // MEDIA_OPCODE (MISC_OPCODE 0x1)
-                } // MISC_OPCODE (CPNUM 0xA)
+                0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                 0xf: McrMrc15::mcrMrc15();
             } // CPNUM  (OP4 == 1)
         } //OPCODE_4

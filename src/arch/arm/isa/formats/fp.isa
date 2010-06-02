@@ -207,3 +207,49 @@ def format ExtensionRegLoadStore() {{
     }
     '''
 }};
+
+def format ShortFpTransfer() {{
+    decode_block = '''
+    {
+        const uint32_t l = bits(machInst, 20);
+        const uint32_t c = bits(machInst, 8);
+        const uint32_t a = bits(machInst, 23, 21);
+        const uint32_t b = bits(machInst, 6, 5);
+        if ((machInst.thumb == 1 && bits(machInst, 28) == 1) ||
+            (machInst.thumb == 0 && machInst.condCode == 0xf)) {
+            return new Unknown(machInst);
+        }
+        if (l == 0 && c == 0) {
+            if (a == 0) {
+                // A8-648
+                return new WarnUnimplemented("vmov", machInst);
+            } else if (a == 0x7) {
+                // A8-660
+                // B6-29
+                return new WarnUnimplemented("vmsr", machInst);
+            }
+        } else if (l == 0 && c == 1) {
+            if (bits(a, 2) == 0) {
+                // A8-644
+                return new WarnUnimplemented("vmov", machInst);
+            } else if (bits(b, 1) == 0) {
+                // A8-594
+                return new WarnUnimplemented("vdup", machInst);
+            }
+        } else if (l == 1 && c == 0) {
+            if (a == 0) {
+                // A8-648
+                return new WarnUnimplemented("vmov", machInst);
+            } else if (a == 7) {
+                // A8-658
+                // B6-27
+                return new WarnUnimplemented("vmrs", machInst);
+            }
+        } else {
+            // A8-646
+            return new WarnUnimplemented("vmov", machInst);
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};
