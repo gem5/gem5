@@ -40,3 +40,40 @@
 def format Svc() {{
     decode_block = "return new Svc(machInst);"
 }};
+
+def format ArmMsrMrs() {{
+    decode_block = '''
+    {
+        const uint8_t byteMask = bits(machInst, 19, 16);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const uint32_t opcode = bits(machInst, 24, 21);
+        const bool useImm = bits(machInst, 25);
+
+        const uint32_t unrotated = bits(machInst, 7, 0);
+        const uint32_t rotation = (bits(machInst, 11, 8) << 1);
+        const uint32_t imm = rotate_imm(unrotated, rotation);
+
+        switch (opcode) {
+          case 0x8:
+            return new MrsCpsr(machInst, rd);
+          case 0x9:
+            if (useImm) {
+                return new MsrCpsrImm(machInst, imm, byteMask);
+            } else {
+                return new MsrCpsrReg(machInst, rn, byteMask);
+            }
+          case 0xa:
+            return new MrsSpsr(machInst, rd);
+          case 0xb:
+            if (useImm) {
+                return new MsrSpsrImm(machInst, imm, byteMask);
+            } else {
+                return new MsrSpsrReg(machInst, rn, byteMask);
+            }
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
