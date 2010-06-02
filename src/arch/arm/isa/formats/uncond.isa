@@ -265,6 +265,8 @@ def format ArmUnconditional() {{
                 {
                     if (CPNUM == 0xa || CPNUM == 0xb) {
                         return decodeShortFpTransfer(machInst);
+                    } else if (CPNUM == 0xf) {
+                        return decodeMcrMrc15(machInst);
                     }
                     const bool op = bits(machInst, 4);
                     if (op) {
