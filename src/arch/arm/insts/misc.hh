@@ -97,10 +97,10 @@ class MsrRegOp : public MsrBase
 class ImmOp : public PredOp
 {
   protected:
-    uint32_t imm;
+    uint64_t imm;
 
     ImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-             uint32_t _imm) :
+             uint64_t _imm) :
         PredOp(mnem, _machInst, __opClass), imm(_imm)
     {}
 
@@ -125,11 +125,11 @@ class RegImmRegOp : public PredOp
 {
   protected:
     IntRegIndex dest;
-    uint32_t imm;
+    uint64_t imm;
     IntRegIndex op1;
 
     RegImmRegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                IntRegIndex _dest, uint32_t _imm, IntRegIndex _op1) :
+                IntRegIndex _dest, uint64_t _imm, IntRegIndex _op1) :
         PredOp(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm), op1(_op1)
     {}
@@ -143,11 +143,11 @@ class RegRegRegImmOp : public PredOp
     IntRegIndex dest;
     IntRegIndex op1;
     IntRegIndex op2;
-    uint32_t imm;
+    uint64_t imm;
 
     RegRegRegImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                   uint32_t _imm) :
+                   uint64_t _imm) :
         PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), op2(_op2), imm(_imm)
     {}
@@ -194,12 +194,12 @@ class RegRegImmImmOp : public PredOp
   protected:
     IntRegIndex dest;
     IntRegIndex op1;
-    uint32_t imm1;
-    uint32_t imm2;
+    uint64_t imm1;
+    uint64_t imm2;
 
     RegRegImmImmOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    IntRegIndex _dest, IntRegIndex _op1,
-                   uint32_t _imm1, uint32_t _imm2) :
+                   uint64_t _imm1, uint64_t _imm2) :
         PredOp(mnem, _machInst, __opClass),
         dest(_dest), op1(_op1), imm1(_imm1), imm2(_imm2)
     {}
@@ -211,13 +211,13 @@ class RegImmRegShiftOp : public PredOp
 {
   protected:
     IntRegIndex dest;
-    uint32_t imm;
+    uint64_t imm;
     IntRegIndex op1;
     int32_t shiftAmt;
     ArmShiftType shiftType;
 
     RegImmRegShiftOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                     IntRegIndex _dest, uint32_t _imm, IntRegIndex _op1,
+                     IntRegIndex _dest, uint64_t _imm, IntRegIndex _op1,
                      int32_t _shiftAmt, ArmShiftType _shiftType) :
         PredOp(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm), op1(_op1),

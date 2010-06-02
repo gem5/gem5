@@ -105,13 +105,13 @@ class %(class_name)s : public %(base_class)s
   protected:
     public:
         // Constructor
-        %(class_name)s(ExtMachInst machInst, uint32_t _imm);
+        %(class_name)s(ExtMachInst machInst, uint64_t _imm);
         %(BasicExecDeclare)s
 };
 }};
 
 def template ImmOpConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst, uint32_t _imm)
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
         %(constructor)s;
@@ -147,7 +147,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst,
                        IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
-                       uint32_t _imm);
+                       uint64_t _imm);
         %(BasicExecDeclare)s
 };
 }};
@@ -157,7 +157,7 @@ def template RegRegRegImmOpConstructor {{
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
                                           IntRegIndex _op2,
-                                          uint32_t _imm)
+                                          uint64_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _dest, _op1, _op2, _imm)
     {
@@ -223,7 +223,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst,
                        IntRegIndex _dest, IntRegIndex _op1,
-                       uint32_t _imm1, uint32_t _imm2);
+                       uint64_t _imm1, uint64_t _imm2);
         %(BasicExecDeclare)s
 };
 }};
@@ -232,8 +232,8 @@ def template RegRegImmImmOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
                                           IntRegIndex _op1,
-                                          uint32_t _imm1,
-                                          uint32_t _imm2)
+                                          uint64_t _imm1,
+                                          uint64_t _imm2)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _dest, _op1, _imm1, _imm2)
     {
@@ -248,7 +248,7 @@ class %(class_name)s : public %(base_class)s
     public:
         // Constructor
         %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _dest, uint32_t _imm, IntRegIndex _op1);
+                       IntRegIndex _dest, uint64_t _imm, IntRegIndex _op1);
         %(BasicExecDeclare)s
 };
 }};
@@ -256,7 +256,7 @@ class %(class_name)s : public %(base_class)s
 def template RegImmRegOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
-                                          uint32_t _imm,
+                                          uint64_t _imm,
                                           IntRegIndex _op1)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _dest, _imm, _op1)
@@ -272,7 +272,7 @@ class %(class_name)s : public %(base_class)s
     public:
         // Constructor
         %(class_name)s(ExtMachInst machInst,
-                       IntRegIndex _dest, uint32_t _imm, IntRegIndex _op1,
+                       IntRegIndex _dest, uint64_t _imm, IntRegIndex _op1,
                        int32_t _shiftAmt, ArmShiftType _shiftType);
         %(BasicExecDeclare)s
 };
@@ -281,7 +281,7 @@ class %(class_name)s : public %(base_class)s
 def template RegImmRegShiftOpConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                           IntRegIndex _dest,
-                                          uint32_t _imm,
+                                          uint64_t _imm,
                                           IntRegIndex _op1,
                                           int32_t _shiftAmt,
                                           ArmShiftType _shiftType)
