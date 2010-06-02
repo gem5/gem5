@@ -169,5 +169,210 @@
             0x0: WarnUnimpl::b(); // unconditional
         }
     }
-    1: Unknown::unknown();
+
+    // 32 bit thumb instructions.
+    1: decode HTOPCODE_12_11 {
+        0x1: decode HTOPCODE_10_9 {
+            0x0: decode HTOPCODE_8_6 {
+                0x0, 0x6: decode HTOPCODE_4 {
+                    0x0: WarnUnimpl::srs();
+                    0x1: WarnUnimpl::rfe();
+                }
+                0x1: decode HTOPCODE_5_4 {
+                    0x0: WarnUnimpl::strex();
+                    0x1: WarnUnimpl::ldrex();
+                    0x2: WarnUnimpl::strd(); // immediate
+                    0x3: decode HTRN {
+                        0xf: WarnUnimpl::ldrd(); // literal
+                        default: WarnUnimpl::ldrd(); // immediate
+                    }
+                }
+                0x2: decode HTOPCODE_4 {
+                    0x0: WarnUnimpl::stm(); // stmia, stmea
+                    0x1: decode HTRN {
+                        0xd: WarnUnimpl::pop();
+                        default: WarnUnimpl::ldm(); // ldmia, ldmfd
+                    }
+                }
+                0x3: decode HTOPCODE_5_4 {
+                    0x0: decode LTOPCODE_7_4 {
+                        0x4: WarnUnimpl::strexb();
+                        0x5: WarnUnimpl::strexh();
+                        0x7: WarnUnimpl::strexd();
+                    }
+                    0x1: decode LTOPCODE_7_4 {
+                        0x0: WarnUnimpl::tbb();
+                        0x1: WarnUnimpl::tbh();
+                        0x4: WarnUnimpl::ldrexb();
+                        0x5: WarnUnimpl::ldrexh();
+                        0x7: WarnUnimpl::ldrexd();
+                    }
+                    0x2: WarnUnimpl::strd(); // immediate
+                    0x3: decode HTRN {
+                        0xf: WarnUnimpl::ldrd(); // literal
+                        default: WarnUnimpl::ldrd(); // immediate
+                    }
+                }
+                0x4: decode HTOPCODE_4 {
+                    0x0: decode HTRN {
+                        0xd: WarnUnimpl::push();
+                        default: WarnUnimpl::stmdb(); // stmfd
+                    }
+                    0x1: WarnUnimpl::ldmdb(); // ldmea
+                }
+                0x5, 0x7: decode HTOPCODE_4 {
+                    0x0: WarnUnimpl::strd(); // immediate
+                    0x1: decode HTRN {
+                        0xf: WarnUnimpl::ldrd(); // literal
+                        default: WarnUnimpl::ldrd(); // immediate
+                    }
+                }
+            }
+            0x1: decode HTOPCODE_8_5 {
+                0x0: decode LTRD {
+                    0xf: decode HTS {
+                        0x1: WarnUnimpl::tst(); // register
+                    }
+                    default: WarnUnimpl::and(); // register
+                }
+                0x1: WarnUnimpl::bic(); // register
+                0x2: decode HTRN {
+                    0xf: WarnUnimpl::mov(); // register
+                    default: WarnUnimpl::orr(); // register
+                }
+                0x3: decode HTRN {
+                    0xf: WarnUnimpl::mvn(); // register
+                    default: WarnUnimpl::orn(); // register
+                }
+                0x4: decode LTRD {
+                    0xf: decode HTS {
+                        0x1: WarnUnimpl::teq(); // register
+                    }
+                    default: WarnUnimpl::eor(); // register
+                }
+                0x6: WarnUnimpl::pkh();
+                0x8: decode LTRD {
+                    0xf: decode HTS {
+                        0x1: WarnUnimpl::cmn(); // register
+                    }
+                    default: WarnUnimpl::add(); // register
+                }
+                0xa: WarnUnimpl::adc(); // register
+                0xb: WarnUnimpl::sbc(); // register
+                0xd: decode LTRD {
+                    0xf: decode HTS {
+                        0x1: WarnUnimpl::cmp(); // register
+                    }
+                    default: WarnUnimpl::sub(); // register
+                }
+                0xe: WarnUnimpl::rsb(); // register
+            }
+            default: decode HTOPCODE_9_8 {
+                0x2: decode LTOPCODE_4 {
+                    0x0: decode LTCOPROC {
+                        0xa, 0xb: decode OPCODE_23_20 {
+##include "vfpdecode.isa"
+                        }
+                        default: WarnUnimpl::cdp(); // cdp2
+                    }
+                    0x1: decode LTCOPROC {
+                        0xa, 0xb: WarnUnimpl::Core_to_extension_transfer();
+                        default: decode HTOPCODE_4 {
+                            0x0: WarnUnimpl::mcr(); // mcr2
+                            0x1: WarnUnimpl::mrc(); // mrc2
+                        }
+                    }
+                }
+                0x3: WarnUnimpl::Advanced_SIMD();
+                default: decode LTCOPROC {
+                    0xa, 0xb: decode HTOPCODE_9_4 {
+                        0x00: WarnUnimpl::undefined();
+                        0x04: WarnUnimpl::mcrr(); // mcrr2
+                        0x05: WarnUnimpl::mrrc(); // mrrc2
+                        0x02, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10,
+                        0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e:
+                            WarnUnimpl::stc(); // stc2
+                        0x03, 0x07, 0x09, 0x0b, 0x0d, 0x0f, 0x11,
+                        0x13, 0x15, 0x17, 0x19, 0x1b, 0x1d, 0x1f:
+                            decode HTRN {
+                                0xf: WarnUnimpl::ldc(); // ldc2 (literal)
+                                default: WarnUnimpl::ldc(); // ldc2 (immediate)
+                            }
+                    }
+                    default: decode HTOPCODE_9_5 {
+                        0x00: WarnUnimpl::undefined();
+                        0x02: WarnUnimpl::SIMD_VFP_64_bit_core_extension_transfer();
+                        0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f:
+                            WarnUnimpl::Extension_register_load_store_instruction();
+                    }
+                }
+            }
+        }
+        0x2: decode LTOPCODE_15 {
+            0x0: decode HTOPCODE_9 {
+                0x0: WarnUnimpl::Data_processing_modified_immediate();
+                0x1: WarnUnimpl::Data_processing_plain_binary_immediate();
+            }
+            0x1: WarnUnimpl::Branches_and_miscellaneous_control();
+        }
+        0x3: decode HTOPCODE_10_9 {
+            0x0: decode HTOPCODE_4 {
+                0x0: decode HTOPCODE_8 {
+                    0x0: WarnUnimpl::Store_single_data_item();
+                    0x1: WarnUnimpl::Advanced_SIMD_or_structure_load_store();
+                }
+                0x1: decode HTOPCODE_6_5 {
+                    0x0: WarnUnimpl::Load_byte_memory_hints();
+                    0x1: WarnUnimpl::Load_halfword_memory_hints();
+                    0x2: WarnUnimpl::Load_word();
+                    0x3: WarnUnimpl::undefined();
+                }
+            }
+            0x1: decode HTOPCODE_8_7 {
+                0x2: WarnUnimpl::Multiply_multiply_accumulate_and_absolute_difference();
+                0x3: WarnUnimpl::Long_multiply_long_multiply_accumulate_and_divide();
+                default: WarnUnimpl::Data_processing_register();
+            }
+            default: decode HTOPCODE_9_8 {
+                0x2: decode LTOPCODE_4 {
+                    0x0: decode LTCOPROC {
+                        0xa, 0xb: WarnUnimpl::VFP_Inst();
+                        default: WarnUnimpl::cdp(); // cdp2
+                    }
+                    0x1: decode LTCOPROC {
+                        0xa, 0xb: WarnUnimpl::Core_to_extension_transfer();
+                        default: decode HTOPCODE_4 {
+                            0x0: WarnUnimpl::mcr(); // mcr2
+                            0x1: WarnUnimpl::mrc(); // mrc2
+                        }
+                    }
+                }
+                0x3: WarnUnimpl::Advanced_SIMD();
+                default: decode LTCOPROC {
+                    0xa, 0xb: decode HTOPCODE_9_4 {
+                        0x00: WarnUnimpl::undefined();
+                        0x04: WarnUnimpl::mcrr(); // mcrr2
+                        0x05: WarnUnimpl::mrrc(); // mrrc2
+                        0x02, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10,
+                        0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e:
+                            WarnUnimpl::stc(); // stc2
+                        0x03, 0x07, 0x09, 0x0b, 0x0d, 0x0f, 0x11,
+                        0x13, 0x15, 0x17, 0x19, 0x1b, 0x1d, 0x1f:
+                            decode HTRN {
+                                0xf: WarnUnimpl::ldc(); // ldc2 (literal)
+                                default: WarnUnimpl::ldc(); // ldc2 (immediate)
+                            }
+                    }
+                    default: decode HTOPCODE_9_5 {
+                        0x00: WarnUnimpl::undefined();
+                        0x02: WarnUnimpl::SIMD_VFP_64_bit_core_extension_transfer();
+                        0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f:
+                            WarnUnimpl::Extension_register_load_store_instruction();
+                    }
+                }
+            }
+        }
+    }
 }
