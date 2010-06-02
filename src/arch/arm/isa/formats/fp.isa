@@ -48,6 +48,716 @@
 let {{
     header_output = '''
     StaticInstPtr
+    decodeNeonMem(ExtMachInst machInst);
+
+    StaticInstPtr
+    decodeNeonData(ExtMachInst machInst);
+    '''
+
+    decoder_output = '''
+    StaticInstPtr
+    decodeNeonMem(ExtMachInst machInst)
+    {
+        const uint32_t b = bits(machInst, 11, 8);
+        const bool a = bits(machInst, 23);
+        const bool l = bits(machInst, 21);
+
+        if (l) {
+            // Load instructions.
+            if (a) {
+                switch (b) {
+                }
+                // Single.
+            } else {
+                switch (b) {
+                }
+                // Multiple.
+            }
+        } else {
+            // Store instructions.
+            if (a) {
+                switch (b) {
+                }
+                // Single.
+            } else {
+                switch (b) {
+                }
+                // Multiple.
+            }
+        }
+        return new WarnUnimplemented("neon memory", machInst);
+    }
+    '''
+
+    decoder_output += '''
+    static StaticInstPtr
+    decodeNeonThreeRegistersSameLength(ExtMachInst machInst)
+    {
+        const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
+        const uint32_t a = bits(machInst, 11, 8);
+        const bool b = bits(machInst, 4);
+        const uint32_t c = bits(machInst, 21, 20);
+        switch (a) {
+          case 0x0:
+            if (b) {
+                if (bits(machInst, 9) == 0) {
+                    return new WarnUnimplemented("vhadd", machInst);
+                } else {
+                    return new WarnUnimplemented("vhsub", machInst);
+                }
+            } else {
+                return new WarnUnimplemented("vqadd", machInst);
+            }
+          case 0x1:
+            if (!b) {
+                return new WarnUnimplemented("vrhadd", machInst);
+            } else {
+                if (u) {
+                    switch (c) {
+                      case 0:
+                        return new WarnUnimplemented("veor", machInst);
+                      case 1:
+                        return new WarnUnimplemented("vbsl", machInst);
+                      case 2:
+                        return new WarnUnimplemented("vbit", machInst);
+                      case 3:
+                        return new WarnUnimplemented("vbif", machInst);
+                    }
+                } else {
+                    switch (c) {
+                      case 0:
+                        return new WarnUnimplemented("vand (reg)", machInst);
+                      case 1:
+                        return new WarnUnimplemented("vbic (reg)", machInst);
+                      case 2:
+                        {
+                            const IntRegIndex n = (IntRegIndex)(
+                                    (uint32_t)bits(machInst, 19, 16) |
+                                    (uint32_t)(bits(machInst, 7) << 4));
+                            const IntRegIndex m = (IntRegIndex)(
+                                    (uint32_t)bits(machInst, 3, 0) |
+                                    (uint32_t)(bits(machInst, 5) << 4));
+                            if (n == m) {
+                                return new WarnUnimplemented("vmov (reg)",
+                                        machInst);
+                            } else {
+                                return new WarnUnimplemented("vorr (reg)",
+                                        machInst);
+                            }
+                        }
+                      case 3:
+                        return new WarnUnimplemented("vorn (reg)", machInst);
+                    }
+                }
+            }
+          case 0x2:
+            if (b) {
+                return new WarnUnimplemented("vqsub", machInst);
+            } else {
+                if (bits(machInst, 9) == 0) {
+                    return new WarnUnimplemented("vhadd", machInst);
+                } else {
+                    return new WarnUnimplemented("vhsub", machInst);
+                }
+            }
+          case 0x3:
+            if (b) {
+                return new WarnUnimplemented("vcge (reg)", machInst);
+            } else {
+                return new WarnUnimplemented("vcgt (reg)", machInst);
+            }
+          case 0x4:
+            if (b) {
+                return new WarnUnimplemented("vqshl (reg)", machInst);
+            } else {
+                return new WarnUnimplemented("vshl (reg)", machInst);
+            }
+          case 0x5:
+            if (b) {
+                return new WarnUnimplemented("vqrshl", machInst);
+            } else {
+                return new WarnUnimplemented("vrshl", machInst);
+            }
+          case 0x6:
+            if (b) {
+                return new WarnUnimplemented("vmin (int)", machInst);
+            } else {
+                return new WarnUnimplemented("vmax (int)", machInst);
+            }
+          case 0x7:
+            if (b) {
+                return new WarnUnimplemented("vaba", machInst);
+            } else {
+                if (bits(machInst, 23) == 1) {
+                    if (bits(machInst, 6) == 1) {
+                        return new Unknown(machInst);
+                    } else {
+                        return new WarnUnimplemented("vabdl (int)", machInst);
+                    }
+                } else {
+                    return new WarnUnimplemented("vabd (int)", machInst);
+                }
+            }
+          case 0x8:
+            if (b) {
+                if (u) {
+                    return new WarnUnimplemented("vceq (reg)", machInst);
+                } else {
+                    return new WarnUnimplemented("vtst", machInst);
+                }
+            } else {
+                if (u) {
+                    return new WarnUnimplemented("vsub (int)", machInst);
+                } else {
+                    return new WarnUnimplemented("vadd (int)", machInst);
+                }
+            }
+          case 0x9:
+            if (b) {
+                if (u) {
+                    return new WarnUnimplemented("vmul (poly)", machInst);
+                } else {
+                    return new WarnUnimplemented("vmul (int)", machInst);
+                }
+            } else {
+                if (u) {
+                    return new WarnUnimplemented("vmls (int)", machInst);
+                } else {
+                    return new WarnUnimplemented("vmla (int)", machInst);
+                }
+            }
+          case 0xa:
+            if (b) {
+                return new WarnUnimplemented("vpmin (int)", machInst);
+            } else {
+                return new WarnUnimplemented("vpmax (int)", machInst);
+            }
+          case 0xb:
+            if (b) {
+                if (u) {
+                    return new Unknown(machInst);
+                } else {
+                    return new WarnUnimplemented("vpadd (int)", machInst);
+                }
+            } else {
+                if (u) {
+                    return new WarnUnimplemented("vqrdmulh", machInst);
+                } else {
+                    return new WarnUnimplemented("vqdmulh", machInst);
+                }
+            }
+          case 0xc:
+            return new Unknown(machInst);
+          case 0xd:
+            if (b) {
+                if (u) {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vmul (fp)", machInst);
+                    } else {
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vmla (fp)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vmls (fp)", machInst);
+                    }
+                }
+            } else {
+                if (u) {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vpadd (fp)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vabd (fp)", machInst);
+                    }
+                } else {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vadd (fp)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vsub (fp)", machInst);
+                    }
+                }
+            }
+          case 0xe:
+            if (b) {
+                if (u) {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vacge", machInst);
+                    } else {
+                        return new WarnUnimplemented("vacgt", machInst);
+                    }
+                } else {
+                    return new Unknown(machInst);
+                }
+            } else {
+                if (u) {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vcge (reg)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vcgt (reg)", machInst);
+                    }
+                } else {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vceq (reg)", machInst);
+                    } else {
+                        return new Unknown(machInst);
+                    }
+                }
+            }
+          case 0xf:
+            if (b) {
+                if (u) {
+                    return new Unknown(machInst);
+                } else {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vrecps", machInst);
+                    } else {
+                        return new WarnUnimplemented("vrsqrts", machInst);
+                    }
+                }
+            } else {
+                if (u) {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vpmax (fp)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vpmin (fp)", machInst);
+                    }
+                } else {
+                    if (bits(c, 1) == 0) {
+                        return new WarnUnimplemented("vmax (fp)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vmin (fp)", machInst);
+                    }
+                }
+            }
+        }
+        return new Unknown(machInst);
+    }
+
+    static StaticInstPtr
+    decodeNeonOneRegModImm(ExtMachInst machInst)
+    {
+        const bool op = bits(machInst, 5);
+        const uint32_t cmode = bits(machInst, 11, 8);
+        if (op) {
+            if (bits(cmode, 3) == 0) {
+                if (bits(cmode, 0) == 0) {
+                    return new WarnUnimplemented("vmov (imm)", machInst);
+                } else {
+                    return new WarnUnimplemented("vorr (imm)", machInst);
+                }
+            } else {
+                if (bits(cmode, 2) == 1) {
+                    return new WarnUnimplemented("vmov (imm)", machInst);
+                } else {
+                    if (bits(cmode, 0) == 0) {
+                        return new WarnUnimplemented("vmov (imm)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vorr (imm)", machInst);
+                    }
+                }
+            }
+        } else {
+            if (bits(cmode, 3) == 0) {
+                if (bits(cmode, 0) == 0) {
+                    return new WarnUnimplemented("vmvn (imm)", machInst);
+                } else {
+                    return new WarnUnimplemented("vbic (imm)", machInst);
+                }
+            } else {
+                if (bits(cmode, 2) == 1) {
+                    switch (bits(cmode, 1, 0)) {
+                      case 0:
+                      case 1:
+                        return new WarnUnimplemented("vmvn (imm)", machInst);
+                      case 2:
+                        return new WarnUnimplemented("vmov (imm)", machInst);
+                      case 3:
+                        return new Unknown(machInst);
+                    }
+                    return new WarnUnimplemented("vmov (imm)", machInst);
+                } else {
+                    if (bits(cmode, 0) == 0) {
+                        return new WarnUnimplemented("vmvn (imm)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vbic (imm)", machInst);
+                    }
+                }
+            }
+        }
+        return new Unknown(machInst);
+    }
+
+    static StaticInstPtr
+    decodeNeonTwoRegAndShift(ExtMachInst machInst)
+    {
+        const uint32_t a = bits(machInst, 11, 8);
+        const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
+        const bool b = bits(machInst, 6);
+        const bool l = bits(machInst, 7);
+
+        switch (a) {
+          case 0x0:
+            return new WarnUnimplemented("vshr", machInst);
+          case 0x1:
+            return new WarnUnimplemented("vsra", machInst);
+          case 0x2:
+            return new WarnUnimplemented("vrshr", machInst);
+          case 0x3:
+            return new WarnUnimplemented("vrsra", machInst);
+          case 0x4:
+            if (u) {
+                return new WarnUnimplemented("vsri", machInst);
+            } else {
+                return new Unknown(machInst);
+            }
+          case 0x5:
+            if (u) {
+                return new WarnUnimplemented("vsli", machInst);
+            } else {
+                return new WarnUnimplemented("vshl (imm)", machInst);
+            }
+          case 0x6:
+          case 0x7:
+            return new WarnUnimplemented("vqshl, vqshlu (imm)", machInst);
+          case 0x8:
+            if (l) {
+                return new Unknown(machInst);
+            } else if (u) {
+                if (b) {
+                    return new WarnUnimplemented("vqrshrn, vqrshrun", machInst);
+                } else {
+                    return new WarnUnimplemented("vqshrn, vqshrun", machInst);
+                }
+            } else {
+                if (b) {
+                    return new WarnUnimplemented("vrshrn", machInst);
+                } else {
+                    return new WarnUnimplemented("vshrn", machInst);
+                }
+            }
+          case 0x9:
+            if (l) {
+                return new Unknown(machInst);
+            } else if (b) {
+                return new WarnUnimplemented("vqrshrn, vqrshrun", machInst);
+            } else {
+                return new WarnUnimplemented("vqshrn, vqshrun", machInst);
+            }
+          case 0xa:
+            if (l || b) {
+                return new Unknown(machInst);
+            } else {
+                // If the shift amount is zero, it's vmovl.
+                return new WarnUnimplemented("vshll, vmovl", machInst);
+            }
+          case 0xe:
+          case 0xf:
+            if (l) {
+                return new Unknown(machInst);
+            } else if (a == 0xe) {
+                return new WarnUnimplemented("vcvt (fixed to fp)", machInst);
+            } else if (a == 0xf) {
+                return new WarnUnimplemented("vcvt (fp to fixed)", machInst);
+            }
+        }
+        return new Unknown(machInst);
+    }
+
+    static StaticInstPtr
+    decodeNeonThreeRegDiffLengths(ExtMachInst machInst)
+    {
+        const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
+        const uint32_t a = bits(machInst, 11, 8);
+
+        switch (a) {
+          case 0x0:
+            return new WarnUnimplemented("vaddl", machInst);
+          case 0x1:
+            return new WarnUnimplemented("vaddw", machInst);
+          case 0x2:
+            return new WarnUnimplemented("vsubl", machInst);
+          case 0x3:
+            return new WarnUnimplemented("vsubw", machInst);
+          case 0x4:
+            if (u) {
+                return new WarnUnimplemented("vraddhn", machInst);
+            } else {
+                return new WarnUnimplemented("vaddhn", machInst);
+            }
+          case 0x5:
+            return new WarnUnimplemented("vabal", machInst);
+          case 0x6:
+            if (u) {
+                return new WarnUnimplemented("vrsubhn", machInst);
+            } else {
+                return new WarnUnimplemented("vsubhn", machInst);
+            }
+          case 0x7:
+            if (bits(machInst, 23)) {
+                return new WarnUnimplemented("vabdl (int)", machInst);
+            } else {
+                return new WarnUnimplemented("vabd (int)", machInst);
+            }
+          case 0x8:
+            return new WarnUnimplemented("vmlal (int)", machInst);
+          case 0xa:
+            return new WarnUnimplemented("vmlsl (int)", machInst);
+          case 0x9:
+            if (bits(machInst, 23) == 0) {
+                if (bits(machInst, 4) == 0) {
+                    if (u) {
+                        return new WarnUnimplemented("vmls (int)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vmla (int)", machInst);
+                    }
+                } else {
+                    if (u) {
+                        return new WarnUnimplemented("vmul (poly)", machInst);
+                    } else {
+                        return new WarnUnimplemented("vmul (int)", machInst);
+                    }
+                }
+            } else {
+                return new WarnUnimplemented("vqdmlal", machInst);
+            }
+          case 0xb:
+            if (!u) {
+                return new Unknown(machInst);
+            } else {
+                return new WarnUnimplemented("vqdmlsl", machInst);
+            }
+          case 0xc:
+            return new WarnUnimplemented("vmull (int)", machInst);
+          case 0xd:
+            if (!u) {
+                return new Unknown(machInst);
+            } else {
+                return new WarnUnimplemented("vqdmull", machInst);
+            }
+          case 0xe:
+            return new WarnUnimplemented("vmull (poly)", machInst);
+        }
+        return new Unknown(machInst);
+    }
+
+    static StaticInstPtr
+    decodeNeonTwoRegScalar(ExtMachInst machInst)
+    {
+        const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
+        const uint32_t a = bits(machInst, 11, 8);
+
+        switch (a) {
+          case 0x0:
+            return new WarnUnimplemented("vmla (int scalar)", machInst);
+          case 0x1:
+            return new WarnUnimplemented("vmla (fp scalar)", machInst);
+          case 0x4:
+            return new WarnUnimplemented("vmls (int scalar)", machInst);
+          case 0x5:
+            return new WarnUnimplemented("vmls (fp scalar)", machInst);
+          case 0x2:
+            return new WarnUnimplemented("vmlal (scalar)", machInst);
+          case 0x6:
+            return new WarnUnimplemented("vmlsl (scalar)", machInst);
+          case 0x3:
+            if (u) {
+                return new Unknown(machInst);
+            } else {
+                return new WarnUnimplemented("vqdmlal", machInst);
+            }
+          case 0x7:
+            if (u) {
+                return new Unknown(machInst);
+            } else {
+                return new WarnUnimplemented("vqdmlsl", machInst);
+            }
+          case 0x8:
+            return new WarnUnimplemented("vmul (int scalar)", machInst);
+          case 0x9:
+            return new WarnUnimplemented("vmul (fp scalar)", machInst);
+          case 0xa:
+            return new WarnUnimplemented("vmull (scalar)", machInst);
+          case 0xb:
+            if (u) {
+                return new Unknown(machInst);
+            } else {
+                return new WarnUnimplemented("vqdmull", machInst);
+            }
+          case 0xc:
+            return new WarnUnimplemented("vqdmulh", machInst);
+          case 0xd:
+            return new WarnUnimplemented("vqrdmulh", machInst);
+        }
+        return new Unknown(machInst);
+    }
+
+    static StaticInstPtr
+    decodeNeonTwoRegMisc(ExtMachInst machInst)
+    {
+        const uint32_t a = bits(machInst, 17, 16);
+        const uint32_t b = bits(machInst, 10, 6);
+        switch (a) {
+          case 0x0:
+            switch (bits(b, 4, 1)) {
+              case 0x0:
+                return new WarnUnimplemented("vrev64", machInst);
+              case 0x1:
+                return new WarnUnimplemented("vrev32", machInst);
+              case 0x2:
+                return new WarnUnimplemented("vrev16", machInst);
+              case 0x4:
+              case 0x5:
+                return new WarnUnimplemented("vpaddl", machInst);
+              case 0x8:
+                return new WarnUnimplemented("vcls", machInst);
+              case 0x9:
+                return new WarnUnimplemented("vclz", machInst);
+              case 0xa:
+                return new WarnUnimplemented("vcnt", machInst);
+              case 0xb:
+                return new WarnUnimplemented("vmvn (reg)", machInst);
+              case 0xc:
+              case 0xd:
+                return new WarnUnimplemented("vpadal", machInst);
+              case 0xe:
+                return new WarnUnimplemented("vqabs", machInst);
+              case 0xf:
+                return new WarnUnimplemented("vqneg", machInst);
+              default:
+                return new Unknown(machInst);
+            }
+          case 0x1:
+            switch (bits(b, 3, 1)) {
+              case 0x0:
+                return new WarnUnimplemented("vcgt (imm #0)", machInst);
+              case 0x1:
+                return new WarnUnimplemented("vcge (imm #0)", machInst);
+              case 0x2:
+                return new WarnUnimplemented("vceq (imm #0)", machInst);
+              case 0x3:
+                return new WarnUnimplemented("vcle (imm #0)", machInst);
+              case 0x4:
+                return new WarnUnimplemented("vclt (imm #0)", machInst);
+              case 0x6:
+                return new WarnUnimplemented("vabs (imm #0)", machInst);
+              case 0x7:
+                return new WarnUnimplemented("vneg (imm #0)", machInst);
+            }
+          case 0x2:
+            switch (bits(b, 4, 1)) {
+              case 0x0:
+                return new WarnUnimplemented("vswp", machInst);
+              case 0x1:
+                return new WarnUnimplemented("vtrn", machInst);
+              case 0x2:
+                return new WarnUnimplemented("vuzp", machInst);
+              case 0x3:
+                return new WarnUnimplemented("vzip", machInst);
+              case 0x4:
+                if (b == 0x8) {
+                    return new WarnUnimplemented("vmovn", machInst);
+                } else {
+                    return new WarnUnimplemented("vqmovun", machInst);
+                }
+              case 0x5:
+                return new WarnUnimplemented("vqmovn", machInst);
+              case 0x6:
+                if (b == 0xc) {
+                    return new WarnUnimplemented("vshll", machInst);
+                } else {
+                    return new Unknown(machInst);
+                }
+              case 0xc:
+              case 0xe:
+                if (b == 0x18) {
+                    return new WarnUnimplemented("vcvt (single to half)",
+                            machInst);
+                } else if (b == 0x1c) {
+                    return new WarnUnimplemented("vcvt (half to single)",
+                            machInst);
+                } else {
+                    return new Unknown(machInst);
+                }
+              default:
+                return new Unknown(machInst);
+            }
+          case 0x3:
+            if (bits(b, 4, 3) == 0x3) {
+                return new WarnUnimplemented("vcvt (fp and int)", machInst);
+            } else if ((b & 0x1a) == 0x10) {
+                return new WarnUnimplemented("vrecpe", machInst);
+            } else if ((b & 0x1a) == 0x12) {
+                return new WarnUnimplemented("vrsqrte", machInst);
+            } else {
+                return new Unknown(machInst);
+            }
+        }
+        return new Unknown(machInst);
+    }
+
+    StaticInstPtr
+    decodeNeonData(ExtMachInst machInst)
+    {
+        const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
+        const uint32_t a = bits(machInst, 23, 19);
+        const uint32_t b = bits(machInst, 11, 8);
+        const uint32_t c = bits(machInst, 7, 4);
+        if (bits(a, 4) == 0) {
+            return decodeNeonThreeRegistersSameLength(machInst);
+        } else if ((c & 0x9) == 1) {
+            if ((a & 0x7) == 0) {
+                return decodeNeonOneRegModImm(machInst);
+            } else {
+                return decodeNeonTwoRegAndShift(machInst);
+            }
+        } else if ((c & 0x9) == 9) {
+            return decodeNeonTwoRegAndShift(machInst);
+        } else if ((c & 0x5) == 0) {
+            if (bits(a, 3, 2) != 0x3) {
+                return decodeNeonThreeRegDiffLengths(machInst);
+            }
+        } else if ((c & 0x5) == 4) {
+            if (bits(a, 3, 2) != 0x3) {
+                return decodeNeonTwoRegScalar(machInst);
+            }
+        } else if ((a & 0x16) == 0x16) {
+            if (!u) {
+                if (bits(c, 0) == 0) {
+                    return new WarnUnimplemented("vext", machInst);
+                }
+            } else if (bits(b, 3) == 0 && bits(c, 0) == 0) {
+                return decodeNeonTwoRegMisc(machInst);
+            } else if (bits(b, 3, 2) == 0x2 && bits(c, 0) == 0) {
+                if (bits(machInst, 6) == 0) {
+                    return new WarnUnimplemented("vtbl", machInst);
+                } else {
+                    return new WarnUnimplemented("vtbx", machInst);
+                }
+            } else if (b == 0xc && (c & 0x9) == 0) {
+                return new WarnUnimplemented("vdup (scalar)", machInst);
+            }
+        }
+        return new Unknown(machInst);
+    }
+    '''
+}};
+
+def format ThumbNeonMem() {{
+    decode_block = '''
+    return decodeNeonMem(machInst);
+    '''
+}};
+
+def format ThumbNeonData() {{
+    decode_block = '''
+    return decodeNeonMem(machInst);
+    '''
+}};
+
+let {{
+    header_output = '''
+    StaticInstPtr
     decodeExtensionRegLoadStore(ExtMachInst machInst);
     '''
     decoder_output = '''

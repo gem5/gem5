@@ -119,7 +119,7 @@ decode BIGTHUMB {
             0x0: decode HTOPCODE_4 {
                 0x0: decode HTOPCODE_8 {
                     0x0: Thumb32StoreSingle::thumb32StoreSingle();
-                    0x1: WarnUnimpl::Advanced_SIMD_or_structure_load_store();
+                    0x1: ThumbNeonMem::thumbNeonMem();
                 }
                 0x1: decode HTOPCODE_6_5 {
                     0x0: LoadByteMemoryHints::loadByteMemoryHints();
@@ -144,7 +144,7 @@ decode BIGTHUMB {
                         0xf: McrMrc15::mcrMrc15();
                     }
                 }
-                0x3: WarnUnimpl::Advanced_SIMD();
+                0x3: ThumbNeonData::thumbNeonData();
                 default: decode LTCOPROC {
                     0xa, 0xb: ExtensionRegLoadStore::extensionRegLoadStre();
                     0xf: decode HTOPCODE_9_4 {

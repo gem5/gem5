@@ -54,13 +54,10 @@ def format ArmUnconditional() {{
                     return new Cps(machInst, mods);
                 }
             } else if (bits(op1, 6, 5) == 0x1) {
-                return new WarnUnimplemented(
-                        "Advanced SIMD data-processing", machInst);
+                return decodeNeonData(machInst);
             } else if (bits(op1, 6, 4) == 0x4) {
                 if (bits(op1, 0) == 0) {
-                    return new WarnUnimplemented(
-                            "Advanced SIMD element or structure load/store",
-                            machInst);
+                    return decodeNeonMem(machInst);
                 } else if (bits(op1, 2, 0) == 1) {
                     // Unallocated memory hint
                     return new NopInst(machInst);
