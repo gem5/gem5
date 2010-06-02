@@ -152,6 +152,11 @@ namespace ArmISA
                     cpsr.t = 0;
                 return cpsr;
             }
+            if (misc_reg >= MISCREG_CP15_UNIMP_START &&
+                misc_reg < MISCREG_CP15_END) {
+                panic("Unimplemented CP15 register %s read.\n",
+                      miscRegName[misc_reg]);
+            }
             return readMiscRegNoEffect(misc_reg);
         }
 
@@ -204,6 +209,11 @@ namespace ArmISA
                     npc = npc | (ULL(1) << PcTBitShift);
 
                 tc->setNextPC(npc);
+            }
+            if (misc_reg >= MISCREG_CP15_UNIMP_START &&
+                misc_reg < MISCREG_CP15_END) {
+                panic("Unimplemented CP15 register %s wrote with %#x.\n",
+                      miscRegName[misc_reg], val);
             }
             return setMiscRegNoEffect(misc_reg, val);
         }
