@@ -126,6 +126,8 @@ namespace ArmISA
                         DPRINTF(Predecoder, "16 bit Thumb.\n");
                         offset += 2;
                         emi.instBits = word;
+                        // Set the condition code field artificially.
+                        emi.condCode = COND_UC;
                     }
                 }
             }
