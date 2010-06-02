@@ -58,7 +58,7 @@ def format ArmUnconditional() {{
                             machInst);
                 } else if (bits(op1, 2, 0) == 1) {
                     // Unallocated memory hint
-                    return new WarnUnimplemented("nop", machInst);
+                    return new NopInst(machInst);
                 } else if (bits(op1, 2, 0) == 5) {
                     const bool add = bits(machInst, 23);
                     const uint32_t imm12 = bits(machInst, 11, 0);
@@ -108,7 +108,7 @@ def format ArmUnconditional() {{
                 switch (op1 & 0xf7) {
                   case 0x61:
                     // Unallocated memory hint
-                    return new WarnUnimplemented("nop", machInst);
+                    return new NopInst(machInst);
                   case 0x65:
                     {
                         const uint32_t imm5 = bits(machInst, 11, 7);

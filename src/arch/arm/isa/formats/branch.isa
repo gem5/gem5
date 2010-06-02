@@ -157,7 +157,7 @@ def format Thumb32BranchesAndMiscCtrl() {{
                         } else {
                             switch (op2) {
                               case 0x0:
-                                return new WarnUnimplemented("nop", machInst);
+                                return new NopInst(machInst);
                               case 0x1:
                                 return new WarnUnimplemented("yield", machInst);
                               case 0x2:
