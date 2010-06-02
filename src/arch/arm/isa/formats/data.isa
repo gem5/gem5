@@ -285,17 +285,17 @@ def format ArmParallelAddSubtract() {{
               case 0x1:
                 switch (op2) {
                   case 0x0:
-                    return new WarnUnimplemented("uadd16", machInst);
+                    return new Uadd16RegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x1:
-                    return new WarnUnimplemented("uasx", machInst);
+                    return new UasxRegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x2:
-                    return new WarnUnimplemented("usax", machInst);
+                    return new UsaxRegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x3:
-                    return new WarnUnimplemented("usub16", machInst);
+                    return new Usub16RegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x4:
-                    return new WarnUnimplemented("uadd8", machInst);
+                    return new Uadd8RegCc(machInst, rd, rn, rm, 0, LSL);
                   case 0x7:
-                    return new WarnUnimplemented("usub8", machInst);
+                    return new Usub8RegCc(machInst, rd, rn, rm, 0, LSL);
                 }
                 break;
               case 0x2:
@@ -607,17 +607,23 @@ def format Thumb32DataProcReg() {{
                       case 0x0:
                         switch (op1) {
                           case 0x1:
-                            return new WarnUnimplemented("uadd16", machInst);
+                            return new Uadd16RegCc(machInst, rd,
+                                                   rn, rm, 0, LSL);
                           case 0x2:
-                            return new WarnUnimplemented("uasx", machInst);
+                            return new UasxRegCc(machInst, rd,
+                                                 rn, rm, 0, LSL);
                           case 0x6:
-                            return new WarnUnimplemented("usax", machInst);
+                            return new UsaxRegCc(machInst, rd,
+                                                 rn, rm, 0, LSL);
                           case 0x5:
-                            return new WarnUnimplemented("usub16", machInst);
+                            return new Usub16RegCc(machInst, rd,
+                                                   rn, rm, 0, LSL);
                           case 0x0:
-                            return new WarnUnimplemented("uadd8", machInst);
+                            return new Uadd8RegCc(machInst, rd,
+                                                  rn, rm, 0, LSL);
                           case 0x4:
-                            return new WarnUnimplemented("usub8", machInst);
+                            return new Usub8RegCc(machInst, rd,
+                                                  rn, rm, 0, LSL);
                         }
                         break;
                       case 0x1:
