@@ -144,6 +144,25 @@ simd_modified_imm(bool op, uint8_t cmode, uint8_t data)
     return bigData;
 }
 
+static inline uint64_t
+vfp_modified_imm(uint8_t data, bool wide)
+{
+    uint64_t bigData = data;
+    uint64_t repData;
+    if (wide) {
+        repData = bits(data, 6) ? 0xFF : 0;
+        bigData = (bits(bigData, 5, 0) << 48) |
+                  (repData << 54) | (bits(~bigData, 6) << 62) |
+                  (bits(bigData, 7) << 63);
+    } else {
+        repData = bits(data, 6) ? 0x1F : 0;
+        bigData = (bits(bigData, 5, 0) << 19) |
+                  (repData << 25) | (bits(~bigData, 6) << 30) |
+                  (bits(bigData, 7) << 31);
+    }
+    return bigData;
+}
+
 
 /**
  * Base class for predicated integer operations.
