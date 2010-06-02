@@ -66,11 +66,11 @@ let {{
                                      ['IsMicroop'])
 
     microLdrRetUopCode = '''
-        Ra = Mem;
         uint32_t newCpsr =
             cpsrWriteByInstr(Cpsr | CondCodes, Spsr, 0xF, true);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
+        IWNPC = Mem | ((Spsr & 0x20) ? 1 : 0);
     '''
     microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
                                       'MicroMemOp',

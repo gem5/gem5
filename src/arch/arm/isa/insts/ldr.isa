@@ -90,7 +90,7 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = "Dest = Mem%s;\n" % buildMemSuffix(sign, size)
+        accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryImm", post, writeback)
@@ -115,7 +115,7 @@ let {{
             eaCode += offset
         eaCode += ";"
 
-        accCode = "Dest = Mem%s;\n" % buildMemSuffix(sign, size)
+        accCode = "IWDest = Mem%s;\n" % buildMemSuffix(sign, size)
         if writeback:
             accCode += "Base = Base %s;\n" % offset
         base = buildMemBase("MemoryReg", post, writeback)
