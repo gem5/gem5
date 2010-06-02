@@ -500,4 +500,18 @@ let {{
     header_output += RegRegImmImmOpDeclare.subst(bfiIop)
     decoder_output += RegRegImmImmOpConstructor.subst(bfiIop)
     exec_output += PredOpExecute.subst(bfiIop)
+
+    mrc15Iop = InstObjParams("mrc", "Mrc15", "RegRegOp",
+                             { "code": "Dest = MiscOp1;",
+                               "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(mrc15Iop)
+    decoder_output += RegRegOpConstructor.subst(mrc15Iop)
+    exec_output += PredOpExecute.subst(mrc15Iop)
+
+    mcr15Iop = InstObjParams("mcr", "Mcr15", "RegRegOp",
+                             { "code": "MiscDest = Op1;",
+                               "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(mcr15Iop)
+    decoder_output += RegRegOpConstructor.subst(mcr15Iop)
+    exec_output += PredOpExecute.subst(mcr15Iop)
 }};
