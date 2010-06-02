@@ -59,6 +59,8 @@ namespace ArmISA
         Bitfield<33>     sevenAndFour;
         Bitfield<32>     isMisc;
 
+        uint32_t         instBits;
+
         // All the different types of opcode fields.
         Bitfield<27, 25> encoding;
         Bitfield<25>     useImm;
