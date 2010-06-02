@@ -116,7 +116,7 @@ def bitfield PUNWL         punwl;
 // M5 instructions
 def bitfield M5FUNC        m5Func;
 
-// Thumb bitfields
+// 16 bit thumb bitfields
 def bitfield TOPCODE_15_13  topcode15_13;
 def bitfield TOPCODE_13_11  topcode13_11;
 def bitfield TOPCODE_12_11  topcode12_11;
@@ -131,3 +131,28 @@ def bitfield TOPCODE_7_6    topcode7_6;
 def bitfield TOPCODE_7_5    topcode7_5;
 def bitfield TOPCODE_7_4    topcode7_4;
 def bitfield TOPCODE_3_0    topcode3_0;
+
+// 32 bit thumb bitfields
+def bitfield HTOPCODE_12_11 htopcode12_11;
+def bitfield HTOPCODE_10_9  htopcode10_9;
+def bitfield HTOPCODE_9     htopcode9;
+def bitfield HTOPCODE_9_8   htopcode9_8;
+def bitfield HTOPCODE_9_5   htopcode9_5;
+def bitfield HTOPCODE_9_4   htopcode9_4;
+def bitfield HTOPCODE_8     htopcode8;
+def bitfield HTOPCODE_8_7   htopcode8_7;
+def bitfield HTOPCODE_8_6   htopcode8_6;
+def bitfield HTOPCODE_8_5   htopcode8_5;
+def bitfield HTOPCODE_6_5   htopcode6_5;
+def bitfield HTOPCODE_5_4   htopcode5_4;
+def bitfield HTOPCODE_4     htopcode4;
+
+def bitfield HTRN           htrn;
+def bitfield HTS            hts;
+
+def bitfield LTOPCODE_15    ltopcode15;
+def bitfield LTOPCODE_7_4   ltopcode7_4;
+def bitfield LTOPCODE_4     ltopcode4;
+
+def bitfield LTRD           ltrd;
+def bitfield LTCOPROC       ltcoproc;

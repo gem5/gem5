@@ -143,6 +143,31 @@ namespace ArmISA
         Bitfield<7, 5>   topcode7_5;
         Bitfield<7, 4>   topcode7_4;
         Bitfield<3, 0>   topcode3_0;
+
+        // 32 bit thumb bitfields
+        Bitfield<28, 27> htopcode12_11;
+        Bitfield<26, 25> htopcode10_9;
+        Bitfield<25>     htopcode9;
+        Bitfield<25, 24> htopcode9_8;
+        Bitfield<25, 21> htopcode9_5;
+        Bitfield<25, 20> htopcode9_4;
+        Bitfield<24>     htopcode8;
+        Bitfield<24, 23> htopcode8_7;
+        Bitfield<24, 22> htopcode8_6;
+        Bitfield<24, 21> htopcode8_5;
+        Bitfield<22, 21> htopcode6_5;
+        Bitfield<21, 20> htopcode5_4;
+        Bitfield<20>     htopcode4;
+
+        Bitfield<19, 16> htrn;
+        Bitfield<20>     hts;
+
+        Bitfield<15>     ltopcode15;
+        Bitfield<7,  4>  ltopcode7_4;
+        Bitfield<4>      ltopcode4;
+
+        Bitfield<11, 8>  ltrd;
+        Bitfield<11, 8>  ltcoproc;
     EndBitUnion(ExtMachInst)
 
     // Shift types for ARM instructions
