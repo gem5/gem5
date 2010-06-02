@@ -110,7 +110,11 @@ namespace ArmISA
              * Technically this should be 0, but we don't support those
              * settings.
              */
-            miscRegs[MISCREG_CPACR] = 0x0fffffff;
+            CPACR cpacr = 0;
+            // Enable CP 10, 11
+            cpacr.cp10 = 0x3;
+            cpacr.cp11 = 0x3;
+            miscRegs[MISCREG_CPACR] = cpacr;
 
             /* One region, unified map. */
             miscRegs[MISCREG_MPUIR] = 0x100;
@@ -249,9 +253,15 @@ namespace ArmISA
             }
             switch (misc_reg) {
               case MISCREG_CPACR:
-                newVal = bits(val, 27, 0);
-                if (newVal != 0x0fffffff) {
-                    panic("Disabling coprocessors isn't implemented.\n");
+                {
+                    CPACR newCpacr = 0;
+                    CPACR valCpacr = val;
+                    newCpacr.cp10 = valCpacr.cp10;
+                    newCpacr.cp11 = valCpacr.cp11;
+                    if (newCpacr.cp10 != 0x3 || newCpacr.cp11 != 3) {
+                        panic("Disabling coprocessors isn't implemented.\n");
+                    }
+                    newVal = newCpacr;
                 }
                 break;
               case MISCREG_CSSELR:

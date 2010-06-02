@@ -230,6 +230,25 @@ namespace ArmISA
         Bitfield<1>  a;   // Alignment fault checking
         Bitfield<0>  m;   // MMU enable bit 
     EndBitUnion(SCTLR)
+
+    BitUnion32(CPACR)
+        Bitfield<1, 0> cp0;
+        Bitfield<3, 2> cp1;
+        Bitfield<5, 4> cp2;
+        Bitfield<7, 6> cp3;
+        Bitfield<9, 8> cp4;
+        Bitfield<11, 10> cp5;
+        Bitfield<13, 12> cp6;
+        Bitfield<15, 14> cp7;
+        Bitfield<17, 16> cp8;
+        Bitfield<19, 18> cp9;
+        Bitfield<21, 20> cp10;
+        Bitfield<23, 22> cp11;
+        Bitfield<25, 24> cp12;
+        Bitfield<27, 26> cp13;
+        Bitfield<30> d32dis;
+        Bitfield<31> asedis;
+    EndBitUnion(CPACR)
 };
 
 #endif // __ARCH_ARM_MISCREGS_HH__
