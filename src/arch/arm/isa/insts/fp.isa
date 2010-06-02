@@ -226,4 +226,36 @@ let {{
     header_output += RegRegRegOpDeclare.subst(vmov2Core2RegIop);
     decoder_output += RegRegRegOpConstructor.subst(vmov2Core2RegIop);
     exec_output += PredOpExecute.subst(vmov2Core2RegIop);
+
+    vmulSCode = '''
+        FpDest = FpOp1 * FpOp2;
+        if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
+            FpDest = NAN;
+        }
+    '''
+    vmulSIop = InstObjParams("vmuls", "VmulS", "RegRegRegOp",
+                                     { "code": vmulSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vmulSIop);
+    decoder_output += RegRegRegOpConstructor.subst(vmulSIop);
+    exec_output += PredOpExecute.subst(vmulSIop);
+
+    vmulDCode = '''
+        IntDoubleUnion cOp1, cOp2, cDest;
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        cDest.fp = cOp1.fp * cOp2.fp;
+        if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
+                (isinf(cOp2.fp) && cOp1.fp == 0)) {
+            cDest.fp = NAN;
+        }
+        FpDestP0.uw = cDest.bits;
+        FpDestP1.uw = cDest.bits >> 32;
+    '''
+    vmulDIop = InstObjParams("vmuld", "VmulD", "RegRegRegOp",
+                                     { "code": vmulDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vmulDIop);
+    decoder_output += RegRegRegOpConstructor.subst(vmulDIop);
+    exec_output += PredOpExecute.subst(vmulDIop);
 }};
