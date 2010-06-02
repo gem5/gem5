@@ -263,10 +263,10 @@ def format ArmSyncMem() {{
 def format Thumb32SrsRfe() {{
     decode_block = '''
     {
+        const bool wb = (bits(machInst, 21) == 1);
+        const bool add = (bits(machInst, 24, 23) == 0x3);
         if (bits(machInst, 20) == 1) {
-            const bool add = (bits(machInst, 24, 23) == 0x3);
             // post == add
-            const bool wb = (bits(machInst, 21) == 1);
             const IntRegIndex rn =
                 (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
             if (!add && !wb) {
@@ -279,14 +279,31 @@ def format Thumb32SrsRfe() {{
                 return new %(rfe_uw)s(machInst, rn, RfeOp::IncrementAfter, wb);
             }
         } else {
-            return new WarnUnimplemented("srs", machInst);
+            const uint32_t mode = bits(machInst, 4, 0);
+            if (!add && !wb) {
+                return new %(srs)s(machInst, mode,
+                        SrsOp::DecrementBefore, wb);
+            } else if (add && !wb) {
+                return new %(srs_u)s(machInst, mode,
+                        SrsOp::IncrementAfter, wb);
+            } else if (!add && wb) {
+                return new %(srs_w)s(machInst, mode,
+                        SrsOp::DecrementBefore, wb);
+            } else {
+                return new %(srs_uw)s(machInst, mode,
+                        SrsOp::IncrementAfter, wb);
+            }
         }
     }
     ''' % {
         "rfe" : "RFE_" + loadImmClassName(False, False, False, 8),
         "rfe_u" : "RFE_" + loadImmClassName(True, True, False, 8),
         "rfe_w" : "RFE_" + loadImmClassName(False, False, True, 8),
-        "rfe_uw" : "RFE_" + loadImmClassName(True, True, True, 8)
+        "rfe_uw" : "RFE_" + loadImmClassName(True, True, True, 8),
+        "srs" : "SRS_" + storeImmClassName(False, False, False, 8),
+        "srs_u" : "SRS_" + storeImmClassName(True, True, False, 8),
+        "srs_w" : "SRS_" + storeImmClassName(False, False, True, 8),
+        "srs_uw" : "SRS_" + storeImmClassName(True, True, True, 8)
     }
 }};
 

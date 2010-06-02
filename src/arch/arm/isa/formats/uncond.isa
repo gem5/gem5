@@ -163,7 +163,34 @@ def format ArmUnconditional() {{
                 {
                     const uint32_t val = ((machInst >> 20) & 0x5);
                     if (val == 0x4) {
-                        return new WarnUnimplemented("srs", machInst);
+                        const uint32_t mode = bits(machInst, 4, 0);
+                        switch (bits(machInst, 24, 21)) {
+                          case 0x2:
+                            return new %(srs)s(machInst, mode,
+                                    SrsOp::DecrementAfter, false);
+                          case 0x3:
+                            return new %(srs_w)s(machInst, mode,
+                                    SrsOp::DecrementAfter, true);
+                          case 0x6:
+                            return new %(srs_u)s(machInst, mode,
+                                    SrsOp::IncrementAfter, false);
+                          case 0x7:
+                            return new %(srs_uw)s(machInst, mode,
+                                    SrsOp::IncrementAfter, true);
+                          case 0xa:
+                            return new %(srs_p)s(machInst, mode,
+                                    SrsOp::DecrementBefore, false);
+                          case 0xb:
+                            return new %(srs_pw)s(machInst, mode,
+                                    SrsOp::DecrementBefore, true);
+                          case 0xe:
+                            return new %(srs_pu)s(machInst, mode,
+                                    SrsOp::IncrementBefore, false);
+                          case 0xf:
+                            return new %(srs_puw)s(machInst, mode,
+                                    SrsOp::IncrementBefore, true);
+                        }
+                        return new Unknown(machInst);
                     } else if (val == 0x1) {
                         switch (bits(machInst, 24, 21)) {
                           case 0x0:
@@ -266,6 +293,14 @@ def format ArmUnconditional() {{
         "rfe_p" : "RFE_" + loadImmClassName(False, False, False, 8),
         "rfe_pw" : "RFE_" + loadImmClassName(False, False, True, 8),
         "rfe_pu" : "RFE_" + loadImmClassName(False, True, False, 8),
-        "rfe_puw" : "RFE_" + loadImmClassName(False, True, True, 8)
+        "rfe_puw" : "RFE_" + loadImmClassName(False, True, True, 8),
+        "srs" : "SRS_" + storeImmClassName(True, False, False, 8),
+        "srs_w" : "SRS_" + storeImmClassName(True, False, True, 8),
+        "srs_u" : "SRS_" + storeImmClassName(True, True, False, 8),
+        "srs_uw" : "SRS_" + storeImmClassName(True, True, True, 8),
+        "srs_p" : "SRS_" + storeImmClassName(False, False, False, 8),
+        "srs_pw" : "SRS_" + storeImmClassName(False, False, True, 8),
+        "srs_pu" : "SRS_" + storeImmClassName(False, True, False, 8),
+        "srs_puw" : "SRS_" + storeImmClassName(False, True, True, 8)
     };
 }};
