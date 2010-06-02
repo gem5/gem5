@@ -197,6 +197,18 @@ RegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
+RegRegImmImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, dest);
+    ss << ", ";
+    printReg(ss, op1);
+    ccprintf(ss, ", #%d, #%d", imm1, imm2);
+    return ss.str();
+}
+
+std::string
 RegImmRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
