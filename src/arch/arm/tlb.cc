@@ -387,7 +387,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
         // Set memory attributes
         TlbEntry temp_te;
-        tableWalker->memAttrs(tc, temp_te, 0, 1);
+        tableWalker->memAttrs(tc, temp_te, sctlr, 0, 1);
         temp_te.shareable = true;
         DPRINTF(TLBVerbose, "(No MMU) setting memory attributes: shareable:\
                 %d, innerAttrs: %d, outerAttrs: %d\n", temp_te.shareable,

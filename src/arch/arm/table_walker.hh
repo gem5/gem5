@@ -48,6 +48,7 @@
 #include "params/ArmTableWalker.hh"
 #include "sim/faults.hh"
 #include "sim/eventq.hh"
+#include "base/fifo_buffer.hh"
 
 class DmaPort;
 class ThreadContext;
@@ -241,59 +242,77 @@ class TableWalker : public MemObject
 
     };
 
+    struct WalkerState //: public SimObject
+    {
+        /** Thread context that we're doing the walk for */
+        ThreadContext *tc;
+
+        /** Request that is currently being serviced */
+        RequestPtr req;
+
+        /** Context ID that we're servicing the request under */
+        uint8_t contextId;
+
+        /** Translation state for delayed requests */
+        TLB::Translation *transState;
+
+        /** The fault that we are going to return */
+        Fault fault;
+
+        /** The virtual address that is being translated */
+        Addr vaddr;
+
+        /** Cached copy of the sctlr as it existed when translation began */
+        SCTLR sctlr;
+
+        /** Cached copy of the cpsr as it existed when the translation began */
+        CPSR cpsr;
+
+        /** Width of the base address held in TTRB0 */
+        uint32_t N;
+
+        /** If the access is a write */
+        bool isWrite;
+
+        /** If the access is not from user mode */
+        bool isPriv;
+
+        /** If the access is a fetch (for execution, and no-exec) must be checked?*/
+        bool isFetch;
+
+        /** If the mode is timing or atomic */
+        bool timing;
+
+        /** Save mode for use in delayed response */
+        BaseTLB::Mode mode;
+
+        L1Descriptor l1Desc;
+        L2Descriptor l2Desc;
+
+        /** Whether L1/L2 descriptor response is delayed in timing mode */
+        bool delayed;
+
+        TableWalker *tableWalker;
+
+        void doL1Descriptor();
+        void doL2Descriptor();
+
+        std::string name() const {return tableWalker->name();}
+    };
+
+
+    FifoBuffer<WalkerState> stateQueue;
+
     /** Port to issue translation requests from */
     DmaPort *port;
 
     /** TLB that is initiating these table walks */
     TLB *tlb;
 
-    /** Thread context that we're doing the walk for */
-    ThreadContext *tc;
-
-    /** Request that is currently being serviced */
-    RequestPtr req;
-
-    /** Context ID that we're servicing the request under */
-    uint8_t contextId;
-
-    /** Translation state for delayed requests */
-    TLB::Translation *transState;
-
-    /** The fault that we are going to return */
-    Fault fault;
-
-    /** The virtual address that is being translated */
-    Addr vaddr;
-
     /** Cached copy of the sctlr as it existed when translation began */
     SCTLR sctlr;
 
-    /** Cached copy of the cpsr as it existed when the translation began */
-    CPSR cpsr;
-
-    /** Width of the base address held in TTRB0 */
-    uint32_t N;
-
-    /** If the access is a write */
-    bool isWrite;
-
-    /** If the access is not from user mode */
-    bool isPriv;
-
-    /** If the access is a fetch (for execution, and no-exec) must be checked?*/
-    bool isFetch;
-
-    /** If the mode is timing or atomic */
-    bool timing;
-
-    L1Descriptor l1Desc;
-    L2Descriptor l2Desc;
-
-    /** Save mode for use in delayed response */
-    BaseTLB::Mode mode;
-
-    /** Whether L1/L2 descriptor response is delayed in timing mode */
-    bool delayed;
+    WalkerState *currState;
 
   public:
     typedef ArmTableWalkerParams Params;
@@ -313,7 +332,8 @@ class TableWalker : public MemObject
             TLB::Translation *_trans, bool timing);
 
     void setTlb(TLB *_tlb) { tlb = _tlb; }
-    void memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s);
+    void memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
+                  uint8_t texcb, bool s);
 
   private:
 

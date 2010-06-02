@@ -43,13 +43,16 @@
 #include "dev/io_device.hh"
 #include "cpu/thread_context.hh"
 
+#define NUM_WALKERS 2 // 2 should be enough to handle crossing page boundaries
 
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
-    : MemObject(p), port(NULL), tlb(NULL), tc(NULL), req(NULL),
-      doL1DescEvent(this), doL2DescEvent(this)
-{}
+    : MemObject(p), stateQueue(NUM_WALKERS), port(NULL), tlb(NULL),
+      currState(NULL), doL1DescEvent(this), doL2DescEvent(this)
+{
+    sctlr = NULL;
+}
 
 TableWalker::~TableWalker()
 {
@@ -83,80 +86,99 @@ Fault
 TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _mode,
             TLB::Translation *_trans, bool _timing)
 {
-    // Right now 1 CPU == 1 TLB == 1 TLB walker
-    // In the future we might want to change this as multiple
-    // threads/contexts could share a walker and/or a TLB
-    if (tc || req)
-        panic("Overlapping TLB walks attempted\n");
+    if (!currState) {
+        // For atomic mode, a new WalkerState instance should be only created
+        // once per TLB. For timing mode, a new instance is generated for every
+        // TLB miss.
+        DPRINTF(TLBVerbose, "creating new instance of WalkerState\n");
 
-    tc = _tc;
-    transState = _trans;
-    req = _req;
-    fault = NoFault;
-    contextId = _cid;
-    timing = _timing;
-    mode = _mode;
+        currState = new WalkerState();
+        currState->tableWalker = this;
+    }
+    else if (_timing) {
+        panic("currState should always be empty in timing mode!\n");
+    }
+
+    currState->tc = _tc;
+    currState->transState = _trans;
+    currState->req = _req;
+    currState->fault = NoFault;
+    currState->contextId = _cid;
+    currState->timing = _timing;
+    currState->mode = _mode;
 
     /** @todo These should be cached or grabbed from cached copies in
      the TLB, all these miscreg reads are expensive */
-    vaddr = req->getVaddr() & ~PcModeMask;
-    sctlr = tc->readMiscReg(MISCREG_SCTLR);
-    cpsr = tc->readMiscReg(MISCREG_CPSR);
-    N = tc->readMiscReg(MISCREG_TTBCR);
+    currState->vaddr = currState->req->getVaddr() & ~PcModeMask;
+    currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR);
+    sctlr = currState->sctlr;
+    currState->cpsr = currState->tc->readMiscReg(MISCREG_CPSR);
+    currState->N = currState->tc->readMiscReg(MISCREG_TTBCR);
+
+    currState->isFetch = (currState->mode == TLB::Execute);
+    currState->isWrite = (currState->mode == TLB::Write);
+    currState->isPriv = (currState->cpsr.mode != MODE_USER);
+
     Addr ttbr = 0;
 
-    isFetch = (mode == TLB::Execute);
-    isWrite = (mode == TLB::Write);
-    isPriv = (cpsr.mode != MODE_USER);
-
     // If translation isn't enabled, we shouldn't be here
-    assert(sctlr.m);
+    assert(currState->sctlr.m);
 
     DPRINTF(TLB, "Begining table walk for address %#x, TTBCR: %#x, bits:%#x\n",
-            vaddr, N, mbits(vaddr, 31, 32-N));
+            currState->vaddr, currState->N, mbits(currState->vaddr, 31,
+            32-currState->N));
 
-    if (N == 0 || !mbits(vaddr, 31, 32-N)) {
+    if (currState->N == 0 || !mbits(currState->vaddr, 31, 32-currState->N)) {
         DPRINTF(TLB, " - Selecting TTBR0\n");
-        ttbr = tc->readMiscReg(MISCREG_TTBR0);
+        ttbr = currState->tc->readMiscReg(MISCREG_TTBR0);
     } else {
         DPRINTF(TLB, " - Selecting TTBR1\n");
-        ttbr = tc->readMiscReg(MISCREG_TTBR1);
-        N = 0;
+        ttbr = currState->tc->readMiscReg(MISCREG_TTBR1);
+        currState->N = 0;
     }
 
-    Addr l1desc_addr = mbits(ttbr, 31, 14-N) | (bits(vaddr,31-N,20) << 2);
+    Addr l1desc_addr = mbits(ttbr, 31, 14-currState->N) |
+                       (bits(currState->vaddr,31-currState->N,20) << 2);
     DPRINTF(TLB, " - Descriptor at address %#x\n", l1desc_addr);
 
 
     // Trickbox address check
-    fault = tlb->walkTrickBoxCheck(l1desc_addr, vaddr, sizeof(uint32_t),
-            isFetch, isWrite, 0, true);
-    if (fault) {
-       tc = NULL;
-       req = NULL;
-       return fault;
+    Fault f;
+    f = tlb->walkTrickBoxCheck(l1desc_addr, currState->vaddr, sizeof(uint32_t),
+            currState->isFetch, currState->isWrite, 0, true);
+    if (f) {
+       currState->tc = NULL;
+       currState->req = NULL;
+       return f;
     }
 
-    if (timing) {
+    if (currState->timing) {
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
-                &doL1DescEvent, (uint8_t*)&l1Desc.data, (Tick)0);
+                &doL1DescEvent, (uint8_t*)&currState->l1Desc.data, (Tick)0);
+        DPRINTF(TLBVerbose, "Adding to walker fifo: %d free before adding\n",
+                stateQueue.free_slots());
+        stateQueue.add(*currState);
+        currState = NULL;
     } else {
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
-                NULL, (uint8_t*)&l1Desc.data, (Tick)0);
+                NULL, (uint8_t*)&currState->l1Desc.data, (Tick)0);
         doL1Descriptor();
+        f = currState->fault;
     }
 
-    return fault;
+    return f;
 }
 
 void
-TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s)
+TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
+                      uint8_t texcb, bool s)
 {
-    // Note: tc local variable is hiding tc class variable
+    // Note: tc and sctlr local variables are hiding tc and sctrl class
+    // variables
     DPRINTF(TLBVerbose, "memAttrs texcb:%d s:%d\n", texcb, s);
     te.shareable = false; // default value
     bool outer_shareable = false;
-    if (sctlr.tre == 0) {
+    if (sctlr.tre == 0 || ((sctlr.tre == 1) && (sctlr.m == 0))) {
         switch(texcb) {
           case 0: // Stongly-ordered
             te.nonCacheable = true;
@@ -192,8 +214,10 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s)
             te.outerAttrs = bits(texcb, 1, 0);
             break;
           case 5: // Reserved
+            panic("Reserved texcb value!\n");
             break;
           case 6: // Implementation Defined
+            panic("Implementation-defined texcb value!\n");
             break;
           case 7: // Outer and Inner Write-Back, Write-Allocate
             te.mtype = TlbEntry::Normal;
@@ -209,6 +233,7 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s)
             te.outerAttrs = 0;
             break;
           case 9 ... 15:  // Reserved
+            panic("Reserved texcb value!\n");
             break;
           case 16 ... 31: // Cacheable Memory
             te.mtype = TlbEntry::Normal;
@@ -303,7 +328,6 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s)
                 te.shareable = true;
             if (prrr.ns0 && !s)
                 te.shareable = true;
-            //te.shareable = outer_shareable;
             break;
           case 3:
             panic("Reserved type");
@@ -343,6 +367,9 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s)
             }
         }
     }
+    DPRINTF(TLBVerbose, "memAttrs: shareable: %d, innerAttrs: %d, \
+            outerAttrs: %d\n",
+            te.shareable, te.innerAttrs, te.outerAttrs);
 
     /** Formatting for Physical Address Register (PAR)
      *  Only including lower bits (TLB info here)
@@ -375,49 +402,54 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, uint8_t texcb, bool s)
 void
 TableWalker::doL1Descriptor()
 {
-    DPRINTF(TLB, "L1 descriptor for %#x is %#x\n", vaddr, l1Desc.data);
+    DPRINTF(TLB, "L1 descriptor for %#x is %#x\n",
+            currState->vaddr, currState->l1Desc.data);
     TlbEntry te;
 
-    switch (l1Desc.type()) {
+    switch (currState->l1Desc.type()) {
       case L1Descriptor::Ignore:
       case L1Descriptor::Reserved:
-        if (!delayed) {
-            tc = NULL;
-            req = NULL;
+        if (!currState->delayed) {
+            currState->tc = NULL;
+            currState->req = NULL;
         }
         DPRINTF(TLB, "L1 Descriptor Reserved/Ignore, causing fault\n");
-        if (isFetch)
-            fault = new PrefetchAbort(vaddr, ArmFault::Translation0);
+        if (currState->isFetch)
+            currState->fault =
+                new PrefetchAbort(currState->vaddr, ArmFault::Translation0);
         else
-            fault = new DataAbort(vaddr, NULL, isWrite,
+            currState->fault =
+                new DataAbort(currState->vaddr, NULL, currState->isWrite,
                                   ArmFault::Translation0);
         return;
       case L1Descriptor::Section:
-        if (sctlr.afe && bits(l1Desc.ap(), 0) == 0) {
+        if (currState->sctlr.afe && bits(currState->l1Desc.ap(), 0) == 0) {
             /** @todo: check sctlr.ha (bit[17]) if Hardware Access Flag is
               * enabled if set, do l1.Desc.setAp0() instead of generating
               * AccessFlag0
               */
 
-            fault = new DataAbort(vaddr, NULL, isWrite,
+            currState->fault =
+                new DataAbort(currState->vaddr, NULL, currState->isWrite,
                                     ArmFault::AccessFlag0);
         }
 
-        if (l1Desc.supersection()) {
+        if (currState->l1Desc.supersection()) {
             panic("Haven't implemented supersections\n");
         }
         te.N = 20;
-        te.pfn = l1Desc.pfn();
+        te.pfn = currState->l1Desc.pfn();
         te.size = (1<<te.N) - 1;
-        te.global = !l1Desc.global();
+        te.global = !currState->l1Desc.global();
         te.valid = true;
-        te.vpn = vaddr >> te.N;
+        te.vpn = currState->vaddr >> te.N;
         te.sNp = true;
-        te.xn = l1Desc.xn();
-        te.ap =  l1Desc.ap();
-        te.domain = l1Desc.domain();
-        te.asid = contextId;
-        memAttrs(tc, te, l1Desc.texcb(), l1Desc.shareable());
+        te.xn = currState->l1Desc.xn();
+        te.ap = currState->l1Desc.ap();
+        te.domain = currState->l1Desc.domain();
+        te.asid = currState->contextId;
+        memAttrs(currState->tc, te, currState->sctlr,
+                currState->l1Desc.texcb(), currState->l1Desc.shareable());
 
         DPRINTF(TLB, "Inserting Section Descriptor into TLB\n");
         DPRINTF(TLB, " - N%d pfn:%#x size: %#x global:%d valid: %d\n",
@@ -425,40 +457,44 @@ TableWalker::doL1Descriptor()
         DPRINTF(TLB, " - vpn:%#x sNp: %d xn:%d ap:%d domain: %d asid:%d\n",
                 te.vpn, te.sNp, te.xn, te.ap, te.domain, te.asid);
         DPRINTF(TLB, " - domain from l1 desc: %d data: %#x bits:%d\n",
-                l1Desc.domain(), l1Desc.data, (l1Desc.data >> 5) & 0xF );
+                currState->l1Desc.domain(), currState->l1Desc.data,
+                (currState->l1Desc.data >> 5) & 0xF );
 
-        if (!timing) {
-            tc = NULL;
-            req = NULL;
+        if (!currState->timing) {
+            currState->tc = NULL;
+            currState->req = NULL;
         }
-        tlb->insert(vaddr, te);
+        tlb->insert(currState->vaddr, te);
 
         return;
       case L1Descriptor::PageTable:
         Addr l2desc_addr;
-        l2desc_addr = l1Desc.l2Addr() | (bits(vaddr, 19,12) << 2);
+        l2desc_addr = currState->l1Desc.l2Addr() |
+                      (bits(currState->vaddr, 19,12) << 2);
         DPRINTF(TLB, "L1 descriptor points to page table at: %#x\n",
                 l2desc_addr);
 
         // Trickbox address check
-        fault = tlb->walkTrickBoxCheck(l2desc_addr, vaddr, sizeof(uint32_t),
-                isFetch, isWrite, l1Desc.domain(), false);
-        if (fault) {
-            if (!timing) {
-                tc = NULL;
-                req = NULL;
+        currState->fault = tlb->walkTrickBoxCheck(l2desc_addr, currState->vaddr,
+                sizeof(uint32_t), currState->isFetch, currState->isWrite,
+                currState->l1Desc.domain(), false);
+
+        if (currState->fault) {
+            if (!currState->timing) {
+                currState->tc = NULL;
+                currState->req = NULL;
             }
             return;
         }
 
 
-        if (timing) {
-            delayed = true;
+        if (currState->timing) {
+            currState->delayed = true;
             port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
-                    &doL2DescEvent, (uint8_t*)&l2Desc.data, 0);
+                    &doL2DescEvent, (uint8_t*)&currState->l2Desc.data, 0);
         } else {
             port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
-                    NULL, (uint8_t*)&l2Desc.data, 0);
+                    NULL, (uint8_t*)&currState->l2Desc.data, 0);
             doL2Descriptor();
         }
         return;
@@ -470,103 +506,125 @@ TableWalker::doL1Descriptor()
 void
 TableWalker::doL2Descriptor()
 {
-    DPRINTF(TLB, "L2 descriptor for %#x is %#x\n", vaddr, l2Desc.data);
+    DPRINTF(TLB, "L2 descriptor for %#x is %#x\n",
+            currState->vaddr, currState->l2Desc.data);
     TlbEntry te;
 
-    if (l2Desc.invalid()) {
+    if (currState->l2Desc.invalid()) {
         DPRINTF(TLB, "L2 descriptor invalid, causing fault\n");
-        if (!delayed) {
-            tc = NULL;
-            req = NULL;
+        if (!currState->delayed) {
+            currState->tc = NULL;
+            currState->req = NULL;
         }
-        if (isFetch)
-            fault = new PrefetchAbort(vaddr, ArmFault::Translation1);
+        if (currState->isFetch)
+            currState->fault =
+                new PrefetchAbort(currState->vaddr, ArmFault::Translation1);
         else
-            fault = new DataAbort(vaddr, l1Desc.domain(), isWrite,
-                                    ArmFault::Translation1);
+            currState->fault =
+                new DataAbort(currState->vaddr, currState->l1Desc.domain(),
+                              currState->isWrite, ArmFault::Translation1);
         return;
     }
 
-    if (sctlr.afe && bits(l2Desc.ap(), 0) == 0) {
+    if (currState->sctlr.afe && bits(currState->l2Desc.ap(), 0) == 0) {
         /** @todo: check sctlr.ha (bit[17]) if Hardware Access Flag is enabled
           * if set, do l2.Desc.setAp0() instead of generating AccessFlag0
           */
 
-        fault = new DataAbort(vaddr, NULL, isWrite, ArmFault::AccessFlag1);
+        currState->fault =
+            new DataAbort(currState->vaddr, NULL, currState->isWrite,
+                          ArmFault::AccessFlag1);
+
     }
 
-    if (l2Desc.large()) {
+    if (currState->l2Desc.large()) {
       te.N = 16;
-      te.pfn = l2Desc.pfn();
+      te.pfn = currState->l2Desc.pfn();
     } else {
       te.N = 12;
-      te.pfn = l2Desc.pfn();
+      te.pfn = currState->l2Desc.pfn();
     }
 
     te.valid = true;
     te.size =  (1 << te.N) - 1;
-    te.asid = contextId;
+    te.asid = currState->contextId;
     te.sNp = false;
-    te.vpn = vaddr >> te.N;
-    te.global = l2Desc.global();
-    te.xn = l2Desc.xn();
-    te.ap = l2Desc.ap();
-    te.domain = l1Desc.domain();
-    memAttrs(tc, te, l2Desc.texcb(), l2Desc.shareable());
+    te.vpn = currState->vaddr >> te.N;
+    te.global = currState->l2Desc.global();
+    te.xn = currState->l2Desc.xn();
+    te.ap = currState->l2Desc.ap();
+    te.domain = currState->l1Desc.domain();
+    memAttrs(currState->tc, te, currState->sctlr, currState->l2Desc.texcb(),
+             currState->l2Desc.shareable());
 
-    if (!delayed) {
-        tc = NULL;
-        req = NULL;
+    if (!currState->delayed) {
+        currState->tc = NULL;
+        currState->req = NULL;
     }
-    tlb->insert(vaddr, te);
+    tlb->insert(currState->vaddr, te);
 }
 
 void
 TableWalker::doL1DescriptorWrapper()
 {
-    delayed = false;
+    currState = stateQueue.peek();
+    currState->delayed = false;
 
-    DPRINTF(TLBVerbose, "calling doL1Descriptor\n");
+    DPRINTF(TLBVerbose, "calling doL1Descriptor for vaddr:%#x\n", currState->vaddr);
     doL1Descriptor();
 
     // Check if fault was generated
-    if (fault != NoFault) {
-        transState->finish(fault, req, tc, mode);
+    if (currState->fault != NoFault) {
+        currState->transState->finish(currState->fault, currState->req,
+                                      currState->tc, currState->mode);
 
-        req = NULL;
-        tc = NULL;
-        delayed = false;
+        currState->req = NULL;
+        currState->tc = NULL;
+        currState->delayed = false;
+
+        stateQueue.remove();
     }
-    else if (!delayed) {
+    else if (!currState->delayed) {
         DPRINTF(TLBVerbose, "calling translateTiming again\n");
-        fault = tlb->translateTiming(req, tc, transState, mode);
+        currState->fault = tlb->translateTiming(currState->req, currState->tc,
+                                       currState->transState, currState->mode);
 
-        req = NULL;
-        tc = NULL;
-        delayed = false;
+        currState->req = NULL;
+        currState->tc = NULL;
+        currState->delayed = false;
+
+        stateQueue.remove();
     }
+    currState = NULL;
 }
 
 void
 TableWalker::doL2DescriptorWrapper()
 {
-    assert(delayed);
+    currState = stateQueue.peek();
+    assert(currState->delayed);
 
-    DPRINTF(TLBVerbose, "calling doL2Descriptor\n");
+    DPRINTF(TLBVerbose, "calling doL2Descriptor for vaddr:%#x\n",
+            currState->vaddr);
     doL2Descriptor();
 
     // Check if fault was generated
-    if (fault != NoFault) {
-        transState->finish(fault, req, tc, mode);
+    if (currState->fault != NoFault) {
+        currState->transState->finish(currState->fault, currState->req,
+                                      currState->tc, currState->mode);
     }
     else {
         DPRINTF(TLBVerbose, "calling translateTiming again\n");
-        fault = tlb->translateTiming(req, tc, transState, mode);
+        currState->fault = tlb->translateTiming(currState->req, currState->tc,
+                                      currState->transState, currState->mode);
     }
 
-    req = NULL;
-    tc = NULL;
-    delayed = false;
+    currState->req = NULL;
+    currState->tc = NULL;
+    currState->delayed = false;
+
+    stateQueue.remove();
+    currState = NULL;
 }
 
 ArmISA::TableWalker *
