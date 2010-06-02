@@ -164,6 +164,11 @@ namespace ArmISA
                 panic("Unimplemented CP15 register %s read.\n",
                       miscRegName[misc_reg]);
             }
+            switch (misc_reg) {
+              case MISCREG_CLIDR:
+                warn("The clidr register always reports 0 caches.\n");
+                break;
+            }
             return readMiscRegNoEffect(misc_reg);
         }
 
