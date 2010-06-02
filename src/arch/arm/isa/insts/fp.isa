@@ -56,4 +56,174 @@ let {{
     header_output += RegRegOpDeclare.subst(vmrsIop);
     decoder_output += RegRegOpConstructor.subst(vmrsIop);
     exec_output += PredOpExecute.subst(vmrsIop);
+
+    vmovImmSCode = '''
+        FpDest.uw = bits(imm, 31, 0);
+    '''
+    vmovImmSIop = InstObjParams("vmov", "VmovImmS", "RegImmOp",
+                                { "code": vmovImmSCode,
+                                  "predicate_test": predicateTest }, [])
+    header_output += RegImmOpDeclare.subst(vmovImmSIop);
+    decoder_output += RegImmOpConstructor.subst(vmovImmSIop);
+    exec_output += PredOpExecute.subst(vmovImmSIop);
+
+    vmovImmDCode = '''
+        FpDestP0.uw = bits(imm, 31, 0);
+        FpDestP1.uw = bits(imm, 63, 32);
+    '''
+    vmovImmDIop = InstObjParams("vmov", "VmovImmD", "RegImmOp",
+                                { "code": vmovImmDCode,
+                                  "predicate_test": predicateTest }, [])
+    header_output += RegImmOpDeclare.subst(vmovImmDIop);
+    decoder_output += RegImmOpConstructor.subst(vmovImmDIop);
+    exec_output += PredOpExecute.subst(vmovImmDIop);
+
+    vmovImmQCode = '''
+        FpDestP0.uw = bits(imm, 31, 0);
+        FpDestP1.uw = bits(imm, 63, 32);
+        FpDestP2.uw = bits(imm, 31, 0);
+        FpDestP3.uw = bits(imm, 63, 32);
+    '''
+    vmovImmQIop = InstObjParams("vmov", "VmovImmQ", "RegImmOp",
+                                { "code": vmovImmQCode,
+                                  "predicate_test": predicateTest }, [])
+    header_output += RegImmOpDeclare.subst(vmovImmQIop);
+    decoder_output += RegImmOpConstructor.subst(vmovImmQIop);
+    exec_output += PredOpExecute.subst(vmovImmQIop);
+
+    vmovRegSCode = '''
+        FpDest.uw = FpOp1.uw;
+    '''
+    vmovRegSIop = InstObjParams("vmov", "VmovRegS", "RegRegOp",
+                                { "code": vmovRegSCode,
+                                  "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vmovRegSIop);
+    decoder_output += RegRegOpConstructor.subst(vmovRegSIop);
+    exec_output += PredOpExecute.subst(vmovRegSIop);
+
+    vmovRegDCode = '''
+        FpDestP0.uw = FpOp1P0.uw;
+        FpDestP1.uw = FpOp1P1.uw;
+    '''
+    vmovRegDIop = InstObjParams("vmov", "VmovRegD", "RegRegOp",
+                                { "code": vmovRegDCode,
+                                  "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vmovRegDIop);
+    decoder_output += RegRegOpConstructor.subst(vmovRegDIop);
+    exec_output += PredOpExecute.subst(vmovRegDIop);
+
+    vmovRegQCode = '''
+        FpDestP0.uw = FpOp1P0.uw;
+        FpDestP1.uw = FpOp1P1.uw;
+        FpDestP2.uw = FpOp1P2.uw;
+        FpDestP3.uw = FpOp1P3.uw;
+    '''
+    vmovRegQIop = InstObjParams("vmov", "VmovRegQ", "RegRegOp",
+                                { "code": vmovRegQCode,
+                                  "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vmovRegQIop);
+    decoder_output += RegRegOpConstructor.subst(vmovRegQIop);
+    exec_output += PredOpExecute.subst(vmovRegQIop);
+
+    vmovCoreRegBCode = '''
+        FpDest.uw = insertBits(FpDest.uw, imm * 8, imm * 8 + 7, Op1.ub);
+    '''
+    vmovCoreRegBIop = InstObjParams("vmov", "VmovCoreRegB", "RegRegImmOp",
+                                    { "code": vmovCoreRegBCode,
+                                      "predicate_test": predicateTest }, [])
+    header_output += RegRegImmOpDeclare.subst(vmovCoreRegBIop);
+    decoder_output += RegRegImmOpConstructor.subst(vmovCoreRegBIop);
+    exec_output += PredOpExecute.subst(vmovCoreRegBIop);
+
+    vmovCoreRegHCode = '''
+        FpDest.uw = insertBits(FpDest.uw, imm * 16, imm * 16 + 15, Op1.uh);
+    '''
+    vmovCoreRegHIop = InstObjParams("vmov", "VmovCoreRegH", "RegRegImmOp",
+                                    { "code": vmovCoreRegHCode,
+                                      "predicate_test": predicateTest }, [])
+    header_output += RegRegImmOpDeclare.subst(vmovCoreRegHIop);
+    decoder_output += RegRegImmOpConstructor.subst(vmovCoreRegHIop);
+    exec_output += PredOpExecute.subst(vmovCoreRegHIop);
+
+    vmovCoreRegWCode = '''
+        FpDest.uw = Op1.uw;
+    '''
+    vmovCoreRegWIop = InstObjParams("vmov", "VmovCoreRegW", "RegRegOp",
+                                    { "code": vmovCoreRegWCode,
+                                      "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vmovCoreRegWIop);
+    decoder_output += RegRegOpConstructor.subst(vmovCoreRegWIop);
+    exec_output += PredOpExecute.subst(vmovCoreRegWIop);
+
+    vmovRegCoreUBCode = '''
+        Dest = bits(FpOp1.uw, imm * 8, imm * 8 + 7);
+    '''
+    vmovRegCoreUBIop = InstObjParams("vmov", "VmovRegCoreUB", "RegRegImmOp",
+                                     { "code": vmovRegCoreUBCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegImmOpDeclare.subst(vmovRegCoreUBIop);
+    decoder_output += RegRegImmOpConstructor.subst(vmovRegCoreUBIop);
+    exec_output += PredOpExecute.subst(vmovRegCoreUBIop);
+
+    vmovRegCoreUHCode = '''
+        Dest = bits(FpOp1.uw, imm * 16, imm * 16 + 15);
+    '''
+    vmovRegCoreUHIop = InstObjParams("vmov", "VmovRegCoreUH", "RegRegImmOp",
+                                     { "code": vmovRegCoreUHCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegImmOpDeclare.subst(vmovRegCoreUHIop);
+    decoder_output += RegRegImmOpConstructor.subst(vmovRegCoreUHIop);
+    exec_output += PredOpExecute.subst(vmovRegCoreUHIop);
+
+    vmovRegCoreSBCode = '''
+        Dest = sext<8>(bits(FpOp1.uw, imm * 8, imm * 8 + 7));
+    '''
+    vmovRegCoreSBIop = InstObjParams("vmov", "VmovRegCoreSB", "RegRegImmOp",
+                                     { "code": vmovRegCoreSBCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegImmOpDeclare.subst(vmovRegCoreSBIop);
+    decoder_output += RegRegImmOpConstructor.subst(vmovRegCoreSBIop);
+    exec_output += PredOpExecute.subst(vmovRegCoreSBIop);
+
+    vmovRegCoreSHCode = '''
+        Dest = sext<16>(bits(FpOp1.uw, imm * 16, imm * 16 + 15));
+    '''
+    vmovRegCoreSHIop = InstObjParams("vmov", "VmovRegCoreSH", "RegRegImmOp",
+                                     { "code": vmovRegCoreSHCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegImmOpDeclare.subst(vmovRegCoreSHIop);
+    decoder_output += RegRegImmOpConstructor.subst(vmovRegCoreSHIop);
+    exec_output += PredOpExecute.subst(vmovRegCoreSHIop);
+
+    vmovRegCoreWCode = '''
+        Dest = FpOp1.uw;
+    '''
+    vmovRegCoreWIop = InstObjParams("vmov", "VmovRegCoreW", "RegRegOp",
+                                     { "code": vmovRegCoreWCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegOpDeclare.subst(vmovRegCoreWIop);
+    decoder_output += RegRegOpConstructor.subst(vmovRegCoreWIop);
+    exec_output += PredOpExecute.subst(vmovRegCoreWIop);
+
+    vmov2Reg2CoreCode = '''
+        FpDestP0.uw = Op1.uw;
+        FpDestP1.uw = Op2.uw;
+    '''
+    vmov2Reg2CoreIop = InstObjParams("vmov", "Vmov2Reg2Core", "RegRegRegOp",
+                                     { "code": vmov2Reg2CoreCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vmov2Reg2CoreIop);
+    decoder_output += RegRegRegOpConstructor.subst(vmov2Reg2CoreIop);
+    exec_output += PredOpExecute.subst(vmov2Reg2CoreIop);
+
+    vmov2Core2RegCode = '''
+        Dest.uw = FpOp2P0.uw;
+        Op1.uw = FpOp2P1.uw;
+    '''
+    vmov2Core2RegIop = InstObjParams("vmov", "Vmov2Core2Reg", "RegRegRegOp",
+                                     { "code": vmov2Core2RegCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += RegRegRegOpDeclare.subst(vmov2Core2RegIop);
+    decoder_output += RegRegRegOpConstructor.subst(vmov2Core2RegIop);
+    exec_output += PredOpExecute.subst(vmov2Core2RegIop);
 }};
