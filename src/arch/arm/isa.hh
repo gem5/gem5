@@ -131,6 +131,9 @@ namespace ArmISA
                 (0 << 0)     | //Revision
                 0;
 
+            // Separate Instruction and Data TLBs.
+            miscRegs[MISCREG_TLBTR] = 1;
+
             //XXX We need to initialize the rest of the state.
         }
 
@@ -269,6 +272,8 @@ namespace ArmISA
               case MISCREG_CSSELR:
                 warn("The csselr register isn't implemented.\n");
                 break;
+              case MISCREG_TLBTR:
+                return;
             }
             return setMiscRegNoEffect(misc_reg, newVal);
         }
