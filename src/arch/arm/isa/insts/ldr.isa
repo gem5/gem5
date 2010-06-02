@@ -112,6 +112,42 @@ let {{
 
         emitLoad(name, Name, True, eaCode, accCode, memFlags, [], base)
 
+    def buildRfeLoad(mnem, post, add, writeback):
+        name = mnem
+        Name = "RFE_" + loadImmClassName(post, add, writeback, 8)
+
+        offset = 0
+        if post != add:
+            offset += 4
+        if not add:
+            offset -= 8
+
+        eaCode = "EA = Base + %d;" % offset
+
+        wbDiff = -8
+        if add:
+            wbDiff = 8
+        accCode = '''
+        NPC = bits(Mem.ud, 31, 0);
+        uint32_t newCpsr = cpsrWriteByInstr(Cpsr | CondCodes,
+                                            bits(Mem.ud, 63, 32),
+                                            0xF, true);
+        Cpsr = ~CondCodesMask & newCpsr;
+        CondCodes = CondCodesMask & newCpsr;
+        '''
+        if writeback:
+            accCode += "Base = Base + %s;\n" % wbDiff
+
+        global header_output, decoder_output, exec_output
+
+        (newHeader,
+         newDecoder,
+         newExec) = RfeBase(name, Name, eaCode, accCode, [], [])
+
+        header_output += newHeader
+        decoder_output += newDecoder
+        exec_output += newExec
+
     def buildRegLoad(mnem, post, add, writeback, \
                      size=4, sign=False, user=False, prefetch=False):
         name = mnem
@@ -233,6 +269,16 @@ let {{
         buildDoubleImmLoad(mnem, False, False, False)
         buildDoubleRegLoad(mnem, False, False, False)
 
+    def buildRfeLoads(mnem):
+        buildRfeLoad(mnem, True, True, True)
+        buildRfeLoad(mnem, True, True, False)
+        buildRfeLoad(mnem, True, False, True)
+        buildRfeLoad(mnem, True, False, False)
+        buildRfeLoad(mnem, False, True, True)
+        buildRfeLoad(mnem, False, True, False)
+        buildRfeLoad(mnem, False, False, True)
+        buildRfeLoad(mnem, False, False, False)
+
     def buildPrefetches(mnem):
         buildRegLoad(mnem, False, False, False, size=1, prefetch=True)
         buildImmLoad(mnem, False, False, False, size=1, prefetch=True)
@@ -251,6 +297,8 @@ let {{
     buildLoads("ldrsht", size=2, sign=True, user=True)
 
     buildDoubleLoads("ldrd")
+
+    buildRfeLoads("rfe")
 
     buildPrefetches("pld")
     buildPrefetches("pldw")

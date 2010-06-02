@@ -38,7 +38,7 @@
 // Authors: Gabe Black
 
 let {{
-    def loadStoreBaseWork(name, Name, imm, swp, codeBlobs, memFlags,
+    def loadStoreBaseWork(name, Name, imm, swp, rfe, codeBlobs, memFlags,
                           instFlags, double, base = 'Memory',
                           execTemplateBase = ''):
         # Make sure flags are in lists (convert to lists if not).
@@ -66,6 +66,9 @@ let {{
         if swp:
             declareTemplate = SwapDeclare
             constructTemplate = SwapConstructor
+        elif rfe:
+            declareTemplate = RfeDeclare
+            constructTemplate = RfeConstructor
         elif imm:
             if double:
                 declareTemplate = LoadStoreDImmDeclare
@@ -94,8 +97,16 @@ let {{
         codeBlobs = { "ea_code": eaCode,
                       "memacc_code": accCode,
                       "predicate_test": predicateTest }
-        return loadStoreBaseWork(name, Name, imm, False, codeBlobs, memFlags,
-                                 instFlags, double, base, execTemplateBase)
+        return loadStoreBaseWork(name, Name, imm, False, False, codeBlobs,
+                                 memFlags, instFlags, double, base,
+                                 execTemplateBase)
+
+    def RfeBase(name, Name, eaCode, accCode, memFlags, instFlags):
+        codeBlobs = { "ea_code": eaCode,
+                      "memacc_code": accCode,
+                      "predicate_test": predicateTest }
+        return loadStoreBaseWork(name, Name, False, False, True, codeBlobs,
+                                 memFlags, instFlags, False, 'RfeOp', 'Load')
 
     def SwapBase(name, Name, eaCode, preAccCode, postAccCode, memFlags,
                  instFlags):
@@ -103,8 +114,8 @@ let {{
                       "preacc_code": preAccCode,
                       "postacc_code": postAccCode,
                       "predicate_test": predicateTest }
-        return loadStoreBaseWork(name, Name, False, True, codeBlobs, memFlags,
-                                 instFlags, False, 'Swap', 'Swap')
+        return loadStoreBaseWork(name, Name, False, True, False, codeBlobs,
+                                 memFlags, instFlags, False, 'Swap', 'Swap')
 
     def memClassName(base, post, add, writeback, \
                      size=4, sign=False, user=False):
