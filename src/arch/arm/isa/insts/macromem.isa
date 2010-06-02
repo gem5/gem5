@@ -58,6 +58,13 @@ let {{
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
+    microLdrFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrFpUop',
+                                     'MicroMemOp',
+                                     {'memacc_code': 'Fa = Mem;',
+                                      'ea_code': 'EA = Rb + (up ? imm : -imm);',
+                                      'predicate_test': predicateTest},
+                                     ['IsMicroop'])
+
     microLdrRetUopCode = '''
         Ra = Mem;
         uint32_t newCpsr =
@@ -80,21 +87,28 @@ let {{
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
-    header_output = MicroMemDeclare.subst(microLdrUopIop) + \
-                    MicroMemDeclare.subst(microLdrRetUopIop) + \
-                    MicroMemDeclare.subst(microStrUopIop)
-    decoder_output = MicroMemConstructor.subst(microLdrUopIop) + \
-                     MicroMemConstructor.subst(microLdrRetUopIop) + \
-                     MicroMemConstructor.subst(microStrUopIop)
-    exec_output = LoadExecute.subst(microLdrUopIop) + \
-                  LoadExecute.subst(microLdrRetUopIop) + \
-                  StoreExecute.subst(microStrUopIop) + \
-                  LoadInitiateAcc.subst(microLdrUopIop) + \
-                  LoadInitiateAcc.subst(microLdrRetUopIop) + \
-                  StoreInitiateAcc.subst(microStrUopIop) + \
-                  LoadCompleteAcc.subst(microLdrUopIop) + \
-                  LoadCompleteAcc.subst(microLdrRetUopIop) + \
-                  StoreCompleteAcc.subst(microStrUopIop)
+    microStrFpUopIop = InstObjParams('strfp_uop', 'MicroStrFpUop',
+                                     'MicroMemOp',
+                                     {'memacc_code': 'Mem = Fa;',
+                                      'ea_code': 'EA = Rb + (up ? imm : -imm);',
+                                      'predicate_test': predicateTest},
+                                     ['IsMicroop'])
+
+    header_output = decoder_output = exec_output = ''
+
+    loadIops = (microLdrUopIop, microLdrFpUopIop, microLdrRetUopIop)
+    storeIops = (microStrUopIop, microStrFpUopIop)
+    for iop in loadIops + storeIops:
+        header_output += MicroMemDeclare.subst(iop)
+        decoder_output += MicroMemConstructor.subst(iop)
+    for iop in loadIops:
+        exec_output += LoadExecute.subst(iop) + \
+                       LoadInitiateAcc.subst(iop) + \
+                       LoadCompleteAcc.subst(iop)
+    for iop in storeIops:
+        exec_output += StoreExecute.subst(iop) + \
+                       StoreInitiateAcc.subst(iop) + \
+                       StoreCompleteAcc.subst(iop)
 }};
 
 ////////////////////////////////////////////////////////////////////
