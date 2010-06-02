@@ -90,14 +90,18 @@ def format McrMrc15() {{
 
         const bool isRead = bits(machInst, 20);
 
-        if (miscReg == MISCREG_NOP) {
+        switch (miscReg) {
+          case MISCREG_NOP:
             return new NopInst(machInst);
-        } else if (miscReg == NUM_MISCREGS) {
+          case NUM_MISCREGS:
             return new Unknown(machInst);
-        } else if (miscReg == MISCREG_DCCISW) {
-            return new WarnUnimplemented(isRead ? "mrc dccisw" : "mcr dcisw",
-                                         machInst);
-        } else {
+          case MISCREG_DCCISW:
+            return new WarnUnimplemented(
+                    isRead ? "mrc dccisw" : "mcr dcisw", machInst);
+          case MISCREG_DCCIMVAC:
+            return new WarnUnimplemented(
+                    isRead ? "mrc dccimvac" : "mcr dcimvac", machInst);
+          default:
             if (isRead) {
                 return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
             } else {
