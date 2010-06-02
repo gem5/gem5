@@ -45,3 +45,6 @@
 
 //Loads of a single item
 ##include "ldr.isa"
+
+//Stores of a single item
+##include "str.isa"
