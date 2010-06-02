@@ -187,9 +187,9 @@ def format Thumb32BranchesAndMiscCtrl() {{
                         const uint32_t op = bits(machInst, 7, 4);
                         switch (op) {
                           case 0x0:
-                            return new WarnUnimplemented("leavex", machInst);
+                            return new Leavex(machInst);
                           case 0x1:
-                            return new WarnUnimplemented("enterx", machInst);
+                            return new Enterx(machInst);
                           case 0x2:
                             return new WarnUnimplemented("clrex", machInst);
                           case 0x4:
