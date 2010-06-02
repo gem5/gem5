@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
@@ -47,9 +59,13 @@ namespace ArmISA
         ThreadContext * tc;
         //The extended machine instruction being generated
         ExtMachInst emi;
+        MachInst data;
+        bool bigThumb;
+        int offset;
 
       public:
-        Predecoder(ThreadContext * _tc) : tc(_tc)
+        Predecoder(ThreadContext * _tc) :
+            tc(_tc), data(0), bigThumb(false), offset(0)
         {}
 
         ThreadContext * getTC()
@@ -62,20 +78,67 @@ namespace ArmISA
             tc = _tc;
         }
 
-        void process()
-        {}
-
         void reset()
-        {}
+        {
+            bigThumb = false;
+            offset = 0;
+            emi = 0;
+        }
+
+        void process()
+        {
+            if (!emi.thumb) {
+                emi.instBits = data;
+                emi.sevenAndFour = bits(data, 7) && bits(data, 4);
+                emi.isMisc = (bits(data, 24, 23) == 0x2 &&
+                              bits(data, 20) == 0);
+                DPRINTF(Predecoder, "Arm inst.\n");
+            } else {
+                uint16_t word = (data >> (offset * 8));
+                if (bigThumb) {
+                    // A 32 bit thumb inst is half collected.
+                    emi.instBits = emi.instBits | word;
+                    bigThumb = false;
+                    offset += 2;
+                    DPRINTF(Predecoder, "Second half of 32 bit Thumb.\n");
+                } else {
+                    uint16_t highBits = word & 0xF800;
+                    if (highBits == 0xE800 || highBits == 0xF000 ||
+                            highBits == 0xF800) {
+                        // The start of a 32 bit thumb inst.
+                        emi.bigThumb = 1;
+                        if (offset == 0) {
+                            // We've got the whole thing.
+                            DPRINTF(Predecoder,
+                                    "All of 32 bit Thumb.\n");
+                            emi.instBits = (data >> 16) | (data << 16);
+                            offset += 4;
+                        } else {
+                            // We only have the first half word.
+                            DPRINTF(Predecoder,
+                                    "First half of 32 bit Thumb.\n");
+                            emi.instBits = (uint32_t)word << 16;
+                            bigThumb = true;
+                            offset += 2;
+                        }
+                    } else {
+                        // A 16 bit thumb inst.
+                        DPRINTF(Predecoder, "16 bit Thumb.\n");
+                        offset += 2;
+                        emi.instBits = word;
+                    }
+                }
+            }
+        }
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
         void moreBytes(Addr pc, Addr fetchPC, MachInst inst)
         {
-            emi = inst;
-            emi.thumb = (pc & (ULL(1) << PcTBitShift));
-            emi.sevenAndFour = bits(inst, 7) && bits(inst, 4);
-            emi.isMisc = (bits(inst, 24, 23) == 0x2 && bits(inst, 20) == 0);
+            data = inst;
+            offset = (fetchPC >= pc) ? 0 : pc - fetchPC;
+            emi.thumb = (pc & (ULL(1) << PcTBitShift)) ? 1 : 0;
+            process();
         }
 
         //Use this to give data to the predecoder. This should be used
@@ -87,18 +150,27 @@ namespace ArmISA
 
         bool needMoreBytes()
         {
-            return true;
+            return sizeof(MachInst) > offset;
         }
 
         bool extMachInstReady()
         {
-            return true;
+            // The only way an instruction wouldn't be ready is if this is a
+            // 32 bit ARM instruction that's not 32 bit aligned.
+            return !bigThumb;
+        }
+
+        int getInstSize()
+        {
+            return (!emi.thumb || emi.bigThumb) ? 4 : 2;
         }
 
         //This returns a constant reference to the ExtMachInst to avoid a copy
-        const ExtMachInst & getExtMachInst()
+        ExtMachInst getExtMachInst()
         {
-            return emi;
+            ExtMachInst thisEmi = emi;
+            emi = 0;
+            return thisEmi;
         }
     };
 };

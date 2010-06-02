@@ -410,7 +410,7 @@ BaseSimpleCPU::preExecute()
         //If an instruction is ready, decode it. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
         if (predecoder.extMachInstReady()) {
-#if THE_ISA == X86_ISA
+#if THE_ISA == X86_ISA || THE_ISA == ARM_ISA
             thread->setNextPC(thread->readPC() + predecoder.getInstSize());
 #endif // X86_ISA
             stayAtPC = false;
