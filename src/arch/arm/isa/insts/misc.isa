@@ -117,4 +117,40 @@ let {{
     header_output += MsrImmDeclare.subst(msrSpsrImmIop)
     decoder_output += MsrImmConstructor.subst(msrSpsrImmIop)
     exec_output += PredOpExecute.subst(msrSpsrImmIop)
+
+    revCode = '''
+    uint32_t val = Op1;
+    Dest = swap_byte(val);
+    '''
+    revIop = InstObjParams("rev", "Rev", "RevOp",
+                           { "code": revCode,
+                             "predicate_test": predicateTest }, [])
+    header_output += RevOpDeclare.subst(revIop)
+    decoder_output += RevOpConstructor.subst(revIop)
+    exec_output += PredOpExecute.subst(revIop)
+
+    rev16Code = '''
+    uint32_t val = Op1;
+    Dest = (bits(val, 15, 8) << 0) |
+           (bits(val, 7, 0) << 8) |
+           (bits(val, 31, 24) << 16) |
+           (bits(val, 23, 16) << 24);
+    '''
+    rev16Iop = InstObjParams("rev16", "Rev16", "RevOp",
+                             { "code": rev16Code,
+                               "predicate_test": predicateTest }, [])
+    header_output += RevOpDeclare.subst(rev16Iop)
+    decoder_output += RevOpConstructor.subst(rev16Iop)
+    exec_output += PredOpExecute.subst(rev16Iop)
+
+    revshCode = '''
+    uint16_t val = Op1;
+    Dest = sext<16>(swap_byte(val));
+    '''
+    revshIop = InstObjParams("revsh", "Revsh", "RevOp",
+                             { "code": revshCode,
+                               "predicate_test": predicateTest }, [])
+    header_output += RevOpDeclare.subst(revshIop)
+    decoder_output += RevOpConstructor.subst(revshIop)
+    exec_output += PredOpExecute.subst(revshIop)
 }};
