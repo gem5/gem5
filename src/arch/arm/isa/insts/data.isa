@@ -428,6 +428,46 @@ let {{
             Dest = resTemp;
             resTemp = geBits;
         ''', flagType="ge", buildNonCc=False)
+    buildRegDataInst("sasx", '''
+            int32_t midRes, geBits = 0;
+            resTemp = 0;
+            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            midRes = arg1Low - arg2High;
+            if (midRes >= 0) {
+                geBits = geBits | 0x3;
+            }
+            replaceBits(resTemp, 15, 0, midRes);
+            midRes = arg1High + arg2Low;
+            if (midRes >= 0) {
+                geBits = geBits | 0xc;
+            }
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+            resTemp = geBits;
+        ''', flagType="ge", buildNonCc=True)
+    buildRegDataInst("ssax", '''
+            int32_t midRes, geBits = 0;
+            resTemp = 0;
+            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            midRes = arg1Low + arg2High;
+            if (midRes >= 0) {
+                geBits = geBits | 0x3;
+            }
+            replaceBits(resTemp, 15, 0, midRes);
+            midRes = arg1High - arg2Low;
+            if (midRes >= 0) {
+                geBits = geBits | 0xc;
+            }
+            replaceBits(resTemp, 31, 16, midRes);
+            Dest = resTemp;
+            resTemp = geBits;
+        ''', flagType="ge", buildNonCc=True)
 
     buildRegDataInst("uqadd16", '''
             uint32_t midRes;
