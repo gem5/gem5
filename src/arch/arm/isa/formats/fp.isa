@@ -640,8 +640,17 @@ let {{
                 // Between half and single precision.
                 return new WarnUnimplemented("vcvtb, vcvtt", machInst);
               case 0x4:
+                if (single) {
+                    return new VcmpS(machInst, vd, vm);
+                } else {
+                    return new VcmpD(machInst, vd, vm);
+                }
               case 0x5:
-                return new WarnUnimplemented("vcmp, vcmpe", machInst);
+                if (single) {
+                    return new VcmpZeroS(machInst, vd, 0);
+                } else {
+                    return new VcmpZeroD(machInst, vd, 0);
+                }
               case 0x7:
                 if (opc3 == 0x3) {
                     if (single) {

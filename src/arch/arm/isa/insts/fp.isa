@@ -851,4 +851,89 @@ let {{
     header_output += VfpRegRegOpDeclare.subst(vcvtFpDFpSIop);
     decoder_output += VfpRegRegOpConstructor.subst(vcvtFpDFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
+
+    vcmpSCode = '''
+        FPSCR fpscr = Fpscr;
+        if (FpDest == FpOp1) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (FpDest < FpOp1) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (FpDest > FpOp1) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpSIop = InstObjParams("vcmps", "VcmpS", "VfpRegRegOp",
+                                     { "code": vcmpSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcmpSIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcmpSIop);
+    exec_output += PredOpExecute.subst(vcmpSIop);
+
+    vcmpDCode = '''
+        IntDoubleUnion cOp1, cDest;
+        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        FPSCR fpscr = Fpscr;
+        if (cDest.fp == cOp1.fp) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (cDest.fp < cOp1.fp) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (cDest.fp > cOp1.fp) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpDIop = InstObjParams("vcmpd", "VcmpD", "VfpRegRegOp",
+                                     { "code": vcmpDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegRegOpDeclare.subst(vcmpDIop);
+    decoder_output += VfpRegRegOpConstructor.subst(vcmpDIop);
+    exec_output += PredOpExecute.subst(vcmpDIop);
+
+    vcmpZeroSCode = '''
+        FPSCR fpscr = Fpscr;
+        if (FpDest == imm) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (FpDest < imm) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (FpDest > imm) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpZeroSIop = InstObjParams("vcmpZeros", "VcmpZeroS", "VfpRegImmOp",
+                                     { "code": vcmpZeroSCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegImmOpDeclare.subst(vcmpZeroSIop);
+    decoder_output += VfpRegImmOpConstructor.subst(vcmpZeroSIop);
+    exec_output += PredOpExecute.subst(vcmpZeroSIop);
+
+    vcmpZeroDCode = '''
+        IntDoubleUnion cDest;
+        cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        FPSCR fpscr = Fpscr;
+        if (cDest.fp == imm) {
+            fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
+        } else if (cDest.fp < imm) {
+            fpscr.n = 1; fpscr.z = 0; fpscr.c = 0; fpscr.v = 0;
+        } else if (cDest.fp > imm) {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 0;
+        } else {
+            fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    vcmpZeroDIop = InstObjParams("vcmpZerod", "VcmpZeroD", "VfpRegImmOp",
+                                     { "code": vcmpZeroDCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += VfpRegImmOpDeclare.subst(vcmpZeroDIop);
+    decoder_output += VfpRegImmOpConstructor.subst(vcmpZeroDIop);
+    exec_output += PredOpExecute.subst(vcmpZeroDIop);
 }};
