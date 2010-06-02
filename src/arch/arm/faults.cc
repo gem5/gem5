@@ -111,6 +111,7 @@ ArmFaultBase::invoke(ThreadContext *tc)
     cpsr.a = cpsr.a | abortDisable();
     cpsr.f = cpsr.f | fiqDisable();
     cpsr.i = 1;
+    cpsr.e = sctlr.ee;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
     tc->setIntReg(INTREG_LR, tc->readPC() + 
             (saved_cpsr.t ? thumbPcOffset() : armPcOffset()));
