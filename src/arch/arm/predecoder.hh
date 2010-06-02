@@ -100,7 +100,8 @@ namespace ArmISA
                     emi.instBits = emi.instBits | word;
                     bigThumb = false;
                     offset += 2;
-                    DPRINTF(Predecoder, "Second half of 32 bit Thumb.\n");
+                    DPRINTF(Predecoder, "Second half of 32 bit Thumb: %#x.\n",
+                            emi.instBits);
                 } else {
                     uint16_t highBits = word & 0xF800;
                     if (highBits == 0xE800 || highBits == 0xF000 ||
@@ -109,9 +110,9 @@ namespace ArmISA
                         emi.bigThumb = 1;
                         if (offset == 0) {
                             // We've got the whole thing.
-                            DPRINTF(Predecoder,
-                                    "All of 32 bit Thumb.\n");
                             emi.instBits = (data >> 16) | (data << 16);
+                            DPRINTF(Predecoder, "All of 32 bit Thumb: %#x.\n",
+                                    emi.instBits);
                             offset += 4;
                         } else {
                             // We only have the first half word.
@@ -123,11 +124,12 @@ namespace ArmISA
                         }
                     } else {
                         // A 16 bit thumb inst.
-                        DPRINTF(Predecoder, "16 bit Thumb.\n");
                         offset += 2;
                         emi.instBits = word;
                         // Set the condition code field artificially.
                         emi.condCode = COND_UC;
+                        DPRINTF(Predecoder, "16 bit Thumb: %#x.\n",
+                                emi.instBits);
                     }
                 }
             }
