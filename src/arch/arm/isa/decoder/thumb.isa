@@ -139,7 +139,7 @@
                     0x1: WarnUnimpl::Advanced_SIMD_or_structure_load_store();
                 }
                 0x1: decode HTOPCODE_6_5 {
-                    0x0: WarnUnimpl::Load_byte_memory_hints();
+                    0x0: LoadByteMemoryHints::loadByteMemoryHints();
                     0x1: LoadHalfwordMemoryHints::loadHalfwordMemoryHints();
                     0x2: Thumb32LoadWord::thumb32LoadWord();
                     0x3: WarnUnimpl::undefined();

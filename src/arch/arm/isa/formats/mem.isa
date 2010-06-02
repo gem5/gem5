@@ -468,6 +468,203 @@ def format Thumb32StoreSingle() {{
     decode_block = decode % classNames
 }};
 
+def format LoadByteMemoryHints() {{
+    decode = '''
+    {
+        const uint32_t op1 = bits(machInst, 24, 23);
+        const uint32_t op2 = bits(machInst, 11, 6);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const uint32_t imm12 = bits(machInst, 11, 0);
+        const uint32_t imm8 = bits(machInst, 7, 0);
+        bool pldw = bits(machInst, 21);
+        const uint32_t imm2 = bits(machInst, 5, 4);
+        if (rn == 0xf) {
+            if (rt == 0xf) {
+                const bool add = bits(machInst, 23);
+                if (bits(op1, 1) == 1) {
+                    if (add) {
+                        return new %(pli_iulit)s(machInst, INTREG_ZERO,
+                                                 INTREG_PC, true, imm12);
+                    } else {
+                        return new %(pli_ilit)s(machInst, INTREG_ZERO,
+                                                INTREG_PC, false, imm12);
+                    }
+                } else {
+                    if (add) {
+                        return new %(pld_iulit)s(machInst, INTREG_ZERO,
+                                                 INTREG_PC, true, imm12);
+                    } else {
+                        return new %(pld_ilit)s(machInst, INTREG_ZERO,
+                                                INTREG_PC, false, imm12);
+                    }
+                }
+            } else {
+                if (bits(op1, 1) == 1) {
+                    if (bits(machInst, 23)) {
+                        return new %(ldrsb_lit_u)s(machInst, rt, INTREG_PC,
+                                                   true, imm12);
+                    } else {
+                        return new %(ldrsb_lit)s(machInst, rt, INTREG_PC,
+                                                 false, imm12);
+                    }
+                } else {
+                    if (bits(machInst, 23)) {
+                        return new %(ldrb_lit_u)s(machInst, rt, INTREG_PC,
+                                                  true, imm12);
+                    } else {
+                        return new %(ldrb_lit)s(machInst, rt, INTREG_PC,
+                                                false, imm12);
+                    }
+                }
+            }
+        } else if (rt == 0xf) {
+            switch (op1) {
+              case 0x0:
+                if (op2 == 0x0) {
+                    if (pldw) {
+                        return new %(pldw_radd)s(machInst, INTREG_ZERO,
+                                                 rn, true, imm2, LSL, rm);
+                    } else {
+                        return new %(pld_radd)s(machInst, INTREG_ZERO,
+                                                rn, true, imm2, LSL, rm);
+                    }
+                } else if (bits(op2, 5, 2) == 0xc) {
+                    if (pldw) {
+                        return new %(pldw_isub)s(machInst, INTREG_ZERO,
+                                                 rn, false, imm8);
+                    } else {
+                        return new %(pld_isub)s(machInst, INTREG_ZERO,
+                                                rn, false, imm8);
+                    }
+                }
+                break;
+              case 0x1:
+                if (pldw) {
+                    return new %(pldw_iadd)s(machInst, INTREG_ZERO,
+                                             rn, true, imm12);
+                } else {
+                    return new %(pld_iadd)s(machInst, INTREG_ZERO,
+                                            rn, true, imm12);
+                }
+              case 0x2:
+                if (op2 == 0x0) {
+                    return new %(pli_radd)s(machInst, INTREG_ZERO, rn,
+                                            true, imm2, LSL, rm);
+                } else if (bits(op2, 5, 2) == 0xc) {
+                    return new %(pli_ilit)s(machInst, INTREG_ZERO,
+                                            INTREG_PC, false, imm8);
+                }
+                break;
+              case 0x3:
+                return new %(pli_iulit)s(machInst, INTREG_ZERO,
+                                        INTREG_PC, true, imm12);
+            }
+            return new Unknown(machInst);
+        } else {
+            switch (op1) {
+              case 0x0:
+                if (op2 == 0) {
+                    return new %(ldrb_radd)s(machInst, rt, rn, true,
+                                             imm2, LSL, rm);
+                } else if (bits(op2, 5, 2) == 0xe) {
+                    return new %(ldrbt)s(machInst, rt, rn, true, imm8);
+                } else if ((op2 & 0x24) == 0x24 || bits(op2, 5, 2) == 0xc) {
+                    const uint32_t puw = bits(machInst, 10, 8);
+                    switch (puw) {
+                      case 0x1:
+                        return new %(ldrb_iw)s(machInst, rt,
+                                               rn, false, imm8);
+                      case 0x3:
+                        return new %(ldrb_iuw)s(machInst, rt,
+                                                rn, true, imm8);
+                      case 0x4:
+                        return new %(ldrb_ip)s(machInst, rt,
+                                               rn, false, imm8);
+                      case 0x5:
+                        return new %(ldrb_ipw)s(machInst, rt,
+                                                rn, false, imm8);
+                      case 0x7:
+                        return new %(ldrb_ipuw)s(machInst, rt,
+                                                 rn, true, imm8);
+                    }
+                }
+                break;
+              case 0x1:
+                return new %(ldrb_iadd)s(machInst, rt, rn, true, imm12);
+              case 0x2:
+                if (op2 == 0) {
+                    return new %(ldrsb_radd)s(machInst, rt, rn, true,
+                                              imm2, LSL, rm);
+                } else if (bits(op2, 5, 2) == 0xe) {
+                    return new %(ldrsbt)s(machInst, rt, rn, true, imm8);
+                } else if ((op2 & 0x24) == 0x24 || bits(op2, 5, 2) == 0xc) {
+                    const uint32_t puw = bits(machInst, 10, 8);
+                    switch (puw) {
+                      case 0x1:
+                        return new %(ldrsb_iw)s(machInst, rt,
+                                                rn, false, imm8);
+                      case 0x3:
+                        return new %(ldrsb_iuw)s(machInst, rt,
+                                                 rn, true, imm8);
+                      case 0x4:
+                        return new %(ldrsb_ip)s(machInst, rt,
+                                                rn, false, imm8);
+                      case 0x5:
+                        return new %(ldrsb_ipw)s(machInst, rt,
+                                                 rn, false, imm8);
+                      case 0x7:
+                        return new %(ldrsb_ipuw)s(machInst, rt,
+                                                  rn, true, imm8);
+                    }
+                }
+                break;
+              case 0x3:
+                return new %(ldrsb_iadd)s(machInst, rt, rn, true, imm12);
+            }
+            return new Unknown(machInst);
+        }
+    }
+    '''
+    substDict = {
+        "ldrsb_lit_u" : loadImmClassName(False, True, False, 1, True),
+        "ldrsb_lit" : loadImmClassName(False, False, False, 1, True),
+        "ldrb_lit_u" : loadImmClassName(False, True, False, 1),
+        "ldrb_lit" : loadImmClassName(False, False, False, 1),
+        "ldrsb_radd" : loadRegClassName(False, True, False, 1, True),
+        "ldrb_radd" : loadRegClassName(False, True, False, 1),
+        "ldrsb_iw" : loadImmClassName(True, False, True, 1, True),
+        "ldrsb_iuw" : loadImmClassName(True, True, True, 1, True),
+        "ldrsb_ip" : loadImmClassName(False, False, False, 1, True),
+        "ldrsb_ipw" : loadImmClassName(False, False, True, 1, True),
+        "ldrsb_ipuw" : loadImmClassName(False, True, True, 1, True),
+        "ldrsb_iadd" : loadImmClassName(False, True, False, 1, True),
+        "ldrb_iw" : loadImmClassName(True, False, True, 1),
+        "ldrb_iuw" : loadImmClassName(True, True, True, 1),
+        "ldrb_ip" : loadImmClassName(False, False, False, 1),
+        "ldrb_ipw" : loadImmClassName(False, False, True, 1),
+        "ldrb_ipuw" : loadImmClassName(False, True, True, 1),
+        "ldrb_iadd" : loadImmClassName(False, True, False, 1),
+        "ldrbt" : loadImmClassName(False, True, False, 1, user=True),
+        "ldrsbt" : loadImmClassName(False, True, False, 1, True, user=True),
+        "pldw_radd" : "PLDW_" + loadRegClassName(False, True, False, 1),
+        "pld_radd" : "PLD_" + loadRegClassName(False, True, False, 1),
+        "pldw_isub" : "PLDW_" + loadImmClassName(False, False, False, 1),
+        "pld_isub" : "PLD_" + loadImmClassName(False, False, False, 1),
+        "pldw_iadd" : "PLDW_" + loadImmClassName(False, True, False, 1),
+        "pld_iadd" : "PLD_" + loadImmClassName(False, True, False, 1),
+        "pld_iulit" : "PLD_" + loadImmClassName(False, True, False, 1),
+        "pld_ilit" : "PLD_" + loadImmClassName(False, False, False, 1),
+        "pli_iulit" : "PLI_" + loadImmClassName(False, True, False, 1),
+        "pli_ilit" : "PLI_" + loadImmClassName(False, False, False, 1),
+        "pli_radd" : "PLI_" + loadRegClassName(False, True, False, 1),
+        "pli_iulit" : "PLI_" + loadImmClassName(False, True, False, 1),
+        "pli_ilit" : "PLI_" + loadImmClassName(False, False, False, 1)
+    }
+    decode_block = decode % substDict
+}};
+
 def format LoadHalfwordMemoryHints() {{
     decode = '''
     {
