@@ -37,6 +37,9 @@
 //
 // Authors: Gabe Black
 
+//Basic instruction templates
+##include "basic.isa"
+
 //Templates for predicated instructions
 ##include "pred.isa"
 
