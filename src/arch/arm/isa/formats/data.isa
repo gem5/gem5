@@ -1135,11 +1135,6 @@ def format Thumb16Misc() {{
                 return new AddImm(machInst, INTREG_SP, INTREG_SP,
                                    bits(machInst, 6, 0) << 2, true);
             }
-          case 0x1:
-            return new Cbz(machInst,
-                           (bits(machInst, 9) << 6) |
-                           (bits(machInst, 7, 3) << 1),
-                           (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0x2:
             {
                 const IntRegIndex rd =
@@ -1157,6 +1152,7 @@ def format Thumb16Misc() {{
                     return new Uxtb(machInst, rd, 0, rm);
                 }
             }
+          case 0x1:
           case 0x3:
             return new Cbz(machInst,
                            (bits(machInst, 9) << 6) |
@@ -1182,11 +1178,6 @@ def format Thumb16Misc() {{
                     return new Cps(machInst, mods);
                 }
             }
-          case 0x9:
-            return new Cbnz(machInst,
-                            (bits(machInst, 9) << 6) |
-                            (bits(machInst, 7, 3) << 1),
-                            (IntRegIndex)(uint32_t)bits(machInst, 2, 0));
           case 0xa:
             {
                 IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 2, 0);
@@ -1203,6 +1194,7 @@ def format Thumb16Misc() {{
                 }
             }
             break;
+          case 0x9:
           case 0xb:
             return new Cbnz(machInst,
                             (bits(machInst, 9) << 6) |
