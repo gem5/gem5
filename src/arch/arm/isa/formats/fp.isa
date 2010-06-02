@@ -148,8 +148,14 @@ def format FloatCmp(fReg1, fReg2, *flags) {{
         exec_output = FPAExecute.subst(iop)
 }};
 
-def format ExtensionRegLoadStore() {{
-    decode_block = '''
+let {{
+    header_output = '''
+    StaticInstPtr
+    decodeExtensionRegLoadStore(ExtMachInst machInst);
+    '''
+    decoder_output = '''
+    StaticInstPtr
+    decodeExtensionRegLoadStore(ExtMachInst machInst)
     {
         const uint32_t opcode = bits(machInst, 24, 20);
         const uint32_t offset = bits(machInst, 7, 0);
@@ -277,8 +283,20 @@ def format ExtensionRegLoadStore() {{
     }
 }};
 
-def format ShortFpTransfer() {{
+def format ExtensionRegLoadStore() {{
     decode_block = '''
+    return decodeExtensionRegLoadStore(machInst);
+    '''
+}};
+
+let {{
+    header_output = '''
+    StaticInstPtr
+    decodeShortFpTransfer(ExtMachInst machInst);
+    '''
+    decoder_output = '''
+    StaticInstPtr
+    decodeShortFpTransfer(ExtMachInst machInst)
     {
         const uint32_t l = bits(machInst, 20);
         const uint32_t c = bits(machInst, 8);
@@ -441,5 +459,11 @@ def format ShortFpTransfer() {{
         }
         return new Unknown(machInst);
     }
+    '''
+}};
+
+def format ShortFpTransfer() {{
+    decode_block = '''
+    return decodeShortFpTransfer(machInst);
     '''
 }};
