@@ -41,6 +41,8 @@
 #define __ARCH_ARM_INSTS_VFP_HH__
 
 #include "arch/arm/insts/misc.hh"
+#include "arch/arm/miscregs.hh"
+#include <fenv.h>
 
 enum VfpMicroMode {
     VfpNotAMicroop,
@@ -71,6 +73,79 @@ setVfpMicroFlags(VfpMicroMode mode, T &flags)
     if (mode == VfpMicroop || mode == VfpFirstMicroop) {
         flags[StaticInst::IsDelayedCommit] = true;
     }
+}
+
+enum FeExceptionBit
+{
+    FeDivByZero = FE_DIVBYZERO,
+    FeInexact = FE_INEXACT,
+    FeInvalid = FE_INVALID,
+    FeOverflow = FE_OVERFLOW,
+    FeUnderflow = FE_UNDERFLOW,
+    FeAllExceptions = FE_ALL_EXCEPT
+};
+
+enum FeRoundingMode
+{
+    FeRoundDown = FE_DOWNWARD,
+    FeRoundNearest = FE_TONEAREST,
+    FeRoundZero = FE_TOWARDZERO,
+    FeRoundUpward = FE_UPWARD
+};
+
+enum VfpRoundingMode
+{
+    VfpRoundNearest = 0,
+    VfpRoundUpward = 1,
+    VfpRoundDown = 2,
+    VfpRoundZero = 3
+};
+
+typedef int VfpSavedState;
+
+static inline VfpSavedState
+prepVfpFpscr(FPSCR fpscr)
+{
+    int roundingMode = fegetround();
+    feclearexcept(FeAllExceptions);
+    switch (fpscr.rMode) {
+      case VfpRoundNearest:
+        fesetround(FeRoundNearest);
+        break;
+      case VfpRoundUpward:
+        fesetround(FeRoundUpward);
+        break;
+      case VfpRoundDown:
+        fesetround(FeRoundDown);
+        break;
+      case VfpRoundZero:
+        fesetround(FeRoundZero);
+        break;
+    }
+    return roundingMode;
+}
+
+static inline FPSCR
+setVfpFpscr(FPSCR fpscr, VfpSavedState state)
+{
+    int exceptions = fetestexcept(FeAllExceptions);
+    if (exceptions & FeInvalid) {
+        fpscr.ioc = 1;
+    }
+    if (exceptions & FeDivByZero) {
+        fpscr.dzc = 1;
+    }
+    if (exceptions & FeOverflow) {
+        fpscr.ofc = 1;
+    }
+    if (exceptions & FeUnderflow) {
+        fpscr.ufc = 1;
+    }
+    if (exceptions & FeInexact) {
+        fpscr.ixc = 1;
+    }
+    fesetround(state);
+    return fpscr;
 }
 
 class VfpMacroOp : public PredMacroOp

@@ -376,7 +376,9 @@ let {{
     exec_output += PredOpExecute.subst(vmov2Core2RegIop);
 
     vmulSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = FpOp1 * FpOp2;
+        Fpscr = setVfpFpscr(Fpscr, state);
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             FpDest = NAN;
         }
@@ -392,7 +394,9 @@ let {{
         IntDoubleUnion cOp1, cOp2, cDest;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = cOp1.fp * cOp2.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             cDest.fp = NAN;
@@ -456,7 +460,9 @@ let {{
     exec_output += PredOpExecute.subst(vabsDIop);
 
     vaddSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = FpOp1 + FpOp2;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vaddSIop = InstObjParams("vadds", "VaddS", "VfpRegRegRegOp",
                                      { "code": vaddSCode,
@@ -469,7 +475,9 @@ let {{
         IntDoubleUnion cOp1, cOp2, cDest;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = cOp1.fp + cOp2.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -481,7 +489,9 @@ let {{
     exec_output += PredOpExecute.subst(vaddDIop);
 
     vsubSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = FpOp1 - FpOp2;
+        Fpscr = setVfpFpscr(Fpscr, state)
     '''
     vsubSIop = InstObjParams("vsubs", "VsubS", "VfpRegRegRegOp",
                                      { "code": vsubSCode,
@@ -494,7 +504,9 @@ let {{
         IntDoubleUnion cOp1, cOp2, cDest;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = cOp1.fp - cOp2.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -506,7 +518,9 @@ let {{
     exec_output += PredOpExecute.subst(vsubDIop);
 
     vdivSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = FpOp1 / FpOp2;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vdivSIop = InstObjParams("vdivs", "VdivS", "VfpRegRegRegOp",
                                      { "code": vdivSCode,
@@ -519,7 +533,9 @@ let {{
         IntDoubleUnion cOp1, cOp2, cDest;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = cOp1.fp / cOp2.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -531,7 +547,9 @@ let {{
     exec_output += PredOpExecute.subst(vdivDIop);
 
     vsqrtSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = sqrtf(FpOp1);
+        Fpscr = setVfpFpscr(Fpscr, state);
         if (FpOp1 < 0) {
             FpDest = NAN;
         }
@@ -546,7 +564,9 @@ let {{
     vsqrtDCode = '''
         IntDoubleUnion cOp1, cDest;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = sqrt(cOp1.fp);
+        Fpscr = setVfpFpscr(Fpscr, state);
         if (cOp1.fp < 0) {
             cDest.fp = NAN;
         }
@@ -561,11 +581,13 @@ let {{
     exec_output += PredOpExecute.subst(vsqrtDIop);
 
     vmlaSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         float mid = FpOp1 * FpOp2;
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         FpDest = FpDest + mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vmlaSIop = InstObjParams("vmlas", "VmlaS", "VfpRegRegRegOp",
                                      { "code": vmlaSCode,
@@ -579,12 +601,14 @@ let {{
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
         cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         double mid = cOp1.fp * cOp2.fp;
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         cDest.fp = cDest.fp + mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -596,11 +620,13 @@ let {{
     exec_output += PredOpExecute.subst(vmlaDIop);
 
     vmlsSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         float mid = FpOp1 * FpOp2;
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         FpDest = FpDest - mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vmlsSIop = InstObjParams("vmlss", "VmlsS", "VfpRegRegRegOp",
                                      { "code": vmlsSCode,
@@ -614,12 +640,14 @@ let {{
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
         cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         double mid = cOp1.fp * cOp2.fp;
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         cDest.fp = cDest.fp - mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -631,11 +659,13 @@ let {{
     exec_output += PredOpExecute.subst(vmlsDIop);
 
     vnmlaSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         float mid = FpOp1 * FpOp2;
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         FpDest = -FpDest - mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vnmlaSIop = InstObjParams("vnmlas", "VnmlaS", "VfpRegRegRegOp",
                                      { "code": vnmlaSCode,
@@ -649,12 +679,14 @@ let {{
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
         cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         double mid = cOp1.fp * cOp2.fp;
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         cDest.fp = -cDest.fp - mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -666,11 +698,13 @@ let {{
     exec_output += PredOpExecute.subst(vnmlaDIop);
 
     vnmlsSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         float mid = FpOp1 * FpOp2;
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         FpDest = -FpDest + mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vnmlsSIop = InstObjParams("vnmlss", "VnmlsS", "VfpRegRegRegOp",
                                      { "code": vnmlsSCode,
@@ -684,12 +718,14 @@ let {{
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
         cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         double mid = cOp1.fp * cOp2.fp;
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         cDest.fp = -cDest.fp + mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -701,11 +737,13 @@ let {{
     exec_output += PredOpExecute.subst(vnmlsDIop);
 
     vnmulSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         float mid = FpOp1 * FpOp2;
         if ((isinf(FpOp1) && FpOp2 == 0) || (isinf(FpOp2) && FpOp1 == 0)) {
             mid = NAN;
         }
         FpDest = -mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vnmulSIop = InstObjParams("vnmuls", "VnmulS", "VfpRegRegRegOp",
                                      { "code": vnmulSCode,
@@ -719,12 +757,14 @@ let {{
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         cOp2.bits = ((uint64_t)FpOp2P0.uw | ((uint64_t)FpOp2P1.uw << 32));
         cDest.bits = ((uint64_t)FpDestP0.uw | ((uint64_t)FpDestP1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         double mid = cOp1.fp * cOp2.fp;
         if ((isinf(cOp1.fp) && cOp2.fp == 0) ||
                 (isinf(cOp2.fp) && cOp1.fp == 0)) {
             mid = NAN;
         }
         cDest.fp = -mid;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -736,7 +776,9 @@ let {{
     exec_output += PredOpExecute.subst(vnmulDIop);
 
     vcvtUIntFpSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = FpOp1.uw;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtUIntFpSIop = InstObjParams("vcvt", "VcvtUIntFpS", "VfpRegRegOp",
                                      { "code": vcvtUIntFpSCode,
@@ -747,7 +789,9 @@ let {{
 
     vcvtUIntFpDCode = '''
         IntDoubleUnion cDest;
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = (uint64_t)FpOp1P0.uw;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -759,7 +803,9 @@ let {{
     exec_output += PredOpExecute.subst(vcvtUIntFpDIop);
 
     vcvtSIntFpSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = FpOp1.sw;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtSIntFpSIop = InstObjParams("vcvt", "VcvtSIntFpS", "VfpRegRegOp",
                                      { "code": vcvtSIntFpSCode,
@@ -770,7 +816,9 @@ let {{
 
     vcvtSIntFpDCode = '''
         IntDoubleUnion cDest;
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = FpOp1P0.sw;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -782,7 +830,9 @@ let {{
     exec_output += PredOpExecute.subst(vcvtSIntFpDIop);
 
     vcvtFpUIntSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest.uw = FpOp1;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtFpUIntSIop = InstObjParams("vcvt", "VcvtFpUIntS", "VfpRegRegOp",
                                      { "code": vcvtFpUIntSCode,
@@ -794,7 +844,9 @@ let {{
     vcvtFpUIntDCode = '''
         IntDoubleUnion cOp1;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         uint64_t result = cOp1.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
     '''
     vcvtFpUIntDIop = InstObjParams("vcvt", "VcvtFpUIntD", "VfpRegRegOp",
@@ -805,7 +857,9 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUIntDIop);
 
     vcvtFpSIntSCode = '''
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest.sw = FpOp1;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtFpSIntSIop = InstObjParams("vcvt", "VcvtFpSIntS", "VfpRegRegOp",
                                      { "code": vcvtFpSIntSCode,
@@ -817,7 +871,9 @@ let {{
     vcvtFpSIntDCode = '''
         IntDoubleUnion cOp1;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         int64_t result = cOp1.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = result;
     '''
     vcvtFpSIntDIop = InstObjParams("vcvt", "VcvtFpSIntD", "VfpRegRegOp",
@@ -829,7 +885,9 @@ let {{
 
     vcvtFpSFpDCode = '''
         IntDoubleUnion cDest;
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         cDest.fp = FpOp1;
+        Fpscr = setVfpFpscr(Fpscr, state);
         FpDestP0.uw = cDest.bits;
         FpDestP1.uw = cDest.bits >> 32;
     '''
@@ -843,7 +901,9 @@ let {{
     vcvtFpDFpSCode = '''
         IntDoubleUnion cOp1;
         cOp1.bits = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
+        VfpSavedState state = prepVfpFpscr(Fpscr);
         FpDest = cOp1.fp;
+        Fpscr = setVfpFpscr(Fpscr, state);
     '''
     vcvtFpDFpSIop = InstObjParams("vcvt", "VcvtFpDFpS", "VfpRegRegOp",
                                      { "code": vcvtFpDFpSCode,
