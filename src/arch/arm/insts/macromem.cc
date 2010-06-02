@@ -101,7 +101,7 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
 
         unsigned regIdx = reg;
         if (force_user) {
-            regIdx = intRegForceUser(regIdx);
+            regIdx = intRegInMode(MODE_USER, regIdx);
         }
 
         if (load) {

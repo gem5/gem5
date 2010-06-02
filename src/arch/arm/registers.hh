@@ -40,7 +40,7 @@ namespace ArmISA {
 using ArmISAInst::MaxInstSrcRegs;
 using ArmISAInst::MaxInstDestRegs;
 
-typedef uint8_t  RegIndex;
+typedef uint16_t  RegIndex;
 
 typedef uint64_t IntReg;
 

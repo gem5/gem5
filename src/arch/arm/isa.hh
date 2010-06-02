@@ -270,9 +270,27 @@ namespace ArmISA
             } else if (reg < NUM_INTREGS) {
                 return reg;
             } else {
-                reg -= NUM_INTREGS;
-                assert(reg < NUM_ARCH_INTREGS);
-                return reg;
+                int mode = reg / intRegsPerMode;
+                reg = reg % intRegsPerMode;
+                switch (mode) {
+                  case MODE_USER:
+                  case MODE_SYSTEM:
+                    return INTREG_USR(reg);
+                  case MODE_FIQ:
+                    return INTREG_FIQ(reg);
+                  case MODE_IRQ:
+                    return INTREG_IRQ(reg);
+                  case MODE_SVC:
+                    return INTREG_SVC(reg);
+                  case MODE_MON:
+                    return INTREG_MON(reg);
+                  case MODE_ABORT:
+                    return INTREG_ABT(reg);
+                  case MODE_UNDEFINED:
+                    return INTREG_UND(reg);
+                  default:
+                    panic("Flattening into an unknown mode.\n");
+                }
             }
         }
 
