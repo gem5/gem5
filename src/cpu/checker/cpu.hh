@@ -54,9 +54,6 @@ namespace TheISA
 class Processor;
 class PhysicalMemory;
 
-class RemoteGDB;
-class GDBListener;
-
 #else
 
 class Process;

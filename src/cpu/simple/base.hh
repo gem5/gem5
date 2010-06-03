@@ -63,9 +63,6 @@ class Process;
 
 #endif // FULL_SYSTEM
 
-class RemoteGDB;
-class GDBListener;
-
 namespace TheISA
 {
     class Predecoder;

@@ -76,7 +76,6 @@
 #include "arch/stacktrace.hh"
 #include "arch/tlb.hh"
 #include "arch/vtophys.hh"
-#include "base/remote_gdb.hh"
 #else // !FULL_SYSTEM
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM

@@ -91,11 +91,6 @@ class Process : public SimObject
     // thread contexts associated with this process
     std::vector<int> contextIds;
 
-    // remote gdb objects
-    std::vector<BaseRemoteGDB *> remoteGDB;
-    std::vector<GDBListener *> gdbListen;
-    bool breakpoint();
-
     // number of CPUs (esxec contexts, really) assigned to this process.
     unsigned int numCpus() { return contextIds.size(); }
 

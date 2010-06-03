@@ -151,9 +151,6 @@ System::~System()
 #endif // FULL_SYSTEM}
 }
 
-int rgdb_wait = -1;
-int rgdb_enable = true;
-
 void
 System::setMemoryMode(Enums::MemoryMode mode)
 {
@@ -167,6 +164,13 @@ bool System::breakpoint()
         return remoteGDB[0]->breakpoint();
     return false;
 }
+
+/**
+ * Setting rgdb_wait to a positive integer waits for a remote debugger to
+ * connect to that context ID before continuing.  This should really
+   be a parameter on the CPU object or something...
+ */
+int rgdb_wait = -1;
 
 int
 System::registerThreadContext(ThreadContext *tc, int assigned)
@@ -193,14 +197,11 @@ System::registerThreadContext(ThreadContext *tc, int assigned)
     _numContexts++;
 
     int port = getRemoteGDBPort();
-    if (rgdb_enable && port) {
+    if (port) {
         RemoteGDB *rgdb = new RemoteGDB(this, tc);
         GDBListener *gdbl = new GDBListener(rgdb, port + id);
         gdbl->listen();
-        /**
-         * Uncommenting this line waits for a remote debugger to
-         * connect to the simulator before continuing.
-         */
+
         if (rgdb_wait != -1 && rgdb_wait == id)
             gdbl->accept();
 

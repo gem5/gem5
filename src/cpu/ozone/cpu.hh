@@ -58,9 +58,6 @@ namespace TheISA
 class PhysicalMemory;
 class MemoryController;
 
-class RemoteGDB;
-class GDBListener;
-
 namespace TheISA {
     namespace Kernel {
         class Statistics;

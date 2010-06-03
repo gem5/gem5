@@ -101,7 +101,7 @@ set_group("Debugging Options")
 add_option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
     help="Cycle to create a breakpoint")
 add_option("--remote-gdb-port", type='int', default=7000,
-    help="Remote gdb base port")
+    help="Remote gdb base port (set to 0 to disable listening)")
 
 # Tracing options
 set_group("Trace Options")
