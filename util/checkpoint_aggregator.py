@@ -56,12 +56,15 @@ def aggregate(options, args):
             sys.exit(1)
 
     dirname = "-".join([options.prefix, "cpt"])
-    print dirname
     agg_name = "-".join(args)
     print agg_name
     fullpath = os.path.join("..", dirname, "cpt." + agg_name + ".10000")
     if not os.path.isdir(fullpath):
         os.system("mkdir -p " + fullpath)
+    elif os.path.isfile(fullpath + "/system.physmem.physmem"):
+        if os.path.isfile(fullpath + "/m5.cpt"):
+            print fullpath, " already done"
+            return
 
     myfile = open(fullpath + "/system.physmem.physmem", "wb+")
     merged_mem = gzip.GzipFile(fileobj=myfile, mode="wb")
@@ -69,6 +72,7 @@ def aggregate(options, args):
     max_curtick = 0
     when = 0
     for (i, arg) in enumerate(args):
+        print arg
         config = myCP()
         config.readfp(open(cpts[i] + "/m5.cpt"))
 
@@ -105,7 +109,6 @@ def aggregate(options, args):
                     when = config.getint("system.cpu.tickEvent", "_when")
             else:
                 if i == 0:
-                    print sec
                     merged.add_section(sec)
                     for item in config.items(sec):
                         merged.set(sec, item[0], item[1])
@@ -119,11 +122,14 @@ def aggregate(options, args):
         ### memory stuff
         f = open(cpts[i] + "/system.physmem.physmem", "rb")
         gf = gzip.GzipFile(fileobj=f, mode="rb")
-        bytes = int(config.get("system", "page_ptr")) << 13
-        print "bytes to be read: ", bytes
+        pages = int(config.get("system", "page_ptr"))
+        print "pages to be read: ", pages
 
-        bytesRead = gf.read(int(config.get("system", "page_ptr")) << 13)
-        merged_mem.write(bytesRead)
+        x = 0
+        while x < pages:
+            bytesRead = gf.read(1 << 13)
+            merged_mem.write(bytesRead)
+            x += 1
 
         gf.close()
         f.close()
