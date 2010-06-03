@@ -424,10 +424,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                       flags = TLB::MustBeOne | TLB::UserMode;
                       mode = BaseTLB::Write;
                       break;
-                  case MISCREG_V2POWPR:
-                  case MISCREG_V2POWPW:
-                  case MISCREG_V2POWUR:
-                  case MISCREG_V2POWUW:
+                  default:
                       panic("Security Extensions not implemented!");
               }
               req->setVirt(0, val, 1, flags, tc->readPC());
