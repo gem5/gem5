@@ -1698,7 +1698,11 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
         delete [] reinterpret_cast<char *>(storage);
     }
 
-    Proxy operator[](off_type index);
+    Proxy operator[](off_type index)
+    {
+        assert(index >= 0 && index < size());
+        return Proxy(this->self(), index);
+    }
 
     size_type
     size() const
@@ -1739,15 +1743,15 @@ template <class Stat>
 class DistProxy
 {
   private:
-    Stat *stat;
+    Stat &stat;
     off_type index;
 
   protected:
-    typename Stat::Storage *data() { return stat->data(index); }
-    const typename Stat::Storage *data() const { return stat->data(index); }
+    typename Stat::Storage *data() { return stat.data(index); }
+    const typename Stat::Storage *data() const { return stat.data(index); }
 
   public:
-    DistProxy(Stat *s, off_type i)
+    DistProxy(Stat &s, off_type i)
         : stat(s), index(i)
     {}
 
@@ -1788,15 +1792,16 @@ class DistProxy
      */
     void reset() { }
 };
-
+/*
 template <class Derived, class Stor>
 inline typename VectorDistBase<Derived, Stor>::Proxy
 VectorDistBase<Derived, Stor>::operator[](off_type index)
 {
     assert (index >= 0 && index < size());
     typedef typename VectorDistBase<Derived, Stor>::Proxy Proxy;
-    return Proxy(this, index);
+    return Proxy(this->self(), index);
 }
+*/
 
 #if 0
 template <class Storage>
@@ -2267,7 +2272,7 @@ class Distribution : public DistBase<Distribution, DistStor>
         params->min = min;
         params->max = max;
         params->bucket_size = bkt;
-        params->buckets = (size_type)rint((max - min) / bkt + 1.0);
+        params->buckets = (size_type)rint((max - min + 1.0) / bkt );
         this->setParams(params);
         this->doInit();
         return this->self();
@@ -2328,7 +2333,7 @@ class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
         params->min = min;
         params->max = max;
         params->bucket_size = bkt;
-        params->buckets = (size_type)rint((max - min) / bkt + 1.0);
+        params->buckets = (size_type)rint((max - min + 1.0) / bkt);
         this->setParams(params);
         this->doInit(size);
         return this->self();

@@ -412,7 +412,7 @@ DistPrint::operator()(ostream &stream) const
         namestr << base;
 
         Counter low = i * bucket_size + min;
-        Counter high = ::min(low + bucket_size, max);
+        Counter high = ::min(low + bucket_size - 1.0, max);
         namestr << low;
         if (low < high)
             namestr << "-" << high;
