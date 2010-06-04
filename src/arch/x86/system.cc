@@ -45,7 +45,6 @@
 #include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
-#include "base/remote_gdb.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/physical.hh"

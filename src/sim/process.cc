@@ -36,7 +36,6 @@
 #include <cstdio>
 #include <string>
 
-#include "arch/remote_gdb.hh"
 #include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"

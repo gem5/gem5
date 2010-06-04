@@ -51,8 +51,6 @@
 #include "sim/sim_object.hh"
 #include "sim/syscallreturn.hh"
 
-class BaseRemoteGDB;
-class GDBListener;
 class PageTable;
 class ProcessParams;
 class LiveProcessParams;
