@@ -36,7 +36,6 @@ use Getopt::Std;
 #
 # -t thresh sets threshold for ignoring differences (in %)
 # -p sorts differences by % chg (default is alphabetic)
-# -f ignores fetch-loss statistics
 # -d ignores all distributions
 #
 
@@ -46,7 +45,6 @@ if ($#ARGV < 1)
 {
     print "\nError: need two file arguments (<reference> <new>).\n";
     print "   Options: -d  =  Ignore distributions\n";
-    print "            -f  =  Ignore fetch-loss stats\n";
     print "            -p  =  Sort errors by percentage\n";
     print "            -h  =  Diff header info separately from stats\n";
     print "            -n <num>  =  Print top <num> errors (default 20)\n";
@@ -130,7 +128,6 @@ sub parse_file
     while (<$stathandle>)
     {
 	next if /^\s*$/;	# skip blank lines
-                next if /^\*\*Ignore/;   # temporary, to make totaling scripts easy for ISCA 03
 	last if /End Simulation Statistics/;
 
 	s/ *#.*//;		# strip comments
@@ -140,51 +137,26 @@ sub parse_file
 	    $value = $1;
 	}
 	elsif ($in_dist) {
-	    if ($in_dist =~ /^fetch_loss_counters/) {
-		if (/^fetch_loss_counters_\d+\.end/) {
-		    # end line of distribution: clear $in_dist flag
-		    $in_dist = undef;
-		    next;
-		}
-		else {
-		    next if $opt_f;
-
-		    ($stat, $value) = /^(\S+)\s+(.*)/;
-		}
+	    if (/(.*)\.end_dist/) {
+		# end line of distribution: clear $in_dist flag
+		$in_dist = undef;
+		next;
 	    }
-	    else {
-		if (/(.*)\.end_dist/) {
-		    # end line of distribution: clear $in_dist flag
-		    $in_dist = undef;
-		    next;
-		}
-		if ($opt_d) {
-		    next;  #  bail out if we are ignoring dists...
-		}
-		elsif (/(.*)\.(min|max)_value/) {
-		    # treat these like normal stats
-		    ($stat, $value) = /^(\S+)\s+(.*)/;
-		}
-		else {
-		    # this is ugly because labels in the distribution
-		    # buckets don't start in column 0 and may include
-		    # embedded spaces
-		    ($stat, $value) =
-		      /^\s*(\S+(?:.*\S)?)\s+(\d+)\s+\d+\.\d+%/;
-		    $stat = $in_dist . '::' . $stat;
-		}
+	    if ($opt_d) {
+		next;		#  bail out if we are ignoring dists...
+	    } elsif (/(.*)\.(min|max)_value/) {
+		# treat these like normal stats
+		($stat, $value) = /^(\S+)\s+(.*)/;
+	    } else {
+		($stat, $value) =
+		  /^(\S+(?:.*\S)?)\s+(\d+)\s+\d+\.\d+%/;
+		$stat = $in_dist . '::' . $stat;
 	    }
 	}
 	else {
 	    if (/(.*)\.start_dist/) {
 		# start line of distribution: set $in_dist flag
 		# and save distribution name for future reference
-		$in_dist = $1;
-		$stat = $1;
-		$value = 0;
-	    }
-	    elsif (/^(fetch_loss_counters_\d+)\.start/) {
-		# treat fetch loss counters like distribution, sort of
 		$in_dist = $1;
 		$stat = $1;
 		$value = 0;
@@ -354,11 +326,8 @@ foreach $err (@errs)
 }
 
 #
-# Report missing stats, but first filter out distribution buckets:
-# these are mostly noise
-
-@missing_stats = grep { !/::(\d+|overflows)?$/ } @missing_stats;
-
+# Report missing stats
+#
 # get count
 $missing_stats = scalar(@missing_stats);
 
@@ -379,10 +348,6 @@ if ($missing_stats)
 
 @added_stats = keys %$newhash;
 
-# first filter out distribution buckets: mostly noise
-
-@added_stats = grep { !/::(\d+|overflows)?$/ } @added_stats;
-
 # get count
 $added_stats = scalar(@added_stats);
 
@@ -398,8 +363,8 @@ if ($added_stats)
 }
 
 cleanup();
-# Exit code is 0 if some stats found & no stats error, 1 otherwise
-$status = ($#key_stats >= 0 && $max_err_mag == 0.0) ? 0 : 1;
+# Exit code is 0 if all stats are found (with no extras) & no stats error, 1 otherwise
+$status = ($missing_stats == 0 && $added_stats == 0 && $max_err_mag == 0.0) ? 0 : 1;
 exit $status;
 
 sub cleanup
