@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing/simout
+Redirecting stderr to build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,9 +7,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May 12 2010 01:43:39
-M5 revision 3f044cf767ee 7080 default qtip bp_regress.patch tip
-M5 started May 12 2010 01:43:41
+M5 compiled Jun  6 2010 03:04:38
+M5 revision ba1a0193c050 7448 default tip
+M5 started Jun  6 2010 03:04:42
 M5 executing on zizzer
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second

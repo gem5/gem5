@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 153450                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 210984                       # Number of bytes of host memory used
-host_seconds                                   548.58                       # Real time elapsed on the host
-host_tick_rate                               73456175                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 133236                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 211268                       # Number of bytes of host memory used
+host_seconds                                   631.81                       # Real time elapsed on the host
+host_tick_rate                               63779599                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    84179709                       # Number of instructions simulated
 sim_seconds                                  0.040297                       # Number of seconds simulated
@@ -23,14 +23,14 @@ system.cpu.commit.COM:committed_per_cycle::samples     72454759                 
 system.cpu.commit.COM:committed_per_cycle::mean     1.268420                       # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::stdev     1.963909                       # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::underflows            0      0.00%      0.00% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::0-1     35335976     48.77%     48.77% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::1-2     18219580     25.15%     73.92% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::2-3      7350657     10.15%     84.06% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::3-4      3843959      5.31%     89.37% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::4-5      2026400      2.80%     92.16% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::5-6      1285963      1.77%     93.94% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::6-7       738665      1.02%     94.96% # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::7-8       745593      1.03%     95.99% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::0     35335976     48.77%     48.77% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::1     18219580     25.15%     73.92% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::2      7350657     10.15%     84.06% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::3      3843959      5.31%     89.37% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::4      2026400      2.80%     92.16% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::5      1285963      1.77%     93.94% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::6       738665      1.02%     94.96% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::7       745593      1.03%     95.99% # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::8      2907966      4.01%    100.00% # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::overflows            0      0.00%    100.00% # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
@@ -157,14 +157,14 @@ system.cpu.fetch.rateDist::samples           80484719                       # Nu
 system.cpu.fetch.rateDist::mean              2.076420                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::stdev             3.094224                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::underflows               0      0.00%      0.00% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::0-1               50001427     62.13%     62.13% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::1-2                3132178      3.89%     66.02% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::2-3                1884597      2.34%     68.36% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::3-4                3228306      4.01%     72.37% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::4-5                4370184      5.43%     77.80% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::5-6                1507606      1.87%     79.67% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::6-7                1854945      2.30%     81.98% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::7-8                1658454      2.06%     84.04% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::0                 50001427     62.13%     62.13% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::1                  3132178      3.89%     66.02% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::2                  1884597      2.34%     68.36% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::3                  3228306      4.01%     72.37% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::4                  4370184      5.43%     77.80% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::5                  1507606      1.87%     79.67% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::6                  1854945      2.30%     81.98% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::7                  1658454      2.06%     84.04% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::8                 12847022     15.96%    100.00% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::overflows                0      0.00%    100.00% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::min_value                0                       # Number of instructions fetched each cycle (Total)
@@ -306,14 +306,14 @@ system.cpu.iq.ISSUE:issued_per_cycle::samples     80484719                      
 system.cpu.iq.ISSUE:issued_per_cycle::mean     1.291184                       # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::stdev     1.543424                       # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::underflows            0      0.00%      0.00% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::0-1     34420666     42.77%     42.77% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::1-2     18632497     23.15%     65.92% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::2-3     11734091     14.58%     80.50% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::3-4      6720766      8.35%     88.85% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::4-5      5079668      6.31%     95.16% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::5-6      2378591      2.96%     98.11% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::6-7      1227784      1.53%     99.64% # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::7-8       245969      0.31%     99.94% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::0      34420666     42.77%     42.77% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::1      18632497     23.15%     65.92% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::2      11734091     14.58%     80.50% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::3       6720766      8.35%     88.85% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::4       5079668      6.31%     95.16% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::5       2378591      2.96%     98.11% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::6       1227784      1.53%     99.64% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::7        245969      0.31%     99.94% # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::8         44687      0.06%    100.00% # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::overflows            0      0.00%    100.00% # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::min_value            0                       # Number of insts issued each cycle

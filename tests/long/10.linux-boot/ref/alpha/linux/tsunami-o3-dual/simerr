@@ -2,6 +2,4 @@ warn: Sockets disabled, not accepting terminal connections
 For more information see: http://www.m5sim.org/warn/8742226b
 warn: Sockets disabled, not accepting gdb connections
 For more information see: http://www.m5sim.org/warn/d946bea6
-warn: 125751000: Trying to launch CPU number 1!
-For more information see: http://www.m5sim.org/warn/8f7d2563
 hack: be nice to actually delete the event here
