@@ -30,9 +30,6 @@
 
 Import('*')
 
-if not main['RUBY']:
-    Return()
-
 sticky_vars.AddVariables(
     BoolVariable('NO_VECTOR_BOUNDS_CHECKS', "Don't do bounds checks", True),
     BoolVariable('RUBY_DEBUG', "Add debugging stuff to Ruby", False),

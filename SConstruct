@@ -314,7 +314,6 @@ global_sticky_vars.AddVariables(
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('EXTRAS', 'Add Extra directories to the compilation', '',
      PathListAllExist, PathListMakeAbsolute),
-    BoolVariable('RUBY', 'Build with Ruby', False),
     )
 
 # base help text
@@ -688,6 +687,7 @@ sticky_vars.AddVariables(
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('USE_CHECKER', 'Use checker for detailed CPU models', False),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
+    BoolVariable('RUBY', 'Build with Ruby', False),
     )
 
 nonsticky_vars.AddVariables(
