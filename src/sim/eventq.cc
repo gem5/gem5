@@ -238,7 +238,9 @@ Event::unserialize(Checkpoint *cp, const string &section)
     // object itself (since they aren't immediately true)
     short _flags;
     UNSERIALIZE_SCALAR(_flags);
+    assert(initialized());
     flags = _flags;
+    flags.set(Initialized);
 
     bool wasScheduled = flags.isSet(Scheduled) && !flags.isSet(Squashed);
     flags.clear(Squashed | Scheduled);
