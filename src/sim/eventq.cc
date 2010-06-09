@@ -233,15 +233,22 @@ Event::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(_when);
     UNSERIALIZE_SCALAR(_priority);
 
-    // need to see if original event was in a scheduled, unsquashed
-    // state, but don't want to restore those flags in the current
-    // object itself (since they aren't immediately true)
     short _flags;
     UNSERIALIZE_SCALAR(_flags);
+
+    // Old checkpoints had no concept of the Initialized flag
+    // so restoring from old checkpoints always fail.
+    // Events are initialized on construction but original code 
+    // "flags = _flags" would just overwrite the initialization. 
+    // So, read in the checkpoint flags, but then set the Initialized 
+    // flag on top of it in order to avoid failures.
     assert(initialized());
     flags = _flags;
     flags.set(Initialized);
 
+    // need to see if original event was in a scheduled, unsquashed
+    // state, but don't want to restore those flags in the current
+    // object itself (since they aren't immediately true)
     bool wasScheduled = flags.isSet(Scheduled) && !flags.isSet(Squashed);
     flags.clear(Squashed | Scheduled);
 
