@@ -29,7 +29,6 @@
 #include <vector>
 
 #include "base/stl_helpers.hh"
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
@@ -70,15 +69,16 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
     const int records_printed = 100;
 
     uint64 misses = 0;
-    PrioHeap<const AccessTraceForAddress*> heap;
+    std::vector<const AccessTraceForAddress *> sorted;
 
     AddressMap::const_iterator i = record_map.begin();
     AddressMap::const_iterator end = record_map.end();
     for (; i != end; ++i) {
         const AccessTraceForAddress* record = &i->second;
         misses += record->getTotal();
-        heap.insert(record);
+        sorted.push_back(record);
     }
+    sort(sorted.begin(), sorted.end(), AccessTraceForAddress::less_equal);
 
     out << "Total_entries_" << description << ": " << record_map.size()
         << endl;
@@ -106,8 +106,9 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
     }
 
     int counter = 0;
-    while (heap.size() > 0 && counter < records_printed) {
-        const AccessTraceForAddress* record = heap.extractMin();
+    int max = sorted.size();
+    while (counter < max && counter < records_printed) {
+        const AccessTraceForAddress* record = sorted[counter];
         double percent = 100.0 * (record->getTotal() / double(misses));
         out << description << " | " << percent << " % " << *record << endl;
         all_records.add(record->getTotal());
@@ -117,8 +118,8 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
         m_touched_weighted_vec[record->getTouchedBy()] += record->getTotal();
     }
 
-    while (heap.size() > 0) {
-        const AccessTraceForAddress* record = heap.extractMin();
+    while (counter < max) {
+        const AccessTraceForAddress* record = sorted[counter];
         all_records.add(record->getTotal());
         remaining_records.add(record->getTotal());
         all_records_log.add(record->getTotal());

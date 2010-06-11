@@ -63,7 +63,6 @@
 #include "sim/eventq.hh"
 
 class Consumer;
-template <class TYPE> class PrioHeap;
 class RubyEventQueueNode;
 
 class RubyEventQueue : public EventManager

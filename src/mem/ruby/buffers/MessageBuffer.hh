@@ -34,10 +34,12 @@
 #ifndef __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
 #define __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
 
+#include <algorithm>
+#include <functional>
 #include <iostream>
+#include <vector>
 #include <string>
 
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/buffers/MessageBufferNode.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
@@ -61,13 +63,16 @@ class MessageBuffer
     isReady() const
     {
         return ((m_prio_heap.size() > 0) &&
-                (m_prio_heap.peekMin().m_time <= g_eventQueue_ptr->getTime()));
+                (m_prio_heap.front().m_time <= g_eventQueue_ptr->getTime()));
     }
 
     void
     delayHead()
     {
-        MessageBufferNode node = m_prio_heap.extractMin();
+        MessageBufferNode node = m_prio_heap.front();
+        std::pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
+                      std::greater<MessageBufferNode>());
+        m_prio_heap.pop_back();
         enqueue(node.m_msgptr, 1);
     }
 
@@ -93,13 +98,13 @@ class MessageBuffer
     peekMsgPtr() const
     {
         assert(isReady());
-        return m_prio_heap.peekMin().m_msgptr;
+        return m_prio_heap.front().m_msgptr;
     }
 
     const MsgPtr&
     peekMsgPtrEvenIfNotReady() const
     {
-        return m_prio_heap.peekMin().m_msgptr;
+        return m_prio_heap.front().m_msgptr;
     }
 
     void enqueue(MsgPtr message) { enqueue(message, 1); }
@@ -144,7 +149,7 @@ class MessageBuffer
 
     // Data Members (m_ prefix)
     Consumer* m_consumer_ptr;  // Consumer to signal a wakeup(), can be NULL
-    PrioHeap<MessageBufferNode> m_prio_heap;
+    std::vector<MessageBufferNode> m_prio_heap;
     std::string m_name;
 
     int m_max_size;

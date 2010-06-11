@@ -37,7 +37,6 @@
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/network/orion/power_bus.hh"
 
 class GarnetNetwork_d;

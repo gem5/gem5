@@ -26,31 +26,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <algorithm>
+
 #include "gzstream.hh"
 
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
-#include "mem/ruby/recorder/TraceRecord.hh"
 
 using namespace std;
-
-CacheRecorder::CacheRecorder()
-{
-    m_records_ptr = new PrioHeap<TraceRecord>;
-}
-
-CacheRecorder::~CacheRecorder()
-{
-    delete m_records_ptr;
-}
 
 void
 CacheRecorder::addRecord(Sequencer* sequencer, const Address& data_addr,
     const Address& pc_addr, RubyRequestType type, Time time)
 {
-    m_records_ptr->
-        insert(TraceRecord(sequencer, data_addr, pc_addr, type, time));
+    TraceRecord rec(sequencer, data_addr, pc_addr, type, time);
+    m_records.push_back(rec);
 }
 
 int
@@ -62,13 +52,15 @@ CacheRecorder::dumpRecords(string filename)
         return 0;
     }
 
-    int counter = 0;
-    while (m_records_ptr->size() != 0) {
-        TraceRecord record = m_records_ptr->extractMin();
-        record.output(out);
-        counter++;
-    }
-    return counter;
+    std::sort(m_records.begin(), m_records.end(), greater<TraceRecord>());
+
+    int size = m_records.size();
+    for (int i = 0; i < size; ++i)
+        m_records[i].output(out);
+
+    m_records.clear();
+
+    return size;
 }
 
 void

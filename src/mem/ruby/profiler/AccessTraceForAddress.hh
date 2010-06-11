@@ -60,6 +60,13 @@ class AccessTraceForAddress
 
     void print(std::ostream& out) const;
 
+    static inline bool
+    less_equal(const AccessTraceForAddress* n1,
+        const AccessTraceForAddress* n2)
+    {
+        return n1->getTotal() <= n2->getTotal();
+    }
+
   private:
     Address m_addr;
     uint64 m_loads;
@@ -71,13 +78,6 @@ class AccessTraceForAddress
     Set m_touched_by;
     Histogram* m_histogram_ptr;
 };
-
-inline bool
-node_less_then_eq(const AccessTraceForAddress* n1,
-                  const AccessTraceForAddress* n2)
-{
-    return n1->getTotal() > n2->getTotal();
-}
 
 inline std::ostream&
 operator<<(std::ostream& out, const AccessTraceForAddress& obj)

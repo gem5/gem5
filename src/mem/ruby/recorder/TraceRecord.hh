@@ -60,12 +60,6 @@ class TraceRecord
     TraceRecord(const TraceRecord& obj);
     TraceRecord& operator=(const TraceRecord& obj);
 
-    bool
-    node_less_then_eq(const TraceRecord& rec) const
-    {
-        return this->m_time <= rec.m_time;
-    }
-
     void issueRequest() const;
 
     void print(std::ostream& out) const;
@@ -73,6 +67,8 @@ class TraceRecord
     bool input(std::istream& in);
 
   private:
+    friend bool operator>(const TraceRecord& n1, const TraceRecord& n2);
+
     Sequencer* m_sequencer_ptr;
     Time m_time;
     Address m_data_address;
@@ -81,9 +77,9 @@ class TraceRecord
 };
 
 inline bool
-node_less_then_eq(const TraceRecord& n1, const TraceRecord& n2)
+operator>(const TraceRecord& n1, const TraceRecord& n2)
 {
-    return n1.node_less_then_eq(n2);
+    return n1.m_time > n2.m_time;
 }
 
 inline std::ostream&

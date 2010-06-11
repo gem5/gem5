@@ -59,13 +59,13 @@ class MessageBufferNode
 };
 
 inline bool
-node_less_then_eq(const MessageBufferNode& n1, const MessageBufferNode& n2)
+operator>(const MessageBufferNode& n1, const MessageBufferNode& n2)
 {
     if (n1.m_time == n2.m_time) {
         assert(n1.m_msg_counter != n2.m_msg_counter);
-        return (n1.m_msg_counter <= n2.m_msg_counter);
+        return n1.m_msg_counter > n2.m_msg_counter;
     } else {
-        return (n1.m_time <= n2.m_time);
+        return n1.m_time > n2.m_time;
     }
 }
 

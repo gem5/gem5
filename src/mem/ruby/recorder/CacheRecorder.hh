@@ -36,13 +36,14 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/libruby_internal.hh"
 #include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/recorder/TraceRecord.hh"
 
-template <class TYPE> class PrioHeap;
 class Address;
 class TraceRecord;
 class Sequencer;
@@ -50,9 +51,6 @@ class Sequencer;
 class CacheRecorder
 {
   public:
-    CacheRecorder();
-    ~CacheRecorder();
-
     void addRecord(Sequencer* sequencer, const Address& data_addr,
         const Address& pc_addr, RubyRequestType type, Time time);
     int dumpRecords(std::string filename);
@@ -64,7 +62,7 @@ class CacheRecorder
     CacheRecorder(const CacheRecorder& obj);
     CacheRecorder& operator=(const CacheRecorder& obj);
 
-    PrioHeap<TraceRecord>* m_records_ptr;
+    std::vector<TraceRecord> m_records;
 };
 
 inline std::ostream&

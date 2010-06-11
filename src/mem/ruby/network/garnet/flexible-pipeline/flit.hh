@@ -52,6 +52,16 @@ public:
         flit_type get_type();
         void print(std::ostream& out) const;
 
+        static bool
+        greater(flit* n1, flit* n2)
+        {
+            if (n1->get_time() == n2->get_time())
+                //ASSERT(n1->flit_id != n2->flit_id);
+                return (n1->get_id() > n2->get_id());
+            else
+                return (n1->get_time() > n2->get_time());
+        }
+
 private:
 /************Data Members*************/
         int m_id;
@@ -63,19 +73,6 @@ private:
         MsgPtr m_msg_ptr;
 
 };
-
-inline extern bool node_less_then_eq(flit* n1, flit* n2);
-
-inline extern
-bool node_less_then_eq(flit* n1, flit* n2)
-{
-  if (n1->get_time() == n2->get_time()) {
-//    ASSERT(n1->flit_id != n2->flit_id);
-    return (n1->get_id() <= n2->get_id());
-  } else {
-    return (n1->get_time() <= n2->get_time());
-  }
-}
 
 inline std::ostream&
 operator<<(std::ostream& out, const flit& obj)

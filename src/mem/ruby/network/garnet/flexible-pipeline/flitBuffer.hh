@@ -32,9 +32,9 @@
 #define FLIT_BUFFER_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/flit.hh"
 
 class flitBuffer {
@@ -54,7 +54,7 @@ public:
 
 /**********Data Members*********/
 private:
-        PrioHeap <flit *> m_buffer;
+        std::vector<flit *> m_buffer;
         int size, max_size;
 };
 

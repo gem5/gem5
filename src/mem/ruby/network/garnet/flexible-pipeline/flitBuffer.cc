@@ -28,7 +28,11 @@
  * Authors: Niket Agarwal
  */
 
+#include <algorithm>
+
 #include "mem/ruby/network/garnet/flexible-pipeline/flitBuffer.hh"
+
+using namespace std;
 
 flitBuffer::flitBuffer()
 {
@@ -49,7 +53,7 @@ bool flitBuffer::isReady()
 {
         if(m_buffer.size() != 0 )
         {
-                flit *t_flit = m_buffer.peekMin();
+                flit *t_flit = m_buffer.front();
                 if(t_flit->get_time() <= g_eventQueue_ptr->getTime())
                         return true;
         }
@@ -60,7 +64,7 @@ bool flitBuffer::isReadyForNext()
 {
         if(m_buffer.size() != 0 )
         {
-                flit *t_flit = m_buffer.peekMin();
+                flit *t_flit = m_buffer.front();
                 if(t_flit->get_time() <= (g_eventQueue_ptr->getTime() + 1))
                         return true;
         }
@@ -79,17 +83,21 @@ void flitBuffer::setMaxSize(int maximum)
 
 flit* flitBuffer:: getTopFlit()
 {
-        return m_buffer.extractMin();
+        flit *f = m_buffer.front();
+        pop_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
+        m_buffer.pop_back();
+        return f;
 }
 
 flit* flitBuffer::peekTopFlit()
 {
-        return m_buffer.peekMin();
+        return m_buffer.front();
 }
 
 void flitBuffer::insert(flit *flt)
 {
-        m_buffer.insert(flt);
+        m_buffer.push_back(flt);
+        push_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
 }
 
 void flitBuffer::print(std::ostream& out) const

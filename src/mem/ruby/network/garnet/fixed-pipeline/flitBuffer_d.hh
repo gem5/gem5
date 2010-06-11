@@ -31,10 +31,11 @@
 #ifndef FLIT_BUFFER_D_H
 #define FLIT_BUFFER_D_H
 
+#include <algorithm>
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 
 class flitBuffer_d {
@@ -51,19 +52,23 @@ public:
 
         inline flit_d* getTopFlit()
         {
-                return m_buffer.extractMin();
+            flit_d *f = m_buffer.front();
+            std::pop_heap(m_buffer.begin(), m_buffer.end(), flit_d::greater);
+            m_buffer.pop_back();
+            return f;
         }
         inline flit_d* peekTopFlit()
         {
-                return m_buffer.peekMin();
+            return m_buffer.front();
         }
         inline void insert(flit_d *flt)
         {
-                m_buffer.insert(flt);
+            m_buffer.push_back(flt);
+            std::push_heap(m_buffer.begin(), m_buffer.end(), flit_d::greater);
         }
         /**********Data Members*********/
 private:
-        PrioHeap <flit_d *> m_buffer;
+        std::vector<flit_d *> m_buffer;
         int size, max_size;
 };
 

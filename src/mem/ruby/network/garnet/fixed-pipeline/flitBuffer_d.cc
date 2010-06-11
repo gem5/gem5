@@ -49,7 +49,7 @@ bool flitBuffer_d::isReady()
 {
         if(m_buffer.size() != 0 )
         {
-                flit_d *t_flit = m_buffer.peekMin();
+                flit_d *t_flit = peekTopFlit();
                 if(t_flit->get_time() <= g_eventQueue_ptr->getTime())
                         return true;
         }
@@ -60,7 +60,7 @@ bool flitBuffer_d::isReadyForNext()
 {
         if(m_buffer.size() != 0 )
         {
-                flit_d *t_flit = m_buffer.peekMin();
+                flit_d *t_flit = peekTopFlit();
                 if(t_flit->get_time() <= (g_eventQueue_ptr->getTime() + 1))
                         return true;
         }

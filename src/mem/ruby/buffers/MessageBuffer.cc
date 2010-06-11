@@ -27,10 +27,12 @@
  */
 
 #include "base/cprintf.hh"
+#include "base/stl_helpers.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
+using m5::stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const string &name)
 {
@@ -111,7 +113,7 @@ MessageBuffer::getMsgPtrCopy() const
 {
     assert(isReady());
 
-    return m_prio_heap.peekMin().m_msgptr->clone();
+    return m_prio_heap.front().m_msgptr->clone();
 }
 
 const Message*
@@ -124,7 +126,7 @@ MessageBuffer::peekAtHeadOfQueue() const
                        m_name, g_eventQueue_ptr->getTime()));
     assert(isReady());
 
-    const Message* msg_ptr = m_prio_heap.peekMin().m_msgptr.get();
+    const Message* msg_ptr = m_prio_heap.front().m_msgptr.get();
     assert(msg_ptr);
 
     DEBUG_EXPR(QUEUE_COMP, MedPrio, *msg_ptr);
@@ -223,7 +225,9 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
 
     // Insert the message into the priority heap
     MessageBufferNode thisNode(arrival_time, m_msg_counter, message);
-    m_prio_heap.insert(thisNode);
+    m_prio_heap.push_back(thisNode);
+    push_heap(m_prio_heap.begin(), m_prio_heap.end(),
+        greater<MessageBufferNode>());
 
     DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
     DEBUG_MSG(QUEUE_COMP, HighPrio,
@@ -260,7 +264,7 @@ void
 MessageBuffer::dequeue(MsgPtr& message)
 {
     DEBUG_MSG(QUEUE_COMP, MedPrio, "dequeue from " + m_name);
-    message = m_prio_heap.peekMin().m_msgptr;
+    message = m_prio_heap.front().m_msgptr;
 
     pop();
     DEBUG_EXPR(QUEUE_COMP, MedPrio, message);
@@ -272,7 +276,7 @@ MessageBuffer::dequeue_getDelayCycles()
     int delay_cycles = -1;  // null value
 
     // get MsgPtr of the message about to be dequeued
-    MsgPtr message = m_prio_heap.peekMin().m_msgptr;
+    MsgPtr message = m_prio_heap.front().m_msgptr;
 
     // get the delay cycles
     delay_cycles = setAndReturnDelayCycles(message);
@@ -288,7 +292,10 @@ MessageBuffer::pop()
 {
     DEBUG_MSG(QUEUE_COMP, MedPrio, "pop from " + m_name);
     assert(isReady());
-    m_prio_heap.extractMin();
+    pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
+        greater<MessageBufferNode>());
+    m_prio_heap.pop_back();
+
     // record previous size and time so the current buffer size isn't
     // adjusted until next cycle
     if (m_time_last_time_pop < g_eventQueue_ptr->getTime()) {
@@ -301,11 +308,7 @@ MessageBuffer::pop()
 void
 MessageBuffer::clear()
 {
-    while(m_prio_heap.size() > 0){
-        m_prio_heap.extractMin();
-    }
-
-    ASSERT(m_prio_heap.size() == 0);
+    m_prio_heap.clear();
 
     m_msg_counter = 0;
     m_size = 0;
@@ -320,9 +323,13 @@ MessageBuffer::recycle()
 {
     DEBUG_MSG(QUEUE_COMP, MedPrio, "recycling " + m_name);
     assert(isReady());
-    MessageBufferNode node = m_prio_heap.extractMin();
+    MessageBufferNode node = m_prio_heap.front();
+    pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
+        greater<MessageBufferNode>());
     node.m_time = g_eventQueue_ptr->getTime() + m_recycle_latency;
-    m_prio_heap.insert(node);
+    m_prio_heap.back() = node;
+    push_heap(m_prio_heap.begin(), m_prio_heap.end(),
+        greater<MessageBufferNode>());
     g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr,
         g_eventQueue_ptr->getTime() + m_recycle_latency);
 }
@@ -353,7 +360,10 @@ MessageBuffer::print(ostream& out) const
     if (m_consumer_ptr != NULL) {
         out << " consumer-yes ";
     }
-    out << m_prio_heap << "] " << m_name << endl;
+
+    vector<MessageBufferNode> copy(m_prio_heap);
+    sort_heap(copy.begin(), copy.end(), greater<MessageBufferNode>());
+    out << copy << "] " << m_name << endl;
 }
 
 void

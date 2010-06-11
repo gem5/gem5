@@ -27,7 +27,6 @@
  */
 
 #include "base/cprintf.hh"
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/recorder/TraceRecord.hh"
 #include "mem/ruby/recorder/Tracer.hh"

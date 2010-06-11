@@ -46,7 +46,6 @@
 #include "params/RubyTracer.hh"
 #include "sim/sim_object.hh"
 
-template <class TYPE> class PrioHeap;
 class Address;
 class TraceRecord;
 class Sequencer;
