@@ -239,7 +239,7 @@ MemoryControl::enqueue(const MsgPtr& message, int latency)
 {
     Time current_time = g_eventQueue_ptr->getTime();
     Time arrival_time = current_time + latency;
-    const MemoryMsg* memMess = dynamic_cast<const MemoryMsg*>(message.ref());
+    const MemoryMsg* memMess = safe_cast<const MemoryMsg*>(message.get());
     physical_address_t addr = memMess->getAddress().getAddress();
     MemoryRequestType type = memMess->getType();
     bool is_mem_read = (type == MemoryRequestType_MEMORY_READ);
@@ -285,7 +285,7 @@ const Message*
 MemoryControl::peek()
 {
     MemoryNode node = peekNode();
-    Message* msg_ptr = node.m_msgptr.ref();
+    Message* msg_ptr = node.m_msgptr.get();
     assert(msg_ptr != NULL);
     return msg_ptr;
 }
@@ -536,7 +536,7 @@ MemoryControl::issueRequest(int bank)
                 req.m_msg_counter, req.m_addr, req.m_is_mem_read? 'R':'W',
                 current_time, bank);
     }
-    if (req.m_msgptr.ref() != NULL) {  // don't enqueue L3 writebacks
+    if (req.m_msgptr) {  // don't enqueue L3 writebacks
         enqueueToDirectory(req, m_mem_ctl_latency + m_mem_fixed_delay);
     }
     m_oldRequest[bank] = 0;

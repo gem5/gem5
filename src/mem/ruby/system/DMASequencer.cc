@@ -82,22 +82,22 @@ DMASequencer::makeRequest(const RubyRequest &request)
     active_request.bytes_issued = 0;
     active_request.pkt = request.pkt;
 
-    SequencerMsg msg;
-    msg.getPhysicalAddress() = Address(paddr);
-    msg.getLineAddress() = line_address(msg.getPhysicalAddress());
-    msg.getType() = write ? SequencerRequestType_ST : SequencerRequestType_LD;
+    SequencerMsg *msg = new SequencerMsg;
+    msg->getPhysicalAddress() = Address(paddr);
+    msg->getLineAddress() = line_address(msg->getPhysicalAddress());
+    msg->getType() = write ? SequencerRequestType_ST : SequencerRequestType_LD;
     int offset = paddr & m_data_block_mask;
 
-    msg.getLen() = (offset + len) <= RubySystem::getBlockSizeBytes() ?
+    msg->getLen() = (offset + len) <= RubySystem::getBlockSizeBytes() ?
         len : RubySystem::getBlockSizeBytes() - offset;
 
     if (write) {
-        msg.getDataBlk().setData(data, offset, msg.getLen());
+        msg->getDataBlk().setData(data, offset, msg->getLen());
     }
 
     assert(m_mandatory_q_ptr != NULL);
     m_mandatory_q_ptr->enqueue(msg);
-    active_request.bytes_issued += msg.getLen();
+    active_request.bytes_issued += msg->getLen();
 
     return RequestStatus_Issued;
 }
@@ -113,34 +113,34 @@ DMASequencer::issueNext()
         return;
     }
 
-    SequencerMsg msg;
-    msg.getPhysicalAddress() = Address(active_request.start_paddr +
+    SequencerMsg *msg = new SequencerMsg;
+    msg->getPhysicalAddress() = Address(active_request.start_paddr +
                                        active_request.bytes_completed);
 
-    assert((msg.getPhysicalAddress().getAddress() & m_data_block_mask) == 0);
-    msg.getLineAddress() = line_address(msg.getPhysicalAddress());
+    assert((msg->getPhysicalAddress().getAddress() & m_data_block_mask) == 0);
+    msg->getLineAddress() = line_address(msg->getPhysicalAddress());
 
-    msg.getType() = (active_request.write ? SequencerRequestType_ST :
+    msg->getType() = (active_request.write ? SequencerRequestType_ST :
                      SequencerRequestType_LD);
 
-    msg.getLen() =
+    msg->getLen() =
         (active_request.len -
          active_request.bytes_completed < RubySystem::getBlockSizeBytes() ?
          active_request.len - active_request.bytes_completed :
          RubySystem::getBlockSizeBytes());
 
     if (active_request.write) {
-        msg.getDataBlk().
+        msg->getDataBlk().
             setData(&active_request.data[active_request.bytes_completed],
-                    0, msg.getLen());
-        msg.getType() = SequencerRequestType_ST;
+                    0, msg->getLen());
+        msg->getType() = SequencerRequestType_ST;
     } else {
-        msg.getType() = SequencerRequestType_LD;
+        msg->getType() = SequencerRequestType_LD;
     }
 
     assert(m_mandatory_q_ptr != NULL);
     m_mandatory_q_ptr->enqueue(msg);
-    active_request.bytes_issued += msg.getLen();
+    active_request.bytes_issued += msg->getLen();
 }
 
 void

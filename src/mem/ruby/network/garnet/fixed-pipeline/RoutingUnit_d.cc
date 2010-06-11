@@ -61,8 +61,8 @@ void RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)
 int RoutingUnit_d::routeCompute(flit_d *t_flit)
 {
         MsgPtr msg_ptr = t_flit->get_msg_ptr();
-        NetworkMessage* net_msg_ptr = NULL;
-        net_msg_ptr = dynamic_cast<NetworkMessage*>(msg_ptr.ref());
+        NetworkMessage* net_msg_ptr =
+            safe_cast<NetworkMessage*>(msg_ptr.get());
         NetDest msg_destination = net_msg_ptr->getInternalDestination();
 
         int output_link = -1;

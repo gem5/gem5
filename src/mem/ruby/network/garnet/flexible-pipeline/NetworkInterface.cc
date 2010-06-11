@@ -103,7 +103,8 @@ void NetworkInterface::request_vc(int in_vc, int in_port, NetDest destination, T
 
 bool NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 {
-        NetworkMessage *net_msg_ptr = dynamic_cast<NetworkMessage*>(msg_ptr.ref());
+        NetworkMessage *net_msg_ptr =
+            safe_cast<NetworkMessage*>(msg_ptr.get());
         NetDest net_msg_dest = net_msg_ptr->getInternalDestination();
         Vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
         int num_flits = (int) ceil((double) m_net_ptr->MessageSizeType_to_int(net_msg_ptr->getMessageSize())/m_net_ptr->getFlitSize() ); // Number of flits is dependent on the link bandwidth available. This is expressed in terms of bytes/cycle or the flit size
@@ -117,10 +118,11 @@ bool NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
                         // did not find a free output vc
                         return false ;
                 }
-                MsgPtr new_msg_ptr = *(msg_ptr.ref());
+                MsgPtr new_msg_ptr = msg_ptr->clone();
                 NodeID destID = dest_nodes[ctr];
 
-                NetworkMessage *new_net_msg_ptr = dynamic_cast<NetworkMessage*>(new_msg_ptr.ref());
+                NetworkMessage *new_net_msg_ptr =
+                    safe_cast<NetworkMessage*>(new_msg_ptr.get());
                 if(dest_nodes.size() > 1)
                 {
                         NetDest personal_dest;

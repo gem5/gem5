@@ -205,7 +205,6 @@ class Type(Symbol):
 #include <iostream>
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/gems_common/Allocator.hh"
 ''')
 
         for dm in self.data_members.values():
@@ -242,6 +241,26 @@ $klass ${{self.c_ident}}$parent
             code.dedent()
         code('}')
 
+        # ******** Copy constructor ********
+        if not self.isGlobal:
+            code('${{self.c_ident}}(const ${{self.c_ident}}&other)')
+
+            # Call superclass constructor
+            if "interface" in self:
+                code('    : ${{self["interface"]}}(other)')
+
+            code('{')
+            code.indent()
+
+            for dm in self.data_members.values():
+                code('m_${{dm.ident}} = other.m_${{dm.ident}};')
+
+            if self.isMessage:
+                code('proc_id = other.proc_id;')
+
+            code.dedent()
+            code('}')
+
         # ******** Full init constructor ********
         if not self.isGlobal:
             params = [ 'const %s& local_%s' % (dm.type.c_ident, dm.ident) \
@@ -270,44 +289,18 @@ $klass ${{self.c_ident}}$parent
             code.dedent()
             code('}')
 
-        # create a static factory method
-        if "interface" in self:
-            code('''
-static ${{self["interface"]}}*
+        # create a static factory method and a clone member
+        code('''
+static ${{self.c_ident}}*
 create()
 {
     return new ${{self.c_ident}}();
 }
-''')
 
-        # ******** Message member functions ********
-        # FIXME: those should be moved into slicc file, slicc should
-        # support more of the c++ class inheritance
-
-        if self.isMessage:
-            code('''
-Message *
+${{self.c_ident}}*
 clone() const
 {
-    checkAllocator();
-    return s_allocator_ptr->allocate(*this);
-}
-
-void
-destroy()
-{
-    checkAllocator();
-    s_allocator_ptr->deallocate(this);
-}
-
-static Allocator<${{self.c_ident}}>* s_allocator_ptr;
-
-static void
-checkAllocator()
-{
-    if (s_allocator_ptr == NULL) {
-        s_allocator_ptr = new Allocator<${{self.c_ident}}>;
-    }
+     return new ${{self.c_ident}}(*this);
 }
 ''')
 
@@ -414,8 +407,6 @@ operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 using namespace std;
 ''')
 
-        if self.isMessage:
-            code('Allocator<${{self.c_ident}}>* ${{self.c_ident}}::s_allocator_ptr = NULL;')
         code('''
 /** \\brief Print the state of this object */
 void

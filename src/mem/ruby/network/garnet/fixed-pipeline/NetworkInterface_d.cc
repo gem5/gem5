@@ -107,7 +107,8 @@ void NetworkInterface_d::addNode(Vector<MessageBuffer*>& in,  Vector<MessageBuff
 
 bool NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 {
-        NetworkMessage *net_msg_ptr = dynamic_cast<NetworkMessage*>(msg_ptr.ref());
+        NetworkMessage *net_msg_ptr =
+            safe_cast<NetworkMessage *>(msg_ptr.get());
         NetDest net_msg_dest = net_msg_ptr->getInternalDestination();
         Vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
 
@@ -120,10 +121,11 @@ bool NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
                 {
                         return false ;
                 }
-                MsgPtr new_msg_ptr = *(msg_ptr.ref());
+                MsgPtr new_msg_ptr = msg_ptr->clone();
                 NodeID destID = dest_nodes[ctr];
 
-                NetworkMessage *new_net_msg_ptr = dynamic_cast<NetworkMessage*>(new_msg_ptr.ref());
+                NetworkMessage *new_net_msg_ptr =
+                    safe_cast<NetworkMessage *>(new_msg_ptr.get());
                 if(dest_nodes.size() > 1)
                 {
                         NetDest personal_dest;
@@ -145,7 +147,7 @@ bool NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
                 {
                         m_net_ptr->increment_injected_flits();
                         flit_d *fl = new flit_d(i, vc, vnet, num_flits, new_msg_ptr);
-                        fl->set_delay(g_eventQueue_ptr->getTime() - (msg_ptr.ref())->getTime());
+                        fl->set_delay(g_eventQueue_ptr->getTime() - msg_ptr->getTime());
                         m_ni_buffers[vc]->insert(fl);
                 }
                 m_ni_enqueue_time[vc] = g_eventQueue_ptr->getTime();

@@ -65,7 +65,6 @@ DebugComponentData debugComponents[] =
     {"Store Buffer",      'b' },
     {"Cache",             'c' },
     {"Predictor",         'p' },
-    {"Allocator",         'a' },
     {"Memory",            'M' },
 };
 

@@ -111,16 +111,12 @@ MessageBuffer::getMsgPtrCopy() const
 {
     assert(isReady());
 
-    MsgPtr temp_msg;
-    temp_msg = *(m_prio_heap.peekMin().m_msgptr.ref());
-    assert(temp_msg.ref() != NULL);
-    return temp_msg;
+    return m_prio_heap.peekMin().m_msgptr->clone();
 }
 
 const Message*
 MessageBuffer::peekAtHeadOfQueue() const
 {
-    const Message* msg_ptr;
     DEBUG_NEWLINE(QUEUE_COMP, MedPrio);
 
     DEBUG_MSG(QUEUE_COMP, MedPrio,
@@ -128,8 +124,8 @@ MessageBuffer::peekAtHeadOfQueue() const
                        m_name, g_eventQueue_ptr->getTime()));
     assert(isReady());
 
-    msg_ptr = m_prio_heap.peekMin().m_msgptr.ref();
-    assert(msg_ptr != NULL);
+    const Message* msg_ptr = m_prio_heap.peekMin().m_msgptr.get();
+    assert(msg_ptr);
 
     DEBUG_EXPR(QUEUE_COMP, MedPrio, *msg_ptr);
     DEBUG_NEWLINE(QUEUE_COMP, MedPrio);
@@ -149,7 +145,7 @@ random_time()
 }
 
 void
-MessageBuffer::enqueue(const MsgPtr& message, Time delta)
+MessageBuffer::enqueue(MsgPtr message, Time delta)
 {
     DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
     DEBUG_MSG(QUEUE_COMP, HighPrio,
@@ -214,7 +210,7 @@ MessageBuffer::enqueue(const MsgPtr& message, Time delta)
     m_last_arrival_time = arrival_time;
 
     // compute the delay cycles and set enqueue time
-    Message* msg_ptr = message.mod_ref();
+    Message* msg_ptr = message.get();
     assert(msg_ptr != NULL);
 
     assert(g_eventQueue_ptr->getTime() >= msg_ptr->getLastEnqueueTime() &&
@@ -332,12 +328,11 @@ MessageBuffer::recycle()
 }
 
 int
-MessageBuffer::setAndReturnDelayCycles(MsgPtr& message)
+MessageBuffer::setAndReturnDelayCycles(MsgPtr msg_ptr)
 {
     int delay_cycles = -1;  // null value
 
     // get the delay cycles of the message at the top of the queue
-    Message* msg_ptr = message.ref();
 
     // this function should only be called on dequeue
     // ensure the msg hasn't been enqueued

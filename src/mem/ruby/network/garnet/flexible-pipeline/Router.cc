@@ -252,7 +252,9 @@ void Router::routeCompute(flit *m_flit, int inport)
                 g_eventQueue_ptr->scheduleEvent(this, m_net_ptr->getNumPipeStages() -1 );
         if((m_flit->get_type() == HEAD_) || (m_flit->get_type() == HEAD_TAIL_))
         {
-                NetDest destination = dynamic_cast<NetworkMessage*>(m_flit->get_msg_ptr().ref())->getInternalDestination();
+                NetworkMessage *nm =
+                    safe_cast<NetworkMessage*>(m_flit->get_msg_ptr().get());
+                NetDest destination = nm->getInternalDestination();
                 if(m_net_ptr->getNumPipeStages() > 1)
                 {
                         m_out_vc_state[outport][outvc]->setState(VC_AB_, g_eventQueue_ptr->getTime() + 1);

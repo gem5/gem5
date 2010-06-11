@@ -62,7 +62,6 @@ enum DebugComponents
     STOREBUFFER_COMP,
     CACHE_COMP,
     PREDICTOR_COMP,
-    ALLOCATOR_COMP,
     MEMORY_COMP,
     NUMBER_OF_COMPS
 };

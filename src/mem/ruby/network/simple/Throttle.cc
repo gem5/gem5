@@ -157,7 +157,7 @@ Throttle::wakeup()
                 // Find the size of the message we are moving
                 MsgPtr msg_ptr = m_in[vnet]->peekMsgPtr();
                 NetworkMessage* net_msg_ptr =
-                    safe_cast<NetworkMessage*>(msg_ptr.ref());
+                    safe_cast<NetworkMessage*>(msg_ptr.get());
                 m_units_remaining[vnet] +=
                     network_message_to_size(net_msg_ptr);
 

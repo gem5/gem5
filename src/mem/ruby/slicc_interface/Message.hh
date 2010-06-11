@@ -31,29 +31,31 @@
 
 #include <iostream>
 
-#include "mem/gems_common/RefCnt.hh"
-#include "mem/gems_common/RefCountable.hh"
+#include "base/refcnt.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 class Message;
-typedef RefCnt<Message> MsgPtr;
+typedef RefCountingPtr<Message> MsgPtr;
 
-class Message : public RefCountable
+class Message : public RefCounted
 {
   public:
     Message()
-        : RefCountable()
-    {
-        m_time = g_eventQueue_ptr->getTime();
-        m_LastEnqueueTime = g_eventQueue_ptr->getTime();
-        m_DelayedCycles = 0;
-    }
+        : m_time(g_eventQueue_ptr->getTime()),
+          m_LastEnqueueTime(g_eventQueue_ptr->getTime()),
+          m_DelayedCycles(0)
+    { }
+
+    Message(const Message &other)
+        : m_time(other.m_time),
+          m_LastEnqueueTime(other.m_LastEnqueueTime),
+          m_DelayedCycles(other.m_DelayedCycles)
+    { }
 
     virtual ~Message() { }
 
     virtual Message* clone() const = 0;
-    virtual void destroy() = 0;
     virtual void print(std::ostream& out) const = 0;
 
     void setDelayedCycles(const int& cycles) { m_DelayedCycles = cycles; }

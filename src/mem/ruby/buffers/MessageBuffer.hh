@@ -102,8 +102,8 @@ class MessageBuffer
         return m_prio_heap.peekMin().m_msgptr;
     }
 
-    void enqueue(const MsgPtr& message) { enqueue(message, 1); }
-    void enqueue(const MsgPtr& message, Time delta);
+    void enqueue(MsgPtr message) { enqueue(message, 1); }
+    void enqueue(MsgPtr message, Time delta);
     //  void enqueueAbsolute(const MsgPtr& message, Time absolute_time);
     int dequeue_getDelayCycles(MsgPtr& message);  // returns delay
                                                   // cycles of the
@@ -136,7 +136,7 @@ class MessageBuffer
     int m_recycle_latency;
 
     // Private Methods
-    int setAndReturnDelayCycles(MsgPtr& message);
+    int setAndReturnDelayCycles(MsgPtr message);
 
     // Private copy constructor and assignment operator
     MessageBuffer(const MessageBuffer& obj);

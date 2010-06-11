@@ -536,9 +536,9 @@ Sequencer::issueRequest(const RubyRequest& request)
 
     Address line_addr(request.paddr);
     line_addr.makeLineAddress();
-    CacheMsg msg(line_addr, Address(request.paddr), ctype,
-                 Address(request.pc), amtype, request.len, PrefetchBit_No,
-                 request.proc_id);
+    CacheMsg *msg = new CacheMsg(line_addr, Address(request.paddr), ctype,
+        Address(request.pc), amtype, request.len, PrefetchBit_No,
+        request.proc_id);
 
     if (Debug::getProtocolTrace()) {
         g_system_ptr->getProfiler()->

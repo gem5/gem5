@@ -170,7 +170,7 @@ PerfectSwitch::wakeup()
 
                 // Peek at message
                 msg_ptr = m_in[incoming][vnet]->peekMsgPtr();
-                net_msg_ptr = dynamic_cast<NetworkMessage*>(msg_ptr.ref());
+                net_msg_ptr = safe_cast<NetworkMessage*>(msg_ptr.get());
                 DEBUG_EXPR(NETWORK_COMP, MedPrio, *net_msg_ptr);
 
                 output_links.clear();
@@ -272,7 +272,7 @@ PerfectSwitch::wakeup()
 
                     // This magic line creates a private copy of the
                     // message
-                    unmodified_msg_ptr = *(msg_ptr.ref());
+                    unmodified_msg_ptr = msg_ptr->clone();
                 }
 
                 // Enqueue it - for all outgoing queues
@@ -282,13 +282,13 @@ PerfectSwitch::wakeup()
                     if (i > 0) {
                         // create a private copy of the unmodified
                         // message
-                        msg_ptr = *(unmodified_msg_ptr.ref());
+                        msg_ptr = unmodified_msg_ptr->clone();
                     }
 
                     // Change the internal destination set of the
                     // message so it knows which destinations this
                     // link is responsible for.
-                    net_msg_ptr = safe_cast<NetworkMessage*>(msg_ptr.ref());
+                    net_msg_ptr = safe_cast<NetworkMessage*>(msg_ptr.get());
                     net_msg_ptr->getInternalDestination() =
                         output_link_destinations[i];
 

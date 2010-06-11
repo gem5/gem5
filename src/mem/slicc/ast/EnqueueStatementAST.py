@@ -48,12 +48,12 @@ class EnqueueStatementAST(StatementAST):
         msg_type = self.type_ast.type
 
         # Add new local var to symbol table
-        v = Var(self.symtab, "out_msg", self.location, msg_type, "out_msg",
+        v = Var(self.symtab, "out_msg", self.location, msg_type, "*out_msg",
                 self.pairs)
         self.symtab.newSymbol(v)
 
         # Declare message
-        code("${{msg_type.ident}} out_msg;")
+        code("${{msg_type.ident}} *out_msg = new ${{msg_type.ident}};")
 
         # The other statements
         t = self.statements.generate(code, None)
