@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-#include "mem/gems_common/Map.hh"
+#include "base/hashmap.hh"
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/GenericMachineType.hh"
@@ -85,6 +85,7 @@ class Sequencer : public RubyPort, public Consumer
     void printStats(std::ostream& out) const;
     void checkCoherence(const Address& address);
 
+    void markRemoved();
     void removeRequest(SequencerRequest* request);
 
   private:
@@ -108,8 +109,9 @@ class Sequencer : public RubyPort, public Consumer
     CacheMemory* m_dataCache_ptr;
     CacheMemory* m_instCache_ptr;
 
-    Map<Address, SequencerRequest*> m_writeRequestTable;
-    Map<Address, SequencerRequest*> m_readRequestTable;
+    typedef m5::hash_map<Address, SequencerRequest*> RequestTable;
+    RequestTable m_writeRequestTable;
+    RequestTable m_readRequestTable;
     // Global outstanding request count, across all request tables
     int m_outstanding_count;
     bool m_deadlock_check_scheduled;

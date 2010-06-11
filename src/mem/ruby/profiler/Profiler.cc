@@ -50,7 +50,6 @@
 
 #include "base/stl_helpers.hh"
 #include "base/str.hh"
-#include "mem/gems_common/Map.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/MachineType.hh"
@@ -73,8 +72,6 @@ static double process_memory_resident();
 Profiler::Profiler(const Params *p)
     : SimObject(p)
 {
-    m_requestProfileMap_ptr = new Map<string, int>;
-
     m_inst_profiler_ptr = NULL;
     m_address_profiler_ptr = NULL;
 
@@ -106,8 +103,6 @@ Profiler::~Profiler()
     if (m_periodic_output_file_ptr != &cerr) {
         delete m_periodic_output_file_ptr;
     }
-
-    delete m_requestProfileMap_ptr;
 }
 
 void
@@ -355,20 +350,20 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << "--------------------------------" << endl;
         out << endl;
 
-        vector<string> requestProfileKeys = m_requestProfileMap_ptr->keys();
-        sort(requestProfileKeys.begin(), requestProfileKeys.end());
+        map<string, int>::const_iterator i = m_requestProfileMap.begin();
+        map<string, int>::const_iterator end = m_requestProfileMap.end();
+        for (; i != end; ++i) {
+            const string &key = i->first;
+            int count = i->second;
 
-        for (int i = 0; i < requestProfileKeys.size(); i++) {
-            int temp_int =
-                m_requestProfileMap_ptr->lookup(requestProfileKeys[i]);
-            double percent = (100.0 * double(temp_int)) / double(m_requests);
+            double percent = (100.0 * double(count)) / double(m_requests);
             vector<string> items;
-            tokenize(items, requestProfileKeys[i], ':');
-            vector<string>::iterator i = items.begin();
+            tokenize(items, key, ':');
+            vector<string>::iterator j = items.begin();
             vector<string>::iterator end = items.end();
-            for (; i != end; ++i)
-                out << setw(10) << *i;
-            out << setw(11) << temp_int;
+            for (; j != end; ++i)
+                out << setw(10) << *j;
+            out << setw(11) << count;
             out << setw(14) << percent << endl;
         }
         out << endl;
@@ -480,7 +475,7 @@ Profiler::clearStats()
     m_memory_to_cache = 0;
 
     // clear HashMaps
-    m_requestProfileMap_ptr->clear();
+    m_requestProfileMap.clear();
 
     // count requests profiled
     m_requests = 0;
@@ -555,11 +550,9 @@ Profiler::profileRequest(const string& requestStr)
 {
     m_requests++;
 
-    if (m_requestProfileMap_ptr->exist(requestStr)) {
-        (m_requestProfileMap_ptr->lookup(requestStr))++;
-    } else {
-        m_requestProfileMap_ptr->add(requestStr, 1);
-    }
+    // if it doesn't exist, conveniently, it will be created with the
+    // default value which is 0
+    m_requestProfileMap[requestStr]++;
 }
 
 void
@@ -679,18 +672,14 @@ Profiler::rubyWatch(int id)
     out << setw(ID_SPACES) << id << " "
         << "RUBY WATCH " << watch_address << endl;
 
-    if (!m_watch_address_list_ptr->exist(watch_address)) {
-        m_watch_address_list_ptr->add(watch_address, 1);
-    }
+    // don't care about success or failure
+    m_watch_address_set.insert(watch_address);
 }
 
 bool
 Profiler::watchAddress(Address addr)
 {
-    if (m_watch_address_list_ptr->exist(addr))
-        return true;
-    else
-        return false;
+    return m_watch_address_set.count(addr) > 0;
 }
 
 Profiler *

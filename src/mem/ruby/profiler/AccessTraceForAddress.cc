@@ -29,26 +29,9 @@
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/profiler/AccessTraceForAddress.hh"
 
-AccessTraceForAddress::AccessTraceForAddress()
-{
-    m_histogram_ptr = NULL;
-}
-
-AccessTraceForAddress::AccessTraceForAddress(const Address& addr)
-{
-    m_addr = addr;
-    m_total = 0;
-    m_loads = 0;
-    m_stores = 0;
-    m_atomics = 0;
-    m_user = 0;
-    m_sharing = 0;
-    m_histogram_ptr = NULL;
-}
-
 AccessTraceForAddress::~AccessTraceForAddress()
 {
-    if (m_histogram_ptr != NULL) {
+    if (m_histogram_ptr) {
         delete m_histogram_ptr;
         m_histogram_ptr = NULL;
     }

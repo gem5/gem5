@@ -41,9 +41,8 @@ TimerTable::TimerTable()
 bool
 TimerTable::isReady() const
 {
-    if (m_map.size() == 0) {
+    if (m_map.empty())
         return false;
-    }
 
     if (!m_next_valid) {
         updateNext();
@@ -69,9 +68,9 @@ TimerTable::set(const Address& address, Time relative_latency)
 {
     assert(address == line_address(address));
     assert(relative_latency > 0);
-    assert(m_map.exist(address) == false);
+    assert(!m_map.count(address));
     Time ready_time = g_eventQueue_ptr->getTime() + relative_latency;
-    m_map.add(address, ready_time);
+    m_map[address] = ready_time;
     assert(m_consumer_ptr != NULL);
     g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, ready_time);
     m_next_valid = false;
@@ -86,8 +85,8 @@ void
 TimerTable::unset(const Address& address)
 {
     assert(address == line_address(address));
-    assert(m_map.exist(address) == true);
-    m_map.remove(address);
+    assert(m_map.count(address));
+    m_map.erase(address);
 
     // Don't always recalculate the next ready address
     if (address == m_next_address) {
@@ -103,24 +102,24 @@ TimerTable::print(std::ostream& out) const
 void
 TimerTable::updateNext() const
 {
-    if (m_map.size() == 0) {
-        assert(m_next_valid == false);
+    if (m_map.empty()) {
+        assert(!m_next_valid);
         return;
     }
 
-    std::vector<Address> addresses = m_map.keys();
-    m_next_address = addresses[0];
-    m_next_time = m_map.lookup(m_next_address);
+    AddressMap::const_iterator i = m_map.begin();
+    AddressMap::const_iterator end = m_map.end();
 
-    // Search for the minimum time
-    int size = addresses.size();
-    for (int i=1; i<size; i++) {
-        Address maybe_next_address = addresses[i];
-        Time maybe_next_time = m_map.lookup(maybe_next_address);
-        if (maybe_next_time < m_next_time) {
-            m_next_time = maybe_next_time;
-            m_next_address= maybe_next_address;
+    m_next_address = i->first;
+    m_next_time = i->second;
+    ++i;
+
+    for (; i != end; ++i) {
+        if (i->second < m_next_time) {
+            m_next_address = i->first;
+            m_next_time = i->second;
         }
     }
+
     m_next_valid = true;
 }

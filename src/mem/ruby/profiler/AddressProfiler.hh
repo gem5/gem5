@@ -31,21 +31,21 @@
 
 #include <iostream>
 
+#include "base/hashmap.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
+#include "mem/ruby/profiler/AccessTraceForAddress.hh"
 #include "mem/ruby/system/NodeID.hh"
 
-class AccessTraceForAddress;
 class Set;
-template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
 class AddressProfiler
 {
   public:
-    typedef Map<Address, AccessTraceForAddress> AddressMap;
+    typedef m5::hash_map<Address, AccessTraceForAddress> AddressMap;
 
   public:
     AddressProfiler(int num_of_sequencers);
@@ -76,10 +76,10 @@ class AddressProfiler
 
     int64 m_sharing_miss_counter;
 
-    AddressMap* m_dataAccessTrace;
-    AddressMap* m_macroBlockAccessTrace;
-    AddressMap* m_programCounterAccessTrace;
-    AddressMap* m_retryProfileMap;
+    AddressMap m_dataAccessTrace;
+    AddressMap m_macroBlockAccessTrace;
+    AddressMap m_programCounterAccessTrace;
+    AddressMap m_retryProfileMap;
     Histogram m_retryProfileHisto;
     Histogram m_retryProfileHistoWrite;
     Histogram m_retryProfileHistoRead;

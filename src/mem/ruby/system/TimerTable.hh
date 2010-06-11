@@ -33,7 +33,7 @@
 #include <iostream>
 #include <string>
 
-#include "mem/gems_common/Map.hh"
+#include "base/hashmap.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 
@@ -61,7 +61,7 @@ class TimerTable
 
     bool isReady() const;
     const Address& readyAddress() const;
-    bool isSet(const Address& address) const { return m_map.exist(address); }
+    bool isSet(const Address& address) const { return !!m_map.count(address); }
     void set(const Address& address, Time relative_latency);
     void unset(const Address& address);
     void print(std::ostream& out) const;
@@ -74,7 +74,8 @@ class TimerTable
     TimerTable& operator=(const TimerTable& obj);
 
     // Data Members (m_prefix)
-    Map<Address, Time> m_map;
+    typedef m5::hash_map<Address, Time> AddressMap;
+    AddressMap m_map;
     mutable bool m_next_valid;
     mutable Time m_next_time; // Only valid if m_next_valid is true
     mutable Address m_next_address;  // Only valid if m_next_valid is true

@@ -28,8 +28,6 @@
 
 #include "base/intmath.hh"
 #include "base/str.hh"
-#include "mem/gems_common/Map.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
 
 using namespace std;

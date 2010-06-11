@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-#include "mem/gems_common/Map.hh"
+#include "base/hashmap.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -79,7 +79,8 @@ class PersistentTable
     PersistentTable& operator=(const PersistentTable& obj);
 
     // Data Members (m_prefix)
-    Map<Address, PersistentTableEntry>* m_map_ptr;
+    typedef m5::hash_map<Address, PersistentTableEntry> AddressMap;
+    AddressMap m_map;
 };
 
 inline std::ostream&

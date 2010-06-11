@@ -33,8 +33,10 @@
 
 #if defined(__GNUC__) && __GNUC__ >= 3
 #include <ext/hash_map>
+#include <ext/hash_set>
 #else
 #include <hash_map>
+#include <hash_set>
 #endif
 
 #include <string>
@@ -49,7 +51,9 @@
 
 namespace m5 {
     using ::__hash_namespace::hash_multimap;
+    using ::__hash_namespace::hash_multiset;
     using ::__hash_namespace::hash_map;
+    using ::__hash_namespace::hash_set;
     using ::__hash_namespace::hash;
 }
 
@@ -88,10 +92,6 @@ namespace __hash_namespace {
             return (__stl_hash_string(r.first.c_str())) ^ r.second;
         }
     };
-
-
-
-}
-
+/* namespace __hash_namespace */ }
 
 #endif // __HASHMAP_HH__

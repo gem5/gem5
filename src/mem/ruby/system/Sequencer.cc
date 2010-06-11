@@ -28,7 +28,6 @@
 
 #include "base/str.hh"
 #include "cpu/rubytest/RubyTester.hh"
-#include "mem/gems_common/Map.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/protocol/Protocol.hh"
@@ -92,35 +91,39 @@ Sequencer::wakeup()
     // Check across all outstanding requests
     int total_outstanding = 0;
 
-    std::vector<Address> keys = m_readRequestTable.keys();
-    for (int i = 0; i < keys.size(); i++) {
-        SequencerRequest* request = m_readRequestTable.lookup(keys[i]);
-        if (current_time - request->issue_time >= m_deadlock_threshold) {
-            WARN_MSG("Possible Deadlock detected");
-            WARN_EXPR(request);
-            WARN_EXPR(m_version);
-            WARN_EXPR(request->ruby_request.paddr);
-            WARN_EXPR(keys.size());
-            WARN_EXPR(current_time);
-            WARN_EXPR(request->issue_time);
-            WARN_EXPR(current_time - request->issue_time);
-            ERROR_MSG("Aborting");
-        }
+    RequestTable::iterator read = m_readRequestTable.begin();
+    RequestTable::iterator read_end = m_readRequestTable.end();
+    for (; read != read_end; ++read) {
+        SequencerRequest* request = read->second;
+        if (current_time - request->issue_time < m_deadlock_threshold)
+            continue;
+
+        WARN_MSG("Possible Deadlock detected");
+        WARN_EXPR(request);
+        WARN_EXPR(m_version);
+        WARN_EXPR(request->ruby_request.paddr);
+        WARN_EXPR(m_readRequestTable.size());
+        WARN_EXPR(current_time);
+        WARN_EXPR(request->issue_time);
+        WARN_EXPR(current_time - request->issue_time);
+        ERROR_MSG("Aborting");
     }
 
-    keys = m_writeRequestTable.keys();
-    for (int i = 0; i < keys.size(); i++) {
-        SequencerRequest* request = m_writeRequestTable.lookup(keys[i]);
-        if (current_time - request->issue_time >= m_deadlock_threshold) {
-            WARN_MSG("Possible Deadlock detected");
-            WARN_EXPR(request);
-            WARN_EXPR(m_version);
-            WARN_EXPR(current_time);
-            WARN_EXPR(request->issue_time);
-            WARN_EXPR(current_time - request->issue_time);
-            WARN_EXPR(keys.size());
-            ERROR_MSG("Aborting");
-        }
+    RequestTable::iterator write = m_writeRequestTable.begin();
+    RequestTable::iterator write_end = m_writeRequestTable.end();
+    for (; write != write_end; ++write) {
+        SequencerRequest* request = write->second;
+        if (current_time - request->issue_time < m_deadlock_threshold)
+            continue;
+
+        WARN_MSG("Possible Deadlock detected");
+        WARN_EXPR(request);
+        WARN_EXPR(m_version);
+        WARN_EXPR(current_time);
+        WARN_EXPR(request->issue_time);
+        WARN_EXPR(current_time - request->issue_time);
+        WARN_EXPR(m_writeRequestTable.size());
+        ERROR_MSG("Aborting");
     }
 
     total_outstanding += m_writeRequestTable.size();
@@ -160,13 +163,14 @@ Sequencer::printProgress(ostream& out) const
     out << "---------------" << endl;
     out << "outstanding requests" << endl;
 
-    std::vector<Address> rkeys = m_readRequestTable.keys();
-    int read_size = rkeys.size();
-    out << "proc " << m_version << " Read Requests = " << read_size << endl;
+    out << "proc " << m_Read
+        << " version Requests = " << m_readRequestTable.size() << endl;
 
     // print the request table
-    for (int i = 0; i < read_size; ++i) {
-        SequencerRequest *request = m_readRequestTable.lookup(rkeys[i]);
+    RequestTable::iterator read = m_readRequestTable.begin();
+    RequestTable::iterator read_end = m_readRequestTable.end();
+    for (; read != read_end; ++read) {
+        SequencerRequest* request = read->second;
         out << "\tRequest[ " << i << " ] = " << request->type
             << " Address " << rkeys[i]
             << " Posted " << request->issue_time
@@ -174,13 +178,14 @@ Sequencer::printProgress(ostream& out) const
         total_demand++;
     }
 
-    std::vector<Address> wkeys = m_writeRequestTable.keys();
-    int write_size = wkeys.size();
-    out << "proc " << m_version << " Write Requests = " << write_size << endl;
+    out << "proc " << m_version
+        << " Write Requests = " << m_writeRequestTable.size << endl;
 
     // print the request table
-    for (int i = 0; i < write_size; ++i){
-        CacheMsg &request = m_writeRequestTable.lookup(wkeys[i]);
+    RequestTable::iterator write = m_writeRequestTable.begin();
+    RequestTable::iterator write_end = m_writeRequestTable.end();
+    for (; write != write_end; ++write) {
+        SequencerRequest* request = write->second;
         out << "\tRequest[ " << i << " ] = " << request.getType()
             << " Address " << wkeys[i]
             << " Posted " << request.getTime()
@@ -231,26 +236,32 @@ Sequencer::insertRequest(SequencerRequest* request)
         (request->ruby_request.type == RubyRequestType_RMW_Write) ||
         (request->ruby_request.type == RubyRequestType_Locked_Read) ||
         (request->ruby_request.type == RubyRequestType_Locked_Write)) {
-        if (m_writeRequestTable.exist(line_addr)) {
-            m_writeRequestTable.lookup(line_addr) = request;
+        pair<RequestTable::iterator, bool> r =
+            m_writeRequestTable.insert(RequestTable::value_type(line_addr, 0));
+        bool success = r.second;
+        RequestTable::iterator i = r.first;
+        if (!success) {
+            i->second = request;
             // return true;
 
             // drh5: isn't this an error?  do you lose the initial request?
             assert(0);
         }
-        m_writeRequestTable.allocate(line_addr);
-        m_writeRequestTable.lookup(line_addr) = request;
+        i->second = request;
         m_outstanding_count++;
     } else {
-        if (m_readRequestTable.exist(line_addr)) {
-            m_readRequestTable.lookup(line_addr) = request;
+        pair<RequestTable::iterator, bool> r =
+            m_readRequestTable.insert(RequestTable::value_type(line_addr, 0));
+        bool success = r.second;
+        RequestTable::iterator i = r.first;
+        if (!success) {
+            i->second = request;
             // return true;
 
             // drh5: isn't this an error?  do you lose the initial request?
             assert(0);
         }
-        m_readRequestTable.allocate(line_addr);
-        m_readRequestTable.lookup(line_addr) = request;
+        i->second = request;
         m_outstanding_count++;
     }
 
@@ -260,6 +271,14 @@ Sequencer::insertRequest(SequencerRequest* request)
     assert(m_outstanding_count == total_outstanding);
 
     return false;
+}
+
+void
+Sequencer::markRemoved()
+{
+    m_outstanding_count--;
+    assert(m_outstanding_count ==
+           m_writeRequestTable.size() + m_readRequestTable.size());
 }
 
 void
@@ -276,24 +295,26 @@ Sequencer::removeRequest(SequencerRequest* srequest)
         (ruby_request.type == RubyRequestType_RMW_Write) ||
         (ruby_request.type == RubyRequestType_Locked_Read) ||
         (ruby_request.type == RubyRequestType_Locked_Write)) {
-        m_writeRequestTable.deallocate(line_addr);
+        m_writeRequestTable.erase(line_addr);
     } else {
-        m_readRequestTable.deallocate(line_addr);
+        m_readRequestTable.erase(line_addr);
     }
-    m_outstanding_count--;
 
-    assert(m_outstanding_count == m_writeRequestTable.size() + m_readRequestTable.size());
+    markRemoved();
 }
 
 void
 Sequencer::writeCallback(const Address& address, DataBlock& data)
 {
     assert(address == line_address(address));
-    assert(m_writeRequestTable.exist(line_address(address)));
+    assert(m_writeRequestTable.count(line_address(address)));
 
-    SequencerRequest* request = m_writeRequestTable.lookup(address);
+    RequestTable::iterator i = m_writeRequestTable.find(address);
+    assert(i != m_writeRequestTable.end());
+    SequencerRequest* request = i->second;
 
-    removeRequest(request);
+    m_writeRequestTable.erase(i);
+    markRemoved();
 
     assert((request->ruby_request.type == RubyRequestType_ST) ||
            (request->ruby_request.type == RubyRequestType_RMW_Read) ||
@@ -316,10 +337,14 @@ void
 Sequencer::readCallback(const Address& address, DataBlock& data)
 {
     assert(address == line_address(address));
-    assert(m_readRequestTable.exist(line_address(address)));
+    assert(m_readRequestTable.count(line_address(address)));
 
-    SequencerRequest* request = m_readRequestTable.lookup(address);
-    removeRequest(request);
+    RequestTable::iterator i = m_readRequestTable.find(address);
+    assert(i != m_readRequestTable.end());
+    SequencerRequest* request = i->second;
+
+    m_readRequestTable.erase(i);
+    markRemoved();
 
     assert((request->ruby_request.type == RubyRequestType_LD) ||
            (request->ruby_request.type == RubyRequestType_RMW_Read) ||
@@ -409,9 +434,9 @@ RequestStatus
 Sequencer::getRequestStatus(const RubyRequest& request)
 {
     bool is_outstanding_store =
-        m_writeRequestTable.exist(line_address(Address(request.paddr)));
+        !!m_writeRequestTable.count(line_address(Address(request.paddr)));
     bool is_outstanding_load =
-        m_readRequestTable.exist(line_address(Address(request.paddr)));
+        !!m_readRequestTable.count(line_address(Address(request.paddr)));
     if (is_outstanding_store) {
         if ((request.type == RubyRequestType_LD) ||
             (request.type == RubyRequestType_IFETCH) ||
@@ -441,7 +466,7 @@ Sequencer::getRequestStatus(const RubyRequest& request)
 bool
 Sequencer::empty() const
 {
-    return m_writeRequestTable.size() == 0 && m_readRequestTable.size() == 0;
+    return m_writeRequestTable.empty() && m_readRequestTable.empty();
 }
 
 RequestStatus
@@ -579,6 +604,21 @@ Sequencer::tryCacheAccess(const Address& addr, CacheRequestType type,
     return cache->tryCacheAccess(line_address(addr), type, data_ptr);
 }
 #endif
+
+template <class KEY, class VALUE>
+std::ostream &
+operator<<(ostream &out, const m5::hash_map<KEY, VALUE> &map)
+{
+    typename m5::hash_map<KEY, VALUE>::const_iterator i = map.begin();
+    typename m5::hash_map<KEY, VALUE>::const_iterator end = map.end();
+
+    out << "[";
+    for (; i != end; ++i)
+        out << " " << i->first << "=" << i->second;
+    out << " ]";
+
+    return out;
+}
 
 void
 Sequencer::print(ostream& out) const

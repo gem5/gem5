@@ -46,9 +46,11 @@
 #define __MEM_RUBY_PROFILER_PROFILER_HH__
 
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
+#include "base/hashmap.hh"
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -69,8 +71,6 @@
 
 class CacheMsg;
 class AddressProfiler;
-
-template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
 class Profiler : public SimObject, public Consumer
 {
@@ -210,10 +210,10 @@ class Profiler : public SimObject, public Consumer
 
     Histogram m_average_latency_estimate;
 
-    Map<Address, int>* m_watch_address_list_ptr;
+    m5::hash_set<Address> m_watch_address_set;
     // counts all initiated cache request including PUTs
     int m_requests;
-    Map <std::string, int>* m_requestProfileMap_ptr;
+    std::map<std::string, int> m_requestProfileMap;
 
     //added by SS
     bool m_hot_lines;

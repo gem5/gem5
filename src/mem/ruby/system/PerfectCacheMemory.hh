@@ -29,7 +29,7 @@
 #ifndef __MEM_RUBY_SYSTEM_PERFECTCACHEMEMORY_HH__
 #define __MEM_RUBY_SYSTEM_PERFECTCACHEMEMORY_HH__
 
-#include "mem/gems_common/Map.hh"
+#include "base/hashmap.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -94,7 +94,7 @@ class PerfectCacheMemory
     PerfectCacheMemory& operator=(const PerfectCacheMemory& obj);
 
     // Data Members (m_prefix)
-    Map<Address, PerfectCacheLineState<ENTRY> > m_map;
+    m5::hash_map<Address, PerfectCacheLineState<ENTRY> > m_map;
 };
 
 template<class ENTRY>
@@ -131,7 +131,7 @@ template<class ENTRY>
 inline bool
 PerfectCacheMemory<ENTRY>::isTagPresent(const Address& address) const
 {
-    return m_map.exist(line_address(address));
+    return m_map.count(line_address(address)) > 0;
 }
 
 template<class ENTRY>
@@ -150,7 +150,7 @@ PerfectCacheMemory<ENTRY>::allocate(const Address& address)
     PerfectCacheLineState<ENTRY> line_state;
     line_state.m_permission = AccessPermission_Busy;
     line_state.m_entry = ENTRY();
-    m_map.add(line_address(address), line_state);
+    m_map[line_address(address)] = line_state;
 }
 
 // deallocate entry
@@ -174,7 +174,7 @@ template<class ENTRY>
 inline ENTRY&
 PerfectCacheMemory<ENTRY>::lookup(const Address& address)
 {
-    return m_map.lookup(line_address(address)).m_entry;
+    return m_map[line_address(address)].m_entry;
 }
 
 // looks an address up in the cache
@@ -182,14 +182,14 @@ template<class ENTRY>
 inline const ENTRY&
 PerfectCacheMemory<ENTRY>::lookup(const Address& address) const
 {
-    return m_map.lookup(line_address(address)).m_entry;
+    return m_map[line_address(address)].m_entry;
 }
 
 template<class ENTRY>
 inline AccessPermission
 PerfectCacheMemory<ENTRY>::getPermission(const Address& address) const
 {
-    return m_map.lookup(line_address(address)).m_permission;
+    return m_map[line_address(address)].m_permission;
 }
 
 template<class ENTRY>
@@ -199,7 +199,7 @@ PerfectCacheMemory<ENTRY>::changePermission(const Address& address,
 {
     Address line_address = address;
     line_address.makeLineAddress();
-    PerfectCacheLineState<ENTRY>& line_state = m_map.lookup(line_address);
+    PerfectCacheLineState<ENTRY>& line_state = m_map[line_address];
     AccessPermission old_perm = line_state.m_permission;
     line_state.m_permission = new_perm;
 }

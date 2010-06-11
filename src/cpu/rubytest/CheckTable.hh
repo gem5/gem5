@@ -33,12 +33,12 @@
 #include <iostream>
 #include <vector>
 
+#include "base/hashmap.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 
-class Address;
 class Check;
 class RubyTester;
-template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
 class CheckTable
 {
@@ -64,7 +64,7 @@ class CheckTable
     CheckTable& operator=(const CheckTable& obj);
 
     std::vector<Check*> m_check_vector;
-    Map<Address, Check*>* m_lookup_map_ptr;
+    m5::hash_map<Address, Check*> m_lookup_map;
 
     int m_num_cpu_sequencers;
     RubyTester* m_tester_ptr;

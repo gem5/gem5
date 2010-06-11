@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-#include "mem/gems_common/Map.hh"
+#include "base/hashmap.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/Profiler.hh"
@@ -73,7 +73,7 @@ class TBETable
     TBETable& operator=(const TBETable& obj);
 
     // Data Members (m_prefix)
-    Map<Address, ENTRY> m_map;
+    m5::hash_map<Address, ENTRY> m_map;
 
   private:
     int m_number_of_TBEs;
@@ -94,23 +94,23 @@ TBETable<ENTRY>::isPresent(const Address& address) const
 {
     assert(address == line_address(address));
     assert(m_map.size() <= m_number_of_TBEs);
-    return m_map.exist(address);
+    return !!m_map.count(address);
 }
 
 template<class ENTRY>
 inline void
 TBETable<ENTRY>::allocate(const Address& address)
 {
-    assert(isPresent(address) == false);
+    assert(!isPresent(address));
     assert(m_map.size() < m_number_of_TBEs);
-    m_map.add(address, ENTRY());
+    m_map[address] = ENTRY();
 }
 
 template<class ENTRY>
 inline void
 TBETable<ENTRY>::deallocate(const Address& address)
 {
-    assert(isPresent(address) == true);
+    assert(isPresent(address));
     assert(m_map.size() > 0);
     m_map.erase(address);
 }
@@ -120,8 +120,8 @@ template<class ENTRY>
 inline ENTRY&
 TBETable<ENTRY>::lookup(const Address& address)
 {
-    assert(isPresent(address) == true);
-    return m_map.lookup(address);
+    assert(isPresent(address));
+    return m_map.find(address)->second;
 }
 
 // looks an address up in the cache
@@ -129,8 +129,8 @@ template<class ENTRY>
 inline const ENTRY&
 TBETable<ENTRY>::lookup(const Address& address) const
 {
-    assert(isPresent(address) == true);
-    return m_map.lookup(address);
+    assert(isPresent(address));
+    return m_map.find(address)->second;
 }
 
 template<class ENTRY>

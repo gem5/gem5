@@ -31,12 +31,10 @@
 #include "cpu/rubytest/Check.hh"
 #include "cpu/rubytest/CheckTable.hh"
 #include "cpu/rubytest/CheckTable.hh"
-#include "mem/gems_common/Map.hh"
 
 CheckTable::CheckTable(int _num_cpu_sequencers, RubyTester* _tester)
     : m_num_cpu_sequencers(_num_cpu_sequencers), m_tester_ptr(_tester)
 {
-    m_lookup_map_ptr = new Map<Address, Check*>;
     physical_address_t physical = 0;
     Address address;
 
@@ -76,7 +74,6 @@ CheckTable::~CheckTable()
     int size = m_check_vector.size();
     for (int i = 0; i < size; i++)
         delete m_check_vector[i];
-    delete m_lookup_map_ptr;
 }
 
 void
@@ -89,7 +86,7 @@ CheckTable::addCheck(const Address& address)
     }
 
     for (int i = 0; i < CHECK_SIZE; i++) {
-        if (m_lookup_map_ptr->exist(Address(address.getAddress()+i))) {
+        if (m_lookup_map.count(Address(address.getAddress()+i))) {
             // A mapping for this byte already existed, discard the
             // entire check
             return;
@@ -100,7 +97,7 @@ CheckTable::addCheck(const Address& address)
                                  m_num_cpu_sequencers, m_tester_ptr);
     for (int i = 0; i < CHECK_SIZE; i++) {
         // Insert it once per byte
-        m_lookup_map_ptr->add(Address(address.getAddress() + i), check_ptr);
+        m_lookup_map[Address(address.getAddress() + i)] = check_ptr;
     }
     m_check_vector.push_back(check_ptr);
 }
@@ -117,13 +114,14 @@ CheckTable::getCheck(const Address& address)
     DEBUG_MSG(TESTER_COMP, MedPrio, "Looking for check by address");
     DEBUG_EXPR(TESTER_COMP, MedPrio, address);
 
-    if (m_lookup_map_ptr->exist(address)) {
-        Check* check = m_lookup_map_ptr->lookup(address);
-        assert(check != NULL);
-        return check;
-    } else {
+    m5::hash_map<Address, Check*>::iterator i = m_lookup_map.find(address);
+
+    if (i == m_lookup_map.end())
         return NULL;
-    }
+
+    Check* check = i->second;
+    assert(check != NULL);
+    return check;
 }
 
 void

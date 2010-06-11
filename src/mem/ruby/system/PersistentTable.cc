@@ -40,13 +40,10 @@ int persistent_randomize[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
 
 PersistentTable::PersistentTable()
 {
-    m_map_ptr = new Map<Address, PersistentTableEntry>;
 }
 
 PersistentTable::~PersistentTable()
 {
-    delete m_map_ptr;
-    m_map_ptr = NULL;
 }
 
 void
@@ -63,28 +60,25 @@ PersistentTable::persistentRequestLock(const Address& address,
 #endif
 
     assert(address == line_address(address));
-    if (!m_map_ptr->exist(address)) {
-        // Allocate if not present
-        PersistentTableEntry entry;
-        entry.m_starving.add(locker);
-        if (type == AccessType_Write) {
-            entry.m_request_to_write.add(locker);
-        }
-        m_map_ptr->add(address, entry);
-    } else {
-        PersistentTableEntry& entry = m_map_ptr->lookup(address);
 
-        //
+    static const PersistentTableEntry dflt;
+    pair<AddressMap::iterator, bool> r =
+        m_map.insert(AddressMap::value_type(address, dflt));
+    bool present = !r.second;
+    AddressMap::iterator i = r.first;
+    PersistentTableEntry &entry = i->second;
+
+    if (present) {
         // Make sure we're not already in the locked set
-        //
         assert(!(entry.m_starving.isElement(locker)));
-
-        entry.m_starving.add(locker);
-        if (type == AccessType_Write) {
-            entry.m_request_to_write.add(locker);
-        }
-        assert(entry.m_marked.isSubset(entry.m_starving));
     }
+
+    entry.m_starving.add(locker);
+    if (type == AccessType_Write)
+        entry.m_request_to_write.add(locker);
+
+    if (present)
+        assert(entry.m_marked.isSubset(entry.m_starving));
 }
 
 void
@@ -100,8 +94,8 @@ PersistentTable::persistentRequestUnlock(const Address& address,
 #endif
 
     assert(address == line_address(address));
-    assert(m_map_ptr->exist(address));
-    PersistentTableEntry& entry = m_map_ptr->lookup(address);
+    assert(m_map.count(address));
+    PersistentTableEntry& entry = m_map[address];
 
     //
     // Make sure we're in the locked set
@@ -116,7 +110,7 @@ PersistentTable::persistentRequestUnlock(const Address& address,
     // Deallocate if empty
     if (entry.m_starving.isEmpty()) {
         assert(entry.m_marked.isEmpty());
-        m_map_ptr->erase(address);
+        m_map.erase(address);
     }
 }
 
@@ -125,24 +119,31 @@ PersistentTable::okToIssueStarving(const Address& address,
                                    MachineID machId) const
 {
     assert(address == line_address(address));
-    if (!m_map_ptr->exist(address)) {
+
+    AddressMap::const_iterator i = m_map.find(address);
+    if (i == m_map.end()) {
         // No entry present
         return true;
-    } else if (m_map_ptr->lookup(address).m_starving.isElement(machId)) {
+    }
+
+    const PersistentTableEntry &entry = i->second;
+
+    if (entry.m_starving.isElement(machId)) {
         // We can't issue another lockdown until are previous unlock
         // has occurred
         return false;
-    } else {
-        return m_map_ptr->lookup(address).m_marked.isEmpty();
     }
+
+    return entry.m_marked.isEmpty();
 }
 
 MachineID
 PersistentTable::findSmallest(const Address& address) const
 {
     assert(address == line_address(address));
-    assert(m_map_ptr->exist(address));
-    const PersistentTableEntry& entry = m_map_ptr->lookup(address);
+    AddressMap::const_iterator i = m_map.find(address);
+    assert(i != m_map.end());
+    const PersistentTableEntry& entry = i->second;
     return entry.m_starving.smallestElement();
 }
 
@@ -150,8 +151,9 @@ AccessType
 PersistentTable::typeOfSmallest(const Address& address) const
 {
     assert(address == line_address(address));
-    assert(m_map_ptr->exist(address));
-    const PersistentTableEntry& entry = m_map_ptr->lookup(address);
+    AddressMap::const_iterator i = m_map.find(address);
+    assert(i != m_map.end());
+    const PersistentTableEntry& entry = i->second;
     if (entry.m_request_to_write.
         isElement(entry.m_starving.smallestElement())) {
         return AccessType_Write;
@@ -164,15 +166,17 @@ void
 PersistentTable::markEntries(const Address& address)
 {
     assert(address == line_address(address));
-    if (m_map_ptr->exist(address)) {
-        PersistentTableEntry& entry = m_map_ptr->lookup(address);
+    AddressMap::iterator i = m_map.find(address);
+    if (i == m_map.end())
+        return;
 
-        // None should be marked
-        assert(entry.m_marked.isEmpty());
+    PersistentTableEntry& entry = i->second;
 
-        // Mark all the nodes currently in the table
-        entry.m_marked = entry.m_starving;
-    }
+    // None should be marked
+    assert(entry.m_marked.isEmpty());
+
+    // Mark all the nodes currently in the table
+    entry.m_marked = entry.m_starving;
 }
 
 bool
@@ -181,29 +185,31 @@ PersistentTable::isLocked(const Address& address) const
     assert(address == line_address(address));
 
     // If an entry is present, it must be locked
-    return m_map_ptr->exist(address);
+    return m_map.count(address) > 0;
 }
 
 int
 PersistentTable::countStarvingForAddress(const Address& address) const
 {
-    if (m_map_ptr->exist(address)) {
-        PersistentTableEntry& entry = m_map_ptr->lookup(address);
-        return (entry.m_starving.count());
-    } else {
+    assert(address == line_address(address));
+    AddressMap::const_iterator i = m_map.find(address);
+    if (i == m_map.end())
         return 0;
-    }
+
+    const PersistentTableEntry& entry = i->second;
+    return entry.m_starving.count();
 }
 
 int
 PersistentTable::countReadStarvingForAddress(const Address& address) const
 {
-    if (m_map_ptr->exist(address)) {
-        PersistentTableEntry& entry = m_map_ptr->lookup(address);
-        return (entry.m_starving.count() - entry.m_request_to_write.count());
-    } else {
+    assert(address == line_address(address));
+    AddressMap::const_iterator i = m_map.find(address);
+    if (i == m_map.end())
         return 0;
-    }
+
+    const PersistentTableEntry& entry = i->second;
+    return entry.m_starving.count() - entry.m_request_to_write.count();
 }
 
 void

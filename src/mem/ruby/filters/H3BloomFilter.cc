@@ -28,8 +28,6 @@
 
 #include "base/intmath.hh"
 #include "base/str.hh"
-#include "mem/gems_common/Map.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/H3BloomFilter.hh"
 
 using namespace std;

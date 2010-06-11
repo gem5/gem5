@@ -43,10 +43,13 @@ class Histogram;
 class AccessTraceForAddress
 {
   public:
-    AccessTraceForAddress();
-    explicit AccessTraceForAddress(const Address& addr);
+    AccessTraceForAddress()
+        : m_loads(0), m_stores(0), m_atomics(0), m_total(0), m_user(0),
+          m_sharing(0), m_histogram_ptr(NULL)
+    { }
     ~AccessTraceForAddress();
 
+    void setAddress(const Address& addr) { m_addr = addr; }
     void update(CacheRequestType type, AccessModeType access_mode, NodeID cpu,
                 bool sharing_miss);
     int getTotal() const;

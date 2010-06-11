@@ -27,7 +27,6 @@
  */
 
 #include "mem/gems_common/PrioHeap.hh"
-#include "mem/ruby/profiler/AccessTraceForAddress.hh"
 #include "mem/ruby/profiler/CacheProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"

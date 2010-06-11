@@ -60,12 +60,13 @@ class ContainerPrint
     void
     operator()(const T &elem)
     {
-        out << elem;
         // First one doesn't get a space before it.  The rest do.
         if (first)
             first = false;
         else
             out << " ";
+
+        out << elem;
     }
 };
 

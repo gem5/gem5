@@ -105,7 +105,6 @@
  */
 
 #include "base/cprintf.hh"
-#include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"

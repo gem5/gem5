@@ -27,7 +27,6 @@
  */
 
 #include "base/stl_helpers.hh"
-#include "mem/gems_common/Map.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/protocol/TopologyType.hh"

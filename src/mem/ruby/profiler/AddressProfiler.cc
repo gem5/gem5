@@ -29,10 +29,8 @@
 #include <vector>
 
 #include "base/stl_helpers.hh"
-#include "mem/gems_common/Map.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/protocol/CacheMsg.hh"
-#include "mem/ruby/profiler/AccessTraceForAddress.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
@@ -44,30 +42,46 @@ using m5::stl_helpers::operator<<;
 
 // Helper functions
 AccessTraceForAddress&
-lookupTraceForAddress(const Address& addr, AddressMap* record_map)
+lookupTraceForAddress(const Address& addr, AddressMap& record_map)
 {
-    if (!record_map->exist(addr)) {
-        record_map->add(addr, AccessTraceForAddress(addr));
+    // we create a static default object here that is used to insert
+    // since the insertion will create a copy of the object in the
+    // process.  Perhaps this is optimizing early, but it doesn't seem
+    // like it could hurt.
+    static const AccessTraceForAddress dflt;
+
+    pair<AddressMap::iterator, bool> r =
+        record_map.insert(make_pair(addr, dflt));
+    AddressMap::iterator i = r.first;
+    AccessTraceForAddress &access_trace = i->second;
+    if (r.second) {
+        // there was nothing there and the insert succeed, so we need
+        // to actually set the address.
+        access_trace.setAddress(addr);
     }
-    return record_map->lookup(addr);
+
+    return access_trace;
 }
 
 void
-printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map,
+printSorted(ostream& out, int num_of_sequencers, const AddressMap &record_map,
             string description)
 {
     const int records_printed = 100;
 
     uint64 misses = 0;
-    PrioHeap<AccessTraceForAddress*> heap;
-    std::vector<Address> keys = record_map->keys();
-    for (int i = 0; i < keys.size(); i++) {
-        AccessTraceForAddress* record = &(record_map->lookup(keys[i]));
+    PrioHeap<const AccessTraceForAddress*> heap;
+
+    AddressMap::const_iterator i = record_map.begin();
+    AddressMap::const_iterator end = record_map.end();
+    for (; i != end; ++i) {
+        const AccessTraceForAddress* record = &i->second;
         misses += record->getTotal();
         heap.insert(record);
     }
 
-    out << "Total_entries_" << description << ": " << keys.size() << endl;
+    out << "Total_entries_" << description << ": " << record_map.size()
+        << endl;
     if (g_system_ptr->getProfiler()->getAllInstructions())
         out << "Total_Instructions_" << description << ": " << misses << endl;
     else
@@ -93,7 +107,7 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map,
 
     int counter = 0;
     while (heap.size() > 0 && counter < records_printed) {
-        AccessTraceForAddress* record = heap.extractMin();
+        const AccessTraceForAddress* record = heap.extractMin();
         double percent = 100.0 * (record->getTotal() / double(misses));
         out << description << " | " << percent << " % " << *record << endl;
         all_records.add(record->getTotal());
@@ -104,7 +118,7 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map,
     }
 
     while (heap.size() > 0) {
-        AccessTraceForAddress* record = heap.extractMin();
+        const AccessTraceForAddress* record = heap.extractMin();
         all_records.add(record->getTotal());
         remaining_records.add(record->getTotal());
         all_records_log.add(record->getTotal());
@@ -130,20 +144,12 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map,
 
 AddressProfiler::AddressProfiler(int num_of_sequencers)
 {
-    m_dataAccessTrace = new AddressMap;
-    m_macroBlockAccessTrace = new AddressMap;
-    m_programCounterAccessTrace = new AddressMap;
-    m_retryProfileMap = new AddressMap;
     m_num_of_sequencers = num_of_sequencers;
     clearStats();
 }
 
 AddressProfiler::~AddressProfiler()
 {
-    delete m_dataAccessTrace;
-    delete m_macroBlockAccessTrace;
-    delete m_programCounterAccessTrace;
-    delete m_retryProfileMap;
 }
 
 void
@@ -225,10 +231,10 @@ AddressProfiler::clearStats()
 {
     // Clear the maps
     m_sharing_miss_counter = 0;
-    m_dataAccessTrace->clear();
-    m_macroBlockAccessTrace->clear();
-    m_programCounterAccessTrace->clear();
-    m_retryProfileMap->clear();
+    m_dataAccessTrace.clear();
+    m_macroBlockAccessTrace.clear();
+    m_programCounterAccessTrace.clear();
+    m_retryProfileMap.clear();
     m_retryProfileHisto.clear();
     m_retryProfileHistoRead.clear();
     m_retryProfileHistoWrite.clear();
