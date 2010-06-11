@@ -30,10 +30,14 @@
 
 #include <cmath>
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkInterface_d.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
+
+using namespace std;
+using m5::stl_helpers::deletePointers;
 
 NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks, GarnetNetwork_d *network_ptr)
 {
@@ -44,10 +48,10 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks, GarnetNetwo
         m_num_vcs = m_vc_per_vnet*m_virtual_networks;
 
         m_vc_round_robin = 0;
-        m_ni_buffers.setSize(m_num_vcs);
-        m_ni_enqueue_time.setSize(m_num_vcs);
-        inNode_ptr.setSize(m_virtual_networks);
-        outNode_ptr.setSize(m_virtual_networks);
+        m_ni_buffers.resize(m_num_vcs);
+        m_ni_enqueue_time.resize(m_num_vcs);
+        inNode_ptr.resize(m_virtual_networks);
+        outNode_ptr.resize(m_virtual_networks);
         creditQueue = new flitBuffer_d();
 
         for(int i =0; i < m_num_vcs; i++)
@@ -55,7 +59,7 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks, GarnetNetwo
                 m_ni_buffers[i] = new flitBuffer_d(); // instantiating the NI flit buffers
                 m_ni_enqueue_time[i] = INFINITE_;
         }
-         m_vc_allocator.setSize(m_virtual_networks); // 1 allocator per virtual net
+         m_vc_allocator.resize(m_virtual_networks); // 1 allocator per virtual net
          for(int i = 0; i < m_virtual_networks; i++)
          {
                  m_vc_allocator[i] = 0;
@@ -63,15 +67,15 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks, GarnetNetwo
 
          for(int i = 0; i < m_num_vcs; i++)
          {
-                m_out_vc_state.insertAtBottom(new OutVcState_d(i, m_net_ptr));
+                m_out_vc_state.push_back(new OutVcState_d(i, m_net_ptr));
                 m_out_vc_state[i]->setState(IDLE_, g_eventQueue_ptr->getTime());
          }
 }
 
 NetworkInterface_d::~NetworkInterface_d()
 {
-        m_out_vc_state.deletePointers();
-        m_ni_buffers.deletePointers();
+        deletePointers(m_out_vc_state);
+        deletePointers(m_ni_buffers);
         delete creditQueue;
         delete outSrcQueue;
 }
@@ -94,7 +98,7 @@ void NetworkInterface_d::addOutPort(NetworkLink_d *out_link, CreditLink_d *credi
         out_link->setSourceQueue(outSrcQueue);
 }
 
-void NetworkInterface_d::addNode(Vector<MessageBuffer*>& in,  Vector<MessageBuffer*>& out)
+void NetworkInterface_d::addNode(vector<MessageBuffer*>& in,  vector<MessageBuffer*>& out)
 {
         ASSERT(in.size() == m_virtual_networks);
         inNode_ptr = in;
@@ -110,7 +114,7 @@ bool NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         NetworkMessage *net_msg_ptr =
             safe_cast<NetworkMessage *>(msg_ptr.get());
         NetDest net_msg_dest = net_msg_ptr->getInternalDestination();
-        Vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
+        vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
 
         int num_flits = (int) ceil((double) m_net_ptr->MessageSizeType_to_int(net_msg_ptr->getMessageSize())/m_net_ptr->getFlitSize() ); // Number of flits is dependent on the link bandwidth available. This is expressed in terms of bytes/cycle or the flit size
 

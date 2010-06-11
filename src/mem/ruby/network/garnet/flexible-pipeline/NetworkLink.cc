@@ -42,7 +42,7 @@ NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
         m_latency = latency;
         int num_net = net_ptr->getNumberOfVirtualNetworks();
         int num_vc = m_net_ptr->getVCsPerClass();
-        m_vc_load.setSize(num_net*num_vc);
+        m_vc_load.resize(num_net * num_vc);
 
         for(int i = 0; i < num_net*num_vc; i++)
                 m_vc_load[i] = 0;
@@ -91,7 +91,7 @@ void NetworkLink::release_vc_link(int vc, Time release_time)
         link_source->release_vc(m_out_port, vc, release_time);
 }
 
-Vector<int> NetworkLink::getVcLoad()
+std::vector<int> NetworkLink::getVcLoad()
 {
         return m_vc_load;
 }

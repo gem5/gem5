@@ -32,11 +32,11 @@
 #define INPUT_UNIT_D_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/VirtualChannel_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
@@ -163,7 +163,7 @@ private:
         flitBuffer_d *creditQueue;
 
         // Virtual channels
-        Vector<VirtualChannel_d *> m_vcs; // [vc]
+        std::vector<VirtualChannel_d *> m_vcs; // [vc]
 };
 
 #endif

@@ -521,7 +521,7 @@ $vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet);
                 if vtype.isBuffer:
                     code('''
 if (m_buffer_size > 0) {
-    $vid->setSize(m_buffer_size);
+    $vid->resize(m_buffer_size);
 }
 ''')
 

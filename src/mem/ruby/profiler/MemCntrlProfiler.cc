@@ -39,7 +39,7 @@ MemCntrlProfiler::MemCntrlProfiler(const string& description,
     m_dimms_per_channel = dimms_per_channel;
 
     int totalBanks = banks_per_rank * ranks_per_dimm * dimms_per_channel;
-    m_memBankCount.setSize(totalBanks);
+    m_memBankCount.resize(totalBanks);
 
     clearStats();
 }

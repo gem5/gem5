@@ -64,8 +64,8 @@
 #define __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__
 
 #include <iostream>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/NodeID.hh"
@@ -96,7 +96,7 @@ class SimpleNetwork : public Network
     // returns the queue requested for the given component
     MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
     MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
-    virtual const Vector<Throttle*>* getThrottles(NodeID id) const;
+    virtual const std::vector<Throttle*>* getThrottles(NodeID id) const;
 
     bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
     bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
@@ -130,14 +130,14 @@ class SimpleNetwork : public Network
     SimpleNetwork& operator=(const SimpleNetwork& obj);
 
     // vector of queues from the components
-    Vector<Vector<MessageBuffer*> > m_toNetQueues;
-    Vector<Vector<MessageBuffer*> > m_fromNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
 
-    Vector<bool> m_in_use;
-    Vector<bool> m_ordered;
-    Vector<Switch*> m_switch_ptr_vector;
-    Vector<MessageBuffer*> m_buffers_to_free;
-    Vector<Switch*> m_endpoint_switches;
+    std::vector<bool> m_in_use;
+    std::vector<bool> m_ordered;
+    std::vector<Switch*> m_switch_ptr_vector;
+    std::vector<MessageBuffer*> m_buffers_to_free;
+    std::vector<Switch*> m_endpoint_switches;
 };
 
 inline std::ostream&

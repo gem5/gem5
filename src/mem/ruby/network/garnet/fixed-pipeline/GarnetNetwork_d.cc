@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkInterface_d.hh"
@@ -39,6 +40,7 @@
 #include "mem/ruby/common/NetDest.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
 
 GarnetNetwork_d::GarnetNetwork_d(const Params *p)
   : BaseGarnetNetwork(p)
@@ -52,10 +54,10 @@ GarnetNetwork_d::GarnetNetwork_d(const Params *p)
     m_router_ptr_vector.clear();
     
     // Allocate to and from queues
-    m_toNetQueues.setSize(m_nodes);         // Queues that are getting messages from protocol
-    m_fromNetQueues.setSize(m_nodes);       // Queues that are feeding the protocol
-    m_in_use.setSize(m_virtual_networks);
-    m_ordered.setSize(m_virtual_networks);
+    m_toNetQueues.resize(m_nodes);         // Queues that are getting messages from protocol
+    m_fromNetQueues.resize(m_nodes);       // Queues that are feeding the protocol
+    m_in_use.resize(m_virtual_networks);
+    m_ordered.resize(m_virtual_networks);
     for (int i = 0; i < m_virtual_networks; i++)
     {
         m_in_use[i] = false;
@@ -65,8 +67,8 @@ GarnetNetwork_d::GarnetNetwork_d(const Params *p)
     for (int node = 0; node < m_nodes; node++)
     {
         //Setting how many vitual message buffers will there be per Network Queue
-        m_toNetQueues[node].setSize(m_virtual_networks);
-        m_fromNetQueues[node].setSize(m_virtual_networks);
+        m_toNetQueues[node].resize(m_virtual_networks);
+        m_fromNetQueues[node].resize(m_virtual_networks);
         
         for (int j = 0; j < m_virtual_networks; j++)
         {
@@ -88,13 +90,13 @@ void GarnetNetwork_d::init()
 
     int number_of_routers = m_topology_ptr->numSwitches();
     for (int i=0; i<number_of_routers; i++) {
-        m_router_ptr_vector.insertAtBottom(new Router_d(i, this));
+        m_router_ptr_vector.push_back(new Router_d(i, this));
     }
 
     for (int i=0; i < m_nodes; i++) {
         NetworkInterface_d *ni = new NetworkInterface_d(i, m_virtual_networks, this);
         ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
-        m_ni_ptr_vector.insertAtBottom(ni);
+        m_ni_ptr_vector.push_back(ni);
     }
     m_topology_ptr->createLinks(this, false);  // false because this isn't a reconfiguration
     for(int i = 0; i < m_router_ptr_vector.size(); i++)
@@ -107,13 +109,13 @@ GarnetNetwork_d::~GarnetNetwork_d()
 {
         for (int i = 0; i < m_nodes; i++)
         {
-                m_toNetQueues[i].deletePointers();
-                m_fromNetQueues[i].deletePointers();
+                deletePointers(m_toNetQueues[i]);
+                deletePointers(m_fromNetQueues[i]);
         }
-        m_router_ptr_vector.deletePointers();
-        m_ni_ptr_vector.deletePointers();
-        m_link_ptr_vector.deletePointers();
-        m_creditlink_ptr_vector.deletePointers();
+        deletePointers(m_router_ptr_vector);
+        deletePointers(m_ni_ptr_vector);
+        deletePointers(m_link_ptr_vector);
+        deletePointers(m_creditlink_ptr_vector);
         delete m_topology_ptr;
 }
 
@@ -143,8 +145,8 @@ void GarnetNetwork_d::makeInLink(NodeID src, SwitchID dest, const NetDest& routi
         {
                 NetworkLink_d *net_link = new NetworkLink_d(m_link_ptr_vector.size(), link_latency, this);
                 CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size(), link_latency, this);
-                m_link_ptr_vector.insertAtBottom(net_link);
-                m_creditlink_ptr_vector.insertAtBottom(credit_link);
+                m_link_ptr_vector.push_back(net_link);
+                m_creditlink_ptr_vector.push_back(credit_link);
 
                 m_router_ptr_vector[dest]->addInPort(net_link, credit_link);
                 m_ni_ptr_vector[src]->addOutPort(net_link, credit_link);
@@ -172,8 +174,8 @@ void GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, const NetDest& rout
         {
                 NetworkLink_d *net_link = new NetworkLink_d(m_link_ptr_vector.size(), link_latency, this);
                 CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size(), link_latency, this);
-                m_link_ptr_vector.insertAtBottom(net_link);
-                m_creditlink_ptr_vector.insertAtBottom(credit_link);
+                m_link_ptr_vector.push_back(net_link);
+                m_creditlink_ptr_vector.push_back(credit_link);
 
                 m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry, link_weight, credit_link);
                 m_ni_ptr_vector[dest]->addInPort(net_link, credit_link);
@@ -195,8 +197,8 @@ void GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, const NetDes
         {
                 NetworkLink_d *net_link = new NetworkLink_d(m_link_ptr_vector.size(), link_latency, this);
                 CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size(), link_latency, this);
-                m_link_ptr_vector.insertAtBottom(net_link);
-                m_creditlink_ptr_vector.insertAtBottom(credit_link);
+                m_link_ptr_vector.push_back(net_link);
+                m_creditlink_ptr_vector.push_back(credit_link);
 
                 m_router_ptr_vector[dest]->addInPort(net_link, credit_link);
                 m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry, link_weight, credit_link);
@@ -244,8 +246,8 @@ Time GarnetNetwork_d::getRubyStartTime()
 
 void GarnetNetwork_d::printStats(ostream& out) const
 {       double average_link_utilization = 0;
-        Vector<double > average_vc_load;
-        average_vc_load.setSize(m_virtual_networks*m_vcs_per_class);
+        vector<double> average_vc_load;
+        average_vc_load.resize(m_virtual_networks*m_vcs_per_class);
 
         for(int i = 0; i < m_virtual_networks*m_vcs_per_class; i++)
         {
@@ -260,7 +262,7 @@ void GarnetNetwork_d::printStats(ostream& out) const
         {
                 average_link_utilization += (double(m_link_ptr_vector[i]->getLinkUtilization())) / (double(g_eventQueue_ptr->getTime()-m_ruby_start));
 
-                Vector<int > vc_load = m_link_ptr_vector[i]->getVcLoad();
+                vector<int> vc_load = m_link_ptr_vector[i]->getVcLoad();
                 for(int j = 0; j < vc_load.size(); j++)
                 {
                         assert(vc_load.size() == m_vcs_per_class*m_virtual_networks);

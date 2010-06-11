@@ -34,7 +34,6 @@
 #include <vector>
 
 #include "base/hashmap.hh"
-#include "mem/gems_common/Vector.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -153,8 +152,8 @@ class CacheMemory : public SimObject
     // The first index is the # of cache lines.
     // The second index is the the amount associativity.
     m5::hash_map<Address, int> m_tag_index;
-    Vector<Vector<AbstractCacheEntry*> > m_cache;
-    Vector<Vector<int> > m_locked;
+    std::vector<std::vector<AbstractCacheEntry*> > m_cache;
+    std::vector<std::vector<int> > m_locked;
 
     AbstractReplacementPolicy *m_replacementPolicy_ptr;
 

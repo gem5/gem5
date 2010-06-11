@@ -85,17 +85,17 @@ Throttle::clear()
 }
 
 void
-Throttle::addLinks(const Vector<MessageBuffer*>& in_vec,
-    const Vector<MessageBuffer*>& out_vec)
+Throttle::addLinks(const std::vector<MessageBuffer*>& in_vec,
+    const std::vector<MessageBuffer*>& out_vec)
 {
     assert(in_vec.size() == out_vec.size());
     for (int i=0; i<in_vec.size(); i++) {
         addVirtualNetwork(in_vec[i], out_vec[i]);
     }
 
-    m_message_counters.setSize(MessageSizeType_NUM);
+    m_message_counters.resize(MessageSizeType_NUM);
     for (int i = 0; i < MessageSizeType_NUM; i++) {
-        m_message_counters[i].setSize(in_vec.size());
+        m_message_counters[i].resize(in_vec.size());
         for (int j = 0; j<m_message_counters[i].size(); j++) {
             m_message_counters[i][j] = 0;
         }
@@ -105,9 +105,9 @@ Throttle::addLinks(const Vector<MessageBuffer*>& in_vec,
 void
 Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)
 {
-    m_units_remaining.insertAtBottom(0);
-    m_in.insertAtBottom(in_ptr);
-    m_out.insertAtBottom(out_ptr);
+    m_units_remaining.push_back(0);
+    m_in.push_back(in_ptr);
+    m_out.push_back(out_ptr);
 
     // Set consumer and description
     m_in[m_vnets]->setConsumer(this);

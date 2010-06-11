@@ -36,7 +36,10 @@
 
 #ifndef DETERMINISTICDRIVER_H
 #define DETERMINISTICDRIVER_H
+
 #include <map>
+#include <vector>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/tester/Tester_Globals.hh"
 #include "mem/ruby/common/Histogram.hh"            // includes global, but doesn't use anything, so it should be fine
@@ -96,18 +99,18 @@ public:
 private:
   // Private Methods
 
-  Address getNextAddr(NodeID node, Vector<NodeID> addr_vector);
-  bool isAddrReady(NodeID node, Vector<NodeID> addr_vector);
-  bool isAddrReady(NodeID node, Vector<NodeID> addr_vector, Address addr);
-  void setNextAddr(NodeID node, Address addr, Vector<NodeID>& addr_vector);
+  Address getNextAddr(NodeID node, std::vector<NodeID> addr_vector);
+  bool isAddrReady(NodeID node, std::vector<NodeID> addr_vector);
+  bool isAddrReady(NodeID node, std::vector<NodeID> addr_vector, Address addr);
+  void setNextAddr(NodeID node, Address addr, std::vector<NodeID>& addr_vector);
 
   
   // Data Members (m_ prefix)
-  Vector<Time> m_last_progress_vector;
-  Vector<SpecifiedGenerator*> m_generator_vector;
+  std::vector<Time> m_last_progress_vector;
+  std::vector<SpecifiedGenerator*> m_generator_vector;
   //DMAGenerator* m_dma_generator;
-  Vector<NodeID> m_load_vector;  // Processor last to load the addr
-  Vector<NodeID> m_store_vector;  // Processor last to store the addr
+  std::vector<NodeID> m_load_vector;  // Processor last to load the addr
+  std::vector<NodeID> m_store_vector;  // Processor last to store the addr
 
   int last_proc;
   int m_done_counter;

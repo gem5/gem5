@@ -46,6 +46,9 @@
 #include <sys/resource.h>
 #include <sys/times.h>
 
+#include <algorithm>
+
+#include "base/stl_helpers.hh"
 #include "base/str.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/gems_common/PrioHeap.hh"
@@ -60,6 +63,7 @@
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
+using m5::stl_helpers::operator<<;
 
 extern ostream* debug_cout_ptr;
 
@@ -111,8 +115,7 @@ Profiler::wakeup()
 {
     // FIXME - avoid the repeated code
 
-    Vector<integer_t> perProcCycleCount;
-    perProcCycleCount.setSize(m_num_of_sequencers);
+    vector<integer_t> perProcCycleCount(m_num_of_sequencers);
 
     for (int i = 0; i < m_num_of_sequencers; i++) {
         perProcCycleCount[i] =
@@ -235,8 +238,7 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << endl;
     }
 
-    Vector<integer_t> perProcCycleCount;
-    perProcCycleCount.setSize(m_num_of_sequencers);
+    vector<integer_t> perProcCycleCount(m_num_of_sequencers);
 
     for (int i = 0; i < m_num_of_sequencers; i++) {
         perProcCycleCount[i] =
@@ -353,8 +355,8 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << "--------------------------------" << endl;
         out << endl;
 
-        Vector<string> requestProfileKeys = m_requestProfileMap_ptr->keys();
-        requestProfileKeys.sortVector();
+        vector<string> requestProfileKeys = m_requestProfileMap_ptr->keys();
+        sort(requestProfileKeys.begin(), requestProfileKeys.end());
 
         for (int i = 0; i < requestProfileKeys.size(); i++) {
             int temp_int =
@@ -423,7 +425,7 @@ Profiler::clearStats()
 {
     m_ruby_start = g_eventQueue_ptr->getTime();
 
-    m_cycles_executed_at_start.setSize(m_num_of_sequencers);
+    m_cycles_executed_at_start.resize(m_num_of_sequencers);
     for (int i = 0; i < m_num_of_sequencers; i++) {
         if (g_system_ptr == NULL) {
             m_cycles_executed_at_start[i] = 0;
@@ -432,10 +434,10 @@ Profiler::clearStats()
         }
     }
 
-    m_busyControllerCount.setSize(MachineType_NUM); // all machines
+    m_busyControllerCount.resize(MachineType_NUM); // all machines
     for (int i = 0; i < MachineType_NUM; i++) {
         int size = MachineType_base_count((MachineType)i);
-        m_busyControllerCount[i].setSize(size);
+        m_busyControllerCount[i].resize(size);
         for (int j = 0; j < size; j++) {
             m_busyControllerCount[i][j] = 0;
         }
@@ -445,26 +447,26 @@ Profiler::clearStats()
     m_delayedCyclesHistogram.clear();
     m_delayedCyclesNonPFHistogram.clear();
     int size = RubySystem::getNetwork()->getNumberOfVirtualNetworks();
-    m_delayedCyclesVCHistograms.setSize(size);
+    m_delayedCyclesVCHistograms.resize(size);
     for (int i = 0; i < size; i++) {
         m_delayedCyclesVCHistograms[i].clear();
     }
 
-    m_missLatencyHistograms.setSize(RubyRequestType_NUM);
+    m_missLatencyHistograms.resize(RubyRequestType_NUM);
     for (int i = 0; i < m_missLatencyHistograms.size(); i++) {
         m_missLatencyHistograms[i].clear(200);
     }
-    m_machLatencyHistograms.setSize(GenericMachineType_NUM+1);
+    m_machLatencyHistograms.resize(GenericMachineType_NUM+1);
     for (int i = 0; i < m_machLatencyHistograms.size(); i++) {
         m_machLatencyHistograms[i].clear(200);
     }
     m_allMissLatencyHistogram.clear(200);
 
-    m_SWPrefetchLatencyHistograms.setSize(CacheRequestType_NUM);
+    m_SWPrefetchLatencyHistograms.resize(CacheRequestType_NUM);
     for (int i = 0; i < m_SWPrefetchLatencyHistograms.size(); i++) {
         m_SWPrefetchLatencyHistograms[i].clear(200);
     }
-    m_SWPrefetchMachLatencyHistograms.setSize(GenericMachineType_NUM+1);
+    m_SWPrefetchMachLatencyHistograms.resize(GenericMachineType_NUM+1);
     for (int i = 0; i < m_SWPrefetchMachLatencyHistograms.size(); i++) {
         m_SWPrefetchMachLatencyHistograms[i].clear(200);
     }

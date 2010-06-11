@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkInterface.hh"
@@ -40,6 +41,7 @@
 #include "mem/ruby/common/NetDest.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
 
 GarnetNetwork::GarnetNetwork(const Params *p)
   : BaseGarnetNetwork(p)
@@ -47,10 +49,10 @@ GarnetNetwork::GarnetNetwork(const Params *p)
     m_ruby_start = 0;
     
     // Allocate to and from queues
-    m_toNetQueues.setSize(m_nodes);         // Queues that are getting messages from protocol
-    m_fromNetQueues.setSize(m_nodes);       // Queues that are feeding the protocol
-    m_in_use.setSize(m_virtual_networks);
-    m_ordered.setSize(m_virtual_networks);
+    m_toNetQueues.resize(m_nodes);         // Queues that are getting messages from protocol
+    m_fromNetQueues.resize(m_nodes);       // Queues that are feeding the protocol
+    m_in_use.resize(m_virtual_networks);
+    m_ordered.resize(m_virtual_networks);
     for (int i = 0; i < m_virtual_networks; i++)
     {
         m_in_use[i] = false;
@@ -60,8 +62,8 @@ GarnetNetwork::GarnetNetwork(const Params *p)
     for (int node = 0; node < m_nodes; node++)
     {
         //Setting how many vitual message buffers will there be per Network Queue
-        m_toNetQueues[node].setSize(m_virtual_networks);
-        m_fromNetQueues[node].setSize(m_virtual_networks);
+        m_toNetQueues[node].resize(m_virtual_networks);
+        m_fromNetQueues[node].resize(m_virtual_networks);
         
         for (int j = 0; j < m_virtual_networks; j++)
         {
@@ -80,13 +82,13 @@ void GarnetNetwork::init()
     
     int number_of_routers = m_topology_ptr->numSwitches();
     for (int i=0; i<number_of_routers; i++) {
-        m_router_ptr_vector.insertAtBottom(new Router(i, this));
+        m_router_ptr_vector.push_back(new Router(i, this));
     }
     
     for (int i=0; i < m_nodes; i++) {
         NetworkInterface *ni = new NetworkInterface(i, m_virtual_networks, this);
         ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
-        m_ni_ptr_vector.insertAtBottom(ni);
+        m_ni_ptr_vector.push_back(ni);
     }
     m_topology_ptr->createLinks(this, false);  // false because this isn't a reconfiguration
 }
@@ -95,12 +97,12 @@ GarnetNetwork::~GarnetNetwork()
 {
         for (int i = 0; i < m_nodes; i++)
         {
-                m_toNetQueues[i].deletePointers();
-                m_fromNetQueues[i].deletePointers();
+                deletePointers(m_toNetQueues[i]);
+                deletePointers(m_fromNetQueues[i]);
         }
-        m_router_ptr_vector.deletePointers();
-        m_ni_ptr_vector.deletePointers();
-        m_link_ptr_vector.deletePointers();
+        deletePointers(m_router_ptr_vector);
+        deletePointers(m_ni_ptr_vector);
+        deletePointers(m_link_ptr_vector);
         delete m_topology_ptr;
 }
 
@@ -123,7 +125,7 @@ void GarnetNetwork::makeInLink(NodeID src, SwitchID dest, const NetDest& routing
         if(!isReconfiguration)
         {
                 NetworkLink *net_link = new NetworkLink(m_link_ptr_vector.size(), link_latency, this);
-                m_link_ptr_vector.insertAtBottom(net_link);
+                m_link_ptr_vector.push_back(net_link);
                 m_router_ptr_vector[dest]->addInPort(net_link);
                 m_ni_ptr_vector[src]->addOutPort(net_link);
         }
@@ -143,7 +145,7 @@ void GarnetNetwork::makeOutLink(SwitchID src, NodeID dest, const NetDest& routin
         if(!isReconfiguration)
         {
                 NetworkLink *net_link = new NetworkLink(m_link_ptr_vector.size(), link_latency, this);
-                m_link_ptr_vector.insertAtBottom(net_link);
+                m_link_ptr_vector.push_back(net_link);
                 m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry, link_weight);
                 m_ni_ptr_vector[dest]->addInPort(net_link);
         }
@@ -159,7 +161,7 @@ void GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, const NetDest&
         if(!isReconfiguration)
         {
                 NetworkLink *net_link = new NetworkLink(m_link_ptr_vector.size(), link_latency, this);
-                m_link_ptr_vector.insertAtBottom(net_link);
+                m_link_ptr_vector.push_back(net_link);
                 m_router_ptr_vector[dest]->addInPort(net_link);
                 m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry, link_weight);
         }
@@ -208,8 +210,8 @@ Time GarnetNetwork::getRubyStartTime()
 
 void GarnetNetwork::printStats(ostream& out) const
 {       double average_link_utilization = 0;
-        Vector<double > average_vc_load;
-        average_vc_load.setSize(m_virtual_networks*m_vcs_per_class);
+        std::vector<double> average_vc_load;
+        average_vc_load.resize(m_virtual_networks*m_vcs_per_class);
 
         for(int i = 0; i < m_virtual_networks*m_vcs_per_class; i++)
         {
@@ -223,7 +225,7 @@ void GarnetNetwork::printStats(ostream& out) const
         for(int i = 0; i < m_link_ptr_vector.size(); i++)
         {
                 average_link_utilization += m_link_ptr_vector[i]->getLinkUtilization();
-                Vector<int > vc_load = m_link_ptr_vector[i]->getVcLoad();
+                std::vector<int> vc_load = m_link_ptr_vector[i]->getVcLoad();
                 for(int j = 0; j < vc_load.size(); j++)
                 {
                         assert(vc_load.size() == m_vcs_per_class*m_virtual_networks);

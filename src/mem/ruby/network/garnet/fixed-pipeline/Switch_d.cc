@@ -28,9 +28,12 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Switch_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
+
+using m5::stl_helpers::deletePointers;
 
 Switch_d::Switch_d(Router_d *router)
 {
@@ -41,7 +44,7 @@ Switch_d::Switch_d(Router_d *router)
 
 Switch_d::~Switch_d()
 {
-        m_switch_buffer.deletePointers();
+    deletePointers(m_switch_buffer);
 }
 
 void Switch_d::init()
@@ -49,7 +52,7 @@ void Switch_d::init()
         m_output_unit = m_router->get_outputUnit_ref();
 
         m_num_inports = m_router->get_num_inports();
-        m_switch_buffer.setSize(m_num_inports);
+        m_switch_buffer.resize(m_num_inports);
         for(int i = 0; i < m_num_inports; i++)
         {
                 m_switch_buffer[i] = new flitBuffer_d();

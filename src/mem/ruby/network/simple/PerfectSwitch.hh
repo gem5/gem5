@@ -37,8 +37,8 @@
 #define __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__
 
 #include <iostream>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
@@ -59,8 +59,8 @@ class PerfectSwitch : public Consumer
     PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr);
     ~PerfectSwitch();
 
-    void addInPort(const Vector<MessageBuffer*>& in);
-    void addOutPort(const Vector<MessageBuffer*>& out,
+    void addInPort(const std::vector<MessageBuffer*>& in);
+    void addOutPort(const std::vector<MessageBuffer*>& out,
         const NetDest& routing_table_entry);
     void clearRoutingTables();
     void clearBuffers();
@@ -84,10 +84,10 @@ class PerfectSwitch : public Consumer
     SwitchID m_switch_id;
 
     // vector of queues from the components
-    Vector<Vector<MessageBuffer*> > m_in;
-    Vector<Vector<MessageBuffer*> > m_out;
-    Vector<NetDest> m_routing_table;
-    Vector<LinkOrder> m_link_order;
+    std::vector<std::vector<MessageBuffer*> > m_in;
+    std::vector<std::vector<MessageBuffer*> > m_out;
+    std::vector<NetDest> m_routing_table;
+    std::vector<LinkOrder> m_link_order;
     int m_virtual_networks;
     int m_round_robin_start;
     int m_wakeups_wo_switch;

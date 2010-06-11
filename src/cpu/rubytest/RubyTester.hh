@@ -31,6 +31,7 @@
 #define __CPU_RUBYTEST_RUBYTESTER_HH__
 
 #include <iostream>
+#include <vector>
 #include <string>
 
 #include "cpu/rubytest/CheckTable.hh"
@@ -126,7 +127,7 @@ class RubyTester : public MemObject
     RubyTester& operator=(const RubyTester& obj);
 
     CheckTable* m_checkTable_ptr;
-    Vector<Time> m_last_progress_vector;
+    std::vector<Time> m_last_progress_vector;
 
     uint64 m_checks_completed;
     std::vector<CpuPort*> ports;

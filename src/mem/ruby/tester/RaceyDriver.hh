@@ -37,11 +37,13 @@
 #ifndef RACEYDRIVER_H
 #define RACEYDRIVER_H
 
+#include <map>
+#include <vector>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/tester/Tester_Globals.hh"
 #include "mem/ruby/common/Driver.hh"
 #include "mem/ruby/tester/RaceyPseudoThread.hh"
-#include <map>
 #include "mem/ruby/libruby.hh"
 
 #define g_DEADLOCK_THRESHOLD 5000
@@ -100,7 +102,7 @@ private:
   RaceyDriver& operator=(const RaceyDriver& obj);
   
   // Data Members (m_ prefix)
-  Vector<RaceyPseudoThread*> m_racey_pseudo_threads;
+  std::vector<RaceyPseudoThread*> m_racey_pseudo_threads;
   int m_done_counter;
   bool m_wakeup_thread0;
   Time m_finish_time;

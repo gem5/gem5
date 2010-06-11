@@ -59,7 +59,7 @@ RubyTester::init()
 {
     assert(ports.size() > 0);
 
-    m_last_progress_vector.setSize(ports.size());
+    m_last_progress_vector.resize(ports.size());
     for (int i = 0; i < m_last_progress_vector.size(); i++) {
         m_last_progress_vector[i] = 0;
     }

@@ -31,8 +31,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-#include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
@@ -73,7 +73,7 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
     int hash_bitsel(uint64 value, int index, int jump, int maxBits,
                     int numBits);
 
-    Vector<int> m_filter;
+    std::vector<int> m_filter;
     int m_filter_size;
     int m_num_hashes;
     int m_filter_size_bits;

@@ -32,6 +32,7 @@
 #define ROUTER_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
@@ -68,23 +69,23 @@ private:
         int m_id;
         int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
         GarnetNetwork *m_net_ptr;
-        Vector<int > m_vc_round_robin; // For scheduling of out source queues
+        std::vector<int> m_vc_round_robin; // For scheduling of out source queues
         int m_round_robin_inport, m_round_robin_start; // for vc arbitration
-        Vector<int > m_round_robin_invc; // For every outport. for vc arbitration
+        std::vector<int> m_round_robin_invc; // For every outport. for vc arbitration
 
-        Vector<Vector<flitBuffer *> > m_router_buffers; // These are essentially output buffers
-        Vector<flitBuffer *> m_out_src_queue; // These are source queues for the output link
-        Vector<NetworkLink *> m_in_link;
-        Vector<NetworkLink *> m_out_link;
-        Vector<Vector<InVcState * > > m_in_vc_state;
-        Vector<Vector<OutVcState * > > m_out_vc_state;
-        Vector<NetDest> m_routing_table;
-        Vector<int > m_link_weights;
+        std::vector<std::vector<flitBuffer *> > m_router_buffers; // These are essentially output buffers
+        std::vector<flitBuffer *> m_out_src_queue; // These are source queues for the output link
+        std::vector<NetworkLink *> m_in_link;
+        std::vector<NetworkLink *> m_out_link;
+        std::vector<std::vector<InVcState *> > m_in_vc_state;
+        std::vector<std::vector<OutVcState *> > m_out_vc_state;
+        std::vector<NetDest> m_routing_table;
+        std::vector<int> m_link_weights;
         VCarbiter *m_vc_arbiter;
 
 /*********** Private methods *************/
         int getRoute(NetDest destination);
-        Vector<int > get_valid_vcs(int invc);
+        std::vector<int> get_valid_vcs(int invc);
         void routeCompute(flit *m_flit, int inport);
         void checkReschedule();
         void check_arbiter_reschedule();

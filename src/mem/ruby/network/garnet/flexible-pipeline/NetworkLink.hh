@@ -32,6 +32,7 @@
 #define NETWORK_LINK_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/FlexibleConsumer.hh"
@@ -67,13 +68,13 @@ public:
         bool isBufferNotFull_link(int vc);
         void setSource(FlexibleConsumer *source);
         double getLinkUtilization();
-        Vector<int> getVcLoad();
+        std::vector<int> getVcLoad();
 
 protected:
         int m_id, m_latency;
         int m_in_port, m_out_port;
         int m_link_utilized;
-        Vector<int > m_vc_load;
+        std::vector<int> m_vc_load;
         GarnetNetwork *m_net_ptr;
 
         flitBuffer *linkBuffer;

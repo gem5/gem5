@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
- * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2010 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,57 +24,74 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Nathan Binkert
  */
 
-#ifndef __CPU_RUBYTEST_CHECKTABLE_HH__
-#define __CPU_RUBYTEST_CHECKTABLE_HH__
+#ifndef __BASE_STL_HELPERS_HH__
+#define __BASE_STL_HELPERS_HH__
 
+#include <algorithm>
 #include <iostream>
-#include <vector>
 
-#include "mem/ruby/common/Global.hh"
+namespace m5 {
+namespace stl_helpers {
 
-class Address;
-class Check;
-class RubyTester;
-template <class KEY_TYPE, class VALUE_TYPE> class Map;
-
-class CheckTable
+template <typename T>
+void
+deletePointer(T &ptr)
 {
-  public:
-    CheckTable(int _num_cpu_sequencers, RubyTester* _tester);
-    ~CheckTable();
+    delete ptr;
+    ptr = NULL;
+}
 
-    Check* getRandomCheck();
-    Check* getCheck(const Address& address);
-
-    //  bool isPresent(const Address& address) const;
-    //  void removeCheckFromTable(const Address& address);
-    //  bool isTableFull() const;
-    // Need a method to select a check or retrieve a check
-
-    void print(std::ostream& out) const;
-
+template <class T>
+class ContainerPrint
+{
   private:
-    void addCheck(const Address& address);
+    std::ostream &out;
+    bool first;
 
-    // Private copy constructor and assignment operator
-    CheckTable(const CheckTable& obj);
-    CheckTable& operator=(const CheckTable& obj);
+  public:
+    ContainerPrint(std::ostream &out)
+        : out(out), first(true)
+    {}
 
-    std::vector<Check*> m_check_vector;
-    Map<Address, Check*>* m_lookup_map_ptr;
-
-    int m_num_cpu_sequencers;
-    RubyTester* m_tester_ptr;
+    void
+    operator()(const T &elem)
+    {
+        out << elem;
+        // First one doesn't get a space before it.  The rest do.
+        if (first)
+            first = false;
+        else
+            out << " ";
+    }
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const CheckTable& obj)
+// Treat all objects in an stl container as pointers to heap objects,
+// calling delete on each one and zeroing the pointers along the way
+template <typename T, template <typename T, typename A> class C, typename A>
+void
+deletePointers(C<T,A> &container)
 {
-    obj.print(out);
+    std::for_each(container.begin(), container.end(), deletePointer<T>);
+}
+
+// Write out all elements in an stl container as a space separated
+// list enclosed in square brackets
+template <typename T, template <typename T, typename A> class C, typename A>
+std::ostream &
+operator<<(std::ostream& out, const C<T,A> &vec)
+{
+    out << "[ ";
+    std::for_each(vec.begin(), vec.end(), ContainerPrint<T>(out));
+    out << " ]";
     out << std::flush;
     return out;
 }
 
-#endif // __CPU_RUBYTEST_CHECKTABLE_HH__
+/* namespace stl_helpers */ }
+/* namespace m5 */ }
+
+#endif // __BASE_STL_HELPERS_HH__

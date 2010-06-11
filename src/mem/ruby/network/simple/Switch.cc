@@ -26,6 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <numeric>
+
+#include "base/stl_helpers.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
@@ -35,12 +38,13 @@
 #include "mem/ruby/network/simple/Throttle.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
+using m5::stl_helpers::operator<<;
 
 Switch::Switch(SwitchID sid, SimpleNetwork* network_ptr)
 {
     m_perfect_switch_ptr = new PerfectSwitch(sid, network_ptr);
     m_switch_id = sid;
-    m_throttles.setSize(0);
 }
 
 Switch::~Switch()
@@ -48,20 +52,20 @@ Switch::~Switch()
     delete m_perfect_switch_ptr;
 
     // Delete throttles (one per output port)
-    m_throttles.deletePointers();
+    deletePointers(m_throttles);
 
     // Delete MessageBuffers
-    m_buffers_to_free.deletePointers();
+    deletePointers(m_buffers_to_free);
 }
 
 void
-Switch::addInPort(const Vector<MessageBuffer*>& in)
+Switch::addInPort(const vector<MessageBuffer*>& in)
 {
     m_perfect_switch_ptr->addInPort(in);
 }
 
 void
-Switch::addOutPort(const Vector<MessageBuffer*>& out,
+Switch::addOutPort(const vector<MessageBuffer*>& out,
     const NetDest& routing_table_entry, int link_latency, int bw_multiplier)
 {
     Throttle* throttle_ptr = NULL;
@@ -69,20 +73,20 @@ Switch::addOutPort(const Vector<MessageBuffer*>& out,
     // Create a throttle
     throttle_ptr = new Throttle(m_switch_id, m_throttles.size(), link_latency,
         bw_multiplier);
-    m_throttles.insertAtBottom(throttle_ptr);
+    m_throttles.push_back(throttle_ptr);
 
     // Create one buffer per vnet (these are intermediaryQueues)
-    Vector<MessageBuffer*> intermediateBuffers;
+    vector<MessageBuffer*> intermediateBuffers;
     for (int i = 0; i < out.size(); i++) {
         MessageBuffer* buffer_ptr = new MessageBuffer;
         // Make these queues ordered
         buffer_ptr->setOrdering(true);
         Network* net_ptr = RubySystem::getNetwork();
         if (net_ptr->getBufferSize() > 0) {
-            buffer_ptr->setSize(net_ptr->getBufferSize());
+            buffer_ptr->resize(net_ptr->getBufferSize());
         }
-        intermediateBuffers.insertAtBottom(buffer_ptr);
-        m_buffers_to_free.insertAtBottom(buffer_ptr);
+        intermediateBuffers.push_back(buffer_ptr);
+        m_buffers_to_free.push_back(buffer_ptr);
   }
 
     // Hook the queues to the PerfectSwitch
@@ -122,7 +126,7 @@ Switch::getThrottle(LinkID link_number) const
     return m_throttles[link_number];
 }
 
-const Vector<Throttle*>*
+const vector<Throttle*>*
 Switch::getThrottles() const
 {
     return &m_throttles;
@@ -172,18 +176,21 @@ Switch::printStats(std::ostream& out) const
         if (!throttle_ptr)
             continue;
 
-        const Vector<Vector<int> >& message_counts =
+        const vector<vector<int> >& message_counts =
             throttle_ptr->getCounters();
         for (int int_type = 0; int_type < MessageSizeType_NUM; int_type++) {
             MessageSizeType type = MessageSizeType(int_type);
-            int sum = message_counts[type].sum();
+            const vector<int> &mct = message_counts[type];
+            int sum = accumulate(mct.begin(), mct.end(), 0);
             if (sum == 0)
                 continue;
 
             out << "  outgoing_messages_switch_" << m_switch_id
                 << "_link_" << link << "_" << type << ": " << sum << " "
                 << sum * RubySystem::getNetwork()->MessageSizeType_to_int(type)
-                << " " << message_counts[type] << " base_latency: "
+                << " ";
+            out << mct;
+            out << " base_latency: "
                 << throttle_ptr->getLatency() << endl;
         }
     }

@@ -31,8 +31,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-#include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
@@ -62,7 +62,7 @@ class BlockBloomFilter : public AbstractBloomFilter
   private:
     int get_index(const Address& addr);
 
-    Vector<int> m_filter;
+    std::vector<int> m_filter;
     int m_filter_size;
     int m_filter_size_bits;
 

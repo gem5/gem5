@@ -44,7 +44,7 @@ class MemoryVector
     ~MemoryVector();
     friend class DirectoryMemory;
 
-    void setSize(uint32 size);  // destructive
+    void resize(uint32 size);  // destructive
 
     void write(const Address & paddr, uint8* data, int len);
     uint8* read(const Address & paddr, uint8* data, int len);
@@ -71,7 +71,7 @@ inline
 MemoryVector::MemoryVector(uint32 size)
     : m_page_offset_mask(4095)
 {
-    setSize(size);
+    resize(size);
 }
 
 inline
@@ -86,7 +86,7 @@ MemoryVector::~MemoryVector()
 }
 
 inline void
-MemoryVector::setSize(uint32 size)
+MemoryVector::resize(uint32 size)
 {
     if (m_pages != NULL){
         for (int i = 0; i < m_num_pages; i++) {

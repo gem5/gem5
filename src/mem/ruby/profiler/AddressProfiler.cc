@@ -26,6 +26,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <vector>
+
+#include "base/stl_helpers.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/protocol/CacheMsg.hh"
@@ -36,6 +39,8 @@
 
 using namespace std;
 typedef AddressProfiler::AddressMap AddressMap;
+
+using m5::stl_helpers::operator<<;
 
 // Helper functions
 AccessTraceForAddress&
@@ -55,7 +60,7 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map,
 
     uint64 misses = 0;
     PrioHeap<AccessTraceForAddress*> heap;
-    Vector<Address> keys = record_map->keys();
+    std::vector<Address> keys = record_map->keys();
     for (int i = 0; i < keys.size(); i++) {
         AccessTraceForAddress* record = &(record_map->lookup(keys[i]));
         misses += record->getTotal();
@@ -77,10 +82,10 @@ printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map,
     Histogram all_records_log(-1);
 
     // Allows us to track how many lines where touched by n processors
-    Vector<int64> m_touched_vec;
-    Vector<int64> m_touched_weighted_vec;
-    m_touched_vec.setSize(num_of_sequencers+1);
-    m_touched_weighted_vec.setSize(num_of_sequencers+1);
+    std::vector<int64> m_touched_vec;
+    std::vector<int64> m_touched_weighted_vec;
+    m_touched_vec.resize(num_of_sequencers+1);
+    m_touched_weighted_vec.resize(num_of_sequencers+1);
     for (int i = 0; i < m_touched_vec.size(); i++) {
         m_touched_vec[i] = 0;
         m_touched_weighted_vec[i] = 0;

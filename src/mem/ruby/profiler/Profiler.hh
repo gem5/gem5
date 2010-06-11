@@ -47,6 +47,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/AccessType.hh"
@@ -166,8 +167,8 @@ class Profiler : public SimObject, public Consumer
     AddressProfiler* m_address_profiler_ptr;
     AddressProfiler* m_inst_profiler_ptr;
 
-    Vector<int64> m_instructions_executed_at_start;
-    Vector<int64> m_cycles_executed_at_start;
+    std::vector<int64> m_instructions_executed_at_start;
+    std::vector<int64> m_cycles_executed_at_start;
 
     std::ostream* m_periodic_output_file_ptr;
     integer_t m_stats_period;
@@ -175,7 +176,7 @@ class Profiler : public SimObject, public Consumer
     Time m_ruby_start;
     time_t m_real_time_start_time;
 
-    Vector <Vector<integer_t> > m_busyControllerCount;
+    std::vector<std::vector<integer_t> > m_busyControllerCount;
     integer_t m_busyBankCount;
     Histogram m_multicast_retry_histogram;
 
@@ -191,18 +192,18 @@ class Profiler : public SimObject, public Consumer
 
     Histogram m_prefetchWaitHistogram;
 
-    Vector<Histogram> m_missLatencyHistograms;
-    Vector<Histogram> m_machLatencyHistograms;
+    std::vector<Histogram> m_missLatencyHistograms;
+    std::vector<Histogram> m_machLatencyHistograms;
     Histogram m_allMissLatencyHistogram;
 
     Histogram m_allSWPrefetchLatencyHistogram;
     Histogram m_SWPrefetchL2MissLatencyHistogram;
-    Vector<Histogram> m_SWPrefetchLatencyHistograms;
-    Vector<Histogram> m_SWPrefetchMachLatencyHistograms;
+    std::vector<Histogram> m_SWPrefetchLatencyHistograms;
+    std::vector<Histogram> m_SWPrefetchMachLatencyHistograms;
 
     Histogram m_delayedCyclesHistogram;
     Histogram m_delayedCyclesNonPFHistogram;
-    Vector<Histogram> m_delayedCyclesVCHistograms;
+    std::vector<Histogram> m_delayedCyclesVCHistograms;
 
     Histogram m_outstanding_requests;
     Histogram m_outstanding_persistent_requests;

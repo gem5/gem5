@@ -32,6 +32,7 @@
 #define SWITCH_D_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -63,8 +64,8 @@ private:
         int m_num_inports;
         double m_crossbar_activity;
         Router_d *m_router;
-        Vector<flitBuffer_d *> m_switch_buffer;
-        Vector<OutputUnit_d *> m_output_unit;
+        std::vector<flitBuffer_d *> m_switch_buffer;
+        std::vector<OutputUnit_d *> m_output_unit;
 };
 
 #endif

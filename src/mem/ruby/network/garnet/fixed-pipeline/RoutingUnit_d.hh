@@ -49,8 +49,8 @@ public:
 
 private:
         Router_d *m_router;
-        Vector<NetDest > m_routing_table;
-        Vector<int > m_weight_table;
+        std::vector<NetDest > m_routing_table;
+        std::vector<int > m_weight_table;
 };
 
 #endif

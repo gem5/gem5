@@ -108,7 +108,7 @@ TimerTable::updateNext() const
         return;
     }
 
-    Vector<Address> addresses = m_map.keys();
+    std::vector<Address> addresses = m_map.keys();
     m_next_address = addresses[0];
     m_next_time = m_map.lookup(m_next_address);
 

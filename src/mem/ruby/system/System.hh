@@ -36,7 +36,6 @@
 #define __MEM_RUBY_SYSTEM_SYSTEM_HH__
 
 #include "base/callback.hh"
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/system/RubyPort.hh"

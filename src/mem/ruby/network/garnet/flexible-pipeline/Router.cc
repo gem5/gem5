@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/InVcState.hh"
@@ -35,6 +36,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/VCarbiter.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
 
 Router::Router(int id, GarnetNetwork *network_ptr)
 {
@@ -52,14 +54,14 @@ Router::~Router()
 {
         for (int i = 0; i < m_in_link.size(); i++)
         {
-                m_in_vc_state[i].deletePointers();
+                deletePointers(m_in_vc_state[i]);
         }
         for (int i = 0; i < m_out_link.size(); i++)
         {
-                m_out_vc_state[i].deletePointers();
-                m_router_buffers[i].deletePointers();
+                deletePointers(m_out_vc_state[i]);
+                deletePointers(m_router_buffers[i]);
         }
-        m_out_src_queue.deletePointers();
+        deletePointers(m_out_src_queue);
         delete m_vc_arbiter;
 
 }
@@ -67,19 +69,19 @@ Router::~Router()
 void Router::addInPort(NetworkLink *in_link)
 {
         int port = m_in_link.size();
-        Vector<InVcState *> in_vc_vector;
+        vector<InVcState *> in_vc_vector;
         for(int i = 0; i < m_num_vcs; i++)
         {
-                in_vc_vector.insertAtBottom(new InVcState(i));
+                in_vc_vector.push_back(new InVcState(i));
                 in_vc_vector[i]->setState(IDLE_, g_eventQueue_ptr->getTime());
         }
-        m_in_vc_state.insertAtBottom(in_vc_vector);
-        m_in_link.insertAtBottom(in_link);
+        m_in_vc_state.push_back(in_vc_vector);
+        m_in_link.push_back(in_link);
         in_link->setLinkConsumer(this);
         in_link->setInPort(port);
 
         int start = 0;
-        m_round_robin_invc.insertAtBottom(start);
+        m_round_robin_invc.push_back(start);
 
 }
 
@@ -88,30 +90,30 @@ void Router::addOutPort(NetworkLink *out_link, const NetDest& routing_table_entr
         int port = m_out_link.size();
         out_link->setOutPort(port);
         int start = 0;
-        m_vc_round_robin.insertAtBottom(start);
+        m_vc_round_robin.push_back(start);
 
-        m_out_src_queue.insertAtBottom(new flitBuffer());
+        m_out_src_queue.push_back(new flitBuffer());
 
-        m_out_link.insertAtBottom(out_link);
-        m_routing_table.insertAtBottom(routing_table_entry);
+        m_out_link.push_back(out_link);
+        m_routing_table.push_back(routing_table_entry);
         out_link->setSourceQueue(m_out_src_queue[port]);
         out_link->setSource(this);
 
-        Vector<flitBuffer *> intermediateQueues;
+        vector<flitBuffer *> intermediateQueues;
         for(int i = 0; i < m_num_vcs; i++)
         {
-                intermediateQueues.insertAtBottom(new flitBuffer(m_net_ptr->getBufferSize()));
+                intermediateQueues.push_back(new flitBuffer(m_net_ptr->getBufferSize()));
         }
-        m_router_buffers.insertAtBottom(intermediateQueues);
+        m_router_buffers.push_back(intermediateQueues);
 
-        Vector<OutVcState *> out_vc_vector;
+        vector<OutVcState *> out_vc_vector;
         for(int i = 0; i < m_num_vcs; i++)
         {
-                out_vc_vector.insertAtBottom(new OutVcState(i));
+                out_vc_vector.push_back(new OutVcState(i));
                 out_vc_vector[i]->setState(IDLE_, g_eventQueue_ptr->getTime());
         }
-        m_out_vc_state.insertAtBottom(out_vc_vector);
-        m_link_weights.insertAtBottom(link_weight);
+        m_out_vc_state.push_back(out_vc_vector);
+        m_link_weights.push_back(link_weight);
 }
 
 bool Router::isBufferNotFull(int vc, int inport)
@@ -164,7 +166,7 @@ void Router::vc_arbitrate()
                         if(in_vc_state->isInState(VC_AB_, g_eventQueue_ptr->getTime()))
                         {
                                 int outport = in_vc_state->get_outport();
-                                Vector<int > valid_vcs = get_valid_vcs(invc);
+                                vector<int> valid_vcs = get_valid_vcs(invc);
                                 for(int valid_vc_iter = 0; valid_vc_iter < valid_vcs.size(); valid_vc_iter++)
                                 {
                                         if(m_out_vc_state[outport][valid_vcs[valid_vc_iter]]->isInState(IDLE_, g_eventQueue_ptr->getTime()))
@@ -180,9 +182,9 @@ void Router::vc_arbitrate()
         }
 }
 
-Vector<int > Router::get_valid_vcs(int invc)
+vector<int> Router::get_valid_vcs(int invc)
 {
-        Vector<int > vc_list;
+        vector<int> vc_list;
 
         for(int vnet = 0; vnet < m_virtual_networks; vnet++)
         {
@@ -197,7 +199,7 @@ Vector<int > Router::get_valid_vcs(int invc)
 
                         for(int offset = 0; offset < vc_per_vnet; offset++)
                         {
-                                vc_list.insertAtBottom(base+offset);
+                                vc_list.push_back(base+offset);
                         }
                         break;
                 }

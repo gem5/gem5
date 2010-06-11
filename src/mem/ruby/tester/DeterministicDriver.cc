@@ -39,6 +39,8 @@
 //#include "DMAGenerator.hh"
 #include "mem/ruby/tester/DetermGETXGenerator.hh"
 
+using namespace std;
+
 #define DATA_BLOCK_BYTES 64
 
 DeterministicDriver::DeterministicDriver(string generator_type, int num_completions, int num_procs, Time g_think_time, Time g_wait_time, int g_tester_length)
@@ -56,22 +58,22 @@ DeterministicDriver::DeterministicDriver(string generator_type, int num_completi
   m_wait_time = g_wait_time;
   m_tester_length = g_tester_length;
   
-  m_last_progress_vector.setSize(num_procs);
+  m_last_progress_vector.resize(num_procs);
   for (int i=0; i<m_last_progress_vector.size(); i++) {
     m_last_progress_vector[i] = 0;
   }
 
-  m_load_vector.setSize(10);
+  m_load_vector.resize(10);
   for (int i=0; i<m_load_vector.size(); i++) {
     m_load_vector[i] = -1;  // No processor last held it
   }
 
-  m_store_vector.setSize(10);
+  m_store_vector.resize(10);
   for (int i=0; i<m_store_vector.size(); i++) {
     m_store_vector[i] = -1;  // No processor last held it
   }
 
-  m_generator_vector.setSize(num_procs);
+  m_generator_vector.resize(num_procs);
 
   int generator = string_to_SpecifiedGeneratorType(generator_type);
 
@@ -156,7 +158,7 @@ bool DeterministicDriver::isLoadReady(NodeID node, Address addr)
 }
 
 // searches for any address in the addr_vector
-bool DeterministicDriver::isAddrReady(NodeID node, Vector<NodeID> addr_vector)
+bool DeterministicDriver::isAddrReady(NodeID node, vector<NodeID> addr_vector)
 {
   for (int i=0; i<addr_vector.size(); i++) {
     if (((addr_vector[i]+1)%m_num_procs == node) &&
@@ -170,7 +172,7 @@ bool DeterministicDriver::isAddrReady(NodeID node, Vector<NodeID> addr_vector)
 }
 
 // test for a particular addr
-bool DeterministicDriver::isAddrReady(NodeID node, Vector<NodeID> addr_vector, Address addr)
+bool DeterministicDriver::isAddrReady(NodeID node, vector<NodeID> addr_vector, Address addr)
 {
   int addr_number = addr.getAddress()/DATA_BLOCK_BYTES;
 
@@ -197,7 +199,7 @@ void DeterministicDriver::storeCompleted(NodeID node, Address addr)
   setNextAddr(node, addr, m_store_vector);
 }
 
-void DeterministicDriver::setNextAddr(NodeID node, Address addr, Vector<NodeID>& addr_vector)
+void DeterministicDriver::setNextAddr(NodeID node, Address addr, vector<NodeID>& addr_vector)
 {
   // mark the addr vector that this proc was the last to use the particular address
   int addr_number = addr.getAddress()/DATA_BLOCK_BYTES;
@@ -214,7 +216,7 @@ Address DeterministicDriver::getNextStoreAddr(NodeID node)
   return getNextAddr(node, m_store_vector);
 }
 
-Address DeterministicDriver::getNextAddr(NodeID node, Vector<NodeID> addr_vector)
+Address DeterministicDriver::getNextAddr(NodeID node, vector<NodeID> addr_vector)
 {
 
   // This method deterministically picks the next addr the node should acquirer

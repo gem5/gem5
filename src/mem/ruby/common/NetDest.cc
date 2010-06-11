@@ -31,7 +31,7 @@
 
 NetDest::NetDest()
 {
-  setSize();
+  resize();
 }
 
 void
@@ -107,16 +107,16 @@ NetDest::broadcast(MachineType machineType)
 }
 
 //For Princeton Network
-Vector<NodeID>
+std::vector<NodeID>
 NetDest::getAllDest()
 {
-    Vector<NodeID> dest;
+    std::vector<NodeID> dest;
     dest.clear();
     for (int i = 0; i < m_bits.size(); i++) {
         for (int j = 0; j < m_bits[i].getSize(); j++) {
             if (m_bits[i].isElement(j)) {
                 int id = MachineType_base_number((MachineType)i) + j;
-                dest.insertAtBottom((NodeID)id);
+                dest.push_back((NodeID)id);
             }
         }
     }
@@ -249,9 +249,9 @@ NetDest::isElement(MachineID element) const
 }
 
 void
-NetDest::setSize()
+NetDest::resize()
 {
-    m_bits.setSize(MachineType_base_level(MachineType_NUM));
+    m_bits.resize(MachineType_base_level(MachineType_NUM));
     assert(m_bits.size() == MachineType_NUM);
 
     for (int i = 0; i < m_bits.size(); i++) {

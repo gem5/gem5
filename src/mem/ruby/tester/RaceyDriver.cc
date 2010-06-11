@@ -50,7 +50,7 @@ RaceyDriver::RaceyDriver(int num_procs, int tester_length)
   assert(m_num_procs >= 2);
 
   // init all racey pseudo threads
-  m_racey_pseudo_threads.setSize(m_num_procs);
+  m_racey_pseudo_threads.resize(m_num_procs);
   for (int i=0; i<m_racey_pseudo_threads.size(); i++) {
     m_racey_pseudo_threads[i] = new RaceyPseudoThread(i, *this);
   }

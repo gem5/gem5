@@ -40,8 +40,8 @@
 #define __MEM_RUBY_NETWORK_SIMPLE_SWITCH_HH__
 
 #include <iostream>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 
 class MessageBuffer;
@@ -57,12 +57,12 @@ class Switch
     Switch(SwitchID sid, SimpleNetwork* network_ptr);
     ~Switch();
 
-    void addInPort(const Vector<MessageBuffer*>& in);
-    void addOutPort(const Vector<MessageBuffer*>& out,
+    void addInPort(const std::vector<MessageBuffer*>& in);
+    void addOutPort(const std::vector<MessageBuffer*>& out,
         const NetDest& routing_table_entry, int link_latency,
         int bw_multiplier);
     const Throttle* getThrottle(LinkID link_number) const;
-    const Vector<Throttle*>* getThrottles() const;
+    const std::vector<Throttle*>* getThrottles() const;
     void clearRoutingTables();
     void clearBuffers();
     void reconfigureOutPort(const NetDest& routing_table_entry);
@@ -80,8 +80,8 @@ class Switch
 
     PerfectSwitch* m_perfect_switch_ptr;
     Network* m_network_ptr;
-    Vector<Throttle*> m_throttles;
-    Vector<MessageBuffer*> m_buffers_to_free;
+    std::vector<Throttle*> m_throttles;
+    std::vector<MessageBuffer*> m_buffers_to_free;
     SwitchID m_switch_id;
 };
 

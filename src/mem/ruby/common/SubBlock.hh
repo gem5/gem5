@@ -30,8 +30,8 @@
 #define __MEM_RUBY_COMMON_SUBBLOCK_HH__
 
 #include <iostream>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/Global.hh"
@@ -47,7 +47,7 @@ class SubBlock
     void setAddress(const Address& addr) { m_address = addr; }
 
     int getSize() const { return m_data.size(); }
-    void setSize(int size) {  m_data.setSize(size); }
+    void resize(int size) {  m_data.resize(size); }
     uint8 getByte(int offset) const { return m_data[offset]; }
     void setByte(int offset, uint8 data) { m_data[offset] = data; }
 
@@ -68,7 +68,7 @@ class SubBlock
 
     // Data Members (m_ prefix)
     Address m_address;
-    Vector<uint8_t> m_data;
+    std::vector<uint8_t> m_data;
 };
 
 inline std::ostream&

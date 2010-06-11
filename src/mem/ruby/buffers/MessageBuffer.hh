@@ -121,7 +121,7 @@ class MessageBuffer
         m_strict_fifo = order;
         m_ordering_set = true;
     }
-    void setSize(int size) { m_max_size = size; }
+    void resize(int size) { m_max_size = size; }
     int getSize();
     void setRandomization(bool random_flag) { m_randomization = random_flag; }
 

@@ -26,12 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/common/SubBlock.hh"
+
+using m5::stl_helpers::operator<<;
 
 SubBlock::SubBlock(const Address& addr, int size)
 {
     m_address = addr;
-    setSize(size);
+    resize(size);
     for (int i = 0; i < size; i++) {
         setByte(i, 0);
     }

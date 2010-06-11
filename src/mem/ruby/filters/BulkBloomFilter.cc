@@ -49,8 +49,8 @@ BulkBloomFilter::BulkBloomFilter(string str)
     // split the filter bits in half, c0 and c1
     m_sector_bits = m_filter_size_bits - 1;
 
-    m_temp_filter.setSize(m_filter_size);
-    m_filter.setSize(m_filter_size);
+    m_temp_filter.resize(m_filter_size);
+    m_filter.resize(m_filter_size);
     clear();
 
     // clear temp filter

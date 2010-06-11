@@ -32,6 +32,7 @@
 #define SW_ALLOCATOR_D_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -68,12 +69,12 @@ private:
         double m_local_arbiter_activity, m_global_arbiter_activity;
 
         Router_d *m_router;
-        Vector<int > m_round_robin_outport;
-        Vector<int > m_round_robin_inport;
-        Vector<Vector<bool > > m_port_req;
-        Vector<Vector<int > > m_vc_winners; // a list for each outport
-        Vector<InputUnit_d *> m_input_unit;
-        Vector<OutputUnit_d *> m_output_unit;
+        std::vector<int> m_round_robin_outport;
+        std::vector<int> m_round_robin_inport;
+        std::vector<std::vector<bool> > m_port_req;
+        std::vector<std::vector<int> > m_vc_winners; // a list for each outport
+        std::vector<InputUnit_d *> m_input_unit;
+        std::vector<OutputUnit_d *> m_output_unit;
 };
 
 #endif

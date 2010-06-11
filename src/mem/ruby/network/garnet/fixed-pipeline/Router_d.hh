@@ -32,9 +32,9 @@
 #define ROUTER_D_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/orion/power_router_init.hh"
@@ -66,8 +66,8 @@ public:
         int get_id() { return m_id; }
         GarnetNetwork_d* get_net_ptr() { return m_network_ptr; }
 
-        Vector<InputUnit_d *>& get_inputUnit_ref() { return m_input_unit; }
-        Vector<OutputUnit_d *>& get_outputUnit_ref() { return m_output_unit; }
+        std::vector<InputUnit_d *>& get_inputUnit_ref() { return m_input_unit; }
+        std::vector<OutputUnit_d *>& get_outputUnit_ref() { return m_output_unit; }
 
         void update_sw_winner(int inport, flit_d *t_flit);
         void update_incredit(int in_port, int in_vc, int credit);
@@ -88,8 +88,8 @@ private:
 
         double buf_read_count, buf_write_count, crossbar_count, vc_local_arbit_count, vc_global_arbit_count, sw_local_arbit_count, sw_global_arbit_count;
 
-        Vector<InputUnit_d *> m_input_unit;
-        Vector<OutputUnit_d *> m_output_unit;
+        std::vector<InputUnit_d *> m_input_unit;
+        std::vector<OutputUnit_d *> m_output_unit;
         RoutingUnit_d *m_routing_unit;
         VCallocator_d *m_vc_alloc;
         SWallocator_d *m_sw_alloc;

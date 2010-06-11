@@ -92,7 +92,7 @@ Sequencer::wakeup()
     // Check across all outstanding requests
     int total_outstanding = 0;
 
-    Vector<Address> keys = m_readRequestTable.keys();
+    std::vector<Address> keys = m_readRequestTable.keys();
     for (int i = 0; i < keys.size(); i++) {
         SequencerRequest* request = m_readRequestTable.lookup(keys[i]);
         if (current_time - request->issue_time >= m_deadlock_threshold) {
@@ -160,7 +160,7 @@ Sequencer::printProgress(ostream& out) const
     out << "---------------" << endl;
     out << "outstanding requests" << endl;
 
-    Vector<Address> rkeys = m_readRequestTable.keys();
+    std::vector<Address> rkeys = m_readRequestTable.keys();
     int read_size = rkeys.size();
     out << "proc " << m_version << " Read Requests = " << read_size << endl;
 
@@ -174,7 +174,7 @@ Sequencer::printProgress(ostream& out) const
         total_demand++;
     }
 
-    Vector<Address> wkeys = m_writeRequestTable.keys();
+    std::vector<Address> wkeys = m_writeRequestTable.keys();
     int write_size = wkeys.size();
     out << "proc " << m_version << " Write Requests = " << write_size << endl;
 

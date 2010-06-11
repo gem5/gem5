@@ -34,10 +34,11 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include <cassert>
 #include <iostream>
+#include <vector>
 
 #include "base/hashmap.hh"
-#include "mem/gems_common/Vector.hh"
 
 template <class KEY_TYPE, class VALUE_TYPE>
 class Map
@@ -55,8 +56,8 @@ public:
   bool exist(const KEY_TYPE& key) const;
   int size() const { return m_map.size(); }
   void erase(const KEY_TYPE& key) { assert(exist(key)); m_map.erase(key); }
-  Vector<KEY_TYPE> keys() const;
-  Vector<VALUE_TYPE> values() const;
+  std::vector<KEY_TYPE> keys() const;
+  std::vector<VALUE_TYPE> values() const;
   void deleteKeys();
   void deleteValues();
   VALUE_TYPE& lookup(const KEY_TYPE& key) const;
@@ -108,27 +109,29 @@ VALUE_TYPE& Map<KEY_TYPE, VALUE_TYPE>::lookup(const KEY_TYPE& key) const
 }
 
 template <class KEY_TYPE, class VALUE_TYPE>
-Vector<KEY_TYPE> Map<KEY_TYPE, VALUE_TYPE>::keys() const
+std::vector<KEY_TYPE> Map<KEY_TYPE, VALUE_TYPE>::keys() const
 {
-  Vector<KEY_TYPE> keys;
-  const_iterator iter;
-  for (iter = m_map.begin(); iter != m_map.end(); iter++) {
-    keys.insertAtBottom((*iter).first);
+  std::vector<KEY_TYPE> keys(m_map.size());
+  const_iterator iter = m_map.begin();
+  for (int i = 0; i < m_map.size(); ++i) {
+      keys[i] = iter->first;
+      ++iter;
   }
+  assert(iter == m_map.end());
   return keys;
 }
 
 template <class KEY_TYPE, class VALUE_TYPE>
-Vector<VALUE_TYPE> Map<KEY_TYPE, VALUE_TYPE>::values() const
+std::vector<VALUE_TYPE> Map<KEY_TYPE, VALUE_TYPE>::values() const
 {
-  Vector<VALUE_TYPE> values;
-  const_iterator iter;
-  std::pair<KEY_TYPE, VALUE_TYPE> p;
+  std::vector<VALUE_TYPE> values(m_map.size());
+  const_iterator iter = m_map.begin();
 
-  for (iter = m_map.begin(); iter != m_map.end(); iter++) {
-    p = *iter;
-    values.insertAtBottom(p.second);
+  for (int i = 0; i < m_map.size(); ++i) {
+      values[i] = iter->second;
+      ++iter;
   }
+  assert(iter == m_map.end());
   return values;
 }
 

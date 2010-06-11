@@ -32,6 +32,7 @@
 #define VC_ALLOCATOR_D_H
 
 #include <iostream>
+#include <vector>
 #include <utility>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
@@ -71,13 +72,13 @@ private:
         double m_local_arbiter_activity, m_global_arbiter_activity;
 
         Router_d *m_router;
-        Vector<Vector <int > > m_round_robin_invc; // First stage of arbitration where all vcs select an output vc to content for
-        Vector<Vector <std::pair<int, int> > > m_round_robin_outvc; // Arbiter for every output vc
-        Vector<Vector<Vector<Vector<bool > > > > m_outvc_req; // [outport][outvc][inpotr][invc]. set true in the first phase of allocation
-        Vector<Vector<bool > > m_outvc_is_req;
+        std::vector<std::vector<int > > m_round_robin_invc; // First stage of arbitration where all vcs select an output vc to content for
+        std::vector<std::vector<std::pair<int, int> > > m_round_robin_outvc; // Arbiter for every output vc
+        std::vector<std::vector<std::vector<std::vector<bool> > > > m_outvc_req; // [outport][outvc][inpotr][invc]. set true in the first phase of allocation
+        std::vector<std::vector<bool> > m_outvc_is_req;
 
-        Vector<InputUnit_d *> m_input_unit ;
-        Vector<OutputUnit_d *> m_output_unit ;
+        std::vector<InputUnit_d *> m_input_unit ;
+        std::vector<OutputUnit_d *> m_output_unit ;
 
 };
 

@@ -30,9 +30,9 @@
 #define __MEM_RUBY_COMMON_HISTOGRAM_HH__
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/gems_common/Vector.hh"
 
 class Histogram
 {
@@ -56,7 +56,7 @@ class Histogram
     void print(std::ostream& out) const;
 
 private:
-    Vector<int64> m_data;
+    std::vector<int64> m_data;
     int64 m_max;          // the maximum value seen so far
     int64 m_count;                // the number of elements added
     int m_binsize;                // the size of each bucket

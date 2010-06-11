@@ -32,6 +32,7 @@
 #define OUTPUT_UNIT_D_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -85,7 +86,7 @@ private:
         CreditLink_d *m_credit_link;
 
         flitBuffer_d *m_out_buffer; // This is for the network link to consume
-        Vector<OutVcState_d *> m_outvc_state; // vc state of downstream router
+        std::vector<OutVcState_d *> m_outvc_state; // vc state of downstream router
 
 };
 

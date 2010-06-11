@@ -51,10 +51,10 @@ void SWallocator_d::init()
 
         m_num_inports = m_router->get_num_inports();
         m_num_outports = m_router->get_num_outports();
-        m_round_robin_outport.setSize(m_num_outports);
-        m_round_robin_inport.setSize(m_num_inports);
-        m_port_req.setSize(m_num_outports);
-        m_vc_winners.setSize(m_num_outports);
+        m_round_robin_outport.resize(m_num_outports);
+        m_round_robin_inport.resize(m_num_inports);
+        m_port_req.resize(m_num_outports);
+        m_vc_winners.resize(m_num_outports);
 
         for(int i = 0; i < m_num_inports; i++)
         {
@@ -63,8 +63,8 @@ void SWallocator_d::init()
 
         for(int i = 0; i < m_num_outports; i++)
         {
-                m_port_req[i].setSize(m_num_inports);
-                m_vc_winners[i].setSize(m_num_inports);
+                m_port_req[i].resize(m_num_inports);
+                m_vc_winners[i].resize(m_num_inports);
 
                 m_round_robin_outport[i] = 0;
 

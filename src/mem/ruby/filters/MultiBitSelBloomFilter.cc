@@ -61,7 +61,7 @@ MultiBitSelBloomFilter::MultiBitSelBloomFilter(string str)
     m_par_filter_size = m_filter_size / m_num_hashes;
     m_par_filter_size_bits = floorLog2(m_par_filter_size);
 
-    m_filter.setSize(m_filter_size);
+    m_filter.resize(m_filter_size);
     clear();
 }
 

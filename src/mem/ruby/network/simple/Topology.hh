@@ -42,8 +42,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "params/ExtLink.hh"
@@ -55,7 +55,7 @@
 class Network;
 class NetDest;
 
-typedef Vector<Vector<int> > Matrix;
+typedef std::vector<std::vector<int> > Matrix;
 
 class Link : public SimObject
 {
@@ -111,8 +111,9 @@ class Topology : public SimObject
         const NetDest& routing_table_entry, int link_latency, int weight,
         int bw_multiplier, bool isReconfiguration);
 
-    //void makeSwitchesPerChip(Vector<Vector< SwitchID> > &nodePairs,
-    //    Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChips);
+    //void makeSwitchesPerChip(std::vector<std::vector<SwitchID > > &nodePairs,
+    //    std::vector<int> &latencies, std::vector<int> &bw_multis,
+    //    int numberOfChips);
 
     std::string getDesignStr();
     // Private copy constructor and assignment operator
@@ -124,13 +125,13 @@ class Topology : public SimObject
     NodeID m_nodes;
     int m_number_of_switches;
 
-    Vector<AbstractController*> m_controller_vector;
+    std::vector<AbstractController*> m_controller_vector;
 
-    Vector<SwitchID> m_links_src_vector;
-    Vector<SwitchID> m_links_dest_vector;
-    Vector<int> m_links_latency_vector;
-    Vector<int> m_links_weight_vector;
-    Vector<int> m_bw_multiplier_vector;
+    std::vector<SwitchID> m_links_src_vector;
+    std::vector<SwitchID> m_links_dest_vector;
+    std::vector<int> m_links_latency_vector;
+    std::vector<int> m_links_weight_vector;
+    std::vector<int> m_bw_multiplier_vector;
 
     Matrix m_component_latencies;
     Matrix m_component_inter_switches;

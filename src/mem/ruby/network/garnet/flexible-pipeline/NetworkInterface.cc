@@ -30,10 +30,14 @@
 
 #include <cmath>
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkInterface.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/flitBuffer.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
+
+using namespace std;
+using m5::stl_helpers::deletePointers;
 
 NetworkInterface::NetworkInterface(int id, int virtual_networks, GarnetNetwork *network_ptr)
 {
@@ -44,14 +48,14 @@ NetworkInterface::NetworkInterface(int id, int virtual_networks, GarnetNetwork *
         m_num_vcs = m_vc_per_vnet*m_virtual_networks;
 
         m_vc_round_robin = 0;
-        m_ni_buffers.setSize(m_num_vcs);
-        inNode_ptr.setSize(m_virtual_networks);
-        outNode_ptr.setSize(m_virtual_networks);
+        m_ni_buffers.resize(m_num_vcs);
+        inNode_ptr.resize(m_virtual_networks);
+        outNode_ptr.resize(m_virtual_networks);
 
         for(int i =0; i < m_num_vcs; i++)
                 m_ni_buffers[i] = new flitBuffer(); // instantiating the NI flit buffers
 
-         m_vc_allocator.setSize(m_virtual_networks);
+         m_vc_allocator.resize(m_virtual_networks);
          for(int i = 0; i < m_virtual_networks; i++)
          {
                  m_vc_allocator[i] = 0;
@@ -59,15 +63,15 @@ NetworkInterface::NetworkInterface(int id, int virtual_networks, GarnetNetwork *
 
          for(int i = 0; i < m_num_vcs; i++)
          {
-                m_out_vc_state.insertAtBottom(new OutVcState(i));
+                m_out_vc_state.push_back(new OutVcState(i));
                 m_out_vc_state[i]->setState(IDLE_, g_eventQueue_ptr->getTime());
          }
 }
 
 NetworkInterface::~NetworkInterface()
 {
-        m_out_vc_state.deletePointers();
-        m_ni_buffers.deletePointers();
+        deletePointers(m_out_vc_state);
+        deletePointers(m_ni_buffers);
         delete outSrcQueue;
 }
 
@@ -85,7 +89,7 @@ void NetworkInterface::addOutPort(NetworkLink *out_link)
         out_link->setSource(this);
 }
 
-void NetworkInterface::addNode(Vector<MessageBuffer*>& in,  Vector<MessageBuffer*>& out)
+void NetworkInterface::addNode(vector<MessageBuffer*>& in, vector<MessageBuffer*>& out)
 {
         ASSERT(in.size() == m_virtual_networks);
         inNode_ptr = in;
@@ -106,7 +110,7 @@ bool NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         NetworkMessage *net_msg_ptr =
             safe_cast<NetworkMessage*>(msg_ptr.get());
         NetDest net_msg_dest = net_msg_ptr->getInternalDestination();
-        Vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
+        vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
         int num_flits = (int) ceil((double) m_net_ptr->MessageSizeType_to_int(net_msg_ptr->getMessageSize())/m_net_ptr->getFlitSize() ); // Number of flits is dependent on the link bandwidth available. This is expressed in terms of bytes/cycle or the flit size
 
         for(int ctr = 0; ctr < dest_nodes.size(); ctr++) // loop because we will be converting all multicast messages into unicast messages

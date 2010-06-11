@@ -32,10 +32,10 @@
 #define GARNET_NETWORK_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/network/Network.hh"
 #include "params/GarnetNetwork.hh"
 
@@ -89,15 +89,15 @@ private:
 //      int m_virtual_networks;
 //      int m_nodes;
 
-        Vector<bool> m_in_use;
-        Vector<bool> m_ordered;
+        std::vector<bool> m_in_use;
+        std::vector<bool> m_ordered;
 
-        Vector<Vector<MessageBuffer*> > m_toNetQueues;
-        Vector<Vector<MessageBuffer*> > m_fromNetQueues;
+        std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
+        std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
 
-        Vector<Router *> m_router_ptr_vector;   // All Routers in Network
-        Vector<NetworkLink *> m_link_ptr_vector; // All links in the network
-        Vector<NetworkInterface *> m_ni_ptr_vector;     // All NI's in Network
+        std::vector<Router *> m_router_ptr_vector;   // All Routers in Network
+        std::vector<NetworkLink *> m_link_ptr_vector; // All links in the network
+        std::vector<NetworkInterface *> m_ni_ptr_vector;     // All NI's in Network
 
 //      Topology* m_topology_ptr;
         Time m_ruby_start;

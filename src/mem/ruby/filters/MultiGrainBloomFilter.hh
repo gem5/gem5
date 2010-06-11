@@ -31,8 +31,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-#include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
@@ -64,11 +64,11 @@ class MultiGrainBloomFilter : public AbstractBloomFilter
     int get_page_index(const Address & addr);
 
     // The block filter
-    Vector<int> m_filter;
+    std::vector<int> m_filter;
     int m_filter_size;
     int m_filter_size_bits;
     // The page number filter
-    Vector<int> m_page_filter;
+    std::vector<int> m_page_filter;
     int m_page_filter_size;
     int m_page_filter_size_bits;
 

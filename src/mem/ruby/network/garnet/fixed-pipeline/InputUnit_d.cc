@@ -28,10 +28,12 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
 
 InputUnit_d::InputUnit_d(int id, Router_d *router)
 {
@@ -44,7 +46,7 @@ InputUnit_d::InputUnit_d(int id, Router_d *router)
 
         creditQueue = new flitBuffer_d();
         // Instantiating the virtual channels
-        m_vcs.setSize(m_num_vcs);
+        m_vcs.resize(m_num_vcs);
         for(int i=0; i < m_num_vcs; i++)
         {
                 m_vcs[i] = new VirtualChannel_d(i);
@@ -54,7 +56,7 @@ InputUnit_d::InputUnit_d(int id, Router_d *router)
 InputUnit_d::~InputUnit_d()
 {
         delete creditQueue;
-        m_vcs.deletePointers();
+        deletePointers(m_vcs);
 }
 
 void InputUnit_d::wakeup()

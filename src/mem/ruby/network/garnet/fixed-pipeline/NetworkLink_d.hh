@@ -32,6 +32,7 @@
 #define NETWORK_LINK_D_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -51,7 +52,7 @@ public:
         void setSourceQueue(flitBuffer_d *srcQueue);
         void print(std::ostream& out) const{}
         int getLinkUtilization();
-        Vector<int> getVcLoad();
+        std::vector<int> getVcLoad();
         int get_id(){return m_id;}
         void wakeup();
 
@@ -80,7 +81,7 @@ protected:
         Consumer *link_consumer;
         flitBuffer_d *link_srcQueue;
         int m_link_utilized;
-        Vector<int > m_vc_load;
+        std::vector<int> m_vc_load;
         int m_flit_width;
 };
 

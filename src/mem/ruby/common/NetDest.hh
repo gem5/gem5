@@ -35,8 +35,8 @@
 #define __MEM_RUBY_COMMON_NETDEST_HH__
 
 #include <iostream>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Set.hh"
@@ -89,12 +89,12 @@ class NetDest
     bool isEmpty() const;
 
     // For Princeton Network
-    Vector<NodeID> getAllDest();
+    std::vector<NodeID> getAllDest();
 
     MachineID smallestElement() const;
     MachineID smallestElement(MachineType machine) const;
 
-    void setSize();
+    void resize();
     int getSize() const { return m_bits.size(); }
 
     // get element for a index
@@ -119,7 +119,7 @@ class NetDest
         return index;
     }
 
-    Vector <Set> m_bits;  // a Vector of bit vectors - i.e. Sets
+    std::vector<Set> m_bits;  // a vector of bit vectors - i.e. Sets
 };
 
 inline std::ostream&

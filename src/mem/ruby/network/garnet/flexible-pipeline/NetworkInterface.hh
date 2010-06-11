@@ -32,10 +32,10 @@
 #define NET_INTERFACE_H
 
 #include <iostream>
+#include <vector>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/FlexibleConsumer.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
@@ -55,7 +55,7 @@ public:
         void addOutPort(NetworkLink *out_link);
 
         void wakeup();
-        void addNode(Vector<MessageBuffer *> &inNode, Vector<MessageBuffer *> &outNode);
+        void addNode(std::vector<MessageBuffer *> &inNode, std::vector<MessageBuffer *> &outNode);
         void grant_vc(int out_port, int vc, Time grant_time);
         void release_vc(int out_port, int vc, Time release_time);
         bool isBufferNotFull(int vc, int inport)
@@ -73,8 +73,8 @@ private:
         int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
         NodeID m_id;
 
-        Vector<OutVcState *> m_out_vc_state;
-        Vector<int > m_vc_allocator;
+        std::vector<OutVcState *> m_out_vc_state;
+        std::vector<int> m_vc_allocator;
         int m_vc_round_robin; // For round robin scheduling
         flitBuffer *outSrcQueue; // For modelling link contention
 
@@ -82,10 +82,10 @@ private:
         NetworkLink *outNetLink;
 
         // Input Flit Buffers
-        Vector<flitBuffer *>   m_ni_buffers; // The flit buffers which will serve the Consumer
+        std::vector<flitBuffer *>   m_ni_buffers; // The flit buffers which will serve the Consumer
 
-        Vector<MessageBuffer *> inNode_ptr; // The Message buffers that takes messages from the protocol
-        Vector<MessageBuffer *> outNode_ptr; // The Message buffers that provides messages to the protocol
+        std::vector<MessageBuffer *> inNode_ptr; // The Message buffers that takes messages from the protocol
+        std::vector<MessageBuffer *> outNode_ptr; // The Message buffers that provides messages to the protocol
 
         bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
         int calculateVC(int vnet);

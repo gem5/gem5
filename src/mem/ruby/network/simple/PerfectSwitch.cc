@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <algorithm>
+
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
@@ -55,11 +57,11 @@ PerfectSwitch::PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr)
 }
 
 void
-PerfectSwitch::addInPort(const Vector<MessageBuffer*>& in)
+PerfectSwitch::addInPort(const vector<MessageBuffer*>& in)
 {
     assert(in.size() == m_virtual_networks);
     NodeID port = m_in.size();
-    m_in.insertAtBottom(in);
+    m_in.push_back(in);
     for (int j = 0; j < m_virtual_networks; j++) {
         m_in[port][j]->setConsumer(this);
         string desc = csprintf("[Queue from port %s %s %s to PerfectSwitch]",
@@ -70,7 +72,7 @@ PerfectSwitch::addInPort(const Vector<MessageBuffer*>& in)
 }
 
 void
-PerfectSwitch::addOutPort(const Vector<MessageBuffer*>& out,
+PerfectSwitch::addOutPort(const vector<MessageBuffer*>& out,
     const NetDest& routing_table_entry)
 {
     assert(out.size() == m_virtual_networks);
@@ -79,11 +81,11 @@ PerfectSwitch::addOutPort(const Vector<MessageBuffer*>& out,
     LinkOrder l;
     l.m_value = 0;
     l.m_link = m_out.size();
-    m_link_order.insertAtBottom(l);
+    m_link_order.push_back(l);
 
     // Add to routing table
-    m_out.insertAtBottom(out);
-    m_routing_table.insertAtBottom(routing_table_entry);
+    m_out.push_back(out);
+    m_routing_table.push_back(routing_table_entry);
 }
 
 void
@@ -111,7 +113,7 @@ PerfectSwitch::clearBuffers()
 void
 PerfectSwitch::reconfigureOutPort(const NetDest& routing_table_entry)
 {
-    m_routing_table.insertAtBottom(routing_table_entry);
+    m_routing_table.push_back(routing_table_entry);
 }
 
 PerfectSwitch::~PerfectSwitch()
@@ -161,8 +163,8 @@ PerfectSwitch::wakeup()
             }
 
             // temporary vectors to store the routing results
-            Vector<LinkID> output_links;
-            Vector<NetDest> output_link_destinations;
+            vector<LinkID> output_links;
+            vector<NetDest> output_link_destinations;
 
             // Is there a message waiting?
             while (m_in[incoming][vnet]->isReady()) {
@@ -206,7 +208,7 @@ PerfectSwitch::wakeup()
                         }
 
                         // Look at the most empty link first
-                        m_link_order.sortVector();
+                        sort(m_link_order.begin(), m_link_order.end());
                     }
                 }
 
@@ -220,14 +222,14 @@ PerfectSwitch::wakeup()
                         continue;
 
                     // Remember what link we're using
-                    output_links.insertAtBottom(link);
+                    output_links.push_back(link);
 
                     // Need to remember which destinations need this
                     // message in another vector.  This Set is the
                     // intersection of the routing_table entry and the
                     // current destination set.  The intersection must
                     // not be empty, since we are inside "if"
-                    output_link_destinations.insertAtBottom(msg_dsts.AND(dst));
+                    output_link_destinations.push_back(msg_dsts.AND(dst));
 
                     // Next, we update the msg_destination not to
                     // include those nodes that were already handled

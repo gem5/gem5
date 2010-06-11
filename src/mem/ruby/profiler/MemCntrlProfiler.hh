@@ -31,11 +31,9 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
-
-template <class TYPE> class Vector;
 
 class MemCntrlProfiler
 {
@@ -86,7 +84,7 @@ private:
     uint64 m_memArbWait;
     uint64 m_memRandBusy;
     uint64 m_memNotOld;
-    Vector<uint64> m_memBankCount;
+    std::vector<uint64> m_memBankCount;
     int m_banks_per_rank;
     int m_ranks_per_dimm;
     int m_dimms_per_channel;

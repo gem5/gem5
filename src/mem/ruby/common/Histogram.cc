@@ -58,7 +58,7 @@ Histogram::clear(int bins)
     m_bins = bins;
     m_largest_bin = 0;
     m_max = 0;
-    m_data.setSize(m_bins);
+    m_data.resize(m_bins);
     for (int i = 0; i < m_bins; i++) {
         m_data[i] = 0;
     }

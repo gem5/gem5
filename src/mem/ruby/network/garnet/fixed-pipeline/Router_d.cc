@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
@@ -40,6 +41,7 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/Switch_d.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
 
 Router_d::Router_d(int id, GarnetNetwork_d *network_ptr)
 {
@@ -69,8 +71,8 @@ Router_d::Router_d(int id, GarnetNetwork_d *network_ptr)
 
 Router_d::~Router_d()
 {
-        m_input_unit.deletePointers();
-        m_output_unit.deletePointers();
+        deletePointers(m_input_unit);
+        deletePointers(m_output_unit);
         delete m_routing_unit;
         delete m_vc_alloc;
         delete m_sw_alloc;
@@ -94,7 +96,7 @@ void Router_d::addInPort(NetworkLink_d *in_link, CreditLink_d *credit_link)
         in_link->setLinkConsumer(input_unit);
         credit_link->setSourceQueue(input_unit->getCreditQueue());
 
-        m_input_unit.insertAtBottom(input_unit);
+        m_input_unit.push_back(input_unit);
 }
 
 void Router_d::addOutPort(NetworkLink_d *out_link, const NetDest& routing_table_entry, int link_weight, CreditLink_d *credit_link)
@@ -107,7 +109,7 @@ void Router_d::addOutPort(NetworkLink_d *out_link, const NetDest& routing_table_
         credit_link->setLinkConsumer(output_unit);
         out_link->setSourceQueue(output_unit->getOutQueue());
 
-        m_output_unit.insertAtBottom(output_unit);
+        m_output_unit.push_back(output_unit);
 
         m_routing_unit->addRoute(routing_table_entry);
         m_routing_unit->addWeight(link_weight);

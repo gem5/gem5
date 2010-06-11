@@ -42,6 +42,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/Global.hh"
@@ -76,7 +77,7 @@ class Network : public SimObject
         int netNumber) = 0;
     virtual MessageBuffer* getFromNetQueue(NodeID id, bool ordered,
         int netNumber) = 0;
-    virtual const Vector<Throttle*>* getThrottles(NodeID id) const;
+    virtual const std::vector<Throttle*>* getThrottles(NodeID id) const;
     virtual int getNumNodes() {return 1;}
 
     virtual void makeOutLink(SwitchID src, NodeID dest,

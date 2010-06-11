@@ -49,7 +49,7 @@ LSB_CountingBloomFilter::LSB_CountingBloomFilter(string str)
     m_count = atoi(tail.c_str());
     m_count_bits = floorLog2(m_count);
 
-    m_filter.setSize(m_filter_size);
+    m_filter.resize(m_filter_size);
     clear();
 }
 

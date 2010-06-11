@@ -73,11 +73,11 @@ CacheMemory::init()
     else
         assert(false);
 
-    m_cache.setSize(m_cache_num_sets);
-    m_locked.setSize(m_cache_num_sets);
+    m_cache.resize(m_cache_num_sets);
+    m_locked.resize(m_cache_num_sets);
     for (int i = 0; i < m_cache_num_sets; i++) {
-        m_cache[i].setSize(m_cache_assoc);
-        m_locked[i].setSize(m_cache_assoc);
+        m_cache[i].resize(m_cache_assoc);
+        m_locked[i].resize(m_cache_assoc);
         for (int j = 0; j < m_cache_assoc; j++) {
             m_cache[i][j] = NULL;
             m_locked[i][j] = -1;
@@ -266,7 +266,7 @@ CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
 
     // Find the first open slot
     Index cacheSet = addressToCacheSet(address);
-    Vector<AbstractCacheEntry*> &set = m_cache[cacheSet];
+    std::vector<AbstractCacheEntry*> &set = m_cache[cacheSet];
     for (int i = 0; i < m_cache_assoc; i++) {
         if (!set[i] || set[i]->m_Permission == AccessPermission_NotPresent) {
             set[i] = entry;  // Init entry

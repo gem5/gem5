@@ -102,7 +102,7 @@ CheckTable::addCheck(const Address& address)
         // Insert it once per byte
         m_lookup_map_ptr->add(Address(address.getAddress() + i), check_ptr);
     }
-    m_check_vector.insertAtBottom(check_ptr);
+    m_check_vector.push_back(check_ptr);
 }
 
 Check*

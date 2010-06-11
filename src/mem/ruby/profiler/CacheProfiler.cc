@@ -27,7 +27,6 @@
  */
 
 #include "mem/gems_common/PrioHeap.hh"
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/profiler/AccessTraceForAddress.hh"
 #include "mem/ruby/profiler/CacheProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
@@ -36,17 +35,15 @@
 using namespace std;
 
 CacheProfiler::CacheProfiler(const string& description)
+    : m_requestTypeVec(int(CacheRequestType_NUM))
 {
     m_description = description;
-    m_requestTypeVec_ptr = new Vector<int>;
-    m_requestTypeVec_ptr->setSize(int(CacheRequestType_NUM));
 
     clearStats();
 }
 
 CacheProfiler::~CacheProfiler()
 {
-    delete m_requestTypeVec_ptr;
 }
 
 void
@@ -65,18 +62,18 @@ CacheProfiler::printStats(ostream& out) const
     int requests = 0;
 
     for (int i = 0; i < int(CacheRequestType_NUM); i++) {
-        requests += m_requestTypeVec_ptr->ref(i);
+        requests += m_requestTypeVec[i];
     }
 
     assert(m_misses == requests);
 
     if (requests > 0) {
         for (int i = 0; i < int(CacheRequestType_NUM); i++) {
-            if (m_requestTypeVec_ptr->ref(i) > 0) {
+            if (m_requestTypeVec[i] > 0) {
                 out << description << "_request_type_"
                     << CacheRequestType_to_string(CacheRequestType(i))
                     << ":   "
-                    << 100.0 * (double)m_requestTypeVec_ptr->ref(i) /
+                    << 100.0 * (double)m_requestTypeVec[i] /
                     (double)requests
                     << "%" << endl;
             }
@@ -103,7 +100,7 @@ void
 CacheProfiler::clearStats()
 {
     for (int i = 0; i < int(CacheRequestType_NUM); i++) {
-        m_requestTypeVec_ptr->ref(i) = 0;
+        m_requestTypeVec[i] = 0;
     }
     m_requestSize.clear();
     m_misses = 0;
@@ -123,7 +120,7 @@ CacheProfiler::addStatSample(CacheRequestType requestType,
 {
     m_misses++;
 
-    m_requestTypeVec_ptr->ref(requestType)++;
+    m_requestTypeVec[requestType]++;
 
     m_accessModeTypeHistogram[type]++;
     m_requestSize.add(msgSize);

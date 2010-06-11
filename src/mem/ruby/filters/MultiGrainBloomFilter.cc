@@ -52,8 +52,8 @@ MultiGrainBloomFilter::MultiGrainBloomFilter(string str)
     m_page_filter_size = atoi(tail.c_str());
     m_page_filter_size_bits = floorLog2(m_page_filter_size);
 
-    m_filter.setSize(m_filter_size);
-    m_page_filter.setSize(m_page_filter_size);
+    m_filter.resize(m_filter_size);
+    m_page_filter.resize(m_page_filter_size);
     clear();
 }
 

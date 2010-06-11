@@ -50,14 +50,14 @@ void VCallocator_d::init()
 
         m_num_inports = m_router->get_num_inports();
         m_num_outports = m_router->get_num_outports();
-        m_round_robin_invc.setSize(m_num_inports);
-        m_round_robin_outvc.setSize(m_num_outports);
-        m_outvc_req.setSize(m_num_outports);
-        m_outvc_is_req.setSize(m_num_outports);
+        m_round_robin_invc.resize(m_num_inports);
+        m_round_robin_outvc.resize(m_num_outports);
+        m_outvc_req.resize(m_num_outports);
+        m_outvc_is_req.resize(m_num_outports);
 
         for(int i = 0; i < m_num_inports; i++)
         {
-                m_round_robin_invc[i].setSize(m_num_vcs);
+                m_round_robin_invc[i].resize(m_num_vcs);
 
                 for(int j = 0; j < m_num_vcs; j++)
                 {
@@ -67,9 +67,9 @@ void VCallocator_d::init()
 
         for(int i = 0; i < m_num_outports; i++)
         {
-                m_round_robin_outvc[i].setSize(m_num_vcs);
-                m_outvc_req[i].setSize(m_num_vcs);
-                m_outvc_is_req[i].setSize(m_num_vcs);
+                m_round_robin_outvc[i].resize(m_num_vcs);
+                m_outvc_req[i].resize(m_num_vcs);
+                m_outvc_is_req[i].resize(m_num_vcs);
 
                 for(int j = 0; j < m_num_vcs; j++)
                 {
@@ -77,11 +77,11 @@ void VCallocator_d::init()
                         m_round_robin_outvc[i][j].second = 0;
                         m_outvc_is_req[i][j] = false;
 
-                        m_outvc_req[i][j].setSize(m_num_inports);
+                        m_outvc_req[i][j].resize(m_num_inports);
 
                         for(int k = 0; k < m_num_inports; k++)
                         {
-                                m_outvc_req[i][j][k].setSize(m_num_vcs);
+                                m_outvc_req[i][j][k].resize(m_num_vcs);
                                 for(int l = 0; l < m_num_vcs; l++)
                                 {
                                         m_outvc_req[i][j][k][l] = false;

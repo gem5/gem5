@@ -42,12 +42,12 @@ RoutingUnit_d::RoutingUnit_d(Router_d *router)
 
 void RoutingUnit_d::addRoute(const NetDest& routing_table_entry)
 {
-        m_routing_table.insertAtBottom(routing_table_entry);
+        m_routing_table.push_back(routing_table_entry);
 }
 
 void RoutingUnit_d::addWeight(int link_weight)
 {
-        m_weight_table.insertAtBottom(link_weight);
+        m_weight_table.push_back(link_weight);
 }
 
 void RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)

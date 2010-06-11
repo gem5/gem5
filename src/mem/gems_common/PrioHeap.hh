@@ -29,9 +29,9 @@
 #ifndef PRIOHEAP_H
 #define PRIOHEAP_H
 
+#include <cassert>
 #include <iostream>
-
-#include "mem/gems_common/Vector.hh"
+#include <vector>
 
 typedef unsigned int HeapIndex;
 
@@ -63,7 +63,7 @@ private:
   PrioHeap<TYPE>& operator=(const PrioHeap& obj);
 
   // Data Members (m_ prefix)
-  Vector<TYPE> m_heap;
+  std::vector<TYPE> m_heap;
   HeapIndex m_current_size;
 };
 
@@ -109,7 +109,7 @@ void PrioHeap<TYPE>::insert(const TYPE& key)
   int i;
   // grow the vector size
   m_current_size++;
-  m_heap.setSize(m_current_size+1);
+  m_heap.resize(m_current_size+1);
 
   if(m_current_size == 1){      // HACK: need to initialize index 0 to avoid purify UMCs
     m_heap[0] = key;
@@ -214,7 +214,7 @@ void PrioHeap<TYPE>::heapify()
 template <class TYPE>
 void PrioHeap<TYPE>::print(std::ostream& out) const
 {
-  Vector<TYPE> copyHeap(m_heap);
+  std::vector<TYPE> copyHeap(m_heap);
 
   // sort copyHeap (inefficient, but will not be done often)
 

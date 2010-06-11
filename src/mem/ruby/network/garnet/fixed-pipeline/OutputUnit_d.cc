@@ -28,10 +28,12 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
 
 OutputUnit_d::OutputUnit_d(int id, Router_d *router)
 {
@@ -42,14 +44,14 @@ OutputUnit_d::OutputUnit_d(int id, Router_d *router)
 
         for(int i = 0; i < m_num_vcs; i++)
         {
-                m_outvc_state.insertAtBottom(new OutVcState_d(i, m_router->get_net_ptr()));
+                m_outvc_state.push_back(new OutVcState_d(i, m_router->get_net_ptr()));
         }
 }
 
 OutputUnit_d::~OutputUnit_d()
 {
         delete m_out_buffer;
-        m_outvc_state.deletePointers();
+        deletePointers(m_outvc_state);
 }
 
 void OutputUnit_d::decrement_credit(int out_vc)

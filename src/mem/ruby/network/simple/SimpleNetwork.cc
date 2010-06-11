@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/stl_helpers.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
@@ -39,6 +40,7 @@
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
+using m5::stl_helpers::deletePointers;
 
 #if 0
 // ***BIG HACK*** - This is actually code that _should_ be in Network.cc
@@ -59,21 +61,21 @@ SimpleNetwork::SimpleNetwork(const Params *p)
     // SimpleNetwork child constructor.  Therefore, the member variables
     // used below should already be initialized.
 
-    m_endpoint_switches.setSize(m_nodes);
+    m_endpoint_switches.resize(m_nodes);
 
-    m_in_use.setSize(m_virtual_networks);
-    m_ordered.setSize(m_virtual_networks);
+    m_in_use.resize(m_virtual_networks);
+    m_ordered.resize(m_virtual_networks);
     for (int i = 0; i < m_virtual_networks; i++) {
         m_in_use[i] = false;
         m_ordered[i] = false;
     }
 
     // Allocate to and from queues
-    m_toNetQueues.setSize(m_nodes);
-    m_fromNetQueues.setSize(m_nodes);
+    m_toNetQueues.resize(m_nodes);
+    m_fromNetQueues.resize(m_nodes);
     for (int node = 0; node < m_nodes; node++) {
-        m_toNetQueues[node].setSize(m_virtual_networks);
-        m_fromNetQueues[node].setSize(m_virtual_networks);
+        m_toNetQueues[node].resize(m_virtual_networks);
+        m_fromNetQueues[node].resize(m_virtual_networks);
         for (int j = 0; j < m_virtual_networks; j++) {
             m_toNetQueues[node][j] =
                 new MessageBuffer(csprintf("toNet node %d j %d", node, j));
@@ -93,7 +95,7 @@ SimpleNetwork::init()
     assert(m_topology_ptr != NULL);
     int number_of_switches = m_topology_ptr->numSwitches();
     for (int i = 0; i < number_of_switches; i++) {
-        m_switch_ptr_vector.insertAtBottom(new Switch(i, this));
+        m_switch_ptr_vector.push_back(new Switch(i, this));
     }
 
     // false because this isn't a reconfiguration
@@ -118,11 +120,11 @@ SimpleNetwork::reset()
 SimpleNetwork::~SimpleNetwork()
 {
     for (int i = 0; i < m_nodes; i++) {
-        m_toNetQueues[i].deletePointers();
-        m_fromNetQueues[i].deletePointers();
+        deletePointers(m_toNetQueues[i]);
+        deletePointers(m_fromNetQueues[i]);
     }
-    m_switch_ptr_vector.deletePointers();
-    m_buffers_to_free.deletePointers();
+    deletePointers(m_switch_ptr_vector);
+    deletePointers(m_buffers_to_free);
     // delete m_topology_ptr;
 }
 
@@ -173,17 +175,17 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest,
     }
 
     // Create a set of new MessageBuffers
-    Vector<MessageBuffer*> queues;
+    std::vector<MessageBuffer*> queues;
     for (int i = 0; i < m_virtual_networks; i++) {
         // allocate a buffer
         MessageBuffer* buffer_ptr = new MessageBuffer;
         buffer_ptr->setOrdering(true);
         if (m_buffer_size > 0) {
-            buffer_ptr->setSize(m_buffer_size);
+            buffer_ptr->resize(m_buffer_size);
         }
-        queues.insertAtBottom(buffer_ptr);
+        queues.push_back(buffer_ptr);
         // remember to deallocate it
-        m_buffers_to_free.insertAtBottom(buffer_ptr);
+        m_buffers_to_free.push_back(buffer_ptr);
     }
     // Connect it to the two switches
     m_switch_ptr_vector[dest]->addInPort(queues);
@@ -217,7 +219,7 @@ SimpleNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num)
     return m_fromNetQueues[id][network_num];
 }
 
-const Vector<Throttle*>*
+const std::vector<Throttle*>*
 SimpleNetwork::getThrottles(NodeID id) const
 {
     assert(id >= 0);

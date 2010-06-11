@@ -85,7 +85,7 @@ RubySystem::RubySystem(const Params *p)
         m_mem_vec_ptr = NULL;
     } else {
         m_mem_vec_ptr = new MemoryVector;
-        m_mem_vec_ptr->setSize(m_memory_size_bytes);
+        m_mem_vec_ptr->resize(m_memory_size_bytes);
     }
 
     //

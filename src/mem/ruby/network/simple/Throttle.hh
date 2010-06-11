@@ -39,8 +39,8 @@
 #define __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__
 
 #include <iostream>
+#include <vector>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/network/Network.hh"
@@ -57,8 +57,8 @@ class Throttle : public Consumer
     Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier);
     ~Throttle() {}
 
-    void addLinks(const Vector<MessageBuffer*>& in_vec,
-        const Vector<MessageBuffer*>& out_vec);
+    void addLinks(const std::vector<MessageBuffer*>& in_vec,
+        const std::vector<MessageBuffer*>& out_vec);
     void wakeup();
 
     void printStats(std::ostream& out) const;
@@ -74,7 +74,7 @@ class Throttle : public Consumer
     }
     int getLatency() const { return m_link_latency; }
 
-    const Vector<Vector<int> >&
+    const std::vector<std::vector<int> >&
     getCounters() const
     {
         return m_message_counters;
@@ -93,11 +93,11 @@ class Throttle : public Consumer
     Throttle(const Throttle& obj);
     Throttle& operator=(const Throttle& obj);
 
-    Vector<MessageBuffer*> m_in;
-    Vector<MessageBuffer*> m_out;
-    Vector<Vector<int> > m_message_counters;
+    std::vector<MessageBuffer*> m_in;
+    std::vector<MessageBuffer*> m_out;
+    std::vector<std::vector<int> > m_message_counters;
     int m_vnets;
-    Vector<int> m_units_remaining;
+    std::vector<int> m_units_remaining;
     int m_sID;
     NodeID m_node;
     int m_link_bandwidth_multiplier;

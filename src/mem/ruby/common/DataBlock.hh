@@ -32,7 +32,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/System.hh"
 

@@ -63,8 +63,8 @@ Topology::Topology(const Params *p)
     m_print_config = p->print_config;
     m_number_of_switches = p->num_int_nodes;
     // initialize component latencies record
-    m_component_latencies.setSize(0);
-    m_component_inter_switches.setSize(0);
+    m_component_latencies.resize(0);
+    m_component_inter_switches.resize(0);
 
     // Total nodes/controllers in network
     // Must make sure this is called after the State Machine constructors
@@ -85,7 +85,7 @@ Topology::Topology(const Params *p)
         AbstractController *c = p->ext_node;
 
         // Store the controller pointers for later
-        m_controller_vector.insertAtBottom(c);
+        m_controller_vector.push_back(c);
 
         int ext_idx1 =
             MachineType_base_number(c->getMachineType()) + c->getVersion();
@@ -133,24 +133,24 @@ Topology::createLinks(Network *net, bool isReconfiguration)
     Matrix topology_latency;
     Matrix topology_bw_multis;
     int num_switches = max_switch_id+1;
-    topology_weights.setSize(num_switches);
-    topology_latency.setSize(num_switches);
-    topology_bw_multis.setSize(num_switches);
+    topology_weights.resize(num_switches);
+    topology_latency.resize(num_switches);
+    topology_bw_multis.resize(num_switches);
 
     // FIXME setting the size of a member variable here is a HACK!
-    m_component_latencies.setSize(num_switches);
+    m_component_latencies.resize(num_switches);
 
     // FIXME setting the size of a member variable here is a HACK!
-    m_component_inter_switches.setSize(num_switches);
+    m_component_inter_switches.resize(num_switches);
 
     for (int i = 0; i < topology_weights.size(); i++) {
-        topology_weights[i].setSize(num_switches);
-        topology_latency[i].setSize(num_switches);
-        topology_bw_multis[i].setSize(num_switches);
-        m_component_latencies[i].setSize(num_switches);
+        topology_weights[i].resize(num_switches);
+        topology_latency[i].resize(num_switches);
+        topology_bw_multis[i].resize(num_switches);
+        m_component_latencies[i].resize(num_switches);
 
         // FIXME setting the size of a member variable here is a HACK!
-        m_component_inter_switches[i].setSize(num_switches);
+        m_component_inter_switches[i].resize(num_switches);
 
         for (int j = 0; j < topology_weights[i].size(); j++) {
             topology_weights[i][j] = INFINITE_LATENCY;
@@ -226,11 +226,11 @@ Topology::addLink(SwitchID src, SwitchID dest, int link_latency,
 {
     ASSERT(src <= m_number_of_switches+m_nodes+m_nodes);
     ASSERT(dest <= m_number_of_switches+m_nodes+m_nodes);
-    m_links_src_vector.insertAtBottom(src);
-    m_links_dest_vector.insertAtBottom(dest);
-    m_links_latency_vector.insertAtBottom(link_latency);
-    m_links_weight_vector.insertAtBottom(link_weight);
-    m_bw_multiplier_vector.insertAtBottom(bw_multiplier);
+    m_links_src_vector.push_back(src);
+    m_links_dest_vector.push_back(dest);
+    m_links_latency_vector.push_back(link_latency);
+    m_links_weight_vector.push_back(link_weight);
+    m_bw_multiplier_vector.push_back(bw_multiplier);
 }
 
 void

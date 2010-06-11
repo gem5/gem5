@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -38,8 +39,6 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/system/NodeID.hh"
-
-template <class TYPE> class Vector;
 
 class CacheProfiler
 {
@@ -69,7 +68,7 @@ class CacheProfiler
     int64 m_hw_prefetches;
     int64 m_accessModeTypeHistogram[AccessModeType_NUM];
 
-    Vector <int>* m_requestTypeVec_ptr;
+    std::vector<int> m_requestTypeVec;
 };
 
 inline std::ostream&
