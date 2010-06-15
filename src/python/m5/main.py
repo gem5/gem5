@@ -360,8 +360,13 @@ def main():
 
     # once the script is done
     if options.interactive:
-        interact = code.InteractiveConsole(scope)
-        interact.interact("M5 Interactive Console")
+        banner = "M5 Interactive Console"
+        try:
+            from IPython.Shell import IPShellEmbed
+            ipshell = IPShellEmbed(banner=banner,user_ns=scope)
+            ipshell()
+        except ImportError:
+            code.InteractiveConsole(scope).interact(banner)
 
 if __name__ == '__main__':
     from pprint import pprint
