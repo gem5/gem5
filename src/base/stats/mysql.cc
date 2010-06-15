@@ -150,22 +150,6 @@ MySqlRun::cleanup()
 
     if (mysql.commit())
         panic("could not commit transaction\n%s\n", mysql.error);
-
-    mysql.query("DELETE events"
-                "FROM events"
-                "LEFT JOIN runs ON ev_run=rn_id"
-                "WHERE rn_id IS NULL");
-
-    if (mysql.commit())
-        panic("could not commit transaction\n%s\n", mysql.error);
-
-    mysql.query("DELETE event_names"
-                "FROM event_names"
-                "LEFT JOIN events ON en_id=ev_event"
-                "WHERE ev_event IS NULL");
-
-    if (mysql.commit())
-        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -347,93 +331,6 @@ InsertData::insert()
                     data);
 }
 
-InsertEvent::InsertEvent(MySqlRun *_run)
-    : run(_run)
-{
-    query = new char[maxsize + 1];
-    size = 0;
-    first = true;
-    flush();
-}
-
-InsertEvent::~InsertEvent()
-{
-    flush();
-}
-
-void
-InsertEvent::insert(const string &stat)
-{
-    MySQL::Connection &mysql = run->conn();
-    assert(mysql.connected());
-
-    event_map_t::iterator i = events.find(stat);
-    uint32_t event;
-    if (i == events.end()) {
-        mysql.query(
-            csprintf("SELECT en_id "
-                     "from event_names "
-                     "where en_name=\"%s\"",
-                     stat));
-
-        MySQL::Result result = mysql.store_result();
-        if (!result)
-            panic("could not get a run\n%s\n", mysql.error);
-
-        assert(result.num_fields() == 1);
-        MySQL::Row row = result.fetch_row();
-        if (row) {
-            if (!to_number(row[0], event))
-                panic("invalid event id: %s\n", row[0]);
-        } else {
-            mysql.query(
-                csprintf("INSERT INTO "
-                         "event_names(en_name)"
-                         "values(\"%s\")",
-                         stat));
-
-            if (mysql.error)
-                panic("could not get a run\n%s\n", mysql.error);
-
-            event = mysql.insert_id();
-        }
-    } else {
-        event = (*i).second;
-    }
-
-    if (size + 1024 > maxsize)
-        flush();
-
-    if (!first) {
-        query[size++] = ',';
-        query[size] = '\0';
-    }
-
-    first = false;
-
-    size += sprintf(query + size, "(%u,%u,%llu)",
-                    event, run->run(), (unsigned long long)curTick);
-}
-
-void
-InsertEvent::flush()
-{
-    static const char query_header[] = "INSERT INTO "
-        "events(ev_event, ev_run, ev_tick)"
-        "values";
-
-    MySQL::Connection &mysql = run->conn();
-    assert(mysql.connected());
-
-    if (size)
-        mysql.query(query);
-
-    query[0] = '\0';
-    size = sizeof(query_header);
-    first = true;
-    memcpy(query, query_header, size);
-}
-
 struct InsertSubData
 {
     uint16_t stat;
@@ -465,7 +362,7 @@ InsertSubData::setup(MySqlRun *run)
 }
 
 MySql::MySql()
-    : run(new MySqlRun), newdata(run), newevent(run)
+    : run(new MySqlRun), newdata(run)
 {}
 
 MySql::~MySql()
@@ -727,12 +624,6 @@ MySql::output()
     }
 
     newdata.flush();
-}
-
-void
-MySql::event(const std::string &event)
-{
-    newevent.insert(event);
 }
 
 void

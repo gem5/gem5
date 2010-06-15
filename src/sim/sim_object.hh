@@ -136,9 +136,6 @@ class SimObject
      * char* rather than std::string to make it callable from gdb.
      */
     static SimObject *find(const char *name);
-
-  public:
-    void recordEvent(const std::string &stat);
 };
 
 #endif // __SIM_OBJECT_HH__

@@ -36,7 +36,6 @@
 #include "arch/alpha/tlb.hh"
 #include "base/cp_annotate.hh"
 #include "base/debug.hh"
-#include "base/stats/events.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"

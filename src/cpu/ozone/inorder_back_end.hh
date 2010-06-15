@@ -229,10 +229,6 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
             DPRINTF(IBE, "Dcache hit!\n");
         }
     }
-/*
-    if (!dcacheInterface && (memReq->isUncacheable()))
-        recordEvent("Uncached Read");
-*/
     return fault;
 }
 
@@ -269,10 +265,6 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     if (res && (fault == NoFault))
         *res = memReq->result;
-/*
-    if (!dcacheInterface && (memReq->isUncacheable()))
-        recordEvent("Uncached Write");
-*/
     return fault;
 }
 
@@ -313,10 +305,6 @@ InorderBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         }
     }
 
-/*
-    if (!dcacheInterface && (req->isUncacheable()))
-        recordEvent("Uncached Read");
-*/
     return NoFault;
 }
 
@@ -390,10 +378,6 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
     if (res && (fault == NoFault))
         *res = req->result;
         */
-/*
-    if (!dcacheInterface && (req->isUncacheable()))
-        recordEvent("Uncached Write");
-*/
     return NoFault;
 }
 

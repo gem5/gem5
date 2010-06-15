@@ -75,7 +75,6 @@ Source('loader/object_file.cc')
 Source('loader/raw_object.cc')
 Source('loader/symtab.cc')
 
-Source('stats/events.cc')
 Source('stats/output.cc')
 Source('stats/text.cc')
 Source('stats/visit.cc')

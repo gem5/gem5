@@ -92,27 +92,6 @@ class InsertData
     void insert();
 };
 
-class InsertEvent
-{
-  private:
-    char *query;
-    size_type size;
-    bool first;
-    static const size_type maxsize = 1024*1024;
-
-    typedef std::map<std::string, uint32_t> event_map_t;
-    event_map_t events;
-
-    MySqlRun *run;
-
-  public:
-    InsertEvent(MySqlRun *_run);
-    ~InsertEvent();
-
-    void flush();
-    void insert(const std::string &stat);
-};
-
 class MySql : public Output
 {
   protected:
@@ -121,7 +100,6 @@ class MySql : public Output
 
     SetupStat stat;
     InsertData newdata;
-    InsertEvent newevent;
     std::list<FormulaInfo *> formulas;
     bool configured;
 
@@ -166,9 +144,6 @@ class MySql : public Output
     // Implement Output
     virtual bool valid() const;
     virtual void output();
-
-    // Implement Event Output
-    virtual void event(const std::string &event);
 
   protected:
     // Output helper

@@ -35,7 +35,6 @@
 #include "base/inifile.hh"
 #include "base/match.hh"
 #include "base/misc.hh"
-#include "base/stats/events.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "sim/sim_object.hh"
@@ -219,12 +218,6 @@ debugObjectBreak(const char *objs)
     SimObject::debugObjectBreak(string(objs));
 }
 #endif
-
-void
-SimObject::recordEvent(const std::string &stat)
-{
-    Stats::recordEvent(stat);
-}
 
 unsigned int
 SimObject::drain(Event *drain_event)

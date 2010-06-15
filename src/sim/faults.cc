@@ -46,7 +46,6 @@ void FaultBase::invoke(ThreadContext * tc)
 void FaultBase::invoke(ThreadContext * tc)
 {
     DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), tc->readPC());
-    tc->getCpuPtr()->recordEvent(csprintf("Fault %s", name()));
 
     assert(!tc->misspeculating());
 }
