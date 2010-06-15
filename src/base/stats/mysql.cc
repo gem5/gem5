@@ -430,7 +430,7 @@ MySql::configure(const Info &info, string type)
     stat.name = info.name;
     stat.descr = info.desc;
     stat.type = type;
-    stat.print = info.flags & print;
+    stat.print = info.flags & display;
     stat.prec = info.precision;
     stat.nozero = info.flags & nozero;
     stat.nonan = info.flags & nonan;
@@ -629,7 +629,7 @@ MySql::output()
 void
 MySql::output(const ScalarInfo &info)
 {
-    if (!(info.flags & print))
+    if (!(info.flags & display))
         return;
 
     newdata.stat = find(info.id);
@@ -643,7 +643,7 @@ MySql::output(const ScalarInfo &info)
 void
 MySql::output(const VectorInfo &info)
 {
-    if (!(info.flags & print))
+    if (!(info.flags & display))
         return;
 
     newdata.stat = find(info.id);
@@ -710,7 +710,7 @@ MySql::output(const DistData &data, const DistParams *params)
 void
 MySql::output(const DistInfo &info)
 {
-    if (!(info.flags & print))
+    if (!(info.flags & display))
         return;
 
     newdata.stat = find(info.id);
@@ -721,7 +721,7 @@ MySql::output(const DistInfo &info)
 void
 MySql::output(const VectorDistInfo &info)
 {
-    if (!(info.flags & print))
+    if (!(info.flags & display))
         return;
 
     newdata.stat = find(info.id);
@@ -737,7 +737,7 @@ MySql::output(const VectorDistInfo &info)
 void
 MySql::output(const Vector2dInfo &info)
 {
-    if (!(info.flags & print))
+    if (!(info.flags & display))
         return;
 
     newdata.stat = find(info.id);
