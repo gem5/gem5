@@ -119,7 +119,7 @@ EtherDevice::regStats()
         .precision(0)
         ;
 
-   descDmaWrBytes
+    descDmaWrBytes
         .name(name() + ".descDmaWriteBytes")
         .desc("number of descriptor bytes write w/ DMA")
         .precision(0)
@@ -364,4 +364,5 @@ EtherDevice::regStats()
 
     txPacketRate = txPackets / simSeconds;
     rxPacketRate = rxPackets / simSeconds;
+    totPacketRate = totPackets / simSeconds;
 }

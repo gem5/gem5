@@ -238,12 +238,12 @@ Vector2dInfo::enable()
 
 Formula::Formula()
 {
-    setInit();
 }
 
 Formula::Formula(Temp r)
 {
     root = r;
+    setInit();
     assert(size());
 }
 
@@ -252,6 +252,7 @@ Formula::operator=(Temp r)
 {
     assert(!root && "Can't change formulas");
     root = r;
+    setInit();
     assert(size());
     return *this;
 }
@@ -261,8 +262,11 @@ Formula::operator+=(Temp r)
 {
     if (root)
         root = NodePtr(new BinaryNode<std::plus<Result> >(root, r));
-    else
+    else {
         root = r;
+        setInit();
+    }
+
     assert(size());
     return *this;
 }

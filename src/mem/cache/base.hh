@@ -324,12 +324,14 @@ class BaseCache : public MemObject
     /** Total cycle latency of overall MSHR misses. */
     Stats::Formula overallMshrUncacheableLatency;
 
+#if 0
     /** The total number of MSHR accesses per command and thread. */
     Stats::Formula mshrAccesses[MemCmd::NUM_MEM_CMDS];
     /** The total number of demand MSHR accesses. */
     Stats::Formula demandMshrAccesses;
     /** The total number of MSHR accesses. */
     Stats::Formula overallMshrAccesses;
+#endif
 
     /** The miss rate in the MSHRs pre command and thread. */
     Stats::Formula mshrMissRate[MemCmd::NUM_MEM_CMDS];

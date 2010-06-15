@@ -282,11 +282,6 @@ TLB::regStats()
         .desc("DTB misses")
         ;
 
-    invalids
-        .name(name() + ".invalids")
-        .desc("DTB access violations")
-        ;
-
     accesses
         .name(name() + ".accesses")
         .desc("DTB accesses")

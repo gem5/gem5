@@ -244,10 +244,6 @@ class IdeDisk : public SimObject
     Stats::Scalar dmaWriteFullPages;
     Stats::Scalar dmaWriteBytes;
     Stats::Scalar dmaWriteTxs;
-    Stats::Formula rdBandwidth;
-    Stats::Formula wrBandwidth;
-    Stats::Formula totBandwidth;
-    Stats::Formula totBytes;
 
   public:
     typedef IdeDiskParams Params;

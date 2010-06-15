@@ -108,7 +108,6 @@ class TLB : public BaseTLB
     mutable Stats::Scalar write_accesses;
     Stats::Formula hits;
     Stats::Formula misses;
-    Stats::Formula invalids;
     Stats::Formula accesses;
 
 

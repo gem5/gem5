@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:13:04
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 24 2010 23:13:12
-M5 executing on SC2B0619
-command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic -re tests/run.py build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
+M5 compiled Jun 14 2010 18:16:48
+M5 revision 22c414a5ff89+ 7455+ default stats_funcinit.diff qtip tip
+M5 started Jun 14 2010 18:19:53
+M5 executing on maize
+command line: /n/blue/z/binkert/build/work/build/ALPHA_FS/m5.fast -d /n/blue/z/binkert/build/work/build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic -re tests/run.py /n/blue/z/binkert/build/work/build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /proj/aatl_perfmod_arch/m5_system_files/m5_system_2.0b3/binaries/vmlinux
-info: kernel located at: /proj/aatl_perfmod_arch/m5_system_files/m5_system_2.0b3/binaries/vmlinux
+info: kernel located at: /dist/m5/system/binaries/vmlinux
+info: kernel located at: /dist/m5/system/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 4300236804024 because checkpoint
