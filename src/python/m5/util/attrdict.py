@@ -58,6 +58,9 @@ class multiattrdict(attrdict):
         try:
             return super(multiattrdict, self).__getattr__(attr)
         except AttributeError:
+            if attr.startswith('_'):
+                raise
+
             d = multiattrdict()
             setattr(self, attr, d)
             return d

@@ -34,7 +34,7 @@ import sys
 import convert
 import jobfile
 
-from attrdict import attrdict, optiondict
+from attrdict import attrdict, multiattrdict, optiondict
 from code_formatter import code_formatter
 from multidict import multidict
 from orderdict import orderdict
