@@ -44,7 +44,7 @@ const FlagsType none =          0x0000;
 /** This Stat is Initialized */
 const FlagsType init =          0x0001;
 /** Print this stat. */
-const FlagsType print =         0x0002;
+const FlagsType display =       0x0002;
 /** Print the total. */
 const FlagsType total =         0x0010;
 /** Print the percent of the total that this entry represents. */
@@ -59,7 +59,7 @@ const FlagsType nozero =        0x0100;
 const FlagsType nonan =         0x0200;
 
 /** Mask of flags that can't be set directly */
-const FlagsType __reserved =    init | print;
+const FlagsType __reserved =    init | display;
 
 struct StorageParams
 {

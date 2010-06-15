@@ -192,7 +192,7 @@ Info::baseCheck() const
         return false;
     }
 
-    if ((flags & print) && name.empty()) {
+    if ((flags & display) && name.empty()) {
         panic("all printable stats must be named");
         return false;
     }
@@ -331,7 +331,7 @@ enable()
     off_t j = 0;
     for (i = statsList().begin(); i != end; ++i) {
         Info *info = *i;
-        if (!(info->flags & print))
+        if (!(info->flags & display))
             info->name = "__Stat" + to_string(j++);
     }
 

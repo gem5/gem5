@@ -151,7 +151,7 @@ Text::output()
 bool
 Text::noOutput(const Info &info)
 {
-    if (!info.flags.isSet(print))
+    if (!info.flags.isSet(display))
         return true;
 
     if (info.prereq && info.prereq->zero())
