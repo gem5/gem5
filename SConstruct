@@ -515,7 +515,8 @@ from distutils import sysconfig
 
 py_getvar = sysconfig.get_config_var
 
-py_version = 'python' + py_getvar('VERSION')
+py_debug = getattr(sys, 'pydebug', False)
+py_version = 'python' + py_getvar('VERSION') + (py_debug and "_d" or "")
 
 py_general_include = sysconfig.get_python_inc()
 py_platform_include = sysconfig.get_python_inc(plat_specific=True)
