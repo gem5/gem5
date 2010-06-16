@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 140959                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 294084                       # Number of bytes of host memory used
-host_seconds                                   398.50                       # Real time elapsed on the host
-host_tick_rate                             4787234846                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 198866                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 278256                       # Number of bytes of host memory used
+host_seconds                                   282.46                       # Real time elapsed on the host
+host_tick_rate                             6753860070                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    56171530                       # Number of instructions simulated
 sim_seconds                                  1.907689                       # Number of seconds simulated
@@ -1250,26 +1250,46 @@ system.l2c.ReadReq_mshr_miss_rate::2              inf                       # ms
 system.l2c.ReadReq_mshr_miss_rate::total          inf                       # mshr miss rate for ReadReq accesses
 system.l2c.ReadReq_mshr_misses                 311951                       # number of ReadReq MSHR misses
 system.l2c.ReadReq_mshr_uncacheable_latency    839822000                       # number of ReadReq MSHR uncacheable cycles
-system.l2c.UpgradeReq_accesses::0               86460                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.UpgradeReq_accesses::1               54412                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.UpgradeReq_accesses::total          140872                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.UpgradeReq_avg_miss_latency::0 83177.133796                       # average UpgradeReq miss latency
-system.l2c.UpgradeReq_avg_miss_latency::1 132167.444461                       # average UpgradeReq miss latency
+system.l2c.SCUpgradeReq_accesses::0             17600                       # number of SCUpgradeReq accesses(hits+misses)
+system.l2c.SCUpgradeReq_accesses::1             13825                       # number of SCUpgradeReq accesses(hits+misses)
+system.l2c.SCUpgradeReq_accesses::total         31425                       # number of SCUpgradeReq accesses(hits+misses)
+system.l2c.SCUpgradeReq_avg_miss_latency::0 92935.170455                       # average SCUpgradeReq miss latency
+system.l2c.SCUpgradeReq_avg_miss_latency::1 118311.681736                       # average SCUpgradeReq miss latency
+system.l2c.SCUpgradeReq_avg_miss_latency::2          inf                       # average SCUpgradeReq miss latency
+system.l2c.SCUpgradeReq_avg_miss_latency::total          inf                       # average SCUpgradeReq miss latency
+system.l2c.SCUpgradeReq_avg_mshr_miss_latency 40007.112172                       # average SCUpgradeReq mshr miss latency
+system.l2c.SCUpgradeReq_miss_latency       1635659000                       # number of SCUpgradeReq miss cycles
+system.l2c.SCUpgradeReq_miss_rate::0                1                       # miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_miss_rate::1                1                       # miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_misses::0               17600                       # number of SCUpgradeReq misses
+system.l2c.SCUpgradeReq_misses::1               13825                       # number of SCUpgradeReq misses
+system.l2c.SCUpgradeReq_misses::total           31425                       # number of SCUpgradeReq misses
+system.l2c.SCUpgradeReq_mshr_miss_latency   1257223500                       # number of SCUpgradeReq MSHR miss cycles
+system.l2c.SCUpgradeReq_mshr_miss_rate::0     1.785511                       # mshr miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_mshr_miss_rate::1     2.273056                       # mshr miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_mshr_miss_rate::2          inf                       # mshr miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_mshr_miss_rate::total          inf                       # mshr miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_mshr_misses             31425                       # number of SCUpgradeReq MSHR misses
+system.l2c.UpgradeReq_accesses::0               68860                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.UpgradeReq_accesses::1               40587                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.UpgradeReq_accesses::total          109447                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.UpgradeReq_avg_miss_latency::0 80683.066918                       # average UpgradeReq miss latency
+system.l2c.UpgradeReq_avg_miss_latency::1 136887.081775                       # average UpgradeReq miss latency
 system.l2c.UpgradeReq_avg_miss_latency::2          inf                       # average UpgradeReq miss latency
 system.l2c.UpgradeReq_avg_miss_latency::total          inf                       # average UpgradeReq miss latency
-system.l2c.UpgradeReq_avg_mshr_miss_latency 40094.049918                       # average UpgradeReq mshr miss latency
-system.l2c.UpgradeReq_miss_latency         7191494988                       # number of UpgradeReq miss cycles
+system.l2c.UpgradeReq_avg_mshr_miss_latency 40119.011942                       # average UpgradeReq mshr miss latency
+system.l2c.UpgradeReq_miss_latency         5555835988                       # number of UpgradeReq miss cycles
 system.l2c.UpgradeReq_miss_rate::0                  1                       # miss rate for UpgradeReq accesses
 system.l2c.UpgradeReq_miss_rate::1                  1                       # miss rate for UpgradeReq accesses
-system.l2c.UpgradeReq_misses::0                 86460                       # number of UpgradeReq misses
-system.l2c.UpgradeReq_misses::1                 54412                       # number of UpgradeReq misses
-system.l2c.UpgradeReq_misses::total            140872                       # number of UpgradeReq misses
-system.l2c.UpgradeReq_mshr_miss_latency    5648129000                       # number of UpgradeReq MSHR miss cycles
-system.l2c.UpgradeReq_mshr_miss_rate::0      1.629331                       # mshr miss rate for UpgradeReq accesses
-system.l2c.UpgradeReq_mshr_miss_rate::1      2.588988                       # mshr miss rate for UpgradeReq accesses
+system.l2c.UpgradeReq_misses::0                 68860                       # number of UpgradeReq misses
+system.l2c.UpgradeReq_misses::1                 40587                       # number of UpgradeReq misses
+system.l2c.UpgradeReq_misses::total            109447                       # number of UpgradeReq misses
+system.l2c.UpgradeReq_mshr_miss_latency    4390905500                       # number of UpgradeReq MSHR miss cycles
+system.l2c.UpgradeReq_mshr_miss_rate::0      1.589413                       # mshr miss rate for UpgradeReq accesses
+system.l2c.UpgradeReq_mshr_miss_rate::1      2.696602                       # mshr miss rate for UpgradeReq accesses
 system.l2c.UpgradeReq_mshr_miss_rate::2           inf                       # mshr miss rate for UpgradeReq accesses
 system.l2c.UpgradeReq_mshr_miss_rate::total          inf                       # mshr miss rate for UpgradeReq accesses
-system.l2c.UpgradeReq_mshr_misses              140872                       # number of UpgradeReq MSHR misses
+system.l2c.UpgradeReq_mshr_misses              109447                       # number of UpgradeReq MSHR misses
 system.l2c.WriteReq_avg_mshr_uncacheable_latency          inf                       # average WriteReq mshr uncacheable latency
 system.l2c.WriteReq_mshr_uncacheable_latency   1423289998                       # number of WriteReq MSHR uncacheable cycles
 system.l2c.Writeback_accesses::0               451661                       # number of Writeback accesses(hits+misses)

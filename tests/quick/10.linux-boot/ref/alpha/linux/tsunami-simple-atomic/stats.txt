@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                2156504                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 277176                       # Number of bytes of host memory used
-host_seconds                                    27.84                       # Real time elapsed on the host
-host_tick_rate                            65706739181                       # Simulator tick rate (ticks/s)
+host_inst_rate                                3274924                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 275440                       # Number of bytes of host memory used
+host_seconds                                    18.33                       # Real time elapsed on the host
+host_tick_rate                            99783911231                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    60038305                       # Number of instructions simulated
 sim_seconds                                  1.829332                       # Number of seconds simulated
@@ -405,11 +405,16 @@ system.l2c.ReadReq_hits::total                1696652                       # nu
 system.l2c.ReadReq_miss_rate::0              0.361938                       # miss rate for ReadReq accesses
 system.l2c.ReadReq_misses::0                   962419                       # number of ReadReq misses
 system.l2c.ReadReq_misses::total               962419                       # number of ReadReq misses
-system.l2c.UpgradeReq_accesses::0              124945                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.UpgradeReq_accesses::total          124945                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.SCUpgradeReq_accesses::0             29867                       # number of SCUpgradeReq accesses(hits+misses)
+system.l2c.SCUpgradeReq_accesses::total         29867                       # number of SCUpgradeReq accesses(hits+misses)
+system.l2c.SCUpgradeReq_miss_rate::0                1                       # miss rate for SCUpgradeReq accesses
+system.l2c.SCUpgradeReq_misses::0               29867                       # number of SCUpgradeReq misses
+system.l2c.SCUpgradeReq_misses::total           29867                       # number of SCUpgradeReq misses
+system.l2c.UpgradeReq_accesses::0               95078                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.UpgradeReq_accesses::total           95078                       # number of UpgradeReq accesses(hits+misses)
 system.l2c.UpgradeReq_miss_rate::0                  1                       # miss rate for UpgradeReq accesses
-system.l2c.UpgradeReq_misses::0                124945                       # number of UpgradeReq misses
-system.l2c.UpgradeReq_misses::total            124945                       # number of UpgradeReq misses
+system.l2c.UpgradeReq_misses::0                 95078                       # number of UpgradeReq misses
+system.l2c.UpgradeReq_misses::total             95078                       # number of UpgradeReq misses
 system.l2c.Writeback_accesses::0               428893                       # number of Writeback accesses(hits+misses)
 system.l2c.Writeback_accesses::total           428893                       # number of Writeback accesses(hits+misses)
 system.l2c.Writeback_hits::0                   428893                       # number of Writeback hits

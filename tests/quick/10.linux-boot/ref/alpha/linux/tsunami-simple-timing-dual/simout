@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-timing-dual/simout
+Redirecting stderr to build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-timing-dual/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,12 +7,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:13:04
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 24 2010 23:33:27
-M5 executing on SC2B0619
+M5 compiled Jun 16 2010 10:39:13
+M5 revision b85fd4ba5453 7466 default qtip tip llsc-fix-stats
+M5 started Jun 16 2010 10:43:55
+M5 executing on phenom
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-timing-dual -re tests/run.py build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-timing-dual
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /proj/aatl_perfmod_arch/m5_system_files/m5_system_2.0b3/binaries/vmlinux
+info: kernel located at: /home/stever/m5/m5_system_2.0b3/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
+info: Launching CPU 1 @ 591544000
 Exiting @ tick 1972135461000 because m5_exit instruction encountered

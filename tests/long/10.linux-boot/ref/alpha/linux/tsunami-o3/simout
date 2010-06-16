@@ -7,12 +7,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun  6 2010 03:50:36
-M5 revision ba1a0193c050 7448 default tip
-M5 started Jun  6 2010 03:51:37
-M5 executing on zizzer
+M5 compiled Jun 16 2010 10:39:13
+M5 revision b85fd4ba5453 7466 default qtip tip llsc-fix-stats
+M5 started Jun 16 2010 10:39:35
+M5 executing on phenom
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3 -re tests/run.py build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/vmlinux
+info: kernel located at: /home/stever/m5/m5_system_2.0b3/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 1867360295500 because m5_exit instruction encountered
