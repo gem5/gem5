@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2010 Advancec Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,11 +93,22 @@ MemCmd::commandInfo[] =
     { SET3(IsWrite, NeedsExclusive, IsResponse),
             InvalidCmd, "WriteInvalidateResp" },
     /* UpgradeReq */
-    { SET4(IsInvalidate, NeedsExclusive, IsRequest, NeedsResponse),
+    { SET5(IsInvalidate, NeedsExclusive, IsUpgrade, IsRequest, NeedsResponse),
             UpgradeResp, "UpgradeReq" },
+    /* SCUpgradeReq: response could be UpgradeResp or UpgradeFailResp */
+    { SET6(IsInvalidate, NeedsExclusive, IsUpgrade, IsLlsc,
+           IsRequest, NeedsResponse),
+            UpgradeResp, "SCUpgradeReq" },
     /* UpgradeResp */
-    { SET2(NeedsExclusive, IsResponse),
+    { SET3(NeedsExclusive, IsUpgrade, IsResponse),
             InvalidCmd, "UpgradeResp" },
+    /* SCUpgradeFailReq: generates UpgradeFailResp ASAP */
+    { SET5(IsInvalidate, NeedsExclusive, IsLlsc,
+           IsRequest, NeedsResponse),
+            UpgradeFailResp, "SCUpgradeFailReq" },
+    /* UpgradeFailResp */
+    { SET2(NeedsExclusive, IsResponse),
+            InvalidCmd, "UpgradeFailResp" },
     /* ReadExReq */
     { SET5(IsRead, NeedsExclusive, IsInvalidate, IsRequest, NeedsResponse),
             ReadExResp, "ReadExReq" },

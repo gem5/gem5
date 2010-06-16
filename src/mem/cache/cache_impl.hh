@@ -196,7 +196,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
         // Not a read or write... must be an upgrade.  it's OK
         // to just ack those as long as we have an exclusive
         // copy at this level.
-        assert(pkt->cmd == MemCmd::UpgradeReq);
+        assert(pkt->isUpgrade());
         tags->invalidateBlk(blk);
     }
 }
@@ -536,8 +536,8 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
         return NULL;
     }
 
-    if (!blkValid && (cpu_pkt->cmd == MemCmd::Writeback ||
-                      cpu_pkt->cmd == MemCmd::UpgradeReq)) {
+    if (!blkValid &&
+        (cpu_pkt->cmd == MemCmd::Writeback || cpu_pkt->isUpgrade())) {
         // Writebacks that weren't allocated in access() and upgrades
         // from upper-level caches that missed completely just go
         // through.
@@ -556,7 +556,7 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
         // only reason to be here is that blk is shared
         // (read-only) and we need exclusive
         assert(needsExclusive && !blk->isWritable());
-        cmd = MemCmd::UpgradeReq;
+        cmd = cpu_pkt->isLLSC() ? MemCmd::SCUpgradeReq : MemCmd::UpgradeReq;
     } else {
         // block is invalid
         cmd = needsExclusive ? MemCmd::ReadExReq : MemCmd::ReadReq;
@@ -814,6 +814,11 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 assert(!target->pkt->req->isUncacheable());
                 missLatency[target->pkt->cmdToIndex()][0/*pkt->req->threadId()*/] +=
                     completion_time - target->recvTime;
+            } else if (target->pkt->cmd == MemCmd::StoreCondReq &&
+                       pkt->cmd == MemCmd::UpgradeFailResp) {
+                // failed StoreCond upgrade
+                completion_time = tags->getHitLatency() + pkt->finishTime;
+                target->pkt->req->setExtraData(0);
             } else {
                 // not a cache fill, just forwarding response
                 completion_time = tags->getHitLatency() + pkt->finishTime;
@@ -1336,7 +1341,15 @@ Cache<TagStore>::getTimingPacket()
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
     PacketPtr pkt = NULL;
 
-    if (mshr->isForwardNoResponse()) {
+    if (tgt_pkt->cmd == MemCmd::SCUpgradeFailReq) {
+        // SCUpgradeReq saw invalidation while queued in MSHR, so now
+        // that we are getting around to processing it, just treat it
+        // as if we got a failure response
+        pkt = new Packet(tgt_pkt);
+        pkt->cmd = MemCmd::UpgradeFailResp;
+        handleResponse(pkt);
+        return NULL;
+    } else if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
         assert(tags->findBlock(mshr->addr) == NULL);
         pkt = tgt_pkt;

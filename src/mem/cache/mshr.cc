@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2010 Advancec Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,7 +72,7 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
             needsExclusive = true;
         }
 
-        if (pkt->cmd == MemCmd::UpgradeReq) {
+        if (pkt->isUpgrade()) {
             hasUpgrade = true;
         }
     }
@@ -99,6 +100,9 @@ MSHR::TargetList::replaceUpgrades()
         if (i->pkt->cmd == MemCmd::UpgradeReq) {
             i->pkt->cmd = MemCmd::ReadExReq;
             DPRINTF(Cache, "Replacing UpgradeReq with ReadExReq\n");
+        } else if (i->pkt->cmd == MemCmd::SCUpgradeReq) {
+            i->pkt->cmd = MemCmd::SCUpgradeFailReq;
+            DPRINTF(Cache, "Replacing SCUpgradeReq with SCUpgradeFailReq\n");
         }
     }
 

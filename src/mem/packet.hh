@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2010 Advancec Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,7 +82,10 @@ class MemCmd
         WriteInvalidateReq,
         WriteInvalidateResp,
         UpgradeReq,
+        SCUpgradeReq,           // Special "weak" upgrade for StoreCond
         UpgradeResp,
+        SCUpgradeFailReq,       // Failed SCUpgradeReq in MSHR (never sent)
+        UpgradeFailResp,        // Valid for SCUpgradeReq only
         ReadExReq,
         ReadExResp,
         LoadLockedReq,
@@ -111,6 +115,7 @@ class MemCmd
     {
         IsRead,         //!< Data flows from responder to requester
         IsWrite,        //!< Data flows from requester to responder
+        IsUpgrade,
         IsPrefetch,     //!< Not a demand access
         IsInvalidate,
         NeedsExclusive, //!< Requires exclusive copy to complete in-cache
@@ -157,7 +162,8 @@ class MemCmd
   public:
 
     bool isRead() const         { return testCmdAttrib(IsRead); }
-    bool isWrite()  const       { return testCmdAttrib(IsWrite); }
+    bool isWrite() const        { return testCmdAttrib(IsWrite); }
+    bool isUpgrade() const      { return testCmdAttrib(IsUpgrade); }
     bool isRequest() const      { return testCmdAttrib(IsRequest); }
     bool isResponse() const     { return testCmdAttrib(IsResponse); }
     bool needsExclusive() const { return testCmdAttrib(NeedsExclusive); }
@@ -392,7 +398,8 @@ class Packet : public FastAlloc, public Printable
     inline int cmdToIndex() const { return cmd.toInt(); }
 
     bool isRead() const         { return cmd.isRead(); }
-    bool isWrite()  const       { return cmd.isWrite(); }
+    bool isWrite() const        { return cmd.isWrite(); }
+    bool isUpgrade()  const     { return cmd.isUpgrade(); }
     bool isRequest() const      { return cmd.isRequest(); }
     bool isResponse() const     { return cmd.isResponse(); }
     bool needsExclusive() const { return cmd.needsExclusive(); }
