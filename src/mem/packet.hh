@@ -559,6 +559,10 @@ class Packet : public FastAlloc, public Printable
         origCmd = cmd;
         cmd = cmd.responseCommand();
 
+        // responses are never express, even if the snoop that
+        // triggered them was
+        flags.clear(EXPRESS_SNOOP);
+
         dest = src;
         flags.set(VALID_DST, flags.isSet(VALID_SRC));
         flags.clear(VALID_SRC);

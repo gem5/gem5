@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -169,9 +170,9 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
     if (pkt->cmd == MemCmd::SwapReq) {
         cmpAndSwap(blk, pkt);
     } else if (pkt->isWrite()) {
-        blk->status |= BlkDirty;
         if (blk->checkWrite(pkt)) {
             pkt->writeDataToBlock(blk->data, blkSize);
+            blk->status |= BlkDirty;
         }
     } else if (pkt->isRead()) {
         if (pkt->isLLSC()) {
@@ -988,11 +989,19 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         assert(pkt->hasData() || blk->isValid());
     }
 
+    blk->status = BlkValid | BlkReadable;
+
     if (!pkt->sharedAsserted()) {
-        blk->status = BlkValid | BlkReadable | BlkWritable;
-    } else {
-        assert(!pkt->needsExclusive());
-        blk->status = BlkValid | BlkReadable;
+        blk->status |= BlkWritable;
+        // If we got this via cache-to-cache transfer (i.e., from a
+        // cache that was an owner) and took away that owner's copy,
+        // then we need to write it back.  Normally this happens
+        // anyway as a side effect of getting a copy to write it, but
+        // there are cases (such as failed store conditionals or
+        // compare-and-swaps) where we'll demand an exclusive copy but
+        // end up not writing it.
+        if (pkt->memInhibitAsserted())
+            blk->status |= BlkDirty;
     }
 
     DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
@@ -1023,14 +1032,8 @@ doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
 {
     // timing-mode snoop responses require a new packet, unless we
     // already made a copy...
-    PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt, true);
-    if (!req_pkt->isInvalidate()) {
-        // note that we're ignoring the shared flag on req_pkt... it's
-        // basically irrelevant, as we'll always assert shared unless
-        // it's an exclusive request, in which case the shared line
-        // should never be asserted1
-        pkt->assertShared();
-    }
+    PacketPtr pkt = already_copied ? req_pkt : new Packet(req_pkt);
+    assert(req_pkt->isInvalidate() || pkt->sharedAsserted());
     pkt->allocate();
     pkt->makeTimingResponse();
     if (pkt->isRead()) {
