@@ -32,39 +32,45 @@
 
 InVcState::InVcState(int id)
 {
-        m_id = id;
-        m_vc_state = IDLE_;
+    m_id = id;
+    m_vc_state = IDLE_;
 }
 
-bool InVcState::isInState(VC_state_type state, Time request_time)
+bool
+InVcState::isInState(VC_state_type state, Time request_time)
 {
-        return ((m_vc_state == state) && (request_time >= m_time) );
+    return ((m_vc_state == state) && (request_time >= m_time) );
 }
 
-void InVcState::setRoute(int route)
+void
+InVcState::setRoute(int route)
 {
-        m_route = route;
+    m_route = route;
 }
 
-void InVcState::setState(VC_state_type state, Time time)
+void
+InVcState::setState(VC_state_type state, Time time)
 {
-        m_vc_state = state;
-        m_time = time;
+    m_vc_state = state;
+    m_time = time;
 }
 
-void InVcState::grant_vc(int out_vc, Time grant_time)
+void
+InVcState::grant_vc(int out_vc, Time grant_time)
 {
-        m_vc_state = ACTIVE_;
-        m_time = grant_time;
-        m_output_vc = out_vc;
+    m_vc_state = ACTIVE_;
+    m_time = grant_time;
+    m_output_vc = out_vc;
 }
 
-int InVcState::get_outport()
+int
+InVcState::get_outport()
 {
-        return m_route;
+    return m_route;
 }
 
-int InVcState::get_outvc()
+int
+InVcState::get_outvc()
 {
-        return m_output_vc;
+    return m_output_vc;
 }

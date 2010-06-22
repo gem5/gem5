@@ -33,109 +33,128 @@
 
 NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
 {
-        m_id = id;
-        linkBuffer = new flitBuffer();
-        m_in_port = 0;
-        m_out_port = 0;
-        m_link_utilized = 0;
-        m_net_ptr = net_ptr;
-        m_latency = latency;
-        int num_net = net_ptr->getNumberOfVirtualNetworks();
-        int num_vc = m_net_ptr->getVCsPerClass();
-        m_vc_load.resize(num_net * num_vc);
+    m_id = id;
+    linkBuffer = new flitBuffer();
+    m_in_port = 0;
+    m_out_port = 0;
+    m_link_utilized = 0;
+    m_net_ptr = net_ptr;
+    m_latency = latency;
+    int num_net = net_ptr->getNumberOfVirtualNetworks();
+    int num_vc = m_net_ptr->getVCsPerClass();
+    m_vc_load.resize(num_net * num_vc);
 
-        for(int i = 0; i < num_net*num_vc; i++)
-                m_vc_load[i] = 0;
+    for (int i = 0; i < num_net * num_vc; i++)
+        m_vc_load[i] = 0;
 }
 
 NetworkLink::~NetworkLink()
 {
-        delete linkBuffer;
+    delete linkBuffer;
 }
 
-int NetworkLink::get_id()
+int
+NetworkLink::get_id()
 {
-        return m_id;
+    return m_id;
 }
 
-void NetworkLink::setLinkConsumer(FlexibleConsumer *consumer)
+void
+NetworkLink::setLinkConsumer(FlexibleConsumer *consumer)
 {
-        link_consumer = consumer;
+    link_consumer = consumer;
 }
 
-void NetworkLink::setSourceQueue(flitBuffer *srcQueue)
+void
+NetworkLink::setSourceQueue(flitBuffer *srcQueue)
 {
-        link_srcQueue = srcQueue;
+    link_srcQueue = srcQueue;
 }
 
-void NetworkLink::setSource(FlexibleConsumer *source)
+void
+NetworkLink::setSource(FlexibleConsumer *source)
 {
-        link_source = source;
-}
-void NetworkLink::request_vc_link(int vc, NetDest destination, Time request_time)
-{
-        link_consumer->request_vc(vc, m_in_port, destination, request_time);
-}
-bool NetworkLink::isBufferNotFull_link(int vc)
-{
-        return link_consumer->isBufferNotFull(vc, m_in_port);
+    link_source = source;
 }
 
-void NetworkLink::grant_vc_link(int vc, Time grant_time)
+void
+NetworkLink::request_vc_link(int vc, NetDest destination, Time request_time)
 {
-        link_source->grant_vc(m_out_port, vc, grant_time);
+    link_consumer->request_vc(vc, m_in_port, destination, request_time);
 }
 
-void NetworkLink::release_vc_link(int vc, Time release_time)
+bool
+NetworkLink::isBufferNotFull_link(int vc)
 {
-        link_source->release_vc(m_out_port, vc, release_time);
+    return link_consumer->isBufferNotFull(vc, m_in_port);
 }
 
-std::vector<int> NetworkLink::getVcLoad()
+void
+NetworkLink::grant_vc_link(int vc, Time grant_time)
 {
-        return m_vc_load;
+    link_source->grant_vc(m_out_port, vc, grant_time);
 }
 
-double NetworkLink::getLinkUtilization()
+void
+NetworkLink::release_vc_link(int vc, Time release_time)
 {
-        Time m_ruby_start = m_net_ptr->getRubyStartTime();
-        return (double(m_link_utilized)) / (double(g_eventQueue_ptr->getTime()-m_ruby_start));
+    link_source->release_vc(m_out_port, vc, release_time);
 }
 
-bool NetworkLink::isReady()
+std::vector<int>
+NetworkLink::getVcLoad()
 {
-        return linkBuffer->isReady();
+    return m_vc_load;
 }
 
-void NetworkLink::setInPort(int port)
+double
+NetworkLink::getLinkUtilization()
 {
-        m_in_port = port;
+    Time m_ruby_start = m_net_ptr->getRubyStartTime();
+    return (double(m_link_utilized)) /
+           (double(g_eventQueue_ptr->getTime()-m_ruby_start));
 }
 
-void NetworkLink::setOutPort(int port)
+bool
+NetworkLink::isReady()
 {
-        m_out_port = port;
+    return linkBuffer->isReady();
 }
 
-void NetworkLink::wakeup()
+void
+NetworkLink::setInPort(int port)
 {
-        if(link_srcQueue->isReady())
-        {
-                flit *t_flit = link_srcQueue->getTopFlit();
-                t_flit->set_time(g_eventQueue_ptr->getTime() + m_latency);
-                linkBuffer->insert(t_flit);
-                g_eventQueue_ptr->scheduleEvent(link_consumer, m_latency);
-                m_link_utilized++;
-                m_vc_load[t_flit->get_vc()]++;
-        }
+    m_in_port = port;
 }
 
-flit* NetworkLink::peekLink()
+void
+NetworkLink::setOutPort(int port)
 {
-        return linkBuffer->peekTopFlit();
+    m_out_port = port;
 }
 
-flit* NetworkLink::consumeLink()
+void
+NetworkLink::wakeup()
 {
-        return linkBuffer->getTopFlit();
+    if (!link_srcQueue->isReady())
+        return;
+
+    flit *t_flit = link_srcQueue->getTopFlit();
+    t_flit->set_time(g_eventQueue_ptr->getTime() + m_latency);
+    linkBuffer->insert(t_flit);
+    g_eventQueue_ptr->scheduleEvent(link_consumer, m_latency);
+    m_link_utilized++;
+    m_vc_load[t_flit->get_vc()]++;
+}
+
+flit*
+NetworkLink::peekLink()
+{
+    return linkBuffer->peekTopFlit();
+}
+
+flit*
+NetworkLink::consumeLink()
+{
+    return linkBuffer->getTopFlit();
 }

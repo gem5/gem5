@@ -28,56 +28,45 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef OUT_VC_STATE_D_H
-#define OUT_VC_STATE_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_OUT_VC_STATE_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_OUT_VC_STATE_D_HH__
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 
-class OutVcState_d {
-public:
-        OutVcState_d(int id, GarnetNetwork_d *network_ptr);
+class OutVcState_d
+{
+  public:
+    OutVcState_d(int id, GarnetNetwork_d *network_ptr);
 
-        int get_inport() {return m_in_port; }
-        int get_invc() { return m_in_vc; }
-        int get_credit_count() {return m_credit_count; }
-        void set_inport(int port) {m_in_port = port; }
-        void set_invc(int vc) {m_in_vc = vc; }
+    int get_inport()                { return m_in_port; }
+    int get_invc()                  { return m_in_vc; }
+    int get_credit_count()          { return m_credit_count; }
+    void set_inport(int port)       { m_in_port = port; }
+    void set_invc(int vc)           { m_in_vc = vc; }
+    inline bool
+    isInState(VC_state_type state, Time request_time)
+    {
+        return ((m_vc_state == state) && (request_time >= m_time) );
+    }
+    inline void
+    setState(VC_state_type state, Time time)
+    {
+        m_vc_state = state;
+        m_time = time;
+    }
+    inline bool has_credits()       { return (m_credit_count > 0); }
+    inline void increment_credit()  { m_credit_count++; }
+    inline void decrement_credit()  { m_credit_count--; }
 
-        inline bool isInState(VC_state_type state, Time request_time)
-        {
-                return ((m_vc_state == state) && (request_time >= m_time) );
-        }
-
-        inline void setState(VC_state_type state, Time time)
-        {
-                m_vc_state = state;
-                m_time = time;
-        }
-
-        inline bool has_credits()
-        {
-                return (m_credit_count > 0);
-        }
-
-        inline void increment_credit()
-        {
-                m_credit_count++;
-        }
-
-        inline void decrement_credit()
-        {
-                m_credit_count--;
-        }
-
-private:
-        GarnetNetwork_d *m_network_ptr;
-        int m_id ;
-        Time m_time;
-        VC_state_type m_vc_state;
-        int m_in_port;
-        int m_in_vc;
-        int m_credit_count;
+  private:
+    GarnetNetwork_d *m_network_ptr;
+    int m_id ;
+    Time m_time;
+    VC_state_type m_vc_state;
+    int m_in_port;
+    int m_in_vc;
+    int m_credit_count;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_OUT_VC_STATE_D_HH__

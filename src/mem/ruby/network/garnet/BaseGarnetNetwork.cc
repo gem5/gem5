@@ -40,7 +40,8 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
     m_using_network_testing = p->using_network_testing;
 }
 
-void BaseGarnetNetwork::init()
+void
+BaseGarnetNetwork::init()
 {
     Network::init();
 }

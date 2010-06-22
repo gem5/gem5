@@ -37,58 +37,65 @@ using m5::stl_helpers::deletePointers;
 
 InputUnit_d::InputUnit_d(int id, Router_d *router)
 {
-        m_id = id;
-        m_router = router;
-        m_num_vcs = m_router->get_num_vcs();
+    m_id = id;
+    m_router = router;
+    m_num_vcs = m_router->get_num_vcs();
 
-        m_num_buffer_reads = 0;
-        m_num_buffer_writes = 0;
+    m_num_buffer_reads = 0;
+    m_num_buffer_writes = 0;
 
-        creditQueue = new flitBuffer_d();
-        // Instantiating the virtual channels
-        m_vcs.resize(m_num_vcs);
-        for(int i=0; i < m_num_vcs; i++)
-        {
-                m_vcs[i] = new VirtualChannel_d(i);
-        }
+    creditQueue = new flitBuffer_d();
+    // Instantiating the virtual channels
+    m_vcs.resize(m_num_vcs);
+    for (int i=0; i < m_num_vcs; i++) {
+        m_vcs[i] = new VirtualChannel_d(i);
+    }
 }
 
 InputUnit_d::~InputUnit_d()
 {
-        delete creditQueue;
-        deletePointers(m_vcs);
+    delete creditQueue;
+    deletePointers(m_vcs);
 }
 
-void InputUnit_d::wakeup()
+void
+InputUnit_d::wakeup()
 {
-        flit_d *t_flit;
-        if(m_in_link->isReady())
-        {
-                t_flit = m_in_link->consumeLink();
-                int vc = t_flit->get_vc();
-                if((t_flit->get_type() == HEAD_) || (t_flit->get_type() == HEAD_TAIL_))
-                {
-                        assert(m_vcs[vc]->get_state() == IDLE_);
-                        m_router->route_req(t_flit, this, vc); // Do the route computation for this vc
-                        m_vcs[vc]->set_enqueue_time(g_eventQueue_ptr->getTime());
-                }
-                else
-                {
-                        t_flit->advance_stage(SA_);
-                        m_router->swarb_req();
-                }
-                m_vcs[vc]->insertFlit(t_flit);   // write flit into input buffer
-                m_num_buffer_writes++;
-                m_num_buffer_reads++; // same as read because any flit that is written will be read only once
+    flit_d *t_flit;
+    if (m_in_link->isReady()) {
+
+        t_flit = m_in_link->consumeLink();
+        int vc = t_flit->get_vc();
+
+        if ((t_flit->get_type() == HEAD_) ||
+           (t_flit->get_type() == HEAD_TAIL_)) {
+
+            assert(m_vcs[vc]->get_state() == IDLE_);
+            // Do the route computation for this vc
+            m_router->route_req(t_flit, this, vc);
+
+            m_vcs[vc]->set_enqueue_time(g_eventQueue_ptr->getTime());
+        } else {
+            t_flit->advance_stage(SA_);
+            m_router->swarb_req();
         }
+        // write flit into input buffer
+        m_vcs[vc]->insertFlit(t_flit);
+
+
+        // number of writes same as reads
+        // any flit that is written will be read only once
+        m_num_buffer_writes++;
+        m_num_buffer_reads++;
+    }
 }
 
-
-void InputUnit_d::printConfig(ostream& out)
+void
+InputUnit_d::printConfig(ostream& out)
 {
-        out << endl;
-        out << "InputUnit Configuration" << endl;
-        out << "---------------------" << endl;
-        out << "id = " << m_id << endl;
-        out << "In link is " << m_in_link->get_id() << endl;
+    out << endl;
+    out << "InputUnit Configuration" << endl;
+    out << "---------------------" << endl;
+    out << "id = " << m_id << endl;
+    out << "In link is " << m_in_link->get_id() << endl;
 }

@@ -31,68 +31,61 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 
-/*
-NetworkLink_d::NetworkLink_d(int id)
-{
-        m_id = id;
-        m_latency = 1;
-        m_flit_width = NetworkConfig::getFlitSize();
-
-        linkBuffer = new flitBuffer_d();
-        m_link_utilized = 0;
-        m_vc_load.resize(NetworkConfig::getVCsPerClass()*RubySystem::getNetwork()->getNumberOfVirtualNetworks());
-
-        for(int i = 0; i < NetworkConfig::getVCsPerClass()*RubySystem::getNetwork()->getNumberOfVirtualNetworks(); i++)
-                m_vc_load[i] = 0;
-}
-*/
 NetworkLink_d::NetworkLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr)
 {
-        m_net_ptr = net_ptr;
-        m_id = id;
-        m_latency = link_latency;
-        linkBuffer = new flitBuffer_d();
-        m_link_utilized = 0;
-        m_vc_load.resize(m_net_ptr->getVCsPerClass()*net_ptr->getNumberOfVirtualNetworks());
+    m_net_ptr = net_ptr;
+    m_id = id;
+    m_latency = link_latency;
+    linkBuffer = new flitBuffer_d();
+    m_link_utilized = 0;
+    m_vc_load.resize(m_net_ptr->getVCsPerClass() *
+                     net_ptr->getNumberOfVirtualNetworks());
 
-        for(int i = 0; i < m_net_ptr->getVCsPerClass()*net_ptr->getNumberOfVirtualNetworks(); i++)
-                m_vc_load[i] = 0;
+    for (int i = 0;
+        i < m_net_ptr->getVCsPerClass()*net_ptr->getNumberOfVirtualNetworks();
+        i++) {
+        m_vc_load[i] = 0;
+    }
 }
 
 NetworkLink_d::~NetworkLink_d()
 {
-        delete linkBuffer;
+    delete linkBuffer;
 }
 
-void NetworkLink_d::setLinkConsumer(Consumer *consumer)
+void
+NetworkLink_d::setLinkConsumer(Consumer *consumer)
 {
-        link_consumer = consumer;
+    link_consumer = consumer;
 }
 
-void NetworkLink_d::setSourceQueue(flitBuffer_d *srcQueue)
+void
+NetworkLink_d::setSourceQueue(flitBuffer_d *srcQueue)
 {
-        link_srcQueue = srcQueue;
+    link_srcQueue = srcQueue;
 }
 
-void NetworkLink_d::wakeup()
+void
+NetworkLink_d::wakeup()
 {
-        if(link_srcQueue->isReady())
-        {
-                flit_d *t_flit = link_srcQueue->getTopFlit();
-                t_flit->set_time(g_eventQueue_ptr->getTime() + m_latency);
-                linkBuffer->insert(t_flit);
-                g_eventQueue_ptr->scheduleEvent(link_consumer, m_latency);
-                m_link_utilized++;
-                m_vc_load[t_flit->get_vc()]++;
-        }
+    if (link_srcQueue->isReady()) {
+        flit_d *t_flit = link_srcQueue->getTopFlit();
+        t_flit->set_time(g_eventQueue_ptr->getTime() + m_latency);
+        linkBuffer->insert(t_flit);
+        g_eventQueue_ptr->scheduleEvent(link_consumer, m_latency);
+        m_link_utilized++;
+        m_vc_load[t_flit->get_vc()]++;
+    }
 }
 
-std::vector<int> NetworkLink_d::getVcLoad()
+std::vector<int>
+NetworkLink_d::getVcLoad()
 {
-        return m_vc_load;
+    return m_vc_load;
 }
 
-int NetworkLink_d::getLinkUtilization()
+int
+NetworkLink_d::getLinkUtilization()
 {
-        return m_link_utilized;
+    return m_link_utilized;
 }

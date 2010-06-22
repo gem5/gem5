@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef NET_INTERFACE_D_H
-#define NET_INTERFACE_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_INTERFACE_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_INTERFACE_D_HH__
 
 #include <iostream>
 #include <vector>
@@ -46,49 +46,53 @@ class NetworkMessage;
 class MessageBuffer;
 class flitBuffer_d;
 
-class NetworkInterface_d : public Consumer {
-public:
-        NetworkInterface_d(int id, int virtual_networks, GarnetNetwork_d* network_ptr);
+class NetworkInterface_d : public Consumer
+{
+  public:
+    NetworkInterface_d(int id, int virtual_networks,
+                       GarnetNetwork_d* network_ptr);
 
-        ~NetworkInterface_d();
+    ~NetworkInterface_d();
 
-        void addInPort(NetworkLink_d *in_link, CreditLink_d *credit_link);
-        void addOutPort(NetworkLink_d *out_link, CreditLink_d *credit_link);
+    void addInPort(NetworkLink_d *in_link, CreditLink_d *credit_link);
+    void addOutPort(NetworkLink_d *out_link, CreditLink_d *credit_link);
 
-        void wakeup();
-        void addNode(std::vector<MessageBuffer *> &inNode,
-            std::vector<MessageBuffer *> &outNode);
-        void printConfig(std::ostream& out) const;
-        void print(std::ostream& out) const;
-        int get_vnet(int vc);
+    void wakeup();
+    void addNode(std::vector<MessageBuffer *> &inNode,
+                 std::vector<MessageBuffer *> &outNode);
+    void printConfig(std::ostream& out) const;
+    void print(std::ostream& out) const;
+    int get_vnet(int vc);
 
-private:
-/**************Data Members*************/
-        GarnetNetwork_d *m_net_ptr;
-        int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
-        NodeID m_id;
-        std::vector<OutVcState_d *> m_out_vc_state;
-        std::vector<int > m_vc_allocator;
-        int m_vc_round_robin; // For round robin scheduling
-        flitBuffer_d *outSrcQueue; // For modelling link contention
-        flitBuffer_d *creditQueue;
+  private:
+    GarnetNetwork_d *m_net_ptr;
+    int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
+    NodeID m_id;
+    std::vector<OutVcState_d *> m_out_vc_state;
+    std::vector<int> m_vc_allocator;
+    int m_vc_round_robin; // For round robin scheduling
+    flitBuffer_d *outSrcQueue; // For modelling link contention
+    flitBuffer_d *creditQueue;
 
-        NetworkLink_d *inNetLink;
-        NetworkLink_d *outNetLink;
-        CreditLink_d *m_credit_link;
-        CreditLink_d *m_ni_credit_link;
+    NetworkLink_d *inNetLink;
+    NetworkLink_d *outNetLink;
+    CreditLink_d *m_credit_link;
+    CreditLink_d *m_ni_credit_link;
 
-        // Input Flit Buffers
-        std::vector<flitBuffer_d *>   m_ni_buffers; // The flit buffers which will serve the Consumer
-        std::vector<Time > m_ni_enqueue_time;
+    // Input Flit Buffers
+    // The flit buffers which will serve the Consumer
+    std::vector<flitBuffer_d *>   m_ni_buffers;
+    std::vector<Time> m_ni_enqueue_time;
 
-        std::vector<MessageBuffer *> inNode_ptr; // The Message buffers that takes messages from the protocol
-        std::vector<MessageBuffer *> outNode_ptr; // The Message buffers that provides messages to the protocol
+    // The Message buffers that takes messages from the protocol
+    std::vector<MessageBuffer *> inNode_ptr;
+    // The Message buffers that provides messages to the protocol
+    std::vector<MessageBuffer *> outNode_ptr;
 
-        bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
-        int calculateVC(int vnet);
-        void scheduleOutputLink();
-        void checkReschedule();
+    bool flitisizeMessage(MsgPtr msg_ptr, int vnet);
+    int calculateVC(int vnet);
+    void scheduleOutputLink();
+    void checkReschedule();
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_INTERFACE_D_HH__

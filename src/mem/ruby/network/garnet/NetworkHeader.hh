@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef NETWORK_HEADER_H
-#define NETWORK_HEADER_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_NETWORKHEADER_HH__
+#define __MEM_RUBY_NETWORK_GARNET_NETWORKHEADER_HH__
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
@@ -40,5 +40,4 @@ enum flit_stage {I_, VA_, SA_, ST_, LT_, NUM_FLIT_STAGE_};
 
 #define INFINITE_ 10000
 
-#endif
-
+#endif // __MEM_RUBY_NETWORK_GARNET_NETWORKHEADER_HH__

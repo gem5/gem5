@@ -37,9 +37,9 @@ using m5::stl_helpers::deletePointers;
 
 Switch_d::Switch_d(Router_d *router)
 {
-        m_router = router;
-        m_num_vcs = m_router->get_num_vcs();
-        m_crossbar_activity = 0;
+    m_router = router;
+    m_num_vcs = m_router->get_num_vcs();
+    m_crossbar_activity = 0;
 }
 
 Switch_d::~Switch_d()
@@ -47,50 +47,49 @@ Switch_d::~Switch_d()
     deletePointers(m_switch_buffer);
 }
 
-void Switch_d::init()
+void
+Switch_d::init()
 {
-        m_output_unit = m_router->get_outputUnit_ref();
+    m_output_unit = m_router->get_outputUnit_ref();
 
-        m_num_inports = m_router->get_num_inports();
-        m_switch_buffer.resize(m_num_inports);
-        for(int i = 0; i < m_num_inports; i++)
-        {
-                m_switch_buffer[i] = new flitBuffer_d();
-        }
+    m_num_inports = m_router->get_num_inports();
+    m_switch_buffer.resize(m_num_inports);
+    for (int i = 0; i < m_num_inports; i++) {
+        m_switch_buffer[i] = new flitBuffer_d();
+    }
 }
 
-void Switch_d::wakeup()
+void
+Switch_d::wakeup()
 {
-        DEBUG_MSG(NETWORK_COMP, HighPrio, "Switch woke up");
-        DEBUG_EXPR(NETWORK_COMP, HighPrio, g_eventQueue_ptr->getTime());
+    DEBUG_MSG(NETWORK_COMP, HighPrio, "Switch woke up");
+    DEBUG_EXPR(NETWORK_COMP, HighPrio, g_eventQueue_ptr->getTime());
 
-        for(int inport = 0; inport < m_num_inports; inport++)
-        {
-                if(!m_switch_buffer[inport]->isReady())
-                        continue;
-                flit_d *t_flit = m_switch_buffer[inport]->peekTopFlit();
-                if(t_flit->is_stage(ST_))
-                {
-                        int outport = t_flit->get_outport();
-                        t_flit->advance_stage(LT_);
-                        t_flit->set_time(g_eventQueue_ptr->getTime() + 1);
-                        m_output_unit[outport]->insert_flit(t_flit); // This will take care of waking up the Network Link
-                        m_switch_buffer[inport]->getTopFlit();
-                        m_crossbar_activity++;
-                }
+    for (int inport = 0; inport < m_num_inports; inport++) {
+        if (!m_switch_buffer[inport]->isReady())
+            continue;
+        flit_d *t_flit = m_switch_buffer[inport]->peekTopFlit();
+        if (t_flit->is_stage(ST_)) {
+            int outport = t_flit->get_outport();
+            t_flit->advance_stage(LT_);
+            t_flit->set_time(g_eventQueue_ptr->getTime() + 1);
+
+            // This will take care of waking up the Network Link
+            m_output_unit[outport]->insert_flit(t_flit);
+            m_switch_buffer[inport]->getTopFlit();
+            m_crossbar_activity++;
         }
-        check_for_wakeup();
+    }
+    check_for_wakeup();
 }
 
-void Switch_d::check_for_wakeup()
+void
+Switch_d::check_for_wakeup()
 {
-        for(int inport = 0; inport < m_num_inports; inport++)
-        {
-                if(m_switch_buffer[inport]->isReadyForNext())
-                {
-                        g_eventQueue_ptr->scheduleEvent(this, 1);
-                        break;
-                }
+    for (int inport = 0; inport < m_num_inports; inport++) {
+        if (m_switch_buffer[inport]->isReadyForNext()) {
+            g_eventQueue_ptr->scheduleEvent(this, 1);
+            break;
         }
+    }
 }
-

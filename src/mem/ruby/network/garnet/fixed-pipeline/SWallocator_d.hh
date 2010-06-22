@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef SW_ALLOCATOR_D_H
-#define SW_ALLOCATOR_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_SW_ALLOCATOR_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_SW_ALLOCATOR_D_HH__
 
 #include <iostream>
 #include <vector>
@@ -41,40 +41,44 @@ class Router_d;
 class InputUnit_d;
 class OutputUnit_d;
 
-class SWallocator_d : public Consumer {
-public:
-        SWallocator_d(Router_d *router);
-        void wakeup();
-        void init();
-        void clear_request_vector();
-        void check_for_wakeup();
-        int get_vnet (int invc);
-        void print(std::ostream& out) const {};
-        void arbitrate_inports();
-        void arbitrate_outports();
-        bool is_candidate_inport(int inport, int invc);
-        inline double get_local_arbit_count()
-        {
-                return m_local_arbiter_activity;
-        }
-        inline double get_global_arbit_count()
-        {
-                return m_global_arbiter_activity;
-        }
+class SWallocator_d : public Consumer
+{
+  public:
+    SWallocator_d(Router_d *router);
+    void wakeup();
+    void init();
+    void clear_request_vector();
+    void check_for_wakeup();
+    int get_vnet (int invc);
+    void print(std::ostream& out) const {};
+    void arbitrate_inports();
+    void arbitrate_outports();
+    bool is_candidate_inport(int inport, int invc);
 
-private:
-        int m_num_inports, m_num_outports;
-        int m_num_vcs, m_vc_per_vnet;
+    inline double
+    get_local_arbit_count()
+    {
+        return m_local_arbiter_activity;
+    }
+    inline double
+    get_global_arbit_count()
+    {
+        return m_global_arbiter_activity;
+    }
 
-        double m_local_arbiter_activity, m_global_arbiter_activity;
+  private:
+    int m_num_inports, m_num_outports;
+    int m_num_vcs, m_vc_per_vnet;
 
-        Router_d *m_router;
-        std::vector<int> m_round_robin_outport;
-        std::vector<int> m_round_robin_inport;
-        std::vector<std::vector<bool> > m_port_req;
-        std::vector<std::vector<int> > m_vc_winners; // a list for each outport
-        std::vector<InputUnit_d *> m_input_unit;
-        std::vector<OutputUnit_d *> m_output_unit;
+    double m_local_arbiter_activity, m_global_arbiter_activity;
+
+    Router_d *m_router;
+    std::vector<int> m_round_robin_outport;
+    std::vector<int> m_round_robin_inport;
+    std::vector<std::vector<bool> > m_port_req;
+    std::vector<std::vector<int> > m_vc_winners; // a list for each outport
+    std::vector<InputUnit_d *> m_input_unit;
+    std::vector<OutputUnit_d *> m_output_unit;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_SW_ALLOCATOR_D_HH__

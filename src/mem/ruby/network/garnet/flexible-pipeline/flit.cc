@@ -32,77 +32,94 @@
 
 flit::flit(int id, int  vc, int vnet, int size, MsgPtr msg_ptr)
 {
-        m_size = size;
-        m_msg_ptr = msg_ptr;
-        m_enqueue_time = g_eventQueue_ptr->getTime();
-        m_time = g_eventQueue_ptr->getTime();
-        m_id = id;
-        m_vnet = vnet;
-        m_vc = vc;
+    m_size = size;
+    m_msg_ptr = msg_ptr;
+    m_enqueue_time = g_eventQueue_ptr->getTime();
+    m_time = g_eventQueue_ptr->getTime();
+    m_id = id;
+    m_vnet = vnet;
+    m_vc = vc;
 
-        if(size == 1)
-        {
-                m_type = HEAD_TAIL_;
-                return;
-        }
-        if(id == 0)
-                m_type = HEAD_;
-        else if(id == (size - 1))
-                m_type = TAIL_;
-        else
-                m_type = BODY_;
-}
-
-int flit::get_size()
-{
-        return m_size;
-}
-int flit::get_id()
-{
-        return m_id;
-}
-Time flit::get_time()
-{
-        return m_time;
+    if (size == 1) {
+        m_type = HEAD_TAIL_;
+        return;
+    }
+    if (id == 0)
+        m_type = HEAD_;
+    else if (id == (size - 1))
+        m_type = TAIL_;
+    else
+        m_type = BODY_;
 }
 
-Time flit::get_enqueue_time()
+int
+flit::get_size()
 {
-        return m_enqueue_time;
-}
-void flit::set_time(Time time)
-{
-        m_time = time;
+    return m_size;
 }
 
-int flit::get_vnet()
+int
+flit::get_id()
 {
-        return m_vnet;
-}
-int flit::get_vc()
-{
-        return m_vc;
-}
-void flit::set_vc(int vc)
-{
-        m_vc = vc;
-}
-MsgPtr& flit::get_msg_ptr()
-{
-        return m_msg_ptr;
-}
-flit_type flit::get_type()
-{
-        return m_type;
+    return m_id;
 }
 
-void flit::print(std::ostream& out) const
+Time
+flit::get_time()
 {
-        out << "[flit:: ";
-        out << "Id=" << m_id << " ";
-        out << "Type=" << m_type << " ";
-        out << "Vnet=" << m_vnet << " ";
-        out << "VC=" << m_vc << " ";
-        out << "Enqueue Time=" << m_enqueue_time << " ";
-        out << "]";
+    return m_time;
+}
+
+Time
+flit::get_enqueue_time()
+{
+    return m_enqueue_time;
+}
+
+void
+flit::set_time(Time time)
+{
+    m_time = time;
+}
+
+int
+flit::get_vnet()
+{
+    return m_vnet;
+}
+
+int
+flit::get_vc()
+{
+    return m_vc;
+}
+
+void
+flit::set_vc(int vc)
+{
+    m_vc = vc;
+}
+
+MsgPtr&
+flit::get_msg_ptr()
+{
+    return m_msg_ptr;
+}
+
+flit_type
+flit::get_type()
+{
+    return m_type;
+}
+
+void
+flit::print(std::ostream& out) const
+{
+    out << "[flit:: ";
+    out << "Id=" << m_id << " ";
+    out << "Type=" << m_type << " ";
+    out << "Vnet=" << m_vnet << " ";
+    out << "VC=" << m_vc << " ";
+    out << "Enqueue Time=" << m_enqueue_time << " ";
+    out << "]";
 }

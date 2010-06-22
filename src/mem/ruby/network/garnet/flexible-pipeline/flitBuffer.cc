@@ -36,72 +36,79 @@ using namespace std;
 
 flitBuffer::flitBuffer()
 {
-        max_size = INFINITE_;
+    max_size = INFINITE_;
 }
 
 flitBuffer::flitBuffer(int maximum_size)
 {
-        max_size = maximum_size;
+    max_size = maximum_size;
 }
 
-bool flitBuffer::isEmpty()
+bool
+flitBuffer::isEmpty()
 {
-        return (m_buffer.size() == 0);
+    return (m_buffer.size() == 0);
 }
 
-bool flitBuffer::isReady()
+bool
+flitBuffer::isReady()
 {
-        if(m_buffer.size() != 0 )
-        {
-                flit *t_flit = m_buffer.front();
-                if(t_flit->get_time() <= g_eventQueue_ptr->getTime())
-                        return true;
-        }
-        return false;
+    if (m_buffer.size() != 0 ) {
+        flit *t_flit = m_buffer.front();
+        if (t_flit->get_time() <= g_eventQueue_ptr->getTime())
+            return true;
+    }
+    return false;
 }
 
-bool flitBuffer::isReadyForNext()
+bool
+flitBuffer::isReadyForNext()
 {
-        if(m_buffer.size() != 0 )
-        {
-                flit *t_flit = m_buffer.front();
-                if(t_flit->get_time() <= (g_eventQueue_ptr->getTime() + 1))
-                        return true;
-        }
-        return false;
+    if (m_buffer.size() != 0 ) {
+        flit *t_flit = m_buffer.front();
+        if (t_flit->get_time() <= (g_eventQueue_ptr->getTime() + 1))
+            return true;
+    }
+    return false;
 }
 
-bool flitBuffer::isFull()
+bool
+flitBuffer::isFull()
 {
-        return (m_buffer.size() >= max_size);
+    return (m_buffer.size() >= max_size);
 }
 
-void flitBuffer::setMaxSize(int maximum)
+void
+flitBuffer::setMaxSize(int maximum)
 {
-        max_size = maximum;
+    max_size = maximum;
 }
 
-flit* flitBuffer:: getTopFlit()
+flit*
+flitBuffer:: getTopFlit()
 {
-        flit *f = m_buffer.front();
-        pop_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
-        m_buffer.pop_back();
-        return f;
+    flit *f = m_buffer.front();
+    pop_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
+    m_buffer.pop_back();
+    return f;
 }
 
-flit* flitBuffer::peekTopFlit()
+flit*
+flitBuffer::peekTopFlit()
 {
-        return m_buffer.front();
+    return m_buffer.front();
 }
 
-void flitBuffer::insert(flit *flt)
+void
+flitBuffer::insert(flit *flt)
 {
-        m_buffer.push_back(flt);
-        push_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
+    m_buffer.push_back(flt);
+    push_heap(m_buffer.begin(), m_buffer.end(), flit::greater);
 }
 
-void flitBuffer::print(std::ostream& out) const
+void
+flitBuffer::print(std::ostream& out) const
 {
-        out << "[flitBuffer: ";
-        out << m_buffer.size() << "] " << std::endl;
+    out << "[flitBuffer: ";
+    out << m_buffer.size() << "] " << std::endl;
 }

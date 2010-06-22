@@ -28,14 +28,17 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef CREDIT_LINK_D_H
-#define CREDIT_LINK_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_CREDIT_LINK_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_CREDIT_LINK_D_HH__
 
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 
-class CreditLink_d : public NetworkLink_d {
-public:
-        CreditLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr):NetworkLink_d(id, link_latency, net_ptr) {}
+class CreditLink_d : public NetworkLink_d
+{
+  public:
+    CreditLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr)
+        : NetworkLink_d(id, link_latency, net_ptr)
+    {}
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_CREDIT_LINK_D_HH__

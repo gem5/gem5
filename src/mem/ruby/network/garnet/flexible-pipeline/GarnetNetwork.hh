@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef GARNET_NETWORK_H
-#define GARNET_NETWORK_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_GARNET_NETWORK_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_GARNET_NETWORK_HH__
 
 #include <iostream>
 #include <vector>
@@ -46,61 +46,65 @@ class Topology;
 class NetDest;
 class NetworkLink;
 
-class GarnetNetwork : public BaseGarnetNetwork {
-public:
+class GarnetNetwork : public BaseGarnetNetwork
+{
+  public:
     typedef GarnetNetworkParams Params;
     GarnetNetwork(const Params *p);
 
     ~GarnetNetwork();
 
-        void init();
+    void init();
 
-        // returns the queue requested for the given component
-        MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
-        MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
+    // returns the queue requested for the given component
+    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
+    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
 
-        void clearStats();
-        void printStats(std::ostream& out) const;
-        void printConfig(std::ostream& out) const;
-        void print(std::ostream& out) const;
+    void clearStats();
+    void printStats(std::ostream& out) const;
+    void printConfig(std::ostream& out) const;
+    void print(std::ostream& out) const;
 
-        bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
-        bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
+    bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
+    bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
 
-        Time getRubyStartTime();
-        int getNumNodes(){ return m_nodes; }
+    Time getRubyStartTime();
+    int getNumNodes(){ return m_nodes; }
 
-        void reset();
+    void reset();
 
-        // Methods used by Topology to setup the network
-        void makeOutLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight,  int bw_multiplier, bool isReconfiguration);
-        void makeInLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int bw_multiplier, bool isReconfiguration);
-        void makeInternalLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration);
+    // Methods used by Topology to setup the network
+    void makeOutLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency,
+        int link_weight,  int bw_multiplier, bool isReconfiguration);
+    void makeInLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency,
+        int bw_multiplier, bool isReconfiguration);
+    void makeInternalLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency,
+        int link_weight, int bw_multiplier, bool isReconfiguration);
 
-private:
-        void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
+  private:
+    void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
 
-// Private copy constructor and assignment operator
-        GarnetNetwork(const GarnetNetwork& obj);
-        GarnetNetwork& operator=(const GarnetNetwork& obj);
+    GarnetNetwork(const GarnetNetwork& obj);
+    GarnetNetwork& operator=(const GarnetNetwork& obj);
 
+    // int m_virtual_networks;
+    // int m_nodes;
 
-/***********Data Members*************/
-//      int m_virtual_networks;
-//      int m_nodes;
+    std::vector<bool> m_in_use;
+    std::vector<bool> m_ordered;
 
-        std::vector<bool> m_in_use;
-        std::vector<bool> m_ordered;
+    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
 
-        std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
-        std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
+    std::vector<Router *> m_router_ptr_vector;   // All Routers in Network
+    std::vector<NetworkLink *> m_link_ptr_vector; // All links in network
+    std::vector<NetworkInterface *> m_ni_ptr_vector; // All NI's in Network
 
-        std::vector<Router *> m_router_ptr_vector;   // All Routers in Network
-        std::vector<NetworkLink *> m_link_ptr_vector; // All links in the network
-        std::vector<NetworkInterface *> m_ni_ptr_vector;     // All NI's in Network
-
-//      Topology* m_topology_ptr;
-        Time m_ruby_start;
+    // Topology* m_topology_ptr;
+    Time m_ruby_start;
 };
 
 inline std::ostream&
@@ -111,4 +115,5 @@ operator<<(std::ostream& out, const GarnetNetwork& obj)
     return out;
 }
 
-#endif //NETWORK_H
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_GARNET_NETWORK_HH__
+

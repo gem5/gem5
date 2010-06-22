@@ -33,14 +33,15 @@
  * required by the interconnection network.
  */
 
-#ifndef BASEGARNETNETWORK_H
-#define BASEGARNETNETWORK_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__
+#define __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/Network.hh"
 #include "params/BaseGarnetNetwork.hh"
 
-class BaseGarnetNetwork : public Network {
+class BaseGarnetNetwork : public Network 
+{
   public:
     typedef BaseGarnetNetworkParams Params;
     BaseGarnetNetwork(const Params *p);
@@ -58,8 +59,6 @@ class BaseGarnetNetwork : public Network {
     int m_vcs_per_class;
     int m_buffer_size;
     bool m_using_network_testing;
-
 };
 
-
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__

@@ -33,10 +33,12 @@
 
 VCarbiter::VCarbiter(Router *router)
 {
-        m_router = router;
+    m_router = router;
 }
 
-void VCarbiter::wakeup()
+void
+VCarbiter::wakeup()
 {
-        m_router->vc_arbitrate();
+    m_router->vc_arbitrate();
 }
+

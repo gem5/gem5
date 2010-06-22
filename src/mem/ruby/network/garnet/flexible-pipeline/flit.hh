@@ -33,44 +33,44 @@
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
-#ifndef FLIT_H
-#define FLIT_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLIT_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLIT_HH__
 
-class flit {
-public:
-        flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr);
+class flit
+{
+  public:
+    flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr);
 
-        int get_size();
-        int get_id();
-        Time get_time();
-        Time get_enqueue_time();
-        void set_time(Time time);
-        int get_vnet();
-        int get_vc();
-        void set_vc(int vc);
-        MsgPtr& get_msg_ptr();
-        flit_type get_type();
-        void print(std::ostream& out) const;
+    int get_size();
+    int get_id();
+    Time get_time();
+    Time get_enqueue_time();
+    void set_time(Time time);
+    int get_vnet();
+    int get_vc();
+    void set_vc(int vc);
+    MsgPtr& get_msg_ptr();
+    flit_type get_type();
+    void print(std::ostream& out) const;
 
-        static bool
-        greater(flit* n1, flit* n2)
-        {
-            if (n1->get_time() == n2->get_time())
-                //ASSERT(n1->flit_id != n2->flit_id);
-                return (n1->get_id() > n2->get_id());
-            else
-                return (n1->get_time() > n2->get_time());
-        }
+    static bool
+    greater(flit* n1, flit* n2)
+    {
+        if (n1->get_time() == n2->get_time())
+            //ASSERT(n1->flit_id != n2->flit_id);
+            return (n1->get_id() > n2->get_id());
+        else
+            return (n1->get_time() > n2->get_time());
+    }
 
-private:
-/************Data Members*************/
-        int m_id;
-        int m_vnet;
-        int m_vc;
-        int m_size;
-        Time m_enqueue_time, m_time;
-        flit_type m_type;
-        MsgPtr m_msg_ptr;
+  private:
+    int m_id;
+    int m_vnet;
+    int m_vc;
+    int m_size;
+    Time m_enqueue_time, m_time;
+    flit_type m_type;
+    MsgPtr m_msg_ptr;
 
 };
 
@@ -82,4 +82,4 @@ operator<<(std::ostream& out, const flit& obj)
     return out;
 }
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLIT_HH__

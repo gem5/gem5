@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef FLIT_BUFFER_D_H
-#define FLIT_BUFFER_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_FLIT_BUFFER_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_FLIT_BUFFER_D_HH__
 
 #include <algorithm>
 #include <iostream>
@@ -38,38 +38,44 @@
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 
-class flitBuffer_d {
-public:
-        flitBuffer_d();
-        flitBuffer_d(int maximum_size);
+class flitBuffer_d
+{
+  public:
+    flitBuffer_d();
+    flitBuffer_d(int maximum_size);
 
-        bool isReady();
-        bool isReadyForNext();
-        bool isEmpty();
-        void print(std::ostream& out) const;
-        bool isFull();
-        void setMaxSize(int maximum);
+    bool isReady();
+    bool isReadyForNext();
+    bool isEmpty();
+    void print(std::ostream& out) const;
+    bool isFull();
+    void setMaxSize(int maximum);
 
-        inline flit_d* getTopFlit()
-        {
-            flit_d *f = m_buffer.front();
-            std::pop_heap(m_buffer.begin(), m_buffer.end(), flit_d::greater);
-            m_buffer.pop_back();
-            return f;
-        }
-        inline flit_d* peekTopFlit()
-        {
-            return m_buffer.front();
-        }
-        inline void insert(flit_d *flt)
-        {
-            m_buffer.push_back(flt);
-            std::push_heap(m_buffer.begin(), m_buffer.end(), flit_d::greater);
-        }
-        /**********Data Members*********/
-private:
-        std::vector<flit_d *> m_buffer;
-        int size, max_size;
+    flit_d *
+    getTopFlit()
+    {
+        flit_d *f = m_buffer.front();
+        std::pop_heap(m_buffer.begin(), m_buffer.end(), flit_d::greater);
+        m_buffer.pop_back();
+        return f;
+    }
+
+    flit_d *
+    peekTopFlit()
+    {
+        return m_buffer.front();
+    }
+
+    void
+    insert(flit_d *flt)
+    {
+        m_buffer.push_back(flt);
+        std::push_heap(m_buffer.begin(), m_buffer.end(), flit_d::greater);
+    }
+
+  private:
+    std::vector<flit_d *> m_buffer;
+    int size, max_size;
 };
 
 inline std::ostream&
@@ -80,5 +86,4 @@ operator<<(std::ostream& out, const flitBuffer_d& obj)
     return out;
 }
 
-#endif
-
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_FLIT_BUFFER_D_HH__

@@ -35,54 +35,55 @@
 
 RoutingUnit_d::RoutingUnit_d(Router_d *router)
 {
-        m_router = router;
-        m_routing_table.clear();
-        m_weight_table.clear();
+    m_router = router;
+    m_routing_table.clear();
+    m_weight_table.clear();
 }
 
-void RoutingUnit_d::addRoute(const NetDest& routing_table_entry)
+void
+RoutingUnit_d::addRoute(const NetDest& routing_table_entry)
 {
-        m_routing_table.push_back(routing_table_entry);
+    m_routing_table.push_back(routing_table_entry);
 }
 
-void RoutingUnit_d::addWeight(int link_weight)
+void
+RoutingUnit_d::addWeight(int link_weight)
 {
-        m_weight_table.push_back(link_weight);
+    m_weight_table.push_back(link_weight);
 }
 
-void RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)
+void
+RoutingUnit_d::RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc)
 {
-        int outport = routeCompute(t_flit);
-        in_unit->updateRoute(invc, outport);
-        t_flit->advance_stage(VA_);
-        m_router->vcarb_req();
+    int outport = routeCompute(t_flit);
+    in_unit->updateRoute(invc, outport);
+    t_flit->advance_stage(VA_);
+    m_router->vcarb_req();
 }
 
-int RoutingUnit_d::routeCompute(flit_d *t_flit)
+int
+RoutingUnit_d::routeCompute(flit_d *t_flit)
 {
-        MsgPtr msg_ptr = t_flit->get_msg_ptr();
-        NetworkMessage* net_msg_ptr =
-            safe_cast<NetworkMessage*>(msg_ptr.get());
-        NetDest msg_destination = net_msg_ptr->getInternalDestination();
+    MsgPtr msg_ptr = t_flit->get_msg_ptr();
+    NetworkMessage* net_msg_ptr = safe_cast<NetworkMessage *>(msg_ptr.get());
+    NetDest msg_destination = net_msg_ptr->getInternalDestination();
 
-        int output_link = -1;
-        int min_weight = INFINITE_;
+    int output_link = -1;
+    int min_weight = INFINITE_;
 
-        for(int link = 0; link < m_routing_table.size(); link++)
-        {
-                if (msg_destination.intersectionIsNotEmpty(m_routing_table[link]))
-                {
-                        if(m_weight_table[link] >= min_weight)
-                                continue;
-                        output_link = link;
-                        min_weight = m_weight_table[link];
-                }
+    for (int link = 0; link < m_routing_table.size(); link++) {
+        if (msg_destination.intersectionIsNotEmpty(m_routing_table[link])) {
+            if (m_weight_table[link] >= min_weight)
+                continue;
+            output_link = link;
+            min_weight = m_weight_table[link];
         }
-        if(output_link == -1)
-        {
-                ERROR_MSG("Fatal Error:: No Route exists from this Router.");
-                exit(0);
-        }
-        return output_link;
+    }
 
+    if (output_link == -1) {
+        ERROR_MSG("Fatal Error:: No Route exists from this Router.");
+        exit(0);
+    }
+
+    return output_link;
 }

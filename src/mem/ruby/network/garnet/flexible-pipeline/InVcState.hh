@@ -28,28 +28,29 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef IN_VC_STATE_H
-#define IN_VC_STATE_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 
-class InVcState {
-public:
-        InVcState(int id);
+class InVcState
+{
+  public:
+    InVcState(int id);
 
-        void setRoute(int route);
-        void setState(VC_state_type state, Time time);
-        int get_outport();
-        int get_outvc();
-        void grant_vc(int out_vc, Time grant_time);
-        bool isInState(VC_state_type state, Time time);
+    void setRoute(int route);
+    void setState(VC_state_type state, Time time);
+    int get_outport();
+    int get_outvc();
+    void grant_vc(int out_vc, Time grant_time);
+    bool isInState(VC_state_type state, Time time);
 
-private:
-        int m_id;
-        int m_route;
-        int m_output_vc;
-        VC_state_type m_vc_state;
-        Time m_time;
+  private:
+    int m_id;
+    int m_route;
+    int m_output_vc;
+    VC_state_type m_vc_state;
+    Time m_time;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__

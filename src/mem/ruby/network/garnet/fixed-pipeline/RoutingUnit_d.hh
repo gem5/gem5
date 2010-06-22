@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef ROUTING_UNIT_D_H
-#define ROUTING_UNIT_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTING_UNIT_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTING_UNIT_D_HH__
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -39,18 +39,19 @@
 class InputUnit_d;
 class Router_d;
 
-class RoutingUnit_d {
-public:
-        RoutingUnit_d(Router_d *router);
-        void addRoute(const NetDest& routing_table_entry);
-        int routeCompute(flit_d *t_flit);
-        void addWeight(int link_weight);
-        void RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc);
+class RoutingUnit_d
+{
+  public:
+    RoutingUnit_d(Router_d *router);
+    void addRoute(const NetDest& routing_table_entry);
+    int routeCompute(flit_d *t_flit);
+    void addWeight(int link_weight);
+    void RC_stage(flit_d *t_flit, InputUnit_d *in_unit, int invc);
 
-private:
-        Router_d *m_router;
-        std::vector<NetDest > m_routing_table;
-        std::vector<int > m_weight_table;
+  private:
+    Router_d *m_router;
+    std::vector<NetDest> m_routing_table;
+    std::vector<int> m_weight_table;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTING_UNIT_D_HH__

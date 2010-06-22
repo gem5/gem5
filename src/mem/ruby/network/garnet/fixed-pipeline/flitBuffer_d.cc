@@ -32,52 +32,56 @@
 
 flitBuffer_d::flitBuffer_d()
 {
-        max_size = INFINITE_;
+    max_size = INFINITE_;
 }
 
 flitBuffer_d::flitBuffer_d(int maximum_size)
 {
-        max_size = maximum_size;
+    max_size = maximum_size;
 }
 
-bool flitBuffer_d::isEmpty()
+bool
+flitBuffer_d::isEmpty()
 {
-        return (m_buffer.size() == 0);
+    return (m_buffer.size() == 0);
 }
 
-bool flitBuffer_d::isReady()
+bool
+flitBuffer_d::isReady()
 {
-        if(m_buffer.size() != 0 )
-        {
-                flit_d *t_flit = peekTopFlit();
-                if(t_flit->get_time() <= g_eventQueue_ptr->getTime())
-                        return true;
-        }
-        return false;
+    if (m_buffer.size() != 0 ) {
+        flit_d *t_flit = peekTopFlit();
+        if (t_flit->get_time() <= g_eventQueue_ptr->getTime())
+            return true;
+    }
+    return false;
 }
 
-bool flitBuffer_d::isReadyForNext()
+bool
+flitBuffer_d::isReadyForNext()
 {
-        if(m_buffer.size() != 0 )
-        {
-                flit_d *t_flit = peekTopFlit();
-                if(t_flit->get_time() <= (g_eventQueue_ptr->getTime() + 1))
-                        return true;
-        }
-        return false;
+    if (m_buffer.size() != 0 ) {
+        flit_d *t_flit = peekTopFlit();
+        if (t_flit->get_time() <= (g_eventQueue_ptr->getTime() + 1))
+            return true;
+    }
+    return false;
 }
 
-void flitBuffer_d::print(std::ostream& out) const
+void
+flitBuffer_d::print(std::ostream& out) const
 {
-        out << "[flitBuffer: ";
-        out << m_buffer.size() << "] " << std::endl;
+    out << "[flitBuffer: " << m_buffer.size() << "] " << std::endl;
 }
 
-bool flitBuffer_d::isFull()
+bool
+flitBuffer_d::isFull()
 {
-        return (m_buffer.size() >= max_size);
+    return (m_buffer.size() >= max_size);
 }
-void flitBuffer_d::setMaxSize(int maximum)
+
+void
+flitBuffer_d::setMaxSize(int maximum)
 {
-        max_size = maximum;
+    max_size = maximum;
 }

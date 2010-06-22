@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef VC_ARBITER_H
-#define VC_ARBITER_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_VC_ARBITER_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_VC_ARBITER_HH__
 
 #include <iostream>
 
@@ -38,16 +38,17 @@
 
 class Router;
 
-class VCarbiter : public Consumer{
-public:
-        VCarbiter(Router *router);
-        ~VCarbiter() {}
+class VCarbiter : public Consumer
+{
+  public:
+    VCarbiter(Router *router);
+    ~VCarbiter() {}
 
-        void print(std::ostream& out) const {}
-        void wakeup();
+    void print(std::ostream& out) const {}
+    void wakeup();
 
-private:
-        Router *m_router;
+  private:
+    Router *m_router;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_VC_ARBITER_HH__

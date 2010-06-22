@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef NETWORK_LINK_H
-#define NETWORK_LINK_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_NETWORK_LINK_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_NETWORK_LINK_HH__
 
 #include <iostream>
 #include <vector>
@@ -41,46 +41,46 @@
 
 class GarnetNetwork;
 
-class NetworkLink : public FlexibleConsumer {
-public:
-        NetworkLink();
-        NetworkLink(int id, int latency, GarnetNetwork *net_ptr);
-        ~NetworkLink();
+class NetworkLink : public FlexibleConsumer
+{
+  public:
+    NetworkLink();
+    NetworkLink(int id, int latency, GarnetNetwork *net_ptr);
+    ~NetworkLink();
 
-        void setLinkConsumer(FlexibleConsumer *consumer);
-        void setSourceQueue(flitBuffer *srcQueue);
-        flit* peekLink();
-        flit* consumeLink();
+    void setLinkConsumer(FlexibleConsumer *consumer);
+    void setSourceQueue(flitBuffer *srcQueue);
+    flit *peekLink();
+    flit *consumeLink();
 
-        void print(std::ostream& out) const {}
+    void print(std::ostream& out) const {}
 
-        bool is_vc_ready(flit *t_flit);
+    bool is_vc_ready(flit *t_flit);
 
-        int get_id();
-        void setInPort(int port);
-        void setOutPort(int port);
-        void wakeup();
-        bool isReady();
-        void grant_vc_link(int vc, Time grant_time);
-        void release_vc_link(int vc, Time release_time);
-        void request_vc_link(int vc, NetDest destination, Time request_time);
-        bool isBufferNotFull_link(int vc);
-        void setSource(FlexibleConsumer *source);
-        double getLinkUtilization();
-        std::vector<int> getVcLoad();
+    int get_id();
+    void setInPort(int port);
+    void setOutPort(int port);
+    void wakeup();
+    bool isReady();
+    void grant_vc_link(int vc, Time grant_time);
+    void release_vc_link(int vc, Time release_time);
+    void request_vc_link(int vc, NetDest destination, Time request_time);
+    bool isBufferNotFull_link(int vc);
+    void setSource(FlexibleConsumer *source);
+    double getLinkUtilization();
+    std::vector<int> getVcLoad();
 
-protected:
-        int m_id, m_latency;
-        int m_in_port, m_out_port;
-        int m_link_utilized;
-        std::vector<int> m_vc_load;
-        GarnetNetwork *m_net_ptr;
+  protected:
+    int m_id, m_latency;
+    int m_in_port, m_out_port;
+    int m_link_utilized;
+    std::vector<int> m_vc_load;
+    GarnetNetwork *m_net_ptr;
 
-        flitBuffer *linkBuffer;
-        FlexibleConsumer *link_consumer;
-        FlexibleConsumer *link_source;
-        flitBuffer *link_srcQueue;
+    flitBuffer *linkBuffer;
+    FlexibleConsumer *link_consumer;
+    FlexibleConsumer *link_source;
+    flitBuffer *link_srcQueue;
 };
 
-#endif
-
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_NETWORK_LINK_HH__

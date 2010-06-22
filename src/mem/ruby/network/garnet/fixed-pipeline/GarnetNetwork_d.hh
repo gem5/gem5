@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef GARNETNETWORK_D_H
-#define GARNETNETWORK_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_GARNETNETWORK_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_GARNETNETWORK_D_HH__
 
 #include <iostream>
 #include <vector>
@@ -47,84 +47,83 @@ class NetDest;
 class NetworkLink_d;
 class CreditLink_d;
 
-class GarnetNetwork_d : public BaseGarnetNetwork {
-public:
+class GarnetNetwork_d : public BaseGarnetNetwork
+{
+  public:
     typedef GarnetNetwork_dParams Params;
     GarnetNetwork_d(const Params *p);
 
-        ~GarnetNetwork_d();
+    ~GarnetNetwork_d();
 
-        void init();
+    void init();
 
-        int getNumNodes(){ return m_nodes;}
+    int getNumNodes() { return m_nodes; }
 
-        // returns the queue requested for the given component
-        MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
-        MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
+    // returns the queue requested for the given component
+    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
+    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
 
-        void clearStats();
-        void printStats(std::ostream& out) const;
-        void printConfig(std::ostream& out) const;
-        void print(std::ostream& out) const;
+    void clearStats();
+    void printStats(std::ostream& out) const;
+    void printConfig(std::ostream& out) const;
+    void print(std::ostream& out) const;
 
-        inline void increment_injected_flits()
-        {
-                m_flits_injected++;
-        }
-        inline void increment_recieved_flits()
-        {
-                m_flits_recieved++;
-        }
-        inline void increment_network_latency(Time latency)
-        {
-                m_network_latency += latency;
-        }
-        inline void increment_queueing_latency(Time latency)
-        {
-                m_queueing_latency += latency;
-        }
+    inline void increment_injected_flits() { m_flits_injected++; }
+    inline void increment_received_flits() { m_flits_received++; }
 
-        bool isVNetOrdered(int vnet)
-        {
-                return m_ordered[vnet];
-        }
-        bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
+    inline void
+    increment_network_latency(Time latency)
+    {
+        m_network_latency += latency;
+    }
 
-        Time getRubyStartTime();
+    inline void
+    increment_queueing_latency(Time latency)
+    {
+        m_queueing_latency += latency;
+    }
 
-        void reset();
+    bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
+    bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
+    Time getRubyStartTime();
 
-        // Methods used by Topology to setup the network
-        void makeOutLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight,  int bw_multiplier, bool isReconfiguration);
-        void makeInLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int bw_multiplier, bool isReconfiguration);
-        void makeInternalLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration);
+    void reset();
 
-private:
-        void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
+    // Methods used by Topology to setup the network
+    void makeOutLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency, int link_weight,
+        int bw_multiplier, bool isReconfiguration);
+    void makeInLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency,
+        int bw_multiplier, bool isReconfiguration);
+    void makeInternalLink(SwitchID src, NodeID dest,
+        const NetDest& routing_table_entry, int link_latency, int link_weight,
+        int bw_multiplier, bool isReconfiguration);
 
-// Private copy constructor and assignment operator
-        GarnetNetwork_d(const GarnetNetwork_d& obj);
-        GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);
+  private:
+    void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
 
-/***********Data Members*************/
-//      int m_virtual_networks;
-//      int m_nodes;
-        int m_flits_recieved, m_flits_injected;
-        double m_network_latency, m_queueing_latency;
+    GarnetNetwork_d(const GarnetNetwork_d& obj);
+    GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);
 
-        std::vector<bool> m_in_use;
-        std::vector<bool> m_ordered;
+    // int m_virtual_networks;
+    // int m_nodes;
+    int m_flits_received, m_flits_injected;
+    double m_network_latency, m_queueing_latency;
 
-        std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
-        std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
+    std::vector<bool> m_in_use;
+    std::vector<bool> m_ordered;
 
-        std::vector<Router_d *> m_router_ptr_vector;   // All Routers in Network
-        std::vector<NetworkLink_d *> m_link_ptr_vector; // All links in the network
-        std::vector<CreditLink_d *> m_creditlink_ptr_vector; // All links in the network
-        std::vector<NetworkInterface_d *> m_ni_ptr_vector;   // All NI's in Network
+    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
 
-//      Topology* m_topology_ptr;
-        Time m_ruby_start;
+    std::vector<Router_d *> m_router_ptr_vector;   // All Routers in Network
+    std::vector<NetworkLink_d *> m_link_ptr_vector; // All links in the network
+    std::vector<CreditLink_d *> m_creditlink_ptr_vector; // All links in net
+    std::vector<NetworkInterface_d *> m_ni_ptr_vector;   // All NI's in Network
+
+    //      Topology* m_topology_ptr;
+    Time m_ruby_start;
 };
 
 inline std::ostream&
@@ -135,4 +134,4 @@ operator<<(std::ostream& out, const GarnetNetwork_d& obj)
     return out;
 }
 
-#endif //GARNETNETWORK_D_H
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_GARNETNETWORK_D_HH__

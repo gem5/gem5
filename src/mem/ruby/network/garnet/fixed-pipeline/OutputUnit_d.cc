@@ -37,73 +37,83 @@ using m5::stl_helpers::deletePointers;
 
 OutputUnit_d::OutputUnit_d(int id, Router_d *router)
 {
-        m_id = id;
-        m_router = router;
-        m_num_vcs = m_router->get_num_vcs();
-        m_out_buffer = new flitBuffer_d();
+    m_id = id;
+    m_router = router;
+    m_num_vcs = m_router->get_num_vcs();
+    m_out_buffer = new flitBuffer_d();
 
-        for(int i = 0; i < m_num_vcs; i++)
-        {
-                m_outvc_state.push_back(new OutVcState_d(i, m_router->get_net_ptr()));
-        }
+    for (int i = 0; i < m_num_vcs; i++) {
+        m_outvc_state.push_back(new OutVcState_d(i, m_router->get_net_ptr()));
+    }
 }
 
 OutputUnit_d::~OutputUnit_d()
 {
-        delete m_out_buffer;
-        deletePointers(m_outvc_state);
+    delete m_out_buffer;
+    deletePointers(m_outvc_state);
 }
 
-void OutputUnit_d::decrement_credit(int out_vc)
+void
+OutputUnit_d::decrement_credit(int out_vc)
 {
-        m_outvc_state[out_vc]->decrement_credit();
-        m_router->update_incredit(m_outvc_state[out_vc]->get_inport(), m_outvc_state[out_vc]->get_invc(), m_outvc_state[out_vc]->get_credit_count());
+    m_outvc_state[out_vc]->decrement_credit();
+    m_router->update_incredit(m_outvc_state[out_vc]->get_inport(),
+                              m_outvc_state[out_vc]->get_invc(),
+                              m_outvc_state[out_vc]->get_credit_count());
 }
 
-void OutputUnit_d::wakeup()
+void
+OutputUnit_d::wakeup()
 {
-        if(m_credit_link->isReady())
-        {
-                flit_d *t_flit = m_credit_link->consumeLink();
-                int out_vc = t_flit->get_vc();
-                m_outvc_state[out_vc]->increment_credit();
-                m_router->update_incredit(m_outvc_state[out_vc]->get_inport(), m_outvc_state[out_vc]->get_invc(), m_outvc_state[out_vc]->get_credit_count());
+    if (m_credit_link->isReady()) {
+        flit_d *t_flit = m_credit_link->consumeLink();
+        int out_vc = t_flit->get_vc();
+        m_outvc_state[out_vc]->increment_credit();
+        m_router->update_incredit(m_outvc_state[out_vc]->get_inport(),
+                                  m_outvc_state[out_vc]->get_invc(),
+                                  m_outvc_state[out_vc]->get_credit_count());
 
-                if(t_flit->is_free_signal())
-                        set_vc_state(IDLE_, out_vc);
+        if (t_flit->is_free_signal())
+            set_vc_state(IDLE_, out_vc);
 
-                delete t_flit;
-        }
+        delete t_flit;
+    }
 }
 
-flitBuffer_d* OutputUnit_d::getOutQueue()
+flitBuffer_d*
+OutputUnit_d::getOutQueue()
 {
-        return m_out_buffer;
+    return m_out_buffer;
 }
 
-void OutputUnit_d::set_out_link(NetworkLink_d *link)
+void
+OutputUnit_d::set_out_link(NetworkLink_d *link)
 {
-        m_out_link = link;
+    m_out_link = link;
 }
 
-void OutputUnit_d::set_credit_link(CreditLink_d *credit_link)
+void
+OutputUnit_d::set_credit_link(CreditLink_d *credit_link)
 {
-        m_credit_link = credit_link;
+    m_credit_link = credit_link;
 }
 
-void OutputUnit_d::update_vc(int vc, int in_port, int in_vc)
+void
+OutputUnit_d::update_vc(int vc, int in_port, int in_vc)
 {
-        m_outvc_state[vc]->setState(ACTIVE_, g_eventQueue_ptr->getTime() + 1);
-        m_outvc_state[vc]->set_inport(in_port);
-        m_outvc_state[vc]->set_invc(in_vc);
-        m_router->update_incredit(in_port, in_vc, m_outvc_state[vc]->get_credit_count());
+    m_outvc_state[vc]->setState(ACTIVE_, g_eventQueue_ptr->getTime() + 1);
+    m_outvc_state[vc]->set_inport(in_port);
+    m_outvc_state[vc]->set_invc(in_vc);
+    m_router->update_incredit(in_port, in_vc,
+                              m_outvc_state[vc]->get_credit_count());
 }
 
-void OutputUnit_d::printConfig(ostream& out)
+void
+OutputUnit_d::printConfig(ostream& out)
 {
-        out << endl;
-        out << "OutputUnit Configuration" << endl;
-        out << "---------------------" << endl;
-        out << "id = " << m_id << endl;
-        out << "Out link is " << m_out_link->get_id() << endl;
+    out << endl;
+    out << "OutputUnit Configuration" << endl;
+    out << "---------------------" << endl;
+    out << "id = " << m_id << endl;
+    out << "Out link is " << m_out_link->get_id() << endl;
 }

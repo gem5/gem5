@@ -32,24 +32,26 @@
 
 OutVcState::OutVcState(int id)
 {
-        m_id = id;
-        m_vc_state = IDLE_;
+    m_id = id;
+    m_vc_state = IDLE_;
 }
 
-bool OutVcState::isInState(VC_state_type state, Time request_time)
+bool
+OutVcState::isInState(VC_state_type state, Time request_time)
 {
-        return ((m_vc_state == state) && (request_time >= m_time) );
+    return ((m_vc_state == state) && (request_time >= m_time));
 }
 
-void OutVcState::grant_vc(Time grant_time)
+void
+OutVcState::grant_vc(Time grant_time)
 {
-        m_time = grant_time;
-        m_vc_state = ACTIVE_;
+    m_time = grant_time;
+    m_vc_state = ACTIVE_;
 }
 
-void OutVcState::setState(VC_state_type state, Time time)
+void
+OutVcState::setState(VC_state_type state, Time time)
 {
-        m_vc_state = state;
-        m_time = time;
+    m_vc_state = state;
+    m_time = time;
 }
-

@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef SWITCH_D_H
-#define SWITCH_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_SWITCH_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_SWITCH_D_HH__
 
 #include <iostream>
 #include <vector>
@@ -41,31 +41,35 @@
 class Router_d;
 class OutputUnit_d;
 
-class Switch_d : public Consumer {
-public:
-        Switch_d(Router_d *router);
-        ~Switch_d();
-        void wakeup();
-        void init();
-        void check_for_wakeup();
-        void print(std::ostream& out) const {};
-        inline void update_sw_winner(int inport, flit_d *t_flit)
-        {
-                m_switch_buffer[inport]->insert(t_flit);
-        }
-        inline double get_crossbar_count()
-        {
-                return m_crossbar_activity;
-        }
+class Switch_d : public Consumer
+{
+  public:
+    Switch_d(Router_d *router);
+    ~Switch_d();
+    void wakeup();
+    void init();
+    void check_for_wakeup();
+    void print(std::ostream& out) const {};
 
+    inline void
+    update_sw_winner(int inport, flit_d *t_flit)
+    {
+        m_switch_buffer[inport]->insert(t_flit);
+    }
 
-private:
-        int m_num_vcs;
-        int m_num_inports;
-        double m_crossbar_activity;
-        Router_d *m_router;
-        std::vector<flitBuffer_d *> m_switch_buffer;
-        std::vector<OutputUnit_d *> m_output_unit;
+    inline double
+    get_crossbar_count()
+    {
+        return m_crossbar_activity;
+    }
+
+  private:
+    int m_num_vcs;
+    int m_num_inports;
+    double m_crossbar_activity;
+    Router_d *m_router;
+    std::vector<flitBuffer_d *> m_switch_buffer;
+    std::vector<OutputUnit_d *> m_output_unit;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_SWITCH_D_HH__

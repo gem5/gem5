@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef VC_ALLOCATOR_D_H
-#define VC_ALLOCATOR_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_VC_ALLOCATOR_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_VC_ALLOCATOR_D_HH__
 
 #include <iostream>
 #include <vector>
@@ -42,44 +42,57 @@ class Router_d;
 class InputUnit_d;
 class OutputUnit_d;
 
-class VCallocator_d : public Consumer {
-public:
-        VCallocator_d(Router_d *router);
-        void init();
-        void wakeup();
-        void check_for_wakeup();
-        void clear_request_vector();
-        int get_vnet(int invc);
-        void print(std::ostream& out) const {};
-        void arbitrate_invcs();
-        void arbitrate_outvcs();
-        bool is_invc_candidate(int inport_iter, int invc_iter);
-        void select_outvc(int inport_iter, int invc_iter);
-        inline double get_local_arbit_count()
-        {
-                return m_local_arbiter_activity;
-        }
-        inline double get_global_arbit_count()
-        {
-                return m_global_arbiter_activity;
-        }
+class VCallocator_d : public Consumer
+{
+  public:
+    VCallocator_d(Router_d *router);
+    void init();
+    void wakeup();
+    void check_for_wakeup();
+    void clear_request_vector();
+    int get_vnet(int invc);
+    void print(std::ostream& out) const {}
+    void arbitrate_invcs();
+    void arbitrate_outvcs();
+    bool is_invc_candidate(int inport_iter, int invc_iter);
+    void select_outvc(int inport_iter, int invc_iter);
 
-private:
-        int m_num_vcs, m_vc_per_vnet;
-        int m_num_inports;
-        int m_num_outports;
+    inline double
+    get_local_arbit_count()
+    {
+        return m_local_arbiter_activity;
+    }
 
-        double m_local_arbiter_activity, m_global_arbiter_activity;
+    inline double
+    get_global_arbit_count()
+    {
+        return m_global_arbiter_activity;
+    }
 
-        Router_d *m_router;
-        std::vector<std::vector<int > > m_round_robin_invc; // First stage of arbitration where all vcs select an output vc to content for
-        std::vector<std::vector<std::pair<int, int> > > m_round_robin_outvc; // Arbiter for every output vc
-        std::vector<std::vector<std::vector<std::vector<bool> > > > m_outvc_req; // [outport][outvc][inpotr][invc]. set true in the first phase of allocation
-        std::vector<std::vector<bool> > m_outvc_is_req;
+  private:
+    int m_num_vcs, m_vc_per_vnet;
+    int m_num_inports;
+    int m_num_outports;
 
-        std::vector<InputUnit_d *> m_input_unit ;
-        std::vector<OutputUnit_d *> m_output_unit ;
+    double m_local_arbiter_activity, m_global_arbiter_activity;
 
+    Router_d *m_router;
+
+    // First stage of arbitration
+    // where all vcs select an output vc to contend for
+    std::vector<std::vector<int> > m_round_robin_invc;
+
+    // Arbiter for every output vc
+    std::vector<std::vector<std::pair<int, int> > > m_round_robin_outvc;
+
+    // [outport][outvc][inport][invc]
+    // set true in the first phase of allocation
+    std::vector<std::vector<std::vector<std::vector<bool> > > > m_outvc_req;
+
+    std::vector<std::vector<bool> > m_outvc_is_req;
+
+    std::vector<InputUnit_d *> m_input_unit;
+    std::vector<OutputUnit_d *> m_output_unit;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_VC_ALLOCATOR_D_HH__

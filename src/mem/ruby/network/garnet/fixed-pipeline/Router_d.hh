@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef ROUTER_D_H
-#define ROUTER_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTER_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTER_D_HH__
 
 #include <iostream>
 #include <vector>
@@ -49,51 +49,58 @@ class VCallocator_d;
 class SWallocator_d;
 class Switch_d;
 
-class Router_d {
-public:
-        Router_d(int id, GarnetNetwork_d *network_ptr);
+class Router_d
+{
+  public:
+    Router_d(int id, GarnetNetwork_d *network_ptr);
 
-        ~Router_d();
+    ~Router_d();
 
-        void init();
-        void addInPort(NetworkLink_d *link, CreditLink_d *credit_link);
-        void addOutPort(NetworkLink_d *link, const NetDest& routing_table_entry, int link_weight, CreditLink_d *credit_link);
-        int get_num_vcs() { return m_num_vcs; }
-        int get_vc_per_vnet() {return m_vc_per_vnet; }
-        int get_num_inports() { return m_input_unit.size(); }
-        int get_num_outports() { return m_output_unit.size(); }
-        void printConfig(std::ostream& out);
-        int get_id() { return m_id; }
-        GarnetNetwork_d* get_net_ptr() { return m_network_ptr; }
+    void init();
+    void addInPort(NetworkLink_d *link, CreditLink_d *credit_link);
+    void addOutPort(NetworkLink_d *link, const NetDest& routing_table_entry,
+                    int link_weight, CreditLink_d *credit_link);
 
-        std::vector<InputUnit_d *>& get_inputUnit_ref() { return m_input_unit; }
-        std::vector<OutputUnit_d *>& get_outputUnit_ref() { return m_output_unit; }
+    int get_num_vcs()       { return m_num_vcs; }
+    int get_vc_per_vnet()   { return m_vc_per_vnet; }
+    int get_num_inports()   { return m_input_unit.size(); }
+    int get_num_outports()  { return m_output_unit.size(); }
+    int get_id()            { return m_id; }
 
-        void update_sw_winner(int inport, flit_d *t_flit);
-        void update_incredit(int in_port, int in_vc, int credit);
-        void route_req(flit_d *t_flit, InputUnit_d* in_unit, int invc);
-        void vcarb_req();
-        void swarb_req();
+    GarnetNetwork_d* get_net_ptr()                  { return m_network_ptr; }
+    std::vector<InputUnit_d *>& get_inputUnit_ref()   { return m_input_unit; }
+    std::vector<OutputUnit_d *>& get_outputUnit_ref() { return m_output_unit; }
 
-        void power_router_initialize(power_router *router, power_router_info *info);
+    void update_sw_winner(int inport, flit_d *t_flit);
+    void update_incredit(int in_port, int in_vc, int credit);
+    void route_req(flit_d *t_flit, InputUnit_d* in_unit, int invc);
+    void vcarb_req();
+    void swarb_req();
+    void printConfig(std::ostream& out);
+
+    void power_router_initialize(power_router *router,
+                                 power_router_info *info);
     double calculate_power();
     double calculate_offline_power(power_router*, power_router_info*);
-        void calculate_performance_numbers();
+    void calculate_performance_numbers();
 
-private:
-        int m_id;
-        int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
-        GarnetNetwork_d *m_network_ptr;
-        int m_flit_width;
+  private:
+    int m_id;
+    int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
+    GarnetNetwork_d *m_network_ptr;
+    int m_flit_width;
 
-        double buf_read_count, buf_write_count, crossbar_count, vc_local_arbit_count, vc_global_arbit_count, sw_local_arbit_count, sw_global_arbit_count;
+    double buf_read_count, buf_write_count;
+    double crossbar_count;
+    double vc_local_arbit_count, vc_global_arbit_count;
+    double sw_local_arbit_count, sw_global_arbit_count;
 
-        std::vector<InputUnit_d *> m_input_unit;
-        std::vector<OutputUnit_d *> m_output_unit;
-        RoutingUnit_d *m_routing_unit;
-        VCallocator_d *m_vc_alloc;
-        SWallocator_d *m_sw_alloc;
-        Switch_d *m_switch;
+    std::vector<InputUnit_d *> m_input_unit;
+    std::vector<OutputUnit_d *> m_output_unit;
+    RoutingUnit_d *m_routing_unit;
+    VCallocator_d *m_vc_alloc;
+    SWallocator_d *m_sw_alloc;
+    Switch_d *m_switch;
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTER_D_HH__

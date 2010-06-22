@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef FLIT_BUFFER_H
-#define FLIT_BUFFER_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLIT_BUFFER_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLIT_BUFFER_HH__
 
 #include <iostream>
 #include <vector>
@@ -37,25 +37,25 @@
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/flit.hh"
 
-class flitBuffer {
-public:
-        flitBuffer();
-        flitBuffer(int maximum_size);
+class flitBuffer
+{
+ public:
+    flitBuffer();
+    flitBuffer(int maximum_size);
 
-        bool isReady();
-        bool isReadyForNext();
-        bool isFull();
-        bool isEmpty();
-        void setMaxSize(int maximum);
-        flit *getTopFlit();
-        flit *peekTopFlit();
-        void insert(flit *flt);
-        void print(std::ostream& out) const;
+    bool isReady();
+    bool isReadyForNext();
+    bool isFull();
+    bool isEmpty();
+    void setMaxSize(int maximum);
+    flit *getTopFlit();
+    flit *peekTopFlit();
+    void insert(flit *flt);
+    void print(std::ostream& out) const;
 
-/**********Data Members*********/
-private:
-        std::vector<flit *> m_buffer;
-        int size, max_size;
+  private:
+    std::vector<flit *> m_buffer;
+    int size, max_size;
 };
 
 inline std::ostream&
@@ -66,5 +66,4 @@ operator<<(std::ostream& out, const flitBuffer& obj)
     return out;
 }
 
-#endif
-
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLIT_BUFFER_HH__

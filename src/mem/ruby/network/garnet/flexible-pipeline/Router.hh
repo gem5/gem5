@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef ROUTER_H
-#define ROUTER_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_ROUTER_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_ROUTER_HH__
 
 #include <iostream>
 #include <vector>
@@ -45,51 +45,55 @@
 
 class VCarbiter;
 
-class Router : public FlexibleConsumer {
-public:
-        Router(int id, GarnetNetwork *network_ptr);
+class Router : public FlexibleConsumer
+{
+  public:
+    Router(int id, GarnetNetwork *network_ptr);
 
-        ~Router();
+    ~Router();
 
-        void addInPort(NetworkLink *in_link);
-        void addOutPort(NetworkLink *out_link, const NetDest& routing_table_entry, int link_weight);
-        void wakeup();
-        void request_vc(int in_vc, int in_port, NetDest destination, Time request_time);
-        bool isBufferNotFull(int vc, int inport);
-        void grant_vc(int out_port, int vc, Time grant_time);
-        void release_vc(int out_port, int vc, Time release_time);
-        void vc_arbitrate();
+    void addInPort(NetworkLink *in_link);
+    void addOutPort(NetworkLink *out_link, const NetDest& routing_table_entry,
+                    int link_weight);
+    void wakeup();
+    void request_vc(int in_vc, int in_port, NetDest destination,
+                    Time request_time);
+    bool isBufferNotFull(int vc, int inport);
+    void grant_vc(int out_port, int vc, Time grant_time);
+    void release_vc(int out_port, int vc, Time release_time);
+    void vc_arbitrate();
 
-        void printConfig(std::ostream& out) const;
-        void print(std::ostream& out) const;
+    void printConfig(std::ostream& out) const;
+    void print(std::ostream& out) const;
 
-private:
-/***************Data Members******************/
-        int m_id;
-        int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
-        GarnetNetwork *m_net_ptr;
-        std::vector<int> m_vc_round_robin; // For scheduling of out source queues
-        int m_round_robin_inport, m_round_robin_start; // for vc arbitration
-        std::vector<int> m_round_robin_invc; // For every outport. for vc arbitration
+  private:
+    int m_id;
+    int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
+    GarnetNetwork *m_net_ptr;
+    std::vector<int> m_vc_round_robin; // For scheduling of out source queues
+    int m_round_robin_inport, m_round_robin_start; // for vc arbitration
+    std::vector<int> m_round_robin_invc; // For vc arbitration of each outport
 
-        std::vector<std::vector<flitBuffer *> > m_router_buffers; // These are essentially output buffers
-        std::vector<flitBuffer *> m_out_src_queue; // These are source queues for the output link
-        std::vector<NetworkLink *> m_in_link;
-        std::vector<NetworkLink *> m_out_link;
-        std::vector<std::vector<InVcState *> > m_in_vc_state;
-        std::vector<std::vector<OutVcState *> > m_out_vc_state;
-        std::vector<NetDest> m_routing_table;
-        std::vector<int> m_link_weights;
-        VCarbiter *m_vc_arbiter;
+    // These are essentially output buffers
+    std::vector<std::vector<flitBuffer *> > m_router_buffers;
 
-/*********** Private methods *************/
-        int getRoute(NetDest destination);
-        std::vector<int> get_valid_vcs(int invc);
-        void routeCompute(flit *m_flit, int inport);
-        void checkReschedule();
-        void check_arbiter_reschedule();
-        void scheduleOutputLinks();
+    // These are source queues for the output link
+    std::vector<flitBuffer *> m_out_src_queue;
+
+    std::vector<NetworkLink *> m_in_link;
+    std::vector<NetworkLink *> m_out_link;
+    std::vector<std::vector<InVcState *> > m_in_vc_state;
+    std::vector<std::vector<OutVcState *> > m_out_vc_state;
+    std::vector<NetDest> m_routing_table;
+    std::vector<int> m_link_weights;
+    VCarbiter *m_vc_arbiter;
+
+    int getRoute(NetDest destination);
+    std::vector<int> get_valid_vcs(int invc);
+    void routeCompute(flit *m_flit, int inport);
+    void checkReschedule();
+    void check_arbiter_reschedule();
+    void scheduleOutputLinks();
 };
 
-#endif
-
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_ROUTER_HH__

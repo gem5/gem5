@@ -28,19 +28,21 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef FLEXIBLE_CONSUMER_H
-#define FLEXIBLE_CONSUMER_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLEXIBLE_CONSUMER_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLEXIBLE_CONSUMER_HH__
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/NetDest.hh"
 
-class FlexibleConsumer : public Consumer {
-public:
-        virtual bool isBufferNotFull(int vc, int inport) {return true;}
-        virtual void grant_vc(int out_port, int vc, Time grant_time) {}
-        virtual void release_vc(int out_port, int vc, Time release_time) {}
-        virtual void request_vc(int vc, int in_port, NetDest destination, Time request_time) {}
+class FlexibleConsumer : public Consumer
+{
+  public:
+    virtual bool isBufferNotFull(int vc, int inport) { return true; }
+    virtual void grant_vc(int out_port, int vc, Time grant_time) {}
+    virtual void release_vc(int out_port, int vc, Time release_time) {}
+    virtual void request_vc(int vc, int in_port, NetDest destination,
+                            Time request_time) {}
 };
 
-#endif
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLEXIBLE_CONSUMER_HH__

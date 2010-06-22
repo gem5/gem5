@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef NETWORK_LINK_D_H
-#define NETWORK_LINK_D_H
+#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_LINK_D_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_LINK_D_HH__
 
 #include <iostream>
 #include <vector>
@@ -41,48 +41,39 @@
 
 class GarnetNetwork_d;
 
-class NetworkLink_d : public Consumer {
-public:
-        //NetworkLink_d(int id);
-        ~NetworkLink_d();
+class NetworkLink_d : public Consumer
+{
+  public:
+    //NetworkLink_d(int id);
+    ~NetworkLink_d();
 
-        NetworkLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr);
-        void setLinkConsumer(Consumer *consumer);
-        void setSourceQueue(flitBuffer_d *srcQueue);
-        void print(std::ostream& out) const{}
-        int getLinkUtilization();
-        std::vector<int> getVcLoad();
-        int get_id(){return m_id;}
-        void wakeup();
+    NetworkLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr);
+    void setLinkConsumer(Consumer *consumer);
+    void setSourceQueue(flitBuffer_d *srcQueue);
+    void print(std::ostream& out) const{}
+    int getLinkUtilization();
+    std::vector<int> getVcLoad();
+    int get_id(){return m_id;}
+    void wakeup();
 
     double calculate_offline_power(power_bus*);
     double calculate_power();
 
-        inline bool isReady()
-        {
-                return linkBuffer->isReady();
-        }
-        inline flit_d* peekLink()
-        {
-                return linkBuffer->peekTopFlit();
-        }
-        inline flit_d* consumeLink()
-        {
-                return linkBuffer->getTopFlit();
-        }
+    inline bool isReady()           { return linkBuffer->isReady(); }
+    inline flit_d* peekLink()       { return linkBuffer->peekTopFlit(); }
+    inline flit_d* consumeLink()    { return linkBuffer->getTopFlit(); }
 
-protected:
-        int m_id;
-        int m_latency;
-        GarnetNetwork_d *m_net_ptr;
+  protected:
+    int m_id;
+    int m_latency;
+    GarnetNetwork_d *m_net_ptr;
 
-        flitBuffer_d *linkBuffer;
-        Consumer *link_consumer;
-        flitBuffer_d *link_srcQueue;
-        int m_link_utilized;
-        std::vector<int> m_vc_load;
-        int m_flit_width;
+    flitBuffer_d *linkBuffer;
+    Consumer *link_consumer;
+    flitBuffer_d *link_srcQueue;
+    int m_link_utilized;
+    std::vector<int> m_vc_load;
+    int m_flit_width;
 };
 
-#endif
-
+#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_LINK_D_HH__
