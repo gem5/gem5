@@ -55,8 +55,9 @@ void
 O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
+#if FULL_SYSTEM
     assert(getSystemPtr() == old_context->getSystemPtr());
-#if !FULL_SYSTEM
+#else
     assert(getProcessPtr() == old_context->getProcessPtr());
 #endif
 
