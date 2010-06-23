@@ -259,7 +259,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->bdelaySeqNum,
                                  inst->readTid());
             mainEventQueue.schedule(res_pool_event, 
-                                    curTick + cpu->ticks(delay));
+                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
         }
         break;
 
@@ -278,7 +278,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  tid);
 
             mainEventQueue.schedule(res_pool_event, 
-                                    curTick + cpu->ticks(delay));
+                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
 
         }
         break;
@@ -287,7 +287,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
 
             DPRINTF(Resource, "Scheduling Suspend Thread Resource Pool Event for tick %i.\n",
-                    curTick + delay);
+                    cpu->nextCycle(cpu->nextCycle(curTick + cpu->ticks(delay))));
             ResPoolEvent *res_pool_event = new ResPoolEvent(this,
                                                             e_type,
                                                             inst,
@@ -295,7 +295,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                                             inst->bdelaySeqNum,
                                                             tid);
 
-            mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
+            mainEventQueue.schedule(res_pool_event, cpu->nextCycle(cpu->nextCycle(curTick + cpu->ticks(delay))));
 
         }
         break;
@@ -311,7 +311,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->seqNum,
                                  inst->readTid());
             mainEventQueue.schedule(res_pool_event, 
-                                    curTick + cpu->ticks(delay));
+                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
 
         }
         break;
@@ -327,7 +327,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->bdelaySeqNum,
                                  inst->readTid());
             mainEventQueue.schedule(res_pool_event, 
-                                    curTick + cpu->ticks(delay));
+                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
         }
         break;
 
@@ -343,7 +343,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->seqNum - 1,
                                  inst->readTid());
             mainEventQueue.schedule(res_pool_event, 
-                                    curTick + cpu->ticks(delay));
+                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
         }
         break;
 
@@ -356,7 +356,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                                             inst->squashingStage,
                                                             inst->seqNum,
                                                             inst->readTid());
-            mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
+            mainEventQueue.schedule(res_pool_event, cpu->nextCycle(curTick + cpu->ticks(delay)));
 
         }
         break;
@@ -544,9 +544,9 @@ void
 ResourcePool::ResPoolEvent::scheduleEvent(int delay)
 {
     if (squashed())
-      mainEventQueue.reschedule(this,curTick + resPool->cpu->ticks(delay));
+        mainEventQueue.reschedule(this,resPool->cpu->nextCycle(curTick + resPool->cpu->ticks(delay)));
     else if (!scheduled())
-      mainEventQueue.schedule(this,curTick + resPool->cpu->ticks(delay));
+        mainEventQueue.schedule(this, resPool->cpu->nextCycle(curTick + resPool->cpu->ticks(delay)));
 }
 
 /** Unschedule resource event, regardless of its current state. */

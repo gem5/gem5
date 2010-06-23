@@ -158,9 +158,9 @@ void
 InOrderCPU::CPUEvent::scheduleEvent(int delay)
 {
     if (squashed())
-      mainEventQueue.reschedule(this,curTick + cpu->ticks(delay));
+        mainEventQueue.reschedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)));
     else if (!scheduled())
-      mainEventQueue.schedule(this,curTick + cpu->ticks(delay));
+        mainEventQueue.schedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)));
 }
 
 void
@@ -671,10 +671,11 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst,
                                        event_pri_offset);
 
+    Tick sked_tick = nextCycle(curTick + ticks(delay));
     if (delay >= 0) {
         DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i, [tid:%i].\n",
                 eventNames[c_event], curTick + delay, tid);
-        mainEventQueue.schedule(cpu_event,curTick + delay);
+        mainEventQueue.schedule(cpu_event, sked_tick);
     } else {
         cpu_event->process();
         cpuEventRemoveList.push(cpu_event);
@@ -1335,7 +1336,7 @@ InOrderCPU::cleanUpRemovedReqs()
     while (!reqRemoveList.empty()) {
         ResourceRequest *res_req = reqRemoveList.front();
 
-        DPRINTF(Resource, "[tid:%i] [sn:%lli]: Removing Request "
+        DPRINTF(RefCount, "[tid:%i] [sn:%lli]: Removing Request "
                 "[stage_num:%i] [res:%s] [slot:%i] [completed:%i].\n",
                 res_req->inst->threadNumber,
                 res_req->inst->seqNum,
@@ -1400,7 +1401,7 @@ InOrderCPU::wakeCPU()
 
     numCycles += extra_cycles;
 
-    mainEventQueue.schedule(&tickEvent, curTick);
+    mainEventQueue.schedule(&tickEvent, nextCycle(curTick));
 }
 
 #if FULL_SYSTEM
