@@ -614,6 +614,11 @@ template<class T>
 inline Fault
 InOrderDynInst::read(Addr addr, T &data, unsigned flags)
 {
+    if (traceData) {
+        traceData->setAddr(addr);
+        traceData->setData(data);
+    }
+
     return cpu->read(this, addr, data, flags);
 }
 
@@ -662,7 +667,11 @@ template<class T>
 inline Fault
 InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    //memcpy(memData, gtoh(data), sizeof(T));
+    if (traceData) {
+        traceData->setAddr(addr);
+        traceData->setData(data);
+    }
+
     storeData  = data;
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting store data to %#x.\n",
