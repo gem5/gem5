@@ -1308,7 +1308,7 @@ Cache<TagStore>::getNextMSHR()
 
     // fall through... no pending requests.  Try a prefetch.
     assert(!miss_mshr && !write_mshr);
-    if (!mshrQueue.isFull()) {
+    if (prefetcher && !mshrQueue.isFull()) {
         // If we have a miss queue slot, we can try a prefetch
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
