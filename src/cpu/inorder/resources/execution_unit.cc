@@ -170,8 +170,14 @@ ExecutionUnit::execute(int slot_num)
 
                         if (inst->predTaken()) {
                             predictedTakenIncorrect++;
+                            DPRINTF(InOrderExecute, "[tid:%i] [sn:%i] %s ... PC%#x ... Mispredicts! (Taken)\n",
+                                    tid, inst->seqNum, inst->staticInst->disassemble(inst->PC),
+                                    inst->readPC());
                         } else {
                             predictedNotTakenIncorrect++;
+                            DPRINTF(InOrderExecute, "[tid:%i] [sn:%i] %s ... PC%#x ... Mispredicts! (Not Taken)\n",
+                                    tid, inst->seqNum, inst->staticInst->disassemble(inst->PC),
+                                    inst->readPC());
                         }
                     } else {
                         DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: Prediction Correct.\n",

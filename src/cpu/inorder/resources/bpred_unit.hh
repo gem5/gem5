@@ -219,6 +219,7 @@ class BPredUnit
     };
 
     typedef std::list<PredictorHistory> History;
+    typedef History::iterator HistoryIt;
 
     /**
      * The per-thread predictor history. This is used to update the predictor
@@ -255,6 +256,7 @@ class BPredUnit
     Stats::Scalar usedRAS;
     /** Stat for number of times the RAS is incorrect. */
     Stats::Scalar RASIncorrect;
+    Stats::Formula BTBHitPct;
 };
 
 #endif // __CPU_INORDER_BPRED_UNIT_HH__
