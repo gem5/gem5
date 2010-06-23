@@ -37,6 +37,16 @@ AGENUnit::AGENUnit(std::string res_name, int res_id, int res_width,
 { }
 
 void
+AGENUnit::regStats()
+{
+    agens
+        .name(name() + ".agens")
+        .desc("Number of Address Generations");
+
+    Resource::regStats();
+}
+
+void
 AGENUnit::execute(int slot_num)
 {
     ResourceRequest* agen_req = reqMap[slot_num];
@@ -72,6 +82,8 @@ AGENUnit::execute(int slot_num)
                     fatal("%s encountered while calculating address [sn:%i]",
                           fault->name(), seq_num);
                 }
+
+                agens++;
             } else {
                 DPRINTF(InOrderAGEN,
                         "[tid:] Ignoring non-memory instruction [sn:%i]\n",

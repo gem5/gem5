@@ -106,6 +106,19 @@ class UseDefUnit : public Resource {
 
         int useDefIdx;
     };
+
+  protected:
+    /** Register File Reads */
+    Stats::Scalar regFileReads;
+
+    /** Register File Writes */
+    Stats::Scalar regFileWrites;
+
+    /** Source Register Forwarding */
+    Stats::Scalar regForwards;
+
+    /** Register File Total Accesses (Read+Write) */
+    Stats::Formula regFileAccs;
 };
 
 #endif //__CPU_INORDER_USE_DEF_UNIT_HH__

@@ -66,6 +66,23 @@ UseDefUnit::regStats()
         .name(name() + ".uniqueRegsPerSwitch")
         .desc("Number of Unique Registers Needed Per Context Switch")
         .prereq(uniqueRegsPerSwitch);
+
+    regFileReads
+        .name(name() + ".regFileReads")
+        .desc("Number of Reads from Register File");
+
+    regForwards
+        .name(name() + ".regForwards")
+        .desc("Number of Registers Read Through Forwarding Logic");
+
+    regFileWrites
+        .name(name() + ".regFileWrites")
+        .desc("Number of Writes to Register File");
+
+    regFileAccs
+        .name(name() + ".regFileAccesses")
+        .desc("Number of Total Accesses (Read+Write) to the Register File");
+    regFileAccs = regFileReads + regFileWrites;
     
     Resource::regStats();
 }
@@ -182,7 +199,7 @@ UseDefUnit::execute(int slot_idx)
                     }
 
                     outReadSeqNum[tid] = maxSeqNum;
-
+                    regFileReads++;
                     ud_req->done();
                 } else {
                     DPRINTF(InOrderUseDef, "[tid:%i]: Unable to read because "
@@ -240,7 +257,7 @@ UseDefUnit::execute(int slot_idx)
                         }
 
                         outReadSeqNum[tid] = maxSeqNum;
-
+                        regForwards++;
                         ud_req->done();
                     } else {
                         DPRINTF(InOrderUseDef, "[tid:%i]: Unable to read "
@@ -353,7 +370,7 @@ UseDefUnit::execute(int slot_idx)
                     }
 
                     outWriteSeqNum[tid] = maxSeqNum;
-
+                    regFileWrites++;
                     ud_req->done();
                 } else {
                     DPRINTF(InOrderUseDef, "[tid:%i]: Unable to write because "

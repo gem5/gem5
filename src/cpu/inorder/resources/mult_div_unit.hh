@@ -116,11 +116,11 @@ class MultDivUnit : public Resource {
     /** Last instruction name the MDU used */
     std::string lastInstName;
 
-    /** Number of Instruction Requests the Resource Processes */
-    Stats::Scalar multInstReqsProcessed;
+    /** Number of Multiplies */
+    Stats::Scalar multiplies;
 
-    /** Number of Instruction Requests the Resource Processes */
-    Stats::Scalar divInstReqsProcessed;
+    /** Number of Divides */
+    Stats::Scalar divides;
 
     MDUEvent *mduEvent;    
 };

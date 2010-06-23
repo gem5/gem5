@@ -56,9 +56,10 @@ class AGENUnit : public Resource {
     };
 
     virtual void execute(int slot_num);
+    void regStats();
 
   protected:
-    /** @todo: Add Resource Stats Here */
+    Stats::Scalar agens;
 };
 
 #endif //__CPU_INORDER_DECODE_UNIT_HH__

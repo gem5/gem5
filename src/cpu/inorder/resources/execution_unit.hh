@@ -71,10 +71,8 @@ class ExecutionUnit : public Resource {
     Stats::Scalar predictedTakenIncorrect;
     Stats::Scalar predictedNotTakenIncorrect;
 
-    Stats::Scalar cyclesExecuted;
+    Stats::Scalar executions;
     Tick lastExecuteCycle;
-
-    Stats::Formula utilization;
 };
 
 

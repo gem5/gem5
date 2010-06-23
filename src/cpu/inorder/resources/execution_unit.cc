@@ -56,14 +56,9 @@ ExecutionUnit::regStats()
 
     lastExecuteCycle = curTick;
 
-    cyclesExecuted
-        .name(name() + ".cyclesExecuted")
-        .desc("Number of Cycles Execution Unit was used.");
-
-    utilization
-        .name(name() + ".utilization")
-        .desc("Utilization of Execution Unit (cycles / totalCycles).");
-    utilization = cyclesExecuted / cpu->numCycles;
+    executions
+        .name(name() + ".executions")
+        .desc("Number of Instructions Executed.");
 
     Resource::regStats();
 }
@@ -88,7 +83,6 @@ ExecutionUnit::execute(int slot_num)
         {
             if (curTick != lastExecuteCycle) {
                 lastExecuteCycle = curTick;
-                cyclesExecuted++;
             }
 
 
@@ -97,6 +91,7 @@ ExecutionUnit::execute(int slot_num)
             } else if (inst->isControl()) {
                 // Evaluate Branch
                 fault = inst->execute();
+                executions++;
 
                 inst->setExecuted();
 
@@ -190,6 +185,7 @@ ExecutionUnit::execute(int slot_num)
             } else {
                 // Regular ALU instruction
                 fault = inst->execute();
+                executions++;
 
                 if (fault == NoFault) {
                     inst->setExecuted();

@@ -79,11 +79,13 @@ Resource::name()
 void
 Resource::regStats()
 {
+#ifdef DEBUG
     instReqsProcessed
         .name(name() + ".instReqsProcessed")
         .desc("Number of Instructions Requests that completed in "
               "this resource.")
         .prereq(instReqsProcessed);
+#endif
 }
 
 int
@@ -474,8 +476,10 @@ ResourceRequest::done(bool completed)
 
     // change slot # to -1, since we check slotNum to see if request is still valid
     slotNum = -1;
-        
+
+#ifdef DEBUG
     res->instReqsProcessed++;
+#endif
 }
 
 ResourceEvent::ResourceEvent()

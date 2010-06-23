@@ -253,8 +253,10 @@ class Resource {
     // DEFAULT RESOURCE STATISTICS
     //
     /////////////////////////////////////////////////////////////////
+#ifdef DEBUG
     /** Number of Instruction Requests the Resource Processes */
     Stats::Scalar instReqsProcessed;
+#endif
 };
 
 class ResourceEvent : public Event

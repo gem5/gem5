@@ -53,13 +53,13 @@ MultDivUnit::MultDivUnit(string res_name, int res_id, int res_width,
 void
 MultDivUnit::regStats()
 {
-    multInstReqsProcessed
-        .name(name() + ".multInstReqsProcessed")
-        .desc("Number of Multiply Requests Processed.");
+    multiplies
+        .name(name() + ".multiplies")
+        .desc("Number of Multipy Operations Executed");
 
-    divInstReqsProcessed
-        .name(name() + ".divInstReqsProcessed")
-        .desc("Number of Divide Requests Processed.");
+    divides
+        .name(name() + ".divides")
+        .desc("Number of Divide Operations Executed");
 
     Resource::regStats();
 }
@@ -209,7 +209,6 @@ MultDivUnit::execute(int slot_num)
 
         if (inst->opClass() == IntMultOp) {
             scheduleEvent(slot_num, multLatency);
-            multInstReqsProcessed++;
         } else if (inst->opClass() == IntDivOp) {
             int op_size = getDivOpSize(inst);
 
@@ -233,8 +232,6 @@ MultDivUnit::execute(int slot_num)
             }
 
             lastDivSize = op_size;
-
-            divInstReqsProcessed++;
         }
 
         // Allow to pass through to next stage while
@@ -282,6 +279,12 @@ MultDivUnit::exeMulDiv(int slot_num)
     int seq_num = inst->seqNum;
 
     fault = inst->execute();
+
+    if (inst->opClass() == IntMultOp) {
+        multiplies++;
+    } else if (inst->opClass() == IntDivOp) {
+        divides++;
+    }
 
     if (fault == NoFault) {
         inst->setExecuted();

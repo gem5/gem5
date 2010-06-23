@@ -388,6 +388,34 @@ InOrderCPU::regStats()
     numCtxtSwitches
         .name(name() + ".contextSwitches")
         .desc("Number of context switches");
+
+    comLoads
+        .name(name() + ".comLoads")
+        .desc("Number of Load instructions committed");
+
+    comStores
+        .name(name() + ".comStores")
+        .desc("Number of Store instructions committed");
+
+    comBranches
+        .name(name() + ".comBranches")
+        .desc("Number of Branches instructions committed");
+
+    comNops
+        .name(name() + ".comNops")
+        .desc("Number of Nop instructions committed");
+
+    comNonSpec
+        .name(name() + ".comNonSpec")
+        .desc("Number of Non-Speculative instructions committed");
+
+    comInts
+        .name(name() + ".comInts")
+        .desc("Number of Integer instructions committed");
+
+    comFloats
+        .name(name() + ".comFloats")
+        .desc("Number of Floating Point instructions committed");
             
     timesIdled
         .name(name() + ".timesIdled")
@@ -436,7 +464,7 @@ InOrderCPU::regStats()
         .name(name() + ".cpi")
         .desc("CPI: Cycles Per Instruction (Per-Thread)")
         .precision(6);
-    cpi = threadCycles / committedInsts;
+    cpi = numCycles / committedInsts;
 
     smtCpi
         .name(name() + ".smt_cpi")
@@ -454,7 +482,7 @@ InOrderCPU::regStats()
         .name(name() + ".ipc")
         .desc("IPC: Instructions Per Cycle (Per-Thread)")
         .precision(6);
-    ipc =  committedInsts / threadCycles;
+    ipc =  committedInsts / numCycles;
 
     smtIpc
         .name(name() + ".smt_ipc")
@@ -1171,6 +1199,23 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     // Count SMT-committed insts per thread stat
     if (numActiveThreads() > 1) {
         smtCommittedInsts[tid]++;
+    }
+
+    // Instruction-Mix Stats
+    if (inst->isLoad()) {
+        comLoads++;
+    } else if (inst->isStore()) {
+        comStores++;
+    } else if (inst->isControl()) {
+        comBranches++;
+    } else if (inst->isNop()) {
+        comNops++;
+    } else if (inst->isNonSpeculative()) {
+        comNonSpec++;
+    } else if (inst->isInteger()) {
+        comInts++;
+    } else if (inst->isFloating()) {
+        comFloats++;
     }
 
     // Check for instruction-count-based events.

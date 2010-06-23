@@ -740,6 +740,15 @@ class InOrderCPU : public BaseCPU
     /** Percentage of cycles a stage was active */
     Stats::Formula activity;
 
+    /** Instruction Mix Stats */
+    Stats::Scalar comLoads;
+    Stats::Scalar comStores;
+    Stats::Scalar comBranches;
+    Stats::Scalar comNops;
+    Stats::Scalar comNonSpec;
+    Stats::Scalar comInts;
+    Stats::Scalar comFloats;
+
     /** Stat for the number of committed instructions per thread. */
     Stats::Vector committedInsts;
 
