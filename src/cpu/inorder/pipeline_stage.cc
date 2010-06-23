@@ -233,8 +233,21 @@ PipelineStage::checkStall(ThreadID tid) const
 void
 PipelineStage::removeStalls(ThreadID tid)
 {
-    for (int stNum = 0; stNum < NumStages; stNum++) {
-        stalls[tid].stage[stNum] = false;
+    for (int st_num = 0; st_num < NumStages; st_num++) {
+        if (stalls[tid].stage[st_num] == true) {
+            DPRINTF(InOrderStage, "Removing stall from stage %i.\n", st_num);
+            stalls[tid].stage[st_num] = false;
+        }
+
+        if (toPrevStages->stageBlock[st_num][tid] == true) {
+            DPRINTF(InOrderStage, "Removing pending block from stage %i.\n", st_num);
+            toPrevStages->stageBlock[st_num][tid] = false;
+        }
+
+        if (fromNextStages->stageBlock[st_num][tid] == true) {
+            DPRINTF(InOrderStage, "Removing pending block from stage %i.\n", st_num);
+            fromNextStages->stageBlock[st_num][tid] = false;
+        }
     }
     stalls[tid].resources.clear();
 }
@@ -626,12 +639,15 @@ PipelineStage::readStallSignals(ThreadID tid)
 
         // Check for Stage Blocking Signal
         if (fromNextStages->stageBlock[stage_idx][tid]) {
+            DPRINTF(InOrderStage, "[tid:%i] Stall from stage %i set.\n", tid,
+                    stage_idx);
             stalls[tid].stage[stage_idx] = true;
         }
 
         // Check for Stage Unblocking Signal
         if (fromNextStages->stageUnblock[stage_idx][tid]) {
-            //assert(fromNextStages->stageBlock[stage_idx][tid]);
+            DPRINTF(InOrderStage, "[tid:%i] Stall from stage %i unset.\n", tid,
+                    stage_idx);
             stalls[tid].stage[stage_idx] = false;
         }
     }
