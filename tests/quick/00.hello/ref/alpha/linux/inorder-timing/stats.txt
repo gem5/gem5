@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  29161                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 154960                       # Number of bytes of host memory used
-host_seconds                                     0.22                       # Real time elapsed on the host
-host_tick_rate                              142056848                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  13224                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 154984                       # Number of bytes of host memory used
+host_seconds                                     0.48                       # Real time elapsed on the host
+host_tick_rate                               64469997                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                        6404                       # Number of instructions simulated
 sim_seconds                                  0.000031                       # Number of seconds simulated
@@ -20,6 +20,9 @@ system.cpu.Branch-Predictor.predictedNotTaken          817                      
 system.cpu.Branch-Predictor.predictedTaken          234                       # Number of Branches Predicted As Taken (True).
 system.cpu.Branch-Predictor.usedRAS               124                       # Number of times the RAS was used to get a target.
 system.cpu.Execution-Unit.executions             4354                       # Number of Instructions Executed.
+system.cpu.Execution-Unit.mispredictPct     62.131304                       # Percentage of Incorrect Branches Predicts
+system.cpu.Execution-Unit.mispredicted            653                       # Number of Branches Incorrectly Predicted
+system.cpu.Execution-Unit.predicted               398                       # Number of Branches Incorrectly Predicted
 system.cpu.Execution-Unit.predictedNotTakenIncorrect          523                       # Number of Branches Incorrectly Predicted As Not Taken).
 system.cpu.Execution-Unit.predictedTakenIncorrect          130                       # Number of Branches Incorrectly Predicted As Taken.
 system.cpu.Mult-Div-Unit.divides                    0                       # Number of Divide Operations Executed

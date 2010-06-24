@@ -5,13 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun 23 2010 16:05:32
-M5 revision f157e4974de9+ 7462+ default qtip inorder_update_regr tip
-M5 started Jun 23 2010 17:31:47
+M5 compiled Jun 24 2010 14:49:55
+M5 revision ec51e8700a87+ 7479+ default qtip tip update_regr
+M5 started Jun 24 2010 14:49:57
 M5 executing on zooks
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing
-Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing/smred.sav
-Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
