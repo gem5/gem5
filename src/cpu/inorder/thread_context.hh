@@ -114,7 +114,8 @@ class InOrderThreadContext : public ThreadContext
 
     virtual VirtualPort *getVirtPort();
 
-    virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
+    virtual void connectMemPorts(ThreadContext *tc)
+    { thread->connectMemPorts(tc); }
 
     /** Dumps the function profiling information.
      * @todo: Implement.
@@ -203,7 +204,8 @@ class InOrderThreadContext : public ThreadContext
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val);
 
-    virtual void setRegOtherThread(int misc_reg, const MiscReg &val,
+    virtual void setRegOtherThread(int misc_reg,
+                                   const MiscReg &val,
                                    ThreadID tid);
 
     /** Reads this thread's PC. */

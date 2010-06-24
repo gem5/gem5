@@ -37,7 +37,8 @@ using namespace ThePipeline;
 using namespace std;
 
 DecodeUnit::DecodeUnit(std::string res_name, int res_id, int res_width,
-                       int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
+                       int res_latency, InOrderCPU *_cpu,
+                       ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu)
 {
     for (ThreadID tid = 0; tid < MaxThreads; tid++) {

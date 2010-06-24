@@ -37,7 +37,8 @@ using namespace TheISA;
 using namespace ThePipeline;
 
 BranchPredictor::BranchPredictor(std::string res_name, int res_id, int res_width,
-                       int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
+                                 int res_latency, InOrderCPU *_cpu,
+                                 ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       branchPred(this, params)
 {
@@ -80,26 +81,27 @@ BranchPredictor::execute(int slot_num)
         {
             if (inst->seqNum > cpu->squashSeqNum[tid] &&
                 curTick == cpu->lastSquashCycle[tid]) {
-                DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, skipping prediction \n",
-                        tid, inst->seqNum);
+                DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, "
+                        "skipping prediction \n", tid, inst->seqNum);
             } else {
                 Addr pred_PC = inst->readNextPC();
 
                 if (inst->isControl()) {
                     // If not, the pred_PC be updated to pc+8
-                    // If predicted, the pred_PC will be updated to new target value
+                    // If predicted, the pred_PC will be updated to new target
+                    // value
                     bool predict_taken = branchPred.predict(inst, pred_PC, tid);
 
                     if (predict_taken) {
-                        DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch predicted true.\n",
-                                tid, seq_num);
+                        DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch "
+                                "predicted true.\n", tid, seq_num);
 
                         inst->setPredTarg(pred_PC);
 
                         predictedTaken++;
                     } else {
-                        DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch predicted false.\n",
-                                tid, seq_num);
+                        DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch "
+                                "predicted false.\n", tid, seq_num);
 
                         if (inst->isCondDelaySlot())
                         {
@@ -113,11 +115,12 @@ BranchPredictor::execute(int slot_num)
 
                     inst->setBranchPred(predict_taken);
 
-                    DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Predicted PC is %08p.\n",
-                            tid, seq_num, pred_PC);
+                    DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Predicted PC is "
+                            "%08p.\n", tid, seq_num, pred_PC);
 
                 } else {
-                    //DPRINTF(InOrderBPred, "[tid:%i]: Ignoring [sn:%i] because this isn't "
+                    //DPRINTF(InOrderBPred, "[tid:%i]: Ignoring [sn:%i] "
+                    //      "because this isn't "
                     //      "a control instruction.\n", tid, seq_num);
                 }
             }
@@ -130,10 +133,12 @@ BranchPredictor::execute(int slot_num)
         {
             if (inst->seqNum > cpu->squashSeqNum[tid] &&
                 curTick == cpu->lastSquashCycle[tid]) {
-                DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, skipping branch predictor update \n",
+                DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, "
+                        "skipping branch predictor update \n",
                         tid, inst->seqNum);
             } else {
-                DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Updating Branch Predictor.\n",
+                DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Updating "
+                        "Branch Predictor.\n",
                         tid, seq_num);
 
 

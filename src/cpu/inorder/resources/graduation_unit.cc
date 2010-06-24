@@ -34,7 +34,8 @@
 using namespace ThePipeline;
 
 GraduationUnit::GraduationUnit(std::string res_name, int res_id, int res_width,
-                       int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
+                               int res_latency, InOrderCPU *_cpu,
+                               ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       lastCycleGrad(0), numCycleGrad(0)
       
@@ -60,9 +61,9 @@ GraduationUnit::execute(int slot_num)
     {
       case GraduateInst:
         {
-            // @TODO: Instructions should never really get to this point since this should be handled
-            // through the request interface. Check to make sure this happens and delete this
-            // code.
+            // @TODO: Instructions should never really get to this point since
+            // this should be handled through the request interface. Check to
+            // make sure this happens and delete this code.
             if (lastCycleGrad != curTick) {
                 lastCycleGrad = curTick;
                 numCycleGrad = 0;
@@ -79,8 +80,8 @@ GraduationUnit::execute(int slot_num)
                     "[tid:%i] Graduating instruction [sn:%i].\n",
                     tid, inst->seqNum);
 
-            // Release Non-Speculative "Block" on instructions that could not execute
-            // because there was a non-speculative inst. active.
+            // Release Non-Speculative "Block" on instructions that could not
+            // execute because there was a non-speculative inst. active.
             // @TODO: Fix this functionality. Probably too conservative.
             if (inst->isNonSpeculative()) {
                 *nonSpecInstActive[tid] = false;

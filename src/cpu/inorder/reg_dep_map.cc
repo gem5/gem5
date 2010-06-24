@@ -154,8 +154,9 @@ RegDepMap::canRead(unsigned idx, DynInstPtr inst)
     if (inst->seqNum <= (*list_it)->seqNum) {
         return true;
     } else {
-        DPRINTF(RegDepMap, "[sn:%i] Can't read from RegFile, [sn:%i] has not written"
-                " it's value back yet.\n",  inst->seqNum, (*list_it)->seqNum);
+        DPRINTF(RegDepMap, "[sn:%i] Can't read from RegFile, [sn:%i] has "
+                "not written it's value back yet.\n",
+                inst->seqNum, (*list_it)->seqNum);
         return false;
     }
 }
@@ -184,13 +185,14 @@ RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst)
             return forward_inst;
         } else {
             if (!forward_inst->isExecuted()) {
-                DPRINTF(RegDepMap, "[sn:%i] Can't get value through forwarding, "
-                        " [sn:%i] has not been executed yet.\n",
+                DPRINTF(RegDepMap, "[sn:%i] Can't get value through "
+                        "forwarding, [sn:%i] has not been executed yet.\n",
                         inst->seqNum, forward_inst->seqNum);
             } else if (forward_inst->readResultTime(dest_reg_idx) >= curTick) {
-                DPRINTF(RegDepMap, "[sn:%i] Can't get value through forwarding, "
-                        " [sn:%i] executed on tick:%i.\n",
-                        inst->seqNum, forward_inst->seqNum, forward_inst->readResultTime(dest_reg_idx));
+                DPRINTF(RegDepMap, "[sn:%i] Can't get value through "
+                        "forwarding, [sn:%i] executed on tick:%i.\n",
+                        inst->seqNum, forward_inst->seqNum,
+                        forward_inst->readResultTime(dest_reg_idx));
             }
 
             return NULL;
@@ -213,8 +215,9 @@ RegDepMap::canWrite(unsigned idx, DynInstPtr inst)
     if (inst->seqNum <= (*list_it)->seqNum) {
         return true;
     } else {
-        DPRINTF(RegDepMap, "[sn:%i] Can't write from RegFile: [sn:%i] has not written"
-                " it's value back yet.\n", inst->seqNum, (*list_it)->seqNum);
+        DPRINTF(RegDepMap, "[sn:%i] Can't write from RegFile: [sn:%i] "
+                "has not written it's value back yet.\n", inst->seqNum,
+                (*list_it)->seqNum);
     }
 
     return false;

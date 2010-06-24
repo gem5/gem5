@@ -51,7 +51,8 @@ class GraduationUnit : public Resource {
 
   public:
     GraduationUnit(std::string res_name, int res_id, int res_width,
-              int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
+                   int res_latency, InOrderCPU *_cpu,
+                   ThePipeline::Params *params);
     virtual ~GraduationUnit() {}
 
     virtual void execute(int slot_num);

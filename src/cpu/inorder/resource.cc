@@ -346,7 +346,8 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
 }
 
 void
-Resource::squashDueToMemStall(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+Resource::squashDueToMemStall(DynInstPtr inst, int stage_num,
+                              InstSeqNum squash_seq_num,
                               ThreadID tid)
 {
     squash(inst, stage_num, squash_seq_num, tid);    
@@ -454,8 +455,9 @@ ResourceRequest::~ResourceRequest()
 void
 ResourceRequest::done(bool completed)
 {
-    DPRINTF(Resource, "%s [slot:%i] done with request from [sn:%i] [tid:%i].\n",
-            res->name(), slotNum, inst->seqNum, inst->readTid());
+    DPRINTF(Resource, "%s [slot:%i] done with request from "
+            "[sn:%i] [tid:%i].\n", res->name(), slotNum,
+            inst->seqNum, inst->readTid());
 
     setCompleted(completed);
 
@@ -463,7 +465,8 @@ ResourceRequest::done(bool completed)
     if (completed) {
         complSlotNum = slotNum;
     
-        // Would like to start a convention such as all requests deleted in resources/pipeline
+        // Would like to start a convention such as all requests deleted in
+        // resources/pipeline
         // but a little more complex then it seems...
         // For now, all COMPLETED requests deleted in resource..
         //          all FAILED requests deleted in pipeline stage
@@ -474,7 +477,8 @@ ResourceRequest::done(bool completed)
     // Free Slot So Another Instruction Can Use This Resource
     res->freeSlot(slotNum);
 
-    // change slot # to -1, since we check slotNum to see if request is still valid
+    // change slot # to -1, since we check slotNum to see if request is
+    // still valid
     slotNum = -1;
 
 #ifdef DEBUG

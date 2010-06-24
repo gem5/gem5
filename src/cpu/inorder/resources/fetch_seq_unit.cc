@@ -38,7 +38,8 @@ using namespace TheISA;
 using namespace ThePipeline;
 
 FetchSeqUnit::FetchSeqUnit(std::string res_name, int res_id, int res_width,
-                       int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
+                           int res_latency, InOrderCPU *_cpu,
+                           ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       instSize(sizeof(MachInst))
 {
@@ -95,7 +96,8 @@ FetchSeqUnit::execute(int slot_num)
 
                     delaySlotInfo[tid].targetReady = false;
 
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to delay slot target\n",tid);
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to delay "
+                            "slot target\n",tid);
                 }
 
                 inst->setPC(PC[tid]);
@@ -110,8 +112,10 @@ FetchSeqUnit::execute(int slot_num)
                 inst->setMemAddr(PC[tid]);
                 inst->setSeqNum(cpu->getAndIncrementInstSeq(tid));
 
-                DPRINTF(InOrderFetchSeq, "[tid:%i]: Assigning [sn:%i] to PC %08p, NPC %08p, NNPC %08p\n", tid,
-                        inst->seqNum, inst->readPC(), inst->readNextPC(), inst->readNextNPC());
+                DPRINTF(InOrderFetchSeq, "[tid:%i]: Assigning [sn:%i] to "
+                        "PC %08p, NPC %08p, NNPC %08p\n", tid,
+                        inst->seqNum, inst->readPC(), inst->readNextPC(),
+                        inst->readNextNPC());
 
                 if (delaySlotInfo[tid].numInsts > 0) {
                     --delaySlotInfo[tid].numInsts;
@@ -121,8 +125,9 @@ FetchSeqUnit::execute(int slot_num)
                         delaySlotInfo[tid].targetReady = true;
                     }
 
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: %i delay slot inst(s) left to"
-                            " process.\n", tid, delaySlotInfo[tid].numInsts);
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: %i delay slot inst(s) "
+                            "left to process.\n", tid,
+                            delaySlotInfo[tid].numInsts);
                 }
 
                 PC[tid] = nextPC[tid];
@@ -147,7 +152,8 @@ FetchSeqUnit::execute(int slot_num)
                     pcBlockStage[tid] = stage_num;
                 } else if (inst->isCondDelaySlot() && !inst->predTaken()) {
                 // Not-Taken AND Conditional Control
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: [PC:%08p] Predicted Not-Taken Cond. "
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: [PC:%08p] "
+                            "Predicted Not-Taken Cond. "
                             "Delay inst. Skipping delay slot and  Updating PC to %08p\n",
                             tid, inst->seqNum, inst->readPC(), inst->readPredTarg());
 
@@ -160,7 +166,8 @@ FetchSeqUnit::execute(int slot_num)
                     squashAfterInst(inst, stage_num, tid);
                 } else if (!inst->isCondDelaySlot() && !inst->predTaken()) {
                     // Not-Taken Control
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Predicted Not-Taken Control "
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Predicted "
+                            "Not-Taken Control "
                             "inst. updating PC to %08p\n", tid, inst->seqNum,
                             inst->readNextPC());
 #if ISA_HAS_DELAY_SLOT
@@ -177,8 +184,9 @@ FetchSeqUnit::execute(int slot_num)
                     delaySlotInfo[tid].targetReady = false;
                     delaySlotInfo[tid].targetAddr = inst->readPredTarg();
 
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i] Updating delay slot target "
-                            "to PC %08p\n", tid, inst->seqNum, inst->readPredTarg());
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i] Updating delay"
+                            " slot target to PC %08p\n", tid, inst->seqNum,
+                            inst->readPredTarg());
                     inst->bdelaySeqNum = seq_num + 1;
 #else
                     inst->bdelaySeqNum = seq_num;
@@ -187,15 +195,17 @@ FetchSeqUnit::execute(int slot_num)
 
                     inst->squashingStage = stage_num;
 
-                    DPRINTF(InOrderFetchSeq, "[tid:%i] Setting up squash to start from stage %i, after [sn:%i].\n",
+                    DPRINTF(InOrderFetchSeq, "[tid:%i] Setting up squash to "
+                            "start from stage %i, after [sn:%i].\n",
                             tid, stage_num, inst->bdelaySeqNum);
 
                     // Do Squashing
                     squashAfterInst(inst, stage_num, tid);
                 }
             } else {
-                DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Ignoring branch target update "
-                        "since then is not a control instruction.\n", tid, inst->seqNum);
+                DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Ignoring branch "
+                        "target update since then is not a control "
+                        "instruction.\n", tid, inst->seqNum);
             }
 
             fs_req->done();
@@ -213,8 +223,8 @@ FetchSeqUnit::squashAfterInst(DynInstPtr inst, int stage_num, ThreadID tid)
     // Squash In Pipeline Stage
     cpu->pipelineStage[stage_num]->squashDueToBranch(inst, tid);
 
-    // Squash inside current resource, so if there needs to be fetching on same cycle
-    // the fetch information will be correct.
+    // Squash inside current resource, so if there needs to be fetching on
+    // same cycle the fetch information will be correct.
     // squash(inst, stage_num, inst->bdelaySeqNum, tid);
 
     // Schedule Squash Through-out Resource Pool
@@ -224,8 +234,8 @@ void
 FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
                      InstSeqNum squash_seq_num, ThreadID tid)
 {
-    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating due to squash from stage %i.\n",
-            tid, squash_stage);
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating due to squash from stage %i."
+            "\n", tid, squash_stage);
 
     InstSeqNum done_seq_num = inst->bdelaySeqNum;
 
@@ -236,8 +246,8 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
 
     if (squashSeqNum[tid] <= done_seq_num &&
         lastSquashCycle[tid] == curTick) {
-        DPRINTF(InOrderFetchSeq, "[tid:%i]: Ignoring squash from stage %i, since"
-                "there is an outstanding squash that is older.\n",
+        DPRINTF(InOrderFetchSeq, "[tid:%i]: Ignoring squash from stage %i, "
+                "since there is an outstanding squash that is older.\n",
                 tid, squash_stage);
     } else {
         squashSeqNum[tid] = done_seq_num;
@@ -265,7 +275,8 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
 
             delaySlotInfo[tid].numInsts = 1;
             delaySlotInfo[tid].targetReady = false;
-            delaySlotInfo[tid].targetAddr = (inst->procDelaySlotOnMispred) ? inst->branchTarget() : new_PC;
+            delaySlotInfo[tid].targetAddr = (inst->procDelaySlotOnMispred) ?
+                inst->branchTarget() : new_PC;
 
             // Reset PC to Delay Slot Instruction
             if (inst->procDelaySlotOnMispred) {
@@ -278,7 +289,8 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
 
         // Unblock Any Stages Waiting for this information to be updated ...
         if (!pcValid[tid]) {
-            cpu->pipelineStage[pcBlockStage[tid]]->toPrevStages->stageUnblock[pcBlockStage[tid]][tid] = true;
+            cpu->pipelineStage[pcBlockStage[tid]]->
+                toPrevStages->stageUnblock[pcBlockStage[tid]][tid] = true;
         }
 
         pcValid[tid] = true;
@@ -301,8 +313,9 @@ FetchSeqUnit::FetchSeqEvent::process()
         fs_res->PC[i] = fs_res->cpu->readPC(i);
         fs_res->nextPC[i] = fs_res->cpu->readNextPC(i);
         fs_res->nextNPC[i] = fs_res->cpu->readNextNPC(i);
-        DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC:%08p NPC:%08p NNPC:%08p.\n",
-                fs_res->PC[i], fs_res->nextPC[i], fs_res->nextNPC[i]);
+        DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC:%08p NPC:%08p "
+                "NNPC:%08p.\n", fs_res->PC[i], fs_res->nextPC[i],
+                fs_res->nextNPC[i]);
 
         fs_res->pcValid[i] = true;
     }
@@ -322,8 +335,8 @@ FetchSeqUnit::activateThread(ThreadID tid)
 
     cpu->fetchPriorityList.push_back(tid);
 
-    DPRINTF(InOrderFetchSeq, "[tid:%i]: Reading PC:%08p NPC:%08p NNPC:%08p.\n",
-            tid, PC[tid], nextPC[tid], nextNPC[tid]);
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Reading PC:%08p NPC:%08p "
+            "NNPC:%08p.\n", tid, PC[tid], nextPC[tid], nextNPC[tid]);
 }
 
 void

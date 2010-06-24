@@ -60,29 +60,36 @@ class RegDepMap
     /** Insert all of a instruction's destination registers into map*/
     void insert(DynInstPtr inst);
 
-    /** Insert an instruction into a specific destination register index onto map */
+    /** Insert an instruction into a specific destination register index
+     *  onto map
+     */
     void insert(unsigned idx, DynInstPtr inst);
 
     /** Remove all of a instruction's destination registers into map*/
     void remove(DynInstPtr inst);
 
-    /** Remove a specific instruction and destination register index from map */
+    /** Remove a specific instruction and dest. register index from map*/
     void remove(unsigned idx, DynInstPtr inst);
 
     /** Remove Front instruction from a destination register */
     void removeFront(unsigned idx, DynInstPtr inst);
 
-    /** Is the current instruction able to read from this destination register? */
+    /** Is the current instruction able to read from this
+     *  destination register?
+     */
     bool canRead(unsigned idx, DynInstPtr inst);
 
-    /** Is the current instruction able to get a forwarded value from another instruction
-     *  for this destination register? */
+    /** Is the current instruction able to get a forwarded value from
+     *  another instruction for this destination register?
+     */
     DynInstPtr canForward(unsigned reg_idx, DynInstPtr inst);
 
     /** find an instruction to forward/bypass a value from */
     DynInstPtr findBypassInst(unsigned idx);
 
-    /** Is the current instruction able to write to this destination register? */
+    /** Is the current instruction able to write to this
+     *  destination register?
+     */
     bool canWrite(unsigned idx, DynInstPtr inst);
 
     /** Size of Dependency of Map */

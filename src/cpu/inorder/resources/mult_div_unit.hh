@@ -56,7 +56,8 @@ class MultDivUnit : public Resource {
 
   public:
     MultDivUnit(std::string res_name, int res_id, int res_width,
-              int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
+                int res_latency, InOrderCPU *_cpu,
+                ThePipeline::Params *params);
 
   public:
     /** Override default Resource getSlot(). Will only getSlot if

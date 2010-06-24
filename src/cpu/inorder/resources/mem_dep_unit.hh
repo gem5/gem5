@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef __CPU_INORDER_GRAD_UNIT_HH__
-#define __CPU_INORDER_GRAD_UNIT_HH__
+#ifndef __CPU_INORDER_MEM_DEP_UNIT_HH__
+#define __CPU_INORDER_MEM_DEP_UNIT_HH__
 
 #include <vector>
 #include <list>

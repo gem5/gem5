@@ -242,21 +242,24 @@ InOrderThreadContext::setRegOtherThread(int misc_reg, const MiscReg &val,
 void
 InOrderThreadContext::setPC(uint64_t val)
 {
-    DPRINTF(InOrderCPU, "[tid:%i] Setting PC to %08p\n", thread->readTid(), val);
+    DPRINTF(InOrderCPU, "[tid:%i] Setting PC to %08p\n",
+            thread->readTid(), val);
     cpu->setPC(val, thread->readTid());
 }
 
 void
 InOrderThreadContext::setNextPC(uint64_t val)
 {
-    DPRINTF(InOrderCPU, "[tid:%i] Setting NPC to %08p\n", thread->readTid(), val);
+    DPRINTF(InOrderCPU, "[tid:%i] Setting NPC to %08p\n",
+            thread->readTid(), val);
     cpu->setNextPC(val, thread->readTid());
 }
 
 void
 InOrderThreadContext::setNextNPC(uint64_t val)
 {
-    DPRINTF(InOrderCPU, "[tid:%i] Setting NNPC to %08p\n", thread->readTid(), val);
+    DPRINTF(InOrderCPU, "[tid:%i] Setting NNPC to %08p\n",
+            thread->readTid(), val);
     cpu->setNextNPC(val, thread->readTid());
 }
 

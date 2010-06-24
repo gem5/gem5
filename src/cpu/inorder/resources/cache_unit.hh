@@ -174,7 +174,8 @@ class CacheUnit : public Resource
     /** Read/Write on behalf of an instruction.
      *  curResSlot needs to be a valid value in instruction.
      */
-    Fault doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL, CacheReqPtr split_req=NULL);
+    Fault doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL,
+                        CacheReqPtr split_req=NULL);
 
     void prefetch(DynInstPtr inst);
 

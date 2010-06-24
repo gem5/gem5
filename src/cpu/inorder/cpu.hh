@@ -731,7 +731,9 @@ class InOrderCPU : public BaseCPU
     /** Stat for total number of times the CPU is descheduled. */
     Stats::Scalar timesIdled;
 
-    /** Stat for total number of cycles the CPU spends descheduled or no stages active. */
+    /** Stat for total number of cycles the CPU spends descheduled or no
+     *  stages active.
+     */
     Stats::Scalar idleCycles;
 
     /** Stat for total number of cycles the CPU is active. */

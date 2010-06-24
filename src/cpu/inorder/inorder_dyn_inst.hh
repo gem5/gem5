@@ -141,7 +141,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     InstSeqNum bdelaySeqNum;
 
     enum Status {
-        RegDepMapEntry,          /// Instruction has been entered onto the RegDepMap
+        RegDepMapEntry,          /// Instruction is entered onto the RegDepMap
         IqEntry,                 /// Instruction is in the IQ
         RobEntry,                /// Instruction is in the ROB
         LsqEntry,                /// Instruction is in the LSQ
@@ -648,8 +648,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
 
-    /** Initiates a memory access - Calculate Eff. Addr & Initiate Memory Access
-     *  Only valid for memory operations.
+    /** Initiates a memory access - Calculate Eff. Addr & Initiate Memory
+     *  Access Only valid for memory operations.
      */
     Fault initiateAcc();
 
@@ -685,7 +685,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Returns the effective address. */
     const Addr &getEA() const { return instEffAddr; }
 
-    /** Returns whether or not the eff. addr. calculation has been completed. */
+    /** Returns whether or not the eff. addr. calculation has been completed.*/
     bool doneEACalc() { return eaCalcDone; }
 
     /** Returns whether or not the eff. addr. source registers are ready.
@@ -895,7 +895,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void setMiscReg(int misc_reg, const MiscReg &val);
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
     void setMiscRegOperand(const StaticInst *si, int idx, const MiscReg &val);
-    void setMiscRegOperandNoEffect(const StaticInst *si, int idx, const MiscReg &val);
+    void setMiscRegOperandNoEffect(const StaticInst *si, int idx,
+                                   const MiscReg &val);
 
     virtual uint64_t readRegOtherThread(unsigned idx,
                                         ThreadID tid = InvalidThreadID);

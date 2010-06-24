@@ -40,13 +40,19 @@ using namespace std;
 using namespace ThePipeline;
 
 MultDivUnit::MultDivUnit(string res_name, int res_id, int res_width,
-                         int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
+                         int res_latency, InOrderCPU *_cpu,
+                         ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      multRepeatRate(params->multRepeatRate), multLatency(params->multLatency), 
-      div8RepeatRate(params->div8RepeatRate), div8Latency(params->div8Latency), 
-      div16RepeatRate(params->div16RepeatRate), div16Latency(params->div16Latency), 
-      div24RepeatRate(params->div24RepeatRate), div24Latency(params->div24Latency), 
-      div32RepeatRate(params->div32RepeatRate), div32Latency(params->div32Latency), 
+      multRepeatRate(params->multRepeatRate),
+      multLatency(params->multLatency),
+      div8RepeatRate(params->div8RepeatRate),
+      div8Latency(params->div8Latency),
+      div16RepeatRate(params->div16RepeatRate),
+      div16Latency(params->div16Latency),
+      div24RepeatRate(params->div24RepeatRate),
+      div24Latency(params->div24Latency),
+      div32RepeatRate(params->div32RepeatRate),
+      div32Latency(params->div32Latency),
       lastMDUCycle(0), lastOpType(No_OpClass)
 { }
 
@@ -76,8 +82,8 @@ MultDivUnit::init()
 int
 MultDivUnit::findSlot(DynInstPtr inst)
 {
-    DPRINTF(InOrderMDU, "Finding slot for inst:%i\n | slots-free:%i | slots-used:%i\n", 
-            inst->seqNum, slotsAvail(), slotsInUse());
+    DPRINTF(InOrderMDU, "Finding slot for inst:%i\n | slots-free:%i | "
+            "slots-used:%i\n", inst->seqNum, slotsAvail(), slotsInUse());
     
     return Resource::findSlot(inst);    
 }
@@ -85,8 +91,9 @@ MultDivUnit::findSlot(DynInstPtr inst)
 void
 MultDivUnit::freeSlot(int slot_idx)
 {
-    DPRINTF(InOrderMDU, "Freeing slot for inst:%i\n | slots-free:%i | slots-used:%i\n", 
-            reqMap[slot_idx]->getInst()->seqNum, slotsAvail(), slotsInUse());
+    DPRINTF(InOrderMDU, "Freeing slot for inst:%i\n | slots-free:%i | "
+            "slots-used:%i\n", reqMap[slot_idx]->getInst()->seqNum,
+            slotsAvail(), slotsInUse());
     
     Resource::freeSlot(slot_idx);    
 }
@@ -107,8 +114,8 @@ MultDivUnit::requestAgain(DynInstPtr inst, bool &service_request)
         // If different, then update command in the request
         mult_div_req->cmd = inst->resSched.top()->cmd;
         DPRINTF(InOrderMDU,
-                "[tid:%i]: [sn:%i]: Updating the command for this instruction\n",
-                inst->readTid(), inst->seqNum);
+                "[tid:%i]: [sn:%i]: Updating the command for this "
+                "instruction\n", inst->readTid(), inst->seqNum);
     } else {
         // If same command, just check to see if memory access was completed
         // but dont try to re-execute
@@ -157,8 +164,8 @@ MultDivUnit::getSlot(DynInstPtr inst)
     }
 
     if (lastMDUCycle + repeat_rate > curTick) {
-        DPRINTF(InOrderMDU, "MDU not ready to process another inst. until %i, denying request.\n",
-              lastMDUCycle + repeat_rate);
+        DPRINTF(InOrderMDU, "MDU not ready to process another inst. until %i, "
+                "denying request.\n", lastMDUCycle + repeat_rate);
         return -1;
     } else {
         int rval = Resource::getSlot(inst);

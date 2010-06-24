@@ -259,7 +259,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->bdelaySeqNum,
                                  inst->readTid());
             mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
+                                    cpu->nextCycle(curTick +
+                                                   cpu->ticks(delay)));
         }
         break;
 
@@ -278,7 +279,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  tid);
 
             mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
+                                    cpu->nextCycle(curTick +
+                                                   cpu->ticks(delay)));
 
         }
         break;
@@ -286,8 +288,10 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
       case InOrderCPU::SuspendThread:
         {
 
-            DPRINTF(Resource, "Scheduling Suspend Thread Resource Pool Event for tick %i.\n",
+            DPRINTF(Resource, "Scheduling Suspend Thread Resource Pool "
+                    "Event for tick %i.\n",
                     cpu->nextCycle(cpu->nextCycle(curTick + cpu->ticks(delay))));
+
             ResPoolEvent *res_pool_event = new ResPoolEvent(this,
                                                             e_type,
                                                             inst,
@@ -295,7 +299,9 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                                             inst->bdelaySeqNum,
                                                             tid);
 
-            mainEventQueue.schedule(res_pool_event, cpu->nextCycle(cpu->nextCycle(curTick + cpu->ticks(delay))));
+            Tick sked_tick = curTick + cpu->ticks(delay);
+            mainEventQueue.schedule(res_pool_event,
+                                    cpu->nextCycle(cpu->nextCycle(sked_tick)));
 
         }
         break;
@@ -311,7 +317,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->seqNum,
                                  inst->readTid());
             mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
+                                    cpu->nextCycle(curTick +
+                                                   cpu->ticks(delay)));
 
         }
         break;
@@ -327,7 +334,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->bdelaySeqNum,
                                  inst->readTid());
             mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
+                                    cpu->nextCycle(curTick +
+                                                   cpu->ticks(delay)));
         }
         break;
 
@@ -356,7 +364,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                                             inst->squashingStage,
                                                             inst->seqNum,
                                                             inst->readTid());
-            mainEventQueue.schedule(res_pool_event, cpu->nextCycle(curTick + cpu->ticks(delay)));
+            mainEventQueue.schedule(res_pool_event,
+                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
 
         }
         break;
@@ -443,8 +452,8 @@ ResourcePool::deactivateAll(ThreadID tid)
 void
 ResourcePool::suspendAll(ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Suspension to all resources.\n",
-            tid);
+    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Suspension to all "
+            "resources.\n", tid);
 
     int num_resources = resources.size();
 
@@ -543,10 +552,17 @@ ResourcePool::ResPoolEvent::description()
 void
 ResourcePool::ResPoolEvent::scheduleEvent(int delay)
 {
-    if (squashed())
-        mainEventQueue.reschedule(this,resPool->cpu->nextCycle(curTick + resPool->cpu->ticks(delay)));
-    else if (!scheduled())
-        mainEventQueue.schedule(this, resPool->cpu->nextCycle(curTick + resPool->cpu->ticks(delay)));
+    if (squashed()) {
+        mainEventQueue.reschedule(this,
+                                  resPool->cpu->nextCycle(curTick +
+                                                          resPool->
+                                                          cpu->ticks(delay)));
+    } else if (!scheduled()) {
+        mainEventQueue.schedule(this,
+                                resPool->cpu->nextCycle(curTick +
+                                                        resPool->
+                                                        cpu->ticks(delay)));
+    }
 }
 
 /** Unschedule resource event, regardless of its current state. */

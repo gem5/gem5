@@ -106,7 +106,8 @@ class BPredUnit
      * until.
      * @param tid The thread id.
      */
-    void squash(const InstSeqNum &squashed_sn, ThreadID tid);
+    void squash(const InstSeqNum &squashed_sn, ThreadID tid,
+                ThreadID asid = 0);
 
     /**
      * Squashes all outstanding updates until a given sequence number, and
@@ -118,7 +119,7 @@ class BPredUnit
      * @param tid The thread id.
      */
     void squash(const InstSeqNum &squashed_sn, const Addr &corr_target,
-                bool actually_taken, ThreadID tid);
+                bool actually_taken, ThreadID tid, ThreadID asid = 0);
 
     /**
      * @param bp_history Pointer to the history object.  The predictor

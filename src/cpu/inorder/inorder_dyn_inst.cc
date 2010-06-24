@@ -172,8 +172,8 @@ InOrderDynInst::initVars()
 
 
 
-    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created. (active insts: %i)\n",
-            threadNumber, seqNum, instcount);
+    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created."
+            " (active insts: %i)\n", threadNumber, seqNum, instcount);
 }
 
 void
@@ -209,8 +209,8 @@ InOrderDynInst::~InOrderDynInst()
 
     deleteStages();
 
-    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction destroyed. (active insts: %i)\n",
-            threadNumber, seqNum, instcount);
+    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction destroyed"
+            " (active insts: %i)\n", threadNumber, seqNum, instcount);
 }
 
 void
@@ -387,8 +387,8 @@ InOrderDynInst::releaseReq(ResourceRequest* req)
     while(list_it != list_end) {
         if((*list_it)->getResIdx() == req->getResIdx() &&
            (*list_it)->getSlot() == req->getSlot()) {
-            DPRINTF(InOrderDynInst, "[tid:%u]: [sn:%i] Done with request to %s.\n",
-                    threadNumber, seqNum, req->res->name());
+            DPRINTF(InOrderDynInst, "[tid:%u]: [sn:%i] Done with request "
+                    "to %s.\n", threadNumber, seqNum, req->res->name());
             reqList.erase(list_it);
             return;
         }
@@ -402,8 +402,8 @@ InOrderDynInst::releaseReq(ResourceRequest* req)
 void
 InOrderDynInst::setIntSrc(int idx, uint64_t val)
 {
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Source Value %i being set to %#x.\n",
-            threadNumber, seqNum, idx, val);
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Source Value %i being set "
+            "to %#x.\n", threadNumber, seqNum, idx, val);
     instSrc[idx].integer = val;
 }
 
@@ -757,7 +757,8 @@ unsigned int MyHashFunc(const InOrderDynInst *addr)
     return hash;
 }
 
-typedef m5::hash_map<const InOrderDynInst *, const InOrderDynInst *, MyHashFunc>
+typedef m5::hash_map<const InOrderDynInst *, const InOrderDynInst *,
+                     MyHashFunc>
 my_hash_t;
 
 my_hash_t thishash;

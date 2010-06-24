@@ -235,17 +235,20 @@ PipelineStage::removeStalls(ThreadID tid)
 {
     for (int st_num = 0; st_num < NumStages; st_num++) {
         if (stalls[tid].stage[st_num] == true) {
-            DPRINTF(InOrderStage, "Removing stall from stage %i.\n", st_num);
+            DPRINTF(InOrderStage, "Removing stall from stage %i.\n",
+                    st_num);
             stalls[tid].stage[st_num] = false;
         }
 
         if (toPrevStages->stageBlock[st_num][tid] == true) {
-            DPRINTF(InOrderStage, "Removing pending block from stage %i.\n", st_num);
+            DPRINTF(InOrderStage, "Removing pending block from stage %i.\n",
+                    st_num);
             toPrevStages->stageBlock[st_num][tid] = false;
         }
 
         if (fromNextStages->stageBlock[st_num][tid] == true) {
-            DPRINTF(InOrderStage, "Removing pending block from stage %i.\n", st_num);
+            DPRINTF(InOrderStage, "Removing pending block from stage %i.\n",
+                    st_num);
             fromNextStages->stageBlock[st_num][tid] = false;
         }
     }
@@ -568,15 +571,15 @@ PipelineStage::activateThread(ThreadID tid)
         } else {
             DynInstPtr inst = switchedOutBuffer[tid];
 
-            DPRINTF(InOrderStage,"[tid:%i]: Re-Inserting [sn:%lli] PC:%#x into "
-                    "stage skidBuffer %i\n", tid, inst->seqNum, 
+            DPRINTF(InOrderStage,"[tid:%i]: Re-Inserting [sn:%lli] PC:%#x into"
+                    " stage skidBuffer %i\n", tid, inst->seqNum,
                     inst->readPC(), inst->threadNumber);
 
             // Make instruction available for pipeline processing
             skidBuffer[tid].push(inst);            
 
-            // Update PC so that we start fetching after this instruction to prevent
-            // "double"-execution of instructions
+            // Update PC so that we start fetching after this instruction to
+            // prevent "double"-execution of instructions
             cpu->resPool->scheduleEvent((InOrderCPU::CPUEventType)
                                         ResourcePool::UpdateAfterContextSwitch, 
                                         inst, 0, 0, tid);
@@ -988,10 +991,11 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                 if (req->isMemStall() && 
                     cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
                     // Save Stalling Instruction
-                    DPRINTF(ThreadModel, "[tid:%i] [sn:%i] Detected cache miss.\n", tid, inst->seqNum);
+                    DPRINTF(ThreadModel, "[tid:%i] [sn:%i] Detected cache "
+                            "miss.\n", tid, inst->seqNum);
 
-                    DPRINTF(InOrderStage, "Inserting [tid:%i][sn:%i] into switch out buffer.\n",
-                             tid, inst->seqNum);                    
+                    DPRINTF(InOrderStage, "Inserting [tid:%i][sn:%i] into "
+                            "switch out buffer.\n", tid, inst->seqNum);
 
                     switchedOutBuffer[tid] = inst;
                     switchedOutValid[tid] = true;
@@ -1004,26 +1008,27 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     // Switch On Cache Miss
                     //=====================
                     // Suspend Thread at end of cycle
-                    DPRINTF(ThreadModel, "Suspending [tid:%i] due to cache miss.\n", tid);
+                    DPRINTF(ThreadModel, "Suspending [tid:%i] due to cache "
+                            "miss.\n", tid);
                     cpu->suspendContext(tid);                    
 
                     // Activate Next Ready Thread at end of cycle
-                    DPRINTF(ThreadModel, "Attempting to activate next ready thread due to"
-                            " cache miss.\n");
+                    DPRINTF(ThreadModel, "Attempting to activate next ready "
+                            "thread due to cache miss.\n");
                     cpu->activateNextReadyContext();                                                                                               
                 }
                 
                 // Mark request for deletion
                 // if it isnt currently being used by a resource
                 if (!req->hasSlot()) {                   
-                    DPRINTF(InOrderStage, "[sn:%i] Deleting Request, has no slot in resource.\n",
-                            inst->seqNum);
+                    DPRINTF(InOrderStage, "[sn:%i] Deleting Request, has no "
+                            "slot in resource.\n", inst->seqNum);
                     
                     cpu->reqRemoveList.push(req);
                 } else {
-                    DPRINTF(InOrderStage, "[sn:%i] Ignoring Request Deletion, in resource [slot:%i].\n",
-                            inst->seqNum, req->getSlot());
-                    //req = cpu->dummyReq[tid];                    
+                    DPRINTF(InOrderStage, "[sn:%i] Ignoring Request Deletion, "
+                            "in resource [slot:%i].\n", inst->seqNum,
+                            req->getSlot());
                 }
                 
                 

@@ -158,9 +158,11 @@ void
 InOrderCPU::CPUEvent::scheduleEvent(int delay)
 {
     if (squashed())
-        mainEventQueue.reschedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)));
+        mainEventQueue.reschedule(this, cpu->nextCycle(curTick +
+                                                       cpu->ticks(delay)));
     else if (!scheduled())
-        mainEventQueue.schedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)));
+        mainEventQueue.schedule(this, cpu->nextCycle(curTick +
+                                                     cpu->ticks(delay)));
 }
 
 void
@@ -674,7 +676,8 @@ InOrderCPU::squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay)
 
 
 void
-InOrderCPU::squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid)
+InOrderCPU::squashDueToMemStall(int stage_num, InstSeqNum seq_num,
+                                ThreadID tid)
 {
     DPRINTF(InOrderCPU, "Squashing Pipeline Stages Due to Memory Stall...\n");
         
@@ -965,7 +968,8 @@ InOrderCPU::suspendContext(ThreadID tid, int delay)
 void
 InOrderCPU::suspendThread(ThreadID tid)
 {
-    DPRINTF(InOrderCPU, "[tid:%i]: Placing on Suspended Threads List...\n", tid);
+    DPRINTF(InOrderCPU, "[tid:%i]: Placing on Suspended Threads List...\n",
+            tid);
     deactivateThread(tid);
     suspendedThreads.push_back(tid);    
     thread[tid]->lastSuspend = curTick;    
@@ -1323,8 +1327,8 @@ InOrderCPU::squashInstIt(const ListIt &instIt, ThreadID tid)
             (*instIt)->setRemoveList();        
             removeList.push(instIt);
         } else {
-            DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %#x "
-                    "[sn:%lli], already on remove list\n",
+            DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i]"
+                    " PC %#x [sn:%lli], already on remove list\n",
                     (*instIt)->threadNumber, (*instIt)->readPC(), 
                     (*instIt)->seqNum);
         }
@@ -1387,7 +1391,8 @@ InOrderCPU::cleanUpRemovedReqs()
                 res_req->inst->seqNum,
                 res_req->getStageNum(),
                 res_req->res->name(),
-                (res_req->isCompleted()) ? res_req->getComplSlot() : res_req->getSlot(),
+                (res_req->isCompleted()) ?
+                res_req->getComplSlot() : res_req->getSlot(),
                 res_req->isCompleted());
 
         reqRemoveList.pop();
