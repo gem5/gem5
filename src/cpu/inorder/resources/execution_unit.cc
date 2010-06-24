@@ -60,6 +60,22 @@ ExecutionUnit::regStats()
         .name(name() + ".executions")
         .desc("Number of Instructions Executed.");
 
+ 
+    predictedIncorrect
+        .name(name() + ".mispredicted")
+        .desc("Number of Branches Incorrectly Predicted");
+
+    predictedCorrect
+        .name(name() + ".predicted")
+        .desc("Number of Branches Incorrectly Predicted");
+
+    mispredictPct
+        .name(name() + ".mispredictPct")
+        .desc("Percentage of Incorrect Branches Predicts")
+        .precision(6);
+    mispredictPct = (predictedIncorrect / 
+                     (predictedCorrect + predictedIncorrect)) * 100;
+
     Resource::regStats();
 }
 
