@@ -95,8 +95,6 @@ namespace ThePipeline {
             idx(_idx), priority(_priority)
         { }
 
-        virtual ~ScheduleEntry(){}
-
         // Stage number to perform this service.
         int stageNum;
 

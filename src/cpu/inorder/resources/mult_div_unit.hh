@@ -63,24 +63,24 @@ class MultDivUnit : public Resource {
     /** Override default Resource getSlot(). Will only getSlot if
      *  valid mult/div sequence is being maintained
      */
-    virtual int getSlot(DynInstPtr inst);
+    int getSlot(DynInstPtr inst);
 
-    virtual int findSlot(DynInstPtr inst);
+    int findSlot(DynInstPtr inst);
 
-    virtual void freeSlot(int slot_idx);
+    void freeSlot(int slot_idx);
     
-    virtual void init();
+    void init();
     
     /** Get Operand Size For A Division Operation */
     int getDivOpSize(DynInstPtr inst);
 
     /** Override default Resource execute */
-    virtual void execute(int slot_num);
+    void execute(int slot_num);
 
     void exeMulDiv(int slot_num);    
     
     /** Register extra resource stats */
-    virtual void regStats();
+    void regStats();
 
     void requestAgain(DynInstPtr inst, bool &try_request);
 
@@ -130,10 +130,10 @@ class MDUEvent : public ResourceEvent
 {
   public:
     MDUEvent();
-    virtual ~MDUEvent() { }
+    ~MDUEvent() { }
     
 
-    virtual void process();    
+    void process();
 };
 
 

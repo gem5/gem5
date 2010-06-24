@@ -54,13 +54,13 @@ class FetchSeqUnit : public Resource {
   public:
     FetchSeqUnit(std::string res_name, int res_id, int res_width,
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~FetchSeqUnit();
+    ~FetchSeqUnit();
     
-    virtual void init();
-    virtual void activateThread(ThreadID tid);
-    virtual void deactivateThread(ThreadID tid);
-    virtual void suspendThread(ThreadID tid);
-    virtual void execute(int slot_num);
+    void init();
+    void activateThread(ThreadID tid);
+    void deactivateThread(ThreadID tid);
+    void suspendThread(ThreadID tid);
+    void execute(int slot_num);
     void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);
     
 
@@ -68,7 +68,7 @@ class FetchSeqUnit : public Resource {
      *  looks in the global communication buffer to get squash
      *  info
      */
-    virtual void squash(DynInstPtr inst, int squash_stage,
+    void squash(DynInstPtr inst, int squash_stage,
                         InstSeqNum squash_seq_num, ThreadID tid);
 
 
@@ -110,10 +110,10 @@ class FetchSeqUnit : public Resource {
       public:
         /** Constructs a resource event. */
         FetchSeqEvent();
-        virtual ~FetchSeqEvent() {}
+        ~FetchSeqEvent() {}
 
         /** Processes a resource event. */
-        virtual void process();
+        void process();
     };
 
 };

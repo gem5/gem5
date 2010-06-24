@@ -108,7 +108,7 @@ class ResourcePool {
         }
 
         /** Processes a resource event. */
-        virtual void process();
+        void process();
 
         /** Returns the description of the resource event. */
         const char *description();

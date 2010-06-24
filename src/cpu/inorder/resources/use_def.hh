@@ -55,17 +55,16 @@ class UseDefUnit : public Resource {
   public:
     UseDefUnit(std::string res_name, int res_id, int res_width,
                int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~UseDefUnit() {}
 
-    virtual ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
+    ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                         int res_idx, int slot_num,
                                         unsigned cmd);
 
-    virtual ResReqPtr findRequest(DynInstPtr inst);
+    ResReqPtr findRequest(DynInstPtr inst);
 
-    virtual void execute(int slot_num);
+    void execute(int slot_num);
 
-    virtual void squash(DynInstPtr inst, int stage_num,
+    void squash(DynInstPtr inst, int stage_num,
                         InstSeqNum squash_seq_num, ThreadID tid);
 
     void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);    

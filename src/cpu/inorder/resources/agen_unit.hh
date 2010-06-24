@@ -49,7 +49,6 @@ class AGENUnit : public Resource {
   public:
     AGENUnit(std::string res_name, int res_id, int res_width,
              int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~AGENUnit() {}
 
     enum Command {
         GenerateAddr

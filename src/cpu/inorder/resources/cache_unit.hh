@@ -101,30 +101,30 @@ class CacheUnit : public Resource
 
       protected:
         /** Atomic version of receive.  Panics. */
-        virtual Tick recvAtomic(PacketPtr pkt);
+        Tick recvAtomic(PacketPtr pkt);
 
         /** Functional version of receive.  Panics. */
-        virtual void recvFunctional(PacketPtr pkt);
+        void recvFunctional(PacketPtr pkt);
 
         /** Receives status change.  Other than range changing, panics. */
-        virtual void recvStatusChange(Status status);
+        void recvStatusChange(Status status);
 
         /** Returns the address ranges of this device. */
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
+        void getDeviceAddressRanges(AddrRangeList &resp,
                                             AddrRangeList &snoop)
         { resp.clear(); snoop.clear(); }
 
         /** Timing version of receive. Handles setting fetch to the
          * proper status to start fetching. */
-        virtual bool recvTiming(PacketPtr pkt);
+        bool recvTiming(PacketPtr pkt);
 
         /** Handles doing a retry of a failed fetch. */
-        virtual void recvRetry();
+        void recvRetry();
     };
 
     void init();
 
-    virtual ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
+    ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                         int res_idx, int slot_num,
                                         unsigned cmd);
 
@@ -238,7 +238,7 @@ class CacheUnitEvent : public ResourceEvent {
     virtual ~CacheUnitEvent() {}
 
     /** Processes a resource event. */
-    virtual void process();
+    void process();
 };
 
 class CacheRequest : public ResourceRequest

@@ -106,9 +106,7 @@ class PipelineStage
     void regStats();
 
     /** Sets CPU pointer. */
-    virtual void setCPU(InOrderCPU *cpu_ptr);
-
-    virtual void scheduleStageStart(int delay, ThreadID tid) { }
+    void setCPU(InOrderCPU *cpu_ptr);
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -145,7 +143,7 @@ class PipelineStage
     /** Ticks stage, processing all input signals and executing as many
      *  instructions as possible.
      */
-    virtual void tick();
+    void tick();
 
     /** Set a resource stall in the pipeline-stage */
     void setResStall(ResReqPtr res_req, ThreadID tid);
@@ -154,7 +152,7 @@ class PipelineStage
     void unsetResStall(ResReqPtr res_req, ThreadID tid);
 
     /** Remove all stall signals for a particular thread; */
-    virtual void removeStalls(ThreadID tid);
+    void removeStalls(ThreadID tid);
 
     /** Is there room in the stage buffer? */
     int stageBufferAvail();
@@ -168,7 +166,7 @@ class PipelineStage
      * change (ie switching from from blocking to unblocking).
      * @param tid Thread id to stage instructions from.
      */
-    virtual void processThread(bool &status_change, ThreadID tid);
+    void processThread(bool &status_change, ThreadID tid);
 
     /** Processes instructions from fetch and passes them on to rename.
      * Decoding of instructions actually happens when they are created in
@@ -178,13 +176,13 @@ class PipelineStage
     virtual void processInsts(ThreadID tid);
 
     /** Process all resources on an instruction's resource schedule */
-    virtual bool processInstSchedule(DynInstPtr inst, int &reqs_processed);
+    bool processInstSchedule(DynInstPtr inst, int &reqs_processed);
 
     /** Is there room in the next stage buffer for this instruction? */
-    virtual bool canSendInstToStage(unsigned stage_num);
+    bool canSendInstToStage(unsigned stage_num);
 
     /** Send an instruction to the next stage buffer */
-    virtual bool sendInstToNextStage(DynInstPtr inst);
+    bool sendInstToNextStage(DynInstPtr inst);
 
     /** Inserts a thread's instructions into the skid buffer, to be staged
      * once stage unblocks.
@@ -198,7 +196,7 @@ class PipelineStage
     bool skidsEmpty();
 
     /** Updates overall stage status based on all of the threads' statuses. */
-    virtual void updateStatus();
+    void updateStatus();
 
     /** Separates instructions from fetch into individual lists of instructions
      * sorted by thread.
@@ -206,13 +204,13 @@ class PipelineStage
     void sortInsts();
 
     /** Reads all stall signals from the backwards communication timebuffer. */
-    virtual void readStallSignals(ThreadID tid);
+    void readStallSignals(ThreadID tid);
 
     /** Checks all input signals and updates stage's status appropriately. */
-    virtual bool checkSignalsAndUpdate(ThreadID tid);
+    bool checkSignalsAndUpdate(ThreadID tid);
 
     /** Checks all stall signals, and returns if any are true. */
-    virtual bool checkStall(ThreadID tid) const;
+    bool checkStall(ThreadID tid) const;
 
     /** Returns if there any instructions from the previous stage
      * on this cycle.
@@ -223,7 +221,7 @@ class PipelineStage
      * become blocked.
      * @return Returns true if there is a status change.
      */
-    virtual bool block(ThreadID tid);
+    bool block(ThreadID tid);
 
     void blockDueToBuffer(ThreadID tid);
 
@@ -231,21 +229,21 @@ class PipelineStage
      * signals back that stage has unblocked.
      * @return Returns true if there is a status change.
      */
-    virtual bool unblock(ThreadID tid);
+    bool unblock(ThreadID tid);
 
 
   public:
-    virtual void activateThread(ThreadID tid);
+    void activateThread(ThreadID tid);
     
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      */
-    virtual void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
+    void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
 
     virtual void squashDueToMemStall(InstSeqNum seq_num, ThreadID tid);
 
     /** Squash instructions from stage buffer  */
-    virtual void squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid);
+    void squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid);
 
     /** Squashes due to commit signalling a squash. Changes status to
      *  squashing and clears block/unblock signals as needed.

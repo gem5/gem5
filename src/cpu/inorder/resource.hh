@@ -132,7 +132,7 @@ class Resource {
                                         unsigned cmd);
 
     /** Schedule Execution of This Resource For A Given Slot*/
-    virtual void scheduleExecution(int slot_idx);
+    void scheduleExecution(int slot_idx);
 
     /** Execute the function of this resource. The Default is action
      *  is to do nothing. More specific models will derive from this
@@ -195,7 +195,7 @@ class Resource {
     virtual ResReqPtr findRequest(DynInstPtr inst);
 
     /** */
-    virtual void rejectRequest(DynInstPtr inst);
+    void rejectRequest(DynInstPtr inst);
 
     /** Request a Resource again. Some resources have to special process this
      *  in subsequent accesses.

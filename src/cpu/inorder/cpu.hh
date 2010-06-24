@@ -222,10 +222,10 @@ class InOrderCPU : public BaseCPU
             vpe = 0;            
         }
 
-        /** Processes a resource event. */
-        virtual void process();
+        /** Processes a CPU event. */
+        void process();
 
-        /** Returns the description of the resource event. */
+        /** Returns the description of the CPU event. */
         const char *description();
 
         /** Schedule Event */

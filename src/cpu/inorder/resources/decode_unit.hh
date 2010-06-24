@@ -49,13 +49,12 @@ class DecodeUnit : public Resource {
   public:
     DecodeUnit(std::string res_name, int res_id, int res_width,
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~DecodeUnit() {}
 
     enum Command {
         DecodeInst
     };
 
-    virtual void execute(int slot_num);
+    void execute(int slot_num);
 
     void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                 ThreadID tid);

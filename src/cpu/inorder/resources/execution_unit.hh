@@ -54,13 +54,13 @@ class ExecutionUnit : public Resource {
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
 
   public:
-    virtual void regStats();
+    void regStats();
 
     /** Execute the function of this resource. The Default is action
      *  is to do nothing. More specific models will derive from this
      *  class and define their own execute function.
      */
-    virtual void execute(int slot_num);
+    void execute(int slot_num);
 
   protected:
     /////////////////////////////////////////////////////////////////

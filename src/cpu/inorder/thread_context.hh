@@ -75,193 +75,193 @@ class InOrderThreadContext : public ThreadContext
     System *getSystemPtr() { return cpu->system; }
 
     /** Returns a pointer to this CPU. */
-    virtual BaseCPU *getCpuPtr() { return cpu; }
+    BaseCPU *getCpuPtr() { return cpu; }
 
     /** Returns a pointer to this CPU. */
-    virtual std::string getCpuName() { return cpu->name(); }
+    std::string getCpuName() { return cpu->name(); }
 
     /** Reads this CPU's ID. */
-    virtual int cpuId() { return cpu->cpuId(); }
+    int cpuId() { return cpu->cpuId(); }
 
-    virtual int contextId() { return thread->contextId(); }
+    int contextId() { return thread->contextId(); }
 
-    virtual void setContextId(int id) { thread->setContextId(id); }
+    void setContextId(int id) { thread->setContextId(id); }
 
     /** Returns this thread's ID number. */
-    virtual int threadId() { return thread->threadId(); }
-    virtual void setThreadId(int id) { return thread->setThreadId(id); }
+    int threadId() { return thread->threadId(); }
+    void setThreadId(int id) { return thread->setThreadId(id); }
 
-    virtual uint64_t readMicroPC()
+    uint64_t readMicroPC()
     { return 0; }
 
-    virtual void setMicroPC(uint64_t val) { };
+    void setMicroPC(uint64_t val) { };
 
-    virtual uint64_t readNextMicroPC()
+    uint64_t readNextMicroPC()
     { return 0; }
 
-    virtual void setNextMicroPC(uint64_t val) { };
+    void setNextMicroPC(uint64_t val) { };
 
 #if FULL_SYSTEM
     /** Returns a pointer to physical memory. */
-    virtual PhysicalMemory *getPhysMemPtr() 
+    PhysicalMemory *getPhysMemPtr()
     { assert(0); return 0; /*return cpu->physmem;*/ }
 
     /** Returns a pointer to this thread's kernel statistics. */
-    virtual TheISA::Kernel::Statistics *getKernelStats()
+    TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
-    virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
+    FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
-    virtual VirtualPort *getVirtPort();
+    VirtualPort *getVirtPort();
 
-    virtual void connectMemPorts(ThreadContext *tc)
+    void connectMemPorts(ThreadContext *tc)
     { thread->connectMemPorts(tc); }
 
     /** Dumps the function profiling information.
      * @todo: Implement.
      */
-    virtual void dumpFuncProfile();
+    void dumpFuncProfile();
 
     /** Reads the last tick that this thread was activated on. */
-    virtual Tick readLastActivate();
+    Tick readLastActivate();
     /** Reads the last tick that this thread was suspended on. */
-    virtual Tick readLastSuspend();
+    Tick readLastSuspend();
 
     /** Clears the function profiling information. */
-    virtual void profileClear();
+    void profileClear();
 
     /** Samples the function profiling information. */
-    virtual void profileSample();
+    void profileSample();
 
     /** Returns pointer to the quiesce event. */
-    virtual EndQuiesceEvent *getQuiesceEvent()
+    EndQuiesceEvent *getQuiesceEvent()
     {
         return this->thread->quiesceEvent;
     }
 #else
-    virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
+    TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
     /** Returns a pointer to this thread's process. */
-    virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
+    Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
 
     /** Returns this thread's status. */
-    virtual Status status() const { return thread->status(); }
+    Status status() const { return thread->status(); }
 
     /** Sets this thread's status. */
-    virtual void setStatus(Status new_status)
+    void setStatus(Status new_status)
     { thread->setStatus(new_status); }
 
     /** Set the status to Active.  Optional delay indicates number of
      * cycles to wait before beginning execution. */
-    virtual void activate(int delay = 1);
+    void activate(int delay = 1);
 
     /** Set the status to Suspended. */
-    virtual void suspend(int delay = 0);
+    void suspend(int delay = 0);
 
     /** Set the status to Halted. */
-    virtual void halt(int delay = 0);
+    void halt(int delay = 0);
 
     /** Takes over execution of a thread from another CPU. */
-    virtual void takeOverFrom(ThreadContext *old_context);
+    void takeOverFrom(ThreadContext *old_context);
 
     /** Registers statistics associated with this TC. */
-    virtual void regStats(const std::string &name);
+    void regStats(const std::string &name);
 
     /** Serializes state. */
-    virtual void serialize(std::ostream &os);
+    void serialize(std::ostream &os);
 
     /** Unserializes state. */
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void unserialize(Checkpoint *cp, const std::string &section);
 
     /** Returns this thread's ID number. */
-    virtual int getThreadNum() { return thread->readTid(); }
+    int getThreadNum() { return thread->readTid(); }
 
     /** Returns the instruction this thread is currently committing.
      *  Only used when an instruction faults.
      */
-    virtual TheISA::MachInst getInst();
+    TheISA::MachInst getInst();
 
     /** Copies the architectural registers from another TC into this TC. */
-    virtual void copyArchRegs(ThreadContext *src_tc);
+    void copyArchRegs(ThreadContext *src_tc);
 
     /** Resets all architectural registers to 0. */
-    virtual void clearArchRegs();
+    void clearArchRegs();
 
     /** Reads an integer register. */
-    virtual uint64_t readIntReg(int reg_idx);
+    uint64_t readIntReg(int reg_idx);
 
-    virtual FloatReg readFloatReg(int reg_idx);
+    FloatReg readFloatReg(int reg_idx);
 
-    virtual FloatRegBits readFloatRegBits(int reg_idx);
+    FloatRegBits readFloatRegBits(int reg_idx);
 
-    virtual uint64_t readRegOtherThread(int misc_reg, ThreadID tid);
+    uint64_t readRegOtherThread(int misc_reg, ThreadID tid);
 
     /** Sets an integer register to a value. */
-    virtual void setIntReg(int reg_idx, uint64_t val);
+    void setIntReg(int reg_idx, uint64_t val);
 
-    virtual void setFloatReg(int reg_idx, FloatReg val);
+    void setFloatReg(int reg_idx, FloatReg val);
 
-    virtual void setFloatRegBits(int reg_idx, FloatRegBits val);
+    void setFloatRegBits(int reg_idx, FloatRegBits val);
 
-    virtual void setRegOtherThread(int misc_reg,
+    void setRegOtherThread(int misc_reg,
                                    const MiscReg &val,
                                    ThreadID tid);
 
     /** Reads this thread's PC. */
-    virtual uint64_t readPC()
+    uint64_t readPC()
     { return cpu->readPC(thread->readTid()); }
 
     /** Sets this thread's PC. */
-    virtual void setPC(uint64_t val);
+    void setPC(uint64_t val);
 
     /** Reads this thread's next PC. */
-    virtual uint64_t readNextPC()
+    uint64_t readNextPC()
     { return cpu->readNextPC(thread->readTid()); }
 
     /** Sets this thread's next PC. */
-    virtual void setNextPC(uint64_t val);
+    void setNextPC(uint64_t val);
 
-    virtual uint64_t readNextNPC()
+    uint64_t readNextNPC()
     { return cpu->readNextNPC(thread->readTid()); }
 
-    virtual void setNextNPC(uint64_t val);
+    void setNextNPC(uint64_t val);
 
     /** Reads a miscellaneous register. */
-    virtual MiscReg readMiscRegNoEffect(int misc_reg)
+    MiscReg readMiscRegNoEffect(int misc_reg)
     { return cpu->readMiscRegNoEffect(misc_reg, thread->readTid()); }
 
     /** Reads a misc. register, including any side-effects the
      * read might have as defined by the architecture. */
-    virtual MiscReg readMiscReg(int misc_reg)
+    MiscReg readMiscReg(int misc_reg)
     { return cpu->readMiscReg(misc_reg, thread->readTid()); }
 
     /** Sets a misc. register. */
-    virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
 
     /** Sets a misc. register, including any side-effects the
      * write might have as defined by the architecture. */
-    virtual void setMiscReg(int misc_reg, const MiscReg &val);
+    void setMiscReg(int misc_reg, const MiscReg &val);
 
-    virtual int flattenIntIndex(int reg)
+    int flattenIntIndex(int reg)
     { return cpu->isa[thread->readTid()].flattenIntIndex(reg); }
 
-    virtual int flattenFloatIndex(int reg)
+    int flattenFloatIndex(int reg)
     { return cpu->isa[thread->readTid()].flattenFloatIndex(reg); }
 
-    virtual void activateContext(int delay)
+    void activateContext(int delay)
     { cpu->activateContext(thread->readTid(), delay); }
 
-    virtual void deallocateContext()
+    void deallocateContext()
     { cpu->deallocateContext(thread->readTid()); }
 
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.
-    virtual unsigned readStCondFailures()
+    unsigned readStCondFailures()
     { return thread->storeCondFailures; }
 
     /** Sets the number of consecutive store conditional failures. */
-    virtual void setStCondFailures(unsigned sc_failures)
+    void setStCondFailures(unsigned sc_failures)
     { thread->storeCondFailures = sc_failures; }
 
     // Only really makes sense for old CPU model.  Lots of code
@@ -270,18 +270,18 @@ class InOrderThreadContext : public ThreadContext
     /** Checks if the thread is misspeculating.  Because it is
      * very difficult to determine if the thread is
      * misspeculating, this is set as false. */
-    virtual bool misspeculating() { return false; }
+    bool misspeculating() { return false; }
 
 #if !FULL_SYSTEM
     /** Executes a syscall in SE mode. */
-    virtual void syscall(int64_t callnum)
+    void syscall(int64_t callnum)
     { return cpu->syscall(callnum, thread->readTid()); }
 #endif
 
     /** Reads the funcExeInst counter. */
-    virtual Counter readFuncExeInst() { return thread->funcExeInst; }
+    Counter readFuncExeInst() { return thread->funcExeInst; }
 
-    virtual void changeRegFileContext(unsigned param,
+    void changeRegFileContext(unsigned param,
                                       unsigned val)
     { panic("Not supported!"); }
 };

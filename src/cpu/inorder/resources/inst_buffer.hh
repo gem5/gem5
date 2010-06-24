@@ -57,21 +57,20 @@ class InstBuffer : public Resource {
   public:
     InstBuffer(std::string res_name, int res_id, int res_width,
                int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~InstBuffer() {}
 
-    virtual void regStats();
+    void regStats();
 
-    virtual void execute(int slot_num);
+    void execute(int slot_num);
 
-    virtual void insert(DynInstPtr inst);
+    void insert(DynInstPtr inst);
 
-    virtual void remove(DynInstPtr inst);
+    void remove(DynInstPtr inst);
 
-    virtual void pop(ThreadID tid);
+    void pop(ThreadID tid);
 
-    virtual DynInstPtr top(ThreadID tid);
+    DynInstPtr top(ThreadID tid);
 
-    virtual void squash(DynInstPtr inst, int stage_num,
+    void squash(DynInstPtr inst, int stage_num,
                         InstSeqNum squash_seq_num, ThreadID tid);
   protected:
     /** List of instructions this resource is currently

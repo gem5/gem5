@@ -56,14 +56,14 @@ class BranchPredictor : public Resource {
     BranchPredictor(std::string res_name, int res_id, int res_width,
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
 
-    virtual void regStats();
+    void regStats();
 
-    virtual void execute(int slot_num);
+    void execute(int slot_num);
 
-    virtual void squash(DynInstPtr inst, int stage_num,
+    void squash(DynInstPtr inst, int stage_num,
                         InstSeqNum squash_seq_num, ThreadID tid);
 
-    virtual void instGraduated(InstSeqNum seq_num, ThreadID tid);
+    void instGraduated(InstSeqNum seq_num, ThreadID tid);
 
   protected:
     /** List of instructions this resource is currently
