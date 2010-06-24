@@ -228,7 +228,11 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
             tid, squash_stage);
 
     InstSeqNum done_seq_num = inst->bdelaySeqNum;
-    Addr new_PC = inst->readPredTarg();
+
+    // Handles the case where we are squashing because of something that is
+    // not a branch...like a memory stall
+    Addr new_PC = (inst->isControl()) ?
+        inst->readPredTarg() : inst->readPC() + instSize;
 
     if (squashSeqNum[tid] <= done_seq_num &&
         lastSquashCycle[tid] == curTick) {
