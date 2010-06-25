@@ -42,6 +42,8 @@
 #include "params/InOrderCPU.hh"
 
 class InOrderDynInst;
+class ScheduleEntry;
+class ResourceSked;
 
 /* This Namespace contains constants, typedefs, functions and
  * objects specific to the Pipeline Implementation.
@@ -88,51 +90,7 @@ namespace ThePipeline {
     //////////////////////////
     // RESOURCE SCHEDULING
     //////////////////////////
-    struct ScheduleEntry {
-        ScheduleEntry(int stage_num, int _priority, int res_num, int _cmd = 0,
-                      int _idx = 0) :
-            stageNum(stage_num), resNum(res_num), cmd(_cmd),
-            idx(_idx), priority(_priority)
-        { }
-
-        // Stage number to perform this service.
-        int stageNum;
-
-        // Resource ID to access
-        int resNum;
-
-        // See specific resource for meaning
-        unsigned cmd;
-
-        // See specific resource for meaning
-        unsigned idx;
-
-        // Some Resources May Need Priority?
-        int priority;
-    };
-
-    struct entryCompare {
-        bool operator()(const ScheduleEntry* lhs, const ScheduleEntry* rhs) 
-            const
-        {
-            // Prioritize first by stage number that the resource is needed
-            if (lhs->stageNum > rhs->stageNum) {
-                return true;
-            } else if (lhs->stageNum == rhs->stageNum) {
-                if (lhs->priority > rhs->priority) {
-                  return true;
-                } else {
-                  return false;
-                }
-            } else {
-                return false;
-            }
-        }
-    };
-
-
-    typedef std::priority_queue<ScheduleEntry*, std::vector<ScheduleEntry*>,
-                                         entryCompare> ResSchedule;
+    typedef ResourceSked ResSchedule;
 
     void createFrontEndSchedule(DynInstPtr &inst);
     bool createBackEndSchedule(DynInstPtr &inst);
@@ -147,17 +105,8 @@ namespace ThePipeline {
       public:
         InstStage(DynInstPtr inst, int stage_num);
 
-        void needs(int unit, int request) {
-            instSched->push( new ScheduleEntry(
-                stageNum, nextTaskPriority++, unit, request
-            ));
-        }
-
-        void needs(int unit, int request, int param) {
-            instSched->push( new ScheduleEntry(
-                stageNum, nextTaskPriority++, unit, request, param
-            ));
-        }
+        void needs(int unit, int request);
+        void needs(int unit, int request, int param);
     };
 };
 

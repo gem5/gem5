@@ -50,6 +50,7 @@
 #include "cpu/inorder/inorder_trace.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resource.hh"
+#include "cpu/inorder/resource_sked.hh"
 #include "cpu/inorder/thread_state.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
@@ -436,7 +437,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void deleteStages();
 
     /** Add A Entry To Reource Schedule */
-    void addToSched(ThePipeline::ScheduleEntry* sched_entry)
+    void addToSched(ScheduleEntry* sched_entry)
     { resSched.push(sched_entry); }
 
 
@@ -481,7 +482,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void popSchedEntry()
     {
         if (!resSched.empty()) {
-            ThePipeline::ScheduleEntry* sked = resSched.top();
+            ScheduleEntry* sked = resSched.top();
             resSched.pop();
             if (sked != 0) {
                 delete sked;

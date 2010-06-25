@@ -77,6 +77,8 @@ void createFrontEndSchedule(DynInstPtr &inst)
     D->needs(Decode, DecodeUnit::DecodeInst);
     D->needs(BPred, BranchPredictor::PredictBranch);
     D->needs(FetchSeq, FetchSeqUnit::UpdateTargetPC);
+
+    inst->resSched.init();
 }
 
 bool createBackEndSchedule(DynInstPtr &inst)
@@ -150,6 +152,20 @@ InstStage::InstStage(DynInstPtr inst, int stage_num)
     stageNum = stage_num;
     nextTaskPriority = 0;
     instSched = &inst->resSched;
+}
+
+void
+InstStage::needs(int unit, int request) {
+    instSched->push( new ScheduleEntry(
+                         stageNum, nextTaskPriority++, unit, request
+                         ));
+}
+
+void
+InstStage::needs(int unit, int request, int param) {
+    instSched->push( new ScheduleEntry(
+                         stageNum, nextTaskPriority++, unit, request, param
+                         ));
 }
 
 };
