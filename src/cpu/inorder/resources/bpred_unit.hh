@@ -83,11 +83,11 @@ class BPredUnit
      * Predicts whether or not the instruction is a taken branch, and the
      * target of the branch if it is taken.
      * @param inst The branch instruction.
-     * @param PC The predicted PC is passed back through this parameter.
+     * @param pred_PC The predicted PC is passed back through this parameter.
      * @param tid The thread id.
      * @return Returns if the branch is taken or not.
      */
-    bool predict(ThePipeline::DynInstPtr &inst, Addr &PC, ThreadID tid);
+    bool predict(ThePipeline::DynInstPtr &inst, Addr &pred_PC, ThreadID tid);
 
     // @todo: Rename this function.
     void BPUncond(void * &bp_history);
@@ -173,6 +173,7 @@ class BPredUnit
     void dump();
 
   private:
+    int instSize;
     Resource *res;
     
     struct PredictorHistory {

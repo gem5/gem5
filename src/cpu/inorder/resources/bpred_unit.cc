@@ -66,7 +66,9 @@ BPredUnit::BPredUnit(Resource *_res, ThePipeline::Params *params)
     }
 
     for (int i=0; i < ThePipeline::MaxThreads; i++)
-	RAS[i].init(params->RASSize);
+        RAS[i].init(params->RASSize);
+
+    instSize = sizeof(TheISA::MachInst);
 }
 
 std::string
@@ -147,7 +149,7 @@ BPredUnit::takeOverFrom()
 
 
 bool
-BPredUnit::predict(DynInstPtr &inst, Addr &PC, ThreadID tid)
+BPredUnit::predict(DynInstPtr &inst, Addr &pred_PC, ThreadID tid)
 {
     // See if branch predictor predicts taken.
     // If so, get its target addr either from the BTB or the RAS.
@@ -183,14 +185,14 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, ThreadID tid)
     } else {
         ++condPredicted;
 
-        pred_taken = BPLookup(PC, bp_history);
+        pred_taken = BPLookup(pred_PC, bp_history);
 
         DPRINTF(InOrderBPred, "[tid:%i]: Branch predictor predicted %i "
                 "for PC %#x\n",
                 tid, pred_taken, inst->readPC());
     }
 
-    PredictorHistory predict_record(inst->seqNum, PC, pred_taken, 
+    PredictorHistory predict_record(inst->seqNum, pred_PC, pred_taken,
                                     bp_history, tid);
 
     // Now lookup in the BTB or RAS.
@@ -218,10 +220,11 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, ThreadID tid)
             ++BTBLookups;
 
             if (inst->isCall()) {
+
 #if ISA_HAS_DELAY_SLOT
-                Addr ras_pc = PC + (2 * sizeof(MachInst)); // Next Next PC
+                Addr ras_pc = pred_PC + instSize; // Next Next PC
 #else
-                Addr ras_pc = PC + sizeof(MachInst); // Next PC
+                Addr ras_pc = pred_PC; // Next PC
 #endif
 
                 RAS[tid].push(ras_pc);
@@ -243,11 +246,11 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, ThreadID tid)
                 DPRINTF(InOrderBPred, "[tid:%i]: Setting %#x predicted"
                         " target to %#x.\n",
                         tid, inst->readPC(), target);
-            } else if (BTB.valid(PC, asid)) {
+            } else if (BTB.valid(pred_PC, asid)) {
                 ++BTBHits;
 
                 // If it's not a return, use the BTB to get the target addr.
-                target = BTB.lookup(PC, asid);
+                target = BTB.lookup(pred_PC, asid);
 
                 DPRINTF(InOrderBPred, "[tid:%i]: [asid:%i] Instruction %#x "
                         "predicted target is %#x.\n",
@@ -262,16 +265,14 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, ThreadID tid)
 
     if (pred_taken) {
         // Set the PC and the instruction's predicted target.
-        PC = target;
-        inst->setPredTarg(target);
+        pred_PC = target;
     } else {
 #if ISA_HAS_DELAY_SLOT
         // This value will be inst->PC + 4 (nextPC)
         // Delay Slot archs need this to be inst->PC + 8 (nextNPC)
         // so we increment one more time here.
-        PC = PC + sizeof(MachInst);
+        pred_PC = pred_PC + instSize;
 #endif
-        inst->setPredTarg(PC);
     }
 
     predHist[tid].push_front(predict_record);
