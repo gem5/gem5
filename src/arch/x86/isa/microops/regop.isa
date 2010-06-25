@@ -636,7 +636,7 @@ let {{
             Quotient = quotient;
         '''
         flag_code = '''
-            if (DestReg == 0)
+            if (remaining == 0)
                 ccFlagBits = ccFlagBits | (ext & EZFBit);
             else
                 ccFlagBits = ccFlagBits & ~(ext & EZFBit);
