@@ -83,7 +83,7 @@ class Resource {
     virtual void initSlots();
 
     /** Register Stats for this resource */
-    virtual void regStats();
+    virtual void regStats() { }
 
     /** Resources that care about thread activation override this. */
     virtual void activateThread(ThreadID tid) { }
@@ -246,17 +246,6 @@ class Resource {
 
     /** Default denied resource request pointer*/
     ResReqPtr deniedReq;
-
-  public:
-    /////////////////////////////////////////////////////////////////
-    //
-    // DEFAULT RESOURCE STATISTICS
-    //
-    /////////////////////////////////////////////////////////////////
-#ifdef DEBUG
-    /** Number of Instruction Requests the Resource Processes */
-    Stats::Scalar instReqsProcessed;
-#endif
 };
 
 class ResourceEvent : public Event
