@@ -689,8 +689,6 @@ class InOrderCPU : public BaseCPU
 
     /** Number of resource requests active in CPU **/
     unsigned resReqCount;
-
-    Stats::Scalar maxResReqCount;    
 #endif
 
     /** Counter of how many stages have completed switching out. */

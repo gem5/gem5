@@ -369,13 +369,6 @@ InOrderCPU::regStats()
     /* Register the Resource Pool's stats here.*/
     resPool->regStats();
 
-#ifdef DEBUG
-    maxResReqCount
-        .name(name() + ".maxResReqCount")
-        .desc("Maximum number of live resource requests in CPU")
-        .prereq(maxResReqCount);   
-#endif
-
     /* Register for each Pipeline Stage */
     for (int stage_num=0; stage_num < ThePipeline::NumStages; stage_num++) {
         pipelineStage[stage_num]->regStats();

@@ -421,7 +421,6 @@ ResourceRequest::ResourceRequest(Resource *_res, DynInstPtr _inst,
 
         if (res->cpu->resReqCount > maxReqCount) {            
             maxReqCount = res->cpu->resReqCount;
-            res->cpu->maxResReqCount = maxReqCount;            
         }
         
 #endif
