@@ -79,11 +79,6 @@ class Process : public SimObject
     /// running on.
     System *system;
 
-    // have we initialized a thread context from this process?  If
-    // yes, subsequent contexts are assumed to be for dynamically
-    // created threads and are not initialized.
-    bool initialContextLoaded;
-
     bool checkpointRestored;
 
     // thread contexts associated with this process
@@ -249,8 +244,6 @@ class LiveProcess : public Process
     std::string cwd;
 
     LiveProcess(LiveProcessParams * params, ObjectFile *objFile);
-
-    virtual void argsInit(int intSize, int pageSize);
 
     // Id of the owner of the process
     uint64_t __uid;
