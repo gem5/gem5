@@ -29,7 +29,7 @@
 
 import math
 import sys
-import types
+from types import FunctionType
 
 try:
     import pydot
@@ -102,15 +102,15 @@ instanceDict = {}
 # class are instantiated, and provides inherited instance behavior).
 class MetaSimObject(type):
     # Attributes that can be set only at initialization time
-    init_keywords = { 'abstract' : types.BooleanType,
-                      'cxx_class' : types.StringType,
-                      'cxx_type' : types.StringType,
-                      'cxx_predecls' : types.ListType,
-                      'swig_objdecls' : types.ListType,
-                      'swig_predecls' : types.ListType,
-                      'type' : types.StringType }
+    init_keywords = { 'abstract' : bool,
+                      'cxx_class' : str,
+                      'cxx_type' : str,
+                      'cxx_predecls' : list,
+                      'swig_objdecls' : list,
+                      'swig_predecls' : list,
+                      'type' : str }
     # Attributes that can be set any time
-    keywords = { 'check' : types.FunctionType }
+    keywords = { 'check' : FunctionType }
 
     # __new__ is called before __init__, and is where the statements
     # in the body of the class definition get loaded into the class's
@@ -126,8 +126,9 @@ class MetaSimObject(type):
         cls_dict = {}
         value_dict = {}
         for key,val in dict.items():
-            if key.startswith('_') or isinstance(val, (types.FunctionType,
-                                                       types.TypeType)):
+            if key.startswith('_') or isinstance(val, (FunctionType,
+                                                       classmethod,
+                                                       type)):
                 cls_dict[key] = val
             else:
                 # must be a param/port setting
@@ -233,7 +234,7 @@ class MetaSimObject(type):
         if not isinstance(val, kwtype):
             raise TypeError, 'keyword %s has bad type %s (expecting %s)' % \
                   (keyword, type(val), kwtype)
-        if isinstance(val, types.FunctionType):
+        if isinstance(val, FunctionType):
             val = classmethod(val)
         type.__setattr__(cls, keyword, val)
 
