@@ -292,6 +292,16 @@ def run(options, root, testsys, cpu_class):
     num_checkpoints = 0
     exit_cause = ''
 
+    # If we're taking and restoring checkpoints, use checkpoint_dir
+    # option only for finding the checkpoints to restore from.  This
+    # lets us test checkpointing by restoring from one set of
+    # checkpoints, generating a second set, and then comparing them.
+    if options.take_checkpoints and options.checkpoint_restore:
+        if m5.options.outdir:
+            cptdir = m5.options.outdir
+        else:
+            cptdir = getcwd()
+
     # Checkpoints being taken via the command line at <when> and at
     # subsequent periods of <period>.  Checkpoint instructions
     # received from the benchmark running are ignored and skipped in
