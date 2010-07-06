@@ -334,6 +334,7 @@ STN(unsigned short);
 STN(signed short);
 STN(unsigned char);
 STN(signed char);
+STN(char);
 
 template<>
 bool to_number<bool>(const string &value, bool &retval)

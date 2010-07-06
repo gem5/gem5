@@ -87,6 +87,14 @@ showParam(ostream &os, const T &value)
 // Treat 8-bit ints (chars) as ints on output, not as chars
 template <>
 void
+showParam(ostream &os, const char &value)
+{
+    os << (int)value;
+}
+
+
+template <>
+void
 showParam(ostream &os, const signed char &value)
 {
     os << (int)value;
@@ -350,6 +358,7 @@ template void                                                           \
 arrayParamIn(Checkpoint *cp, const string &section,                     \
              const string &name, vector<type> &param);
 
+INSTANTIATE_PARAM_TEMPLATES(char)
 INSTANTIATE_PARAM_TEMPLATES(signed char)
 INSTANTIATE_PARAM_TEMPLATES(unsigned char)
 INSTANTIATE_PARAM_TEMPLATES(signed short)
