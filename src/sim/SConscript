@@ -48,7 +48,6 @@ Source('serialize.cc')
 Source('sim_events.cc')
 Source('sim_object.cc')
 Source('simulate.cc')
-Source('startup.cc')
 Source('stat_control.cc')
 Source('system.cc')
 

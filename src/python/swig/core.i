@@ -38,7 +38,6 @@
 #include "base/socket.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
-#include "sim/startup.hh"
 
 extern const char *compileDate;
 
@@ -62,7 +61,6 @@ inline void disableAllListeners() { ListenSocket::disableAll(); }
 %include "base/types.hh"
 
 void setOutputDir(const std::string &dir);
-void SimStartup();
 void doExitCleanup();
 void disableAllListeners();
 
@@ -82,6 +80,7 @@ void unserializeAll(const std::string &cpt_dir);
 
 void initAll();
 void regAllStats();
+void startupAll();
 
 bool want_warn, warn_verbose;
 bool want_info, info_verbose;

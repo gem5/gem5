@@ -69,3 +69,8 @@ unserializeAll(const std::string &cpt_dir)
     Serializable::unserializeAll(cpt_dir);
 }
 
+inline void
+startupAll()
+{
+    SimObject::startupAll();
+}

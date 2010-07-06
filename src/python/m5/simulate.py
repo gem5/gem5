@@ -91,7 +91,7 @@ def simulate(*args, **kwargs):
     global need_resume, need_startup
 
     if need_startup:
-        internal.core.SimStartup()
+        internal.core.startupAll()
         need_startup = False
 
     for root in need_resume:

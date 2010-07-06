@@ -45,7 +45,6 @@
 #include "params/SimObject.hh"
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
-#include "sim/startup.hh"
 
 class BaseCPU;
 class Event;
@@ -55,8 +54,7 @@ class Event;
  * correspond to physical components and can be specified via the
  * config file (CPUs, caches, etc.).
  */
-class SimObject
-    : public EventManager, public Serializable, protected StartupCallback
+class SimObject : public EventManager, public Serializable
 {
   public:
     enum State {
@@ -102,6 +100,11 @@ class SimObject
     virtual void regStats();
     virtual void regFormulas();
     virtual void resetStats();
+
+    // final initialization before simulation
+    // all state is unserialized so 
+    virtual void startup();
+    static void startupAll();
 
     // static: call reg_stats on all SimObjects
     static void regAllStats();

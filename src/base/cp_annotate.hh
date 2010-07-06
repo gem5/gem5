@@ -43,7 +43,6 @@
 #include "config/cp_annotate.hh"
 #include "config/the_isa.hh"
 #include "sim/serialize.hh"
-#include "sim/startup.hh"
 #include "sim/system.hh"
 
 #if CP_ANNOTATE

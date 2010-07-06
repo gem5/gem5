@@ -73,6 +73,11 @@ SimObject::init()
 {
 }
 
+void
+SimObject::startup()
+{
+}
+
 //
 // no default statistics, so nothing to do in base implementation
 //
@@ -194,6 +199,20 @@ SimObject::unserializeAll(Checkpoint *cp)
                  obj->name());
    }
 }
+
+
+void
+SimObject::startupAll()
+{
+    SimObjectList::iterator i = simObjectList.begin();
+    SimObjectList::iterator end = simObjectList.end();
+
+    while (i != end) {
+        (*i)->startup();
+        ++i;
+    }
+}
+
 
 #ifdef DEBUG
 //
