@@ -87,7 +87,7 @@ showParam(ostream &os, const T &value)
 // Treat 8-bit ints (chars) as ints on output, not as chars
 template <>
 void
-showParam(ostream &os, const char &value)
+showParam(ostream &os, const signed char &value)
 {
     os << (int)value;
 }
