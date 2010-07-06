@@ -427,8 +427,7 @@ Serializable::unserialize(Checkpoint *cp, const string &section)
 void
 Serializable::serializeAll(const string &cpt_dir)
 {
-    setCheckpointDir(cpt_dir);
-    string dir = Checkpoint::dir();
+    string dir = Checkpoint::setDir(cpt_dir);
     if (mkdir(dir.c_str(), 0775) == -1 && errno != EEXIST)
             fatal("couldn't mkdir %s\n", dir);
 
@@ -446,14 +445,10 @@ Serializable::serializeAll(const string &cpt_dir)
 void
 Serializable::unserializeAll(const string &cpt_dir)
 {
-    setCheckpointDir(cpt_dir);
-    string dir = Checkpoint::dir();
-    string cpt_file = dir + Checkpoint::baseFilename;
-    string section = "";
+    string dir = Checkpoint::setDir(cpt_dir);
 
-    DPRINTFR(Config, "Loading checkpoint dir '%s'\n",
-             dir);
-    Checkpoint *cp = new Checkpoint(dir, section);
+    DPRINTFR(Config, "Loading checkpoint dir '%s'\n", dir);
+    Checkpoint *cp = new Checkpoint(dir);
     unserializeGlobals(cp);
     SimObject::unserializeAll(cp);
 }
@@ -462,27 +457,6 @@ void
 Serializable::unserializeGlobals(Checkpoint *cp)
 {
     globals.unserialize(cp);
-}
-
-const char *Checkpoint::baseFilename = "m5.cpt";
-
-static string checkpointDirBase;
-
-void
-setCheckpointDir(const string &name)
-{
-    checkpointDirBase = name;
-    if (checkpointDirBase[checkpointDirBase.size() - 1] != '/')
-        checkpointDirBase += "/";
-}
-
-string
-Checkpoint::dir()
-{
-    // use csprintf to insert curTick into directory name if it
-    // appears to have a format placeholder in it.
-    return (checkpointDirBase.find("%") != string::npos) ?
-        csprintf(checkpointDirBase, curTick) : checkpointDirBase;
 }
 
 void
@@ -554,8 +528,31 @@ Serializable::create(Checkpoint *cp, const string &section)
 }
 
 
-Checkpoint::Checkpoint(const string &cpt_dir, const string &path)
-    : db(new IniFile), basePath(path), cptDir(cpt_dir)
+const char *Checkpoint::baseFilename = "m5.cpt";
+
+string Checkpoint::currentDirectory;
+
+string
+Checkpoint::setDir(const string &name)
+{
+    // use csprintf to insert curTick into directory name if it
+    // appears to have a format placeholder in it.
+    currentDirectory = (name.find("%") != string::npos) ?
+        csprintf(name, curTick) : name;
+    if (currentDirectory[currentDirectory.size() - 1] != '/')
+        currentDirectory += "/";
+    return currentDirectory;
+}
+
+string
+Checkpoint::dir()
+{
+    return currentDirectory;
+}
+
+
+Checkpoint::Checkpoint(const string &cpt_dir)
+    : db(new IniFile), cptDir(cpt_dir)
 {
     string filename = cpt_dir + "/" + Checkpoint::baseFilename;
     if (!db->load(filename)) {

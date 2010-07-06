@@ -219,19 +219,14 @@ class SerializableClass
 SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,                        \
                                          OBJ_CLASS::createForUnserialize);
 
-void
-setCheckpointDir(const std::string &name);
-
 class Checkpoint
 {
   private:
 
     IniFile *db;
-    const std::string basePath;
-    std::map<std::string, Serializable*> objMap;
 
   public:
-    Checkpoint(const std::string &cpt_dir, const std::string &path);
+    Checkpoint(const std::string &cpt_dir);
 
     const std::string cptDir;
 
@@ -245,7 +240,20 @@ class Checkpoint
 
     // The following static functions have to do with checkpoint
     // creation rather than restoration.  This class makes a handy
-    // namespace for them though.
+    // namespace for them though.  Currently no Checkpoint object is
+    // created on serialization (only unserialization) so we track the
+    // directory name as a global.  It would be nice to change this
+    // someday
+
+  private:
+    // current directory we're serializing into.
+    static std::string currentDirectory;
+
+  public:
+    // Set the current directory.  This function takes care of
+    // inserting curTick if there's a '%d' in the argument, and
+    // appends a '/' if necessary.  The final name is returned.
+    static std::string setDir(const std::string &base_name);
 
     // Export current checkpoint directory name so other objects can
     // derive filenames from it (e.g., memory).  The return value is
