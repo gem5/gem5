@@ -327,6 +327,7 @@ Process::sim_fd_obj(int tgt_fd)
 
     return &fd_map[tgt_fd];
 }
+
 bool
 Process::checkAndAllocNextPage(Addr vaddr)
 {
@@ -353,9 +354,10 @@ Process::checkAndAllocNextPage(Addr vaddr)
     return false;
 }
 
- // find all offsets for currently open files and save them
+// find all offsets for currently open files and save them
 void
-Process::fix_file_offsets() {
+Process::fix_file_offsets()
+{
     Process::FdMap *fdo_stdin = &fd_map[STDIN_FILENO];
     Process::FdMap *fdo_stdout = &fd_map[STDOUT_FILENO];
     Process::FdMap *fdo_stderr = &fd_map[STDERR_FILENO];
@@ -370,8 +372,8 @@ Process::fix_file_offsets() {
         stdin_fd = STDIN_FILENO;
     else if (in == "None")
         stdin_fd = -1;
-    else{
-        //OPEN standard in and seek to the right location
+    else {
+        // open standard in and seek to the right location
         stdin_fd = Process::openInputFile(in);
         if (lseek(stdin_fd, fdo_stdin->fileOffset, SEEK_SET) < 0)
             panic("Unable to seek to correct location in file: %s", in);
@@ -383,7 +385,7 @@ Process::fix_file_offsets() {
         stdout_fd = STDERR_FILENO;
     else if (out == "None")
         stdout_fd = -1;
-    else{
+    else {
         stdout_fd = Process::openOutputFile(out);
         if (lseek(stdout_fd, fdo_stdout->fileOffset, SEEK_SET) < 0)
             panic("Unable to seek to correct location in file: %s", out);
@@ -441,18 +443,21 @@ Process::fix_file_offsets() {
 
                 //Seek to correct location before checkpoint
                 if (lseek(fd,fdo->fileOffset, SEEK_SET) < 0)
-                    panic("Unable to seek to correct location in file: %s", fdo->filename);
+                    panic("Unable to seek to correct location in file: %s",
+                          fdo->filename);
             }
         }
     }
 }
+
 void
-Process::find_file_offsets(){
+Process::find_file_offsets()
+{
     for (int free_fd = 0; free_fd <= MAX_FD; ++free_fd) {
         Process::FdMap *fdo = &fd_map[free_fd];
         if (fdo->fd != -1) {
             fdo->fileOffset = lseek(fdo->fd, 0, SEEK_CUR);
-        }  else {
+        } else {
                 fdo->filename = "NULL";
                 fdo->fileOffset = 0;
         }
@@ -460,7 +465,8 @@ Process::find_file_offsets(){
 }
 
 void
-Process::setReadPipeSource(int read_pipe_fd, int source_fd){
+Process::setReadPipeSource(int read_pipe_fd, int source_fd)
+{
     Process::FdMap *fdo = &fd_map[read_pipe_fd];
     fdo->readPipeSource = source_fd;
 }
@@ -526,7 +532,7 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
     pTable->unserialize(cp, section);
     for (int x = 0; x <= MAX_FD; x++) {
         fd_map[x].unserialize(cp, csprintf("%s.FdMap%d", section, x));
-     }
+    }
     fix_file_offsets();
     UNSERIALIZE_OPT_SCALAR(M5_pid);
     // The above returns a bool so that you could do something if you don't
