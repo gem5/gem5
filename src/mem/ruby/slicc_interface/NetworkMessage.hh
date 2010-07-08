@@ -50,7 +50,8 @@ class NetworkMessage : public Message
     { }
 
     NetworkMessage(const NetworkMessage &other)
-        : Message(other), m_internal_dest_valid(other.m_internal_dest_valid)
+        : Message(other), m_internal_dest(other.m_internal_dest),
+          m_internal_dest_valid(other.m_internal_dest_valid)
     { }
 
     virtual ~NetworkMessage() { }
