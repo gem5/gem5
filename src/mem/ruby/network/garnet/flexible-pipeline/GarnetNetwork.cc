@@ -261,6 +261,7 @@ GarnetNetwork::printStats(ostream& out) const
                " flits/cycle" << endl;
     }
     out << "-------------" << endl;
+    m_topology_ptr->printStats(out);
 }
 
 void

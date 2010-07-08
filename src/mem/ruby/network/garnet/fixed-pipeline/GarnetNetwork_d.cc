@@ -323,6 +323,7 @@ GarnetNetwork_d::printStats(ostream& out) const
     out << "Total Link Power = " << m_total_link_power << " W " << endl;
     out << "Total Router Power = " << m_total_router_power << " W " <<endl;
     out << "-------------" << endl;
+    m_topology_ptr->printStats(out);
 }
 
 void
