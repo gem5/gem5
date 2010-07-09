@@ -1347,6 +1347,8 @@ Cache<TagStore>::getTimingPacket()
         // as if we got a failure response
         pkt = new Packet(tgt_pkt);
         pkt->cmd = MemCmd::UpgradeFailResp;
+        pkt->senderState = mshr;
+        pkt->firstWordTime = pkt->finishTime = curTick;
         handleResponse(pkt);
         return NULL;
     } else if (mshr->isForwardNoResponse()) {
