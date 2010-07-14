@@ -241,7 +241,8 @@ namespace ArmISA
         MODE_MON = 22,
         MODE_ABORT = 23,
         MODE_UNDEFINED = 27,
-        MODE_SYSTEM = 31
+        MODE_SYSTEM = 31,
+        MODE_MAXMODE = MODE_SYSTEM
     };
 
     static inline bool
