@@ -282,6 +282,8 @@ def format Thumb32SrsRfe() {{
             }
         } else {
             const uint32_t mode = bits(machInst, 4, 0);
+            if (badMode((OperatingMode)mode))
+                return new Unknown(machInst);
             if (!add && !wb) {
                 return new %(srs)s(machInst, mode,
                         SrsOp::DecrementBefore, wb);
