@@ -527,6 +527,13 @@ class SimObject(object):
         if self._values.has_key(attr):
             return self._values[attr]
 
+        # If the attribute exists on the C++ object, transparently
+        # forward the reference there.  This is typically used for
+        # SWIG-wrapped methods such as init(), regStats(),
+        # regFormulas(), resetStats(), and startup().
+        if self._ccObject and hasattr(self._ccObject, attr):
+            return getattr(self._ccObject, attr)
+
         raise AttributeError, "object '%s' has no attribute '%s'" \
               % (self.__class__.__name__, attr)
 
