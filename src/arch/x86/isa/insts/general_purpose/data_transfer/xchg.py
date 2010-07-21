@@ -50,31 +50,31 @@ def macroop XCHG_R_R
 
 def macroop XCHG_R_M
 {
-    ldst t1, seg, sib, disp
-    st reg, seg, sib, disp
+    ldstl t1, seg, sib, disp
+    stul reg, seg, sib, disp
     mov reg, reg, t1
 };
 
 def macroop XCHG_R_P
 {
     rdip t7
-    ldst t1, seg, riprel, disp
-    st reg, seg, riprel, disp
+    ldstl t1, seg, riprel, disp
+    stul reg, seg, riprel, disp
     mov reg, reg, t1
 };
 
 def macroop XCHG_M_R
 {
-    ldst t1, seg, sib, disp
-    st reg, seg, sib, disp
+    ldstl t1, seg, sib, disp
+    stul reg, seg, sib, disp
     mov reg, reg, t1
 };
 
 def macroop XCHG_P_R
 {
     rdip t7
-    ldst t1, seg, riprel, disp
-    st reg, seg, riprel, disp
+    ldstl t1, seg, riprel, disp
+    stul reg, seg, riprel, disp
     mov reg, reg, t1
 };
 
