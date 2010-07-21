@@ -38,6 +38,7 @@
 #include "base/stats/text.hh"
 #include "base/stats/mysql.hh"
 #include "base/types.hh"
+#include "sim/stat_control.hh"
 
 using namespace std;
 using namespace Stats;
@@ -67,7 +68,6 @@ int
 main(int argc, char *argv[])
 {
     bool descriptions = false;
-    bool compat = false;
     bool text = false;
 
 #if USE_MYSQL
@@ -82,9 +82,6 @@ main(int argc, char *argv[])
     progname = argv[0];
     while ((c = getopt(argc, argv, "cD:dh:P:p:s:tu:")) != -1) {
         switch (c) {
-          case 'c':
-            compat = true;
-            break;
           case 'd':
             descriptions = true;
             break;
@@ -113,8 +110,10 @@ main(int argc, char *argv[])
         }
     }
 
-    if (!text && (compat || descriptions))
+    if (!text && descriptions)
         usage();
+
+    initSimStats();
 
     Scalar s1;
     Scalar s2;
@@ -304,7 +303,7 @@ main(int argc, char *argv[])
     f4 += s5[3];
     f5 = constant(1);
 
-    check();
+    enable();
     reset();
 
     s16[1][0] = 1;
@@ -545,10 +544,11 @@ main(int argc, char *argv[])
 
     s12.sample(100);
 
+    prepare();
+
     if (text) {
         Text out(cout);
         out.descriptions = descriptions;
-        out.compat = compat;
         out();
     }
 

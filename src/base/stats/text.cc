@@ -348,10 +348,18 @@ DistPrint::init(const Text *text, const Info &info, const DistParams *params)
     descriptions = text->descriptions;
 
     type = params->type;
-    min = params->min;
-    max = params->max;
-    bucket_size = params->bucket_size;
-    size = params->buckets;
+    switch (type) {
+      case Dist:
+        min = params->min;
+        max = params->max;
+        bucket_size = params->bucket_size;
+        size = params->buckets;
+        break;
+      case Deviation:
+        break;
+      default:
+        panic("unknown distribution type");
+    }
 }
 
 void

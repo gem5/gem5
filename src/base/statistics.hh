@@ -401,7 +401,7 @@ class DataWrapVec2d : public DataWrapVec<Derived, InfoProxyType>
     }
 
     Derived &
-    ysubname(off_type index, const std::string subname)
+    ysubname(off_type index, const std::string &subname)
     {
         Derived &self = this->self();
         Info *info = this->info();
@@ -411,6 +411,13 @@ class DataWrapVec2d : public DataWrapVec<Derived, InfoProxyType>
         info->y_subnames[index] = subname.c_str();
         return self;
     }
+
+    std::string
+    ysubname(off_type i) const
+    {
+        return this->info()->y_subnames[i];
+    }
+
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1197,8 +1204,6 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
         return self;
     }
 
-    std::string ysubname(off_type i) const { return (*this->y_subnames)[i]; }
-
     Proxy
     operator[](off_type index)
     {
@@ -1713,13 +1718,10 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
     bool
     zero() const
     {
-        return false;
-#if 0
         for (off_type i = 0; i < size(); ++i)
             if (!data(i)->zero())
                 return false;
         return true;
-#endif
     }
 
     void
@@ -1792,27 +1794,6 @@ class DistProxy
      */
     void reset() { }
 };
-/*
-template <class Derived, class Stor>
-inline typename VectorDistBase<Derived, Stor>::Proxy
-VectorDistBase<Derived, Stor>::operator[](off_type index)
-{
-    assert (index >= 0 && index < size());
-    typedef typename VectorDistBase<Derived, Stor>::Proxy Proxy;
-    return Proxy(this->self(), index);
-}
-*/
-
-#if 0
-template <class Storage>
-Result
-VectorDistBase<Storage>::total(off_type index) const
-{
-    Result total = 0.0;
-    for (off_type i = 0; i < x_size(); ++i)
-        total += data(i)->result();
-}
-#endif
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -2291,7 +2272,9 @@ class StandardDeviation : public DistBase<StandardDeviation, SampleStor>
      */
     StandardDeviation()
     {
+        SampleStor::Params *params = new SampleStor::Params;
         this->doInit();
+        this->setParams(params);
     }
 };
 
@@ -2307,7 +2290,9 @@ class AverageDeviation : public DistBase<AverageDeviation, AvgSampleStor>
      */
     AverageDeviation()
     {
+        AvgSampleStor::Params *params = new AvgSampleStor::Params;
         this->doInit();
+        this->setParams(params);
     }
 };
 
@@ -2356,7 +2341,9 @@ class VectorStandardDeviation
     VectorStandardDeviation &
     init(size_type size)
     {
+        SampleStor::Params *params = new SampleStor::Params;
         this->doInit(size);
+        this->setParams(params);
         return this->self();
     }
 };
@@ -2377,7 +2364,9 @@ class VectorAverageDeviation
     VectorAverageDeviation &
     init(size_type size)
     {
+        AvgSampleStor::Params *params = new AvgSampleStor::Params;
         this->doInit(size);
+        this->setParams(params);
         return this->self();
     }
 };
