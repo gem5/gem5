@@ -33,11 +33,11 @@ class CodeImporter(object):
     def __init__(self):
         self.modules = {}
 
-    def add_module(self, filename, modpath, code):
+    def add_module(self, filename, abspath, modpath, code):
         if modpath in self.modules:
             raise AttributeError, "%s already found in importer"
 
-        self.modules[modpath] = (filename, code)
+        self.modules[modpath] = (filename, abspath, code)
 
     def find_module(self, fullname, path):
         if fullname in self.modules:
@@ -59,7 +59,13 @@ class CodeImporter(object):
 
         try:
             mod.__loader__ = self
-            srcfile,code = self.modules[fullname]
+            srcfile,abspath,code = self.modules[fullname]
+
+            override = os.environ.get('M5_OVERRIDE_PY_SOURCE', 'false').lower()
+            if override in ('true', 'yes') and  os.path.exists(abspath):
+                src = file(abspath, 'r').read()
+                code = compile(src, abspath, 'exec')
+
             if os.path.basename(srcfile) == '__init__.py':
                 mod.__path__ = fullname.split('.')
             mod.__file__ = srcfile

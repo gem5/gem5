@@ -37,6 +37,7 @@
 struct EmbeddedPyModule
 {
     const char *filename;
+    const char *abspath;
     const char *modpath;
     const char *code;
     const char *code_end;

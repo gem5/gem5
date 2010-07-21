@@ -929,12 +929,17 @@ def pythonInit(target, source, env):
     dst = file(str(target[0]), 'w')
 
     def dump_mod(sym, endchar=','):
+        def c_str(string):
+            if string is None:
+                return "0"
+            return '"%s"' % string
         pysource = PySource.symnames[sym]
-        print >>dst, '    { "%s",' % pysource.arcname
-        print >>dst, '      "%s",' % pysource.modpath
-        print >>dst, '       %s_beg, %s_end,' % (sym, sym)
-        print >>dst, '       %s_end - %s_beg,' % (sym, sym)
-        print >>dst, '       *(int *)%s_end }%s'  % (sym, endchar)
+        print >>dst, '    { %s,' % c_str(pysource.arcname)
+        print >>dst, '      %s,' % c_str(pysource.abspath)
+        print >>dst, '      %s,' % c_str(pysource.modpath)
+        print >>dst, '      %s_beg, %s_end,' % (sym, sym)
+        print >>dst, '      %s_end - %s_beg,' % (sym, sym)
+        print >>dst, '      *(int *)%s_end }%s'  % (sym, endchar)
     
     print >>dst, '#include "sim/init.hh"'
 
@@ -953,7 +958,7 @@ def pythonInit(target, source, env):
             # Skip the importer since we've already exported it
             continue
         dump_mod(sym)
-    print >>dst, "    { 0, 0, 0, 0, 0, 0 }"
+    print >>dst, "    { 0, 0, 0, 0, 0, 0, 0 }"
     print >>dst, "};"
 
 

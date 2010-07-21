@@ -154,7 +154,8 @@ initM5Python()
     while (pymod->filename) {
         PyObject *code = getCode(pymod);
         PyObject *result = PyObject_CallMethod(module, PyCC("add_module"),
-            PyCC("ssO"), pymod->filename, pymod->modpath, code);
+            PyCC("sssO"), pymod->filename, pymod->abspath, pymod->modpath,
+            code);
         if (!result) {
             PyErr_Print();
             return 1;
