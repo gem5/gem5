@@ -58,6 +58,7 @@ PySource('m5.util', 'm5/util/jobfile.py')
 PySource('m5.util', 'm5/util/multidict.py')
 PySource('m5.util', 'm5/util/orderdict.py')
 PySource('m5.util', 'm5/util/smartdict.py')
+PySource('m5.util', 'm5/util/sorteddict.py')
 
 SwigSource('m5.internal', 'swig/core.i')
 SwigSource('m5.internal', 'swig/debug.i')

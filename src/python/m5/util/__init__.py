@@ -39,6 +39,7 @@ from code_formatter import code_formatter
 from multidict import multidict
 from orderdict import orderdict
 from smartdict import SmartDict
+from sorteddict import SortedDict
 
 # define this here so we can use it right away if necessary
 def errorURL(prefix, s):
