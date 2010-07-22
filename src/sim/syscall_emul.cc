@@ -186,7 +186,10 @@ closeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
     int target_fd = p->getSyscallArg(tc, index);
-    int status = close(p->sim_fd(target_fd));
+    int sim_fd = p->sim_fd(target_fd);
+    int status = 0;
+    if (sim_fd > 2)
+        status = close(sim_fd);
     if (status >= 0)
         p->free_fd(target_fd);
     return status;
