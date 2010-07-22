@@ -155,7 +155,7 @@ SimpleTimingPort::sendDeferredPacket()
             schedule(sendEvent, time <= curTick ? curTick+1 : time);
         }
 
-        if (transmitList.empty() && drainEvent) {
+        if (transmitList.empty() && drainEvent && !sendEvent->scheduled()) {
             drainEvent->process();
             drainEvent = NULL;
         }
@@ -195,7 +195,7 @@ SimpleTimingPort::processSendEvent()
 unsigned int
 SimpleTimingPort::drain(Event *de)
 {
-    if (transmitList.size() == 0)
+    if (transmitList.size() == 0 && !sendEvent->scheduled())
         return 0;
     drainEvent = de;
     return 1;

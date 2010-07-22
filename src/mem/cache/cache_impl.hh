@@ -1569,7 +1569,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
             schedule(sendEvent, std::max(nextReady, curTick + 1));
         } else {
             // no more to send right now: if we're draining, we may be done
-            if (drainEvent) {
+            if (drainEvent && !sendEvent->scheduled()) {
                 drainEvent->process();
                 drainEvent = NULL;
             }
