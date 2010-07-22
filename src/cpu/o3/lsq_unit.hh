@@ -744,6 +744,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
                 delete fst_data_pkt;
                 delete snd_data_pkt->req;
                 delete snd_data_pkt;
+                sreqLow = NULL;
+                sreqHigh = NULL;
             }
 
             req = NULL;
@@ -769,6 +771,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
                 state->complete();
 
                 req = NULL;
+                sreqHigh = NULL;
 
                 lsq->setRetryTid(lsqID);
             }
