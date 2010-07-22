@@ -822,6 +822,12 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
     storeQueue[store_idx].sreqLow = sreqLow;
     storeQueue[store_idx].sreqHigh = sreqHigh;
     storeQueue[store_idx].size = sizeof(T);
+
+    // Split stores can only occur in ISAs with unaligned memory accesses.  If
+    // a store request has been split, sreqLow and sreqHigh will be non-null.
+    if (TheISA::HasUnalignedMemAcc && sreqLow) {
+        storeQueue[store_idx].isSplit = true;
+    }
     assert(sizeof(T) <= sizeof(storeQueue[store_idx].data));
 
     T gData = htog(data);
