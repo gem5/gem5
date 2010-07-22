@@ -1143,7 +1143,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     iew.takeOverFrom();
     commit.takeOverFrom();
 
-    assert(!tickEvent.scheduled());
+    assert(!tickEvent.scheduled() || tickEvent.squashed());
 
     // @todo: Figure out how to properly select the tid to put onto
     // the active threads list.
@@ -1168,7 +1168,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
         ThreadContext *tc = threadContexts[i];
         if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
-            schedule(tickEvent, nextCycle());
+            reschedule(tickEvent, nextCycle(), true);
         }
     }
     if (!tickEvent.scheduled())
