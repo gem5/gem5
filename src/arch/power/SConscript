@@ -42,6 +42,7 @@ if env['TARGET_ISA'] == 'power':
     Source('insts/static_inst.cc')
     Source('pagetable.cc')
     Source('tlb.cc')
+    Source('utility.cc')
 
     SimObject('PowerTLB.py')
     TraceFlag('Power')

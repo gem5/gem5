@@ -32,83 +32,27 @@
  *          Timothy M. Jones
  */
 
-#ifndef __ARCH_POWER_UTILITY_HH__
-#define __ARCH_POWER_UTILITY_HH__
-
-#include "arch/power/miscregs.hh"
-#include "arch/power/types.hh"
-#include "base/hashmap.hh"
-#include "base/types.hh"
-#include "cpu/thread_context.hh"
-
-namespace __hash_namespace {
-
-template<>
-struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
-    size_t operator()(const PowerISA::ExtMachInst &emi) const {
-        return hash<uint32_t>::operator()((uint32_t)emi);
-    };
-};
-
-} // __hash_namespace namespace
+#include "arch/power/utility.hh"
 
 namespace PowerISA {
 
-/**
- * Function to ensure ISA semantics about 0 registers.
- * @param tc The thread context.
- */
-template <class TC>
-void zeroRegisters(TC *tc);
-
-// Instruction address compression hooks
-static inline Addr
-realPCToFetchPC(const Addr &addr)
-{
-    return addr;
-}
-
-static inline Addr
-fetchPCToRealPC(const Addr &addr)
-{
-    return addr;
-}
-
-// the size of "fetched" instructions
-static inline size_t
-fetchInstSize()
-{
-    return sizeof(MachInst);
-}
-
-static inline MachInst
-makeRegisterCopy(int dest, int src)
-{
-    panic("makeRegisterCopy not implemented");
-    return 0;
-}
-
-inline void
-startupCPU(ThreadContext *tc, int cpuId)
-{
-    tc->activate(0);
-}
-
-template <class XC>
-Fault
-checkFpEnableFault(XC *xc)
-{
-    return NoFault;
-}
-
 void
-copyRegs(ThreadContext *src, ThreadContext *dest);
-
-static inline void
-copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+copyRegs(ThreadContext *src, ThreadContext *dest)
 {
+    // First loop through the integer registers.
+    for (int i = 0; i < NumIntRegs; ++i)
+        dest->setIntReg(i, src->readIntReg(i));
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < NumFloatRegs; ++i)
+        dest->setFloatRegBits(i, src->readFloatRegBits(i));
+
+    // Copy misc. registers
+    copyMiscRegs(src, dest);
+
+    // Lastly copy PC/NPC
+    dest->setPC(src->readPC());
+    dest->setNextPC(src->readNextPC());
 }
 
 } // PowerISA namespace
-
-#endif // __ARCH_POWER_UTILITY_HH__
