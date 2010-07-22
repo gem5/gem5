@@ -44,7 +44,12 @@ const char * const miscRegName[NUM_MISCREGS] = {
 };
 
 BitUnion32(Cr)
-    Bitfield<31,28> cr0;
+    SubBitUnion(cr0, 31, 28)
+        Bitfield<31> lt;
+        Bitfield<30> gt;
+        Bitfield<29> eq;
+        Bitfield<28> so;
+    EndSubBitUnion(cr0)
     Bitfield<27,24> cr1;
 EndBitUnion(Cr)
 

@@ -284,5 +284,12 @@ void
 PowerLiveProcess::setSyscallReturn(ThreadContext *tc,
         SyscallReturn return_value)
 {
+    Cr cr = tc->readIntReg(INTREG_CR);
+    if (return_value.successful()) {
+        cr.cr0.so = 0;
+    } else {
+        cr.cr0.so = 1;
+    }
+    tc->setIntReg(INTREG_CR, cr);
     tc->setIntReg(ReturnValueReg, return_value.value());
 }
