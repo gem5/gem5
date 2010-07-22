@@ -306,30 +306,24 @@ struct DistPrint
     bool descriptions;
     int precision;
 
-    Counter min;
-    Counter max;
-    Counter bucket_size;
-    size_type size;
-    DistType type;
-
     const DistData &data;
 
     DistPrint(const Text *text, const DistInfo &info);
     DistPrint(const Text *text, const VectorDistInfo &info, int i);
-    void init(const Text *text, const Info &info, const DistParams *params);
+    void init(const Text *text, const Info &info);
     void operator()(ostream &stream) const;
 };
 
 DistPrint::DistPrint(const Text *text, const DistInfo &info)
     : data(info.data)
 {
-    init(text, info, safe_cast<const DistParams *>(info.storageParams));
+    init(text, info);
 }
 
 DistPrint::DistPrint(const Text *text, const VectorDistInfo &info, int i)
     : data(info.data[i])
 {
-    init(text, info, safe_cast<const DistParams *>(info.storageParams));
+    init(text, info);
 
     name = info.name + "_" +
         (info.subnames[i].empty() ? (to_string(i)) : info.subnames[i]);
@@ -339,27 +333,13 @@ DistPrint::DistPrint(const Text *text, const VectorDistInfo &info, int i)
 }
 
 void
-DistPrint::init(const Text *text, const Info &info, const DistParams *params)
+DistPrint::init(const Text *text, const Info &info)
 {
     name = info.name;
     desc = info.desc;
     flags = info.flags;
     precision = info.precision;
     descriptions = text->descriptions;
-
-    type = params->type;
-    switch (type) {
-      case Dist:
-        min = params->min;
-        max = params->max;
-        bucket_size = params->bucket_size;
-        size = params->buckets;
-        break;
-      case Deviation:
-        break;
-      default:
-        panic("unknown distribution type");
-    }
 }
 
 void
@@ -391,10 +371,10 @@ DistPrint::operator()(ostream &stream) const
     print.value = stdev;
     print(stream);
 
-    if (type == Deviation)
+    if (data.type == Deviation)
         return;
 
-    assert(size == data.cvec.size());
+    size_t size = data.cvec.size();
 
     Result total = 0.0;
     if (data.underflow != NAN)
@@ -419,8 +399,8 @@ DistPrint::operator()(ostream &stream) const
         stringstream namestr;
         namestr << base;
 
-        Counter low = i * bucket_size + min;
-        Counter high = ::min(low + bucket_size - 1.0, max);
+        Counter low = i * data.bucket_size + data.min;
+        Counter high = ::min(low + data.bucket_size - 1.0, data.max);
         namestr << low;
         if (low < high)
             namestr << "-" << high;

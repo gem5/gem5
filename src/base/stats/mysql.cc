@@ -481,9 +481,10 @@ MySql::configure(const DistInfo &info)
     if (!configure(info, "DIST"))
         return;
 
-    const DistParams *params =
-        safe_cast<const DistParams *>(info.storageParams);
-    if (params->type == Dist) {
+    const DistStor::Params *params =
+        dynamic_cast<const DistStor::Params *>(info.storageParams);
+    if (params) {
+        assert(params->type == Dist);
         stat.size = params->buckets;
         stat.min = params->min;
         stat.max = params->max;
@@ -498,9 +499,10 @@ MySql::configure(const VectorDistInfo &info)
     if (!configure(info, "VECTORDIST"))
         return;
 
-    const DistParams *params =
-        safe_cast<const DistParams *>(info.storageParams);
-    if (params->type == Dist) {
+    const DistStor::Params *params =
+        dynamic_cast<const DistStor::Params *>(info.storageParams);
+    if (params) {
+        assert(params->type == Dist);
         stat.size = params->buckets;
         stat.min = params->min;
         stat.max = params->max;

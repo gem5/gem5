@@ -61,11 +61,7 @@ const FlagsType nonan =         0x0200;
 /** Mask of flags that can't be set directly */
 const FlagsType __reserved =    init | display;
 
-struct StorageParams
-{
-    virtual ~StorageParams();
-};
-
+struct StorageParams;
 struct Visit;
 
 class Info
@@ -168,8 +164,15 @@ class VectorInfo : public Info
     virtual Result total() const = 0;
 };
 
+enum DistType { Deviation, Dist };
+
 struct DistData
 {
+    DistType type;
+    Counter min;
+    Counter max;
+    Counter bucket_size;
+
     Counter min_val;
     Counter max_val;
     Counter underflow;
@@ -178,24 +181,6 @@ struct DistData
     Counter sum;
     Counter squares;
     Counter samples;
-};
-
-enum DistType { Deviation, Dist };
-
-struct DistParams : public StorageParams
-{
-    const DistType type;
-
-    /** The minimum value to track. */
-    Counter min;
-    /** The maximum value to track. */
-    Counter max;
-    /** The number of entries in each bucket. */
-    Counter bucket_size;
-    /** The number of buckets. Equal to (max-min)/bucket_size. */
-    size_type buckets;
-
-    explicit DistParams(DistType t) : type(t) {}
 };
 
 class DistInfo : public Info

@@ -160,6 +160,11 @@ class Vector2dInfoProxy : public InfoProxy<Stat, Vector2dInfo>
     Vector2dInfoProxy(Stat &stat) : InfoProxy<Stat, Vector2dInfo>(stat) {}
 };
 
+struct StorageParams
+{
+    virtual ~StorageParams();
+};
+
 class InfoAccess
 {
   protected:
@@ -1269,6 +1274,12 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
 // Non formula statistics
 //
 //////////////////////////////////////////////////////////////////////
+/** The parameters for a distribution stat. */
+struct DistParams : public StorageParams
+{
+    const DistType type;
+    DistParams(DistType t) : type(t) {}
+};
 
 /**
  * Templatized storage and interface for a distrbution stat.
@@ -1279,6 +1290,15 @@ class DistStor
     /** The parameters for a distribution stat. */
     struct Params : public DistParams
     {
+        /** The minimum value to track. */
+        Counter min;
+        /** The maximum value to track. */
+        Counter max;
+        /** The number of entries in each bucket. */
+        Counter bucket_size;
+        /** The number of buckets. Equal to (max-min)/bucket_size. */
+        size_type buckets;
+
         Params() : DistParams(Dist) {}
     };
 
@@ -1367,6 +1387,12 @@ class DistStor
     prepare(Info *info, DistData &data)
     {
         const Params *params = safe_cast<const Params *>(info->storageParams);
+
+        assert(params->type == Dist);
+        data.type = params->type;
+        data.min = params->min;
+        data.max = params->max;
+        data.bucket_size = params->bucket_size;
 
         data.min_val = (min_val == CounterLimits::max()) ? 0 : min_val;
         data.max_val = (max_val == CounterLimits::min()) ? 0 : max_val;
@@ -1468,6 +1494,10 @@ class SampleStor
     void
     prepare(Info *info, DistData &data)
     {
+        const Params *params = safe_cast<const Params *>(info->storageParams);
+
+        assert(params->type == Deviation);
+        data.type = params->type;
         data.sum = sum;
         data.squares = squares;
         data.samples = samples;
@@ -1540,6 +1570,10 @@ class AvgSampleStor
     void
     prepare(Info *info, DistData &data)
     {
+        const Params *params = safe_cast<const Params *>(info->storageParams);
+
+        assert(params->type == Deviation);
+        data.type = params->type;
         data.sum = sum;
         data.squares = squares;
         data.samples = curTick;
