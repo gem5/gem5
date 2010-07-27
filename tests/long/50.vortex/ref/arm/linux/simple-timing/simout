@@ -1,0 +1,16 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Jul 25 2010 20:52:35
+M5 revision ffac9df60637 7512 default tip
+M5 started Jul 26 2010 23:59:20
+M5 executing on zizzer
+command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/50.vortex/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/long/50.vortex/arm/linux/simple-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+Exiting @ tick 133556162000 because target called exit()

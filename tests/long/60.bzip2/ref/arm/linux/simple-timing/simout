@@ -1,0 +1,32 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Jul 25 2010 20:52:35
+M5 revision ffac9df60637 7512 default tip
+M5 started Jul 26 2010 23:53:12
+M5 executing on zizzer
+command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/simple-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+spec_init
+Loading Input Data
+Input data 1048576 bytes in length
+Compressing Input Data, level 7
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+Compressed data 198546 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 9
+Compressed data 198677 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Tested 1MB buffer: OK!
+Exiting @ tick 2495902189000 because target called exit()
