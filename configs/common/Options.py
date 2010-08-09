@@ -41,9 +41,9 @@ parser.add_option("--topology", type="string", default="Crossbar",
                   help="check src/mem/ruby/network/topologies for complete set")
 parser.add_option("--mesh-rows", type="int", default=1,
                   help="the number of rows in the mesh topology")
-parser.add_option("--garnet-network", type="string", default=none,
+parser.add_option("--garnet-network", type="string", default=None,
                   help="'fixed'|'flexible'")
-parser.add_option("--numa-high-bit", type="int", default=none,
+parser.add_option("--numa-high-bit", type="int", default=None,
                   help="high order address bit to use for numa mapping")
 
 # ruby sparse memory options
