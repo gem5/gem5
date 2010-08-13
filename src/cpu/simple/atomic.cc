@@ -450,6 +450,8 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setData(data);
     }
 
+    data = htog(data);
+
     //The block size of our peer.
     unsigned blockSize = dcachePort.peerBlockSize();
     //The size of the data we're trying to read.
@@ -496,10 +498,6 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                     dcache_latency +=
                         TheISA::handleIprWrite(thread->getTC(), &pkt);
                 } else {
-                    //XXX This needs to be outside of the loop in order to
-                    //work properly for cache line boundary crossing
-                    //accesses in transendian simulations.
-                    data = htog(data);
                     if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
                         dcache_latency += physmemPort.sendAtomic(&pkt);
                     else

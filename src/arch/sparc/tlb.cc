@@ -1049,7 +1049,7 @@ doMmuReadError:
 Tick
 TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
-    uint64_t data = gtoh(pkt->get<uint64_t>());
+    uint64_t data = pkt->get<uint64_t>();
     Addr va = pkt->getAddr();
     ASI asi = (ASI)pkt->req->getAsi();
 
