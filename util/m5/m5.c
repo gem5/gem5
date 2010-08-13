@@ -65,6 +65,11 @@ read_file(int dest_fid)
     int offset = 0;
     int len;
 
+    // Touch all buffer pages to ensure they are mapped in the
+    // page table. This is required in the case of X86_FS, where
+    // Linux does demand paging.
+    memset(buf, 0, sizeof(buf));
+
     while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
         write(dest_fid, buf, len);
         offset += len;

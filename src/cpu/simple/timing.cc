@@ -891,6 +891,8 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     // received a response from the dcache: complete the load or store
     // instruction
     assert(!pkt->isError());
+    assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
+           pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
     numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
@@ -920,7 +922,6 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
         }
     }
 
-    assert(_status == DcacheWaitResponse || _status == DTBWaitResponse);
     _status = Running;
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
