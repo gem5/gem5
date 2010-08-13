@@ -47,6 +47,16 @@ using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
 
+static std::string
+printMemData(uint8_t *data, unsigned size)
+{
+    std::stringstream dataStr;
+    for (unsigned pos = 0; pos < size; pos++) {
+        ccprintf(dataStr, "%02x", data[pos]);
+    }
+    return dataStr.str();
+}
+
 Tick
 CacheUnit::CachePort::recvAtomic(PacketPtr pkt)
 {
@@ -1057,6 +1067,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
             DPRINTF(InOrderCachePort,
                     "[tid:%u]: [sn:%i]: Processing cache access\n",
                     tid, inst->seqNum);
+            PacketPtr dataPkt = NULL;
             
             if (inst->splitInst) {
                 inst->splitFinishCnt++;
@@ -1078,11 +1089,12 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                         split_pkt.dataStatic(&inst->storeData);                        
                     }
                     
-                    inst->completeAcc(&split_pkt);
+                    dataPkt = &split_pkt;
                 }                
-            } else {                            
-                inst->completeAcc(pkt);
+            } else {
+                dataPkt = pkt;
             }
+            inst->completeAcc(dataPkt);
             
             if (inst->isLoad()) {
                 assert(cache_pkt->isRead());
@@ -1094,21 +1106,19 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                     TheISA::handleLockedRead(cpu, cache_pkt->req);
                 }
 
-                // @NOTE: Hardcoded to for load instructions. Assumes that
-                // the dest. idx 0 is always where the data is loaded to.
                 DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: Data loaded was: %08p\n",
-                        tid, inst->seqNum, inst->readIntResult(0));
-                DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: FP Data loaded was: %08p\n",
-                        tid, inst->seqNum, inst->readFloatResult(0));
+                        "[tid:%u]: [sn:%i]: Bytes loaded were: %s\n",
+                        tid, inst->seqNum,
+                        printMemData(dataPkt->getPtr<uint8_t>(),
+                            dataPkt->getSize()));
             } else if(inst->isStore()) {
                 assert(cache_pkt->isWrite());
 
                 DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: Data stored was: FIX ME\n",
-                        tid, inst->seqNum/*,
-                        getMemData(cache_pkt)*/);
+                        "[tid:%u]: [sn:%i]: Bytes stored were: %s\n",
+                        tid, inst->seqNum,
+                        printMemData(dataPkt->getPtr<uint8_t>(),
+                            dataPkt->getSize()));
             }
 
             delete cache_pkt;
@@ -1289,28 +1299,6 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
     // Now Delete Slot Entry from Req. Map
     for (int i = 0; i < slot_remove_list.size(); i++)
         freeSlot(slot_remove_list[i]);
-}
-
-uint64_t
-CacheUnit::getMemData(Packet *packet)
-{
-    switch (packet->getSize())
-    {
-      case 8:
-        return packet->get<uint8_t>();
-
-      case 16:
-        return packet->get<uint16_t>();
-
-      case 32:
-        return packet->get<uint32_t>();
-
-      case 64:
-        return packet->get<uint64_t>();
-
-      default:
-        panic("bad store data size = %d\n", packet->getSize());
-    }
 }
 
 // Extra Template Definitions
