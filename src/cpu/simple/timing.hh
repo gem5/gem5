@@ -251,8 +251,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
+    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
+
+    Fault writeBytes(uint8_t *data, unsigned size,
+                     Addr addr, unsigned flags, uint64_t *res);
 
     void fetch();
     void sendFetch(Fault fault, RequestPtr req, ThreadContext *tc);
@@ -273,6 +278,11 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void finishTranslation(WholeTranslationState *state);
 
   private:
+
+    // The backend for writeBytes and write. It's the same as writeBytes, but
+    // doesn't make a copy of data.
+    Fault writeTheseBytes(uint8_t *data, unsigned size,
+                          Addr addr, unsigned flags, uint64_t *res);
 
     typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;
     FetchEvent fetchEvent;

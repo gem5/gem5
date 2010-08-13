@@ -161,12 +161,11 @@ class CacheUnit : public Resource
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);
     
-    template <class T>
-    Fault read(DynInstPtr inst, Addr addr, T &data, unsigned flags);
+    Fault read(DynInstPtr inst, Addr addr,
+               uint8_t *data, unsigned size, unsigned flags);
 
-    template <class T>
-    Fault write(DynInstPtr inst, T data, Addr addr, unsigned flags,
-                        uint64_t *res);
+    Fault write(DynInstPtr inst, uint8_t *data, unsigned size,
+                Addr addr, unsigned flags, uint64_t *res);
 
     Fault doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                       int flags,  TheISA::TLB::Mode tlb_mode);

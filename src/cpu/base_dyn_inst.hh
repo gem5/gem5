@@ -120,6 +120,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
+    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+
     /**
      * Does a write to a given address.
      * @param data The data to be written.
@@ -130,6 +132,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
      */
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
+
+    Fault writeBytes(uint8_t *data, unsigned size,
+                     Addr addr, unsigned flags, uint64_t *res);
 
     /** Splits a request in two if it crosses a dcache block. */
     void splitRequest(RequestPtr req, RequestPtr &sreqLow,
@@ -867,12 +872,12 @@ class BaseDynInst : public FastAlloc, public RefCounted
 };
 
 template<class Impl>
-template<class T>
-inline Fault
-BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
+Fault
+BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
+                             unsigned size, unsigned flags)
 {
     reqMade = true;
-    Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
+    Request *req = new Request(asid, addr, size, flags, this->PC,
                                thread->contextId(), threadNumber);
 
     Request *sreqLow = NULL;
@@ -889,11 +894,6 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
         effAddrValid = true;
         fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
     } else {
-
-        // Return a fixed value to keep simulation deterministic even
-        // along misspeculated paths.
-        data = (T)-1;
-
         // Commit will have to clean up whatever happened.  Set this
         // instruction as executed.
         this->setExecuted();
@@ -901,7 +901,6 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 
     if (traceData) {
         traceData->setAddr(addr);
-        traceData->setData(data);
     }
 
     return fault;
@@ -910,15 +909,35 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 template<class Impl>
 template<class T>
 inline Fault
-BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
+BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
+    Fault fault = readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
+
+    if (fault != NoFault) {
+        // Return a fixed value to keep simulation deterministic even
+        // along misspeculated paths.
+        data = (T)-1;
+    }
+    data = TheISA::gtoh(data);
+
     if (traceData) {
-        traceData->setAddr(addr);
         traceData->setData(data);
     }
 
+    return fault;
+}
+
+template<class Impl>
+Fault
+BaseDynInst<Impl>::writeBytes(uint8_t *data, unsigned size,
+                              Addr addr, unsigned flags, uint64_t *res)
+{
+    if (traceData) {
+        traceData->setAddr(addr);
+    }
+
     reqMade = true;
-    Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
+    Request *req = new Request(asid, addr, size, flags, this->PC,
                                thread->contextId(), threadNumber);
 
     Request *sreqLow = NULL;
@@ -937,6 +956,18 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     }
 
     return fault;
+}
+
+template<class Impl>
+template<class T>
+inline Fault
+BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
+{
+    if (traceData) {
+        traceData->setData(data);
+    }
+    data = TheISA::htog(data);
+    return writeBytes((uint8_t *)&data, sizeof(T), addr, flags, res);
 }
 
 template<class Impl>

@@ -414,26 +414,25 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     pkt2->senderState = new SplitFragmentSenderState(pkt, 1);
 }
 
-template <class T>
 Fault
-TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
+TimingSimpleCPU::readBytes(Addr addr, uint8_t *data,
+                           unsigned size, unsigned flags)
 {
     Fault fault;
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->readPC();
     unsigned block_size = dcachePort.peerBlockSize();
-    int data_size = sizeof(T);
     BaseTLB::Mode mode = BaseTLB::Read;
 
     if (traceData) {
         traceData->setAddr(addr);
     }
 
-    RequestPtr req  = new Request(asid, addr, data_size,
+    RequestPtr req  = new Request(asid, addr, size,
                                   flags, pc, _cpuId, tid);
 
-    Addr split_addr = roundDown(addr + data_size - 1, block_size);
+    Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
     _status = DTBWaitResponse;
@@ -443,7 +442,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         req->splitOnVaddr(split_addr, req1, req2);
 
         WholeTranslationState *state =
-            new WholeTranslationState(req, req1, req2, (uint8_t *)(new T),
+            new WholeTranslationState(req, req1, req2, new uint8_t[size],
                                       NULL, mode);
         DataTranslation<TimingSimpleCPU> *trans1 =
             new DataTranslation<TimingSimpleCPU>(this, state, 0);
@@ -454,13 +453,20 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         thread->dtb->translateTiming(req2, tc, trans2, mode);
     } else {
         WholeTranslationState *state =
-            new WholeTranslationState(req, (uint8_t *)(new T), NULL, mode);
+            new WholeTranslationState(req, new uint8_t[size], NULL, mode);
         DataTranslation<TimingSimpleCPU> *translation
             = new DataTranslation<TimingSimpleCPU>(this, state);
         thread->dtb->translateTiming(req, tc, translation, mode);
     }
 
     return NoFault;
+}
+
+template <class T>
+Fault
+TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
+{
+    return readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -532,30 +538,26 @@ TimingSimpleCPU::handleWritePacket()
     return dcache_pkt == NULL;
 }
 
-template <class T>
 Fault
-TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
+TimingSimpleCPU::writeTheseBytes(uint8_t *data, unsigned size,
+                                 Addr addr, unsigned flags, uint64_t *res)
 {
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->readPC();
     unsigned block_size = dcachePort.peerBlockSize();
-    int data_size = sizeof(T);
     BaseTLB::Mode mode = BaseTLB::Write;
 
     if (traceData) {
         traceData->setAddr(addr);
-        traceData->setData(data);
     }
 
-    RequestPtr req = new Request(asid, addr, data_size,
+    RequestPtr req = new Request(asid, addr, size,
                                  flags, pc, _cpuId, tid);
 
-    Addr split_addr = roundDown(addr + data_size - 1, block_size);
+    Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
-    T *dataP = new T;
-    *dataP = TheISA::htog(data);
     _status = DTBWaitResponse;
     if (split_addr > addr) {
         RequestPtr req1, req2;
@@ -563,8 +565,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         req->splitOnVaddr(split_addr, req1, req2);
 
         WholeTranslationState *state =
-            new WholeTranslationState(req, req1, req2, (uint8_t *)dataP,
-                                      res, mode);
+            new WholeTranslationState(req, req1, req2, data, res, mode);
         DataTranslation<TimingSimpleCPU> *trans1 =
             new DataTranslation<TimingSimpleCPU>(this, state, 0);
         DataTranslation<TimingSimpleCPU> *trans2 =
@@ -574,7 +575,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         thread->dtb->translateTiming(req2, tc, trans2, mode);
     } else {
         WholeTranslationState *state =
-            new WholeTranslationState(req, (uint8_t *)dataP, res, mode);
+            new WholeTranslationState(req, data, res, mode);
         DataTranslation<TimingSimpleCPU> *translation =
             new DataTranslation<TimingSimpleCPU>(this, state);
         thread->dtb->translateTiming(req, tc, translation, mode);
@@ -582,6 +583,28 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     // Translation faults will be returned via finishTranslation()
     return NoFault;
+}
+
+Fault
+TimingSimpleCPU::writeBytes(uint8_t *data, unsigned size,
+                            Addr addr, unsigned flags, uint64_t *res)
+{
+    uint8_t *newData = new uint8_t[size];
+    memcpy(newData, data, size);
+    return writeTheseBytes(newData, size, addr, flags, res);
+}
+
+template <class T>
+Fault
+TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
+{
+    if (traceData) {
+        traceData->setData(data);
+    }
+    T *dataP = new T;
+    *dataP = TheISA::htog(data);
+
+    return writeTheseBytes((uint8_t *)dataP, sizeof(T), addr, flags, res);
 }
 
 

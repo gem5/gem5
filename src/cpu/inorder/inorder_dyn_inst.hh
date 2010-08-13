@@ -334,7 +334,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
     PacketDataPtr splitMemData;
     RequestPtr splitMemReq;    
-    int splitTotalSize;
+    int totalSize;
     int split2ndSize;
     Addr split2ndAddr;
     bool split2ndAccess;
@@ -637,6 +637,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
+    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+
     /**
      * Does a write to a given address.
      * @param data The data to be written.
@@ -648,6 +650,9 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
+
+    Fault writeBytes(uint8_t *data, unsigned size,
+                     Addr addr, unsigned flags, uint64_t *res);
 
     /** Initiates a memory access - Calculate Eff. Addr & Initiate Memory
      *  Access Only valid for memory operations.

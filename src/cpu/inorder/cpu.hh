@@ -523,15 +523,14 @@ class InOrderCPU : public BaseCPU
     /** Forwards an instruction read to the appropriate data
      *  resource (indexes into Resource Pool thru "dataPortIdx")
      */
-    template <class T>
-    Fault read(DynInstPtr inst, Addr addr, T &data, unsigned flags);
+    Fault read(DynInstPtr inst, Addr addr,
+               uint8_t *data, unsigned size, unsigned flags);
 
     /** Forwards an instruction write. to the appropriate data
      *  resource (indexes into Resource Pool thru "dataPortIdx")
      */
-    template <class T>
-    Fault write(DynInstPtr inst, T data, Addr addr, unsigned flags,
-                uint64_t *write_res = NULL);
+    Fault write(DynInstPtr inst, uint8_t *data, unsigned size,
+                Addr addr, unsigned flags, uint64_t *write_res = NULL);
 
     /** Forwards an instruction prefetch to the appropriate data
      *  resource (indexes into Resource Pool thru "dataPortIdx")

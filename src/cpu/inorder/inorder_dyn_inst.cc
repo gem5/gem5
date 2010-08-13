@@ -610,6 +610,13 @@ InOrderDynInst::deallocateContext(int thread_num)
     this->cpu->deallocateContext(thread_num);
 }
 
+Fault
+InOrderDynInst::readBytes(Addr addr, uint8_t *data,
+                          unsigned size, unsigned flags)
+{
+    return cpu->read(this, addr, data, size, flags);
+}
+
 template<class T>
 inline Fault
 InOrderDynInst::read(Addr addr, T &data, unsigned flags)
@@ -618,8 +625,11 @@ InOrderDynInst::read(Addr addr, T &data, unsigned flags)
         traceData->setAddr(addr);
         traceData->setData(data);
     }
-
-    return cpu->read(this, addr, data, flags);
+    Fault fault = readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
+    data = TheISA::gtoh(data);
+    if (traceData)
+        traceData->setData(data);
+    return fault;
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -663,20 +673,29 @@ InOrderDynInst::read(Addr addr, int32_t &data, unsigned flags)
     return read(addr, (uint32_t&)data, flags);
 }
 
+Fault
+InOrderDynInst::writeBytes(uint8_t *data, unsigned size,
+                           Addr addr, unsigned flags, uint64_t *res)
+{
+    assert(sizeof(storeData) >= size);
+    memcpy(&storeData, data, size);
+    return cpu->write(this, (uint8_t *)&storeData, size, addr, flags, res);
+}
+
 template<class T>
 inline Fault
 InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    if (traceData) {
-        traceData->setAddr(addr);
-        traceData->setData(data);
-    }
-
     storeData  = data;
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting store data to %#x.\n",
             threadNumber, seqNum, storeData);
-    return cpu->write(this, data, addr, flags, res);
+    if (traceData) {
+        traceData->setAddr(addr);
+        traceData->setData(data);
+    }
+    storeData = TheISA::htog(data);
+    return writeBytes((uint8_t*)&data, sizeof(T), addr, flags, res);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

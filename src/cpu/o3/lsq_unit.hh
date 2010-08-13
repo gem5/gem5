@@ -474,14 +474,12 @@ class LSQUnit {
 
   public:
     /** Executes the load at the given index. */
-    template <class T>
-    Fault read(Request *req, Request *sreqLow, Request *sreqHigh, T &data,
-               int load_idx);
+    Fault read(Request *req, Request *sreqLow, Request *sreqHigh,
+               uint8_t *data, int load_idx);
 
     /** Executes the store at the given index. */
-    template <class T>
-    Fault write(Request *req, Request *sreqLow, Request *sreqHigh, T &data,
-                int store_idx);
+    Fault write(Request *req, Request *sreqLow, Request *sreqHigh,
+                uint8_t *data, int store_idx);
 
     /** Returns the index of the head load instruction. */
     int getLoadHead() { return loadHead; }
@@ -514,10 +512,9 @@ class LSQUnit {
 };
 
 template <class Impl>
-template <class T>
 Fault
 LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
-                    T &data, int load_idx)
+                    uint8_t *data, int load_idx)
 {
     DynInstPtr load_inst = loadQueue[load_idx];
 
@@ -605,7 +602,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             // Get shift amount for offset into the store's data.
             int shift_amt = req->getVaddr() & (store_size - 1);
 
-            memcpy(&data, storeQueue[store_idx].data + shift_amt, sizeof(T));
+            memcpy(data, storeQueue[store_idx].data + shift_amt,
+                   req->getSize());
 
             assert(!load_inst->memData);
             load_inst->memData = new uint8_t[64];
@@ -809,10 +807,9 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 }
 
 template <class Impl>
-template <class T>
 Fault
 LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
-                     T &data, int store_idx)
+                     uint8_t *data, int store_idx)
 {
     assert(storeQueue[store_idx].inst);
 
@@ -824,17 +821,17 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
     storeQueue[store_idx].req = req;
     storeQueue[store_idx].sreqLow = sreqLow;
     storeQueue[store_idx].sreqHigh = sreqHigh;
-    storeQueue[store_idx].size = sizeof(T);
+    unsigned size = req->getSize();
+    storeQueue[store_idx].size = size;
+    assert(size <= sizeof(storeQueue[store_idx].data));
 
     // Split stores can only occur in ISAs with unaligned memory accesses.  If
     // a store request has been split, sreqLow and sreqHigh will be non-null.
     if (TheISA::HasUnalignedMemAcc && sreqLow) {
         storeQueue[store_idx].isSplit = true;
     }
-    assert(sizeof(T) <= sizeof(storeQueue[store_idx].data));
 
-    T gData = htog(data);
-    memcpy(storeQueue[store_idx].data, &gData, sizeof(T));
+    memcpy(storeQueue[store_idx].data, data, size);
 
     // This function only writes the data to the store queue, so no fault
     // can happen here.

@@ -273,16 +273,14 @@ class LSQ {
     /** Executes a read operation, using the load specified at the load
      * index.
      */
-    template <class T>
     Fault read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
-               T &data, int load_idx);
+               uint8_t *data, int load_idx);
 
     /** Executes a store operation, using the store specified at the store
      * index.
      */
-    template <class T>
     Fault write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
-                T &data, int store_idx);
+                uint8_t *data, int store_idx);
 
     /** The CPU pointer. */
     O3CPU *cpu;
@@ -371,10 +369,9 @@ class LSQ {
 };
 
 template <class Impl>
-template <class T>
 Fault
 LSQ<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
-                T &data, int load_idx)
+                uint8_t *data, int load_idx)
 {
     ThreadID tid = req->threadId();
 
@@ -382,10 +379,9 @@ LSQ<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
 }
 
 template <class Impl>
-template <class T>
 Fault
 LSQ<Impl>::write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
-                 T &data, int store_idx)
+                 uint8_t *data, int store_idx)
 {
     ThreadID tid = req->threadId();
 

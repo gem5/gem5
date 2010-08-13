@@ -1518,135 +1518,25 @@ InOrderCPU::getDTBPtr()
     return dtb_res->tlb();
 }
 
-template <class T>
 Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
+InOrderCPU::read(DynInstPtr inst, Addr addr,
+                 uint8_t *data, unsigned size, unsigned flags)
 {
     //@TODO: Generalize name "CacheUnit" to "MemUnit" just in case
     //       you want to run w/out caches?
     CacheUnit *cache_res = 
         dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
 
-    return cache_res->read(inst, addr, data, flags);
+    return cache_res->read(inst, addr, data, size, flags);
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template
 Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, Twin32_t &data, unsigned flags);
-
-template
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, Twin64_t &data, unsigned flags);
-
-template
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, uint64_t &data, unsigned flags);
-
-template
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, uint32_t &data, unsigned flags);
-
-template
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, uint16_t &data, unsigned flags);
-
-template
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, uint8_t &data, unsigned flags);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, double &data, unsigned flags)
-{
-    return read(inst, addr, *(uint64_t*)&data, flags);
-}
-
-template<>
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, float &data, unsigned flags)
-{
-    return read(inst, addr, *(uint32_t*)&data, flags);
-}
-
-
-template<>
-Fault
-InOrderCPU::read(DynInstPtr inst, Addr addr, int32_t &data, unsigned flags)
-{
-    return read(inst, addr, (uint32_t&)data, flags);
-}
-
-template <class T>
-Fault
-InOrderCPU::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
-                  uint64_t *write_res)
+InOrderCPU::write(DynInstPtr inst, uint8_t *data, unsigned size,
+                  Addr addr, unsigned flags, uint64_t *write_res)
 {
     //@TODO: Generalize name "CacheUnit" to "MemUnit" just in case
     //       you want to run w/out caches?
     CacheUnit *cache_res =
         dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
-    return cache_res->write(inst, data, addr, flags, write_res);
-}
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template
-Fault
-InOrderCPU::write(DynInstPtr inst, Twin32_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-InOrderCPU::write(DynInstPtr inst, Twin64_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-InOrderCPU::write(DynInstPtr inst, uint64_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-InOrderCPU::write(DynInstPtr inst, uint32_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-InOrderCPU::write(DynInstPtr inst, uint16_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-InOrderCPU::write(DynInstPtr inst, uint8_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-InOrderCPU::write(DynInstPtr inst, double data, Addr addr, unsigned flags, 
-                  uint64_t *res)
-{
-    return write(inst, *(uint64_t*)&data, addr, flags, res);
-}
-
-template<>
-Fault
-InOrderCPU::write(DynInstPtr inst, float data, Addr addr, unsigned flags, 
-                  uint64_t *res)
-{
-    return write(inst, *(uint32_t*)&data, addr, flags, res);
-}
-
-
-template<>
-Fault
-InOrderCPU::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, 
-                  uint64_t *res)
-{
-    return write(inst, (uint32_t)data, addr, flags, res);
+    return cache_res->write(inst, data, size, addr, flags, write_res);
 }

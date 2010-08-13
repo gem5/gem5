@@ -443,9 +443,9 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
     return cache_req->fault;
 }
 
-template <class T>
 Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
+CacheUnit::read(DynInstPtr inst, Addr addr,
+                uint8_t *data, unsigned size, unsigned flags)
 {
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
     assert(cache_req && "Can't Find Instruction for Read!");
@@ -454,14 +454,15 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
     unsigned blockSize = this->cachePort->peerBlockSize();
 
     //The size of the data we're trying to read.
-    int dataSize = sizeof(T);
+    int fullSize = size;
+    inst->totalSize = size;
 
     if (inst->traceData) {
         inst->traceData->setAddr(addr);
     }
 
     if (inst->split2ndAccess) {     
-        dataSize = inst->split2ndSize;
+        size = inst->split2ndSize;
         cache_req->splitAccess = true;        
         cache_req->split2ndAccess = true;
         
@@ -473,7 +474,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
 
     //The address of the second part of this access if it needs to be split
     //across a cache line boundary.
-    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, blockSize);
 
     
     if (secondAddr > addr && !inst->split2ndAccess) {
@@ -483,8 +484,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
         // Save All "Total" Split Information
         // ==============================
         inst->splitInst = true;        
-        inst->splitMemData = new uint8_t[dataSize];
-        inst->splitTotalSize = dataSize;
+        inst->splitMemData = new uint8_t[size];
         
         if (!inst->splitInstSked) {
             // Schedule Split Read/Complete for Instruction
@@ -517,22 +517,22 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
 
         // Split Information for First Access
         // ==============================
-        dataSize = secondAddr - addr;
+        size = secondAddr - addr;
         cache_req->splitAccess = true;
 
         // Split Information for Second Access
         // ==============================
-        inst->split2ndSize = addr + sizeof(T) - secondAddr;
+        inst->split2ndSize = addr + fullSize - secondAddr;
         inst->split2ndAddr = secondAddr;            
-        inst->split2ndDataPtr = inst->splitMemData + dataSize;            
+        inst->split2ndDataPtr = inst->splitMemData + size;
         inst->split2ndFlags = flags;        
     }
     
-    doTLBAccess(inst, cache_req, dataSize, flags, TheISA::TLB::Read);
+    doTLBAccess(inst, cache_req, size, flags, TheISA::TLB::Read);
 
     if (cache_req->fault == NoFault) {
         if (!cache_req->splitAccess) {            
-            cache_req->reqData = new uint8_t[dataSize];
+            cache_req->reqData = new uint8_t[size];
             doCacheAccess(inst, NULL);
         } else {
             if (!inst->split2ndAccess) {                
@@ -548,10 +548,9 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
     return cache_req->fault;
 }
 
-template <class T>
 Fault
-CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
-            uint64_t *write_res)
+CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
+                 Addr addr, unsigned flags, uint64_t *write_res)
 {
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
     assert(cache_req && "Can't Find Instruction for Write!");
@@ -559,16 +558,16 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
     // The block size of our peer
     unsigned blockSize = this->cachePort->peerBlockSize();
 
-    //The size of the data we're trying to read.
-    int dataSize = sizeof(T);
+    //The size of the data we're trying to write.
+    int fullSize = size;
+    inst->totalSize = size;
 
     if (inst->traceData) {
         inst->traceData->setAddr(addr);
-        inst->traceData->setData(data);
     }
 
     if (inst->split2ndAccess) {     
-        dataSize = inst->split2ndSize;
+        size = inst->split2ndSize;
         cache_req->splitAccess = true;        
         cache_req->split2ndAccess = true;
         
@@ -579,7 +578,7 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
 
     //The address of the second part of this access if it needs to be split
     //across a cache line boundary.
-    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, blockSize);
 
     if (secondAddr > addr && !inst->split2ndAccess) {
             
@@ -589,7 +588,6 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
         // Save All "Total" Split Information
         // ==============================
         inst->splitInst = true;        
-        inst->splitTotalSize = dataSize;
 
         if (!inst->splitInstSked) {
             // Schedule Split Read/Complete for Instruction
@@ -624,25 +622,25 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
 
         // Split Information for First Access
         // ==============================
-        dataSize = secondAddr - addr;
+        size = secondAddr - addr;
         cache_req->splitAccess = true;
 
         // Split Information for Second Access
         // ==============================
-        inst->split2ndSize = addr + sizeof(T) - secondAddr;
+        inst->split2ndSize = addr + fullSize - secondAddr;
         inst->split2ndAddr = secondAddr;            
         inst->split2ndStoreDataPtr = &cache_req->inst->storeData;
-        inst->split2ndStoreDataPtr += dataSize;            
+        inst->split2ndStoreDataPtr += size;
         inst->split2ndFlags = flags;        
         inst->splitInstSked = true;
     }    
         
-    doTLBAccess(inst, cache_req, dataSize, flags, TheISA::TLB::Write);
+    doTLBAccess(inst, cache_req, size, flags, TheISA::TLB::Write);
 
     if (cache_req->fault == NoFault) {
         if (!cache_req->splitAccess) {            
             // Remove this line since storeData is saved in INST?
-            cache_req->reqData = new uint8_t[dataSize];
+            cache_req->reqData = new uint8_t[size];
             doCacheAccess(inst, write_res);
         } else {            
             doCacheAccess(inst, write_res, cache_req);            
@@ -729,8 +727,8 @@ CacheUnit::execute(int slot_num)
                 cache_req->inst->split2ndAddr);
         inst->split2ndAccess = true;
         assert(inst->split2ndAddr != 0);
-        read(inst, inst->split2ndAddr, inst->split2ndData,
-             inst->split2ndFlags);
+        read(inst, inst->split2ndAddr, &inst->split2ndData,
+             inst->totalSize, inst->split2ndFlags);
         break;
 
       case InitSecondSplitWrite:
@@ -741,8 +739,8 @@ CacheUnit::execute(int slot_num)
 
         inst->split2ndAccess = true;
         assert(inst->split2ndAddr != 0);
-        write(inst, inst->split2ndAddr, inst->split2ndData,
-              inst->split2ndFlags, NULL);
+        write(inst, &inst->split2ndData, inst->totalSize,
+              inst->split2ndAddr, inst->split2ndFlags, NULL);
         break;
 
 
@@ -1075,7 +1073,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 if (inst->splitFinishCnt == 2) {
                     cache_req->memReq->setVirt(0/*inst->tid*/, 
                                                inst->getMemAddr(),
-                                               inst->splitTotalSize,
+                                               inst->totalSize,
                                                0,
                                                0);
                     
@@ -1299,115 +1297,5 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
     // Now Delete Slot Entry from Req. Map
     for (int i = 0; i < slot_remove_list.size(); i++)
         freeSlot(slot_remove_list[i]);
-}
-
-// Extra Template Definitions
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, Twin32_t &data, unsigned flags);
-
-template
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, Twin64_t &data, unsigned flags);
-
-template
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, uint64_t &data, unsigned flags);
-
-template
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, uint32_t &data, unsigned flags);
-
-template
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, uint16_t &data, unsigned flags);
-
-template
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, uint8_t &data, unsigned flags);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, double &data, unsigned flags)
-{
-    return read(inst, addr, *(uint64_t*)&data, flags);
-}
-
-template<>
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, float &data, unsigned flags)
-{
-    return read(inst, addr, *(uint32_t*)&data, flags);
-}
-
-
-template<>
-Fault
-CacheUnit::read(DynInstPtr inst, Addr addr, int32_t &data, unsigned flags)
-{
-    return read(inst, addr, (uint32_t&)data, flags);
-}
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template
-Fault
-CacheUnit::write(DynInstPtr inst, Twin32_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-CacheUnit::write(DynInstPtr inst, Twin64_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-CacheUnit::write(DynInstPtr inst, uint64_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-CacheUnit::write(DynInstPtr inst, uint32_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-CacheUnit::write(DynInstPtr inst, uint16_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-CacheUnit::write(DynInstPtr inst, uint8_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-CacheUnit::write(DynInstPtr inst, double data, Addr addr, unsigned flags, 
-                 uint64_t *res)
-{
-    return write(inst, *(uint64_t*)&data, addr, flags, res);
-}
-
-template<>
-Fault
-CacheUnit::write(DynInstPtr inst, float data, Addr addr, unsigned flags, 
-                 uint64_t *res)
-{
-    return write(inst, *(uint32_t*)&data, addr, flags, res);
-}
-
-
-template<>
-Fault
-CacheUnit::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, 
-                 uint64_t *res)
-{
-    return write(inst, (uint32_t)data, addr, flags, res);
 }
 

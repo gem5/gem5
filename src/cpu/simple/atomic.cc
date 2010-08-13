@@ -294,9 +294,9 @@ AtomicSimpleCPU::suspendContext(int thread_num)
 }
 
 
-template <class T>
 Fault
-AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
+AtomicSimpleCPU::readBytes(Addr addr, uint8_t * data,
+                           unsigned size, unsigned flags)
 {
     // use the CPU's statically allocated read request and packet objects
     Request *req = &data_read_req;
@@ -308,21 +308,19 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
     //The block size of our peer.
     unsigned blockSize = dcachePort.peerBlockSize();
     //The size of the data we're trying to read.
-    int dataSize = sizeof(T);
-
-    uint8_t * dataPtr = (uint8_t *)&data;
+    int fullSize = size;
 
     //The address of the second part of this access if it needs to be split
     //across a cache line boundary.
-    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, blockSize);
 
-    if(secondAddr > addr)
-        dataSize = secondAddr - addr;
+    if (secondAddr > addr)
+        size = secondAddr - addr;
 
     dcache_latency = 0;
 
-    while(1) {
-        req->setVirt(0, addr, dataSize, flags, thread->readPC());
+    while (1) {
+        req->setVirt(0, addr, size, flags, thread->readPC());
 
         // translate to physical address
         Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Read);
@@ -332,7 +330,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
             Packet pkt = Packet(req,
                     req->isLLSC() ? MemCmd::LoadLockedReq : MemCmd::ReadReq,
                     Packet::Broadcast);
-            pkt.dataStatic(dataPtr);
+            pkt.dataStatic(data);
 
             if (req->isMmapedIpr())
                 dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
@@ -363,10 +361,6 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         //If we don't need to access a second cache line, stop now.
         if (secondAddr <= addr)
         {
-            data = gtoh(data);
-            if (traceData) {
-                traceData->setData(data);
-            }
             if (req->isLocked() && fault == NoFault) {
                 assert(!locked);
                 locked = true;
@@ -379,12 +373,28 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
          */
 
         //Move the pointer we're reading into to the correct location.
-        dataPtr += dataSize;
+        data += size;
         //Adjust the size to get the remaining bytes.
-        dataSize = addr + sizeof(T) - secondAddr;
+        size = addr + fullSize - secondAddr;
         //And access the right address.
         addr = secondAddr;
     }
+}
+
+
+template <class T>
+Fault
+AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
+{
+    uint8_t *dataPtr = (uint8_t *)&data;
+    memset(dataPtr, 0, sizeof(data));
+    Fault fault = readBytes(addr, dataPtr, sizeof(data), flags);
+    if (fault == NoFault) {
+        data = gtoh(data);
+        if (traceData)
+            traceData->setData(data);
+    }
+    return fault;
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -438,38 +448,33 @@ AtomicSimpleCPU::read(Addr addr, int32_t &data, unsigned flags)
 }
 
 
-template <class T>
 Fault
-AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
+AtomicSimpleCPU::writeBytes(uint8_t *data, unsigned size,
+                            Addr addr, unsigned flags, uint64_t *res)
 {
     // use the CPU's statically allocated write request and packet objects
     Request *req = &data_write_req;
 
     if (traceData) {
         traceData->setAddr(addr);
-        traceData->setData(data);
     }
-
-    data = htog(data);
 
     //The block size of our peer.
     unsigned blockSize = dcachePort.peerBlockSize();
     //The size of the data we're trying to read.
-    int dataSize = sizeof(T);
-
-    uint8_t * dataPtr = (uint8_t *)&data;
+    int fullSize = size;
 
     //The address of the second part of this access if it needs to be split
     //across a cache line boundary.
-    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+    Addr secondAddr = roundDown(addr + size - 1, blockSize);
 
     if(secondAddr > addr)
-        dataSize = secondAddr - addr;
+        size = secondAddr - addr;
 
     dcache_latency = 0;
 
     while(1) {
-        req->setVirt(0, addr, dataSize, flags, thread->readPC());
+        req->setVirt(0, addr, size, flags, thread->readPC());
 
         // translate to physical address
         Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Write);
@@ -492,7 +497,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
             if (do_access && !req->getFlags().isSet(Request::NO_ACCESS)) {
                 Packet pkt = Packet(req, cmd, Packet::Broadcast);
-                pkt.dataStatic(dataPtr);
+                pkt.dataStatic(data);
 
                 if (req->isMmapedIpr()) {
                     dcache_latency +=
@@ -508,7 +513,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
                 if (req->isSwap()) {
                     assert(res);
-                    *res = pkt.get<T>();
+                    memcpy(res, pkt.getPtr<uint8_t>(), fullSize);
                 }
             }
 
@@ -537,12 +542,29 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
          */
 
         //Move the pointer we're reading into to the correct location.
-        dataPtr += dataSize;
+        data += size;
         //Adjust the size to get the remaining bytes.
-        dataSize = addr + sizeof(T) - secondAddr;
+        size = addr + fullSize - secondAddr;
         //And access the right address.
         addr = secondAddr;
     }
+}
+
+
+template <class T>
+Fault
+AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
+{
+    uint8_t *dataPtr = (uint8_t *)&data;
+    if (traceData)
+        traceData->setData(data);
+    data = htog(data);
+
+    Fault fault = writeBytes(dataPtr, sizeof(data), addr, flags, res);
+    if (fault == NoFault && data_write_req.isSwap()) {
+        *res = gtoh((T)*res);
+    }
+    return fault;
 }
 
 
