@@ -47,6 +47,7 @@ using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
 
+#if TRACING_ON
 static std::string
 printMemData(uint8_t *data, unsigned size)
 {
@@ -56,6 +57,7 @@ printMemData(uint8_t *data, unsigned size)
     }
     return dataStr.str();
 }
+#endif
 
 Tick
 CacheUnit::CachePort::recvAtomic(PacketPtr pkt)
