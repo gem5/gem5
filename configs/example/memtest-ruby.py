@@ -129,7 +129,7 @@ else:
 m5.ticks.setGlobalFrequency('1ns')
 
 # instantiate configuration
-m5.instantiate(root)
+m5.instantiate()
 
 # simulate until program terminates
 exit_event = m5.simulate(options.maxtick)

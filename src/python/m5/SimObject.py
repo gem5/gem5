@@ -623,7 +623,7 @@ class SimObject(object):
 
     def path(self):
         if not self._parent:
-            return 'root'
+            return '(orphan)'
         ppath = self._parent.path()
         if ppath == 'root':
             return self._name

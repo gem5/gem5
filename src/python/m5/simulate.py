@@ -39,13 +39,19 @@ from main import options
 import SimObject
 import ticks
 import objects
+from util import fatal
 
 # define a MaxTick parameter
 MaxTick = 2**63 - 1
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
-def instantiate(root):
+def instantiate():
+    root = objects.Root.getInstance()
+
+    if not root:
+        fatal("Need to instantiate Root() before calling instantiate()")
+
     # we need to fix the global frequency
     ticks.fixGlobalFrequency()
 
@@ -136,7 +142,8 @@ def drain(root):
 def resume(root):
     root.resume()
 
-def checkpoint(root, dir):
+def checkpoint(dir):
+    root = objects.Root.getInstance()
     if not isinstance(root, objects.Root):
         raise TypeError, "Checkpoint must be called on a root object."
     doDrain(root)
@@ -144,7 +151,8 @@ def checkpoint(root, dir):
     internal.core.serializeAll(dir)
     resume(root)
 
-def restoreCheckpoint(root, dir):
+def restoreCheckpoint(dir):
+    root = objects.Root.getInstance()
     print "Restoring from checkpoint"
     internal.core.unserializeAll(dir)
     need_resume.append(root)

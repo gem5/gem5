@@ -78,7 +78,7 @@ sys.path.append(joinpath(tests_root, category, name))
 execfile(joinpath(tests_root, category, name, 'test.py'))
 
 # instantiate configuration
-m5.instantiate(root)
+m5.instantiate()
 
 # simulate until program terminates
 exit_event = m5.simulate(maxtick)

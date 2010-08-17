@@ -276,7 +276,7 @@ if options.timing or options.detailed:
     root.system.mem_mode = 'timing'
 
 # instantiate configuration
-m5.instantiate(root)
+m5.instantiate()
 
 # simulate until program terminates
 if options.maxtick:
