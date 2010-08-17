@@ -29,6 +29,7 @@
 import internal
 
 from internal.stats import StatEvent as event
+from objects import Root
 
 def initText(filename, desc=True):
     internal.stats.initText(filename, desc)
@@ -56,4 +57,8 @@ def dump():
     internal.stats.dump()
 
 def reset():
+    # call reset stats on all SimObjects
+    root = Root.getInstance()
+    for obj in root.descendants(): obj.resetStats()
+    # call any other registered stats reset callbacks
     internal.stats.reset()

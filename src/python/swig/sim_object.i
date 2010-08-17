@@ -50,6 +50,12 @@ class SimObject {
       Drained
     };
 
+    void init();
+    void regStats();
+    void regFormulas();
+    void resetStats();
+    void startup();
+
     unsigned int drain(Event *drain_event);
     void resume();
     void switchOut();

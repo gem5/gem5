@@ -78,10 +78,6 @@ Tick curTick;
 void serializeAll(const std::string &cpt_dir);
 void unserializeAll(const std::string &cpt_dir);
 
-void initAll();
-void regAllStats();
-void startupAll();
-
 bool want_warn, warn_verbose;
 bool want_info, info_verbose;
 bool want_hack, hack_verbose;

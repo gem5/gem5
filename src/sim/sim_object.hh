@@ -94,7 +94,6 @@ class SimObject : public EventManager, public Serializable
     // initialization pass of all objects.
     // Gets invoked after construction, before unserialize.
     virtual void init();
-    static void initAll();
 
     // register statistics for this object
     virtual void regStats();
@@ -104,13 +103,6 @@ class SimObject : public EventManager, public Serializable
     // final initialization before simulation
     // all state is unserialized so 
     virtual void startup();
-    static void startupAll();
-
-    // static: call reg_stats on all SimObjects
-    static void regAllStats();
-
-    // static: call resetStats on all SimObjects
-    static void resetAllStats();
 
     // static: call nameOut() & serialize() on all SimObjects
     static void serializeAll(std::ostream &);

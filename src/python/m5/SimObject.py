@@ -530,7 +530,8 @@ class SimObject(object):
         # If the attribute exists on the C++ object, transparently
         # forward the reference there.  This is typically used for
         # SWIG-wrapped methods such as init(), regStats(),
-        # regFormulas(), resetStats(), and startup().
+        # regFormulas(), resetStats(), startup(), drain(), and
+        # resume().
         if self._ccObject and hasattr(self._ccObject, attr):
             return getattr(self._ccObject, attr)
 
@@ -660,7 +661,7 @@ class SimObject(object):
     def unproxy(self, base):
         return self
 
-    def unproxy_all(self):
+    def unproxyParams(self):
         for param in self._params.iterkeys():
             value = self._values.get(param)
             if value != None and isproxy(value):
@@ -680,12 +681,6 @@ class SimObject(object):
             port = self._port_refs.get(port_name)
             if port != None:
                 port.unproxy(self)
-
-        # Unproxy children in sorted order for determinism also.
-        child_names = self._children.keys()
-        child_names.sort()
-        for child in child_names:
-            self._children[child].unproxy_all()
 
     def print_ini(self, ini_file):
         print >>ini_file, '[' + self.path() + ']'       # .ini section header
@@ -716,9 +711,6 @@ class SimObject(object):
                 print >>ini_file, '%s=%s' % (port_name, port.ini_str())
 
         print >>ini_file        # blank line between objects
-
-        for child in child_names:
-            self._children[child].print_ini(ini_file)
 
     def getCCParams(self):
         if self._ccParams:
@@ -774,39 +766,25 @@ class SimObject(object):
                   % self.path()
         return self._ccObject
 
-    # Call C++ to create C++ object corresponding to this object and
-    # (recursively) all its children
+    def descendants(self):
+        yield self
+        for child in self._children.itervalues():
+            for obj in child.descendants():
+                yield obj
+
+    # Call C++ to create C++ object corresponding to this object
     def createCCObject(self):
         self.getCCParams()
         self.getCCObject() # force creation
-        for child in self._children.itervalues():
-            child.createCCObject()
 
     def getValue(self):
         return self.getCCObject()
 
     # Create C++ port connections corresponding to the connections in
-    # _port_refs (& recursively for all children)
+    # _port_refs
     def connectPorts(self):
         for portRef in self._port_refs.itervalues():
             portRef.ccConnect()
-        for child in self._children.itervalues():
-            child.connectPorts()
-
-    def startDrain(self, drain_event, recursive):
-        count = 0
-        if isinstance(self, SimObject):
-            count += self._ccObject.drain(drain_event)
-        if recursive:
-            for child in self._children.itervalues():
-                count += child.startDrain(drain_event, True)
-        return count
-
-    def resume(self):
-        if isinstance(self, SimObject):
-            self._ccObject.resume()
-        for child in self._children.itervalues():
-            child.resume()
 
     def getMemoryMode(self):
         if not isinstance(self, m5.objects.System):
@@ -820,8 +798,6 @@ class SimObject(object):
             # setMemoryMode directly from self._ccObject results in calling
             # SimObject::setMemoryMode, not the System::setMemoryMode
             self._ccObject.setMemoryMode(mode)
-        for child in self._children.itervalues():
-            child.changeTiming(mode)
 
     def takeOverFrom(self, old_cpu):
         self._ccObject.takeOverFrom(old_cpu._ccObject)

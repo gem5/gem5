@@ -97,76 +97,6 @@ SimObject::resetStats()
 }
 
 //
-// static function:
-//   call regStats() on all SimObjects and then regFormulas() on all
-//   SimObjects.
-//
-struct SimObjectResetCB : public Callback
-{
-    virtual void process() { SimObject::resetAllStats(); }
-};
-
-namespace {
-    static SimObjectResetCB StatResetCB;
-}
-
-void
-SimObject::regAllStats()
-{
-    SimObjectList::iterator i;
-    SimObjectList::iterator end = simObjectList.end();
-
-    /**
-     * @todo change cprintfs to DPRINTFs
-     */
-    for (i = simObjectList.begin(); i != end; ++i) {
-#ifdef STAT_DEBUG
-        cprintf("registering stats for %s\n", (*i)->name());
-#endif
-        (*i)->regStats();
-    }
-
-    for (i = simObjectList.begin(); i != end; ++i) {
-#ifdef STAT_DEBUG
-        cprintf("registering formulas for %s\n", (*i)->name());
-#endif
-        (*i)->regFormulas();
-    }
-
-    Stats::registerResetCallback(&StatResetCB);
-}
-
-//
-// static function: call init() on all SimObjects.
-//
-void
-SimObject::initAll()
-{
-    SimObjectList::iterator i = simObjectList.begin();
-    SimObjectList::iterator end = simObjectList.end();
-
-    for (; i != end; ++i) {
-        SimObject *obj = *i;
-        obj->init();
-    }
-}
-
-//
-// static function: call resetStats() on all SimObjects.
-//
-void
-SimObject::resetAllStats()
-{
-    SimObjectList::iterator i = simObjectList.begin();
-    SimObjectList::iterator end = simObjectList.end();
-
-    for (; i != end; ++i) {
-        SimObject *obj = *i;
-        obj->resetStats();
-    }
-}
-
-//
 // static function: serialize all SimObjects.
 //
 void
@@ -200,18 +130,6 @@ SimObject::unserializeAll(Checkpoint *cp)
    }
 }
 
-
-void
-SimObject::startupAll()
-{
-    SimObjectList::iterator i = simObjectList.begin();
-    SimObjectList::iterator end = simObjectList.end();
-
-    while (i != end) {
-        (*i)->startup();
-        ++i;
-    }
-}
 
 
 #ifdef DEBUG

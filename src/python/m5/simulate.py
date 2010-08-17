@@ -55,25 +55,29 @@ def instantiate():
     # we need to fix the global frequency
     ticks.fixGlobalFrequency()
 
-    root.unproxy_all()
+    # Unproxy in sorted order for determinism
+    for obj in root.descendants(): obj.unproxyParams()
 
     if options.dump_config:
         ini_file = file(os.path.join(options.outdir, options.dump_config), 'w')
-        root.print_ini(ini_file)
+        # Print ini sections in sorted order for easier diffing
+        for obj in sorted(root.descendants(), key=lambda o: o.path()):
+            obj.print_ini(ini_file)
         ini_file.close()
 
     # Initialize the global statistics
     stats.initSimStats()
 
     # Create the C++ sim objects and connect ports
-    root.createCCObject()
-    root.connectPorts()
+    for obj in root.descendants(): obj.createCCObject()
+    for obj in root.descendants(): obj.connectPorts()
 
     # Do a second pass to finish initializing the sim objects
-    core.initAll()
+    for obj in root.descendants(): obj.init()
 
     # Do a third pass to initialize statistics
-    core.regAllStats()
+    for obj in root.descendants(): obj.regStats()
+    for obj in root.descendants(): obj.regFormulas()
 
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()
@@ -97,7 +101,8 @@ def simulate(*args, **kwargs):
     global need_resume, need_startup
 
     if need_startup:
-        internal.core.startupAll()
+        root = objects.Root.getInstance()
+        for obj in root.descendants(): obj.startup()
         need_startup = False
 
     for root in need_resume:
@@ -129,10 +134,10 @@ def doDrain(root):
 def drain(root):
     all_drained = False
     drain_event = internal.event.createCountedDrain()
-    unready_objects = root.startDrain(drain_event, True)
+    unready_objs = sum(obj.drain(drain_event) for obj in root.descendants())
     # If we've got some objects that can't drain immediately, then simulate
-    if unready_objects > 0:
-        drain_event.setCount(unready_objects)
+    if unready_objs > 0:
+        drain_event.setCount(unready_objs)
         simulate()
     else:
         all_drained = True
@@ -140,7 +145,7 @@ def drain(root):
     return all_drained
 
 def resume(root):
-    root.resume()
+    for obj in root.descendants(): obj.resume()
 
 def checkpoint(dir):
     root = objects.Root.getInstance()
@@ -165,7 +170,8 @@ def changeToAtomic(system):
     if system.getMemoryMode() != objects.params.atomic:
         doDrain(system)
         print "Changing memory mode to atomic"
-        system.changeTiming(objects.params.atomic)
+        for obj in system.descendants():
+            obj.changeTiming(objects.params.atomic)
 
 def changeToTiming(system):
     if not isinstance(system, (objects.Root, objects.System)):
@@ -175,7 +181,8 @@ def changeToTiming(system):
     if system.getMemoryMode() != objects.params.timing:
         doDrain(system)
         print "Changing memory mode to timing"
-        system.changeTiming(objects.params.timing)
+        for obj in system.descendants():
+            obj.changeTiming(objects.params.timing)
 
 def switchCpus(cpuList):
     print "switching cpus"

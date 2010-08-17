@@ -45,17 +45,6 @@ SimObject *resolveSimObject(const std::string &name);
 int connectPorts(SimObject *o1, const std::string &name1, int i1,
     SimObject *o2, const std::string &name2, int i2);
 
-inline void
-initAll()
-{
-    SimObject::initAll();
-}
-
-inline void
-regAllStats()
-{
-    SimObject::regAllStats();
-}
 
 inline void
 serializeAll(const std::string &cpt_dir)
@@ -67,10 +56,4 @@ inline void
 unserializeAll(const std::string &cpt_dir)
 {
     Serializable::unserializeAll(cpt_dir);
-}
-
-inline void
-startupAll()
-{
-    SimObject::startupAll();
 }
