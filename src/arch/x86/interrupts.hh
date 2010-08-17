@@ -260,13 +260,13 @@ class Interrupts : public BasicPioDevice, IntDev
     void
     serialize(std::ostream &os)
     {
-        panic("Interrupts::serialize unimplemented!\n");
+        warn("Interrupts::serialize unimplemented!\n");
     }
 
     void
     unserialize(Checkpoint *cp, const std::string &section)
     {
-        panic("Interrupts::unserialize unimplemented!\n");
+        warn("Interrupts::unserialize unimplemented!\n");
     }
 
     /*

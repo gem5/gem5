@@ -352,6 +352,11 @@ ISA::unserialize(EventManager *em, Checkpoint * cp,
                  const std::string & section)
 {
     UNSERIALIZE_ARRAY(regVal, NumMiscRegs);
+    updateHandyM5Reg(regVal[MISCREG_EFER],
+                     regVal[MISCREG_CR0],
+                     regVal[MISCREG_CS_ATTR],
+                     regVal[MISCREG_SS_ATTR],
+                     regVal[MISCREG_RFLAGS]);
 }
 
 }
