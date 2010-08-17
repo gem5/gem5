@@ -46,7 +46,7 @@ MaxTick = 2**63 - 1
 
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
-def instantiate():
+def instantiate(ckpt_dir=None):
     root = objects.Root.getInstance()
 
     if not root:
@@ -85,6 +85,11 @@ def instantiate():
 
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()
+
+    # Restore checkpoint (if any)
+    if ckpt_dir:
+        internal.core.unserializeAll(ckpt_dir)
+        need_resume.append(root)
 
     # Reset to put the stats in a consistent state.
     stats.reset()
@@ -159,13 +164,6 @@ def checkpoint(dir):
     print "Writing checkpoint"
     internal.core.serializeAll(dir)
     resume(root)
-
-def restoreCheckpoint(dir):
-    root = objects.Root.getInstance()
-    print "Restoring from checkpoint"
-    internal.core.unserializeAll(dir)
-    need_resume.append(root)
-    stats.reset()
 
 def changeToAtomic(system):
     if not isinstance(system, (objects.Root, objects.System)):

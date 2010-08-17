@@ -190,8 +190,7 @@ def run(options, root, testsys, cpu_class):
             for i in xrange(np):
                 testsys.cpu[i].max_insts_any_thread = offset
 
-    m5.instantiate()
-
+    checkpoint_dir = None
     if options.checkpoint_restore != None:
         from os.path import isdir, exists
         from os import listdir
@@ -212,10 +211,6 @@ def run(options, root, testsys, cpu_class):
                                       "cpt.%s.%s" % (options.bench, inst))
             if not exists(checkpoint_dir):
                 fatal("Unable to find checkpoint directory %s", checkpoint_dir)
-
-            print "Restoring checkpoint ..."
-            m5.restoreCheckpoint(checkpoint_dir)
-            print "Done."
         else:
             dirs = listdir(cptdir)
             expr = re.compile('cpt\.([0-9]*)')
@@ -234,10 +229,9 @@ def run(options, root, testsys, cpu_class):
 
             ## Adjust max tick based on our starting tick
             maxtick = maxtick - int(cpts[cpt_num - 1])
+            checkpoint_dir = joinpath(cptdir, "cpt.%s" % cpts[cpt_num - 1])
 
-            ## Restore the checkpoint
-            m5.restoreCheckpoint(joinpath(cptdir,
-                                          "cpt.%s" % cpts[cpt_num - 1]))
+    m5.instantiate(checkpoint_dir)
 
     if options.standard_switch or cpu_class:
         if options.standard_switch:
