@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 18 2010 14:59:19
-M5 revision 6a6bb24e484f+ 7041+ default qtip tip brad/regress_updates
-M5 started Mar 18 2010 15:40:34
-M5 executing on cabr0210
-command line: build/ALPHA_SE_MOESI_hammer/m5.fast -d build/ALPHA_SE_MOESI_hammer/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer
+M5 compiled Jul  1 2010 14:37:50
+M5 revision acd9f15a9c7c 7493 default qtip tip simobj-parent-fix-stats-udpate
+M5 started Jul  1 2010 14:38:54
+M5 executing on phenom
+command line: build/ALPHA_SE_MOESI_hammer/m5.opt -d build/ALPHA_SE_MOESI_hammer/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 4339943 because maximum number of loads reached
+Exiting @ tick 4329426 because maximum number of loads reached

@@ -1,5 +1,3 @@
-Redirecting stdout to build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simout
-Redirecting stderr to build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun  6 2010 04:01:36
-M5 revision ba1a0193c050 7448 default tip
-M5 started Jun  6 2010 04:01:52
-M5 executing on zizzer
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
+M5 compiled Jul  1 2010 14:40:18
+M5 revision acd9f15a9c7c 7493 default qtip tip simobj-parent-fix-stats-udpate
+M5 started Jul  1 2010 14:40:33
+M5 executing on phenom
+command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Init done
