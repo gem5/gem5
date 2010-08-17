@@ -200,28 +200,18 @@ def run(options, root, testsys, cpu_class):
         if not isdir(cptdir):
             fatal("checkpoint dir %s does not exist!", cptdir)
 
-        if options.at_instruction:
-            checkpoint_dir = joinpath(cptdir, "cpt.%s.%s" % \
-                    (options.bench, options.checkpoint_restore))
+        if options.at_instruction or options.simpoint:
+            inst = options.checkpoint_restore
+            if options.simpoint:
+                # assume workload 0 has the simpoint
+                if testsys.cpu[0].workload[0].simpoint == 0:
+                    fatal('Unable to find simpoint')
+                inst += int(testsys.cpu[0].workload[0].simpoint)
+
+            checkpoint_dir = joinpath(cptdir,
+                                      "cpt.%s.%s" % (options.bench, inst))
             if not exists(checkpoint_dir):
                 fatal("Unable to find checkpoint directory %s", checkpoint_dir)
-
-            print "Restoring checkpoint ..."
-            m5.restoreCheckpoint(checkpoint_dir)
-            print "Done."
-        elif options.simpoint:
-            # assume workload 0 has the simpoint
-            if testsys.cpu[0].workload[0].simpoint == 0:
-                fatal('Unable to find simpoint')
-
-            options.checkpoint_restore += \
-                int(testsys.cpu[0].workload[0].simpoint)
-
-            checkpoint_dir = joinpath(cptdir, "cpt.%s.%d" % \
-                    (options.bench, options.checkpoint_restore))
-            if not exists(checkpoint_dir):
-                fatal("Unable to find checkpoint directory %s.%s",
-                      options.bench, options.checkpoint_restore)
 
             print "Restoring checkpoint ..."
             m5.restoreCheckpoint(checkpoint_dir)
