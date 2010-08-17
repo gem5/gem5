@@ -49,6 +49,7 @@ import datetime
 import re
 import sys
 import time
+import math
 
 import proxy
 import ticks
@@ -178,10 +179,42 @@ class VectorParamValue(list):
     def unproxy(self, base):
         return [v.unproxy(base) for v in self]
 
-class SimObjVector(VectorParamValue):
-    def print_ini(self, ini_file):
+class SimObjectVector(VectorParamValue):
+    # support clone operation
+    def __call__(self, **kwargs):
+        return SimObjectVector([v(**kwargs) for v in self])
+
+    def clear_parent(self, old_parent):
         for v in self:
-            v.print_ini(ini_file)
+            v.clear_parent(old_parent)
+
+    def set_parent(self, parent, name):
+        if len(self) == 1:
+            self[0].set_parent(parent, name)
+        else:
+            width = int(math.ceil(math.log(len(self))/math.log(10)))
+            for i,v in enumerate(self):
+                v.set_parent(parent, "%s%0*d" % (name, width, i))
+
+    def get_parent(self):
+        parent_set = set(v._parent for v in self)
+        if len(parent_set) != 1:
+            raise RuntimeError, \
+                  "SimObjectVector elements have inconsistent parent value."
+        return parent_set.pop()
+
+    # return 'cpu0 cpu1' etc. for print_ini()
+    def get_name(self):
+        return ' '.join([v._name for v in self])
+
+    # By iterating through the constituent members of the vector here
+    # we can nicely handle iterating over all a SimObject's children
+    # without having to provide lots of special functions on
+    # SimObjectVector directly.
+    def descendants(self):
+        for v in self:
+            for obj in v.descendants():
+                yield obj
 
 class VectorParamDesc(ParamDesc):
     file_ext = 'vptype'
@@ -197,7 +230,7 @@ class VectorParamDesc(ParamDesc):
             tmp_list = [ ParamDesc.convert(self, value) ]
 
         if isSimObjectSequence(tmp_list):
-            return SimObjVector(tmp_list)
+            return SimObjectVector(tmp_list)
         else:
             return VectorParamValue(tmp_list)
 

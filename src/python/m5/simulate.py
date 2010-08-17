@@ -55,6 +55,10 @@ def instantiate():
     # we need to fix the global frequency
     ticks.fixGlobalFrequency()
 
+    # Make sure SimObject-valued params are in the configuration
+    # hierarchy so we catch them with future descendants() walks
+    for obj in root.descendants(): obj.adoptOrphanParams()
+
     # Unproxy in sorted order for determinism
     for obj in root.descendants(): obj.unproxyParams()
 
