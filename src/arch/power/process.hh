@@ -46,7 +46,7 @@ class PowerLiveProcess : public LiveProcess
   protected:
     PowerLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
 
-    void startup();
+    void initState();
 
   public:
     void argsInit(int intSize, int pageSize);

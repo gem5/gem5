@@ -51,6 +51,8 @@ class SimObject {
     };
 
     void init();
+    void loadState(Checkpoint *cp);
+    void initState();
     void regStats();
     void regFormulas();
     void resetStats();

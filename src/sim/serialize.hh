@@ -141,7 +141,6 @@ class Serializable
     static int ckptMaxCount;
     static int ckptPrevCount;
     static void serializeAll(const std::string &cpt_dir);
-    static void unserializeAll(const std::string &cpt_dir);
     static void unserializeGlobals(Checkpoint *cp);
 };
 

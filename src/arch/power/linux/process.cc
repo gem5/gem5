@@ -432,9 +432,9 @@ PowerLinuxProcess::getDesc(int callnum)
 }
 
 void
-PowerLinuxProcess::startup()
+PowerLinuxProcess::initState()
 {
-    PowerLiveProcess::startup();
+    PowerLiveProcess::initState();
 }
 
 PowerISA::IntReg

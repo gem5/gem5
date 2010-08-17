@@ -52,7 +52,7 @@ class SparcLiveProcess : public LiveProcess
     SparcLiveProcess(LiveProcessParams * params,
             ObjectFile *objFile, Addr _StackBias);
 
-    void startup();
+    void initState();
 
     template<class IntType>
     void argsInit(int pageSize);
@@ -87,7 +87,7 @@ class Sparc32LiveProcess : public SparcLiveProcess
         mmap_start = mmap_end = 0x70000000;
     }
 
-    void startup();
+    void initState();
 
   public:
 
@@ -115,7 +115,7 @@ class Sparc64LiveProcess : public SparcLiveProcess
         mmap_start = mmap_end = 0xfffff80000000000ULL;
     }
 
-    void startup();
+    void initState();
 
   public:
 

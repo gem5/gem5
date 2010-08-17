@@ -452,17 +452,6 @@ Serializable::serializeAll(const string &cpt_dir)
 }
 
 void
-Serializable::unserializeAll(const string &cpt_dir)
-{
-    string dir = Checkpoint::setDir(cpt_dir);
-
-    DPRINTFR(Config, "Loading checkpoint dir '%s'\n", dir);
-    Checkpoint *cp = new Checkpoint(dir);
-    unserializeGlobals(cp);
-    SimObject::unserializeAll(cp);
-}
-
-void
 Serializable::unserializeGlobals(Checkpoint *cp)
 {
     globals.unserialize(cp);
@@ -561,9 +550,9 @@ Checkpoint::dir()
 
 
 Checkpoint::Checkpoint(const string &cpt_dir)
-    : db(new IniFile), cptDir(cpt_dir)
+    : db(new IniFile), cptDir(setDir(cpt_dir))
 {
-    string filename = cpt_dir + "/" + Checkpoint::baseFilename;
+    string filename = cptDir + "/" + Checkpoint::baseFilename;
     if (!db->load(filename)) {
         fatal("Can't load checkpoint file '%s'\n", filename);
     }

@@ -76,6 +76,7 @@ ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile,
 void
 ArmLiveProcess::startup()
 {
+    LiveProcess::startup();
     argsInit(MachineBytes, VMPageSize);
 }
 
@@ -113,9 +114,6 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 
     //We want 16 byte alignment
     uint64_t align = 16;
-
-    // Overloaded argsInit so that we can fine-tune for ARM architecture
-    Process::startup();
 
     // load object file into target memory
     objFile->loadSections(initVirtMem);

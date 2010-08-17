@@ -44,7 +44,7 @@ class PowerLinuxProcess : public PowerLiveProcess
 
     virtual SyscallDesc* getDesc(int callnum);
 
-    void startup();
+    void initState();
 
     PowerISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     void setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val);

@@ -52,8 +52,14 @@ serializeAll(const std::string &cpt_dir)
     Serializable::serializeAll(cpt_dir);
 }
 
-inline void
-unserializeAll(const std::string &cpt_dir)
+inline Checkpoint *
+getCheckpoint(const std::string &cpt_dir)
 {
-    Serializable::unserializeAll(cpt_dir);
+    return new Checkpoint(cpt_dir);
+}
+
+inline void
+unserializeGlobals(Checkpoint *cp)
+{
+    Serializable::unserializeGlobals(cp);
 }

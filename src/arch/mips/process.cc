@@ -67,9 +67,9 @@ MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
 }
 
 void
-MipsLiveProcess::startup()
+MipsLiveProcess::initState()
 {
-    Process::startup();
+    LiveProcess::initState();
 
     argsInit<uint32_t>(VMPageSize);
 }
@@ -79,7 +79,6 @@ void
 MipsLiveProcess::argsInit(int pageSize)
 {
     int intSize = sizeof(IntType);
-    Process::startup();
 
     // load object file into target memory
     objFile->loadSections(initVirtMem);

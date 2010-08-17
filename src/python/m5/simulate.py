@@ -88,8 +88,12 @@ def instantiate(ckpt_dir=None):
 
     # Restore checkpoint (if any)
     if ckpt_dir:
-        internal.core.unserializeAll(ckpt_dir)
+        ckpt = internal.core.getCheckpoint(ckpt_dir)
+        internal.core.unserializeGlobals(ckpt);
+        for obj in root.descendants(): obj.loadState(ckpt)
         need_resume.append(root)
+    else:
+        for obj in root.descendants(): obj.initState()
 
     # Reset to put the stats in a consistent state.
     stats.reset()

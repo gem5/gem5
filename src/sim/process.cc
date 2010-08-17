@@ -100,8 +100,8 @@ template class AuxVector<uint32_t>;
 template class AuxVector<uint64_t>;
 
 Process::Process(ProcessParams * params)
-    : SimObject(params), system(params->system), checkpointRestored(false),
-    max_stack_size(params->max_stack_size)
+    : SimObject(params), system(params->system),
+      max_stack_size(params->max_stack_size)
 {
     string in = params->input;
     string out = params->output;
@@ -233,7 +233,7 @@ Process::findFreeContext()
 }
 
 void
-Process::startup()
+Process::initState()
 {
     if (contextIds.empty())
         fatal("Process %s is not associated with any HW contexts!\n", name());
@@ -537,9 +537,6 @@ Process::unserialize(Checkpoint *cp, const std::string &section)
     // find the param in the checkpoint if you wanted to, like set a default
     // but in this case we'll just stick with the instantianted value if not
     // found.   
-
-    checkpointRestored = true;
-
 }
 
 

@@ -79,8 +79,6 @@ class Process : public SimObject
     /// running on.
     System *system;
 
-    bool checkpointRestored;
-
     // thread contexts associated with this process
     std::vector<int> contextIds;
 
@@ -130,8 +128,7 @@ class Process : public SimObject
     // constructor
     Process(ProcessParams * params);
 
-    // post initialization startup
-    virtual void startup();
+    virtual void initState();
 
   protected:
     /// Memory object for initialization (image loading)

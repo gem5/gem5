@@ -58,7 +58,7 @@ class LinuxX86System : public X86System
     LinuxX86System(Params *p);
     ~LinuxX86System();
 
-    void startup();
+    void initState();
 };
 
 #endif

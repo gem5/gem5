@@ -59,9 +59,9 @@ LinuxX86System::~LinuxX86System()
 }
 
 void
-LinuxX86System::startup()
+LinuxX86System::initState()
 {
-    X86System::startup();
+    X86System::initState();
 
     // The location of the real mode data structure.
     const Addr realModeData = 0x90200;

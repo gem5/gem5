@@ -157,12 +157,9 @@ X86LiveProcess::getDesc(int callnum)
 }
 
 void
-X86_64LiveProcess::startup()
+X86_64LiveProcess::initState()
 {
-    LiveProcess::startup();
-
-    if (checkpointRestored)
-        return;
+    X86LiveProcess::initState();
 
     argsInit(sizeof(uint64_t), VMPageSize);
 
@@ -255,12 +252,9 @@ X86_64LiveProcess::startup()
 }
 
 void
-I386LiveProcess::startup()
+I386LiveProcess::initState()
 {
-    LiveProcess::startup();
-
-    if (checkpointRestored)
-        return;
+    X86LiveProcess::initState();
 
     argsInit(sizeof(uint32_t), VMPageSize);
 

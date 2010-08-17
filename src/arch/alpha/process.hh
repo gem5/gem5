@@ -36,10 +36,14 @@
 
 class AlphaLiveProcess : public LiveProcess
 {
+  private:
+    void setupASNReg();
+
   protected:
     AlphaLiveProcess(LiveProcessParams *params, ObjectFile *objFile);
 
-    void startup();
+    void loadState(Checkpoint *cp);
+    void initState();
 
     void argsInit(int intSize, int pageSize);
 

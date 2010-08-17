@@ -111,9 +111,9 @@ void SparcLiveProcess::handleTrap(int trapNum, ThreadContext *tc)
 }
 
 void
-SparcLiveProcess::startup()
+SparcLiveProcess::initState()
 {
-    Process::startup();
+    LiveProcess::initState();
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //From the SPARC ABI
@@ -157,12 +157,9 @@ SparcLiveProcess::startup()
 }
 
 void
-Sparc32LiveProcess::startup()
+Sparc32LiveProcess::initState()
 {
-    if (checkpointRestored)
-        return;
-
-    SparcLiveProcess::startup();
+    SparcLiveProcess::initState();
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //The process runs in user mode with 32 bit addresses
@@ -172,12 +169,9 @@ Sparc32LiveProcess::startup()
 }
 
 void
-Sparc64LiveProcess::startup()
+Sparc64LiveProcess::initState()
 {
-    if (checkpointRestored)
-        return;
-
-    SparcLiveProcess::startup();
+    SparcLiveProcess::initState();
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //The process runs in user mode

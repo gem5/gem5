@@ -173,19 +173,35 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
 }
 
 void
-AlphaLiveProcess::startup()
+AlphaLiveProcess::setupASNReg()
 {
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     tc->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
+}
 
-    if (checkpointRestored) {
-        return;
-    }
 
-    Process::startup();
+void
+AlphaLiveProcess::loadState(Checkpoint *cp)
+{
+    LiveProcess::loadState(cp);
+    // need to set up ASN after unserialization since M5_pid value may
+    // come from checkpoint
+    setupASNReg();
+}
+
+
+void
+AlphaLiveProcess::initState()
+{
+    // need to set up ASN before further initialization since init
+    // will involve writing to virtual memory addresses
+    setupASNReg();
+
+    LiveProcess::initState();
 
     argsInit(MachineBytes, VMPageSize);
 
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
     tc->setIntReg(GlobalPointerReg, objFile->globalPointer());
     //Operate in user mode
     tc->setMiscRegNoEffect(IPR_ICM, 0x18);

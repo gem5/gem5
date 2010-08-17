@@ -77,7 +77,7 @@ class X86System : public System
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    void startup();
+    void initState();
 
   protected:
 

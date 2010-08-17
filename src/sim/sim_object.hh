@@ -91,17 +91,48 @@ class SimObject : public EventManager, public Serializable
 
     virtual const std::string name() const { return params()->name; }
 
-    // initialization pass of all objects.
-    // Gets invoked after construction, before unserialize.
+    // The following SimObject initialization methods are called from
+    // the instantiate() method in src/python/m5/simulate.py.  See
+    // that function for details on how/when these methods are
+    // invoked.
+
+    /**
+     * init() is called after all C++ SimObjects have been created and
+     * all ports are connected.  Initializations that are independent
+     * of unserialization but rely on a fully instantiated and
+     * connected SimObject graph should be done here.
+     */
     virtual void init();
+
+    /**
+     * loadState() is called on each SimObject when restoring from a
+     * checkpoint.  The default implementation simply calls
+     * unserialize() if there is a corresponding section in the
+     * checkpoint.  However, objects can override loadState() to get
+     * other behaviors, e.g., doing other programmed initializations
+     * after unserialize(), or complaining if no checkpoint section is
+     * found.
+     */
+    virtual void loadState(Checkpoint *cp);
+
+    /**
+     * initState() is called on each SimObject when *not* restoring
+     * from a checkpoint.  This provides a hook for state
+     * initializations that are only required for a "cold start".
+     */
+    virtual void initState();
 
     // register statistics for this object
     virtual void regStats();
     virtual void regFormulas();
     virtual void resetStats();
 
-    // final initialization before simulation
-    // all state is unserialized so 
+    /**
+     * startup() is the final initialization call before simulation.
+     * All state is initialized (including unserialized state, if any,
+     * such as the curTick value), so this is the appropriate place to
+     * schedule initial event(s) for objects that need them.
+     */
     virtual void startup();
 
     // static: call nameOut() & serialize() on all SimObjects

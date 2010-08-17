@@ -63,8 +63,10 @@ PowerLiveProcess::PowerLiveProcess(LiveProcessParams *params,
 }
 
 void
-PowerLiveProcess::startup()
+PowerLiveProcess::initState()
 {
+    Process::initState();
+
     argsInit(MachineBytes, VMPageSize);
 }
 
@@ -82,9 +84,6 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
 
     //We want 16 byte alignment
     uint64_t align = 16;
-
-    // Overloaded argsInit so that we can fine-tune for POWER architecture
-    Process::startup();
 
     // load object file into target memory
     objFile->loadSections(initVirtMem);

@@ -45,7 +45,7 @@ class MipsLiveProcess : public LiveProcess
   protected:
     MipsLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
 
-    void startup();
+    void initState();
 
     template<class IntType>
     void argsInit(int pageSize);

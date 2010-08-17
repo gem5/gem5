@@ -109,9 +109,10 @@ installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
 }
 
 void
-X86System::startup()
+X86System::initState()
 {
-    System::startup();
+    System::initState();
+
     ThreadContext *tc = threadContexts[0];
     // This is the boot strap processor (BSP). Initialize it to look like
     // the boot loader has just turned control over to the 64 bit OS. We

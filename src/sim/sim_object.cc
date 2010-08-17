@@ -74,6 +74,18 @@ SimObject::init()
 }
 
 void
+SimObject::loadState(Checkpoint *cp)
+{
+    if (cp->sectionExists(name()))
+        unserialize(cp, name());
+}
+
+void
+SimObject::initState()
+{
+}
+
+void
 SimObject::startup()
 {
 }

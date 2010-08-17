@@ -75,8 +75,11 @@ void setClockFrequency(Tick ticksPerSecond);
 %immutable curTick;
 Tick curTick;
 
+class Checkpoint;
+
 void serializeAll(const std::string &cpt_dir);
-void unserializeAll(const std::string &cpt_dir);
+Checkpoint *getCheckpoint(const std::string &cpt_dir);
+void unserializeGlobals(Checkpoint *cp);
 
 bool want_warn, warn_verbose;
 bool want_info, info_verbose;
