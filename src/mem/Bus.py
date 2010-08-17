@@ -31,9 +31,6 @@ from m5.params import *
 from m5.proxy import *
 from MemObject import MemObject
 
-if buildEnv['FULL_SYSTEM']:
-    from Device import BadAddr
-
 class Bus(MemObject):
     type = 'Bus'
     port = VectorPort("vector port for connecting devices")
@@ -41,6 +38,8 @@ class Bus(MemObject):
     clock = Param.Clock("1GHz", "bus clock speed")
     header_cycles = Param.Int(1, "cycles of overhead per transaction")
     width = Param.Int(64, "bus width (bytes)")
-    responder_set = Param.Bool(False, "Did the user specify a default responder.")
     block_size = Param.Int(64, "The default block size if one isn't set by a device attached to the bus.")
-    default = Port("Default port for requests that aren't handled by a device.")
+    default = \
+            Port("Default port for requests that aren't handled by a device.")
+    use_default_range = \
+            Param.Bool(False, "Query default port device for legal range.")

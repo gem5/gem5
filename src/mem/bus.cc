@@ -40,6 +40,25 @@
 #include "base/trace.hh"
 #include "mem/bus.hh"
 
+Bus::Bus(const BusParams *p)
+    : MemObject(p), busId(p->bus_id), clock(p->clock),
+      headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
+      drainEvent(NULL), busIdle(this), inRetry(false), maxId(0),
+      defaultPort(NULL), funcPort(NULL), funcPortId(-4),
+      useDefaultRange(p->use_default_range), defaultBlockSize(p->block_size),
+      cachedBlockSize(0), cachedBlockSizeValid(false)
+{
+    //width, clock period, and header cycles must be positive
+    if (width <= 0)
+        fatal("Bus width must be positive\n");
+    if (clock <= 0)
+        fatal("Bus clock period must be positive\n");
+    if (headerCycles <= 0)
+        fatal("Number of header cycles must be positive\n");
+    clearBusCache();
+    clearPortCache();
+}
+
 Port *
 Bus::getPort(const std::string &if_name, int idx)
 {
@@ -310,19 +329,22 @@ int
 Bus::findPort(Addr addr)
 {
     /* An interval tree would be a better way to do this. --ali. */
-    int dest_id = -1;
+    int dest_id;
 
     dest_id = checkPortCache(addr);
-    if (dest_id == -1) {
-        PortIter i = portMap.find(RangeSize(addr,1));
-        if (i != portMap.end()) {
-            dest_id = i->second;
-            updatePortCache(dest_id, i->first.start, i->first.end);
-        }
+    if (dest_id != -1)
+        return dest_id;
+
+    // Check normal port ranges
+    PortIter i = portMap.find(RangeSize(addr,1));
+    if (i != portMap.end()) {
+        dest_id = i->second;
+        updatePortCache(dest_id, i->first.start, i->first.end);
+        return dest_id;
     }
 
     // Check if this matches the default range
-    if (dest_id == -1) {
+    if (useDefaultRange) {
         AddrRangeIter a_end = defaultRange.end();
         for (AddrRangeIter i = defaultRange.begin(); i != a_end; i++) {
             if (*i == addr) {
@@ -331,18 +353,12 @@ Bus::findPort(Addr addr)
             }
         }
 
-        if (responderSet) {
-            panic("Unable to find destination for addr (user set default "
-                  "responder): %#llx\n", addr);
-        } else {
-            DPRINTF(Bus, "Unable to find destination for addr: %#llx, will use "
-                    "default port\n", addr);
-
-            return defaultId;
-        }
+        panic("Unable to find destination for addr %#llx\n", addr);
     }
 
-    return dest_id;
+    DPRINTF(Bus, "Unable to find destination for addr %#llx, "
+            "will use default port\n", addr);
+    return defaultId;
 }
 
 
@@ -484,7 +500,7 @@ Bus::recvStatusChange(Port::Status status, int id)
     if (id == defaultId) {
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.
-        if (responderSet) {
+        if (useDefaultRange) {
             defaultPort->getPeerAddressRanges(ranges, snoops);
             assert(snoops == false);
             for(iter = ranges.begin(); iter != ranges.end(); iter++) {

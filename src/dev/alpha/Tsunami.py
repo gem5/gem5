@@ -96,8 +96,7 @@ class Tsunami(Platform):
         self.cchip.pio = bus.port
         self.pchip.pio = bus.port
         self.pciconfig.pio = bus.default
-        bus.responder_set = True
-        bus.responder = self.pciconfig
+        bus.use_default_range = True
         self.fake_sm_chip.pio = bus.port
         self.fake_uart1.pio = bus.port
         self.fake_uart2.pio = bus.port

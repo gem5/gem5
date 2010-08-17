@@ -305,8 +305,11 @@ class Bus : public MemObject
     BusPort *funcPort;
     int funcPortId;
 
-    /** Has the user specified their own default responder? */
-    bool responderSet;
+    /** If true, use address range provided by default device.  Any
+       address not handled by another port and not in default device's
+       range will cause a fatal error.  If false, just send all
+       addresses not handled by another port to default device. */
+    bool useDefaultRange;
 
     unsigned defaultBlockSize;
     unsigned cachedBlockSize;
@@ -371,25 +374,7 @@ class Bus : public MemObject
 
     unsigned int drain(Event *de);
 
-    Bus(const BusParams *p)
-        : MemObject(p), busId(p->bus_id), clock(p->clock),
-          headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
-          drainEvent(NULL), busIdle(this), inRetry(false), maxId(0),
-          defaultPort(NULL), funcPort(NULL), funcPortId(-4),
-          responderSet(p->responder_set), defaultBlockSize(p->block_size),
-          cachedBlockSize(0), cachedBlockSizeValid(false)
-    {
-        //width, clock period, and header cycles must be positive
-        if (width <= 0)
-            fatal("Bus width must be positive\n");
-        if (clock <= 0)
-            fatal("Bus clock period must be positive\n");
-        if (headerCycles <= 0)
-            fatal("Number of header cycles must be positive\n");
-        clearBusCache();
-        clearPortCache();
-    }
-
+    Bus(const BusParams *p);
 };
 
 #endif //__MEM_BUS_HH__
