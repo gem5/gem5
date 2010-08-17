@@ -761,13 +761,16 @@ class SimObject(object):
     # children.
     def getCCObject(self):
         if not self._ccObject:
-            # Cycles in the configuration heirarchy are not supported. This
+            # Make sure this object is in the configuration hierarchy
+            if not self._parent and not isRoot(self):
+                raise RuntimeError, "Attempt to instantiate orphan node"
+            # Cycles in the configuration hierarchy are not supported. This
             # will catch the resulting recursion and stop.
             self._ccObject = -1
             params = self.getCCParams()
             self._ccObject = params.create()
         elif self._ccObject == -1:
-            raise RuntimeError, "%s: Cycle found in configuration heirarchy." \
+            raise RuntimeError, "%s: Cycle found in configuration hierarchy." \
                   % self.path()
         return self._ccObject
 
@@ -889,6 +892,10 @@ def isSimObjectSequence(value):
 
 def isSimObjectOrSequence(value):
     return isSimObject(value) or isSimObjectSequence(value)
+
+def isRoot(obj):
+    from m5.objects import Root
+    return obj and obj is Root.getInstance()
 
 baseClasses = allClasses.copy()
 baseInstances = instanceDict.copy()

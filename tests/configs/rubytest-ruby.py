@@ -70,7 +70,7 @@ execfile(os.path.join(config_root, "configs/common", "Options.py"))
 #
 tester = RubyTester(checks_to_complete = 100, wakeup_frequency = 10)
 
-system = System(physmem = PhysicalMemory())
+system = System(tester = tester, physmem = PhysicalMemory())
 
 system.ruby = Ruby.create_system(options, system.physmem)
 

@@ -1049,8 +1049,14 @@ class PortRef(object):
         peer = self.peer
         if not self.peer: # nothing to connect to
             return
-        connectPorts(self.simobj.getCCObject(), self.name, self.index,
-                     peer.simobj.getCCObject(), peer.name, peer.index)
+        try:
+            connectPorts(self.simobj.getCCObject(), self.name, self.index,
+                         peer.simobj.getCCObject(), peer.name, peer.index)
+        except:
+            print "Error connecting port %s.%s to %s.%s" % \
+                  (self.simobj.path(), self.name,
+                   peer.simobj.path(), peer.name)
+            raise
         self.ccConnected = True
         peer.ccConnected = True
 
