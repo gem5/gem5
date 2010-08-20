@@ -150,7 +150,7 @@ np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system.physmem)
+system.ruby = Ruby.create_system(options, system)
 
 assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
 

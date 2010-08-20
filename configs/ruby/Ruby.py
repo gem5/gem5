@@ -52,13 +52,13 @@ def define_options(parser):
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)
 
-def create_system(options, physmem, piobus = None, dma_devices = []):
+def create_system(options, system, piobus = None, dma_devices = []):
 
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, all_cntrls) = \
-          eval("%s.create_system(options, physmem, piobus, dma_devices)" \
+          eval("%s.create_system(options, system, piobus, dma_devices)" \
                % protocol)
     except:
         print "Error: could not create sytem for ruby protocol %s" % protocol
@@ -91,7 +91,8 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
     total_mem_size = MemorySize('0B')
     for dir_cntrl in dir_cntrls:
         total_mem_size.value += dir_cntrl.directory.size.value
-    physmem_size = long(physmem.range.second) - long(physmem.range.first) + 1
+    physmem_size = long(system.physmem.range.second) - \
+                     long(system.physmem.range.first) + 1
     assert(total_mem_size.value == physmem_size)
 
     ruby_profiler = RubyProfiler(num_of_sequencers = len(cpu_sequencers))

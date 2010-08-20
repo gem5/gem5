@@ -113,7 +113,7 @@ CPUClass.clock = options.clock
 system = makeLinuxAlphaRubySystem(test_mem_mode, bm[0])
 
 system.ruby = Ruby.create_system(options,
-                                 system.physmem,
+                                 system,
                                  system.piobus,
                                  system.dma_devices)
 

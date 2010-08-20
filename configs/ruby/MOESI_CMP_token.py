@@ -52,7 +52,7 @@ def define_options(parser):
     parser.add_option("--disable-dyn-timeouts", action="store_true",
           help="Token_CMP: disable dyanimc timeouts, use fixed latency instead")
 
-def create_system(options, phys_mem, piobus, dma_devices):
+def create_system(options, system, piobus, dma_devices):
     
     if buildEnv['PROTOCOL'] != 'MOESI_CMP_token':
         panic("This script requires the MOESI_CMP_token protocol to be built.")
@@ -92,8 +92,8 @@ def create_system(options, phys_mem, piobus, dma_devices):
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
                                 dcache = l1d_cache,
-                                physMemPort = phys_mem.port,
-                                physmem = phys_mem)
+                                physMemPort = system.physmem.port,
+                                physmem = system.physmem)
 
         if piobus != None:
             cpu_seq.pio_port = piobus.port
@@ -103,14 +103,17 @@ def create_system(options, phys_mem, piobus, dma_devices):
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
                                       l2_select_num_bits = \
-                                        math.log(options.num_l2caches, 2),
+                                        math.log(options.num_l2caches,
+                                                 2),
                                       N_tokens = n_tokens,
-                                      retry_threshold = options.l1_retries,
+                                      retry_threshold = \
+                                        options.l1_retries,
                                       fixed_timeout_latency = \
                                         options.timeout_latency,
                                       dynamic_timeout_enabled = \
                                         not options.disable_dyn_timeouts)
 
+        exec("system.l1_cntrl%d = l1_cntrl" % i)
         #
         # Add controllers and sequencers to the appropriate lists
         #
@@ -128,9 +131,11 @@ def create_system(options, phys_mem, piobus, dma_devices):
                                       L2cacheMemory = l2_cache,
                                       N_tokens = n_tokens)
         
+        exec("system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
         
-    phys_mem_size = long(phys_mem.range.second) - long(phys_mem.range.first) + 1
+    phys_mem_size = long(system.physmem.range.second) - \
+                      long(system.physmem.range.first) + 1
     mem_module_size = phys_mem_size / options.num_dirs
 
     for i in xrange(options.num_dirs):
@@ -146,11 +151,14 @@ def create_system(options, phys_mem, piobus, dma_devices):
         dir_cntrl = Directory_Controller(version = i,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
-                                                             size = dir_size),
+                                                             size = \
+                                                               dir_size),
                                          memBuffer = mem_cntrl,
                                          l2_select_num_bits = \
-                                           math.log(options.num_l2caches, 2))
+                                           math.log(options.num_l2caches,
+                                                    2))
 
+        exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
     for i, dma_device in enumerate(dma_devices):
@@ -158,12 +166,13 @@ def create_system(options, phys_mem, piobus, dma_devices):
         # Create the Ruby objects associated with the dma controller
         #
         dma_seq = DMASequencer(version = i,
-                               physMemPort = phys_mem.port,
-                               physmem = phys_mem)
+                               physMemPort = system.physmem.port,
+                               physmem = system.physmem)
         
         dma_cntrl = DMA_Controller(version = i,
                                    dma_sequencer = dma_seq)
 
+        exec("system.dma_cntrl%d = dma_cntrl" % i)
         dma_cntrl.dma_sequencer.port = dma_device.dma
         dma_cntrl_nodes.append(dma_cntrl)
 

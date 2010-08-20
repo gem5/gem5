@@ -111,7 +111,7 @@ system = System(cpu = cpus,
                 funcmem = PhysicalMemory(),
                 physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system.physmem)
+system.ruby = Ruby.create_system(options, system)
 
 assert(len(cpus) == len(system.ruby.cpu_ruby_ports))
 

@@ -92,7 +92,7 @@ tester = RubyTester(checks_to_complete = options.checks,
 #
 system = System(physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system.physmem)
+system.ruby = Ruby.create_system(options, system)
 
 assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
 
