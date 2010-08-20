@@ -317,14 +317,16 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
 bool
 RubyPort::M5Port::sendTiming(PacketPtr pkt)
 {
-    schedSendTiming(pkt, curTick + 1); //minimum latency, must be > 0
+    //minimum latency, must be > 0
+    schedSendTiming(pkt, curTick + (1 * g_eventQueue_ptr->getClock()));
     return true;
 }
 
 bool
 RubyPort::PioPort::sendTiming(PacketPtr pkt)
 {
-    schedSendTiming(pkt, curTick + 1); //minimum latency, must be > 0
+    //minimum latency, must be > 0
+    schedSendTiming(pkt, curTick + (1 * g_eventQueue_ptr->getClock()));
     return true;
 }
 
