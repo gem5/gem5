@@ -148,6 +148,23 @@ RubySystem::printStats(ostream& out)
 }
 
 void
+RubySystem::serialize(std::ostream &os)
+{
+
+}
+
+void
+RubySystem::unserialize(Checkpoint *cp, const string &section)
+{
+    //
+    // The main purpose for clearing stats in the unserialize process is so
+    // that the profiler can correctly set its start time to the unserialized
+    // value of curTick
+    //
+    clearStats();
+}
+
+void
 RubySystem::clearStats() const
 {
     m_profiler_ptr->clearStats();

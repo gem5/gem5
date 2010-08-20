@@ -125,6 +125,9 @@ class RubySystem : public SimObject
 
     void print(std::ostream& out) const;
 
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
   private:
     // Private copy constructor and assignment operator
     RubySystem(const RubySystem& obj);
