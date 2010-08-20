@@ -44,7 +44,8 @@ class L2Cache(RubyCache):
     latency = 10
 
 def define_options(parser):
-    return
+    parser.add_option("--allow-atomic-migration", action="store_true",
+          help="allow migratory sharing for atomic only accessed blocks")
 
 def create_system(options, system, piobus, dma_devices):
     
@@ -91,7 +92,9 @@ def create_system(options, system, piobus, dma_devices):
                                       sequencer = cpu_seq,
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
-                                      L2cacheMemory = l2_cache)
+                                      L2cacheMemory = l2_cache,
+                                      no_mig_atomic = not \
+                                        options.allow_atomic_migration)
 
         exec("system.l1_cntrl%d = l1_cntrl" % i)
         #

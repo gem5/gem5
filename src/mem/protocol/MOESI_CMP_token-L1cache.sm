@@ -42,7 +42,8 @@ machine(L1Cache, "Token protocol")
    int l1_response_latency = 2,
    int retry_threshold = 1,
    int fixed_timeout_latency = 100,
-   bool dynamic_timeout_enabled = true
+   bool dynamic_timeout_enabled = true,
+   bool no_mig_atomic = true
 {
 
   // From this node's L1 cache TO the network
@@ -92,6 +93,7 @@ machine(L1Cache, "Token protocol")
     Load,            desc="Load request from the processor";
     Ifetch,          desc="I-fetch request from the processor";
     Store,           desc="Store request from the processor";
+    Atomic,          desc="Atomic request from the processor";
     L1_Replacement,  desc="L1 Replacement";
 
     // Responses
@@ -120,7 +122,7 @@ machine(L1Cache, "Token protocol")
     Use_TimeoutStarverX,             desc="Timeout";
     Use_TimeoutStarverS,             desc="Timeout";
     Use_TimeoutNoStarvers,             desc="Timeout";
-
+    Use_TimeoutNoStarvers_NoMig,     desc="Timeout Don't Migrate";
   }
 
   // TYPES
@@ -143,6 +145,7 @@ machine(L1Cache, "Token protocol")
 
     bool WentPersistent, default="false",  desc="Request went persistent";
     bool ExternalResponse, default="false", desc="Response came from an external controller";
+    bool IsAtomic, default="false",       desc="Request was an atomic request";
 
     AccessType AccessType,                desc="Type of request (used for profiling)";
     Time IssueTime,                       desc="Time the request was issued";
@@ -361,8 +364,14 @@ machine(L1Cache, "Token protocol")
       return Event:Load;
     } else if (type == CacheRequestType:IFETCH) {
       return Event:Ifetch;
-    } else if ((type == CacheRequestType:ST) || (type == CacheRequestType:ATOMIC)) {
+    } else if (type == CacheRequestType:ST) {
       return Event:Store;
+    } else if (type == CacheRequestType:ATOMIC) {
+      if (no_mig_atomic) {
+        return Event:Atomic;
+      } else {
+        return Event:Store;
+      }
     } else {
       error("Invalid CacheRequestType");
     }
@@ -422,13 +431,16 @@ machine(L1Cache, "Token protocol")
       if (persistentTable.isLocked(useTimerTable.readyAddress()) && (persistentTable.findSmallest(useTimerTable.readyAddress()) != machineID)) {
         if (persistentTable.typeOfSmallest(useTimerTable.readyAddress()) == AccessType:Write) {
           trigger(Event:Use_TimeoutStarverX, useTimerTable.readyAddress());
-        }
-        else {
+        } else {
           trigger(Event:Use_TimeoutStarverS, useTimerTable.readyAddress());
         }
-      }
-      else {
-        trigger(Event:Use_TimeoutNoStarvers, useTimerTable.readyAddress());
+      } else {
+        assert(L1_TBEs.isPresent(useTimerTable.readyAddress()));
+        if (no_mig_atomic && L1_TBEs[useTimerTable.readyAddress()].IsAtomic) {
+          trigger(Event:Use_TimeoutNoStarvers_NoMig, useTimerTable.readyAddress());
+        } else {
+          trigger(Event:Use_TimeoutNoStarvers, useTimerTable.readyAddress());
+        }
       }
     }
   }
@@ -1245,6 +1257,9 @@ machine(L1Cache, "Token protocol")
     peek(mandatoryQueue_in, CacheMsg) {
       L1_TBEs[address].PC := in_msg.ProgramCounter;
       L1_TBEs[address].AccessType := cache_request_type_to_access_type(in_msg.Type);
+      if (in_msg.Type == CacheRequestType:ATOMIC) {
+        L1_TBEs[address].IsAtomic := true;
+      }
       L1_TBEs[address].Prefetch := in_msg.Prefetch;
       L1_TBEs[address].AccessMode := in_msg.AccessMode;
     }
@@ -1444,7 +1459,7 @@ machine(L1Cache, "Token protocol")
     zz_recycleMandatoryQueue;
   }
 
-  transition({IM, SM, OM, IS, IM_L, IS_L, SM_L}, Store) {
+  transition({IM, SM, OM, IS, IM_L, IS_L, SM_L}, {Store, Atomic}) {
     zz_recycleMandatoryQueue;
   }
 
@@ -1475,7 +1490,7 @@ machine(L1Cache, "Token protocol")
     k_popMandatoryQueue;
   }
 
-  transition(NP, Store, IM) {
+  transition(NP, {Store, Atomic}, IM) {
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     b_issueWriteRequest;
@@ -1511,7 +1526,7 @@ machine(L1Cache, "Token protocol")
     k_popMandatoryQueue;
   }
 
-  transition(I, Store, IM) {
+  transition(I, {Store, Atomic}, IM) {
     i_allocateTBE;
     b_issueWriteRequest;
     uu_profileMiss;
@@ -1570,7 +1585,7 @@ machine(L1Cache, "Token protocol")
     k_popMandatoryQueue;
   }
 
-  transition(S, Store, SM) {
+  transition(S, {Store, Atomic}, SM) {
     i_allocateTBE;
     b_issueWriteRequest;
     uu_profileMiss;
@@ -1646,7 +1661,7 @@ machine(L1Cache, "Token protocol")
     k_popMandatoryQueue;
   }
 
-  transition(O, Store, OM) {
+  transition(O, {Store, Atomic}, OM) {
     i_allocateTBE;
     b_issueWriteRequest;
     uu_profileMiss;
@@ -1723,7 +1738,17 @@ machine(L1Cache, "Token protocol")
     k_popMandatoryQueue;
   }
 
-  transition({MM, MM_W}, Store) {
+  transition({MM_W}, {Store, Atomic}) {
+    hh_store_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(MM, Store) {
+    hh_store_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(MM, Atomic, M) {
     hh_store_hit;
     k_popMandatoryQueue;
   }
@@ -1755,8 +1780,12 @@ machine(L1Cache, "Token protocol")
     l_popPersistentQueue;
   }
 
-
   transition(MM_W, Use_TimeoutNoStarvers, MM) {
+    s_deallocateTBE;
+    jj_unsetUseTimer;
+  }
+
+  transition(MM_W, Use_TimeoutNoStarvers_NoMig, M) {
     s_deallocateTBE;
     jj_unsetUseTimer;
   }
@@ -1772,7 +1801,17 @@ machine(L1Cache, "Token protocol")
     k_popMandatoryQueue;
   }
 
+  transition(M, Atomic) {
+    hh_store_hit;
+    k_popMandatoryQueue;
+  }
+
   transition(M_W, Store, MM_W) {
+    hh_store_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M_W, Atomic) {
     hh_store_hit;
     k_popMandatoryQueue;
   }
@@ -1825,7 +1864,7 @@ machine(L1Cache, "Token protocol")
   }
 
   // someone unlocked during timeout
-  transition(M_W, Use_TimeoutNoStarvers, M) {
+  transition(M_W, {Use_TimeoutNoStarvers, Use_TimeoutNoStarvers_NoMig}, M) {
     s_deallocateTBE;
     jj_unsetUseTimer;
   }
@@ -2065,7 +2104,7 @@ machine(L1Cache, "Token protocol")
     k_popMandatoryQueue;
   }
 
-  transition(I_L, Store, IM_L) {
+  transition(I_L, {Store, Atomic}, IM_L) {
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     b_issueWriteRequest;
@@ -2076,7 +2115,7 @@ machine(L1Cache, "Token protocol")
 
   // Transitions from S_L
 
-  transition(S_L, Store, SM_L) {
+  transition(S_L, {Store, Atomic}, SM_L) {
     i_allocateTBE;
     b_issueWriteRequest;
     uu_profileMiss;

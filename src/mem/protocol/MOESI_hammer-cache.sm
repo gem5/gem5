@@ -40,7 +40,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
   CacheMemory * L2cacheMemory,
   int cache_response_latency = 10,
   int issue_latency = 2,
-  int l2_cache_hit_latency = 10
+  int l2_cache_hit_latency = 10,
+  bool no_mig_atomic = true
 {
 
   // NETWORK BUFFERS
@@ -94,6 +95,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     // Requests
     Other_GETX,      desc="A GetX from another processor";
     Other_GETS,      desc="A GetS from another processor";
+    Other_GETS_No_Mig, desc="A GetS from another processor";
 
     // Responses
     Ack,             desc="Received an ack message";
@@ -122,6 +124,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     bool Dirty,              desc="Is the data dirty (different than memory)?";
     DataBlock DataBlk,       desc="data for the block";
     bool FromL2, default="false", desc="block just moved from L2";
+    bool AtomicAccessed, default="false", desc="block just moved from L2";
   }
 
   // TBE fields
@@ -280,7 +283,15 @@ machine(L1Cache, "AMD Hammer-like protocol")
         if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:Other_GETX, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:Other_GETS, in_msg.Address);
+          if (isCacheTagPresent(in_msg.Address)) {
+            if (getCacheEntry(in_msg.Address).AtomicAccessed && no_mig_atomic) {
+              trigger(Event:Other_GETS_No_Mig, in_msg.Address);
+            } else {
+              trigger(Event:Other_GETS, in_msg.Address);
+            }
+          } else {
+            trigger(Event:Other_GETS, in_msg.Address);
+          }
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
           trigger(Event:Writeback_Ack, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
@@ -538,12 +549,16 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    peek(mandatoryQueue_in, CacheMsg) {
+      sequencer.writeCallback(address, 
+                              testAndClearLocalHit(address), 
+                              getCacheEntry(address).DataBlk);
 
-    sequencer.writeCallback(address, 
-                            testAndClearLocalHit(address), 
-                            getCacheEntry(address).DataBlk);
-
-    getCacheEntry(address).Dirty := true;
+      getCacheEntry(address).Dirty := true;
+      if (in_msg.Type == CacheRequestType:ATOMIC) {
+        getCacheEntry(address).AtomicAccessed := true;
+      }
+    }
   }
 
   action(sx_external_store_hit, "sx", desc="store required external msgs.") {
@@ -798,7 +813,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     zz_recycleMandatoryQueue;
   }
 
-  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS}) {
+  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
     // stall
   }
 
@@ -948,7 +963,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     rr_deallocateL2CacheBlock;
   }
 
-  transition(I, {Other_GETX, Other_GETS}) {
+  transition(I, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -975,7 +990,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(S, Other_GETS) {
+  transition(S, {Other_GETS, Other_GETS_No_Mig}) {
     ff_sendAckShared;
     l_popForwardQueue;
   }
@@ -1005,7 +1020,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(O, Other_GETS) {
+  transition(O, {Other_GETS, Other_GETS_No_Mig}) {
     ee_sendDataShared;
     l_popForwardQueue;
   }
@@ -1037,6 +1052,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
   
+  transition(MM, Other_GETS_No_Mig, O) {
+    ee_sendDataShared;
+    l_popForwardQueue;
+  }
+  
   // Transitions from Dirty Exclusive
   transition(M, {Load, Ifetch}) {
     h_load_hit;
@@ -1059,14 +1079,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(M, Other_GETS, O) {
+  transition(M, {Other_GETS, Other_GETS_No_Mig}, O) {
     ee_sendDataShared;
     l_popForwardQueue;
   }
 
   // Transitions from IM
 
-  transition(IM, {Other_GETX, Other_GETS}) {
+  transition(IM, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1093,7 +1113,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   // Transitions from SM
-  transition(SM, Other_GETS) {
+  transition(SM, {Other_GETS, Other_GETS_No_Mig}) {
     ff_sendAckShared;
     l_popForwardQueue;
   }
@@ -1138,7 +1158,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(OM, Other_GETS) {
+  transition(OM, {Other_GETS, Other_GETS_No_Mig}) {
     ee_sendDataShared;
     l_popForwardQueue;
   }
@@ -1158,7 +1178,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   // Transitions from IS
 
-  transition(IS, {Other_GETX, Other_GETS}) {
+  transition(IS, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1274,7 +1294,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition({OI, MI}, Other_GETS, OI) {
+  transition({OI, MI}, {Other_GETS, Other_GETS_No_Mig}, OI) {
     q_sendDataFromTBEToCache;
     l_popForwardQueue;
   }
@@ -1292,7 +1312,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   // Transitions from II
-  transition(II, {Other_GETS, Other_GETX}, II) {
+  transition(II, {Other_GETS, Other_GETS_No_Mig, Other_GETX}, II) {
     f_sendAck;
     l_popForwardQueue;
   }

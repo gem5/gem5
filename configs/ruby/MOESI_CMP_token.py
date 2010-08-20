@@ -51,7 +51,9 @@ def define_options(parser):
                       help="Token_CMP: cycles until issuing again");
     parser.add_option("--disable-dyn-timeouts", action="store_true",
           help="Token_CMP: disable dyanimc timeouts, use fixed latency instead")
-
+    parser.add_option("--allow-atomic-migration", action="store_true",
+          help="allow migratory sharing for atomic only accessed blocks")
+    
 def create_system(options, system, piobus, dma_devices):
     
     if buildEnv['PROTOCOL'] != 'MOESI_CMP_token':
@@ -111,7 +113,9 @@ def create_system(options, system, piobus, dma_devices):
                                       fixed_timeout_latency = \
                                         options.timeout_latency,
                                       dynamic_timeout_enabled = \
-                                        not options.disable_dyn_timeouts)
+                                        not options.disable_dyn_timeouts,
+                                      no_mig_atomic = not \
+                                        options.allow_atomic_migration)
 
         exec("system.l1_cntrl%d = l1_cntrl" % i)
         #
