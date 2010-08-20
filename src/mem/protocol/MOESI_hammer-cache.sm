@@ -95,6 +95,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     // Requests
     Other_GETX,      desc="A GetX from another processor";
     Other_GETS,      desc="A GetS from another processor";
+    Merged_GETS,     desc="A Merged GetS from another processor";
     Other_GETS_No_Mig, desc="A GetS from another processor";
     Invalidate,      desc="Invalidate block";
 
@@ -136,6 +137,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
     bool Sharers,            desc="On a GetS, did we find any other sharers in the system";
     MachineID LastResponder, desc="last machine to send a response for this request";
+    MachineID CurOwner,      desc="current owner of the block, used for UnblockS responses";
     Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
     Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
     Time FirstResponseTime, default="0", desc="the time the first response was received";
@@ -286,6 +288,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
       peek(forwardToCache_in, RequestMsg, block_on="Address") {
         if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:Other_GETX, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:MERGED_GETS) {
+          trigger(Event:Merged_GETS, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           if (isCacheTagPresent(in_msg.Address)) {
             if (getCacheEntry(in_msg.Address).AtomicAccessed && no_mig_atomic) {
@@ -518,6 +522,24 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
   
+  action(em_sendDataSharedMultiple, "em", desc="Send data from cache to all requestors") {
+    peek(forwardToCache_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA_SHARED;
+        out_msg.Sender := machineID;
+        out_msg.Destination := in_msg.MergedRequestors;
+        out_msg.DataBlk := getCacheEntry(address).DataBlk;
+        DEBUG_EXPR(out_msg.DataBlk);
+        out_msg.Dirty := getCacheEntry(address).Dirty;
+        out_msg.Acks := machineCount(MachineType:L1Cache);
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
+      }
+    }
+  }
+  
   action(f_sendAck, "f", desc="Send ack from cache to requestor") {
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
@@ -575,6 +597,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCKS;
       out_msg.Sender := machineID;
+      out_msg.CurOwner := TBEs[address].CurOwner;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
@@ -690,6 +713,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
       }
     }
   }
+  action(uo_updateCurrentOwner, "uo", desc="When moving SS state, update current owner.") {
+    peek(responseToCache_in, ResponseMsg) {
+      TBEs[address].CurOwner := in_msg.Sender;
+    }
+  }
 
   action(n_popResponseQueue, "n", desc="Pop response queue") {
     responseToCache_in.dequeue();
@@ -738,6 +766,24 @@ machine(L1Cache, "AMD Hammer-like protocol")
         } else {
           out_msg.Acks := 2;
         }
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
+      }
+    }
+  }
+
+  action(qm_sendDataFromTBEToCache, "qm", desc="Send data from TBE to cache, multiple sharers") {
+    peek(forwardToCache_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.Sender := machineID;
+        out_msg.Destination := in_msg.MergedRequestors;
+        DEBUG_EXPR(out_msg.Destination);
+        out_msg.DataBlk := TBEs[address].DataBlk;
+        out_msg.Dirty := TBEs[address].Dirty;
+        out_msg.Acks := machineCount(MachineType:L1Cache);
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
@@ -899,7 +945,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     zz_recycleMandatoryQueue;
   }
 
-  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
+  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS, Merged_GETS, Other_GETS_No_Mig, Invalidate}) {
     // stall
   }
 
@@ -1111,6 +1157,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
+  transition(O, Merged_GETS) {
+    em_sendDataSharedMultiple;
+    l_popForwardQueue;
+  }
+
   // Transitions from Modified
   transition(MM, {Load, Ifetch}) {
     h_load_hit;
@@ -1143,6 +1194,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
   
+  transition(MM, Merged_GETS, O) {
+    em_sendDataSharedMultiple;
+    l_popForwardQueue;
+  }
+ 
   // Transitions from Dirty Exclusive
   transition(M, {Load, Ifetch}) {
     h_load_hit;
@@ -1167,6 +1223,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   transition(M, {Other_GETS, Other_GETS_No_Mig}, O) {
     ee_sendDataShared;
+    l_popForwardQueue;
+  }
+
+  transition(M, Merged_GETS, O) {
+    em_sendDataSharedMultiple;
     l_popForwardQueue;
   }
 
@@ -1249,6 +1310,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
+  transition(OM, Merged_GETS) {
+    em_sendDataSharedMultiple;
+    l_popForwardQueue;
+  }
+
   transition(OM, Ack) {
     m_decrementNumberOfMessages;
     o_checkForCompletion;
@@ -1287,6 +1353,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     m_decrementNumberOfMessages;
     o_checkForCompletion;
     hx_external_load_hit;
+    uo_updateCurrentOwner;
     n_popResponseQueue;
   }
 
@@ -1304,6 +1371,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     m_decrementNumberOfMessages;
     o_checkForCompletion;
     hx_external_load_hit;
+    uo_updateCurrentOwner;
     n_popResponseQueue;
   }
 
@@ -1382,6 +1450,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   transition({OI, MI}, {Other_GETS, Other_GETS_No_Mig}, OI) {
     q_sendDataFromTBEToCache;
+    l_popForwardQueue;
+  }
+
+  transition({OI, MI}, Merged_GETS, OI) {
+    qm_sendDataFromTBEToCache;
     l_popForwardQueue;
   }
 

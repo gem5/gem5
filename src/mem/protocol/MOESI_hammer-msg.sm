@@ -33,6 +33,7 @@
 enumeration(CoherenceRequestType, desc="...") {
   GETX,      desc="Get eXclusive";
   GETS,      desc="Get Shared";
+  MERGED_GETS, desc="Get Shared";
   PUT,       desc="Put Ownership";
   WB_ACK,    desc="Writeback ack";
   WB_NACK,   desc="Writeback neg. ack";
@@ -62,6 +63,7 @@ enumeration(TriggerType, desc="...") {
   ALL_ACKS,            desc="See corresponding event";
   ALL_ACKS_OWNER_EXISTS,desc="See corresponding event";
   ALL_ACKS_NO_SHARERS, desc="See corresponding event";
+  ALL_UNBLOCKS,        desc="all unblockS received";
 }
 
 // TriggerMsg
@@ -75,6 +77,7 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   Address Address,             desc="Physical address for this request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
+  NetDest MergedRequestors,    desc="Merge set of read requestors";
   NetDest Destination,             desc="Multicast destination mask";
   MessageSizeType MessageSize, desc="size category of the message";
   bool DirectedProbe, default="false", desc="probe filter directed probe";
@@ -87,6 +90,7 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   Address Address,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
   MachineID Sender,               desc="Node who sent the data";
+  MachineID CurOwner,      desc="current owner of the block, used for UnblockS responses";
   NetDest Destination,             desc="Node to whom the data is sent";
   DataBlock DataBlk,           desc="data for the cache line";
   bool Dirty,                  desc="Is the data dirty (different than memory)?";

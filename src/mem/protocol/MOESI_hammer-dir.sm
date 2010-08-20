@@ -69,6 +69,9 @@ machine(Directory, "AMD Hammer-like protocol")
     NO_R,           desc="Was Not Owner or Sharer, replacing probe filter entry";
 
     NO_B,  "NO^B",  desc="Not Owner, Blocked";
+    NO_B_X,  "NO^B",  desc="Not Owner, Blocked, next queued request GETX";
+    NO_B_S,  "NO^B",  desc="Not Owner, Blocked, next queued request GETS";
+    NO_B_S_W,  "NO^B",  desc="Not Owner, Blocked, forwarded merged GETS, waiting for responses";
     O_B,   "O^B",   desc="Owner, Blocked";
     NO_B_W,         desc="Not Owner, Blocked, waiting for Dram";
     O_B_W,          desc="Owner, Blocked, waiting for Dram";
@@ -121,6 +124,7 @@ machine(Directory, "AMD Hammer-like protocol")
     All_acks_and_shared_data,     desc="Received shared data and message acks";
     All_acks_and_owner_data,     desc="Received shared data and message acks";
     All_acks_and_data_no_sharers, desc="Received all acks and no other processor has a shared copy";
+    All_Unblocks, desc="Received all unblocks for a merged gets request";
   }
 
   // TYPES
@@ -148,6 +152,7 @@ machine(Directory, "AMD Hammer-like protocol")
     DataBlock DataBlk,     desc="The current view of system memory";
     int Len,               desc="...";
     MachineID DmaRequestor, desc="DMA requestor";
+    NetDest GetSRequestors, desc="GETS merged requestors";
     int NumPendingMsgs,    desc="Number of pending acks/messages";
     bool CacheDirty, default="false", desc="Indicates whether a cache has responded with dirty data";
     bool Sharers, default="false", desc="Indicates whether a cache has indicated it is currently a sharer";
@@ -243,6 +248,8 @@ machine(Directory, "AMD Hammer-like protocol")
           trigger(Event:All_acks_and_shared_data, in_msg.Address);
         } else if (in_msg.Type == TriggerType:ALL_ACKS_NO_SHARERS) {
           trigger(Event:All_acks_and_data_no_sharers, in_msg.Address);
+        } else if (in_msg.Type == TriggerType:ALL_UNBLOCKS) {
+          trigger(Event:All_Unblocks, in_msg.Address);
         } else {
           error("Unexpected message");
         }
@@ -487,6 +494,20 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
+  action(mu_decrementNumberOfUnblocks, "mu", desc="Decrement the number of messages for which we're waiting") {
+    peek(unblockNetwork_in, ResponseMsg) {
+      assert(in_msg.Type == CoherenceResponseType:UNBLOCKS);
+      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      //
+      // Note that cache data responses will have an ack count of 2.  However, 
+      // directory DMA requests must wait for acks from all LLC caches, so 
+      // only decrement by 1.
+      //
+      TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - 1;
+      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+    }
+  }
+
   action(n_popResponseQueue, "n", desc="Pop response queue") {
     responseToDir_in.dequeue();
   }
@@ -506,6 +527,19 @@ machine(Directory, "AMD Hammer-like protocol")
         }
       }
     }
+  }
+
+  action(os_checkForMergedGetSCompletion, "os", desc="Check for merged GETS completion") {
+    if (TBEs[address].NumPendingMsgs == 0) {
+      enqueue(triggerQueue_out, TriggerMsg) {
+        out_msg.Address := address;
+        out_msg.Type := TriggerType:ALL_UNBLOCKS;
+      }
+    }
+  }
+
+  action(sp_setPendingMsgsToMergedSharers, "sp", desc="Set pending messages to waiting sharers") {
+    TBEs[address].NumPendingMsgs := TBEs[address].GetSRequestors.count();
   }
 
   action(spa_setPendingAcksToZeroIfPF, "spa", desc="if probe filter, no need to wait for acks") {
@@ -595,6 +629,12 @@ machine(Directory, "AMD Hammer-like protocol")
   action(r_recordDataInTBE, "rt", desc="Record Data in TBE") {
     peek(requestQueue_in, RequestMsg) {
       TBEs[address].ResponseType := CoherenceResponseType:DATA;
+    }
+  }
+
+  action(rs_recordGetSRequestor, "rs", desc="Record GETS requestor in TBE") {
+    peek(requestQueue_in, RequestMsg) {
+      TBEs[address].GetSRequestors.add(in_msg.Requestor);
     }
   }
 
@@ -691,6 +731,29 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.ForwardRequestTime := get_time();
         }
       }
+    }
+  }
+
+  action(fr_forwardMergeReadRequestsToOwner, "frr", desc="Forward coalesced read request to owner") {
+    assert(machineCount(MachineType:L1Cache) > 1);
+    //
+    // Fixme! The unblock network should not stall on the forward network.  Add a trigger queue to
+    // decouple the two.
+    //
+    peek(unblockNetwork_in, ResponseMsg) {
+      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:MERGED_GETS;
+        out_msg.MergedRequestors := TBEs[address].GetSRequestors;
+        if (in_msg.Type == CoherenceResponseType:UNBLOCKS) {
+          out_msg.Destination.add(in_msg.CurOwner);
+        } else {
+          out_msg.Destination.add(in_msg.Sender);
+        }
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.InitialRequestTime := zero_time();
+        out_msg.ForwardRequestTime := get_time();
+      }      
     }
   }
 
@@ -1058,29 +1121,79 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   // Blocked transient states
-  transition({NO_B, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
-              NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, 
+  transition({NO_B_X, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
+              NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, NO_B_S_W,
               NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R}, 
              {GETS, GETX, PUT, Pf_Replacement}) {
     z_stallAndWaitRequest;
   }
 
-  transition({NO_B, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
-              NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, 
+  transition(NO_B, GETX, NO_B_X) {
+    z_stallAndWaitRequest;
+  }
+
+  transition(NO_B, {PUT, Pf_Replacement}) {
+    z_stallAndWaitRequest;
+  }
+
+  transition(NO_B_S, {GETX, PUT, Pf_Replacement}) {
+    z_stallAndWaitRequest;
+  }
+
+  transition({NO_B, NO_B_S, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
+              NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, NO_B_S_W,
               NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R}, 
              {DMA_READ, DMA_WRITE}) {
     zd_stallAndWaitDMARequest;
   }
 
-  transition(NO_B, UnblockS, NX) {
+  // merge GETS into one response
+  transition(NO_B, GETS, NO_B_S) {
+    v_allocateTBE;
+    rs_recordGetSRequestor;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(NO_B_S, GETS) {
+    rs_recordGetSRequestor;
+    i_popIncomingRequestQueue;
+  }
+
+  // unblock responses
+  transition({NO_B, NO_B_X}, UnblockS, NX) {
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
-  transition(NO_B, UnblockM, NO) {
+  transition({NO_B, NO_B_X}, UnblockM, NO) {
     uo_updateOwnerIfPf;
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_B_S, UnblockS, NO_B_S_W) {
+    fr_forwardMergeReadRequestsToOwner;
+    sp_setPendingMsgsToMergedSharers;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_B_S, UnblockM, NO_B_S_W) {
+    uo_updateOwnerIfPf;
+    fr_forwardMergeReadRequestsToOwner;
+    sp_setPendingMsgsToMergedSharers;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_B_S_W, UnblockS) {
+    mu_decrementNumberOfUnblocks;
+    os_checkForMergedGetSCompletion;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_B_S_W, All_Unblocks, NX) {
+    w_deallocateTBE;
+    k_wakeUpDependents;
+    g_popTriggerQueue;
   }
 
   transition(O_B, UnblockS, O) {
@@ -1315,7 +1428,12 @@ machine(Directory, "AMD Hammer-like protocol")
     l_popMemQueue;
   }
 
-  transition(NO_B_W, {UnblockM, UnblockS}, NO_W) {
+  transition(NO_B_W, UnblockM, NO_W) {
+    uo_updateOwnerIfPf;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_B_W, UnblockS, NO_W) {
     j_popIncomingUnblockQueue;
   }
 
