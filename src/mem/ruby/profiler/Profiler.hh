@@ -133,9 +133,15 @@ class Profiler : public SimObject, public Consumer
 
     void controllerBusy(MachineID machID);
     void bankBusy();
-    void missLatency(Time t, RubyRequestType type);
-    void swPrefetchLatency(Time t, CacheRequestType type,
-                           GenericMachineType respondingMach);
+
+    void missLatency(Time t, 
+                     RubyRequestType type,
+                     const GenericMachineType respondingMach);
+
+    void swPrefetchLatency(Time t, 
+                           CacheRequestType type,
+                           const GenericMachineType respondingMach);
+
     void sequencerRequests(int num) { m_sequencer_requests.add(num); }
 
     void profileTransition(const std::string& component, NodeID version,

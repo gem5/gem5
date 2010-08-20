@@ -75,7 +75,16 @@ class Sequencer : public RubyPort, public Consumer
     void printProgress(std::ostream& out) const;
 
     void writeCallback(const Address& address, DataBlock& data);
+
+    void writeCallback(const Address& address, 
+                       GenericMachineType mach, 
+                       DataBlock& data);
+
     void readCallback(const Address& address, DataBlock& data);
+
+    void readCallback(const Address& address, 
+                      GenericMachineType mach, 
+                      DataBlock& data);
 
     RequestStatus makeRequest(const RubyRequest & request);
     RequestStatus getRequestStatus(const RubyRequest& request);
@@ -94,7 +103,10 @@ class Sequencer : public RubyPort, public Consumer
                         int size, DataBlock*& data_ptr);
     void issueRequest(const RubyRequest& request);
 
-    void hitCallback(SequencerRequest* request, DataBlock& data);
+    void hitCallback(SequencerRequest* request, 
+                     GenericMachineType mach,
+                     DataBlock& data);
+
     bool insertRequest(SequencerRequest* request);
 
 

@@ -100,7 +100,9 @@ external_type(NetDest, non_obj="yes") {
 
 external_type(Sequencer) {
   void readCallback(Address, DataBlock);
+  void readCallback(Address, GenericMachineType, DataBlock);
   void writeCallback(Address, DataBlock);
+  void writeCallback(Address, GenericMachineType, DataBlock);
   void checkCoherence(Address);
   void profileNack(Address, int, int, uint64);
 }

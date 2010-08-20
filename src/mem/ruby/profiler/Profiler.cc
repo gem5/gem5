@@ -574,23 +574,27 @@ Profiler::bankBusy()
 
 // non-zero cycle demand request
 void
-Profiler::missLatency(Time t, RubyRequestType type)
+Profiler::missLatency(Time cycles, 
+                      RubyRequestType type,
+                      const GenericMachineType respondingMach)
 {
-    m_allMissLatencyHistogram.add(t);
-    m_missLatencyHistograms[type].add(t);
+    m_allMissLatencyHistogram.add(cycles);
+    m_missLatencyHistograms[type].add(cycles);
+    m_machLatencyHistograms[respondingMach].add(cycles);
 }
 
 // non-zero cycle prefetch request
 void
-Profiler::swPrefetchLatency(Time t, CacheRequestType type,
-                            GenericMachineType respondingMach)
+Profiler::swPrefetchLatency(Time cycles, 
+                            CacheRequestType type,
+                            const GenericMachineType respondingMach)
 {
-    m_allSWPrefetchLatencyHistogram.add(t);
-    m_SWPrefetchLatencyHistograms[type].add(t);
-    m_SWPrefetchMachLatencyHistograms[respondingMach].add(t);
+    m_allSWPrefetchLatencyHistogram.add(cycles);
+    m_SWPrefetchLatencyHistograms[type].add(cycles);
+    m_SWPrefetchMachLatencyHistograms[respondingMach].add(cycles);
     if (respondingMach == GenericMachineType_Directory ||
         respondingMach == GenericMachineType_NUM) {
-        m_SWPrefetchL2MissLatencyHistogram.add(t);
+        m_SWPrefetchL2MissLatencyHistogram.add(cycles);
     }
 }
 

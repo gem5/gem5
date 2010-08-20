@@ -305,6 +305,14 @@ Sequencer::removeRequest(SequencerRequest* srequest)
 void
 Sequencer::writeCallback(const Address& address, DataBlock& data)
 {
+    writeCallback(address, GenericMachineType_NULL, data);
+}
+
+void
+Sequencer::writeCallback(const Address& address,
+                         GenericMachineType mach, 
+                         DataBlock& data)
+{
     assert(address == line_address(address));
     assert(m_writeRequestTable.count(line_address(address)));
 
@@ -329,11 +337,19 @@ Sequencer::writeCallback(const Address& address, DataBlock& data)
         m_controller->unblock(address);
     }
 
-    hitCallback(request, data);
+    hitCallback(request, mach, data);
 }
 
 void
 Sequencer::readCallback(const Address& address, DataBlock& data)
+{
+    readCallback(address, GenericMachineType_NULL, data);
+}
+
+void
+Sequencer::readCallback(const Address& address,
+                        GenericMachineType mach,
+                        DataBlock& data)
 {
     assert(address == line_address(address));
     assert(m_readRequestTable.count(line_address(address)));
@@ -349,11 +365,13 @@ Sequencer::readCallback(const Address& address, DataBlock& data)
            (request->ruby_request.type == RubyRequestType_RMW_Read) ||
            (request->ruby_request.type == RubyRequestType_IFETCH));
 
-    hitCallback(request, data);
+    hitCallback(request, mach, data);
 }
 
 void
-Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data)
+Sequencer::hitCallback(SequencerRequest* srequest,
+                       GenericMachineType mach,
+                       DataBlock& data)
 {
     const RubyRequest & ruby_request = srequest->ruby_request;
     Address request_address(ruby_request.paddr);
@@ -376,7 +394,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data)
 
     // Profile the miss latency for all non-zero demand misses
     if (miss_latency != 0) {
-        g_system_ptr->getProfiler()->missLatency(miss_latency, type);
+        g_system_ptr->getProfiler()->missLatency(miss_latency, type, mach);
 
         if (Debug::getProtocolTrace()) {
             g_system_ptr->getProfiler()->

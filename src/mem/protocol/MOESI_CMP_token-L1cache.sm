@@ -374,24 +374,27 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-//  GenericMachineType getNondirectHitMachType(Address addr, MachineID sender) {
-//    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
-//      return GenericMachineType:L1Cache_wCC;  // NOTE direct L1 hits should not call this
-//    } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
-//
-//      if (sender == (mapAddressToRange(addr, 
-//                                       MachineType:L2Cache,
-//                                       l2_select_low_bit,
-//                                       l2_select_num_bits))) {
-//
-//        return GenericMachineType:L2Cache;
-//      } else {
-//        return GenericMachineType:L2Cache_wCC;
-//      }
-//    } else {
-//      return ConvertMachToGenericMach(machineIDToMachineType(sender));
-//    }
-//  }
+  GenericMachineType getNondirectHitMachType(Address addr, MachineID sender) {
+    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
+      //
+      // NOTE direct local hits should not call this
+      //
+      return GenericMachineType:L1Cache_wCC;  
+    } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
+
+      if (sender == (mapAddressToRange(addr, 
+                                       MachineType:L2Cache,
+                                       l2_select_low_bit,
+                                       l2_select_num_bits))) {
+
+        return GenericMachineType:L2Cache;
+      } else {
+        return GenericMachineType:L2Cache_wCC;
+      }
+    } else {
+      return ConvertMachToGenericMach(machineIDToMachineType(sender));
+    }
+  }
 
   bool okToIssueStarving(Address addr, MachineID machinID) {
     return persistentTable.okToIssueStarving(addr, machineID);
@@ -1136,8 +1139,11 @@ machine(L1Cache, "Token protocol")
   action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
     DEBUG_EXPR(address);
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
-    //sequencer.readCallback(address, getCacheEntry(address).DataBlk, GenericMachineType:L1Cache, PrefetchBit:No);
-    sequencer.readCallback(address, getCacheEntry(address).DataBlk);
+
+    sequencer.readCallback(address, 
+                           GenericMachineType:L1Cache, 
+                           getCacheEntry(address).DataBlk);
+
   }
 
   action(x_external_load_hit, "x", desc="Notify sequencer the load completed.") {
@@ -1145,16 +1151,21 @@ machine(L1Cache, "Token protocol")
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
 
-      //sequencer.readCallback(address, getCacheEntry(address).DataBlk, getNondirectHitMachType(in_msg.Address, in_msg.Sender), PrefetchBit:No);
-      sequencer.readCallback(address, getCacheEntry(address).DataBlk);
+      sequencer.readCallback(address, 
+                             getNondirectHitMachType(address, in_msg.Sender),
+                             getCacheEntry(address).DataBlk);
+
     }
   }
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
     DEBUG_EXPR(address);
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
-    //sequencer.writeCallback(address, getCacheEntry(address).DataBlk, GenericMachineType:L1Cache, PrefetchBit:No);
-    sequencer.writeCallback(address, getCacheEntry(address).DataBlk);
+
+    sequencer.writeCallback(address, 
+                            GenericMachineType:L1Cache, 
+                            getCacheEntry(address).DataBlk);
+
     getCacheEntry(address).Dirty := true;
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
   }
@@ -1163,8 +1174,11 @@ machine(L1Cache, "Token protocol")
     DEBUG_EXPR(address);
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
-      //sequencer.writeCallback(address, getCacheEntry(address).DataBlk, getNondirectHitMachType(in_msg.Address, in_msg.Sender), PrefetchBit:No);
-      sequencer.writeCallback(address, getCacheEntry(address).DataBlk);
+
+      sequencer.writeCallback(address,
+                              getNondirectHitMachType(address, in_msg.Sender),
+                              getCacheEntry(address).DataBlk);
+
     }
     getCacheEntry(address).Dirty := true;
     DEBUG_EXPR(getCacheEntry(address).DataBlk);

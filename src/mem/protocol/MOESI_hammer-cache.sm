@@ -114,6 +114,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     State CacheState,        desc="cache state";
     bool Dirty,              desc="Is the data dirty (different than memory)?";
     DataBlock DataBlk,       desc="data for the block";
+    bool FromL2, default="false", desc="block just moved from L2";
   }
 
   // TBE fields
@@ -123,6 +124,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     bool Dirty,              desc="Is the data dirty (different than memory)?";
     int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
     bool Sharers,            desc="On a GetS, did we find any other sharers in the system";
+    MachineID LastResponder, desc="last machine to send a response for this request";
   }
 
   external_type(TBETable) {
@@ -211,6 +213,26 @@ machine(L1Cache, "AMD Hammer-like protocol")
       return Event:Store;
     } else {
       error("Invalid CacheRequestType");
+    }
+  }
+
+  GenericMachineType getNondirectHitMachType(Address addr, MachineID sender) {
+    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
+      //
+      // NOTE direct local hits should not call this
+      //
+      return GenericMachineType:L1Cache_wCC; 
+    } else {
+      return ConvertMachToGenericMach(machineIDToMachineType(sender));
+    }
+  }
+
+  GenericMachineType testAndClearLocalHit(Address addr) {
+    if (getCacheEntry(addr).FromL2) {
+      getCacheEntry(addr).FromL2 := false;
+      return GenericMachineType:L2Cache;
+    } else {
+      return GenericMachineType:L1Cache; 
     }
   }
 
@@ -487,12 +509,54 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
-    sequencer.readCallback(address, getCacheEntry(address).DataBlk);
+
+    sequencer.readCallback(address, 
+                           testAndClearLocalHit(address), 
+                           getCacheEntry(address).DataBlk);
+
+  }
+
+  action(hx_external_load_hit, "hx", desc="load required external msgs") {
+    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    peek(responseToCache_in, ResponseMsg) {
+
+      sequencer.readCallback(address, 
+                             getNondirectHitMachType(in_msg.Address, in_msg.Sender),
+                             getCacheEntry(address).DataBlk);
+
+    }
   }
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
-    sequencer.writeCallback(address, getCacheEntry(address).DataBlk);
+
+    sequencer.writeCallback(address, 
+                            testAndClearLocalHit(address), 
+                            getCacheEntry(address).DataBlk);
+
+    getCacheEntry(address).Dirty := true;
+  }
+
+  action(sx_external_store_hit, "sx", desc="store required external msgs.") {
+    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    peek(responseToCache_in, ResponseMsg) {
+
+      sequencer.writeCallback(address, 
+                              getNondirectHitMachType(address, in_msg.Sender),
+                              getCacheEntry(address).DataBlk);
+
+    }
+    getCacheEntry(address).Dirty := true;
+  }
+
+  action(sxt_trig_ext_store_hit, "sxt", desc="store required external msgs.") {
+    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+
+    sequencer.writeCallback(address, 
+                            getNondirectHitMachType(address, 
+                                                    TBEs[address].LastResponder),
+                            getCacheEntry(address).DataBlk);
+
     getCacheEntry(address).Dirty := true;
   }
 
@@ -522,6 +586,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       DEBUG_EXPR(TBEs[address].NumPendingMsgs);
       TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - in_msg.Acks;
       DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      TBEs[address].LastResponder := in_msg.Sender;
     }
   }
 
@@ -671,9 +736,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     if (L1DcacheMemory.isTagPresent(address)) {
       static_cast(Entry, L1DcacheMemory[address]).Dirty := static_cast(Entry, L2cacheMemory[address]).Dirty;
       static_cast(Entry, L1DcacheMemory[address]).DataBlk := static_cast(Entry, L2cacheMemory[address]).DataBlk;
+      static_cast(Entry, L1DcacheMemory[address]).FromL2 := true;
     } else {
       static_cast(Entry, L1IcacheMemory[address]).Dirty := static_cast(Entry, L2cacheMemory[address]).Dirty;
       static_cast(Entry, L1IcacheMemory[address]).DataBlk := static_cast(Entry, L2cacheMemory[address]).DataBlk;
+      static_cast(Entry, L1IcacheMemory[address]).FromL2 := true;
     }
   }
 
@@ -905,7 +972,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     u_writeDataToCache;
     m_decrementNumberOfMessages; 
     o_checkForCompletion;
-    hh_store_hit;
+    sx_external_store_hit;
     n_popResponseQueue;
   }
 
@@ -941,7 +1008,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition(ISM, All_acks_no_sharers, MM) {
-    hh_store_hit;
+    sxt_trig_ext_store_hit;
     g_sendUnblock;
     s_deallocateTBE;
     j_popTriggerQueue;
@@ -967,7 +1034,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition(OM, {All_acks, All_acks_no_sharers}, MM) {
-    hh_store_hit;
+    sxt_trig_ext_store_hit;
     g_sendUnblock;
     s_deallocateTBE;
     j_popTriggerQueue;
@@ -997,7 +1064,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     u_writeDataToCache;
     m_decrementNumberOfMessages;
     o_checkForCompletion;
-    h_load_hit;
+    hx_external_load_hit;
     n_popResponseQueue;
   }
 
@@ -1005,7 +1072,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     u_writeDataToCache;
     m_decrementNumberOfMessages;
     o_checkForCompletion;
-    h_load_hit;
+    hx_external_load_hit;
     n_popResponseQueue;
   }
 
@@ -1014,7 +1081,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     r_setSharerBit;
     m_decrementNumberOfMessages;
     o_checkForCompletion;
-    h_load_hit;
+    hx_external_load_hit;
     n_popResponseQueue;
   }
 
