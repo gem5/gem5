@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <numeric>
+
 #include "base/stl_helpers.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
@@ -34,6 +36,7 @@
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
+#include "mem/ruby/network/simple/Throttle.hh"
 #include "mem/ruby/network/simple/Topology.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
@@ -233,6 +236,61 @@ SimpleNetwork::printStats(ostream& out) const
     out << endl;
     out << "Network Stats" << endl;
     out << "-------------" << endl;
+    out << endl;
+
+    //
+    // Determine total counts before printing out each switch's stats
+    //
+    std::vector<uint64> total_msg_counts;
+    total_msg_counts.resize(MessageSizeType_NUM);
+    for (MessageSizeType type = MessageSizeType_FIRST; 
+         type < MessageSizeType_NUM; 
+         ++type) {
+        total_msg_counts[type] = 0;
+    }
+    
+    for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
+        const std::vector<Throttle*>* throttles = 
+            m_switch_ptr_vector[i]->getThrottles();
+        
+        for (int p = 0; p < throttles->size(); p++) {
+            
+            const std::vector<std::vector<int> >& message_counts = 
+                ((*throttles)[p])->getCounters();
+            
+            for (MessageSizeType type = MessageSizeType_FIRST; 
+                 type < MessageSizeType_NUM; 
+                 ++type) {
+
+                const std::vector<int> &mct = message_counts[type];
+                int sum = accumulate(mct.begin(), mct.end(), 0);
+                total_msg_counts[type] += uint64(sum);
+            }
+        }
+    }
+    uint64 total_msgs = 0;
+    uint64 total_bytes = 0;
+    for (MessageSizeType type = MessageSizeType_FIRST; 
+         type < MessageSizeType_NUM; 
+         ++type) {
+        
+        if (total_msg_counts[type] > 0) {
+            out << "total_msg_count_" << type << ": " << total_msg_counts[type] 
+                << " " << total_msg_counts[type] * 
+                uint64(RubySystem::getNetwork()->MessageSizeType_to_int(type))
+                << endl;
+            
+            total_msgs += total_msg_counts[type];
+            
+            total_bytes += total_msg_counts[type] * 
+                uint64(RubySystem::getNetwork()->MessageSizeType_to_int(type));
+            
+        }
+    }
+    
+    out << "total_msgs: " << total_msgs 
+        << " total_bytes: " << total_bytes << endl;
+    
     out << endl;
     for (int i = 0; i < m_switch_ptr_vector.size(); i++) {
         m_switch_ptr_vector[i]->printStats(out);
