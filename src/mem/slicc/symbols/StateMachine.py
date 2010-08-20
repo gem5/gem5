@@ -145,6 +145,8 @@ class StateMachine(Symbol):
         self.printCWakeup(path)
         self.printProfilerCC(path)
         self.printProfilerHH(path)
+        self.printProfileDumperCC(path)
+        self.printProfileDumperHH(path)
 
         for func in self.functions:
             func.writeCodeFiles(path)
@@ -208,6 +210,7 @@ class $py_ident(RubyController):
 #include "mem/protocol/TransitionResult.hh"
 #include "mem/protocol/Types.hh"
 #include "mem/protocol/${ident}_Profiler.hh"
+#include "mem/protocol/${ident}_ProfileDumper.hh"
 ''')
 
         seen_types = set()
@@ -277,7 +280,8 @@ Network* m_net_ptr;
 MachineID m_machineID;
 bool m_is_blocking;
 std::map<Address, MessageBuffer*> m_block_map;
-${ident}_Profiler s_profiler;
+static ${ident}_ProfileDumper s_profileDumper;
+${ident}_Profiler m_profiler;
 static int m_num_controllers;
 
 // Internal functions
@@ -357,6 +361,7 @@ ${c_ident}Params::create()
 }
 
 int $c_ident::m_num_controllers = 0;
+${ident}_ProfileDumper $c_ident::s_profileDumper;
 
 // for adding information to the protocol debug trace
 stringstream ${ident}_transitionComment;
@@ -434,7 +439,8 @@ $c_ident::init()
     m_machineID.num = m_version;
 
     // initialize objects
-    s_profiler.setVersion(m_version);
+    m_profiler.setVersion(m_version);
+    s_profileDumper.registerProfiler(&m_profiler);
 
 ''')
 
@@ -554,7 +560,7 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
             if not stall:
                 state = "%s_State_%s" % (self.ident, trans.state.ident)
                 event = "%s_Event_%s" % (self.ident, trans.event.ident)
-                code('s_profiler.possibleTransition($state, $event);')
+                code('m_profiler.possibleTransition($state, $event);')
 
         # added by SS to initialize recycle_latency of message buffers
         for buf in self.message_buffer_names:
@@ -658,7 +664,9 @@ $c_ident::printStats(ostream& out) const
                 code('    m_${{param.ident}}_ptr->printStats(out);')
 
         code('''
-    s_profiler.dumpStats(out);
+    if (m_version == 0) {
+        s_profileDumper.dumpStats(out);
+    }
 }
 
 void $c_ident::clearStats() {
@@ -674,7 +682,7 @@ void $c_ident::clearStats() {
                 code('    m_${{param.ident}}_ptr->clearStats();')
 
         code('''
-    s_profiler.clearStats();
+    m_profiler.clearStats();
 }
 
 // Actions
@@ -804,7 +812,7 @@ ${ident}_Controller::doTransition(${ident}_Event event,
     if (result == TransitionResult_Valid) {
         DEBUG_EXPR(GENERATED_COMP, MedPrio, next_state);
         DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
-        s_profiler.countTransition(state, event);
+        m_profiler.countTransition(state, event);
         if (Debug::getProtocolTrace()) {
             g_system_ptr->getProfiler()->profileTransition("${ident}",
                     m_version, addr,
@@ -928,6 +936,101 @@ if (!%s.areNSlotsAvailable(%s))
 ''')
         code.write(path, "%s_Transitions.cc" % self.ident)
 
+    def printProfileDumperHH(self, path):
+        code = self.symtab.codeFormatter()
+        ident = self.ident
+
+        code('''
+// Auto generated C++ code started by $__file__:$__line__
+// ${ident}: ${{self.short}}
+
+#ifndef __${ident}_PROFILE_DUMPER_HH__
+#define __${ident}_PROFILE_DUMPER_HH__
+
+#include <iostream>
+#include <vector>
+
+#include "${ident}_Profiler.hh"
+#include "${ident}_Event.hh"
+
+typedef std::vector<${ident}_Profiler *> ${ident}_profilers;
+
+class ${ident}_ProfileDumper
+{
+  public:
+    ${ident}_ProfileDumper();
+    void registerProfiler(${ident}_Profiler* profiler);
+    void dumpStats(std::ostream& out) const;
+
+  private:
+    ${ident}_profilers m_profilers;
+};
+
+#endif // __${ident}_PROFILE_DUMPER_HH__
+''')
+        code.write(path, "%s_ProfileDumper.hh" % self.ident)
+
+    def printProfileDumperCC(self, path):
+        code = self.symtab.codeFormatter()
+        ident = self.ident
+
+        code('''
+// Auto generated C++ code started by $__file__:$__line__
+// ${ident}: ${{self.short}}
+
+#include "mem/protocol/${ident}_ProfileDumper.hh"
+
+${ident}_ProfileDumper::${ident}_ProfileDumper()
+{
+}
+
+void
+${ident}_ProfileDumper::registerProfiler(${ident}_Profiler* profiler)
+{
+    m_profilers.push_back(profiler);
+}
+
+void
+${ident}_ProfileDumper::dumpStats(std::ostream& out) const
+{
+    out << " --- ${ident} ---\\n";
+    out << " - Event Counts -\\n";
+    for (${ident}_Event event = ${ident}_Event_FIRST;
+         event < ${ident}_Event_NUM;
+         ++event) {
+        out << (${ident}_Event) event << " [";
+        uint64 total = 0;
+        for (int i = 0; i < m_profilers.size(); i++) {
+             out << m_profilers[i]->getEventCount(event) << " ";
+             total += m_profilers[i]->getEventCount(event);
+        }
+        out << "] " << total << "\\n";
+    }
+    out << "\\n";
+    out << " - Transitions -\\n";
+    for (${ident}_State state = ${ident}_State_FIRST;
+         state < ${ident}_State_NUM;
+         ++state) {
+        for (${ident}_Event event = ${ident}_Event_FIRST;
+             event < ${ident}_Event_NUM;
+             ++event) {
+            if (m_profilers[0]->isPossible(state, event)) {
+                out << (${ident}_State) state << "  "
+                    << (${ident}_Event) event << " [";
+                uint64 total = 0;
+                for (int i = 0; i < m_profilers.size(); i++) {
+                     out << m_profilers[i]->getTransitionCount(state, event) << " ";
+                     total += m_profilers[i]->getTransitionCount(state, event);
+                }
+                out << "] " << total << "\\n";
+            }
+        }
+        out << "\\n";
+    }
+}
+''')
+        code.write(path, "%s_ProfileDumper.cc" % self.ident)
+
     def printProfilerHH(self, path):
         code = self.symtab.codeFormatter()
         ident = self.ident
@@ -936,8 +1039,8 @@ if (!%s.areNSlotsAvailable(%s))
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
-#ifndef __${ident}_PROFILER_HH_
-#define __${ident}_PROFILER_HH_
+#ifndef __${ident}_PROFILER_HH__
+#define __${ident}_PROFILER_HH__
 
 #include <iostream>
 
@@ -952,7 +1055,9 @@ class ${ident}_Profiler
     void setVersion(int version);
     void countTransition(${ident}_State state, ${ident}_Event event);
     void possibleTransition(${ident}_State state, ${ident}_Event event);
-    void dumpStats(std::ostream& out) const;
+    uint64 getEventCount(${ident}_Event event);
+    bool isPossible(${ident}_State state, ${ident}_Event event);
+    uint64 getTransitionCount(${ident}_State state, ${ident}_Event event);
     void clearStats();
 
   private:
@@ -1022,34 +1127,25 @@ ${ident}_Profiler::possibleTransition(${ident}_State state,
     m_possible[state][event] = true;
 }
 
-void
-${ident}_Profiler::dumpStats(std::ostream& out) const
+uint64
+${ident}_Profiler::getEventCount(${ident}_Event event)
 {
-    using namespace std;
-
-    out << " --- ${ident} " << m_version << " ---" << endl;
-    out << " - Event Counts -" << endl;
-    for (int event = 0; event < ${ident}_Event_NUM; event++) {
-        int count = m_event_counters[event];
-        out << (${ident}_Event) event << "  " << count << endl;
-    }
-    out << endl;
-    out << " - Transitions -" << endl;
-    for (int state = 0; state < ${ident}_State_NUM; state++) {
-        for (int event = 0; event < ${ident}_Event_NUM; event++) {
-            if (m_possible[state][event]) {
-                int count = m_counters[state][event];
-                out << (${ident}_State) state << "  "
-                    << (${ident}_Event) event << "  " << count;
-                if (count == 0) {
-                    out << " <-- ";
-                }
-                out << endl;
-            }
-        }
-        out << endl;
-    }
+    return m_event_counters[event];
 }
+
+bool
+${ident}_Profiler::isPossible(${ident}_State state, ${ident}_Event event)
+{
+    return m_possible[state][event];
+}
+
+uint64
+${ident}_Profiler::getTransitionCount(${ident}_State state,
+                                      ${ident}_Event event)
+{
+    return m_counters[state][event];
+}
+
 ''')
         code.write(path, "%s_Profiler.cc" % self.ident)
 
