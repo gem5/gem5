@@ -38,3 +38,4 @@ class RubyCache(SimObject):
     latency = Param.Int("");
     assoc = Param.Int("");
     replacement_policy = Param.String("PSEUDO_LRU", "");
+    start_index_bit = Param.Int(6, "index start, default 6 for 64-byte line");

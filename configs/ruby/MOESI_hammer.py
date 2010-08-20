@@ -27,6 +27,7 @@
 #
 # Authors: Brad Beckmann
 
+import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
@@ -43,10 +44,18 @@ class L1Cache(RubyCache):
 class L2Cache(RubyCache):
     latency = 10
 
+#
+# Probe filter is a cache, latency is not used
+#
+class ProbeFilter(RubyCache):
+    latency = 1
+
 def define_options(parser):
     parser.add_option("--allow-atomic-migration", action="store_true",
           help="allow migratory sharing for atomic only accessed blocks")
-
+    parser.add_option("--pf-on", action="store_true",
+          help="Hammer: enable Probe Filter")
+    
 def create_system(options, system, piobus, dma_devices):
     
     if buildEnv['PROTOCOL'] != 'MOESI_hammer':
@@ -107,6 +116,29 @@ def create_system(options, system, piobus, dma_devices):
                       long(system.physmem.range.first) + 1
     mem_module_size = phys_mem_size / options.num_dirs
 
+    #
+    # determine size and index bits for probe filter
+    # By default, the probe filter size is configured to be twice the
+    # size of the L2 cache.
+    #
+    pf_size = MemorySize(options.l2_size)
+    pf_size.value = pf_size.value * 2
+    dir_bits = int(math.log(options.num_dirs, 2))
+    pf_bits = int(math.log(pf_size.value, 2))
+    if options.numa_high_bit:
+        if options.numa_high_bit > 0:
+            # if numa high bit explicitly set, make sure it does not overlap
+            # with the probe filter index
+            assert(options.numa_high_bit - dir_bits > pf_bits)
+
+        # set the probe filter start bit to just above the block offset
+        pf_start_bit = 6
+    else:
+        if dir_bits > 0:
+            pf_start_bit = dir_bits + 5
+        else:
+            pf_start_bit = 6
+
     for i in xrange(options.num_dirs):
         #
         # Create the Ruby objects associated with the directory controller
@@ -117,6 +149,8 @@ def create_system(options, system, piobus, dma_devices):
         dir_size = MemorySize('0B')
         dir_size.value = mem_module_size
 
+        pf = ProbeFilter(size = pf_size, assoc = 4)
+
         dir_cntrl = Directory_Controller(version = i,
                                          directory = \
                                          RubyDirectoryMemory( \
@@ -125,7 +159,10 @@ def create_system(options, system, piobus, dma_devices):
                                                     use_map = options.use_map,
                                                     map_levels = \
                                                     options.map_levels),
-                                         memBuffer = mem_cntrl)
+                                         probeFilter = pf,
+                                         memBuffer = mem_cntrl,
+                                         probe_filter_enabled = \
+                                           options.pf_on)
 
         exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)

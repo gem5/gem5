@@ -169,6 +169,7 @@ class CacheMemory : public SimObject
     int m_cache_num_sets;
     int m_cache_num_set_bits;
     int m_cache_assoc;
+    int m_start_index_bit;
 };
 
 #endif // __MEM_RUBY_SYSTEM_CACHEMEMORY_HH__

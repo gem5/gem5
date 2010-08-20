@@ -81,6 +81,7 @@ def create_system(options, system, piobus, dma_devices):
     # Must create the individual controllers before the network to ensure the
     # controller constructors are called before the network constructor
     #
+    l2_bits = int(math.log(options.num_l2caches, 2))
     
     for i in xrange(options.num_cpus):
         #
@@ -104,9 +105,7 @@ def create_system(options, system, piobus, dma_devices):
                                       sequencer = cpu_seq,
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
-                                      l2_select_num_bits = \
-                                        math.log(options.num_l2caches,
-                                                 2),
+                                      l2_select_num_bits = l2_bits,
                                       N_tokens = n_tokens,
                                       retry_threshold = \
                                         options.l1_retries,
@@ -129,7 +128,8 @@ def create_system(options, system, piobus, dma_devices):
         # First create the Ruby objects associated with this cpu
         #
         l2_cache = L2Cache(size = options.l2_size,
-                           assoc = options.l2_assoc)
+                           assoc = options.l2_assoc,
+                           start_index_bit = l2_bits)
 
         l2_cntrl = L2Cache_Controller(version = i,
                                       L2cacheMemory = l2_cache,

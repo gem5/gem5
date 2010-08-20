@@ -53,6 +53,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_cache_assoc = p->assoc;
     m_policy = p->replacement_policy;
     m_profiler_ptr = new CacheProfiler(name());
+    m_start_index_bit = p->start_index_bit;
 }
 
 void
@@ -127,8 +128,8 @@ Index
 CacheMemory::addressToCacheSet(const Address& address) const
 {
     assert(address == line_address(address));
-    return address.bitSelect(RubySystem::getBlockSizeBits(),
-        RubySystem::getBlockSizeBits() + m_cache_num_set_bits - 1);
+    return address.bitSelect(m_start_index_bit,
+                             m_start_index_bit + m_cache_num_set_bits - 1);
 }
 
 // Given a cache index: returns the index of the tag in a set.

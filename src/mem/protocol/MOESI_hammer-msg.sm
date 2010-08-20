@@ -36,6 +36,7 @@ enumeration(CoherenceRequestType, desc="...") {
   PUT,       desc="Put Ownership";
   WB_ACK,    desc="Writeback ack";
   WB_NACK,   desc="Writeback neg. ack";
+  INV,       desc="Invalidate";
 }
 
 // CoherenceResponseType
@@ -49,7 +50,9 @@ enumeration(CoherenceResponseType, desc="...") {
   WB_DIRTY,           desc="Dirty writeback";
   WB_EXCLUSIVE_CLEAN, desc="Clean writeback of exclusive data";
   WB_EXCLUSIVE_DIRTY, desc="Dirty writeback of exclusive data";
-  UNBLOCK,            desc="Unblock";
+  UNBLOCK,            desc="Unblock for writeback";
+  UNBLOCKS,            desc="Unblock now in S";
+  UNBLOCKM,            desc="Unblock now in M/O/E";
   NULL,               desc="Null value";
 }
 
@@ -57,6 +60,7 @@ enumeration(CoherenceResponseType, desc="...") {
 enumeration(TriggerType, desc="...") {
   L2_to_L1,            desc="L2 to L1 transfer";
   ALL_ACKS,            desc="See corresponding event";
+  ALL_ACKS_OWNER_EXISTS,desc="See corresponding event";
   ALL_ACKS_NO_SHARERS, desc="See corresponding event";
 }
 
@@ -73,6 +77,7 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   MachineID Requestor,            desc="Node who initiated the request";
   NetDest Destination,             desc="Multicast destination mask";
   MessageSizeType MessageSize, desc="size category of the message";
+  bool DirectedProbe, default="false", desc="probe filter directed probe";
 }
 
 // ResponseMsg (and also unblock requests)

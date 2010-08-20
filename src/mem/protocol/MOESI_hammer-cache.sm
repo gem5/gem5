@@ -96,6 +96,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     Other_GETX,      desc="A GetX from another processor";
     Other_GETS,      desc="A GetS from another processor";
     Other_GETS_No_Mig, desc="A GetS from another processor";
+    Invalidate,      desc="Invalidate block";
 
     // Responses
     Ack,             desc="Received an ack message";
@@ -292,6 +293,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
           } else {
             trigger(Event:Other_GETS, in_msg.Address);
           }
+        } else if (in_msg.Type == CoherenceRequestType:INV) {
+          trigger(Event:Invalidate, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
           trigger(Event:Writeback_Ack, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
@@ -445,7 +448,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := getCacheEntry(address).DataBlk;
         out_msg.Dirty := getCacheEntry(address).Dirty;
-        out_msg.Acks := 2;
+        if (in_msg.DirectedProbe) {
+          out_msg.Acks := machineCount(MachineType:L1Cache);
+        } else {
+          out_msg.Acks := 2;
+        }
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -470,7 +477,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := getCacheEntry(address).DataBlk;
         out_msg.Dirty := getCacheEntry(address).Dirty;
-        out_msg.Acks := 2;
+        if (in_msg.DirectedProbe) {
+          out_msg.Acks := machineCount(MachineType:L1Cache);
+        } else {
+          out_msg.Acks := 2;
+        }
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -484,8 +495,13 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := getCacheEntry(address).DataBlk;
+        DEBUG_EXPR(out_msg.DataBlk);
         out_msg.Dirty := getCacheEntry(address).Dirty;
-        out_msg.Acks := 2;
+        if (in_msg.DirectedProbe) {
+          out_msg.Acks := machineCount(MachineType:L1Cache);
+        } else {
+          out_msg.Acks := 2;
+        }
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -499,6 +515,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.Acks := 1;
+        assert(in_msg.DirectedProbe == false);
         out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
@@ -512,6 +529,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.Acks := 1;
+        assert(in_msg.DirectedProbe == false);
         out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
@@ -521,6 +539,26 @@ machine(L1Cache, "AMD Hammer-like protocol")
     enqueue(unblockNetwork_out, ResponseMsg, latency=cache_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+    }
+  }
+
+  action(gm_sendUnblockM, "gm", desc="Send unblock to memory and indicate M/O/E state") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency=cache_response_latency) {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:UNBLOCKM;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+    }
+  }
+
+  action(gs_sendUnblockS, "gs", desc="Send unblock to memory and indicate S state") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency=cache_response_latency) {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:UNBLOCKS;
       out_msg.Sender := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
@@ -653,9 +691,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
+        DEBUG_EXPR(out_msg.Destination);
         out_msg.DataBlk := TBEs[address].DataBlk;
         out_msg.Dirty := TBEs[address].Dirty;
-        out_msg.Acks := 2;
+        if (in_msg.DirectedProbe) {
+          out_msg.Acks := machineCount(MachineType:L1Cache);
+        } else {
+          out_msg.Acks := 2;
+        }
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -719,9 +762,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   action(v_writeDataToCacheVerify, "v", desc="Write data to cache, assert it was same as before") {
     peek(responseToCache_in, ResponseMsg) {
+      DEBUG_EXPR(getCacheEntry(address).DataBlk);
+      DEBUG_EXPR(in_msg.DataBlk);
       assert(getCacheEntry(address).DataBlk == in_msg.DataBlk);
       getCacheEntry(address).DataBlk := in_msg.DataBlk;
-      getCacheEntry(address).Dirty := in_msg.Dirty;
+      getCacheEntry(address).Dirty := in_msg.Dirty || getCacheEntry(address).Dirty;
     }
   }
   
@@ -813,7 +858,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     zz_recycleMandatoryQueue;
   }
 
-  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
+  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
     // stall
   }
 
@@ -963,7 +1008,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     rr_deallocateL2CacheBlock;
   }
 
-  transition(I, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
+  transition(I, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -985,7 +1030,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     rr_deallocateL2CacheBlock;
   }
 
-  transition(S, Other_GETX, I) {
+  transition(S, {Other_GETX, Invalidate}, I) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1015,7 +1060,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     rr_deallocateL2CacheBlock;
   }
 
-  transition(O, Other_GETX, I) {
+  transition(O, {Other_GETX, Invalidate}, I) {
     e_sendData;
     l_popForwardQueue;
   }
@@ -1042,7 +1087,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     rr_deallocateL2CacheBlock;
   }
 
-  transition(MM, Other_GETX, I) {
+  transition(MM, {Other_GETX, Invalidate}, I) {
     c_sendExclusiveData;
     l_popForwardQueue;
   }
@@ -1074,7 +1119,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     rr_deallocateL2CacheBlock;
   }
 
-  transition(M, Other_GETX, I) {
+  transition(M, {Other_GETX, Invalidate}, I) {
     c_sendExclusiveData;
     l_popForwardQueue;
   }
@@ -1086,7 +1131,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   // Transitions from IM
 
-  transition(IM, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
+  transition(IM, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1118,7 +1163,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(SM, Other_GETX, IM) {
+  transition(SM, {Other_GETX, Invalidate}, IM) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1145,14 +1190,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   transition(ISM, All_acks_no_sharers, MM) {
     sxt_trig_ext_store_hit;
-    g_sendUnblock;
+    gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
   }
 
   // Transitions from OM
 
-  transition(OM, Other_GETX, IM) {
+  transition(OM, {Other_GETX, Invalidate}, IM) {
     e_sendData;
     pp_incrementNumberOfMessagesByOne;
     l_popForwardQueue;
@@ -1171,14 +1216,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   transition(OM, {All_acks, All_acks_no_sharers}, MM) {
     sxt_trig_ext_store_hit;
-    g_sendUnblock;
+    gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
   }
 
   // Transitions from IS
 
-  transition(IS, {Other_GETX, Other_GETS, Other_GETS_No_Mig}) {
+  transition(IS, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1237,14 +1282,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition(SS, All_acks, S) {
-    g_sendUnblock;
+    gs_sendUnblockS;
     s_deallocateTBE;
     j_popTriggerQueue;
   }
 
   transition(SS, All_acks_no_sharers, S) {
     // Note: The directory might still be the owner, so that is why we go to S
-    g_sendUnblock;
+    gs_sendUnblockS;
     s_deallocateTBE;
     j_popTriggerQueue;
   }
@@ -1263,7 +1308,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition(MM_W, All_acks_no_sharers, MM) {
-    g_sendUnblock;
+    gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
   }
@@ -1282,14 +1327,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition(M_W, All_acks_no_sharers, M) {
-    g_sendUnblock;
+    gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
   }
 
   // Transitions from OI/MI
 
-  transition({OI, MI}, Other_GETX, II) {
+  transition({OI, MI}, {Other_GETX, Invalidate}, II) {
     q_sendDataFromTBEToCache;
     l_popForwardQueue;
   }
@@ -1312,7 +1357,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   // Transitions from II
-  transition(II, {Other_GETS, Other_GETS_No_Mig, Other_GETX}, II) {
+  transition(II, {Other_GETS, Other_GETS_No_Mig, Other_GETX, Invalidate}, II) {
     f_sendAck;
     l_popForwardQueue;
   }
