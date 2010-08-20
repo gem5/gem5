@@ -55,6 +55,7 @@ enumeration(CoherenceResponseType, desc="...") {
 
 // TriggerType
 enumeration(TriggerType, desc="...") {
+  L2_to_L1,            desc="L2 to L1 transfer";
   ALL_ACKS,            desc="See corresponding event";
   ALL_ACKS_NO_SHARERS, desc="See corresponding event";
 }

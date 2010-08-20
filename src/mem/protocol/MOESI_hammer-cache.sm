@@ -39,7 +39,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
   CacheMemory * L1DcacheMemory,
   CacheMemory * L2cacheMemory,
   int cache_response_latency = 10,
-  int issue_latency = 2
+  int issue_latency = 2,
+  int l2_cache_hit_latency = 10
 {
 
   // NETWORK BUFFERS
@@ -72,6 +73,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     OI, "OI", desc="Issued PutO, waiting for ack";
     MI, "MI", desc="Issued PutX, waiting for ack";
     II, "II", desc="Issued PutX/O, saw Other_GETS or Other_GETX, waiting for ack";
+    IT, "IT", desc="Invalid block transferring to L1";
+    ST, "ST", desc="S block transferring to L1";
+    OT, "OT", desc="O block transferring to L1";
+    MT, "MT", desc="M block transferring to L1";
+    MMT, "MMT", desc="MM block transferring to L1";
   }
 
   // EVENTS
@@ -81,8 +87,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
     Store,           desc="Store request from the processor";
     L2_Replacement,  desc="L2 Replacement";
     L1_to_L2,        desc="L1 to L2 transfer";
-    L2_to_L1D,       desc="L2 to L1-Data transfer";
-    L2_to_L1I,       desc="L2 to L1-Instruction transfer";
+    Trigger_L2_to_L1D,  desc="Trigger L2 to L1-Data transfer";
+    Trigger_L2_to_L1I,  desc="Trigger L2 to L1-Instruction transfer";
+    Complete_L2_to_L1, desc="L2 to L1 transfer completed";
 
     // Requests
     Other_GETX,      desc="A GetX from another processor";
@@ -251,7 +258,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
   in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
-        if (in_msg.Type == TriggerType:ALL_ACKS) {
+        if (in_msg.Type == TriggerType:L2_to_L1) {
+          trigger(Event:Complete_L2_to_L1, in_msg.Address);
+        } else if (in_msg.Type == TriggerType:ALL_ACKS) {
           trigger(Event:All_acks, in_msg.Address);
         } else if (in_msg.Type == TriggerType:ALL_ACKS_NO_SHARERS) {
           trigger(Event:All_acks_no_sharers, in_msg.Address);
@@ -334,7 +343,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
               // L1 does't have the line, but we have space for it in the L1
               if (L2cacheMemory.isTagPresent(in_msg.LineAddress)) {
                 // L2 has it (maybe not with the right permissions)
-                trigger(Event:L2_to_L1I, in_msg.LineAddress);
+                trigger(Event:Trigger_L2_to_L1I, in_msg.LineAddress);
               } else {
                 // We have room, the L2 doesn't have it, so the L1 fetches the line
                 trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
@@ -371,7 +380,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
               // L1 does't have the line, but we have space for it in the L1
               if (L2cacheMemory.isTagPresent(in_msg.LineAddress)) {
                 // L2 has it (maybe not with the right permissions)
-                trigger(Event:L2_to_L1D, in_msg.LineAddress);
+                trigger(Event:Trigger_L2_to_L1D, in_msg.LineAddress);
               } else {
                 // We have room, the L2 doesn't have it, so the L1 fetches the line
                 trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
@@ -594,6 +603,13 @@ machine(L1Cache, "AMD Hammer-like protocol")
     responseToCache_in.dequeue();
   }
 
+  action(ll_L2toL1Transfer, "ll", desc="") {
+    enqueue(triggerQueue_out, TriggerMsg, latency=l2_cache_hit_latency) {
+      out_msg.Address := address;
+      out_msg.Type := TriggerType:L2_to_L1;
+    }
+  }
+
   action(o_checkForCompletion, "o", desc="Check if we have received all the messages required for completion") {
     if (TBEs[address].NumPendingMsgs == 0) {
       enqueue(triggerQueue_out, TriggerMsg) {
@@ -766,7 +782,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   //*****************************************************
 
   // Transitions for Load/Store/L2_Replacement from transient states
-  transition({IM, SM, ISM, OM, IS, SS, OI, MI, II}, {Store, L2_Replacement}) {
+  transition({IM, SM, ISM, OM, IS, SS, OI, MI, II, IT, ST, OT, MT, MMT}, {Store, L2_Replacement}) {
     zz_recycleMandatoryQueue;
   }
 
@@ -774,12 +790,16 @@ machine(L1Cache, "AMD Hammer-like protocol")
     zz_recycleMandatoryQueue;
   }
 
-  transition({IM, IS, OI, MI, II}, {Load, Ifetch}) {
+  transition({IM, IS, OI, MI, II, IT, ST, OT, MT, MMT}, {Load, Ifetch}) {
     zz_recycleMandatoryQueue;
   }
 
-  transition({IM, SM, ISM, OM, IS, SS, MM_W, M_W, OI, MI, II}, L1_to_L2) {
+  transition({IM, SM, ISM, OM, IS, SS, MM_W, M_W, OI, MI, II, IT, ST, OT, MT, MMT}, L1_to_L2) {
     zz_recycleMandatoryQueue;
+  }
+
+  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS}) {
+    // stall
   }
 
   // Transitions moving data between the L1 and L2 caches
@@ -789,18 +809,114 @@ machine(L1Cache, "AMD Hammer-like protocol")
     gg_deallocateL1CacheBlock;
   }
   
-  transition({I, S, O, M, MM}, L2_to_L1D) {
+  transition(I, Trigger_L2_to_L1D, IT) {
     ii_allocateL1DCacheBlock;
     tt_copyFromL2toL1; // Not really needed for state I
     uu_profileMiss;
     rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
   }
 
-  transition({I, S, O, M, MM}, L2_to_L1I) {
+  transition(S, Trigger_L2_to_L1D, ST) {
+    ii_allocateL1DCacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(O, Trigger_L2_to_L1D, OT) {
+    ii_allocateL1DCacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(M, Trigger_L2_to_L1D, MT) {
+    ii_allocateL1DCacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(MM, Trigger_L2_to_L1D, MMT) {
+    ii_allocateL1DCacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(I, Trigger_L2_to_L1I, IT) {
     jj_allocateL1ICacheBlock;
     tt_copyFromL2toL1; // Not really needed for state I
     uu_profileMiss;
     rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(S, Trigger_L2_to_L1I, ST) {
+    jj_allocateL1ICacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(O, Trigger_L2_to_L1I, OT) {
+    jj_allocateL1ICacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(M, Trigger_L2_to_L1I, MT) {
+    jj_allocateL1ICacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(MM, Trigger_L2_to_L1I, MMT) {
+    jj_allocateL1ICacheBlock;
+    tt_copyFromL2toL1;
+    uu_profileMiss;
+    rr_deallocateL2CacheBlock;
+    zz_recycleMandatoryQueue;
+    ll_L2toL1Transfer;
+  }
+
+  transition(IT, Complete_L2_to_L1, I) {
+    j_popTriggerQueue;
+  }
+
+  transition(ST, Complete_L2_to_L1, S) {
+    j_popTriggerQueue;
+  }
+
+  transition(OT, Complete_L2_to_L1, O) {
+    j_popTriggerQueue;
+  }
+
+  transition(MT, Complete_L2_to_L1, M) {
+    j_popTriggerQueue;
+  }
+
+  transition(MMT, Complete_L2_to_L1, MM) {
+    j_popTriggerQueue;
   }
 
   // Transitions from Idle
