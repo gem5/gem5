@@ -99,7 +99,6 @@ Sequencer::wakeup()
             continue;
 
         WARN_MSG("Possible Deadlock detected");
-        WARN_EXPR(request);
         WARN_EXPR(m_version);
         WARN_EXPR(request->ruby_request.paddr);
         WARN_EXPR(m_readRequestTable.size());
@@ -117,8 +116,8 @@ Sequencer::wakeup()
             continue;
 
         WARN_MSG("Possible Deadlock detected");
-        WARN_EXPR(request);
         WARN_EXPR(m_version);
+        WARN_EXPR(request->ruby_request.paddr);
         WARN_EXPR(current_time);
         WARN_EXPR(request->issue_time);
         WARN_EXPR(current_time - request->issue_time);
