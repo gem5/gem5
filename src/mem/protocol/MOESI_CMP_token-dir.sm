@@ -86,6 +86,7 @@ machine(Directory, "Token protocol")
     Lockdown, desc="A lockdown request arrives";
     Unlockdown, desc="An un-lockdown request arrives";
     Own_Lock_or_Unlock, desc="own lock or unlock";
+    Own_Lock_or_Unlock_Tokens, desc="own lock or unlock with tokens";
     Data_Owner, desc="Data arrive";
     Data_All_Tokens, desc="Data and all tokens";
     Ack_Owner, desc="Owner token arrived without data because it was clean";
@@ -179,7 +180,7 @@ machine(Directory, "Token protocol")
     }
     getDirectoryEntry(addr).DirectoryState := state;
 
-    if (state == State:L) {
+    if (state == State:L || state == State:DW_L || state == State:DR_L) {
       assert(getDirectoryEntry(addr).Tokens == 0);
     } 
 
@@ -190,7 +191,7 @@ machine(Directory, "Token protocol")
     assert(getDirectoryEntry(addr).Tokens >= 0);
     assert(getDirectoryEntry(addr).Tokens <= max_tokens());
 
-    if (state == State:O) {
+    if (state == State:O || state == State:O_W || state == State:O_DW) {
       assert(getDirectoryEntry(addr).Tokens >= 1); // Must have at least one token
       // assert(getDirectoryEntry(addr).Tokens >= (max_tokens() / 2)); // Only mostly true; this might not always hold
     }
@@ -293,7 +294,11 @@ machine(Directory, "Token protocol")
           // React to the message based on the current state of the table
           if (persistentTable.isLocked(in_msg.Address)) {
             if (persistentTable.findSmallest(in_msg.Address) == machineID) {
-              trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+              if (getDirectoryEntry(in_msg.Address).Tokens > 0) {
+                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Address);
+              } else {
+                trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+              }
             } else {
               trigger(Event:Lockdown, in_msg.Address); // locked
             }   
@@ -303,7 +308,11 @@ machine(Directory, "Token protocol")
         }
         else {
           if (persistentTable.findSmallest(in_msg.Address) == machineID) {
-            trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+              if (getDirectoryEntry(in_msg.Address).Tokens > 0) {
+                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Address);
+              } else {
+                trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+              }
           } else if (in_msg.Type == PersistentRequestType:GETX_PERSISTENT) {
             trigger(Event:Lockdown, in_msg.Address); // locked
           } else if (in_msg.Type == PersistentRequestType:GETS_PERSISTENT) {
@@ -540,7 +549,7 @@ machine(Directory, "Token protocol")
     getDirectoryEntry(address).Tokens := 0;
   }
 
-  action(dd_sendDataWithAllTokensToStarver, "\d", desc="Send data and tokens to starver") {
+  action(dd_sendMemDataToStarver, "\d", desc="Send data and tokens to starver") {
     peek(memQueue_in, MemoryMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency="1") {
         out_msg.Address := address;
@@ -553,6 +562,21 @@ machine(Directory, "Token protocol")
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }   
+    }
+    getDirectoryEntry(address).Tokens := 0;
+  }
+
+  action(de_sendTbeDataToStarver, "de", desc="Send data and tokens to starver") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA_OWNER;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(persistentTable.findSmallest(address));
+      assert(getDirectoryEntry(address).Tokens > 0);
+      out_msg.Tokens := getDirectoryEntry(address).Tokens;
+      out_msg.DataBlk := TBEs[address].DataBlk;
+      out_msg.Dirty := false;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
     }
     getDirectoryEntry(address).Tokens := 0;
   }
@@ -865,6 +889,7 @@ machine(Directory, "Token protocol")
 
   transition(O, DMA_WRITE, O_DW) {
     vd_allocateDmaRequestInTBE;
+    cd_writeCleanDataToTbe;
     bw_broadcastWrite;
     st_scheduleTimeout;
     p_popDmaRequestQueue;
@@ -924,6 +949,11 @@ machine(Directory, "Token protocol")
   //
   // issued GETX for DMA write, waiting for all tokens
   //
+  transition(O_DW, Request_Timeout) {
+    ut_unsetReissueTimer;
+    px_tryIssuingPersistentGETXRequest;
+  }
+
   transition(O_DW, Tokens) {
     f_incrementTokens;
     k_popIncomingResponseQueue;
@@ -942,6 +972,7 @@ machine(Directory, "Token protocol")
   }
 
   transition(O_DW, Lockdown, DW_L) {
+    de_sendTbeDataToStarver;
     l_popIncomingPersistentQueue;
   }
 
@@ -1050,7 +1081,6 @@ machine(Directory, "Token protocol")
   transition(NO_DW, Data_Owner, O_DW) {
     f_incrementTokens;
     rd_recordDataInTbe;
-    lq_queueMemoryWbRequest;
     k_popIncomingResponseQueue;
   }
 
@@ -1111,12 +1141,16 @@ machine(Directory, "Token protocol")
     k_popIncomingResponseQueue;
   }
 
-  transition(L, Unlockdown, NO) {
+  transition(L, {Unlockdown, Own_Lock_or_Unlock}, NO) {
+    l_popIncomingPersistentQueue;
+  }
+
+  transition(L, Own_Lock_or_Unlock_Tokens, O) {
     l_popIncomingPersistentQueue;
   }
 
   transition({L_NO_W, L_O_W}, Memory_Data, L) {
-    dd_sendDataWithAllTokensToStarver;
+    dd_sendMemDataToStarver;
     l_popMemQueue;
   }
 
@@ -1125,16 +1159,16 @@ machine(Directory, "Token protocol")
     l_popMemQueue;
   }
 
-  transition(L_O_W, Unlockdown, O_W) {
+  transition(L_O_W, {Unlockdown, Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}, O_W) {
     l_popIncomingPersistentQueue;
   }
 
-  transition(L_NO_W, Unlockdown, NO_W) {
+  transition(L_NO_W, {Unlockdown, Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}, NO_W) {
     l_popIncomingPersistentQueue;
   }
 
   transition(DR_L_W, Memory_Data, DR_L) {
-    dd_sendDataWithAllTokensToStarver;
+    dd_sendMemDataToStarver;
     l_popMemQueue;
   }
 
@@ -1142,19 +1176,19 @@ machine(Directory, "Token protocol")
     aat_assertAllTokens;
     da_sendDmaAck;
     s_deallocateTBE;
-    dd_sendDataWithAllTokensToStarver;
+    dd_sendMemDataToStarver;
     l_popMemQueue;
   }
 
-  transition(DW_L, {Unlockdown, Own_Lock_or_Unlock}, NO_DW) {
+  transition(DW_L, {Unlockdown, Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}, NO_DW) {
     l_popIncomingPersistentQueue;
   }
 
-  transition(DR_L_W, Unlockdown, O_DR_W) {
+  transition(DR_L_W, {Unlockdown, Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}, O_DR_W) {
     l_popIncomingPersistentQueue;
   }
 
-  transition(DW_L_W, Unlockdown, O_DW_W) {
+  transition(DW_L_W, {Unlockdown, Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}, O_DW_W) {
     l_popIncomingPersistentQueue;
   }
 
@@ -1163,7 +1197,7 @@ machine(Directory, "Token protocol")
     px_tryIssuingPersistentGETXRequest;
   }
 
-  transition(DR_L, {Unlockdown, Own_Lock_or_Unlock}, NO_DR) {
+  transition(DR_L, {Unlockdown, Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}, NO_DR) {
     l_popIncomingPersistentQueue;
   }
 
@@ -1180,7 +1214,7 @@ machine(Directory, "Token protocol")
     l_popMemQueue; 
   }
 
-  transition({O, NO, O_DW, NO_DW, NO_DR}, Own_Lock_or_Unlock) {
+  transition({O, NO}, {Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}) {
     l_popIncomingPersistentQueue;
   }
 
@@ -1193,7 +1227,7 @@ machine(Directory, "Token protocol")
     y_recycleDmaRequestQueue;
   }
 
-  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, DW_L_W, O_DW_W, O_DR_W}, {Data_Owner, Ack_Owner, Tokens, Ack_All_Tokens}) {
+  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, DW_L_W, O_DW_W, O_DR_W}, {Data_Owner, Ack_Owner, Tokens, Data_All_Tokens, Ack_All_Tokens}) {
     kz_recycleResponse;
   }
 
@@ -1222,7 +1256,7 @@ machine(Directory, "Token protocol")
     l_popIncomingPersistentQueue;
   }
 
-  transition({NO_W, O_W, O_DR_W, O_DW_W}, {Unlockdown, Own_Lock_or_Unlock}) {
+  transition({NO_W, O_W, O_DR_W, O_DW_W, O_DW, NO_DR, NO_DW}, {Unlockdown, Own_Lock_or_Unlock, Own_Lock_or_Unlock_Tokens}) {
     l_popIncomingPersistentQueue;
   }
 }
