@@ -31,7 +31,6 @@ import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
-from m5.util import addToPath
 
 #
 # Note: the L1 Cache latency is only used by the sequencer on fast path hits
@@ -47,8 +46,14 @@ class L2Cache(RubyCache):
 
 def create_system(options, phys_mem, piobus, dma_devices):
     
-    if buildEnv['PROTOCOL'] != 'MESI_CMP_directory':
-        panic("This script requires the MESI_CMP_directory protocol to be built.")
+    if buildEnv['PROTOCOL'] != 'MOESI_CMP_token':
+        panic("This script requires the MOESI_CMP_token protocol to be built.")
+
+    #
+    # number of tokens that the owner passes to requests so that shared blocks can
+    # respond to read requests
+    #
+    n_tokens = options.num_cpus + 1
 
     cpu_sequencers = []
     
@@ -90,7 +95,8 @@ def create_system(options, phys_mem, piobus, dma_devices):
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
                                       l2_select_num_bits = \
-                                        math.log(options.num_l2caches, 2))
+                                        math.log(options.num_l2caches, 2),
+                                      N_tokens = n_tokens)
         #
         # Add controllers and sequencers to the appropriate lists
         #
@@ -105,7 +111,8 @@ def create_system(options, phys_mem, piobus, dma_devices):
                            assoc = options.l2_assoc)
 
         l2_cntrl = L2Cache_Controller(version = i,
-                                      L2cacheMemory = l2_cache)
+                                      L2cacheMemory = l2_cache,
+                                      N_tokens = n_tokens)
         
         l2_cntrl_nodes.append(l2_cntrl)
         
@@ -126,7 +133,9 @@ def create_system(options, phys_mem, piobus, dma_devices):
                                          directory = \
                                          RubyDirectoryMemory(version = i,
                                                              size = dir_size),
-                                         memBuffer = mem_cntrl)
+                                         memBuffer = mem_cntrl,
+                                         l2_select_num_bits = \
+                                           math.log(options.num_l2caches, 2))
 
         dir_cntrl_nodes.append(dir_cntrl)
 

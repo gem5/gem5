@@ -27,21 +27,27 @@
 #
 # Authors: Brad Beckmann
 
+import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
-from m5.util import addToPath
 
 #
-# Note: the cache latency is only used by the sequencer on fast path hits
+# Note: the L1 Cache latency is only used by the sequencer on fast path hits
 #
-class Cache(RubyCache):
+class L1Cache(RubyCache):
     latency = 3
+
+#
+# Note: the L2 Cache latency is not currently used
+#
+class L2Cache(RubyCache):
+    latency = 15
 
 def create_system(options, phys_mem, piobus, dma_devices):
     
-    if buildEnv['PROTOCOL'] != 'MI_example':
-        panic("This script requires the MI_example protocol to be built.")
+    if buildEnv['PROTOCOL'] != 'MOESI_CMP_directory':
+        panic("This script requires the MOESI_CMP_directory protocol to be built.")
 
     cpu_sequencers = []
     
@@ -51,6 +57,7 @@ def create_system(options, phys_mem, piobus, dma_devices):
     # listed before the directory nodes and directory nodes before dma nodes, etc.
     #
     l1_cntrl_nodes = []
+    l2_cntrl_nodes = []
     dir_cntrl_nodes = []
     dma_cntrl_nodes = []
 
@@ -62,18 +69,15 @@ def create_system(options, phys_mem, piobus, dma_devices):
     for i in xrange(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
-        # Only one cache exists for this protocol, so by default use the L1D
-        # config parameters.
         #
-        cache = Cache(size = options.l1d_size,
-                      assoc = options.l1d_assoc)
+        l1i_cache = L1Cache(size = options.l1i_size,
+                            assoc = options.l1i_assoc)
+        l1d_cache = L1Cache(size = options.l1d_size,
+                            assoc = options.l1d_assoc)
 
-        #
-        # Only one unified L1 cache exists.  Can cache instructions and data.
-        #
         cpu_seq = RubySequencer(version = i,
-                                icache = cache,
-                                dcache = cache,
+                                icache = l1i_cache,
+                                dcache = l1d_cache,
                                 physMemPort = phys_mem.port,
                                 physmem = phys_mem)
 
@@ -82,13 +86,28 @@ def create_system(options, phys_mem, piobus, dma_devices):
 
         l1_cntrl = L1Cache_Controller(version = i,
                                       sequencer = cpu_seq,
-                                      cacheMemory = cache)
+                                      L1IcacheMemory = l1i_cache,
+                                      L1DcacheMemory = l1d_cache,
+                                      l2_select_num_bits = \
+                                        math.log(options.num_l2caches, 2))
         #
         # Add controllers and sequencers to the appropriate lists
         #
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
 
+    for i in xrange(options.num_l2caches):
+        #
+        # First create the Ruby objects associated with this cpu
+        #
+        l2_cache = L2Cache(size = options.l2_size,
+                           assoc = options.l2_assoc)
+
+        l2_cntrl = L2Cache_Controller(version = i,
+                                      L2cacheMemory = l2_cache)
+        
+        l2_cntrl_nodes.append(l2_cntrl)
+        
     phys_mem_size = long(phys_mem.range.second) - long(phys_mem.range.first) + 1
     mem_module_size = phys_mem_size / options.num_dirs
 
@@ -105,9 +124,7 @@ def create_system(options, phys_mem, piobus, dma_devices):
         dir_cntrl = Directory_Controller(version = i,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
-                                               size = dir_size,
-                                               use_map = options.use_map,
-                                               map_levels = options.map_levels),
+                                                             size = dir_size),
                                          memBuffer = mem_cntrl)
 
         dir_cntrl_nodes.append(dir_cntrl)
@@ -126,6 +143,9 @@ def create_system(options, phys_mem, piobus, dma_devices):
         dma_cntrl.dma_sequencer.port = dma_device.dma
         dma_cntrl_nodes.append(dma_cntrl)
 
-    all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes + dma_cntrl_nodes
+    all_cntrls = l1_cntrl_nodes + \
+                 l2_cntrl_nodes + \
+                 dir_cntrl_nodes + \
+                 dma_cntrl_nodes
 
     return (cpu_sequencers, dir_cntrl_nodes, all_cntrls)

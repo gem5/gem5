@@ -30,7 +30,6 @@
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
-from m5.util import addToPath
 
 def create_system(options, physmem, piobus = None, dma_devices = []):
 
