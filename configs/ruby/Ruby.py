@@ -27,6 +27,7 @@
 #
 # Authors: Brad Beckmann
 
+import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
@@ -42,7 +43,8 @@ def define_options(parser):
 
     # ruby mapping options
     parser.add_option("--numa-high-bit", type="int", default=none,
-                      help="high order address bit to use for numa mapping")
+                      help="high order address bit to use for numa mapping. " \
+                           "0 = highest bit, not specified = lowest bit")
 
     # ruby sparse memory options
     parser.add_option("--use-map", action="store_true", default=False)
@@ -88,14 +90,32 @@ def create_system(options, system, piobus = None, dma_devices = []):
         network = SimpleNetwork(topology = net_topology)
 
     #
+    # Loop through the directory controlers.
     # Determine the total memory size of the ruby system and verify it is equal
     # to physmem.  However, if Ruby memory is using sparse memory in SE 
     # mode, then the system should not back-up the memory state with
     # the Memory Vector and thus the memory size bytes should stay at 0.
+    # Also set the numa bits to the appropriate values.
     #
     total_mem_size = MemorySize('0B')
+
+    dir_bits = int(math.log(options.num_dirs, 2))
+
+    if options.numa_high_bit:
+        numa_bit = options.numa_high_bit
+    else:
+        # if not specified, use the lowest bits above the block offest
+        if options.numa_high_bit == 0:
+            if dir_bits > 0:
+                # add 5 because bits 0-5 are the block offset
+                numa_bit = dir_bits + 5
+            else:
+                numa_bit = 6
+        
     for dir_cntrl in dir_cntrls:
         total_mem_size.value += dir_cntrl.directory.size.value
+        dir_cntrl.directory.numa_high_bit = numa_bit
+        
     physmem_size = long(system.physmem.range.second) - \
                      long(system.physmem.range.first) + 1
     assert(total_mem_size.value == physmem_size)

@@ -71,7 +71,7 @@ DirectoryMemory::init()
     m_total_size_bytes += m_size_bytes;
 
     if (m_numa_high_bit == 0) {
-        m_numa_high_bit = RubySystem::getMemorySizeBits();
+        m_numa_high_bit = RubySystem::getMemorySizeBits() - 1;
     }
     assert(m_numa_high_bit != 0);
 }
@@ -125,7 +125,7 @@ DirectoryMemory::mapAddressToDirectoryVersion(PhysAddress address)
     if (m_num_directories_bits == 0)
         return 0;
 
-    uint64 ret = address.bitSelect(m_numa_high_bit - m_num_directories_bits,
+    uint64 ret = address.bitSelect(m_numa_high_bit - m_num_directories_bits + 1,
                                    m_numa_high_bit);
     return ret;
 }
@@ -140,10 +140,15 @@ DirectoryMemory::isPresent(PhysAddress address)
 uint64
 DirectoryMemory::mapAddressToLocalIdx(PhysAddress address)
 {
-    uint64 ret = address.bitRemove(m_numa_high_bit - m_num_directories_bits,
-                                   m_numa_high_bit)
-        >> (RubySystem::getBlockSizeBits());
-    return ret;
+    uint64 ret;
+    if (m_num_directories_bits > 0) {
+        ret = address.bitRemove(m_numa_high_bit - m_num_directories_bits + 1,
+                                m_numa_high_bit);
+    } else {
+        ret = address.getAddress();
+    }
+
+    return ret >> (RubySystem::getBlockSizeBits());
 }
 
 Directory_Entry&
