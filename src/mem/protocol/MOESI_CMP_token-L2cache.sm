@@ -35,8 +35,8 @@
 machine(L2Cache, "Token protocol") 
  : CacheMemory * L2cacheMemory,
    int N_tokens,
-   int l2_request_latency = 10,
-   int l2_response_latency = 10,
+   int l2_request_latency = 5,
+   int l2_response_latency = 5,
    bool filtering_enabled = true
 {
 

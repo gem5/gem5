@@ -36,9 +36,9 @@ machine(Directory, "Token protocol")
  : DirectoryMemory * directory,
    MemoryControl * memBuffer,
    int l2_select_num_bits,
-   int directory_latency = 6,
+   int directory_latency = 5,
    bool distributed_persistent = true,
-   int fixed_timeout_latency = 300
+   int fixed_timeout_latency = 100
 {
 
   MessageBuffer dmaResponseFromDir, network="To", virtual_network="5", ordered="true";

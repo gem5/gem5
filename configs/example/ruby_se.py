@@ -143,7 +143,7 @@ assert(options.timing)
 assert(test_mem_mode == 'timing')
 assert(FutureClass == None)
 
-CPUClass.clock = '1GHz'
+CPUClass.clock = options.clock
 
 np = options.num_cpus
 

@@ -41,7 +41,7 @@ machine(L1Cache, "Token protocol")
    int l1_request_latency = 2,
    int l1_response_latency = 2,
    int retry_threshold = 1,
-   int fixed_timeout_latency = 300,
+   int fixed_timeout_latency = 100,
    bool dynamic_timeout_enabled = true
 {
 

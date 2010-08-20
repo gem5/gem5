@@ -38,7 +38,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   CacheMemory * L1IcacheMemory,
   CacheMemory * L1DcacheMemory,
   CacheMemory * L2cacheMemory,
-  int cache_response_latency = 12,
+  int cache_response_latency = 10,
   int issue_latency = 2
 {
 
