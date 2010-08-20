@@ -48,25 +48,13 @@ m5_root = os.path.dirname(config_root)
 
 parser = optparse.OptionParser()
 
-parser.add_option("-a", "--atomic", action="store_true",
-                  help="Use atomic (non-timing) mode")
-parser.add_option("-b", "--blocking", action="store_true",
-                  help="Use blocking caches")
 parser.add_option("-l", "--maxloads", metavar="N", default=0,
                   help="Stop after N loads")
-parser.add_option("-f", "--functional", type="int", default=0,
-                  metavar="PCT",
-                  help="Target percentage of functional accesses "
-                  "[default: %default]")
-parser.add_option("-u", "--uncacheable", type="int", default=0,
-                  metavar="PCT",
-                  help="Target percentage of uncacheable accesses "
-                  "[default: %default]")
-
 parser.add_option("--progress", type="int", default=1000,
                   metavar="NLOADS",
                   help="Progress message interval "
                   "[default: %default]")
+parser.add_option("--num-dmas", type="int", default=0, help="# of dma testers")
 
 #
 # Add the ruby specific and protocol specific options
@@ -101,36 +89,61 @@ if options.num_cpus > block_size:
            % (options.num_cpus, block_size)
      sys.exit(1)
 
-cpus = [ MemTest(atomic=options.atomic, max_loads=options.maxloads, \
-                 percent_functional=options.functional, \
-                 percent_uncacheable=options.uncacheable, \
-                 progress_interval=options.progress) \
+#
+# Currently ruby does not support atomic, functional, or uncacheable accesses
+#
+cpus = [ MemTest(atomic = False, \
+                 max_loads = options.maxloads, \
+                 issue_dmas = False, \
+                 percent_functional = 0, \
+                 percent_uncacheable = 0, \
+                 progress_interval = options.progress) \
          for i in xrange(options.num_cpus) ]
 
 system = System(cpu = cpus,
                 funcmem = PhysicalMemory(),
                 physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system)
+system.dmas = [ MemTest(atomic = False, \
+                        max_loads = options.maxloads, \
+                        issue_dmas = True, \
+                        percent_functional = 0, \
+                        percent_uncacheable = 0, \
+                        progress_interval = options.progress) \
+                for i in xrange(options.num_dmas) ]
 
+system.ruby = Ruby.create_system(options, \
+                                 system.physmem, \
+                                 dma_devices = system.dmas)
+
+#
+# The tester is most effective when randomization is turned on and
+# artifical delay is randomly inserted on messages
+#
+system.ruby.randomization = True
+ 
 assert(len(cpus) == len(system.ruby.cpu_ruby_ports))
 
 for (i, cpu) in enumerate(cpus):
     #
-    # Tie the memtester ports to the correct system ports
+    # Tie the cpu memtester ports to the correct system ports
     #
     cpu.test = system.ruby.cpu_ruby_ports[i].port
     cpu.functional = system.funcmem.port
+
+for (i, dma) in enumerate(system.dmas):
+    #
+    # Tie the dma memtester ports to the correct functional port
+    # Note that the test port has already been connected to the dma_sequencer
+    #
+    dma.functional = system.funcmem.port
 
 # -----------------------
 # run simulation
 # -----------------------
 
 root = Root( system = system )
-if options.atomic:
-    root.system.mem_mode = 'atomic'
-else:
-    root.system.mem_mode = 'timing'
+root.system.mem_mode = 'timing'
 
 # Not much point in this being higher than the L1 latency
 m5.ticks.setGlobalFrequency('1ns')

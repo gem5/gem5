@@ -109,8 +109,20 @@ MemTest::sendPkt(PacketPtr pkt) {
         completeRequest(pkt);
     }
     else if (!cachePort.sendTiming(pkt)) {
+        DPRINTF(MemTest, "accessRetry setting to true\n");
+
+        //
+        // dma requests should never be retried
+        //
+        if (issueDmas) {
+            panic("Nacked DMA requests are not supported\n");
+        }
         accessRetry = true;
         retryPkt = pkt;
+    } else {
+        if (issueDmas) {
+            dmaOutstanding = true;
+        }
     }
 
 }
@@ -127,6 +139,7 @@ MemTest::MemTest(const Params *p)
       percentReads(p->percent_reads),
       percentFunctional(p->percent_functional),
       percentUncacheable(p->percent_uncacheable),
+      issueDmas(p->issue_dmas),
       progressInterval(p->progress_interval),
       nextProgressMessage(p->progress_interval),
       percentSourceUnaligned(p->percent_source_unaligned),
@@ -134,6 +147,7 @@ MemTest::MemTest(const Params *p)
       maxLoads(p->max_loads),
       atomic(p->atomic)
 {
+ 
     vector<string> cmd;
     cmd.push_back("/bin/ls");
     vector<string> null_vec;
@@ -142,6 +156,8 @@ MemTest::MemTest(const Params *p)
 
     cachePort.snoopRangeSent = false;
     funcPort.snoopRangeSent = true;
+
+    id = TESTER_ALLOCATOR++;
 
     // Needs to be masked off once we know the block size.
     traceBlockAddr = p->trace_addr;
@@ -154,9 +170,8 @@ MemTest::MemTest(const Params *p)
     numReads = 0;
     schedule(tickEvent, 0);
 
-    id = TESTER_ALLOCATOR++;
-
     accessRetry = false;
+    dmaOutstanding = false;
 }
 
 Port *
@@ -187,6 +202,10 @@ void
 MemTest::completeRequest(PacketPtr pkt)
 {
     Request *req = pkt->req;
+
+    if (issueDmas) {
+        dmaOutstanding = false;
+    }
 
     DPRINTF(MemTest, "completing %s at address %x (blk %x)\n",
             pkt->isWrite() ? "write" : "read",
@@ -265,11 +284,15 @@ MemTest::tick()
         schedule(tickEvent, curTick + ticks(1));
 
     if (++noResponseCycles >= 500000) {
+        if (issueDmas) {
+            cerr << "DMA tester ";
+        }
         cerr << name() << ": deadlocked at cycle " << curTick << endl;
         fatal("");
     }
 
-    if (accessRetry) {
+    if (accessRetry || (issueDmas && dmaOutstanding)) {
+        DPRINTF(MemTest, "MemTester waiting on accessRetry or DMA response\n");
         return;
     }
 
@@ -281,6 +304,8 @@ MemTest::tick()
     unsigned access_size = random() % 4;
     bool uncacheable = (random() % 100) < percentUncacheable;
 
+    unsigned dma_access_size = random() % 4; 
+
     //If we aren't doing copies, use id as offset, and do a false sharing
     //mem tester
     //We can eliminate the lower bits of the offset, and then use the id
@@ -288,6 +313,7 @@ MemTest::tick()
     offset = blockAddr(offset);
     offset += id;
     access_size = 0;
+    dma_access_size = 0;
 
     Request *req = new Request();
     Request::Flags flags;
@@ -296,14 +322,21 @@ MemTest::tick()
     if (uncacheable) {
         flags.set(Request::UNCACHEABLE);
         paddr = uncacheAddr + offset;
-    } else {
+    } else  {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
     bool probe = (random() % 100 < percentFunctional) && !uncacheable;
 
-    paddr &= ~((1 << access_size) - 1);
-    req->setPhys(paddr, 1 << access_size, flags);
-    req->setThreadContext(id,0);
+    if (issueDmas) {
+        paddr &= ~((1 << dma_access_size) - 1);
+        req->setPhys(paddr, 1 << dma_access_size, flags);
+        req->setThreadContext(id,0);
+    } else {
+        paddr &= ~((1 << access_size) - 1);
+        req->setPhys(paddr, 1 << access_size, flags);
+        req->setThreadContext(id,0);
+    }
+    assert(req->getSize() == 1);
 
     uint8_t *result = new uint8_t[8];
 
@@ -325,8 +358,8 @@ MemTest::tick()
         funcPort.readBlob(req->getPaddr(), result, req->getSize());
 
         DPRINTF(MemTest,
-                "initiating read at address %x (blk %x) expecting %x\n",
-                req->getPaddr(), blockAddr(req->getPaddr()), *result);
+                "id %d initiating read at address %x (blk %x) expecting %x\n",
+                id, req->getPaddr(), blockAddr(req->getPaddr()), *result);
 
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         pkt->setSrc(0);
@@ -380,6 +413,7 @@ void
 MemTest::doRetry()
 {
     if (cachePort.sendTiming(retryPkt)) {
+        DPRINTF(MemTest, "accessRetry setting to false\n");
         accessRetry = false;
         retryPkt = NULL;
     }

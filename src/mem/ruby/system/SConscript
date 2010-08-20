@@ -52,3 +52,4 @@ Source('System.cc')
 Source('TimerTable.cc')
 
 TraceFlag('RubyCache')
+TraceFlag('RubyDma')

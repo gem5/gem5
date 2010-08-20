@@ -132,12 +132,19 @@ class MemTest : public MemObject
     PacketPtr retryPkt;
 
     bool accessRetry;
+    
+    //
+    // The dmaOustanding flag enforces only one dma at a time
+    //
+    bool dmaOutstanding;
 
     unsigned size;              // size of testing memory region
 
     unsigned percentReads;      // target percentage of read accesses
     unsigned percentFunctional; // target percentage of functional accesses
     unsigned percentUncacheable;
+
+    bool issueDmas;
 
     int id;
 

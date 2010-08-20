@@ -49,6 +49,10 @@ DMASequencer::init()
 RequestStatus
 DMASequencer::makeRequest(const RubyRequest &request)
 {
+    if (m_is_busy) {
+        return RequestStatus_BufferFull;
+    }
+
     uint64_t paddr = request.paddr;
     uint8_t* data = request.data;
     int len = request.len;
@@ -108,6 +112,7 @@ DMASequencer::issueNext()
     assert(m_is_busy == true);
     active_request.bytes_completed = active_request.bytes_issued;
     if (active_request.len == active_request.bytes_completed) {
+        DPRINTF(RubyDma, "DMA request completed\n"); 
         ruby_hit_callback(active_request.pkt);
         m_is_busy = false;
         return;
@@ -141,6 +146,7 @@ DMASequencer::issueNext()
     assert(m_mandatory_q_ptr != NULL);
     m_mandatory_q_ptr->enqueue(msg);
     active_request.bytes_issued += msg->getLen();
+    DPRINTF(RubyDma, "Next DMA segment issued to the DMA cntrl\n");
 }
 
 void

@@ -38,6 +38,7 @@ class MemTest(MemObject):
     percent_dest_unaligned = Param.Percent(50,
         "percent of copy dest address that are unaligned")
     percent_reads = Param.Percent(65, "target read percentage")
+    issue_dmas = Param.Bool(False, "this memtester should issue dma requests")
     percent_source_unaligned = Param.Percent(50,
         "percent of copy source address that are unaligned")
     percent_functional = Param.Percent(50, "percent of access that are functional")
