@@ -109,6 +109,7 @@ class Sequencer : public RubyPort, public Consumer
 
     bool insertRequest(SequencerRequest* request);
 
+    void handleLlscWrites(const Address& address, SequencerRequest* request);
 
     // Private copy constructor and assignment operator
     Sequencer(const Sequencer& obj);

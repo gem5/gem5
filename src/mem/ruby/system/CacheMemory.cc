@@ -353,7 +353,9 @@ CacheMemory::changePermission(const Address& address,
     lookup(address).m_Permission = new_perm;
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
-    if (new_perm != AccessPermission_Read_Write) {
+    if ((new_perm == AccessPermission_Invalid) ||
+        (new_perm == AccessPermission_NotPresent) ||
+        (new_perm == AccessPermission_Stale)) {
         DPRINTF(RubyCache, "Permission clearing lock for addr: %x\n", address);
         m_locked[cacheSet][loc] = -1;
     }

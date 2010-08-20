@@ -463,6 +463,30 @@ class Packet : public FastAlloc, public Printable
     Addr getOffset(int blkSize) const { return getAddr() & (Addr)(blkSize - 1); }
 
     /**
+     * It has been determined that the SC packet should successfully update
+     * memory.  Therefore, convert this SC packet to a normal write.
+     */
+    void
+    convertScToWrite()
+    {
+        assert(isLLSC());
+        assert(isWrite());
+        cmd = MemCmd::WriteReq;
+    }
+
+    /**
+     * When ruby is in use, Ruby will monitor the cache line and thus M5 
+     * phys memory should treat LL ops as normal reads. 
+     */
+    void
+    convertLlToRead()
+    {
+        assert(isLLSC());
+        assert(isRead());
+        cmd = MemCmd::ReadReq;
+    }
+
+    /**
      * Constructor.  Note that a Request object must be constructed
      * first, but the Requests's physical address and size fields need
      * not be valid. The command and destination addresses must be

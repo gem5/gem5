@@ -229,23 +229,10 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     // Submit the ruby request
     RequestStatus requestStatus = ruby_port->makeRequest(ruby_request);
 
-    // If the request successfully issued or the SC request completed because
-    // exclusive permission was lost, then we should return true.
+    // If the request successfully issued then we should return true.
     // Otherwise, we need to delete the senderStatus we just created and return
     // false.
-    if ((requestStatus == RequestStatus_Issued) ||
-        (requestStatus == RequestStatus_LlscFailed)) {
-
-        // The communicate to M5 whether the SC command succeeded by seting the
-        // packet's extra data.
-        if (pkt->isLLSC() && pkt->isWrite()) {
-            if (requestStatus == RequestStatus_LlscFailed) {
-                DPRINTF(MemoryAccess, "SC failed and request completed\n");
-                pkt->req->setExtraData(0);
-            } else {
-                pkt->req->setExtraData(1);
-            }
-        }
+    if (requestStatus == RequestStatus_Issued) {
         return true;
     }
 
@@ -280,9 +267,39 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
 {
     bool needsResponse = pkt->needsResponse();
 
+    //
+    // All responses except failed SC operations access M5 physical memory
+    //
+    bool accessPhysMem = true;
+
+    if (pkt->isLLSC()) {
+        if (pkt->isWrite()) {
+            if (pkt->req->getExtraData() != 0) {
+                //
+                // Successful SC packets convert to normal writes
+                //
+                pkt->convertScToWrite();
+            } else {
+                //
+                // Failed SC packets don't access physical memory and thus
+                // the RubyPort itself must convert it to a response.
+                //
+                accessPhysMem = false;
+                pkt->makeAtomicResponse();
+            }
+        } else {
+            //
+            // All LL packets convert to normal loads so that M5 PhysMem does
+            // not lock the blocks.
+            //
+            pkt->convertLlToRead();
+        }
+    }
     DPRINTF(MemoryAccess, "Hit callback needs response %d\n", needsResponse);
 
-    ruby_port->physMemPort->sendAtomic(pkt);
+    if (accessPhysMem) {
+        ruby_port->physMemPort->sendAtomic(pkt);
+    }
 
     // turn packet around to go back to requester if response expected
     if (needsResponse) {

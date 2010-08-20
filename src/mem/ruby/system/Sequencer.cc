@@ -41,6 +41,7 @@
 #include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
+#include "mem/packet.hh"
 #include "params/RubySequencer.hh"
 
 using namespace std;
@@ -303,6 +304,38 @@ Sequencer::removeRequest(SequencerRequest* srequest)
 }
 
 void
+Sequencer::handleLlscWrites(const Address& address, SequencerRequest* request)
+{
+    if (request->ruby_request.type == RubyRequestType_Locked_Write) {
+        if (!m_dataCache_ptr->isLocked(address, m_version)) {
+            //
+            // For failed SC requests, indicate the failure to the cpu by
+            // setting the extra data to zero.
+            //
+            request->ruby_request.pkt->req->setExtraData(0);
+        } else {
+            //
+            // For successful SC requests, indicate the success to the cpu by
+            // setting the extra data to one.  
+            //
+            request->ruby_request.pkt->req->setExtraData(1);
+        }
+        m_dataCache_ptr->clearLocked(address);
+    } else if (request->ruby_request.type == RubyRequestType_Locked_Read) {
+        //
+        // Note: To fully follow Alpha LLSC semantics, should the LL clear any
+        // previously locked cache lines?
+        //
+        m_dataCache_ptr->setLocked(address, m_version);
+    } else if (m_dataCache_ptr->isLocked(address, m_version)) {
+        //
+        // Normal writes should clear the locked address
+        //
+        m_dataCache_ptr->clearLocked(address);
+    }
+}
+
+void
 Sequencer::writeCallback(const Address& address, DataBlock& data)
 {
     writeCallback(address, GenericMachineType_NULL, data);
@@ -329,9 +362,13 @@ Sequencer::writeCallback(const Address& address,
            (request->ruby_request.type == RubyRequestType_Locked_Read) ||
            (request->ruby_request.type == RubyRequestType_Locked_Write));
 
-    if (request->ruby_request.type == RubyRequestType_Locked_Read) {
-        m_dataCache_ptr->setLocked(address, m_version);
-    } else if (request->ruby_request.type == RubyRequestType_RMW_Read) {
+    //
+    // For Alpha, properly handle LL, SC, and write requests with respect to
+    // locked cache blocks.
+    //
+    handleLlscWrites(address, request);
+
+    if (request->ruby_request.type == RubyRequestType_RMW_Read) {
         m_controller->blockOnQueue(address, m_mandatory_q_ptr);
     } else if (request->ruby_request.type == RubyRequestType_RMW_Write) {
         m_controller->unblock(address);
@@ -504,26 +541,6 @@ Sequencer::makeRequest(const RubyRequest &request)
         return RequestStatus_NULL;
     }
 
-    if (request.type == RubyRequestType_Locked_Write) {
-        // NOTE: it is OK to check the locked flag here as the
-        // mandatory queue will be checked first ensuring that nothing
-        // comes between checking the flag and servicing the store.
-
-        Address line_addr = line_address(Address(request.paddr));
-        if (!m_dataCache_ptr->isLocked(line_addr, m_version)) {
-            removeRequest(srequest);
-            if (Debug::getProtocolTrace()) {
-                g_system_ptr->getProfiler()->
-                    profileTransition("Seq", m_version,
-                                      Address(request.paddr),
-                                      "", "SC Fail", "",
-                                      RubyRequestType_to_string(request.type));
-            }
-            return RequestStatus_LlscFailed;
-        } else {
-            m_dataCache_ptr->clearLocked(line_addr);
-        }
-    }
     issueRequest(request);
 
     // TODO: issue hardware prefetches here

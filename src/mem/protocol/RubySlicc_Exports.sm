@@ -53,7 +53,6 @@ enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent")
   Read_Write, desc="Read/Write";
   Invalid,    desc="Invalid";
   NotPresent, desc="NotPresent";
-  OnHold,     desc="Holding a place in dnuca cache";
   ReadUpgradingToWrite, desc="Read only, but trying to get Read/Write";
   Stale,      desc="local L1 has a modified copy, assume L2 copy is stale data";
 }
@@ -345,6 +344,5 @@ enumeration(RequestStatus, desc="...", default="RequestStatus_NULL")  {
   Issued, desc="The sequencer successfully issued the request";
   BufferFull, desc="Can not issue because the sequencer is full";
   Aliased, desc="This request aliased with a currently outstanding request";
-  LlscFailed, desc="The write failed in the Load-Link Store-Conditional pair";
   NULL, desc="";
 }
