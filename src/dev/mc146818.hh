@@ -119,6 +119,10 @@ class MC146818 : public EventManager
     /** RTC status register B */
     uint8_t stat_regB;
 
+    /** RTC event times for drain and serialization coordination */
+    Tick rtcTimerInterruptTickOffset;
+    Tick rtcClockTickOffset;
+
   public:
     MC146818(EventManager *em, const std::string &name, const struct tm time,
             bool bcd, Tick frequency);
@@ -131,6 +135,8 @@ class MC146818 : public EventManager
     uint8_t readData(const uint8_t addr);
 
     void tickClock();
+
+    unsigned int drain(Event *de);
 
     /**
       * Serialize this object to the given output stream.

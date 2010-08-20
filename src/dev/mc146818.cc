@@ -40,6 +40,7 @@
 #include "base/trace.hh"
 #include "dev/mc146818.hh"
 #include "dev/rtcreg.h"
+#include "sim/sim_object.hh"
 
 using namespace std;
 
@@ -105,8 +106,12 @@ MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
 
 MC146818::~MC146818()
 {
-    deschedule(tickEvent);
-    deschedule(event);
+    if (tickEvent.scheduled()) {
+        deschedule(tickEvent);
+    }
+    if (event.scheduled()) {
+        deschedule(event);
+    }
 }
 
 void
@@ -203,6 +208,20 @@ MC146818::tickClock()
     setTime(*gmtime(&calTime));
 }
 
+unsigned int 
+MC146818::drain(Event *de)
+{
+    if (event.scheduled()) {
+        rtcTimerInterruptTickOffset = event.when() - curTick;
+        rtcClockTickOffset = event.when() - curTick;
+        deschedule(event);
+    }
+    if (tickEvent.scheduled()) {
+        deschedule(tickEvent);
+    }
+    return 0;
+}
+
 void
 MC146818::serialize(const string &base, ostream &os)
 {
@@ -214,9 +233,7 @@ MC146818::serialize(const string &base, ostream &os)
     // save the timer tick and rtc clock tick values to correctly reschedule 
     // them during unserialize
     //
-    Tick rtcTimerInterruptTickOffset = event.when() - curTick;
     SERIALIZE_SCALAR(rtcTimerInterruptTickOffset);
-    Tick rtcClockTickOffset = event.when() - curTick;
     SERIALIZE_SCALAR(rtcClockTickOffset);
 }
 

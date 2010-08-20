@@ -137,6 +137,10 @@ class Intel8254Timer : public EventManager
         /** Pointer to container */
         Intel8254Timer *parent;
 
+        /** if non-zero, the scheduled tick of an event used for drain
+            serialization coordination */
+        Tick event_tick;
+
       public:
         Counter(Intel8254Timer *p, const std::string &name, unsigned int num);
 
@@ -163,6 +167,12 @@ class Intel8254Timer : public EventManager
 
         /** Is the output high? */
         bool outputHigh();
+
+        /**
+         * Drain all associated events.
+         * @param drainEvent
+         */
+        unsigned int drain(Event *de);
 
         /**
          * Serialize this object to the given output stream.
@@ -228,6 +238,8 @@ class Intel8254Timer : public EventManager
         assert(num < 3);
         return counter[num]->outputHigh();
     }
+
+    unsigned int drain(Event *de);
 
     /**
      * Serialize this object to the given output stream.
