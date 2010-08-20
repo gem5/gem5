@@ -730,9 +730,9 @@ machine(L1Cache, "Token protocol")
           out_msg.RetryNum := L1_TBEs[address].IssueCount;
           out_msg.isLocal := true;
           if (L1_TBEs[address].IssueCount == 0) {
-            out_msg.MessageSize := MessageSizeType:Request_Control;
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
           } else {
-            out_msg.MessageSize := MessageSizeType:Reissue_Control;
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
           }
           out_msg.Prefetch := L1_TBEs[address].Prefetch;
           out_msg.AccessMode := L1_TBEs[address].AccessMode;
@@ -854,9 +854,9 @@ machine(L1Cache, "Token protocol")
 
           out_msg.RetryNum := L1_TBEs[address].IssueCount;
           if (L1_TBEs[address].IssueCount == 0) {
-            out_msg.MessageSize := MessageSizeType:Request_Control;
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
           } else {
-            out_msg.MessageSize := MessageSizeType:Reissue_Control;
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
           }
           out_msg.Prefetch := L1_TBEs[address].Prefetch;
           out_msg.AccessMode := L1_TBEs[address].AccessMode;

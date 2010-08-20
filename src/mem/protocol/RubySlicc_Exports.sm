@@ -200,6 +200,7 @@ enumeration(MessageSizeType, default="MessageSizeType_Undefined", desc="...") {
   Response_Control, desc="non-data response";
   Writeback_Data, desc="Writeback data";
   Writeback_Control, desc="Writeback control";
+  Broadcast_Control, desc="Broadcast control";
   Forwarded_Control, desc="Forwarded control";
   Invalidate_Control, desc="Invalidate control";
   Unblock_Control, desc="Unblock control";

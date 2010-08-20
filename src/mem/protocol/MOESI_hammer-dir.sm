@@ -477,7 +477,7 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.Requestor := in_msg.Requestor;
           out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
           out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
-          out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+          out_msg.MessageSize := MessageSizeType:Broadcast_Control;
         }
       }
     }
@@ -494,7 +494,7 @@ machine(Directory, "AMD Hammer-like protocol")
         //
         out_msg.Requestor := machineID;
         out_msg.Destination.broadcast(MachineType:L1Cache); 
-        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+        out_msg.MessageSize := MessageSizeType:Broadcast_Control;
       }
     }
   }
@@ -510,7 +510,7 @@ machine(Directory, "AMD Hammer-like protocol")
         //
         out_msg.Requestor := machineID;
         out_msg.Destination.broadcast(MachineType:L1Cache); 
-        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+        out_msg.MessageSize := MessageSizeType:Broadcast_Control;
       }
     }
   }

@@ -748,7 +748,7 @@ machine(L2Cache, "Token protocol")
 
            out_msg.Type := in_msg.Type;
            out_msg.isLocal := false;
-           out_msg.MessageSize := MessageSizeType:Request_Control;
+           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
            out_msg.AccessMode := in_msg.AccessMode;
            out_msg.Prefetch := in_msg.Prefetch;
         }
