@@ -35,6 +35,7 @@
 
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
@@ -49,8 +50,13 @@ class CacheProfiler
     void printStats(std::ostream& out) const;
     void clearStats();
 
-    void addStatSample(CacheRequestType requestType, AccessModeType type,
-                       int msgSize, PrefetchBit pfBit);
+    void addCacheStatSample(CacheRequestType requestType, 
+                            AccessModeType type,
+                            PrefetchBit pfBit);
+
+    void addGenericStatSample(GenericRequestType requestType, 
+                              AccessModeType type,
+                              PrefetchBit pfBit);
 
     void print(std::ostream& out) const;
 
@@ -58,9 +64,9 @@ class CacheProfiler
     // Private copy constructor and assignment operator
     CacheProfiler(const CacheProfiler& obj);
     CacheProfiler& operator=(const CacheProfiler& obj);
+    void addStatSample(AccessModeType type, PrefetchBit pfBit);
 
     std::string m_description;
-    Histogram m_requestSize;
     int64 m_misses;
     int64 m_demand_misses;
     int64 m_prefetches;
@@ -68,7 +74,8 @@ class CacheProfiler
     int64 m_hw_prefetches;
     int64 m_accessModeTypeHistogram[AccessModeType_NUM];
 
-    std::vector<int> m_requestTypeVec;
+    std::vector<int> m_cacheRequestType;
+    std::vector<int> m_genericRequestType;
 };
 
 inline std::ostream&

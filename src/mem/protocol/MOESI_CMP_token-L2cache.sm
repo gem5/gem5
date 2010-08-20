@@ -304,6 +304,17 @@ machine(L2Cache, "Token protocol")
     }
   }
 
+  GenericRequestType convertToGenericType(CoherenceRequestType type) {
+    if(type == CoherenceRequestType:GETS) {
+      return GenericRequestType:GETS;
+    } else if(type == CoherenceRequestType:GETX) {
+      return GenericRequestType:GETX;
+    } else {
+      DEBUG_EXPR(type);
+      error("invalid CoherenceRequestType");
+    }
+  }
+
   // ** OUT_PORTS **
   out_port(globalRequestNetwork_out, RequestMsg, GlobalRequestFromL2Cache);
   out_port(localRequestNetwork_out, RequestMsg, L1RequestFromL2Cache);
@@ -918,12 +929,13 @@ machine(L2Cache, "Token protocol")
     L2cacheMemory.deallocate(address);
   }
 
-  //action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-  //  peek(L1requestNetwork_in, RequestMsg) {
-      // AccessModeType not implemented
-      //profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize),  in_msg.Prefetch, machineIDToNodeID(in_msg.Requestor));
-  //  }
-  //}
+  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      L2cacheMemory.profileGenericRequest(convertToGenericType(in_msg.Type),
+                                          in_msg.AccessMode,   
+                                          in_msg.Prefetch);
+    }
+  }
 
 
   action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
@@ -961,7 +973,7 @@ machine(L2Cache, "Token protocol")
   transition(NP,  {L1_GETS, L1_GETX}) {
     a_broadcastLocalRequest;
     r_markNewSharer;
-    //uu_profileMiss;
+    uu_profileMiss;
     o_popL1RequestQueue;
   }
 
@@ -1012,7 +1024,7 @@ machine(L2Cache, "Token protocol")
     a_broadcastLocalRequest;
     tt_sendLocalAckWithCollectedTokens;  // send any tokens we have collected
     r_markNewSharer;
-    //uu_profileMiss;
+    uu_profileMiss;
     o_popL1RequestQueue;
   }
 
@@ -1020,7 +1032,7 @@ machine(L2Cache, "Token protocol")
     a_broadcastLocalRequest;
     tt_sendLocalAckWithCollectedTokens; // send any tokens we have collected
     r_markNewSharer;
-    //uu_profileMiss;
+    uu_profileMiss;
     o_popL1RequestQueue;
   }
 
@@ -1181,7 +1193,7 @@ machine(L2Cache, "Token protocol")
     tt_sendLocalAckWithCollectedTokens;
     r_markNewSharer;
     r_setMRU;
-    //uu_profileMiss;
+    uu_profileMiss;
     o_popL1RequestQueue;
   }
 
@@ -1294,7 +1306,7 @@ machine(L2Cache, "Token protocol")
     k_dataAndAllTokensFromL2CacheToL1Requestor;
     r_markNewSharer;
     r_setMRU;
-    //uu_profileMiss;
+    uu_profileMiss;
     o_popL1RequestQueue;
   }
 
@@ -1382,7 +1394,7 @@ machine(L2Cache, "Token protocol")
   transition(I_L, {L1_GETX, L1_GETS}) {
     a_broadcastLocalRequest;
     r_markNewSharer;
-    //uu_profileMiss;
+    uu_profileMiss;
     o_popL1RequestQueue;
   }
 
@@ -1391,7 +1403,7 @@ machine(L2Cache, "Token protocol")
     tt_sendLocalAckWithCollectedTokens;
     r_markNewSharer;
     r_setMRU;
-    //uu_profileMiss;
+    uu_profileMiss;
     o_popL1RequestQueue;
   }
 

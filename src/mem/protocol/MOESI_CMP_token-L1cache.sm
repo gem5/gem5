@@ -1357,7 +1357,11 @@ machine(L1Cache, "Token protocol")
 
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(mandatoryQueue_in, CacheMsg) {
-      // profile_miss(in_msg, id);
+      if (L1DcacheMemory.isTagPresent(address)) {
+        L1DcacheMemory.profileMiss(in_msg);
+      } else {
+        L1IcacheMemory.profileMiss(in_msg);
+      }
     }
   }
 

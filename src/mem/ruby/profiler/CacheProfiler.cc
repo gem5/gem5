@@ -33,7 +33,7 @@
 using namespace std;
 
 CacheProfiler::CacheProfiler(const string& description)
-    : m_requestTypeVec(int(CacheRequestType_NUM))
+    : m_cacheRequestType(int(CacheRequestType_NUM)), m_genericRequestType(int(GenericRequestType_NUM))
 {
     m_description = description;
 
@@ -60,18 +60,33 @@ CacheProfiler::printStats(ostream& out) const
     int requests = 0;
 
     for (int i = 0; i < int(CacheRequestType_NUM); i++) {
-        requests += m_requestTypeVec[i];
+        requests += m_cacheRequestType[i];
+    }
+
+    for (int i = 0; i < int(GenericRequestType_NUM); i++) {
+        requests += m_genericRequestType[i];
     }
 
     assert(m_misses == requests);
 
     if (requests > 0) {
         for (int i = 0; i < int(CacheRequestType_NUM); i++) {
-            if (m_requestTypeVec[i] > 0) {
+            if (m_cacheRequestType[i] > 0) {
                 out << description << "_request_type_"
                     << CacheRequestType_to_string(CacheRequestType(i))
                     << ":   "
-                    << 100.0 * (double)m_requestTypeVec[i] /
+                    << 100.0 * (double)m_cacheRequestType[i] /
+                    (double)requests
+                    << "%" << endl;
+            }
+        }
+
+        for (int i = 0; i < int(GenericRequestType_NUM); i++) {
+            if (m_genericRequestType[i] > 0) {
+                out << description << "_request_type_"
+                    << GenericRequestType_to_string(GenericRequestType(i))
+                    << ":   "
+                    << 100.0 * (double)m_genericRequestType[i] /
                     (double)requests
                     << "%" << endl;
             }
@@ -90,7 +105,6 @@ CacheProfiler::printStats(ostream& out) const
         }
     }
 
-    out << description << "_request_size: " << m_requestSize << endl;
     out << endl;
 }
 
@@ -98,9 +112,11 @@ void
 CacheProfiler::clearStats()
 {
     for (int i = 0; i < int(CacheRequestType_NUM); i++) {
-        m_requestTypeVec[i] = 0;
+        m_cacheRequestType[i] = 0;
     }
-    m_requestSize.clear();
+    for (int i = 0; i < int(GenericRequestType_NUM); i++) {
+        m_genericRequestType[i] = 0;
+    }
     m_misses = 0;
     m_demand_misses = 0;
     m_prefetches = 0;
@@ -112,16 +128,30 @@ CacheProfiler::clearStats()
 }
 
 void
-CacheProfiler::addStatSample(CacheRequestType requestType,
-                             AccessModeType type, int msgSize,
+CacheProfiler::addCacheStatSample(CacheRequestType requestType,
+                                  AccessModeType accessType, 
+                                  PrefetchBit pfBit)
+{
+    m_cacheRequestType[requestType]++;
+    addStatSample(accessType, pfBit);
+}
+
+void
+CacheProfiler::addGenericStatSample(GenericRequestType requestType,
+                                    AccessModeType accessType, 
+                                    PrefetchBit pfBit)
+{
+    m_genericRequestType[requestType]++;
+    addStatSample(accessType, pfBit);
+}
+
+void
+CacheProfiler::addStatSample(AccessModeType accessType, 
                              PrefetchBit pfBit)
 {
     m_misses++;
 
-    m_requestTypeVec[requestType]++;
-
-    m_accessModeTypeHistogram[type]++;
-    m_requestSize.add(msgSize);
+    m_accessModeTypeHistogram[accessType]++;
     if (pfBit == PrefetchBit_No) {
         m_demand_misses++;
     } else if (pfBit == PrefetchBit_Yes) {

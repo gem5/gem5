@@ -37,6 +37,7 @@
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
@@ -111,6 +112,10 @@ class CacheMemory : public SimObject
     void setMRU(const Address& address);
 
     void profileMiss(const CacheMsg & msg);
+
+    void profileGenericRequest(GenericRequestType requestType,
+                               AccessModeType accessType,
+                               PrefetchBit pfBit);
 
     void getMemoryValue(const Address& addr, char* value,
                         unsigned int size_in_bytes);

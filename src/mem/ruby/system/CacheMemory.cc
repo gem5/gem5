@@ -375,8 +375,19 @@ CacheMemory::setMRU(const Address& address)
 void
 CacheMemory::profileMiss(const CacheMsg& msg)
 {
-    m_profiler_ptr->addStatSample(msg.getType(), msg.getAccessMode(),
-                                  msg.getSize(), msg.getPrefetch());
+    m_profiler_ptr->addCacheStatSample(msg.getType(), 
+                                       msg.getAccessMode(),
+                                       msg.getPrefetch());
+}
+
+void
+CacheMemory::profileGenericRequest(GenericRequestType requestType,
+                                   AccessModeType accessType,
+                                   PrefetchBit pfBit)
+{
+    m_profiler_ptr->addGenericStatSample(requestType, 
+                                         accessType, 
+                                         pfBit);
 }
 
 void

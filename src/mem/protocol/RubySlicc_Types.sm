@@ -126,6 +126,11 @@ external_type(CacheMemory) {
   void changePermission(Address, AccessPermission);
   bool isTagPresent(Address);
   void profileMiss(CacheMsg);
+
+  void profileGenericRequest(GenericRequestType,
+                             AccessModeType,
+                             PrefetchBit);
+
   void setMRU(Address);
 }
 

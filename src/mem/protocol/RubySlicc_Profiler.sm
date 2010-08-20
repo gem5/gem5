@@ -40,7 +40,6 @@ void profile_miss(CacheMsg msg);
 void profile_L1Cache_miss(CacheMsg msg, NodeID l1cacheID);
 
 // used by CMP protocols
-void profile_L2Cache_miss(GenericRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit, NodeID l2cacheID);
 void profile_request(std::string L1CacheStateStr, std::string L2CacheStateStr,
     std::string directoryStateStr, std::string requestTypeStr);
 void profileMessageReordering(bool wasReordered);
