@@ -65,45 +65,18 @@ enumeration(TesterStatus, desc="...") {
   Check_Pending,   desc="Check Pending";
 }
 
-// SpecifiedGeneratorTypes
-enumeration(SpecifiedGeneratorType, desc="...") {
-  DetermGETXGenerator,       desc="deterministic GETX Tester";
-  DetermInvGenerator,        desc="deterministic all shared then invalidate Tester";
-  DetermSeriesGETSGenerator, desc="deterministic Series of GETSs Tester for prefetcher tuning";
+// InvalidateGeneratorStatus
+enumeration(InvalidateGeneratorStatus, desc="...") {
+  Load_Waiting,    desc="Load waiting to be issued";
+  Load_Pending,    desc="Load issued";
+  Inv_Waiting,     desc="Store (invalidate) waiting to be issued";
+  Inv_Pending,     desc="Store (invalidate) issued";
 }
 
-// RequestGeneratorStatus
-enumeration(RequestGeneratorStatus, desc="...") {
-  Thinking,        desc="Doing work between release and next acquire";
-  Test_Pending,    desc="Test pending";
-  Before_Swap,     desc="We're about to perform the swap";
-  Swap_Pending,    desc="The swap used for test-and-send is pending";
-  Holding,         desc="We are holding the lock performing the critical section";
-  Release_Pending, desc="The write for the release is pending";
-  Done,            desc="Done, waiting for end of run";
-}
-
-// DetermGETXGeneratorStatus
-enumeration(DetermGETXGeneratorStatus, desc="...") {
+// SeriesRequestGeneratorStatus
+enumeration(SeriesRequestGeneratorStatus, desc="...") {
   Thinking,        desc="Doing work before next action";
-  Store_Pending,   desc="Store pending";
-  Done,            desc="Done, waiting for end of run";
-}
-
-// DetermGETXGeneratorStatus
-enumeration(DetermInvGeneratorStatus, desc="...") {
-  Thinking,        desc="Doing work before next action";
-  Store_Pending,   desc="Store pending";
-  Load_Complete,   desc="Load complete";
-  Load_Pending,    desc="Load pending";
-  Done,            desc="Done, waiting for end of run";
-}
-
-// DetermSeriesGETSGeneratorStatus
-enumeration(DetermSeriesGETSGeneratorStatus, desc="...") {
-  Thinking,        desc="Doing work before next action";
-  Load_Pending,    desc="Load pending";
-  Done,            desc="Done, waiting for end of run";
+  Request_Pending, desc="Request pending";
 }
 
 // LockStatus
