@@ -50,6 +50,8 @@ class IntLink(Link):
 
 class Topology(SimObject):
     type = 'Topology'
+    description = Param.String("Not Specified",
+                               "the name of the imported topology module")
     ext_links = VectorParam.ExtLink("Links to external nodes")
     int_links = VectorParam.IntLink("Links between internal nodes")
     num_int_nodes = Param.Int("Nunber of internal nodes")

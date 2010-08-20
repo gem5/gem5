@@ -29,6 +29,9 @@
 from m5.params import *
 from m5.objects import *
 
+class Mesh(Topology):
+    description='Mesh'
+
 # Makes a generic mesh assuming an equal number of cache and directory cntrls
 
 def makeTopology(nodes, options):
@@ -87,6 +90,6 @@ def makeTopology(nodes, options):
                                          node_b=south_id,
                                          weight=2))
 
-    return Topology(ext_links=ext_links,
-                    int_links=int_links,
-                    num_int_nodes=num_routers)
+    return Mesh(ext_links=ext_links,
+                int_links=int_links,
+                num_int_nodes=num_routers)

@@ -29,6 +29,9 @@
 from m5.params import *
 from m5.objects import *
 
+class MeshDirCorners(Topology):
+    description='MeshDirCorners'
+
 # This file contains a special network creation function.  This
 # networks is not general and will only work with specific system
 # configurations.  The network specified is similar to GEMS old file
@@ -105,7 +108,7 @@ def makeTopology(nodes, options):
                                          node_b=south_id,
                                          weight=2))
 
-    return Topology(ext_links=ext_links,
-                    int_links=int_links,
-                    num_int_nodes=num_routers)
+    return MeshDirCorners(ext_links=ext_links,
+                          int_links=int_links,
+                          num_int_nodes=num_routers)
 
