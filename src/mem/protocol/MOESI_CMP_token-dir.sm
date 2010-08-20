@@ -63,6 +63,7 @@ machine(Directory, "Token protocol")
     L_O_W, desc="transitioning to Locked, waiting for memory read, could eventually return to O";
     L_NO_W, desc="transitioning to Locked, waiting for memory read, eventually return to NO";
     DR_L_W, desc="transitioning to Locked underneath a DMA read, waiting for memory data";
+    DW_L_W, desc="transitioning to Locked underneath a DMA write, waiting for memory ack";
     NO_W, desc="transitioning to Not Owner, waiting for memory read";
     O_DW_W, desc="transitioning to Owner, waiting for memory before DMA ack";
     O_DR_W, desc="transitioning to Owner, waiting for memory before DMA data";
@@ -291,13 +292,19 @@ machine(Directory, "Token protocol")
 
           // React to the message based on the current state of the table
           if (persistentTable.isLocked(in_msg.Address)) {
-            trigger(Event:Lockdown, in_msg.Address); // locked
+            if (persistentTable.findSmallest(in_msg.Address) == machineID) {
+              trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+            } else {
+              trigger(Event:Lockdown, in_msg.Address); // locked
+            }   
           } else {
             trigger(Event:Unlockdown, in_msg.Address); // unlocked
           }
         }
         else {
-          if (in_msg.Type == PersistentRequestType:GETX_PERSISTENT) {
+          if (persistentTable.findSmallest(in_msg.Address) == machineID) {
+            trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+          } else if (in_msg.Type == PersistentRequestType:GETX_PERSISTENT) {
             trigger(Event:Lockdown, in_msg.Address); // locked
           } else if (in_msg.Type == PersistentRequestType:GETS_PERSISTENT) {
             trigger(Event:Lockdown, in_msg.Address); // locked
@@ -685,6 +692,10 @@ machine(Directory, "Token protocol")
     }
   }
 
+  action(aat_assertAllTokens, "aat", desc="assert that we have all tokens") {
+    assert(getDirectoryEntry(address).Tokens == max_tokens());
+  }
+
   action(j_popIncomingRequestQueue, "j", desc="Pop incoming request queue") {
     requestNetwork_in.dequeue();
   }
@@ -743,6 +754,16 @@ machine(Directory, "Token protocol")
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := in_msg.Dirty;
       }
+    }
+  }
+
+  action(rs_resetScheduleTimeout, "rs", desc="Reschedule Schedule Timeout") {
+    //
+    // currently only support a fixed timeout latency
+    //
+    if (reissueTimerTable.isSet(address)) {
+      reissueTimerTable.unset(address);
+      reissueTimerTable.set(address, fixed_timeout_latency);
     }
   }
 
@@ -883,6 +904,10 @@ machine(Directory, "Token protocol")
     n_checkData;
     f_incrementTokens;
     k_popIncomingResponseQueue;
+  }
+
+  transition({O, NO}, Unlockdown) {
+    l_popIncomingPersistentQueue;
   }
 
   //
@@ -1060,7 +1085,7 @@ machine(Directory, "Token protocol")
     j_popIncomingRequestQueue;
   }
 
-  transition({L, DW_L, DR_L, L_O_W, L_NO_W, DR_L_W}, Lockdown) {
+  transition({L, DW_L, DR_L, L_O_W, L_NO_W, DR_L_W, DW_L_W}, Lockdown) {
     l_popIncomingPersistentQueue;
   }
 
@@ -1100,11 +1125,11 @@ machine(Directory, "Token protocol")
     l_popMemQueue;
   }
 
-  transition(L_O_W, {Unlockdown, Own_Lock_or_Unlock}, O_W) {
+  transition(L_O_W, Unlockdown, O_W) {
     l_popIncomingPersistentQueue;
   }
 
-  transition(L_NO_W, {Unlockdown, Own_Lock_or_Unlock}, NO_W) {
+  transition(L_NO_W, Unlockdown, NO_W) {
     l_popIncomingPersistentQueue;
   }
 
@@ -1113,15 +1138,27 @@ machine(Directory, "Token protocol")
     l_popMemQueue;
   }
 
+  transition(DW_L_W, Memory_Ack, L) {
+    aat_assertAllTokens;
+    da_sendDmaAck;
+    s_deallocateTBE;
+    dd_sendDataWithAllTokensToStarver;
+    l_popMemQueue;
+  }
+
   transition(DW_L, {Unlockdown, Own_Lock_or_Unlock}, NO_DW) {
     l_popIncomingPersistentQueue;
   }
 
-  transition(DR_L_W, {Unlockdown, Own_Lock_or_Unlock}, O_DR_W) {
+  transition(DR_L_W, Unlockdown, O_DR_W) {
     l_popIncomingPersistentQueue;
   }
 
-  transition({DW_L, DR_L_W}, Request_Timeout) {
+  transition(DW_L_W, Unlockdown, O_DW_W) {
+    l_popIncomingPersistentQueue;
+  }
+
+  transition({DW_L, DR_L_W, DW_L_W}, Request_Timeout) {
     ut_unsetReissueTimer;
     px_tryIssuingPersistentGETXRequest;
   }
@@ -1143,21 +1180,30 @@ machine(Directory, "Token protocol")
     l_popMemQueue; 
   }
 
-  transition({O, NO, L, O_DW, NO_DW, NO_DR}, Own_Lock_or_Unlock) {
+  transition({O, NO, O_DW, NO_DW, NO_DR}, Own_Lock_or_Unlock) {
     l_popIncomingPersistentQueue;
   }
 
   // Blocked states
-  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR}, {GETX, GETS}) {
+  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, DW_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR}, {GETX, GETS}) {
     z_recycleRequest;
   }
 
-  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR, L, DW_L, DR_L}, {DMA_READ, DMA_WRITE}) {
+  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, DW_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR, L, DW_L, DR_L}, {DMA_READ, DMA_WRITE, DMA_WRITE_All_Tokens}) {
     y_recycleDmaRequestQueue;
   }
 
-  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, O_DW_W, O_DR_W}, {Data_Owner, Ack_Owner, Tokens, Ack_All_Tokens}) {
+  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, DW_L_W, O_DW_W, O_DR_W}, {Data_Owner, Ack_Owner, Tokens, Ack_All_Tokens}) {
     kz_recycleResponse;
+  }
+
+  //
+  // If we receive a request timeout while waiting for memory, it is likely that
+  // the request will be satisfied and issuing a presistent request will do us
+  // no good.  Just wait.
+  //
+  transition({O_DW_W, O_DR_W}, Request_Timeout) {
+    rs_resetScheduleTimeout;
   }
 
   transition(NO_W, Lockdown, L_NO_W) {
@@ -1172,7 +1218,11 @@ machine(Directory, "Token protocol")
     l_popIncomingPersistentQueue;
   }
 
-  transition({NO_W, O_W, O_DR_W}, {Unlockdown, Own_Lock_or_Unlock}) {
+  transition(O_DW_W, Lockdown, DW_L_W) {
+    l_popIncomingPersistentQueue;
+  }
+
+  transition({NO_W, O_W, O_DR_W, O_DW_W}, {Unlockdown, Own_Lock_or_Unlock}) {
     l_popIncomingPersistentQueue;
   }
 }
