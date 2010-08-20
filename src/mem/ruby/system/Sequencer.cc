@@ -303,9 +303,15 @@ Sequencer::removeRequest(SequencerRequest* srequest)
     markRemoved();
 }
 
-void
-Sequencer::handleLlscWrites(const Address& address, SequencerRequest* request)
+bool
+Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
 {
+    //
+    // The success flag indicates whether the LLSC operation was successful.
+    // LL ops will always succeed, but SC may fail if the cache line is no
+    // longer locked.
+    //
+    bool success = true;
     if (request->ruby_request.type == RubyRequestType_Locked_Write) {
         if (!m_dataCache_ptr->isLocked(address, m_version)) {
             //
@@ -313,6 +319,7 @@ Sequencer::handleLlscWrites(const Address& address, SequencerRequest* request)
             // setting the extra data to zero.
             //
             request->ruby_request.pkt->req->setExtraData(0);
+            success = false;
         } else {
             //
             // For successful SC requests, indicate the success to the cpu by
@@ -320,6 +327,9 @@ Sequencer::handleLlscWrites(const Address& address, SequencerRequest* request)
             //
             request->ruby_request.pkt->req->setExtraData(1);
         }
+        //
+        // Independent of success, all SC operations must clear the lock
+        //
         m_dataCache_ptr->clearLocked(address);
     } else if (request->ruby_request.type == RubyRequestType_Locked_Read) {
         //
@@ -333,6 +343,7 @@ Sequencer::handleLlscWrites(const Address& address, SequencerRequest* request)
         //
         m_dataCache_ptr->clearLocked(address);
     }
+    return success;
 }
 
 void
@@ -366,7 +377,7 @@ Sequencer::writeCallback(const Address& address,
     // For Alpha, properly handle LL, SC, and write requests with respect to
     // locked cache blocks.
     //
-    handleLlscWrites(address, request);
+    bool success = handleLlsc(address, request);
 
     if (request->ruby_request.type == RubyRequestType_RMW_Read) {
         m_controller->blockOnQueue(address, m_mandatory_q_ptr);
@@ -374,7 +385,7 @@ Sequencer::writeCallback(const Address& address,
         m_controller->unblock(address);
     }
 
-    hitCallback(request, mach, data);
+    hitCallback(request, mach, data, success);
 }
 
 void
@@ -402,13 +413,14 @@ Sequencer::readCallback(const Address& address,
            (request->ruby_request.type == RubyRequestType_RMW_Read) ||
            (request->ruby_request.type == RubyRequestType_IFETCH));
 
-    hitCallback(request, mach, data);
+    hitCallback(request, mach, data, true);
 }
 
 void
 Sequencer::hitCallback(SequencerRequest* srequest,
                        GenericMachineType mach,
-                       DataBlock& data)
+                       DataBlock& data,
+                       bool success)
 {
     const RubyRequest & ruby_request = srequest->ruby_request;
     Address request_address(ruby_request.paddr);
@@ -434,10 +446,17 @@ Sequencer::hitCallback(SequencerRequest* srequest,
         g_system_ptr->getProfiler()->missLatency(miss_latency, type, mach);
 
         if (Debug::getProtocolTrace()) {
-            g_system_ptr->getProfiler()->
-                profileTransition("Seq", m_version,
-                                  Address(ruby_request.paddr), "", "Done", "",
-                                  csprintf("%d cycles", miss_latency));
+            if (success) {
+                g_system_ptr->getProfiler()->
+                    profileTransition("Seq", m_version,
+                                      Address(ruby_request.paddr), "", "Done", "",
+                                      csprintf("%d cycles", miss_latency));
+            } else {
+                g_system_ptr->getProfiler()->
+                    profileTransition("Seq", m_version,
+                                      Address(ruby_request.paddr), "", "SC_Failed", "",
+                                      csprintf("%d cycles", miss_latency));
+            }
         }
     }
 #if 0

@@ -105,11 +105,12 @@ class Sequencer : public RubyPort, public Consumer
 
     void hitCallback(SequencerRequest* request, 
                      GenericMachineType mach,
-                     DataBlock& data);
+                     DataBlock& data,
+                     bool success);
 
     bool insertRequest(SequencerRequest* request);
 
-    void handleLlscWrites(const Address& address, SequencerRequest* request);
+    bool handleLlsc(const Address& address, SequencerRequest* request);
 
     // Private copy constructor and assignment operator
     Sequencer(const Sequencer& obj);
