@@ -108,6 +108,7 @@ machine(L2Cache, "Token protocol")
     // Lock/Unlock
     Persistent_GETX,     desc="Another processor has priority to read/write";
     Persistent_GETS,     desc="Another processor has priority to read";
+    Persistent_GETS_Last_Token, desc="Another processor has priority to read";
     Own_Lock_or_Unlock,  desc="This processor now has priority";
   }
 
@@ -194,6 +195,7 @@ machine(L2Cache, "Token protocol")
       // Make sure the token count is in range
       assert(getL2CacheEntry(addr).Tokens >= 0);
       assert(getL2CacheEntry(addr).Tokens <= max_tokens());
+      assert(getL2CacheEntry(addr).Tokens != (max_tokens() / 2));
 
       // Make sure we have no tokens in L
       if ((state == State:I_L) ) {
@@ -219,8 +221,7 @@ machine(L2Cache, "Token protocol")
 
       // You have at least half the token in O-like states
       if (state == State:O ) {
-        assert(getL2CacheEntry(addr).Tokens >= 1); // Must have at least one token
-      //  assert(getL2CacheEntry(addr).Tokens >= (max_tokens() / 2)); // Only mostly true; this might not always hold
+        assert(getL2CacheEntry(addr).Tokens > (max_tokens() / 2));
       }
 
       getL2CacheEntry(addr).CacheState := state;
@@ -344,7 +345,12 @@ machine(L2Cache, "Token protocol")
         if (persistentTable.isLocked(in_msg.Address)) {
 
           if (persistentTable.typeOfSmallest(in_msg.Address) == AccessType:Read) {
-            trigger(Event:Persistent_GETS, in_msg.Address);
+            if (getTokens(in_msg.Address) == 1 ||
+                getTokens(in_msg.Address) == (max_tokens() / 2) + 1) {
+              trigger(Event:Persistent_GETS_Last_Token, in_msg.Address);
+            } else {
+              trigger(Event:Persistent_GETS, in_msg.Address);
+            }
           } else {
             trigger(Event:Persistent_GETX, in_msg.Address);
           }
@@ -386,7 +392,8 @@ machine(L2Cache, "Token protocol")
         if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:L1_GETX, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
-          if (L2cacheMemory.isTagPresent(in_msg.Address) && getL2CacheEntry(in_msg.Address).Tokens == 1) {
+          if (getTokens(in_msg.Address) == 1 ||
+              getTokens(in_msg.Address) == (max_tokens() / 2) + 1) {
             trigger(Event:L1_GETS_Last_Token, in_msg.Address);
           }
           else {
@@ -407,6 +414,7 @@ machine(L2Cache, "Token protocol")
         assert(in_msg.Destination.isElement(machineID));
         if (getTokens(in_msg.Address) + in_msg.Tokens != max_tokens()) {
           if (in_msg.Type == CoherenceResponseType:ACK) {
+            assert(in_msg.Tokens < (max_tokens() / 2));
             trigger(Event:Ack, in_msg.Address);
           } else if (in_msg.Type == CoherenceResponseType:DATA_OWNER) {
             trigger(Event:Data_Owner, in_msg.Address);
@@ -440,6 +448,7 @@ machine(L2Cache, "Token protocol")
           }
         } else {
           if (in_msg.Type == CoherenceResponseType:ACK) {
+            assert(in_msg.Tokens < (max_tokens() / 2));
             trigger(Event:Ack_All_Tokens, in_msg.Address);
           } else if (in_msg.Type == CoherenceResponseType:DATA_OWNER || in_msg.Type == CoherenceResponseType:DATA_SHARED) {
             trigger(Event:Data_All_Tokens, in_msg.Address);
@@ -562,7 +571,7 @@ machine(L2Cache, "Token protocol")
 
   action(d_sendDataWithTokens, "d", desc="Send data and a token from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
-      if (getL2CacheEntry(address).Tokens > N_tokens) {
+      if (getL2CacheEntry(address).Tokens > (N_tokens + (max_tokens() / 2))) {
         enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
@@ -657,21 +666,34 @@ machine(L2Cache, "Token protocol")
 
   action(ff_sendDataWithAllButOneTokens, "\f", desc="Send data and out tokens but one to starver") {
     //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
-    assert(getL2CacheEntry(address).Tokens > 0);
-    if (getL2CacheEntry(address).Tokens > 1) {
-      enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+    assert(getL2CacheEntry(address).Tokens > (max_tokens() / 2) + 1);
+    enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
         out_msg.Destination.add(persistentTable.findSmallest(address));
-        assert(getL2CacheEntry(address).Tokens >= 1);
         out_msg.Tokens := getL2CacheEntry(address).Tokens - 1;
         out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
         out_msg.Dirty := getL2CacheEntry(address).Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
-      }
-      getL2CacheEntry(address).Tokens := 1;
     }
+    getL2CacheEntry(address).Tokens := 1;
+  }
+
+  action(fa_sendDataWithAllTokens, "fa", desc="Send data and out tokens but one to starver") {
+    //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
+    assert(getL2CacheEntry(address).Tokens == (max_tokens() / 2) + 1);
+    enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA_OWNER;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(persistentTable.findSmallest(address));
+        out_msg.Tokens := getL2CacheEntry(address).Tokens;
+        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
+        out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    getL2CacheEntry(address).Tokens := 0;
   }
 
 
@@ -702,6 +724,7 @@ machine(L2Cache, "Token protocol")
         if (in_msg.Type == CoherenceResponseType:WB_SHARED_DATA) {
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
         } else {
+          assert(in_msg.Tokens < (max_tokens() / 2));
           out_msg.Type := CoherenceResponseType:ACK;
         }
         out_msg.Sender := machineID;
@@ -789,7 +812,7 @@ machine(L2Cache, "Token protocol")
 
   action(k_dataOwnerFromL2CacheToL1Requestor, "\k", desc="Send data and a token from cache to L1 requestor") {
     peek(L1requestNetwork_in, RequestMsg) {
-      assert(getL2CacheEntry(address).Tokens > 0);
+      assert(getL2CacheEntry(address).Tokens == (max_tokens() / 2) + 1);
       enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
@@ -798,9 +821,9 @@ machine(L2Cache, "Token protocol")
         out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
         out_msg.Dirty := getL2CacheEntry(address).Dirty;
         out_msg.MessageSize := MessageSizeType:ResponseL2hit_Data;
-        out_msg.Tokens := 1;
+        out_msg.Tokens := getL2CacheEntry(address).Tokens;
       }
-      getL2CacheEntry(address).Tokens := getL2CacheEntry(address).Tokens - 1;
+      getL2CacheEntry(address).Tokens := 0;
     }
   }
 
@@ -940,7 +963,10 @@ machine(L2Cache, "Token protocol")
 
   action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
     peek(responseNetwork_in, ResponseMsg) {
-      assert(getL2CacheEntry(address).DataBlk == in_msg.DataBlk);
+      if (in_msg.Type != CoherenceResponseType:ACK &&
+          in_msg.Type != CoherenceResponseType:WB_TOKENS) {
+        assert(getL2CacheEntry(address).DataBlk == in_msg.DataBlk);
+      }
     }
   }
 
@@ -1014,7 +1040,9 @@ machine(L2Cache, "Token protocol")
   }
 
 
-  transition(NP, {Persistent_GETX, Persistent_GETS}, I_L) {
+  transition(NP, 
+             {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, 
+             I_L) {
     l_popPersistentQueue;
   }
 
@@ -1048,7 +1076,9 @@ machine(L2Cache, "Token protocol")
     m_popRequestQueue;
   }
 
-  transition(I, {Persistent_GETX, Persistent_GETS}, I_L) {
+  transition(I, 
+             {Persistent_GETX, Persistent_GETS, Persistent_GETS_Last_Token}, 
+             I_L) {
     e_sendAckWithCollectedTokens;
     l_popPersistentQueue;
   }
@@ -1131,7 +1161,7 @@ machine(L2Cache, "Token protocol")
   }
 
 
-  transition(S, Persistent_GETS, S_L) {
+  transition(S, {Persistent_GETS, Persistent_GETS_Last_Token}, S_L) {
     f_sendAckWithAllButOneTokens;
     l_popPersistentQueue;
   }
@@ -1234,6 +1264,11 @@ machine(L2Cache, "Token protocol")
 
   transition(O, Persistent_GETS, S_L) {
     ff_sendDataWithAllButOneTokens;
+    l_popPersistentQueue;
+  }
+
+  transition(O, Persistent_GETS_Last_Token, I_L) {
+    fa_sendDataWithAllTokens;
     l_popPersistentQueue;
   }
 
@@ -1426,7 +1461,7 @@ machine(L2Cache, "Token protocol")
     l_popPersistentQueue;
   }
 
-  transition(S_L, Persistent_GETS) {
+  transition(S_L, {Persistent_GETS, Persistent_GETS_Last_Token}) {
     l_popPersistentQueue;
   }
 
