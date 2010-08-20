@@ -37,6 +37,9 @@ from m5.defines import buildEnv
 class Cache(RubyCache):
     latency = 3
 
+def define_options(parser):
+    return
+
 def create_system(options, phys_mem, piobus, dma_devices):
     
     if buildEnv['PROTOCOL'] != 'MI_example':

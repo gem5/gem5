@@ -31,6 +31,27 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 
+def define_options(parser):
+    # ruby network options
+    parser.add_option("--topology", type="string", default="Crossbar",
+                 help="check src/mem/ruby/network/topologies for complete set")
+    parser.add_option("--mesh-rows", type="int", default=1,
+                      help="the number of rows in the mesh topology")
+    parser.add_option("--garnet-network", type="string", default=none,
+                      help="'fixed'|'flexible'")
+
+    # ruby mapping options
+    parser.add_option("--numa-high-bit", type="int", default=none,
+                      help="high order address bit to use for numa mapping")
+
+    # ruby sparse memory options
+    parser.add_option("--use-map", action="store_true", default=False)
+    parser.add_option("--map-levels", type="int", default=4)
+
+    protocol = buildEnv['PROTOCOL']
+    exec "import %s" % protocol
+    eval("%s.define_options(parser)" % protocol)
+
 def create_system(options, physmem, piobus = None, dma_devices = []):
 
     protocol = buildEnv['PROTOCOL']

@@ -44,6 +44,9 @@ class L1Cache(RubyCache):
 class L2Cache(RubyCache):
     latency = 15
 
+def define_options(parser):
+    return
+
 def create_system(options, phys_mem, piobus, dma_devices):
     
     if buildEnv['PROTOCOL'] != 'MESI_CMP_directory':

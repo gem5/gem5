@@ -69,19 +69,26 @@ parser.add_option("--progress", type="int", default=1000,
                   "[default: %default]")
 
 #
-# Set the default cache size and associativity to be very small to encourage
-# races between requests and writebacks.
+# Add the ruby specific and protocol specific options
 #
-parser.add_option("--l1d_size", type="string", default="256B")
-parser.add_option("--l1i_size", type="string", default="256B")
-parser.add_option("--l2_size", type="string", default="512B")
-parser.add_option("--l1d_assoc", type="int", default=2)
-parser.add_option("--l1i_assoc", type="int", default=2)
-parser.add_option("--l2_assoc", type="int", default=2)
+Ruby.define_options(parser)
 
 execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
+
+#
+# Set the default cache size and associativity to be very small to encourage
+# races between requests and writebacks.
+#
+options.l1d_size="256B"
+options.l1i_size="256B"
+options.l2_size="512B"
+options.l3_size="1kB"
+options.l1d_assoc=2
+options.l1i_assoc=2
+options.l2_assoc=2
+options.l3_assoc=2
 
 if args:
      print "Error: script doesn't take any positional arguments"

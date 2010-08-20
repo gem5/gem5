@@ -72,16 +72,10 @@ parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
 parser.add_option("--output", default="", help="Redirect stdout to a file.")
 parser.add_option("--errout", default="", help="Redirect stderr to a file.")
 
-# cache parameters
-parser.add_option("--l1d_size", type="string", default="32kB")
-parser.add_option("--l1i_size", type="string", default="32kB")
-parser.add_option("--l2_size", type="string", default="1MB")
-parser.add_option("--l1d_assoc", type="int", default=2)
-parser.add_option("--l1i_assoc", type="int", default=2)
-parser.add_option("--l2_assoc", type="int", default=16)
- 
-# ruby host memory experimentation
-parser.add_option("--map_levels", type="int")
+#
+# Add the ruby specific and protocol specific options
+#
+Ruby.define_options(parser)
 
 execfile(os.path.join(config_root, "common", "Options.py"))
 

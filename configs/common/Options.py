@@ -37,18 +37,15 @@ parser.add_option("--fastmem", action="store_true")
 parser.add_option("--clock", action="store", type="string", default='1GHz')
 parser.add_option("--num-dirs", type="int", default=1)
 parser.add_option("--num-l2caches", type="int", default=1)
-parser.add_option("--topology", type="string", default="Crossbar",
-                  help="check src/mem/ruby/network/topologies for complete set")
-parser.add_option("--mesh-rows", type="int", default=1,
-                  help="the number of rows in the mesh topology")
-parser.add_option("--garnet-network", type="string", default=None,
-                  help="'fixed'|'flexible'")
-parser.add_option("--numa-high-bit", type="int", default=None,
-                  help="high order address bit to use for numa mapping")
-
-# ruby sparse memory options
-parser.add_option("--use-map", action="store_true", default=False)
-parser.add_option("--map-levels", type="int", default=4)
+parser.add_option("--num-l3caches", type="int", default=1)
+parser.add_option("--l1d_size", type="string", default="32kB")
+parser.add_option("--l1i_size", type="string", default="32kB")
+parser.add_option("--l2_size", type="string", default="2MB")
+parser.add_option("--l3_size", type="string", default="16MB")
+parser.add_option("--l1d_assoc", type="int", default=2)
+parser.add_option("--l1i_assoc", type="int", default=2)
+parser.add_option("--l2_assoc", type="int", default=16)
+parser.add_option("--l3_assoc", type="int", default=16)
 
 # Run duration options
 parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
