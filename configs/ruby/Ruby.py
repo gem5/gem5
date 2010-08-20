@@ -62,11 +62,11 @@ def create_system(options, system, piobus = None, dma_devices = []):
     exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, all_cntrls) = \
-          eval("%s.create_system(options, system, piobus, dma_devices)" \
-               % protocol)
+             eval("%s.create_system(options, system, piobus, dma_devices)" \
+                  % protocol)
     except:
         print "Error: could not create sytem for ruby protocol %s" % protocol
-        sys.exit(1)
+        raise
         
     #
     # Important: the topology must be created before the network and after the
@@ -74,10 +74,11 @@ def create_system(options, system, piobus = None, dma_devices = []):
     #
     exec "import %s" % options.topology
     try:
-        net_topology = eval("%s.makeTopology(all_cntrls, options)" % options.topology)
+        net_topology = eval("%s.makeTopology(all_cntrls, options)" \
+                            % options.topology)
     except:
         print "Error: could not create topology %s" % options.topology
-        sys.exit(1)
+        raise
         
     if options.garnet_network == "fixed":
         network = GarnetNetwork_d(topology = net_topology)
