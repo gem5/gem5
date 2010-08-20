@@ -238,6 +238,8 @@ public:
     const std::string toString() const;
     const std::string getName() const;
     const MachineType getMachineType() const;
+    void stallBuffer(MessageBuffer* buf, Address addr);
+    void wakeUpBuffers(Address addr);
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
     void print(std::ostream& out) const;
     void printConfig(std::ostream& out) const;
@@ -280,6 +282,11 @@ Network* m_net_ptr;
 MachineID m_machineID;
 bool m_is_blocking;
 std::map<Address, MessageBuffer*> m_block_map;
+typedef std::vector<MessageBuffer*> MsgVecType;
+typedef m5::hash_map< Address, MsgVecType* > WaitingBufType;
+WaitingBufType m_waiting_buffers;
+int m_max_in_port_rank;
+int m_cur_in_port_rank;
 static ${ident}_ProfileDumper s_profileDumper;
 ${ident}_Profiler m_profiler;
 static int m_num_controllers;
@@ -378,6 +385,12 @@ $c_ident::$c_ident(const Params *p)
     m_number_of_TBEs = p->number_of_TBEs;
     m_is_blocking = false;
 ''')
+        #
+        # max_port_rank is used to size vectors and thus should be one plus the
+        # largest port rank
+        #
+        max_port_rank = self.in_ports[0].pairs["max_port_rank"] + 1
+        code('    m_max_in_port_rank = $max_port_rank;')
         code.indent()
 
         #
@@ -621,6 +634,35 @@ $c_ident::getMachineType() const
 }
 
 void
+$c_ident::stallBuffer(MessageBuffer* buf, Address addr)
+{
+    if (m_waiting_buffers.count(addr) == 0) {
+        MsgVecType* msgVec = new MsgVecType;
+        msgVec->resize(m_max_in_port_rank, NULL);
+        m_waiting_buffers[addr] = msgVec;
+    }
+    (*(m_waiting_buffers[addr]))[m_cur_in_port_rank] = buf;
+}
+
+void
+$c_ident::wakeUpBuffers(Address addr)
+{
+    //
+    // Wake up all possible lower rank (i.e. lower priority) buffers that could
+    // be waiting on this message.
+    // 
+    for (int in_port_rank = m_cur_in_port_rank - 1;
+         in_port_rank >= 0;
+         in_port_rank--) {
+        if ((*(m_waiting_buffers[addr]))[in_port_rank] != NULL) {
+            (*(m_waiting_buffers[addr]))[in_port_rank]->reanalyzeMessages(addr);
+        }
+    }
+    delete m_waiting_buffers[addr];
+    m_waiting_buffers.erase(addr);
+}
+
+void
 $c_ident::blockOnQueue(Address addr, MessageBuffer* port)
 {
     m_is_blocking = true;
@@ -757,6 +799,10 @@ ${ident}_Controller::wakeup()
         for port in self.in_ports:
             code.indent()
             code('// ${ident}InPort $port')
+            if port.pairs.has_key("rank"):
+                code('m_cur_in_port_rank = ${{port.pairs["rank"]}};')
+            else:
+                code('m_cur_in_port_rank = 0;')
             code('${{port["c_code_in_port"]}}')
             code.dedent()
 

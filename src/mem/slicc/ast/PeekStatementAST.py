@@ -77,6 +77,14 @@ class PeekStatementAST(StatementAST):
     }
             ''')
 
+        if self.pairs.has_key("wake_up"):
+            address_field = self.pairs['wake_up']
+            code('''
+    if (m_waiting_buffers.count(in_msg_ptr->m_$address_field) > 0) {
+        wakeUpBuffers(in_msg_ptr->m_$address_field);
+    }
+            ''')
+
         # The other statements
         self.statements.generate(code, return_type)
         self.symtab.popFrame()

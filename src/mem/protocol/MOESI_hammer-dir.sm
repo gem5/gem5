@@ -234,7 +234,7 @@ machine(Directory, "AMD Hammer-like protocol")
   // ** IN_PORTS **
   
   // Trigger Queue
-  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=5) {
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
@@ -250,7 +250,7 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
-  in_port(unblockNetwork_in, ResponseMsg, unblockToDir) {
+  in_port(unblockNetwork_in, ResponseMsg, unblockToDir, rank=4) {
     if (unblockNetwork_in.isReady()) {
       peek(unblockNetwork_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
@@ -275,7 +275,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   // Response Network
-  in_port(responseToDir_in, ResponseMsg, responseToDir) {
+  in_port(responseToDir_in, ResponseMsg, responseToDir, rank=3) {
     if (responseToDir_in.isReady()) {
       peek(responseToDir_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:ACK) {
@@ -295,22 +295,8 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
-  in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir) {
-    if (dmaRequestQueue_in.isReady()) {
-      peek(dmaRequestQueue_in, DMARequestMsg) {
-        if (in_msg.Type == DMARequestType:READ) {
-          trigger(Event:DMA_READ, in_msg.LineAddress);
-        } else if (in_msg.Type == DMARequestType:WRITE) {
-          trigger(Event:DMA_WRITE, in_msg.LineAddress);
-        } else {
-          error("Invalid message");
-        }
-      }
-    }
-  }
-
   // off-chip memory request/response is done
-  in_port(memQueue_in, MemoryMsg, memBuffer) {
+  in_port(memQueue_in, MemoryMsg, memBuffer, rank=2) {
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
@@ -325,7 +311,7 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
-  in_port(requestQueue_in, RequestMsg, requestToDir) {
+  in_port(requestQueue_in, RequestMsg, requestToDir, rank=1) {
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:PUT) {
@@ -344,6 +330,20 @@ machine(Directory, "AMD Hammer-like protocol")
           } else {
             trigger(cache_request_to_event(in_msg.Type), in_msg.Address);
           }
+        }
+      }
+    }
+  }
+
+  in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir, rank=0) {
+    if (dmaRequestQueue_in.isReady()) {
+      peek(dmaRequestQueue_in, DMARequestMsg) {
+        if (in_msg.Type == DMARequestType:READ) {
+          trigger(Event:DMA_READ, in_msg.LineAddress);
+        } else if (in_msg.Type == DMARequestType:WRITE) {
+          trigger(Event:DMA_WRITE, in_msg.LineAddress);
+        } else {
+          error("Invalid message");
         }
       }
     }
@@ -772,6 +772,10 @@ machine(Directory, "AMD Hammer-like protocol")
     unblockNetwork_in.dequeue();
   }
 
+  action(k_wakeUpDependents, "k", desc="wake-up dependents") {
+    wake_up_dependents(address);
+  }
+
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
     memQueue_in.dequeue();
   }
@@ -784,8 +788,11 @@ machine(Directory, "AMD Hammer-like protocol")
     dmaRequestQueue_in.dequeue();
   }
 
-  action(y_recycleDmaRequestQueue, "y", desc="recycle dma request queue") {
-    dmaRequestQueue_in.recycle();
+  action(zd_stallAndWaitDMARequest, "zd", desc="Stall and wait the dma request queue") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+        APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+    } 
+    stall_and_wait(dmaRequestQueue_in, address);
   }
 
   action(r_recordMemoryData, "rd", desc="record data from memory to TBE") {
@@ -882,11 +889,11 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
-  action(zz_recycleRequest, "\z", desc="Recycle the request queue") {
+  action(z_stallAndWaitRequest, "z", desc="Recycle the request queue") {
     peek(requestQueue_in, RequestMsg) {
         APPEND_TRANSITION_COMMENT(in_msg.Requestor);
     } 
-    requestQueue_in.recycle();
+    stall_and_wait(requestQueue_in, address);
   }
 
   // TRANSITIONS
@@ -1055,26 +1062,29 @@ machine(Directory, "AMD Hammer-like protocol")
               NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, 
               NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R}, 
              {GETS, GETX, PUT, Pf_Replacement}) {
-    zz_recycleRequest;
+    z_stallAndWaitRequest;
   }
 
   transition({NO_B, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
               NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, 
               NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R}, 
              {DMA_READ, DMA_WRITE}) {
-    y_recycleDmaRequestQueue;
+    zd_stallAndWaitDMARequest;
   }
 
   transition(NO_B, UnblockS, NX) {
+    k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
   transition(NO_B, UnblockM, NO) {
     uo_updateOwnerIfPf;
+    k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
   transition(O_B, UnblockS, O) {
+    k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
@@ -1125,6 +1135,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   transition({O_R, S_R, NO_R}, All_acks_and_data_no_sharers, E) {
     w_deallocateTBE;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1197,6 +1208,7 @@ machine(Directory, "AMD Hammer-like protocol")
     dt_sendDmaDataFromTbe;
     wdt_writeDataFromTBE;
     w_deallocateTBE;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1209,6 +1221,7 @@ machine(Directory, "AMD Hammer-like protocol")
     dt_sendDmaDataFromTbe;
     wdt_writeDataFromTBE;
     w_deallocateTBE;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1221,6 +1234,7 @@ machine(Directory, "AMD Hammer-like protocol")
     dt_sendDmaDataFromTbe;
     wdt_writeDataFromTBE;
     w_deallocateTBE;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1233,12 +1247,14 @@ machine(Directory, "AMD Hammer-like protocol")
     dt_sendDmaDataFromTbe;
     wdt_writeDataFromTBE;
     w_deallocateTBE;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
   transition(O_DR_B, All_acks_and_owner_data, O) {
     wdt_writeDataFromTBE;
     w_deallocateTBE;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1246,6 +1262,7 @@ machine(Directory, "AMD Hammer-like protocol")
     wdt_writeDataFromTBE;
     w_deallocateTBE;
     pfd_probeFilterDeallocate;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1259,6 +1276,7 @@ machine(Directory, "AMD Hammer-like protocol")
     wdt_writeDataFromTBE;
     w_deallocateTBE;
     ppfd_possibleProbeFilterDeallocate;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1273,6 +1291,7 @@ machine(Directory, "AMD Hammer-like protocol")
     wdt_writeDataFromTBE;
     w_deallocateTBE;
     ppfd_possibleProbeFilterDeallocate;
+    k_wakeUpDependents;
     g_popTriggerQueue;
   }
 
@@ -1286,6 +1305,7 @@ machine(Directory, "AMD Hammer-like protocol")
     da_sendDmaAck;
     w_deallocateTBE;
     ppfd_possibleProbeFilterDeallocate;
+    k_wakeUpDependents;
     l_popMemQueue;
   }
 
@@ -1305,11 +1325,13 @@ machine(Directory, "AMD Hammer-like protocol")
 
   transition(NO_W, Memory_Data, NO) {
     w_deallocateTBE;
+    k_wakeUpDependents;
     l_popMemQueue;
   }
 
   transition(O_W, Memory_Data, O) {
     w_deallocateTBE;
+    k_wakeUpDependents;
     l_popMemQueue;
   }
 
@@ -1328,26 +1350,31 @@ machine(Directory, "AMD Hammer-like protocol")
 
   transition(WB_E_W, Memory_Ack, E) {
     pfd_probeFilterDeallocate;
+    k_wakeUpDependents;
     l_popMemQueue;
   }
 
   transition(WB_O_W, Memory_Ack, O) {
+    k_wakeUpDependents;
     l_popMemQueue;
   }
 
   transition(WB, Writeback_Clean, O) {
     ll_checkIncomingWriteback;
+    k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
   transition(WB, Writeback_Exclusive_Clean, E) {
     ll_checkIncomingWriteback;
     pfd_probeFilterDeallocate;
+    k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
   transition(WB, Unblock, NO) {
     auno_assertUnblockerNotOwner;
+    k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 }

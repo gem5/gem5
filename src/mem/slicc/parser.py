@@ -157,6 +157,8 @@ class SLICC(Grammar):
         'external_type' : 'EXTERN_TYPE',
         'enumeration' : 'ENUM',
         'peek' : 'PEEK',
+        'stall_and_wait' : 'STALL_AND_WAIT',
+        'wake_up_dependents' : 'WAKE_UP_DEPENDENTS',
         'enqueue' : 'ENQUEUE',
         'copy_head' : 'COPY_HEAD',
         'check_allocate' : 'CHECK_ALLOCATE',
@@ -499,7 +501,8 @@ class SLICC(Grammar):
 
     def p_pair__assign(self, p):
         """pair : ident '=' STRING
-                | ident '=' ident"""
+                | ident '=' ident
+                | ident '=' NUMBER"""
         p[0] = ast.PairAST(self, p[1], p[3])
 
     def p_pair__literal(self, p):
@@ -546,6 +549,14 @@ class SLICC(Grammar):
     def p_statement__enqueue(self, p):
         "statement : ENQUEUE '(' var ',' type pairs ')' statements"
         p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[6], p[8])
+
+    def p_statement__stall_and_wait(self, p):
+        "statement : STALL_AND_WAIT '(' var ',' var ')' SEMI"
+        p[0] = ast.StallAndWaitStatementAST(self, p[3], p[5])
+
+    def p_statement__wake_up_dependents(self, p):
+        "statement : WAKE_UP_DEPENDENTS '(' var ')' SEMI"
+        p[0] = ast.WakeUpDependentsStatementAST(self, p[3])
 
     def p_statement__peek(self, p):
         "statement : PEEK '(' var ',' type pairs ')' statements"

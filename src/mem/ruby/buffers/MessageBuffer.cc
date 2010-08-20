@@ -334,6 +334,49 @@ MessageBuffer::recycle()
         g_eventQueue_ptr->getTime() + m_recycle_latency);
 }
 
+void
+MessageBuffer::reanalyzeMessages(const Address& addr)
+{
+    DEBUG_MSG(QUEUE_COMP, MedPrio, "reanalyzeMessages " + m_name);
+    assert(m_stall_msg_map.count(addr) > 0);
+
+    //
+    // Put all stalled messages associated with this address back on the
+    // prio heap
+    //
+    while(!m_stall_msg_map[addr].empty()) {
+        m_msg_counter++;
+        MessageBufferNode msgNode(g_eventQueue_ptr->getTime() + 1, 
+                                  m_msg_counter, 
+                                  m_stall_msg_map[addr].front());
+
+        m_prio_heap.push_back(msgNode);
+        push_heap(m_prio_heap.begin(), m_prio_heap.end(),
+            greater<MessageBufferNode>());
+
+        g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, msgNode.m_time);
+        m_stall_msg_map[addr].pop_front();
+    }
+}
+
+void
+MessageBuffer::stallMessage(const Address& addr)
+{
+    DEBUG_MSG(QUEUE_COMP, MedPrio, "stalling " + m_name);
+    assert(isReady());
+    assert(addr.getOffset() == 0);
+    MsgPtr message = m_prio_heap.front().m_msgptr;
+
+    pop();
+
+    //
+    // Note: no event is scheduled to analyze the map at a later time.
+    // Instead the controller is responsible to call reanalyzeMessages when
+    // these addresses change state.
+    //
+    (m_stall_msg_map[addr]).push_back(message);
+}
+
 int
 MessageBuffer::setAndReturnDelayCycles(MsgPtr msg_ptr)
 {

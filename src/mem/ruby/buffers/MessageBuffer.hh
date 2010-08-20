@@ -45,6 +45,7 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/ruby/common/Address.hh"
 
 class MessageBuffer
 {
@@ -57,6 +58,9 @@ class MessageBuffer
     {
         m_recycle_latency = recycle_latency;
     }
+
+    void reanalyzeMessages(const Address& addr);
+    void stallMessage(const Address& addr);
 
     // TRUE if head of queue timestamp <= SystemTime
     bool
@@ -150,6 +154,11 @@ class MessageBuffer
     // Data Members (m_ prefix)
     Consumer* m_consumer_ptr;  // Consumer to signal a wakeup(), can be NULL
     std::vector<MessageBufferNode> m_prio_heap;
+    
+    typedef m5::hash_map< Address, std::list<MsgPtr> > StallMsgMapType;
+    typedef std::vector<MsgPtr>::iterator MsgListIter;
+
+    StallMsgMapType m_stall_msg_map;
     std::string m_name;
 
     int m_max_size;

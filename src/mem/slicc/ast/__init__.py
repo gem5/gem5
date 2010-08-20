@@ -57,6 +57,7 @@ from slicc.ast.PairAST import *
 from slicc.ast.PairListAST import *
 from slicc.ast.PeekStatementAST import *
 from slicc.ast.ReturnStatementAST import *
+from slicc.ast.StallAndWaitStatementAST import *
 from slicc.ast.StatementAST import *
 from slicc.ast.StatementListAST import *
 from slicc.ast.StaticCastAST import *
@@ -68,3 +69,4 @@ from slicc.ast.TypeFieldEnumAST import *
 from slicc.ast.TypeFieldMemberAST import *
 from slicc.ast.TypeFieldMethodAST import *
 from slicc.ast.VarExprAST import *
+from slicc.ast.WakeUpDependentsStatementAST import *
