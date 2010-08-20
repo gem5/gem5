@@ -167,7 +167,7 @@ class MessageBuffer
 
     int m_not_avail_count;  // count the # of times I didn't have N
                             // slots available
-    int m_msg_counter;
+    uint64 m_msg_counter;
     int m_priority_rank;
     bool m_strict_fifo;
     bool m_ordering_set;

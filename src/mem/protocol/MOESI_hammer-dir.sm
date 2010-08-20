@@ -52,7 +52,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   MessageBuffer unblockToDir, network="From", virtual_network="5", ordered="false";
   MessageBuffer responseToDir, network="From", virtual_network="4", ordered="false";
-  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="false";
+  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="false", recycle_latency="1";
   MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true";
 
   // STATES
@@ -309,6 +309,22 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
+  // off-chip memory request/response is done
+  in_port(memQueue_in, MemoryMsg, memBuffer) {
+    if (memQueue_in.isReady()) {
+      peek(memQueue_in, MemoryMsg) {
+        if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
+          trigger(Event:Memory_Data, in_msg.Address);
+        } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
+          trigger(Event:Memory_Ack, in_msg.Address);
+        } else {
+          DEBUG_EXPR(in_msg.Type);
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
   in_port(requestQueue_in, RequestMsg, requestToDir) {
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
@@ -328,22 +344,6 @@ machine(Directory, "AMD Hammer-like protocol")
           } else {
             trigger(cache_request_to_event(in_msg.Type), in_msg.Address);
           }
-        }
-      }
-    }
-  }
-
-  // off-chip memory request/response is done
-  in_port(memQueue_in, MemoryMsg, memBuffer) {
-    if (memQueue_in.isReady()) {
-      peek(memQueue_in, MemoryMsg) {
-        if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.Address);
-        } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.Address);
-        } else {
-          DEBUG_EXPR(in_msg.Type);
-          error("Invalid message");
         }
       }
     }
@@ -766,6 +766,9 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(j_popIncomingUnblockQueue, "j", desc="Pop incoming unblock queue") {
+    peek(unblockNetwork_in, ResponseMsg) {
+        APPEND_TRANSITION_COMMENT(in_msg.Sender);
+    } 
     unblockNetwork_in.dequeue();
   }
 
@@ -880,6 +883,9 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(zz_recycleRequest, "\z", desc="Recycle the request queue") {
+    peek(requestQueue_in, RequestMsg) {
+        APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+    } 
     requestQueue_in.recycle();
   }
 

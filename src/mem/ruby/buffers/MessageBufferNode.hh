@@ -54,7 +54,7 @@ class MessageBufferNode
 
   public:
     Time m_time;
-    int m_msg_counter; // FIXME, should this be a 64-bit value?
+    uint64 m_msg_counter; // FIXME, should this be a 64-bit value?
     MsgPtr m_msgptr;
 };
 

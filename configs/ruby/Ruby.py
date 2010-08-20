@@ -54,6 +54,9 @@ def define_options(parser):
     parser.add_option("--ruby-debug", action="store_true", default=False)
     parser.add_option("--ruby-debug-cycle", type="int", default=1)
 
+    parser.add_option("--recycle-latency", type="int", default=10,
+                      help="Recycle latency for ruby controller input buffers")
+    
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)

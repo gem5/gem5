@@ -494,6 +494,7 @@ $c_ident::init()
                     if vtype.isBuffer and \
                            "rank" in var and "trigger_queue" not in var:
                         code('$vid->setPriority(${{var["rank"]}});')
+
             else:
                 # Network port object
                 network = var["network"]
@@ -537,6 +538,13 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
 
 ''')
 
+            if vtype.isBuffer:
+                if "recycle_latency" in var:
+                    code('$vid->setRecycleLatency(${{var["recycle_latency"]}});')
+                else:
+                    code('$vid->setRecycleLatency(m_recycle_latency);')
+
+
         # Set the queue consumers
         code.insert_newline()
         for port in self.in_ports:
@@ -561,10 +569,6 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
                 state = "%s_State_%s" % (self.ident, trans.state.ident)
                 event = "%s_Event_%s" % (self.ident, trans.event.ident)
                 code('m_profiler.possibleTransition($state, $event);')
-
-        # added by SS to initialize recycle_latency of message buffers
-        for buf in self.message_buffer_names:
-            code("$buf->setRecycleLatency(m_recycle_latency);")
 
         code.dedent()
         code('}')

@@ -105,6 +105,9 @@ def create_system(options, system, piobus, dma_devices):
                                       no_mig_atomic = not \
                                         options.allow_atomic_migration)
 
+        if options.recycle_latency:
+            l1_cntrl.recycle_latency = options.recycle_latency
+
         exec("system.l1_cntrl%d = l1_cntrl" % i)
         #
         # Add controllers and sequencers to the appropriate lists
@@ -164,6 +167,9 @@ def create_system(options, system, piobus, dma_devices):
                                          probe_filter_enabled = \
                                            options.pf_on)
 
+        if options.recycle_latency:
+            dir_cntrl.recycle_latency = options.recycle_latency
+
         exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
@@ -185,6 +191,9 @@ def create_system(options, system, piobus, dma_devices):
             system.dma_cntrl.dma_sequencer.port = dma_device.dma
         dma_cntrl.dma_sequencer.port = dma_device.dma
         dma_cntrl_nodes.append(dma_cntrl)
+
+        if options.recycle_latency:
+            dma_cntrl.recycle_latency = options.recycle_latency
 
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes + dma_cntrl_nodes
 
