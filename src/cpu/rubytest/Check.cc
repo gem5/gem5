@@ -82,10 +82,6 @@ Check::initiatePrefetch()
     Request::Flags flags;
     flags.set(Request::PREFETCH);
 
-    // Prefetches are assumed to be 0 sized
-    Request *req = new Request(m_address.getAddress(), 0, flags, curTick,
-                               m_pc.getAddress());
-
     Packet::Command cmd;
 
     // 1 in 8 chance this will be an exclusive prefetch
@@ -100,6 +96,10 @@ Check::initiatePrefetch()
         cmd = MemCmd::WriteReq;
         flags.set(Request::PF_EXCLUSIVE);
     }
+
+    // Prefetches are assumed to be 0 sized
+    Request *req = new Request(m_address.getAddress(), 0, flags, curTick,
+                               m_pc.getAddress());
 
     PacketPtr pkt = new Packet(req, cmd, port->idx);
 
@@ -198,14 +198,14 @@ Check::initiateCheck()
 
     Request::Flags flags;
 
-    // Checks are sized depending on the number of bytes written
-    Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags,
-                               curTick, m_pc.getAddress());
-
     // 50% chance that the request will be an instruction fetch
     if ((random() & 0x1) == 0) {
         flags.set(Request::INST_FETCH);
     }
+
+    // Checks are sized depending on the number of bytes written
+    Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags,
+                               curTick, m_pc.getAddress());
 
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq, port->idx);
     uint8_t* dataArray = new uint8_t[CHECK_SIZE];
