@@ -286,6 +286,35 @@ Profiler::printStats(ostream& out, bool short_stats)
             }
         }
 
+        out << "miss_latency_wCC_issue_to_initial_request: " 
+            << m_wCCIssueToInitialRequestHistogram << endl;
+        out << "miss_latency_wCC_initial_forward_request: " 
+            << m_wCCInitialRequestToForwardRequestHistogram << endl;
+        out << "miss_latency_wCC_forward_to_first_response: " 
+            << m_wCCForwardRequestToFirstResponseHistogram << endl;
+        out << "miss_latency_wCC_first_response_to_completion: " 
+            << m_wCCFirstResponseToCompleteHistogram << endl;
+        out << "imcomplete_wCC_Times: " << m_wCCIncompleteTimes << endl;
+        out << "miss_latency_dir_issue_to_initial_request: " 
+            << m_dirIssueToInitialRequestHistogram << endl;
+        out << "miss_latency_dir_initial_forward_request: " 
+            << m_dirInitialRequestToForwardRequestHistogram << endl;
+        out << "miss_latency_dir_forward_to_first_response: " 
+            << m_dirForwardRequestToFirstResponseHistogram << endl;
+        out << "miss_latency_dir_first_response_to_completion: " 
+            << m_dirFirstResponseToCompleteHistogram << endl;
+        out << "imcomplete_dir_Times: " << m_dirIncompleteTimes << endl;
+
+        for (int i = 0; i < m_missMachLatencyHistograms.size(); i++) {
+            for (int j = 0; j < m_missMachLatencyHistograms[i].size(); j++) {
+                if (m_missMachLatencyHistograms[i][j].size() > 0) {
+                    out << "miss_latency_" << RubyRequestType(i) 
+                        << "_" << GenericMachineType(j) << ": "
+                        << m_missMachLatencyHistograms[i][j] << endl;
+                }
+            }
+        }
+
         out << endl;
 
         out << "All Non-Zero Cycle SW Prefetch Requests" << endl;
@@ -454,7 +483,24 @@ Profiler::clearStats()
     for (int i = 0; i < m_machLatencyHistograms.size(); i++) {
         m_machLatencyHistograms[i].clear(200);
     }
+    m_missMachLatencyHistograms.resize(RubyRequestType_NUM);
+    for (int i = 0; i < m_missLatencyHistograms.size(); i++) {
+        m_missMachLatencyHistograms[i].resize(GenericMachineType_NUM+1);
+        for (int j = 0; j < m_missMachLatencyHistograms[i].size(); j++) {
+            m_missMachLatencyHistograms[i][j].clear(200);
+        }
+    }
     m_allMissLatencyHistogram.clear(200);
+    m_wCCIssueToInitialRequestHistogram.clear(200);
+    m_wCCInitialRequestToForwardRequestHistogram.clear(200);
+    m_wCCForwardRequestToFirstResponseHistogram.clear(200);
+    m_wCCFirstResponseToCompleteHistogram.clear(200);
+    m_wCCIncompleteTimes = 0;
+    m_dirIssueToInitialRequestHistogram.clear(200);
+    m_dirInitialRequestToForwardRequestHistogram.clear(200);
+    m_dirForwardRequestToFirstResponseHistogram.clear(200);
+    m_dirFirstResponseToCompleteHistogram.clear(200);
+    m_dirIncompleteTimes = 0;
 
     m_SWPrefetchLatencyHistograms.resize(CacheRequestType_NUM);
     for (int i = 0; i < m_SWPrefetchLatencyHistograms.size(); i++) {
@@ -581,6 +627,59 @@ Profiler::missLatency(Time cycles,
     m_allMissLatencyHistogram.add(cycles);
     m_missLatencyHistograms[type].add(cycles);
     m_machLatencyHistograms[respondingMach].add(cycles);
+    m_missMachLatencyHistograms[type][respondingMach].add(cycles);
+}
+
+void
+Profiler::missLatencyWcc(Time issuedTime,
+                         Time initialRequestTime,
+                         Time forwardRequestTime,
+                         Time firstResponseTime,
+                         Time completionTime)
+{
+    if ((issuedTime <= initialRequestTime) &&
+        (initialRequestTime <= forwardRequestTime) &&
+        (forwardRequestTime <= firstResponseTime) &&
+        (firstResponseTime <= completionTime)) {
+        m_wCCIssueToInitialRequestHistogram.add(initialRequestTime - issuedTime);
+        
+        m_wCCInitialRequestToForwardRequestHistogram.add(forwardRequestTime - 
+                                                         initialRequestTime);
+        
+        m_wCCForwardRequestToFirstResponseHistogram.add(firstResponseTime - 
+                                                        forwardRequestTime);
+        
+        m_wCCFirstResponseToCompleteHistogram.add(completionTime - 
+                                                  firstResponseTime);
+    } else {
+        m_wCCIncompleteTimes++;
+    }
+}
+
+void
+Profiler::missLatencyDir(Time issuedTime,
+                         Time initialRequestTime,
+                         Time forwardRequestTime,
+                         Time firstResponseTime,
+                         Time completionTime)
+{
+    if ((issuedTime <= initialRequestTime) &&
+        (initialRequestTime <= forwardRequestTime) &&
+        (forwardRequestTime <= firstResponseTime) &&
+        (firstResponseTime <= completionTime)) {
+        m_dirIssueToInitialRequestHistogram.add(initialRequestTime - issuedTime);
+        
+        m_dirInitialRequestToForwardRequestHistogram.add(forwardRequestTime - 
+                                                         initialRequestTime);
+        
+        m_dirForwardRequestToFirstResponseHistogram.add(firstResponseTime - 
+                                                        forwardRequestTime);
+        
+        m_dirFirstResponseToCompleteHistogram.add(completionTime - 
+                                                  firstResponseTime);
+    } else {
+        m_dirIncompleteTimes++;
+    }
 }
 
 // non-zero cycle prefetch request

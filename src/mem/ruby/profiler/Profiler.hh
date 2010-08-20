@@ -138,6 +138,18 @@ class Profiler : public SimObject, public Consumer
                      RubyRequestType type,
                      const GenericMachineType respondingMach);
 
+    void missLatencyWcc(Time issuedTime,
+                        Time initialRequestTime,
+                        Time forwardRequestTime,
+                        Time firstResponseTime,
+                        Time completionTime);
+    
+    void missLatencyDir(Time issuedTime,
+                        Time initialRequestTime,
+                        Time forwardRequestTime,
+                        Time firstResponseTime,
+                        Time completionTime);
+    
     void swPrefetchLatency(Time t, 
                            CacheRequestType type,
                            const GenericMachineType respondingMach);
@@ -200,6 +212,18 @@ class Profiler : public SimObject, public Consumer
 
     std::vector<Histogram> m_missLatencyHistograms;
     std::vector<Histogram> m_machLatencyHistograms;
+    std::vector< std::vector<Histogram> > m_missMachLatencyHistograms;
+    Histogram m_wCCIssueToInitialRequestHistogram;
+    Histogram m_wCCInitialRequestToForwardRequestHistogram;
+    Histogram m_wCCForwardRequestToFirstResponseHistogram;
+    Histogram m_wCCFirstResponseToCompleteHistogram;
+    int64 m_wCCIncompleteTimes;
+    Histogram m_dirIssueToInitialRequestHistogram;
+    Histogram m_dirInitialRequestToForwardRequestHistogram;
+    Histogram m_dirForwardRequestToFirstResponseHistogram;
+    Histogram m_dirFirstResponseToCompleteHistogram;
+    int64 m_dirIncompleteTimes;
+
     Histogram m_allMissLatencyHistogram;
 
     Histogram m_allSWPrefetchLatencyHistogram;

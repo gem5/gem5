@@ -645,6 +645,8 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
           out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+          out_msg.ForwardRequestTime := get_time();
         }
       }
     }
@@ -685,6 +687,8 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
           out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+          out_msg.ForwardRequestTime := get_time();
         }
       }
     }
@@ -701,6 +705,8 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.Destination.add(getPfEntry(address).Owner);
           out_msg.MessageSize := MessageSizeType:Request_Control;
           out_msg.DirectedProbe := true;
+          out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+          out_msg.ForwardRequestTime := get_time();
         }
       }      
     } else {
@@ -712,6 +718,8 @@ machine(Directory, "AMD Hammer-like protocol")
           out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
           out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
           out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+          out_msg.ForwardRequestTime := get_time();
         }
       }
     }

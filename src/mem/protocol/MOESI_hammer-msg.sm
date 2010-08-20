@@ -78,6 +78,8 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   NetDest Destination,             desc="Multicast destination mask";
   MessageSizeType MessageSize, desc="size category of the message";
   bool DirectedProbe, default="false", desc="probe filter directed probe";
+  Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
+  Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
 }
 
 // ResponseMsg (and also unblock requests)
@@ -90,6 +92,8 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   bool Dirty,                  desc="Is the data dirty (different than memory)?";
   int Acks,                    desc="How many messages this counts as";
   MessageSizeType MessageSize, desc="size category of the message";
+  Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
+  Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
 }
 
 enumeration(DMARequestType, desc="...", default="DMARequestType_NULL") {

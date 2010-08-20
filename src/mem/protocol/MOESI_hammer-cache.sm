@@ -136,6 +136,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
     int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
     bool Sharers,            desc="On a GetS, did we find any other sharers in the system";
     MachineID LastResponder, desc="last machine to send a response for this request";
+    Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
+    Time ForwardRequestTime, default="0", desc="time the dir forwarded the request";
+    Time FirstResponseTime, default="0", desc="the time the first response was received";
   }
 
   external_type(TBETable) {
@@ -424,6 +427,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := get_time();
       TBEs[address].NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
     }
   }
@@ -435,6 +439,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.InitialRequestTime := get_time();
       TBEs[address].NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
     }
   }
@@ -454,6 +459,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
           out_msg.Acks := 2;
         }
         out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
       }
     }
   }
@@ -483,6 +490,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
           out_msg.Acks := 2;
         }
         out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
       }
     }
   }
@@ -503,6 +512,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
           out_msg.Acks := 2;
         }
         out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
       }
     }
   }
@@ -517,6 +528,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Acks := 1;
         assert(in_msg.DirectedProbe == false);
         out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
       }
     }
   }
@@ -531,6 +544,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Acks := 1;
         assert(in_msg.DirectedProbe == false);
         out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
       }
     }
   }
@@ -580,7 +595,10 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
       sequencer.readCallback(address, 
                              getNondirectHitMachType(in_msg.Address, in_msg.Sender),
-                             getCacheEntry(address).DataBlk);
+                             getCacheEntry(address).DataBlk,
+                             TBEs[address].InitialRequestTime,
+                             TBEs[address].ForwardRequestTime,
+                             TBEs[address].FirstResponseTime);
 
     }
   }
@@ -605,7 +623,10 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
       sequencer.writeCallback(address, 
                               getNondirectHitMachType(address, in_msg.Sender),
-                              getCacheEntry(address).DataBlk);
+                              getCacheEntry(address).DataBlk,
+                              TBEs[address].InitialRequestTime,
+                              TBEs[address].ForwardRequestTime,
+                              TBEs[address].FirstResponseTime);
 
     }
     getCacheEntry(address).Dirty := true;
@@ -617,7 +638,10 @@ machine(L1Cache, "AMD Hammer-like protocol")
     sequencer.writeCallback(address, 
                             getNondirectHitMachType(address, 
                                                     TBEs[address].LastResponder),
-                            getCacheEntry(address).DataBlk);
+                            getCacheEntry(address).DataBlk,
+                            TBEs[address].InitialRequestTime,
+                            TBEs[address].ForwardRequestTime,
+                            TBEs[address].FirstResponseTime);
 
     getCacheEntry(address).Dirty := true;
   }
@@ -649,6 +673,21 @@ machine(L1Cache, "AMD Hammer-like protocol")
       TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - in_msg.Acks;
       DEBUG_EXPR(TBEs[address].NumPendingMsgs);
       TBEs[address].LastResponder := in_msg.Sender;
+      if (TBEs[address].InitialRequestTime != zero_time() && in_msg.InitialRequestTime != zero_time()) {
+        assert(TBEs[address].InitialRequestTime == in_msg.InitialRequestTime);
+      }
+      if (in_msg.InitialRequestTime != zero_time()) {
+        TBEs[address].InitialRequestTime := in_msg.InitialRequestTime;
+      }
+      if (TBEs[address].ForwardRequestTime != zero_time() && in_msg.ForwardRequestTime != zero_time()) {
+        assert(TBEs[address].ForwardRequestTime == in_msg.ForwardRequestTime);
+      }
+      if (in_msg.ForwardRequestTime != zero_time()) {
+        TBEs[address].ForwardRequestTime := in_msg.ForwardRequestTime;
+      }
+      if (TBEs[address].FirstResponseTime == zero_time()) {
+        TBEs[address].FirstResponseTime := get_time();
+      }
     }
   }
 
@@ -700,6 +739,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
           out_msg.Acks := 2;
         }
         out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
       }
     }
   }

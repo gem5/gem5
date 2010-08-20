@@ -80,11 +80,25 @@ class Sequencer : public RubyPort, public Consumer
                        GenericMachineType mach, 
                        DataBlock& data);
 
+    void writeCallback(const Address& address, 
+                       GenericMachineType mach, 
+                       DataBlock& data,
+                       Time initialRequestTime,
+                       Time forwardRequestTime,
+                       Time firstResponseTime);
+
     void readCallback(const Address& address, DataBlock& data);
 
     void readCallback(const Address& address, 
                       GenericMachineType mach, 
                       DataBlock& data);
+
+    void readCallback(const Address& address, 
+                      GenericMachineType mach, 
+                      DataBlock& data,
+                      Time initialRequestTime,
+                      Time forwardRequestTime,
+                      Time firstResponseTime);
 
     RequestStatus makeRequest(const RubyRequest & request);
     RequestStatus getRequestStatus(const RubyRequest& request);
@@ -106,7 +120,10 @@ class Sequencer : public RubyPort, public Consumer
     void hitCallback(SequencerRequest* request, 
                      GenericMachineType mach,
                      DataBlock& data,
-                     bool success);
+                     bool success,
+                     Time initialRequestTime,
+                     Time forwardRequestTime,
+                     Time firstResponseTime);
 
     bool insertRequest(SequencerRequest* request);
 

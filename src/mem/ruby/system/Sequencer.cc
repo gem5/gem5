@@ -357,6 +357,17 @@ Sequencer::writeCallback(const Address& address,
                          GenericMachineType mach, 
                          DataBlock& data)
 {
+    writeCallback(address, mach, data, 0, 0, 0);
+}
+
+void
+Sequencer::writeCallback(const Address& address,
+                         GenericMachineType mach, 
+                         DataBlock& data,
+                         Time initialRequestTime,
+                         Time forwardRequestTime,
+                         Time firstResponseTime)
+{
     assert(address == line_address(address));
     assert(m_writeRequestTable.count(line_address(address)));
 
@@ -385,7 +396,8 @@ Sequencer::writeCallback(const Address& address,
         m_controller->unblock(address);
     }
 
-    hitCallback(request, mach, data, success);
+    hitCallback(request, mach, data, success, 
+                initialRequestTime, forwardRequestTime, firstResponseTime);
 }
 
 void
@@ -398,6 +410,17 @@ void
 Sequencer::readCallback(const Address& address,
                         GenericMachineType mach,
                         DataBlock& data)
+{
+    readCallback(address, mach, data, 0, 0, 0);
+}
+
+void
+Sequencer::readCallback(const Address& address,
+                        GenericMachineType mach,
+                        DataBlock& data,
+                        Time initialRequestTime,
+                        Time forwardRequestTime,
+                        Time firstResponseTime)
 {
     assert(address == line_address(address));
     assert(m_readRequestTable.count(line_address(address)));
@@ -413,14 +436,18 @@ Sequencer::readCallback(const Address& address,
            (request->ruby_request.type == RubyRequestType_RMW_Read) ||
            (request->ruby_request.type == RubyRequestType_IFETCH));
 
-    hitCallback(request, mach, data, true);
+    hitCallback(request, mach, data, true, 
+                initialRequestTime, forwardRequestTime, firstResponseTime);
 }
 
 void
 Sequencer::hitCallback(SequencerRequest* srequest,
                        GenericMachineType mach,
                        DataBlock& data,
-                       bool success)
+                       bool success,
+                       Time initialRequestTime,
+                       Time forwardRequestTime,
+                       Time firstResponseTime)
 {
     const RubyRequest & ruby_request = srequest->ruby_request;
     Address request_address(ruby_request.paddr);
@@ -444,6 +471,22 @@ Sequencer::hitCallback(SequencerRequest* srequest,
     // Profile the miss latency for all non-zero demand misses
     if (miss_latency != 0) {
         g_system_ptr->getProfiler()->missLatency(miss_latency, type, mach);
+
+        if (mach == GenericMachineType_L1Cache_wCC) {
+            g_system_ptr->getProfiler()->missLatencyWcc(issued_time,
+                                                   initialRequestTime,
+                                                   forwardRequestTime,
+                                                   firstResponseTime,
+                                                   g_eventQueue_ptr->getTime());
+        }
+
+        if (mach == GenericMachineType_Directory) {
+            g_system_ptr->getProfiler()->missLatencyDir(issued_time,
+                                                   initialRequestTime,
+                                                   forwardRequestTime,
+                                                   firstResponseTime,
+                                                   g_eventQueue_ptr->getTime());
+        }
 
         if (Debug::getProtocolTrace()) {
             if (success) {
