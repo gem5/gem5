@@ -45,7 +45,12 @@ class L2Cache(RubyCache):
     latency = 15
 
 def define_options(parser):
-    return
+    parser.add_option("--l1-retries", type="int", default=1,
+                      help="Token_CMP: # of l1 retries before going persistent")
+    parser.add_option("--timeout-latency", type="int", default=300,
+                      help="Token_CMP: cycles until issuing again");
+    parser.add_option("--disable-dyn-timeouts", action="store_true",
+          help="Token_CMP: disable dyanimc timeouts, use fixed latency instead")
 
 def create_system(options, phys_mem, piobus, dma_devices):
     
@@ -99,7 +104,13 @@ def create_system(options, phys_mem, piobus, dma_devices):
                                       L1DcacheMemory = l1d_cache,
                                       l2_select_num_bits = \
                                         math.log(options.num_l2caches, 2),
-                                      N_tokens = n_tokens)
+                                      N_tokens = n_tokens,
+                                      retry_threshold = options.l1_retries,
+                                      fixed_timeout_latency = \
+                                        options.timeout_latency,
+                                      dynamic_timeout_enabled = \
+                                        not options.disable_dyn_timeouts)
+
         #
         # Add controllers and sequencers to the appropriate lists
         #
