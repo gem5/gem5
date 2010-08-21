@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 18 2010 14:36:48
-M5 revision 6a6bb24e484f+ 7041+ default qtip tip brad/regress_updates
-M5 started Mar 18 2010 14:37:00
-M5 executing on cabr0210
+M5 compiled Aug 20 2010 11:26:07
+M5 revision 7074a6fb3b4f 7537 default qtip tip brad/regress_updates
+M5 started Aug 20 2010 11:29:00
+M5 executing on SC2B0629
 command line: build/ALPHA_SE_MESI_CMP_directory/m5.fast -d build/ALPHA_SE_MESI_CMP_directory/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory -re tests/run.py build/ALPHA_SE_MESI_CMP_directory/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 385311 because Ruby Tester completed
+Exiting @ tick 362171 because Ruby Tester completed

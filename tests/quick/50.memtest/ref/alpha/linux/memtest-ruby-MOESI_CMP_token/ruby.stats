@@ -34,7 +34,7 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Jul/01/2010 14:40:39
+Real time: Aug/20/2010 12:14:59
 
 Profiler Stats
 --------------
@@ -43,20 +43,20 @@ Elapsed_time_in_minutes: 0.433333
 Elapsed_time_in_hours: 0.00722222
 Elapsed_time_in_days: 0.000300926
 
-Virtual_time_in_seconds: 26.08
-Virtual_time_in_minutes: 0.434667
-Virtual_time_in_hours:   0.00724444
-Virtual_time_in_days:    0.000301852
+Virtual_time_in_seconds: 25.78
+Virtual_time_in_minutes: 0.429667
+Virtual_time_in_hours:   0.00716111
+Virtual_time_in_days:    0.00029838
 
-Ruby_current_time: 3229931
+Ruby_current_time: 2583072
 Ruby_start_time: 0
-Ruby_cycles: 3229931
+Ruby_cycles: 2583072
 
-mbytes_resident: 32.3867
-mbytes_total: 325.047
-resident_ratio: 0.0996491
+mbytes_resident: 32.8789
+mbytes_total: 333.961
+resident_ratio: 0.0984747
 
-ruby_cycles_executed: [ 3229932 3229932 3229932 3229932 3229932 3229932 3229932 3229932 ]
+ruby_cycles_executed: [ 2583073 2583073 2583073 2583073 2583073 2583073 2583073 2583073 ]
 
 Busy Controller Counts:
 L1Cache-0:0  L1Cache-1:0  L1Cache-2:0  L1Cache-3:0  L1Cache-4:0  L1Cache-5:0  L1Cache-6:0  L1Cache-7:0  
@@ -67,13 +67,31 @@ Directory-0:0
 
 Busy Bank Count:0
 
-sequencer_requests_outstanding: [binsize: 1 max: 2 count: 1209436 average: 1.99443 | standard deviation: 0.0744408 | 0 6739 1202697 ]
+sequencer_requests_outstanding: [binsize: 1 max: 2 count: 1202451 average: 1.98763 | standard deviation: 0.110552 | 0 14880 1187571 ]
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
-miss_latency: [binsize: 8 max: 1074 count: 1209420 average: 40.7265 | standard deviation: 150.859 | 1138116 0 121 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 69534 1022 106 161 136 90 74 14 17 8 0 0 0 0 0 6 4 1 0 0 0 0 0 2 0 0 0 0 0 0 1 1 0 0 0 0 0 0 2 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_2: [binsize: 8 max: 949 count: 786341 average: 40.6919 | standard deviation: 150.795 | 740099 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 45198 631 68 105 94 61 49 6 10 8 0 0 0 0 0 4 4 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_3: [binsize: 8 max: 1074 count: 423079 average: 40.7906 | standard deviation: 150.976 | 398017 0 121 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 24336 391 38 56 42 29 25 8 7 0 0 0 0 0 0 2 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency: [binsize: 8 max: 1010 count: 1202436 average: 32.3679 | standard deviation: 136.165 | 1145435 0 24 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 56101 498 85 84 67 29 60 30 1 5 1 0 0 0 0 4 2 0 0 0 0 0 0 2 0 0 0 0 0 0 2 0 0 0 0 0 0 0 2 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_LD: [binsize: 8 max: 1010 count: 782221 average: 32.3974 | standard deviation: 136.229 | 745119 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 36551 320 49 51 39 20 34 21 1 3 1 0 0 0 0 2 1 0 0 0 0 0 0 1 0 0 0 0 0 0 2 0 0 0 0 0 0 0 2 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_ST: [binsize: 8 max: 825 count: 420215 average: 32.313 | standard deviation: 136.046 | 400316 0 24 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 19550 178 36 33 28 9 26 9 0 2 0 0 0 0 0 2 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_L1Cache: [binsize: 1 max: 2 count: 1145435 average:     2 | standard deviation: 0 | 0 0 1145435 ]
+miss_latency_Directory: [binsize: 2 max: 369 count: 2 average:   314 | standard deviation: 77.7817 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
+miss_latency_L1Cache_wCC: [binsize: 8 max: 1010 count: 56999 average: 642.622 | standard deviation: 13.675 | 0 0 24 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 56101 498 85 84 67 29 60 30 1 5 1 0 0 0 0 4 2 0 0 0 0 0 0 2 0 0 0 0 0 0 2 0 0 0 0 0 0 0 2 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_wCC_issue_to_initial_request: [binsize: 1 max: 0 count: 6 average:     0 | standard deviation: 0 | 6 ]
+miss_latency_wCC_initial_forward_request: [binsize: 1 max: 0 count: 6 average:     0 | standard deviation: 0 | 6 ]
+miss_latency_wCC_forward_to_first_response: [binsize: 1 max: 0 count: 6 average:     0 | standard deviation: 0 | 6 ]
+miss_latency_wCC_first_response_to_completion: [binsize: 8 max: 887 count: 6 average: 764.333 | standard deviation: 101.837 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 2 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+imcomplete_wCC_Times: 56993
+miss_latency_dir_issue_to_initial_request: [binsize: 1 max: 0 count: 2 average:     0 | standard deviation: 0 | 2 ]
+miss_latency_dir_initial_forward_request: [binsize: 1 max: 0 count: 2 average:     0 | standard deviation: 0 | 2 ]
+miss_latency_dir_forward_to_first_response: [binsize: 1 max: 0 count: 2 average:     0 | standard deviation: 0 | 2 ]
+miss_latency_dir_first_response_to_completion: [binsize: 2 max: 369 count: 2 average:   314 | standard deviation: 77.7817 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
+imcomplete_dir_Times: 0
+miss_latency_LD_L1Cache: [binsize: 1 max: 2 count: 745119 average:     2 | standard deviation: 0 | 0 0 745119 ]
+miss_latency_LD_Directory: [binsize: 2 max: 369 count: 2 average:   314 | standard deviation: 77.7817 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
+miss_latency_LD_L1Cache_wCC: [binsize: 8 max: 1010 count: 37100 average: 642.885 | standard deviation: 5.20071 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 36551 320 49 51 39 20 34 21 1 3 1 0 0 0 0 2 1 0 0 0 0 0 0 1 0 0 0 0 0 0 2 0 0 0 0 0 0 0 2 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_ST_L1Cache: [binsize: 1 max: 2 count: 400316 average:     2 | standard deviation: 0 | 0 0 400316 ]
+miss_latency_ST_L1Cache_wCC: [binsize: 8 max: 825 count: 19899 average: 642.132 | standard deviation: 22.02 | 0 0 24 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 19550 178 36 33 28 9 26 9 0 2 0 0 0 0 0 2 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 
 All Non-Zero Cycle SW Prefetch Requests
 ------------------------------------
@@ -103,3081 +121,924 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard dev
 Resource Usage
 --------------
 page_size: 4096
-user_time: 26
+user_time: 25
 system_time: 0
-page_reclaims: 8508
+page_reclaims: 9519
 page_faults: 0
 swaps: 0
-block_inputs: 24
-block_outputs: 72
+block_inputs: 16
+block_outputs: 0
 
 Network Stats
 -------------
 
+total_msg_count_Request_Control: 342090 2736720
+total_msg_count_Response_Data: 170931 12307032
+total_msg_count_ResponseLocal_Data: 48 3456
+total_msg_count_Response_Control: 170943 1367544
+total_msg_count_Broadcast_Control: 855225 6841800
+total_msg_count_Persistent_Control: 2279000 18232000
+total_msgs: 3818237 total_bytes: 41488552
+
 switch_0_inlinks: 2
 switch_0_outlinks: 2
-links_utilized_percent_switch_0: 0.151652
-  links_utilized_percent_switch_0_link_0: 0.110271 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 0.193034 bw: 160000 base_latency: 1
+links_utilized_percent_switch_0: 0.151672
+  links_utilized_percent_switch_0_link_0: 0.110312 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_0_link_1: 0.193032 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_0_link_0_Request_Control: 62398 499184 [ 0 62398 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_ResponseLocal_Data: 9 648 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_Response_Control: 12 96 [ 0 0 0 0 12 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Request_Control: 17840 142720 [ 0 17840 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Response_Data: 8902 640944 [ 0 0 0 0 8902 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_ResponseLocal_Data: 5 360 [ 0 0 0 0 5 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Response_Control: 8900 71200 [ 0 0 0 0 8900 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Persistent_Control: 17794 142352 [ 0 0 0 17794 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_Response_Data: 7123 512856 [ 0 0 0 0 7123 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_Broadcast_Control: 49890 399120 [ 0 49890 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Request_Control: 7125 57000 [ 0 7125 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Response_Control: 7122 56976 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Broadcast_Control: 7125 57000 [ 0 7125 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Persistent_Control: 14244 113952 [ 0 0 0 14244 0 0 0 0 0 0 ] base_latency: 1
 
 switch_1_inlinks: 2
 switch_1_outlinks: 2
-links_utilized_percent_switch_1: 0.151663
-  links_utilized_percent_switch_1_link_0: 0.110278 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 0.193049 bw: 160000 base_latency: 1
+links_utilized_percent_switch_1: 0.151704
+  links_utilized_percent_switch_1_link_0: 0.11032 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_1_link_1: 0.193088 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_1_link_0_Request_Control: 62403 499224 [ 0 62403 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_ResponseLocal_Data: 11 792 [ 0 0 0 0 11 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Response_Control: 5 40 [ 0 0 0 0 5 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Request_Control: 17830 142640 [ 0 17830 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Response_Data: 8901 640872 [ 0 0 0 0 8901 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_ResponseLocal_Data: 8 576 [ 0 0 0 0 8 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Response_Control: 8900 71200 [ 0 0 0 0 8900 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Persistent_Control: 17796 142368 [ 0 0 0 17796 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_0_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_0_ResponseLocal_Data: 4 288 [ 0 0 0 0 4 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_0_Broadcast_Control: 49888 399104 [ 0 49888 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Request_Control: 7127 57016 [ 0 7127 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Response_Data: 7124 512928 [ 0 0 0 0 7124 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Response_Control: 7122 56976 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Broadcast_Control: 7127 57016 [ 0 7127 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Persistent_Control: 14242 113936 [ 0 0 0 14242 0 0 0 0 0 0 ] base_latency: 1
 
 switch_2_inlinks: 2
 switch_2_outlinks: 2
-links_utilized_percent_switch_2: 0.151622
-  links_utilized_percent_switch_2_link_0: 0.110265 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 0.192979 bw: 160000 base_latency: 1
+links_utilized_percent_switch_2: 0.151685
+  links_utilized_percent_switch_2_link_0: 0.110312 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_2_link_1: 0.193057 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_2_link_0_Request_Control: 62403 499224 [ 0 62403 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_Response_Data: 8899 640728 [ 0 0 0 0 8899 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_ResponseLocal_Data: 6 432 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Request_Control: 17830 142640 [ 0 17830 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Response_Data: 8896 640512 [ 0 0 0 0 8896 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_ResponseLocal_Data: 8 576 [ 0 0 0 0 8 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Response_Control: 8901 71208 [ 0 0 0 0 8901 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Persistent_Control: 17795 142360 [ 0 0 0 17795 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_0_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_0_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_0_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_0_Broadcast_Control: 49888 399104 [ 0 49888 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Request_Control: 7127 57016 [ 0 7127 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Response_Data: 7120 512640 [ 0 0 0 0 7120 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_ResponseLocal_Data: 4 288 [ 0 0 0 0 4 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Response_Control: 7122 56976 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Broadcast_Control: 7127 57016 [ 0 7127 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Persistent_Control: 14244 113952 [ 0 0 0 14244 0 0 0 0 0 0 ] base_latency: 1
 
 switch_3_inlinks: 2
 switch_3_outlinks: 2
-links_utilized_percent_switch_3: 0.151632
-  links_utilized_percent_switch_3_link_0: 0.110268 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_3_link_1: 0.192996 bw: 160000 base_latency: 1
+links_utilized_percent_switch_3: 0.151691
+  links_utilized_percent_switch_3_link_0: 0.110313 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_3_link_1: 0.193069 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_3_link_0_Request_Control: 62402 499216 [ 0 62402 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_0_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_0_ResponseLocal_Data: 8 576 [ 0 0 0 0 8 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_0_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Request_Control: 17832 142656 [ 0 17832 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Response_Data: 8899 640728 [ 0 0 0 0 8899 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_ResponseLocal_Data: 6 432 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Response_Control: 8901 71208 [ 0 0 0 0 8901 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Persistent_Control: 17795 142360 [ 0 0 0 17795 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_0_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_0_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_0_Response_Control: 6 48 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_0_Broadcast_Control: 49885 399080 [ 0 49885 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Request_Control: 7130 57040 [ 0 7130 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Response_Data: 7124 512928 [ 0 0 0 0 7124 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Response_Control: 7122 56976 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Broadcast_Control: 7130 57040 [ 0 7130 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Persistent_Control: 14244 113952 [ 0 0 0 14244 0 0 0 0 0 0 ] base_latency: 1
 
 switch_4_inlinks: 2
 switch_4_outlinks: 2
-links_utilized_percent_switch_4: 0.151623
-  links_utilized_percent_switch_4_link_0: 0.110263 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_4_link_1: 0.192984 bw: 160000 base_latency: 1
+links_utilized_percent_switch_4: 0.1517
+  links_utilized_percent_switch_4_link_0: 0.110316 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_4_link_1: 0.193084 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_4_link_0_Request_Control: 62403 499224 [ 0 62403 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_0_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_0_ResponseLocal_Data: 6 432 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_0_Response_Control: 12 96 [ 0 0 0 0 12 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Request_Control: 17830 142640 [ 0 17830 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Response_Data: 8893 640296 [ 0 0 0 0 8893 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_ResponseLocal_Data: 11 792 [ 0 0 0 0 11 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Response_Control: 8903 71224 [ 0 0 0 0 8903 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Persistent_Control: 17796 142368 [ 0 0 0 17796 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_0_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_0_ResponseLocal_Data: 3 216 [ 0 0 0 0 3 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_0_Response_Control: 3 24 [ 0 0 0 0 3 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_0_Broadcast_Control: 49886 399088 [ 0 49886 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Request_Control: 7129 57032 [ 0 7129 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Response_Data: 7123 512856 [ 0 0 0 0 7123 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Response_Control: 7123 56984 [ 0 0 0 0 7123 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Broadcast_Control: 7129 57032 [ 0 7129 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Persistent_Control: 14244 113952 [ 0 0 0 14244 0 0 0 0 0 0 ] base_latency: 1
 
 switch_5_inlinks: 2
 switch_5_outlinks: 2
-links_utilized_percent_switch_5: 0.151636
-  links_utilized_percent_switch_5_link_0: 0.110271 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_5_link_1: 0.193001 bw: 160000 base_latency: 1
+links_utilized_percent_switch_5: 0.151686
+  links_utilized_percent_switch_5_link_0: 0.110312 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_5_link_1: 0.193059 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_5_link_0_Request_Control: 62407 499256 [ 0 62407 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_0_Response_Data: 8897 640584 [ 0 0 0 0 8897 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_0_ResponseLocal_Data: 10 720 [ 0 0 0 0 10 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_0_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_0_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_5_link_0_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Request_Control: 17822 142576 [ 0 17822 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Response_Data: 8901 640872 [ 0 0 0 0 8901 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_ResponseLocal_Data: 6 432 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Response_Control: 8897 71176 [ 0 0 0 0 8897 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Persistent_Control: 17794 142352 [ 0 0 0 17794 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_0_Broadcast_Control: 49888 399104 [ 0 49888 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Request_Control: 7127 57016 [ 0 7127 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Response_Data: 7119 512568 [ 0 0 0 0 7119 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_ResponseLocal_Data: 5 360 [ 0 0 0 0 5 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Response_Control: 7123 56984 [ 0 0 0 0 7123 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Broadcast_Control: 7127 57016 [ 0 7127 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Persistent_Control: 14244 113952 [ 0 0 0 14244 0 0 0 0 0 0 ] base_latency: 1
 
 switch_6_inlinks: 2
 switch_6_outlinks: 2
-links_utilized_percent_switch_6: 0.151646
-  links_utilized_percent_switch_6_link_0: 0.110272 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_6_link_1: 0.19302 bw: 160000 base_latency: 1
+links_utilized_percent_switch_6: 0.151673
+  links_utilized_percent_switch_6_link_0: 0.110309 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_6_link_1: 0.193038 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_6_link_0_Request_Control: 62402 499216 [ 0 62402 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_0_Response_Data: 8897 640584 [ 0 0 0 0 8897 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_0_ResponseLocal_Data: 10 720 [ 0 0 0 0 10 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_0_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Request_Control: 17832 142656 [ 0 17832 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Response_Data: 8900 640800 [ 0 0 0 0 8900 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_ResponseLocal_Data: 7 504 [ 0 0 0 0 7 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Response_Control: 8899 71192 [ 0 0 0 0 8899 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Persistent_Control: 17794 142352 [ 0 0 0 17794 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_0_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_0_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_0_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_0_Broadcast_Control: 49890 399120 [ 0 49890 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Request_Control: 7125 57000 [ 0 7125 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Response_Control: 7125 57000 [ 0 0 0 0 7125 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Broadcast_Control: 7125 57000 [ 0 7125 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Persistent_Control: 14244 113952 [ 0 0 0 14244 0 0 0 0 0 0 ] base_latency: 1
 
 switch_7_inlinks: 2
 switch_7_outlinks: 2
-links_utilized_percent_switch_7: 0.151601
-  links_utilized_percent_switch_7_link_0: 0.110257 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_7_link_1: 0.192945 bw: 160000 base_latency: 1
+links_utilized_percent_switch_7: 0.151662
+  links_utilized_percent_switch_7_link_0: 0.110309 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_7_link_1: 0.193014 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_7_link_0_Request_Control: 62408 499264 [ 0 62408 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_0_Response_Data: 8899 640728 [ 0 0 0 0 8899 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_0_ResponseLocal_Data: 3 216 [ 0 0 0 0 3 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_0_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Request_Control: 17822 142576 [ 0 17822 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Response_Data: 8890 640080 [ 0 0 0 0 8890 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_ResponseLocal_Data: 12 864 [ 0 0 0 0 12 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Response_Control: 8902 71216 [ 0 0 0 0 8902 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Persistent_Control: 17798 142384 [ 0 0 0 17798 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_0_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_0_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_0_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_0_Broadcast_Control: 49890 399120 [ 0 49890 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Request_Control: 7125 57000 [ 0 7125 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Response_Data: 7121 512712 [ 0 0 0 0 7121 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Response_Control: 7122 56976 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Broadcast_Control: 7125 57000 [ 0 7125 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Persistent_Control: 14244 113952 [ 0 0 0 14244 0 0 0 0 0 0 ] base_latency: 1
 
 switch_8_inlinks: 2
 switch_8_outlinks: 2
-links_utilized_percent_switch_8: 0.110314
-  links_utilized_percent_switch_8_link_0: 0.110225 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_8_link_1: 0.110402 bw: 160000 base_latency: 1
+links_utilized_percent_switch_8: 0.110331
+  links_utilized_percent_switch_8_link_0: 0.110299 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_8_link_1: 0.110363 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_8_link_0_Request_Control: 71318 570544 [ 0 71318 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_0_Response_Control: 71136 569088 [ 0 0 0 0 71136 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_1_Request_Control: 71318 570544 [ 0 0 71318 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_0_Request_Control: 57015 456120 [ 0 57015 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_0_Response_Control: 56964 455712 [ 0 0 0 0 56964 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_1_Request_Control: 57015 456120 [ 0 0 57015 0 0 0 0 0 0 0 ] base_latency: 1
 
 switch_9_inlinks: 2
 switch_9_outlinks: 2
-links_utilized_percent_switch_9: 0.0413616
-  links_utilized_percent_switch_9_link_0: 0.0826953 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_9_link_1: 2.78644e-05 bw: 160000 base_latency: 1
+links_utilized_percent_switch_9: 0.0413841
+  links_utilized_percent_switch_9_link_0: 0.0827334 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_9_link_1: 3.48422e-05 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_9_link_0_Request_Control: 71318 570544 [ 0 0 71318 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_0_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_0_Request_Control: 57015 456120 [ 0 0 57015 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_0_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_9_link_1_Response_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
 
 switch_10_inlinks: 10
 switch_10_outlinks: 10
-links_utilized_percent_switch_10: 0.407988
-  links_utilized_percent_switch_10_link_0: 0.41354 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_1: 0.413561 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_2: 0.413513 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_3: 0.413526 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_4: 0.413503 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_5: 0.413538 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_6: 0.413541 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_7: 0.413475 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_8: 0.440901 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_9: 0.330781 bw: 160000 base_latency: 1
+links_utilized_percent_switch_10: 0.408158
+  links_utilized_percent_switch_10_link_0: 0.413678 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_1: 0.413713 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_2: 0.413678 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_3: 0.41368 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_4: 0.413693 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_5: 0.413678 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_6: 0.413664 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_7: 0.413664 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_8: 0.441198 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_9: 0.330933 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_10_link_0_Request_Control: 62398 499184 [ 0 62398 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_0_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_0_ResponseLocal_Data: 9 648 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_0_Response_Control: 12 96 [ 0 0 0 0 12 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_0_Persistent_Control: 124568 996544 [ 0 0 0 124568 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_1_Request_Control: 62403 499224 [ 0 62403 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_1_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_1_ResponseLocal_Data: 11 792 [ 0 0 0 0 11 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_1_Response_Control: 5 40 [ 0 0 0 0 5 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_1_Persistent_Control: 124566 996528 [ 0 0 0 124566 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_2_Request_Control: 62403 499224 [ 0 62403 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_2_Response_Data: 8899 640728 [ 0 0 0 0 8899 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_2_ResponseLocal_Data: 6 432 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_2_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_2_Persistent_Control: 124567 996536 [ 0 0 0 124567 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_3_Request_Control: 62402 499216 [ 0 62402 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_3_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_3_ResponseLocal_Data: 8 576 [ 0 0 0 0 8 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_3_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_3_Persistent_Control: 124567 996536 [ 0 0 0 124567 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_4_Request_Control: 62403 499224 [ 0 62403 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_4_Response_Data: 8898 640656 [ 0 0 0 0 8898 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_4_ResponseLocal_Data: 6 432 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_4_Response_Control: 12 96 [ 0 0 0 0 12 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_4_Persistent_Control: 124566 996528 [ 0 0 0 124566 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_5_Request_Control: 62407 499256 [ 0 62407 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_5_Response_Data: 8897 640584 [ 0 0 0 0 8897 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_5_ResponseLocal_Data: 10 720 [ 0 0 0 0 10 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_0_Response_Data: 7123 512856 [ 0 0 0 0 7123 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_0_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_0_Broadcast_Control: 49890 399120 [ 0 49890 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_0_Persistent_Control: 99706 797648 [ 0 0 0 99706 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_1_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_1_ResponseLocal_Data: 4 288 [ 0 0 0 0 4 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_1_Broadcast_Control: 49888 399104 [ 0 49888 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_1_Persistent_Control: 99708 797664 [ 0 0 0 99708 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_2_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_2_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_2_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_2_Broadcast_Control: 49888 399104 [ 0 49888 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_2_Persistent_Control: 99706 797648 [ 0 0 0 99706 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_3_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_3_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_3_Response_Control: 6 48 [ 0 0 0 0 6 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_3_Broadcast_Control: 49885 399080 [ 0 49885 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_3_Persistent_Control: 99706 797648 [ 0 0 0 99706 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_4_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_4_ResponseLocal_Data: 3 216 [ 0 0 0 0 3 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_4_Response_Control: 3 24 [ 0 0 0 0 3 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_4_Broadcast_Control: 49886 399088 [ 0 49886 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_4_Persistent_Control: 99706 797648 [ 0 0 0 99706 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_5_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_5_ResponseLocal_Data: 2 144 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_10_link_5_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_5_Persistent_Control: 124568 996544 [ 0 0 0 124568 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_6_Request_Control: 62402 499216 [ 0 62402 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_6_Response_Data: 8897 640584 [ 0 0 0 0 8897 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_6_ResponseLocal_Data: 10 720 [ 0 0 0 0 10 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_6_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_6_Persistent_Control: 124568 996544 [ 0 0 0 124568 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_7_Request_Control: 62408 499264 [ 0 62408 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_7_Response_Data: 8899 640728 [ 0 0 0 0 8899 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_7_ResponseLocal_Data: 3 216 [ 0 0 0 0 3 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_7_Response_Control: 9 72 [ 0 0 0 0 9 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_7_Persistent_Control: 124564 996512 [ 0 0 0 124564 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_8_Request_Control: 71318 570544 [ 0 71318 0 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_8_Response_Control: 71136 569088 [ 0 0 0 0 71136 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_8_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_9_Request_Control: 71318 570544 [ 0 0 71318 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_9_Persistent_Control: 142362 1138896 [ 0 0 0 142362 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_5_Broadcast_Control: 49888 399104 [ 0 49888 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_5_Persistent_Control: 99706 797648 [ 0 0 0 99706 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_6_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_6_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_6_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_6_Broadcast_Control: 49890 399120 [ 0 49890 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_6_Persistent_Control: 99706 797648 [ 0 0 0 99706 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_7_Response_Data: 7122 512784 [ 0 0 0 0 7122 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_7_ResponseLocal_Data: 1 72 [ 0 0 0 0 1 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_7_Response_Control: 2 16 [ 0 0 0 0 2 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_7_Broadcast_Control: 49890 399120 [ 0 49890 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_7_Persistent_Control: 99706 797648 [ 0 0 0 99706 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_8_Request_Control: 57015 456120 [ 0 57015 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_8_Response_Control: 56964 455712 [ 0 0 0 0 56964 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_8_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_9_Request_Control: 57015 456120 [ 0 0 57015 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_9_Persistent_Control: 113950 911600 [ 0 0 0 113950 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.network.topology.ext_links0.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links0.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1IcacheMemory
+  system.l1_cntrl0.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl0.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
 
-  system.ruby.network.topology.ext_links0.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
-Cache Stats: system.ruby.network.topology.ext_links0.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links0.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1DcacheMemory
+  system.l1_cntrl0.L1DcacheMemory_total_misses: 7125
+  system.l1_cntrl0.L1DcacheMemory_total_demand_misses: 7125
+  system.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
 
-  system.ruby.network.topology.ext_links0.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+  system.l1_cntrl0.L1DcacheMemory_request_type_LD:   64.9965%
+  system.l1_cntrl0.L1DcacheMemory_request_type_ST:   35.0035%
 
- --- L1Cache 0 ---
+  system.l1_cntrl0.L1DcacheMemory_access_mode_type_SupervisorMode:   7125    100%
+
+ --- L1Cache ---
  - Event Counts -
-Load  99666
-Ifetch  0
-Store  53551
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  16
-Data_All_Tokens  8891
-Ack  1
-Ack_All_Tokens  11
-Transient_GETX  0
-Transient_Local_GETX  21942
-Transient_GETS  0
-Transient_Local_GETS  40456
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  24652
-Persistent_GETS  45581
-Own_Lock_or_Unlock  72129
-Request_Timeout  9283
-Use_TimeoutStarverX  3
-Use_TimeoutStarverS  4
-Use_TimeoutNoStarvers  8895
+Load [97598 97330 96960 97500 100000 98829 96777 97237 ] 782231
+Ifetch [0 0 0 0 0 0 0 0 ] 0
+Store [52430 52106 52281 52110 53664 53487 51846 52295 ] 420219
+Atomic [0 0 0 0 0 0 0 0 ] 0
+L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+Data_Shared [0 0 0 0 0 0 0 0 ] 0
+Data_Owner [6 6 3 2 1 3 5 4 ] 30
+Data_All_Tokens [7119 7118 7120 7121 7123 7123 7119 7120 ] 56963
+Ack [0 1 1 1 0 0 1 2 ] 6
+Ack_All_Tokens [3 1 1 1 0 0 1 4 ] 11
+Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+Transient_Local_GETX [17379 17433 17386 17429 17409 17431 17418 17436 ] 139321
+Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+Transient_Local_GETS [32507 32455 32504 32461 32481 32457 32470 32449 ] 259784
+Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+Persistent_GETX [19681 19967 19851 19972 19399 19393 19734 19360 ] 157357
+Persistent_GETS [36732 37056 37006 37152 36090 36049 36638 36016 ] 292739
+Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+Own_Lock_or_Unlock [57537 56927 57093 56826 58461 58508 57578 58574 ] 461504
+Request_Timeout [7147 7226 7147 7140 7122 7468 7539 7333 ] 58122
+Use_TimeoutStarverX [6 19 10 28 0 6 54 0 ] 123
+Use_TimeoutStarverS [11 27 13 48 0 8 69 1 ] 177
+Use_TimeoutNoStarvers [7105 7073 7098 7046 7123 7109 6997 7123 ] 56674
+Use_TimeoutNoStarvers_NoMig [0 0 0 0 0 0 0 0 ] 0
 
  - Transitions -
-NP  Load  2
-NP  Ifetch  0 <-- 
-NP  Store  0 <-- 
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
+NP  Load [2 2 1 2 2 2 2 1 ] 14
+NP  Ifetch [0 0 0 0 0 0 0 0 ] 0
+NP  Store [0 0 1 0 0 0 0 1 ] 2
+NP  Atomic [0 0 0 0 0 0 0 0 ] 0
+NP  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+NP  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+NP  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+NP  Ack [0 0 0 0 0 0 0 0 ] 0
+NP  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+NP  Transient_Local_GETX [0 0 0 0 0 0 0 0 ] 0
+NP  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+NP  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+NP  Persistent_GETX [0 0 0 0 0 0 0 0 ] 0
+NP  Persistent_GETS [0 0 0 0 0 0 0 0 ] 0
+NP  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+NP  Own_Lock_or_Unlock [0 0 0 0 0 0 0 0 ] 0
 
-I  Load  3
-I  Ifetch  0 <-- 
-I  Store  4
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  1
+I  Load [1 4 1 0 0 2 4 0 ] 12
+I  Ifetch [0 0 0 0 0 0 0 0 ] 0
+I  Store [1 1 1 1 1 0 0 0 ] 5
+I  Atomic [0 0 0 0 0 0 0 0 ] 0
+I  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+I  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+I  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+I  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+I  Ack [0 0 0 0 0 0 0 0 ] 0
+I  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+I  Transient_Local_GETX [0 0 0 0 0 0 0 0 ] 0
+I  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+I  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+I  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+I  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+I  Persistent_GETX [0 0 0 0 0 0 0 0 ] 0
+I  Persistent_GETS [0 0 0 0 0 0 0 0 ] 0
+I  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+I  Own_Lock_or_Unlock [0 1 0 0 0 1 0 0 ] 2
 
-S  Load  3
-S  Ifetch  0 <-- 
-S  Store  1
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  2
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
+S  Load [0 0 4 0 0 2 0 2 ] 8
+S  Ifetch [0 0 0 0 0 0 0 0 ] 0
+S  Store [0 0 0 0 1 2 0 1 ] 4
+S  Atomic [0 0 0 0 0 0 0 0 ] 0
+S  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+S  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+S  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+S  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+S  Ack [0 0 0 0 0 0 0 0 ] 0
+S  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+S  Transient_Local_GETX [0 0 1 0 0 0 0 0 ] 1
+S  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+S  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+S  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+S  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+S  Persistent_GETX [0 0 0 0 0 0 0 0 ] 0
+S  Persistent_GETS [0 0 0 0 0 0 0 0 ] 0
+S  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+S  Own_Lock_or_Unlock [0 0 0 0 0 0 0 0 ] 0
 
-O  Load  13
-O  Ifetch  0 <-- 
-O  Store  11
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  5
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  15
+O  Load [7 3 2 5 1 0 9 0 ] 27
+O  Ifetch [0 0 0 0 0 0 0 0 ] 0
+O  Store [3 1 1 1 0 0 1 4 ] 11
+O  Atomic [0 0 0 0 0 0 0 0 ] 0
+O  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+O  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+O  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+O  Ack [0 0 0 0 0 0 1 1 ] 2
+O  Ack_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+O  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+O  Transient_Local_GETX [2 5 1 1 1 2 4 0 ] 16
+O  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+O  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+O  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+O  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+O  Persistent_GETX [0 0 0 0 0 0 0 0 ] 0
+O  Persistent_GETS [0 0 0 0 0 0 0 0 ] 0
+O  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+O  Own_Lock_or_Unlock [4 4 1 2 1 1 4 1 ] 18
 
-M  Load  149
-M  Ifetch  0 <-- 
-M  Store  72
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  11
-M  Persistent_GETS  14
-M  Own_Lock_or_Unlock  72
+M  Load [28 73 44 39 51 47 48 45 ] 375
+M  Ifetch [0 0 0 0 0 0 0 0 ] 0
+M  Store [22 27 20 30 34 31 25 34 ] 223
+M  Atomic [0 0 0 0 0 0 0 0 ] 0
+M  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+M  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+M  Transient_Local_GETX [0 0 0 0 0 0 0 0 ] 0
+M  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+M  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+M  Persistent_GETX [2 2 4 1 2 1 3 3 ] 18
+M  Persistent_GETS [4 4 3 1 3 5 2 3 ] 25
+M  Own_Lock_or_Unlock [19 24 20 17 24 22 19 23 ] 168
 
-MM  Load  39155
-MM  Ifetch  0 <-- 
-MM  Store  21046
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3081
-MM  Persistent_GETS  5789
-MM  Own_Lock_or_Unlock  8681
+MM  Load [37560 37440 37171 37275 39797 38949 36895 37075 ] 302162
+MM  Ifetch [0 0 0 0 0 0 0 0 ] 0
+MM  Store [20087 19886 19931 20132 21523 20999 19589 20207 ] 162354
+MM  Atomic [0 0 0 0 0 0 0 0 ] 0
+MM  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+MM  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+MM  Transient_Local_GETX [0 0 0 0 0 0 0 0 ] 0
+MM  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+MM  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+MM  Persistent_GETX [2470 2470 2418 2451 2479 2469 2466 2510 ] 19733
+MM  Persistent_GETS [4629 4597 4673 4592 4638 4634 4526 4607 ] 36896
+MM  Own_Lock_or_Unlock [6898 6682 6801 6585 7078 6942 6691 7047 ] 54724
 
-M_W  Load  10405
-M_W  Ifetch  0 <-- 
-M_W  Store  5678
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1514
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2959
-M_W  Persistent_GETX  0 <-- 
-M_W  Persistent_GETS  0 <-- 
-M_W  Own_Lock_or_Unlock  11
-M_W  Use_TimeoutStarverX  0 <-- 
-M_W  Use_TimeoutStarverS  0 <-- 
-M_W  Use_TimeoutNoStarvers  97
+M_W  Load [8494 8681 8359 8508 8736 8655 8348 8688 ] 68469
+M_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
+M_W  Store [4571 4617 4577 4617 4591 4614 4605 4617 ] 36809
+M_W  Atomic [0 0 0 0 0 0 0 0 ] 0
+M_W  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+M_W  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+M_W  Transient_Local_GETX [1166 1154 1141 1143 1201 1194 1152 1185 ] 9336
+M_W  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+M_W  Transient_Local_GETS [2166 2212 2154 2181 2163 2167 2179 2189 ] 17411
+M_W  Persistent_GETX [0 1 0 1 0 0 4 0 ] 6
+M_W  Persistent_GETS [0 1 0 0 0 0 2 0 ] 3
+M_W  Own_Lock_or_Unlock [1 0 0 0 2 3 0 1 ] 7
+M_W  Use_TimeoutStarverX [0 0 0 0 0 0 0 0 ] 0
+M_W  Use_TimeoutStarverS [0 0 0 0 0 0 0 0 ] 0
+M_W  Use_TimeoutNoStarvers [28 33 27 32 39 37 30 40 ] 266
+M_W  Use_TimeoutNoStarvers_NoMig [0 0 0 0 0 0 0 0 ] 0
 
-MM_W  Load  44130
-MM_W  Ifetch  0 <-- 
-MM_W  Store  23628
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  947
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1674
-MM_W  Persistent_GETX  3
-MM_W  Persistent_GETS  4
-MM_W  Own_Lock_or_Unlock  116
-MM_W  Use_TimeoutStarverX  3
-MM_W  Use_TimeoutStarverS  4
-MM_W  Use_TimeoutNoStarvers  8798
+MM_W  Load [46901 46467 46766 47022 46777 46509 46835 46760 ] 374037
+MM_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
+MM_W  Store [25226 25106 25236 24857 25022 25371 25142 24970 ] 200930
+MM_W  Atomic [0 0 0 0 0 0 0 0 ] 0
+MM_W  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+MM_W  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+MM_W  Transient_Local_GETX [726 705 680 664 692 661 707 713 ] 5548
+MM_W  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+MM_W  Transient_Local_GETS [1308 1301 1347 1301 1330 1295 1309 1253 ] 10444
+MM_W  Persistent_GETX [6 17 10 26 0 6 48 0 ] 113
+MM_W  Persistent_GETS [11 26 13 47 0 8 62 1 ] 168
+MM_W  Own_Lock_or_Unlock [56 8 48 0 16 91 27 45 ] 291
+MM_W  Use_TimeoutStarverX [6 19 10 28 0 6 54 0 ] 123
+MM_W  Use_TimeoutStarverS [11 27 13 48 0 8 69 1 ] 177
+MM_W  Use_TimeoutNoStarvers [7077 7040 7071 7014 7084 7072 6967 7083 ] 56408
+MM_W  Use_TimeoutNoStarvers_NoMig [0 0 0 0 0 0 0 0 ] 0
 
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  0 <-- 
-IM  Data_All_Tokens  3107
-IM  Ack  0 <-- 
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  273
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  409
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5555
-IM  Persistent_GETS  10291
-IM  Own_Lock_or_Unlock  3107
-IM  Request_Timeout  2214
+IM  Load [0 0 0 0 0 0 0 0 ] 0
+IM  Ifetch [0 0 0 0 0 0 0 0 ] 0
+IM  Store [0 0 0 0 0 0 0 0 ] 0
+IM  Atomic [0 0 0 0 0 0 0 0 ] 0
+IM  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+IM  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+IM  Data_Owner [1 0 1 0 0 1 0 0 ] 3
+IM  Data_All_Tokens [2518 2465 2516 2471 2492 2469 2479 2461 ] 19871
+IM  Ack [0 1 1 1 0 0 0 1 ] 4
+IM  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+IM  Transient_Local_GETX [222 216 237 258 221 212 225 232 ] 1823
+IM  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+IM  Transient_Local_GETS [400 402 434 422 408 454 399 431 ] 3350
+IM  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IM  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IM  Persistent_GETX [4521 4513 4646 4487 4479 4548 4472 4529 ] 36195
+IM  Persistent_GETS [8641 8405 8595 8462 8549 8387 8536 8357 ] 67932
+IM  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IM  Own_Lock_or_Unlock [2182 1996 2007 1984 2492 2470 2235 2406 ] 17772
+IM  Request_Timeout [1799 1793 1784 1765 1766 1755 1871 1763 ] 14296
 
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  9
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  3
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  0 <-- 
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
+SM  Load [0 0 0 0 0 0 0 0 ] 0
+SM  Ifetch [0 0 0 0 0 0 0 0 ] 0
+SM  Store [0 0 0 0 0 0 0 0 ] 0
+SM  Atomic [0 0 0 0 0 0 0 0 ] 0
+SM  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+SM  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+SM  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+SM  Data_All_Tokens [2 2 0 1 1 3 2 2 ] 13
+SM  Ack [0 0 0 0 0 0 0 0 ] 0
+SM  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+SM  Transient_Local_GETX [3 2 3 0 2 2 0 1 ] 13
+SM  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+SM  Transient_Local_GETS [0 0 0 0 0 2 0 0 ] 2
+SM  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+SM  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+SM  Persistent_GETX [0 0 0 0 0 0 0 0 ] 0
+SM  Persistent_GETS [0 0 0 0 0 0 0 0 ] 0
+SM  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+SM  Own_Lock_or_Unlock [0 0 0 0 0 0 0 0 ] 0
+SM  Request_Timeout [0 0 0 0 0 0 0 0 ] 0
 
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  11
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  4
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  1
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  0 <-- 
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
+OM  Load [0 0 0 0 0 0 0 0 ] 0
+OM  Ifetch [0 0 0 0 0 0 0 0 ] 0
+OM  Store [0 0 0 0 0 0 0 0 ] 0
+OM  Atomic [0 0 0 0 0 0 0 0 ] 0
+OM  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+OM  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+OM  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+OM  Ack [0 0 0 0 0 0 0 0 ] 0
+OM  Ack_All_Tokens [3 1 1 1 0 0 1 4 ] 11
+OM  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+OM  Transient_Local_GETX [3 1 1 0 0 0 0 3 ] 8
+OM  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+OM  Transient_Local_GETS [0 0 0 1 0 0 0 0 ] 1
+OM  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+OM  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+OM  Persistent_GETX [0 0 0 0 0 1 0 0 ] 1
+OM  Persistent_GETS [1 0 1 0 0 0 0 0 ] 2
+OM  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+OM  Own_Lock_or_Unlock [0 1 0 0 0 0 0 3 ] 4
+OM  Request_Timeout [0 0 0 0 0 0 0 0 ] 0
 
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  16
-IS  Data_All_Tokens  5775
-IS  Ack  1
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  481
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  797
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10383
-IS  Persistent_GETS  19203
-IS  Own_Lock_or_Unlock  5794
-IS  Request_Timeout  4171
+IS  Load [0 0 0 0 0 0 0 0 ] 0
+IS  Ifetch [0 0 0 0 0 0 0 0 ] 0
+IS  Store [0 0 0 0 0 0 0 0 ] 0
+IS  Atomic [0 0 0 0 0 0 0 0 ] 0
+IS  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+IS  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+IS  Data_Owner [5 6 2 2 1 2 5 4 ] 27
+IS  Data_All_Tokens [4599 4650 4604 4647 4630 4651 4631 4657 ] 37069
+IS  Ack [0 0 0 0 0 0 0 0 ] 0
+IS  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+IS  Transient_Local_GETX [400 408 389 443 408 431 429 415 ] 3323
+IS  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+IS  Transient_Local_GETS [769 757 780 755 748 754 760 742 ] 6065
+IS  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IS  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IS  Persistent_GETX [8371 8439 8397 8510 8389 8397 8431 8464 ] 67398
+IS  Persistent_GETS [15722 16004 15772 15880 15673 15863 15872 16008 ] 126794
+IS  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IS  Own_Lock_or_Unlock [3999 3732 3684 3780 4636 4659 4178 4566 ] 33234
+IS  Request_Timeout [3330 3318 3254 3362 3293 3408 3544 3379 ] 26888
 
-I_L  Load  5788
-I_L  Ifetch  0 <-- 
-I_L  Store  3100
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  3
-I_L  Persistent_GETS  0 <-- 
-I_L  Own_Lock_or_Unlock  0 <-- 
+I_L  Load [4602 4651 4606 4649 4629 4651 4636 4662 ] 37086
+I_L  Ifetch [0 0 0 0 0 0 0 0 ] 0
+I_L  Store [2516 2464 2512 2471 2490 2467 2482 2459 ] 19861
+I_L  Atomic [0 0 0 0 0 0 0 0 ] 0
+I_L  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+I_L  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+I_L  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+I_L  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+I_L  Ack [0 0 0 0 0 0 0 0 ] 0
+I_L  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+I_L  Transient_Local_GETX [0 0 0 0 0 0 0 0 ] 0
+I_L  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+I_L  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+I_L  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+I_L  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+I_L  Persistent_GETX [29 83 67 101 1 11 63 0 ] 355
+I_L  Persistent_GETS [52 140 100 186 1 27 119 0 ] 625
+I_L  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+I_L  Own_Lock_or_Unlock [0 0 0 0 0 0 0 0 ] 0
 
-S_L  Load  18
-S_L  Ifetch  0 <-- 
-S_L  Store  11
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  0 <-- 
-S_L  Own_Lock_or_Unlock  3
+S_L  Load [3 9 6 0 7 12 0 4 ] 41
+S_L  Ifetch [0 0 0 0 0 0 0 0 ] 0
+S_L  Store [4 4 2 1 2 3 2 2 ] 20
+S_L  Atomic [0 0 0 0 0 0 0 0 ] 0
+S_L  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+S_L  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+S_L  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+S_L  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+S_L  Ack [0 0 0 0 0 0 0 0 ] 0
+S_L  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+S_L  Transient_Local_GETX [0 0 0 0 0 0 0 0 ] 0
+S_L  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+S_L  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+S_L  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+S_L  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+S_L  Persistent_GETX [0 0 0 0 0 0 0 0 ] 0
+S_L  Persistent_GETS [0 0 0 0 0 0 0 0 ] 0
+S_L  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+S_L  Own_Lock_or_Unlock [0 0 1 0 1 2 0 1 ] 5
 
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  0 <-- 
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6467
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  12155
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  2008
-IM_L  Persistent_GETS  3584
-IM_L  Own_Lock_or_Unlock  18946
-IM_L  Request_Timeout  1024
+IM_L  Load [0 0 0 0 0 0 0 0 ] 0
+IM_L  Ifetch [0 0 0 0 0 0 0 0 ] 0
+IM_L  Store [0 0 0 0 0 0 0 0 ] 0
+IM_L  Atomic [0 0 0 0 0 0 0 0 ] 0
+IM_L  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+IM_L  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+IM_L  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+IM_L  Data_All_Tokens [0 1 0 0 0 0 3 0 ] 4
+IM_L  Ack [0 0 0 0 0 0 0 0 ] 0
+IM_L  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+IM_L  Transient_Local_GETX [5265 5143 5258 5229 5111 5141 5302 5088 ] 41537
+IM_L  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+IM_L  Transient_Local_GETS [9843 9650 9830 9596 9842 9666 9585 9672 ] 77684
+IM_L  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IM_L  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IM_L  Persistent_GETX [1517 1566 1504 1478 1373 1311 1418 1290 ] 11457
+IM_L  Persistent_GETS [2742 2736 2735 2863 2483 2456 2680 2521 ] 21216
+IM_L  Own_Lock_or_Unlock [15678 15381 15753 15420 15518 15403 15487 15345 ] 123985
+IM_L  Request_Timeout [719 701 732 708 726 823 763 775 ] 5947
 
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  0 <-- 
-SM_L  Own_Lock_or_Unlock  11
-SM_L  Request_Timeout  0 <-- 
+SM_L  Load [0 0 0 0 0 0 0 0 ] 0
+SM_L  Ifetch [0 0 0 0 0 0 0 0 ] 0
+SM_L  Store [0 0 0 0 0 0 0 0 ] 0
+SM_L  Atomic [0 0 0 0 0 0 0 0 ] 0
+SM_L  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+SM_L  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+SM_L  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+SM_L  Data_All_Tokens [0 0 0 0 0 0 0 0 ] 0
+SM_L  Ack [0 0 0 0 0 0 0 0 ] 0
+SM_L  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+SM_L  Transient_Local_GETX [0 0 0 0 0 0 0 0 ] 0
+SM_L  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+SM_L  Transient_Local_GETS [0 0 0 0 0 0 0 0 ] 0
+SM_L  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+SM_L  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+SM_L  Persistent_GETX [0 0 0 0 0 0 0 0 ] 0
+SM_L  Persistent_GETS [0 0 0 0 0 0 1 0 ] 1
+SM_L  Persistent_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+SM_L  Own_Lock_or_Unlock [5 4 3 1 2 3 2 2 ] 22
+SM_L  Request_Timeout [0 0 0 0 0 0 0 0 ] 0
 
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  0 <-- 
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  12246
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22461
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  3608
-IS_L  Persistent_GETS  6696
-IS_L  Own_Lock_or_Unlock  35372
-IS_L  Request_Timeout  1874
+IS_L  Load [0 0 0 0 0 0 0 0 ] 0
+IS_L  Ifetch [0 0 0 0 0 0 0 0 ] 0
+IS_L  Store [0 0 0 0 0 0 0 0 ] 0
+IS_L  Atomic [0 0 0 0 0 0 0 0 ] 0
+IS_L  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
+IS_L  Data_Shared [0 0 0 0 0 0 0 0 ] 0
+IS_L  Data_Owner [0 0 0 0 0 0 0 0 ] 0
+IS_L  Data_All_Tokens [0 0 0 2 0 0 4 0 ] 6
+IS_L  Ack [0 0 0 0 0 0 0 0 ] 0
+IS_L  Transient_GETX [0 0 0 0 0 0 0 0 ] 0
+IS_L  Transient_Local_GETX [9592 9799 9675 9691 9773 9788 9599 9799 ] 77716
+IS_L  Transient_GETS [0 0 0 0 0 0 0 0 ] 0
+IS_L  Transient_Local_GETS [18021 18133 17959 18205 17990 18119 18238 18162 ] 144827
+IS_L  Transient_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IS_L  Transient_Local_GETS_Last_Token [0 0 0 0 0 0 0 0 ] 0
+IS_L  Persistent_GETX [2765 2876 2805 2917 2676 2649 2829 2564 ] 22081
+IS_L  Persistent_GETS [4930 5143 5114 5121 4743 4669 4838 4519 ] 39077
+IS_L  Own_Lock_or_Unlock [28695 29094 28775 29037 28691 28911 28935 29134 ] 231272
+IS_L  Request_Timeout [1299 1414 1377 1305 1337 1482 1361 1416 ] 10991
 
-Cache Stats: system.ruby.network.topology.ext_links1.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links1.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1IcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl1.L1IcacheMemory
+  system.l1_cntrl1.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl1.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl1.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl1.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl1.L1IcacheMemory_total_hw_prefetches: 0
 
-  system.ruby.network.topology.ext_links1.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
-Cache Stats: system.ruby.network.topology.ext_links1.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links1.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links1.ext_node.L1DcacheMemory_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl1.L1DcacheMemory
+  system.l1_cntrl1.L1DcacheMemory_total_misses: 7127
+  system.l1_cntrl1.L1DcacheMemory_total_demand_misses: 7127
+  system.l1_cntrl1.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl1.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl1.L1DcacheMemory_total_hw_prefetches: 0
 
-  system.ruby.network.topology.ext_links1.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+  system.l1_cntrl1.L1DcacheMemory_request_type_LD:   65.315%
+  system.l1_cntrl1.L1DcacheMemory_request_type_ST:   34.685%
 
- --- L1Cache 1 ---
+  system.l1_cntrl1.L1DcacheMemory_access_mode_type_SupervisorMode:   7127    100%
+
+Cache Stats: system.l1_cntrl2.L1IcacheMemory
+  system.l1_cntrl2.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl2.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl2.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl2.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl2.L1IcacheMemory_total_hw_prefetches: 0
+
+
+Cache Stats: system.l1_cntrl2.L1DcacheMemory
+  system.l1_cntrl2.L1DcacheMemory_total_misses: 7127
+  system.l1_cntrl2.L1DcacheMemory_total_demand_misses: 7127
+  system.l1_cntrl2.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl2.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl2.L1DcacheMemory_total_hw_prefetches: 0
+
+  system.l1_cntrl2.L1DcacheMemory_request_type_LD:   65.1326%
+  system.l1_cntrl2.L1DcacheMemory_request_type_ST:   34.8674%
+
+  system.l1_cntrl2.L1DcacheMemory_access_mode_type_SupervisorMode:   7127    100%
+
+Cache Stats: system.l1_cntrl3.L1IcacheMemory
+  system.l1_cntrl3.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl3.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl3.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl3.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl3.L1IcacheMemory_total_hw_prefetches: 0
+
+
+Cache Stats: system.l1_cntrl3.L1DcacheMemory
+  system.l1_cntrl3.L1DcacheMemory_total_misses: 7130
+  system.l1_cntrl3.L1DcacheMemory_total_demand_misses: 7130
+  system.l1_cntrl3.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl3.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl3.L1DcacheMemory_total_hw_prefetches: 0
+
+  system.l1_cntrl3.L1DcacheMemory_request_type_LD:   65.3997%
+  system.l1_cntrl3.L1DcacheMemory_request_type_ST:   34.6003%
+
+  system.l1_cntrl3.L1DcacheMemory_access_mode_type_SupervisorMode:   7130    100%
+
+Cache Stats: system.l1_cntrl4.L1IcacheMemory
+  system.l1_cntrl4.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl4.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl4.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl4.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl4.L1IcacheMemory_total_hw_prefetches: 0
+
+
+Cache Stats: system.l1_cntrl4.L1DcacheMemory
+  system.l1_cntrl4.L1DcacheMemory_total_misses: 7129
+  system.l1_cntrl4.L1DcacheMemory_total_demand_misses: 7129
+  system.l1_cntrl4.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl4.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl4.L1DcacheMemory_total_hw_prefetches: 0
+
+  system.l1_cntrl4.L1DcacheMemory_request_type_LD:   64.5953%
+  system.l1_cntrl4.L1DcacheMemory_request_type_ST:   35.4047%
+
+  system.l1_cntrl4.L1DcacheMemory_access_mode_type_SupervisorMode:   7129    100%
+
+Cache Stats: system.l1_cntrl5.L1IcacheMemory
+  system.l1_cntrl5.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl5.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl5.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl5.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl5.L1IcacheMemory_total_hw_prefetches: 0
+
+
+Cache Stats: system.l1_cntrl5.L1DcacheMemory
+  system.l1_cntrl5.L1DcacheMemory_total_misses: 7127
+  system.l1_cntrl5.L1DcacheMemory_total_demand_misses: 7127
+  system.l1_cntrl5.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl5.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl5.L1DcacheMemory_total_hw_prefetches: 0
+
+  system.l1_cntrl5.L1DcacheMemory_request_type_LD:   65.3431%
+  system.l1_cntrl5.L1DcacheMemory_request_type_ST:   34.6569%
+
+  system.l1_cntrl5.L1DcacheMemory_access_mode_type_SupervisorMode:   7127    100%
+
+Cache Stats: system.l1_cntrl6.L1IcacheMemory
+  system.l1_cntrl6.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl6.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl6.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl6.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl6.L1IcacheMemory_total_hw_prefetches: 0
+
+
+Cache Stats: system.l1_cntrl6.L1DcacheMemory
+  system.l1_cntrl6.L1DcacheMemory_total_misses: 7125
+  system.l1_cntrl6.L1DcacheMemory_total_demand_misses: 7125
+  system.l1_cntrl6.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl6.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl6.L1DcacheMemory_total_hw_prefetches: 0
+
+  system.l1_cntrl6.L1DcacheMemory_request_type_LD:   64.6737%
+  system.l1_cntrl6.L1DcacheMemory_request_type_ST:   35.3263%
+
+  system.l1_cntrl6.L1DcacheMemory_access_mode_type_SupervisorMode:   7125    100%
+
+Cache Stats: system.l1_cntrl7.L1IcacheMemory
+  system.l1_cntrl7.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl7.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl7.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl7.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl7.L1IcacheMemory_total_hw_prefetches: 0
+
+
+Cache Stats: system.l1_cntrl7.L1DcacheMemory
+  system.l1_cntrl7.L1DcacheMemory_total_misses: 7125
+  system.l1_cntrl7.L1DcacheMemory_total_demand_misses: 7125
+  system.l1_cntrl7.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl7.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl7.L1DcacheMemory_total_hw_prefetches: 0
+
+  system.l1_cntrl7.L1DcacheMemory_request_type_LD:   65.2772%
+  system.l1_cntrl7.L1DcacheMemory_request_type_ST:   34.7228%
+
+  system.l1_cntrl7.L1DcacheMemory_access_mode_type_SupervisorMode:   7125    100%
+
+Cache Stats: system.l2_cntrl0.L2cacheMemory
+  system.l2_cntrl0.L2cacheMemory_total_misses: 57015
+  system.l2_cntrl0.L2cacheMemory_total_demand_misses: 57015
+  system.l2_cntrl0.L2cacheMemory_total_prefetches: 0
+  system.l2_cntrl0.L2cacheMemory_total_sw_prefetches: 0
+  system.l2_cntrl0.L2cacheMemory_total_hw_prefetches: 0
+
+  system.l2_cntrl0.L2cacheMemory_request_type_GETS:   65.0916%
+  system.l2_cntrl0.L2cacheMemory_request_type_GETX:   34.9084%
+
+  system.l2_cntrl0.L2cacheMemory_access_mode_type_SupervisorMode:   57015    100%
+
+ --- L2Cache ---
  - Event Counts -
-Load  97849
-Ifetch  0
-Store  52926
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  14
-Data_All_Tokens  8895
-Ack  0
-Ack_All_Tokens  5
-Transient_GETX  0
-Transient_Local_GETX  21897
-Transient_GETS  0
-Transient_Local_GETS  40506
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  24686
-Persistent_GETS  45801
-Own_Lock_or_Unlock  71875
-Request_Timeout  8949
-Use_TimeoutStarverX  3
-Use_TimeoutStarverS  4
-Use_TimeoutNoStarvers  8893
+L1_GETS [37112 ] 37112
+L1_GETS_Last_Token [0 ] 0
+L1_GETX [19903 ] 19903
+L1_INV [56964 ] 56964
+Transient_GETX [0 ] 0
+Transient_GETS [0 ] 0
+Transient_GETS_Last_Token [0 ] 0
+L2_Replacement [0 ] 0
+Writeback_Tokens [0 ] 0
+Writeback_Shared_Data [0 ] 0
+Writeback_All_Tokens [0 ] 0
+Writeback_Owned [0 ] 0
+Data_Shared [0 ] 0
+Data_Owner [0 ] 0
+Data_All_Tokens [0 ] 0
+Ack [0 ] 0
+Ack_All_Tokens [0 ] 0
+Persistent_GETX [22460 ] 22460
+Persistent_GETS [41771 ] 41771
+Persistent_GETS_Last_Token [0 ] 0
+Own_Lock_or_Unlock [49719 ] 49719
 
  - Transitions -
-NP  Load  0 <-- 
-NP  Ifetch  0 <-- 
-NP  Store  2
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
-
-I  Load  6
-I  Ifetch  0 <-- 
-I  Store  3
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  3
-
-S  Load  1
-S  Ifetch  0 <-- 
-S  Store  2
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  1
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  Load  7
-O  Ifetch  0 <-- 
-O  Store  5
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  8
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  10
-
-M  Load  157
-M  Ifetch  0 <-- 
-M  Store  87
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  2
-M  Persistent_GETS  14
-M  Own_Lock_or_Unlock  73
-
-MM  Load  37407
-MM  Ifetch  0 <-- 
-MM  Store  20168
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3149
-MM  Persistent_GETS  5728
-MM  Own_Lock_or_Unlock  8660
-
-M_W  Load  10437
-M_W  Ifetch  0 <-- 
-M_W  Store  5625
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1592
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2880
-M_W  Persistent_GETX  0 <-- 
-M_W  Persistent_GETS  0 <-- 
-M_W  Own_Lock_or_Unlock  3
-M_W  Use_TimeoutStarverX  0 <-- 
-M_W  Use_TimeoutStarverS  0 <-- 
-M_W  Use_TimeoutNoStarvers  103
-
-MM_W  Load  44078
-MM_W  Ifetch  0 <-- 
-MM_W  Store  23874
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  953
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1733
-MM_W  Persistent_GETX  3
-MM_W  Persistent_GETS  4
-MM_W  Own_Lock_or_Unlock  123
-MM_W  Use_TimeoutStarverX  3
-MM_W  Use_TimeoutStarverS  4
-MM_W  Use_TimeoutNoStarvers  8790
-
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  1
-IM  Data_All_Tokens  3157
-IM  Ack  0 <-- 
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  272
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  427
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5610
-IM  Persistent_GETS  10506
-IM  Own_Lock_or_Unlock  3021
-IM  Request_Timeout  2203
-
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  10
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  4
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  0 <-- 
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
-
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  5
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  2
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  0 <-- 
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  1
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
-
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  13
-IS  Data_All_Tokens  5728
-IS  Ack  0 <-- 
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  444
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  758
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10291
-IS  Persistent_GETS  19195
-IS  Own_Lock_or_Unlock  5481
-IS  Request_Timeout  3967
-
-I_L  Load  5737
-I_L  Ifetch  0 <-- 
-I_L  Store  3149
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  5
-I_L  Persistent_GETS  11
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  Load  19
-S_L  Ifetch  0 <-- 
-S_L  Store  11
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  1
-S_L  Own_Lock_or_Unlock  3
-
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  0 <-- 
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6621
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  12284
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  2040
-IM_L  Persistent_GETS  3733
-IM_L  Own_Lock_or_Unlock  19265
-IM_L  Request_Timeout  979
-
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  0 <-- 
-SM_L  Own_Lock_or_Unlock  12
-SM_L  Request_Timeout  0 <-- 
-
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  0 <-- 
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  12000
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22424
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  3586
-IS_L  Persistent_GETS  6608
-IS_L  Own_Lock_or_Unlock  35221
-IS_L  Request_Timeout  1800
-
-Cache Stats: system.ruby.network.topology.ext_links2.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links2.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links2.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Cache Stats: system.ruby.network.topology.ext_links2.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links2.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links2.ext_node.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links2.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
- --- L1Cache 2 ---
- - Event Counts -
-Load  100000
-Ifetch  0
-Store  54082
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  17
-Data_All_Tokens  8888
-Ack  0
-Ack_All_Tokens  9
-Transient_GETX  0
-Transient_Local_GETX  21915
-Transient_GETS  0
-Transient_Local_GETS  40488
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  24880
-Persistent_GETS  46033
-Own_Lock_or_Unlock  71449
-Request_Timeout  8898
-Use_TimeoutStarverX  10
-Use_TimeoutStarverS  14
-Use_TimeoutNoStarvers  8872
-
- - Transitions -
-NP  Load  1
-NP  Ifetch  0 <-- 
-NP  Store  1
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
-
-I  Load  7
-I  Ifetch  0 <-- 
-I  Store  4
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  3
-
-S  Load  8
-S  Ifetch  0 <-- 
-S  Store  1
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  3
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  Load  11
-O  Ifetch  0 <-- 
-O  Store  9
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  8
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  14
-
-M  Load  188
-M  Ifetch  0 <-- 
-M  Store  102
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  9
-M  Persistent_GETS  13
-M  Own_Lock_or_Unlock  83
-
-MM  Load  39705
-MM  Ifetch  0 <-- 
-MM  Store  21181
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3130
-MM  Persistent_GETS  5720
-MM  Own_Lock_or_Unlock  8637
-
-M_W  Load  10480
-M_W  Ifetch  0 <-- 
-M_W  Store  5620
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1566
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2909
-M_W  Persistent_GETX  0 <-- 
-M_W  Persistent_GETS  0 <-- 
-M_W  Own_Lock_or_Unlock  1
-M_W  Use_TimeoutStarverX  0 <-- 
-M_W  Use_TimeoutStarverS  0 <-- 
-M_W  Use_TimeoutNoStarvers  124
-
-MM_W  Load  43821
-MM_W  Ifetch  0 <-- 
-MM_W  Store  24025
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  914
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1744
-MM_W  Persistent_GETX  10
-MM_W  Persistent_GETS  14
-MM_W  Own_Lock_or_Unlock  23
-MM_W  Use_TimeoutStarverX  10
-MM_W  Use_TimeoutStarverS  14
-MM_W  Use_TimeoutNoStarvers  8748
-
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  0 <-- 
-IM  Data_All_Tokens  3138
-IM  Ack  0 <-- 
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  270
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  428
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5591
-IM  Persistent_GETS  10381
-IM  Own_Lock_or_Unlock  2975
-IM  Request_Timeout  2196
-
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  6
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  4
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  0 <-- 
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
-
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  9
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  8
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  1
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  0 <-- 
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
-
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  17
-IS  Data_All_Tokens  5744
-IS  Ack  0 <-- 
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  441
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  766
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10221
-IS  Persistent_GETS  19165
-IS  Own_Lock_or_Unlock  5460
-IS  Request_Timeout  3916
-
-I_L  Load  5753
-I_L  Ifetch  0 <-- 
-I_L  Store  3130
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  31
-I_L  Persistent_GETS  63
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  Load  26
-S_L  Ifetch  0 <-- 
-S_L  Store  9
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  0 <-- 
-S_L  Own_Lock_or_Unlock  4
-
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  0 <-- 
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6599
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  12210
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  2151
-IM_L  Persistent_GETS  3738
-IM_L  Own_Lock_or_Unlock  19101
-IM_L  Request_Timeout  941
-
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  0 <-- 
-SM_L  Own_Lock_or_Unlock  9
-SM_L  Request_Timeout  0 <-- 
-
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  0 <-- 
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  12102
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22430
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  3737
-IS_L  Persistent_GETS  6939
-IS_L  Own_Lock_or_Unlock  35139
-IS_L  Request_Timeout  1845
-
-Cache Stats: system.ruby.network.topology.ext_links3.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links3.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links3.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Cache Stats: system.ruby.network.topology.ext_links3.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links3.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links3.ext_node.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links3.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
- --- L1Cache 3 ---
- - Event Counts -
-Load  97548
-Ifetch  0
-Store  52845
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  15
-Data_All_Tokens  8890
-Ack  0
-Ack_All_Tokens  9
-Transient_GETX  0
-Transient_Local_GETX  21893
-Transient_GETS  0
-Transient_Local_GETS  40509
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  24936
-Persistent_GETS  46314
-Own_Lock_or_Unlock  71112
-Request_Timeout  9055
-Use_TimeoutStarverX  18
-Use_TimeoutStarverS  47
-Use_TimeoutNoStarvers  8834
-
- - Transitions -
-NP  Load  1
-NP  Ifetch  0 <-- 
-NP  Store  1
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
-
-I  Load  8
-I  Ifetch  0 <-- 
-I  Store  2
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  4
-
-S  Load  7
-S  Ifetch  0 <-- 
-S  Store  1
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  4
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  Load  21
-O  Ifetch  0 <-- 
-O  Store  9
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  6
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  11
-
-M  Load  149
-M  Ifetch  0 <-- 
-M  Store  71
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  7
-M  Persistent_GETS  17
-M  Own_Lock_or_Unlock  70
-
-MM  Load  37142
-MM  Ifetch  0 <-- 
-MM  Store  20055
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3053
-MM  Persistent_GETS  5757
-MM  Own_Lock_or_Unlock  8418
-
-M_W  Load  10116
-M_W  Ifetch  0 <-- 
-M_W  Store  5630
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1537
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2910
-M_W  Persistent_GETX  0 <-- 
-M_W  Persistent_GETS  0 <-- 
-M_W  Own_Lock_or_Unlock  3
-M_W  Use_TimeoutStarverX  0 <-- 
-M_W  Use_TimeoutStarverS  0 <-- 
-M_W  Use_TimeoutNoStarvers  95
-
-MM_W  Load  44353
-MM_W  Ifetch  0 <-- 
-MM_W  Store  23913
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  966
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1750
-MM_W  Persistent_GETX  18
-MM_W  Persistent_GETS  46
-MM_W  Own_Lock_or_Unlock  99
-MM_W  Use_TimeoutStarverX  18
-MM_W  Use_TimeoutStarverS  47
-MM_W  Use_TimeoutNoStarvers  8739
-
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  0 <-- 
-IM  Data_All_Tokens  3157
-IM  Ack  0 <-- 
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  240
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  417
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5599
-IM  Persistent_GETS  10582
-IM  Own_Lock_or_Unlock  2850
-IM  Request_Timeout  2215
-
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  8
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  5
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  0 <-- 
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
-
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  9
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  5
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  0 <-- 
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  0 <-- 
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
-
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  15
-IS  Data_All_Tokens  5724
-IS  Ack  0 <-- 
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  467
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  762
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10393
-IS  Persistent_GETS  18988
-IS  Own_Lock_or_Unlock  5198
-IS  Request_Timeout  4113
-
-I_L  Load  5731
-I_L  Ifetch  0 <-- 
-I_L  Store  3151
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  58
-I_L  Persistent_GETS  108
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  Load  20
-S_L  Ifetch  0 <-- 
-S_L  Store  12
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  1
-S_L  Own_Lock_or_Unlock  5
-
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  0 <-- 
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6699
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  12233
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  2031
-IM_L  Persistent_GETS  3864
-IM_L  Own_Lock_or_Unlock  19331
-IM_L  Request_Timeout  1000
-
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  2
-SM_L  Own_Lock_or_Unlock  12
-SM_L  Request_Timeout  0 <-- 
-
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  1
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  11964
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22437
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  3777
-IS_L  Persistent_GETS  6949
-IS_L  Own_Lock_or_Unlock  35111
-IS_L  Request_Timeout  1727
-
-Cache Stats: system.ruby.network.topology.ext_links4.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links4.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links4.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Cache Stats: system.ruby.network.topology.ext_links4.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links4.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links4.ext_node.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links4.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
- --- L1Cache 4 ---
- - Event Counts -
-Load  98336
-Ifetch  0
-Store  52558
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  22
-Data_All_Tokens  8882
-Ack  2
-Ack_All_Tokens  10
-Transient_GETX  0
-Transient_Local_GETX  21927
-Transient_GETS  0
-Transient_Local_GETS  40476
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  24899
-Persistent_GETS  46131
-Own_Lock_or_Unlock  71332
-Request_Timeout  8962
-Use_TimeoutStarverX  11
-Use_TimeoutStarverS  17
-Use_TimeoutNoStarvers  8864
-
- - Transitions -
-NP  Load  2
-NP  Ifetch  0 <-- 
-NP  Store  0 <-- 
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
-
-I  Load  10
-I  Ifetch  0 <-- 
-I  Store  4
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  2
-
-S  Load  2
-S  Ifetch  0 <-- 
-S  Store  2
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  3
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  Load  20
-O  Ifetch  0 <-- 
-O  Store  10
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  11
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  19
-
-M  Load  166
-M  Ifetch  0 <-- 
-M  Store  86
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  10
-M  Persistent_GETS  16
-M  Own_Lock_or_Unlock  83
-
-MM  Load  37712
-MM  Ifetch  0 <-- 
-MM  Store  19992
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3090
-MM  Persistent_GETS  5748
-MM  Own_Lock_or_Unlock  8387
-
-M_W  Load  10442
-M_W  Ifetch  0 <-- 
-M_W  Store  5639
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1598
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2819
-M_W  Persistent_GETX  1
-M_W  Persistent_GETS  0 <-- 
-M_W  Own_Lock_or_Unlock  3
-M_W  Use_TimeoutStarverX  0 <-- 
-M_W  Use_TimeoutStarverS  0 <-- 
-M_W  Use_TimeoutNoStarvers  112
-
-MM_W  Load  44196
-MM_W  Ifetch  0 <-- 
-MM_W  Store  23699
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  902
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1779
-MM_W  Persistent_GETX  9
-MM_W  Persistent_GETS  17
-MM_W  Own_Lock_or_Unlock  95
-MM_W  Use_TimeoutStarverX  11
-MM_W  Use_TimeoutStarverS  17
-MM_W  Use_TimeoutNoStarvers  8752
-
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  1
-IM  Data_All_Tokens  3126
-IM  Ack  1
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  229
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  407
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5549
-IM  Persistent_GETS  10517
-IM  Own_Lock_or_Unlock  2855
-IM  Request_Timeout  2152
-
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  5
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  9
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  1
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
-
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  10
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  7
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  0 <-- 
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  1
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
-
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  21
-IS  Data_All_Tokens  5750
-IS  Ack  1
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  491
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  805
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10484
-IS  Persistent_GETS  19149
-IS  Own_Lock_or_Unlock  5299
-IS  Request_Timeout  4040
-
-I_L  Load  5761
-I_L  Ifetch  0 <-- 
-I_L  Store  3115
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  80
-I_L  Persistent_GETS  123
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  Load  25
-S_L  Ifetch  0 <-- 
-S_L  Store  11
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  1
-S_L  Own_Lock_or_Unlock  5
-
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  0 <-- 
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6491
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  12257
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  1961
-IM_L  Persistent_GETS  3726
-IM_L  Own_Lock_or_Unlock  19180
-IM_L  Request_Timeout  988
-
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  0 <-- 
-SM_L  Own_Lock_or_Unlock  12
-SM_L  Request_Timeout  0 <-- 
-
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  1
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  12186
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22408
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  3715
-IS_L  Persistent_GETS  6833
-IS_L  Own_Lock_or_Unlock  35392
-IS_L  Request_Timeout  1782
-
-Cache Stats: system.ruby.network.topology.ext_links5.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links5.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links5.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Cache Stats: system.ruby.network.topology.ext_links5.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links5.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links5.ext_node.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links5.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
- --- L1Cache 5 ---
- - Event Counts -
-Load  97596
-Ifetch  0
-Store  52680
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  8
-Data_All_Tokens  8899
-Ack  0
-Ack_All_Tokens  2
-Transient_GETX  0
-Transient_Local_GETX  22013
-Transient_GETS  0
-Transient_Local_GETS  40394
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  25459
-Persistent_GETS  46885
-Own_Lock_or_Unlock  70018
-Request_Timeout  9144
-Use_TimeoutStarverX  41
-Use_TimeoutStarverS  78
-Use_TimeoutNoStarvers  8782
-
- - Transitions -
-NP  Load  1
-NP  Ifetch  0 <-- 
-NP  Store  1
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
-
-I  Load  5
-I  Ifetch  0 <-- 
-I  Store  1
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  3
-
-S  Load  0 <-- 
-S  Ifetch  0 <-- 
-S  Store  0 <-- 
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  0 <-- 
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  Load  2
-O  Ifetch  0 <-- 
-O  Store  2
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  6
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  5
-
-M  Load  143
-M  Ifetch  0 <-- 
-M  Store  82
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  10
-M  Persistent_GETS  12
-M  Own_Lock_or_Unlock  75
-
-MM  Load  37054
-MM  Ifetch  0 <-- 
-MM  Store  20002
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3069
-MM  Persistent_GETS  5691
-MM  Own_Lock_or_Unlock  8228
-
-M_W  Load  10582
-M_W  Ifetch  0 <-- 
-M_W  Store  5741
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1563
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2981
-M_W  Persistent_GETX  1
-M_W  Persistent_GETS  1
-M_W  Own_Lock_or_Unlock  2
-M_W  Use_TimeoutStarverX  0 <-- 
-M_W  Use_TimeoutStarverS  1
-M_W  Use_TimeoutNoStarvers  104
-
-MM_W  Load  43952
-MM_W  Ifetch  0 <-- 
-MM_W  Store  23799
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  896
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1686
-MM_W  Persistent_GETX  40
-MM_W  Persistent_GETS  76
-MM_W  Own_Lock_or_Unlock  48
-MM_W  Use_TimeoutStarverX  41
-MM_W  Use_TimeoutStarverS  77
-MM_W  Use_TimeoutNoStarvers  8678
-
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  0 <-- 
-IM  Data_All_Tokens  3043
-IM  Ack  0 <-- 
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  264
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  412
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5392
-IM  Persistent_GETS  10154
-IM  Own_Lock_or_Unlock  2439
-IM  Request_Timeout  2167
-
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  10
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  3
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  0 <-- 
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
-
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  2
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  2
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  0 <-- 
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  0 <-- 
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
-
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  8
-IS  Data_All_Tokens  5845
-IS  Ack  0 <-- 
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  462
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  808
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10637
-IS  Persistent_GETS  19370
-IS  Own_Lock_or_Unlock  4767
-IS  Request_Timeout  4200
-
-I_L  Load  5849
-I_L  Ifetch  0 <-- 
-I_L  Store  3039
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  104
-I_L  Persistent_GETS  214
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  Load  8
-S_L  Ifetch  0 <-- 
-S_L  Store  13
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  2
-S_L  Own_Lock_or_Unlock  0 <-- 
-
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  0 <-- 
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6400
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  11834
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  2161
-IM_L  Persistent_GETS  3947
-IM_L  Own_Lock_or_Unlock  18584
-IM_L  Request_Timeout  934
-
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  0 <-- 
-SM_L  Own_Lock_or_Unlock  13
-SM_L  Request_Timeout  0 <-- 
-
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  1
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  12417
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22673
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  4045
-IS_L  Persistent_GETS  7418
-IS_L  Own_Lock_or_Unlock  35854
-IS_L  Request_Timeout  1843
-
-Cache Stats: system.ruby.network.topology.ext_links6.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links6.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links6.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Cache Stats: system.ruby.network.topology.ext_links6.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links6.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links6.ext_node.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links6.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
- --- L1Cache 6 ---
- - Event Counts -
-Load  97890
-Ifetch  0
-Store  52462
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  14
-Data_All_Tokens  8893
-Ack  2
-Ack_All_Tokens  7
-Transient_GETX  0
-Transient_Local_GETX  21982
-Transient_GETS  0
-Transient_Local_GETS  40420
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  25433
-Persistent_GETS  46779
-Own_Lock_or_Unlock  70150
-Request_Timeout  8995
-Use_TimeoutStarverX  59
-Use_TimeoutStarverS  91
-Use_TimeoutNoStarvers  8750
-
- - Transitions -
-NP  Load  0 <-- 
-NP  Ifetch  0 <-- 
-NP  Store  2
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
-
-I  Load  5
-I  Ifetch  0 <-- 
-I  Store  3
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  2
-
-S  Load  1
-S  Ifetch  0 <-- 
-S  Store  3
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  1
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  Load  5
-O  Ifetch  0 <-- 
-O  Store  7
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  1
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  7
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  12
-
-M  Load  175
-M  Ifetch  0 <-- 
-M  Store  82
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  5
-M  Persistent_GETS  20
-M  Own_Lock_or_Unlock  77
-
-MM  Load  37311
-MM  Ifetch  0 <-- 
-MM  Store  19913
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3037
-MM  Persistent_GETS  5688
-MM  Own_Lock_or_Unlock  8062
-
-M_W  Load  10708
-M_W  Ifetch  0 <-- 
-M_W  Store  5706
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1629
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2878
-M_W  Persistent_GETX  4
-M_W  Persistent_GETS  2
-M_W  Own_Lock_or_Unlock  0 <-- 
-M_W  Use_TimeoutStarverX  0 <-- 
-M_W  Use_TimeoutStarverS  1
-M_W  Use_TimeoutNoStarvers  107
-
-MM_W  Load  43836
-MM_W  Ifetch  0 <-- 
-MM_W  Store  23674
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  974
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1682
-MM_W  Persistent_GETX  55
-MM_W  Persistent_GETS  89
-MM_W  Own_Lock_or_Unlock  11
-MM_W  Use_TimeoutStarverX  59
-MM_W  Use_TimeoutStarverS  90
-MM_W  Use_TimeoutNoStarvers  8643
-
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  0 <-- 
-IM  Data_All_Tokens  3069
-IM  Ack  1
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  245
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  389
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5601
-IM  Persistent_GETS  10146
-IM  Own_Lock_or_Unlock  2518
-IM  Request_Timeout  2145
-
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  10
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  10
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  1
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
-
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  7
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  3
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  0 <-- 
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  0 <-- 
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
-
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  14
-IS  Data_All_Tokens  5814
-IS  Ack  0 <-- 
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  492
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  759
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10459
-IS  Persistent_GETS  19532
-IS  Own_Lock_or_Unlock  4832
-IS  Request_Timeout  4014
-
-I_L  Load  5824
-I_L  Ifetch  0 <-- 
-I_L  Store  3055
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  151
-I_L  Persistent_GETS  242
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  Load  25
-S_L  Ifetch  0 <-- 
-S_L  Store  17
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  2
-S_L  Own_Lock_or_Unlock  4
-
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  0 <-- 
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6386
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  12013
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  2174
-IM_L  Persistent_GETS  3820
-IM_L  Own_Lock_or_Unlock  18801
-IM_L  Request_Timeout  978
-
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  3
-SM_L  Own_Lock_or_Unlock  17
-SM_L  Request_Timeout  0 <-- 
-
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  0 <-- 
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  12235
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22698
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  3947
-IS_L  Persistent_GETS  7235
-IS_L  Own_Lock_or_Unlock  35814
-IS_L  Request_Timeout  1858
-
-Cache Stats: system.ruby.network.topology.ext_links7.ext_node.L1IcacheMemory
-  system.ruby.network.topology.ext_links7.ext_node.L1IcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1IcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1IcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1IcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1IcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links7.ext_node.L1IcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-Cache Stats: system.ruby.network.topology.ext_links7.ext_node.L1DcacheMemory
-  system.ruby.network.topology.ext_links7.ext_node.L1DcacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1DcacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1DcacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1DcacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links7.ext_node.L1DcacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links7.ext_node.L1DcacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
- --- L1Cache 7 ---
- - Event Counts -
-Load  97464
-Ifetch  0
-Store  51982
-L1_Replacement  0
-Data_Shared  0
-Data_Owner  21
-Data_All_Tokens  8881
-Ack  1
-Ack_All_Tokens  8
-Transient_GETX  0
-Transient_Local_GETX  21914
-Transient_GETS  0
-Transient_Local_GETS  40494
-Transient_GETS_Last_Token  0
-Transient_Local_GETS_Last_Token  0
-Persistent_GETX  25492
-Persistent_GETS  47155
-Own_Lock_or_Unlock  69715
-Request_Timeout  9514
-Use_TimeoutStarverX  78
-Use_TimeoutStarverS  164
-Use_TimeoutNoStarvers  8647
-
- - Transitions -
-NP  Load  1
-NP  Ifetch  0 <-- 
-NP  Store  1
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Transient_GETX  0 <-- 
-NP  Transient_Local_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Transient_Local_GETS  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  0 <-- 
-
-I  Load  8
-I  Ifetch  0 <-- 
-I  Store  5
-I  L1_Replacement  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_Local_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_Local_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  Transient_Local_GETS_Last_Token  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  9
-
-S  Load  3
-S  Ifetch  0 <-- 
-S  Store  2
-S  L1_Replacement  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_Local_GETX  1
-S  Transient_GETS  0 <-- 
-S  Transient_Local_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  Transient_Local_GETS_Last_Token  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  Load  11
-O  Ifetch  0 <-- 
-O  Store  8
-O  L1_Replacement  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_Local_GETX  12
-O  Transient_GETS  0 <-- 
-O  Transient_Local_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  Transient_Local_GETS_Last_Token  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  11
-
-M  Load  148
-M  Ifetch  0 <-- 
-M  Store  79
-M  L1_Replacement  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_Local_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  Transient_Local_GETS  0 <-- 
-M  Persistent_GETX  8
-M  Persistent_GETS  13
-M  Own_Lock_or_Unlock  65
-
-MM  Load  36904
-MM  Ifetch  0 <-- 
-MM  Store  19338
-MM  L1_Replacement  0 <-- 
-MM  Transient_GETX  0 <-- 
-MM  Transient_Local_GETX  0 <-- 
-MM  Transient_GETS  0 <-- 
-MM  Transient_Local_GETS  0 <-- 
-MM  Persistent_GETX  3047
-MM  Persistent_GETS  5579
-MM  Own_Lock_or_Unlock  7946
-
-M_W  Load  10283
-M_W  Ifetch  0 <-- 
-M_W  Store  5634
-M_W  L1_Replacement  0 <-- 
-M_W  Transient_GETX  0 <-- 
-M_W  Transient_Local_GETX  1545
-M_W  Transient_GETS  0 <-- 
-M_W  Transient_Local_GETS  2924
-M_W  Persistent_GETX  4
-M_W  Persistent_GETS  13
-M_W  Own_Lock_or_Unlock  0 <-- 
-M_W  Use_TimeoutStarverX  1
-M_W  Use_TimeoutStarverS  0 <-- 
-M_W  Use_TimeoutNoStarvers  100
-
-MM_W  Load  44338
-MM_W  Ifetch  0 <-- 
-MM_W  Store  23776
-MM_W  L1_Replacement  0 <-- 
-MM_W  Transient_GETX  0 <-- 
-MM_W  Transient_Local_GETX  908
-MM_W  Transient_GETS  0 <-- 
-MM_W  Transient_Local_GETS  1759
-MM_W  Persistent_GETX  73
-MM_W  Persistent_GETS  147
-MM_W  Own_Lock_or_Unlock  0 <-- 
-MM_W  Use_TimeoutStarverX  77
-MM_W  Use_TimeoutStarverS  164
-MM_W  Use_TimeoutNoStarvers  8547
-
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Data_Shared  0 <-- 
-IM  Data_Owner  1
-IM  Data_All_Tokens  3142
-IM  Ack  1
-IM  Transient_GETX  0 <-- 
-IM  Transient_Local_GETX  232
-IM  Transient_GETS  0 <-- 
-IM  Transient_Local_GETS  444
-IM  Transient_GETS_Last_Token  0 <-- 
-IM  Transient_Local_GETS_Last_Token  0 <-- 
-IM  Persistent_GETX  5658
-IM  Persistent_GETS  10537
-IM  Own_Lock_or_Unlock  2485
-IM  Request_Timeout  2317
-
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Data_Shared  0 <-- 
-SM  Data_Owner  0 <-- 
-SM  Data_All_Tokens  2
-SM  Ack  0 <-- 
-SM  Transient_GETX  0 <-- 
-SM  Transient_Local_GETX  11
-SM  Transient_GETS  0 <-- 
-SM  Transient_Local_GETS  1
-SM  Transient_GETS_Last_Token  0 <-- 
-SM  Transient_Local_GETS_Last_Token  0 <-- 
-SM  Persistent_GETX  0 <-- 
-SM  Persistent_GETS  0 <-- 
-SM  Own_Lock_or_Unlock  0 <-- 
-SM  Request_Timeout  0 <-- 
-
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Data_Shared  0 <-- 
-OM  Data_All_Tokens  0 <-- 
-OM  Ack  0 <-- 
-OM  Ack_All_Tokens  8
-OM  Transient_GETX  0 <-- 
-OM  Transient_Local_GETX  4
-OM  Transient_GETS  0 <-- 
-OM  Transient_Local_GETS  1
-OM  Transient_GETS_Last_Token  0 <-- 
-OM  Transient_Local_GETS_Last_Token  0 <-- 
-OM  Persistent_GETX  0 <-- 
-OM  Persistent_GETS  1
-OM  Own_Lock_or_Unlock  0 <-- 
-OM  Request_Timeout  0 <-- 
-
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Data_Shared  0 <-- 
-IS  Data_Owner  20
-IS  Data_All_Tokens  5732
-IS  Ack  0 <-- 
-IS  Transient_GETX  0 <-- 
-IS  Transient_Local_GETX  463
-IS  Transient_GETS  0 <-- 
-IS  Transient_Local_GETS  759
-IS  Transient_GETS_Last_Token  0 <-- 
-IS  Transient_Local_GETS_Last_Token  0 <-- 
-IS  Persistent_GETX  10253
-IS  Persistent_GETS  19299
-IS  Own_Lock_or_Unlock  4569
-IS  Request_Timeout  4269
-
-I_L  Load  5747
-I_L  Ifetch  0 <-- 
-I_L  Store  3129
-I_L  L1_Replacement  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_Local_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_Local_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  Transient_Local_GETS_Last_Token  0 <-- 
-I_L  Persistent_GETX  140
-I_L  Persistent_GETS  344
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  Load  21
-S_L  Ifetch  0 <-- 
-S_L  Store  10
-S_L  L1_Replacement  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_Local_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_Local_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  Transient_Local_GETS_Last_Token  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  3
-S_L  Own_Lock_or_Unlock  3
-
-IM_L  Load  0 <-- 
-IM_L  Ifetch  0 <-- 
-IM_L  Store  0 <-- 
-IM_L  L1_Replacement  0 <-- 
-IM_L  Data_Shared  0 <-- 
-IM_L  Data_Owner  0 <-- 
-IM_L  Data_All_Tokens  2
-IM_L  Ack  0 <-- 
-IM_L  Transient_GETX  0 <-- 
-IM_L  Transient_Local_GETX  6660
-IM_L  Transient_GETS  0 <-- 
-IM_L  Transient_Local_GETS  12193
-IM_L  Transient_GETS_Last_Token  0 <-- 
-IM_L  Transient_Local_GETS_Last_Token  0 <-- 
-IM_L  Persistent_GETX  2248
-IM_L  Persistent_GETS  3909
-IM_L  Own_Lock_or_Unlock  19321
-IM_L  Request_Timeout  1049
-
-SM_L  Load  0 <-- 
-SM_L  Ifetch  0 <-- 
-SM_L  Store  0 <-- 
-SM_L  L1_Replacement  0 <-- 
-SM_L  Data_Shared  0 <-- 
-SM_L  Data_Owner  0 <-- 
-SM_L  Data_All_Tokens  0 <-- 
-SM_L  Ack  0 <-- 
-SM_L  Transient_GETX  0 <-- 
-SM_L  Transient_Local_GETX  0 <-- 
-SM_L  Transient_GETS  0 <-- 
-SM_L  Transient_Local_GETS  0 <-- 
-SM_L  Transient_GETS_Last_Token  0 <-- 
-SM_L  Transient_Local_GETS_Last_Token  0 <-- 
-SM_L  Persistent_GETX  0 <-- 
-SM_L  Persistent_GETS  0 <-- 
-SM_L  Own_Lock_or_Unlock  11
-SM_L  Request_Timeout  0 <-- 
-
-IS_L  Load  0 <-- 
-IS_L  Ifetch  0 <-- 
-IS_L  Store  0 <-- 
-IS_L  L1_Replacement  0 <-- 
-IS_L  Data_Shared  0 <-- 
-IS_L  Data_Owner  0 <-- 
-IS_L  Data_All_Tokens  3
-IS_L  Ack  0 <-- 
-IS_L  Transient_GETX  0 <-- 
-IS_L  Transient_Local_GETX  12078
-IS_L  Transient_GETS  0 <-- 
-IS_L  Transient_Local_GETS  22413
-IS_L  Transient_GETS_Last_Token  0 <-- 
-IS_L  Transient_Local_GETS_Last_Token  0 <-- 
-IS_L  Persistent_GETX  4061
-IS_L  Persistent_GETS  7310
-IS_L  Own_Lock_or_Unlock  35295
-IS_L  Request_Timeout  1879
-
-Cache Stats: system.ruby.network.topology.ext_links8.ext_node.L2cacheMemory
-  system.ruby.network.topology.ext_links8.ext_node.L2cacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links8.ext_node.L2cacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links8.ext_node.L2cacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links8.ext_node.L2cacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links8.ext_node.L2cacheMemory_total_hw_prefetches: 0
-
-  system.ruby.network.topology.ext_links8.ext_node.L2cacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
- --- L2Cache 0 ---
- - Event Counts -
-L1_GETS  46249
-L1_GETS_Last_Token  0
-L1_GETX  25069
-L1_INV  71135
-Transient_GETX  0
-Transient_GETS  0
-Transient_GETS_Last_Token  0
-L2_Replacement  0
-Writeback_Tokens  0
-Writeback_Shared_Data  0
-Writeback_All_Tokens  0
-Writeback_Owned  0
-Data_Shared  0
-Data_Owner  0
-Data_All_Tokens  0
-Ack  0
-Ack_All_Tokens  0
-Persistent_GETX  28628
-Persistent_GETS  52955
-Own_Lock_or_Unlock  60779
-
- - Transitions -
-NP  L1_GETS  60
-NP  L1_GETX  143
-NP  L1_INV  78
-NP  Transient_GETX  0 <-- 
-NP  Transient_GETS  0 <-- 
-NP  Writeback_Tokens  0 <-- 
-NP  Writeback_Shared_Data  0 <-- 
-NP  Writeback_All_Tokens  0 <-- 
-NP  Writeback_Owned  0 <-- 
-NP  Data_Shared  0 <-- 
-NP  Data_Owner  0 <-- 
-NP  Data_All_Tokens  0 <-- 
-NP  Ack  0 <-- 
-NP  Persistent_GETX  0 <-- 
-NP  Persistent_GETS  0 <-- 
-NP  Own_Lock_or_Unlock  60779
-
-I  L1_GETS  0 <-- 
-I  L1_GETS_Last_Token  0 <-- 
-I  L1_GETX  0 <-- 
-I  L1_INV  0 <-- 
-I  Transient_GETX  0 <-- 
-I  Transient_GETS  0 <-- 
-I  Transient_GETS_Last_Token  0 <-- 
-I  L2_Replacement  0 <-- 
-I  Writeback_Tokens  0 <-- 
-I  Writeback_Shared_Data  0 <-- 
-I  Writeback_All_Tokens  0 <-- 
-I  Writeback_Owned  0 <-- 
-I  Data_Shared  0 <-- 
-I  Data_Owner  0 <-- 
-I  Data_All_Tokens  0 <-- 
-I  Ack  0 <-- 
-I  Persistent_GETX  0 <-- 
-I  Persistent_GETS  0 <-- 
-I  Own_Lock_or_Unlock  0 <-- 
-
-S  L1_GETS  0 <-- 
-S  L1_GETS_Last_Token  0 <-- 
-S  L1_GETX  0 <-- 
-S  L1_INV  0 <-- 
-S  Transient_GETX  0 <-- 
-S  Transient_GETS  0 <-- 
-S  Transient_GETS_Last_Token  0 <-- 
-S  L2_Replacement  0 <-- 
-S  Writeback_Tokens  0 <-- 
-S  Writeback_Shared_Data  0 <-- 
-S  Writeback_All_Tokens  0 <-- 
-S  Writeback_Owned  0 <-- 
-S  Data_Shared  0 <-- 
-S  Data_Owner  0 <-- 
-S  Data_All_Tokens  0 <-- 
-S  Ack  0 <-- 
-S  Persistent_GETX  0 <-- 
-S  Persistent_GETS  0 <-- 
-S  Own_Lock_or_Unlock  0 <-- 
-
-O  L1_GETS  0 <-- 
-O  L1_GETS_Last_Token  0 <-- 
-O  L1_GETX  0 <-- 
-O  L1_INV  0 <-- 
-O  Transient_GETX  0 <-- 
-O  Transient_GETS  0 <-- 
-O  Transient_GETS_Last_Token  0 <-- 
-O  L2_Replacement  0 <-- 
-O  Writeback_Tokens  0 <-- 
-O  Writeback_Shared_Data  0 <-- 
-O  Writeback_All_Tokens  0 <-- 
-O  Data_Shared  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Ack  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  Persistent_GETX  0 <-- 
-O  Persistent_GETS  0 <-- 
-O  Own_Lock_or_Unlock  0 <-- 
-
-M  L1_GETS  0 <-- 
-M  L1_GETX  0 <-- 
-M  L1_INV  0 <-- 
-M  Transient_GETX  0 <-- 
-M  Transient_GETS  0 <-- 
-M  L2_Replacement  0 <-- 
-M  Persistent_GETX  0 <-- 
-M  Persistent_GETS  0 <-- 
-M  Own_Lock_or_Unlock  0 <-- 
-
-I_L  L1_GETS  46189
-I_L  L1_GETX  24926
-I_L  L1_INV  71057
-I_L  Transient_GETX  0 <-- 
-I_L  Transient_GETS  0 <-- 
-I_L  Transient_GETS_Last_Token  0 <-- 
-I_L  L2_Replacement  0 <-- 
-I_L  Writeback_Tokens  0 <-- 
-I_L  Writeback_Shared_Data  0 <-- 
-I_L  Writeback_All_Tokens  0 <-- 
-I_L  Writeback_Owned  0 <-- 
-I_L  Data_Shared  0 <-- 
-I_L  Data_Owner  0 <-- 
-I_L  Data_All_Tokens  0 <-- 
-I_L  Ack  0 <-- 
-I_L  Persistent_GETX  28628
-I_L  Persistent_GETS  52955
-I_L  Own_Lock_or_Unlock  0 <-- 
-
-S_L  L1_GETS  0 <-- 
-S_L  L1_GETS_Last_Token  0 <-- 
-S_L  L1_GETX  0 <-- 
-S_L  L1_INV  0 <-- 
-S_L  Transient_GETX  0 <-- 
-S_L  Transient_GETS  0 <-- 
-S_L  Transient_GETS_Last_Token  0 <-- 
-S_L  L2_Replacement  0 <-- 
-S_L  Writeback_Tokens  0 <-- 
-S_L  Writeback_Shared_Data  0 <-- 
-S_L  Writeback_All_Tokens  0 <-- 
-S_L  Writeback_Owned  0 <-- 
-S_L  Data_Shared  0 <-- 
-S_L  Data_Owner  0 <-- 
-S_L  Data_All_Tokens  0 <-- 
-S_L  Ack  0 <-- 
-S_L  Persistent_GETX  0 <-- 
-S_L  Persistent_GETS  0 <-- 
-S_L  Own_Lock_or_Unlock  0 <-- 
-
-Memory controller: system.ruby.network.topology.ext_links9.ext_node.memBuffer:
+NP  L1_GETS [26 ] 26
+NP  L1_GETX [27 ] 27
+NP  L1_INV [17 ] 17
+NP  Transient_GETX [0 ] 0
+NP  Transient_GETS [0 ] 0
+NP  Writeback_Tokens [0 ] 0
+NP  Writeback_Shared_Data [0 ] 0
+NP  Writeback_All_Tokens [0 ] 0
+NP  Writeback_Owned [0 ] 0
+NP  Data_Shared [0 ] 0
+NP  Data_Owner [0 ] 0
+NP  Data_All_Tokens [0 ] 0
+NP  Ack [0 ] 0
+NP  Persistent_GETX [0 ] 0
+NP  Persistent_GETS [0 ] 0
+NP  Persistent_GETS_Last_Token [0 ] 0
+NP  Own_Lock_or_Unlock [49719 ] 49719
+
+I  L1_GETS [0 ] 0
+I  L1_GETS_Last_Token [0 ] 0
+I  L1_GETX [0 ] 0
+I  L1_INV [0 ] 0
+I  Transient_GETX [0 ] 0
+I  Transient_GETS [0 ] 0
+I  Transient_GETS_Last_Token [0 ] 0
+I  L2_Replacement [0 ] 0
+I  Writeback_Tokens [0 ] 0
+I  Writeback_Shared_Data [0 ] 0
+I  Writeback_All_Tokens [0 ] 0
+I  Writeback_Owned [0 ] 0
+I  Data_Shared [0 ] 0
+I  Data_Owner [0 ] 0
+I  Data_All_Tokens [0 ] 0
+I  Ack [0 ] 0
+I  Persistent_GETX [0 ] 0
+I  Persistent_GETS [0 ] 0
+I  Persistent_GETS_Last_Token [0 ] 0
+I  Own_Lock_or_Unlock [0 ] 0
+
+S  L1_GETS [0 ] 0
+S  L1_GETS_Last_Token [0 ] 0
+S  L1_GETX [0 ] 0
+S  L1_INV [0 ] 0
+S  Transient_GETX [0 ] 0
+S  Transient_GETS [0 ] 0
+S  Transient_GETS_Last_Token [0 ] 0
+S  L2_Replacement [0 ] 0
+S  Writeback_Tokens [0 ] 0
+S  Writeback_Shared_Data [0 ] 0
+S  Writeback_All_Tokens [0 ] 0
+S  Writeback_Owned [0 ] 0
+S  Data_Shared [0 ] 0
+S  Data_Owner [0 ] 0
+S  Data_All_Tokens [0 ] 0
+S  Ack [0 ] 0
+S  Persistent_GETX [0 ] 0
+S  Persistent_GETS [0 ] 0
+S  Persistent_GETS_Last_Token [0 ] 0
+S  Own_Lock_or_Unlock [0 ] 0
+
+O  L1_GETS [0 ] 0
+O  L1_GETS_Last_Token [0 ] 0
+O  L1_GETX [0 ] 0
+O  L1_INV [0 ] 0
+O  Transient_GETX [0 ] 0
+O  Transient_GETS [0 ] 0
+O  Transient_GETS_Last_Token [0 ] 0
+O  L2_Replacement [0 ] 0
+O  Writeback_Tokens [0 ] 0
+O  Writeback_Shared_Data [0 ] 0
+O  Writeback_All_Tokens [0 ] 0
+O  Data_Shared [0 ] 0
+O  Data_All_Tokens [0 ] 0
+O  Ack [0 ] 0
+O  Ack_All_Tokens [0 ] 0
+O  Persistent_GETX [0 ] 0
+O  Persistent_GETS [0 ] 0
+O  Persistent_GETS_Last_Token [0 ] 0
+O  Own_Lock_or_Unlock [0 ] 0
+
+M  L1_GETS [0 ] 0
+M  L1_GETX [0 ] 0
+M  L1_INV [0 ] 0
+M  Transient_GETX [0 ] 0
+M  Transient_GETS [0 ] 0
+M  L2_Replacement [0 ] 0
+M  Persistent_GETX [0 ] 0
+M  Persistent_GETS [0 ] 0
+M  Own_Lock_or_Unlock [0 ] 0
+
+I_L  L1_GETS [37086 ] 37086
+I_L  L1_GETX [19876 ] 19876
+I_L  L1_INV [56947 ] 56947
+I_L  Transient_GETX [0 ] 0
+I_L  Transient_GETS [0 ] 0
+I_L  Transient_GETS_Last_Token [0 ] 0
+I_L  L2_Replacement [0 ] 0
+I_L  Writeback_Tokens [0 ] 0
+I_L  Writeback_Shared_Data [0 ] 0
+I_L  Writeback_All_Tokens [0 ] 0
+I_L  Writeback_Owned [0 ] 0
+I_L  Data_Shared [0 ] 0
+I_L  Data_Owner [0 ] 0
+I_L  Data_All_Tokens [0 ] 0
+I_L  Ack [0 ] 0
+I_L  Persistent_GETX [22460 ] 22460
+I_L  Persistent_GETS [41771 ] 41771
+I_L  Own_Lock_or_Unlock [0 ] 0
+
+S_L  L1_GETS [0 ] 0
+S_L  L1_GETS_Last_Token [0 ] 0
+S_L  L1_GETX [0 ] 0
+S_L  L1_INV [0 ] 0
+S_L  Transient_GETX [0 ] 0
+S_L  Transient_GETS [0 ] 0
+S_L  Transient_GETS_Last_Token [0 ] 0
+S_L  L2_Replacement [0 ] 0
+S_L  Writeback_Tokens [0 ] 0
+S_L  Writeback_Shared_Data [0 ] 0
+S_L  Writeback_All_Tokens [0 ] 0
+S_L  Writeback_Owned [0 ] 0
+S_L  Data_Shared [0 ] 0
+S_L  Data_Owner [0 ] 0
+S_L  Data_All_Tokens [0 ] 0
+S_L  Ack [0 ] 0
+S_L  Persistent_GETX [0 ] 0
+S_L  Persistent_GETS [0 ] 0
+S_L  Persistent_GETS_Last_Token [0 ] 0
+S_L  Own_Lock_or_Unlock [0 ] 0
+
+Memory controller: system.dir_cntrl0.memBuffer:
   memory_total_requests: 2
   memory_reads: 2
   memory_writes: 0
@@ -3197,215 +1058,278 @@ Memory controller: system.ruby.network.topology.ext_links9.ext_node.memBuffer:
   memory_stalls_for_read_read_turnaround: 0
   accesses_per_bank: 2  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  
 
- --- Directory 0 ---
+ --- Directory ---
  - Event Counts -
-GETX  25266
-GETS  46457
-Lockdown  81583
-Unlockdown  60779
-Own_Lock_or_Unlock  0
-Data_Owner  0
-Data_All_Tokens  0
-Ack_Owner  0
-Ack_Owner_All_Tokens  0
-Tokens  0
-Ack_All_Tokens  0
-Request_Timeout  0
-Memory_Data  2
-Memory_Ack  0
-DMA_READ  0
-DMA_WRITE  0
-DMA_WRITE_All_Tokens  0
+GETX [19962 ] 19962
+GETS [37458 ] 37458
+Lockdown [64231 ] 64231
+Unlockdown [49719 ] 49719
+Own_Lock_or_Unlock [0 ] 0
+Own_Lock_or_Unlock_Tokens [0 ] 0
+Data_Owner [0 ] 0
+Data_All_Tokens [0 ] 0
+Ack_Owner [0 ] 0
+Ack_Owner_All_Tokens [0 ] 0
+Tokens [0 ] 0
+Ack_All_Tokens [0 ] 0
+Request_Timeout [0 ] 0
+Memory_Data [2 ] 2
+Memory_Ack [0 ] 0
+DMA_READ [0 ] 0
+DMA_WRITE [0 ] 0
+DMA_WRITE_All_Tokens [0 ] 0
 
  - Transitions -
-O  GETX  1
-O  GETS  1
-O  Lockdown  0 <-- 
-O  Own_Lock_or_Unlock  0 <-- 
-O  Data_Owner  0 <-- 
-O  Data_All_Tokens  0 <-- 
-O  Tokens  0 <-- 
-O  Ack_All_Tokens  0 <-- 
-O  DMA_READ  0 <-- 
-O  DMA_WRITE  0 <-- 
-O  DMA_WRITE_All_Tokens  0 <-- 
+O  GETX [0 ] 0
+O  GETS [2 ] 2
+O  Lockdown [0 ] 0
+O  Unlockdown [0 ] 0
+O  Own_Lock_or_Unlock [0 ] 0
+O  Own_Lock_or_Unlock_Tokens [0 ] 0
+O  Data_Owner [0 ] 0
+O  Data_All_Tokens [0 ] 0
+O  Tokens [0 ] 0
+O  Ack_All_Tokens [0 ] 0
+O  DMA_READ [0 ] 0
+O  DMA_WRITE [0 ] 0
+O  DMA_WRITE_All_Tokens [0 ] 0
 
-NO  GETX  200
-NO  GETS  59
-NO  Lockdown  60781
-NO  Own_Lock_or_Unlock  0 <-- 
-NO  Data_Owner  0 <-- 
-NO  Data_All_Tokens  0 <-- 
-NO  Ack_Owner  0 <-- 
-NO  Ack_Owner_All_Tokens  0 <-- 
-NO  Tokens  0 <-- 
-NO  DMA_READ  0 <-- 
-NO  DMA_WRITE  0 <-- 
+NO  GETX [42 ] 42
+NO  GETS [24 ] 24
+NO  Lockdown [49719 ] 49719
+NO  Unlockdown [0 ] 0
+NO  Own_Lock_or_Unlock [0 ] 0
+NO  Own_Lock_or_Unlock_Tokens [0 ] 0
+NO  Data_Owner [0 ] 0
+NO  Data_All_Tokens [0 ] 0
+NO  Ack_Owner [0 ] 0
+NO  Ack_Owner_All_Tokens [0 ] 0
+NO  Tokens [0 ] 0
+NO  DMA_READ [0 ] 0
+NO  DMA_WRITE [0 ] 0
 
-L  GETX  24868
-L  GETS  46189
-L  Lockdown  20802
-L  Unlockdown  60779
-L  Own_Lock_or_Unlock  0 <-- 
-L  Data_Owner  0 <-- 
-L  Data_All_Tokens  0 <-- 
-L  Ack_Owner  0 <-- 
-L  Ack_Owner_All_Tokens  0 <-- 
-L  Tokens  0 <-- 
-L  DMA_READ  0 <-- 
-L  DMA_WRITE  0 <-- 
+L  GETX [19861 ] 19861
+L  GETS [37086 ] 37086
+L  Lockdown [14512 ] 14512
+L  Unlockdown [49719 ] 49719
+L  Own_Lock_or_Unlock [0 ] 0
+L  Own_Lock_or_Unlock_Tokens [0 ] 0
+L  Data_Owner [0 ] 0
+L  Data_All_Tokens [0 ] 0
+L  Ack_Owner [0 ] 0
+L  Ack_Owner_All_Tokens [0 ] 0
+L  Tokens [0 ] 0
+L  DMA_READ [0 ] 0
+L  DMA_WRITE [0 ] 0
+L  DMA_WRITE_All_Tokens [0 ] 0
 
-O_W  GETX  0 <-- 
-O_W  GETS  0 <-- 
-O_W  Lockdown  0 <-- 
-O_W  Unlockdown  0 <-- 
-O_W  Own_Lock_or_Unlock  0 <-- 
-O_W  Data_Owner  0 <-- 
-O_W  Ack_Owner  0 <-- 
-O_W  Tokens  0 <-- 
-O_W  Ack_All_Tokens  0 <-- 
-O_W  Memory_Data  0 <-- 
-O_W  Memory_Ack  0 <-- 
-O_W  DMA_READ  0 <-- 
-O_W  DMA_WRITE  0 <-- 
+O_W  GETX [0 ] 0
+O_W  GETS [0 ] 0
+O_W  Lockdown [0 ] 0
+O_W  Unlockdown [0 ] 0
+O_W  Own_Lock_or_Unlock [0 ] 0
+O_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+O_W  Data_Owner [0 ] 0
+O_W  Data_All_Tokens [0 ] 0
+O_W  Ack_Owner [0 ] 0
+O_W  Tokens [0 ] 0
+O_W  Ack_All_Tokens [0 ] 0
+O_W  Memory_Data [0 ] 0
+O_W  Memory_Ack [0 ] 0
+O_W  DMA_READ [0 ] 0
+O_W  DMA_WRITE [0 ] 0
+O_W  DMA_WRITE_All_Tokens [0 ] 0
 
-L_O_W  GETX  0 <-- 
-L_O_W  GETS  0 <-- 
-L_O_W  Lockdown  0 <-- 
-L_O_W  Unlockdown  0 <-- 
-L_O_W  Own_Lock_or_Unlock  0 <-- 
-L_O_W  Data_Owner  0 <-- 
-L_O_W  Ack_Owner  0 <-- 
-L_O_W  Tokens  0 <-- 
-L_O_W  Ack_All_Tokens  0 <-- 
-L_O_W  Memory_Data  0 <-- 
-L_O_W  Memory_Ack  0 <-- 
-L_O_W  DMA_READ  0 <-- 
-L_O_W  DMA_WRITE  0 <-- 
+L_O_W  GETX [0 ] 0
+L_O_W  GETS [0 ] 0
+L_O_W  Lockdown [0 ] 0
+L_O_W  Unlockdown [0 ] 0
+L_O_W  Own_Lock_or_Unlock [0 ] 0
+L_O_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+L_O_W  Data_Owner [0 ] 0
+L_O_W  Data_All_Tokens [0 ] 0
+L_O_W  Ack_Owner [0 ] 0
+L_O_W  Tokens [0 ] 0
+L_O_W  Ack_All_Tokens [0 ] 0
+L_O_W  Memory_Data [0 ] 0
+L_O_W  Memory_Ack [0 ] 0
+L_O_W  DMA_READ [0 ] 0
+L_O_W  DMA_WRITE [0 ] 0
+L_O_W  DMA_WRITE_All_Tokens [0 ] 0
 
-L_NO_W  GETX  0 <-- 
-L_NO_W  GETS  0 <-- 
-L_NO_W  Lockdown  0 <-- 
-L_NO_W  Unlockdown  0 <-- 
-L_NO_W  Own_Lock_or_Unlock  0 <-- 
-L_NO_W  Data_Owner  0 <-- 
-L_NO_W  Ack_Owner  0 <-- 
-L_NO_W  Tokens  0 <-- 
-L_NO_W  Ack_All_Tokens  0 <-- 
-L_NO_W  Memory_Data  0 <-- 
-L_NO_W  DMA_READ  0 <-- 
-L_NO_W  DMA_WRITE  0 <-- 
+L_NO_W  GETX [0 ] 0
+L_NO_W  GETS [0 ] 0
+L_NO_W  Lockdown [0 ] 0
+L_NO_W  Unlockdown [0 ] 0
+L_NO_W  Own_Lock_or_Unlock [0 ] 0
+L_NO_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+L_NO_W  Data_Owner [0 ] 0
+L_NO_W  Data_All_Tokens [0 ] 0
+L_NO_W  Ack_Owner [0 ] 0
+L_NO_W  Tokens [0 ] 0
+L_NO_W  Ack_All_Tokens [0 ] 0
+L_NO_W  Memory_Data [0 ] 0
+L_NO_W  DMA_READ [0 ] 0
+L_NO_W  DMA_WRITE [0 ] 0
+L_NO_W  DMA_WRITE_All_Tokens [0 ] 0
 
-DR_L_W  GETX  0 <-- 
-DR_L_W  GETS  0 <-- 
-DR_L_W  Lockdown  0 <-- 
-DR_L_W  Unlockdown  0 <-- 
-DR_L_W  Own_Lock_or_Unlock  0 <-- 
-DR_L_W  Data_Owner  0 <-- 
-DR_L_W  Ack_Owner  0 <-- 
-DR_L_W  Tokens  0 <-- 
-DR_L_W  Ack_All_Tokens  0 <-- 
-DR_L_W  Request_Timeout  0 <-- 
-DR_L_W  Memory_Data  0 <-- 
-DR_L_W  DMA_READ  0 <-- 
-DR_L_W  DMA_WRITE  0 <-- 
+DR_L_W  GETX [0 ] 0
+DR_L_W  GETS [0 ] 0
+DR_L_W  Lockdown [0 ] 0
+DR_L_W  Unlockdown [0 ] 0
+DR_L_W  Own_Lock_or_Unlock [0 ] 0
+DR_L_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+DR_L_W  Data_Owner [0 ] 0
+DR_L_W  Data_All_Tokens [0 ] 0
+DR_L_W  Ack_Owner [0 ] 0
+DR_L_W  Tokens [0 ] 0
+DR_L_W  Ack_All_Tokens [0 ] 0
+DR_L_W  Request_Timeout [0 ] 0
+DR_L_W  Memory_Data [0 ] 0
+DR_L_W  DMA_READ [0 ] 0
+DR_L_W  DMA_WRITE [0 ] 0
+DR_L_W  DMA_WRITE_All_Tokens [0 ] 0
 
-NO_W  GETX  197
-NO_W  GETS  208
-NO_W  Lockdown  0 <-- 
-NO_W  Unlockdown  0 <-- 
-NO_W  Own_Lock_or_Unlock  0 <-- 
-NO_W  Data_Owner  0 <-- 
-NO_W  Ack_Owner  0 <-- 
-NO_W  Tokens  0 <-- 
-NO_W  Ack_All_Tokens  0 <-- 
-NO_W  Memory_Data  2
-NO_W  DMA_READ  0 <-- 
-NO_W  DMA_WRITE  0 <-- 
+DW_L_W  GETX [0 ] 0
+DW_L_W  GETS [0 ] 0
+DW_L_W  Lockdown [0 ] 0
+DW_L_W  Unlockdown [0 ] 0
+DW_L_W  Own_Lock_or_Unlock [0 ] 0
+DW_L_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+DW_L_W  Data_Owner [0 ] 0
+DW_L_W  Data_All_Tokens [0 ] 0
+DW_L_W  Ack_Owner [0 ] 0
+DW_L_W  Tokens [0 ] 0
+DW_L_W  Ack_All_Tokens [0 ] 0
+DW_L_W  Request_Timeout [0 ] 0
+DW_L_W  Memory_Ack [0 ] 0
+DW_L_W  DMA_READ [0 ] 0
+DW_L_W  DMA_WRITE [0 ] 0
+DW_L_W  DMA_WRITE_All_Tokens [0 ] 0
 
-O_DW_W  GETX  0 <-- 
-O_DW_W  GETS  0 <-- 
-O_DW_W  Data_Owner  0 <-- 
-O_DW_W  Ack_Owner  0 <-- 
-O_DW_W  Tokens  0 <-- 
-O_DW_W  Ack_All_Tokens  0 <-- 
-O_DW_W  Memory_Ack  0 <-- 
-O_DW_W  DMA_READ  0 <-- 
-O_DW_W  DMA_WRITE  0 <-- 
+NO_W  GETX [59 ] 59
+NO_W  GETS [346 ] 346
+NO_W  Lockdown [0 ] 0
+NO_W  Unlockdown [0 ] 0
+NO_W  Own_Lock_or_Unlock [0 ] 0
+NO_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+NO_W  Data_Owner [0 ] 0
+NO_W  Data_All_Tokens [0 ] 0
+NO_W  Ack_Owner [0 ] 0
+NO_W  Tokens [0 ] 0
+NO_W  Ack_All_Tokens [0 ] 0
+NO_W  Memory_Data [2 ] 2
+NO_W  DMA_READ [0 ] 0
+NO_W  DMA_WRITE [0 ] 0
+NO_W  DMA_WRITE_All_Tokens [0 ] 0
 
-O_DR_W  GETX  0 <-- 
-O_DR_W  GETS  0 <-- 
-O_DR_W  Lockdown  0 <-- 
-O_DR_W  Unlockdown  0 <-- 
-O_DR_W  Own_Lock_or_Unlock  0 <-- 
-O_DR_W  Data_Owner  0 <-- 
-O_DR_W  Ack_Owner  0 <-- 
-O_DR_W  Tokens  0 <-- 
-O_DR_W  Ack_All_Tokens  0 <-- 
-O_DR_W  Memory_Data  0 <-- 
-O_DR_W  DMA_READ  0 <-- 
-O_DR_W  DMA_WRITE  0 <-- 
+O_DW_W  GETX [0 ] 0
+O_DW_W  GETS [0 ] 0
+O_DW_W  Lockdown [0 ] 0
+O_DW_W  Unlockdown [0 ] 0
+O_DW_W  Own_Lock_or_Unlock [0 ] 0
+O_DW_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+O_DW_W  Data_Owner [0 ] 0
+O_DW_W  Data_All_Tokens [0 ] 0
+O_DW_W  Ack_Owner [0 ] 0
+O_DW_W  Tokens [0 ] 0
+O_DW_W  Ack_All_Tokens [0 ] 0
+O_DW_W  Request_Timeout [0 ] 0
+O_DW_W  Memory_Ack [0 ] 0
+O_DW_W  DMA_READ [0 ] 0
+O_DW_W  DMA_WRITE [0 ] 0
+O_DW_W  DMA_WRITE_All_Tokens [0 ] 0
 
-O_DW  GETX  0 <-- 
-O_DW  GETS  0 <-- 
-O_DW  Lockdown  0 <-- 
-O_DW  Own_Lock_or_Unlock  0 <-- 
-O_DW  Data_Owner  0 <-- 
-O_DW  Data_All_Tokens  0 <-- 
-O_DW  Ack_Owner  0 <-- 
-O_DW  Ack_Owner_All_Tokens  0 <-- 
-O_DW  Tokens  0 <-- 
-O_DW  Ack_All_Tokens  0 <-- 
-O_DW  DMA_READ  0 <-- 
-O_DW  DMA_WRITE  0 <-- 
+O_DR_W  GETX [0 ] 0
+O_DR_W  GETS [0 ] 0
+O_DR_W  Lockdown [0 ] 0
+O_DR_W  Unlockdown [0 ] 0
+O_DR_W  Own_Lock_or_Unlock [0 ] 0
+O_DR_W  Own_Lock_or_Unlock_Tokens [0 ] 0
+O_DR_W  Data_Owner [0 ] 0
+O_DR_W  Data_All_Tokens [0 ] 0
+O_DR_W  Ack_Owner [0 ] 0
+O_DR_W  Tokens [0 ] 0
+O_DR_W  Ack_All_Tokens [0 ] 0
+O_DR_W  Request_Timeout [0 ] 0
+O_DR_W  Memory_Data [0 ] 0
+O_DR_W  DMA_READ [0 ] 0
+O_DR_W  DMA_WRITE [0 ] 0
+O_DR_W  DMA_WRITE_All_Tokens [0 ] 0
 
-NO_DW  GETX  0 <-- 
-NO_DW  GETS  0 <-- 
-NO_DW  Lockdown  0 <-- 
-NO_DW  Own_Lock_or_Unlock  0 <-- 
-NO_DW  Data_Owner  0 <-- 
-NO_DW  Data_All_Tokens  0 <-- 
-NO_DW  Tokens  0 <-- 
-NO_DW  Request_Timeout  0 <-- 
-NO_DW  DMA_READ  0 <-- 
-NO_DW  DMA_WRITE  0 <-- 
+O_DW  GETX [0 ] 0
+O_DW  GETS [0 ] 0
+O_DW  Lockdown [0 ] 0
+O_DW  Unlockdown [0 ] 0
+O_DW  Own_Lock_or_Unlock [0 ] 0
+O_DW  Own_Lock_or_Unlock_Tokens [0 ] 0
+O_DW  Data_Owner [0 ] 0
+O_DW  Data_All_Tokens [0 ] 0
+O_DW  Ack_Owner [0 ] 0
+O_DW  Ack_Owner_All_Tokens [0 ] 0
+O_DW  Tokens [0 ] 0
+O_DW  Ack_All_Tokens [0 ] 0
+O_DW  Request_Timeout [0 ] 0
+O_DW  DMA_READ [0 ] 0
+O_DW  DMA_WRITE [0 ] 0
+O_DW  DMA_WRITE_All_Tokens [0 ] 0
 
-NO_DR  GETX  0 <-- 
-NO_DR  GETS  0 <-- 
-NO_DR  Lockdown  0 <-- 
-NO_DR  Own_Lock_or_Unlock  0 <-- 
-NO_DR  Data_Owner  0 <-- 
-NO_DR  Data_All_Tokens  0 <-- 
-NO_DR  Tokens  0 <-- 
-NO_DR  Request_Timeout  0 <-- 
-NO_DR  DMA_READ  0 <-- 
-NO_DR  DMA_WRITE  0 <-- 
+NO_DW  GETX [0 ] 0
+NO_DW  GETS [0 ] 0
+NO_DW  Lockdown [0 ] 0
+NO_DW  Unlockdown [0 ] 0
+NO_DW  Own_Lock_or_Unlock [0 ] 0
+NO_DW  Own_Lock_or_Unlock_Tokens [0 ] 0
+NO_DW  Data_Owner [0 ] 0
+NO_DW  Data_All_Tokens [0 ] 0
+NO_DW  Tokens [0 ] 0
+NO_DW  Request_Timeout [0 ] 0
+NO_DW  DMA_READ [0 ] 0
+NO_DW  DMA_WRITE [0 ] 0
+NO_DW  DMA_WRITE_All_Tokens [0 ] 0
 
-DW_L  GETX  0 <-- 
-DW_L  GETS  0 <-- 
-DW_L  Lockdown  0 <-- 
-DW_L  Unlockdown  0 <-- 
-DW_L  Own_Lock_or_Unlock  0 <-- 
-DW_L  Data_Owner  0 <-- 
-DW_L  Data_All_Tokens  0 <-- 
-DW_L  Ack_Owner  0 <-- 
-DW_L  Ack_Owner_All_Tokens  0 <-- 
-DW_L  Tokens  0 <-- 
-DW_L  Request_Timeout  0 <-- 
-DW_L  DMA_READ  0 <-- 
-DW_L  DMA_WRITE  0 <-- 
+NO_DR  GETX [0 ] 0
+NO_DR  GETS [0 ] 0
+NO_DR  Lockdown [0 ] 0
+NO_DR  Unlockdown [0 ] 0
+NO_DR  Own_Lock_or_Unlock [0 ] 0
+NO_DR  Own_Lock_or_Unlock_Tokens [0 ] 0
+NO_DR  Data_Owner [0 ] 0
+NO_DR  Data_All_Tokens [0 ] 0
+NO_DR  Tokens [0 ] 0
+NO_DR  Request_Timeout [0 ] 0
+NO_DR  DMA_READ [0 ] 0
+NO_DR  DMA_WRITE [0 ] 0
+NO_DR  DMA_WRITE_All_Tokens [0 ] 0
 
-DR_L  GETX  0 <-- 
-DR_L  GETS  0 <-- 
-DR_L  Lockdown  0 <-- 
-DR_L  Unlockdown  0 <-- 
-DR_L  Own_Lock_or_Unlock  0 <-- 
-DR_L  Data_Owner  0 <-- 
-DR_L  Data_All_Tokens  0 <-- 
-DR_L  Ack_Owner  0 <-- 
-DR_L  Ack_Owner_All_Tokens  0 <-- 
-DR_L  Tokens  0 <-- 
-DR_L  Request_Timeout  0 <-- 
-DR_L  DMA_READ  0 <-- 
-DR_L  DMA_WRITE  0 <-- 
+DW_L  GETX [0 ] 0
+DW_L  GETS [0 ] 0
+DW_L  Lockdown [0 ] 0
+DW_L  Unlockdown [0 ] 0
+DW_L  Own_Lock_or_Unlock [0 ] 0
+DW_L  Own_Lock_or_Unlock_Tokens [0 ] 0
+DW_L  Data_Owner [0 ] 0
+DW_L  Data_All_Tokens [0 ] 0
+DW_L  Ack_Owner [0 ] 0
+DW_L  Ack_Owner_All_Tokens [0 ] 0
+DW_L  Tokens [0 ] 0
+DW_L  Request_Timeout [0 ] 0
+DW_L  DMA_READ [0 ] 0
+DW_L  DMA_WRITE [0 ] 0
+DW_L  DMA_WRITE_All_Tokens [0 ] 0
 
+DR_L  GETX [0 ] 0
+DR_L  GETS [0 ] 0
+DR_L  Lockdown [0 ] 0
+DR_L  Unlockdown [0 ] 0
+DR_L  Own_Lock_or_Unlock [0 ] 0
+DR_L  Own_Lock_or_Unlock_Tokens [0 ] 0
+DR_L  Data_Owner [0 ] 0
+DR_L  Data_All_Tokens [0 ] 0
+DR_L  Ack_Owner [0 ] 0
+DR_L  Ack_Owner_All_Tokens [0 ] 0
+DR_L  Tokens [0 ] 0
+DR_L  Request_Timeout [0 ] 0
+DR_L  DMA_READ [0 ] 0
+DR_L  DMA_WRITE [0 ] 0
+DR_L  DMA_WRITE_All_Tokens

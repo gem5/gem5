@@ -13,7 +13,7 @@ RubySystem config:
 Network Configuration
 ---------------------
 network: SIMPLE_NETWORK
-topology: 
+topology: Crossbar
 
 virtual_net_0: active, unordered
 virtual_net_1: active, unordered
@@ -34,7 +34,7 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Jan/28/2010 15:08:15
+Real time: Aug/05/2010 10:37:10
 
 Profiler Stats
 --------------
@@ -43,31 +43,20 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.51
-Virtual_time_in_minutes: 0.0085
-Virtual_time_in_hours:   0.000141667
-Virtual_time_in_days:    5.90278e-06
+Virtual_time_in_seconds: 0.41
+Virtual_time_in_minutes: 0.00683333
+Virtual_time_in_hours:   0.000113889
+Virtual_time_in_days:    4.74537e-06
 
 Ruby_current_time: 85988
 Ruby_start_time: 0
 Ruby_cycles: 85988
 
-mbytes_resident: 33.25
-mbytes_total: 33.2578
+mbytes_resident: 33.6484
+mbytes_total: 33.6562
 resident_ratio: 1
 
-Total_misses: 0
-total_misses: 0 [ 0 ]
-user_misses: 0 [ 0 ]
-supervisor_misses: 0 [ 0 ]
-
-ruby_cycles_executed: 85989 [ 85989 ]
-
-transactions_started: 0 [ 0 ]
-transactions_ended: 0 [ 0 ]
-cycles_per_transaction: 0 [ 0 ]
-misses_per_transaction: 0 [ 0 ]
-
+ruby_cycles_executed: [ 85989 ]
 
 Busy Controller Counts:
 L2Cache-0:0  
@@ -82,9 +71,23 @@ sequencer_requests_outstanding: [binsize: 1 max: 1 count: 3295 average:     1 | 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
 miss_latency: [binsize: 2 max: 269 count: 3294 average: 25.1044 | standard deviation: 56.2234 | 0 2784 0 0 0 0 0 0 0 69 14 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 80 86 86 80 64 7 5 1 2 0 2 4 2 1 2 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_1: [binsize: 2 max: 227 count: 2585 average: 18.8561 | standard deviation: 48.7313 | 0 2315 0 0 0 0 0 0 0 27 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 48 53 42 50 34 2 4 1 1 0 2 2 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_2: [binsize: 2 max: 267 count: 415 average: 61.0506 | standard deviation: 78.3756 | 0 233 0 0 0 0 0 0 0 42 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 32 18 42 18 23 1 0 0 1 0 0 1 0 0 2 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_3: [binsize: 2 max: 269 count: 294 average: 29.3027 | standard deviation: 60.9274 | 0 236 0 0 0 0 0 0 0 0 14 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 15 2 12 7 4 1 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_IFETCH: [binsize: 2 max: 227 count: 2585 average: 18.8561 | standard deviation: 48.7313 | 0 2315 0 0 0 0 0 0 0 27 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 48 53 42 50 34 2 4 1 1 0 2 2 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_LD: [binsize: 2 max: 267 count: 415 average: 61.0506 | standard deviation: 78.3756 | 0 233 0 0 0 0 0 0 0 42 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 32 18 42 18 23 1 0 0 1 0 0 1 0 0 2 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_ST: [binsize: 2 max: 269 count: 294 average: 29.3027 | standard deviation: 60.9274 | 0 236 0 0 0 0 0 0 0 0 14 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 15 2 12 7 4 1 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_NULL: [binsize: 2 max: 269 count: 3294 average: 25.1044 | standard deviation: 56.2234 | 0 2784 0 0 0 0 0 0 0 69 14 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 80 86 86 80 64 7 5 1 2 0 2 4 2 1 2 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_wCC_issue_to_initial_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+miss_latency_wCC_initial_forward_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+miss_latency_wCC_forward_to_first_response: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+miss_latency_wCC_first_response_to_completion: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+imcomplete_wCC_Times: 0
+miss_latency_dir_issue_to_initial_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+miss_latency_dir_initial_forward_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+miss_latency_dir_forward_to_first_response: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+miss_latency_dir_first_response_to_completion: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+imcomplete_dir_Times: 0
+miss_latency_IFETCH_NULL: [binsize: 2 max: 227 count: 2585 average: 18.8561 | standard deviation: 48.7313 | 0 2315 0 0 0 0 0 0 0 27 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 48 53 42 50 34 2 4 1 1 0 2 2 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_LD_NULL: [binsize: 2 max: 267 count: 415 average: 61.0506 | standard deviation: 78.3756 | 0 233 0 0 0 0 0 0 0 42 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 32 18 42 18 23 1 0 0 1 0 0 1 0 0 2 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_ST_NULL: [binsize: 2 max: 269 count: 294 average: 29.3027 | standard deviation: 60.9274 | 0 236 0 0 0 0 0 0 0 0 14 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 15 2 12 7 4 1 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 
 All Non-Zero Cycle SW Prefetch Requests
 ------------------------------------
@@ -116,14 +119,22 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 7143
-page_faults: 2153
+page_reclaims: 7386
+page_faults: 2090
 swaps: 0
 block_inputs: 0
 block_outputs: 0
 
 Network Stats
 -------------
+
+total_msg_count_Request_Control: 2811 22488
+total_msg_count_Response_Data: 2562 184464
+total_msg_count_ResponseL2hit_Data: 249 17928
+total_msg_count_Writeback_Data: 1737 125064
+total_msg_count_Writeback_Control: 6480 51840
+total_msg_count_Unblock_Control: 2810 22480
+total_msgs: 16649 total_bytes: 424264
 
 switch_0_inlinks: 2
 switch_0_outlinks: 2
@@ -190,972 +201,966 @@ links_utilized_percent_switch_3: 0.342645
   outgoing_messages_switch_3_link_2_Writeback_Control: 745 5960 [ 0 411 334 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_3_link_2_Unblock_Control: 427 3416 [ 0 0 427 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.network.topology.ext_links0.ext_node.sequencer.icache
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.icache_total_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.icache_total_demand_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.icache_total_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.icache_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.icache_total_hw_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.icache_misses_per_transaction: nan
+Cache Stats: system.l1_cntrl0.sequencer.icache
+  system.l1_cntrl0.sequencer.icache_total_misses: 0
+  system.l1_cntrl0.sequencer.icache_total_demand_misses: 0
+  system.l1_cntrl0.sequencer.icache_total_prefetches: 0
+  system.l1_cntrl0.sequencer.icache_total_sw_prefetches: 0
+  system.l1_cntrl0.sequencer.icache_total_hw_prefetches: 0
 
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.icache_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
-Cache Stats: system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache_total_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache_total_demand_misses: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache_total_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache_total_hw_prefetches: 0
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache_misses_per_transaction: nan
+Cache Stats: system.l1_cntrl0.sequencer.dcache
+  system.l1_cntrl0.sequencer.dcache_total_misses: 0
+  system.l1_cntrl0.sequencer.dcache_total_demand_misses: 0
+  system.l1_cntrl0.sequencer.dcache_total_prefetches: 0
+  system.l1_cntrl0.sequencer.dcache_total_sw_prefetches: 0
+  system.l1_cntrl0.sequencer.dcache_total_hw_prefetches: 0
 
-  system.ruby.network.topology.ext_links0.ext_node.sequencer.dcache_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
- --- L1Cache 0 ---
+ --- L1Cache ---
  - Event Counts -
-Load  415
-Ifetch  2585
-Store  294
-L1_Replacement  506
-Own_GETX  0
-Fwd_GETX  0
-Fwd_GETS  0
-Fwd_DMA  0
-Inv  0
-Ack  0
-Data  0
-Exclusive_Data  510
-Writeback_Ack  0
-Writeback_Ack_Data  502
-Writeback_Nack  0
-All_acks  58
-Use_Timeout  509
+Load [415 ] 415
+Ifetch [2585 ] 2585
+Store [294 ] 294
+L1_Replacement [506 ] 506
+Own_GETX [0 ] 0
+Fwd_GETX [0 ] 0
+Fwd_GETS [0 ] 0
+Fwd_DMA [0 ] 0
+Inv [0 ] 0
+Ack [0 ] 0
+Data [0 ] 0
+Exclusive_Data [510 ] 510
+Writeback_Ack [0 ] 0
+Writeback_Ack_Data [502 ] 502
+Writeback_Nack [0 ] 0
+All_acks [58 ] 58
+Use_Timeout [509 ] 509
 
  - Transitions -
-I  Load  182
-I  Ifetch  270
-I  Store  58
-I  L1_Replacement  0 <-- 
-I  Inv  0 <-- 
+I  Load [182 ] 182
+I  Ifetch [270 ] 270
+I  Store [58 ] 58
+I  L1_Replacement [0 ] 0
+I  Inv [0 ] 0
 
-S  Load  0 <-- 
-S  Ifetch  0 <-- 
-S  Store  0 <-- 
-S  L1_Replacement  0 <-- 
-S  Fwd_GETS  0 <-- 
-S  Fwd_DMA  0 <-- 
-S  Inv  0 <-- 
+S  Load [0 ] 0
+S  Ifetch [0 ] 0
+S  Store [0 ] 0
+S  L1_Replacement [0 ] 0
+S  Fwd_GETS [0 ] 0
+S  Fwd_DMA [0 ] 0
+S  Inv [0 ] 0
 
-O  Load  0 <-- 
-O  Ifetch  0 <-- 
-O  Store  0 <-- 
-O  L1_Replacement  0 <-- 
-O  Fwd_GETX  0 <-- 
-O  Fwd_GETS  0 <-- 
-O  Fwd_DMA  0 <-- 
+O  Load [0 ] 0
+O  Ifetch [0 ] 0
+O  Store [0 ] 0
+O  L1_Replacement [0 ] 0
+O  Fwd_GETX [0 ] 0
+O  Fwd_GETS [0 ] 0
+O  Fwd_DMA [0 ] 0
 
-M  Load  82
-M  Ifetch  1224
-M  Store  33
-M  L1_Replacement  406
-M  Fwd_GETX  0 <-- 
-M  Fwd_GETS  0 <-- 
-M  Fwd_DMA  0 <-- 
+M  Load [82 ] 82
+M  Ifetch [1224 ] 1224
+M  Store [33 ] 33
+M  L1_Replacement [406 ] 406
+M  Fwd_GETX [0 ] 0
+M  Fwd_GETS [0 ] 0
+M  Fwd_DMA [0 ] 0
 
-M_W  Load  49
-M_W  Ifetch  1091
-M_W  Store  7
-M_W  L1_Replacement  4
-M_W  Own_GETX  0 <-- 
-M_W  Fwd_GETX  0 <-- 
-M_W  Fwd_GETS  0 <-- 
-M_W  Fwd_DMA  0 <-- 
-M_W  Inv  0 <-- 
-M_W  Use_Timeout  444
+M_W  Load [49 ] 49
+M_W  Ifetch [1091 ] 1091
+M_W  Store [7 ] 7
+M_W  L1_Replacement [4 ] 4
+M_W  Own_GETX [0 ] 0
+M_W  Fwd_GETX [0 ] 0
+M_W  Fwd_GETS [0 ] 0
+M_W  Fwd_DMA [0 ] 0
+M_W  Inv [0 ] 0
+M_W  Use_Timeout [444 ] 444
 
-MM  Load  99
-MM  Ifetch  0 <-- 
-MM  Store  114
-MM  L1_Replacement  96
-MM  Fwd_GETX  0 <-- 
-MM  Fwd_GETS  0 <-- 
-MM  Fwd_DMA  0 <-- 
+MM  Load [99 ] 99
+MM  Ifetch [0 ] 0
+MM  Store [114 ] 114
+MM  L1_Replacement [96 ] 96
+MM  Fwd_GETX [0 ] 0
+MM  Fwd_GETS [0 ] 0
+MM  Fwd_DMA [0 ] 0
 
-MM_W  Load  3
-MM_W  Ifetch  0 <-- 
-MM_W  Store  82
-MM_W  L1_Replacement  0 <-- 
-MM_W  Own_GETX  0 <-- 
-MM_W  Fwd_GETX  0 <-- 
-MM_W  Fwd_GETS  0 <-- 
-MM_W  Fwd_DMA  0 <-- 
-MM_W  Inv  0 <-- 
-MM_W  Use_Timeout  65
+MM_W  Load [3 ] 3
+MM_W  Ifetch [0 ] 0
+MM_W  Store [82 ] 82
+MM_W  L1_Replacement [0 ] 0
+MM_W  Own_GETX [0 ] 0
+MM_W  Fwd_GETX [0 ] 0
+MM_W  Fwd_GETS [0 ] 0
+MM_W  Fwd_DMA [0 ] 0
+MM_W  Inv [0 ] 0
+MM_W  Use_Timeout [65 ] 65
 
-IM  Load  0 <-- 
-IM  Ifetch  0 <-- 
-IM  Store  0 <-- 
-IM  L1_Replacement  0 <-- 
-IM  Inv  0 <-- 
-IM  Ack  0 <-- 
-IM  Data  0 <-- 
-IM  Exclusive_Data  58
+IM  Load [0 ] 0
+IM  Ifetch [0 ] 0
+IM  Store [0 ] 0
+IM  L1_Replacement [0 ] 0
+IM  Inv [0 ] 0
+IM  Ack [0 ] 0
+IM  Data [0 ] 0
+IM  Exclusive_Data [58 ] 58
 
-SM  Load  0 <-- 
-SM  Ifetch  0 <-- 
-SM  Store  0 <-- 
-SM  L1_Replacement  0 <-- 
-SM  Fwd_GETS  0 <-- 
-SM  Fwd_DMA  0 <-- 
-SM  Inv  0 <-- 
-SM  Ack  0 <-- 
-SM  Data  0 <-- 
-SM  Exclusive_Data  0 <-- 
+SM  Load [0 ] 0
+SM  Ifetch [0 ] 0
+SM  Store [0 ] 0
+SM  L1_Replacement [0 ] 0
+SM  Fwd_GETS [0 ] 0
+SM  Fwd_DMA [0 ] 0
+SM  Inv [0 ] 0
+SM  Ack [0 ] 0
+SM  Data [0 ] 0
+SM  Exclusive_Data [0 ] 0
 
-OM  Load  0 <-- 
-OM  Ifetch  0 <-- 
-OM  Store  0 <-- 
-OM  L1_Replacement  0 <-- 
-OM  Own_GETX  0 <-- 
-OM  Fwd_GETX  0 <-- 
-OM  Fwd_GETS  0 <-- 
-OM  Fwd_DMA  0 <-- 
-OM  Ack  0 <-- 
-OM  All_acks  58
+OM  Load [0 ] 0
+OM  Ifetch [0 ] 0
+OM  Store [0 ] 0
+OM  L1_Replacement [0 ] 0
+OM  Own_GETX [0 ] 0
+OM  Fwd_GETX [0 ] 0
+OM  Fwd_GETS [0 ] 0
+OM  Fwd_DMA [0 ] 0
+OM  Ack [0 ] 0
+OM  All_acks [58 ] 58
 
-IS  Load  0 <-- 
-IS  Ifetch  0 <-- 
-IS  Store  0 <-- 
-IS  L1_Replacement  0 <-- 
-IS  Inv  0 <-- 
-IS  Data  0 <-- 
-IS  Exclusive_Data  452
+IS  Load [0 ] 0
+IS  Ifetch [0 ] 0
+IS  Store [0 ] 0
+IS  L1_Replacement [0 ] 0
+IS  Inv [0 ] 0
+IS  Data [0 ] 0
+IS  Exclusive_Data [452 ] 452
 
-SI  Load  0 <-- 
-SI  Ifetch  0 <-- 
-SI  Store  0 <-- 
-SI  L1_Replacement  0 <-- 
-SI  Fwd_GETS  0 <-- 
-SI  Fwd_DMA  0 <-- 
-SI  Inv  0 <-- 
-SI  Writeback_Ack  0 <-- 
-SI  Writeback_Ack_Data  0 <-- 
-SI  Writeback_Nack  0 <-- 
+SI  Load [0 ] 0
+SI  Ifetch [0 ] 0
+SI  Store [0 ] 0
+SI  L1_Replacement [0 ] 0
+SI  Fwd_GETS [0 ] 0
+SI  Fwd_DMA [0 ] 0
+SI  Inv [0 ] 0
+SI  Writeback_Ack [0 ] 0
+SI  Writeback_Ack_Data [0 ] 0
+SI  Writeback_Nack [0 ] 0
 
-OI  Load  0 <-- 
-OI  Ifetch  0 <-- 
-OI  Store  0 <-- 
-OI  L1_Replacement  0 <-- 
-OI  Fwd_GETX  0 <-- 
-OI  Fwd_GETS  0 <-- 
-OI  Fwd_DMA  0 <-- 
-OI  Writeback_Ack  0 <-- 
-OI  Writeback_Ack_Data  0 <-- 
-OI  Writeback_Nack  0 <-- 
+OI  Load [0 ] 0
+OI  Ifetch [0 ] 0
+OI  Store [0 ] 0
+OI  L1_Replacement [0 ] 0
+OI  Fwd_GETX [0 ] 0
+OI  Fwd_GETS [0 ] 0
+OI  Fwd_DMA [0 ] 0
+OI  Writeback_Ack [0 ] 0
+OI  Writeback_Ack_Data [0 ] 0
+OI  Writeback_Nack [0 ] 0
 
-MI  Load  0 <-- 
-MI  Ifetch  0 <-- 
-MI  Store  0 <-- 
-MI  L1_Replacement  0 <-- 
-MI  Fwd_GETX  0 <-- 
-MI  Fwd_GETS  0 <-- 
-MI  Fwd_DMA  0 <-- 
-MI  Writeback_Ack  0 <-- 
-MI  Writeback_Ack_Data  502
-MI  Writeback_Nack  0 <-- 
+MI  Load [0 ] 0
+MI  Ifetch [0 ] 0
+MI  Store [0 ] 0
+MI  L1_Replacement [0 ] 0
+MI  Fwd_GETX [0 ] 0
+MI  Fwd_GETS [0 ] 0
+MI  Fwd_DMA [0 ] 0
+MI  Writeback_Ack [0 ] 0
+MI  Writeback_Ack_Data [502 ] 502
+MI  Writeback_Nack [0 ] 0
 
-II  Load  0 <-- 
-II  Ifetch  0 <-- 
-II  Store  0 <-- 
-II  L1_Replacement  0 <-- 
-II  Inv  0 <-- 
-II  Writeback_Ack  0 <-- 
-II  Writeback_Ack_Data  0 <-- 
-II  Writeback_Nack  0 <-- 
+II  Load [0 ] 0
+II  Ifetch [0 ] 0
+II  Store [0 ] 0
+II  L1_Replacement [0 ] 0
+II  Inv [0 ] 0
+II  Writeback_Ack [0 ] 0
+II  Writeback_Ack_Data [0 ] 0
+II  Writeback_Nack [0 ] 0
 
-Cache Stats: system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory
-  system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory_total_misses: 0
-  system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory_total_demand_misses: 0
-  system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory_total_prefetches: 0
-  system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory_total_sw_prefetches: 0
-  system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory_total_hw_prefetches: 0
-  system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory_misses_per_transaction: nan
+Cache Stats: system.l2_cntrl0.L2cacheMemory
+  system.l2_cntrl0.L2cacheMemory_total_misses: 0
+  system.l2_cntrl0.L2cacheMemory_total_demand_misses: 0
+  system.l2_cntrl0.L2cacheMemory_total_prefetches: 0
+  system.l2_cntrl0.L2cacheMemory_total_sw_prefetches: 0
+  system.l2_cntrl0.L2cacheMemory_total_hw_prefetches: 0
 
-  system.ruby.network.topology.ext_links1.ext_node.L2cacheMemory_request_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
- --- L2Cache 0 ---
+ --- L2Cache ---
  - Event Counts -
-L1_GETS  455
-L1_GETX  58
-L1_PUTO  0
-L1_PUTX  502
-L1_PUTS_only  0
-L1_PUTS  0
-Fwd_GETX  0
-Fwd_GETS  0
-Fwd_DMA  0
-Own_GETX  0
-Inv  0
-IntAck  0
-ExtAck  0
-All_Acks  44
-Data  44
-Data_Exclusive  383
-L1_WBCLEANDATA  396
-L1_WBDIRTYDATA  106
-Writeback_Ack  411
-Writeback_Nack  0
-Unblock  0
-Exclusive_Unblock  510
-L2_Replacement  411
+L1_GETS [455 ] 455
+L1_GETX [58 ] 58
+L1_PUTO [0 ] 0
+L1_PUTX [502 ] 502
+L1_PUTS_only [0 ] 0
+L1_PUTS [0 ] 0
+Fwd_GETX [0 ] 0
+Fwd_GETS [0 ] 0
+Fwd_DMA [0 ] 0
+Own_GETX [0 ] 0
+Inv [0 ] 0
+IntAck [0 ] 0
+ExtAck [0 ] 0
+All_Acks [44 ] 44
+Data [44 ] 44
+Data_Exclusive [383 ] 383
+L1_WBCLEANDATA [396 ] 396
+L1_WBDIRTYDATA [106 ] 106
+Writeback_Ack [411 ] 411
+Writeback_Nack [0 ] 0
+Unblock [0 ] 0
+Exclusive_Unblock [510 ] 510
+L2_Replacement [411 ] 411
 
  - Transitions -
-NP  L1_GETS  383
-NP  L1_GETX  44
-NP  L1_PUTO  0 <-- 
-NP  L1_PUTX  0 <-- 
-NP  L1_PUTS  0 <-- 
-NP  Inv  0 <-- 
+NP  L1_GETS [383 ] 383
+NP  L1_GETX [44 ] 44
+NP  L1_PUTO [0 ] 0
+NP  L1_PUTX [0 ] 0
+NP  L1_PUTS [0 ] 0
+NP  Inv [0 ] 0
 
-I  L1_GETS  0 <-- 
-I  L1_GETX  0 <-- 
-I  L1_PUTO  0 <-- 
-I  L1_PUTX  0 <-- 
-I  L1_PUTS  0 <-- 
-I  Inv  0 <-- 
-I  L2_Replacement  0 <-- 
+I  L1_GETS [0 ] 0
+I  L1_GETX [0 ] 0
+I  L1_PUTO [0 ] 0
+I  L1_PUTX [0 ] 0
+I  L1_PUTS [0 ] 0
+I  Inv [0 ] 0
+I  L2_Replacement [0 ] 0
 
-ILS  L1_GETS  0 <-- 
-ILS  L1_GETX  0 <-- 
-ILS  L1_PUTO  0 <-- 
-ILS  L1_PUTX  0 <-- 
-ILS  L1_PUTS_only  0 <-- 
-ILS  L1_PUTS  0 <-- 
-ILS  Inv  0 <-- 
-ILS  L2_Replacement  0 <-- 
+ILS  L1_GETS [0 ] 0
+ILS  L1_GETX [0 ] 0
+ILS  L1_PUTO [0 ] 0
+ILS  L1_PUTX [0 ] 0
+ILS  L1_PUTS_only [0 ] 0
+ILS  L1_PUTS [0 ] 0
+ILS  Inv [0 ] 0
+ILS  L2_Replacement [0 ] 0
 
-ILX  L1_GETS  0 <-- 
-ILX  L1_GETX  0 <-- 
-ILX  L1_PUTO  0 <-- 
-ILX  L1_PUTX  502
-ILX  L1_PUTS_only  0 <-- 
-ILX  L1_PUTS  0 <-- 
-ILX  Fwd_GETX  0 <-- 
-ILX  Fwd_GETS  0 <-- 
-ILX  Fwd_DMA  0 <-- 
-ILX  Inv  0 <-- 
-ILX  Data  0 <-- 
-ILX  L2_Replacement  0 <-- 
+ILX  L1_GETS [0 ] 0
+ILX  L1_GETX [0 ] 0
+ILX  L1_PUTO [0 ] 0
+ILX  L1_PUTX [502 ] 502
+ILX  L1_PUTS_only [0 ] 0
+ILX  L1_PUTS [0 ] 0
+ILX  Fwd_GETX [0 ] 0
+ILX  Fwd_GETS [0 ] 0
+ILX  Fwd_DMA [0 ] 0
+ILX  Inv [0 ] 0
+ILX  Data [0 ] 0
+ILX  L2_Replacement [0 ] 0
 
-ILO  L1_GETS  0 <-- 
-ILO  L1_GETX  0 <-- 
-ILO  L1_PUTO  0 <-- 
-ILO  L1_PUTX  0 <-- 
-ILO  L1_PUTS  0 <-- 
-ILO  Fwd_GETX  0 <-- 
-ILO  Fwd_GETS  0 <-- 
-ILO  Fwd_DMA  0 <-- 
-ILO  Inv  0 <-- 
-ILO  Data  0 <-- 
-ILO  L2_Replacement  0 <-- 
+ILO  L1_GETS [0 ] 0
+ILO  L1_GETX [0 ] 0
+ILO  L1_PUTO [0 ] 0
+ILO  L1_PUTX [0 ] 0
+ILO  L1_PUTS [0 ] 0
+ILO  Fwd_GETX [0 ] 0
+ILO  Fwd_GETS [0 ] 0
+ILO  Fwd_DMA [0 ] 0
+ILO  Inv [0 ] 0
+ILO  Data [0 ] 0
+ILO  L2_Replacement [0 ] 0
 
-ILOX  L1_GETS  0 <-- 
-ILOX  L1_GETX  0 <-- 
-ILOX  L1_PUTO  0 <-- 
-ILOX  L1_PUTX  0 <-- 
-ILOX  L1_PUTS  0 <-- 
-ILOX  Fwd_GETX  0 <-- 
-ILOX  Fwd_GETS  0 <-- 
-ILOX  Fwd_DMA  0 <-- 
-ILOX  Data  0 <-- 
+ILOX  L1_GETS [0 ] 0
+ILOX  L1_GETX [0 ] 0
+ILOX  L1_PUTO [0 ] 0
+ILOX  L1_PUTX [0 ] 0
+ILOX  L1_PUTS [0 ] 0
+ILOX  Fwd_GETX [0 ] 0
+ILOX  Fwd_GETS [0 ] 0
+ILOX  Fwd_DMA [0 ] 0
+ILOX  Data [0 ] 0
 
-ILOS  L1_GETS  0 <-- 
-ILOS  L1_GETX  0 <-- 
-ILOS  L1_PUTO  0 <-- 
-ILOS  L1_PUTX  0 <-- 
-ILOS  L1_PUTS_only  0 <-- 
-ILOS  L1_PUTS  0 <-- 
-ILOS  Fwd_GETX  0 <-- 
-ILOS  Fwd_GETS  0 <-- 
-ILOS  Fwd_DMA  0 <-- 
-ILOS  Data  0 <-- 
-ILOS  L2_Replacement  0 <-- 
+ILOS  L1_GETS [0 ] 0
+ILOS  L1_GETX [0 ] 0
+ILOS  L1_PUTO [0 ] 0
+ILOS  L1_PUTX [0 ] 0
+ILOS  L1_PUTS_only [0 ] 0
+ILOS  L1_PUTS [0 ] 0
+ILOS  Fwd_GETX [0 ] 0
+ILOS  Fwd_GETS [0 ] 0
+ILOS  Fwd_DMA [0 ] 0
+ILOS  Data [0 ] 0
+ILOS  L2_Replacement [0 ] 0
 
-ILOSX  L1_GETS  0 <-- 
-ILOSX  L1_GETX  0 <-- 
-ILOSX  L1_PUTO  0 <-- 
-ILOSX  L1_PUTX  0 <-- 
-ILOSX  L1_PUTS_only  0 <-- 
-ILOSX  L1_PUTS  0 <-- 
-ILOSX  Fwd_GETX  0 <-- 
-ILOSX  Fwd_GETS  0 <-- 
-ILOSX  Fwd_DMA  0 <-- 
-ILOSX  Data  0 <-- 
+ILOSX  L1_GETS [0 ] 0
+ILOSX  L1_GETX [0 ] 0
+ILOSX  L1_PUTO [0 ] 0
+ILOSX  L1_PUTX [0 ] 0
+ILOSX  L1_PUTS_only [0 ] 0
+ILOSX  L1_PUTS [0 ] 0
+ILOSX  Fwd_GETX [0 ] 0
+ILOSX  Fwd_GETS [0 ] 0
+ILOSX  Fwd_DMA [0 ] 0
+ILOSX  Data [0 ] 0
 
-S  L1_GETS  0 <-- 
-S  L1_GETX  0 <-- 
-S  L1_PUTX  0 <-- 
-S  L1_PUTS  0 <-- 
-S  Inv  0 <-- 
-S  L2_Replacement  0 <-- 
+S  L1_GETS [0 ] 0
+S  L1_GETX [0 ] 0
+S  L1_PUTX [0 ] 0
+S  L1_PUTS [0 ] 0
+S  Inv [0 ] 0
+S  L2_Replacement [0 ] 0
 
-O  L1_GETS  0 <-- 
-O  L1_GETX  0 <-- 
-O  L1_PUTX  0 <-- 
-O  Fwd_GETX  0 <-- 
-O  Fwd_GETS  0 <-- 
-O  Fwd_DMA  0 <-- 
-O  L2_Replacement  0 <-- 
+O  L1_GETS [0 ] 0
+O  L1_GETX [0 ] 0
+O  L1_PUTX [0 ] 0
+O  Fwd_GETX [0 ] 0
+O  Fwd_GETS [0 ] 0
+O  Fwd_DMA [0 ] 0
+O  L2_Replacement [0 ] 0
 
-OLS  L1_GETS  0 <-- 
-OLS  L1_GETX  0 <-- 
-OLS  L1_PUTX  0 <-- 
-OLS  L1_PUTS_only  0 <-- 
-OLS  L1_PUTS  0 <-- 
-OLS  Fwd_GETX  0 <-- 
-OLS  Fwd_GETS  0 <-- 
-OLS  Fwd_DMA  0 <-- 
-OLS  L2_Replacement  0 <-- 
+OLS  L1_GETS [0 ] 0
+OLS  L1_GETX [0 ] 0
+OLS  L1_PUTX [0 ] 0
+OLS  L1_PUTS_only [0 ] 0
+OLS  L1_PUTS [0 ] 0
+OLS  Fwd_GETX [0 ] 0
+OLS  Fwd_GETS [0 ] 0
+OLS  Fwd_DMA [0 ] 0
+OLS  L2_Replacement [0 ] 0
 
-OLSX  L1_GETS  0 <-- 
-OLSX  L1_GETX  0 <-- 
-OLSX  L1_PUTO  0 <-- 
-OLSX  L1_PUTX  0 <-- 
-OLSX  L1_PUTS_only  0 <-- 
-OLSX  L1_PUTS  0 <-- 
-OLSX  Fwd_GETX  0 <-- 
-OLSX  Fwd_GETS  0 <-- 
-OLSX  Fwd_DMA  0 <-- 
-OLSX  L2_Replacement  0 <-- 
+OLSX  L1_GETS [0 ] 0
+OLSX  L1_GETX [0 ] 0
+OLSX  L1_PUTO [0 ] 0
+OLSX  L1_PUTX [0 ] 0
+OLSX  L1_PUTS_only [0 ] 0
+OLSX  L1_PUTS [0 ] 0
+OLSX  Fwd_GETX [0 ] 0
+OLSX  Fwd_GETS [0 ] 0
+OLSX  Fwd_DMA [0 ] 0
+OLSX  L2_Replacement [0 ] 0
 
-SLS  L1_GETS  0 <-- 
-SLS  L1_GETX  0 <-- 
-SLS  L1_PUTX  0 <-- 
-SLS  L1_PUTS_only  0 <-- 
-SLS  L1_PUTS  0 <-- 
-SLS  Inv  0 <-- 
-SLS  L2_Replacement  0 <-- 
+SLS  L1_GETS [0 ] 0
+SLS  L1_GETX [0 ] 0
+SLS  L1_PUTX [0 ] 0
+SLS  L1_PUTS_only [0 ] 0
+SLS  L1_PUTS [0 ] 0
+SLS  Inv [0 ] 0
+SLS  L2_Replacement [0 ] 0
 
-M  L1_GETS  69
-M  L1_GETX  14
-M  L1_PUTO  0 <-- 
-M  L1_PUTX  0 <-- 
-M  L1_PUTS  0 <-- 
-M  Fwd_GETX  0 <-- 
-M  Fwd_GETS  0 <-- 
-M  Fwd_DMA  0 <-- 
-M  L2_Replacement  411
+M  L1_GETS [69 ] 69
+M  L1_GETX [14 ] 14
+M  L1_PUTO [0 ] 0
+M  L1_PUTX [0 ] 0
+M  L1_PUTS [0 ] 0
+M  Fwd_GETX [0 ] 0
+M  Fwd_GETS [0 ] 0
+M  Fwd_DMA [0 ] 0
+M  L2_Replacement [411 ] 411
 
-IFGX  L1_GETS  0 <-- 
-IFGX  L1_GETX  0 <-- 
-IFGX  L1_PUTO  0 <-- 
-IFGX  L1_PUTX  0 <-- 
-IFGX  L1_PUTS_only  0 <-- 
-IFGX  L1_PUTS  0 <-- 
-IFGX  Fwd_GETX  0 <-- 
-IFGX  Fwd_GETS  0 <-- 
-IFGX  Fwd_DMA  0 <-- 
-IFGX  Inv  0 <-- 
-IFGX  Data  0 <-- 
-IFGX  Data_Exclusive  0 <-- 
-IFGX  L2_Replacement  0 <-- 
+IFGX  L1_GETS [0 ] 0
+IFGX  L1_GETX [0 ] 0
+IFGX  L1_PUTO [0 ] 0
+IFGX  L1_PUTX [0 ] 0
+IFGX  L1_PUTS_only [0 ] 0
+IFGX  L1_PUTS [0 ] 0
+IFGX  Fwd_GETX [0 ] 0
+IFGX  Fwd_GETS [0 ] 0
+IFGX  Fwd_DMA [0 ] 0
+IFGX  Inv [0 ] 0
+IFGX  Data [0 ] 0
+IFGX  Data_Exclusive [0 ] 0
+IFGX  L2_Replacement [0 ] 0
 
-IFGS  L1_GETS  0 <-- 
-IFGS  L1_GETX  0 <-- 
-IFGS  L1_PUTO  0 <-- 
-IFGS  L1_PUTX  0 <-- 
-IFGS  L1_PUTS_only  0 <-- 
-IFGS  L1_PUTS  0 <-- 
-IFGS  Fwd_GETX  0 <-- 
-IFGS  Fwd_GETS  0 <-- 
-IFGS  Fwd_DMA  0 <-- 
-IFGS  Inv  0 <-- 
-IFGS  Data  0 <-- 
-IFGS  Data_Exclusive  0 <-- 
-IFGS  L2_Replacement  0 <-- 
+IFGS  L1_GETS [0 ] 0
+IFGS  L1_GETX [0 ] 0
+IFGS  L1_PUTO [0 ] 0
+IFGS  L1_PUTX [0 ] 0
+IFGS  L1_PUTS_only [0 ] 0
+IFGS  L1_PUTS [0 ] 0
+IFGS  Fwd_GETX [0 ] 0
+IFGS  Fwd_GETS [0 ] 0
+IFGS  Fwd_DMA [0 ] 0
+IFGS  Inv [0 ] 0
+IFGS  Data [0 ] 0
+IFGS  Data_Exclusive [0 ] 0
+IFGS  L2_Replacement [0 ] 0
 
-ISFGS  L1_GETS  0 <-- 
-ISFGS  L1_GETX  0 <-- 
-ISFGS  L1_PUTO  0 <-- 
-ISFGS  L1_PUTX  0 <-- 
-ISFGS  L1_PUTS_only  0 <-- 
-ISFGS  L1_PUTS  0 <-- 
-ISFGS  Fwd_GETX  0 <-- 
-ISFGS  Fwd_GETS  0 <-- 
-ISFGS  Fwd_DMA  0 <-- 
-ISFGS  Inv  0 <-- 
-ISFGS  Data  0 <-- 
-ISFGS  L2_Replacement  0 <-- 
+ISFGS  L1_GETS [0 ] 0
+ISFGS  L1_GETX [0 ] 0
+ISFGS  L1_PUTO [0 ] 0
+ISFGS  L1_PUTX [0 ] 0
+ISFGS  L1_PUTS_only [0 ] 0
+ISFGS  L1_PUTS [0 ] 0
+ISFGS  Fwd_GETX [0 ] 0
+ISFGS  Fwd_GETS [0 ] 0
+ISFGS  Fwd_DMA [0 ] 0
+ISFGS  Inv [0 ] 0
+ISFGS  Data [0 ] 0
+ISFGS  L2_Replacement [0 ] 0
 
-IFGXX  L1_GETS  0 <-- 
-IFGXX  L1_GETX  0 <-- 
-IFGXX  L1_PUTO  0 <-- 
-IFGXX  L1_PUTX  0 <-- 
-IFGXX  L1_PUTS_only  0 <-- 
-IFGXX  L1_PUTS  0 <-- 
-IFGXX  Fwd_GETX  0 <-- 
-IFGXX  Fwd_GETS  0 <-- 
-IFGXX  Fwd_DMA  0 <-- 
-IFGXX  Inv  0 <-- 
-IFGXX  IntAck  0 <-- 
-IFGXX  All_Acks  0 <-- 
-IFGXX  Data_Exclusive  0 <-- 
-IFGXX  L2_Replacement  0 <-- 
+IFGXX  L1_GETS [0 ] 0
+IFGXX  L1_GETX [0 ] 0
+IFGXX  L1_PUTO [0 ] 0
+IFGXX  L1_PUTX [0 ] 0
+IFGXX  L1_PUTS_only [0 ] 0
+IFGXX  L1_PUTS [0 ] 0
+IFGXX  Fwd_GETX [0 ] 0
+IFGXX  Fwd_GETS [0 ] 0
+IFGXX  Fwd_DMA [0 ] 0
+IFGXX  Inv [0 ] 0
+IFGXX  IntAck [0 ] 0
+IFGXX  All_Acks [0 ] 0
+IFGXX  Data_Exclusive [0 ] 0
+IFGXX  L2_Replacement [0 ] 0
 
-OFGX  L1_GETS  0 <-- 
-OFGX  L1_GETX  0 <-- 
-OFGX  L1_PUTO  0 <-- 
-OFGX  L1_PUTX  0 <-- 
-OFGX  L1_PUTS_only  0 <-- 
-OFGX  L1_PUTS  0 <-- 
-OFGX  Fwd_GETX  0 <-- 
-OFGX  Fwd_GETS  0 <-- 
-OFGX  Fwd_DMA  0 <-- 
-OFGX  Inv  0 <-- 
-OFGX  L2_Replacement  0 <-- 
+OFGX  L1_GETS [0 ] 0
+OFGX  L1_GETX [0 ] 0
+OFGX  L1_PUTO [0 ] 0
+OFGX  L1_PUTX [0 ] 0
+OFGX  L1_PUTS_only [0 ] 0
+OFGX  L1_PUTS [0 ] 0
+OFGX  Fwd_GETX [0 ] 0
+OFGX  Fwd_GETS [0 ] 0
+OFGX  Fwd_DMA [0 ] 0
+OFGX  Inv [0 ] 0
+OFGX  L2_Replacement [0 ] 0
 
-OLSF  L1_GETS  0 <-- 
-OLSF  L1_GETX  0 <-- 
-OLSF  L1_PUTO  0 <-- 
-OLSF  L1_PUTX  0 <-- 
-OLSF  L1_PUTS_only  0 <-- 
-OLSF  L1_PUTS  0 <-- 
-OLSF  Fwd_GETX  0 <-- 
-OLSF  Fwd_GETS  0 <-- 
-OLSF  Fwd_DMA  0 <-- 
-OLSF  Inv  0 <-- 
-OLSF  IntAck  0 <-- 
-OLSF  All_Acks  0 <-- 
-OLSF  L2_Replacement  0 <-- 
+OLSF  L1_GETS [0 ] 0
+OLSF  L1_GETX [0 ] 0
+OLSF  L1_PUTO [0 ] 0
+OLSF  L1_PUTX [0 ] 0
+OLSF  L1_PUTS_only [0 ] 0
+OLSF  L1_PUTS [0 ] 0
+OLSF  Fwd_GETX [0 ] 0
+OLSF  Fwd_GETS [0 ] 0
+OLSF  Fwd_DMA [0 ] 0
+OLSF  Inv [0 ] 0
+OLSF  IntAck [0 ] 0
+OLSF  All_Acks [0 ] 0
+OLSF  L2_Replacement [0 ] 0
 
-ILOW  L1_GETS  0 <-- 
-ILOW  L1_GETX  0 <-- 
-ILOW  L1_PUTO  0 <-- 
-ILOW  L1_PUTX  0 <-- 
-ILOW  L1_PUTS_only  0 <-- 
-ILOW  L1_PUTS  0 <-- 
-ILOW  Fwd_GETX  0 <-- 
-ILOW  Fwd_GETS  0 <-- 
-ILOW  Fwd_DMA  0 <-- 
-ILOW  Inv  0 <-- 
-ILOW  L1_WBCLEANDATA  0 <-- 
-ILOW  L1_WBDIRTYDATA  0 <-- 
-ILOW  Unblock  0 <-- 
-ILOW  L2_Replacement  0 <-- 
+ILOW  L1_GETS [0 ] 0
+ILOW  L1_GETX [0 ] 0
+ILOW  L1_PUTO [0 ] 0
+ILOW  L1_PUTX [0 ] 0
+ILOW  L1_PUTS_only [0 ] 0
+ILOW  L1_PUTS [0 ] 0
+ILOW  Fwd_GETX [0 ] 0
+ILOW  Fwd_GETS [0 ] 0
+ILOW  Fwd_DMA [0 ] 0
+ILOW  Inv [0 ] 0
+ILOW  L1_WBCLEANDATA [0 ] 0
+ILOW  L1_WBDIRTYDATA [0 ] 0
+ILOW  Unblock [0 ] 0
+ILOW  L2_Replacement [0 ] 0
 
-ILOXW  L1_GETS  0 <-- 
-ILOXW  L1_GETX  0 <-- 
-ILOXW  L1_PUTO  0 <-- 
-ILOXW  L1_PUTX  0 <-- 
-ILOXW  L1_PUTS_only  0 <-- 
-ILOXW  L1_PUTS  0 <-- 
-ILOXW  Fwd_GETX  0 <-- 
-ILOXW  Fwd_GETS  0 <-- 
-ILOXW  Fwd_DMA  0 <-- 
-ILOXW  Inv  0 <-- 
-ILOXW  L1_WBCLEANDATA  0 <-- 
-ILOXW  L1_WBDIRTYDATA  0 <-- 
-ILOXW  Unblock  0 <-- 
-ILOXW  L2_Replacement  0 <-- 
+ILOXW  L1_GETS [0 ] 0
+ILOXW  L1_GETX [0 ] 0
+ILOXW  L1_PUTO [0 ] 0
+ILOXW  L1_PUTX [0 ] 0
+ILOXW  L1_PUTS_only [0 ] 0
+ILOXW  L1_PUTS [0 ] 0
+ILOXW  Fwd_GETX [0 ] 0
+ILOXW  Fwd_GETS [0 ] 0
+ILOXW  Fwd_DMA [0 ] 0
+ILOXW  Inv [0 ] 0
+ILOXW  L1_WBCLEANDATA [0 ] 0
+ILOXW  L1_WBDIRTYDATA [0 ] 0
+ILOXW  Unblock [0 ] 0
+ILOXW  L2_Replacement [0 ] 0
 
-ILOSW  L1_GETS  0 <-- 
-ILOSW  L1_GETX  0 <-- 
-ILOSW  L1_PUTO  0 <-- 
-ILOSW  L1_PUTX  0 <-- 
-ILOSW  L1_PUTS_only  0 <-- 
-ILOSW  L1_PUTS  0 <-- 
-ILOSW  Fwd_GETX  0 <-- 
-ILOSW  Fwd_GETS  0 <-- 
-ILOSW  Fwd_DMA  0 <-- 
-ILOSW  Inv  0 <-- 
-ILOSW  L1_WBCLEANDATA  0 <-- 
-ILOSW  L1_WBDIRTYDATA  0 <-- 
-ILOSW  Unblock  0 <-- 
-ILOSW  L2_Replacement  0 <-- 
+ILOSW  L1_GETS [0 ] 0
+ILOSW  L1_GETX [0 ] 0
+ILOSW  L1_PUTO [0 ] 0
+ILOSW  L1_PUTX [0 ] 0
+ILOSW  L1_PUTS_only [0 ] 0
+ILOSW  L1_PUTS [0 ] 0
+ILOSW  Fwd_GETX [0 ] 0
+ILOSW  Fwd_GETS [0 ] 0
+ILOSW  Fwd_DMA [0 ] 0
+ILOSW  Inv [0 ] 0
+ILOSW  L1_WBCLEANDATA [0 ] 0
+ILOSW  L1_WBDIRTYDATA [0 ] 0
+ILOSW  Unblock [0 ] 0
+ILOSW  L2_Replacement [0 ] 0
 
-ILOSXW  L1_GETS  0 <-- 
-ILOSXW  L1_GETX  0 <-- 
-ILOSXW  L1_PUTO  0 <-- 
-ILOSXW  L1_PUTX  0 <-- 
-ILOSXW  L1_PUTS_only  0 <-- 
-ILOSXW  L1_PUTS  0 <-- 
-ILOSXW  Fwd_GETX  0 <-- 
-ILOSXW  Fwd_GETS  0 <-- 
-ILOSXW  Fwd_DMA  0 <-- 
-ILOSXW  Inv  0 <-- 
-ILOSXW  L1_WBCLEANDATA  0 <-- 
-ILOSXW  L1_WBDIRTYDATA  0 <-- 
-ILOSXW  Unblock  0 <-- 
-ILOSXW  L2_Replacement  0 <-- 
+ILOSXW  L1_GETS [0 ] 0
+ILOSXW  L1_GETX [0 ] 0
+ILOSXW  L1_PUTO [0 ] 0
+ILOSXW  L1_PUTX [0 ] 0
+ILOSXW  L1_PUTS_only [0 ] 0
+ILOSXW  L1_PUTS [0 ] 0
+ILOSXW  Fwd_GETX [0 ] 0
+ILOSXW  Fwd_GETS [0 ] 0
+ILOSXW  Fwd_DMA [0 ] 0
+ILOSXW  Inv [0 ] 0
+ILOSXW  L1_WBCLEANDATA [0 ] 0
+ILOSXW  L1_WBDIRTYDATA [0 ] 0
+ILOSXW  Unblock [0 ] 0
+ILOSXW  L2_Replacement [0 ] 0
 
-SLSW  L1_GETS  0 <-- 
-SLSW  L1_GETX  0 <-- 
-SLSW  L1_PUTO  0 <-- 
-SLSW  L1_PUTX  0 <-- 
-SLSW  L1_PUTS_only  0 <-- 
-SLSW  L1_PUTS  0 <-- 
-SLSW  Fwd_GETX  0 <-- 
-SLSW  Fwd_GETS  0 <-- 
-SLSW  Fwd_DMA  0 <-- 
-SLSW  Inv  0 <-- 
-SLSW  Unblock  0 <-- 
-SLSW  L2_Replacement  0 <-- 
+SLSW  L1_GETS [0 ] 0
+SLSW  L1_GETX [0 ] 0
+SLSW  L1_PUTO [0 ] 0
+SLSW  L1_PUTX [0 ] 0
+SLSW  L1_PUTS_only [0 ] 0
+SLSW  L1_PUTS [0 ] 0
+SLSW  Fwd_GETX [0 ] 0
+SLSW  Fwd_GETS [0 ] 0
+SLSW  Fwd_DMA [0 ] 0
+SLSW  Inv [0 ] 0
+SLSW  Unblock [0 ] 0
+SLSW  L2_Replacement [0 ] 0
 
-OLSW  L1_GETS  0 <-- 
-OLSW  L1_GETX  0 <-- 
-OLSW  L1_PUTO  0 <-- 
-OLSW  L1_PUTX  0 <-- 
-OLSW  L1_PUTS_only  0 <-- 
-OLSW  L1_PUTS  0 <-- 
-OLSW  Fwd_GETX  0 <-- 
-OLSW  Fwd_GETS  0 <-- 
-OLSW  Fwd_DMA  0 <-- 
-OLSW  Inv  0 <-- 
-OLSW  Unblock  0 <-- 
-OLSW  L2_Replacement  0 <-- 
+OLSW  L1_GETS [0 ] 0
+OLSW  L1_GETX [0 ] 0
+OLSW  L1_PUTO [0 ] 0
+OLSW  L1_PUTX [0 ] 0
+OLSW  L1_PUTS_only [0 ] 0
+OLSW  L1_PUTS [0 ] 0
+OLSW  Fwd_GETX [0 ] 0
+OLSW  Fwd_GETS [0 ] 0
+OLSW  Fwd_DMA [0 ] 0
+OLSW  Inv [0 ] 0
+OLSW  Unblock [0 ] 0
+OLSW  L2_Replacement [0 ] 0
 
-ILSW  L1_GETS  0 <-- 
-ILSW  L1_GETX  0 <-- 
-ILSW  L1_PUTO  0 <-- 
-ILSW  L1_PUTX  0 <-- 
-ILSW  L1_PUTS_only  0 <-- 
-ILSW  L1_PUTS  0 <-- 
-ILSW  Fwd_GETX  0 <-- 
-ILSW  Fwd_GETS  0 <-- 
-ILSW  Fwd_DMA  0 <-- 
-ILSW  Inv  0 <-- 
-ILSW  L1_WBCLEANDATA  0 <-- 
-ILSW  Unblock  0 <-- 
-ILSW  L2_Replacement  0 <-- 
+ILSW  L1_GETS [0 ] 0
+ILSW  L1_GETX [0 ] 0
+ILSW  L1_PUTO [0 ] 0
+ILSW  L1_PUTX [0 ] 0
+ILSW  L1_PUTS_only [0 ] 0
+ILSW  L1_PUTS [0 ] 0
+ILSW  Fwd_GETX [0 ] 0
+ILSW  Fwd_GETS [0 ] 0
+ILSW  Fwd_DMA [0 ] 0
+ILSW  Inv [0 ] 0
+ILSW  L1_WBCLEANDATA [0 ] 0
+ILSW  Unblock [0 ] 0
+ILSW  L2_Replacement [0 ] 0
 
-IW  L1_GETS  0 <-- 
-IW  L1_GETX  0 <-- 
-IW  L1_PUTO  0 <-- 
-IW  L1_PUTX  0 <-- 
-IW  L1_PUTS_only  0 <-- 
-IW  L1_PUTS  0 <-- 
-IW  Fwd_GETX  0 <-- 
-IW  Fwd_GETS  0 <-- 
-IW  Fwd_DMA  0 <-- 
-IW  Inv  0 <-- 
-IW  L1_WBCLEANDATA  0 <-- 
-IW  L2_Replacement  0 <-- 
+IW  L1_GETS [0 ] 0
+IW  L1_GETX [0 ] 0
+IW  L1_PUTO [0 ] 0
+IW  L1_PUTX [0 ] 0
+IW  L1_PUTS_only [0 ] 0
+IW  L1_PUTS [0 ] 0
+IW  Fwd_GETX [0 ] 0
+IW  Fwd_GETS [0 ] 0
+IW  Fwd_DMA [0 ] 0
+IW  Inv [0 ] 0
+IW  L1_WBCLEANDATA [0 ] 0
+IW  L2_Replacement [0 ] 0
 
-OW  L1_GETS  0 <-- 
-OW  L1_GETX  0 <-- 
-OW  L1_PUTO  0 <-- 
-OW  L1_PUTX  0 <-- 
-OW  L1_PUTS_only  0 <-- 
-OW  L1_PUTS  0 <-- 
-OW  Fwd_GETX  0 <-- 
-OW  Fwd_GETS  0 <-- 
-OW  Fwd_DMA  0 <-- 
-OW  Inv  0 <-- 
-OW  Unblock  0 <-- 
-OW  L2_Replacement  0 <-- 
+OW  L1_GETS [0 ] 0
+OW  L1_GETX [0 ] 0
+OW  L1_PUTO [0 ] 0
+OW  L1_PUTX [0 ] 0
+OW  L1_PUTS_only [0 ] 0
+OW  L1_PUTS [0 ] 0
+OW  Fwd_GETX [0 ] 0
+OW  Fwd_GETS [0 ] 0
+OW  Fwd_DMA [0 ] 0
+OW  Inv [0 ] 0
+OW  Unblock [0 ] 0
+OW  L2_Replacement [0 ] 0
 
-SW  L1_GETS  0 <-- 
-SW  L1_GETX  0 <-- 
-SW  L1_PUTO  0 <-- 
-SW  L1_PUTX  0 <-- 
-SW  L1_PUTS_only  0 <-- 
-SW  L1_PUTS  0 <-- 
-SW  Fwd_GETX  0 <-- 
-SW  Fwd_GETS  0 <-- 
-SW  Fwd_DMA  0 <-- 
-SW  Inv  0 <-- 
-SW  Unblock  0 <-- 
-SW  L2_Replacement  0 <-- 
+SW  L1_GETS [0 ] 0
+SW  L1_GETX [0 ] 0
+SW  L1_PUTO [0 ] 0
+SW  L1_PUTX [0 ] 0
+SW  L1_PUTS_only [0 ] 0
+SW  L1_PUTS [0 ] 0
+SW  Fwd_GETX [0 ] 0
+SW  Fwd_GETS [0 ] 0
+SW  Fwd_DMA [0 ] 0
+SW  Inv [0 ] 0
+SW  Unblock [0 ] 0
+SW  L2_Replacement [0 ] 0
 
-OXW  L1_GETS  0 <-- 
-OXW  L1_GETX  0 <-- 
-OXW  L1_PUTO  0 <-- 
-OXW  L1_PUTX  0 <-- 
-OXW  L1_PUTS_only  0 <-- 
-OXW  L1_PUTS  0 <-- 
-OXW  Fwd_GETX  0 <-- 
-OXW  Fwd_GETS  0 <-- 
-OXW  Fwd_DMA  0 <-- 
-OXW  Inv  0 <-- 
-OXW  Unblock  0 <-- 
-OXW  L2_Replacement  0 <-- 
+OXW  L1_GETS [0 ] 0
+OXW  L1_GETX [0 ] 0
+OXW  L1_PUTO [0 ] 0
+OXW  L1_PUTX [0 ] 0
+OXW  L1_PUTS_only [0 ] 0
+OXW  L1_PUTS [0 ] 0
+OXW  Fwd_GETX [0 ] 0
+OXW  Fwd_GETS [0 ] 0
+OXW  Fwd_DMA [0 ] 0
+OXW  Inv [0 ] 0
+OXW  Unblock [0 ] 0
+OXW  L2_Replacement [0 ] 0
 
-OLSXW  L1_GETS  0 <-- 
-OLSXW  L1_GETX  0 <-- 
-OLSXW  L1_PUTO  0 <-- 
-OLSXW  L1_PUTX  0 <-- 
-OLSXW  L1_PUTS_only  0 <-- 
-OLSXW  L1_PUTS  0 <-- 
-OLSXW  Fwd_GETX  0 <-- 
-OLSXW  Fwd_GETS  0 <-- 
-OLSXW  Fwd_DMA  0 <-- 
-OLSXW  Inv  0 <-- 
-OLSXW  Unblock  0 <-- 
-OLSXW  L2_Replacement  0 <-- 
+OLSXW  L1_GETS [0 ] 0
+OLSXW  L1_GETX [0 ] 0
+OLSXW  L1_PUTO [0 ] 0
+OLSXW  L1_PUTX [0 ] 0
+OLSXW  L1_PUTS_only [0 ] 0
+OLSXW  L1_PUTS [0 ] 0
+OLSXW  Fwd_GETX [0 ] 0
+OLSXW  Fwd_GETS [0 ] 0
+OLSXW  Fwd_DMA [0 ] 0
+OLSXW  Inv [0 ] 0
+OLSXW  Unblock [0 ] 0
+OLSXW  L2_Replacement [0 ] 0
 
-ILXW  L1_GETS  0 <-- 
-ILXW  L1_GETX  0 <-- 
-ILXW  L1_PUTO  0 <-- 
-ILXW  L1_PUTX  0 <-- 
-ILXW  L1_PUTS_only  0 <-- 
-ILXW  L1_PUTS  0 <-- 
-ILXW  Fwd_GETX  0 <-- 
-ILXW  Fwd_GETS  0 <-- 
-ILXW  Fwd_DMA  0 <-- 
-ILXW  Inv  0 <-- 
-ILXW  Data  0 <-- 
-ILXW  L1_WBCLEANDATA  396
-ILXW  L1_WBDIRTYDATA  106
-ILXW  Unblock  0 <-- 
-ILXW  L2_Replacement  0 <-- 
+ILXW  L1_GETS [0 ] 0
+ILXW  L1_GETX [0 ] 0
+ILXW  L1_PUTO [0 ] 0
+ILXW  L1_PUTX [0 ] 0
+ILXW  L1_PUTS_only [0 ] 0
+ILXW  L1_PUTS [0 ] 0
+ILXW  Fwd_GETX [0 ] 0
+ILXW  Fwd_GETS [0 ] 0
+ILXW  Fwd_DMA [0 ] 0
+ILXW  Inv [0 ] 0
+ILXW  Data [0 ] 0
+ILXW  L1_WBCLEANDATA [396 ] 396
+ILXW  L1_WBDIRTYDATA [106 ] 106
+ILXW  Unblock [0 ] 0
+ILXW  L2_Replacement [0 ] 0
 
-IFLS  L1_GETS  0 <-- 
-IFLS  L1_GETX  0 <-- 
-IFLS  L1_PUTO  0 <-- 
-IFLS  L1_PUTX  0 <-- 
-IFLS  L1_PUTS_only  0 <-- 
-IFLS  L1_PUTS  0 <-- 
-IFLS  Fwd_GETX  0 <-- 
-IFLS  Fwd_GETS  0 <-- 
-IFLS  Fwd_DMA  0 <-- 
-IFLS  Inv  0 <-- 
-IFLS  Unblock  0 <-- 
-IFLS  L2_Replacement  0 <-- 
+IFLS  L1_GETS [0 ] 0
+IFLS  L1_GETX [0 ] 0
+IFLS  L1_PUTO [0 ] 0
+IFLS  L1_PUTX [0 ] 0
+IFLS  L1_PUTS_only [0 ] 0
+IFLS  L1_PUTS [0 ] 0
+IFLS  Fwd_GETX [0 ] 0
+IFLS  Fwd_GETS [0 ] 0
+IFLS  Fwd_DMA [0 ] 0
+IFLS  Inv [0 ] 0
+IFLS  Unblock [0 ] 0
+IFLS  L2_Replacement [0 ] 0
 
-IFLO  L1_GETS  0 <-- 
-IFLO  L1_GETX  0 <-- 
-IFLO  L1_PUTO  0 <-- 
-IFLO  L1_PUTX  0 <-- 
-IFLO  L1_PUTS_only  0 <-- 
-IFLO  L1_PUTS  0 <-- 
-IFLO  Fwd_GETX  0 <-- 
-IFLO  Fwd_GETS  0 <-- 
-IFLO  Fwd_DMA  0 <-- 
-IFLO  Inv  0 <-- 
-IFLO  Unblock  0 <-- 
-IFLO  L2_Replacement  0 <-- 
+IFLO  L1_GETS [0 ] 0
+IFLO  L1_GETX [0 ] 0
+IFLO  L1_PUTO [0 ] 0
+IFLO  L1_PUTX [0 ] 0
+IFLO  L1_PUTS_only [0 ] 0
+IFLO  L1_PUTS [0 ] 0
+IFLO  Fwd_GETX [0 ] 0
+IFLO  Fwd_GETS [0 ] 0
+IFLO  Fwd_DMA [0 ] 0
+IFLO  Inv [0 ] 0
+IFLO  Unblock [0 ] 0
+IFLO  L2_Replacement [0 ] 0
 
-IFLOX  L1_GETS  0 <-- 
-IFLOX  L1_GETX  0 <-- 
-IFLOX  L1_PUTO  0 <-- 
-IFLOX  L1_PUTX  0 <-- 
-IFLOX  L1_PUTS_only  0 <-- 
-IFLOX  L1_PUTS  0 <-- 
-IFLOX  Fwd_GETX  0 <-- 
-IFLOX  Fwd_GETS  0 <-- 
-IFLOX  Fwd_DMA  0 <-- 
-IFLOX  Inv  0 <-- 
-IFLOX  Unblock  0 <-- 
-IFLOX  Exclusive_Unblock  0 <-- 
-IFLOX  L2_Replacement  0 <-- 
+IFLOX  L1_GETS [0 ] 0
+IFLOX  L1_GETX [0 ] 0
+IFLOX  L1_PUTO [0 ] 0
+IFLOX  L1_PUTX [0 ] 0
+IFLOX  L1_PUTS_only [0 ] 0
+IFLOX  L1_PUTS [0 ] 0
+IFLOX  Fwd_GETX [0 ] 0
+IFLOX  Fwd_GETS [0 ] 0
+IFLOX  Fwd_DMA [0 ] 0
+IFLOX  Inv [0 ] 0
+IFLOX  Unblock [0 ] 0
+IFLOX  Exclusive_Unblock [0 ] 0
+IFLOX  L2_Replacement [0 ] 0
 
-IFLOXX  L1_GETS  0 <-- 
-IFLOXX  L1_GETX  0 <-- 
-IFLOXX  L1_PUTO  0 <-- 
-IFLOXX  L1_PUTX  0 <-- 
-IFLOXX  L1_PUTS_only  0 <-- 
-IFLOXX  L1_PUTS  0 <-- 
-IFLOXX  Fwd_GETX  0 <-- 
-IFLOXX  Fwd_GETS  0 <-- 
-IFLOXX  Fwd_DMA  0 <-- 
-IFLOXX  Inv  0 <-- 
-IFLOXX  Unblock  0 <-- 
-IFLOXX  Exclusive_Unblock  0 <-- 
-IFLOXX  L2_Replacement  0 <-- 
+IFLOXX  L1_GETS [0 ] 0
+IFLOXX  L1_GETX [0 ] 0
+IFLOXX  L1_PUTO [0 ] 0
+IFLOXX  L1_PUTX [0 ] 0
+IFLOXX  L1_PUTS_only [0 ] 0
+IFLOXX  L1_PUTS [0 ] 0
+IFLOXX  Fwd_GETX [0 ] 0
+IFLOXX  Fwd_GETS [0 ] 0
+IFLOXX  Fwd_DMA [0 ] 0
+IFLOXX  Inv [0 ] 0
+IFLOXX  Unblock [0 ] 0
+IFLOXX  Exclusive_Unblock [0 ] 0
+IFLOXX  L2_Replacement [0 ] 0
 
-IFLOSX  L1_GETS  0 <-- 
-IFLOSX  L1_GETX  0 <-- 
-IFLOSX  L1_PUTO  0 <-- 
-IFLOSX  L1_PUTX  0 <-- 
-IFLOSX  L1_PUTS_only  0 <-- 
-IFLOSX  L1_PUTS  0 <-- 
-IFLOSX  Fwd_GETX  0 <-- 
-IFLOSX  Fwd_GETS  0 <-- 
-IFLOSX  Fwd_DMA  0 <-- 
-IFLOSX  Inv  0 <-- 
-IFLOSX  Unblock  0 <-- 
-IFLOSX  Exclusive_Unblock  0 <-- 
-IFLOSX  L2_Replacement  0 <-- 
+IFLOSX  L1_GETS [0 ] 0
+IFLOSX  L1_GETX [0 ] 0
+IFLOSX  L1_PUTO [0 ] 0
+IFLOSX  L1_PUTX [0 ] 0
+IFLOSX  L1_PUTS_only [0 ] 0
+IFLOSX  L1_PUTS [0 ] 0
+IFLOSX  Fwd_GETX [0 ] 0
+IFLOSX  Fwd_GETS [0 ] 0
+IFLOSX  Fwd_DMA [0 ] 0
+IFLOSX  Inv [0 ] 0
+IFLOSX  Unblock [0 ] 0
+IFLOSX  Exclusive_Unblock [0 ] 0
+IFLOSX  L2_Replacement [0 ] 0
 
-IFLXO  L1_GETS  0 <-- 
-IFLXO  L1_GETX  0 <-- 
-IFLXO  L1_PUTO  0 <-- 
-IFLXO  L1_PUTX  0 <-- 
-IFLXO  L1_PUTS_only  0 <-- 
-IFLXO  L1_PUTS  0 <-- 
-IFLXO  Fwd_GETX  0 <-- 
-IFLXO  Fwd_GETS  0 <-- 
-IFLXO  Fwd_DMA  0 <-- 
-IFLXO  Inv  0 <-- 
-IFLXO  Exclusive_Unblock  0 <-- 
-IFLXO  L2_Replacement  0 <-- 
+IFLXO  L1_GETS [0 ] 0
+IFLXO  L1_GETX [0 ] 0
+IFLXO  L1_PUTO [0 ] 0
+IFLXO  L1_PUTX [0 ] 0
+IFLXO  L1_PUTS_only [0 ] 0
+IFLXO  L1_PUTS [0 ] 0
+IFLXO  Fwd_GETX [0 ] 0
+IFLXO  Fwd_GETS [0 ] 0
+IFLXO  Fwd_DMA [0 ] 0
+IFLXO  Inv [0 ] 0
+IFLXO  Exclusive_Unblock [0 ] 0
+IFLXO  L2_Replacement [0 ] 0
 
-IGS  L1_GETS  0 <-- 
-IGS  L1_GETX  0 <-- 
-IGS  L1_PUTO  0 <-- 
-IGS  L1_PUTX  0 <-- 
-IGS  L1_PUTS_only  0 <-- 
-IGS  L1_PUTS  0 <-- 
-IGS  Fwd_GETX  0 <-- 
-IGS  Fwd_GETS  0 <-- 
-IGS  Fwd_DMA  0 <-- 
-IGS  Own_GETX  0 <-- 
-IGS  Inv  0 <-- 
-IGS  Data  0 <-- 
-IGS  Data_Exclusive  383
-IGS  Unblock  0 <-- 
-IGS  Exclusive_Unblock  383
-IGS  L2_Replacement  0 <-- 
+IGS  L1_GETS [0 ] 0
+IGS  L1_GETX [0 ] 0
+IGS  L1_PUTO [0 ] 0
+IGS  L1_PUTX [0 ] 0
+IGS  L1_PUTS_only [0 ] 0
+IGS  L1_PUTS [0 ] 0
+IGS  Fwd_GETX [0 ] 0
+IGS  Fwd_GETS [0 ] 0
+IGS  Fwd_DMA [0 ] 0
+IGS  Own_GETX [0 ] 0
+IGS  Inv [0 ] 0
+IGS  Data [0 ] 0
+IGS  Data_Exclusive [383 ] 383
+IGS  Unblock [0 ] 0
+IGS  Exclusive_Unblock [383 ] 383
+IGS  L2_Replacement [0 ] 0
 
-IGM  L1_GETS  0 <-- 
-IGM  L1_GETX  0 <-- 
-IGM  L1_PUTO  0 <-- 
-IGM  L1_PUTX  0 <-- 
-IGM  L1_PUTS_only  0 <-- 
-IGM  L1_PUTS  0 <-- 
-IGM  Fwd_GETX  0 <-- 
-IGM  Fwd_GETS  0 <-- 
-IGM  Fwd_DMA  0 <-- 
-IGM  Own_GETX  0 <-- 
-IGM  Inv  0 <-- 
-IGM  ExtAck  0 <-- 
-IGM  Data  44
-IGM  Data_Exclusive  0 <-- 
-IGM  L2_Replacement  0 <-- 
+IGM  L1_GETS [0 ] 0
+IGM  L1_GETX [0 ] 0
+IGM  L1_PUTO [0 ] 0
+IGM  L1_PUTX [0 ] 0
+IGM  L1_PUTS_only [0 ] 0
+IGM  L1_PUTS [0 ] 0
+IGM  Fwd_GETX [0 ] 0
+IGM  Fwd_GETS [0 ] 0
+IGM  Fwd_DMA [0 ] 0
+IGM  Own_GETX [0 ] 0
+IGM  Inv [0 ] 0
+IGM  ExtAck [0 ] 0
+IGM  Data [44 ] 44
+IGM  Data_Exclusive [0 ] 0
+IGM  L2_Replacement [0 ] 0
 
-IGMLS  L1_GETS  0 <-- 
-IGMLS  L1_GETX  0 <-- 
-IGMLS  L1_PUTO  0 <-- 
-IGMLS  L1_PUTX  0 <-- 
-IGMLS  L1_PUTS_only  0 <-- 
-IGMLS  L1_PUTS  0 <-- 
-IGMLS  Inv  0 <-- 
-IGMLS  IntAck  0 <-- 
-IGMLS  ExtAck  0 <-- 
-IGMLS  All_Acks  0 <-- 
-IGMLS  Data  0 <-- 
-IGMLS  Data_Exclusive  0 <-- 
-IGMLS  L2_Replacement  0 <-- 
+IGMLS  L1_GETS [0 ] 0
+IGMLS  L1_GETX [0 ] 0
+IGMLS  L1_PUTO [0 ] 0
+IGMLS  L1_PUTX [0 ] 0
+IGMLS  L1_PUTS_only [0 ] 0
+IGMLS  L1_PUTS [0 ] 0
+IGMLS  Inv [0 ] 0
+IGMLS  IntAck [0 ] 0
+IGMLS  ExtAck [0 ] 0
+IGMLS  All_Acks [0 ] 0
+IGMLS  Data [0 ] 0
+IGMLS  Data_Exclusive [0 ] 0
+IGMLS  L2_Replacement [0 ] 0
 
-IGMO  L1_GETS  0 <-- 
-IGMO  L1_GETX  0 <-- 
-IGMO  L1_PUTO  0 <-- 
-IGMO  L1_PUTX  0 <-- 
-IGMO  L1_PUTS_only  0 <-- 
-IGMO  L1_PUTS  0 <-- 
-IGMO  Fwd_GETX  0 <-- 
-IGMO  Fwd_GETS  0 <-- 
-IGMO  Fwd_DMA  0 <-- 
-IGMO  Own_GETX  0 <-- 
-IGMO  ExtAck  0 <-- 
-IGMO  All_Acks  44
-IGMO  Exclusive_Unblock  44
-IGMO  L2_Replacement  0 <-- 
+IGMO  L1_GETS [0 ] 0
+IGMO  L1_GETX [0 ] 0
+IGMO  L1_PUTO [0 ] 0
+IGMO  L1_PUTX [0 ] 0
+IGMO  L1_PUTS_only [0 ] 0
+IGMO  L1_PUTS [0 ] 0
+IGMO  Fwd_GETX [0 ] 0
+IGMO  Fwd_GETS [0 ] 0
+IGMO  Fwd_DMA [0 ] 0
+IGMO  Own_GETX [0 ] 0
+IGMO  ExtAck [0 ] 0
+IGMO  All_Acks [44 ] 44
+IGMO  Exclusive_Unblock [44 ] 44
+IGMO  L2_Replacement [0 ] 0
 
-IGMIO  L1_GETS  0 <-- 
-IGMIO  L1_GETX  0 <-- 
-IGMIO  L1_PUTO  0 <-- 
-IGMIO  L1_PUTX  0 <-- 
-IGMIO  L1_PUTS_only  0 <-- 
-IGMIO  L1_PUTS  0 <-- 
-IGMIO  Fwd_GETX  0 <-- 
-IGMIO  Fwd_GETS  0 <-- 
-IGMIO  Fwd_DMA  0 <-- 
-IGMIO  Own_GETX  0 <-- 
-IGMIO  ExtAck  0 <-- 
-IGMIO  All_Acks  0 <-- 
+IGMIO  L1_GETS [0 ] 0
+IGMIO  L1_GETX [0 ] 0
+IGMIO  L1_PUTO [0 ] 0
+IGMIO  L1_PUTX [0 ] 0
+IGMIO  L1_PUTS_only [0 ] 0
+IGMIO  L1_PUTS [0 ] 0
+IGMIO  Fwd_GETX [0 ] 0
+IGMIO  Fwd_GETS [0 ] 0
+IGMIO  Fwd_DMA [0 ] 0
+IGMIO  Own_GETX [0 ] 0
+IGMIO  ExtAck [0 ] 0
+IGMIO  All_Acks [0 ] 0
 
-OGMIO  L1_GETS  0 <-- 
-OGMIO  L1_GETX  0 <-- 
-OGMIO  L1_PUTO  0 <-- 
-OGMIO  L1_PUTX  0 <-- 
-OGMIO  L1_PUTS_only  0 <-- 
-OGMIO  L1_PUTS  0 <-- 
-OGMIO  Fwd_GETX  0 <-- 
-OGMIO  Fwd_GETS  0 <-- 
-OGMIO  Fwd_DMA  0 <-- 
-OGMIO  Own_GETX  0 <-- 
-OGMIO  ExtAck  0 <-- 
-OGMIO  All_Acks  0 <-- 
+OGMIO  L1_GETS [0 ] 0
+OGMIO  L1_GETX [0 ] 0
+OGMIO  L1_PUTO [0 ] 0
+OGMIO  L1_PUTX [0 ] 0
+OGMIO  L1_PUTS_only [0 ] 0
+OGMIO  L1_PUTS [0 ] 0
+OGMIO  Fwd_GETX [0 ] 0
+OGMIO  Fwd_GETS [0 ] 0
+OGMIO  Fwd_DMA [0 ] 0
+OGMIO  Own_GETX [0 ] 0
+OGMIO  ExtAck [0 ] 0
+OGMIO  All_Acks [0 ] 0
 
-IGMIOF  L1_GETS  0 <-- 
-IGMIOF  L1_GETX  0 <-- 
-IGMIOF  L1_PUTO  0 <-- 
-IGMIOF  L1_PUTX  0 <-- 
-IGMIOF  L1_PUTS_only  0 <-- 
-IGMIOF  L1_PUTS  0 <-- 
-IGMIOF  IntAck  0 <-- 
-IGMIOF  All_Acks  0 <-- 
-IGMIOF  Data_Exclusive  0 <-- 
+IGMIOF  L1_GETS [0 ] 0
+IGMIOF  L1_GETX [0 ] 0
+IGMIOF  L1_PUTO [0 ] 0
+IGMIOF  L1_PUTX [0 ] 0
+IGMIOF  L1_PUTS_only [0 ] 0
+IGMIOF  L1_PUTS [0 ] 0
+IGMIOF  IntAck [0 ] 0
+IGMIOF  All_Acks [0 ] 0
+IGMIOF  Data_Exclusive [0 ] 0
 
-IGMIOFS  L1_GETS  0 <-- 
-IGMIOFS  L1_GETX  0 <-- 
-IGMIOFS  L1_PUTO  0 <-- 
-IGMIOFS  L1_PUTX  0 <-- 
-IGMIOFS  L1_PUTS_only  0 <-- 
-IGMIOFS  L1_PUTS  0 <-- 
-IGMIOFS  Fwd_GETX  0 <-- 
-IGMIOFS  Fwd_GETS  0 <-- 
-IGMIOFS  Fwd_DMA  0 <-- 
-IGMIOFS  Inv  0 <-- 
-IGMIOFS  Data  0 <-- 
-IGMIOFS  L2_Replacement  0 <-- 
+IGMIOFS  L1_GETS [0 ] 0
+IGMIOFS  L1_GETX [0 ] 0
+IGMIOFS  L1_PUTO [0 ] 0
+IGMIOFS  L1_PUTX [0 ] 0
+IGMIOFS  L1_PUTS_only [0 ] 0
+IGMIOFS  L1_PUTS [0 ] 0
+IGMIOFS  Fwd_GETX [0 ] 0
+IGMIOFS  Fwd_GETS [0 ] 0
+IGMIOFS  Fwd_DMA [0 ] 0
+IGMIOFS  Inv [0 ] 0
+IGMIOFS  Data [0 ] 0
+IGMIOFS  L2_Replacement [0 ] 0
 
-OGMIOF  L1_GETS  0 <-- 
-OGMIOF  L1_GETX  0 <-- 
-OGMIOF  L1_PUTO  0 <-- 
-OGMIOF  L1_PUTX  0 <-- 
-OGMIOF  L1_PUTS_only  0 <-- 
-OGMIOF  L1_PUTS  0 <-- 
-OGMIOF  IntAck  0 <-- 
-OGMIOF  All_Acks  0 <-- 
+OGMIOF  L1_GETS [0 ] 0
+OGMIOF  L1_GETX [0 ] 0
+OGMIOF  L1_PUTO [0 ] 0
+OGMIOF  L1_PUTX [0 ] 0
+OGMIOF  L1_PUTS_only [0 ] 0
+OGMIOF  L1_PUTS [0 ] 0
+OGMIOF  IntAck [0 ] 0
+OGMIOF  All_Acks [0 ] 0
 
-II  L1_GETS  0 <-- 
-II  L1_GETX  0 <-- 
-II  L1_PUTO  0 <-- 
-II  L1_PUTX  0 <-- 
-II  L1_PUTS_only  0 <-- 
-II  L1_PUTS  0 <-- 
-II  IntAck  0 <-- 
-II  All_Acks  0 <-- 
+II  L1_GETS [0 ] 0
+II  L1_GETX [0 ] 0
+II  L1_PUTO [0 ] 0
+II  L1_PUTX [0 ] 0
+II  L1_PUTS_only [0 ] 0
+II  L1_PUTS [0 ] 0
+II  IntAck [0 ] 0
+II  All_Acks [0 ] 0
 
-MM  L1_GETS  0 <-- 
-MM  L1_GETX  0 <-- 
-MM  L1_PUTO  0 <-- 
-MM  L1_PUTX  0 <-- 
-MM  L1_PUTS_only  0 <-- 
-MM  L1_PUTS  0 <-- 
-MM  Fwd_GETX  0 <-- 
-MM  Fwd_GETS  0 <-- 
-MM  Fwd_DMA  0 <-- 
-MM  Inv  0 <-- 
-MM  Exclusive_Unblock  14
-MM  L2_Replacement  0 <-- 
+MM  L1_GETS [0 ] 0
+MM  L1_GETX [0 ] 0
+MM  L1_PUTO [0 ] 0
+MM  L1_PUTX [0 ] 0
+MM  L1_PUTS_only [0 ] 0
+MM  L1_PUTS [0 ] 0
+MM  Fwd_GETX [0 ] 0
+MM  Fwd_GETS [0 ] 0
+MM  Fwd_DMA [0 ] 0
+MM  Inv [0 ] 0
+MM  Exclusive_Unblock [14 ] 14
+MM  L2_Replacement [0 ] 0
 
-SS  L1_GETS  0 <-- 
-SS  L1_GETX  0 <-- 
-SS  L1_PUTO  0 <-- 
-SS  L1_PUTX  0 <-- 
-SS  L1_PUTS_only  0 <-- 
-SS  L1_PUTS  0 <-- 
-SS  Fwd_GETX  0 <-- 
-SS  Fwd_GETS  0 <-- 
-SS  Fwd_DMA  0 <-- 
-SS  Inv  0 <-- 
-SS  Unblock  0 <-- 
-SS  L2_Replacement  0 <-- 
+SS  L1_GETS [0 ] 0
+SS  L1_GETX [0 ] 0
+SS  L1_PUTO [0 ] 0
+SS  L1_PUTX [0 ] 0
+SS  L1_PUTS_only [0 ] 0
+SS  L1_PUTS [0 ] 0
+SS  Fwd_GETX [0 ] 0
+SS  Fwd_GETS [0 ] 0
+SS  Fwd_DMA [0 ] 0
+SS  Inv [0 ] 0
+SS  Unblock [0 ] 0
+SS  L2_Replacement [0 ] 0
 
-OO  L1_GETS  0 <-- 
-OO  L1_GETX  0 <-- 
-OO  L1_PUTO  0 <-- 
-OO  L1_PUTX  0 <-- 
-OO  L1_PUTS_only  0 <-- 
-OO  L1_PUTS  0 <-- 
-OO  Fwd_GETX  0 <-- 
-OO  Fwd_GETS  0 <-- 
-OO  Fwd_DMA  0 <-- 
-OO  Inv  0 <-- 
-OO  Unblock  0 <-- 
-OO  Exclusive_Unblock  69
-OO  L2_Replacement  0 <-- 
+OO  L1_GETS [0 ] 0
+OO  L1_GETX [0 ] 0
+OO  L1_PUTO [0 ] 0
+OO  L1_PUTX [0 ] 0
+OO  L1_PUTS_only [0 ] 0
+OO  L1_PUTS [0 ] 0
+OO  Fwd_GETX [0 ] 0
+OO  Fwd_GETS [0 ] 0
+OO  Fwd_DMA [0 ] 0
+OO  Inv [0 ] 0
+OO  Unblock [0 ] 0
+OO  Exclusive_Unblock [69 ] 69
+OO  L2_Replacement [0 ] 0
 
-OLSS  L1_GETS  0 <-- 
-OLSS  L1_GETX  0 <-- 
-OLSS  L1_PUTO  0 <-- 
-OLSS  L1_PUTX  0 <-- 
-OLSS  L1_PUTS_only  0 <-- 
-OLSS  L1_PUTS  0 <-- 
-OLSS  Fwd_GETX  0 <-- 
-OLSS  Fwd_GETS  0 <-- 
-OLSS  Fwd_DMA  0 <-- 
-OLSS  Inv  0 <-- 
-OLSS  Unblock  0 <-- 
-OLSS  L2_Replacement  0 <-- 
+OLSS  L1_GETS [0 ] 0
+OLSS  L1_GETX [0 ] 0
+OLSS  L1_PUTO [0 ] 0
+OLSS  L1_PUTX [0 ] 0
+OLSS  L1_PUTS_only [0 ] 0
+OLSS  L1_PUTS [0 ] 0
+OLSS  Fwd_GETX [0 ] 0
+OLSS  Fwd_GETS [0 ] 0
+OLSS  Fwd_DMA [0 ] 0
+OLSS  Inv [0 ] 0
+OLSS  Unblock [0 ] 0
+OLSS  L2_Replacement [0 ] 0
 
-OLSXS  L1_GETS  0 <-- 
-OLSXS  L1_GETX  0 <-- 
-OLSXS  L1_PUTO  0 <-- 
-OLSXS  L1_PUTX  0 <-- 
-OLSXS  L1_PUTS_only  0 <-- 
-OLSXS  L1_PUTS  0 <-- 
-OLSXS  Fwd_GETX  0 <-- 
-OLSXS  Fwd_GETS  0 <-- 
-OLSXS  Fwd_DMA  0 <-- 
-OLSXS  Inv  0 <-- 
-OLSXS  Unblock  0 <-- 
-OLSXS  L2_Replacement  0 <-- 
+OLSXS  L1_GETS [0 ] 0
+OLSXS  L1_GETX [0 ] 0
+OLSXS  L1_PUTO [0 ] 0
+OLSXS  L1_PUTX [0 ] 0
+OLSXS  L1_PUTS_only [0 ] 0
+OLSXS  L1_PUTS [0 ] 0
+OLSXS  Fwd_GETX [0 ] 0
+OLSXS  Fwd_GETS [0 ] 0
+OLSXS  Fwd_DMA [0 ] 0
+OLSXS  Inv [0 ] 0
+OLSXS  Unblock [0 ] 0
+OLSXS  L2_Replacement [0 ] 0
 
-SLSS  L1_GETS  0 <-- 
-SLSS  L1_GETX  0 <-- 
-SLSS  L1_PUTO  0 <-- 
-SLSS  L1_PUTX  0 <-- 
-SLSS  L1_PUTS_only  0 <-- 
-SLSS  L1_PUTS  0 <-- 
-SLSS  Fwd_GETX  0 <-- 
-SLSS  Fwd_GETS  0 <-- 
-SLSS  Fwd_DMA  0 <-- 
-SLSS  Inv  0 <-- 
-SLSS  Unblock  0 <-- 
-SLSS  L2_Replacement  0 <-- 
+SLSS  L1_GETS [0 ] 0
+SLSS  L1_GETX [0 ] 0
+SLSS  L1_PUTO [0 ] 0
+SLSS  L1_PUTX [0 ] 0
+SLSS  L1_PUTS_only [0 ] 0
+SLSS  L1_PUTS [0 ] 0
+SLSS  Fwd_GETX [0 ] 0
+SLSS  Fwd_GETS [0 ] 0
+SLSS  Fwd_DMA [0 ] 0
+SLSS  Inv [0 ] 0
+SLSS  Unblock [0 ] 0
+SLSS  L2_Replacement [0 ] 0
 
-OI  L1_GETS  0 <-- 
-OI  L1_GETX  0 <-- 
-OI  L1_PUTO  0 <-- 
-OI  L1_PUTX  0 <-- 
-OI  L1_PUTS_only  0 <-- 
-OI  L1_PUTS  0 <-- 
-OI  Fwd_GETX  0 <-- 
-OI  Fwd_GETS  0 <-- 
-OI  Fwd_DMA  0 <-- 
-OI  Writeback_Ack  0 <-- 
-OI  Writeback_Nack  0 <-- 
-OI  L2_Replacement  0 <-- 
+OI  L1_GETS [0 ] 0
+OI  L1_GETX [0 ] 0
+OI  L1_PUTO [0 ] 0
+OI  L1_PUTX [0 ] 0
+OI  L1_PUTS_only [0 ] 0
+OI  L1_PUTS [0 ] 0
+OI  Fwd_GETX [0 ] 0
+OI  Fwd_GETS [0 ] 0
+OI  Fwd_DMA [0 ] 0
+OI  Writeback_Ack [0 ] 0
+OI  Writeback_Nack [0 ] 0
+OI  L2_Replacement [0 ] 0
 
-MI  L1_GETS  3
-MI  L1_GETX  0 <-- 
-MI  L1_PUTO  0 <-- 
-MI  L1_PUTX  0 <-- 
-MI  L1_PUTS_only  0 <-- 
-MI  L1_PUTS  0 <-- 
-MI  Fwd_GETX  0 <-- 
-MI  Fwd_GETS  0 <-- 
-MI  Fwd_DMA  0 <-- 
-MI  Writeback_Ack  411
-MI  L2_Replacement  0 <-- 
+MI  L1_GETS [3 ] 3
+MI  L1_GETX [0 ] 0
+MI  L1_PUTO [0 ] 0
+MI  L1_PUTX [0 ] 0
+MI  L1_PUTS_only [0 ] 0
+MI  L1_PUTS [0 ] 0
+MI  Fwd_GETX [0 ] 0
+MI  Fwd_GETS [0 ] 0
+MI  Fwd_DMA [0 ] 0
+MI  Writeback_Ack [411 ] 411
+MI  L2_Replacement [0 ] 0
 
-MII  L1_GETS  0 <-- 
-MII  L1_GETX  0 <-- 
-MII  L1_PUTO  0 <-- 
-MII  L1_PUTX  0 <-- 
-MII  L1_PUTS_only  0 <-- 
-MII  L1_PUTS  0 <-- 
-MII  Writeback_Ack  0 <-- 
-MII  Writeback_Nack  0 <-- 
-MII  L2_Replacement  0 <-- 
+MII  L1_GETS [0 ] 0
+MII  L1_GETX [0 ] 0
+MII  L1_PUTO [0 ] 0
+MII  L1_PUTX [0 ] 0
+MII  L1_PUTS_only [0 ] 0
+MII  L1_PUTS [0 ] 0
+MII  Writeback_Ack [0 ] 0
+MII  Writeback_Nack [0 ] 0
+MII  L2_Replacement [0 ] 0
 
-OLSI  L1_GETS  0 <-- 
-OLSI  L1_GETX  0 <-- 
-OLSI  L1_PUTO  0 <-- 
-OLSI  L1_PUTX  0 <-- 
-OLSI  L1_PUTS_only  0 <-- 
-OLSI  L1_PUTS  0 <-- 
-OLSI  Fwd_GETX  0 <-- 
-OLSI  Fwd_GETS  0 <-- 
-OLSI  Fwd_DMA  0 <-- 
-OLSI  Writeback_Ack  0 <-- 
-OLSI  L2_Replacement  0 <-- 
+OLSI  L1_GETS [0 ] 0
+OLSI  L1_GETX [0 ] 0
+OLSI  L1_PUTO [0 ] 0
+OLSI  L1_PUTX [0 ] 0
+OLSI  L1_PUTS_only [0 ] 0
+OLSI  L1_PUTS [0 ] 0
+OLSI  Fwd_GETX [0 ] 0
+OLSI  Fwd_GETS [0 ] 0
+OLSI  Fwd_DMA [0 ] 0
+OLSI  Writeback_Ack [0 ] 0
+OLSI  L2_Replacement [0 ] 0
 
-ILSI  L1_GETS  0 <-- 
-ILSI  L1_GETX  0 <-- 
-ILSI  L1_PUTO  0 <-- 
-ILSI  L1_PUTX  0 <-- 
-ILSI  L1_PUTS_only  0 <-- 
-ILSI  L1_PUTS  0 <-- 
-ILSI  IntAck  0 <-- 
-ILSI  All_Acks  0 <-- 
-ILSI  Writeback_Ack  0 <-- 
-ILSI  L2_Replacement  0 <-- 
+ILSI  L1_GETS [0 ] 0
+ILSI  L1_GETX [0 ] 0
+ILSI  L1_PUTO [0 ] 0
+ILSI  L1_PUTX [0 ] 0
+ILSI  L1_PUTS_only [0 ] 0
+ILSI  L1_PUTS [0 ] 0
+ILSI  IntAck [0 ] 0
+ILSI  All_Acks [0 ] 0
+ILSI  Writeback_Ack [0 ] 0
+ILSI  L2_Replacement [0 ] 0
 
-Memory controller: system.ruby.network.topology.ext_links2.ext_node.memBuffer:
+Memory controller: system.dir_cntrl0.memBuffer:
   memory_total_requests: 504
   memory_reads: 427
   memory_writes: 77
@@ -1175,201 +1180,200 @@ Memory controller: system.ruby.network.topology.ext_links2.ext_node.memBuffer:
   memory_stalls_for_read_read_turnaround: 0
   accesses_per_bank: 18  10  0  35  20  20  28  21  5  3  6  4  21  40  20  3  4  5  7  13  10  16  14  41  16  5  5  12  12  18  14  58  
 
- --- Directory 0 ---
+ --- Directory ---
  - Event Counts -
-GETX  44
-GETS  383
-PUTX  411
-PUTO  0
-PUTO_SHARERS  0
-Unblock  0
-Last_Unblock  0
-Exclusive_Unblock  426
-Clean_Writeback  334
-Dirty_Writeback  77
-Memory_Data  427
-Memory_Ack  77
-DMA_READ  0
-DMA_WRITE  0
-Data  0
+GETX [44 ] 44
+GETS [383 ] 383
+PUTX [411 ] 411
+PUTO [0 ] 0
+PUTO_SHARERS [0 ] 0
+Unblock [0 ] 0
+Last_Unblock [0 ] 0
+Exclusive_Unblock [426 ] 426
+Clean_Writeback [334 ] 334
+Dirty_Writeback [77 ] 77
+Memory_Data [427 ] 427
+Memory_Ack [77 ] 77
+DMA_READ [0 ] 0
+DMA_WRITE [0 ] 0
+Data [0 ] 0
 
  - Transitions -
-I  GETX  44
-I  GETS  383
-I  PUTX  0 <-- 
-I  PUTO  0 <-- 
-I  Memory_Data  0 <-- 
-I  Memory_Ack  75
-I  DMA_READ  0 <-- 
-I  DMA_WRITE  0 <-- 
+I  GETX [44 ] 44
+I  GETS [383 ] 383
+I  PUTX [0 ] 0
+I  PUTO [0 ] 0
+I  Memory_Data [0 ] 0
+I  Memory_Ack [75 ] 75
+I  DMA_READ [0 ] 0
+I  DMA_WRITE [0 ] 0
 
-S  GETX  0 <-- 
-S  GETS  0 <-- 
-S  PUTX  0 <-- 
-S  PUTO  0 <-- 
-S  Memory_Data  0 <-- 
-S  Memory_Ack  0 <-- 
-S  DMA_READ  0 <-- 
-S  DMA_WRITE  0 <-- 
+S  GETX [0 ] 0
+S  GETS [0 ] 0
+S  PUTX [0 ] 0
+S  PUTO [0 ] 0
+S  Memory_Data [0 ] 0
+S  Memory_Ack [0 ] 0
+S  DMA_READ [0 ] 0
+S  DMA_WRITE [0 ] 0
 
-O  GETX  0 <-- 
-O  GETS  0 <-- 
-O  PUTX  0 <-- 
-O  PUTO  0 <-- 
-O  PUTO_SHARERS  0 <-- 
-O  Memory_Data  0 <-- 
-O  Memory_Ack  0 <-- 
-O  DMA_READ  0 <-- 
-O  DMA_WRITE  0 <-- 
+O  GETX [0 ] 0
+O  GETS [0 ] 0
+O  PUTX [0 ] 0
+O  PUTO [0 ] 0
+O  PUTO_SHARERS [0 ] 0
+O  Memory_Data [0 ] 0
+O  Memory_Ack [0 ] 0
+O  DMA_READ [0 ] 0
+O  DMA_WRITE [0 ] 0
 
-M  GETX  0 <-- 
-M  GETS  0 <-- 
-M  PUTX  411
-M  PUTO  0 <-- 
-M  PUTO_SHARERS  0 <-- 
-M  Memory_Data  0 <-- 
-M  Memory_Ack  0 <-- 
-M  DMA_READ  0 <-- 
-M  DMA_WRITE  0 <-- 
+M  GETX [0 ] 0
+M  GETS [0 ] 0
+M  PUTX [411 ] 411
+M  PUTO [0 ] 0
+M  PUTO_SHARERS [0 ] 0
+M  Memory_Data [0 ] 0
+M  Memory_Ack [0 ] 0
+M  DMA_READ [0 ] 0
+M  DMA_WRITE [0 ] 0
 
-IS  GETX  0 <-- 
-IS  GETS  0 <-- 
-IS  PUTX  0 <-- 
-IS  PUTO  0 <-- 
-IS  PUTO_SHARERS  0 <-- 
-IS  Unblock  0 <-- 
-IS  Exclusive_Unblock  382
-IS  Memory_Data  383
-IS  Memory_Ack  1
-IS  DMA_READ  0 <-- 
-IS  DMA_WRITE  0 <-- 
+IS  GETX [0 ] 0
+IS  GETS [0 ] 0
+IS  PUTX [0 ] 0
+IS  PUTO [0 ] 0
+IS  PUTO_SHARERS [0 ] 0
+IS  Unblock [0 ] 0
+IS  Exclusive_Unblock [382 ] 382
+IS  Memory_Data [383 ] 383
+IS  Memory_Ack [1 ] 1
+IS  DMA_READ [0 ] 0
+IS  DMA_WRITE [0 ] 0
 
-SS  GETX  0 <-- 
-SS  GETS  0 <-- 
-SS  PUTX  0 <-- 
-SS  PUTO  0 <-- 
-SS  PUTO_SHARERS  0 <-- 
-SS  Unblock  0 <-- 
-SS  Last_Unblock  0 <-- 
-SS  Memory_Data  0 <-- 
-SS  Memory_Ack  0 <-- 
-SS  DMA_READ  0 <-- 
-SS  DMA_WRITE  0 <-- 
+SS  GETX [0 ] 0
+SS  GETS [0 ] 0
+SS  PUTX [0 ] 0
+SS  PUTO [0 ] 0
+SS  PUTO_SHARERS [0 ] 0
+SS  Unblock [0 ] 0
+SS  Last_Unblock [0 ] 0
+SS  Memory_Data [0 ] 0
+SS  Memory_Ack [0 ] 0
+SS  DMA_READ [0 ] 0
+SS  DMA_WRITE [0 ] 0
 
-OO  GETX  0 <-- 
-OO  GETS  0 <-- 
-OO  PUTX  0 <-- 
-OO  PUTO  0 <-- 
-OO  PUTO_SHARERS  0 <-- 
-OO  Unblock  0 <-- 
-OO  Last_Unblock  0 <-- 
-OO  Memory_Data  0 <-- 
-OO  Memory_Ack  0 <-- 
-OO  DMA_READ  0 <-- 
-OO  DMA_WRITE  0 <-- 
+OO  GETX [0 ] 0
+OO  GETS [0 ] 0
+OO  PUTX [0 ] 0
+OO  PUTO [0 ] 0
+OO  PUTO_SHARERS [0 ] 0
+OO  Unblock [0 ] 0
+OO  Last_Unblock [0 ] 0
+OO  Memory_Data [0 ] 0
+OO  Memory_Ack [0 ] 0
+OO  DMA_READ [0 ] 0
+OO  DMA_WRITE [0 ] 0
 
-MO  GETX  0 <-- 
-MO  GETS  0 <-- 
-MO  PUTX  0 <-- 
-MO  PUTO  0 <-- 
-MO  PUTO_SHARERS  0 <-- 
-MO  Unblock  0 <-- 
-MO  Exclusive_Unblock  0 <-- 
-MO  Memory_Data  0 <-- 
-MO  Memory_Ack  0 <-- 
-MO  DMA_READ  0 <-- 
-MO  DMA_WRITE  0 <-- 
+MO  GETX [0 ] 0
+MO  GETS [0 ] 0
+MO  PUTX [0 ] 0
+MO  PUTO [0 ] 0
+MO  PUTO_SHARERS [0 ] 0
+MO  Unblock [0 ] 0
+MO  Exclusive_Unblock [0 ] 0
+MO  Memory_Data [0 ] 0
+MO  Memory_Ack [0 ] 0
+MO  DMA_READ [0 ] 0
+MO  DMA_WRITE [0 ] 0
 
-MM  GETX  0 <-- 
-MM  GETS  0 <-- 
-MM  PUTX  0 <-- 
-MM  PUTO  0 <-- 
-MM  PUTO_SHARERS  0 <-- 
-MM  Exclusive_Unblock  44
-MM  Memory_Data  44
-MM  Memory_Ack  1
-MM  DMA_READ  0 <-- 
-MM  DMA_WRITE  0 <-- 
+MM  GETX [0 ] 0
+MM  GETS [0 ] 0
+MM  PUTX [0 ] 0
+MM  PUTO [0 ] 0
+MM  PUTO_SHARERS [0 ] 0
+MM  Exclusive_Unblock [44 ] 44
+MM  Memory_Data [44 ] 44
+MM  Memory_Ack [1 ] 1
+MM  DMA_READ [0 ] 0
+MM  DMA_WRITE [0 ] 0
 
 
-MI  GETX  0 <-- 
-MI  GETS  0 <-- 
-MI  PUTX  0 <-- 
-MI  PUTO  0 <-- 
-MI  PUTO_SHARERS  0 <-- 
-MI  Unblock  0 <-- 
-MI  Clean_Writeback  334
-MI  Dirty_Writeback  77
-MI  Memory_Data  0 <-- 
-MI  Memory_Ack  0 <-- 
-MI  DMA_READ  0 <-- 
-MI  DMA_WRITE  0 <-- 
+MI  GETX [0 ] 0
+MI  GETS [0 ] 0
+MI  PUTX [0 ] 0
+MI  PUTO [0 ] 0
+MI  PUTO_SHARERS [0 ] 0
+MI  Unblock [0 ] 0
+MI  Clean_Writeback [334 ] 334
+MI  Dirty_Writeback [77 ] 77
+MI  Memory_Data [0 ] 0
+MI  Memory_Ack [0 ] 0
+MI  DMA_READ [0 ] 0
+MI  DMA_WRITE [0 ] 0
 
-MIS  GETX  0 <-- 
-MIS  GETS  0 <-- 
-MIS  PUTX  0 <-- 
-MIS  PUTO  0 <-- 
-MIS  PUTO_SHARERS  0 <-- 
-MIS  Unblock  0 <-- 
-MIS  Clean_Writeback  0 <-- 
-MIS  Dirty_Writeback  0 <-- 
-MIS  Memory_Data  0 <-- 
-MIS  Memory_Ack  0 <-- 
-MIS  DMA_READ  0 <-- 
-MIS  DMA_WRITE  0 <-- 
+MIS  GETX [0 ] 0
+MIS  GETS [0 ] 0
+MIS  PUTX [0 ] 0
+MIS  PUTO [0 ] 0
+MIS  PUTO_SHARERS [0 ] 0
+MIS  Unblock [0 ] 0
+MIS  Clean_Writeback [0 ] 0
+MIS  Dirty_Writeback [0 ] 0
+MIS  Memory_Data [0 ] 0
+MIS  Memory_Ack [0 ] 0
+MIS  DMA_READ [0 ] 0
+MIS  DMA_WRITE [0 ] 0
 
-OS  GETX  0 <-- 
-OS  GETS  0 <-- 
-OS  PUTX  0 <-- 
-OS  PUTO  0 <-- 
-OS  PUTO_SHARERS  0 <-- 
-OS  Unblock  0 <-- 
-OS  Clean_Writeback  0 <-- 
-OS  Dirty_Writeback  0 <-- 
-OS  Memory_Data  0 <-- 
-OS  Memory_Ack  0 <-- 
-OS  DMA_READ  0 <-- 
-OS  DMA_WRITE  0 <-- 
+OS  GETX [0 ] 0
+OS  GETS [0 ] 0
+OS  PUTX [0 ] 0
+OS  PUTO [0 ] 0
+OS  PUTO_SHARERS [0 ] 0
+OS  Unblock [0 ] 0
+OS  Clean_Writeback [0 ] 0
+OS  Dirty_Writeback [0 ] 0
+OS  Memory_Data [0 ] 0
+OS  Memory_Ack [0 ] 0
+OS  DMA_READ [0 ] 0
+OS  DMA_WRITE [0 ] 0
 
-OSS  GETX  0 <-- 
-OSS  GETS  0 <-- 
-OSS  PUTX  0 <-- 
-OSS  PUTO  0 <-- 
-OSS  PUTO_SHARERS  0 <-- 
-OSS  Unblock  0 <-- 
-OSS  Clean_Writeback  0 <-- 
-OSS  Dirty_Writeback  0 <-- 
-OSS  Memory_Data  0 <-- 
-OSS  Memory_Ack  0 <-- 
-OSS  DMA_READ  0 <-- 
-OSS  DMA_WRITE  0 <-- 
+OSS  GETX [0 ] 0
+OSS  GETS [0 ] 0
+OSS  PUTX [0 ] 0
+OSS  PUTO [0 ] 0
+OSS  PUTO_SHARERS [0 ] 0
+OSS  Unblock [0 ] 0
+OSS  Clean_Writeback [0 ] 0
+OSS  Dirty_Writeback [0 ] 0
+OSS  Memory_Data [0 ] 0
+OSS  Memory_Ack [0 ] 0
+OSS  DMA_READ [0 ] 0
+OSS  DMA_WRITE [0 ] 0
 
-XI_M  GETX  0 <-- 
-XI_M  GETS  0 <-- 
-XI_M  PUTX  0 <-- 
-XI_M  PUTO  0 <-- 
-XI_M  PUTO_SHARERS  0 <-- 
-XI_M  Memory_Data  0 <-- 
-XI_M  Memory_Ack  0 <-- 
-XI_M  DMA_READ  0 <-- 
-XI_M  DMA_WRITE  0 <-- 
+XI_M  GETX [0 ] 0
+XI_M  GETS [0 ] 0
+XI_M  PUTX [0 ] 0
+XI_M  PUTO [0 ] 0
+XI_M  PUTO_SHARERS [0 ] 0
+XI_M  Memory_Data [0 ] 0
+XI_M  Memory_Ack [0 ] 0
+XI_M  DMA_READ [0 ] 0
+XI_M  DMA_WRITE [0 ] 0
 
-XI_U  GETX  0 <-- 
-XI_U  GETS  0 <-- 
-XI_U  PUTX  0 <-- 
-XI_U  PUTO  0 <-- 
-XI_U  PUTO_SHARERS  0 <-- 
-XI_U  Exclusive_Unblock  0 <-- 
-XI_U  Memory_Ack  0 <-- 
-XI_U  DMA_READ  0 <-- 
-XI_U  DMA_WRITE  0 <-- 
+XI_U  GETX [0 ] 0
+XI_U  GETS [0 ] 0
+XI_U  PUTX [0 ] 0
+XI_U  PUTO [0 ] 0
+XI_U  PUTO_SHARERS [0 ] 0
+XI_U  Exclusive_Unblock [0 ] 0
+XI_U  Memory_Ack [0 ] 0
+XI_U  DMA_READ [0 ] 0
+XI_U  DMA_WRITE [0 ] 0
 
-OI_D  GETX  0 <-- 
-OI_D  GETS  0 <-- 
-OI_D  PUTX  0 <-- 
-OI_D  PUTO  0 <-- 
-OI_D  PUTO_SHARERS  0 <-- 
-OI_D  DMA_READ  0 <-- 
-OI_D  DMA_WRITE  0 <-- 
-OI_D  Data  0 <-- 
-
+OI_D  GETX [0 ] 0
+OI_D  GETS [0 ] 0
+OI_D  PUTX [0 ] 0
+OI_D  PUTO [0 ] 0
+OI_D  PUTO_SHARERS [0 ] 0
+OI_D  DMA_READ [0 ] 0
+OI_D  DMA_WRITE [0 ] 0
+OI_D  Data

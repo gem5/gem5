@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 18 2010 14:58:42
-M5 revision 6a6bb24e484f+ 7041+ default qtip tip brad/regress_updates
-M5 started Mar 18 2010 14:58:52
-M5 executing on cabr0210
+M5 compiled Aug  5 2010 10:41:36
+M5 revision 1cd2a169499f+ 7535+ default brad/hammer_merge_gets qtip tip
+M5 started Aug  5 2010 10:45:27
+M5 executing on svvint09
 command line: build/ALPHA_SE_MOESI_CMP_token/m5.fast -d build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_CMP_token
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 275491 because Ruby Tester completed
+Exiting @ tick 273851 because Ruby Tester completed

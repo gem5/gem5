@@ -1,13 +1,13 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  32212                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 212236                       # Number of bytes of host memory used
-host_seconds                                     0.08                       # Real time elapsed on the host
-host_tick_rate                                1020887                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  42947                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 211060                       # Number of bytes of host memory used
+host_seconds                                     0.06                       # Real time elapsed on the host
+host_tick_rate                                1306713                       # Simulator tick rate (ticks/s)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
 sim_insts                                        2577                       # Number of instructions simulated
-sim_seconds                                  0.000082                       # Number of seconds simulated
-sim_ticks                                       81672                       # Number of ticks simulated
+sim_seconds                                  0.000078                       # Number of seconds simulated
+sim_ticks                                       78408                       # Number of ticks simulated
 system.cpu.dtb.data_accesses                      717                       # DTB accesses
 system.cpu.dtb.data_acv                             0                       # DTB access violations
 system.cpu.dtb.data_hits                          709                       # DTB hits
@@ -42,7 +42,7 @@ system.cpu.itb.write_acv                            0                       # DT
 system.cpu.itb.write_hits                           0                       # DTB write hits
 system.cpu.itb.write_misses                         0                       # DTB write misses
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                            81672                       # number of cpu cycles simulated
+system.cpu.numCycles                            78408                       # number of cpu cycles simulated
 system.cpu.num_insts                             2577                       # Number of instructions executed
 system.cpu.num_refs                               717                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls               4                       # Number of system calls
