@@ -896,6 +896,8 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
         // handled by the IQ and thus have no dependency graph entry.
         // @todo Figure out a cleaner way to handle this.
         if (dest_reg >= numPhysRegs) {
+            DPRINTF(IQ, "dest_reg :%d, numPhysRegs: %d\n", dest_reg,
+                    numPhysRegs);
             continue;
         }
 
@@ -907,8 +909,8 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
         DynInstPtr dep_inst = dependGraph.pop(dest_reg);
 
         while (dep_inst) {
-            DPRINTF(IQ, "Waking up a dependent instruction, PC%#x.\n",
-                    dep_inst->readPC());
+            DPRINTF(IQ, "Waking up a dependent instruction, [sn:%lli] "
+                    "PC%#x.\n", dep_inst->seqNum, dep_inst->readPC());
 
             // Might want to give more information to the instruction
             // so that it knows which of its source registers is

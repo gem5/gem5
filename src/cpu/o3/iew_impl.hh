@@ -1192,6 +1192,7 @@ DefaultIEW<Impl>::executeInsts()
     }
 
     // Uncomment this if you want to see all available instructions.
+    // @todo This doesn't actually work anymore, we should fix it.
 //    printAvailableInsts();
 
     // Execute/writeback any instructions that are available.

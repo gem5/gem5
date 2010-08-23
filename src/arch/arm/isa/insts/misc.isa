@@ -63,7 +63,8 @@ let {{
     mrsCpsrCode = "Dest = (Cpsr | CondCodes) & 0xF8FF03DF"
     mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
                                { "code": mrsCpsrCode,
-                                 "predicate_test": condPredicateTest }, [])
+                                 "predicate_test": condPredicateTest },
+                               ["IsSerializeAfter"])
     header_output += MrsDeclare.subst(mrsCpsrIop)
     decoder_output += MrsConstructor.subst(mrsCpsrIop)
     exec_output += PredOpExecute.subst(mrsCpsrIop)
@@ -71,7 +72,8 @@ let {{
     mrsSpsrCode = "Dest = Spsr"
     mrsSpsrIop = InstObjParams("mrs", "MrsSpsr", "MrsOp",
                                { "code": mrsSpsrCode,
-                                 "predicate_test": predicateTest }, [])
+                                 "predicate_test": predicateTest },
+                               ["IsSerializeAfter"])
     header_output += MrsDeclare.subst(mrsSpsrIop)
     decoder_output += MrsConstructor.subst(mrsSpsrIop)
     exec_output += PredOpExecute.subst(mrsSpsrIop)
@@ -85,7 +87,8 @@ let {{
     '''
     msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
                                   { "code": msrCpsrRegCode,
-                                    "predicate_test": condPredicateTest }, [])
+                                    "predicate_test": condPredicateTest },
+                                  ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrRegDeclare.subst(msrCpsrRegIop)
     decoder_output += MsrRegConstructor.subst(msrCpsrRegIop)
     exec_output += PredOpExecute.subst(msrCpsrRegIop)
@@ -93,7 +96,8 @@ let {{
     msrSpsrRegCode = "Spsr = spsrWriteByInstr(Spsr, Op1, byteMask, false);"
     msrSpsrRegIop = InstObjParams("msr", "MsrSpsrReg", "MsrRegOp",
                                   { "code": msrSpsrRegCode,
-                                    "predicate_test": predicateTest }, [])
+                                    "predicate_test": predicateTest },
+                                  ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrRegDeclare.subst(msrSpsrRegIop)
     decoder_output += MsrRegConstructor.subst(msrSpsrRegIop)
     exec_output += PredOpExecute.subst(msrSpsrRegIop)
@@ -107,7 +111,8 @@ let {{
     '''
     msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
                                   { "code": msrCpsrImmCode,
-                                    "predicate_test": condPredicateTest }, [])
+                                    "predicate_test": condPredicateTest },
+                                  ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrImmDeclare.subst(msrCpsrImmIop)
     decoder_output += MsrImmConstructor.subst(msrCpsrImmIop)
     exec_output += PredOpExecute.subst(msrCpsrImmIop)
@@ -115,7 +120,8 @@ let {{
     msrSpsrImmCode = "Spsr = spsrWriteByInstr(Spsr, imm, byteMask, false);"
     msrSpsrImmIop = InstObjParams("msr", "MsrSpsrImm", "MsrImmOp",
                                   { "code": msrSpsrImmCode,
-                                    "predicate_test": predicateTest }, [])
+                                    "predicate_test": predicateTest },
+                                  ["IsSerializeAfter","IsNonSpeculative"])
     header_output += MsrImmDeclare.subst(msrSpsrImmIop)
     decoder_output += MsrImmConstructor.subst(msrSpsrImmIop)
     exec_output += PredOpExecute.subst(msrSpsrImmIop)
@@ -609,7 +615,8 @@ let {{
     '''
     mcr15Iop = InstObjParams("mcr", "Mcr15", "RegRegOp",
                              { "code": mcr15code,
-                               "predicate_test": predicateTest }, [])
+                               "predicate_test": predicateTest },
+                               ["IsSerializeAfter","IsNonSpeculative"])
     header_output += RegRegOpDeclare.subst(mcr15Iop)
     decoder_output += RegRegOpConstructor.subst(mcr15Iop)
     exec_output += PredOpExecute.subst(mcr15Iop)
@@ -623,7 +630,8 @@ let {{
 
     mcr15UserIop = InstObjParams("mcr", "Mcr15User", "RegRegOp",
                                  { "code": "MiscDest = Op1",
-                                   "predicate_test": predicateTest }, [])
+                                   "predicate_test": predicateTest },
+                                   ["IsSerializeAfter","IsNonSpeculative"])
     header_output += RegRegOpDeclare.subst(mcr15UserIop)
     decoder_output += RegRegOpConstructor.subst(mcr15UserIop)
     exec_output += PredOpExecute.subst(mcr15UserIop)
@@ -687,7 +695,8 @@ let {{
     '''
     cpsIop = InstObjParams("cps", "Cps", "ImmOp",
                            { "code": cpsCode,
-                             "predicate_test": predicateTest }, [])
+                             "predicate_test": predicateTest },
+                           ["IsSerializeAfter","IsNonSpeculative"])
     header_output += ImmOpDeclare.subst(cpsIop)
     decoder_output += ImmOpConstructor.subst(cpsIop)
     exec_output += PredOpExecute.subst(cpsIop)
