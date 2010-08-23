@@ -675,9 +675,11 @@ let {{
     clrexIop = InstObjParams("clrex", "Clrex","PredOp",
                              { "code": clrexCode,
                                "predicate_test": predicateTest },[])
-    header_output += BasicDeclare.subst(clrexIop)
+    header_output += ClrexDeclare.subst(clrexIop)
     decoder_output += BasicConstructor.subst(clrexIop)
     exec_output += PredOpExecute.subst(clrexIop)
+    exec_output += ClrexInitiateAcc.subst(clrexIop)
+    exec_output += ClrexCompleteAcc.subst(clrexIop)
 
     isbCode = '''
     '''

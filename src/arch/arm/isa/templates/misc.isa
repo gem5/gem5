@@ -336,3 +336,67 @@ def template RegImmRegShiftOpConstructor {{
         %(constructor)s;
     }
 }};
+
+def template ClrexDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst);
+
+        %(BasicExecDeclare)s
+
+        %(InitiateAccDeclare)s
+
+        %(CompleteAccDeclare)s
+    };
+}};
+
+def template ClrexInitiateAcc {{
+    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        if (%(predicate_test)s)
+        {
+            if (fault == NoFault) {
+                unsigned memAccessFlags = ArmISA::TLB::Clrex|3|Request::LLSC;
+                fault = xc->read(0, (uint32_t&)Mem, memAccessFlags);
+            }
+        } else {
+            xc->setPredicate(false);
+            if (fault == NoFault && machInst.itstateMask != 0) {
+                xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+            }
+        }
+
+        return fault;
+    }
+}};
+
+def template ClrexCompleteAcc {{
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+                                      %(CPU_exec_context)s *xc,
+                                      Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
+        return fault;
+    }
+}};
+
