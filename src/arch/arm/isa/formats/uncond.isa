@@ -97,7 +97,7 @@ def format ArmUnconditional() {{
                 } else if (op1 == 0x57) {
                     switch (op2) {
                       case 0x1:
-                        return new WarnUnimplemented("clrex", machInst);
+                        return new Clrex(machInst);
                       case 0x4:
                         return new WarnUnimplemented("dsb", machInst);
                       case 0x5:

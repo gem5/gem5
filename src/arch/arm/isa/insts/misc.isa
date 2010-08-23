@@ -668,6 +668,17 @@ let {{
     decoder_output += ImmOpConstructor.subst(setendIop)
     exec_output += PredOpExecute.subst(setendIop)
 
+    clrexCode = '''
+        unsigned memAccessFlags = ArmISA::TLB::Clrex|3|Request::LLSC;
+        fault = xc->read(0, (uint32_t&)Mem, memAccessFlags);
+    '''
+    clrexIop = InstObjParams("clrex", "Clrex","PredOp",
+                             { "code": clrexCode,
+                               "predicate_test": predicateTest },[])
+    header_output += BasicDeclare.subst(clrexIop)
+    decoder_output += BasicConstructor.subst(clrexIop)
+    exec_output += PredOpExecute.subst(clrexIop)
+
     cpsCode = '''
     uint32_t mode = bits(imm, 4, 0);
     uint32_t f = bits(imm, 5);

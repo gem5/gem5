@@ -355,6 +355,13 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
     DPRINTF(TLBVerbose, "CPSR is user:%d UserMode:%d\n", cpsr.mode == MODE_USER, flags
             & UserMode);
+    // If this is a clrex instruction, provide a PA of 0 with no fault
+    // This will force the monitor to set the tracked address to 0
+    // a bit of a hack but this effectively clrears this processors monitor
+    if (flags & Clrex){
+       req->setPaddr(0);
+       return NoFault;
+    }
     if (!is_fetch) {
         assert(flags & MustBeOne);
         if (sctlr.a || !(flags & AllowUnaligned)) {
