@@ -341,24 +341,48 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         }
         break;
       case 9:
-        if (opc1 >= 0 && opc1 <= 7) {
+        if (opc1 == 0) {
             switch (crm) {
-              case 0:
-              case 1:
-              case 2:
-              case 5:
-              case 6:
-              case 7:
-              case 8:
-                //Reserved for Branch Predictor, Cache and TCM operations
               case 12:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_PMCR;
+                  case 1:
+                    return MISCREG_PMCNTENSET;
+                  case 2:
+                    return MISCREG_PMCNTENCLR;
+                  case 3:
+                    return MISCREG_PMOVSR;
+                  case 4:
+                    return MISCREG_PMSWINC;
+                  case 5:
+                    return MISCREG_PMSELR;
+                  case 6:
+                    return MISCREG_PMCEID0;
+                  case 7:
+                    return MISCREG_PMCEID1;
+                }
               case 13:
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_PMCCNTR;
+                  case 1:
+                    return MISCREG_PMC_OTHER;
+                  case 2:
+                    return MISCREG_PMXEVCNTR;
+                }
               case 14:
-              case 15:
-                // Reserved for Performance monitors
-                break;
+                switch (opc2) {
+                  case 0:
+                    return MISCREG_PMUSERENR;
+                  case 1:
+                    return MISCREG_PMINTENSET;
+                  case 2:
+                    return MISCREG_PMINTENCLR;
+                }
             }
         }
+        //Reserved for Branch Predictor, Cache and TCM operations
         break;
       case 10:
         if (opc1 == 0) {

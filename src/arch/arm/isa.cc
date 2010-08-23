@@ -212,6 +212,20 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         break;
       case MISCREG_ID_PFR0:
         return 0x1031; // ThumbEE | !Jazelle | Thumb | ARM
+      case MISCREG_ID_MMFR0:
+        return 0x03; //VMSAz7
+      case MISCREG_CTR:
+        return 0x86468006; // V7, 64 byte cache line, load/exclusive is exact
+      case MISCREG_ACTLR:
+        warn("Not doing anything for miscreg ACTLR\n");
+        break;
+      case MISCREG_PMCR:
+      case MISCREG_PMCCNTR:
+      case MISCREG_PMSELR:
+        warn("Not doing anyhting for read to miscreg %s\n",
+                miscRegName[misc_reg]);
+        break;
+
     }
     return readMiscRegNoEffect(misc_reg);
 }
@@ -394,6 +408,15 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           case MISCREG_DTLBIASID:
             tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
             return;
+          case MISCREG_ACTLR:
+            warn("Not doing anything for write of miscreg ACTLR\n");
+            break;
+          case MISCREG_PMCR:
+          case MISCREG_PMCCNTR:
+          case MISCREG_PMSELR:
+            warn("Not doing anything for write to miscreg %s\n",
+                    miscRegName[misc_reg]);
+            break;
           case MISCREG_V2PCWPR:
           case MISCREG_V2PCWPW:
           case MISCREG_V2PCWUR:
