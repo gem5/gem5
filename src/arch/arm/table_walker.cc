@@ -182,6 +182,7 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
     // variables
     DPRINTF(TLBVerbose, "memAttrs texcb:%d s:%d\n", texcb, s);
     te.shareable = false; // default value
+    te.nonCacheable = false;
     bool outer_shareable = false;
     if (sctlr.tre == 0 || ((sctlr.tre == 1) && (sctlr.m == 0))) {
         switch(texcb) {
@@ -256,7 +257,7 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
         PRRR prrr = tc->readMiscReg(MISCREG_PRRR);
         NMRR nmrr = tc->readMiscReg(MISCREG_NMRR);
         DPRINTF(TLBVerbose, "memAttrs PRRR:%08x NMRR:%08x\n", prrr, nmrr);
-        uint8_t curr_tr, curr_ir, curr_or;
+        uint8_t curr_tr = 0, curr_ir = 0, curr_or = 0;
         switch(bits(texcb, 2,0)) {
           case 0:
             curr_tr = prrr.tr0;
@@ -457,10 +458,11 @@ TableWalker::doL1Descriptor()
                 currState->l1Desc.texcb(), currState->l1Desc.shareable());
 
         DPRINTF(TLB, "Inserting Section Descriptor into TLB\n");
-        DPRINTF(TLB, " - N%d pfn:%#x size: %#x global:%d valid: %d\n",
+        DPRINTF(TLB, " - N:%d pfn:%#x size: %#x global:%d valid: %d\n",
                 te.N, te.pfn, te.size, te.global, te.valid);
-        DPRINTF(TLB, " - vpn:%#x sNp: %d xn:%d ap:%d domain: %d asid:%d\n",
-                te.vpn, te.sNp, te.xn, te.ap, te.domain, te.asid);
+        DPRINTF(TLB, " - vpn:%#x sNp: %d xn:%d ap:%d domain: %d asid:%d nc:%d\n",
+                te.vpn, te.sNp, te.xn, te.ap, te.domain, te.asid,
+                te.nonCacheable);
         DPRINTF(TLB, " - domain from l1 desc: %d data: %#x bits:%d\n",
                 currState->l1Desc.domain(), currState->l1Desc.data,
                 (currState->l1Desc.data >> 5) & 0xF );
