@@ -267,6 +267,22 @@ namespace X86ISA
         tc->setNextPC(tc->readPC() + sizeof(MachInst));
     }
 
+#else
+
+    void
+    PageFault::invoke(ThreadContext * tc)
+    {
+        PageFaultErrorCode code = errorCode;
+        const char *modeStr = "";
+        if (code.fetch)
+            modeStr = "execute";
+        else if (code.write)
+            modeStr = "write";
+        else
+            modeStr = "read";
+        panic("Tried to %s unmapped address %#x.\n", modeStr, addr);
+    }
+
 #endif
 } // namespace X86ISA
 

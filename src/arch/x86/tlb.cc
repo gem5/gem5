@@ -619,21 +619,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                     success = p->pTable->lookup(vaddr, newEntry);
                 }
                 if (!success) {
-                    if (req->isPrefetch()) {
-                        return new PageFault(vaddr, true, mode, true, false);
-                    } else {
-                        const char *modeStr = "";
-                        if (mode == Execute)
-                            modeStr = "execute";
-                        else if (mode == Read)
-                            modeStr = "read";
-                        else if (mode == Write)
-                            modeStr = "write";
-                        else
-                            modeStr = "?";
-                        panic("Tried to %s unmapped address %#x.\n",
-                                modeStr, vaddr);
-                    }
+                    return new PageFault(vaddr, true, mode, true, false);
                 } else {
                     Addr alignedVaddr = p->pTable->pageAlign(vaddr);
                     DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,

@@ -327,9 +327,9 @@ namespace X86ISA
             errorCode = code;
         }
 
-#if FULL_SYSTEM
         void invoke(ThreadContext * tc);
 
+#if FULL_SYSTEM
         virtual std::string describe() const;
 #endif
     };
