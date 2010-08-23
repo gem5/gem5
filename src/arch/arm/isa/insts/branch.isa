@@ -46,16 +46,16 @@ let {{
     # B, BL
     for (mnem, link) in (("b", False), ("bl", True)):
         bCode = '''
-        Addr PC = readPC(xc);
-        NPC = ((PC + imm) & mask(32)) | (PC & ~mask(32));
+        Addr curPc = readPC(xc);
+        NPC = ((curPc + imm) & mask(32)) | (curPc & ~mask(32));
         '''
         if (link):
             bCode += '''
-                Addr tBit = PC & (ULL(1) << PcTBitShift);
+                Addr tBit = curPc & (ULL(1) << PcTBitShift);
                 if (!tBit)
-                    LR = PC - 4;
+                    LR = curPc - 4;
                 else
-                    LR = PC | 1;
+                    LR = curPc | 1;
             '''
 
         bIop = InstObjParams(mnem, mnem.capitalize(), "BranchImmCond",
@@ -67,8 +67,8 @@ let {{
 
     # BX, BLX
     blxCode = '''
-    Addr PC = readPC(xc);
-    Addr tBit = PC & (ULL(1) << PcTBitShift);
+    Addr curPc = readPC(xc);
+    Addr tBit = curPc & (ULL(1) << PcTBitShift);
     bool arm = !tBit;
     arm = arm; // In case it's not used otherwise.
     %(link)s
@@ -86,7 +86,7 @@ let {{
             Name += "Imm"
             # Since we're switching ISAs, the target ISA will be the opposite
             # of the current ISA. !arm is whether the target is ARM.
-            newPC = '(!arm ? (roundDown(PC, 4) + imm) : (PC + imm))'
+            newPC = '(!arm ? (roundDown(curPc, 4) + imm) : (curPc + imm))'
             base = "BranchImm"
             declare = BranchImmDeclare
             constructor = BranchImmConstructor
@@ -102,23 +102,23 @@ let {{
                 // is 32 bits wide, but "next pc" doesn't reflect that
                 // so we don't want to substract 2 from it at this point
                 if (arm)
-                    LR = PC - 4;
+                    LR = curPc - 4;
                 else
-                    LR = PC  | 1;
+                    LR = curPc  | 1;
             '''
         elif link:
             linkStr = '''
                 if (arm)
-                    LR = PC - 4;
+                    LR = curPc - 4;
                 else
-                    LR = (PC - 2) | 1;
+                    LR = (curPc - 2) | 1;
             '''
         else:
             linkStr = ""
 
         if imm and link: #blx with imm
             branchStr = '''
-                Addr tempPc = ((%(newPC)s) & mask(32)) | (PC & ~mask(32));
+                Addr tempPc = ((%(newPC)s) & mask(32)) | (curPc & ~mask(32));
                 FNPC = tempPc ^ (ULL(1) << PcTBitShift);
             '''
         else:
@@ -140,8 +140,8 @@ let {{
     #CBNZ, CBZ. These are always unconditional as far as predicates
     for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):
         code = '''
-        Addr PC = readPC(xc);
-        NPC = ((PC + imm) & mask(32)) | (PC & ~mask(32));
+        Addr curPc = readPC(xc);
+        NPC = ((curPc + imm) & mask(32)) | (curPc & ~mask(32));
         '''
         predTest = "Op1 %(test)s 0" % {"test": test}
         iop = InstObjParams(mnem, mnem.capitalize(), "BranchImmReg",
