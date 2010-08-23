@@ -1,6 +1,15 @@
 # Copyright (c) 2009 ARM Limited
 # All rights reserved.
 #
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
@@ -30,7 +39,16 @@ from m5.params import *
 
 from System import System
 
+class ArmMachineType(Enum):
+    map = {'RealView_EB' : 827,
+           'RealView_PBX' : 1901 }
+
 class ArmSystem(System):
     type = 'ArmSystem'
     load_addr_mask = 0xffffffff
 
+class LinuxArmSystem(ArmSystem):
+    type = 'LinuxArmSystem'
+    load_addr_mask = 0x0fffffff
+    machine_type = Param.ArmMachineType('RealView_PBX',
+        "Machine id from http://www.arm.linux.org.uk/developer/machines/")

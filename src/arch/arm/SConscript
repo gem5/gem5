@@ -73,6 +73,7 @@ if env['TARGET_ISA'] == 'arm':
         Source('interrupts.cc')
         Source('stacktrace.cc')
         Source('system.cc')
+        Source('linux/system.cc')
         Source('table_walker.cc')
         
         SimObject('ArmInterrupts.py')

@@ -40,23 +40,85 @@
  * Authors: Ali Saidi
  */
 
-#include "arch/arm/system.hh"
+#include "arch/arm/isa_traits.hh"
+#include "arch/arm/linux/atag.hh"
+#include "arch/arm/linux/system.hh"
+#include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
+#include "mem/physical.hh"
 
 using namespace ArmISA;
 
-ArmSystem::ArmSystem(Params *p)
-    : System(p)
+LinuxArmSystem::LinuxArmSystem(Params *p)
+    : ArmSystem(p)
 {
+    // Load symbols at physical address, we might not want
+    // to do this perminately, for but early bootup work
+    // it is helpfulp.
+    kernel->loadGlobalSymbols(kernelSymtab, loadAddrMask);
+    kernel->loadGlobalSymbols(debugSymbolTable, loadAddrMask);
 
+    // Setup boot data structure
+    AtagCore *ac = new AtagCore;
+    ac->flags(1); // read-only
+    ac->pagesize(8192);
+    ac->rootdev(0);
+
+    AtagMem *am = new AtagMem;
+    am->memSize(params()->physmem->size());
+    am->memStart(params()->physmem->start());
+
+    AtagCmdline *ad = new AtagCmdline;
+    ad->cmdline(params()->boot_osflags);
+
+    DPRINTF(Loader, "boot command line %d bytes: %s\n", ad->size() <<2, params()->boot_osflags.c_str());
+
+    AtagNone *an = new AtagNone;
+
+    uint32_t size = ac->size() + am->size() + ad->size() + an->size();
+    uint32_t offset = 0;
+    uint8_t *boot_data = new uint8_t[size << 2];
+
+    offset += ac->copyOut(boot_data + offset);
+    offset += am->copyOut(boot_data + offset);
+    offset += ad->copyOut(boot_data + offset);
+    offset += an->copyOut(boot_data + offset);
+
+    DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
+    DDUMP(Loader, boot_data, size << 2);
+
+    functionalPort.writeBlob(ParamsList, boot_data, size << 2);
+
+#ifndef NDEBUG
+    kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
+    if (!kernelPanicEvent)
+        panic("could not find kernel symbol \'panic\'");
+#endif
 }
 
-ArmSystem::~ArmSystem()
+void
+LinuxArmSystem::startup()
+{
+    ArmSystem::startup();
+    ThreadContext *tc = threadContexts[0];
+
+    // Set the initial PC to be at start of the kernel code
+    tc->setPC(tc->getSystemPtr()->kernelEntry & loadAddrMask);
+    tc->setNextPC(tc->readPC() + sizeof(MachInst));
+
+    // Setup the machine type
+    tc->setIntReg(0, 0);
+    tc->setIntReg(1, params()->machine_type);
+    tc->setIntReg(2, ParamsList);
+}
+
+LinuxArmSystem::~LinuxArmSystem()
 {
 }
 
 
-ArmSystem *
-ArmSystemParams::create()
+LinuxArmSystem *
+LinuxArmSystemParams::create()
 {
-    return new ArmSystem(this);
+    return new LinuxArmSystem(this);
 }

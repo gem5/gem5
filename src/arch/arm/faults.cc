@@ -136,9 +136,9 @@ ArmFault::invoke(ThreadContext *tc)
         panic("unknown Mode\n");
     }
 
-    Addr pc = tc->readPC();
+    Addr pc M5_VAR_USED = tc->readPC();
     Addr newPc = getVector(tc) | (sctlr.te ? (ULL(1) << PcTBitShift) : 0);
-    DPRINTF(Faults, "Invoking Fault: %s cpsr: %#x PC: %#x lr: %#x newVector: %#x\n",
+    DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x\n",
             name(), cpsr, pc, tc->readIntReg(INTREG_LR), newPc);
     tc->setPC(newPc);
     tc->setNextPC(newPc + cpsr.t ? 2 : 4 );

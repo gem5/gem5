@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2002-2006 The Regents of The University of Michigan
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,23 +40,41 @@
  * Authors: Ali Saidi
  */
 
+#ifndef __ARCH_ARM_LINUX_SYSTEM_HH__
+#define __ARCH_ARM_LINUX_SYSTEM_HH__
+
+#include <string>
+#include <vector>
+
 #include "arch/arm/system.hh"
+#include "kern/linux/events.hh"
+#include "params/LinuxArmSystem.hh"
 
-using namespace ArmISA;
-
-ArmSystem::ArmSystem(Params *p)
-    : System(p)
+class LinuxArmSystem : public ArmSystem
 {
+  protected:
+    static const int ParamsList =  0x100;
 
-}
+  public:
+    /** Boilerplate params code */
+    typedef LinuxArmSystemParams Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
-ArmSystem::~ArmSystem()
-{
-}
+    LinuxArmSystem(Params *p);
+    ~LinuxArmSystem();
 
+    /** Initialize the CPU for booting */
+    void startup();
+  private:
+#ifndef NDEBUG
+    /** Event to halt the simulator if the kernel calls panic()  */
+    BreakPCEvent *kernelPanicEvent;
+#endif
+};
 
-ArmSystem *
-ArmSystemParams::create()
-{
-    return new ArmSystem(this);
-}
+#endif // __ARCH_ARM_LINUX_SYSTEM_HH__
+
