@@ -80,11 +80,6 @@ namespace SparcISA
     const Addr BytesInPageMask = ULL(0x1FFF);
 
 #if FULL_SYSTEM
-    // I don't know what it's for, so I don't
-    // know what SPARC's value should be
-    // For loading... XXX This maybe could be USegEnd?? --ali
-    const Addr LoadAddrMask = ULL(0xffffffffff);
-
     enum InterruptTypes
     {
         IT_TRAP_LEVEL_ZERO,

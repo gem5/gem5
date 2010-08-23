@@ -91,9 +91,6 @@ namespace ArmISA
     const Addr KSeg0Base =  ULL(0x80000000);
     const Addr KSeg0Mask = ULL(0x1FFFFFFF);
 
-    // For loading... XXX This maybe could be USegEnd?? --ali
-    const Addr LoadAddrMask = ULL(0xffffffffff);
-
     const unsigned VABits = 32;
     const unsigned PABits = 32; // Is this correct?
     const Addr VAddrImplMask = (ULL(1) << VABits) - 1;

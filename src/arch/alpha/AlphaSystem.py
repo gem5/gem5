@@ -35,6 +35,7 @@ class AlphaSystem(System):
     pal = Param.String("file that contains palcode")
     system_type = Param.UInt64("Type of system we are emulating")
     system_rev = Param.UInt64("Revision of system we are emulating")
+    load_addr_mask = 0xffffffffff
 
 class LinuxAlphaSystem(AlphaSystem):
     type = 'LinuxAlphaSystem'

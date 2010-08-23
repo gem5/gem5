@@ -32,4 +32,5 @@ from System import System
 
 class ArmSystem(System):
     type = 'ArmSystem'
+    load_addr_mask = 0xffffffff
 

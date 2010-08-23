@@ -50,3 +50,5 @@ class System(SimObject):
         kernel = Param.String("", "file that contains the kernel code")
         readfile = Param.String("", "file to read startup script from")
         symbolfile = Param.String("", "file to get the symbols from")
+        load_addr_mask = Param.UInt64(0xffffffffff,
+                "Address to mask loading binaries with");

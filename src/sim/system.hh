@@ -126,6 +126,14 @@ class System : public SimObject
     /** Entry point in the kernel to start at */
     Addr kernelEntry;
 
+    /** Mask that should be anded for binary/symbol loading.
+     * This allows one two different OS requirements for the same ISA to be
+     * handled.  Some OSes are compiled for a virtual address and need to be
+     * loaded into physical memory that starts at address 0, while other
+     * bare metal tools generate images that start at address 0.
+     */
+    Addr loadAddrMask;
+
 #else
 
     int page_ptr;

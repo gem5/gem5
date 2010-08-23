@@ -76,9 +76,6 @@ const Addr K0SegEnd = ULL(0xfffffdffffffffff);
 const Addr K1SegBase = ULL(0xfffffe0000000000);
 const Addr K1SegEnd = ULL(0xffffffffffffffff);
 
-// For loading... XXX This maybe could be USegEnd?? --ali
-const Addr LoadAddrMask = ULL(0xffffffffff);
-
 ////////////////////////////////////////////////////////////////////////
 //
 //  Interrupt levels

@@ -95,9 +95,6 @@ const Addr KSeg3End = ULL(0xFFFFFFFF);
 const Addr KSeg3Base = ULL(0xE0000000);
 
 
-// For loading... XXX This maybe could be USegEnd?? --ali
-const Addr LoadAddrMask = ULL(0xffffffffff);
-
 inline Addr Phys2K0Seg(Addr addr)
 {
     return addr | KSeg0Base;

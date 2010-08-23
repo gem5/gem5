@@ -65,8 +65,8 @@ AlphaSystem::AlphaSystem(Params *p)
 
 
     // Load program sections into memory
-    pal->loadSections(&functionalPort, LoadAddrMask);
-    console->loadSections(&functionalPort, LoadAddrMask);
+    pal->loadSections(&functionalPort, loadAddrMask);
+    console->loadSections(&functionalPort, loadAddrMask);
 
     // load symbols
     if (!console->loadGlobalSymbols(consoleSymtab))

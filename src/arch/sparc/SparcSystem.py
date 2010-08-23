@@ -71,4 +71,4 @@ class SparcSystem(System):
     nvram_bin = Param.String("file that contains the contents of nvram")
     hypervisor_desc_bin = Param.String("file that contains the hypervisor description")
     partition_desc_bin = Param.String("file that contains the partition description")
-
+    load_addr_mask = 0xffffffffff

@@ -70,7 +70,7 @@ MipsSystem::MipsSystem(Params *p) : System(p)
     if (console == NULL)
         fatal("Could not load console file %s", params()->console);
     //Load program sections into memory
-    console->loadSections(&functionalPort, MipsISA::LoadAddrMask);
+    console->loadSections(&functionalPort, loadAddrMask);
 
     //load symbols
     if (!console->loadGlobalSymbols(consoleSymtab))

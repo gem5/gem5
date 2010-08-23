@@ -54,6 +54,7 @@ class X86System(System):
             'intel mp spec configuration table')
     acpi_description_table_pointer = Param.X86ACPIRSDP(
             X86ACPIRSDP(), 'ACPI root description pointer structure')
+    load_addr_mask = 0xffffffffffffffff
 
 class LinuxX86System(X86System):
     type = 'LinuxX86System'

@@ -72,8 +72,6 @@ namespace X86ISA
 
     StaticInstPtr decodeInst(ExtMachInst);
 
-    const Addr LoadAddrMask = ULL(-1);
-
     // Memory accesses can be unaligned
     const bool HasUnalignedMemAcc = true;
 };

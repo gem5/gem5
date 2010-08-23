@@ -66,6 +66,7 @@ System::System(Params *p)
       init_param(p->init_param),
       functionalPort(p->name + "-fport"),
       virtPort(p->name + "-vport"),
+      loadAddrMask(p->load_addr_mask),
 #else
       page_ptr(0),
       next_PID(0),
@@ -109,7 +110,7 @@ System::System(Params *p)
             fatal("Could not load kernel file %s", params()->kernel);
 
         // Load program sections into memory
-        kernel->loadSections(&functionalPort, LoadAddrMask);
+        kernel->loadSections(&functionalPort, loadAddrMask);
 
         // setup entry points
         kernelStart = kernel->textBase();
