@@ -94,6 +94,8 @@ class MicroIntOp : public MicroOp
               ura(_ura), urb(_urb), imm(_imm)
     {
     }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
@@ -111,6 +113,8 @@ class MicroMemOp : public MicroIntOp
               up(_up), memAccessFlags(TLB::MustBeOne | TLB::AlignWord)
     {
     }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**

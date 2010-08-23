@@ -1162,7 +1162,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 #if TRACING_ON
                 instruction->traceData =
                     cpu->getTracer()->getInstRecord(curTick, cpu->tcBase(tid),
-                            instruction->staticInst, instruction->readPC());
+                            instruction->staticInst, instruction->readPC(),
+                            macroop, instruction->readMicroPC());
 #else
                 instruction->traceData = NULL;
 #endif

@@ -215,4 +215,31 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
     }
 }
 
+std::string
+MicroIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, ura);
+    ss << ", ";
+    printReg(ss, urb);
+    ss << ", ";
+    ccprintf(ss, "#%d", imm);
+    return ss.str();
+}
+
+std::string
+MicroMemOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, ura);
+    ss << ", [";
+    printReg(ss, urb);
+    ss << ", ";
+    ccprintf(ss, "#%d", imm);
+    ss << "]";
+    return ss.str();
+}
+
 }
