@@ -45,6 +45,8 @@ output header {{
                 OpClass __opClass) :
             X86ISA::X86StaticInst(_mnemonic, _machInst, __opClass)
         {
+            flags[IsSerializing] = 1;
+            flags[IsSerializeAfter] = 1;
         }
 
         std::string generateDisassembly(Addr pc,

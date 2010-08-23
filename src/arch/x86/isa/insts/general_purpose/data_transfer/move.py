@@ -174,16 +174,19 @@ def macroop MOVZX_W_R_P {
 };
 
 def macroop MOV_C_R {
+    .serializing
     .adjust_env maxOsz
     wrcr reg, regm
 };
 
 def macroop MOV_R_C {
+    .serializing
     .adjust_env maxOsz
     rdcr reg, regm
 };
 
 def macroop MOV_D_R {
+    .serializing
     .adjust_env maxOsz
     wrdr reg, regm
 };
