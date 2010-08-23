@@ -166,7 +166,7 @@ def format Thumb32BranchesAndMiscCtrl() {{
                                                   ((enable ? 1 : 0) << 9);
                             return new Cps(machInst, mods);
                         } else if ((op2 & 0xf0) == 0xf0) {
-                            return new WarnUnimplemented("dbg", machInst);
+                            return new Dbg(machInst);
                         } else {
                             switch (op2) {
                               case 0x0:

@@ -708,6 +708,15 @@ let {{
     decoder_output += BasicConstructor.subst(dmbIop)
     exec_output += PredOpExecute.subst(dmbIop)
 
+    dbgCode = '''
+    '''
+    dbgIop = InstObjParams("dbg", "Dbg", "PredOp",
+                             {"code": dbgCode,
+                               "predicate_test": predicateTest})
+    header_output += BasicDeclare.subst(dbgIop)
+    decoder_output += BasicConstructor.subst(dbgIop)
+    exec_output += PredOpExecute.subst(dbgIop)
+
     cpsCode = '''
     uint32_t mode = bits(imm, 4, 0);
     uint32_t f = bits(imm, 5);
