@@ -74,17 +74,9 @@ def template MicroFpOpExecute {{
 def template MicroFpOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      protected:
-        void buildMe();
-
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _dataSize, int8_t _spm);
-
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, int8_t _spm);
 
@@ -93,23 +85,6 @@ def template MicroFpOpDeclare {{
 }};
 
 def template MicroFpOpConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-            uint8_t _dataSize, int8_t _spm) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
-                _src1, _src2, _dest, _dataSize, _spm,
-                %(op_class)s)
-    {
-        buildMe();
-    }
-
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
@@ -118,7 +93,7 @@ def template MicroFpOpConstructor {{
                 _src1, _src2, _dest, _dataSize, _spm,
                 %(op_class)s)
     {
-        buildMe();
+        %(constructor)s;
     }
 }};
 

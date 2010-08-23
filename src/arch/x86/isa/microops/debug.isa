@@ -53,9 +53,6 @@ output header {{
                 const char * instMnem, uint64_t setFlags,
                 std::string _message, uint8_t _cc);
 
-        MicroDebugBase(ExtMachInst _machInst, const char * mnem,
-                const char * instMnem, std::string _message, uint8_t _cc);
-
         std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
     };
@@ -64,14 +61,9 @@ output header {{
 def template MicroDebugDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      private:
-        void buildMe();
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, std::string _message, uint8_t _cc);
-
-        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                std::string _message, uint8_t _cc);
 
         %(BasicExecDeclare)s
     };
@@ -93,14 +85,6 @@ def template MicroDebugExecute {{
 output decoder {{
     inline MicroDebugBase::MicroDebugBase(
             ExtMachInst machInst, const char * mnem, const char * instMnem,
-            std::string _message, uint8_t _cc) :
-        X86MicroopBase(machInst, mnem, instMnem, 0, No_OpClass),
-        message(_message), cc(_cc)
-    {
-    }
-
-    inline MicroDebugBase::MicroDebugBase(
-            ExtMachInst machInst, const char * mnem, const char * instMnem,
             uint64_t setFlags, std::string _message, uint8_t _cc) :
         X86MicroopBase(machInst, mnem, instMnem,
                 setFlags, No_OpClass),
@@ -110,27 +94,13 @@ output decoder {{
 }};
 
 def template MicroDebugConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            std::string _message, uint8_t _cc) :
-        %(base_class)s(machInst, "%(func)s", instMnem, _message, _cc)
-    {
-        buildMe();
-    }
-
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             std::string _message, uint8_t _cc) :
         %(base_class)s(machInst, "%(func)s", instMnem,
                 setFlags, _message, _cc)
     {
-        buildMe();
+        %(constructor)s;
     }
 }};
 

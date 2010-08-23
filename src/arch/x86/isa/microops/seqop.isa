@@ -59,14 +59,9 @@ output header {{
 def template SeqOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      private:
-        void buildMe();
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, uint16_t _target, uint8_t _cc);
-
-        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                uint16_t _target, uint8_t _cc);
 
         %(BasicExecDeclare)s
     };
@@ -91,14 +86,6 @@ def template SeqOpExecute {{
 output decoder {{
     inline SeqOpBase::SeqOpBase(
             ExtMachInst machInst, const char * mnemonic, const char * instMnem,
-            uint16_t _target, uint8_t _cc) :
-        X86MicroopBase(machInst, mnemonic, instMnem, 0, No_OpClass),
-        target(_target), cc(_cc)
-    {
-    }
-
-    inline SeqOpBase::SeqOpBase(
-            ExtMachInst machInst, const char * mnemonic, const char * instMnem,
             uint64_t setFlags, uint16_t _target, uint8_t _cc) :
         X86MicroopBase(machInst, mnemonic, instMnem, setFlags, No_OpClass),
                 target(_target), cc(_cc)
@@ -107,27 +94,13 @@ output decoder {{
 }};
 
 def template SeqOpConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            uint16_t _target, uint8_t _cc) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, _target, _cc)
-    {
-        buildMe();
-    }
-
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             uint64_t setFlags, uint16_t _target, uint8_t _cc) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 setFlags, _target, _cc)
     {
-        buildMe();
+        %(constructor)s;
     }
 }};
 

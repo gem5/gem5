@@ -71,20 +71,9 @@ def template MicroLeaExecute {{
 def template MicroLeaDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      protected:
-        void buildMe();
-
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
-                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-                uint64_t _disp, InstRegIndex _segment,
-                InstRegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize,
-                Request::FlagsType _memFlags);
-
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
                 uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
                 uint64_t _disp, InstRegIndex _segment,
                 InstRegIndex _data,
@@ -246,20 +235,9 @@ def template CompleteAccDeclare {{
 def template MicroLdStOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      protected:
-        void buildMe();
-
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
-                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-                uint64_t _disp, InstRegIndex _segment,
-                InstRegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize,
-                Request::FlagsType _memFlags);
-
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
                 uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
                 uint64_t _disp, InstRegIndex _segment,
                 InstRegIndex _data,
@@ -275,27 +253,6 @@ def template MicroLdStOpDeclare {{
 }};
 
 def template MicroLdStOpConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
-            uint64_t _disp, InstRegIndex _segment,
-            InstRegIndex _data,
-            uint8_t _dataSize, uint8_t _addressSize,
-            Request::FlagsType _memFlags) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
-                _scale, _index, _base,
-                _disp, _segment, _data,
-                _dataSize, _addressSize, _memFlags, %(op_class)s)
-    {
-        buildMe();
-    }
-
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
@@ -308,7 +265,7 @@ def template MicroLdStOpConstructor {{
                 _disp, _segment, _data,
                 _dataSize, _addressSize, _memFlags, %(op_class)s)
     {
-        buildMe();
+        %(constructor)s;
     }
 }};
 

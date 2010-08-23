@@ -52,9 +52,6 @@ output header {{
         MicroFaultBase(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, Fault _fault, uint8_t _cc);
 
-        MicroFaultBase(ExtMachInst _machInst, const char * instMnem,
-                Fault _fault, uint8_t _cc);
-
         std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
     };
@@ -68,11 +65,6 @@ output header {{
         {
         }
 
-        MicroHalt(ExtMachInst _machInst, const char * instMnem) :
-            X86MicroopBase(_machInst, "halt", instMnem, 0, No_OpClass)
-        {
-        }
-
         %(BasicExecDeclare)s
 
         std::string generateDisassembly(Addr pc,
@@ -83,14 +75,9 @@ output header {{
 def template MicroFaultDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      private:
-        void buildMe();
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags, Fault _fault, uint8_t _cc);
-
-        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                Fault _fault, uint8_t _cc);
 
         %(BasicExecDeclare)s
     };
@@ -124,14 +111,6 @@ output exec {{
 output decoder {{
     inline MicroFaultBase::MicroFaultBase(
             ExtMachInst machInst, const char * instMnem,
-            Fault _fault, uint8_t _cc) :
-        X86MicroopBase(machInst, "fault", instMnem, 0, No_OpClass),
-        fault(_fault), cc(_cc)
-    {
-    }
-
-    inline MicroFaultBase::MicroFaultBase(
-            ExtMachInst machInst, const char * instMnem,
             uint64_t setFlags, Fault _fault, uint8_t _cc) :
         X86MicroopBase(machInst, "fault", instMnem, setFlags, No_OpClass),
                 fault(_fault), cc(_cc)
@@ -140,26 +119,12 @@ output decoder {{
 }};
 
 def template MicroFaultConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            Fault _fault, uint8_t _cc) :
-        %(base_class)s(machInst, instMnem, _fault, _cc)
-    {
-        buildMe();
-    }
-
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             Fault _fault, uint8_t _cc) :
         %(base_class)s(machInst, instMnem, setFlags, _fault, _cc)
     {
-        buildMe();
+        %(constructor)s;
     }
 }};
 

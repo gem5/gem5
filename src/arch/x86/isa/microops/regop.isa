@@ -101,17 +101,9 @@ def template MicroRegOpImmExecute {{
 def template MicroRegOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
-      protected:
-        void buildMe();
-
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
-                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _dataSize, uint16_t _ext);
-
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
@@ -123,17 +115,9 @@ def template MicroRegOpImmDeclare {{
 
     class %(class_name)s : public %(base_class)s
     {
-      protected:
-        void buildMe();
-
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem, uint64_t setFlags,
-                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
-                uint8_t _dataSize, uint16_t _ext);
-
-        %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
                 InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
@@ -142,23 +126,6 @@ def template MicroRegOpImmDeclare {{
 }};
 
 def template MicroRegOpConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-            uint8_t _dataSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
-                _src1, _src2, _dest, _dataSize, _ext,
-                %(op_class)s)
-    {
-        buildMe();
-    }
-
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
@@ -167,28 +134,11 @@ def template MicroRegOpConstructor {{
                 _src1, _src2, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
-        buildMe();
+        %(constructor)s;
     }
 }};
 
 def template MicroRegOpImmConstructor {{
-
-    inline void %(class_name)s::buildMe()
-    {
-        %(constructor)s;
-    }
-
-    inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
-            uint8_t _dataSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
-                _src1, _imm8, _dest, _dataSize, _ext,
-                %(op_class)s)
-    {
-        buildMe();
-    }
-
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
@@ -197,7 +147,7 @@ def template MicroRegOpImmConstructor {{
                 _src1, _imm8, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
-        buildMe();
+        %(constructor)s;
     }
 }};
 
