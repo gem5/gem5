@@ -200,7 +200,6 @@ def template StoreExecute {{
             if (fault == NoFault) {
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, NULL);
-                if (traceData) { traceData->setData(Mem); }
             }
 
             if (fault == NoFault) {
@@ -240,7 +239,6 @@ def template StoreExExecute {{
             if (fault == NoFault) {
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, &writeResult);
-                if (traceData) { traceData->setData(Mem); }
             }
 
             if (fault == NoFault) {
@@ -282,7 +280,6 @@ def template StoreExInitiateAcc {{
             if (fault == NoFault) {
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, NULL);
-                if (traceData) { traceData->setData(Mem); }
             }
 
             // Need to write back any potential address register update
@@ -321,7 +318,6 @@ def template StoreInitiateAcc {{
             if (fault == NoFault) {
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, NULL);
-                if (traceData) { traceData->setData(Mem); }
             }
 
             // Need to write back any potential address register update
