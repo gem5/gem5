@@ -50,7 +50,7 @@ class ElfObject : public ObjectFile
     std::set<std::string> sectionNames;
 
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
-    bool loadSomeSymbols(SymbolTable *symtab, int binding);
+    bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask);
 
     ElfObject(const std::string &_filename, int _fd,
               size_t _len, uint8_t *_data,

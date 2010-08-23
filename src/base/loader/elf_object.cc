@@ -335,7 +335,7 @@ ElfObject::ElfObject(const string &_filename, int _fd,
 
 
 bool
-ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding)
+ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
 {
     Elf *elf;
     int sec_idx = 1; // there is a 0 but it is nothing, go figure
@@ -375,7 +375,7 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding)
             for (ii = 0; ii < count; ++ii) {
                 gelf_getsym(data, ii, &sym);
                 if (GELF_ST_BIND(sym.st_info) == binding) {
-                   symtab->insert(sym.st_value,
+                   symtab->insert(sym.st_value & mask,
                                   elf_strptr(elf, shdr.sh_link, sym.st_name));
                 }
             }
@@ -392,13 +392,13 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding)
 bool
 ElfObject::loadGlobalSymbols(SymbolTable *symtab, Addr addrMask)
 {
-    return loadSomeSymbols(symtab, STB_GLOBAL);
+    return loadSomeSymbols(symtab, STB_GLOBAL, addrMask);
 }
 
 bool
 ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 {
-    return loadSomeSymbols(symtab, STB_LOCAL);
+    return loadSomeSymbols(symtab, STB_LOCAL, addrMask);
 }
 
 bool
