@@ -139,12 +139,15 @@ let {{
             self.adjust_imm += val
         def adjustDisp(self, val):
             self.adjust_disp += val
+        def serializing(self):
+            self.serializing = True
         def __init__(self, name):
             super(X86Macroop, self).__init__(name)
             self.directives = {
                 "adjust_env" : self.setAdjustEnv,
                 "adjust_imm" : self.adjustImm,
-                "adjust_disp" : self.adjustDisp
+                "adjust_disp" : self.adjustDisp,
+                "serializing" : self.serializing
             }
             self.declared = False
             self.adjust_env = ""
@@ -159,6 +162,7 @@ let {{
                 //This is to pacify gcc in case the displacement isn't used.
                 adjustedDisp = adjustedDisp;
             '''
+            self.serializing = False
         def getAllocator(self, env):
             return "new X86Macroop::%s(machInst, %s)" % \
                     (self.name, env.getAllocator())
@@ -188,6 +192,9 @@ let {{
                 flags = ["IsMicroop"]
                 if micropc == numMicroops - 1:
                     flags.append("IsLastMicroop")
+                    if self.serializing:
+                        flags.append("IsSerializing")
+                        flags.append("IsSerializeAfter")
                 else:
                     flags.append("IsDelayedCommit")
                 if micropc == 0:
