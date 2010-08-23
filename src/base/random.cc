@@ -65,7 +65,9 @@ Random::~Random()
 uint32_t
 Random::genrand(uint32_t max)
 {
-    int log = ceilLog2(max);
+    if (max == 0)
+        return 0;
+    int log = ceilLog2(max) + 1;
     int shift = (sizeof(uint32_t) * 8 - log);
     uint32_t random;
 
@@ -79,7 +81,9 @@ Random::genrand(uint32_t max)
 uint64_t
 Random::genrand(uint64_t max)
 {
-    int log = ceilLog2(max);
+    if (max == 0)
+        return 0;
+    int log = ceilLog2(max) + 1;
     int shift = (sizeof(uint64_t) * 8 - log);
     uint64_t random;
 
