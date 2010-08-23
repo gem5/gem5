@@ -206,7 +206,9 @@ let {{
             # Add memory request flags where necessary
             if self.flavor == "exclusive":
                 self.memFlags.append("Request::LLSC")
-            self.memFlags.append("ArmISA::TLB::AlignWord")
+                self.memFlags.append("ArmISA::TLB::AlignDoubleWord")
+            else:
+                self.memFlags.append("ArmISA::TLB::AlignWord")
 
             # Disambiguate the class name for different flavors of loads
             if self.flavor != "normal":

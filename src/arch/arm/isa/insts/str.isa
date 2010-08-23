@@ -225,9 +225,11 @@ let {{
             self.Name = self.nameFunc(self.post, self.add, self.writeback)
 
             # Add memory request flags where necessary
-            self.memFlags.append("ArmISA::TLB::AlignWord")
             if self.flavor == "exclusive":
                 self.memFlags.append("Request::LLSC")
+                self.memFlags.append("ArmISA::TLB::AlignDoubleWord")
+            else:
+                self.memFlags.append("ArmISA::TLB::AlignWord")
 
             # Disambiguate the class name for different flavors of stores
             if self.flavor != "normal":
