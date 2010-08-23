@@ -41,8 +41,6 @@
 
 namespace SparcISA
 {
-
-
     uint64_t getArgument(ThreadContext *tc, int number, bool fp);
 
     static inline bool
@@ -97,7 +95,8 @@ namespace SparcISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
-    inline void initCPU(ThreadContext *tc, int cpuId)
+    inline void
+    initCPU(ThreadContext *tc, int cpuId)
     {
         static Fault por = new PowerOnReset();
         if (cpuId == 0)
@@ -105,7 +104,8 @@ namespace SparcISA
 
     }
 
-    inline void startupCPU(ThreadContext *tc, int cpuId)
+    inline void
+    startupCPU(ThreadContext *tc, int cpuId)
     {
 #if FULL_SYSTEM
         // Other CPUs will get activated by IPIs
