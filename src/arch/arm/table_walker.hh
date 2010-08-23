@@ -40,6 +40,8 @@
 #ifndef __ARCH_ARM_TABLE_WALKER_HH__
 #define __ARCH_ARM_TABLE_WALKER_HH__
 
+#include <list>
+
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/tlb.hh"
 #include "mem/mem_object.hh"
@@ -48,7 +50,6 @@
 #include "params/ArmTableWalker.hh"
 #include "sim/faults.hh"
 #include "sim/eventq.hh"
-#include "base/fifo_buffer.hh"
 
 class DmaPort;
 class ThreadContext;
@@ -301,7 +302,7 @@ class TableWalker : public MemObject
     };
 
 
-    FifoBuffer<WalkerState> stateQueue;
+    std::list<WalkerState *> stateQueue;
 
     /** Port to issue translation requests from */
     DmaPort *port;

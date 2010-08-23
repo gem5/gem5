@@ -43,12 +43,10 @@
 #include "dev/io_device.hh"
 #include "cpu/thread_context.hh"
 
-#define NUM_WALKERS 2 // 2 should be enough to handle crossing page boundaries
-
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
-    : MemObject(p), stateQueue(NUM_WALKERS), port(NULL), tlb(NULL),
+    : MemObject(p), port(NULL), tlb(NULL),
       currState(NULL), doL1DescEvent(this), doL2DescEvent(this)
 {
     sctlr = 0;
@@ -155,9 +153,10 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
     if (currState->timing) {
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
                 &doL1DescEvent, (uint8_t*)&currState->l1Desc.data, (Tick)0);
-        DPRINTF(TLBVerbose, "Adding to walker fifo: %d free before adding\n",
-                stateQueue.free_slots());
-        stateQueue.add(*currState);
+        DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
+                stateQueue.size());
+        stateQueue.push_back(currState);
+        assert(stateQueue.size() < 5);
         currState = NULL;
     } else {
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
@@ -567,8 +566,11 @@ TableWalker::doL2Descriptor()
 void
 TableWalker::doL1DescriptorWrapper()
 {
-    currState = stateQueue.peek();
+    currState = stateQueue.front();
     currState->delayed = false;
+
+    DPRINTF(TLBVerbose, "L1 Desc object host addr: %p\n",&currState->l1Desc.data);
+    DPRINTF(TLBVerbose, "L1 Desc object      data: %08x\n",currState->l1Desc.data);
 
     DPRINTF(TLBVerbose, "calling doL1Descriptor for vaddr:%#x\n", currState->vaddr);
     doL1Descriptor();
@@ -582,7 +584,7 @@ TableWalker::doL1DescriptorWrapper()
         currState->tc = NULL;
         currState->delayed = false;
 
-        stateQueue.remove();
+        stateQueue.pop_front();
     }
     else if (!currState->delayed) {
         DPRINTF(TLBVerbose, "calling translateTiming again\n");
@@ -593,7 +595,7 @@ TableWalker::doL1DescriptorWrapper()
         currState->tc = NULL;
         currState->delayed = false;
 
-        stateQueue.remove();
+        stateQueue.pop_front();
     }
     currState = NULL;
 }
@@ -601,7 +603,7 @@ TableWalker::doL1DescriptorWrapper()
 void
 TableWalker::doL2DescriptorWrapper()
 {
-    currState = stateQueue.peek();
+    currState = stateQueue.front();
     assert(currState->delayed);
 
     DPRINTF(TLBVerbose, "calling doL2Descriptor for vaddr:%#x\n",
@@ -623,7 +625,7 @@ TableWalker::doL2DescriptorWrapper()
     currState->tc = NULL;
     currState->delayed = false;
 
-    stateQueue.remove();
+    stateQueue.pop_front();
     currState = NULL;
 }
 
