@@ -87,6 +87,12 @@ class ArmFault : public FaultBase
         MemoryAccessSynchronousParityError = 0x19,
         TranslationTableWalkPrtyErr0 = 0x1c,
         TranslationTableWalkPrtyErr1 = 0x1e,
+
+        // not a real fault. This is a status code
+        // to allow the translation function to inform
+        // the memory access function not to proceed
+        // for a Prefetch that misses in the TLB.
+        PrefetchTLBMiss
     };
 
     struct FaultVals

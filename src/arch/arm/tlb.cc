@@ -409,6 +409,11 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
     TlbEntry *te = lookup(vaddr, context_id);
     if (te == NULL) {
+        if (req->isPrefetch()){
+           //if the request is a prefetch don't attempt to fill the TLB
+           //or go any further with the memory access
+           return new PrefetchAbort(vaddr, ArmFault::PrefetchTLBMiss);
+        }
         // start translation table walk, pass variables rather than
         // re-retreaving in table walker for speed
         DPRINTF(TLB, "TLB Miss: Starting hardware table walker for %#x(%d)\n",

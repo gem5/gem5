@@ -439,11 +439,10 @@ TableWalker::doL1Descriptor()
               * AccessFlag0
               */
 
-            currState->fault =
-                new DataAbort(currState->vaddr, NULL, currState->isWrite,
+            currState->fault = new DataAbort(currState->vaddr,
+                                    currState->l1Desc.domain(), currState->isWrite,
                                     ArmFault::AccessFlag0);
         }
-
         if (currState->l1Desc.supersection()) {
             panic("Haven't implemented supersections\n");
         }

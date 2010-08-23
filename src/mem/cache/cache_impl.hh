@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -261,14 +273,19 @@ bool
 Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                         int &lat, PacketList &writebacks)
 {
+    int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+    blk = tags->accessBlock(pkt->getAddr(), lat, id);
+
     if (pkt->req->isUncacheable())  {
+        if (blk != NULL) {
+            tags->invalidateBlk(blk);
+        }
+
         blk = NULL;
         lat = hitLatency;
         return false;
     }
 
-    int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
-    blk = tags->accessBlock(pkt->getAddr(), lat, id);
 
     DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
@@ -393,6 +410,13 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     if (pkt->req->isUncacheable()) {
+        int lat = hitLatency;
+        int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+        BlkType *blk = tags->accessBlock(pkt->getAddr(), lat, id);
+        if (blk != NULL) {
+            tags->invalidateBlk(blk);
+        }
+
         // writes go in write buffer, reads use MSHR
         if (pkt->isWrite() && !pkt->isRead()) {
             allocateWriteBuffer(pkt, time, true);
@@ -532,7 +556,7 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
     bool blkValid = blk && blk->isValid();
 
     if (cpu_pkt->req->isUncacheable()) {
-        assert(blk == NULL);
+        //assert(blk == NULL);
         return NULL;
     }
 
