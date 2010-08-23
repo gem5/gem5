@@ -43,7 +43,6 @@ Import('*')
 
 # List of headers to generate
 isa_switch_hdrs = Split('''
-        arguments.hh
         faults.hh
         interrupts.hh
 	isa.hh
