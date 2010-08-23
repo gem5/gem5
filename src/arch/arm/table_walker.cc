@@ -145,9 +145,15 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
     f = tlb->walkTrickBoxCheck(l1desc_addr, currState->vaddr, sizeof(uint32_t),
             currState->isFetch, currState->isWrite, 0, true);
     if (f) {
-       currState->tc = NULL;
-       currState->req = NULL;
-       return f;
+        if (currState->timing) {
+            currState->transState->finish(f, currState->req,
+                                          currState->tc, currState->mode);
+            currState = NULL;
+        } else {
+            currState->tc = NULL;
+            currState->req = NULL;
+        }
+        return f;
     }
 
     if (currState->timing) {
