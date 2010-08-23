@@ -104,7 +104,7 @@ isRomMicroPC(MicroPC upc)
  */
 class StaticInstBase : public RefCounted
 {
-  protected:
+  public:
 
     /// Set of boolean static instruction properties.
     ///
@@ -184,6 +184,8 @@ class StaticInstBase : public RefCounted
 
         NumFlags
     };
+
+  protected:
 
     /// Flag values for this instruction.
     std::bitset<NumFlags> flags;
