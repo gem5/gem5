@@ -43,9 +43,4 @@ void
 MipsISA::initCPU(ThreadContext *tc, int cpuId)
 {}
 
-template <class CPU>
-void
-MipsISA::processInterrupts(CPU *cpu)
-{}
-
 #endif // FULL_SYSTEM || BARE_IRON

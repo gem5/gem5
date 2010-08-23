@@ -167,7 +167,6 @@ class FrontEnd
     // We fold in the PISA 64- to 32-bit conversion here as well.
     Addr icacheBlockAlignPC(Addr addr)
     {
-        addr = TheISA::realPCToFetchPC(addr);
         return (addr & ~(cacheBlkMask));
     }
 

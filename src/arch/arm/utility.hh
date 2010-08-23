@@ -96,25 +96,6 @@ namespace ArmISA {
     template <class TC>
     void zeroRegisters(TC *tc);
 
-    // Instruction address compression hooks
-    static inline Addr realPCToFetchPC(const Addr &addr) {
-        return addr;
-    }
-
-    static inline Addr fetchPCToRealPC(const Addr &addr) {
-        return addr;
-    }
-
-    // the size of "fetched" instructions
-    static inline size_t fetchInstSize() {
-        return sizeof(MachInst);
-    }
-
-    static inline MachInst makeRegisterCopy(int dest, int src) {
-        panic("makeRegisterCopy not implemented");
-        return 0;
-    }
-
     inline void startupCPU(ThreadContext *tc, int cpuId)
     {
         tc->activate(0);

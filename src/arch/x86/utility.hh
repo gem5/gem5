@@ -85,44 +85,6 @@ namespace X86ISA
 #endif
     }
 
-    inline bool isCallerSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCallerSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    inline bool isCalleeSaveFloatRegister(unsigned int reg) {
-        panic("register classification not implemented");
-        return false;
-    }
-
-    // Instruction address compression hooks
-    inline Addr realPCToFetchPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    inline Addr fetchPCToRealPC(const Addr &addr)
-    {
-        return addr;
-    }
-
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    inline size_t fetchInstSize()
-    {
-        return sizeof(MachInst);
-    }
-
     /**
      * Function to insure ISA semantics about 0 registers.
      * @param tc The thread context.

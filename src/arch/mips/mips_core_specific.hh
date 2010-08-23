@@ -37,13 +37,6 @@ class ThreadContext;
 
 namespace MipsISA {
     void initCPU(ThreadContext *tc, int cpuId);
-
-    /**
-     * Function to check for and process any interrupts.
-     * @param tc The thread context.
-     */
-    template <class CPU>
-    void processInterrupts(CPU *cpu);
 };
 
 #endif // __ARCH_MIPS_CORE_SPECIFIC_HH__

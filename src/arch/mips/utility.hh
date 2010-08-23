@@ -79,30 +79,6 @@ inUserMode(ThreadContext *tc)
     }
 }
 
-// Instruction address compression hooks
-static inline Addr realPCToFetchPC(const Addr &addr) {
-    return addr;
-}
-
-static inline Addr fetchPCToRealPC(const Addr &addr) {
-    return addr;
-}
-
-// the size of "fetched" instructions (not necessarily the size
-// of real instructions for PISA)
-static inline size_t fetchInstSize() {
-    return sizeof(MachInst);
-}
-
-////////////////////////////////////////////////////////////////////////
-//
-//  Register File Utility Functions
-//
-static inline MachInst makeRegisterCopy(int dest, int src) {
-    panic("makeRegisterCopy not implemented");
-    return 0;
-}
-
 template <class CPU>
 void zeroRegisters(CPU *cpu);
 

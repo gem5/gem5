@@ -290,7 +290,6 @@ class DefaultFetch
     /** Align a PC to the start of an I-cache block. */
     Addr icacheBlockAlignPC(Addr addr)
     {
-        addr = TheISA::realPCToFetchPC(addr);
         return (addr & ~(cacheBlkMask));
     }
 

@@ -49,68 +49,6 @@ inUserMode(ThreadContext *tc)
     return (tc->readMiscRegNoEffect(IPR_DTB_CM) & 0x18) != 0;
 }
 
-inline bool
-isCallerSaveIntegerRegister(unsigned int reg)
-{
-    panic("register classification not implemented");
-    return (reg >= 1 && reg <= 8) || (reg >= 22 && reg <= 25) || reg == 27;
-}
-
-inline bool
-isCalleeSaveIntegerRegister(unsigned int reg)
-{
-    panic("register classification not implemented");
-    return reg >= 9 && reg <= 15;
-}
-
-inline bool
-isCallerSaveFloatRegister(unsigned int reg)
-{
-    panic("register classification not implemented");
-    return false;
-}
-
-inline bool
-isCalleeSaveFloatRegister(unsigned int reg)
-{
-    panic("register classification not implemented");
-    return false;
-}
-
-inline Addr
-alignAddress(const Addr &addr, unsigned int nbytes)
-{
-    return (addr & ~(nbytes - 1));
-}
-
-// Instruction address compression hooks
-inline Addr
-realPCToFetchPC(const Addr &addr)
-{
-    return addr;
-}
-
-inline Addr
-fetchPCToRealPC(const Addr &addr)
-{
-    return addr;
-}
-
-// the size of "fetched" instructions (not necessarily the size
-// of real instructions for PISA)
-inline size_t
-fetchInstSize()
-{
-    return sizeof(MachInst);
-}
-
-inline MachInst
-makeRegisterCopy(int dest, int src)
-{
-    panic("makeRegisterCopy not implemented");
-    return 0;
-}
-
 /**
  * Function to insure ISA semantics about 0 registers.
  * @param tc The thread context.
@@ -150,13 +88,6 @@ RoundPage(Addr addr)
 void initIPRs(ThreadContext *tc, int cpuId);
 #if FULL_SYSTEM
 void initCPU(ThreadContext *tc, int cpuId);
-
-/**
- * Function to check for and process any interrupts.
- * @param tc The thread context.
- */
-template <class TC>
-void processInterrupts(TC *tc);
 #endif
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
