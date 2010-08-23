@@ -45,6 +45,7 @@
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
 #include "base/types.hh"
+#include "sim/serialize.hh"
 
 namespace X86ISA
 {
@@ -223,5 +224,16 @@ namespace X86ISA
         int core_type;
     };
 };
+
+// These two functions allow ExtMachInst to be used with SERIALIZE_SCALAR
+// and UNSERIALIZE_SCALAR.
+template <>
+void
+paramOut(std::ostream &os, const std::string &name,
+         const X86ISA::ExtMachInst &machInst);
+template <>
+void
+paramIn(Checkpoint *cp, const std::string &section,
+        const std::string &name, X86ISA::ExtMachInst &machInst);
 
 #endif // __ARCH_X86_TYPES_HH__

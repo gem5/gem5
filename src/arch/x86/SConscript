@@ -59,6 +59,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('predecoder_tables.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
+    Source('types.cc')
     Source('utility.cc')
 
     SimObject('X86NativeTrace.py')
