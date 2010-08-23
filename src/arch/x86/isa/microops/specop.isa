@@ -50,8 +50,7 @@ output header {{
 
       public:
         MicroFaultBase(ExtMachInst _machInst, const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                Fault _fault, uint8_t _cc);
+                uint64_t setFlags, Fault _fault, uint8_t _cc);
 
         MicroFaultBase(ExtMachInst _machInst, const char * instMnem,
                 Fault _fault, uint8_t _cc);
@@ -64,15 +63,13 @@ output header {{
     {
       public:
         MicroHalt(ExtMachInst _machInst, const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast) :
-            X86MicroopBase(_machInst, "halt", instMnem,
-                    isMicro, isDelayed, isFirst, isLast, No_OpClass)
+                uint64_t setFlags) :
+            X86MicroopBase(_machInst, "halt", instMnem, setFlags, No_OpClass)
         {
         }
 
         MicroHalt(ExtMachInst _machInst, const char * instMnem) :
-            X86MicroopBase(_machInst, "halt", instMnem,
-                    false, false, false, false, No_OpClass)
+            X86MicroopBase(_machInst, "halt", instMnem, 0, No_OpClass)
         {
         }
 
@@ -90,8 +87,7 @@ def template MicroFaultDeclare {{
         void buildMe();
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                Fault _fault, uint8_t _cc);
+                uint64_t setFlags, Fault _fault, uint8_t _cc);
 
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 Fault _fault, uint8_t _cc);
@@ -129,18 +125,15 @@ output decoder {{
     inline MicroFaultBase::MicroFaultBase(
             ExtMachInst machInst, const char * instMnem,
             Fault _fault, uint8_t _cc) :
-        X86MicroopBase(machInst, "fault", instMnem,
-                false, false, false, false, No_OpClass),
+        X86MicroopBase(machInst, "fault", instMnem, 0, No_OpClass),
         fault(_fault), cc(_cc)
     {
     }
 
     inline MicroFaultBase::MicroFaultBase(
             ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            Fault _fault, uint8_t _cc) :
-        X86MicroopBase(machInst, "fault", instMnem,
-                isMicro, isDelayed, isFirst, isLast, No_OpClass),
+            uint64_t setFlags, Fault _fault, uint8_t _cc) :
+        X86MicroopBase(machInst, "fault", instMnem, setFlags, No_OpClass),
                 fault(_fault), cc(_cc)
     {
     }
@@ -162,11 +155,9 @@ def template MicroFaultConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             Fault _fault, uint8_t _cc) :
-        %(base_class)s(machInst, instMnem,
-                isMicro, isDelayed, isFirst, isLast, _fault, _cc)
+        %(base_class)s(machInst, instMnem, setFlags, _fault, _cc)
     {
         buildMe();
     }
@@ -211,8 +202,8 @@ let {{
             else:
                 self.cond = "0"
 
-        def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+        def getAllocator(self, microFlags):
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(fault)s, %(cc)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
@@ -239,8 +230,8 @@ let {{
         def __init__(self):
             pass
 
-        def getAllocator(self, *microFlags):
-            return "new MicroHalt(machInst, macrocodeBlock %s)" % \
+        def getAllocator(self, microFlags):
+            return "new MicroHalt(machInst, macrocodeBlock, %s)" % \
                     self.microFlagsText(microFlags)
 
     microopClasses["halt"] = Halt

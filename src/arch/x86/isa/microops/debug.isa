@@ -50,8 +50,7 @@ output header {{
 
       public:
         MicroDebugBase(ExtMachInst _machInst, const char * mnem,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 std::string _message, uint8_t _cc);
 
         MicroDebugBase(ExtMachInst _machInst, const char * mnem,
@@ -69,8 +68,7 @@ def template MicroDebugDeclare {{
         void buildMe();
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                std::string _message, uint8_t _cc);
+                uint64_t setFlags, std::string _message, uint8_t _cc);
 
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 std::string _message, uint8_t _cc);
@@ -96,18 +94,16 @@ output decoder {{
     inline MicroDebugBase::MicroDebugBase(
             ExtMachInst machInst, const char * mnem, const char * instMnem,
             std::string _message, uint8_t _cc) :
-        X86MicroopBase(machInst, mnem, instMnem,
-                false, false, false, false, No_OpClass),
+        X86MicroopBase(machInst, mnem, instMnem, 0, No_OpClass),
         message(_message), cc(_cc)
     {
     }
 
     inline MicroDebugBase::MicroDebugBase(
             ExtMachInst machInst, const char * mnem, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            std::string _message, uint8_t _cc) :
+            uint64_t setFlags, std::string _message, uint8_t _cc) :
         X86MicroopBase(machInst, mnem, instMnem,
-                isMicro, isDelayed, isFirst, isLast, No_OpClass),
+                setFlags, No_OpClass),
                 message(_message), cc(_cc)
     {
     }
@@ -129,11 +125,10 @@ def template MicroDebugConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             std::string _message, uint8_t _cc) :
         %(base_class)s(machInst, "%(func)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, _message, _cc)
+                setFlags, _message, _cc)
     {
         buildMe();
     }
@@ -164,8 +159,8 @@ let {{
             else:
                 self.cond = "0"
 
-        def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+        def getAllocator(self, microFlags):
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, "%(message)s", %(cc)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),

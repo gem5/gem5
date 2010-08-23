@@ -53,14 +53,11 @@ namespace X86ISA
 
         // Constructor
         MediaOpBase(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
+                const char *mnem, const char *_instMnem, uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _dest,
                 uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
                 OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
+            X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
                     __opClass),
             src1(_src1.idx), dest(_dest.idx),
             srcSize(_srcSize), destSize(_destSize), ext(_ext)
@@ -98,14 +95,11 @@ namespace X86ISA
 
         // Constructor
         MediaOpReg(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
+                const char *mnem, const char *_instMnem, uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
                 OpClass __opClass) :
-            MediaOpBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
+            MediaOpBase(_machInst, mnem, _instMnem, setFlags,
                     _src1, _dest, _srcSize, _destSize, _ext,
                     __opClass),
             src2(_src2.idx)
@@ -122,14 +116,11 @@ namespace X86ISA
 
         // Constructor
         MediaOpImm(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
+                const char *mnem, const char *_instMnem, uint64_t setFlags,
                 InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
                 OpClass __opClass) :
-            MediaOpBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
+            MediaOpBase(_machInst, mnem, _instMnem, setFlags,
                     _src1, _dest, _srcSize, _destSize, _ext,
                     __opClass),
             imm8(_imm8)

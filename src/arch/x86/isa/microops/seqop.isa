@@ -44,8 +44,7 @@ output header {{
 
       public:
         SeqOpBase(ExtMachInst _machInst, const char * instMnem,
-                const char * mnemonic,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * mnemonic, uint64_t setFlags,
                 uint16_t _target, uint8_t _cc);
 
         SeqOpBase(ExtMachInst _machInst, const char * instMnem,
@@ -64,8 +63,7 @@ def template SeqOpDeclare {{
         void buildMe();
       public:
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                uint16_t _target, uint8_t _cc);
+                uint64_t setFlags, uint16_t _target, uint8_t _cc);
 
         %(class_name)s(ExtMachInst _machInst, const char * instMnem,
                 uint16_t _target, uint8_t _cc);
@@ -94,18 +92,15 @@ output decoder {{
     inline SeqOpBase::SeqOpBase(
             ExtMachInst machInst, const char * mnemonic, const char * instMnem,
             uint16_t _target, uint8_t _cc) :
-        X86MicroopBase(machInst, mnemonic, instMnem,
-                false, false, false, false, No_OpClass),
+        X86MicroopBase(machInst, mnemonic, instMnem, 0, No_OpClass),
         target(_target), cc(_cc)
     {
     }
 
     inline SeqOpBase::SeqOpBase(
             ExtMachInst machInst, const char * mnemonic, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            uint16_t _target, uint8_t _cc) :
-        X86MicroopBase(machInst, mnemonic, instMnem,
-                isMicro, isDelayed, isFirst, isLast, No_OpClass),
+            uint64_t setFlags, uint16_t _target, uint8_t _cc) :
+        X86MicroopBase(machInst, mnemonic, instMnem, setFlags, No_OpClass),
                 target(_target), cc(_cc)
     {
     }
@@ -128,10 +123,9 @@ def template SeqOpConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            uint16_t _target, uint8_t _cc) :
+            uint64_t setFlags, uint16_t _target, uint8_t _cc) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, _target, _cc)
+                setFlags, _target, _cc)
     {
         buildMe();
     }
@@ -162,8 +156,8 @@ let {{
             else:
                 self.cond = "0"
 
-        def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+        def getAllocator(self, microFlags):
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(target)s, %(cc)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
@@ -174,12 +168,12 @@ let {{
     class Br(SeqOp):
         className = "MicroBranch"
 
-        def getAllocator(self, *microFlags):
-            (is_micro, is_delayed, is_first, is_last) = microFlags
-            is_last = False
-            is_delayed = True
-            microFlags = (is_micro, is_delayed, is_first, is_last)
-            return super(Br, self).getAllocator(*microFlags)
+        def getAllocator(self, microFlags):
+            if "IsLastMicroop" in microFlags:
+                microFlags.remove("IsLastMicroop")
+            if not "IsDelayedCommit" in microFlags:
+                microFlags.append("IsDelayedCommit")
+            return super(Br, self).getAllocator(microFlags)
 
     class Eret(SeqOp):
         target = "normalMicroPC(0)"
@@ -194,12 +188,12 @@ let {{
             else:
                 self.cond = "0"
 
-        def getAllocator(self, *microFlags):
-            (is_micro, is_delayed, is_first, is_last) = microFlags
-            is_last = True
-            is_delayed = False
-            microFlags = (is_micro, is_delayed, is_first, is_last)
-            return super(Eret, self).getAllocator(*microFlags)
+        def getAllocator(self, microFlags):
+            if not "IsLastMicroop" in microFlags:
+                microFlags.append("IsLastMicroop")
+            if "IsDelayedCommit" in microFlags:
+                microFlags.remove("IsDelayedCommit")
+            return super(Eret, self).getAllocator(microFlags)
 
     iop = InstObjParams("br", "MicroBranchFlags", "SeqOpBase",
             {"code": "nuIP = target",

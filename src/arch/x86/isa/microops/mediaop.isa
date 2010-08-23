@@ -54,8 +54,7 @@ def template MediaOpRegDeclare {{
 
       public:
         %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
@@ -77,8 +76,7 @@ def template MediaOpImmDeclare {{
 
       public:
         %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
                 uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
@@ -102,8 +100,7 @@ def template MediaOpRegConstructor {{
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
                 _src1, _src2, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
@@ -111,12 +108,10 @@ def template MediaOpRegConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
                 _src1, _src2, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
@@ -135,8 +130,7 @@ def template MediaOpImmConstructor {{
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
             uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
                 _src1, _imm8, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
@@ -144,12 +138,10 @@ def template MediaOpImmConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
             uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
                 _src1, _imm8, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
@@ -272,11 +264,11 @@ let {{
             else:
                 self.ext = ext 
 
-        def getAllocator(self, *microFlags):
+        def getAllocator(self, microFlags):
             className = self.className
             if self.mnemonic == self.base_mnemonic + 'i':
                 className += "Imm"
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(src1)s, %(op2)s, %(dest)s,
                     %(srcSize)s, %(destSize)s, %(ext)s)''' % {
                 "class_name" : className,

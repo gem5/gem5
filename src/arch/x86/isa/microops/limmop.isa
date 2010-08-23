@@ -69,8 +69,8 @@ def template MicroLimmOpDeclare {{
       public:
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize);
+                uint64_t setFlags, InstRegIndex _dest,
+                uint64_t _imm, uint8_t _dataSize);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
@@ -105,19 +105,17 @@ def template MicroLimmOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false, %(op_class)s),
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0, %(op_class)s),
                 dest(_dest.idx), imm(_imm), dataSize(_dataSize)
     {
         buildMe();
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast, %(op_class)s),
+                setFlags, %(op_class)s),
                 dest(_dest.idx), imm(_imm), dataSize(_dataSize)
     {
         buildMe();
@@ -135,8 +133,8 @@ let {{
             self.imm = imm
             self.dataSize = dataSize
 
-        def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+        def getAllocator(self, microFlags):
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(dest)s, %(imm)s, %(dataSize)s)''' % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,
@@ -159,8 +157,8 @@ let {{
             self.imm = imm
             self.dataSize = dataSize
 
-        def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+        def getAllocator(self, microFlags):
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(dest)s, %(imm)s, %(dataSize)s)''' % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,

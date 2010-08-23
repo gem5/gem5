@@ -76,8 +76,7 @@ def template MicroLeaDeclare {{
 
       public:
         %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
                 uint64_t _disp, InstRegIndex _segment,
                 InstRegIndex _data,
@@ -252,8 +251,7 @@ def template MicroLdStOpDeclare {{
 
       public:
         %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
                 uint64_t _disp, InstRegIndex _segment,
                 InstRegIndex _data,
@@ -290,8 +288,7 @@ def template MicroLdStOpConstructor {{
             InstRegIndex _data,
             uint8_t _dataSize, uint8_t _addressSize,
             Request::FlagsType _memFlags) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
                 _scale, _index, _base,
                 _disp, _segment, _data,
                 _dataSize, _addressSize, _memFlags, %(op_class)s)
@@ -300,15 +297,13 @@ def template MicroLdStOpConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
             uint64_t _disp, InstRegIndex _segment,
             InstRegIndex _data,
             uint8_t _dataSize, uint8_t _addressSize,
             Request::FlagsType _memFlags) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
                 _scale, _index, _base,
                 _disp, _segment, _data,
                 _dataSize, _addressSize, _memFlags, %(op_class)s)
@@ -335,8 +330,8 @@ let {{
             self.memFlags += " | (machInst.legacy.addr ? " + \
                              "(AddrSizeFlagBit << FlagShift) : 0)"
 
-        def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+        def getAllocator(self, microFlags):
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(scale)s, %(index)s, %(base)s,
                     %(disp)s, %(segment)s, %(data)s,
                     %(dataSize)s, %(addressSize)s, %(memFlags)s)''' % {

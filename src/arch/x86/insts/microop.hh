@@ -96,16 +96,11 @@ namespace X86ISA
 
         X86MicroopBase(ExtMachInst _machInst,
                 const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
-                OpClass __opClass) :
+                uint64_t setFlags, OpClass __opClass) :
             X86ISA::X86StaticInst(mnem, _machInst, __opClass),
             instMnem(_instMnem)
         {
-            flags[IsMicroop] = isMicro;
-            flags[IsDelayedCommit] = isDelayed;
-            flags[IsFirstMicroop] = isFirst;
-            flags[IsLastMicroop] = isLast;
+            flags |= setFlags;
         }
 
         std::string generateDisassembly(Addr pc,

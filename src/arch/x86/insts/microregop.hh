@@ -58,14 +58,11 @@ namespace X86ISA
 
         // Constructor
         RegOpBase(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
+                const char *mnem, const char *_instMnem, uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
+            X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
                     __opClass),
             src1(_src1.idx), dest(_dest.idx),
             dataSize(_dataSize), ext(_ext)
@@ -86,14 +83,11 @@ namespace X86ISA
 
         // Constructor
         RegOp(ExtMachInst _machInst,
-                const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
+                const char *mnem, const char *_instMnem, uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
-            RegOpBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
+            RegOpBase(_machInst, mnem, _instMnem, setFlags,
                     _src1, _dest, _dataSize, _ext,
                     __opClass),
             src2(_src2.idx)
@@ -111,14 +105,11 @@ namespace X86ISA
 
         // Constructor
         RegOpImm(ExtMachInst _machInst,
-                const char * mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
+                const char * mnem, const char *_instMnem, uint64_t setFlags,
                 InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
-            RegOpBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
+            RegOpBase(_machInst, mnem, _instMnem, setFlags,
                     _src1, _dest, _dataSize, _ext,
                     __opClass),
             imm8(_imm8)

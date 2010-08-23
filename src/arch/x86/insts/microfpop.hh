@@ -60,13 +60,11 @@ namespace X86ISA
         // Constructor
         FpOp(ExtMachInst _machInst,
                 const char *mnem, const char *_instMnem,
-                bool isMicro, bool isDelayed,
-                bool isFirst, bool isLast,
+                uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, int8_t _spm,
                 OpClass __opClass) :
-            X86MicroopBase(_machInst, mnem, _instMnem,
-                    isMicro, isDelayed, isFirst, isLast,
+            X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
                     __opClass),
             src1(_src1.idx), src2(_src2.idx), dest(_dest.idx),
             dataSize(_dataSize), spm(_spm)

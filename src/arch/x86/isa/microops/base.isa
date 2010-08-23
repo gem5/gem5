@@ -78,25 +78,14 @@ let {{
         def __init__(self, name):
             self.name = name
 
-        # This converts a python bool into a C++ bool
-        def cppBool(self, val):
-            if val:
-                return "true"
-            else:
-                return "false"
-
-        # This converts a list of python bools into
-        # a comma seperated list of C++ bools.
-        def microFlagsText(self, vals):
-            text = ""
-            for val in vals:
-                text += ", %s" % self.cppBool(val)
-            return text
+        def microFlagsText(self, flags):
+            wrapped = ("(1ULL << StaticInst::%s)" % flag for flag in flags)
+            return " | ".join(wrapped)
 
         def getGeneratorDef(self, micropc):
             return self.generatorTemplate % \
                 (self.className, micropc, \
-                 self.getAllocator(True, True, False, False))
+                 self.getAllocator(["IsMicroop", "IsDelayedCommit"]))
 
         def getGenerator(self, micropc):
             return self.generatorNameTemplate % (self.className, micropc)

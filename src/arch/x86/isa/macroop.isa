@@ -185,11 +185,16 @@ let {{
             allocMicroops = ''
             micropc = 0
             for op in self.microops:
-                isLast = (micropc == numMicroops - 1)
+                flags = ["IsMicroop"]
+                if micropc == numMicroops - 1:
+                    flags.append("IsLastMicroop")
+                else:
+                    flags.append("IsDelayedCommit")
+                if micropc == 0:
+                    flags.append("IsFirstMicroop")
                 allocMicroops += \
                     "microops[%d] = %s;\n" % \
-                    (micropc, op.getAllocator(True, not isLast,
-                                              micropc == 0, isLast))
+                    (micropc, op.getAllocator(flags))
                 micropc += 1
             if env.useStackSize:
                 useStackSize = "true"

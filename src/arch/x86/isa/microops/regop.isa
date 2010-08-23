@@ -106,8 +106,7 @@ def template MicroRegOpDeclare {{
 
       public:
         %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
@@ -129,8 +128,7 @@ def template MicroRegOpImmDeclare {{
 
       public:
         %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
@@ -154,8 +152,7 @@ def template MicroRegOpConstructor {{
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
                 _src1, _src2, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
@@ -163,12 +160,10 @@ def template MicroRegOpConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
                 _src1, _src2, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
@@ -187,8 +182,7 @@ def template MicroRegOpImmConstructor {{
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
                 _src1, _imm8, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
@@ -196,12 +190,10 @@ def template MicroRegOpImmConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
                 _src1, _imm8, _dest, _dataSize, _ext,
                 %(op_class)s)
     {
@@ -421,11 +413,11 @@ let {{
                 self.ext = " | ".join(flags)
                 self.className += "Flags"
 
-        def getAllocator(self, *microFlags):
+        def getAllocator(self, microFlags):
             className = self.className
             if self.mnemonic == self.base_mnemonic + 'i':
                 className += "Imm"
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(src1)s, %(op2)s, %(dest)s,
                     %(dataSize)s, %(ext)s)''' % {
                 "class_name" : className,

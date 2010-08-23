@@ -79,8 +79,7 @@ def template MicroFpOpDeclare {{
 
       public:
         %(class_name)s(ExtMachInst _machInst,
-                const char * instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                const char * instMnem, uint64_t setFlags,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, int8_t _spm);
 
@@ -104,8 +103,7 @@ def template MicroFpOpConstructor {{
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, int8_t _spm) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                false, false, false, false,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, 0,
                 _src1, _src2, _dest, _dataSize, _spm,
                 %(op_class)s)
     {
@@ -113,12 +111,10 @@ def template MicroFpOpConstructor {{
     }
 
     inline %(class_name)s::%(class_name)s(
-            ExtMachInst machInst, const char * instMnem,
-            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, int8_t _spm) :
-        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
-                isMicro, isDelayed, isFirst, isLast,
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, setFlags,
                 _src1, _src2, _dest, _dataSize, _spm,
                 %(op_class)s)
     {
@@ -226,8 +222,8 @@ let {{
             if spm:
                 self.className += "Top"
 
-        def getAllocator(self, *microFlags):
-            return '''new %(class_name)s(machInst, macrocodeBlock
+        def getAllocator(self, microFlags):
+            return '''new %(class_name)s(machInst, macrocodeBlock,
                     %(flags)s, %(src1)s, %(src2)s, %(dest)s,
                     %(dataSize)s, %(spm)d)''' % {
                 "class_name" : self.className,

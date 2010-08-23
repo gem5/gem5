@@ -74,15 +74,14 @@ namespace X86ISA
         //Constructor
         LdStOp(ExtMachInst _machInst,
                 const char * mnem, const char * _instMnem,
-                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                uint64_t setFlags,
                 uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
                 uint64_t _disp, InstRegIndex _segment,
                 InstRegIndex _data,
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags,
                 OpClass __opClass) :
-        X86MicroopBase(machInst, mnem, _instMnem,
-                isMicro, isDelayed, isFirst, isLast, __opClass),
+        X86MicroopBase(machInst, mnem, _instMnem, setFlags, __opClass),
                 scale(_scale), index(_index.idx), base(_base.idx),
                 disp(_disp), segment(_segment.idx),
                 data(_data.idx),
