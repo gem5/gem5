@@ -157,28 +157,17 @@ MiscReg
 ISA::readMiscRegNoEffect(int misc_reg)
 {
     assert(misc_reg < NumMiscRegs);
-    if (misc_reg == MISCREG_SPSR) {
-        CPSR cpsr = miscRegs[MISCREG_CPSR];
-        switch (cpsr.mode) {
-          case MODE_USER:
-            return miscRegs[MISCREG_SPSR];
-          case MODE_FIQ:
-            return miscRegs[MISCREG_SPSR_FIQ];
-          case MODE_IRQ:
-            return miscRegs[MISCREG_SPSR_IRQ];
-          case MODE_SVC:
-            return miscRegs[MISCREG_SPSR_SVC];
-          case MODE_MON:
-            return miscRegs[MISCREG_SPSR_MON];
-          case MODE_ABORT:
-            return miscRegs[MISCREG_SPSR_ABT];
-          case MODE_UNDEFINED:
-            return miscRegs[MISCREG_SPSR_UND];
-          default:
-            return miscRegs[MISCREG_SPSR];
-        }
-    }
-    return miscRegs[misc_reg];
+
+    int flat_idx;
+    if (misc_reg == MISCREG_SPSR)
+        flat_idx = flattenMiscIndex(misc_reg);
+    else
+        flat_idx = misc_reg;
+    MiscReg val = miscRegs[flat_idx];
+
+    DPRINTF(MiscRegs, "Reading From misc reg %d (%d) : %#x\n",
+            misc_reg, flat_idx, val);
+    return val;
 }
 
 
@@ -237,36 +226,16 @@ void
 ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
     assert(misc_reg < NumMiscRegs);
-    if (misc_reg == MISCREG_SPSR) {
-        CPSR cpsr = miscRegs[MISCREG_CPSR];
-        switch (cpsr.mode) {
-          case MODE_USER:
-            miscRegs[MISCREG_SPSR] = val;
-            return;
-          case MODE_FIQ:
-            miscRegs[MISCREG_SPSR_FIQ] = val;
-            return;
-          case MODE_IRQ:
-            miscRegs[MISCREG_SPSR_IRQ] = val;
-            return;
-          case MODE_SVC:
-            miscRegs[MISCREG_SPSR_SVC] = val;
-            return;
-          case MODE_MON:
-            miscRegs[MISCREG_SPSR_MON] = val;
-            return;
-          case MODE_ABORT:
-            miscRegs[MISCREG_SPSR_ABT] = val;
-            return;
-          case MODE_UNDEFINED:
-            miscRegs[MISCREG_SPSR_UND] = val;
-            return;
-          default:
-            miscRegs[MISCREG_SPSR] = val;
-            return;
-        }
-    }
-    miscRegs[misc_reg] = val;
+
+    int flat_idx;
+    if (misc_reg == MISCREG_SPSR)
+        flat_idx = flattenMiscIndex(misc_reg);
+    else
+        flat_idx = misc_reg;
+    miscRegs[flat_idx] = val;
+
+    DPRINTF(MiscRegs, "Writing to misc reg %d (%d) : %#x\n", misc_reg,
+            flat_idx, val);
 }
 
 void
@@ -276,8 +245,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
     if (misc_reg == MISCREG_CPSR) {
         updateRegMap(val);
         CPSR cpsr = val;
-        DPRINTF(Arm, "Updating CPSR to %#x f:%d i:%d a:%d mode:%#x\n",
-                cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
+        DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
+                miscRegs[misc_reg], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
         Addr npc = tc->readNextPC() & ~PcModeMask;
         if (cpsr.j)
             npc = npc | (ULL(1) << PcJBitShift);

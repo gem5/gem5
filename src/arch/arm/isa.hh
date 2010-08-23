@@ -137,6 +137,46 @@ namespace ArmISA
             return reg;
         }
 
+        int
+        flattenMiscIndex(int reg)
+        {
+            if (reg == MISCREG_SPSR) {
+                int spsr_idx = NUM_MISCREGS;
+                CPSR cpsr = miscRegs[MISCREG_CPSR];
+                switch (cpsr.mode) {
+                  case MODE_USER:
+                    warn("User mode does not have SPSR\n");
+                    spsr_idx = MISCREG_SPSR;
+                    break;
+                  case MODE_FIQ:
+                    spsr_idx = MISCREG_SPSR_FIQ;
+                    break;
+                  case MODE_IRQ:
+                    spsr_idx = MISCREG_SPSR_IRQ;
+                    break;
+                  case MODE_SVC:
+                    spsr_idx = MISCREG_SPSR_SVC;
+                    break;
+                  case MODE_MON:
+                    spsr_idx = MISCREG_SPSR_MON;
+                    break;
+                  case MODE_ABORT:
+                    spsr_idx = MISCREG_SPSR_ABT;
+                    break;
+                  case MODE_UNDEFINED:
+                    spsr_idx = MISCREG_SPSR_UND;
+                    break;
+                  default:
+                    warn("Trying to access SPSR in an invalid mode: %d\n",
+                         cpsr.mode);
+                    spsr_idx = MISCREG_SPSR;
+                    break;
+                }
+                return spsr_idx;
+            }
+            return reg;
+        }
+
         void serialize(EventManager *em, std::ostream &os)
         {}
         void unserialize(EventManager *em, Checkpoint *cp,
