@@ -231,7 +231,7 @@ def format ArmUnconditional() {{
                     const uint32_t imm =
                         (sext<26>(bits(machInst, 23, 0) << 2)) |
                         (bits(machInst, 24) << 1);
-                    return new BlxImm(machInst, imm);
+                    return new BlxImm(machInst, imm, COND_UC);
                 }
               case 0x2:
                 if (bits(op1, 4, 0) != 0) {

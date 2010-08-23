@@ -50,7 +50,7 @@ def format ArmBBlxImm() {{
         if (machInst.condCode == 0xF) {
             int32_t imm = (sext<26>(bits(machInst, 23, 0) << 2)) |
                           (bits(machInst, 24) << 1);
-            return new BlxImm(machInst, imm);
+            return new BlxImm(machInst, imm, COND_UC);
         } else {
             return new B(machInst, sext<26>(bits(machInst, 23, 0) << 2),
                          (ConditionCode)(uint32_t)machInst.condCode);
@@ -63,7 +63,7 @@ def format ArmBlBlxImm() {{
         if (machInst.condCode == 0xF) {
             int32_t imm = (sext<26>(bits(machInst, 23, 0) << 2)) |
                           (bits(machInst, 24) << 1);
-            return new BlxImm(machInst, imm);
+            return new BlxImm(machInst, imm, COND_UC);
         } else {
             return new Bl(machInst, sext<26>(bits(machInst, 23, 0) << 2),
                           (ConditionCode)(uint32_t)machInst.condCode);
@@ -236,6 +236,13 @@ def format Thumb32BranchesAndMiscCtrl() {{
             }
           case 0x1:
             {
+                ConditionCode condCode;
+                if(machInst.itstateMask) {
+                  condCode = (ConditionCode)(uint8_t)machInst.itstateCond;
+                } else {
+                  condCode = COND_UC;
+                }
+
                 const uint32_t s = bits(machInst, 26);
                 const uint32_t i1 = !(bits(machInst, 13) ^ s);
                 const uint32_t i2 = !(bits(machInst, 11) ^ s);
@@ -244,12 +251,18 @@ def format Thumb32BranchesAndMiscCtrl() {{
                 const int32_t imm = sext<25>((s << 24) |
                                              (i1 << 23) | (i2 << 22) |
                                              (imm10 << 12) | (imm11 << 1));
-                return new B(machInst, imm, COND_UC);
+                return new B(machInst, imm, condCode);
             }
           case 0x4:
             {
                 if (bits(machInst, 0) == 1) {
                     return new Unknown(machInst);
+                }
+                ConditionCode condCode;
+                if(machInst.itstateMask) {
+                  condCode = (ConditionCode)(uint8_t)machInst.itstateCond;
+                } else {
+                  condCode = COND_UC;
                 }
                 const uint32_t s = bits(machInst, 26);
                 const uint32_t i1 = !(bits(machInst, 13) ^ s);
@@ -259,10 +272,16 @@ def format Thumb32BranchesAndMiscCtrl() {{
                 const int32_t imm = sext<25>((s << 24) |
                                              (i1 << 23) | (i2 << 22) |
                                              (imm10h << 12) | (imm10l << 2));
-                return new BlxImm(machInst, imm);
+                return new BlxImm(machInst, imm, condCode);
             }
           case 0x5:
             {
+                ConditionCode condCode;
+                if(machInst.itstateMask) {
+                  condCode = (ConditionCode)(uint8_t)machInst.itstateCond;
+                } else {
+                  condCode = COND_UC;
+                }
                 const uint32_t s = bits(machInst, 26);
                 const uint32_t i1 = !(bits(machInst, 13) ^ s);
                 const uint32_t i2 = !(bits(machInst, 11) ^ s);
@@ -271,7 +290,7 @@ def format Thumb32BranchesAndMiscCtrl() {{
                 const int32_t imm = sext<25>((s << 24) |
                                              (i1 << 23) | (i2 << 22) |
                                              (imm10 << 12) | (imm11 << 1));
-                return new Bl(machInst, imm, COND_UC);
+                return new Bl(machInst, imm, condCode);
             }
           default:
             break;

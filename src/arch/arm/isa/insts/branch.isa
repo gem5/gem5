@@ -87,9 +87,9 @@ let {{
             # Since we're switching ISAs, the target ISA will be the opposite
             # of the current ISA. !arm is whether the target is ARM.
             newPC = '(!arm ? (roundDown(curPc, 4) + imm) : (curPc + imm))'
-            base = "BranchImm"
-            declare = BranchImmDeclare
-            constructor = BranchImmConstructor
+            base = "BranchImmCond"
+            declare = BranchImmCondDeclare
+            constructor = BranchImmCondConstructor
         else:
             Name += "Reg"
             newPC = 'Op1'
