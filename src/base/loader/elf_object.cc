@@ -375,8 +375,12 @@ ElfObject::loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask)
             for (ii = 0; ii < count; ++ii) {
                 gelf_getsym(data, ii, &sym);
                 if (GELF_ST_BIND(sym.st_info) == binding) {
-                   symtab->insert(sym.st_value & mask,
-                                  elf_strptr(elf, shdr.sh_link, sym.st_name));
+                    char *sym_name = elf_strptr(elf, shdr.sh_link, sym.st_name);
+                    if (sym_name && sym_name[0] != '$') {
+                        DPRINTF(Loader, "Symbol: %-40s value %#x\n",
+                                sym_name, sym.st_value);
+                        symtab->insert(sym.st_value & mask, sym_name);
+                    }
                 }
             }
         }
