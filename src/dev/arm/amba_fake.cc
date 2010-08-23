@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 ARM Limited
+ * Copyright (c) 2010 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,94 +40,52 @@
  * Authors: Ali Saidi
  */
 
-/** @file
- * Implementation of Versatile platform.
- */
+#include "base/trace.hh"
+#include "dev/arm/amba_fake.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 
-#include <deque>
-#include <string>
-#include <vector>
-
-#include "config/the_isa.hh"
-#include "cpu/intr_control.hh"
-#include "dev/arm/versatile.hh"
-#include "dev/terminal.hh"
-#include "sim/system.hh"
-
-using namespace std;
-using namespace TheISA;
-
-Versatile::Versatile(const Params *p)
-    : Platform(p), system(p->system)
+AmbaFake::AmbaFake(const Params *p)
+    : AmbaDevice(p)
 {
-    // set the back pointer from the system to myself
-    system->platform = this;
+    pioSize = 0xfff;
 }
 
 Tick
-Versatile::intrFrequency()
+AmbaFake::read(PacketPtr pkt)
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
+
+    Addr daddr = pkt->getAddr() - pioAddr;
+    pkt->allocate();
+
+    DPRINTF(AMBA, " read register %#x\n", daddr);
+
+    pkt->set<uint32_t>(0);
+    if (!readId(pkt) && !params()->ignore_access)
+        panic("Tried to read AmbaFake at offset %#x that doesn't exist\n", daddr);
+
+    pkt->makeAtomicResponse();
+    return pioDelay;
 }
 
-void
-Versatile::postConsoleInt()
+Tick
+AmbaFake::write(PacketPtr pkt)
 {
-    warn_once("Don't know what interrupt to post for console.\n");
-    //panic("Need implementation\n");
-}
 
-void
-Versatile::clearConsoleInt()
-{
-    warn_once("Don't know what interrupt to clear for console.\n");
-    //panic("Need implementation\n");
-}
+    Addr daddr = pkt->getAddr() - pioAddr;
+    pkt->allocate();
 
-void
-Versatile::postPciInt(int line)
-{
-    panic("Need implementation\n");
-}
+    if (!params()->ignore_access)
+        panic("Tried to write AmbaFake at offset %#x that doesn't exist\n", daddr);
 
-void
-Versatile::clearPciInt(int line)
-{
-    panic("Need implementation\n");
-}
-
-Addr
-Versatile::pciToDma(Addr pciAddr) const
-{
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    pkt->makeAtomicResponse();
+    return pioDelay;
 }
 
 
-Addr
-Versatile::calcPciConfigAddr(int bus, int dev, int func)
+AmbaFake *
+AmbaFakeParams::create()
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
-}
-
-Addr
-Versatile::calcPciIOAddr(Addr addr)
-{
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
-}
-
-Addr
-Versatile::calcPciMemAddr(Addr addr)
-{
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
-}
-
-Versatile *
-VersatileParams::create()
-{
-    return new Versatile(this);
+    return new AmbaFake(this);
 }

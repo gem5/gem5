@@ -40,6 +40,14 @@
 Import('*')
 
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'arm':
-    SimObject('Versatile.py')
+    SimObject('RealView.py')
 
-    Source('versatile.cc')
+    Source('amba_device.cc')
+    Source('amba_fake.cc')
+    Source('gic.cc')
+    Source('pl011.cc')
+    Source('timer_sp804.cc')
+    Source('rv_ctrl.cc')
+    Source('realview.cc')
+
+    TraceFlag('AMBA')

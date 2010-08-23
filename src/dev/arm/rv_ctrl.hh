@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 ARM Limited
+ * Copyright (c) 2010 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -40,80 +37,87 @@
  * Authors: Ali Saidi
  */
 
-/**
- * @file
- * Declaration of top level class for the Versatile platform chips. This class just
- * retains pointers to all its children so the children can communicate.
+#ifndef __DEV_ARM_RV_HH__
+#define __DEV_ARM_RV_HH__
+
+#include "base/range.hh"
+#include "dev/io_device.hh"
+#include "params/RealViewCtrl.hh"
+
+/** @file
+ * This implements the simple real view registers on a PBXA9
  */
 
-#ifndef __DEV_ARM_VERSATILE_HH__
-#define __DEV_ARM_VERSATILE_HH__
-
-#include "dev/platform.hh"
-#include "params/Versatile.hh"
-
-class IdeController;
-class System;
-
-class Versatile : public Platform
+class RealViewCtrl : public BasicPioDevice
 {
-  public:
-    /** Pointer to the system */
-    System *system;
+  protected:
+    enum {
+        IdReg      = 0x00,
+        SwReg      = 0x04,
+        Led        = 0x08,
+        Osc0       = 0x0C,
+        Osc1       = 0x10,
+        Osc2       = 0x14,
+        Osc3       = 0x18,
+        Osc4       = 0x1C,
+        Lock       = 0x20,
+        Clock100   = 0x24,
+        CfgData1   = 0x28,
+        CfgData2   = 0x2C,
+        Flags      = 0x30,
+        FlagsClr   = 0x34,
+        NvFlags    = 0x38,
+        NvFlagsClr = 0x3C,
+        ResetCtl   = 0x40,
+        PciCtl     = 0x44,
+        MciCtl     = 0x48,
+        Flash      = 0x4C,
+        Clcd       = 0x50,
+        ClcdSer    = 0x54,
+        Bootcs     = 0x58,
+        Clock24    = 0x5C,
+        Misc       = 0x60,
+        IoSel      = 0x70,
+        ProcId     = 0x84,
+        TestOsc0   = 0xC0,
+        TestOsc1   = 0xC4,
+        TestOsc2   = 0xC8,
+        TestOsc3   = 0xCC,
+        TestOsc4   = 0xD0
+    };
 
   public:
-    typedef VersatileParams Params;
+    typedef RealViewCtrlParams Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
     /**
-     * Constructor for the Tsunami Class.
-     * @param name name of the object
-     * @param s system the object belongs to
-     * @param intctrl pointer to the interrupt controller
-     */
-    Versatile(const Params *p);
-
-    /**
-     * Return the interrupting frequency to AlphaAccess
-     * @return frequency of RTC interrupts
-     */
-    virtual Tick intrFrequency();
+      * The constructor for RealView just registers itself with the MMU.
+      * @param p params structure
+      */
+    RealViewCtrl(Params *p);
 
     /**
-     * Cause the cpu to post a serial interrupt to the CPU.
+     * Handle a read to the device
+     * @param pkt The memory request.
+     * @param data Where to put the data.
      */
-    virtual void postConsoleInt();
+    virtual Tick read(PacketPtr pkt);
 
     /**
-     * Clear a posted CPU interrupt
+     * All writes are simply ignored.
+     * @param pkt The memory request.
+     * @param data the data
      */
-    virtual void clearConsoleInt();
-
-    /**
-     * Cause the chipset to post a cpi interrupt to the CPU.
-     */
-    virtual void postPciInt(int line);
-
-    /**
-     * Clear a posted PCI->CPU interrupt
-     */
-    virtual void clearPciInt(int line);
+    virtual Tick write(PacketPtr pkt);
 
 
-    virtual Addr pciToDma(Addr pciAddr) const;
-
-    /**
-     * Calculate the configuration address given a bus/dev/func.
-     */
-    virtual Addr calcPciConfigAddr(int bus, int dev, int func);
-
-    /**
-     * Calculate the address for an IO location on the PCI bus.
-     */
-    virtual Addr calcPciIOAddr(Addr addr);
-
-    /**
-     * Calculate the address for a memory location on the PCI bus.
-     */
-    virtual Addr calcPciMemAddr(Addr addr);
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __DEV_ARM_VERSATILE_HH__
+
+#endif // __DEV_ARM_RV_HH__
+

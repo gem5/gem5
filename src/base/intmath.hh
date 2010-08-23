@@ -33,6 +33,7 @@
 
 #include <cassert>
 
+#include "base/misc.hh"
 #include "base/types.hh"
 
 // Returns the prime number one less than n.
@@ -73,6 +74,27 @@ isPowerOf2(T n)
 {
     return n != 0 && leastSigBit(n) == n;
 }
+
+inline uint64_t
+power(uint32_t n, uint32_t e)
+{
+    if (e > 20)
+        warn("Warning, power() function is quite slow for large exponents\n");
+
+    if (e == 0)
+        return 1;
+
+    uint64_t result = n;
+    uint64_t old_result = 0;
+    for (int x = 1; x < e; x++) {
+        old_result = result;
+        result *= n;
+        if (old_result > result)
+            warn("power() overflowed!\n");
+    }
+    return result;
+}
+
 
 inline int
 floorLog2(unsigned x)
