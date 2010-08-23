@@ -530,6 +530,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         (load_idx != loadHead || !load_inst->isAtCommit())) {
         iewStage->rescheduleMemInst(load_inst);
         ++lsqRescheduledLoads;
+        DPRINTF(LSQUnit, "Uncachable load [sn:%lli] PC %#x\n",
+                load_inst->seqNum, load_inst->readPC());
 
         // Must delete request now that it wasn't handed off to
         // memory.  This is quite ugly.  @todo: Figure out the proper

@@ -251,6 +251,9 @@ class DefaultIEW
 
     bool ableToIssue;
 
+    /** Check misprediction  */
+    void checkMisprediction(DynInstPtr &inst);
+
   private:
     /** Sends commit proper information for a squash due to a branch
      * mispredict.

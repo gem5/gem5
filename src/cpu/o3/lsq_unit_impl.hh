@@ -989,6 +989,9 @@ LSQUnit<Impl>::writeback(DynInstPtr &inst, PacketPtr pkt)
     iewStage->instToCommit(inst);
 
     iewStage->activityThisCycle();
+
+    // see if this load changed the PC
+    iewStage->checkMisprediction(inst);
 }
 
 template <class Impl>
