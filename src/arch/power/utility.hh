@@ -67,13 +67,6 @@ startupCPU(ThreadContext *tc, int cpuId)
     tc->activate(0);
 }
 
-template <class XC>
-Fault
-checkFpEnableFault(XC *xc)
-{
-    return NoFault;
-}
-
 void
 copyRegs(ThreadContext *src, ThreadContext *dest);
 
