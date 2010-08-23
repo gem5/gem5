@@ -224,6 +224,11 @@ public:
     {
         return hitLatency;
     }
+    /**
+     *iterated through all blocks and clear all locks
+     *Needed to clear all lock tracking at once
+     */
+    virtual void clearLocks();
 
     /**
      * Called at end of simulation to complete average block reference stats.

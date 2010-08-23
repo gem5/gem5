@@ -273,12 +273,14 @@ bool
 Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                         int &lat, PacketList &writebacks)
 {
-    int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
-    blk = tags->accessBlock(pkt->getAddr(), lat, id);
-
-    if (pkt->req->isUncacheable())  {
-        if (blk != NULL) {
-            tags->invalidateBlk(blk);
+    if (pkt->req->isUncacheable()) {
+        if (pkt->req->isClrex()) {
+            tags->clearLocks();
+        } else {
+           blk = tags->findBlock(pkt->getAddr());
+           if (blk != NULL) {
+               tags->invalidateBlk(blk);
+           }
         }
 
         blk = NULL;
@@ -286,6 +288,8 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         return false;
     }
 
+    int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+    blk = tags->accessBlock(pkt->getAddr(), lat, id);
 
     DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
@@ -410,11 +414,13 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     if (pkt->req->isUncacheable()) {
-        int lat = hitLatency;
-        int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
-        BlkType *blk = tags->accessBlock(pkt->getAddr(), lat, id);
-        if (blk != NULL) {
-            tags->invalidateBlk(blk);
+        if (pkt->req->isClrex()) {
+            tags->clearLocks();
+        } else {
+            BlkType *blk = tags->findBlock(pkt->getAddr());
+            if (blk != NULL) {
+                tags->invalidateBlk(blk);
+            }
         }
 
         // writes go in write buffer, reads use MSHR

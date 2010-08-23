@@ -280,6 +280,12 @@ public:
     {
         return (tag);
     }
+
+    /**
+     *iterated through all blocks and clear all locks
+     *Needed to clear all lock tracking at once
+     */
+    virtual void clearLocks();
 };
 
 #endif // __MEM_CACHE_TAGS_FA_LRU_HH__

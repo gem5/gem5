@@ -286,3 +286,11 @@ FALRU::check()
     }
     return true;
 }
+
+void
+FALRU::clearLocks()
+{
+    for (int i = 0; i < numBlocks; i++){
+        blks[i].clearLoadLocks();
+    }
+}

@@ -632,6 +632,14 @@ IIC::invalidateBlk(IIC::BlkType *tag_ptr)
 }
 
 void
+IIC::clearLocks()
+{
+    for (int i = 0; i < numTags; i++){
+        tagStore[i].clearLoadLocks();
+    }
+}
+
+void
 IIC::cleanupRefs()
 {
     for (unsigned i = 0; i < numTags; ++i) {

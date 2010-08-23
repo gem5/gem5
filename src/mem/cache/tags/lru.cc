@@ -217,6 +217,14 @@ LRU::invalidateBlk(BlkType *blk)
 }
 
 void
+LRU::clearLocks()
+{
+    for (int i = 0; i < numBlocks; i++){
+        blks[i].clearLoadLocks();
+    }
+}
+
+void
 LRU::cleanupRefs()
 {
     for (unsigned i = 0; i < numSets*assoc; ++i) {

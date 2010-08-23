@@ -358,9 +358,10 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     // If this is a clrex instruction, provide a PA of 0 with no fault
     // This will force the monitor to set the tracked address to 0
     // a bit of a hack but this effectively clrears this processors monitor
-    if (flags & Clrex){
+    if (flags & Request::CLREX){
        req->setPaddr(0);
        req->setFlags(Request::UNCACHEABLE);
+       req->setFlags(Request::CLREX);
        return NoFault;
     }
     if ((req->isInstFetch() && (!sctlr.i)) ||

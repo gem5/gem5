@@ -78,8 +78,7 @@ class TLB : public BaseTLB
         // Because zero otherwise looks like a valid setting and may be used
         // accidentally, this bit must be non-zero to show it was used on
         // purpose.
-        MustBeOne = 0x20,
-        Clrex = 0x40
+        MustBeOne = 0x20
     };
   protected:
     typedef std::multimap<Addr, int> PageTable;

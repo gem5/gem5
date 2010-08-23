@@ -439,6 +439,11 @@ class IIC : public BaseTags
     IICTag* findVictim(Addr addr, PacketList &writebacks);
 
     void insertBlock(Addr addr, BlkType *blk, int context_src);
+    /**
+     *iterated through all blocks and clear all locks
+     *Needed to clear all lock tracking at once
+     */
+    virtual void clearLocks();
 
     /**
      * Called at end of simulation to complete average block reference stats.
@@ -497,6 +502,7 @@ private:
      * @param data_ptr The data block to free.
      */
     void freeDataBlock(unsigned long data_ptr);
+
 };
 #endif // __IIC_HH__
 

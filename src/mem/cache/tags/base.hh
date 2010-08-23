@@ -140,6 +140,12 @@ class BaseTags
      * exits.
      */
     virtual void cleanupRefs() {}
+
+    /**
+     *iterated through all blocks and clear all locks
+     *Needed to clear all lock tracking at once
+     */
+    virtual void clearLocks() {}
 };
 
 class BaseTagsCallback : public Callback
