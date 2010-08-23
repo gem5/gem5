@@ -39,7 +39,7 @@
 
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/bios/intelmp.hh"
-#include "arch/x86/miscregs.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/system.hh"
 #include "arch/vtophys.hh"
 #include "base/intmath.hh"

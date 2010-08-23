@@ -37,7 +37,7 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/miscregs.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/predecoder.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"

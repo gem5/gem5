@@ -40,7 +40,7 @@
 #ifndef __ARCH_X86_MISCREGS_HH__
 #define __ARCH_X86_MISCREGS_HH__
 
-#include "arch/x86/segmentregs.hh"
+#include "arch/x86/regs/segment.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
 

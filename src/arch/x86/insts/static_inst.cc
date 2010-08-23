@@ -38,7 +38,7 @@
  */
 
 #include "arch/x86/insts/static_inst.hh"
-#include "arch/x86/segmentregs.hh"
+#include "arch/x86/regs/segment.hh"
 
 namespace X86ISA
 {

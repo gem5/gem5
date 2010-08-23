@@ -42,9 +42,9 @@
 #if FULL_SYSTEM
 #include "arch/x86/interrupts.hh"
 #endif
-#include "arch/x86/intregs.hh"
-#include "arch/x86/miscregs.hh"
-#include "arch/x86/segmentregs.hh"
+#include "arch/x86/regs/int.hh"
+#include "arch/x86/regs/misc.hh"
+#include "arch/x86/regs/segment.hh"
 #include "arch/x86/utility.hh"
 #include "arch/x86/x86_traits.hh"
 #include "cpu/base.hh"

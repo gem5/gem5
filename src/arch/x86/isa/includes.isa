@@ -73,10 +73,10 @@ using X86ISA::InstRegIndex;
 
 output decoder {{
 #include "arch/x86/faults.hh"
-#include "arch/x86/floatregs.hh"
 #include "arch/x86/microcode_rom.hh"
-#include "arch/x86/miscregs.hh"
-#include "arch/x86/segmentregs.hh"
+#include "arch/x86/regs/float.hh"
+#include "arch/x86/regs/misc.hh"
+#include "arch/x86/regs/segment.hh"
 #include "arch/x86/tlb.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
@@ -110,7 +110,7 @@ output exec {{
 #include <cmath>
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
-#include "arch/x86/miscregs.hh"
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bigint.hh"
 #include "base/condcodes.hh"

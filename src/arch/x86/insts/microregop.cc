@@ -38,7 +38,7 @@
  */
 
 #include "arch/x86/insts/microregop.hh"
-#include "arch/x86/miscregs.hh"
+#include "arch/x86/regs/misc.hh"
 #include "base/condcodes.hh"
 #include <string>
 

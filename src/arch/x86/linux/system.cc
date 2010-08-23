@@ -37,8 +37,8 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/intregs.hh"
 #include "arch/x86/linux/system.hh"
+#include "arch/x86/regs/int.hh"
 #include "arch/vtophys.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

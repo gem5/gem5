@@ -45,7 +45,7 @@
 #include <string>
 
 #include "arch/x86/pagetable.hh"
-#include "arch/x86/segmentregs.hh"
+#include "arch/x86/regs/segment.hh"
 #include "config/full_system.hh"
 #include "mem/mem_object.hh"
 #include "mem/request.hh"

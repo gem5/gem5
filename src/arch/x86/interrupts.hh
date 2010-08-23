@@ -40,9 +40,9 @@
 #ifndef __ARCH_X86_INTERRUPTS_HH__
 #define __ARCH_X86_INTERRUPTS_HH__
 
-#include "arch/x86/apicregs.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/intmessage.hh"
+#include "arch/x86/regs/apic.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
 #include "dev/io_device.hh"

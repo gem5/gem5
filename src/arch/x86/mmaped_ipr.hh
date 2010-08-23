@@ -46,7 +46,7 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "arch/x86/miscregs.hh"
+#include "arch/x86/regs/misc.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"

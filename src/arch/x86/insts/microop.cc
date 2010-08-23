@@ -38,7 +38,7 @@
  */
 
 #include "arch/x86/insts/microop.hh"
-#include "arch/x86/miscregs.hh"
+#include "arch/x86/regs/misc.hh"
 
 namespace X86ISA
 {
