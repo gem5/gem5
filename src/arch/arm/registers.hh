@@ -55,7 +55,7 @@ typedef uint64_t MiscReg;
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
 // The number of single precision floating point registers
 const int NumFloatArchRegs = 64;
-const int NumFloatSpecialRegs = 5;
+const int NumFloatSpecialRegs = 8;
 
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
