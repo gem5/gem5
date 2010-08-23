@@ -75,7 +75,7 @@ class ArmFault : public FaultBase
         Translation1 = 0x7,
         SynchronousExternalAbort0 = 0x8,
         Domain0 = 0x9,
-        SynchronousExternalAbort1 = 0xa,
+        SynchronousExternalAbort1 = 0x8,
         Domain1 = 0xb,
         TranslationTableWalkExtAbt0 = 0xc,
         Permission0 = 0xd,
