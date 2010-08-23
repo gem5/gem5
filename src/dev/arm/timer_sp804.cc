@@ -44,6 +44,8 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+using namespace AmbaDev;
+
 Sp804::Sp804(Params *p)
     : AmbaDevice(p), gic(p->gic), timer0(name() + ".timer0", this, p->int_num0, p->clock0),
       timer1(name() + ".timer1", this, p->int_num1, p->clock1)
@@ -71,7 +73,7 @@ Sp804::read(PacketPtr pkt)
         timer0.read(pkt, daddr);
     else if ((daddr - Timer::Size) < Timer::Size)
         timer1.read(pkt, daddr - Timer::Size);
-    else if (!readId(pkt))
+    else if (!readId(pkt, ambaId, pioAddr))
         panic("Tried to read SP804 at offset %#x that doesn't exist\n", daddr);
     pkt->makeAtomicResponse();
     return pioDelay;
@@ -127,7 +129,7 @@ Sp804::write(PacketPtr pkt)
         timer0.write(pkt, daddr);
     else if ((daddr - Timer::Size) < Timer::Size)
         timer1.write(pkt, daddr - Timer::Size);
-    else if (!readId(pkt))
+    else if (!readId(pkt, ambaId, pioAddr))
         panic("Tried to write SP804 at offset %#x that doesn't exist\n", daddr);
     pkt->makeAtomicResponse();
     return pioDelay;

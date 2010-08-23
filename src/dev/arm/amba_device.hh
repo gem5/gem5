@@ -50,33 +50,45 @@
 #define __DEV_ARM_AMBA_DEVICE_H__
 
 #include "base/range.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 #include "dev/io_device.hh"
 #include "params/AmbaDevice.hh"
+#include "params/AmbaDmaDevice.hh"
+
+namespace AmbaDev {
+
+const int AMBA_PER_ID0 = 0xFE0;
+const int AMBA_PER_ID1 = 0xFE4;
+const int AMBA_PER_ID2 = 0xFE8;
+const int AMBA_PER_ID3 = 0xFEC;
+const int AMBA_CEL_ID0 = 0xFF0;
+const int AMBA_CEL_ID1 = 0xFF4;
+const int AMBA_CEL_ID2 = 0xFF8;
+const int AMBA_CEL_ID3 = 0xFFC;
+
+bool readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr);
+}
 
 class AmbaDevice : public BasicPioDevice
 {
   protected:
-    static const int AMBA_PER_ID0 = 0xFE0;
-    static const int AMBA_PER_ID1 = 0xFE4;
-    static const int AMBA_PER_ID2 = 0xFE8;
-    static const int AMBA_PER_ID3 = 0xFEC;
-    static const int AMBA_CEL_ID0 = 0xFF0;
-    static const int AMBA_CEL_ID1 = 0xFF4;
-    static const int AMBA_CEL_ID2 = 0xFF8;
-    static const int AMBA_CEL_ID3 = 0xFFC;
-
     uint64_t ambaId;
 
   public:
-   typedef AmbaDeviceParams Params;
-   const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
+    typedef AmbaDeviceParams Params;
     AmbaDevice(const Params *p);
-
-    bool readId(PacketPtr pkt);
 };
 
-#endif //__DEV_ARM_AMBA_FAKE_H__
+class AmbaDmaDevice : public DmaDevice
+{
+  protected:
+    uint64_t ambaId;
+
+  public:
+    typedef AmbaDmaDeviceParams Params;
+    AmbaDmaDevice(const Params *p);
+};
+
+
+#endif //__DEV_ARM_AMBA_DEVICE_H__

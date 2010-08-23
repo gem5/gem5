@@ -45,6 +45,8 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+using namespace AmbaDev;
+
 AmbaFake::AmbaFake(const Params *p)
     : AmbaDevice(p)
 {
@@ -62,7 +64,7 @@ AmbaFake::read(PacketPtr pkt)
     DPRINTF(AMBA, " read register %#x\n", daddr);
 
     pkt->set<uint32_t>(0);
-    if (!readId(pkt) && !params()->ignore_access)
+    if (!readId(pkt, ambaId, pioAddr) && !params()->ignore_access)
         panic("Tried to read AmbaFake at offset %#x that doesn't exist\n", daddr);
 
     pkt->makeAtomicResponse();

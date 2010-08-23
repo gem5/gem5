@@ -41,13 +41,18 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
+from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr, DmaDevice
 from Platform import Platform
 from Terminal import Terminal
 from Uart import Uart
 
 class AmbaDevice(BasicPioDevice):
     type = 'AmbaDevice'
+    abstract = True
+    amba_id = Param.UInt32("ID of AMBA device for kernel detection")
+
+class AmbaDmaDevice(DmaDevice):
+    type = 'AmbaDmaDevice'
     abstract = True
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 

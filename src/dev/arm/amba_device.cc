@@ -50,22 +50,29 @@ AmbaDevice::AmbaDevice(const Params *p)
 {
 }
 
-bool
-AmbaDevice::readId(PacketPtr pkt)
+AmbaDmaDevice::AmbaDmaDevice(const Params *p)
+    : DmaDevice(p), ambaId(ULL(0xb105f00d00000000) | p->amba_id)
 {
-    Addr daddr = pkt->getAddr() - pioAddr;
+}
+
+
+namespace AmbaDev {
+bool
+readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr)
+{
+    Addr daddr = pkt->getAddr() - pio_addr;
     if (daddr < AMBA_PER_ID0 || daddr > AMBA_CEL_ID3)
         return false;
 
     pkt->allocate();
 
-    daddr -= AMBA_PER_ID0;
-    daddr <<= 1;
+    int byte = (daddr - AMBA_PER_ID0) << 1;
     // Too noisy right now
-    //DPRINTF(AMBA, "Returning %#x for offset %#x(%d)\n", (ambaId >> daddr) & 0xFF,
-    //        pkt->getAddr() - pioAddr, daddr);
+    DPRINTF(AMBA, "Returning %#x for offset %#x(%d)\n", (amba_id >> byte) & 0xFF,
+            pkt->getAddr() - pio_addr, byte);
     assert(pkt->getSize() == 4);
-    pkt->set<uint32_t>((ambaId >> daddr) & 0xFF);
+    pkt->set<uint32_t>((amba_id >> byte) & 0xFF);
     return true;
 }
 
+} // namespace AmbaDev

@@ -58,6 +58,7 @@ class Gic;
 class Pl011 : public Uart
 {
   protected:
+    static const uint64_t AMBA_ID = ULL(0xb105f00d00341011);
     static const int UART_DR = 0x000;
     static const int UART_FR = 0x018;
     static const int UART_FR_CTS  = 0x001;
@@ -72,14 +73,6 @@ class Pl011 : public Uart
     static const int UART_RIS  = 0x03C;
     static const int UART_MIS  = 0x040;
     static const int UART_ICR  = 0x044;
-    static const int UART_PER_ID0 = 0xFE0;
-    static const int UART_PER_ID1 = 0xFE4;
-    static const int UART_PER_ID2 = 0xFE8;
-    static const int UART_PER_ID3 = 0xFEC;
-    static const int UART_CEL_ID0 = 0xFF0;
-    static const int UART_CEL_ID1 = 0xFF4;
-    static const int UART_CEL_ID2 = 0xFF8;
-    static const int UART_CEL_ID3 = 0xFFC;
 
     uint16_t control;
 

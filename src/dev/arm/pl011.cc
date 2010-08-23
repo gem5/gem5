@@ -41,6 +41,7 @@
  */
 
 #include "base/trace.hh"
+#include "dev/arm/amba_device.hh"
 #include "dev/arm/gic.hh"
 #include "dev/arm/pl011.hh"
 #include "dev/terminal.hh"
@@ -113,15 +114,12 @@ Pl011::read(PacketPtr pkt)
         data = maskInt;
         break;
       default:
-        if (daddr >= UART_PER_ID0 && daddr <= UART_CEL_ID3) {
-            // AMBA ID information
-            int byte;
-            byte = (daddr - UART_PER_ID0) << 1;
-            DPRINTF(AMBA, "--daddr=%#x shift=%d val=%#x\n", daddr, byte,
-                (ULL(0xb105f00d00341011) >> byte) & 0xFF);
-            data = (ULL(0xb105f00d00341011) >> byte) & 0xFF;
+        if (AmbaDev::readId(pkt, AMBA_ID, pioAddr)) {
+            // Hack for variable size accesses
+            data = pkt->get<uint32_t>();
             break;
         }
+
         panic("Tried to read PL011 at offset %#x that doesn't exist\n", daddr);
         break;
     }
