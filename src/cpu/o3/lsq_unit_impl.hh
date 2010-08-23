@@ -479,9 +479,14 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
             // are quad word accesses.
 
             // @todo: Fix this, magic number being used here
+
+            // @todo: Uncachable load is not executed until it reaches
+            // the head of the ROB. Once this if checks only the executed
+            // loads(as noted above), this check can be removed
             if (loadQueue[load_idx]->effAddrValid &&
-                (loadQueue[load_idx]->effAddr >> 8) ==
-                (inst->effAddr >> 8)) {
+                ((loadQueue[load_idx]->effAddr >> 8)
+                 == (inst->effAddr >> 8)) &&
+                !loadQueue[load_idx]->uncacheable()) {
                 // A load incorrectly passed this load.  Squash and refetch.
                 // For now return a fault to show that it was unsuccessful.
                 DynInstPtr violator = loadQueue[load_idx];
@@ -553,9 +558,14 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
         // are quad word accesses.
 
         // @todo: Fix this, magic number being used here
+
+        // @todo: Uncachable load is not executed until it reaches
+        // the head of the ROB. Once this if checks only the executed
+        // loads(as noted above), this check can be removed
         if (loadQueue[load_idx]->effAddrValid &&
-            (loadQueue[load_idx]->effAddr >> 8) ==
-            (store_inst->effAddr >> 8)) {
+            ((loadQueue[load_idx]->effAddr >> 8)
+             == (store_inst->effAddr >> 8)) &&
+            !loadQueue[load_idx]->uncacheable()) {
             // A load incorrectly passed this store.  Squash and refetch.
             // For now return a fault to show that it was unsuccessful.
             DynInstPtr violator = loadQueue[load_idx];

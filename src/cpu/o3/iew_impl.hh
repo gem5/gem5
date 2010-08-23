@@ -1318,10 +1318,10 @@ DefaultIEW<Impl>::executeInsts()
                 DynInstPtr violator;
                 violator = ldstQueue.getMemDepViolator(tid);
 
-                DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
-                        "%#x, inst PC: %#x.  Addr is: %#x.\n",
-                        violator->readPC(), inst->readPC(), inst->physEffAddr);
-
+                DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %#x "
+                        "[sn:%lli], inst PC: %#x [sn:%lli]. Addr is: %#x.\n",
+                        violator->readPC(), violator->seqNum,
+                        inst->readPC(), inst->seqNum, inst->physEffAddr);
                 // Ensure the violating instruction is older than
                 // current squash
 /*                if (fetchRedirect[tid] &&

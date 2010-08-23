@@ -1150,9 +1150,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
                 instruction->setThreadState(cpu->thread[tid]);
 
-                DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x created "
-                        "[sn:%lli]\n",
-                        tid, instruction->readPC(), inst_seq);
+                DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x (%d) created "
+                        "[sn:%lli]\n", tid, instruction->readPC(),
+                        instruction->readMicroPC(), inst_seq);
 
                 //DPRINTF(Fetch, "[tid:%i]: MachInst is %#x\n", tid, ext_inst);
 
