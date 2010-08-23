@@ -221,7 +221,7 @@ DmaPort::recvRetry()
 
 void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                   uint8_t *data, Tick delay)
+                   uint8_t *data, Tick delay, Request::Flags flag)
 {
     assert(device->getState() == SimObject::Running);
 
@@ -229,10 +229,10 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
 
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
-            event->scheduled());
+            event ? event->scheduled() : -1 );
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-            Request *req = new Request(gen.addr(), gen.size(), 0);
+            Request *req = new Request(gen.addr(), gen.size(), flag);
             PacketPtr pkt = new Packet(req, cmd, Packet::Broadcast);
 
             // Increment the data pointer on a write
