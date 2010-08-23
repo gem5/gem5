@@ -361,6 +361,14 @@ if main['GCC']:
     main.Append(CCFLAGS='-fno-strict-aliasing')
     main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
     main.Append(CXXFLAGS='-Wno-deprecated')
+    # Read the GCC version to check for versions with bugs
+    # Note CCVERSION doesn't work here because it is run with the CC
+    # before we override it from the command line
+    gcc_version = readCommand([main['CXX'], '-dumpversion'], exception=False)
+    if not compareVersions(gcc_version, '4.4.1') or \
+       not compareVersions(gcc_version, '4.4.2'):
+        print 'Info: Tree vectorizer in GCC 4.4.1 & 4.4.2 is buggy, disabling.'
+        main.Append(CCFLAGS='-fno-tree-vectorize')
 elif main['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings
 elif main['SUNCC']:
