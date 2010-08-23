@@ -287,12 +287,15 @@ class BaseSimpleCPU : public BaseCPU
     uint64_t readNextPC() { return thread->readNextPC(); }
     uint64_t readNextMicroPC() { return thread->readNextMicroPC(); }
     uint64_t readNextNPC() { return thread->readNextNPC(); }
+    bool readPredicate() { return thread->readPredicate(); }
 
     void setPC(uint64_t val) { thread->setPC(val); }
     void setMicroPC(uint64_t val) { thread->setMicroPC(val); }
     void setNextPC(uint64_t val) { thread->setNextPC(val); }
     void setNextMicroPC(uint64_t val) { thread->setNextMicroPC(val); }
     void setNextNPC(uint64_t val) { thread->setNextNPC(val); }
+    void setPredicate(bool val)
+    { return thread->setPredicate(val); }
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     {

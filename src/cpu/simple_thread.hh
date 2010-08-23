@@ -128,6 +128,9 @@ class SimpleThread : public ThreadState
      */
     Addr nextNPC;
 
+    /** Did this instruction execute or is it predicated false */
+    bool predicate;
+
   public:
     // pointer to CPU associated with this SimpleThread
     BaseCPU *cpu;
@@ -369,6 +372,16 @@ class SimpleThread : public ThreadState
 #if ISA_HAS_DELAY_SLOT
         nextNPC = val;
 #endif
+    }
+
+    bool readPredicate()
+    {
+        return predicate;
+    }
+
+    void setPredicate(bool val)
+    {
+        predicate = val;
     }
 
     MiscReg

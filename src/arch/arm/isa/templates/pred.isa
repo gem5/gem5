@@ -142,6 +142,8 @@ def template PredOpExecute {{
             {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {

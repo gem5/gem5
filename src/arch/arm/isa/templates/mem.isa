@@ -69,6 +69,8 @@ def template SwapExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -103,6 +105,8 @@ def template SwapInitiateAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -164,6 +168,8 @@ def template LoadExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -200,6 +206,8 @@ def template StoreExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -242,6 +250,8 @@ def template StoreExExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -279,6 +289,8 @@ def template StoreExInitiateAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -316,6 +328,8 @@ def template StoreInitiateAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -342,8 +356,11 @@ def template LoadInitiateAcc {{
             if (fault == NoFault) {
                 fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
             }
-        } else if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        } else {
+            xc->setPredicate(false);
+            if (fault == NoFault && machInst.itstateMask != 0) {
+                xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+            }
         }
 
         return fault;

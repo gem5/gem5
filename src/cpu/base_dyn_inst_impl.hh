@@ -154,6 +154,7 @@ BaseDynInst<Impl>::initVars()
 
     eaCalcDone = false;
     memOpDone = false;
+    predicate = true;
 
     lqIdx = -1;
     sqIdx = -1;

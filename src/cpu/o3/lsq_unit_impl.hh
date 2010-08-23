@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -439,9 +451,9 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
 
     load_fault = inst->initiateAcc();
 
-    // If the instruction faulted, then we need to send it along to commit
-    // without the instruction completing.
-    if (load_fault != NoFault) {
+    // If the instruction faulted or predicated false, then we need to send it
+    // along to commit without the instruction completing.
+    if (load_fault != NoFault || inst->readPredicate() == false) {
         // Send this instruction to commit, also make sure iew stage
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that

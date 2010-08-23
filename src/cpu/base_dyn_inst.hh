@@ -246,6 +246,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Micro PC of this instruction. */
     Addr microPC;
 
+    /** Did this instruction execute, or is it predicated false */
+    bool predicate;
+
   protected:
     /** Next non-speculative PC.  It is not filled in at fetch, but rather
      *  once the target of the branch is truly known (either decode or
@@ -792,6 +795,16 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setNextMicroPC(Addr val)
     {
         nextMicroPC = val;
+    }
+
+    bool readPredicate()
+    {
+        return predicate;
+    }
+
+    void setPredicate(bool val)
+    {
+        predicate = val;
     }
 
     /** Sets the ASID. */
