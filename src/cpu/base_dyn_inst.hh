@@ -899,6 +899,12 @@ BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
         this->setExecuted();
     }
 
+    if (fault != NoFault) {
+        // Return a fixed value to keep simulation deterministic even
+        // along misspeculated paths.
+        bzero(data, size);
+    }
+
     if (traceData) {
         traceData->setAddr(addr);
     }
@@ -913,11 +919,6 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
     Fault fault = readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
 
-    if (fault != NoFault) {
-        // Return a fixed value to keep simulation deterministic even
-        // along misspeculated paths.
-        data = (T)-1;
-    }
     data = TheISA::gtoh(data);
 
     if (traceData) {
