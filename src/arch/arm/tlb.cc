@@ -363,6 +363,10 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
        req->setFlags(Request::UNCACHEABLE);
        return NoFault;
     }
+    if ((req->isInstFetch() && (!sctlr.i)) ||
+        ((!req->isInstFetch()) && (!sctlr.c))){
+       req->setFlags(Request::UNCACHEABLE);
+    }
     if (!is_fetch) {
         assert(flags & MustBeOne);
         if (sctlr.a || !(flags & AllowUnaligned)) {

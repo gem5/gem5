@@ -165,8 +165,12 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
         assert(stateQueue.size() < 5);
         currState = NULL;
     } else {
+        Request::Flags flag = 0;
+        if (currState->sctlr.c == 0){
+           flag = Request::UNCACHEABLE;
+        }
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
-                NULL, (uint8_t*)&currState->l1Desc.data, (Tick)0);
+                NULL, (uint8_t*)&currState->l1Desc.data, (Tick)0, flag);
         doL1Descriptor();
         f = currState->fault;
     }

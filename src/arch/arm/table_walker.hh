@@ -107,13 +107,13 @@ class TableWalker : public MemObject
         /** Is the translation global (no asid used)? */
         bool global() const
         {
-            return bits(data, 4);
+            return bits(data, 17);
         }
 
         /** Is the translation not allow execution? */
         bool xn() const
         {
-            return bits(data, 17);
+            return bits(data, 4);
         }
 
         /** Three bit access protection flags */
