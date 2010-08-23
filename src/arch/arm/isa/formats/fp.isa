@@ -65,27 +65,113 @@ let {{
         if (l) {
             // Load instructions.
             if (a) {
-                switch (b) {
+                if (bits(b, 3, 2) != 3) {
+                    switch (bits(b, 1, 0)) {
+                      case 0x0:
+                        return new WarnUnimplemented("vld1 single", machInst);
+                      case 0x1:
+                        return new WarnUnimplemented("vld2 single", machInst);
+                      case 0x2:
+                        return new WarnUnimplemented("vld3 single", machInst);
+                      case 0x3:
+                        return new WarnUnimplemented("vld4 single", machInst);
+                    }
+                } else {
+                    switch (bits(b, 1, 0)) {
+                      case 0x0:
+                        return new WarnUnimplemented("vld1 single all",
+                                                     machInst);
+                      case 0x1:
+                        return new WarnUnimplemented("vld2 single all",
+                                                     machInst);
+                      case 0x2:
+                        return new WarnUnimplemented("vld3 single all",
+                                                     machInst);
+                      case 0x3:
+                        return new WarnUnimplemented("vld4 single all",
+                                                     machInst);
+                    }
                 }
-                // Single.
             } else {
-                switch (b) {
+                switch (bits(b, 3, 1)) {
+                  case 0x0:
+                    return new WarnUnimplemented("vld4 multiple", machInst);
+                  case 0x2:
+                    return new WarnUnimplemented("vld3 multiple", machInst);
+                  case 0x3:
+                    return new WarnUnimplemented("vld1 multiple", machInst);
+                  case 0x4:
+                    return new WarnUnimplemented("vld2 multiple", machInst);
+                  case 0x1:
+                    if (b & 0x1) {
+                        return new WarnUnimplemented("vld2 multiple", machInst);
+                    } else {
+                        return new WarnUnimplemented("vld1 multiple", machInst);
+                    }
+                  case 0x5:
+                    if ((b & 0x1) == 0) {
+                        return new WarnUnimplemented("vld1 multiple", machInst);
+                    } else {
+                        break;
+                    }
                 }
-                // Multiple.
             }
         } else {
             // Store instructions.
             if (a) {
-                switch (b) {
+                if (bits(b, 3, 2) != 3) {
+                    switch (bits(b, 1, 0)) {
+                      case 0x0:
+                        return new WarnUnimplemented("vst1 single", machInst);
+                      case 0x1:
+                        return new WarnUnimplemented("vst2 single", machInst);
+                      case 0x2:
+                        return new WarnUnimplemented("vst3 single", machInst);
+                      case 0x3:
+                        return new WarnUnimplemented("vst4 single", machInst);
+                    }
+                } else {
+                    switch (bits(b, 1, 0)) {
+                      case 0x0:
+                        return new WarnUnimplemented("vst1 single all",
+                                                     machInst);
+                      case 0x1:
+                        return new WarnUnimplemented("vst2 single all",
+                                                     machInst);
+                      case 0x2:
+                        return new WarnUnimplemented("vst3 single all",
+                                                     machInst);
+                      case 0x3:
+                        return new WarnUnimplemented("vst4 single all",
+                                                     machInst);
+                    }
                 }
-                // Single.
             } else {
-                switch (b) {
+                switch (bits(b, 3, 1)) {
+                  case 0x0:
+                    return new WarnUnimplemented("vst4 multiple", machInst);
+                  case 0x2:
+                    return new WarnUnimplemented("vst3 multiple", machInst);
+                  case 0x3:
+                    return new WarnUnimplemented("vst1 multiple", machInst);
+                  case 0x4:
+                    return new WarnUnimplemented("vst2 multiple", machInst);
+                  case 0x1:
+                    if (b & 0x1) {
+                        return new WarnUnimplemented("vst2 multiple", machInst);
+                    } else {
+                        return new WarnUnimplemented("vst1 multiple", machInst);
+                    }
+                  case 0x5:
+                    if ((b & 0x1) == 0) {
+                        return new WarnUnimplemented("vst1 multiple", machInst);
+                    } else {
+                        break;
+                    }
                 }
-                // Multiple.
             }
         }
-        return new WarnUnimplemented("neon memory", machInst);
+        return new Unknown(machInst);
     }
     '''
 
