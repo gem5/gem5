@@ -269,7 +269,7 @@ arrayParamIn(Checkpoint *cp, const string &section, const string &name,
         // for which operator[] returns a special reference class
         // that's not the same as 'bool&', (since it's a packed
         // vector)
-        T scalar_value;
+        T scalar_value = 0;
         if (!parseParam(tokens[i], scalar_value)) {
             string err("could not parse \"");
 
@@ -311,7 +311,7 @@ arrayParamIn(Checkpoint *cp, const string &section,
         // for which operator[] returns a special reference class
         // that's not the same as 'bool&', (since it's a packed
         // vector)
-        T scalar_value;
+        T scalar_value = 0;
         if (!parseParam(tokens[i], scalar_value)) {
             string err("could not parse \"");
 

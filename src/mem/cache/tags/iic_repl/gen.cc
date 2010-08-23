@@ -47,7 +47,7 @@ using namespace std;
 GenRepl::GenRepl(const Params *p) // fix this, should be set by cache
     : Repl(p), num_pools(p->num_pools), fresh_res(p->fresh_res),
       pool_res(p->pool_res), num_entries(0), num_pool_entries(0), misses(0),
-      pools(pools = new GenPool[num_pools+1])
+      pools(new GenPool[num_pools+1])
 {
 }
 

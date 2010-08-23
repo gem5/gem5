@@ -51,7 +51,7 @@ TableWalker::TableWalker(const Params *p)
     : MemObject(p), stateQueue(NUM_WALKERS), port(NULL), tlb(NULL),
       currState(NULL), doL1DescEvent(this), doL2DescEvent(this)
 {
-    sctlr = NULL;
+    sctlr = 0;
 }
 
 TableWalker::~TableWalker()
@@ -419,7 +419,7 @@ TableWalker::doL1Descriptor()
                 new PrefetchAbort(currState->vaddr, ArmFault::Translation0);
         else
             currState->fault =
-                new DataAbort(currState->vaddr, NULL, currState->isWrite,
+                new DataAbort(currState->vaddr, 0, currState->isWrite,
                                   ArmFault::Translation0);
         return;
       case L1Descriptor::Section:
@@ -532,7 +532,7 @@ TableWalker::doL2Descriptor()
           */
 
         currState->fault =
-            new DataAbort(currState->vaddr, NULL, currState->isWrite,
+            new DataAbort(currState->vaddr, 0, currState->isWrite,
                           ArmFault::AccessFlag1);
 
     }
