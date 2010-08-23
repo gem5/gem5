@@ -211,7 +211,9 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
                 "always reads as 0.\n");
         break;
       case MISCREG_ID_PFR0:
-        return 0x1031; // ThumbEE | !Jazelle | Thumb | ARM
+        warn("Returning thumbEE disabled for now since we don't support CP14"
+             "config registers and jumping to ThumbEE vectors\n");
+        return 0x0031; // !ThumbEE | !Jazelle | Thumb | ARM
       case MISCREG_ID_MMFR0:
         return 0x03; //VMSAz7
       case MISCREG_CTR:
