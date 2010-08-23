@@ -93,10 +93,6 @@ let {{
                 text += ", %s" % self.cppBool(val)
             return text
 
-        def getAllocator(self, mnemonic, *microFlags):
-            return 'new %s(machInst, %s)' % \
-                (self.className, mnemonic, self.microFlagsText(microFlags))
-
         def getGeneratorDef(self, micropc):
             return self.generatorTemplate % \
                 (self.className, micropc, \
