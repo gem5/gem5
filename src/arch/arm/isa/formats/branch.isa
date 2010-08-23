@@ -196,11 +196,11 @@ def format Thumb32BranchesAndMiscCtrl() {{
                           case 0x2:
                             return new Clrex(machInst);
                           case 0x4:
-                            return new WarnUnimplemented("dsb", machInst);
+                            return new Dsb(machInst);
                           case 0x5:
-                            return new WarnUnimplemented("dmb", machInst);
+                            return new Dmb(machInst);
                           case 0x6:
-                            return new WarnUnimplemented("isb", machInst);
+                            return new Isb(machInst);
                           default:
                             break;
                         }

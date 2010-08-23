@@ -679,6 +679,33 @@ let {{
     decoder_output += BasicConstructor.subst(clrexIop)
     exec_output += PredOpExecute.subst(clrexIop)
 
+    isbCode = '''
+    '''
+    isbIop = InstObjParams("isb", "Isb", "PredOp",
+                             {"code": isbCode,
+                               "predicate_test": predicateTest}, ['IsSerializing'])
+    header_output += BasicDeclare.subst(isbIop)
+    decoder_output += BasicConstructor.subst(isbIop)
+    exec_output += PredOpExecute.subst(isbIop)
+
+    dsbCode = '''
+    '''
+    dsbIop = InstObjParams("dsb", "Dsb", "PredOp",
+                             {"code": dsbCode,
+                               "predicate_test": predicateTest},['IsMemBarrier'])
+    header_output += BasicDeclare.subst(dsbIop)
+    decoder_output += BasicConstructor.subst(dsbIop)
+    exec_output += PredOpExecute.subst(dsbIop)
+
+    dmbCode = '''
+    '''
+    dmbIop = InstObjParams("dmb", "Dmb", "PredOp",
+                             {"code": dmbCode,
+                               "predicate_test": predicateTest},['IsMemBarrier'])
+    header_output += BasicDeclare.subst(dmbIop)
+    decoder_output += BasicConstructor.subst(dmbIop)
+    exec_output += PredOpExecute.subst(dmbIop)
+
     cpsCode = '''
     uint32_t mode = bits(imm, 4, 0);
     uint32_t f = bits(imm, 5);
