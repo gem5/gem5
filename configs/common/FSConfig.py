@@ -1,3 +1,15 @@
+# Copyright (c) 2010 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -169,6 +181,52 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.partition_desc_bin = binary('1up-md.bin')
 
     return self
+
+def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
+        machine_type = None):
+    if bare_metal:
+        self = ArmSystem()
+    else:
+        self = LinuxArmSystem()
+
+    if not mdesc:
+        # generic system
+        mdesc = SysConfig()
+
+    self.readfile = mdesc.script()
+    self.iobus = Bus(bus_id=0)
+    self.membus = MemBus(bus_id=1)
+    self.membus.badaddr_responder.warn_access = "warn"
+    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()), zero = True)
+    self.bridge.side_a = self.iobus.port
+    self.bridge.side_b = self.membus.port
+    self.physmem.port = self.membus.port
+
+    self.mem_mode = mem_mode
+
+    if machine_type == "RealView_PBX":
+        self.realview = RealViewPBX()
+    elif machine_type == "RealView_EB":
+        self.realview = RealViewEB()
+    else:
+        print "Unknown Machine Type"
+        sys.exit(1)
+
+    if not bare_metal and machine_type:
+        self.machine_type = machine_type
+    elif bare_metal:
+        self.realview.uart.end_on_eot = True
+
+    self.realview.attachOnChipIO(self.membus)
+    self.realview.attachIO(self.iobus)
+
+    self.intrctrl = IntrControl()
+    self.terminal = Terminal()
+    self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0 lpj=19988480 norandmaps'
+
+    return self
+
 
 def makeLinuxMipsSystem(mem_mode, mdesc = None):
     class BaseMalta(Malta):
