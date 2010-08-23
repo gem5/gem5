@@ -805,6 +805,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setPredicate(bool val)
     {
         predicate = val;
+
+        if (traceData) {
+            traceData->setPredicate(val);
+        }
     }
 
     /** Sets the ASID. */

@@ -58,6 +58,7 @@ class InstRecord
     StaticInstPtr macroStaticInst;
     MicroPC upc;
     bool misspeculating;
+    bool predicate;
 
     // The remaining fields are only valid for particular instruction
     // types (e.g, addresses for memory ops) or when particular
@@ -102,6 +103,7 @@ class InstRecord
 
         fetch_seq_valid = false;
         cp_seq_valid = false;
+        predicate = false;
     }
 
     virtual ~InstRecord() { }
@@ -127,6 +129,8 @@ class InstRecord
 
     void setCPSeq(InstSeqNum seq)
     { cp_seq = seq; cp_seq_valid = true; }
+
+    void setPredicate(bool val) { predicate = val; }
 
     virtual void dump() = 0;
     

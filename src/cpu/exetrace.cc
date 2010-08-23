@@ -111,6 +111,10 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
             outs << Enums::OpClassStrings[inst->opClass()] << " : ";
         }
 
+        if (IsOn(ExecResult) && predicate == false) {
+            outs << "Predicated False";
+        }
+
         if (IsOn(ExecResult) && data_status != DataInvalid) {
             ccprintf(outs, " D=%#018x", data.as_int);
         }

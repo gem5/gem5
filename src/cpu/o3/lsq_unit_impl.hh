@@ -458,6 +458,9 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that
         // needs to hit the head of commit.
+        DPRINTF(LSQUnit, "Load [sn:%lli] not executed from %s\n",
+                inst->seqNum,
+                (load_fault != NoFault ? "fault" : "predication"));
         if (!(inst->hasRequest() && inst->uncacheable()) ||
             inst->isAtCommit()) {
             inst->setExecuted();
