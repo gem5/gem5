@@ -49,6 +49,7 @@
 #include "arch/arm/types.hh"
 #include "config/full_system.hh"
 #include "sim/faults.hh"
+#include "base/misc.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
@@ -217,6 +218,10 @@ class DataAbort : public AbortFault<DataAbort>
 class Interrupt : public ArmFaultVals<Interrupt> {};
 class FastInterrupt : public ArmFaultVals<FastInterrupt> {};
 
+static inline Fault genMachineCheckFault()
+{
+    return new Reset();
+}
 
 } // ArmISA namespace
 
