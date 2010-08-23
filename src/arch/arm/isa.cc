@@ -55,6 +55,7 @@ ISA::clear()
     updateRegMap(cpsr);
 
     SCTLR sctlr = 0;
+    sctlr.te = (bool)sctlr_rst.te;
     sctlr.nmfi = (bool)sctlr_rst.nmfi;
     sctlr.v = (bool)sctlr_rst.v;
     sctlr.u    = 1;
