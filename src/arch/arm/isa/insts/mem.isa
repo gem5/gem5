@@ -38,64 +38,38 @@
 // Authors: Gabe Black
 
 let {{
-    def loadStoreBaseWork(name, Name, imm, swp, rfe, srs, codeBlobs,
-                          memFlags, instFlags, double, strex,
-                          base = 'Memory', execTemplateBase = ''):
-        # Make sure flags are in lists (convert to lists if not).
-        memFlags = makeList(memFlags)
-        instFlags = makeList(instFlags)
 
-        eaCode = codeBlobs["ea_code"]
+    class LoadStoreInst(object):
+        def __init__(self):
+            self.fullExecTemplate = eval(self.execBase + 'Execute')
+            self.initiateAccTemplate = eval(self.execBase + 'InitiateAcc')
+            self.completeAccTemplate = eval(self.execBase + 'CompleteAcc')
+            self.declareTemplate = eval(self.decConstBase + 'Declare')
+            self.constructTemplate = eval(self.decConstBase + 'Constructor')
 
-        # This shouldn't be part of the eaCode, but until the exec templates
-        # are converted over it's the easiest place to put it.
-        eaCode += '\n    unsigned memAccessFlags = '
-        eaCode += (string.join(memFlags, '|') + ';')
+        def fillTemplates(self, name, Name, codeBlobs, memFlags, instFlags,
+                          base = 'Memory'):
+            # Make sure flags are in lists (convert to lists if not).
+            memFlags = makeList(memFlags)
+            instFlags = makeList(instFlags)
 
-        codeBlobs["ea_code"] = eaCode
+            eaCode = codeBlobs["ea_code"]
 
-        iop = InstObjParams(name, Name, base, codeBlobs, instFlags)
+            # This shouldn't be part of the eaCode, but until the exec templates
+            # are converted over it's the easiest place to put it.
+            eaCode += '\n    unsigned memAccessFlags = '
+            eaCode += (string.join(memFlags, '|') + ';')
 
-        fullExecTemplate = eval(execTemplateBase + 'Execute')
-        initiateAccTemplate = eval(execTemplateBase + 'InitiateAcc')
-        completeAccTemplate = eval(execTemplateBase + 'CompleteAcc')
+            codeBlobs["ea_code"] = eaCode
 
-        if swp:
-            declareTemplate = SwapDeclare
-            constructTemplate = SwapConstructor
-        elif rfe:
-            declareTemplate = RfeDeclare
-            constructTemplate = RfeConstructor
-        elif srs:
-            declareTemplate = SrsDeclare
-            constructTemplate = SrsConstructor
-        elif imm:
-            if double:
-                declareTemplate = LoadStoreDImmDeclare
-                constructTemplate = LoadStoreDImmConstructor
-                if strex:
-                    declareTemplate = StoreExDImmDeclare
-                    constructTemplate = StoreExDImmConstructor
-            elif strex:
-                declareTemplate = StoreExImmDeclare
-                constructTemplate = StoreExImmConstructor
-            else:
-                declareTemplate = LoadStoreImmDeclare
-                constructTemplate = LoadStoreImmConstructor
-        else:
-            if double:
-                declareTemplate = LoadStoreDRegDeclare
-                constructTemplate = LoadStoreDRegConstructor
-            else:
-                declareTemplate = LoadStoreRegDeclare
-                constructTemplate = LoadStoreRegConstructor
+            iop = InstObjParams(name, Name, base, codeBlobs, instFlags)
 
-        # (header_output, decoder_output, decode_block, exec_output)
-        return (declareTemplate.subst(iop),
-                constructTemplate.subst(iop),
-                fullExecTemplate.subst(iop)
-                + initiateAccTemplate.subst(iop)
-                + completeAccTemplate.subst(iop))
+            # (header_output, decoder_output, decode_block, exec_output)
+            return (self.declareTemplate.subst(iop),
+                    self.constructTemplate.subst(iop),
+                    self.fullExecTemplate.subst(iop)
+                    + self.initiateAccTemplate.subst(iop)
+                    + self.completeAccTemplate.subst(iop))
 
     def pickPredicate(blobs):
         for val in blobs.values():
@@ -103,74 +77,20 @@ let {{
                 return condPredicateTest
         return predicateTest
 
-    def loadStoreBase(name, Name, imm, eaCode, accCode, postAccCode,
-                      memFlags, instFlags, double, strex, base = 'Memory',
-                      execTemplateBase = ''):
-        codeBlobs = { "ea_code": eaCode,
-                      "memacc_code": accCode,
-                      "postacc_code": postAccCode }
-        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
-        return loadStoreBaseWork(name, Name, imm, False, False, False,
-                                 codeBlobs, memFlags, instFlags, double,
-                                 strex, base, execTemplateBase)
-
-    def RfeBase(name, Name, eaCode, accCode, memFlags, instFlags):
-        codeBlobs = { "ea_code": eaCode,
-                      "memacc_code": accCode }
-        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
-        return loadStoreBaseWork(name, Name, False, False, True, False,
-                                 codeBlobs, memFlags, instFlags, False, False,
-                                 'RfeOp', 'Load')
-
-    def SrsBase(name, Name, eaCode, accCode, memFlags, instFlags):
-        codeBlobs = { "ea_code": eaCode,
-                      "memacc_code": accCode,
-                      "postacc_code": "" }
-        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
-        return loadStoreBaseWork(name, Name, False, False, False, True,
-                                 codeBlobs, memFlags, instFlags, False, False,
-                                 'SrsOp', 'Store')
-
-    def SwapBase(name, Name, eaCode, preAccCode, postAccCode, memFlags,
-                 instFlags):
-        codeBlobs = { "ea_code": eaCode,
-                      "preacc_code": preAccCode,
-                      "postacc_code": postAccCode }
-        codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
-        return loadStoreBaseWork(name, Name, False, True, False, False,
-                                 codeBlobs, memFlags, instFlags, False, False,
-                                 'Swap', 'Swap')
-
     def memClassName(base, post, add, writeback, \
                      size=4, sign=False, user=False):
         Name = base
 
-        if post:
-            Name += '_PY'
-        else:
-            Name += '_PN'
+        parts = { "P" : post, "A" : add, "W" : writeback,
+                  "S" : sign, "U" : user }
 
-        if add:
-            Name += '_AY'
-        else:
-            Name += '_AN'
-
-        if writeback:
-            Name += '_WY'
-        else:
-            Name += '_WN'
+        for (letter, val) in parts.items():
+            if val:
+                Name += "_%sY" % letter
+            else:
+                Name += "_%sN" % letter
 
         Name += ('_SZ%d' % size)
-
-        if sign:
-            Name += '_SY'
-        else:
-            Name += '_SN'
-
-        if user:
-            Name += '_UY'
-        else:
-            Name += '_UN'
 
         return Name
 
@@ -188,7 +108,7 @@ let {{
             else:
                 memSuffix = '.ub'
         else:
-            raise Exception, "Unrecognized size for load %d" % size
+            raise Exception, "Unrecognized size for access %d" % size
 
         return memSuffix
 

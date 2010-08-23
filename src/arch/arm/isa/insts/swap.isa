@@ -41,27 +41,46 @@ let {{
 
     header_output = decoder_output = exec_output = ""
 
-    (newHeader,
-     newDecoder,
-     newExec) = SwapBase("swp", "Swp", "EA = Base;",
-                         "Mem = cSwap(Op1.uw, ((CPSR)Cpsr).e);",
-                         "Dest = cSwap((uint32_t)memData, ((CPSR)Cpsr).e);",
-                         ["Request::MEM_SWAP",
-                          "ArmISA::TLB::AlignWord",
-                          "ArmISA::TLB::MustBeOne"], [])
-    header_output += newHeader
-    decoder_output += newDecoder
-    exec_output += newExec
+    class SwapInst(LoadStoreInst):
+        execBase = 'Swap'
+        decConstBase = 'Swap'
 
-    (newHeader,
-     newDecoder,
-     newExec) = SwapBase("swpb", "Swpb", "EA = Base;",
-                         "Mem.ub = cSwap(Op1.ub, ((CPSR)Cpsr).e);",
-                         "Dest.ub = cSwap((uint8_t)memData, ((CPSR)Cpsr).e);",
-                         ["Request::MEM_SWAP",
-                          "ArmISA::TLB::AlignByte",
-                          "ArmISA::TLB::MustBeOne"], [])
-    header_output += newHeader
-    decoder_output += newDecoder
-    exec_output += newExec
+        def __init__(self, name, Name, eaCode,
+                     preAccCode, postAccCode, memFlags):
+            super(SwapInst, self).__init__()
+            self.name = name
+            self.Name = Name
+            self.eaCode = eaCode
+            self.preAccCode = preAccCode
+            self.postAccCode = postAccCode
+            self.memFlags = memFlags
+
+        def emit(self):
+            global header_output, decoder_output, exec_output
+            codeBlobs = { "ea_code": self.eaCode,
+                          "preacc_code": self.preAccCode,
+                          "postacc_code": self.postAccCode }
+            codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
+
+            (newHeader,
+             newDecoder,
+             newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
+                                           self.memFlags, [], base = 'Swap')
+            header_output += newHeader
+            decoder_output += newDecoder
+            exec_output += newExec
+
+    SwapInst('swp', 'Swp', 'EA = Base;',
+             'Mem = cSwap(Op1.uw, ((CPSR)Cpsr).e);',
+             'Dest = cSwap((uint32_t)memData, ((CPSR)Cpsr).e);',
+             ['Request::MEM_SWAP',
+              'ArmISA::TLB::AlignWord',
+              'ArmISA::TLB::MustBeOne']).emit()
+
+    SwapInst('swpb', 'Swpb', 'EA = Base;',
+             'Mem.ub = cSwap(Op1.ub, ((CPSR)Cpsr).e);',
+             'Dest.ub = cSwap((uint8_t)memData, ((CPSR)Cpsr).e);',
+             ['Request::MEM_SWAP',
+              'ArmISA::TLB::AlignByte',
+              'ArmISA::TLB::MustBeOne']).emit()
 }};

@@ -43,285 +43,265 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    def loadImmClassName(post, add, writeback, \
-                         size=4, sign=False, user=False):
-        return memClassName("LOAD_IMM", post, add, writeback,
-                            size, sign, user)
+    class LoadInst(LoadStoreInst):
+        execBase = 'Load'
 
-    def loadRegClassName(post, add, writeback, \
-                         size=4, sign=False, user=False):
-        return memClassName("LOAD_REG", post, add, writeback,
-                            size, sign, user)
+        def __init__(self, mnem, post, add, writeback,
+                     size=4, sign=False, user=False, flavor="normal"):
+            super(LoadInst, self).__init__()
+
+            self.name = mnem
+            self.post = post
+            self.add = add
+            self.writeback = writeback
+            self.size = size
+            self.sign = sign
+            self.user = user
+            self.flavor = flavor
+
+            if self.add:
+                self.op = " +"
+            else:
+                self.op = " -"
+
+            self.memFlags = ["ArmISA::TLB::MustBeOne"]
+            self.codeBlobs = {"postacc_code" : ""}
+
+        def emitHelper(self, base = 'Memory'):
+
+            global header_output, decoder_output, exec_output
+
+            codeBlobs = self.codeBlobs
+            codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
+            (newHeader,
+             newDecoder,
+             newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
+                                           self.memFlags, [], base)
+
+            header_output += newHeader
+            decoder_output += newDecoder
+            exec_output += newExec
+
+    class RfeInst(LoadInst):
+        decConstBase = 'Rfe'
+
+        def __init__(self, mnem, post, add, writeback):
+            super(RfeInst, self).__init__(mnem, post, add, writeback)
+            self.Name = "RFE_" + loadImmClassName(post, add, writeback, 8)
+
+            self.memFlags.append("ArmISA::TLB::AlignWord")
+
+        def emit(self):
+            offset = 0
+            if self.post != self.add:
+                offset += 4
+            if not self.add:
+                offset -= 8
+            self.codeBlobs["ea_code"] = "EA = Base + %d;" % offset
+
+            wbDiff = -8
+            if self.add:
+                wbDiff = 8
+            accCode = '''
+            CPSR cpsr = Cpsr;
+            SCTLR sctlr = Sctlr;
+            NPC = cSwap<uint32_t>(Mem.ud, cpsr.e);
+            uint32_t newCpsr =
+                cpsrWriteByInstr(cpsr | CondCodes,
+                                 cSwap<uint32_t>(Mem.ud >> 32, cpsr.e),
+                                 0xF, true, sctlr.nmfi);
+            Cpsr = ~CondCodesMask & newCpsr;
+            CondCodes = CondCodesMask & newCpsr;
+            '''
+            if self.writeback:
+                accCode += "Base = Base + %s;\n" % wbDiff
+            self.codeBlobs["memacc_code"] = accCode
+
+            self.emitHelper('RfeOp')
+
+    class LoadImmInst(LoadInst):
+        def __init__(self, *args, **kargs):
+            super(LoadImmInst, self).__init__(*args, **kargs)
+            self.offset = self.op + " imm"
+
+    class LoadRegInst(LoadInst):
+        def __init__(self, *args, **kargs):
+            super(LoadRegInst, self).__init__(*args, **kargs)
+            self.offset = self.op + " shift_rm_imm(Index, shiftAmt," + \
+                                    " shiftType, CondCodes<29:>)"
+
+    class LoadSingle(LoadInst):
+        def __init__(self, *args, **kargs):
+            super(LoadSingle, self).__init__(*args, **kargs)
+
+            # Build the default class name
+            self.Name = self.nameFunc(self.post, self.add, self.writeback,
+                                      self.size, self.sign, self.user)
+
+            # Add memory request flags where necessary
+            self.memFlags.append("%d" % (self.size - 1))
+            if self.user:
+                self.memFlags.append("ArmISA::TLB::UserMode")
+
+            if self.flavor == "prefetch":
+                self.memFlags.append("Request::PREFETCH")
+            elif self.flavor == "exclusive":
+                self.memFlags.append("Request::LLSC")
+            elif self.flavor == "normal":
+                self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+
+            # Disambiguate the class name for different flavors of loads
+            if self.flavor != "normal":
+                self.Name = "%s_%s" % (self.name.upper(), self.Name)
+
+        def emit(self):
+            # Address compuation code
+            eaCode = "EA = Base"
+            if not self.post:
+                eaCode += self.offset
+            eaCode += ";"
+            self.codeBlobs["ea_code"] = eaCode
+
+            # Code that actually handles the access
+            if self.flavor == "prefetch":
+                accCode = 'uint64_t temp = Mem%s; temp = temp;'
+            elif self.flavor == "fp":
+                accCode = "FpDest.uw = cSwap(Mem%s, ((CPSR)Cpsr).e);\n"
+            else:
+                accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);"
+            accCode = accCode % buildMemSuffix(self.sign, self.size)
+
+            if self.writeback:
+                accCode += "Base = Base %s;\n" % self.offset
+
+            self.codeBlobs["memacc_code"] = accCode
+
+            # Push it out to the output files
+            base = buildMemBase(self.basePrefix, self.post, self.writeback)
+            self.emitHelper(base)
+
+    def loadImmClassName(post, add, writeback, size=4, sign=False, user=False):
+        return memClassName("LOAD_IMM", post, add, writeback, size, sign, user)
+
+    class LoadImm(LoadImmInst, LoadSingle):
+        decConstBase = 'LoadStoreImm'
+        basePrefix = 'MemoryImm'
+        nameFunc = staticmethod(loadImmClassName)
+
+    def loadRegClassName(post, add, writeback, size=4, sign=False, user=False):
+        return memClassName("LOAD_REG", post, add, writeback, size, sign, user)
+
+    class LoadReg(LoadRegInst, LoadSingle):
+        decConstBase = 'LoadStoreReg'
+        basePrefix = 'MemoryReg'
+        nameFunc = staticmethod(loadRegClassName)
+
+    class LoadDouble(LoadInst):
+        def __init__(self, *args, **kargs):
+            super(LoadDouble, self).__init__(*args, **kargs)
+
+            # Build the default class name
+            self.Name = self.nameFunc(self.post, self.add, self.writeback)
+
+            # Add memory request flags where necessary
+            if self.flavor == "exclusive":
+                self.memFlags.append("Request::LLSC")
+            self.memFlags.append("ArmISA::TLB::AlignWord")
+
+            # Disambiguate the class name for different flavors of loads
+            if self.flavor != "normal":
+                self.Name = "%s_%s" % (self.name.upper(), self.Name)
+
+        def emit(self):
+            # Address computation code
+            eaCode = "EA = Base"
+            if not self.post:
+                eaCode += self.offset
+            eaCode += ";"
+            self.codeBlobs["ea_code"] = eaCode
+
+            # Code that actually handles the access
+            if self.flavor != "fp":
+                accCode = '''
+                CPSR cpsr = Cpsr;
+                Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
+                Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
+                '''
+            else:
+                accCode = '''
+                uint64_t swappedMem = cSwap(Mem.ud, ((CPSR)Cpsr).e);
+                FpDest.uw = (uint32_t)swappedMem;
+                FpDest2.uw = (uint32_t)(swappedMem >> 32);
+                '''
+
+            if self.writeback:
+                accCode += "Base = Base %s;\n" % self.offset
+
+            self.codeBlobs["memacc_code"] = accCode
+
+            # Push it out to the output files
+            base = buildMemBase(self.basePrefix, self.post, self.writeback)
+            self.emitHelper(base)
 
     def loadDoubleImmClassName(post, add, writeback):
         return memClassName("LOAD_IMMD", post, add, writeback, 4, False, False)
 
+    class LoadDoubleImm(LoadImmInst, LoadDouble):
+        decConstBase = 'LoadStoreDImm'
+        basePrefix = 'MemoryDImm'
+        nameFunc = staticmethod(loadDoubleImmClassName)
+
     def loadDoubleRegClassName(post, add, writeback):
         return memClassName("LOAD_REGD", post, add, writeback, 4, False, False)
 
-    def emitLoad(name, Name, imm, eaCode, accCode, \
-                 memFlags, instFlags, base, double=False):
-        global header_output, decoder_output, exec_output
-
-        (newHeader,
-         newDecoder,
-         newExec) = loadStoreBase(name, Name, imm,
-                                  eaCode, accCode, "",
-                                  memFlags, instFlags, double, False,
-                                  base, execTemplateBase = 'Load')
-
-        header_output += newHeader
-        decoder_output += newDecoder
-        exec_output += newExec
-
-    def buildImmLoad(mnem, post, add, writeback, \
-                     size=4, sign=False, user=False, \
-                     prefetch=False, ldrex=False, vldr=False):
-        name = mnem
-        Name = loadImmClassName(post, add, writeback, \
-                                size, sign, user)
-
-        if add:
-            op = " +"
-        else:
-            op = " -"
-
-        offset = op + " imm"
-        eaCode = "EA = Base"
-        if not post:
-            eaCode += offset
-        eaCode += ";"
-
-        memFlags = ["ArmISA::TLB::MustBeOne", "%d" % (size - 1)]
-        if user:
-            memFlags.append("ArmISA::TLB::UserMode")
-
-        if prefetch:
-            Name = "%s_%s" % (mnem.upper(), Name)
-            memFlags.append("Request::PREFETCH")
-            accCode = '''
-            uint64_t temp = Mem%s;\n
-            temp = temp;
-            ''' % buildMemSuffix(sign, size)
-        elif vldr:
-            Name = "%s_%s" % (mnem.upper(), Name)
-            accCode = "FpDest.uw = cSwap(Mem%s, ((CPSR)Cpsr).e);\n" % \
-                buildMemSuffix(sign, size)
-        else:
-            if ldrex:
-                memFlags.append("Request::LLSC")
-                Name = "%s_%s" % (mnem.upper(), Name)
-            accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);" % \
-                buildMemSuffix(sign, size)
-
-        if not prefetch and not ldrex and not vldr:
-            memFlags.append("ArmISA::TLB::AllowUnaligned")
-
-        if writeback:
-            accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryImm", post, writeback)
-
-        emitLoad(name, Name, True, eaCode, accCode, memFlags, [], base)
-
-    def buildRfeLoad(mnem, post, add, writeback):
-        name = mnem
-        Name = "RFE_" + loadImmClassName(post, add, writeback, 8)
-
-        offset = 0
-        if post != add:
-            offset += 4
-        if not add:
-            offset -= 8
-
-        eaCode = "EA = Base + %d;" % offset
-
-        wbDiff = -8
-        if add:
-            wbDiff = 8
-        accCode = '''
-        CPSR cpsr = Cpsr;
-        SCTLR sctlr = Sctlr;
-        NPC = cSwap<uint32_t>(Mem.ud, cpsr.e);
-        uint32_t newCpsr =
-            cpsrWriteByInstr(cpsr | CondCodes,
-                             cSwap<uint32_t>(Mem.ud >> 32, cpsr.e),
-                             0xF, true, sctlr.nmfi);
-        Cpsr = ~CondCodesMask & newCpsr;
-        CondCodes = CondCodesMask & newCpsr;
-        '''
-        if writeback:
-            accCode += "Base = Base + %s;\n" % wbDiff
-
-        global header_output, decoder_output, exec_output
-
-        (newHeader,
-         newDecoder,
-         newExec) = RfeBase(name, Name, eaCode, accCode,
-             ["ArmISA::TLB::AlignWord", "ArmISA::TLB::MustBeOne"], [])
-
-        header_output += newHeader
-        decoder_output += newDecoder
-        exec_output += newExec
-
-    def buildRegLoad(mnem, post, add, writeback, size=4, sign=False, \
-                     user=False, prefetch=False):
-        name = mnem
-        Name = loadRegClassName(post, add, writeback,
-                                size, sign, user)
-
-        if add:
-            op = " +"
-        else:
-            op = " -"
-
-        offset = op + " shift_rm_imm(Index, shiftAmt," + \
-                      " shiftType, CondCodes<29:>)"
-        eaCode = "EA = Base"
-        if not post:
-            eaCode += offset
-        eaCode += ";"
-
-        memFlags = ["%d" % (size - 1), "ArmISA::TLB::MustBeOne"]
-        if user:
-            memFlags.append("ArmISA::TLB::UserMode")
-
-        if prefetch:
-            Name = "%s_%s" % (mnem.upper(), Name)
-            memFlags.append("Request::PREFETCH")
-            accCode = '''
-            uint64_t temp = Mem%s;\n
-            temp = temp;
-            ''' % buildMemSuffix(sign, size)
-        else:
-            accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);" % \
-                buildMemSuffix(sign, size)
-        if writeback:
-            accCode += "Base = Base %s;\n" % offset
-
-        if not prefetch:
-            memFlags.append("ArmISA::TLB::AllowUnaligned")
-
-        base = buildMemBase("MemoryReg", post, writeback)
-
-        emitLoad(name, Name, False, eaCode, accCode, \
-                 memFlags, [], base)
-
-    def buildDoubleImmLoad(mnem, post, add, writeback, \
-                           ldrex=False, vldr=False):
-        name = mnem
-        Name = loadDoubleImmClassName(post, add, writeback)
-
-        if add:
-            op = " +"
-        else:
-            op = " -"
-
-        offset = op + " imm"
-        eaCode = "EA = Base"
-        if not post:
-            eaCode += offset
-        eaCode += ";"
-
-        if not vldr:
-            accCode = '''
-            CPSR cpsr = Cpsr;
-            Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
-            Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
-            '''
-        else:
-            accCode = '''
-            uint64_t swappedMem = cSwap(Mem.ud, ((CPSR)Cpsr).e);
-            FpDest.uw = (uint32_t)swappedMem;
-            FpDest2.uw = (uint32_t)(swappedMem >> 32);
-            '''
-        if ldrex:
-            memFlags = ["Request::LLSC"]
-        else:
-            memFlags = []
-        if ldrex or vldr:
-            Name = "%s_%s" % (mnem.upper(), Name)
-        if writeback:
-            accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryDImm", post, writeback)
-
-        memFlags.extend(["ArmISA::TLB::MustBeOne",
-                         "ArmISA::TLB::AlignWord"])
-
-        emitLoad(name, Name, True, eaCode, accCode, \
-                 memFlags, [], base, double=True)
-
-    def buildDoubleRegLoad(mnem, post, add, writeback):
-        name = mnem
-        Name = loadDoubleRegClassName(post, add, writeback)
-
-        if add:
-            op = " +"
-        else:
-            op = " -"
-
-        offset = op + " shift_rm_imm(Index, shiftAmt," + \
-                      " shiftType, CondCodes<29:>)"
-        eaCode = "EA = Base"
-        if not post:
-            eaCode += offset
-        eaCode += ";"
-
-        accCode = '''
-        CPSR cpsr = Cpsr;
-        Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
-        Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
-        '''
-        if writeback:
-            accCode += "Base = Base %s;\n" % offset
-        base = buildMemBase("MemoryDReg", post, writeback)
-
-        emitLoad(name, Name, False, eaCode, accCode,
-                 ["ArmISA::TLB::MustBeOne", "ArmISA::TLB::AlignWord"],
-                 [], base, double=True)
+    class LoadDoubleReg(LoadRegInst, LoadDouble):
+        decConstBase = 'LoadStoreDReg'
+        basePrefix = 'MemoryDReg'
+        nameFunc = staticmethod(loadDoubleRegClassName)
 
     def buildLoads(mnem, size=4, sign=False, user=False):
-        buildImmLoad(mnem, True, True, True, size, sign, user)
-        buildRegLoad(mnem, True, True, True, size, sign, user)
-        buildImmLoad(mnem, True, False, True, size, sign, user)
-        buildRegLoad(mnem, True, False, True, size, sign, user)
-        buildImmLoad(mnem, False, True, True, size, sign, user)
-        buildRegLoad(mnem, False, True, True, size, sign, user)
-        buildImmLoad(mnem, False, False, True, size, sign, user)
-        buildRegLoad(mnem, False, False, True, size, sign, user)
-        buildImmLoad(mnem, False, True, False, size, sign, user)
-        buildRegLoad(mnem, False, True, False, size, sign, user)
-        buildImmLoad(mnem, False, False, False, size, sign, user)
-        buildRegLoad(mnem, False, False, False, size, sign, user)
+        LoadImm(mnem, True, True, True, size, sign, user).emit()
+        LoadReg(mnem, True, True, True, size, sign, user).emit()
+        LoadImm(mnem, True, False, True, size, sign, user).emit()
+        LoadReg(mnem, True, False, True, size, sign, user).emit()
+        LoadImm(mnem, False, True, True, size, sign, user).emit()
+        LoadReg(mnem, False, True, True, size, sign, user).emit()
+        LoadImm(mnem, False, False, True, size, sign, user).emit()
+        LoadReg(mnem, False, False, True, size, sign, user).emit()
+        LoadImm(mnem, False, True, False, size, sign, user).emit()
+        LoadReg(mnem, False, True, False, size, sign, user).emit()
+        LoadImm(mnem, False, False, False, size, sign, user).emit()
+        LoadReg(mnem, False, False, False, size, sign, user).emit()
 
     def buildDoubleLoads(mnem):
-        buildDoubleImmLoad(mnem, True, True, True)
-        buildDoubleRegLoad(mnem, True, True, True)
-        buildDoubleImmLoad(mnem, True, False, True)
-        buildDoubleRegLoad(mnem, True, False, True)
-        buildDoubleImmLoad(mnem, False, True, True)
-        buildDoubleRegLoad(mnem, False, True, True)
-        buildDoubleImmLoad(mnem, False, False, True)
-        buildDoubleRegLoad(mnem, False, False, True)
-        buildDoubleImmLoad(mnem, False, True, False)
-        buildDoubleRegLoad(mnem, False, True, False)
-        buildDoubleImmLoad(mnem, False, False, False)
-        buildDoubleRegLoad(mnem, False, False, False)
+        LoadDoubleImm(mnem, True, True, True).emit()
+        LoadDoubleReg(mnem, True, True, True).emit()
+        LoadDoubleImm(mnem, True, False, True).emit()
+        LoadDoubleReg(mnem, True, False, True).emit()
+        LoadDoubleImm(mnem, False, True, True).emit()
+        LoadDoubleReg(mnem, False, True, True).emit()
+        LoadDoubleImm(mnem, False, False, True).emit()
+        LoadDoubleReg(mnem, False, False, True).emit()
+        LoadDoubleImm(mnem, False, True, False).emit()
+        LoadDoubleReg(mnem, False, True, False).emit()
+        LoadDoubleImm(mnem, False, False, False).emit()
+        LoadDoubleReg(mnem, False, False, False).emit()
 
     def buildRfeLoads(mnem):
-        buildRfeLoad(mnem, True, True, True)
-        buildRfeLoad(mnem, True, True, False)
-        buildRfeLoad(mnem, True, False, True)
-        buildRfeLoad(mnem, True, False, False)
-        buildRfeLoad(mnem, False, True, True)
-        buildRfeLoad(mnem, False, True, False)
-        buildRfeLoad(mnem, False, False, True)
-        buildRfeLoad(mnem, False, False, False)
+        RfeInst(mnem, True, True, True).emit()
+        RfeInst(mnem, True, True, False).emit()
+        RfeInst(mnem, True, False, True).emit()
+        RfeInst(mnem, True, False, False).emit()
+        RfeInst(mnem, False, True, True).emit()
+        RfeInst(mnem, False, True, False).emit()
+        RfeInst(mnem, False, False, True).emit()
+        RfeInst(mnem, False, False, False).emit()
 
     def buildPrefetches(mnem):
-        buildRegLoad(mnem, False, False, False, size=1, prefetch=True)
-        buildImmLoad(mnem, False, False, False, size=1, prefetch=True)
-        buildRegLoad(mnem, False, True, False, size=1, prefetch=True)
-        buildImmLoad(mnem, False, True, False, size=1, prefetch=True)
+        LoadReg(mnem, False, False, False, size=1, flavor="prefetch").emit()
+        LoadImm(mnem, False, False, False, size=1, flavor="prefetch").emit()
+        LoadReg(mnem, False, True, False, size=1, flavor="prefetch").emit()
+        LoadImm(mnem, False, True, False, size=1, flavor="prefetch").emit()
 
     buildLoads("ldr")
     buildLoads("ldrt", user=True)
@@ -342,13 +322,13 @@ let {{
     buildPrefetches("pldw")
     buildPrefetches("pli")
 
-    buildImmLoad("ldrex", False, True, False, size=4, ldrex=True)
-    buildImmLoad("ldrexh", False, True, False, size=2, ldrex=True)
-    buildImmLoad("ldrexb", False, True, False, size=1, ldrex=True)
-    buildDoubleImmLoad("ldrexd", False, True, False, ldrex=True)
+    LoadImm("ldrex", False, True, False, size=4, flavor="exclusive").emit()
+    LoadImm("ldrexh", False, True, False, size=2, flavor="exclusive").emit()
+    LoadImm("ldrexb", False, True, False, size=1, flavor="exclusive").emit()
+    LoadDoubleImm("ldrexd", False, True, False, flavor="exclusive").emit()
 
-    buildImmLoad("vldr", False, True, False, size=4, vldr=True)
-    buildImmLoad("vldr", False, False, False, size=4, vldr=True)
-    buildDoubleImmLoad("vldr", False, True, False, vldr=True)
-    buildDoubleImmLoad("vldr", False, False, False, vldr=True)
+    LoadImm("vldr", False, True, False, size=4, flavor="fp").emit()
+    LoadImm("vldr", False, False, False, size=4, flavor="fp").emit()
+    LoadDoubleImm("vldr", False, True, False, flavor="fp").emit()
+    LoadDoubleImm("vldr", False, False, False, flavor="fp").emit()
 }};
