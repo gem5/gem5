@@ -360,6 +360,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     // a bit of a hack but this effectively clrears this processors monitor
     if (flags & Clrex){
        req->setPaddr(0);
+       req->setFlags(Request::UNCACHEABLE);
        return NoFault;
     }
     if (!is_fetch) {
@@ -430,7 +431,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             outerAttrs: %d\n",
             te->shareable, te->innerAttrs, te->outerAttrs);
     setAttr(te->attributes);
-
+    if (te->nonCacheable)
+        req->setFlags(Request::UNCACHEABLE);
     uint32_t dacr = tc->readMiscReg(MISCREG_DACR);
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:
