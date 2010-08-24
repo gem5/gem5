@@ -134,14 +134,12 @@ if options.detailed:
             process += [smt_process, ]
             smt_idx += 1
 
-(CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
-
 #
 # Currently ruby only works in timing mode 
 #
-assert(options.timing)
-assert(test_mem_mode == 'timing')
-assert(FutureClass == None)
+class CPUClass(TimingSimpleCPU): pass
+test_mem_mode = 'timing'
+FutureClass = None
 
 CPUClass.clock = options.clock
 

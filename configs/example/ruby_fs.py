@@ -103,7 +103,6 @@ else:
 # fast forward with the atomic cpu and instead set the FutureClass to None.
 # Therefore the cpus resolve to the correct names and unserialize correctly.
 #
-assert(options.timing)
 class CPUClass(TimingSimpleCPU): pass
 test_mem_mode = 'timing'
 FutureClass = None
