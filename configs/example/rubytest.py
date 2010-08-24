@@ -90,7 +90,7 @@ tester = RubyTester(checks_to_complete = options.checks,
 # actually used by the rubytester, but is included to support the
 # M5 memory size == Ruby memory size checks
 #
-system = System(physmem = PhysicalMemory())
+system = System(tester = tester, physmem = PhysicalMemory())
 
 system.ruby = Ruby.create_system(options, system)
 

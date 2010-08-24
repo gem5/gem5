@@ -27,9 +27,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/directedtest/RubyDirectedTester.hh"
-#include "cpu/directedtest/DirectedGenerator.hh"
-#include "cpu/directedtest/SeriesRequestGenerator.hh"
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/RubyDirectedTester.hh"
+#include "cpu/testers/directedtest/SeriesRequestGenerator.hh"
 
 SeriesRequestGenerator::SeriesRequestGenerator(const Params *p)
     : DirectedGenerator(p)

@@ -27,8 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/rubytest/Check.hh"
-#include "cpu/rubytest/RubyTester.hh"
+#include "cpu/testers/rubytest/Check.hh"
+#include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"

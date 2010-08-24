@@ -27,9 +27,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/directedtest/RubyDirectedTester.hh"
-#include "cpu/directedtest/DirectedGenerator.hh"
-#include "cpu/directedtest/InvalidateGenerator.hh"
+#include "cpu/testers/directedtest/RubyDirectedTester.hh"
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/InvalidateGenerator.hh"
 
 InvalidateGenerator::InvalidateGenerator(const Params *p)
     : DirectedGenerator(p)

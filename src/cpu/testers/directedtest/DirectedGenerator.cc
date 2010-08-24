@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
 
 DirectedGenerator::DirectedGenerator(const Params *p)
     : SimObject(p)

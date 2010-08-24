@@ -35,8 +35,8 @@
 #ifndef __CPU_DIRECTEDTEST_INVALIDATEGENERATOR_HH__
 #define __CPU_DIRECTEDTEST_INVALIDATEGENERATOR_HH__
 
-#include "cpu/directedtest/RubyDirectedTester.hh"
-#include "cpu/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/RubyDirectedTester.hh"
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "mem/protocol/InvalidateGeneratorStatus.hh"
 #include "params/InvalidateGenerator.hh"
 

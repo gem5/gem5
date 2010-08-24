@@ -69,7 +69,7 @@ if args:
      sys.exit(1)
 
 #
-# Select the directed generator
+# Select the direct test generator
 #
 if options.test_type == "SeriesGetx":
     generator = SeriesRequestGenerator(num_cpus = options.num_cpus,
@@ -80,7 +80,7 @@ elif options.test_type == "SeriesGets":
 elif options.test_type == "Invalidate":
     generator = InvalidateGenerator(num_cpus = options.num_cpus)
 else:
-    print "Error: unknown directed generator"
+    print "Error: unknown direct test generator"
     sys.exit(1)
 
 #
@@ -95,7 +95,7 @@ system = System(physmem = PhysicalMemory())
 #
 system.tester = RubyDirectedTester(requests_to_complete = \
                                    options.requests,
-                                 generator = generator)
+                                   generator = generator)
 
 system.ruby = Ruby.create_system(options, system)
 

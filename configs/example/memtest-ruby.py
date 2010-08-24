@@ -104,17 +104,21 @@ system = System(cpu = cpus,
                 funcmem = PhysicalMemory(),
                 physmem = PhysicalMemory())
 
-system.dmas = [ MemTest(atomic = False, \
-                        max_loads = options.maxloads, \
-                        issue_dmas = True, \
-                        percent_functional = 0, \
-                        percent_uncacheable = 0, \
-                        progress_interval = options.progress) \
-                for i in xrange(options.num_dmas) ]
+if options.num_dmas > 0:
+    dmas = [ MemTest(atomic = False, \
+                     max_loads = options.maxloads, \
+                     issue_dmas = True, \
+                     percent_functional = 0, \
+                     percent_uncacheable = 0, \
+                     progress_interval = options.progress) \
+             for i in xrange(options.num_dmas) ]
+    system.dma_devices = dmas
+else:
+    dmas = []
 
 system.ruby = Ruby.create_system(options, \
-                                 system.physmem, \
-                                 dma_devices = system.dmas)
+                                 system, \
+                                 dma_devices = dmas)
 
 #
 # The tester is most effective when randomization is turned on and
@@ -131,7 +135,7 @@ for (i, cpu) in enumerate(cpus):
     cpu.test = system.ruby.cpu_ruby_ports[i].port
     cpu.functional = system.funcmem.port
 
-for (i, dma) in enumerate(system.dmas):
+for (i, dma) in enumerate(dmas):
     #
     # Tie the dma memtester ports to the correct functional port
     # Note that the test port has already been connected to the dma_sequencer

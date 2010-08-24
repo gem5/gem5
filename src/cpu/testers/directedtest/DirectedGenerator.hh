@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
- * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,63 +26,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_RUBYTEST_CHECK_HH__
-#define __CPU_RUBYTEST_CHECK_HH__
+#ifndef __CPU_DIRECTEDTEST_DIRECTEDGENERATOR_HH__
+#define __CPU_DIRECTEDTEST_DIRECTEDGENERATOR_HH__
 
-#include <iostream>
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/RubyDirectedTester.hh"
+#include "params/DirectedGenerator.hh"
+#include "sim/sim_object.hh"
 
-#include "cpu/rubytest/RubyTester.hh"
-#include "mem/protocol/AccessModeType.hh"
-#include "mem/protocol/TesterStatus.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
-
-class SubBlock;
-
-const int CHECK_SIZE_BITS = 2;
-const int CHECK_SIZE = (1 << CHECK_SIZE_BITS);
-
-class Check
+class DirectedGenerator : public SimObject 
 {
   public:
-    Check(const Address& address, const Address& pc, int _num_cpu_sequencer,
-          RubyTester* _tester);
-
-    void initiate(); // Does Action or Check or nether
-    void performCallback(NodeID proc, SubBlock* data);
-    const Address& getAddress() { return m_address; }
-    void changeAddress(const Address& address);
-
-    void print(std::ostream& out) const;
-
-  private:
-    void initiatePrefetch();
-    void initiateAction();
-    void initiateCheck();
-
-    void pickValue();
-    void pickInitiatingNode();
-
-    void debugPrint();
-
-    TesterStatus m_status;
-    uint8 m_value;
-    int m_store_count;
-    NodeID m_initiatingNode;
-    Address m_address;
-    Address m_pc;
-    AccessModeType m_access_mode;
-    int m_num_cpu_sequencers;
-    RubyTester* m_tester_ptr;
+    typedef DirectedGeneratorParams Params;
+    DirectedGenerator(const Params *p);
+    
+    virtual ~DirectedGenerator() {}
+    
+    virtual bool initiate() = 0;
+    virtual void performCallback(uint proc, Addr address) = 0;
+    
+    void setDirectedTester(RubyDirectedTester* directed_tester);
+    
+  protected:
+    int m_num_cpus;
+    RubyDirectedTester* m_directed_tester;
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const Check& obj)
-{
-    obj.print(out);
-    out << std::flush;
-    return out;
-}
+#endif //__CPU_DIRECTEDTEST_DIRECTEDGENERATOR_HH__
 
-#endif // __CPU_RUBYTEST_CHECK_HH__

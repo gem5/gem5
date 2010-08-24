@@ -186,10 +186,9 @@ def create_system(options, system, piobus, dma_devices):
 
         exec("system.dma_cntrl%d = dma_cntrl" % i)
         if dma_device.type == 'MemTest':
-            system.dma_cntrl.dma_sequencer.port = dma_device.test
+            exec("system.dma_cntrl%d.dma_sequencer.port = dma_device.test" % i)
         else:
-            system.dma_cntrl.dma_sequencer.port = dma_device.dma
-        dma_cntrl.dma_sequencer.port = dma_device.dma
+            exec("system.dma_cntrl%d.dma_sequencer.port = dma_device.dma" % i)
         dma_cntrl_nodes.append(dma_cntrl)
 
         if options.recycle_latency:

@@ -27,7 +27,7 @@
  */
 
 #include "base/str.hh"
-#include "cpu/rubytest/RubyTester.hh"
+#include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/protocol/Protocol.hh"

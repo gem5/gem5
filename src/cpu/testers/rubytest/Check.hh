@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,38 +27,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//
-// This Deterministic Generator generates GETX requests for all nodes in the 
-// system.  The GETX requests are generated one at a time in round-robin fashion
-// 0...1...2...etc.
-//
+#ifndef __CPU_RUBYTEST_CHECK_HH__
+#define __CPU_RUBYTEST_CHECK_HH__
 
-#ifndef __CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
-#define __CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
+#include <iostream>
 
-#include "cpu/directedtest/RubyDirectedTester.hh"
-#include "cpu/directedtest/DirectedGenerator.hh"
-#include "mem/protocol/SeriesRequestGeneratorStatus.hh"
-#include "params/SeriesRequestGenerator.hh"
+#include "cpu/testers/rubytest/RubyTester.hh"
+#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/TesterStatus.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
 
-class SeriesRequestGenerator : public DirectedGenerator 
+class SubBlock;
+
+const int CHECK_SIZE_BITS = 2;
+const int CHECK_SIZE = (1 << CHECK_SIZE_BITS);
+
+class Check
 {
   public:
-    typedef SeriesRequestGeneratorParams Params;
-    SeriesRequestGenerator(const Params *p);
-    
-    ~SeriesRequestGenerator();
-    
-    bool initiate();
-    void performCallback(uint proc, Addr address);
-    
+    Check(const Address& address, const Address& pc, int _num_cpu_sequencer,
+          RubyTester* _tester);
+
+    void initiate(); // Does Action or Check or nether
+    void performCallback(NodeID proc, SubBlock* data);
+    const Address& getAddress() { return m_address; }
+    void changeAddress(const Address& address);
+
+    void print(std::ostream& out) const;
+
   private:
-    SeriesRequestGeneratorStatus m_status;
-    Addr m_address;
-    uint m_active_node;
-    uint m_addr_increment_size;
-    bool m_issue_writes;
+    void initiatePrefetch();
+    void initiateAction();
+    void initiateCheck();
+
+    void pickValue();
+    void pickInitiatingNode();
+
+    void debugPrint();
+
+    TesterStatus m_status;
+    uint8 m_value;
+    int m_store_count;
+    NodeID m_initiatingNode;
+    Address m_address;
+    Address m_pc;
+    AccessModeType m_access_mode;
+    int m_num_cpu_sequencers;
+    RubyTester* m_tester_ptr;
 };
 
-#endif //__CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
+inline std::ostream&
+operator<<(std::ostream& out, const Check& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
+}
 
+#endif // __CPU_RUBYTEST_CHECK_HH__

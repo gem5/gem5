@@ -27,8 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/directedtest/RubyDirectedTester.hh"
-#include "cpu/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "sim/sim_exit.hh"
 

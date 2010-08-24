@@ -26,31 +26,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_DIRECTEDTEST_DIRECTEDGENERATOR_HH__
-#define __CPU_DIRECTEDTEST_DIRECTEDGENERATOR_HH__
+//
+// This Deterministic Generator generates GETX requests for all nodes in the 
+// system.  The GETX requests are generated one at a time in round-robin fashion
+// 0...1...2...etc.
+//
 
-#include "cpu/directedtest/DirectedGenerator.hh"
-#include "cpu/directedtest/RubyDirectedTester.hh"
-#include "params/DirectedGenerator.hh"
-#include "sim/sim_object.hh"
+#ifndef __CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
+#define __CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
 
-class DirectedGenerator : public SimObject 
+#include "cpu/testers/directedtest/DirectedGenerator.hh"
+#include "cpu/testers/directedtest/RubyDirectedTester.hh"
+#include "mem/protocol/SeriesRequestGeneratorStatus.hh"
+#include "params/SeriesRequestGenerator.hh"
+
+class SeriesRequestGenerator : public DirectedGenerator 
 {
   public:
-    typedef DirectedGeneratorParams Params;
-    DirectedGenerator(const Params *p);
+    typedef SeriesRequestGeneratorParams Params;
+    SeriesRequestGenerator(const Params *p);
     
-    virtual ~DirectedGenerator() {}
+    ~SeriesRequestGenerator();
     
-    virtual bool initiate() = 0;
-    virtual void performCallback(uint proc, Addr address) = 0;
+    bool initiate();
+    void performCallback(uint proc, Addr address);
     
-    void setDirectedTester(RubyDirectedTester* directed_tester);
-    
-  protected:
-    int m_num_cpus;
-    RubyDirectedTester* m_directed_tester;
+  private:
+    SeriesRequestGeneratorStatus m_status;
+    Addr m_address;
+    uint m_active_node;
+    uint m_addr_increment_size;
+    bool m_issue_writes;
 };
 
-#endif //__CPU_DIRECTEDTEST_DIRECTEDGENERATOR_HH__
+#endif //__CPU_DIRECTEDTEST_SERIESREQUESTGENERATOR_HH__
 
