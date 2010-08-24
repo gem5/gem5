@@ -115,7 +115,7 @@ system = makeLinuxAlphaRubySystem(test_mem_mode, bm[0])
 system.ruby = Ruby.create_system(options,
                                  system,
                                  system.piobus,
-                                 system.dma_devices)
+                                 system._dma_devices)
 
 system.cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)]
 

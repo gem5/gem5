@@ -124,9 +124,10 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     self.tsunami.ethernet.pio = self.piobus.port
 
     #
-    # store the dma devices for later connection to dma ruby ports
+    # Store the dma devices for later connection to dma ruby ports.
+    # Append an underscore to dma_devices to avoid the SimObjectVector check.
     #
-    self.dma_devices = [self.tsunami.ide, self.tsunami.ethernet]
+    self._dma_devices = [self.tsunami.ide, self.tsunami.ethernet]
 
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
