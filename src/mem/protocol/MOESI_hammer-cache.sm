@@ -97,6 +97,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     Other_GETS,      desc="A GetS from another processor";
     Merged_GETS,     desc="A Merged GetS from another processor";
     Other_GETS_No_Mig, desc="A GetS from another processor";
+    NC_DMA_GETS,     desc="special GetS when only DMA exists";
     Invalidate,      desc="Invalidate block";
 
     // Responses
@@ -291,14 +292,18 @@ machine(L1Cache, "AMD Hammer-like protocol")
         } else if (in_msg.Type == CoherenceRequestType:MERGED_GETS) {
           trigger(Event:Merged_GETS, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
-          if (isCacheTagPresent(in_msg.Address)) {
-            if (getCacheEntry(in_msg.Address).AtomicAccessed && no_mig_atomic) {
-              trigger(Event:Other_GETS_No_Mig, in_msg.Address);
+          if (machineCount(MachineType:L1Cache) > 1) {
+            if (isCacheTagPresent(in_msg.Address)) {
+              if (getCacheEntry(in_msg.Address).AtomicAccessed && no_mig_atomic) {
+                trigger(Event:Other_GETS_No_Mig, in_msg.Address);
+              } else {
+                trigger(Event:Other_GETS, in_msg.Address);
+              }
             } else {
               trigger(Event:Other_GETS, in_msg.Address);
             }
           } else {
-            trigger(Event:Other_GETS, in_msg.Address);
+            trigger(Event:NC_DMA_GETS, in_msg.Address);
           }
         } else if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Invalidate, in_msg.Address);
@@ -945,7 +950,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     zz_recycleMandatoryQueue;
   }
 
-  transition({IT, ST, OT, MT, MMT}, {Other_GETX, Other_GETS, Merged_GETS, Other_GETS_No_Mig, Invalidate}) {
+  transition({IT, ST, OT, MT, MMT}, {Other_GETX, NC_DMA_GETS, Other_GETS, Merged_GETS, Other_GETS_No_Mig, Invalidate}) {
     // stall
   }
 
@@ -1095,7 +1100,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     rr_deallocateL2CacheBlock;
   }
 
-  transition(I, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
+  transition(I, {Other_GETX, NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1122,7 +1127,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(S, {Other_GETS, Other_GETS_No_Mig}) {
+  transition(S, {NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig}) {
     ff_sendAckShared;
     l_popForwardQueue;
   }
@@ -1152,7 +1157,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(O, {Other_GETS, Other_GETS_No_Mig}) {
+  transition(O, {NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig}) {
     ee_sendDataShared;
     l_popForwardQueue;
   }
@@ -1185,6 +1190,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition(MM, Other_GETS, I) {
+    c_sendExclusiveData;
+    l_popForwardQueue;
+  }
+  
+  transition(MM, NC_DMA_GETS) {
     c_sendExclusiveData;
     l_popForwardQueue;
   }
@@ -1226,6 +1236,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
+  transition(M, NC_DMA_GETS) {
+    ee_sendDataShared;
+    l_popForwardQueue;
+  }
+
   transition(M, Merged_GETS, O) {
     em_sendDataSharedMultiple;
     l_popForwardQueue;
@@ -1233,7 +1248,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   // Transitions from IM
 
-  transition(IM, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
+  transition(IM, {Other_GETX, NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1260,7 +1275,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   // Transitions from SM
-  transition(SM, {Other_GETS, Other_GETS_No_Mig}) {
+  transition(SM, {NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig}) {
     ff_sendAckShared;
     l_popForwardQueue;
   }
@@ -1305,7 +1320,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(OM, {Other_GETS, Other_GETS_No_Mig}) {
+  transition(OM, {NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig}) {
     ee_sendDataShared;
     l_popForwardQueue;
   }
@@ -1330,7 +1345,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   // Transitions from IS
 
-  transition(IS, {Other_GETX, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
+  transition(IS, {Other_GETX, NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
     f_sendAck;
     l_popForwardQueue;
   }
@@ -1448,7 +1463,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition({OI, MI}, {Other_GETS, Other_GETS_No_Mig}, OI) {
+  transition({OI, MI}, {NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig}, OI) {
     q_sendDataFromTBEToCache;
     l_popForwardQueue;
   }
@@ -1471,7 +1486,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   // Transitions from II
-  transition(II, {Other_GETS, Other_GETS_No_Mig, Other_GETX, Invalidate}, II) {
+  transition(II, {NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig, Other_GETX, Invalidate}, II) {
     f_sendAck;
     l_popForwardQueue;
   }
