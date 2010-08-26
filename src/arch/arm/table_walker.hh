@@ -302,7 +302,12 @@ class TableWalker : public MemObject
     };
 
 
-    std::list<WalkerState *> stateQueue;
+    /** Queue of requests that need processing first level translation */
+    std::list<WalkerState *> stateQueueL1;
+
+    /** Queue of requests that have passed first level translation and
+     * require an additional level. */
+    std::list<WalkerState *> stateQueueL2;
 
     /** Port to issue translation requests from */
     DmaPort *port;
