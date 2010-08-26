@@ -106,7 +106,7 @@ let {{
     regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodes<29:>)"
 
     def buildImmDataInst(mnem, code, flagType = "logic", suffix = "Imm", \
-                         buildCc = True, buildNonCc = True):
+                         buildCc = True, buildNonCc = True, instFlags = []):
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
@@ -125,11 +125,11 @@ let {{
         immCode = secondOpRe.sub(immOp2, code)
         immIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataImmOp",
                                {"code" : immCode,
-                                "predicate_test": predicateTest})
+                                "predicate_test": predicateTest}, instFlags)
         immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
                                  "DataImmOp",
                                  {"code" : immCode + immCcCode,
-                                  "predicate_test": condPredicateTest})
+                                  "predicate_test": condPredicateTest}, instFlags)
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -143,7 +143,7 @@ let {{
             subst(immIopCc)
 
     def buildRegDataInst(mnem, code, flagType = "logic", suffix = "Reg", \
-                         buildCc = True, buildNonCc = True):
+                         buildCc = True, buildNonCc = True, instFlags = []):
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
@@ -162,11 +162,12 @@ let {{
         regCode = secondOpRe.sub(regOp2, code)
         regIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataRegOp",
                                {"code" : regCode,
-                                "predicate_test": predicateTest})
+                                "predicate_test": predicateTest}, instFlags)
         regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
                                  "DataRegOp",
                                  {"code" : regCode + regCcCode,
-                                  "predicate_test": condPredicateTest})
+                                  "predicate_test": condPredicateTest},
+                                  instFlags)
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -240,9 +241,11 @@ let {{
             CondCodes = CondCodesMask & newCpsr;
             '''
             buildImmDataInst(mnem + 's', code, flagType,
-                             suffix = "ImmPclr", buildCc = False)
+                             suffix = "ImmPclr", buildCc = False,
+                             instFlags = ["IsSerializeAfter","IsNonSpeculative"])
             buildRegDataInst(mnem + 's', code, flagType,
-                             suffix = "RegPclr", buildCc = False)
+                             suffix = "RegPclr", buildCc = False,
+                             instFlags = ["IsSerializeAfter","IsNonSpeculative"])
 
     buildDataInst("and", "Dest = resTemp = Op1 & secondOp;")
     buildDataInst("eor", "Dest = resTemp = Op1 ^ secondOp;")

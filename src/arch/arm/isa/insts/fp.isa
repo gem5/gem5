@@ -194,7 +194,8 @@ let {{
     vmsrIop = InstObjParams("vmsr", "Vmsr", "FpRegRegOp",
                             { "code": vmsrEnabledCheckCode + \
                                       "MiscDest = Op1;",
-                              "predicate_test": predicateTest }, [])
+                              "predicate_test": predicateTest },
+                             ["IsSerializeAfter","IsNonSpeculative"])
     header_output += FpRegRegOpDeclare.subst(vmsrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmsrIop);
     exec_output += PredOpExecute.subst(vmsrIop);

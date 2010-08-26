@@ -101,7 +101,7 @@ let {{
                                        'ea_code':
                                           'EA = Rb + (up ? imm : -imm);',
                                        'predicate_test': condPredicateTest},
-                                      ['IsMicroop'])
+                                      ['IsMicroop','IsNonSpeculative','IsSerializeAfter'])
 
     microStrUopCode = "Mem = cSwap(Ra.uw, ((CPSR)Cpsr).e);"
     microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',

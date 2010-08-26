@@ -67,7 +67,7 @@ let {{
             self.memFlags = ["ArmISA::TLB::MustBeOne"]
             self.codeBlobs = {"postacc_code" : ""}
 
-        def emitHelper(self, base = 'Memory', wbDecl = None):
+        def emitHelper(self, base = 'Memory', wbDecl = None, instFlags = []):
 
             global header_output, decoder_output, exec_output
 
@@ -76,7 +76,7 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                                           self.memFlags, [], base, wbDecl)
+                                           self.memFlags, instFlags, base, wbDecl)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -118,7 +118,7 @@ let {{
             wbDecl = None
             if self.writeback:
                 wbDecl = "MicroAddiUop(machInst, base, base, %d);" % wbDiff
-            self.emitHelper('RfeOp', wbDecl)
+            self.emitHelper('RfeOp', wbDecl, ["IsSerializeAfter", "IsNonSpeculative"])
 
     class LoadImmInst(LoadInst):
         def __init__(self, *args, **kargs):

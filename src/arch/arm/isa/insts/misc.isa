@@ -490,7 +490,7 @@ let {{
     '''
     wfeIop = InstObjParams("wfe", "WfeInst", "PredOp", \
             { "code" : wfeCode, "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsQuiesce"])
+            ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(wfeIop)
     decoder_output += BasicConstructor.subst(wfeIop)
     exec_output += PredOpExecute.subst(wfeIop)
@@ -517,14 +517,15 @@ let {{
     '''
     sevIop = InstObjParams("sev", "SevInst", "PredOp", \
             { "code" : sevCode, "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsQuiesce"])
+            ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(sevIop)
     decoder_output += BasicConstructor.subst(sevIop)
     exec_output += PredOpExecute.subst(sevIop)
 
     itIop = InstObjParams("it", "ItInst", "PredOp", \
             { "code" : "Itstate = machInst.newItstate;",
-              "predicate_test" : predicateTest })
+              "predicate_test" : predicateTest },
+            ["IsNonSpeculative", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(itIop)
     decoder_output += BasicConstructor.subst(itIop)
     exec_output += PredOpExecute.subst(itIop)
@@ -663,7 +664,8 @@ let {{
     '''
     setendIop = InstObjParams("setend", "Setend", "ImmOp",
                               { "code": setendCode,
-                                "predicate_test": predicateTest }, [])
+                                "predicate_test": predicateTest },
+                              ["IsSerializeAfter","IsNonSpeculative"])
     header_output += ImmOpDeclare.subst(setendIop)
     decoder_output += ImmOpConstructor.subst(setendIop)
     exec_output += PredOpExecute.subst(setendIop)
