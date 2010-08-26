@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 ARM Limited
+ * Copyright (c) 2009-2010 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -59,7 +59,16 @@ initCPU(ThreadContext *tc, int cpuId)
 
 uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
 #if FULL_SYSTEM
-    panic("getArgument() not implemented for ARM!\n");
+    if (number < NumArgumentRegs) {
+        if (fp)
+            panic("getArgument(): Floating point arguments not implemented\n");
+        else
+            return tc->readIntReg(number);
+    }
+    else {
+        panic("getArgument(): Argument index %d beyond max supported (%d).\n",
+              number, NumArgumentRegs - 1);
+    }
 #else
     panic("getArgument() only implemented for FULL_SYSTEM\n");
     M5_DUMMY_RETURN

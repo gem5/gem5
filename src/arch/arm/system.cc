@@ -41,17 +41,22 @@
  */
 
 #include "arch/arm/system.hh"
+#include <iostream>
 
+using namespace std;
 using namespace ArmISA;
+using namespace Linux;
 
 ArmSystem::ArmSystem(Params *p)
     : System(p)
 {
+    debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
 
 }
 
 ArmSystem::~ArmSystem()
 {
+    delete debugPrintkEvent;
 }
 
 

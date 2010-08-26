@@ -79,6 +79,7 @@ const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 const int ReturnValueReg = 0;
 const int ReturnValueReg1 = 1;
 const int ReturnValueReg2 = 2;
+const int NumArgumentRegs = 4;
 const int ArgumentReg0 = 0;
 const int ArgumentReg1 = 1;
 const int ArgumentReg2 = 2;
