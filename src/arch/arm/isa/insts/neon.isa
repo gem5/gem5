@@ -1718,7 +1718,7 @@ let {{
                 destElem = (srcElem1 >> shiftAmt);
             }
             // Make sure the right shift sign extended when it should.
-            if (srcElem1 < 0 && destElem >= 0) {
+            if (ltz(srcElem1) && !ltz(destElem)) {
                 destElem |= -((Element)1 << (sizeof(Element) * 8 -
                                              1 - shiftAmt));
             }
@@ -1740,7 +1740,7 @@ let {{
             Element rBit = 0;
             if (shiftAmt <= sizeof(Element) * 8)
                 rBit = bits(srcElem1, shiftAmt - 1);
-            if (shiftAmt > sizeof(Element) * 8 && srcElem1 < 0)
+            if (shiftAmt > sizeof(Element) * 8 && ltz(srcElem1))
                 rBit = 1;
             if (shiftAmt >= sizeof(Element) * 8) {
                 shiftAmt = sizeof(Element) * 8 - 1;
@@ -1749,7 +1749,7 @@ let {{
                 destElem = (srcElem1 >> shiftAmt);
             }
             // Make sure the right shift sign extended when it should.
-            if (srcElem1 < 0 && destElem >= 0) {
+            if (ltz(srcElem1) && !ltz(destElem)) {
                 destElem |= -((Element)1 << (sizeof(Element) * 8 -
                                              1 - shiftAmt));
             }
@@ -1777,11 +1777,6 @@ let {{
                 destElem = 0;
             } else {
                 destElem = (srcElem1 >> shiftAmt);
-            }
-            // Make sure the right shift sign extended when it should.
-            if (srcElem1 < 0 && destElem >= 0) {
-                destElem |= -((Element)1 << (sizeof(Element) * 8 -
-                                             1 - shiftAmt));
             }
         } else if (shiftAmt > 0) {
             if (shiftAmt >= sizeof(Element) * 8) {
@@ -1862,18 +1857,11 @@ let {{
             Element rBit = 0;
             if (shiftAmt <= sizeof(Element) * 8)
                 rBit = bits(srcElem1, shiftAmt - 1);
-            if (shiftAmt > sizeof(Element) * 8 && srcElem1 < 0)
-                rBit = 1;
             if (shiftAmt >= sizeof(Element) * 8) {
                 shiftAmt = sizeof(Element) * 8 - 1;
                 destElem = 0;
             } else {
                 destElem = (srcElem1 >> shiftAmt);
-            }
-            // Make sure the right shift sign extended when it should.
-            if (srcElem1 < 0 && destElem >= 0) {
-                destElem |= -((Element)1 << (sizeof(Element) * 8 -
-                                             1 - shiftAmt));
             }
             destElem += rBit;
         } else {
@@ -2014,10 +2002,10 @@ let {{
             midElem = ~((BigElement)maxNeg << (sizeof(Element) * 8));
             fpscr.qc = 1;
         }
-        bool negPreDest = (destElem < 0);
+        bool negPreDest = ltz(destElem);
         destElem += midElem;
-        bool negDest = (destElem < 0);
-        bool negMid = (midElem < 0);
+        bool negDest = ltz(destElem);
+        bool negMid = ltz(midElem);
         if (negPreDest == negMid && negMid != negDest) {
             destElem = mask(sizeof(BigElement) * 8 - 1);
             if (negPreDest)
@@ -2039,10 +2027,10 @@ let {{
             midElem = ~((BigElement)maxNeg << (sizeof(Element) * 8));
             fpscr.qc = 1;
         }
-        bool negPreDest = (destElem < 0);
+        bool negPreDest = ltz(destElem);
         destElem -= midElem;
-        bool negDest = (destElem < 0);
-        bool posMid = (midElem > 0);
+        bool negDest = ltz(destElem);
+        bool posMid = ltz((BigElement)-midElem);
         if (negPreDest == posMid && posMid != negDest) {
             destElem = mask(sizeof(BigElement) * 8 - 1);
             if (negPreDest)
@@ -2361,7 +2349,7 @@ let {{
 
     vshrCode = '''
         if (imm >= sizeof(srcElem1) * 8) {
-            if (srcElem1 < 0)
+            if (ltz(srcElem1))
                 destElem = -1;
             else
                 destElem = 0;
@@ -2375,10 +2363,10 @@ let {{
     vsraCode = '''
         Element mid;;
         if (imm >= sizeof(srcElem1) * 8) {
-            mid = (srcElem1 < 0) ? -1 : 0;
+            mid = ltz(srcElem1) ? -1 : 0;
         } else {
             mid = srcElem1 >> imm;
-            if (srcElem1 < 0 && mid >= 0) {
+            if (ltz(srcElem1) && !ltz(mid)) {
                 mid |= -(mid & ((Element)1 <<
                             (sizeof(Element) * 8 - 1 - imm)));
             }
@@ -2686,8 +2674,6 @@ let {{
         } else {
             if (srcElem1 != (Element)srcElem1) {
                 destElem = mask(sizeof(Element) * 8 - 1);
-                if (srcElem1 < 0)
-                    destElem = ~destElem;
                 fpscr.qc = 1;
             } else {
                 destElem = srcElem1;

@@ -142,6 +142,32 @@ def template NeonExecDeclare {{
             %(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
+output header {{
+    template <class T>
+    // Implement a less-than-zero function: ltz()
+    // this function exists because some versions of GCC complain when a
+    // comparison is done between a unsigned variable and 0 and for GCC 4.2
+    // there is no way to disable this warning
+    inline bool ltz(T t);
+
+    template <>
+    inline bool ltz(uint8_t) { return false; }
+    template <>
+    inline bool ltz(uint16_t) { return false; }
+    template <>
+    inline bool ltz(uint32_t) { return false; }
+    template <>
+    inline bool ltz(uint64_t) { return false; }
+    template <>
+    inline bool ltz(int8_t v) { return v < 0; }
+    template <>
+    inline bool ltz(int16_t v) { return v < 0; }
+    template <>
+    inline bool ltz(int32_t v) { return v < 0; }
+    template <>
+    inline bool ltz(int64_t v) { return v < 0; }
+}};
+
 def template NeonEqualRegExecute {{
     template <class Element>
     Fault %(class_name)s<Element>::execute(%(CPU_exec_context)s *xc,
