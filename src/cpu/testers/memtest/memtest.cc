@@ -223,8 +223,6 @@ MemTest::completeRequest(PacketPtr pkt)
     assert(removeAddr != outstandingAddrs.end());
     outstandingAddrs.erase(removeAddr);
 
-    assert(pkt->isResponse());
-
     if (pkt->isRead()) {
         if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
             panic("%s: read of %x (blk %x) @ cycle %d "
@@ -325,7 +323,7 @@ MemTest::tick()
     } else  {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
-    bool probe = (random() % 100 < percentFunctional) && !uncacheable;
+    bool do_functional = (random() % 100 < percentFunctional) && !uncacheable;
 
     if (issueDmas) {
         paddr &= ~((1 << dma_access_size) - 1);
@@ -358,8 +356,9 @@ MemTest::tick()
         funcPort.readBlob(req->getPaddr(), result, req->getSize());
 
         DPRINTF(MemTest,
-                "id %d initiating read at address %x (blk %x) expecting %x\n",
-                id, req->getPaddr(), blockAddr(req->getPaddr()), *result);
+                "id %d initiating %sread at addr %x (blk %x) expecting %x\n",
+                id, do_functional ? "functional " : "", req->getPaddr(),
+                blockAddr(req->getPaddr()), *result);
 
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         pkt->setSrc(0);
@@ -367,7 +366,7 @@ MemTest::tick()
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
 
-        if (probe) {
+        if (do_functional) {
             cachePort.sendFunctional(pkt);
             completeRequest(pkt);
         } else {
@@ -387,8 +386,9 @@ MemTest::tick()
 
         outstandingAddrs.insert(paddr);
 
-        DPRINTF(MemTest, "initiating write at address %x (blk %x) value %x\n",
-                req->getPaddr(), blockAddr(req->getPaddr()), data & 0xff);
+        DPRINTF(MemTest, "initiating %swrite at addr %x (blk %x) value %x\n",
+                do_functional ? "functional " : "", req->getPaddr(),
+                blockAddr(req->getPaddr()), data & 0xff);
 
         PacketPtr pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
         pkt->setSrc(0);
@@ -400,7 +400,7 @@ MemTest::tick()
 
         funcPort.writeBlob(req->getPaddr(), pkt_data, req->getSize());
 
-        if (probe) {
+        if (do_functional) {
             cachePort.sendFunctional(pkt);
             completeRequest(pkt);
         } else {
