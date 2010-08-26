@@ -111,7 +111,7 @@ let {{
             return new WarnUnimplemented(
                     isRead ? "mrc dcimvac" : "mcr dcimvac", machInst);
           case MISCREG_DCCMVAC:
-            return new WarnUnimplemented(
+            return new FlushPipeInst(
                     isRead ? "mrc dccmvac" : "mcr dccmvac", machInst);
           case MISCREG_DCCMVAU:
             return new WarnUnimplemented(

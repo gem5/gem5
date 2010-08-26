@@ -71,6 +71,9 @@ template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals =
 template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals =
     {"FIQ", 0x1C, MODE_FIQ, 4, 4, true, true};
 
+template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals =
+    {"Pipe Flush", 0x00, MODE_SVC, 0, 0, true, true}; // some dummy values
+
 Addr 
 ArmFault::getVector(ThreadContext *tc)
 {
@@ -213,12 +216,22 @@ AbortFault<T>::invoke(ThreadContext *tc)
     tc->setMiscReg(T::FarIndex, faultAddr);
 }
 
+void
+FlushPipe::invoke(ThreadContext *tc) {
+    DPRINTF(Faults, "Invoking FlushPipe Fault\n");
+
+    // Set the PC to the next instruction of the faulting instruction.
+    // Net effect is simply squashing all instructions behind and
+    // start refetching from the next instruction.
+    tc->setPC(tc->readNextPC());
+    tc->setNextPC(tc->readNextNPC());
+    tc->setMicroPC(0);
+    tc->setNextMicroPC(1);
+}
+
 template void AbortFault<PrefetchAbort>::invoke(ThreadContext *tc);
 template void AbortFault<DataAbort>::invoke(ThreadContext *tc);
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm
 
-
-
 } // namespace ArmISA
-

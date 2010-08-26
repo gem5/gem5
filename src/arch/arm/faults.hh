@@ -227,6 +227,14 @@ class DataAbort : public AbortFault<DataAbort>
 class Interrupt : public ArmFaultVals<Interrupt> {};
 class FastInterrupt : public ArmFaultVals<FastInterrupt> {};
 
+// A fault that flushes the pipe, excluding the faulting instructions
+class FlushPipe : public ArmFaultVals<FlushPipe>
+{
+  public:
+    FlushPipe() {}
+    void invoke(ThreadContext *tc);
+};
+
 static inline Fault genMachineCheckFault()
 {
     return new Reset();

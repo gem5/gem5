@@ -101,6 +101,22 @@ output header {{
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
+
+    class FlushPipeInst : public ArmStaticInst
+    {
+      public:
+        FlushPipeInst(const char *_mnemonic, ExtMachInst _machInst)
+            : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
+        {
+            flags[IsNonSpeculative] = true;
+        }
+
+        %(BasicExecDeclare)s
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+    };
 }};
 
 output decoder {{
@@ -116,6 +132,13 @@ output decoder {{
                                            const SymbolTable *symtab) const
     {
         return csprintf("%-10s (unimplemented)", mnemonic);
+    }
+
+    std::string
+    FlushPipeInst::generateDisassembly(Addr pc,
+                                   const SymbolTable *symtab) const
+    {
+        return csprintf("%-10s (pipe flush)", mnemonic);
     }
 }};
 
@@ -141,6 +164,13 @@ output exec {{
         }
 
         return NoFault;
+    }
+
+    Fault
+    FlushPipeInst::execute(%(CPU_exec_context)s *xc,
+                           Trace::InstRecord *traceData) const
+    {
+        return new FlushPipe();
     }
 }};
 
