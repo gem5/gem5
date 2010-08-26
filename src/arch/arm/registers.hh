@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
@@ -59,9 +71,9 @@ const int NumFloatSpecialRegs = 8;
 
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
-
 const int NumMiscRegs = NUM_MISCREGS;
 
+const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 
 // semantically meaningful register indices
 const int ReturnValueReg = 0;
@@ -85,6 +97,7 @@ const int SyscallSuccessReg = ReturnValueReg;
 // These help enumerate all the registers for dependence tracking.
 const int FP_Base_DepTag = NumIntRegs * (MODE_MAXMODE + 1);
 const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
+const int Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs;
 
 typedef union {
     IntReg   intreg;

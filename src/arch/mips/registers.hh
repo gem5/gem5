@@ -283,6 +283,7 @@ enum MiscRegIndex{
 const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 
 const int NumMiscRegs = MISCREG_NUMREGS;
+const int Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 

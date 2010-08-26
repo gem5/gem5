@@ -76,7 +76,8 @@ enum DependenceTags {
         //The microcode fp registers
         8 +
         //The indices that are mapped over the fp stack
-        8
+        8,
+    Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs
 };
 
 // semantically meaningful register indices

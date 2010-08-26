@@ -966,9 +966,11 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
             src_reg = src_reg - TheISA::FP_Base_DepTag;
             flat_src_reg = inst->tcBase()->flattenFloatIndex(src_reg);
             flat_src_reg += TheISA::NumIntRegs;
-        } else {
+        } else if (src_reg < TheISA::Max_DepTag) {
             flat_src_reg = src_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
             DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", src_reg, flat_src_reg);
+        } else {
+            panic("Reg index is out of bound: %d.", src_reg);
         }
 
         inst->flattenSrcReg(src_idx, flat_src_reg);
@@ -1012,11 +1014,13 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
             // Integer registers are flattened.
             flat_dest_reg = inst->tcBase()->flattenIntIndex(dest_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n", (int)dest_reg, (int)flat_dest_reg);
-        } else {
+        } else if (dest_reg < TheISA::Max_DepTag) {
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
             flat_dest_reg = dest_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
             DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", dest_reg, flat_dest_reg);
+        } else {
+            panic("Reg index is out of bound: %d.", dest_reg);
         }
 
         inst->flattenDestReg(dest_idx, flat_dest_reg);

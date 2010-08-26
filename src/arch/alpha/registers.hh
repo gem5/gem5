@@ -101,7 +101,8 @@ enum DependenceTags {
     // 0..31 are the integer regs 0..31
     // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
     FP_Base_DepTag = 40,
-    Ctrl_Base_DepTag = 72
+    Ctrl_Base_DepTag = 72,
+    Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs + NumInternalProcRegs
 };
 
 } // namespace AlphaISA

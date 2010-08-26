@@ -82,6 +82,7 @@ const int SyscallSuccessReg = 3;
 // These help enumerate all the registers for dependence tracking.
 const int FP_Base_DepTag = NumIntRegs;
 const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
+const int Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs;
 
 typedef union {
     IntReg   intreg;
