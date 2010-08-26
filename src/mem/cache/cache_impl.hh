@@ -1099,6 +1099,12 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     assert(!(pending_inval && !is_deferred));
     assert(pkt->isRequest());
 
+    // the packet may get modified if we or a forwarded snooper
+    // responds in atomic mode, so remember a few things about the
+    // original packet up front
+    bool invalidate = pkt->isInvalidate();
+    bool needs_exclusive = pkt->needsExclusive();
+
     if (forwardSnoops) {
         // first propagate snoop upward to see if anyone above us wants to
         // handle it.  save & restore packet src since it will get
@@ -1141,10 +1147,9 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // and then do it later
     bool respond = blk->isDirty() && pkt->needsResponse();
     bool have_exclusive = blk->isWritable();
-    bool invalidate = pkt->isInvalidate();
 
-    if (pkt->isRead() && !pkt->isInvalidate()) {
-        assert(!pkt->needsExclusive());
+    if (pkt->isRead() && !invalidate) {
+        assert(!needs_exclusive);
         pkt->assertShared();
         int bits_to_clear = BlkWritable;
         const bool haveOwnershipState = true; // for now
