@@ -92,29 +92,6 @@ typedef union {
     MiscReg  ctrlreg;
 } AnyReg;
 
-enum FPControlRegNums {
-   FIR = NumFloatArchRegs,
-   FCCR,
-   FEXR,
-   FENR,
-   FCSR
-};
-
-enum FCSRBits {
-    Inexact = 1,
-    Underflow,
-    Overflow,
-    DivideByZero,
-    Invalid,
-    Unimplemented
-};
-
-enum FCSRFields {
-    Flag_Field = 1,
-    Enable_Field = 6,
-    Cause_Field = 11
-};
-
 } // namespace ArmISA
 
 #endif
