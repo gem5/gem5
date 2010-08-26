@@ -44,13 +44,6 @@ class FunctionalPort;
 namespace ArmISA {
     inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
 
-    // User Virtual
-    inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
-
-    inline bool IsKSeg0(Addr a) { return KSeg0Base <= a && a <= KSeg0End; }
-
-    inline Addr KSeg02Phys(Addr addr) { return addr & KSeg0Mask; }
-
     Addr vtophys(Addr vaddr);
     Addr vtophys(ThreadContext *tc, Addr vaddr);
 };

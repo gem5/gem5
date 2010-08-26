@@ -45,17 +45,7 @@ using namespace ArmISA;
 Addr
 ArmISA::vtophys(Addr vaddr)
 {
-    Addr paddr = 0;
-    if (ArmISA::IsUSeg(vaddr))
-        DPRINTF(VtoPhys, "vtophys: invalid vaddr %#x", vaddr);
-    else if (ArmISA::IsKSeg0(vaddr))
-        paddr = ArmISA::KSeg02Phys(vaddr);
-    else
-        panic("vtophys: ptbr is not set on virtual lookup for vaddr %#x", vaddr);
-
-    DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
-
-    return paddr;
+   fatal("VTOPHYS: Can't convert vaddr to paddr on ARM without a thread context");
 }
 
 Addr

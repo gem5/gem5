@@ -86,11 +86,6 @@ namespace ArmISA
     const Addr USegBase = ULL(0x0);
     const Addr USegEnd = ULL(0x7FFFFFFF);
 
-    // Kernel Segment 0 - Unmapped
-    const Addr KSeg0End = ULL(0x9FFFFFFF);
-    const Addr KSeg0Base =  ULL(0x80000000);
-    const Addr KSeg0Mask = ULL(0x1FFFFFFF);
-
     const unsigned VABits = 32;
     const unsigned PABits = 32; // Is this correct?
     const Addr VAddrImplMask = (ULL(1) << VABits) - 1;
