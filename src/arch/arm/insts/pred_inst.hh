@@ -118,24 +118,26 @@ simd_modified_imm(bool op, uint8_t cmode, uint8_t data)
         break;
       case 0xe:
         if (op) {
+            bigData = 0;
+            for (int i = 7; i >= 0; i--) {
+                if (bits(data, i)) {
+                    bigData |= (ULL(0xFF) << (i * 8));
+                }
+            }
+        } else {
             bigData = (bigData << 0)  | (bigData << 8)  |
                       (bigData << 16) | (bigData << 24) |
                       (bigData << 32) | (bigData << 40) |
                       (bigData << 48) | (bigData << 56);
-        } else {
-            bigData = 0;
-            for (int i = 7; i >= 0; i--) {
-                if (bits(data, i)) {
-                    bigData |= (0xFF << (i * 8));
-                }
-            }
         }
+        break;
       case 0xf:
         if (!op) {
             uint64_t bVal = bits(bigData, 6) ? (0x1F) : (0x20);
             bigData = (bits(bigData, 5, 0) << 19) |
                       (bVal << 25) | (bits(bigData, 7) << 31);
             bigData |= (bigData << 32);
+            break;
         }
         // Fall through
       default:

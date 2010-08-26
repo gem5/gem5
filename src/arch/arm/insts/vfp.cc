@@ -91,6 +91,20 @@ FpRegRegRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     return ss.str();
 }
 
+std::string
+FpRegRegRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, dest + FP_Base_DepTag);
+    ss << ", ";
+    printReg(ss, op1 + FP_Base_DepTag);
+    ss << ", ";
+    printReg(ss, op2 + FP_Base_DepTag);
+    ccprintf(ss, ", #%d", imm);
+    return ss.str();
+}
+
 namespace ArmISA
 {
 
@@ -117,7 +131,7 @@ prepFpState(uint32_t rMode)
 }
 
 void
-finishVfp(FPSCR &fpscr, VfpSavedState state)
+finishVfp(FPSCR &fpscr, VfpSavedState state, bool flush)
 {
     int exceptions = fetestexcept(FeAllExceptions);
     bool underflow = false;
@@ -134,7 +148,7 @@ finishVfp(FPSCR &fpscr, VfpSavedState state)
         underflow = true;
         fpscr.ufc = 1;
     }
-    if ((exceptions & FeInexact) && !(underflow && fpscr.fz)) {
+    if ((exceptions & FeInexact) && !(underflow && flush)) {
         fpscr.ixc = 1;
     }
     fesetround(state);
@@ -142,7 +156,7 @@ finishVfp(FPSCR &fpscr, VfpSavedState state)
 
 template <class fpType>
 fpType
-fixDest(FPSCR fpscr, fpType val, fpType op1)
+fixDest(bool flush, bool defaultNan, fpType val, fpType op1)
 {
     int fpClass = std::fpclassify(val);
     fpType junk = 0.0;
@@ -150,12 +164,12 @@ fixDest(FPSCR fpscr, fpType val, fpType op1)
         const bool single = (sizeof(val) == sizeof(float));
         const uint64_t qnan = single ? 0x7fc00000 : ULL(0x7ff8000000000000);
         const bool nan = std::isnan(op1);
-        if (!nan || (fpscr.dn == 1)) {
+        if (!nan || defaultNan) {
             val = bitsToFp(qnan, junk);
         } else if (nan) {
             val = bitsToFp(fpToBits(op1) | qnan, junk);
         }
-    } else if (fpClass == FP_SUBNORMAL && fpscr.fz == 1) {
+    } else if (fpClass == FP_SUBNORMAL && flush == 1) {
         // Turn val into a zero with the correct sign;
         uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
         val = bitsToFp(fpToBits(val) & bitMask, junk);
@@ -166,13 +180,13 @@ fixDest(FPSCR fpscr, fpType val, fpType op1)
 }
 
 template
-float fixDest<float>(FPSCR fpscr, float val, float op1);
+float fixDest<float>(bool flush, bool defaultNan, float val, float op1);
 template
-double fixDest<double>(FPSCR fpscr, double val, double op1);
+double fixDest<double>(bool flush, bool defaultNan, double val, double op1);
 
 template <class fpType>
 fpType
-fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
+fixDest(bool flush, bool defaultNan, fpType val, fpType op1, fpType op2)
 {
     int fpClass = std::fpclassify(val);
     fpType junk = 0.0;
@@ -183,7 +197,7 @@ fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
         const bool nan2 = std::isnan(op2);
         const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
         const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
-        if ((!nan1 && !nan2) || (fpscr.dn == 1)) {
+        if ((!nan1 && !nan2) || defaultNan) {
             val = bitsToFp(qnan, junk);
         } else if (signal1) {
             val = bitsToFp(fpToBits(op1) | qnan, junk);
@@ -194,7 +208,7 @@ fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
         } else if (nan2) {
             val = op2;
         }
-    } else if (fpClass == FP_SUBNORMAL && fpscr.fz == 1) {
+    } else if (fpClass == FP_SUBNORMAL && flush) {
         // Turn val into a zero with the correct sign;
         uint64_t bitMask = ULL(0x1) << (sizeof(fpType) * 8 - 1);
         val = bitsToFp(fpToBits(val) & bitMask, junk);
@@ -205,15 +219,17 @@ fixDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
 }
 
 template
-float fixDest<float>(FPSCR fpscr, float val, float op1, float op2);
+float fixDest<float>(bool flush, bool defaultNan,
+                     float val, float op1, float op2);
 template
-double fixDest<double>(FPSCR fpscr, double val, double op1, double op2);
+double fixDest<double>(bool flush, bool defaultNan,
+                       double val, double op1, double op2);
 
 template <class fpType>
 fpType
-fixDivDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
+fixDivDest(bool flush, bool defaultNan, fpType val, fpType op1, fpType op2)
 {
-    fpType mid = fixDest(fpscr, val, op1, op2);
+    fpType mid = fixDest(flush, defaultNan, val, op1, op2);
     const bool single = (sizeof(fpType) == sizeof(float));
     const fpType junk = 0.0;
     if ((single && (val == bitsToFp(0x00800000, junk) ||
@@ -228,7 +244,7 @@ fixDivDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
         temp = op1 / op2;
         if (flushToZero(temp)) {
             feraiseexcept(FeUnderflow);
-            if (fpscr.fz) {
+            if (flush) {
                 feclearexcept(FeInexact);
                 mid = temp;
             }
@@ -239,9 +255,11 @@ fixDivDest(FPSCR fpscr, fpType val, fpType op1, fpType op2)
 }
 
 template
-float fixDivDest<float>(FPSCR fpscr, float val, float op1, float op2);
+float fixDivDest<float>(bool flush, bool defaultNan,
+                        float val, float op1, float op2);
 template
-double fixDivDest<double>(FPSCR fpscr, double val, double op1, double op2);
+double fixDivDest<double>(bool flush, bool defaultNan,
+                          double val, double op1, double op2);
 
 float
 fixFpDFpSDest(FPSCR fpscr, double val)
@@ -255,7 +273,7 @@ fixFpDFpSDest(FPSCR fpscr, double val)
                            (bits(valBits, 63) << 31);
         op1 = bitsToFp(op1Bits, junk);
     }
-    float mid = fixDest(fpscr, (float)val, op1);
+    float mid = fixDest(fpscr.fz, fpscr.dn, (float)val, op1);
     if (fpscr.fz && fetestexcept(FeUnderflow | FeInexact) ==
                     (FeUnderflow | FeInexact)) {
         feclearexcept(FeInexact);
@@ -291,7 +309,7 @@ fixFpSFpDDest(FPSCR fpscr, float val)
                            ((uint64_t)bits(valBits, 31) << 63);
         op1 = bitsToFp(op1Bits, junk);
     }
-    double mid = fixDest(fpscr, (double)val, op1);
+    double mid = fixDest(fpscr.fz, fpscr.dn, (double)val, op1);
     if (mid == bitsToFp(ULL(0x0010000000000000), junk) ||
         mid == bitsToFp(ULL(0x8010000000000000), junk)) {
         __asm__ __volatile__("" : "=m" (val) : "m" (val));
@@ -311,11 +329,10 @@ fixFpSFpDDest(FPSCR fpscr, float val)
     return mid;
 }
 
-float
-vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
+uint16_t
+vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
+           uint32_t rMode, bool ahp, float op)
 {
-    float junk = 0.0;
-    uint32_t destBits = fpToBits(dest);
     uint32_t opBits = fpToBits(op);
     // Extract the operand.
     bool neg = bits(opBits, 31);
@@ -331,11 +348,11 @@ vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
                 // Signalling nan.
                 fpscr.ioc = 1;
             }
-            if (fpscr.ahp) {
+            if (ahp) {
                 mantissa = 0;
                 exponent = 0;
                 fpscr.ioc = 1;
-            } else if (fpscr.dn) {
+            } else if (defaultNan) {
                 mantissa = (1 << 9);
                 exponent = 0x1f;
                 neg = false;
@@ -346,7 +363,7 @@ vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
         } else {
             // Infinities.
             exponent = 0x1F;
-            if (fpscr.ahp) {
+            if (ahp) {
                 fpscr.ioc = 1;
                 mantissa = 0x3ff;
             } else {
@@ -364,14 +381,14 @@ vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
             // Denormalized.
 
             // If flush to zero is on, this shouldn't happen.
-            assert(fpscr.fz == 0);
+            assert(!flush);
 
             // Check for underflow
             if (inexact || fpscr.ufe)
                 fpscr.ufc = 1;
 
             // Handle rounding.
-            unsigned mode = fpscr.rMode;
+            unsigned mode = rMode;
             if ((mode == VfpRoundUpward && !neg && extra) ||
                 (mode == VfpRoundDown && neg && extra) ||
                 (mode == VfpRoundNearest &&
@@ -416,7 +433,7 @@ vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
             }
 
             // Handle rounding.
-            unsigned mode = fpscr.rMode;
+            unsigned mode = rMode;
             bool nonZero = topOne || !restZeros;
             if ((mode == VfpRoundUpward && !neg && nonZero) ||
                 (mode == VfpRoundDown && neg && nonZero) ||
@@ -432,7 +449,7 @@ vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
             }
 
             // Deal with overflow
-            if (fpscr.ahp) {
+            if (ahp) {
                 if (exponent >= 0x20) {
                     exponent = 0x1f;
                     mantissa = 0x3ff;
@@ -468,27 +485,17 @@ vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top)
     replaceBits(result, 14, 10, exponent);
     if (neg)
         result |= (1 << 15);
-    if (top)
-        replaceBits(destBits, 31, 16, result);
-    else
-        replaceBits(destBits, 15, 0, result);
-    return bitsToFp(destBits, junk);
+    return result;
 }
 
 float
-vcvtFpHFpS(FPSCR &fpscr, float op, bool top)
+vcvtFpHFpS(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op)
 {
     float junk = 0.0;
-    uint32_t opBits = fpToBits(op);
-    // Extract the operand.
-    if (top)
-        opBits = bits(opBits, 31, 16);
-    else
-        opBits = bits(opBits, 15, 0);
     // Extract the bitfields.
-    bool neg = bits(opBits, 15);
-    uint32_t exponent = bits(opBits, 14, 10);
-    uint32_t mantissa = bits(opBits, 9, 0);
+    bool neg = bits(op, 15);
+    uint32_t exponent = bits(op, 14, 10);
+    uint32_t mantissa = bits(op, 9, 0);
     // Do the conversion.
     if (exponent == 0) {
         if (mantissa != 0) {
@@ -500,7 +507,7 @@ vcvtFpHFpS(FPSCR &fpscr, float op, bool top)
             }
         }
         mantissa = mantissa << (23 - 10);
-    } else if (exponent == 0x1f && !fpscr.ahp) {
+    } else if (exponent == 0x1f && !ahp) {
         // Infinities and nans.
         exponent = 0xff;
         if (mantissa != 0) {
@@ -511,7 +518,7 @@ vcvtFpHFpS(FPSCR &fpscr, float op, bool top)
                 fpscr.ioc = 1;
                 mantissa |= (1 << 22);
             }
-            if (fpscr.dn) {
+            if (defaultNan) {
                 mantissa &= ~mask(22);
                 neg = false;
             }
@@ -624,7 +631,8 @@ vfpFpSToFixed(float val, bool isSigned, bool half,
 }
 
 float
-vfpUFixedToFpS(FPSCR fpscr, uint32_t val, bool half, uint8_t imm)
+vfpUFixedToFpS(bool flush, bool defaultNan,
+        uint32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -633,11 +641,12 @@ vfpUFixedToFpS(FPSCR fpscr, uint32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return fixDivDest(fpscr, val / scale, (float)val, scale);
+    return fixDivDest(flush, defaultNan, val / scale, (float)val, scale);
 }
 
 float
-vfpSFixedToFpS(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
+vfpSFixedToFpS(bool flush, bool defaultNan,
+        int32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -646,7 +655,7 @@ vfpSFixedToFpS(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return fixDivDest(fpscr, val / scale, (float)val, scale);
+    return fixDivDest(flush, defaultNan, val / scale, (float)val, scale);
 }
 
 uint64_t
@@ -743,7 +752,8 @@ vfpFpDToFixed(double val, bool isSigned, bool half,
 }
 
 double
-vfpUFixedToFpD(FPSCR fpscr, uint32_t val, bool half, uint8_t imm)
+vfpUFixedToFpD(bool flush, bool defaultNan,
+        uint32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -752,11 +762,12 @@ vfpUFixedToFpD(FPSCR fpscr, uint32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return fixDivDest(fpscr, val / scale, (double)val, scale);
+    return fixDivDest(flush, defaultNan, val / scale, (double)val, scale);
 }
 
 double
-vfpSFixedToFpD(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
+vfpSFixedToFpD(bool flush, bool defaultNan,
+        int32_t val, bool half, uint8_t imm)
 {
     fesetround(FeRoundNearest);
     if (half)
@@ -765,14 +776,211 @@ vfpSFixedToFpD(FPSCR fpscr, int32_t val, bool half, uint8_t imm)
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
     feclearexcept(FeAllExceptions);
     __asm__ __volatile__("" : "=m" (scale) : "m" (scale));
-    return fixDivDest(fpscr, val / scale, (double)val, scale);
+    return fixDivDest(flush, defaultNan, val / scale, (double)val, scale);
 }
+
+// This function implements a magic formula taken from the architecture
+// reference manual. It was originally called recip_sqrt_estimate.
+static double
+recipSqrtEstimate(double a)
+{
+    int64_t q0, q1, s;
+    double r;
+    if (a < 0.5) {
+        q0 = (int64_t)(a * 512.0);
+        r = 1.0 / sqrt(((double)q0 + 0.5) / 512.0);
+    } else {
+        q1 = (int64_t)(a * 256.0);
+        r = 1.0 / sqrt(((double)q1 + 0.5) / 256.0);
+    }
+    s = (int64_t)(256.0 * r + 0.5);
+    return (double)s / 256.0;
+}
+
+// This function is only intended for use in Neon instructions because
+// it ignores certain bits in the FPSCR.
+float
+fprSqrtEstimate(FPSCR &fpscr, float op)
+{
+    const uint32_t qnan = 0x7fc00000;
+    float junk = 0.0;
+    int fpClass = std::fpclassify(op);
+    if (fpClass == FP_NAN) {
+        if ((fpToBits(op) & qnan) != qnan)
+            fpscr.ioc = 1;
+        return bitsToFp(qnan, junk);
+    } else if (fpClass == FP_ZERO) {
+        fpscr.dzc = 1;
+        // Return infinity with the same sign as the operand.
+        return bitsToFp((std::signbit(op) << 31) |
+                       (0xFF << 23) | (0 << 0), junk);
+    } else if (std::signbit(op)) {
+        // Set invalid op bit.
+        fpscr.ioc = 1;
+        return bitsToFp(qnan, junk);
+    } else if (fpClass == FP_INFINITE) {
+        return 0.0;
+    } else {
+        uint64_t opBits = fpToBits(op);
+        double scaled;
+        if (bits(opBits, 23)) {
+            scaled = bitsToFp((0 << 0) | (bits(opBits, 22, 0) << 29) |
+                              (ULL(0x3fd) << 52) | (bits(opBits, 31) << 63),
+                              (double)0.0);
+        } else {
+            scaled = bitsToFp((0 << 0) | (bits(opBits, 22, 0) << 29) |
+                              (ULL(0x3fe) << 52) | (bits(opBits, 31) << 63),
+                              (double)0.0);
+        }
+        uint64_t resultExp = (380 - bits(opBits, 30, 23)) / 2;
+
+        uint64_t estimate = fpToBits(recipSqrtEstimate(scaled));
+
+        return bitsToFp((bits(estimate, 63) << 31) |
+                        (bits(resultExp, 7, 0) << 23) |
+                        (bits(estimate, 51, 29) << 0), junk);
+    }
+}
+
+uint32_t
+unsignedRSqrtEstimate(uint32_t op)
+{
+    if (bits(op, 31, 30) == 0) {
+        return -1;
+    } else {
+        double dpOp;
+        if (bits(op, 31)) {
+            dpOp = bitsToFp((ULL(0) << 63) |
+                            (ULL(0x3fe) << 52) |
+                            (bits((uint64_t)op, 30, 0) << 21) |
+                            (0 << 0), (double)0.0);
+        } else {
+            dpOp = bitsToFp((ULL(0) << 63) |
+                            (ULL(0x3fd) << 52) |
+                            (bits((uint64_t)op, 29, 0) << 22) |
+                            (0 << 0), (double)0.0);
+        }
+        uint64_t estimate = fpToBits(recipSqrtEstimate(dpOp));
+        return (1 << 31) | bits(estimate, 51, 21);
+    }
+}
+
+// This function implements a magic formula taken from the architecture
+// reference manual. It was originally called recip_estimate.
+
+static double
+recipEstimate(double a)
+{
+    int64_t q, s;
+    double r;
+    q = (int64_t)(a * 512.0);
+    r = 1.0 / (((double)q + 0.5) / 512.0);
+    s = (int64_t)(256.0 * r + 0.5);
+    return (double)s / 256.0;
+}
+
+// This function is only intended for use in Neon instructions because
+// it ignores certain bits in the FPSCR.
+float
+fpRecipEstimate(FPSCR &fpscr, float op)
+{
+    const uint32_t qnan = 0x7fc00000;
+    float junk = 0.0;
+    int fpClass = std::fpclassify(op);
+    if (fpClass == FP_NAN) {
+        if ((fpToBits(op) & qnan) != qnan)
+            fpscr.ioc = 1;
+        return bitsToFp(qnan, junk);
+    } else if (fpClass == FP_INFINITE) {
+        return bitsToFp(std::signbit(op) << 31, junk);
+    } else if (fpClass == FP_ZERO) {
+        fpscr.dzc = 1;
+        // Return infinity with the same sign as the operand.
+        return bitsToFp((std::signbit(op) << 31) |
+                       (0xFF << 23) | (0 << 0), junk);
+    } else if (fabs(op) >= pow(2.0, 126)) {
+        fpscr.ufc = 1;
+        return bitsToFp(std::signbit(op) << 31, junk);
+    } else {
+        uint64_t opBits = fpToBits(op);
+        double scaled;
+        scaled = bitsToFp((0 << 0) | (bits(opBits, 22, 0) << 29) |
+                          (ULL(0x3fe) << 52) | (ULL(0) << 63),
+                          (double)0.0);
+        uint64_t resultExp = 253 - bits(opBits, 30, 23);
+
+        uint64_t estimate = fpToBits(recipEstimate(scaled));
+
+        return bitsToFp((bits(opBits, 31) << 31) |
+                        (bits(resultExp, 7, 0) << 23) |
+                        (bits(estimate, 51, 29) << 0), junk);
+    }
+}
+
+uint32_t
+unsignedRecipEstimate(uint32_t op)
+{
+    if (bits(op, 31) == 0) {
+        return -1;
+    } else {
+        double dpOp;
+        dpOp = bitsToFp((ULL(0) << 63) |
+                        (ULL(0x3fe) << 52) |
+                        (bits((uint64_t)op, 30, 0) << 21) |
+                        (0 << 0), (double)0.0);
+        uint64_t estimate = fpToBits(recipEstimate(dpOp));
+        return (1 << 31) | bits(estimate, 51, 21);
+    }
+}
+
+template <class fpType>
+fpType
+FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
+                  fpType op1, fpType op2) const
+{
+    done = true;
+    fpType junk = 0.0;
+    fpType dest = 0.0;
+    const bool single = (sizeof(fpType) == sizeof(float));
+    const uint64_t qnan =
+        single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+    const bool nan1 = std::isnan(op1);
+    const bool nan2 = std::isnan(op2);
+    const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
+    const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
+    if (nan1 || nan2) {
+        if (defaultNan) {
+            dest = bitsToFp(qnan, junk);
+        }  else if (signal1) {
+            dest = bitsToFp(fpToBits(op1) | qnan, junk);
+        } else if (signal2) {
+            dest = bitsToFp(fpToBits(op2) | qnan, junk);
+        } else if (nan1) {
+            dest = op1;
+        } else if (nan2) {
+            dest = op2;
+        }
+        if (signal1 || signal2) {
+            fpscr.ioc = 1;
+        }
+    } else {
+        done = false;
+    }
+    return dest;
+}
+
+template
+float FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
+                        float op1, float op2) const;
+template
+double FpOp::processNans(FPSCR &fpscr, bool &done, bool defaultNan,
+                         double op1, double op2) const;
 
 template <class fpType>
 fpType
 FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
                fpType (*func)(fpType, fpType),
-               bool flush, uint32_t rMode) const
+               bool flush, bool defaultNan, uint32_t rMode) const
 {
     const bool single = (sizeof(fpType) == sizeof(float));
     fpType junk = 0.0;
@@ -795,7 +1003,7 @@ FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
         const bool nan2 = std::isnan(op2);
         const bool signal1 = nan1 && ((fpToBits(op1) & qnan) != qnan);
         const bool signal2 = nan2 && ((fpToBits(op2) & qnan) != qnan);
-        if ((!nan1 && !nan2) || (fpscr.dn == 1)) {
+        if ((!nan1 && !nan2) || (defaultNan == 1)) {
             dest = bitsToFp(qnan, junk);
         } else if (signal1) {
             dest = bitsToFp(fpToBits(op1) | qnan, junk);
@@ -828,18 +1036,18 @@ FpOp::binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
             dest = temp;
         }
     }
-    finishVfp(fpscr, state);
+    finishVfp(fpscr, state, flush);
     return dest;
 }
 
 template
 float FpOp::binaryOp(FPSCR &fpscr, float op1, float op2,
                      float (*func)(float, float),
-                     bool flush, uint32_t rMode) const;
+                     bool flush, bool defaultNan, uint32_t rMode) const;
 template
 double FpOp::binaryOp(FPSCR &fpscr, double op1, double op2,
                       double (*func)(double, double),
-                      bool flush, uint32_t rMode) const;
+                      bool flush, bool defaultNan, uint32_t rMode) const;
 
 template <class fpType>
 fpType
@@ -890,7 +1098,7 @@ FpOp::unaryOp(FPSCR &fpscr, fpType op1, fpType (*func)(fpType),
             dest = temp;
         }
     }
-    finishVfp(fpscr, state);
+    finishVfp(fpscr, state, flush);
     return dest;
 }
 

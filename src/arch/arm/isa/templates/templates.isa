@@ -60,3 +60,6 @@
 
 //Templates for VFP instructions
 ##include "vfp.isa"
+
+//Templates for Neon instructions
+##include "neon.isa"

@@ -74,10 +74,152 @@ def template MicroMemConstructor {{
 
 ////////////////////////////////////////////////////////////////////
 //
-// Integer = Integer op Immediate microops
+// Neon load/store microops
+//
+
+def template MicroNeonMemDeclare {{
+    template <class Element>
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                       RegIndex _ura, uint32_t _imm, unsigned extraMemFlags)
+            : %(base_class)s("%(mnemonic)s", machInst,
+                              %(op_class)s, _dest, _ura, _imm)
+        {
+            memAccessFlags |= extraMemFlags;
+            %(constructor)s;
+        }
+
+        %(BasicExecDeclare)s
+        %(InitiateAccDeclare)s
+        %(CompleteAccDeclare)s
+    };
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Integer = Integer op Integer microops
 //
 
 def template MicroIntDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex _ura, RegIndex _urb, RegIndex _urc);
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroIntConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                   RegIndex _ura,
+                                   RegIndex _urb,
+                                   RegIndex _urc)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _ura, _urb, _urc)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template MicroNeonMemExecDeclare {{
+    template
+    Fault %(class_name)s<%(targs)s>::execute(
+            %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    template
+    Fault %(class_name)s<%(targs)s>::initiateAcc(
+            %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    template
+    Fault %(class_name)s<%(targs)s>::completeAcc(PacketPtr,
+            %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+def template MicroNeonExecDeclare {{
+    template
+    Fault %(class_name)s<%(targs)s>::execute(
+            %(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Neon (de)interlacing microops
+//
+
+def template MicroNeonMixDeclare {{
+    template <class Element>
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1,
+                       uint8_t _step) :
+            %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                           _dest, _op1, _step)
+        {
+            %(constructor)s;
+        }
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroNeonMixExecute {{
+    template <class Element>
+    Fault %(class_name)s<Element>::execute(%(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        uint64_t resTemp = 0;
+        resTemp = resTemp;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        if (%(predicate_test)s)
+        {
+            %(code)s;
+            if (fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
+        return fault;
+    }
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Neon (un)packing microops using a particular lane
+//
+
+def template MicroNeonMixLaneDeclare {{
+    template <class Element>
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _op1,
+                       uint8_t _step, unsigned _lane) :
+            %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                           _dest, _op1, _step, _lane)
+        {
+            %(constructor)s;
+        }
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Integer = Integer op Immediate microops
+//
+
+def template MicroIntImmDeclare {{
     class %(class_name)s : public %(base_class)s
     {
       public:
@@ -88,7 +230,7 @@ def template MicroIntDeclare {{
     };
 }};
 
-def template MicroIntConstructor {{
+def template MicroIntImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    RegIndex _ura,
                                    RegIndex _urb,
@@ -130,6 +272,52 @@ def template MacroMemConstructor {{
     %(constructor)s;
 }
 
+}};
+
+def template VMemMultDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, unsigned width,
+                RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+                uint32_t size, uint32_t align, RegIndex rm);
+        %(BasicExecPanic)s
+};
+}};
+
+def template VMemMultConstructor {{
+%(class_name)s::%(class_name)s(ExtMachInst machInst, unsigned width,
+        RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+        uint32_t size, uint32_t align, RegIndex rm)
+    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, width,
+                     rn, vd, regs, inc, size, align, rm)
+{
+    %(constructor)s;
+}
+}};
+
+def template VMemSingleDeclare {{
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst, bool all, unsigned width,
+                RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+                uint32_t size, uint32_t align, RegIndex rm, unsigned lane = 0);
+        %(BasicExecPanic)s
+};
+}};
+
+def template VMemSingleConstructor {{
+%(class_name)s::%(class_name)s(ExtMachInst machInst, bool all, unsigned width,
+        RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
+        uint32_t size, uint32_t align, RegIndex rm, unsigned lane)
+    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, all, width,
+                     rn, vd, regs, inc, size, align, rm, lane)
+{
+    %(constructor)s;
+}
 }};
 
 def template MacroVFPMemDeclare {{

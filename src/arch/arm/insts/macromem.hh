@@ -80,16 +80,66 @@ class MicroOp : public PredOp
 };
 
 /**
+ * Microops for Neon loads/stores
+ */
+class MicroNeonMemOp : public MicroOp
+{
+  protected:
+    RegIndex dest, ura;
+    uint32_t imm;
+    unsigned memAccessFlags;
+
+    MicroNeonMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                   RegIndex _dest, RegIndex _ura, uint32_t _imm)
+            : MicroOp(mnem, machInst, __opClass),
+              dest(_dest), ura(_ura), imm(_imm),
+              memAccessFlags(TLB::MustBeOne)
+    {
+    }
+};
+
+/**
+ * Microops for Neon load/store (de)interleaving
+ */
+class MicroNeonMixOp : public MicroOp
+{
+  protected:
+    RegIndex dest, op1;
+    uint32_t step;
+
+    MicroNeonMixOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                   RegIndex _dest, RegIndex _op1, uint32_t _step)
+            : MicroOp(mnem, machInst, __opClass),
+              dest(_dest), op1(_op1), step(_step)
+    {
+    }
+};
+
+class MicroNeonMixLaneOp : public MicroNeonMixOp
+{
+  protected:
+    unsigned lane;
+
+    MicroNeonMixLaneOp(const char *mnem, ExtMachInst machInst,
+                       OpClass __opClass, RegIndex _dest, RegIndex _op1,
+                       uint32_t _step, unsigned _lane)
+            : MicroNeonMixOp(mnem, machInst, __opClass, _dest, _op1, _step),
+              lane(_lane)
+    {
+    }
+};
+
+/**
  * Microops of the form IntRegA = IntRegB op Imm
  */
-class MicroIntOp : public MicroOp
+class MicroIntImmOp : public MicroOp
 {
   protected:
     RegIndex ura, urb;
     uint8_t imm;
 
-    MicroIntOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-               RegIndex _ura, RegIndex _urb, uint8_t _imm)
+    MicroIntImmOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                  RegIndex _ura, RegIndex _urb, uint8_t _imm)
             : MicroOp(mnem, machInst, __opClass),
               ura(_ura), urb(_urb), imm(_imm)
     {
@@ -99,9 +149,27 @@ class MicroIntOp : public MicroOp
 };
 
 /**
+ * Microops of the form IntRegA = IntRegB op IntRegC
+ */
+class MicroIntOp : public MicroOp
+{
+  protected:
+    RegIndex ura, urb, urc;
+
+    MicroIntOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+               RegIndex _ura, RegIndex _urb, RegIndex _urc)
+            : MicroOp(mnem, machInst, __opClass),
+              ura(_ura), urb(_urb), urc(_urc)
+    {
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+/**
  * Memory microops which use IntReg + Imm addressing
  */
-class MicroMemOp : public MicroIntOp
+class MicroMemOp : public MicroIntImmOp
 {
   protected:
     bool up;
@@ -109,7 +177,7 @@ class MicroMemOp : public MicroIntOp
 
     MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
-            : MicroIntOp(mnem, machInst, __opClass, _ura, _urb, _imm),
+            : MicroIntImmOp(mnem, machInst, __opClass, _ura, _urb, _imm),
               up(_up), memAccessFlags(TLB::MustBeOne | TLB::AlignWord)
     {
     }
@@ -126,6 +194,46 @@ class MacroMemOp : public PredMacroOp
     MacroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                IntRegIndex rn, bool index, bool up, bool user,
                bool writeback, bool load, uint32_t reglist);
+};
+
+/**
+ * Base classes for microcoded integer memory instructions.
+ */
+class VldMultOp : public PredMacroOp
+{
+  protected:
+    VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+              unsigned elems, RegIndex rn, RegIndex vd, unsigned regs,
+              unsigned inc, uint32_t size, uint32_t align, RegIndex rm);
+};
+
+class VldSingleOp : public PredMacroOp
+{
+  protected:
+    VldSingleOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                bool all, unsigned elems, RegIndex rn, RegIndex vd,
+                unsigned regs, unsigned inc, uint32_t size,
+                uint32_t align, RegIndex rm, unsigned lane);
+};
+
+/**
+ * Base class for microcoded integer memory instructions.
+ */
+class VstMultOp : public PredMacroOp
+{
+  protected:
+    VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+              unsigned width, RegIndex rn, RegIndex vd, unsigned regs,
+              unsigned inc, uint32_t size, uint32_t align, RegIndex rm);
+};
+
+class VstSingleOp : public PredMacroOp
+{
+  protected:
+    VstSingleOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                bool all, unsigned elems, RegIndex rn, RegIndex vd,
+                unsigned regs, unsigned inc, uint32_t size,
+                uint32_t align, RegIndex rm, unsigned lane);
 };
 
 /**

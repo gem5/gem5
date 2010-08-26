@@ -180,6 +180,42 @@ def template LoadExecute {{
     }
 }};
 
+def template NeonLoadExecute {{
+    template <class Element>
+    Fault %(class_name)s<Element>::execute(
+            %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(mem_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        MemUnion memUnion;
+        uint8_t *dataPtr = memUnion.bytes;
+
+        if (%(predicate_test)s)
+        {
+            if (fault == NoFault) {
+                fault = xc->readBytes(EA, dataPtr, %(size)d, memAccessFlags);
+                %(memacc_code)s;
+            }
+
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
+        return fault;
+    }
+}};
+
 def template StoreExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
@@ -207,6 +243,46 @@ def template StoreExecute {{
             }
         } else {
             xc->setPredicate(false);
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
+        return fault;
+    }
+}};
+
+def template NeonStoreExecute {{
+    template <class Element>
+    Fault %(class_name)s<Element>::execute(
+            %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(mem_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        MemUnion memUnion;
+        uint8_t *dataPtr = memUnion.bytes;
+
+        if (%(predicate_test)s)
+        {
+            if (fault == NoFault) {
+                %(memacc_code)s;
+            }
+
+            if (fault == NoFault) {
+                fault = xc->writeBytes(dataPtr, %(size)d, EA,
+                                       memAccessFlags, NULL);
+            }
+
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -336,6 +412,45 @@ def template StoreInitiateAcc {{
     }
 }};
 
+def template NeonStoreInitiateAcc {{
+    template <class Element>
+    Fault %(class_name)s<Element>::initiateAcc(
+            %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(mem_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (%(predicate_test)s)
+        {
+            MemUnion memUnion;
+            if (fault == NoFault) {
+                %(memacc_code)s;
+            }
+
+            if (fault == NoFault) {
+                fault = xc->writeBytes(memUnion.bytes, %(size)d, EA,
+                                       memAccessFlags, NULL);
+            }
+
+            // Need to write back any potential address register update
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
+        return fault;
+    }
+}};
+
 def template LoadInitiateAcc {{
     Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
@@ -357,6 +472,31 @@ def template LoadInitiateAcc {{
             if (fault == NoFault && machInst.itstateMask != 0) {
                 xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
             }
+        }
+
+        return fault;
+    }
+}};
+
+def template NeonLoadInitiateAcc {{
+    template <class Element>
+    Fault %(class_name)s<Element>::initiateAcc(
+            %(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        if (%(predicate_test)s)
+        {
+            if (fault == NoFault) {
+                fault = xc->readBytes(EA, NULL, %(size)d, memAccessFlags);
+            }
+        } else if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -395,10 +535,70 @@ def template LoadCompleteAcc {{
     }
 }};
 
+def template NeonLoadCompleteAcc {{
+    template <class Element>
+    Fault %(class_name)s<Element>::completeAcc(
+            PacketPtr pkt, %(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(mem_decl)s;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        if (%(predicate_test)s)
+        {
+            // ARM instructions will not have a pkt if the predicate is false
+            MemUnion &memUnion = *(MemUnion *)pkt->getPtr<uint8_t>();
+
+            if (fault == NoFault) {
+                %(memacc_code)s;
+            }
+
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
+        return fault;
+    }
+}};
+
 def template StoreCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        if (%(predicate_test)s)
+        {
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+
+        if (fault == NoFault && machInst.itstateMask != 0) {
+            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        }
+
+        return fault;
+    }
+}};
+
+def template NeonStoreCompleteAcc {{
+    template <class Element>
+    Fault %(class_name)s<Element>::completeAcc(
+            PacketPtr pkt, %(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 

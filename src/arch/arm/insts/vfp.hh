@@ -192,10 +192,20 @@ bitsToFp(uint64_t bits, double junk)
     return val.fp;
 }
 
+template <class fpType>
+static bool
+isSnan(fpType val)
+{
+    const bool single = (sizeof(fpType) == sizeof(float));
+    const uint64_t qnan =
+        single ? 0x7fc00000 : ULL(0x7ff8000000000000);
+    return std::isnan(val) && ((fpToBits(val) & qnan) != qnan);
+}
+
 typedef int VfpSavedState;
 
 VfpSavedState prepFpState(uint32_t rMode);
-void finishVfp(FPSCR &fpscr, VfpSavedState state);
+void finishVfp(FPSCR &fpscr, VfpSavedState state, bool flush);
 
 template <class fpType>
 fpType fixDest(FPSCR fpscr, fpType val, fpType op1);
@@ -209,8 +219,9 @@ fpType fixDivDest(FPSCR fpscr, fpType val, fpType op1, fpType op2);
 float fixFpDFpSDest(FPSCR fpscr, double val);
 double fixFpSFpDDest(FPSCR fpscr, float val);
 
-float vcvtFpSFpH(FPSCR &fpscr, float op, float dest, bool top);
-float vcvtFpHFpS(FPSCR &fpscr, float op, bool top);
+uint16_t vcvtFpSFpH(FPSCR &fpscr, bool flush, bool defaultNan,
+                    uint32_t rMode, bool ahp, float op);
+float vcvtFpHFpS(FPSCR &fpscr, bool defaultNan, bool ahp, uint16_t op);
 
 static inline double
 makeDouble(uint32_t low, uint32_t high)
@@ -233,13 +244,23 @@ highFromDouble(double val)
 
 uint64_t vfpFpSToFixed(float val, bool isSigned, bool half,
                        uint8_t imm, bool rzero = true);
-float vfpUFixedToFpS(FPSCR fpscr, uint32_t val, bool half, uint8_t imm);
-float vfpSFixedToFpS(FPSCR fpscr, int32_t val, bool half, uint8_t imm);
+float vfpUFixedToFpS(bool flush, bool defaultNan,
+        uint32_t val, bool half, uint8_t imm);
+float vfpSFixedToFpS(bool flush, bool defaultNan,
+        int32_t val, bool half, uint8_t imm);
 
 uint64_t vfpFpDToFixed(double val, bool isSigned, bool half,
                        uint8_t imm, bool rzero = true);
-double vfpUFixedToFpD(FPSCR fpscr, uint32_t val, bool half, uint8_t imm);
-double vfpSFixedToFpD(FPSCR fpscr, int32_t val, bool half, uint8_t imm);
+double vfpUFixedToFpD(bool flush, bool defaultNan,
+        uint32_t val, bool half, uint8_t imm);
+double vfpSFixedToFpD(bool flush, bool defaultNan,
+        int32_t val, bool half, uint8_t imm);
+
+float fprSqrtEstimate(FPSCR &fpscr, float op);
+uint32_t unsignedRSqrtEstimate(uint32_t op);
+
+float fpRecipEstimate(FPSCR &fpscr, float op);
+uint32_t unsignedRecipEstimate(uint32_t op);
 
 class VfpMacroOp : public PredMacroOp
 {
@@ -312,6 +333,66 @@ fpMulD(double a, double b)
     return a * b;
 }
 
+static inline float
+fpMaxS(float a, float b)
+{
+    // Handle comparisons of +0 and -0.
+    if (!std::signbit(a) && std::signbit(b))
+        return a;
+    return fmaxf(a, b);
+}
+
+static inline float
+fpMinS(float a, float b)
+{
+    // Handle comparisons of +0 and -0.
+    if (std::signbit(a) && !std::signbit(b))
+        return a;
+    return fminf(a, b);
+}
+
+static inline float
+fpRSqrtsS(float a, float b)
+{
+    int fpClassA = std::fpclassify(a);
+    int fpClassB = std::fpclassify(b);
+    float aXb;
+    int fpClassAxB;
+
+    if ((fpClassA == FP_ZERO && fpClassB == FP_INFINITE) ||
+        (fpClassA == FP_INFINITE && fpClassB == FP_ZERO)) {
+        return 1.5;
+    }
+    aXb = a*b;
+    fpClassAxB = std::fpclassify(aXb);
+    if(fpClassAxB == FP_SUBNORMAL) {
+       feraiseexcept(FeUnderflow);
+       return 1.5;
+    }
+    return (3.0 - (a * b)) / 2.0;
+}
+
+static inline float
+fpRecpsS(float a, float b)
+{
+    int fpClassA = std::fpclassify(a);
+    int fpClassB = std::fpclassify(b);
+    float aXb;
+    int fpClassAxB;
+
+    if ((fpClassA == FP_ZERO && fpClassB == FP_INFINITE) ||
+        (fpClassA == FP_INFINITE && fpClassB == FP_ZERO)) {
+        return 2.0;
+    }
+    aXb = a*b;
+    fpClassAxB = std::fpclassify(aXb);
+    if(fpClassAxB == FP_SUBNORMAL) {
+       feraiseexcept(FeUnderflow);
+       return 2.0;
+    }
+    return 2.0 - (a * b);
+}
+
 class FpOp : public PredOp
 {
   protected:
@@ -364,9 +445,14 @@ class FpOp : public PredOp
 
     template <class fpType>
     fpType
+    processNans(FPSCR &fpscr, bool &done, bool defaultNan,
+                fpType op1, fpType op2) const;
+
+    template <class fpType>
+    fpType
     binaryOp(FPSCR &fpscr, fpType op1, fpType op2,
             fpType (*func)(fpType, fpType),
-            bool flush, uint32_t rMode) const;
+            bool flush, bool defaultNan, uint32_t rMode) const;
 
     template <class fpType>
     fpType
@@ -438,6 +524,27 @@ class FpRegRegRegOp : public FpOp
                   IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
                   VfpMicroMode mode = VfpNotAMicroop) :
         FpOp(mnem, _machInst, __opClass), dest(_dest), op1(_op1), op2(_op2)
+    {
+        setVfpMicroFlags(mode, flags);
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class FpRegRegRegImmOp : public FpOp
+{
+  protected:
+    IntRegIndex dest;
+    IntRegIndex op1;
+    IntRegIndex op2;
+    uint64_t imm;
+
+    FpRegRegRegImmOp(const char *mnem, ExtMachInst _machInst,
+                     OpClass __opClass, IntRegIndex _dest,
+                     IntRegIndex _op1, IntRegIndex _op2,
+                     uint64_t _imm, VfpMicroMode mode = VfpNotAMicroop) :
+        FpOp(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), op2(_op2), imm(_imm)
     {
         setVfpMicroFlags(mode, flags);
     }

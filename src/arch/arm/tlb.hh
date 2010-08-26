@@ -65,20 +65,22 @@ class TLB : public BaseTLB
 {
   public:
     enum ArmFlags {
-        AlignmentMask = 0x7,
+        AlignmentMask = 0x1f,
 
         AlignByte = 0x0,
         AlignHalfWord = 0x1,
         AlignWord = 0x3,
         AlignDoubleWord = 0x7,
+        AlignQuadWord = 0xf,
+        AlignOctWord = 0x1f,
 
-        AllowUnaligned = 0x8,
+        AllowUnaligned = 0x20,
         // Priv code operating as if it wasn't
-        UserMode = 0x10,
+        UserMode = 0x40,
         // Because zero otherwise looks like a valid setting and may be used
         // accidentally, this bit must be non-zero to show it was used on
         // purpose.
-        MustBeOne = 0x20
+        MustBeOne = 0x80
     };
   protected:
     typedef std::multimap<Addr, int> PageTable;

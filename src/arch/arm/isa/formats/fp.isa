@@ -45,6 +45,52 @@
 // Floating Point operate instructions
 //
 
+output header {{
+
+    template<template <typename T> class Base>
+    StaticInstPtr
+    newNeonMemInst(const unsigned size,
+                   const ExtMachInst &machInst,
+                   const RegIndex dest, const RegIndex ra,
+                   const uint32_t imm, const unsigned extraMemFlags)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, ra, imm, extraMemFlags);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, ra, imm, extraMemFlags);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, ra, imm, extraMemFlags);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, ra, imm, extraMemFlags);
+          default:
+            panic("Unrecognized width %d for Neon mem inst.\n", (1 << size));
+        }
+    }
+
+    template<template <typename T> class Base>
+    StaticInstPtr
+    newNeonMixInst(const unsigned size,
+                   const ExtMachInst &machInst,
+                   const RegIndex dest, const RegIndex op1,
+                   const uint32_t step)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, step);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, step);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, step);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, step);
+          default:
+            panic("Unrecognized width %d for Neon mem inst.\n", (1 << size));
+        }
+    }
+
+}};
+
 let {{
     header_output = '''
     StaticInstPtr
@@ -59,116 +105,233 @@ let {{
     decodeNeonMem(ExtMachInst machInst)
     {
         const uint32_t b = bits(machInst, 11, 8);
-        const bool a = bits(machInst, 23);
-        const bool l = bits(machInst, 21);
+        const bool single = bits(machInst, 23);
+        const bool singleAll = single && (bits(b, 3, 2) == 3);
+        const bool load = bits(machInst, 21);
 
-        if (l) {
-            // Load instructions.
-            if (a) {
-                if (bits(b, 3, 2) != 3) {
-                    switch (bits(b, 1, 0)) {
-                      case 0x0:
-                        return new WarnUnimplemented("vld1 single", machInst);
-                      case 0x1:
-                        return new WarnUnimplemented("vld2 single", machInst);
-                      case 0x2:
-                        return new WarnUnimplemented("vld3 single", machInst);
-                      case 0x3:
-                        return new WarnUnimplemented("vld4 single", machInst);
-                    }
+        unsigned width = 0;
+
+        if (single) {
+            width = bits(b, 1, 0) + 1;
+        } else {
+            switch (bits(b, 3, 1)) {
+              case 0x0: width = 4;
+                break;
+              case 0x1: width = (b & 0x1) ? 2 : 1;
+                break;
+              case 0x2: width = 3;
+                break;
+              case 0x3: width = 1;
+                break;
+              case 0x4: width = 2;
+                break;
+              case 0x5:
+                if ((b & 0x1) == 0) {
+                    width = 1;
+                    break;
+                }
+                // Fall through on purpose.
+              default:
+                return new Unknown(machInst);
+            }
+        }
+        assert(width > 0 && width <= 4);
+
+        const RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 3, 0);
+        const RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 19, 16);
+        const RegIndex vd = (RegIndex)(uint32_t)(bits(machInst, 15, 12) |
+                                                 bits(machInst, 22) << 4);
+        const uint32_t type = bits(machInst, 11, 8);
+        uint32_t size = 0;
+        uint32_t align = 0;
+        unsigned inc = 1;
+        unsigned regs = 1;
+        unsigned lane = 0;
+        if (single) {
+            if (singleAll) {
+                size = bits(machInst, 7, 6);
+                bool t = bits(machInst, 5);
+                unsigned eBytes = (1 << size);
+                align = (eBytes - 1) | TLB::AllowUnaligned;
+                if (width == 1) {
+                    regs = t ? 2 : 1;
+                    inc = 1;
                 } else {
-                    switch (bits(b, 1, 0)) {
-                      case 0x0:
-                        return new WarnUnimplemented("vld1 single all",
-                                                     machInst);
-                      case 0x1:
-                        return new WarnUnimplemented("vld2 single all",
-                                                     machInst);
-                      case 0x2:
-                        return new WarnUnimplemented("vld3 single all",
-                                                     machInst);
-                      case 0x3:
-                        return new WarnUnimplemented("vld4 single all",
-                                                     machInst);
+                    regs = width;
+                    inc = t ? 2 : 1;
+                }
+                switch (width) {
+                  case 1:
+                  case 2:
+                    if (bits(machInst, 4))
+                        align = width * eBytes - 1;
+                    break;
+                  case 3:
+                    break;
+                  case 4:
+                    if (size == 3) {
+                        if (bits(machInst, 4) == 0)
+                            return new Unknown(machInst);
+                        size = 2;
+                        align = 0xf;
+                    } else if (size == 2) {
+                        if (bits(machInst, 4))
+                            align = 7;
+                    } else {
+                        if (bits(machInst, 4))
+                            align = 4 * eBytes - 1;
                     }
+                    break;
                 }
             } else {
-                switch (bits(b, 3, 1)) {
-                  case 0x0:
-                    return new WarnUnimplemented("vld4 multiple", machInst);
-                  case 0x2:
-                    return new WarnUnimplemented("vld3 multiple", machInst);
-                  case 0x3:
-                    return new WarnUnimplemented("vld1 multiple", machInst);
-                  case 0x4:
-                    return new WarnUnimplemented("vld2 multiple", machInst);
-                  case 0x1:
-                    if (b & 0x1) {
-                        return new WarnUnimplemented("vld2 multiple", machInst);
-                    } else {
-                        return new WarnUnimplemented("vld1 multiple", machInst);
-                    }
-                  case 0x5:
-                    if ((b & 0x1) == 0) {
-                        return new WarnUnimplemented("vld1 multiple", machInst);
-                    } else {
+                size = bits(machInst, 11, 10);
+                unsigned eBytes = (1 << size);
+                align = (eBytes - 1) | TLB::AllowUnaligned;
+                regs = width;
+                unsigned indexAlign = bits(machInst, 7, 4);
+                // If width is 1, inc is always 1. That's overridden later.
+                switch (size) {
+                  case 0:
+                    inc = 1;
+                    lane = bits(indexAlign, 3, 1);
+                    break;
+                  case 1:
+                    inc = bits(indexAlign, 1) ? 2 : 1;
+                    lane = bits(indexAlign, 3, 2);
+                    break;
+                  case 2:
+                    inc = bits(indexAlign, 2) ? 2 : 1;
+                    lane = bits(indexAlign, 3);
+                    break;
+                }
+                // Override inc for width of 1.
+                if (width == 1) {
+                    inc = 1;
+                }
+                switch (width) {
+                  case 1:
+                    switch (size) {
+                      case 0:
+                        break;
+                      case 1:
+                        if (bits(indexAlign, 0))
+                            align = 1;
+                        break;
+                      case 2:
+                        if (bits(indexAlign, 1, 0))
+                            align = 3;
                         break;
                     }
+                    break;
+                  case 2:
+                    if (bits(indexAlign, 0))
+                        align = (2 * eBytes) - 1;
+                    break;
+                  case 3:
+                    break;
+                  case 4:
+                    switch (size) {
+                      case 0:
+                      case 1:
+                        if (bits(indexAlign, 0))
+                            align = (4 * eBytes) - 1;
+                        break;
+                      case 2:
+                        if (bits(indexAlign, 0))
+                            align = (4 << bits(indexAlign, 1, 0)) - 1;
+                        break;
+                    }
+                    break;
                 }
+            }
+            if (size == 0x3) {
+                return new Unknown(machInst);
+            }
+        } else {
+            size = bits(machInst, 7, 6);
+            align = bits(machInst, 5, 4);
+            if (align == 0) {
+                // @align wasn't specified, so alignment can be turned off.
+                align = ((1 << size) - 1) | TLB::AllowUnaligned;
+            } else {
+                align = ((4 << align) - 1);
+            }
+            switch (width) {
+              case 1:
+                switch (type) {
+                  case 0x7: regs = 1;
+                    break;
+                  case 0xa: regs = 2;
+                    break;
+                  case 0x6: regs = 3;
+                    break;
+                  case 0x2: regs = 4;
+                    break;
+                  default:
+                    return new Unknown(machInst);
+                }
+                break;
+              case 2:
+                // Regs doesn't behave exactly as it does in the manual
+                // because they loop over regs registers twice and we break
+                // it down in the macroop.
+                switch (type) {
+                  case 0x8: regs = 2; inc = 1;
+                    break;
+                  case 0x9: regs = 2; inc = 2;
+                    break;
+                  case 0x3: regs = 4; inc = 2;
+                    break;
+                  default:
+                    return new Unknown(machInst);
+                }
+                break;
+              case 3:
+                regs = 3;
+                switch (type) {
+                  case 0x4: inc = 1;
+                    break;
+                  case 0x5: inc = 2;;
+                    break;
+                  default:
+                    return new Unknown(machInst);
+                }
+                break;
+              case 4:
+                regs = 4;
+                switch (type) {
+                  case 0: inc = 1;
+                    break;
+                  case 1: inc = 2;
+                    break;
+                  default:
+                    return new Unknown(machInst);
+                }
+                break;
+            }
+        }
+
+        if (load) {
+            // Load instructions.
+            if (single) {
+                return new VldSingle(machInst, singleAll, width, rn, vd,
+                                     regs, inc, size, align, rm, lane);
+            } else {
+                return new VldMult(machInst, width, rn, vd,
+                                   regs, inc, size, align, rm);
             }
         } else {
             // Store instructions.
-            if (a) {
-                if (bits(b, 3, 2) != 3) {
-                    switch (bits(b, 1, 0)) {
-                      case 0x0:
-                        return new WarnUnimplemented("vst1 single", machInst);
-                      case 0x1:
-                        return new WarnUnimplemented("vst2 single", machInst);
-                      case 0x2:
-                        return new WarnUnimplemented("vst3 single", machInst);
-                      case 0x3:
-                        return new WarnUnimplemented("vst4 single", machInst);
-                    }
+            if (single) {
+                if (singleAll) {
+                    return new Unknown(machInst);
                 } else {
-                    switch (bits(b, 1, 0)) {
-                      case 0x0:
-                        return new WarnUnimplemented("vst1 single all",
-                                                     machInst);
-                      case 0x1:
-                        return new WarnUnimplemented("vst2 single all",
-                                                     machInst);
-                      case 0x2:
-                        return new WarnUnimplemented("vst3 single all",
-                                                     machInst);
-                      case 0x3:
-                        return new WarnUnimplemented("vst4 single all",
-                                                     machInst);
-                    }
+                    return new VstSingle(machInst, false, width, rn, vd,
+                                         regs, inc, size, align, rm, lane);
                 }
             } else {
-                switch (bits(b, 3, 1)) {
-                  case 0x0:
-                    return new WarnUnimplemented("vst4 multiple", machInst);
-                  case 0x2:
-                    return new WarnUnimplemented("vst3 multiple", machInst);
-                  case 0x3:
-                    return new WarnUnimplemented("vst1 multiple", machInst);
-                  case 0x4:
-                    return new WarnUnimplemented("vst2 multiple", machInst);
-                  case 0x1:
-                    if (b & 0x1) {
-                        return new WarnUnimplemented("vst2 multiple", machInst);
-                    } else {
-                        return new WarnUnimplemented("vst1 multiple", machInst);
-                    }
-                  case 0x5:
-                    if ((b & 0x1) == 0) {
-                        return new WarnUnimplemented("vst1 multiple", machInst);
-                    } else {
-                        break;
-                    }
-                }
+                return new VstMult(machInst, width, rn, vd,
+                                   regs, inc, size, align, rm);
             }
         }
         return new Unknown(machInst);
@@ -183,153 +346,243 @@ let {{
         const uint32_t a = bits(machInst, 11, 8);
         const bool b = bits(machInst, 4);
         const uint32_t c = bits(machInst, 21, 20);
+        const IntRegIndex vd =
+            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        const IntRegIndex vn =
+            (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+                               (bits(machInst, 7) << 4)));
+        const IntRegIndex vm =
+            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+                               (bits(machInst, 5) << 4)));
+        const unsigned size = bits(machInst, 21, 20);
+        const bool q = bits(machInst, 6);
+        if (q && ((vd & 0x1) || (vn & 0x1) || (vm & 0x1)))
+            return new Unknown(machInst);
         switch (a) {
           case 0x0:
             if (b) {
-                if (bits(machInst, 9) == 0) {
-                    return new WarnUnimplemented("vhadd", machInst);
+                if (u) {
+                    return decodeNeonUThreeReg<VqaddUD, VqaddUQ>(
+                            q, size, machInst, vd, vn, vm);
                 } else {
-                    return new WarnUnimplemented("vhsub", machInst);
+                    return decodeNeonSThreeReg<VqaddSD, VqaddSQ>(
+                            q, size, machInst, vd, vn, vm);
                 }
             } else {
-                return new WarnUnimplemented("vqadd", machInst);
+                if (size == 3)
+                    return new Unknown(machInst);
+                return decodeNeonUSThreeReg<VhaddD, VhaddQ>(
+                        q, u, size, machInst, vd, vn, vm);
             }
           case 0x1:
             if (!b) {
-                return new WarnUnimplemented("vrhadd", machInst);
+                return decodeNeonUSThreeReg<VrhaddD, VrhaddQ>(
+                        q, u, size, machInst, vd, vn, vm);
             } else {
                 if (u) {
                     switch (c) {
                       case 0:
-                        return new WarnUnimplemented("veor", machInst);
+                        if (q) {
+                            return new VeorQ<uint64_t>(machInst, vd, vn, vm);
+                        } else {
+                            return new VeorD<uint64_t>(machInst, vd, vn, vm);
+                        }
                       case 1:
-                        return new WarnUnimplemented("vbsl", machInst);
+                        if (q) {
+                            return new VbslQ<uint64_t>(machInst, vd, vn, vm);
+                        } else {
+                            return new VbslD<uint64_t>(machInst, vd, vn, vm);
+                        }
                       case 2:
-                        return new WarnUnimplemented("vbit", machInst);
+                        if (q) {
+                            return new VbitQ<uint64_t>(machInst, vd, vn, vm);
+                        } else {
+                            return new VbitD<uint64_t>(machInst, vd, vn, vm);
+                        }
                       case 3:
-                        return new WarnUnimplemented("vbif", machInst);
+                        if (q) {
+                            return new VbifQ<uint64_t>(machInst, vd, vn, vm);
+                        } else {
+                            return new VbifD<uint64_t>(machInst, vd, vn, vm);
+                        }
                     }
                 } else {
                     switch (c) {
                       case 0:
-                        return new WarnUnimplemented("vand (reg)", machInst);
+                        if (q) {
+                            return new VandQ<uint64_t>(machInst, vd, vn, vm);
+                        } else {
+                            return new VandD<uint64_t>(machInst, vd, vn, vm);
+                        }
                       case 1:
-                        return new WarnUnimplemented("vbic (reg)", machInst);
+                        if (q) {
+                            return new VbicQ<uint64_t>(machInst, vd, vn, vm);
+                        } else {
+                            return new VbicD<uint64_t>(machInst, vd, vn, vm);
+                        }
                       case 2:
-                        {
-                            const IntRegIndex n = (IntRegIndex)(
-                                    (uint32_t)bits(machInst, 19, 16) |
-                                    (uint32_t)(bits(machInst, 7) << 4));
-                            const IntRegIndex m = (IntRegIndex)(
-                                    (uint32_t)bits(machInst, 3, 0) |
-                                    (uint32_t)(bits(machInst, 5) << 4));
-                            if (n == m) {
-                                return new WarnUnimplemented("vmov (reg)",
-                                        machInst);
+                        if (vn == vm) {
+                            if (q) {
+                                return new VmovQ<uint64_t>(
+                                        machInst, vd, vn, vm);
                             } else {
-                                return new WarnUnimplemented("vorr (reg)",
-                                        machInst);
+                                return new VmovD<uint64_t>(
+                                        machInst, vd, vn, vm);
+                            }
+                        } else {
+                            if (q) {
+                                return new VorrQ<uint64_t>(
+                                        machInst, vd, vn, vm);
+                            } else {
+                                return new VorrD<uint64_t>(
+                                        machInst, vd, vn, vm);
                             }
                         }
                       case 3:
-                        return new WarnUnimplemented("vorn (reg)", machInst);
+                        if (q) {
+                            return new VornQ<uint64_t>(
+                                    machInst, vd, vn, vm);
+                        } else {
+                            return new VornD<uint64_t>(
+                                    machInst, vd, vn, vm);
+                        }
                     }
                 }
             }
           case 0x2:
             if (b) {
-                return new WarnUnimplemented("vqsub", machInst);
-            } else {
-                if (bits(machInst, 9) == 0) {
-                    return new WarnUnimplemented("vhadd", machInst);
+                if (u) {
+                    return decodeNeonUThreeReg<VqsubUD, VqsubUQ>(
+                            q, size, machInst, vd, vn, vm);
                 } else {
-                    return new WarnUnimplemented("vhsub", machInst);
+                    return decodeNeonSThreeReg<VqsubSD, VqsubSQ>(
+                            q, size, machInst, vd, vn, vm);
                 }
+            } else {
+                if (size == 3)
+                    return new Unknown(machInst);
+                return decodeNeonUSThreeReg<VhsubD, VhsubQ>(
+                        q, u, size, machInst, vd, vn, vm);
             }
           case 0x3:
             if (b) {
-                return new WarnUnimplemented("vcge (reg)", machInst);
+                return decodeNeonUSThreeReg<VcgeD, VcgeQ>(
+                        q, u, size, machInst, vd, vn, vm);
             } else {
-                return new WarnUnimplemented("vcgt (reg)", machInst);
+                return decodeNeonUSThreeReg<VcgtD, VcgtQ>(
+                        q, u, size, machInst, vd, vn, vm);
             }
           case 0x4:
             if (b) {
-                return new WarnUnimplemented("vqshl (reg)", machInst);
+                if (u) {
+                    return decodeNeonUThreeReg<VqshlUD, VqshlUQ>(
+                            q, size, machInst, vd, vm, vn);
+                } else {
+                    return decodeNeonSThreeReg<VqshlSD, VqshlSQ>(
+                            q, size, machInst, vd, vm, vn);
+                }
             } else {
-                return new WarnUnimplemented("vshl (reg)", machInst);
+                return decodeNeonUSThreeReg<VshlD, VshlQ>(
+                        q, u, size, machInst, vd, vm, vn);
             }
           case 0x5:
             if (b) {
-                return new WarnUnimplemented("vqrshl", machInst);
+                if (u) {
+                    return decodeNeonUThreeReg<VqrshlUD, VqrshlUQ>(
+                            q, size, machInst, vd, vm, vn);
+                } else {
+                    return decodeNeonSThreeReg<VqrshlSD, VqrshlSQ>(
+                            q, size, machInst, vd, vm, vn);
+                }
             } else {
-                return new WarnUnimplemented("vrshl", machInst);
+                return decodeNeonUSThreeReg<VrshlD, VrshlQ>(
+                        q, u, size, machInst, vd, vm, vn);
             }
           case 0x6:
             if (b) {
-                return new WarnUnimplemented("vmin (int)", machInst);
+                return decodeNeonUSThreeReg<VminD, VminQ>(
+                        q, u, size, machInst, vd, vn, vm);
             } else {
-                return new WarnUnimplemented("vmax (int)", machInst);
+                return decodeNeonUSThreeReg<VmaxD, VmaxQ>(
+                        q, u, size, machInst, vd, vn, vm);
             }
           case 0x7:
             if (b) {
-                return new WarnUnimplemented("vaba", machInst);
+                return decodeNeonUSThreeReg<VabaD, VabaQ>(
+                        q, u, size, machInst, vd, vn, vm);
             } else {
                 if (bits(machInst, 23) == 1) {
-                    if (bits(machInst, 6) == 1) {
+                    if (q) {
                         return new Unknown(machInst);
                     } else {
-                        return new WarnUnimplemented("vabdl (int)", machInst);
+                        return decodeNeonUSThreeUSReg<Vabdl>(
+                                u, size, machInst, vd, vn, vm);
                     }
                 } else {
-                    return new WarnUnimplemented("vabd (int)", machInst);
+                    return decodeNeonUSThreeReg<VabdD, VabdQ>(
+                            q, u, size, machInst, vd, vn, vm);
                 }
             }
           case 0x8:
             if (b) {
                 if (u) {
-                    return new WarnUnimplemented("vceq (reg)", machInst);
+                    return decodeNeonUThreeReg<VceqD, VceqQ>(
+                            q, size, machInst, vd, vn, vm);
                 } else {
-                    return new WarnUnimplemented("vtst", machInst);
+                    return decodeNeonUThreeReg<VtstD, VtstQ>(
+                            q, size, machInst, vd, vn, vm);
                 }
             } else {
                 if (u) {
-                    return new WarnUnimplemented("vsub (int)", machInst);
+                    return decodeNeonUThreeReg<NVsubD, NVsubQ>(
+                            q, size, machInst, vd, vn, vm);
                 } else {
-                    return new WarnUnimplemented("vadd (int)", machInst);
+                    return decodeNeonUThreeReg<NVaddD, NVaddQ>(
+                            q, size, machInst, vd, vn, vm);
                 }
             }
           case 0x9:
             if (b) {
                 if (u) {
-                    return new WarnUnimplemented("vmul (poly)", machInst);
+                    return decodeNeonUThreeReg<NVmulpD, NVmulpQ>(
+                            q, size, machInst, vd, vn, vm);
                 } else {
-                    return new WarnUnimplemented("vmul (int)", machInst);
+                    return decodeNeonSThreeReg<NVmulD, NVmulQ>(
+                            q, size, machInst, vd, vn, vm);
                 }
             } else {
                 if (u) {
-                    return new WarnUnimplemented("vmls (int)", machInst);
+                    return decodeNeonUSThreeReg<NVmlsD, NVmlsQ>(
+                            q, u, size, machInst, vd, vn, vm);
                 } else {
-                    return new WarnUnimplemented("vmla (int)", machInst);
+                    return decodeNeonUSThreeReg<NVmlaD, NVmlaQ>(
+                            q, u, size, machInst, vd, vn, vm);
                 }
             }
           case 0xa:
             if (b) {
-                return new WarnUnimplemented("vpmin (int)", machInst);
+                return decodeNeonUSThreeReg<VpminD, VpminQ>(
+                        q, u, size, machInst, vd, vn, vm);
             } else {
-                return new WarnUnimplemented("vpmax (int)", machInst);
+                return decodeNeonUSThreeReg<VpmaxD, VpmaxQ>(
+                        q, u, size, machInst, vd, vn, vm);
             }
           case 0xb:
             if (b) {
                 if (u) {
                     return new Unknown(machInst);
                 } else {
-                    return new WarnUnimplemented("vpadd (int)", machInst);
+                    return decodeNeonUThreeReg<NVpaddD, NVpaddQ>(
+                            q, size, machInst, vd, vn, vm);
                 }
             } else {
                 if (u) {
-                    return new WarnUnimplemented("vqrdmulh", machInst);
+                    return decodeNeonSThreeSReg<VqrdmulhD, VqrdmulhQ>(
+                            q, size, machInst, vd, vn, vm);
                 } else {
-                    return new WarnUnimplemented("vqdmulh", machInst);
+                    return decodeNeonSThreeSReg<VqdmulhD, VqdmulhQ>(
+                            q, size, machInst, vd, vn, vm);
                 }
             }
           case 0xc:
@@ -338,29 +591,57 @@ let {{
             if (b) {
                 if (u) {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vmul (fp)", machInst);
+                        if (q) {
+                            return new NVmulQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new NVmulDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
                         return new Unknown(machInst);
                     }
                 } else {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vmla (fp)", machInst);
+                        if (q) {
+                            return new NVmlaQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new NVmlaDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vmls (fp)", machInst);
+                        if (q) {
+                            return new NVmlsQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new NVmlsDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 }
             } else {
                 if (u) {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vpadd (fp)", machInst);
+                        if (q) {
+                            return new VpaddQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VpaddDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vabd (fp)", machInst);
+                        if (q) {
+                            return new VabdQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VabdDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 } else {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vadd (fp)", machInst);
+                        if (q) {
+                            return new VaddQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VaddDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vsub (fp)", machInst);
+                        if (q) {
+                            return new VsubQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VsubDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 }
             }
@@ -368,9 +649,17 @@ let {{
             if (b) {
                 if (u) {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vacge", machInst);
+                        if (q) {
+                            return new VacgeQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VacgeDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vacgt", machInst);
+                        if (q) {
+                            return new VacgtQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VacgtDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 } else {
                     return new Unknown(machInst);
@@ -378,13 +667,25 @@ let {{
             } else {
                 if (u) {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vcge (reg)", machInst);
+                        if (q) {
+                            return new VcgeQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VcgeDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vcgt (reg)", machInst);
+                        if (q) {
+                            return new VcgtQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VcgtDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 } else {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vceq (reg)", machInst);
+                        if (q) {
+                            return new VceqQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VceqDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
                         return new Unknown(machInst);
                     }
@@ -396,23 +697,47 @@ let {{
                     return new Unknown(machInst);
                 } else {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vrecps", machInst);
+                        if (q) {
+                            return new VrecpsQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VrecpsDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vrsqrts", machInst);
+                        if (q) {
+                            return new VrsqrtsQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VrsqrtsDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 }
             } else {
                 if (u) {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vpmax (fp)", machInst);
+                        if (q) {
+                            return new VpmaxQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VpmaxDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vpmin (fp)", machInst);
+                        if (q) {
+                            return new VpminQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VpminDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 } else {
                     if (bits(c, 1) == 0) {
-                        return new WarnUnimplemented("vmax (fp)", machInst);
+                        if (q) {
+                            return new VmaxQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VmaxDFp<float>(machInst, vd, vn, vm);
+                        }
                     } else {
-                        return new WarnUnimplemented("vmin (fp)", machInst);
+                        if (q) {
+                            return new VminQFp<float>(machInst, vd, vn, vm);
+                        } else {
+                            return new VminDFp<float>(machInst, vd, vn, vm);
+                        }
                     }
                 }
             }
@@ -423,50 +748,94 @@ let {{
     static StaticInstPtr
     decodeNeonOneRegModImm(ExtMachInst machInst)
     {
+        const IntRegIndex vd =
+            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        const bool q = bits(machInst, 6);
         const bool op = bits(machInst, 5);
-        const uint32_t cmode = bits(machInst, 11, 8);
+        const uint8_t cmode = bits(machInst, 11, 8);
+        const uint8_t imm = ((THUMB ? bits(machInst, 28) :
+                                      bits(machInst, 24)) << 7) |
+                            (bits(machInst, 18, 16) << 4) |
+                            (bits(machInst, 3, 0) << 0);
+        const uint64_t bigImm = simd_modified_imm(op, cmode, imm);
         if (op) {
             if (bits(cmode, 3) == 0) {
                 if (bits(cmode, 0) == 0) {
-                    return new WarnUnimplemented("vmov (imm)", machInst);
+                    if (q)
+                        return new NVmvniQ<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new NVmvniD<uint64_t>(machInst, vd, bigImm);
                 } else {
-                    return new WarnUnimplemented("vorr (imm)", machInst);
-                }
-            } else {
-                if (bits(cmode, 2) == 1) {
-                    return new WarnUnimplemented("vmov (imm)", machInst);
-                } else {
-                    if (bits(cmode, 0) == 0) {
-                        return new WarnUnimplemented("vmov (imm)", machInst);
-                    } else {
-                        return new WarnUnimplemented("vorr (imm)", machInst);
-                    }
-                }
-            }
-        } else {
-            if (bits(cmode, 3) == 0) {
-                if (bits(cmode, 0) == 0) {
-                    return new WarnUnimplemented("vmvn (imm)", machInst);
-                } else {
-                    return new WarnUnimplemented("vbic (imm)", machInst);
+                    if (q)
+                        return new NVbiciQ<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new NVbiciD<uint64_t>(machInst, vd, bigImm);
                 }
             } else {
                 if (bits(cmode, 2) == 1) {
                     switch (bits(cmode, 1, 0)) {
                       case 0:
                       case 1:
-                        return new WarnUnimplemented("vmvn (imm)", machInst);
+                        if (q)
+                            return new NVmvniQ<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new NVmvniD<uint64_t>(machInst, vd, bigImm);
                       case 2:
-                        return new WarnUnimplemented("vmov (imm)", machInst);
+                        if (q)
+                            return new NVmoviQ<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new NVmoviD<uint64_t>(machInst, vd, bigImm);
                       case 3:
-                        return new Unknown(machInst);
+                        if (q)
+                            return new Unknown(machInst);
+                        else
+                            return new Unknown(machInst);
                     }
-                    return new WarnUnimplemented("vmov (imm)", machInst);
                 } else {
                     if (bits(cmode, 0) == 0) {
-                        return new WarnUnimplemented("vmvn (imm)", machInst);
+                        if (q)
+                            return new NVmvniQ<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new NVmvniD<uint64_t>(machInst, vd, bigImm);
                     } else {
-                        return new WarnUnimplemented("vbic (imm)", machInst);
+                        if (q)
+                            return new NVbiciQ<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new NVbiciD<uint64_t>(machInst, vd, bigImm);
+                    }
+                }
+            }
+        } else {
+            if (bits(cmode, 3) == 0) {
+                if (bits(cmode, 0) == 0) {
+                    if (q)
+                        return new NVmoviQ<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new NVmoviD<uint64_t>(machInst, vd, bigImm);
+                } else {
+                    if (q)
+                        return new NVorriQ<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new NVorriD<uint64_t>(machInst, vd, bigImm);
+                }
+            } else {
+                if (bits(cmode, 2) == 1) {
+                    if (q)
+                        return new NVmoviQ<uint64_t>(machInst, vd, bigImm);
+                    else
+                        return new NVmoviD<uint64_t>(machInst, vd, bigImm);
+                } else {
+                    if (bits(cmode, 0) == 0) {
+                        if (q)
+                            return new NVmoviQ<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new NVmoviD<uint64_t>(machInst, vd, bigImm);
+                    } else {
+                        if (q)
+                            return new NVorriQ<uint64_t>(machInst, vd, bigImm);
+                        else
+                            return new NVorriD<uint64_t>(machInst, vd, bigImm);
                     }
                 }
             }
@@ -481,70 +850,149 @@ let {{
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
         const bool b = bits(machInst, 6);
         const bool l = bits(machInst, 7);
+        const IntRegIndex vd =
+            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        const IntRegIndex vm =
+            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+                               (bits(machInst, 5) << 4)));
+        unsigned imm6 = bits(machInst, 21, 16);
+        unsigned imm = ((l ? 1 : 0) << 6) | imm6;
+        unsigned size = 3;
+        unsigned lShiftAmt = 0;
+        unsigned bitSel;
+        for (bitSel = 1 << 6; true; bitSel >>= 1) {
+            if (bitSel & imm)
+                break;
+            else if (!size)
+                return new Unknown(machInst);
+            size--;
+        }
+        lShiftAmt = imm6 & ~bitSel;
+        unsigned rShiftAmt = 0;
+        if (a != 0xe && a != 0xf) {
+            if (size > 2)
+                rShiftAmt = 64 - imm6;
+            else
+                rShiftAmt = 2 * (8 << size) - imm6;
+        }
 
         switch (a) {
           case 0x0:
-            return new WarnUnimplemented("vshr", machInst);
+            return decodeNeonUSTwoShiftReg<NVshrD, NVshrQ>(
+                    b, u, size, machInst, vd, vm, rShiftAmt);
           case 0x1:
-            return new WarnUnimplemented("vsra", machInst);
+            return decodeNeonUSTwoShiftReg<NVsraD, NVsraQ>(
+                    b, u, size, machInst, vd, vm, rShiftAmt);
           case 0x2:
-            return new WarnUnimplemented("vrshr", machInst);
+            return decodeNeonUSTwoShiftReg<NVrshrD, NVrshrQ>(
+                    b, u, size, machInst, vd, vm, rShiftAmt);
           case 0x3:
-            return new WarnUnimplemented("vrsra", machInst);
+            return decodeNeonUSTwoShiftReg<NVrsraD, NVrsraQ>(
+                    b, u, size, machInst, vd, vm, rShiftAmt);
           case 0x4:
             if (u) {
-                return new WarnUnimplemented("vsri", machInst);
+                return decodeNeonUTwoShiftReg<NVsriD, NVsriQ>(
+                        b, size, machInst, vd, vm, rShiftAmt);
             } else {
                 return new Unknown(machInst);
             }
           case 0x5:
             if (u) {
-                return new WarnUnimplemented("vsli", machInst);
+                return decodeNeonUTwoShiftReg<NVsliD, NVsliQ>(
+                        b, size, machInst, vd, vm, lShiftAmt);
             } else {
-                return new WarnUnimplemented("vshl (imm)", machInst);
+                return decodeNeonUTwoShiftReg<NVshlD, NVshlQ>(
+                        b, size, machInst, vd, vm, lShiftAmt);
             }
           case 0x6:
           case 0x7:
-            return new WarnUnimplemented("vqshl, vqshlu (imm)", machInst);
+            if (u) {
+                if (a == 0x6) {
+                    return decodeNeonSTwoShiftReg<NVqshlusD, NVqshlusQ>(
+                            b, size, machInst, vd, vm, lShiftAmt);
+                } else {
+                    return decodeNeonUTwoShiftReg<NVqshluD, NVqshluQ>(
+                            b, size, machInst, vd, vm, lShiftAmt);
+                }
+            } else {
+                return decodeNeonSTwoShiftReg<NVqshlD, NVqshlQ>(
+                        b, size, machInst, vd, vm, lShiftAmt);
+            }
           case 0x8:
             if (l) {
                 return new Unknown(machInst);
             } else if (u) {
-                if (b) {
-                    return new WarnUnimplemented("vqrshrn, vqrshrun", machInst);
-                } else {
-                    return new WarnUnimplemented("vqshrn, vqshrun", machInst);
-                }
+                return decodeNeonSTwoShiftSReg<NVqshruns, NVqrshruns>(
+                        b, size, machInst, vd, vm, rShiftAmt);
             } else {
-                if (b) {
-                    return new WarnUnimplemented("vrshrn", machInst);
-                } else {
-                    return new WarnUnimplemented("vshrn", machInst);
-                }
+                return decodeNeonUTwoShiftSReg<NVshrn, NVrshrn>(
+                        b, size, machInst, vd, vm, rShiftAmt);
             }
           case 0x9:
             if (l) {
                 return new Unknown(machInst);
-            } else if (b) {
-                return new WarnUnimplemented("vqrshrn, vqrshrun", machInst);
+            } else if (u) {
+                return decodeNeonUTwoShiftSReg<NVqshrun, NVqrshrun>(
+                        b, size, machInst, vd, vm, rShiftAmt);
             } else {
-                return new WarnUnimplemented("vqshrn, vqshrun", machInst);
+                return decodeNeonSTwoShiftSReg<NVqshrn, NVqrshrn>(
+                        b, size, machInst, vd, vm, rShiftAmt);
             }
           case 0xa:
             if (l || b) {
                 return new Unknown(machInst);
             } else {
-                // If the shift amount is zero, it's vmovl.
-                return new WarnUnimplemented("vshll, vmovl", machInst);
+                return decodeNeonUSTwoShiftSReg<NVmovl, NVshll>(
+                        lShiftAmt, u, size, machInst, vd, vm, lShiftAmt);
             }
           case 0xe:
+            if (l) {
+                return new Unknown(machInst);
+            } else {
+                if (bits(imm6, 5) == 0)
+                    return new Unknown(machInst);
+                if (u) {
+                    if (b) {
+                        return new NVcvtu2fpQ<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    } else {
+                        return new NVcvtu2fpD<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    }
+                } else {
+                    if (b) {
+                        return new NVcvts2fpQ<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    } else {
+                        return new NVcvts2fpD<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    }
+                }
+            }
           case 0xf:
             if (l) {
                 return new Unknown(machInst);
-            } else if (a == 0xe) {
-                return new WarnUnimplemented("vcvt (fixed to fp)", machInst);
-            } else if (a == 0xf) {
-                return new WarnUnimplemented("vcvt (fp to fixed)", machInst);
+            } else {
+                if (bits(imm6, 5) == 0)
+                    return new Unknown(machInst);
+                if (u) {
+                    if (b) {
+                        return new NVcvt2ufxQ<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    } else {
+                        return new NVcvt2ufxD<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    }
+                } else {
+                    if (b) {
+                        return new NVcvt2sfxQ<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    } else {
+                        return new NVcvt2sfxD<float>(
+                                machInst, vd, vm, 64 - imm6);
+                    }
+                }
             }
         }
         return new Unknown(machInst);
@@ -555,74 +1003,89 @@ let {{
     {
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
         const uint32_t a = bits(machInst, 11, 8);
-
+        const IntRegIndex vd =
+            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        const IntRegIndex vn =
+            (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+                               (bits(machInst, 7) << 4)));
+        const IntRegIndex vm =
+            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+                               (bits(machInst, 5) << 4)));
+        const unsigned size = bits(machInst, 21, 20);
         switch (a) {
           case 0x0:
-            return new WarnUnimplemented("vaddl", machInst);
+            return decodeNeonUSThreeUSReg<Vaddl>(
+                    u, size, machInst, vd, vn, vm);
           case 0x1:
-            return new WarnUnimplemented("vaddw", machInst);
+            return decodeNeonUSThreeUSReg<Vaddw>(
+                    u, size, machInst, vd, vn, vm);
           case 0x2:
-            return new WarnUnimplemented("vsubl", machInst);
+            return decodeNeonUSThreeUSReg<Vsubl>(
+                    u, size, machInst, vd, vn, vm);
           case 0x3:
-            return new WarnUnimplemented("vsubw", machInst);
+            return decodeNeonUSThreeUSReg<Vsubw>(
+                    u, size, machInst, vd, vn, vm);
           case 0x4:
             if (u) {
-                return new WarnUnimplemented("vraddhn", machInst);
+                return decodeNeonUThreeUSReg<Vraddhn>(
+                        size, machInst, vd, vn, vm);
             } else {
-                return new WarnUnimplemented("vaddhn", machInst);
+                return decodeNeonUThreeUSReg<Vaddhn>(
+                        size, machInst, vd, vn, vm);
             }
           case 0x5:
-            return new WarnUnimplemented("vabal", machInst);
+            return decodeNeonUSThreeUSReg<Vabal>(
+                    u, size, machInst, vd, vn, vm);
           case 0x6:
             if (u) {
-                return new WarnUnimplemented("vrsubhn", machInst);
+                return decodeNeonUThreeUSReg<Vrsubhn>(
+                        size, machInst, vd, vn, vm);
             } else {
-                return new WarnUnimplemented("vsubhn", machInst);
+                return decodeNeonUThreeUSReg<Vsubhn>(
+                        size, machInst, vd, vn, vm);
             }
           case 0x7:
             if (bits(machInst, 23)) {
-                return new WarnUnimplemented("vabdl (int)", machInst);
+                return decodeNeonUSThreeUSReg<Vabdl>(
+                        u, size, machInst, vd, vn, vm);
             } else {
-                return new WarnUnimplemented("vabd (int)", machInst);
+                return decodeNeonUSThreeReg<VabdD, VabdQ>(
+                        bits(machInst, 6), u, size, machInst, vd, vn, vm);
             }
           case 0x8:
-            return new WarnUnimplemented("vmlal (int)", machInst);
+            return decodeNeonUSThreeUSReg<Vmlal>(
+                    u, size, machInst, vd, vn, vm);
           case 0xa:
-            return new WarnUnimplemented("vmlsl (int)", machInst);
+            return decodeNeonUSThreeUSReg<Vmlsl>(
+                    u, size, machInst, vd, vn, vm);
           case 0x9:
-            if (bits(machInst, 23) == 0) {
-                if (bits(machInst, 4) == 0) {
-                    if (u) {
-                        return new WarnUnimplemented("vmls (int)", machInst);
-                    } else {
-                        return new WarnUnimplemented("vmla (int)", machInst);
-                    }
-                } else {
-                    if (u) {
-                        return new WarnUnimplemented("vmul (poly)", machInst);
-                    } else {
-                        return new WarnUnimplemented("vmul (int)", machInst);
-                    }
-                }
+            if (u) {
+                return new Unknown(machInst);
             } else {
-                return new WarnUnimplemented("vqdmlal", machInst);
+                return decodeNeonSThreeUSReg<Vqdmlal>(
+                        size, machInst, vd, vn, vm);
             }
           case 0xb:
-            if (!u) {
+            if (u) {
                 return new Unknown(machInst);
             } else {
-                return new WarnUnimplemented("vqdmlsl", machInst);
+                return decodeNeonSThreeUSReg<Vqdmlsl>(
+                        size, machInst, vd, vn, vm);
             }
           case 0xc:
-            return new WarnUnimplemented("vmull (int)", machInst);
+            return decodeNeonUSThreeUSReg<Vmull>(
+                    u, size, machInst, vd, vn, vm);
           case 0xd:
-            if (!u) {
+            if (u) {
                 return new Unknown(machInst);
             } else {
-                return new WarnUnimplemented("vqdmull", machInst);
+                return decodeNeonSThreeUSReg<Vqdmull>(
+                        size, machInst, vd, vn, vm);
             }
           case 0xe:
-            return new WarnUnimplemented("vmull (poly)", machInst);
+            return decodeNeonUThreeUSReg<Vmullp>(
+                    size, machInst, vd, vn, vm);
         }
         return new Unknown(machInst);
     }
@@ -632,48 +1095,256 @@ let {{
     {
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
         const uint32_t a = bits(machInst, 11, 8);
-
+        const unsigned size = bits(machInst, 21, 20);
+        const IntRegIndex vd =
+            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        const IntRegIndex vn =
+            (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+                               (bits(machInst, 7) << 4)));
+        const IntRegIndex vm = (size == 2) ?
+            (IntRegIndex)(2 * bits(machInst, 3, 0)) :
+            (IntRegIndex)(2 * bits(machInst, 2, 0));
+        const unsigned index = (size == 2) ? (unsigned)bits(machInst, 5) :
+            (bits(machInst, 3) | (bits(machInst, 5) << 1));
         switch (a) {
           case 0x0:
-            return new WarnUnimplemented("vmla (int scalar)", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new VmlasQ<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VmlasQ<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new VmlasD<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VmlasD<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
           case 0x1:
-            return new WarnUnimplemented("vmla (fp scalar)", machInst);
+            if (u)
+                return new VmlasQFp<float>(machInst, vd, vn, vm, index);
+            else
+                return new VmlasDFp<float>(machInst, vd, vn, vm, index);
           case 0x4:
-            return new WarnUnimplemented("vmls (int scalar)", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new VmlssQ<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VmlssQ<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new VmlssD<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VmlssD<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
           case 0x5:
-            return new WarnUnimplemented("vmls (fp scalar)", machInst);
+            if (u)
+                return new VmlssQFp<float>(machInst, vd, vn, vm, index);
+            else
+                return new VmlssDFp<float>(machInst, vd, vn, vm, index);
           case 0x2:
-            return new WarnUnimplemented("vmlal (scalar)", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new Vmlals<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vmlals<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new Vmlals<int16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vmlals<int32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
           case 0x6:
-            return new WarnUnimplemented("vmlsl (scalar)", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new Vmlsls<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vmlsls<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new Vmlsls<int16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vmlsls<int32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
           case 0x3:
             if (u) {
                 return new Unknown(machInst);
             } else {
-                return new WarnUnimplemented("vqdmlal", machInst);
+                switch (size) {
+                  case 1:
+                    return new Vqdmlals<int16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vqdmlals<int32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
             }
           case 0x7:
             if (u) {
                 return new Unknown(machInst);
             } else {
-                return new WarnUnimplemented("vqdmlsl", machInst);
+                switch (size) {
+                  case 1:
+                    return new Vqdmlsls<int16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vqdmlsls<int32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
             }
           case 0x8:
-            return new WarnUnimplemented("vmul (int scalar)", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new VmulsQ<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VmulsQ<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new VmulsD<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VmulsD<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
           case 0x9:
-            return new WarnUnimplemented("vmul (fp scalar)", machInst);
+            if (u)
+                return new VmulsQFp<float>(machInst, vd, vn, vm, index);
+            else
+                return new VmulsDFp<float>(machInst, vd, vn, vm, index);
           case 0xa:
-            return new WarnUnimplemented("vmull (scalar)", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new Vmulls<uint16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vmulls<uint32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new Vmulls<int16_t>(machInst, vd, vn, vm, index);
+                  case 2:
+                    return new Vmulls<int32_t>(machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
           case 0xb:
             if (u) {
                 return new Unknown(machInst);
             } else {
-                return new WarnUnimplemented("vqdmull", machInst);
+                if (u) {
+                    switch (size) {
+                      case 1:
+                        return new Vqdmulls<uint16_t>(
+                                machInst, vd, vn, vm, index);
+                      case 2:
+                        return new Vqdmulls<uint32_t>(
+                                machInst, vd, vn, vm, index);
+                      default:
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    switch (size) {
+                      case 1:
+                        return new Vqdmulls<int16_t>(
+                                machInst, vd, vn, vm, index);
+                      case 2:
+                        return new Vqdmulls<int32_t>(
+                                machInst, vd, vn, vm, index);
+                      default:
+                        return new Unknown(machInst);
+                    }
+                }
             }
           case 0xc:
-            return new WarnUnimplemented("vqdmulh", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new VqdmulhsQ<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqdmulhsQ<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new VqdmulhsD<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqdmulhsD<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
           case 0xd:
-            return new WarnUnimplemented("vqrdmulh", machInst);
+            if (u) {
+                switch (size) {
+                  case 1:
+                    return new VqrdmulhsQ<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqrdmulhsQ<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            } else {
+                switch (size) {
+                  case 1:
+                    return new VqrdmulhsD<int16_t>(
+                            machInst, vd, vn, vm, index);
+                  case 2:
+                    return new VqrdmulhsD<int32_t>(
+                            machInst, vd, vn, vm, index);
+                  default:
+                    return new Unknown(machInst);
+                }
+            }
         }
         return new Unknown(machInst);
     }
@@ -683,85 +1354,234 @@ let {{
     {
         const uint32_t a = bits(machInst, 17, 16);
         const uint32_t b = bits(machInst, 10, 6);
+        const bool q = bits(machInst, 6);
+        const IntRegIndex vd =
+            (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                               (bits(machInst, 22) << 4)));
+        const IntRegIndex vm =
+            (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+                               (bits(machInst, 5) << 4)));
+        const unsigned size = bits(machInst, 19, 18);
         switch (a) {
           case 0x0:
             switch (bits(b, 4, 1)) {
               case 0x0:
-                return new WarnUnimplemented("vrev64", machInst);
+                switch (size) {
+                  case 0:
+                    if (q) {
+                        return new NVrev64Q<uint8_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrev64D<uint8_t>(machInst, vd, vm);
+                    }
+                  case 1:
+                    if (q) {
+                        return new NVrev64Q<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrev64D<uint16_t>(machInst, vd, vm);
+                    }
+                  case 2:
+                    if (q) {
+                        return new NVrev64Q<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrev64D<uint32_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown(machInst);
+                }
               case 0x1:
-                return new WarnUnimplemented("vrev32", machInst);
+                switch (size) {
+                  case 0:
+                    if (q) {
+                        return new NVrev32Q<uint8_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrev32D<uint8_t>(machInst, vd, vm);
+                    }
+                  case 1:
+                    if (q) {
+                        return new NVrev32Q<uint16_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrev32D<uint16_t>(machInst, vd, vm);
+                    }
+                  default:
+                    return new Unknown(machInst);
+                }
               case 0x2:
-                return new WarnUnimplemented("vrev16", machInst);
+                if (size != 0) {
+                    return new Unknown(machInst);
+                } else if (q) {
+                    return new NVrev16Q<uint8_t>(machInst, vd, vm);
+                } else {
+                    return new NVrev16D<uint8_t>(machInst, vd, vm);
+                }
               case 0x4:
+                return decodeNeonSTwoMiscSReg<NVpaddlD, NVpaddlQ>(
+                        q, size, machInst, vd, vm);
               case 0x5:
-                return new WarnUnimplemented("vpaddl", machInst);
+                return decodeNeonUTwoMiscSReg<NVpaddlD, NVpaddlQ>(
+                        q, size, machInst, vd, vm);
               case 0x8:
-                return new WarnUnimplemented("vcls", machInst);
+                return decodeNeonSTwoMiscReg<NVclsD, NVclsQ>(
+                        q, size, machInst, vd, vm);
               case 0x9:
-                return new WarnUnimplemented("vclz", machInst);
+                return decodeNeonSTwoMiscReg<NVclzD, NVclzQ>(
+                        q, size, machInst, vd, vm);
               case 0xa:
-                return new WarnUnimplemented("vcnt", machInst);
+                return decodeNeonUTwoMiscReg<NVcntD, NVcntQ>(
+                        q, size, machInst, vd, vm);
               case 0xb:
-                return new WarnUnimplemented("vmvn (reg)", machInst);
+                if (q)
+                    return new NVmvnQ<uint64_t>(machInst, vd, vm);
+                else
+                    return new NVmvnD<uint64_t>(machInst, vd, vm);
               case 0xc:
+                return decodeNeonSTwoMiscSReg<NVpadalD, NVpadalQ>(
+                        q, size, machInst, vd, vm);
               case 0xd:
-                return new WarnUnimplemented("vpadal", machInst);
+                return decodeNeonUTwoMiscSReg<NVpadalD, NVpadalQ>(
+                        q, size, machInst, vd, vm);
               case 0xe:
-                return new WarnUnimplemented("vqabs", machInst);
+                return decodeNeonSTwoMiscReg<NVqabsD, NVqabsQ>(
+                        q, size, machInst, vd, vm);
               case 0xf:
-                return new WarnUnimplemented("vqneg", machInst);
+                return decodeNeonSTwoMiscReg<NVqnegD, NVqnegQ>(
+                        q, size, machInst, vd, vm);
               default:
                 return new Unknown(machInst);
             }
           case 0x1:
             switch (bits(b, 3, 1)) {
               case 0x0:
-                return new WarnUnimplemented("vcgt (imm #0)", machInst);
+                if (bits(b, 4)) {
+                    if (q) {
+                        return new NVcgtQFp<float>(machInst, vd, vm);
+                    } else {
+                        return new NVcgtDFp<float>(machInst, vd, vm);
+                    }
+                } else {
+                    return decodeNeonSTwoMiscReg<NVcgtD, NVcgtQ>(
+                            q, size, machInst, vd, vm);
+                }
               case 0x1:
-                return new WarnUnimplemented("vcge (imm #0)", machInst);
+                if (bits(b, 4)) {
+                    if (q) {
+                        return new NVcgeQFp<float>(machInst, vd, vm);
+                    } else {
+                        return new NVcgeDFp<float>(machInst, vd, vm);
+                    }
+                } else {
+                    return decodeNeonSTwoMiscReg<NVcgeD, NVcgeQ>(
+                            q, size, machInst, vd, vm);
+                }
               case 0x2:
-                return new WarnUnimplemented("vceq (imm #0)", machInst);
+                if (bits(b, 4)) {
+                    if (q) {
+                        return new NVceqQFp<float>(machInst, vd, vm);
+                    } else {
+                        return new NVceqDFp<float>(machInst, vd, vm);
+                    }
+                } else {
+                    return decodeNeonSTwoMiscReg<NVceqD, NVceqQ>(
+                            q, size, machInst, vd, vm);
+                }
               case 0x3:
-                return new WarnUnimplemented("vcle (imm #0)", machInst);
+                if (bits(b, 4)) {
+                    if (q) {
+                        return new NVcleQFp<float>(machInst, vd, vm);
+                    } else {
+                        return new NVcleDFp<float>(machInst, vd, vm);
+                    }
+                } else {
+                    return decodeNeonSTwoMiscReg<NVcleD, NVcleQ>(
+                            q, size, machInst, vd, vm);
+                }
               case 0x4:
-                return new WarnUnimplemented("vclt (imm #0)", machInst);
+                if (bits(b, 4)) {
+                    if (q) {
+                        return new NVcltQFp<float>(machInst, vd, vm);
+                    } else {
+                        return new NVcltDFp<float>(machInst, vd, vm);
+                    }
+                } else {
+                    return decodeNeonSTwoMiscReg<NVcltD, NVcltQ>(
+                            q, size, machInst, vd, vm);
+                }
               case 0x6:
-                return new WarnUnimplemented("vabs (imm #0)", machInst);
+                if (bits(machInst, 10)) {
+                    if (q)
+                        return new NVabsQFp<float>(machInst, vd, vm);
+                    else
+                        return new NVabsDFp<float>(machInst, vd, vm);
+                } else {
+                    return decodeNeonSTwoMiscReg<NVabsD, NVabsQ>(
+                            q, size, machInst, vd, vm);
+                }
               case 0x7:
-                return new WarnUnimplemented("vneg (imm #0)", machInst);
+                if (bits(machInst, 10)) {
+                    if (q)
+                        return new NVnegQFp<float>(machInst, vd, vm);
+                    else
+                        return new NVnegDFp<float>(machInst, vd, vm);
+                } else {
+                    return decodeNeonSTwoMiscReg<NVnegD, NVnegQ>(
+                            q, size, machInst, vd, vm);
+                }
             }
           case 0x2:
             switch (bits(b, 4, 1)) {
               case 0x0:
-                return new WarnUnimplemented("vswp", machInst);
+                if (q)
+                    return new NVswpQ<uint64_t>(machInst, vd, vm);
+                else
+                    return new NVswpD<uint64_t>(machInst, vd, vm);
               case 0x1:
-                return new WarnUnimplemented("vtrn", machInst);
+                return decodeNeonUTwoMiscReg<NVtrnD, NVtrnQ>(
+                        q, size, machInst, vd, vm);
               case 0x2:
-                return new WarnUnimplemented("vuzp", machInst);
+                return decodeNeonUTwoMiscReg<NVuzpD, NVuzpQ>(
+                        q, size, machInst, vd, vm);
               case 0x3:
-                return new WarnUnimplemented("vzip", machInst);
+                return decodeNeonUTwoMiscReg<NVzipD, NVzipQ>(
+                        q, size, machInst, vd, vm);
               case 0x4:
                 if (b == 0x8) {
-                    return new WarnUnimplemented("vmovn", machInst);
+                    return decodeNeonUTwoMiscUSReg<NVmovn>(
+                            size, machInst, vd, vm);
                 } else {
-                    return new WarnUnimplemented("vqmovun", machInst);
+                    return decodeNeonSTwoMiscUSReg<NVqmovuns>(
+                            size, machInst, vd, vm);
                 }
               case 0x5:
-                return new WarnUnimplemented("vqmovn", machInst);
+                if (q) {
+                    return decodeNeonUTwoMiscUSReg<NVqmovun>(
+                            size, machInst, vd, vm);
+                } else {
+                    return decodeNeonSTwoMiscUSReg<NVqmovn>(
+                            size, machInst, vd, vm);
+                }
               case 0x6:
                 if (b == 0xc) {
-                    return new WarnUnimplemented("vshll", machInst);
+                    const IntRegIndex vd =
+                        (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                                           (bits(machInst, 22) << 4)));
+                    const IntRegIndex vm =
+                        (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+                                           (bits(machInst, 5) << 4)));
+                    unsigned size = bits(machInst, 19, 18);
+                    return decodeNeonSTwoShiftUSReg<NVshll>(
+                            size, machInst, vd, vm, 8 << size);
                 } else {
                     return new Unknown(machInst);
                 }
               case 0xc:
               case 0xe:
                 if (b == 0x18) {
-                    return new WarnUnimplemented("vcvt (single to half)",
-                            machInst);
+                    if (size != 1 || (vm % 2))
+                        return new Unknown(machInst);
+                    return new NVcvts2h<uint16_t>(machInst, vd, vm);
                 } else if (b == 0x1c) {
-                    return new WarnUnimplemented("vcvt (half to single)",
-                            machInst);
+                    if (size != 1 || (vd % 2))
+                        return new Unknown(machInst);
+                    return new NVcvth2s<uint16_t>(machInst, vd, vm);
                 } else {
                     return new Unknown(machInst);
                 }
@@ -770,11 +1590,75 @@ let {{
             }
           case 0x3:
             if (bits(b, 4, 3) == 0x3) {
-                return new WarnUnimplemented("vcvt (fp and int)", machInst);
+                if ((q && (vd % 2 || vm % 2)) || size != 2) {
+                    return new Unknown(machInst);
+                } else {
+                    if (bits(b, 2)) {
+                        if (bits(b, 1)) {
+                            if (q) {
+                                return new NVcvt2ufxQ<float>(
+                                        machInst, vd, vm, 0);
+                            } else {
+                                return new NVcvt2ufxD<float>(
+                                        machInst, vd, vm, 0);
+                            }
+                        } else {
+                            if (q) {
+                                return new NVcvt2sfxQ<float>(
+                                        machInst, vd, vm, 0);
+                            } else {
+                                return new NVcvt2sfxD<float>(
+                                        machInst, vd, vm, 0);
+                            }
+                        }
+                    } else {
+                        if (bits(b, 1)) {
+                            if (q) {
+                                return new NVcvtu2fpQ<float>(
+                                        machInst, vd, vm, 0);
+                            } else {
+                                return new NVcvtu2fpD<float>(
+                                        machInst, vd, vm, 0);
+                            }
+                        } else {
+                            if (q) {
+                                return new NVcvts2fpQ<float>(
+                                        machInst, vd, vm, 0);
+                            } else {
+                                return new NVcvts2fpD<float>(
+                                        machInst, vd, vm, 0);
+                            }
+                        }
+                    }
+                }
             } else if ((b & 0x1a) == 0x10) {
-                return new WarnUnimplemented("vrecpe", machInst);
+                if (bits(b, 2)) {
+                    if (q) {
+                        return new NVrecpeQFp<float>(machInst, vd, vm);
+                    } else {
+                        return new NVrecpeDFp<float>(machInst, vd, vm);
+                    }
+                } else {
+                    if (q) {
+                        return new NVrecpeQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrecpeD<uint32_t>(machInst, vd, vm);
+                    }
+                }
             } else if ((b & 0x1a) == 0x12) {
-                return new WarnUnimplemented("vrsqrte", machInst);
+                if (bits(b, 2)) {
+                    if (q) {
+                        return new NVrsqrteQFp<float>(machInst, vd, vm);
+                    } else {
+                        return new NVrsqrteDFp<float>(machInst, vd, vm);
+                    }
+                } else {
+                    if (q) {
+                        return new NVrsqrteQ<uint32_t>(machInst, vd, vm);
+                    } else {
+                        return new NVrsqrteD<uint32_t>(machInst, vd, vm);
+                    }
+                }
             } else {
                 return new Unknown(machInst);
             }
@@ -799,29 +1683,76 @@ let {{
             }
         } else if ((c & 0x9) == 9) {
             return decodeNeonTwoRegAndShift(machInst);
-        } else if ((c & 0x5) == 0) {
-            if (bits(a, 3, 2) != 0x3) {
+        } else if (bits(a, 2, 1) != 0x3) {
+            if ((c & 0x5) == 0) {
                 return decodeNeonThreeRegDiffLengths(machInst);
-            }
-        } else if ((c & 0x5) == 4) {
-            if (bits(a, 3, 2) != 0x3) {
+            } else if ((c & 0x5) == 4) {
                 return decodeNeonTwoRegScalar(machInst);
             }
         } else if ((a & 0x16) == 0x16) {
+            const IntRegIndex vd =
+                (IntRegIndex)(2 * (bits(machInst, 15, 12) |
+                                   (bits(machInst, 22) << 4)));
+            const IntRegIndex vn =
+                (IntRegIndex)(2 * (bits(machInst, 19, 16) |
+                                   (bits(machInst, 7) << 4)));
+            const IntRegIndex vm =
+                (IntRegIndex)(2 * (bits(machInst, 3, 0) |
+                                   (bits(machInst, 5) << 4)));
             if (!u) {
                 if (bits(c, 0) == 0) {
-                    return new WarnUnimplemented("vext", machInst);
+                    unsigned imm4 = bits(machInst, 11, 8);
+                    bool q = bits(machInst, 6);
+                    if (imm4 >= 16 && !q)
+                        return new Unknown(machInst);
+                    if (q) {
+                        return new NVextQ<uint8_t>(machInst, vd, vn, vm, imm4);
+                    } else {
+                        return new NVextD<uint8_t>(machInst, vd, vn, vm, imm4);
+                    }
                 }
             } else if (bits(b, 3) == 0 && bits(c, 0) == 0) {
                 return decodeNeonTwoRegMisc(machInst);
             } else if (bits(b, 3, 2) == 0x2 && bits(c, 0) == 0) {
+                unsigned length = bits(machInst, 9, 8) + 1;
+                if ((uint32_t)vn / 2 + length > 32)
+                    return new Unknown(machInst);
                 if (bits(machInst, 6) == 0) {
-                    return new WarnUnimplemented("vtbl", machInst);
+                    switch (length) {
+                      case 1:
+                        return new NVtbl1(machInst, vd, vn, vm);
+                      case 2:
+                        return new NVtbl2(machInst, vd, vn, vm);
+                      case 3:
+                        return new NVtbl3(machInst, vd, vn, vm);
+                      case 4:
+                        return new NVtbl4(machInst, vd, vn, vm);
+                    }
                 } else {
-                    return new WarnUnimplemented("vtbx", machInst);
+                    switch (length) {
+                      case 1:
+                        return new NVtbx1(machInst, vd, vn, vm);
+                      case 2:
+                        return new NVtbx2(machInst, vd, vn, vm);
+                      case 3:
+                        return new NVtbx3(machInst, vd, vn, vm);
+                      case 4:
+                        return new NVtbx4(machInst, vd, vn, vm);
+                    }
                 }
             } else if (b == 0xc && (c & 0x9) == 0) {
-                return new WarnUnimplemented("vdup (scalar)", machInst);
+                unsigned imm4 = bits(machInst, 19, 16);
+                if (bits(imm4, 2, 0) == 0)
+                    return new Unknown(machInst);
+                unsigned size = 0;
+                while ((imm4 & 0x1) == 0) {
+                    size++;
+                    imm4 >>= 1;
+                }
+                unsigned index = imm4 >> 1;
+                const bool q = bits(machInst, 6);
+                return decodeNeonUTwoShiftSReg<NVdupD, NVdupQ>(
+                        q, size, machInst, vd, vm, index);
             }
         }
         return new Unknown(machInst);
@@ -837,7 +1768,7 @@ def format ThumbNeonMem() {{
 
 def format ThumbNeonData() {{
     decode_block = '''
-    return decodeNeonMem(machInst);
+    return decodeNeonData(machInst);
     '''
 }};
 
@@ -893,7 +1824,7 @@ let {{
             break;
           case 0x1:
             {
-                if (offset == 0 || vd + offset > NumFloatArchRegs) {
+                if (offset == 0 || vd + offset/2 > NumFloatArchRegs) {
                     break;
                 }
                 switch (bits(opcode, 1, 0)) {
@@ -1044,40 +1975,51 @@ let {{
             if (bits(a, 2) == 0) {
                 uint32_t vd = (bits(machInst, 7) << 5) |
                               (bits(machInst, 19, 16) << 1);
-                uint32_t index, size;
+                // Handle accessing each single precision half of the vector.
+                vd += bits(machInst, 21);
                 const IntRegIndex rt =
                     (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
                 if (bits(machInst, 22) == 1) {
-                    size = 8;
-                    index = (bits(machInst, 21) << 2) |
-                            bits(machInst, 6, 5);
+                    return new VmovCoreRegB(machInst, (IntRegIndex)vd,
+                                            rt, bits(machInst, 6, 5));
                 } else if (bits(machInst, 5) == 1) {
-                    size = 16;
-                    index = (bits(machInst, 21) << 1) |
-                            bits(machInst, 6);
+                    return new VmovCoreRegH(machInst, (IntRegIndex)vd,
+                                            rt, bits(machInst, 6));
                 } else if (bits(machInst, 6) == 0) {
-                    size = 32;
-                    index = bits(machInst, 21);
+                    return new VmovCoreRegW(machInst, (IntRegIndex)vd, rt);
                 } else {
                     return new Unknown(machInst);
                 }
-                if (index >= (32 / size)) {
-                    index -= (32 / size);
-                    vd++;
-                }
-                switch (size) {
-                  case 8:
-                    return new VmovCoreRegB(machInst, (IntRegIndex)vd,
-                                            rt, index);
-                  case 16:
-                    return new VmovCoreRegH(machInst, (IntRegIndex)vd,
-                                            rt, index);
-                  case 32:
-                    return new VmovCoreRegW(machInst, (IntRegIndex)vd, rt);
-                }
             } else if (bits(b, 1) == 0) {
-                // A8-594
-                return new WarnUnimplemented("vdup", machInst);
+                bool q = bits(machInst, 21);
+                unsigned be = (bits(machInst, 22) << 1) | (bits(machInst, 5));
+                IntRegIndex vd = (IntRegIndex)(2 * (uint32_t)
+                    (bits(machInst, 19, 16) | (bits(machInst, 7) << 4)));
+                IntRegIndex rt = (IntRegIndex)(uint32_t)
+                    bits(machInst, 15, 12);
+                if (q) {
+                    switch (be) {
+                      case 0:
+                        return new NVdupQGpr<uint32_t>(machInst, vd, rt);
+                      case 1:
+                        return new NVdupQGpr<uint16_t>(machInst, vd, rt);
+                      case 2:
+                        return new NVdupQGpr<uint8_t>(machInst, vd, rt);
+                      case 3:
+                        return new Unknown(machInst);
+                    }
+                } else {
+                    switch (be) {
+                      case 0:
+                        return new NVdupDGpr<uint32_t>(machInst, vd, rt);
+                      case 1:
+                        return new NVdupDGpr<uint16_t>(machInst, vd, rt);
+                      case 2:
+                        return new NVdupDGpr<uint8_t>(machInst, vd, rt);
+                      case 3:
+                        return new Unknown(machInst);
+                    }
+                }
             }
         } else if (l == 1 && c == 0) {
             if (a == 0) {
@@ -1128,30 +2070,14 @@ let {{
         } else {
             uint32_t vd = (bits(machInst, 7) << 5) |
                           (bits(machInst, 19, 16) << 1);
-            uint32_t index, size;
+            // Handle indexing into each single precision half of the vector.
+            vd += bits(machInst, 21);
+            uint32_t index;
             const IntRegIndex rt =
                 (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
             const bool u = (bits(machInst, 23) == 1);
             if (bits(machInst, 22) == 1) {
-                size = 8;
-                index = (bits(machInst, 21) << 2) |
-                        bits(machInst, 6, 5);
-            } else if (bits(machInst, 5) == 1) {
-                size = 16;
-                index = (bits(machInst, 21) << 1) |
-                        bits(machInst, 6);
-            } else if (bits(machInst, 6) == 0 && !u) {
-                size = 32;
-                index = bits(machInst, 21);
-            } else {
-                return new Unknown(machInst);
-            }
-            if (index >= (32 / size)) {
-                index -= (32 / size);
-                vd++;
-            }
-            switch (size) {
-              case 8:
+                index = bits(machInst, 6, 5);
                 if (u) {
                     return new VmovRegCoreUB(machInst, rt,
                                              (IntRegIndex)vd, index);
@@ -1159,7 +2085,8 @@ let {{
                     return new VmovRegCoreSB(machInst, rt,
                                              (IntRegIndex)vd, index);
                 }
-              case 16:
+            } else if (bits(machInst, 5) == 1) {
+                index = bits(machInst, 6);
                 if (u) {
                     return new VmovRegCoreUH(machInst, rt,
                                              (IntRegIndex)vd, index);
@@ -1167,8 +2094,10 @@ let {{
                     return new VmovRegCoreSH(machInst, rt,
                                              (IntRegIndex)vd, index);
                 }
-              case 32:
+            } else if (bits(machInst, 6) == 0 && !u) {
                 return new VmovRegCoreW(machInst, rt, (IntRegIndex)vd);
+            } else {
+                return new Unknown(machInst);
             }
         }
         return new Unknown(machInst);

@@ -1,0 +1,3343 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+output header {{
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUThreeUReg(unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSThreeUReg(unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUSThreeUReg(bool notSigned, unsigned size,
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1, IntRegIndex op2)
+    {
+        if (notSigned) {
+            return decodeNeonUThreeUReg<Base>(size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonSThreeUReg<Base>(size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUThreeUSReg(unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSThreeUSReg(unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUSThreeUSReg(bool notSigned, unsigned size,
+                           ExtMachInst machInst, IntRegIndex dest,
+                           IntRegIndex op1, IntRegIndex op2)
+    {
+        if (notSigned) {
+            return decodeNeonUThreeUSReg<Base>(
+                    size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonSThreeUSReg<Base>(
+                    size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUThreeSReg(bool q, unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        if (q) {
+            return decodeNeonUThreeUSReg<BaseQ>(
+                    size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonUThreeUSReg<BaseD>(
+                    size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSThreeSReg(bool q, unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        if (q) {
+            return decodeNeonSThreeUSReg<BaseQ>(
+                    size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonSThreeUSReg<BaseD>(
+                    size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUSThreeSReg(bool q, bool notSigned, unsigned size,
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1, IntRegIndex op2)
+    {
+        if (notSigned) {
+            return decodeNeonUThreeSReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonSThreeSReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUThreeReg(bool q, unsigned size,
+                        ExtMachInst machInst, IntRegIndex dest,
+                        IntRegIndex op1, IntRegIndex op2)
+    {
+        if (q) {
+            return decodeNeonUThreeUReg<BaseQ>(
+                    size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonUThreeUReg<BaseD>(
+                    size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSThreeReg(bool q, unsigned size,
+                        ExtMachInst machInst, IntRegIndex dest,
+                        IntRegIndex op1, IntRegIndex op2)
+    {
+        if (q) {
+            return decodeNeonSThreeUReg<BaseQ>(
+                    size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonSThreeUReg<BaseD>(
+                    size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUSThreeReg(bool q, bool notSigned, unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        if (notSigned) {
+            return decodeNeonUThreeReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, op2);
+        } else {
+            return decodeNeonSThreeReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, op2);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoShiftReg(bool q, unsigned size,
+                           ExtMachInst machInst, IntRegIndex dest,
+                           IntRegIndex op1, uint64_t imm)
+    {
+        if (q) {
+            switch (size) {
+              case 0:
+                return new BaseQ<uint8_t>(machInst, dest, op1, imm);
+              case 1:
+                return new BaseQ<uint16_t>(machInst, dest, op1, imm);
+              case 2:
+                return new BaseQ<uint32_t>(machInst, dest, op1, imm);
+              case 3:
+                return new BaseQ<uint64_t>(machInst, dest, op1, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 0:
+                return new BaseD<uint8_t>(machInst, dest, op1, imm);
+              case 1:
+                return new BaseD<uint16_t>(machInst, dest, op1, imm);
+              case 2:
+                return new BaseD<uint32_t>(machInst, dest, op1, imm);
+              case 3:
+                return new BaseD<uint64_t>(machInst, dest, op1, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSTwoShiftReg(bool q, unsigned size,
+                           ExtMachInst machInst, IntRegIndex dest,
+                           IntRegIndex op1, uint64_t imm)
+    {
+        if (q) {
+            switch (size) {
+              case 0:
+                return new BaseQ<int8_t>(machInst, dest, op1, imm);
+              case 1:
+                return new BaseQ<int16_t>(machInst, dest, op1, imm);
+              case 2:
+                return new BaseQ<int32_t>(machInst, dest, op1, imm);
+              case 3:
+                return new BaseQ<int64_t>(machInst, dest, op1, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        } else {
+            switch (size) {
+              case 0:
+                return new BaseD<int8_t>(machInst, dest, op1, imm);
+              case 1:
+                return new BaseD<int16_t>(machInst, dest, op1, imm);
+              case 2:
+                return new BaseD<int32_t>(machInst, dest, op1, imm);
+              case 3:
+                return new BaseD<int64_t>(machInst, dest, op1, imm);
+              default:
+                return new Unknown(machInst);
+            }
+        }
+    }
+
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUSTwoShiftReg(bool q, bool notSigned, unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1, uint64_t imm)
+    {
+        if (notSigned) {
+            return decodeNeonUTwoShiftReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, imm);
+        } else {
+            return decodeNeonSTwoShiftReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, imm);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUTwoShiftUSReg(unsigned size,
+                             ExtMachInst machInst, IntRegIndex dest,
+                             IntRegIndex op1, uint64_t imm)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, imm);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, imm);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, imm);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoShiftSReg(bool q, unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1, uint64_t imm)
+    {
+        if (q) {
+            return decodeNeonUTwoShiftUSReg<BaseQ>(
+                    size, machInst, dest, op1, imm);
+        } else {
+            return decodeNeonUTwoShiftUSReg<BaseD>(
+                    size, machInst, dest, op1, imm);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSTwoShiftUSReg(unsigned size,
+                             ExtMachInst machInst, IntRegIndex dest,
+                             IntRegIndex op1, uint64_t imm)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, imm);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, imm);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, imm);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSTwoShiftSReg(bool q, unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1, uint64_t imm)
+    {
+        if (q) {
+            return decodeNeonSTwoShiftUSReg<BaseQ>(
+                    size, machInst, dest, op1, imm);
+        } else {
+            return decodeNeonSTwoShiftUSReg<BaseD>(
+                    size, machInst, dest, op1, imm);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUSTwoShiftSReg(bool q, bool notSigned, unsigned size,
+                             ExtMachInst machInst, IntRegIndex dest,
+                             IntRegIndex op1, uint64_t imm)
+    {
+        if (notSigned) {
+            return decodeNeonUTwoShiftSReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, imm);
+        } else {
+            return decodeNeonSTwoShiftSReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1, imm);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUTwoMiscUSReg(unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSTwoMiscUSReg(unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoMiscSReg(bool q, unsigned size,
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1)
+    {
+        if (q) {
+            return decodeNeonUTwoMiscUSReg<BaseQ>(size, machInst, dest, op1);
+        } else {
+            return decodeNeonUTwoMiscUSReg<BaseD>(size, machInst, dest, op1);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSTwoMiscSReg(bool q, unsigned size,
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1)
+    {
+        if (q) {
+            return decodeNeonSTwoMiscUSReg<BaseQ>(size, machInst, dest, op1);
+        } else {
+            return decodeNeonSTwoMiscUSReg<BaseD>(size, machInst, dest, op1);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonUTwoMiscUReg(unsigned size,
+                           ExtMachInst machInst, IntRegIndex dest,
+                           IntRegIndex op1)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeNeonSTwoMiscUReg(unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonSTwoMiscReg(bool q, unsigned size,
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1)
+    {
+        if (q) {
+            return decodeNeonSTwoMiscUReg<BaseQ>(size, machInst, dest, op1);
+        } else {
+            return decodeNeonSTwoMiscUReg<BaseD>(size, machInst, dest, op1);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUTwoMiscReg(bool q, unsigned size,
+                          ExtMachInst machInst, IntRegIndex dest,
+                          IntRegIndex op1)
+    {
+        if (q) {
+            return decodeNeonUTwoMiscUReg<BaseQ>(size, machInst, dest, op1);
+        } else {
+            return decodeNeonUTwoMiscUReg<BaseD>(size, machInst, dest, op1);
+        }
+    }
+
+    template <template <typename T> class BaseD,
+              template <typename T> class BaseQ>
+    StaticInstPtr
+    decodeNeonUSTwoMiscSReg(bool q, bool notSigned, unsigned size,
+                            ExtMachInst machInst, IntRegIndex dest,
+                            IntRegIndex op1)
+    {
+        if (notSigned) {
+            return decodeNeonUTwoShiftSReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1);
+        } else {
+            return decodeNeonSTwoShiftSReg<BaseD, BaseQ>(
+                    q, size, machInst, dest, op1);
+        }
+    }
+
+}};
+
+output exec {{
+    static float
+    vcgtFunc(float op1, float op2)
+    {
+        if (isSnan(op1) || isSnan(op2))
+            return 2.0;
+        return (op1 > op2) ? 0.0 : 1.0;
+    }
+
+    static float
+    vcgeFunc(float op1, float op2)
+    {
+        if (isSnan(op1) || isSnan(op2))
+            return 2.0;
+        return (op1 >= op2) ? 0.0 : 1.0;
+    }
+
+    static float
+    vceqFunc(float op1, float op2)
+    {
+        if (isSnan(op1) || isSnan(op2))
+            return 2.0;
+        return (op1 == op2) ? 0.0 : 1.0;
+    }
+
+    static float
+    vcleFunc(float op1, float op2)
+    {
+        if (isSnan(op1) || isSnan(op2))
+            return 2.0;
+        return (op1 <= op2) ? 0.0 : 1.0;
+    }
+
+    static float
+    vcltFunc(float op1, float op2)
+    {
+        if (isSnan(op1) || isSnan(op2))
+            return 2.0;
+        return (op1 < op2) ? 0.0 : 1.0;
+    }
+
+    static float
+    vacgtFunc(float op1, float op2)
+    {
+        if (isSnan(op1) || isSnan(op2))
+            return 2.0;
+        return (fabsf(op1) > fabsf(op2)) ? 0.0 : 1.0;
+    }
+
+    static float
+    vacgeFunc(float op1, float op2)
+    {
+        if (isSnan(op1) || isSnan(op2))
+            return 2.0;
+        return (fabsf(op1) >= fabsf(op2)) ? 0.0 : 1.0;
+    }
+}};
+
+let {{
+
+    header_output = ""
+    exec_output = ""
+
+    smallUnsignedTypes = ("uint8_t", "uint16_t", "uint32_t")
+    unsignedTypes = smallUnsignedTypes + ("uint64_t",)
+    smallSignedTypes = ("int8_t", "int16_t", "int32_t")
+    signedTypes = smallSignedTypes + ("int64_t",)
+    smallTypes = smallUnsignedTypes + smallSignedTypes
+    allTypes = unsignedTypes + signedTypes
+
+    def threeEqualRegInst(name, Name, types, rCount, op,
+                          readDest=False, pairwise=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1, srcReg2, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d.uw);
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        if pairwise:
+            eWalkCode += '''
+            for (unsigned i = 0; i < eCount; i++) {
+                Element srcElem1 = gtoh(2 * i < eCount ?
+                                        srcReg1.elements[2 * i] :
+                                        srcReg2.elements[2 * i - eCount]);
+                Element srcElem2 = gtoh(2 * i < eCount ?
+                                        srcReg1.elements[2 * i + 1] :
+                                        srcReg2.elements[2 * i + 1 - eCount]);
+                Element destElem;
+                %(readDest)s
+                %(op)s
+                destReg.elements[i] = htog(destElem);
+            }
+            ''' % { "op" : op, "readDest" : readDestCode }
+        else:
+            eWalkCode += '''
+            for (unsigned i = 0; i < eCount; i++) {
+                Element srcElem1 = gtoh(srcReg1.elements[i]);
+                Element srcElem2 = gtoh(srcReg2.elements[i]);
+                Element destElem;
+                %(readDest)s
+                %(op)s
+                destReg.elements[i] = htog(destElem);
+            }
+            ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegRegOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def threeEqualRegInstFp(name, Name, types, rCount, op,
+                            readDest=False, pairwise=False, toInt=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        typedef FloatReg FloatVect[rCount];
+        FloatVect srcRegs1, srcRegs2;
+        '''
+        if toInt:
+            eWalkCode += 'RegVect destRegs;\n'
+        else:
+            eWalkCode += 'FloatVect destRegs;\n'
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcRegs1[%(reg)d] = FpOp1P%(reg)d;
+                srcRegs2[%(reg)d] = FpOp2P%(reg)d;
+            ''' % { "reg" : reg }
+            if readDest:
+                if toInt:
+                    eWalkCode += '''
+                        destRegs.regs[%(reg)d] = FpDestP%(reg)d.bits;
+                    ''' % { "reg" : reg }
+                else:
+                    eWalkCode += '''
+                        destRegs[%(reg)d] = FpDestP%(reg)d;
+                    ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destReg = destRegs[r];'
+        destType = 'FloatReg'
+        writeDest = 'destRegs[r] = destReg;'
+        if toInt:
+            destType = 'FloatRegBits'
+            writeDest = 'destRegs.regs[r] = destReg;'
+        if pairwise:
+            eWalkCode += '''
+            for (unsigned r = 0; r < rCount; r++) {
+                FloatReg srcReg1 = (2 * r < rCount) ?
+                    srcRegs1[2 * r] : srcRegs2[2 * r - rCount];
+                FloatReg srcReg2 = (2 * r < rCount) ?
+                    srcRegs1[2 * r + 1] : srcRegs2[2 * r + 1 - rCount];
+                %(destType)s destReg;
+                %(readDest)s
+                %(op)s
+                %(writeDest)s
+            }
+            ''' % { "op" : op,
+                    "readDest" : readDestCode,
+                    "destType" : destType,
+                    "writeDest" : writeDest }
+        else:
+            eWalkCode += '''
+            for (unsigned r = 0; r < rCount; r++) {
+                FloatReg srcReg1 = srcRegs1[r];
+                FloatReg srcReg2 = srcRegs2[r];
+                %(destType)s destReg;
+                %(readDest)s
+                %(op)s
+                %(writeDest)s
+            }
+            ''' % { "op" : op,
+                    "readDest" : readDestCode,
+                    "destType" : destType,
+                    "writeDest" : writeDest }
+        for reg in range(rCount):
+            if toInt:
+                eWalkCode += '''
+                FpDestP%(reg)d.uw = destRegs.regs[%(reg)d];
+                ''' % { "reg" : reg }
+            else:
+                eWalkCode += '''
+                FpDestP%(reg)d = destRegs[%(reg)d];
+                ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "FpRegRegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegRegOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def threeUnequalRegInst(name, Name, types, op,
+                            bigSrc1, bigSrc2, bigDest, readDest):
+        global header_output, exec_output
+        src1Cnt = src2Cnt = destCnt = 2
+        src1Prefix = src2Prefix = destPrefix = ''
+        if bigSrc1:
+            src1Cnt = 4
+            src1Prefix = 'Big'
+        if bigSrc2:
+            src2Cnt = 4
+            src2Prefix = 'Big'
+        if bigDest:
+            destCnt = 4
+            destPrefix = 'Big'
+        eWalkCode = '''
+            %sRegVect srcReg1;
+            %sRegVect srcReg2;
+            %sRegVect destReg;
+        ''' % (src1Prefix, src2Prefix, destPrefix)
+        for reg in range(src1Cnt):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+        for reg in range(src2Cnt):
+            eWalkCode += '''
+                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d.uw);
+            ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(destCnt):
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            %(src1Prefix)sElement srcElem1 = gtoh(srcReg1.elements[i]);
+            %(src1Prefix)sElement srcElem2 = gtoh(srcReg2.elements[i]);
+            %(destPrefix)sElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode,
+                "src1Prefix" : src1Prefix, "src2Prefix" : src2Prefix,
+                "destPrefix" : destPrefix }
+        for reg in range(destCnt):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegRegOpDeclare.subst(iop)
+        exec_output += NeonUnequalRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def threeRegNarrowInst(name, Name, types, op, readDest=False):
+        threeUnequalRegInst(name, Name, types, op,
+                            True, True, False, readDest)
+
+    def threeRegLongInst(name, Name, types, op, readDest=False):
+        threeUnequalRegInst(name, Name, types, op,
+                            False, False, True, readDest)
+
+    def threeRegWideInst(name, Name, types, op, readDest=False):
+        threeUnequalRegInst(name, Name, types, op,
+                            True, False, True, readDest)
+
+    def twoEqualRegInst(name, Name, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1, srcReg2, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d.uw);
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        assert(imm >= 0 && imm < eCount);
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            Element srcElem2 = gtoh(srcReg2.elements[imm]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegLongInst(name, Name, types, op, readDest=False):
+        global header_output, exec_output
+        rCount = 2
+        eWalkCode = '''
+        RegVect srcReg1, srcReg2;
+        BigRegVect destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d.uw);;
+            ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(2 * rCount):
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        assert(imm >= 0 && imm < eCount);
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            Element srcElem2 = gtoh(srcReg2.elements[imm]);
+            BigElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(2 * rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonUnequalRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoEqualRegInstFp(name, Name, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        typedef FloatReg FloatVect[rCount];
+        FloatVect srcRegs1, srcRegs2, destRegs;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcRegs1[%(reg)d] = FpOp1P%(reg)d;
+                srcRegs2[%(reg)d] = FpOp2P%(reg)d;
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                    destRegs[%(reg)d] = FpDestP%(reg)d;
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destReg = destRegs[i];'
+        eWalkCode += '''
+        assert(imm >= 0 && imm < rCount);
+        for (unsigned i = 0; i < rCount; i++) {
+            FloatReg srcReg1 = srcRegs1[i];
+            FloatReg srcReg2 = srcRegs2[imm];
+            FloatReg destReg;
+            %(readDest)s
+            %(op)s
+            destRegs[i] = destReg;
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d = destRegs[%(reg)d];
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "FpRegRegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegShiftInst(name, Name, types, rCount, op,
+            readDest=False, toInt=False, fromInt=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcRegs1, destRegs;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcRegs1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                    destRegs.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destRegs.elements[i]);'
+            if toInt:
+                readDestCode = 'destReg = gtoh(destRegs.regs[i]);'
+        readOpCode = 'Element srcElem1 = gtoh(srcRegs1.elements[i]);'
+        if fromInt:
+            readOpCode = 'FloatRegBits srcReg1 = gtoh(srcRegs1.regs[i]);'
+        declDest = 'Element destElem;'
+        writeDestCode = 'destRegs.elements[i] = htog(destElem);'
+        if toInt:
+            declDest = 'FloatRegBits destReg;'
+            writeDestCode = 'destRegs.regs[i] = htog(destReg);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            %(readOp)s
+            %(declDest)s
+            %(readDest)s
+            %(op)s
+            %(writeDest)s
+        }
+        ''' % { "readOp" : readOpCode,
+                "declDest" : declDest,
+                "readDest" : readDestCode,
+                "op" : op,
+                "writeDest" : writeDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destRegs.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegNarrowShiftInst(name, Name, types, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        BigRegVect srcReg1;
+        RegVect destReg;
+        '''
+        for reg in range(4):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(2):
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            BigElement srcElem1 = gtoh(srcReg1.elements[i]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(2):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonUnequalRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegLongShiftInst(name, Name, types, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1;
+        BigRegVect destReg;
+        '''
+        for reg in range(2):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(4):
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destReg = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            BigElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(4):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonUnequalRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegMiscInst(name, Name, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            unsigned j = i;
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[j] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegMiscScInst(name, Name, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(srcReg1.elements[imm]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegMiscScramble(name, Name, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+                destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += op
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            FpOp1P%(reg)d.uw = gtoh(srcReg1.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegMiscInstFp(name, Name, types, rCount, op,
+            readDest=False, toInt=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        typedef FloatReg FloatVect[rCount];
+        FloatVect srcRegs1;
+        '''
+        if toInt:
+            eWalkCode += 'RegVect destRegs;\n'
+        else:
+            eWalkCode += 'FloatVect destRegs;\n'
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcRegs1[%(reg)d] = FpOp1P%(reg)d;
+            ''' % { "reg" : reg }
+            if readDest:
+                if toInt:
+                    eWalkCode += '''
+                        destRegs.regs[%(reg)d] = FpDestP%(reg)d.bits;
+                    ''' % { "reg" : reg }
+                else:
+                    eWalkCode += '''
+                        destRegs[%(reg)d] = FpDestP%(reg)d;
+                    ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destReg = destRegs[i];'
+        destType = 'FloatReg'
+        writeDest = 'destRegs[r] = destReg;'
+        if toInt:
+            destType = 'FloatRegBits'
+            writeDest = 'destRegs.regs[r] = destReg;'
+        eWalkCode += '''
+        for (unsigned r = 0; r < rCount; r++) {
+            FloatReg srcReg1 = srcRegs1[r];
+            %(destType)s destReg;
+            %(readDest)s
+            %(op)s
+            %(writeDest)s
+        }
+        ''' % { "op" : op,
+                "readDest" : readDestCode,
+                "destType" : destType,
+                "writeDest" : writeDest }
+        for reg in range(rCount):
+            if toInt:
+                eWalkCode += '''
+                FpDestP%(reg)d.uw = destRegs.regs[%(reg)d];
+                ''' % { "reg" : reg }
+            else:
+                eWalkCode += '''
+                FpDestP%(reg)d = destRegs[%(reg)d];
+                ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "FpRegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegCondenseInst(name, Name, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcRegs;
+        BigRegVect destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcRegs.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+            if readDest:
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            Element srcElem1 = gtoh(srcRegs.elements[2 * i]);
+            Element srcElem2 = gtoh(srcRegs.elements[2 * i + 1]);
+            BigElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegOpDeclare.subst(iop)
+        exec_output += NeonUnequalRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegNarrowMiscInst(name, Name, types, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        BigRegVect srcReg1;
+        RegVect destReg;
+        '''
+        for reg in range(4):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(2):
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            BigElement srcElem1 = gtoh(srcReg1.elements[i]);
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(2):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegOpDeclare.subst(iop)
+        exec_output += NeonUnequalRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def oneRegImmInst(name, Name, types, rCount, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect destReg;
+        '''
+        if readDest:
+            for reg in range(rCount):
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destElem = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegImmOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    def twoRegLongMiscInst(name, Name, types, op, readDest=False):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1;
+        BigRegVect destReg;
+        '''
+        for reg in range(2):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+            ''' % { "reg" : reg }
+        if readDest:
+            for reg in range(4):
+                eWalkCode += '''
+                    destReg.regs[%(reg)d] = htog(FpDestP%(reg)d.uw);
+                ''' % { "reg" : reg }
+        readDestCode = ''
+        if readDest:
+            readDestCode = 'destReg = gtoh(destReg.elements[i]);'
+        eWalkCode += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = gtoh(srcReg1.elements[i]);
+            BigElement destElem;
+            %(readDest)s
+            %(op)s
+            destReg.elements[i] = htog(destElem);
+        }
+        ''' % { "op" : op, "readDest" : readDestCode }
+        for reg in range(4):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": 2,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegOpDeclare.subst(iop)
+        exec_output += NeonUnequalRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    vhaddCode = '''
+        Element carryBit =
+            (((unsigned)srcElem1 & 0x1) +
+             ((unsigned)srcElem2 & 0x1)) >> 1;
+        // Use division instead of a shift to ensure the sign extension works
+        // right. The compiler will figure out if it can be a shift. Mask the
+        // inputs so they get truncated correctly.
+        destElem = (((srcElem1 & ~(Element)1) / 2) +
+                    ((srcElem2 & ~(Element)1) / 2)) + carryBit;
+    '''
+    threeEqualRegInst("vhadd", "VhaddD", allTypes, 2, vhaddCode)
+    threeEqualRegInst("vhadd", "VhaddQ", allTypes, 4, vhaddCode)
+
+    vrhaddCode = '''
+        Element carryBit =
+            (((unsigned)srcElem1 & 0x1) +
+             ((unsigned)srcElem2 & 0x1) + 1) >> 1;
+        // Use division instead of a shift to ensure the sign extension works
+        // right. The compiler will figure out if it can be a shift. Mask the
+        // inputs so they get truncated correctly.
+        destElem = (((srcElem1 & ~(Element)1) / 2) +
+                    ((srcElem2 & ~(Element)1) / 2)) + carryBit;
+    '''
+    threeEqualRegInst("vrhadd", "VrhaddD", allTypes, 2, vrhaddCode)
+    threeEqualRegInst("vrhadd", "VrhaddQ", allTypes, 4, vrhaddCode)
+
+    vhsubCode = '''
+        Element barrowBit =
+            (((srcElem1 & 0x1) - (srcElem2 & 0x1)) >> 1) & 0x1;
+        // Use division instead of a shift to ensure the sign extension works
+        // right. The compiler will figure out if it can be a shift. Mask the
+        // inputs so they get truncated correctly.
+        destElem = (((srcElem1 & ~(Element)1) / 2) -
+                    ((srcElem2 & ~(Element)1) / 2)) - barrowBit;
+    '''
+    threeEqualRegInst("vhsub", "VhsubD", allTypes, 2, vhsubCode)
+    threeEqualRegInst("vhsub", "VhsubQ", allTypes, 4, vhsubCode)
+
+    vandCode = '''
+        destElem = srcElem1 & srcElem2;
+    '''
+    threeEqualRegInst("vand", "VandD", unsignedTypes, 2, vandCode)
+    threeEqualRegInst("vand", "VandQ", unsignedTypes, 4, vandCode)
+
+    vbicCode = '''
+        destElem = srcElem1 & ~srcElem2;
+    '''
+    threeEqualRegInst("vbic", "VbicD", unsignedTypes, 2, vbicCode)
+    threeEqualRegInst("vbic", "VbicQ", unsignedTypes, 4, vbicCode)
+
+    vorrCode = '''
+        destElem = srcElem1 | srcElem2;
+    '''
+    threeEqualRegInst("vorr", "VorrD", unsignedTypes, 2, vorrCode)
+    threeEqualRegInst("vorr", "VorrQ", unsignedTypes, 4, vorrCode)
+
+    threeEqualRegInst("vmov", "VmovD", unsignedTypes, 2, vorrCode)
+    threeEqualRegInst("vmov", "VmovQ", unsignedTypes, 4, vorrCode)
+
+    vornCode = '''
+        destElem = srcElem1 | ~srcElem2;
+    '''
+    threeEqualRegInst("vorn", "VornD", unsignedTypes, 2, vornCode)
+    threeEqualRegInst("vorn", "VornQ", unsignedTypes, 4, vornCode)
+
+    veorCode = '''
+        destElem = srcElem1 ^ srcElem2;
+    '''
+    threeEqualRegInst("veor", "VeorD", unsignedTypes, 2, veorCode)
+    threeEqualRegInst("veor", "VeorQ", unsignedTypes, 4, veorCode)
+
+    vbifCode = '''
+        destElem = (destElem & srcElem2) | (srcElem1 & ~srcElem2);
+    '''
+    threeEqualRegInst("vbif", "VbifD", unsignedTypes, 2, vbifCode, True)
+    threeEqualRegInst("vbif", "VbifQ", unsignedTypes, 4, vbifCode, True)
+    vbitCode = '''
+        destElem = (srcElem1 & srcElem2) | (destElem & ~srcElem2);
+    '''
+    threeEqualRegInst("vbit", "VbitD", unsignedTypes, 2, vbitCode, True)
+    threeEqualRegInst("vbit", "VbitQ", unsignedTypes, 4, vbitCode, True)
+    vbslCode = '''
+        destElem = (srcElem1 & destElem) | (srcElem2 & ~destElem);
+    '''
+    threeEqualRegInst("vbsl", "VbslD", unsignedTypes, 2, vbslCode, True)
+    threeEqualRegInst("vbsl", "VbslQ", unsignedTypes, 4, vbslCode, True)
+
+    vmaxCode = '''
+        destElem = (srcElem1 > srcElem2) ? srcElem1 : srcElem2;
+    '''
+    threeEqualRegInst("vmax", "VmaxD", allTypes, 2, vmaxCode)
+    threeEqualRegInst("vmax", "VmaxQ", allTypes, 4, vmaxCode)
+
+    vminCode = '''
+        destElem = (srcElem1 < srcElem2) ? srcElem1 : srcElem2;
+    '''
+    threeEqualRegInst("vmin", "VminD", allTypes, 2, vminCode)
+    threeEqualRegInst("vmin", "VminQ", allTypes, 4, vminCode)
+
+    vaddCode = '''
+        destElem = srcElem1 + srcElem2;
+    '''
+    threeEqualRegInst("vadd", "NVaddD", unsignedTypes, 2, vaddCode)
+    threeEqualRegInst("vadd", "NVaddQ", unsignedTypes, 4, vaddCode)
+
+    threeEqualRegInst("vpadd", "NVpaddD", unsignedTypes,
+                      2, vaddCode, pairwise=True)
+    threeEqualRegInst("vpadd", "NVpaddQ", unsignedTypes,
+                      4, vaddCode, pairwise=True)
+    vaddlwCode = '''
+        destElem = (BigElement)srcElem1 + (BigElement)srcElem2;
+    '''
+    threeRegLongInst("vaddl", "Vaddl", smallTypes, vaddlwCode)
+    threeRegWideInst("vaddw", "Vaddw", smallTypes, vaddlwCode)
+    vaddhnCode = '''
+        destElem = ((BigElement)srcElem1 + (BigElement)srcElem2) >>
+                   (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInst("vaddhn", "Vaddhn", smallTypes, vaddhnCode)
+    vraddhnCode = '''
+        destElem = ((BigElement)srcElem1 + (BigElement)srcElem2 +
+                    ((BigElement)1 << (sizeof(Element) * 8 - 1))) >>
+                   (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInst("vraddhn", "Vraddhn", smallTypes, vraddhnCode)
+
+    vsubCode = '''
+        destElem = srcElem1 - srcElem2;
+    '''
+    threeEqualRegInst("vsub", "NVsubD", unsignedTypes, 2, vsubCode)
+    threeEqualRegInst("vsub", "NVsubQ", unsignedTypes, 4, vsubCode)
+    vsublwCode = '''
+        destElem = (BigElement)srcElem1 - (BigElement)srcElem2;
+    '''
+    threeRegLongInst("vsubl", "Vsubl", smallTypes, vsublwCode)
+    threeRegWideInst("vsubw", "Vsubw", smallTypes, vsublwCode)
+
+    vqaddUCode = '''
+        destElem = srcElem1 + srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (destElem < srcElem1 || destElem < srcElem2) {
+            destElem = (Element)(-1);
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqadd", "VqaddUD", unsignedTypes, 2, vqaddUCode)
+    threeEqualRegInst("vqadd", "VqaddUQ", unsignedTypes, 4, vqaddUCode)
+    vsubhnCode = '''
+        destElem = ((BigElement)srcElem1 - (BigElement)srcElem2) >>
+                   (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInst("vsubhn", "Vsubhn", smallTypes, vsubhnCode)
+    vrsubhnCode = '''
+        destElem = ((BigElement)srcElem1 - (BigElement)srcElem2 +
+                    ((BigElement)1 << (sizeof(Element) * 8 - 1))) >>
+                   (sizeof(Element) * 8);
+    '''
+    threeRegNarrowInst("vrsubhn", "Vrsubhn", smallTypes, vrsubhnCode)
+
+    vqaddSCode = '''
+        destElem = srcElem1 + srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        bool negDest = (destElem < 0);
+        bool negSrc1 = (srcElem1 < 0);
+        bool negSrc2 = (srcElem2 < 0);
+        if ((negDest != negSrc1) && (negSrc1 == negSrc2)) {
+            destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+            if (negDest)
+                destElem -= 1;
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqadd", "VqaddSD", signedTypes, 2, vqaddSCode)
+    threeEqualRegInst("vqadd", "VqaddSQ", signedTypes, 4, vqaddSCode)
+
+    vqsubUCode = '''
+        destElem = srcElem1 - srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (destElem > srcElem1) {
+            destElem = 0;
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqsub", "VqsubUD", unsignedTypes, 2, vqsubUCode)
+    threeEqualRegInst("vqsub", "VqsubUQ", unsignedTypes, 4, vqsubUCode)
+
+    vqsubSCode = '''
+        destElem = srcElem1 - srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        bool negDest = (destElem < 0);
+        bool negSrc1 = (srcElem1 < 0);
+        bool posSrc2 = (srcElem2 >= 0);
+        if ((negDest != negSrc1) && (negSrc1 == posSrc2)) {
+            destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+            if (negDest)
+                destElem -= 1;
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqsub", "VqsubSD", signedTypes, 2, vqsubSCode)
+    threeEqualRegInst("vqsub", "VqsubSQ", signedTypes, 4, vqsubSCode)
+
+    vcgtCode = '''
+        destElem =  (srcElem1 > srcElem2) ? (Element)(-1) : 0;
+    '''
+    threeEqualRegInst("vcgt", "VcgtD", allTypes, 2, vcgtCode)
+    threeEqualRegInst("vcgt", "VcgtQ", allTypes, 4, vcgtCode)
+
+    vcgeCode = '''
+        destElem =  (srcElem1 >= srcElem2) ? (Element)(-1) : 0;
+    '''
+    threeEqualRegInst("vcge", "VcgeD", allTypes, 2, vcgeCode)
+    threeEqualRegInst("vcge", "VcgeQ", allTypes, 4, vcgeCode)
+
+    vceqCode = '''
+        destElem =  (srcElem1 == srcElem2) ? (Element)(-1) : 0;
+    '''
+    threeEqualRegInst("vceq", "VceqD", unsignedTypes, 2, vceqCode)
+    threeEqualRegInst("vceq", "VceqQ", unsignedTypes, 4, vceqCode)
+
+    vshlCode = '''
+        int16_t shiftAmt = (int8_t)srcElem2;
+        if (shiftAmt < 0) {
+            shiftAmt = -shiftAmt;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                shiftAmt = sizeof(Element) * 8 - 1;
+                destElem = 0;
+            } else {
+                destElem = (srcElem1 >> shiftAmt);
+            }
+            // Make sure the right shift sign extended when it should.
+            if (srcElem1 < 0 && destElem >= 0) {
+                destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                             1 - shiftAmt));
+            }
+        } else {
+            if (shiftAmt >= sizeof(Element) * 8) {
+                destElem = 0;
+            } else {
+                destElem = srcElem1 << shiftAmt;
+            }
+        }
+    '''
+    threeEqualRegInst("vshl", "VshlD", allTypes, 2, vshlCode)
+    threeEqualRegInst("vshl", "VshlQ", allTypes, 4, vshlCode)
+
+    vrshlCode = '''
+        int16_t shiftAmt = (int8_t)srcElem2;
+        if (shiftAmt < 0) {
+            shiftAmt = -shiftAmt;
+            Element rBit = 0;
+            if (shiftAmt <= sizeof(Element) * 8)
+                rBit = bits(srcElem1, shiftAmt - 1);
+            if (shiftAmt > sizeof(Element) * 8 && srcElem1 < 0)
+                rBit = 1;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                shiftAmt = sizeof(Element) * 8 - 1;
+                destElem = 0;
+            } else {
+                destElem = (srcElem1 >> shiftAmt);
+            }
+            // Make sure the right shift sign extended when it should.
+            if (srcElem1 < 0 && destElem >= 0) {
+                destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                             1 - shiftAmt));
+            }
+            destElem += rBit;
+        } else if (shiftAmt > 0) {
+            if (shiftAmt >= sizeof(Element) * 8) {
+                destElem = 0;
+            } else {
+                destElem = srcElem1 << shiftAmt;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+    '''
+    threeEqualRegInst("vrshl", "VrshlD", allTypes, 2, vrshlCode)
+    threeEqualRegInst("vrshl", "VrshlQ", allTypes, 4, vrshlCode)
+
+    vqshlUCode = '''
+        int16_t shiftAmt = (int8_t)srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (shiftAmt < 0) {
+            shiftAmt = -shiftAmt;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                shiftAmt = sizeof(Element) * 8 - 1;
+                destElem = 0;
+            } else {
+                destElem = (srcElem1 >> shiftAmt);
+            }
+            // Make sure the right shift sign extended when it should.
+            if (srcElem1 < 0 && destElem >= 0) {
+                destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                             1 - shiftAmt));
+            }
+        } else if (shiftAmt > 0) {
+            if (shiftAmt >= sizeof(Element) * 8) {
+                if (srcElem1 != 0) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = 0;
+                }
+            } else {
+                if (bits(srcElem1, sizeof(Element) * 8 - 1,
+                            sizeof(Element) * 8 - shiftAmt)) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = srcElem1 << shiftAmt;
+                }
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqshl", "VqshlUD", unsignedTypes, 2, vqshlUCode)
+    threeEqualRegInst("vqshl", "VqshlUQ", unsignedTypes, 4, vqshlUCode)
+
+    vqshlSCode = '''
+        int16_t shiftAmt = (int8_t)srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (shiftAmt < 0) {
+            shiftAmt = -shiftAmt;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                shiftAmt = sizeof(Element) * 8 - 1;
+                destElem = 0;
+            } else {
+                destElem = (srcElem1 >> shiftAmt);
+            }
+            // Make sure the right shift sign extended when it should.
+            if (srcElem1 < 0 && destElem >= 0) {
+                destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                             1 - shiftAmt));
+            }
+        } else if (shiftAmt > 0) {
+            bool sat = false;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                if (srcElem1 != 0)
+                    sat = true;
+                else
+                    destElem = 0;
+            } else {
+                if (bits(srcElem1, sizeof(Element) * 8 - 1,
+                            sizeof(Element) * 8 - 1 - shiftAmt) !=
+                        ((srcElem1 < 0) ? mask(shiftAmt + 1) : 0)) {
+                    sat = true;
+                } else {
+                    destElem = srcElem1 << shiftAmt;
+                }
+            }
+            if (sat) {
+                fpscr.qc = 1;
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqshl", "VqshlSD", signedTypes, 2, vqshlSCode)
+    threeEqualRegInst("vqshl", "VqshlSQ", signedTypes, 4, vqshlSCode)
+
+    vqrshlUCode = '''
+        int16_t shiftAmt = (int8_t)srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (shiftAmt < 0) {
+            shiftAmt = -shiftAmt;
+            Element rBit = 0;
+            if (shiftAmt <= sizeof(Element) * 8)
+                rBit = bits(srcElem1, shiftAmt - 1);
+            if (shiftAmt > sizeof(Element) * 8 && srcElem1 < 0)
+                rBit = 1;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                shiftAmt = sizeof(Element) * 8 - 1;
+                destElem = 0;
+            } else {
+                destElem = (srcElem1 >> shiftAmt);
+            }
+            // Make sure the right shift sign extended when it should.
+            if (srcElem1 < 0 && destElem >= 0) {
+                destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                             1 - shiftAmt));
+            }
+            destElem += rBit;
+        } else {
+            if (shiftAmt >= sizeof(Element) * 8) {
+                if (srcElem1 != 0) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = 0;
+                }
+            } else {
+                if (bits(srcElem1, sizeof(Element) * 8 - 1,
+                            sizeof(Element) * 8 - shiftAmt)) {
+                    destElem = mask(sizeof(Element) * 8);
+                    fpscr.qc = 1;
+                } else {
+                    destElem = srcElem1 << shiftAmt;
+                }
+            }
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqrshl", "VqrshlUD", unsignedTypes, 2, vqrshlUCode)
+    threeEqualRegInst("vqrshl", "VqrshlUQ", unsignedTypes, 4, vqrshlUCode)
+
+    vqrshlSCode = '''
+        int16_t shiftAmt = (int8_t)srcElem2;
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (shiftAmt < 0) {
+            shiftAmt = -shiftAmt;
+            Element rBit = 0;
+            if (shiftAmt <= sizeof(Element) * 8)
+                rBit = bits(srcElem1, shiftAmt - 1);
+            if (shiftAmt > sizeof(Element) * 8 && srcElem1 < 0)
+                rBit = 1;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                shiftAmt = sizeof(Element) * 8 - 1;
+                destElem = 0;
+            } else {
+                destElem = (srcElem1 >> shiftAmt);
+            }
+            // Make sure the right shift sign extended when it should.
+            if (srcElem1 < 0 && destElem >= 0) {
+                destElem |= -((Element)1 << (sizeof(Element) * 8 -
+                                             1 - shiftAmt));
+            }
+            destElem += rBit;
+        } else if (shiftAmt > 0) {
+            bool sat = false;
+            if (shiftAmt >= sizeof(Element) * 8) {
+                if (srcElem1 != 0)
+                    sat = true;
+                else
+                    destElem = 0;
+            } else {
+                if (bits(srcElem1, sizeof(Element) * 8 - 1,
+                            sizeof(Element) * 8 - 1 - shiftAmt) !=
+                        ((srcElem1 < 0) ? mask(shiftAmt + 1) : 0)) {
+                    sat = true;
+                } else {
+                    destElem = srcElem1 << shiftAmt;
+                }
+            }
+            if (sat) {
+                fpscr.qc = 1;
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqrshl", "VqrshlSD", signedTypes, 2, vqrshlSCode)
+    threeEqualRegInst("vqrshl", "VqrshlSQ", signedTypes, 4, vqrshlSCode)
+
+    vabaCode = '''
+        destElem += (srcElem1 > srcElem2) ? (srcElem1 - srcElem2) :
+                                            (srcElem2 - srcElem1);
+    '''
+    threeEqualRegInst("vaba", "VabaD", allTypes, 2, vabaCode, True)
+    threeEqualRegInst("vaba", "VabaQ", allTypes, 4, vabaCode, True)
+    vabalCode = '''
+        destElem += (srcElem1 > srcElem2) ?
+            ((BigElement)srcElem1 - (BigElement)srcElem2) :
+            ((BigElement)srcElem2 - (BigElement)srcElem1);
+    '''
+    threeRegLongInst("vabal", "Vabal", smallTypes, vabalCode, True)
+
+    vabdCode = '''
+        destElem = (srcElem1 > srcElem2) ? (srcElem1 - srcElem2) :
+                                           (srcElem2 - srcElem1);
+    '''
+    threeEqualRegInst("vabd", "VabdD", allTypes, 2, vabdCode)
+    threeEqualRegInst("vabd", "VabdQ", allTypes, 4, vabdCode)
+    vabdlCode = '''
+        destElem = (srcElem1 > srcElem2) ?
+            ((BigElement)srcElem1 - (BigElement)srcElem2) :
+            ((BigElement)srcElem2 - (BigElement)srcElem1);
+    '''
+    threeRegLongInst("vabdl", "Vabdl", smallTypes, vabdlCode)
+
+    vtstCode = '''
+        destElem = (srcElem1 & srcElem2) ? (Element)(-1) : 0;
+    '''
+    threeEqualRegInst("vtst", "VtstD", unsignedTypes, 2, vtstCode)
+    threeEqualRegInst("vtst", "VtstQ", unsignedTypes, 4, vtstCode)
+
+    vmulCode = '''
+        destElem = srcElem1 * srcElem2;
+    '''
+    threeEqualRegInst("vmul", "NVmulD", allTypes, 2, vmulCode)
+    threeEqualRegInst("vmul", "NVmulQ", allTypes, 4, vmulCode)
+    vmullCode = '''
+        destElem = (BigElement)srcElem1 * (BigElement)srcElem2;
+    '''
+    threeRegLongInst("vmull", "Vmull", smallTypes, vmullCode)
+
+    vmlaCode = '''
+        destElem = destElem + srcElem1 * srcElem2;
+    '''
+    threeEqualRegInst("vmla", "NVmlaD", allTypes, 2, vmlaCode, True)
+    threeEqualRegInst("vmla", "NVmlaQ", allTypes, 4, vmlaCode, True)
+    vmlalCode = '''
+        destElem = destElem + (BigElement)srcElem1 * (BigElement)srcElem2;
+    '''
+    threeRegLongInst("vmlal", "Vmlal", smallTypes, vmlalCode, True)
+
+    vqdmlalCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
+        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element halfNeg = maxNeg / 2;
+        if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == maxNeg && srcElem2 == halfNeg)) {
+            midElem = ~((BigElement)maxNeg << (sizeof(Element) * 8));
+            fpscr.qc = 1;
+        }
+        bool negPreDest = (destElem < 0);
+        destElem += midElem;
+        bool negDest = (destElem < 0);
+        bool negMid = (midElem < 0);
+        if (negPreDest == negMid && negMid != negDest) {
+            destElem = mask(sizeof(BigElement) * 8 - 1);
+            if (negPreDest)
+                destElem = ~destElem;
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeRegLongInst("vqdmlal", "Vqdmlal", smallTypes, vqdmlalCode, True)
+
+    vqdmlslCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
+        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element halfNeg = maxNeg / 2;
+        if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == maxNeg && srcElem2 == halfNeg)) {
+            midElem = ~((BigElement)maxNeg << (sizeof(Element) * 8));
+            fpscr.qc = 1;
+        }
+        bool negPreDest = (destElem < 0);
+        destElem -= midElem;
+        bool negDest = (destElem < 0);
+        bool posMid = (midElem > 0);
+        if (negPreDest == posMid && posMid != negDest) {
+            destElem = mask(sizeof(BigElement) * 8 - 1);
+            if (negPreDest)
+                destElem = ~destElem;
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeRegLongInst("vqdmlsl", "Vqdmlsl", smallTypes, vqdmlslCode, True)
+
+    vqdmullCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
+        if (srcElem1 == srcElem2 &&
+                srcElem1 == (Element)((Element)1 <<
+                    (Element)(sizeof(Element) * 8 - 1))) {
+            destElem = ~((BigElement)srcElem1 << (sizeof(Element) * 8));
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeRegLongInst("vqdmull", "Vqdmull", smallTypes, vqdmullCode)
+
+    vmlsCode = '''
+        destElem = destElem - srcElem1 * srcElem2;
+    '''
+    threeEqualRegInst("vmls", "NVmlsD", allTypes, 2, vmlsCode, True)
+    threeEqualRegInst("vmls", "NVmlsQ", allTypes, 4, vmlsCode, True)
+    vmlslCode = '''
+        destElem = destElem - (BigElement)srcElem1 * (BigElement)srcElem2;
+    '''
+    threeRegLongInst("vmlsl", "Vmlsl", smallTypes, vmlslCode, True)
+
+    vmulpCode = '''
+        destElem = 0;
+        for (unsigned j = 0; j < sizeof(Element) * 8; j++) {
+            if (bits(srcElem2, j))
+                destElem ^= srcElem1 << j;
+        }
+    '''
+    threeEqualRegInst("vmul", "NVmulpD", unsignedTypes, 2, vmulpCode)
+    threeEqualRegInst("vmul", "NVmulpQ", unsignedTypes, 4, vmulpCode)
+    vmullpCode = '''
+        destElem = 0;
+        for (unsigned j = 0; j < sizeof(Element) * 8; j++) {
+            if (bits(srcElem2, j))
+                destElem ^= (BigElement)srcElem1 << j;
+        }
+    '''
+    threeRegLongInst("vmull", "Vmullp", smallUnsignedTypes, vmullpCode)
+
+    threeEqualRegInst("vpmax", "VpmaxD", allTypes, 2, vmaxCode, pairwise=True)
+    threeEqualRegInst("vpmax", "VpmaxQ", allTypes, 4, vmaxCode, pairwise=True)
+
+    threeEqualRegInst("vpmin", "VpminD", allTypes, 2, vminCode, pairwise=True)
+    threeEqualRegInst("vpmin", "VpminQ", allTypes, 4, vminCode, pairwise=True)
+
+    vqdmulhCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2) >>
+                   (sizeof(Element) * 8);
+        if (srcElem1 == srcElem2 &&
+                srcElem1 == (Element)((Element)1 <<
+                    (sizeof(Element) * 8 - 1))) {
+            destElem = ~srcElem1;
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqdmulh", "VqdmulhD", smallSignedTypes, 2, vqdmulhCode)
+    threeEqualRegInst("vqdmulh", "VqdmulhQ", smallSignedTypes, 4, vqdmulhCode)
+
+    vqrdmulhCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2 +
+                    ((int64_t)1 << (sizeof(Element) * 8 - 1))) >>
+                   (sizeof(Element) * 8);
+        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element halfNeg = maxNeg / 2;
+        if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
+            (srcElem1 == maxNeg && srcElem2 == halfNeg)) {
+            if (destElem < 0) {
+                destElem = mask(sizeof(Element) * 8 - 1);
+            } else {
+                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+            }
+            fpscr.qc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInst("vqrdmulh", "VqrdmulhD",
+            smallSignedTypes, 2, vqrdmulhCode)
+    threeEqualRegInst("vqrdmulh", "VqrdmulhQ",
+            smallSignedTypes, 4, vqrdmulhCode)
+
+    vmaxfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        bool done;
+        destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
+        if (!done) {
+            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMaxS,
+                               true, true, VfpRoundNearest);
+        } else if (flushToZero(srcReg1, srcReg2)) {
+            fpscr.idc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vmax", "VmaxDFp", ("float",), 2, vmaxfpCode)
+    threeEqualRegInstFp("vmax", "VmaxQFp", ("float",), 4, vmaxfpCode)
+
+    vminfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        bool done;
+        destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
+        if (!done) {
+            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMinS,
+                               true, true, VfpRoundNearest);
+        } else if (flushToZero(srcReg1, srcReg2)) {
+            fpscr.idc = 1;
+        }
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vmin", "VminDFp", ("float",), 2, vminfpCode)
+    threeEqualRegInstFp("vmin", "VminQFp", ("float",), 4, vminfpCode)
+
+    threeEqualRegInstFp("vpmax", "VpmaxDFp", ("float",),
+                        2, vmaxfpCode, pairwise=True)
+    threeEqualRegInstFp("vpmax", "VpmaxQFp", ("float",),
+                        4, vmaxfpCode, pairwise=True)
+
+    threeEqualRegInstFp("vpmin", "VpminDFp", ("float",),
+                        2, vminfpCode, pairwise=True)
+    threeEqualRegInstFp("vpmin", "VpminQFp", ("float",),
+                        4, vminfpCode, pairwise=True)
+
+    vaddfpCode = '''
+        FPSCR fpscr = Fpscr;
+        destReg = binaryOp(fpscr, srcReg1, srcReg2, fpAddS,
+                           true, true, VfpRoundNearest);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vadd", "VaddDFp", ("float",), 2, vaddfpCode)
+    threeEqualRegInstFp("vadd", "VaddQFp", ("float",), 4, vaddfpCode)
+
+    threeEqualRegInstFp("vpadd", "VpaddDFp", ("float",),
+                        2, vaddfpCode, pairwise=True)
+    threeEqualRegInstFp("vpadd", "VpaddQFp", ("float",),
+                        4, vaddfpCode, pairwise=True)
+
+    vsubfpCode = '''
+        FPSCR fpscr = Fpscr;
+        destReg = binaryOp(fpscr, srcReg1, srcReg2, fpSubS,
+                           true, true, VfpRoundNearest);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vsub", "VsubDFp", ("float",), 2, vsubfpCode)
+    threeEqualRegInstFp("vsub", "VsubQFp", ("float",), 4, vsubfpCode)
+
+    vmulfpCode = '''
+        FPSCR fpscr = Fpscr;
+        destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMulS,
+                           true, true, VfpRoundNearest);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vmul", "NVmulDFp", ("float",), 2, vmulfpCode)
+    threeEqualRegInstFp("vmul", "NVmulQFp", ("float",), 4, vmulfpCode)
+
+    vmlafpCode = '''
+        FPSCR fpscr = Fpscr;
+        float mid = binaryOp(fpscr, srcReg1, srcReg2, fpMulS,
+                             true, true, VfpRoundNearest);
+        destReg = binaryOp(fpscr, mid, destReg, fpAddS,
+                           true, true, VfpRoundNearest);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vmla", "NVmlaDFp", ("float",), 2, vmlafpCode, True)
+    threeEqualRegInstFp("vmla", "NVmlaQFp", ("float",), 4, vmlafpCode, True)
+
+    vmlsfpCode = '''
+        FPSCR fpscr = Fpscr;
+        float mid = binaryOp(fpscr, srcReg1, srcReg2, fpMulS,
+                             true, true, VfpRoundNearest);
+        destReg = binaryOp(fpscr, destReg, mid, fpSubS,
+                           true, true, VfpRoundNearest);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vmls", "NVmlsDFp", ("float",), 2, vmlsfpCode, True)
+    threeEqualRegInstFp("vmls", "NVmlsQFp", ("float",), 4, vmlsfpCode, True)
+
+    vcgtfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, srcReg2, vcgtFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vcgt", "VcgtDFp", ("float",),
+            2, vcgtfpCode, toInt = True)
+    threeEqualRegInstFp("vcgt", "VcgtQFp", ("float",),
+            4, vcgtfpCode, toInt = True)
+
+    vcgefpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, srcReg2, vcgeFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vcge", "VcgeDFp", ("float",),
+            2, vcgefpCode, toInt = True)
+    threeEqualRegInstFp("vcge", "VcgeQFp", ("float",),
+            4, vcgefpCode, toInt = True)
+
+    vacgtfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, srcReg2, vacgtFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vacgt", "VacgtDFp", ("float",),
+            2, vacgtfpCode, toInt = True)
+    threeEqualRegInstFp("vacgt", "VacgtQFp", ("float",),
+            4, vacgtfpCode, toInt = True)
+
+    vacgefpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, srcReg2, vacgeFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vacge", "VacgeDFp", ("float",),
+            2, vacgefpCode, toInt = True)
+    threeEqualRegInstFp("vacge", "VacgeQFp", ("float",),
+            4, vacgefpCode, toInt = True)
+
+    vceqfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, srcReg2, vceqFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vceq", "VceqDFp", ("float",),
+            2, vceqfpCode, toInt = True)
+    threeEqualRegInstFp("vceq", "VceqQFp", ("float",),
+            4, vceqfpCode, toInt = True)
+
+    vrecpsCode = '''
+        FPSCR fpscr = Fpscr;
+        destReg = binaryOp(fpscr, srcReg1, srcReg2, fpRecpsS,
+                           true, true, VfpRoundNearest);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vrecps", "VrecpsDFp", ("float",), 2, vrecpsCode)
+    threeEqualRegInstFp("vrecps", "VrecpsQFp", ("float",), 4, vrecpsCode)
+
+    vrsqrtsCode = '''
+        FPSCR fpscr = Fpscr;
+        destReg = binaryOp(fpscr, srcReg1, srcReg2, fpRSqrtsS,
+                           true, true, VfpRoundNearest);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vrsqrts", "VrsqrtsDFp", ("float",), 2, vrsqrtsCode)
+    threeEqualRegInstFp("vrsqrts", "VrsqrtsQFp", ("float",), 4, vrsqrtsCode)
+
+    vabdfpCode = '''
+        FPSCR fpscr = Fpscr;
+        float mid = binaryOp(fpscr, srcReg1, srcReg2, fpSubS,
+                             true, true, VfpRoundNearest);
+        destReg = fabs(mid);
+        Fpscr = fpscr;
+    '''
+    threeEqualRegInstFp("vabd", "VabdDFp", ("float",), 2, vabdfpCode)
+    threeEqualRegInstFp("vabd", "VabdQFp", ("float",), 4, vabdfpCode)
+
+    twoEqualRegInst("vmla", "VmlasD", unsignedTypes, 2, vmlaCode, True)
+    twoEqualRegInst("vmla", "VmlasQ", unsignedTypes, 4, vmlaCode, True)
+    twoEqualRegInstFp("vmla", "VmlasDFp", ("float",), 2, vmlafpCode, True)
+    twoEqualRegInstFp("vmla", "VmlasQFp", ("float",), 4, vmlafpCode, True)
+    twoRegLongInst("vmlal", "Vmlals", smallTypes, vmlalCode, True)
+
+    twoEqualRegInst("vmls", "VmlssD", allTypes, 2, vmlsCode, True)
+    twoEqualRegInst("vmls", "VmlssQ", allTypes, 4, vmlsCode, True)
+    twoEqualRegInstFp("vmls", "VmlssDFp", ("float",), 2, vmlsfpCode, True)
+    twoEqualRegInstFp("vmls", "VmlssQFp", ("float",), 4, vmlsfpCode, True)
+    twoRegLongInst("vmlsl", "Vmlsls", smallTypes, vmlslCode, True)
+
+    twoEqualRegInst("vmul", "VmulsD", allTypes, 2, vmulCode)
+    twoEqualRegInst("vmul", "VmulsQ", allTypes, 4, vmulCode)
+    twoEqualRegInstFp("vmul", "VmulsDFp", ("float",), 2, vmulfpCode)
+    twoEqualRegInstFp("vmul", "VmulsQFp", ("float",), 4, vmulfpCode)
+    twoRegLongInst("vmull", "Vmulls", smallTypes, vmullCode)
+
+    twoRegLongInst("vqdmull", "Vqdmulls", smallTypes, vqdmullCode)
+    twoRegLongInst("vqdmlal", "Vqdmlals", smallTypes, vqdmlalCode, True)
+    twoRegLongInst("vqdmlsl", "Vqdmlsls", smallTypes, vqdmlslCode, True)
+    twoEqualRegInst("vqdmulh", "VqdmulhsD", smallSignedTypes, 2, vqdmulhCode)
+    twoEqualRegInst("vqdmulh", "VqdmulhsQ", smallSignedTypes, 4, vqdmulhCode)
+    twoEqualRegInst("vqrdmulh", "VqrdmulhsD",
+            smallSignedTypes, 2, vqrdmulhCode)
+    twoEqualRegInst("vqrdmulh", "VqrdmulhsQ",
+            smallSignedTypes, 4, vqrdmulhCode)
+
+    vshrCode = '''
+        if (imm >= sizeof(srcElem1) * 8) {
+            if (srcElem1 < 0)
+                destElem = -1;
+            else
+                destElem = 0;
+        } else {
+            destElem = srcElem1 >> imm;
+        }
+    '''
+    twoRegShiftInst("vshr", "NVshrD", allTypes, 2, vshrCode)
+    twoRegShiftInst("vshr", "NVshrQ", allTypes, 4, vshrCode)
+
+    vsraCode = '''
+        Element mid;;
+        if (imm >= sizeof(srcElem1) * 8) {
+            mid = (srcElem1 < 0) ? -1 : 0;
+        } else {
+            mid = srcElem1 >> imm;
+            if (srcElem1 < 0 && mid >= 0) {
+                mid |= -(mid & ((Element)1 <<
+                            (sizeof(Element) * 8 - 1 - imm)));
+            }
+        }
+        destElem += mid;
+    '''
+    twoRegShiftInst("vsra", "NVsraD", allTypes, 2, vsraCode, True)
+    twoRegShiftInst("vsra", "NVsraQ", allTypes, 4, vsraCode, True)
+
+    vrshrCode = '''
+        if (imm > sizeof(srcElem1) * 8) {
+            destElem = 0;
+        } else if (imm) {
+            Element rBit = bits(srcElem1, imm - 1);
+            destElem = ((srcElem1 >> (imm - 1)) >> 1) + rBit;
+        } else {
+            destElem = srcElem1;
+        }
+    '''
+    twoRegShiftInst("vrshr", "NVrshrD", allTypes, 2, vrshrCode)
+    twoRegShiftInst("vrshr", "NVrshrQ", allTypes, 4, vrshrCode)
+
+    vrsraCode = '''
+        if (imm > sizeof(srcElem1) * 8) {
+            destElem += 0;
+        } else if (imm) {
+            Element rBit = bits(srcElem1, imm - 1);
+            destElem += ((srcElem1 >> (imm - 1)) >> 1) + rBit;
+        } else {
+            destElem += srcElem1;
+        }
+    '''
+    twoRegShiftInst("vrsra", "NVrsraD", allTypes, 2, vrsraCode, True)
+    twoRegShiftInst("vrsra", "NVrsraQ", allTypes, 4, vrsraCode, True)
+
+    vsriCode = '''
+        if (imm >= sizeof(Element) * 8)
+            destElem = destElem;
+        else
+            destElem = (srcElem1 >> imm) |
+                (destElem & ~mask(sizeof(Element) * 8 - imm));
+    '''
+    twoRegShiftInst("vsri", "NVsriD", unsignedTypes, 2, vsriCode, True)
+    twoRegShiftInst("vsri", "NVsriQ", unsignedTypes, 4, vsriCode, True)
+
+    vshlCode = '''
+        if (imm >= sizeof(Element) * 8)
+            destElem = (srcElem1 << (sizeof(Element) * 8 - 1)) << 1;
+        else
+            destElem = srcElem1 << imm;
+    '''
+    twoRegShiftInst("vshl", "NVshlD", unsignedTypes, 2, vshlCode)
+    twoRegShiftInst("vshl", "NVshlQ", unsignedTypes, 4, vshlCode)
+
+    vsliCode = '''
+        if (imm >= sizeof(Element) * 8)
+            destElem = destElem;
+        else
+            destElem = (srcElem1 << imm) | (destElem & mask(imm));
+    '''
+    twoRegShiftInst("vsli", "NVsliD", unsignedTypes, 2, vsliCode, True)
+    twoRegShiftInst("vsli", "NVsliQ", unsignedTypes, 4, vsliCode, True)
+
+    vqshlCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm >= sizeof(Element) * 8) {
+            if (srcElem1 != 0) {
+                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                if (srcElem1 > 0)
+                    destElem = ~destElem;
+                fpscr.qc = 1;
+            } else {
+                destElem = 0;
+            }
+        } else if (imm) {
+            destElem = (srcElem1 << imm);
+            uint64_t topBits = bits((uint64_t)srcElem1,
+                                    sizeof(Element) * 8 - 1,
+                                    sizeof(Element) * 8 - 1 - imm);
+            if (topBits != 0 && topBits != mask(imm + 1)) {
+                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                if (srcElem1 > 0)
+                    destElem = ~destElem;
+                fpscr.qc = 1;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegShiftInst("vqshl", "NVqshlD", signedTypes, 2, vqshlCode)
+    twoRegShiftInst("vqshl", "NVqshlQ", signedTypes, 4, vqshlCode)
+
+    vqshluCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm >= sizeof(Element) * 8) {
+            if (srcElem1 != 0) {
+                destElem = mask(sizeof(Element) * 8);
+                fpscr.qc = 1;
+            } else {
+                destElem = 0;
+            }
+        } else if (imm) {
+            destElem = (srcElem1 << imm);
+            uint64_t topBits = bits((uint64_t)srcElem1,
+                                    sizeof(Element) * 8 - 1,
+                                    sizeof(Element) * 8 - imm);
+            if (topBits != 0) {
+                destElem = mask(sizeof(Element) * 8);
+                fpscr.qc = 1;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegShiftInst("vqshlu", "NVqshluD", unsignedTypes, 2, vqshluCode)
+    twoRegShiftInst("vqshlu", "NVqshluQ", unsignedTypes, 4, vqshluCode)
+
+    vqshlusCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm >= sizeof(Element) * 8) {
+            if (srcElem1 < 0) {
+                destElem = 0;
+                fpscr.qc = 1;
+            } else if (srcElem1 > 0) {
+                destElem = mask(sizeof(Element) * 8);
+                fpscr.qc = 1;
+            } else {
+                destElem = 0;
+            }
+        } else if (imm) {
+            destElem = (srcElem1 << imm);
+            uint64_t topBits = bits((uint64_t)srcElem1,
+                                    sizeof(Element) * 8 - 1,
+                                    sizeof(Element) * 8 - imm);
+            if (srcElem1 < 0) {
+                destElem = 0;
+                fpscr.qc = 1;
+            } else if (topBits != 0) {
+                destElem = mask(sizeof(Element) * 8);
+                fpscr.qc = 1;
+            }
+        } else {
+            if (srcElem1 < 0) {
+                fpscr.qc = 1;
+                destElem = 0;
+            } else {
+                destElem = srcElem1;
+            }
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegShiftInst("vqshlus", "NVqshlusD", signedTypes, 2, vqshlusCode)
+    twoRegShiftInst("vqshlus", "NVqshlusQ", signedTypes, 4, vqshlusCode)
+
+    vshrnCode = '''
+        if (imm >= sizeof(srcElem1) * 8) {
+            destElem = 0;
+        } else {
+            destElem = srcElem1 >> imm;
+        }
+    '''
+    twoRegNarrowShiftInst("vshrn", "NVshrn", smallUnsignedTypes, vshrnCode)
+
+    vrshrnCode = '''
+        if (imm > sizeof(srcElem1) * 8) {
+            destElem = 0;
+        } else if (imm) {
+            Element rBit = bits(srcElem1, imm - 1);
+            destElem = ((srcElem1 >> (imm - 1)) >> 1) + rBit;
+        } else {
+            destElem = srcElem1;
+        }
+    '''
+    twoRegNarrowShiftInst("vrshrn", "NVrshrn", smallUnsignedTypes, vrshrnCode)
+
+    vqshrnCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm > sizeof(srcElem1) * 8) {
+            if (srcElem1 != 0 && srcElem1 != -1)
+                fpscr.qc = 1;
+            destElem = 0;
+        } else if (imm) {
+            BigElement mid = ((srcElem1 >> (imm - 1)) >> 1);
+            mid |= -(mid & ((BigElement)1 <<
+                        (sizeof(BigElement) * 8 - 1 - imm)));
+            if (mid != (Element)mid) {
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+                fpscr.qc = 1;
+            } else {
+                destElem = mid;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegNarrowShiftInst("vqshrn", "NVqshrn", smallSignedTypes, vqshrnCode)
+
+    vqshrunCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm > sizeof(srcElem1) * 8) {
+            if (srcElem1 != 0)
+                fpscr.qc = 1;
+            destElem = 0;
+        } else if (imm) {
+            BigElement mid = ((srcElem1 >> (imm - 1)) >> 1);
+            if (mid != (Element)mid) {
+                destElem = mask(sizeof(Element) * 8);
+                fpscr.qc = 1;
+            } else {
+                destElem = mid;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegNarrowShiftInst("vqshrun", "NVqshrun",
+            smallUnsignedTypes, vqshrunCode)
+
+    vqshrunsCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm > sizeof(srcElem1) * 8) {
+            if (srcElem1 != 0)
+                fpscr.qc = 1;
+            destElem = 0;
+        } else if (imm) {
+            BigElement mid = ((srcElem1 >> (imm - 1)) >> 1);
+            if (bits(mid, sizeof(BigElement) * 8 - 1,
+                          sizeof(Element) * 8) != 0) {
+                if (srcElem1 < 0) {
+                    destElem = 0;
+                } else {
+                    destElem = mask(sizeof(Element) * 8);
+                }
+                fpscr.qc = 1;
+            } else {
+                destElem = mid;
+            }
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegNarrowShiftInst("vqshrun", "NVqshruns",
+            smallSignedTypes, vqshrunsCode)
+
+    vqrshrnCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm > sizeof(srcElem1) * 8) {
+            if (srcElem1 != 0 && srcElem1 != -1)
+                fpscr.qc = 1;
+            destElem = 0;
+        } else if (imm) {
+            BigElement mid = (srcElem1 >> (imm - 1));
+            uint64_t rBit = mid & 0x1;
+            mid >>= 1;
+            mid |= -(mid & ((BigElement)1 <<
+                        (sizeof(BigElement) * 8 - 1 - imm)));
+            mid += rBit;
+            if (mid != (Element)mid) {
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+                fpscr.qc = 1;
+            } else {
+                destElem = mid;
+            }
+        } else {
+            if (srcElem1 != (Element)srcElem1) {
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+                fpscr.qc = 1;
+            } else {
+                destElem = srcElem1;
+            }
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegNarrowShiftInst("vqrshrn", "NVqrshrn",
+            smallSignedTypes, vqrshrnCode)
+
+    vqrshrunCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm > sizeof(srcElem1) * 8) {
+            if (srcElem1 != 0)
+                fpscr.qc = 1;
+            destElem = 0;
+        } else if (imm) {
+            BigElement mid = (srcElem1 >> (imm - 1));
+            uint64_t rBit = mid & 0x1;
+            mid >>= 1;
+            mid += rBit;
+            if (mid != (Element)mid) {
+                destElem = mask(sizeof(Element) * 8);
+                fpscr.qc = 1;
+            } else {
+                destElem = mid;
+            }
+        } else {
+            if (srcElem1 != (Element)srcElem1) {
+                destElem = mask(sizeof(Element) * 8 - 1);
+                if (srcElem1 < 0)
+                    destElem = ~destElem;
+                fpscr.qc = 1;
+            } else {
+                destElem = srcElem1;
+            }
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegNarrowShiftInst("vqrshrun", "NVqrshrun",
+            smallUnsignedTypes, vqrshrunCode)
+
+    vqrshrunsCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (imm > sizeof(srcElem1) * 8) {
+            if (srcElem1 != 0)
+                fpscr.qc = 1;
+            destElem = 0;
+        } else if (imm) {
+            BigElement mid = (srcElem1 >> (imm - 1));
+            uint64_t rBit = mid & 0x1;
+            mid >>= 1;
+            mid |= -(mid & ((BigElement)1 <<
+                            (sizeof(BigElement) * 8 - 1 - imm)));
+            mid += rBit;
+            if (bits(mid, sizeof(BigElement) * 8 - 1,
+                          sizeof(Element) * 8) != 0) {
+                if (srcElem1 < 0) {
+                    destElem = 0;
+                } else {
+                    destElem = mask(sizeof(Element) * 8);
+                }
+                fpscr.qc = 1;
+            } else {
+                destElem = mid;
+            }
+        } else {
+            if (srcElem1 < 0) {
+                fpscr.qc = 1;
+                destElem = 0;
+            } else {
+                destElem = srcElem1;
+            }
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegNarrowShiftInst("vqrshrun", "NVqrshruns",
+            smallSignedTypes, vqrshrunsCode)
+
+    vshllCode = '''
+        if (imm >= sizeof(destElem) * 8) {
+            destElem = 0;
+        } else {
+            destElem = (BigElement)srcElem1 << imm;
+        }
+    '''
+    twoRegLongShiftInst("vshll", "NVshll", smallTypes, vshllCode)
+
+    vmovlCode = '''
+        destElem = srcElem1;
+    '''
+    twoRegLongShiftInst("vmovl", "NVmovl", smallTypes, vmovlCode)
+
+    vcvt2ufxCode = '''
+        FPSCR fpscr = Fpscr;
+        if (flushToZero(srcElem1))
+            fpscr.idc = 1;
+        VfpSavedState state = prepFpState(VfpRoundNearest);
+        __asm__ __volatile__("" : "=m" (srcElem1) : "m" (srcElem1));
+        destReg = vfpFpSToFixed(srcElem1, false, false, imm);
+        __asm__ __volatile__("" :: "m" (destReg));
+        finishVfp(fpscr, state, true);
+        Fpscr = fpscr;
+    '''
+    twoRegShiftInst("vcvt", "NVcvt2ufxD", ("float",),
+            2, vcvt2ufxCode, toInt = True)
+    twoRegShiftInst("vcvt", "NVcvt2ufxQ", ("float",),
+            4, vcvt2ufxCode, toInt = True)
+
+    vcvt2sfxCode = '''
+        FPSCR fpscr = Fpscr;
+        if (flushToZero(srcElem1))
+            fpscr.idc = 1;
+        VfpSavedState state = prepFpState(VfpRoundNearest);
+        __asm__ __volatile__("" : "=m" (srcElem1) : "m" (srcElem1));
+        destReg = vfpFpSToFixed(srcElem1, true, false, imm);
+        __asm__ __volatile__("" :: "m" (destReg));
+        finishVfp(fpscr, state, true);
+        Fpscr = fpscr;
+    '''
+    twoRegShiftInst("vcvt", "NVcvt2sfxD", ("float",),
+            2, vcvt2sfxCode, toInt = True)
+    twoRegShiftInst("vcvt", "NVcvt2sfxQ", ("float",),
+            4, vcvt2sfxCode, toInt = True)
+
+    vcvtu2fpCode = '''
+        FPSCR fpscr = Fpscr;
+        VfpSavedState state = prepFpState(VfpRoundNearest);
+        __asm__ __volatile__("" : "=m" (srcReg1) : "m" (srcReg1));
+        destElem = vfpUFixedToFpS(true, true, srcReg1, false, imm);
+        __asm__ __volatile__("" :: "m" (destElem));
+        finishVfp(fpscr, state, true);
+        Fpscr = fpscr;
+    '''
+    twoRegShiftInst("vcvt", "NVcvtu2fpD", ("float",),
+            2, vcvtu2fpCode, fromInt = True)
+    twoRegShiftInst("vcvt", "NVcvtu2fpQ", ("float",),
+            4, vcvtu2fpCode, fromInt = True)
+
+    vcvts2fpCode = '''
+        FPSCR fpscr = Fpscr;
+        VfpSavedState state = prepFpState(VfpRoundNearest);
+        __asm__ __volatile__("" : "=m" (srcReg1) : "m" (srcReg1));
+        destElem = vfpSFixedToFpS(true, true, srcReg1, false, imm);
+        __asm__ __volatile__("" :: "m" (destElem));
+        finishVfp(fpscr, state, true);
+        Fpscr = fpscr;
+    '''
+    twoRegShiftInst("vcvt", "NVcvts2fpD", ("float",),
+            2, vcvts2fpCode, fromInt = True)
+    twoRegShiftInst("vcvt", "NVcvts2fpQ", ("float",),
+            4, vcvts2fpCode, fromInt = True)
+
+    vcvts2hCode = '''
+        FPSCR fpscr = Fpscr;
+        float srcFp1 = bitsToFp(srcElem1, (float)0.0);
+        if (flushToZero(srcFp1))
+            fpscr.idc = 1;
+        VfpSavedState state = prepFpState(VfpRoundNearest);
+        __asm__ __volatile__("" : "=m" (srcFp1), "=m" (destElem)
+                                : "m" (srcFp1), "m" (destElem));
+        destElem = vcvtFpSFpH(fpscr, true, true, VfpRoundNearest,
+                              fpscr.ahp, srcFp1);
+        __asm__ __volatile__("" :: "m" (destElem));
+        finishVfp(fpscr, state, true);
+        Fpscr = fpscr;
+    '''
+    twoRegNarrowMiscInst("vcvt", "NVcvts2h", ("uint16_t",), vcvts2hCode)
+
+    vcvth2sCode = '''
+        FPSCR fpscr = Fpscr;
+        VfpSavedState state = prepFpState(VfpRoundNearest);
+        __asm__ __volatile__("" : "=m" (srcElem1), "=m" (destElem)
+                                : "m" (srcElem1), "m" (destElem));
+        destElem = fpToBits(vcvtFpHFpS(fpscr, true, fpscr.ahp, srcElem1));
+        __asm__ __volatile__("" :: "m" (destElem));
+        finishVfp(fpscr, state, true);
+        Fpscr = fpscr;
+    '''
+    twoRegLongMiscInst("vcvt", "NVcvth2s", ("uint16_t",), vcvth2sCode)
+
+    vrsqrteCode = '''
+        destElem = unsignedRSqrtEstimate(srcElem1);
+    '''
+    twoRegMiscInst("vrsqrte", "NVrsqrteD", ("uint32_t",), 2, vrsqrteCode)
+    twoRegMiscInst("vrsqrte", "NVrsqrteQ", ("uint32_t",), 4, vrsqrteCode)
+
+    vrsqrtefpCode = '''
+        FPSCR fpscr = Fpscr;
+        if (flushToZero(srcReg1))
+            fpscr.idc = 1;
+        destReg = fprSqrtEstimate(fpscr, srcReg1);
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInstFp("vrsqrte", "NVrsqrteDFp", ("float",), 2, vrsqrtefpCode)
+    twoRegMiscInstFp("vrsqrte", "NVrsqrteQFp", ("float",), 4, vrsqrtefpCode)
+
+    vrecpeCode = '''
+        destElem = unsignedRecipEstimate(srcElem1);
+    '''
+    twoRegMiscInst("vrecpe", "NVrecpeD", ("uint32_t",), 2, vrecpeCode)
+    twoRegMiscInst("vrecpe", "NVrecpeQ", ("uint32_t",), 4, vrecpeCode)
+
+    vrecpefpCode = '''
+        FPSCR fpscr = Fpscr;
+        if (flushToZero(srcReg1))
+            fpscr.idc = 1;
+        destReg = fpRecipEstimate(fpscr, srcReg1);
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInstFp("vrecpe", "NVrecpeDFp", ("float",), 2, vrecpefpCode)
+    twoRegMiscInstFp("vrecpe", "NVrecpeQFp", ("float",), 4, vrecpefpCode)
+
+    vrev16Code = '''
+        destElem = srcElem1;
+        unsigned groupSize = ((1 << 1) / sizeof(Element));
+        unsigned reverseMask = (groupSize - 1);
+        j = i ^ reverseMask;
+    '''
+    twoRegMiscInst("vrev16", "NVrev16D", ("uint8_t",), 2, vrev16Code)
+    twoRegMiscInst("vrev16", "NVrev16Q", ("uint8_t",), 4, vrev16Code)
+    vrev32Code = '''
+        destElem = srcElem1;
+        unsigned groupSize = ((1 << 2) / sizeof(Element));
+        unsigned reverseMask = (groupSize - 1);
+        j = i ^ reverseMask;
+    '''
+    twoRegMiscInst("vrev32", "NVrev32D",
+            ("uint8_t", "uint16_t"), 2, vrev32Code)
+    twoRegMiscInst("vrev32", "NVrev32Q",
+            ("uint8_t", "uint16_t"), 4, vrev32Code)
+    vrev64Code = '''
+        destElem = srcElem1;
+        unsigned groupSize = ((1 << 3) / sizeof(Element));
+        unsigned reverseMask = (groupSize - 1);
+        j = i ^ reverseMask;
+    '''
+    twoRegMiscInst("vrev64", "NVrev64D", smallUnsignedTypes, 2, vrev64Code)
+    twoRegMiscInst("vrev64", "NVrev64Q", smallUnsignedTypes, 4, vrev64Code)
+
+    vpaddlCode = '''
+        destElem = (BigElement)srcElem1 + (BigElement)srcElem2;
+    '''
+    twoRegCondenseInst("vpaddl", "NVpaddlD", smallTypes, 2, vpaddlCode)
+    twoRegCondenseInst("vpaddl", "NVpaddlQ", smallTypes, 4, vpaddlCode)
+
+    vpadalCode = '''
+        destElem += (BigElement)srcElem1 + (BigElement)srcElem2;
+    '''
+    twoRegCondenseInst("vpadal", "NVpadalD", smallTypes, 2, vpadalCode, True)
+    twoRegCondenseInst("vpadal", "NVpadalQ", smallTypes, 4, vpadalCode, True)
+
+    vclsCode = '''
+        unsigned count = 0;
+        if (srcElem1 < 0) {
+            srcElem1 <<= 1;
+            while (srcElem1 < 0 && count < sizeof(Element) * 8 - 1) {
+                count++;
+                srcElem1 <<= 1;
+            }
+        } else {
+            srcElem1 <<= 1;
+            while (srcElem1 >= 0 && count < sizeof(Element) * 8 - 1) {
+                count++;
+                srcElem1 <<= 1;
+            }
+        }
+        destElem = count;
+    '''
+    twoRegMiscInst("vcls", "NVclsD", signedTypes, 2, vclsCode)
+    twoRegMiscInst("vcls", "NVclsQ", signedTypes, 4, vclsCode)
+
+    vclzCode = '''
+        unsigned count = 0;
+        while (srcElem1 >= 0 && count < sizeof(Element) * 8) {
+            count++;
+            srcElem1 <<= 1;
+        }
+        destElem = count;
+    '''
+    twoRegMiscInst("vclz", "NVclzD", signedTypes, 2, vclzCode)
+    twoRegMiscInst("vclz", "NVclzQ", signedTypes, 4, vclzCode)
+
+    vcntCode = '''
+        unsigned count = 0;
+        while (srcElem1 && count < sizeof(Element) * 8) {
+            count += srcElem1 & 0x1;
+            srcElem1 >>= 1;
+        }
+        destElem = count;
+    '''
+    twoRegMiscInst("vcnt", "NVcntD", unsignedTypes, 2, vcntCode)
+    twoRegMiscInst("vcnt", "NVcntQ", unsignedTypes, 4, vcntCode)
+
+    vmvnCode = '''
+        destElem = ~srcElem1;
+    '''
+    twoRegMiscInst("vmvn", "NVmvnD", ("uint64_t",), 2, vmvnCode)
+    twoRegMiscInst("vmvn", "NVmvnQ", ("uint64_t",), 4, vmvnCode)
+
+    vqabsCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+            fpscr.qc = 1;
+            destElem = ~srcElem1;
+        } else if (srcElem1 < 0) {
+            destElem = -srcElem1;
+        } else {
+            destElem = srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInst("vqabs", "NVqabsD", signedTypes, 2, vqabsCode)
+    twoRegMiscInst("vqabs", "NVqabsQ", signedTypes, 4, vqabsCode)
+
+    vqnegCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+            fpscr.qc = 1;
+            destElem = ~srcElem1;
+        } else {
+            destElem = -srcElem1;
+        }
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInst("vqneg", "NVqnegD", signedTypes, 2, vqnegCode)
+    twoRegMiscInst("vqneg", "NVqnegQ", signedTypes, 4, vqnegCode)
+
+    vabsCode = '''
+        if (srcElem1 < 0) {
+            destElem = -srcElem1;
+        } else {
+            destElem = srcElem1;
+        }
+    '''
+    twoRegMiscInst("vabs", "NVabsD", signedTypes, 2, vabsCode)
+    twoRegMiscInst("vabs", "NVabsQ", signedTypes, 4, vabsCode)
+    vabsfpCode = '''
+        union
+        {
+            uint32_t i;
+            float f;
+        } cStruct;
+        cStruct.f = srcReg1;
+        cStruct.i &= mask(sizeof(Element) * 8 - 1);
+        destReg = cStruct.f;
+    '''
+    twoRegMiscInstFp("vabs", "NVabsDFp", ("float",), 2, vabsfpCode)
+    twoRegMiscInstFp("vabs", "NVabsQFp", ("float",), 4, vabsfpCode)
+
+    vnegCode = '''
+        destElem = -srcElem1;
+    '''
+    twoRegMiscInst("vneg", "NVnegD", signedTypes, 2, vnegCode)
+    twoRegMiscInst("vneg", "NVnegQ", signedTypes, 4, vnegCode)
+    vnegfpCode = '''
+        destReg = -srcReg1;
+    '''
+    twoRegMiscInstFp("vneg", "NVnegDFp", ("float",), 2, vnegfpCode)
+    twoRegMiscInstFp("vneg", "NVnegQFp", ("float",), 4, vnegfpCode)
+
+    vcgtCode = 'destElem = (srcElem1 > 0) ? mask(sizeof(Element) * 8) : 0;'
+    twoRegMiscInst("vcgt", "NVcgtD", signedTypes, 2, vcgtCode)
+    twoRegMiscInst("vcgt", "NVcgtQ", signedTypes, 4, vcgtCode)
+    vcgtfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcgtFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInstFp("vcgt", "NVcgtDFp", ("float",),
+            2, vcgtfpCode, toInt = True)
+    twoRegMiscInstFp("vcgt", "NVcgtQFp", ("float",),
+            4, vcgtfpCode, toInt = True)
+
+    vcgeCode = 'destElem = (srcElem1 >= 0) ? mask(sizeof(Element) * 8) : 0;'
+    twoRegMiscInst("vcge", "NVcgeD", signedTypes, 2, vcgeCode)
+    twoRegMiscInst("vcge", "NVcgeQ", signedTypes, 4, vcgeCode)
+    vcgefpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcgeFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInstFp("vcge", "NVcgeDFp", ("float",),
+            2, vcgefpCode, toInt = True)
+    twoRegMiscInstFp("vcge", "NVcgeQFp", ("float",),
+            4, vcgefpCode, toInt = True)
+
+    vceqCode = 'destElem = (srcElem1 == 0) ? mask(sizeof(Element) * 8) : 0;'
+    twoRegMiscInst("vceq", "NVceqD", signedTypes, 2, vceqCode)
+    twoRegMiscInst("vceq", "NVceqQ", signedTypes, 4, vceqCode)
+    vceqfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vceqFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInstFp("vceq", "NVceqDFp", ("float",),
+            2, vceqfpCode, toInt = True)
+    twoRegMiscInstFp("vceq", "NVceqQFp", ("float",),
+            4, vceqfpCode, toInt = True)
+
+    vcleCode = 'destElem = (srcElem1 <= 0) ? mask(sizeof(Element) * 8) : 0;'
+    twoRegMiscInst("vcle", "NVcleD", signedTypes, 2, vcleCode)
+    twoRegMiscInst("vcle", "NVcleQ", signedTypes, 4, vcleCode)
+    vclefpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcleFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInstFp("vcle", "NVcleDFp", ("float",),
+            2, vclefpCode, toInt = True)
+    twoRegMiscInstFp("vcle", "NVcleQFp", ("float",),
+            4, vclefpCode, toInt = True)
+
+    vcltCode = 'destElem = (srcElem1 < 0) ? mask(sizeof(Element) * 8) : 0;'
+    twoRegMiscInst("vclt", "NVcltD", signedTypes, 2, vcltCode)
+    twoRegMiscInst("vclt", "NVcltQ", signedTypes, 4, vcltCode)
+    vcltfpCode = '''
+        FPSCR fpscr = (FPSCR)Fpscr;
+        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcltFunc,
+                             true, true, VfpRoundNearest);
+        destReg = (res == 0) ? -1 : 0;
+        if (res == 2.0)
+            fpscr.ioc = 1;
+        Fpscr = fpscr;
+    '''
+    twoRegMiscInstFp("vclt", "NVcltDFp", ("float",),
+            2, vcltfpCode, toInt = True)
+    twoRegMiscInstFp("vclt", "NVcltQFp", ("float",),
+            4, vcltfpCode, toInt = True)
+
+    vswpCode = '''
+        FloatRegBits mid;
+        for (unsigned r = 0; r < rCount; r++) {
+            mid = srcReg1.regs[r];
+            srcReg1.regs[r] = destReg.regs[r];
+            destReg.regs[r] = mid;
+        }
+    '''
+    twoRegMiscScramble("vswp", "NVswpD", ("uint64_t",), 2, vswpCode)
+    twoRegMiscScramble("vswp", "NVswpQ", ("uint64_t",), 4, vswpCode)
+
+    vtrnCode = '''
+        Element mid;
+        for (unsigned i = 0; i < eCount; i += 2) {
+            mid = srcReg1.elements[i];
+            srcReg1.elements[i] = destReg.elements[i + 1];
+            destReg.elements[i + 1] = mid;
+        }
+    '''
+    twoRegMiscScramble("vtrn", "NVtrnD", unsignedTypes, 2, vtrnCode)
+    twoRegMiscScramble("vtrn", "NVtrnQ", unsignedTypes, 4, vtrnCode)
+
+    vuzpCode = '''
+        Element mid[eCount];
+        memcpy(&mid, &srcReg1, sizeof(srcReg1));
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            srcReg1.elements[i] = destReg.elements[2 * i + 1];
+            srcReg1.elements[eCount / 2 + i] = mid[2 * i + 1];
+            destReg.elements[i] = destReg.elements[2 * i];
+        }
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            destReg.elements[eCount / 2 + i] = mid[2 * i];
+        }
+    '''
+    twoRegMiscScramble("vuzp", "NVuzpD", unsignedTypes, 2, vuzpCode)
+    twoRegMiscScramble("vuzp", "NVuzpQ", unsignedTypes, 4, vuzpCode)
+
+    vzipCode = '''
+        Element mid[eCount];
+        memcpy(&mid, &destReg, sizeof(destReg));
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            destReg.elements[2 * i] = mid[i];
+            destReg.elements[2 * i + 1] = srcReg1.elements[i];
+        }
+        for (int i = 0; i < eCount / 2; i++) {
+            srcReg1.elements[2 * i] = mid[eCount / 2 + i];
+            srcReg1.elements[2 * i + 1] = srcReg1.elements[eCount / 2 + i];
+        }
+    '''
+    twoRegMiscScramble("vzip", "NVzipD", unsignedTypes, 2, vzipCode)
+    twoRegMiscScramble("vzip", "NVzipQ", unsignedTypes, 4, vzipCode)
+
+    vmovnCode = 'destElem = srcElem1;'
+    twoRegNarrowMiscInst("vmovn", "NVmovn", smallUnsignedTypes, vmovnCode)
+
+    vdupCode = 'destElem = srcElem1;'
+    twoRegMiscScInst("vdup", "NVdupD", smallUnsignedTypes, 2, vdupCode)
+    twoRegMiscScInst("vdup", "NVdupQ", smallUnsignedTypes, 4, vdupCode)
+
+    def vdupGprInst(name, Name, types, rCount):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect destReg;
+        for (unsigned i = 0; i < eCount; i++) {
+            destReg.elements[i] = htog((Element)Op1);
+        }
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+    vdupGprInst("vdup", "NVdupDGpr", smallUnsignedTypes, 2)
+    vdupGprInst("vdup", "NVdupQGpr", smallUnsignedTypes, 4)
+
+    vmovCode = 'destElem = imm;'
+    oneRegImmInst("vmov", "NVmoviD", ("uint64_t",), 2, vmovCode)
+    oneRegImmInst("vmov", "NVmoviQ", ("uint64_t",), 4, vmovCode)
+
+    vorrCode = 'destElem |= imm;'
+    oneRegImmInst("vorr", "NVorriD", ("uint64_t",), 2, vorrCode, True)
+    oneRegImmInst("vorr", "NVorriQ", ("uint64_t",), 4, vorrCode, True)
+
+    vmvnCode = 'destElem = ~imm;'
+    oneRegImmInst("vmvn", "NVmvniD", ("uint64_t",), 2, vmvnCode)
+    oneRegImmInst("vmvn", "NVmvniQ", ("uint64_t",), 4, vmvnCode)
+
+    vbicCode = 'destElem &= ~imm;'
+    oneRegImmInst("vbic", "NVbiciD", ("uint64_t",), 2, vbicCode, True)
+    oneRegImmInst("vbic", "NVbiciQ", ("uint64_t",), 4, vbicCode, True)
+
+    vqmovnCode = '''
+    FPSCR fpscr = (FPSCR)Fpscr;
+    destElem = srcElem1;
+    if ((BigElement)destElem != srcElem1) {
+        fpscr.qc = 1;
+        destElem = mask(sizeof(Element) * 8 - 1);
+        if (srcElem1 < 0)
+            destElem = ~destElem;
+    }
+    Fpscr = fpscr;
+    '''
+    twoRegNarrowMiscInst("vqmovn", "NVqmovn", smallSignedTypes, vqmovnCode)
+
+    vqmovunCode = '''
+    FPSCR fpscr = (FPSCR)Fpscr;
+    destElem = srcElem1;
+    if ((BigElement)destElem != srcElem1) {
+        fpscr.qc = 1;
+        destElem = mask(sizeof(Element) * 8);
+    }
+    Fpscr = fpscr;
+    '''
+    twoRegNarrowMiscInst("vqmovun", "NVqmovun",
+            smallUnsignedTypes, vqmovunCode)
+
+    vqmovunsCode = '''
+    FPSCR fpscr = (FPSCR)Fpscr;
+    destElem = srcElem1;
+    if (srcElem1 < 0 ||
+            ((BigElement)destElem & mask(sizeof(Element) * 8)) != srcElem1) {
+        fpscr.qc = 1;
+        destElem = mask(sizeof(Element) * 8);
+        if (srcElem1 < 0)
+            destElem = ~destElem;
+    }
+    Fpscr = fpscr;
+    '''
+    twoRegNarrowMiscInst("vqmovun", "NVqmovuns",
+            smallSignedTypes, vqmovunsCode)
+
+    def buildVext(name, Name, types, rCount, op):
+        global header_output, exec_output
+        eWalkCode = '''
+        RegVect srcReg1, srcReg2, destReg;
+        '''
+        for reg in range(rCount):
+            eWalkCode += '''
+                srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
+                srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d.uw);
+            ''' % { "reg" : reg }
+        eWalkCode += op
+        for reg in range(rCount):
+            eWalkCode += '''
+            FpDestP%(reg)d.uw = gtoh(destReg.regs[%(reg)d]);
+            ''' % { "reg" : reg }
+        iop = InstObjParams(name, Name,
+                            "RegRegRegImmOp",
+                            { "code": eWalkCode,
+                              "r_count": rCount,
+                              "predicate_test": predicateTest }, [])
+        header_output += NeonRegRegRegImmOpDeclare.subst(iop)
+        exec_output += NeonEqualRegExecute.subst(iop)
+        for type in types:
+            substDict = { "targs" : type,
+                          "class_name" : Name }
+            exec_output += NeonExecDeclare.subst(substDict)
+
+    vextCode = '''
+        for (unsigned i = 0; i < eCount; i++) {
+            unsigned index = i + imm;
+            if (index < eCount) {
+                destReg.elements[i] = srcReg1.elements[index];
+            } else {
+                index -= eCount;
+                assert(index < eCount);
+                destReg.elements[i] = srcReg2.elements[index];
+            }
+        }
+    '''
+    buildVext("vext", "NVextD", ("uint8_t",), 2, vextCode)
+    buildVext("vext", "NVextQ", ("uint8_t",), 4, vextCode)
+
+    def buildVtbxl(name, Name, length, isVtbl):
+        global header_output, decoder_output, exec_output
+        code = '''
+            union
+            {
+                uint8_t bytes[32];
+                FloatRegBits regs[8];
+            } table;
+
+            union
+            {
+                uint8_t bytes[8];
+                FloatRegBits regs[2];
+            } destReg, srcReg2;
+
+            const unsigned length = %(length)d;
+            const bool isVtbl = %(isVtbl)s;
+
+            srcReg2.regs[0] = htog(FpOp2P0.uw);
+            srcReg2.regs[1] = htog(FpOp2P1.uw);
+
+            destReg.regs[0] = htog(FpDestP0.uw);
+            destReg.regs[1] = htog(FpDestP1.uw);
+        ''' % { "length" : length, "isVtbl" : isVtbl }
+        for reg in range(8):
+            if reg < length * 2:
+                code += 'table.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);\n' % \
+                        { "reg" : reg }
+            else:
+                code += 'table.regs[%(reg)d] = 0;\n' % { "reg" : reg }
+        code += '''
+        for (unsigned i = 0; i < sizeof(destReg); i++) {
+            uint8_t index = srcReg2.bytes[i];
+            if (index < 8 * length) {
+                destReg.bytes[i] = table.bytes[index];
+            } else {
+                if (isVtbl)
+                    destReg.bytes[i] = 0;
+                // else destReg.bytes[i] unchanged
+            }
+        }
+
+        FpDestP0.uw = gtoh(destReg.regs[0]);
+        FpDestP1.uw = gtoh(destReg.regs[1]);
+        '''
+        iop = InstObjParams(name, Name,
+                            "RegRegRegOp",
+                            { "code": code,
+                              "predicate_test": predicateTest }, [])
+        header_output += RegRegRegOpDeclare.subst(iop)
+        decoder_output += RegRegRegOpConstructor.subst(iop)
+        exec_output += PredOpExecute.subst(iop)
+
+    buildVtbxl("vtbl", "NVtbl1", 1, "true")
+    buildVtbxl("vtbl", "NVtbl2", 2, "true")
+    buildVtbxl("vtbl", "NVtbl3", 3, "true")
+    buildVtbxl("vtbl", "NVtbl4", 4, "true")
+
+    buildVtbxl("vtbx", "NVtbx1", 1, "false")
+    buildVtbxl("vtbx", "NVtbx2", 2, "false")
+    buildVtbxl("vtbx", "NVtbx3", 3, "false")
+    buildVtbxl("vtbx", "NVtbx4", 4, "false")
+}};

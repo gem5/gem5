@@ -251,6 +251,28 @@ class ArmStaticInst : public StaticInst
         }
     }
 
+    template<class T, class E>
+    static inline T
+    cSwap(T val, bool big)
+    {
+        const unsigned count = sizeof(T) / sizeof(E);
+        union {
+            T tVal;
+            E eVals[count];
+        } conv;
+        conv.tVal = htog(val);
+        if (big) {
+            for (unsigned i = 0; i < count; i++) {
+                conv.eVals[i] = gtobe(conv.eVals[i]);
+            }
+        } else {
+            for (unsigned i = 0; i < count; i++) {
+                conv.eVals[i] = gtole(conv.eVals[i]);
+            }
+        }
+        return gtoh(conv.tVal);
+    }
+
     // Perform an interworking branch.
     template<class XC>
     static inline void

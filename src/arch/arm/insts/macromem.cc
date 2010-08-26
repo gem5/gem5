@@ -137,6 +137,647 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
     }
 }
 
+VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                     unsigned elems, RegIndex rn, RegIndex vd, unsigned regs,
+                     unsigned inc, uint32_t size, uint32_t align, RegIndex rm) :
+    PredMacroOp(mnem, machInst, __opClass)
+{
+    assert(regs > 0 && regs <= 4);
+    assert(regs % elems == 0);
+
+    numMicroops = (regs > 2) ? 2 : 1;
+    bool wb = (rm != 15);
+    bool deinterleave = (elems > 1);
+
+    if (wb) numMicroops++;
+    if (deinterleave) numMicroops += (regs / elems);
+    microOps = new StaticInstPtr[numMicroops];
+
+    RegIndex rMid = deinterleave ? NumFloatArchRegs : vd * 2;
+
+    uint32_t noAlign = TLB::MustBeOne;
+
+    unsigned uopIdx = 0;
+    switch (regs) {
+      case 4:
+        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+                size, machInst, rMid, rn, 0, align);
+        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+                size, machInst, rMid + 4, rn, 16, noAlign);
+        break;
+      case 3:
+        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+                size, machInst, rMid, rn, 0, align);
+        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon8Uop>(
+                size, machInst, rMid + 4, rn, 16, noAlign);
+        break;
+      case 2:
+        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon16Uop>(
+                size, machInst, rMid, rn, 0, align);
+        break;
+      case 1:
+        microOps[uopIdx++] = newNeonMemInst<MicroLdrNeon8Uop>(
+                size, machInst, rMid, rn, 0, align);
+        break;
+      default:
+        panic("Unrecognized number of registers %d.\n", regs);
+    }
+    if (wb) {
+        if (rm != 15 && rm != 13) {
+            microOps[uopIdx++] =
+                new MicroAddUop(machInst, rn, rn, rm);
+        } else {
+            microOps[uopIdx++] =
+                new MicroAddiUop(machInst, rn, rn, regs * 8);
+        }
+    }
+    if (deinterleave) {
+        switch (elems) {
+          case 4:
+            assert(regs == 4);
+            microOps[uopIdx++] = newNeonMixInst<MicroDeintNeon8Uop>(
+                    size, machInst, vd * 2, rMid, inc * 2);
+            break;
+          case 3:
+            assert(regs == 3);
+            microOps[uopIdx++] = newNeonMixInst<MicroDeintNeon6Uop>(
+                    size, machInst, vd * 2, rMid, inc * 2);
+            break;
+          case 2:
+            assert(regs == 4 || regs == 2);
+            if (regs == 4) {
+                microOps[uopIdx++] = newNeonMixInst<MicroDeintNeon4Uop>(
+                        size, machInst, vd * 2, rMid, inc * 2);
+                microOps[uopIdx++] = newNeonMixInst<MicroDeintNeon4Uop>(
+                        size, machInst, vd * 2 + 2, rMid + 4, inc * 2);
+            } else {
+                microOps[uopIdx++] = newNeonMixInst<MicroDeintNeon4Uop>(
+                        size, machInst, vd * 2, rMid, inc * 2);
+            }
+            break;
+          default:
+            panic("Bad number of elements to deinterleave %d.\n", elems);
+        }
+    }
+    assert(uopIdx == numMicroops);
+
+    for (unsigned i = 0; i < numMicroops - 1; i++) {
+        MicroOp * uopPtr = dynamic_cast<MicroOp *>(microOps[i].get());
+        assert(uopPtr);
+        uopPtr->setDelayedCommit();
+    }
+    microOps[numMicroops - 1]->setLastMicroop();
+}
+
+VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
+                         OpClass __opClass, bool all, unsigned elems,
+                         RegIndex rn, RegIndex vd, unsigned regs,
+                         unsigned inc, uint32_t size, uint32_t align,
+                         RegIndex rm, unsigned lane) :
+    PredMacroOp(mnem, machInst, __opClass)
+{
+    assert(regs > 0 && regs <= 4);
+    assert(regs % elems == 0);
+
+    unsigned eBytes = (1 << size);
+    unsigned loadSize = eBytes * elems;
+    unsigned loadRegs M5_VAR_USED = (loadSize + sizeof(FloatRegBits) - 1) /
+                        sizeof(FloatRegBits);
+
+    assert(loadRegs > 0 && loadRegs <= 4);
+
+    numMicroops = 1;
+    bool wb = (rm != 15);
+
+    if (wb) numMicroops++;
+    numMicroops += (regs / elems);
+    microOps = new StaticInstPtr[numMicroops];
+
+    RegIndex ufp0 = NumFloatArchRegs;
+
+    unsigned uopIdx = 0;
+    switch (loadSize) {
+      case 1:
+        microOps[uopIdx++] = new MicroLdrNeon1Uop<uint8_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 2:
+        if (eBytes == 2) {
+            microOps[uopIdx++] = new MicroLdrNeon2Uop<uint16_t>(
+                    machInst, ufp0, rn, 0, align);
+        } else {
+            microOps[uopIdx++] = new MicroLdrNeon2Uop<uint8_t>(
+                    machInst, ufp0, rn, 0, align);
+        }
+        break;
+      case 3:
+        microOps[uopIdx++] = new MicroLdrNeon3Uop<uint8_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 4:
+        switch (eBytes) {
+          case 1:
+            microOps[uopIdx++] = new MicroLdrNeon4Uop<uint8_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+          case 2:
+            microOps[uopIdx++] = new MicroLdrNeon4Uop<uint16_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+          case 4:
+            microOps[uopIdx++] = new MicroLdrNeon4Uop<uint32_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+        }
+        break;
+      case 6:
+        microOps[uopIdx++] = new MicroLdrNeon6Uop<uint16_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 8:
+        switch (eBytes) {
+          case 2:
+            microOps[uopIdx++] = new MicroLdrNeon8Uop<uint16_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+          case 4:
+            microOps[uopIdx++] = new MicroLdrNeon8Uop<uint32_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+        }
+        break;
+      case 12:
+        microOps[uopIdx++] = new MicroLdrNeon12Uop<uint32_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 16:
+        microOps[uopIdx++] = new MicroLdrNeon16Uop<uint32_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      default:
+        panic("Unrecognized load size %d.\n", regs);
+    }
+    if (wb) {
+        if (rm != 15 && rm != 13) {
+            microOps[uopIdx++] =
+                new MicroAddUop(machInst, rn, rn, rm);
+        } else {
+            microOps[uopIdx++] =
+                new MicroAddiUop(machInst, rn, rn, loadSize);
+        }
+    }
+    switch (elems) {
+      case 4:
+        assert(regs == 4);
+        switch (size) {
+          case 0:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon2to8Uop<uint8_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon2to8Uop<uint8_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          case 1:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon2to8Uop<uint16_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon2to8Uop<uint16_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          case 2:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon4to8Uop<uint32_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon4to8Uop<uint32_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          default:
+            panic("Bad size %d.\n", size);
+            break;
+        }
+        break;
+      case 3:
+        assert(regs == 3);
+        switch (size) {
+          case 0:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon2to6Uop<uint8_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon2to6Uop<uint8_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          case 1:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon2to6Uop<uint16_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon2to6Uop<uint16_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          case 2:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon4to6Uop<uint32_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon4to6Uop<uint32_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          default:
+            panic("Bad size %d.\n", size);
+            break;
+        }
+        break;
+      case 2:
+        assert(regs == 2);
+        assert(loadRegs <= 2);
+        switch (size) {
+          case 0:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon2to4Uop<uint8_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon2to4Uop<uint8_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          case 1:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon2to4Uop<uint16_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon2to4Uop<uint16_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          case 2:
+            if (all) {
+                microOps[uopIdx++] = new MicroUnpackAllNeon2to4Uop<uint32_t>(
+                        machInst, vd * 2, ufp0, inc * 2);
+            } else {
+                microOps[uopIdx++] = new MicroUnpackNeon2to4Uop<uint32_t>(
+                        machInst, vd * 2, ufp0, inc * 2, lane);
+            }
+            break;
+          default:
+            panic("Bad size %d.\n", size);
+            break;
+        }
+        break;
+      case 1:
+        assert(regs == 1 || (all && regs == 2));
+        assert(loadRegs <= 2);
+        for (unsigned offset = 0; offset < regs; offset++) {
+            switch (size) {
+              case 0:
+                if (all) {
+                    microOps[uopIdx++] =
+                        new MicroUnpackAllNeon2to2Uop<uint8_t>(
+                            machInst, (vd + offset) * 2, ufp0, inc * 2);
+                } else {
+                    microOps[uopIdx++] =
+                        new MicroUnpackNeon2to2Uop<uint8_t>(
+                            machInst, (vd + offset) * 2, ufp0, inc * 2, lane);
+                }
+                break;
+              case 1:
+                if (all) {
+                    microOps[uopIdx++] =
+                        new MicroUnpackAllNeon2to2Uop<uint16_t>(
+                            machInst, (vd + offset) * 2, ufp0, inc * 2);
+                } else {
+                    microOps[uopIdx++] =
+                        new MicroUnpackNeon2to2Uop<uint16_t>(
+                            machInst, (vd + offset) * 2, ufp0, inc * 2, lane);
+                }
+                break;
+              case 2:
+                if (all) {
+                    microOps[uopIdx++] =
+                        new MicroUnpackAllNeon2to2Uop<uint32_t>(
+                            machInst, (vd + offset) * 2, ufp0, inc * 2);
+                } else {
+                    microOps[uopIdx++] =
+                        new MicroUnpackNeon2to2Uop<uint32_t>(
+                            machInst, (vd + offset) * 2, ufp0, inc * 2, lane);
+                }
+                break;
+              default:
+                panic("Bad size %d.\n", size);
+                break;
+            }
+        }
+        break;
+      default:
+        panic("Bad number of elements to unpack %d.\n", elems);
+    }
+    assert(uopIdx == numMicroops);
+
+    for (unsigned i = 0; i < numMicroops - 1; i++) {
+        MicroOp * uopPtr = dynamic_cast<MicroOp *>(microOps[i].get());
+        assert(uopPtr);
+        uopPtr->setDelayedCommit();
+    }
+    microOps[numMicroops - 1]->setLastMicroop();
+}
+
+VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                     unsigned elems, RegIndex rn, RegIndex vd, unsigned regs,
+                     unsigned inc, uint32_t size, uint32_t align, RegIndex rm) :
+    PredMacroOp(mnem, machInst, __opClass)
+{
+    assert(regs > 0 && regs <= 4);
+    assert(regs % elems == 0);
+
+    numMicroops = (regs > 2) ? 2 : 1;
+    bool wb = (rm != 15);
+    bool interleave = (elems > 1);
+
+    if (wb) numMicroops++;
+    if (interleave) numMicroops += (regs / elems);
+    microOps = new StaticInstPtr[numMicroops];
+
+    uint32_t noAlign = TLB::MustBeOne;
+
+    RegIndex rMid = interleave ? NumFloatArchRegs : vd * 2;
+
+    unsigned uopIdx = 0;
+    if (interleave) {
+        switch (elems) {
+          case 4:
+            assert(regs == 4);
+            microOps[uopIdx++] = newNeonMixInst<MicroInterNeon8Uop>(
+                    size, machInst, rMid, vd * 2, inc * 2);
+            break;
+          case 3:
+            assert(regs == 3);
+            microOps[uopIdx++] = newNeonMixInst<MicroInterNeon6Uop>(
+                    size, machInst, rMid, vd * 2, inc * 2);
+            break;
+          case 2:
+            assert(regs == 4 || regs == 2);
+            if (regs == 4) {
+                microOps[uopIdx++] = newNeonMixInst<MicroInterNeon4Uop>(
+                        size, machInst, rMid, vd * 2, inc * 2);
+                microOps[uopIdx++] = newNeonMixInst<MicroInterNeon4Uop>(
+                        size, machInst, rMid + 4, vd * 2 + 2, inc * 2);
+            } else {
+                microOps[uopIdx++] = newNeonMixInst<MicroInterNeon4Uop>(
+                        size, machInst, rMid, vd * 2, inc * 2);
+            }
+            break;
+          default:
+            panic("Bad number of elements to interleave %d.\n", elems);
+        }
+    }
+    switch (regs) {
+      case 4:
+        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+                size, machInst, rMid, rn, 0, align);
+        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+                size, machInst, rMid + 4, rn, 16, noAlign);
+        break;
+      case 3:
+        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+                size, machInst, rMid, rn, 0, align);
+        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon8Uop>(
+                size, machInst, rMid + 4, rn, 16, noAlign);
+        break;
+      case 2:
+        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon16Uop>(
+                size, machInst, rMid, rn, 0, align);
+        break;
+      case 1:
+        microOps[uopIdx++] = newNeonMemInst<MicroStrNeon8Uop>(
+                size, machInst, rMid, rn, 0, align);
+        break;
+      default:
+        panic("Unrecognized number of registers %d.\n", regs);
+    }
+    if (wb) {
+        if (rm != 15 && rm != 13) {
+            microOps[uopIdx++] =
+                new MicroAddUop(machInst, rn, rn, rm);
+        } else {
+            microOps[uopIdx++] =
+                new MicroAddiUop(machInst, rn, rn, regs * 8);
+        }
+    }
+    assert(uopIdx == numMicroops);
+
+    for (unsigned i = 0; i < numMicroops - 1; i++) {
+        MicroOp * uopPtr = dynamic_cast<MicroOp *>(microOps[i].get());
+        assert(uopPtr);
+        uopPtr->setDelayedCommit();
+    }
+    microOps[numMicroops - 1]->setLastMicroop();
+}
+
+VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
+                         OpClass __opClass, bool all, unsigned elems,
+                         RegIndex rn, RegIndex vd, unsigned regs,
+                         unsigned inc, uint32_t size, uint32_t align,
+                         RegIndex rm, unsigned lane) :
+    PredMacroOp(mnem, machInst, __opClass)
+{
+    assert(!all);
+    assert(regs > 0 && regs <= 4);
+    assert(regs % elems == 0);
+
+    unsigned eBytes = (1 << size);
+    unsigned storeSize = eBytes * elems;
+    unsigned storeRegs M5_VAR_USED = (storeSize + sizeof(FloatRegBits) - 1) /
+                         sizeof(FloatRegBits);
+
+    assert(storeRegs > 0 && storeRegs <= 4);
+
+    numMicroops = 1;
+    bool wb = (rm != 15);
+
+    if (wb) numMicroops++;
+    numMicroops += (regs / elems);
+    microOps = new StaticInstPtr[numMicroops];
+
+    RegIndex ufp0 = NumFloatArchRegs;
+
+    unsigned uopIdx = 0;
+    switch (elems) {
+      case 4:
+        assert(regs == 4);
+        switch (size) {
+          case 0:
+            microOps[uopIdx++] = new MicroPackNeon8to2Uop<uint8_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          case 1:
+            microOps[uopIdx++] = new MicroPackNeon8to2Uop<uint16_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          case 2:
+            microOps[uopIdx++] = new MicroPackNeon8to4Uop<uint32_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          default:
+            panic("Bad size %d.\n", size);
+            break;
+        }
+        break;
+      case 3:
+        assert(regs == 3);
+        switch (size) {
+          case 0:
+            microOps[uopIdx++] = new MicroPackNeon6to2Uop<uint8_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          case 1:
+            microOps[uopIdx++] = new MicroPackNeon6to2Uop<uint16_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          case 2:
+            microOps[uopIdx++] = new MicroPackNeon6to4Uop<uint32_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          default:
+            panic("Bad size %d.\n", size);
+            break;
+        }
+        break;
+      case 2:
+        assert(regs == 2);
+        assert(storeRegs <= 2);
+        switch (size) {
+          case 0:
+            microOps[uopIdx++] = new MicroPackNeon4to2Uop<uint8_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          case 1:
+            microOps[uopIdx++] = new MicroPackNeon4to2Uop<uint16_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          case 2:
+            microOps[uopIdx++] = new MicroPackNeon4to2Uop<uint32_t>(
+                    machInst, ufp0, vd * 2, inc * 2, lane);
+            break;
+          default:
+            panic("Bad size %d.\n", size);
+            break;
+        }
+        break;
+      case 1:
+        assert(regs == 1 || (all && regs == 2));
+        assert(storeRegs <= 2);
+        for (unsigned offset = 0; offset < regs; offset++) {
+            switch (size) {
+              case 0:
+                microOps[uopIdx++] = new MicroPackNeon2to2Uop<uint8_t>(
+                        machInst, ufp0, (vd + offset) * 2, inc * 2, lane);
+                break;
+              case 1:
+                microOps[uopIdx++] = new MicroPackNeon2to2Uop<uint16_t>(
+                        machInst, ufp0, (vd + offset) * 2, inc * 2, lane);
+                break;
+              case 2:
+                microOps[uopIdx++] = new MicroPackNeon2to2Uop<uint32_t>(
+                        machInst, ufp0, (vd + offset) * 2, inc * 2, lane);
+                break;
+              default:
+                panic("Bad size %d.\n", size);
+                break;
+            }
+        }
+        break;
+      default:
+        panic("Bad number of elements to pack %d.\n", elems);
+    }
+    switch (storeSize) {
+      case 1:
+        microOps[uopIdx++] = new MicroStrNeon1Uop<uint8_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 2:
+        if (eBytes == 2) {
+            microOps[uopIdx++] = new MicroStrNeon2Uop<uint16_t>(
+                    machInst, ufp0, rn, 0, align);
+        } else {
+            microOps[uopIdx++] = new MicroStrNeon2Uop<uint8_t>(
+                    machInst, ufp0, rn, 0, align);
+        }
+        break;
+      case 3:
+        microOps[uopIdx++] = new MicroStrNeon3Uop<uint8_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 4:
+        switch (eBytes) {
+          case 1:
+            microOps[uopIdx++] = new MicroStrNeon4Uop<uint8_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+          case 2:
+            microOps[uopIdx++] = new MicroStrNeon4Uop<uint16_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+          case 4:
+            microOps[uopIdx++] = new MicroStrNeon4Uop<uint32_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+        }
+        break;
+      case 6:
+        microOps[uopIdx++] = new MicroStrNeon6Uop<uint16_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 8:
+        switch (eBytes) {
+          case 2:
+            microOps[uopIdx++] = new MicroStrNeon8Uop<uint16_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+          case 4:
+            microOps[uopIdx++] = new MicroStrNeon8Uop<uint32_t>(
+                    machInst, ufp0, rn, 0, align);
+            break;
+        }
+        break;
+      case 12:
+        microOps[uopIdx++] = new MicroStrNeon12Uop<uint32_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      case 16:
+        microOps[uopIdx++] = new MicroStrNeon16Uop<uint32_t>(
+                machInst, ufp0, rn, 0, align);
+        break;
+      default:
+        panic("Unrecognized store size %d.\n", regs);
+    }
+    if (wb) {
+        if (rm != 15 && rm != 13) {
+            microOps[uopIdx++] =
+                new MicroAddUop(machInst, rn, rn, rm);
+        } else {
+            microOps[uopIdx++] =
+                new MicroAddiUop(machInst, rn, rn, storeSize);
+        }
+    }
+    assert(uopIdx == numMicroops);
+
+    for (unsigned i = 0; i < numMicroops - 1; i++) {
+        MicroOp * uopPtr = dynamic_cast<MicroOp *>(microOps[i].get());
+        assert(uopPtr);
+        uopPtr->setDelayedCommit();
+    }
+    microOps[numMicroops - 1]->setLastMicroop();
+}
+
 MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
                              OpClass __opClass, IntRegIndex rn,
                              RegIndex vd, bool single, bool up,
@@ -169,17 +810,25 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
     bool tempUp = up;
     for (int j = 0; j < count; j++) {
         if (load) {
-            microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
-                                              tempUp, addr);
-            if (!single)
-                microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn, tempUp,
-                                                  addr + (up ? 4 : -4));
+            if (single) {
+                microOps[i++] = new MicroLdrFpUop(machInst, vd++, rn,
+                                                  tempUp, addr);
+            } else {
+                microOps[i++] = new MicroLdrDBFpUop(machInst, vd++, rn,
+                                                    tempUp, addr);
+                microOps[i++] = new MicroLdrDTFpUop(machInst, vd++, rn, tempUp,
+                                                    addr + (up ? 4 : -4));
+            }
         } else {
-            microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
-                                              tempUp, addr);
-            if (!single)
-                microOps[i++] = new MicroStrFpUop(machInst, vd++, rn, tempUp,
-                                                  addr + (up ? 4 : -4));
+            if (single) {
+                microOps[i++] = new MicroStrFpUop(machInst, vd++, rn,
+                                                  tempUp, addr);
+            } else {
+                microOps[i++] = new MicroStrDBFpUop(machInst, vd++, rn,
+                                                    tempUp, addr);
+                microOps[i++] = new MicroStrDTFpUop(machInst, vd++, rn, tempUp,
+                                                    addr + (up ? 4 : -4));
+            }
         }
         if (!tempUp) {
             addr -= (single ? 4 : 8);
@@ -216,7 +865,7 @@ MacroVFPMemOp::MacroVFPMemOp(const char *mnem, ExtMachInst machInst,
 }
 
 std::string
-MicroIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+MicroIntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
@@ -225,6 +874,19 @@ MicroIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     printReg(ss, urb);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
+    return ss.str();
+}
+
+std::string
+MicroIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, ura);
+    ss << ", ";
+    printReg(ss, urb);
+    ss << ", ";
+    printReg(ss, urc);
     return ss.str();
 }
 
