@@ -146,6 +146,25 @@ namespace ArmISA {
         return !inUserMode(tc);
     }
 
+    static inline bool
+    vfpEnabled(CPACR cpacr, CPSR cpsr)
+    {
+        return cpacr.cp10 == 0x3 ||
+            (cpacr.cp10 == 0x2 && inPrivilegedMode(cpsr));
+    }
+
+    static inline bool
+    vfpEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
+    {
+        return fpexc.en && vfpEnabled(cpacr, cpsr);
+    }
+
+    static inline bool
+    neonEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
+    {
+        return !cpacr.asedis && vfpEnabled(cpacr, cpsr, fpexc);
+    }
+
 uint64_t getArgument(ThreadContext *tc, int number, bool fp);
     
 Fault setCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);

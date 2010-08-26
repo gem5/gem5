@@ -192,14 +192,16 @@ let {{
     exec_output = ""
 
     vmsrIop = InstObjParams("vmsr", "Vmsr", "FpRegRegOp",
-                            { "code": "MiscDest = Op1;",
+                            { "code": vmsrrsEnabledCheckCode + \
+                                      "MiscDest = Op1;",
                               "predicate_test": predicateTest }, [])
     header_output += FpRegRegOpDeclare.subst(vmsrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmsrIop);
     exec_output += PredOpExecute.subst(vmsrIop);
 
     vmrsIop = InstObjParams("vmrs", "Vmrs", "FpRegRegOp",
-                            { "code": "Dest = MiscOp1;",
+                            { "code": vmsrrsEnabledCheckCode + \
+                                      "Dest = MiscOp1;",
                               "predicate_test": predicateTest }, [])
     header_output += FpRegRegOpDeclare.subst(vmrsIop);
     decoder_output += FpRegRegOpConstructor.subst(vmrsIop);
@@ -213,7 +215,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrIop);
     exec_output += PredOpExecute.subst(vmrsApsrIop);
 
-    vmovImmSCode = '''
+    vmovImmSCode = vfpEnabledCheckCode + '''
         FpDest.uw = bits(imm, 31, 0);
     '''
     vmovImmSIop = InstObjParams("vmov", "VmovImmS", "FpRegImmOp",
@@ -223,7 +225,7 @@ let {{
     decoder_output += FpRegImmOpConstructor.subst(vmovImmSIop);
     exec_output += PredOpExecute.subst(vmovImmSIop);
 
-    vmovImmDCode = '''
+    vmovImmDCode = vfpEnabledCheckCode + '''
         FpDestP0.uw = bits(imm, 31, 0);
         FpDestP1.uw = bits(imm, 63, 32);
     '''
@@ -234,7 +236,7 @@ let {{
     decoder_output += FpRegImmOpConstructor.subst(vmovImmDIop);
     exec_output += PredOpExecute.subst(vmovImmDIop);
 
-    vmovImmQCode = '''
+    vmovImmQCode = vfpEnabledCheckCode + '''
         FpDestP0.uw = bits(imm, 31, 0);
         FpDestP1.uw = bits(imm, 63, 32);
         FpDestP2.uw = bits(imm, 31, 0);
@@ -247,7 +249,7 @@ let {{
     decoder_output += FpRegImmOpConstructor.subst(vmovImmQIop);
     exec_output += PredOpExecute.subst(vmovImmQIop);
 
-    vmovRegSCode = '''
+    vmovRegSCode = vfpEnabledCheckCode + '''
         FpDest.uw = FpOp1.uw;
     '''
     vmovRegSIop = InstObjParams("vmov", "VmovRegS", "FpRegRegOp",
@@ -257,7 +259,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmovRegSIop);
     exec_output += PredOpExecute.subst(vmovRegSIop);
 
-    vmovRegDCode = '''
+    vmovRegDCode = vfpEnabledCheckCode + '''
         FpDestP0.uw = FpOp1P0.uw;
         FpDestP1.uw = FpOp1P1.uw;
     '''
@@ -268,7 +270,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmovRegDIop);
     exec_output += PredOpExecute.subst(vmovRegDIop);
 
-    vmovRegQCode = '''
+    vmovRegQCode = vfpEnabledCheckCode + '''
         FpDestP0.uw = FpOp1P0.uw;
         FpDestP1.uw = FpOp1P1.uw;
         FpDestP2.uw = FpOp1P2.uw;
@@ -281,7 +283,7 @@ let {{
     decoder_output  += FpRegRegOpConstructor.subst(vmovRegQIop);
     exec_output += PredOpExecute.subst(vmovRegQIop);
 
-    vmovCoreRegBCode = '''
+    vmovCoreRegBCode = vfpEnabledCheckCode + '''
         FpDest.uw = insertBits(FpDest.uw, imm * 8 + 7, imm * 8, Op1.ub);
     '''
     vmovCoreRegBIop = InstObjParams("vmov", "VmovCoreRegB", "FpRegRegImmOp",
@@ -291,7 +293,7 @@ let {{
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovCoreRegBIop);
     exec_output += PredOpExecute.subst(vmovCoreRegBIop);
 
-    vmovCoreRegHCode = '''
+    vmovCoreRegHCode = vfpEnabledCheckCode + '''
         FpDest.uw = insertBits(FpDest.uw, imm * 16 + 15, imm * 16, Op1.uh);
     '''
     vmovCoreRegHIop = InstObjParams("vmov", "VmovCoreRegH", "FpRegRegImmOp",
@@ -301,7 +303,7 @@ let {{
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovCoreRegHIop);
     exec_output += PredOpExecute.subst(vmovCoreRegHIop);
 
-    vmovCoreRegWCode = '''
+    vmovCoreRegWCode = vfpEnabledCheckCode + '''
         FpDest.uw = Op1.uw;
     '''
     vmovCoreRegWIop = InstObjParams("vmov", "VmovCoreRegW", "FpRegRegOp",
@@ -311,7 +313,7 @@ let {{
     decoder_output  += FpRegRegOpConstructor.subst(vmovCoreRegWIop);
     exec_output += PredOpExecute.subst(vmovCoreRegWIop);
 
-    vmovRegCoreUBCode = '''
+    vmovRegCoreUBCode = vfpEnabledCheckCode + '''
         assert(imm < 4);
         Dest = bits(FpOp1.uw, imm * 8 + 7, imm * 8);
     '''
@@ -322,7 +324,7 @@ let {{
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreUBIop);
     exec_output += PredOpExecute.subst(vmovRegCoreUBIop);
 
-    vmovRegCoreUHCode = '''
+    vmovRegCoreUHCode = vfpEnabledCheckCode + '''
         assert(imm < 2);
         Dest = bits(FpOp1.uw, imm * 16 + 15, imm * 16);
     '''
@@ -333,7 +335,7 @@ let {{
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreUHIop);
     exec_output += PredOpExecute.subst(vmovRegCoreUHIop);
 
-    vmovRegCoreSBCode = '''
+    vmovRegCoreSBCode = vfpEnabledCheckCode + '''
         assert(imm < 4);
         Dest = sext<8>(bits(FpOp1.uw, imm * 8 + 7, imm * 8));
     '''
@@ -344,7 +346,7 @@ let {{
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreSBIop);
     exec_output += PredOpExecute.subst(vmovRegCoreSBIop);
 
-    vmovRegCoreSHCode = '''
+    vmovRegCoreSHCode = vfpEnabledCheckCode + '''
         assert(imm < 2);
         Dest = sext<16>(bits(FpOp1.uw, imm * 16 + 15, imm * 16));
     '''
@@ -355,7 +357,7 @@ let {{
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreSHIop);
     exec_output += PredOpExecute.subst(vmovRegCoreSHIop);
 
-    vmovRegCoreWCode = '''
+    vmovRegCoreWCode = vfpEnabledCheckCode + '''
         Dest = FpOp1.uw;
     '''
     vmovRegCoreWIop = InstObjParams("vmov", "VmovRegCoreW", "FpRegRegOp",
@@ -365,7 +367,7 @@ let {{
     decoder_output  += FpRegRegOpConstructor.subst(vmovRegCoreWIop);
     exec_output += PredOpExecute.subst(vmovRegCoreWIop);
 
-    vmov2Reg2CoreCode = '''
+    vmov2Reg2CoreCode = vfpEnabledCheckCode + '''
         FpDestP0.uw = Op1.uw;
         FpDestP1.uw = Op2.uw;
     '''
@@ -376,7 +378,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vmov2Reg2CoreIop);
     exec_output += PredOpExecute.subst(vmov2Reg2CoreIop);
 
-    vmov2Core2RegCode = '''
+    vmov2Core2RegCode = vfpEnabledCheckCode + '''
         Dest.uw = FpOp2P0.uw;
         Op1.uw = FpOp2P1.uw;
     '''
@@ -394,7 +396,7 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    singleCode = '''
+    singleCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         FpDest = %(op)s;
         Fpscr = fpscr;
@@ -402,7 +404,7 @@ let {{
     singleBinOp = "binaryOp(fpscr, FpOp1, FpOp2," + \
                 "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode)"
     singleUnaryOp = "unaryOp(fpscr, FpOp1, %(func)s, fpscr.fz, fpscr.rMode)"
-    doubleCode = '''
+    doubleCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double dest = %(op)s;
         Fpscr = fpscr;
@@ -500,7 +502,7 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    vmlaSCode = '''
+    vmlaSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
@@ -515,7 +517,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlaSIop);
     exec_output += PredOpExecute.subst(vmlaSIop);
 
-    vmlaDCode = '''
+    vmlaDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
@@ -534,7 +536,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlaDIop);
     exec_output += PredOpExecute.subst(vmlaDIop);
 
-    vmlsSCode = '''
+    vmlsSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
@@ -549,7 +551,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlsSIop);
     exec_output += PredOpExecute.subst(vmlsSIop);
 
-    vmlsDCode = '''
+    vmlsDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
@@ -568,7 +570,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlsDIop);
     exec_output += PredOpExecute.subst(vmlsDIop);
 
-    vnmlaSCode = '''
+    vnmlaSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
@@ -583,7 +585,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlaSIop);
     exec_output += PredOpExecute.subst(vnmlaSIop);
 
-    vnmlaDCode = '''
+    vnmlaDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
@@ -602,7 +604,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlaDIop);
     exec_output += PredOpExecute.subst(vnmlaDIop);
 
-    vnmlsSCode = '''
+    vnmlsSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
@@ -617,7 +619,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlsSIop);
     exec_output += PredOpExecute.subst(vnmlsSIop);
 
-    vnmlsDCode = '''
+    vnmlsDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
@@ -636,7 +638,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlsDIop);
     exec_output += PredOpExecute.subst(vnmlsDIop);
 
-    vnmulSCode = '''
+    vnmulSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         FpDest = -binaryOp(fpscr, FpOp1, FpOp2, fpMulS,
                 fpscr.fz, fpscr.dn, fpscr.rMode);
@@ -649,7 +651,7 @@ let {{
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmulSIop);
     exec_output += PredOpExecute.subst(vnmulSIop);
 
-    vnmulDCode = '''
+    vnmulDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double dest = -binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                        dbl(FpOp2P0.uw, FpOp2P1.uw),
@@ -673,7 +675,7 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    vcvtUIntFpSCode = '''
+    vcvtUIntFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.uw) : "m" (FpOp1.uw));
@@ -689,7 +691,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtUIntFpSIop);
     exec_output += PredOpExecute.subst(vcvtUIntFpSIop);
 
-    vcvtUIntFpDCode = '''
+    vcvtUIntFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1P0.uw) : "m" (FpOp1P0.uw));
@@ -707,7 +709,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtUIntFpDIop);
     exec_output += PredOpExecute.subst(vcvtUIntFpDIop);
 
-    vcvtSIntFpSCode = '''
+    vcvtSIntFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.sw) : "m" (FpOp1.sw));
@@ -723,7 +725,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtSIntFpSIop);
     exec_output += PredOpExecute.subst(vcvtSIntFpSIop);
 
-    vcvtSIntFpDCode = '''
+    vcvtSIntFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1P0.sw) : "m" (FpOp1P0.sw));
@@ -741,7 +743,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtSIntFpDIop);
     exec_output += PredOpExecute.subst(vcvtSIntFpDIop);
 
-    vcvtFpUIntSRCode = '''
+    vcvtFpUIntSRCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         vfpFlushToZero(fpscr, FpOp1);
@@ -758,7 +760,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntSRIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntSRIop);
 
-    vcvtFpUIntDRCode = '''
+    vcvtFpUIntDRCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -777,7 +779,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntDRIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntDRIop);
 
-    vcvtFpSIntSRCode = '''
+    vcvtFpSIntSRCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         vfpFlushToZero(fpscr, FpOp1);
@@ -794,7 +796,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntSRIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntSRIop);
 
-    vcvtFpSIntDRCode = '''
+    vcvtFpSIntDRCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -813,7 +815,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDRIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDRIop);
 
-    vcvtFpUIntSCode = '''
+    vcvtFpUIntSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -831,7 +833,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntSIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntSIop);
 
-    vcvtFpUIntDCode = '''
+    vcvtFpUIntDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -851,7 +853,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntDIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntDIop);
 
-    vcvtFpSIntSCode = '''
+    vcvtFpSIntSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -869,7 +871,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntSIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntSIop);
 
-    vcvtFpSIntDCode = '''
+    vcvtFpSIntDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -889,7 +891,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDIop);
 
-    vcvtFpSFpDCode = '''
+    vcvtFpSFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -908,7 +910,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpDIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpDIop);
 
-    vcvtFpDFpSCode = '''
+    vcvtFpDFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -926,7 +928,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpDFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
 
-    vcvtFpHTFpSCode = '''
+    vcvtFpHTFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -944,7 +946,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpHTFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpHTFpSIop);
 
-    vcvtFpHBFpSCode = '''
+    vcvtFpHBFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
@@ -961,7 +963,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpHBFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpHBFpSIop);
 
-    vcvtFpSFpHTCode = '''
+    vcvtFpSFpHTCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -981,7 +983,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHTIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpHTIop);
 
-    vcvtFpSFpHBCode = '''
+    vcvtFpSFpHBCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1001,7 +1003,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHBIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpHBIop);
 
-    vcmpSCode = '''
+    vcmpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpDest, FpOp1);
         if (FpDest == FpOp1) {
@@ -1029,7 +1031,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcmpSIop);
     exec_output += PredOpExecute.subst(vcmpSIop);
 
-    vcmpDCode = '''
+    vcmpDCode = vfpEnabledCheckCode + '''
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
         FPSCR fpscr = Fpscr;
@@ -1059,7 +1061,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcmpDIop);
     exec_output += PredOpExecute.subst(vcmpDIop);
 
-    vcmpZeroSCode = '''
+    vcmpZeroSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpDest);
         // This only handles imm == 0 for now.
@@ -1087,7 +1089,7 @@ let {{
     decoder_output += FpRegImmOpConstructor.subst(vcmpZeroSIop);
     exec_output += PredOpExecute.subst(vcmpZeroSIop);
 
-    vcmpZeroDCode = '''
+    vcmpZeroDCode = vfpEnabledCheckCode + '''
         // This only handles imm == 0 for now.
         assert(imm == 0);
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
@@ -1116,7 +1118,7 @@ let {{
     decoder_output += FpRegImmOpConstructor.subst(vcmpZeroDIop);
     exec_output += PredOpExecute.subst(vcmpZeroDIop);
 
-    vcmpeSCode = '''
+    vcmpeSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpDest, FpOp1);
         if (FpDest == FpOp1) {
@@ -1138,7 +1140,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcmpeSIop);
     exec_output += PredOpExecute.subst(vcmpeSIop);
 
-    vcmpeDCode = '''
+    vcmpeDCode = vfpEnabledCheckCode + '''
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
         FPSCR fpscr = Fpscr;
@@ -1162,7 +1164,7 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcmpeDIop);
     exec_output += PredOpExecute.subst(vcmpeDIop);
 
-    vcmpeZeroSCode = '''
+    vcmpeZeroSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpDest);
         if (FpDest == imm) {
@@ -1184,7 +1186,7 @@ let {{
     decoder_output += FpRegImmOpConstructor.subst(vcmpeZeroSIop);
     exec_output += PredOpExecute.subst(vcmpeZeroSIop);
 
-    vcmpeZeroDCode = '''
+    vcmpeZeroDCode = vfpEnabledCheckCode + '''
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, cDest);
@@ -1214,7 +1216,7 @@ let {{
     decoder_output = ""
     exec_output = ""
 
-    vcvtFpSFixedSCode = '''
+    vcvtFpSFixedSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1231,7 +1233,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpSFixedSIop);
 
-    vcvtFpSFixedDCode = '''
+    vcvtFpSFixedDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -1251,7 +1253,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpSFixedDIop);
 
-    vcvtFpUFixedSCode = '''
+    vcvtFpUFixedSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1268,7 +1270,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpUFixedSIop);
 
-    vcvtFpUFixedDCode = '''
+    vcvtFpUFixedDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -1288,7 +1290,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpUFixedDIop);
 
-    vcvtSFixedFpSCode = '''
+    vcvtSFixedFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.sw) : "m" (FpOp1.sw));
@@ -1304,7 +1306,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtSFixedFpSIop);
 
-    vcvtSFixedFpDCode = '''
+    vcvtSFixedFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1323,7 +1325,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtSFixedFpDIop);
 
-    vcvtUFixedFpSCode = '''
+    vcvtUFixedFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.uw) : "m" (FpOp1.uw));
@@ -1339,7 +1341,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtUFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtUFixedFpSIop);
 
-    vcvtUFixedFpDCode = '''
+    vcvtUFixedFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1358,7 +1360,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtUFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtUFixedFpDIop);
 
-    vcvtFpSHFixedSCode = '''
+    vcvtFpSHFixedSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1376,7 +1378,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSHFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpSHFixedSIop);
 
-    vcvtFpSHFixedDCode = '''
+    vcvtFpSHFixedDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -1397,7 +1399,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSHFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpSHFixedDIop);
 
-    vcvtFpUHFixedSCode = '''
+    vcvtFpUHFixedSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1415,7 +1417,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUHFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpUHFixedSIop);
 
-    vcvtFpUHFixedDCode = '''
+    vcvtFpUHFixedDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
@@ -1436,7 +1438,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUHFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpUHFixedDIop);
 
-    vcvtSHFixedFpSCode = '''
+    vcvtSHFixedFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.sh) : "m" (FpOp1.sh));
@@ -1453,7 +1455,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSHFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtSHFixedFpSIop);
 
-    vcvtSHFixedFpDCode = '''
+    vcvtSHFixedFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1473,7 +1475,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSHFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtSHFixedFpDIop);
 
-    vcvtUHFixedFpSCode = '''
+    vcvtUHFixedFpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.uh) : "m" (FpOp1.uh));
@@ -1490,7 +1492,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtUHFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtUHFixedFpSIop);
 
-    vcvtUHFixedFpDCode = '''
+    vcvtUHFixedFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = Fpscr;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);

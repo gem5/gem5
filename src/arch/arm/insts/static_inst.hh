@@ -42,6 +42,7 @@
 #ifndef __ARCH_ARM_INSTS_STATICINST_HH__
 #define __ARCH_ARM_INSTS_STATICINST_HH__
 
+#include "arch/arm/faults.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 
@@ -318,6 +319,16 @@ class ArmStaticInst : public StaticInst
         } else {
             setNextPC(xc, val);
         }
+    }
+
+    inline Fault
+    disabledFault() const
+    {
+#if FULL_SYSTEM
+            return new UndefinedInstruction();
+#else
+            return new UndefinedInstruction(machInst, false, mnemonic, true);
+#endif
     }
 };
 }

@@ -66,17 +66,6 @@ ISA::clear()
     miscRegs[MISCREG_SCTLR] = sctlr;
     miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
 
-
-    /*
-     * Technically this should be 0, but we don't support those
-     * settings.
-     */
-    CPACR cpacr = 0;
-    // Enable CP 10, 11
-    cpacr.cp10 = 0x3;
-    cpacr.cp11 = 0x3;
-    miscRegs[MISCREG_CPACR] = cpacr;
-
     /* Start with an event in the mailbox */
     miscRegs[MISCREG_SEV_MAILBOX] = 1;
 
@@ -278,9 +267,9 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 CPACR valCpacr = val;
                 newCpacr.cp10 = valCpacr.cp10;
                 newCpacr.cp11 = valCpacr.cp11;
-                if (newCpacr.cp10 != 0x3 || newCpacr.cp11 != 3) {
-                    panic("Disabling coprocessors isn't implemented.\n");
-                }
+                //XXX d32dis isn't implemented. The manual says whether or not
+                //it works is implementation defined.
+                newCpacr.asedis = valCpacr.asedis;
                 newVal = newCpacr;
             }
             break;

@@ -37,6 +37,18 @@
 //
 // Authors: Gabe Black
 
+let {{
+    vfpEnabledCheckCode = '''
+        if (!vfpEnabled(Cpacr, Cpsr, Fpexc))
+            return disabledFault();
+    '''
+
+    vmsrrsEnabledCheckCode = '''
+        if (!vfpEnabled(Cpacr, Cpsr))
+            return disabledFault();
+    '''
+}};
+
 def template FpRegRegOpDeclare {{
 class %(class_name)s : public %(base_class)s
 {

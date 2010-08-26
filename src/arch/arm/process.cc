@@ -78,6 +78,18 @@ ArmLiveProcess::startup()
 {
     LiveProcess::startup();
     argsInit(MachineBytes, VMPageSize);
+    for (int i = 0; i < contextIds.size(); i++) {
+        ThreadContext * tc = system->getThreadContext(contextIds[i]);
+        CPACR cpacr = tc->readMiscReg(MISCREG_CPACR);
+        // Enable the floating point coprocessors.
+        cpacr.cp10 = 0x3;
+        cpacr.cp11 = 0x3;
+        tc->setMiscReg(MISCREG_CPACR, cpacr);
+        // Generically enable floating point support.
+        FPEXC fpexc = tc->readMiscReg(MISCREG_FPEXC);
+        fpexc.en = 1;
+        tc->setMiscReg(MISCREG_FPEXC, fpexc);
+    }
 }
 
 void

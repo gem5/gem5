@@ -159,8 +159,12 @@ Reset::invoke(ThreadContext *tc)
 void
 UndefinedInstruction::invoke(ThreadContext *tc)
 {
+    // If the mnemonic isn't defined this has to be an unknown instruction.
     assert(unknown || mnemonic != NULL);
-    if (unknown) {
+    if (disabled) {
+        panic("Attempted to execute disabled instruction "
+                "'%s' (inst 0x%08x)", mnemonic, machInst);
+    } else if (unknown) {
         panic("Attempted to execute unknown instruction (inst 0x%08x)",
               machInst);
     } else {

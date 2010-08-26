@@ -620,6 +620,13 @@ output exec {{
 }};
 
 let {{
+    simdEnabledCheckCode = '''
+        if (!neonEnabled(Cpacr, Cpsr, Fpexc))
+            return disabledFault();
+    '''
+}};
+
+let {{
 
     header_output = ""
     exec_output = ""
@@ -634,7 +641,7 @@ let {{
     def threeEqualRegInst(name, Name, types, rCount, op,
                           readDest=False, pairwise=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, srcReg2, destReg;
         '''
         for reg in range(rCount):
@@ -694,7 +701,7 @@ let {{
     def threeEqualRegInstFp(name, Name, types, rCount, op,
                             readDest=False, pairwise=False, toInt=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         typedef FloatReg FloatVect[rCount];
         FloatVect srcRegs1, srcRegs2;
         '''
@@ -789,7 +796,7 @@ let {{
         if bigDest:
             destCnt = 4
             destPrefix = 'Big'
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
             %sRegVect srcReg1;
             %sRegVect srcReg2;
             %sRegVect destReg;
@@ -852,7 +859,7 @@ let {{
 
     def twoEqualRegInst(name, Name, types, rCount, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, srcReg2, destReg;
         '''
         for reg in range(rCount):
@@ -897,7 +904,7 @@ let {{
     def twoRegLongInst(name, Name, types, op, readDest=False):
         global header_output, exec_output
         rCount = 2
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, srcReg2;
         BigRegVect destReg;
         '''
@@ -943,7 +950,7 @@ let {{
 
     def twoEqualRegInstFp(name, Name, types, rCount, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         typedef FloatReg FloatVect[rCount];
         FloatVect srcRegs1, srcRegs2, destRegs;
         '''
@@ -989,7 +996,7 @@ let {{
     def twoRegShiftInst(name, Name, types, rCount, op,
             readDest=False, toInt=False, fromInt=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcRegs1, destRegs;
         '''
         for reg in range(rCount):
@@ -1044,7 +1051,7 @@ let {{
 
     def twoRegNarrowShiftInst(name, Name, types, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         BigRegVect srcReg1;
         RegVect destReg;
         '''
@@ -1087,7 +1094,7 @@ let {{
 
     def twoRegLongShiftInst(name, Name, types, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1;
         BigRegVect destReg;
         '''
@@ -1130,7 +1137,7 @@ let {{
 
     def twoRegMiscInst(name, Name, types, rCount, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, destReg;
         '''
         for reg in range(rCount):
@@ -1172,7 +1179,7 @@ let {{
 
     def twoRegMiscScInst(name, Name, types, rCount, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, destReg;
         '''
         for reg in range(rCount):
@@ -1213,7 +1220,7 @@ let {{
 
     def twoRegMiscScramble(name, Name, types, rCount, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, destReg;
         '''
         for reg in range(rCount):
@@ -1248,7 +1255,7 @@ let {{
     def twoRegMiscInstFp(name, Name, types, rCount, op,
             readDest=False, toInt=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         typedef FloatReg FloatVect[rCount];
         FloatVect srcRegs1;
         '''
@@ -1312,7 +1319,7 @@ let {{
 
     def twoRegCondenseInst(name, Name, types, rCount, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcRegs;
         BigRegVect destReg;
         '''
@@ -1355,7 +1362,7 @@ let {{
 
     def twoRegNarrowMiscInst(name, Name, types, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         BigRegVect srcReg1;
         RegVect destReg;
         '''
@@ -1398,7 +1405,7 @@ let {{
 
     def oneRegImmInst(name, Name, types, rCount, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect destReg;
         '''
         if readDest:
@@ -1435,7 +1442,7 @@ let {{
 
     def twoRegLongMiscInst(name, Name, types, op, readDest=False):
         global header_output, exec_output
-        eWalkCode = '''
+        eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1;
         BigRegVect destReg;
         '''

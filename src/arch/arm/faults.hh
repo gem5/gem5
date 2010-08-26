@@ -153,12 +153,15 @@ class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
     ExtMachInst machInst;
     bool unknown;
     const char *mnemonic;
+    bool disabled;
 
   public:
     UndefinedInstruction(ExtMachInst _machInst,
                          bool _unknown,
-                         const char *_mnemonic = NULL) :
-        machInst(_machInst), unknown(_unknown), mnemonic(_mnemonic)
+                         const char *_mnemonic = NULL,
+                         bool _disabled = false) :
+        machInst(_machInst), unknown(_unknown),
+        mnemonic(_mnemonic), disabled(_disabled)
     {
     }
 

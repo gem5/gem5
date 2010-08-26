@@ -205,6 +205,7 @@ def operands {{
     'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', None, 2),
     'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', None, 2),
     'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', None, 2),
+    'Cpacr': ('ControlReg', 'uw', 'MISCREG_CPACR', (None, None, 'IsControl'), 2),
     'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 2),
     'Sctlr': ('ControlReg', 'uw', 'MISCREG_SCTLR', None, 2),
     'SevMailbox': ('ControlReg', 'uw', 'MISCREG_SEV_MAILBOX', None, 2),

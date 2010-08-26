@@ -354,6 +354,12 @@ namespace ArmISA
         Bitfield<31> n;
     EndBitUnion(FPSCR)
 
+    BitUnion32(FPEXC)
+        Bitfield<31> ex;
+        Bitfield<30> en;
+        Bitfield<29, 0> subArchDefined;
+    EndBitUnion(FPEXC)
+
     BitUnion32(MVFR0)
         Bitfield<3, 0> advSimdRegisters;
         Bitfield<7, 4> singlePrecision;
