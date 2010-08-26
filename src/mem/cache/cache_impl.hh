@@ -1103,7 +1103,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // responds in atomic mode, so remember a few things about the
     // original packet up front
     bool invalidate = pkt->isInvalidate();
-    bool needs_exclusive = pkt->needsExclusive();
+    bool M5_VAR_USED needs_exclusive = pkt->needsExclusive();
 
     if (forwardSnoops) {
         // first propagate snoop upward to see if anyone above us wants to
