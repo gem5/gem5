@@ -59,7 +59,7 @@ let {{
     microLdrFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrFpUop',
                                       'MicroMemOp',
                                       {'memacc_code': microLdrFpUopCode,
-                                       'ea_code':
+                                       'ea_code': vfpEnabledCheckCode +
                                            'EA = Rb + (up ? imm : -imm);',
                                        'predicate_test': predicateTest},
                                       ['IsMicroop'])
@@ -68,7 +68,7 @@ let {{
     microLdrDBFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrDBFpUop',
                                       'MicroMemOp',
                                       {'memacc_code': microLdrFpUopCode,
-                                       'ea_code': '''
+                                       'ea_code': vfpEnabledCheckCode + '''
                                         EA = Rb + (up ? imm : -imm) +
                                              (((CPSR)Cpsr).e ? 4 : 0);
                                         ''',
@@ -79,7 +79,7 @@ let {{
     microLdrDTFpUopIop = InstObjParams('ldrfp_uop', 'MicroLdrDTFpUop',
                                       'MicroMemOp',
                                       {'memacc_code': microLdrFpUopCode,
-                                       'ea_code': '''
+                                       'ea_code': vfpEnabledCheckCode + '''
                                         EA = Rb + (up ? imm : -imm) -
                                              (((CPSR)Cpsr).e ? 4 : 0);
                                         ''',
@@ -117,7 +117,8 @@ let {{
                                      'MicroMemOp',
                                      {'memacc_code': microStrFpUopCode,
                                       'postacc_code': "",
-                                      'ea_code': 'EA = Rb + (up ? imm : -imm);',
+                                      'ea_code': vfpEnabledCheckCode +
+                                           'EA = Rb + (up ? imm : -imm);',
                                       'predicate_test': predicateTest},
                                      ['IsMicroop'])
 
@@ -126,7 +127,7 @@ let {{
                                        'MicroMemOp',
                                        {'memacc_code': microStrFpUopCode,
                                         'postacc_code': "",
-                                        'ea_code': '''
+                                        'ea_code': vfpEnabledCheckCode + '''
                                          EA = Rb + (up ? imm : -imm) +
                                               (((CPSR)Cpsr).e ? 4 : 0);
                                          ''',
@@ -138,7 +139,7 @@ let {{
                                        'MicroMemOp',
                                        {'memacc_code': microStrFpUopCode,
                                         'postacc_code': "",
-                                        'ea_code': '''
+                                        'ea_code': vfpEnabledCheckCode + '''
                                          EA = Rb + (up ? imm : -imm) -
                                               (((CPSR)Cpsr).e ? 4 : 0);
                                          ''',
@@ -222,7 +223,7 @@ let {{
                                 { 'mem_decl' : memDecl,
                                   'size' : size,
                                   'memacc_code' : loadMemAccCode,
-                                  'ea_code' : eaCode,
+                                  'ea_code' : simdEnabledCheckCode + eaCode,
                                   'predicate_test' : predicateTest },
                                 [ 'IsMicroop', 'IsMemRef', 'IsLoad' ])
         storeIop = InstObjParams('strneon%(size)d_uop' % subst,
@@ -231,7 +232,7 @@ let {{
                                  { 'mem_decl' : memDecl,
                                    'size' : size,
                                    'memacc_code' : storeMemAccCode,
-                                   'ea_code' : eaCode,
+                                   'ea_code' : simdEnabledCheckCode + eaCode,
                                    'predicate_test' : predicateTest },
                                  [ 'IsMicroop', 'IsMemRef', 'IsStore' ])
 

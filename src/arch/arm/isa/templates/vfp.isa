@@ -43,9 +43,24 @@ let {{
             return disabledFault();
     '''
 
-    vmsrrsEnabledCheckCode = '''
+    vmsrEnabledCheckCode = '''
         if (!vfpEnabled(Cpacr, Cpsr))
-            return disabledFault();
+            if (dest != (int)MISCREG_FPEXC && dest != (int)MISCREG_FPSID)
+                return disabledFault();
+        if (!inPrivilegedMode(Cpsr))
+            if (dest != (int)MISCREG_FPSCR)
+                return disabledFault();
+
+    '''
+
+    vmrsEnabledCheckCode = '''
+        if (!vfpEnabled(Cpacr, Cpsr))
+            if (op1 != (int)MISCREG_FPEXC && op1 != (int)MISCREG_FPSID &&
+                op1 != (int)MISCREG_MVFR0 && op1 != (int)MISCREG_MVFR1)
+                return disabledFault();
+        if (!inPrivilegedMode(Cpsr))
+            if (op1 != (int)MISCREG_FPSCR)
+                return disabledFault();
     '''
 }};
 

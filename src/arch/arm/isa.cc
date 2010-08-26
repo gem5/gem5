@@ -139,6 +139,8 @@ ISA::clear()
         (0 << 2)  | // 3:2
         0;          // 1:0
 
+    miscRegs[MISCREG_CPACR] = 0;
+    miscRegs[MISCREG_FPSID] = 0x410430A0;
     //XXX We need to initialize the rest of the state.
 }
 

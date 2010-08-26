@@ -171,6 +171,10 @@ let {{
             if not self.post:
                 eaCode += self.offset
             eaCode += ";"
+
+            if self.flavor == "fp":
+                eaCode += vfpEnabledCheckCode
+
             self.codeBlobs["ea_code"] = eaCode
 
             # Code that actually handles the access
@@ -241,6 +245,10 @@ let {{
             if not self.post:
                 eaCode += self.offset
             eaCode += ";"
+
+            if self.flavor == "fp":
+                eaCode += vfpEnabledCheckCode
+
             self.codeBlobs["ea_code"] = eaCode
 
             # Code that actually handles the access

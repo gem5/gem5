@@ -620,13 +620,6 @@ output exec {{
 }};
 
 let {{
-    simdEnabledCheckCode = '''
-        if (!neonEnabled(Cpacr, Cpsr, Fpexc))
-            return disabledFault();
-    '''
-}};
-
-let {{
 
     header_output = ""
     exec_output = ""
@@ -3235,7 +3228,7 @@ let {{
         RegVect srcReg1, srcReg2, destReg;
         '''
         for reg in range(rCount):
-            eWalkCode += '''
+            eWalkCode += simdEnabledCheckCode + '''
                 srcReg1.regs[%(reg)d] = htog(FpOp1P%(reg)d.uw);
                 srcReg2.regs[%(reg)d] = htog(FpOp2P%(reg)d.uw);
             ''' % { "reg" : reg }

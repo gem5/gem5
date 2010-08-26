@@ -150,7 +150,7 @@ namespace ArmISA {
     vfpEnabled(CPACR cpacr, CPSR cpsr)
     {
         return cpacr.cp10 == 0x3 ||
-            (cpacr.cp10 == 0x2 && inPrivilegedMode(cpsr));
+            (cpacr.cp10 == 0x1 && inPrivilegedMode(cpsr));
     }
 
     static inline bool

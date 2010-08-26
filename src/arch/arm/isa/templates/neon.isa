@@ -37,6 +37,14 @@
 //
 // Authors: Gabe Black
 
+let {{
+    simdEnabledCheckCode = '''
+        if (!neonEnabled(Cpacr, Cpsr, Fpexc))
+            return disabledFault();
+    '''
+}};
+
+
 def template NeonRegRegRegOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s

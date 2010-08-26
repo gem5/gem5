@@ -192,14 +192,14 @@ let {{
     exec_output = ""
 
     vmsrIop = InstObjParams("vmsr", "Vmsr", "FpRegRegOp",
-                            { "code": vmsrrsEnabledCheckCode + \
+                            { "code": vmsrEnabledCheckCode + \
                                       "MiscDest = Op1;",
                               "predicate_test": predicateTest }, [])
     header_output += FpRegRegOpDeclare.subst(vmsrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmsrIop);
     exec_output += PredOpExecute.subst(vmsrIop);
 
-    vmsrFpscrCode = vmsrrsEnabledCheckCode + '''
+    vmsrFpscrCode = vmsrEnabledCheckCode + '''
     Fpscr = Op1 & ~FpCondCodesMask;
     FpCondCodes = Op1 & FpCondCodesMask;
     '''
@@ -211,7 +211,7 @@ let {{
     exec_output += PredOpExecute.subst(vmsrFpscrIop);
 
     vmrsIop = InstObjParams("vmrs", "Vmrs", "FpRegRegOp",
-                            { "code": vmsrrsEnabledCheckCode + \
+                            { "code": vmrsEnabledCheckCode + \
                                       "Dest = MiscOp1;",
                               "predicate_test": predicateTest }, [])
     header_output += FpRegRegOpDeclare.subst(vmrsIop);
@@ -219,14 +219,14 @@ let {{
     exec_output += PredOpExecute.subst(vmrsIop);
 
     vmrsFpscrIop = InstObjParams("vmrs", "VmrsFpscr", "FpRegRegOp",
-                                 { "code": vmsrrsEnabledCheckCode + \
+                                 { "code": vmrsEnabledCheckCode + \
                                            "Dest = Fpscr | FpCondCodes;",
                                    "predicate_test": predicateTest }, [])
     header_output += FpRegRegOpDeclare.subst(vmrsFpscrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmrsFpscrIop);
     exec_output += PredOpExecute.subst(vmrsFpscrIop);
 
-    vmrsApsrCode = vmsrrsEnabledCheckCode + '''
+    vmrsApsrCode = vmrsEnabledCheckCode + '''
         Dest = (MiscOp1 & imm) | (Dest & ~imm);
     '''
     vmrsApsrIop = InstObjParams("vmrs", "VmrsApsr", "FpRegRegImmOp",
@@ -236,7 +236,7 @@ let {{
     decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrIop);
     exec_output += PredOpExecute.subst(vmrsApsrIop);
 
-    vmrsApsrFpscrCode = vmsrrsEnabledCheckCode + '''
+    vmrsApsrFpscrCode = vmrsEnabledCheckCode + '''
     assert((imm & ~FpCondCodesMask) == 0);
     Dest = (FpCondCodes & imm) | (Dest & ~imm);
     '''
