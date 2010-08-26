@@ -575,8 +575,12 @@ let {{
                                     ['IsMicroop'])
 
     microAddUopIop = InstObjParams('add_uop', 'MicroAddUop',
-                                   'MicroIntOp',
-                                   {'code': 'Ra = Rb + Rc;',
+                                   'MicroIntRegOp',
+                                   {'code':
+                                    '''Ra = Rb + shift_rm_imm(Rc, shiftAmt,
+                                                              shiftType,
+                                                              CondCodes<29:>);
+                                    ''',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
@@ -586,15 +590,39 @@ let {{
                                      'predicate_test': predicateTest},
                                     ['IsMicroop'])
 
+    microSubUopIop = InstObjParams('sub_uop', 'MicroSubUop',
+                                   'MicroIntRegOp',
+                                   {'code':
+                                    '''Ra = Rb - shift_rm_imm(Rc, shiftAmt,
+                                                              shiftType,
+                                                              CondCodes<29:>);
+                                    ''',
+                                    'predicate_test': predicateTest},
+                                   ['IsMicroop'])
+
+    microUopRegMovIop = InstObjParams('uopReg_uop', 'MicroUopRegMov',
+                                   'MicroIntMov',
+                                   {'code': 'IWRa = Rb;',
+                                    'predicate_test': predicateTest},
+                                   ['IsMicroop'])
+
     header_output = MicroIntImmDeclare.subst(microAddiUopIop) + \
                     MicroIntImmDeclare.subst(microSubiUopIop) + \
-                    MicroIntDeclare.subst(microAddUopIop)
+                    MicroIntRegDeclare.subst(microAddUopIop) + \
+                    MicroIntRegDeclare.subst(microSubUopIop) + \
+                    MicroIntMovDeclare.subst(microUopRegMovIop)
+
     decoder_output = MicroIntImmConstructor.subst(microAddiUopIop) + \
                      MicroIntImmConstructor.subst(microSubiUopIop) + \
-                     MicroIntConstructor.subst(microAddUopIop)
+                     MicroIntRegConstructor.subst(microAddUopIop) + \
+                     MicroIntRegConstructor.subst(microSubUopIop) + \
+                     MicroIntMovConstructor.subst(microUopRegMovIop)
+
     exec_output = PredOpExecute.subst(microAddiUopIop) + \
                   PredOpExecute.subst(microSubiUopIop) + \
-                  PredOpExecute.subst(microAddUopIop)
+                  PredOpExecute.subst(microAddUopIop) + \
+                  PredOpExecute.subst(microSubUopIop) + \
+                  PredOpExecute.subst(microUopRegMovIop)
 }};
 
 let {{

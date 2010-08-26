@@ -128,6 +128,23 @@ class MicroNeonMixLaneOp : public MicroNeonMixOp
     {
     }
 };
+/**
+ * Microops of the form IntRegA = IntRegB
+ */
+class MicroIntMov : public MicroOp
+{
+  protected:
+    RegIndex ura, urb;
+
+    MicroIntMov(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+               RegIndex _ura, RegIndex _urb)
+            : MicroOp(mnem, machInst, __opClass),
+              ura(_ura), urb(_urb)
+    {
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
 
 /**
  * Microops of the form IntRegA = IntRegB op Imm
@@ -136,10 +153,10 @@ class MicroIntImmOp : public MicroOp
 {
   protected:
     RegIndex ura, urb;
-    uint8_t imm;
+    uint32_t imm;
 
     MicroIntImmOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-                  RegIndex _ura, RegIndex _urb, uint8_t _imm)
+                  RegIndex _ura, RegIndex _urb, uint32_t _imm)
             : MicroOp(mnem, machInst, __opClass),
               ura(_ura), urb(_urb), imm(_imm)
     {
@@ -164,6 +181,26 @@ class MicroIntOp : public MicroOp
     }
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+/**
+ * Microops of the form IntRegA = IntRegB op shifted IntRegC
+ */
+class MicroIntRegOp : public MicroOp
+{
+  protected:
+    RegIndex ura, urb, urc;
+    int32_t shiftAmt;
+    ArmShiftType shiftType;
+
+    MicroIntRegOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+               RegIndex _ura, RegIndex _urb, RegIndex _urc,
+               int32_t _shiftAmt, ArmShiftType _shiftType)
+            : MicroOp(mnem, machInst, __opClass),
+              ura(_ura), urb(_urb), urc(_urc),
+              shiftAmt(_shiftAmt), shiftType(_shiftType)
+    {
+    }
 };
 
 /**

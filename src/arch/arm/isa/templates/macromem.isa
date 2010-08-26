@@ -216,6 +216,31 @@ def template MicroNeonMixLaneDeclare {{
 
 ////////////////////////////////////////////////////////////////////
 //
+// Integer = Integer
+//
+
+def template MicroIntMovDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex _ura, RegIndex _urb);
+        %(BasicExecDeclare)s
+    };
+}};
+def template MicroIntMovConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                   RegIndex _ura,
+                                   RegIndex _urb)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _ura, _urb)
+    {
+        %(constructor)s;
+    }
+}};
+
+////////////////////////////////////////////////////////////////////
+//
 // Integer = Integer op Immediate microops
 //
 
@@ -225,7 +250,7 @@ def template MicroIntImmDeclare {{
       public:
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb,
-                       uint8_t _imm);
+                       int32_t _imm);
         %(BasicExecDeclare)s
     };
 }};
@@ -234,9 +259,31 @@ def template MicroIntImmConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst,
                                    RegIndex _ura,
                                    RegIndex _urb,
-                                   uint8_t _imm)
+                                   int32_t _imm)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          _ura, _urb, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
+def template MicroIntRegDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex _ura, RegIndex _urb, RegIndex _urc,
+                       int32_t _shiftAmt, ArmShiftType _shiftType);
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroIntRegConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                   RegIndex _ura, RegIndex _urb, RegIndex _urc,
+                                   int32_t _shiftAmt, ArmShiftType _shiftType)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _ura, _urb, _urc, _shiftAmt, _shiftType)
     {
         %(constructor)s;
     }

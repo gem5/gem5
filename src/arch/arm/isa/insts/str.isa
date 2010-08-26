@@ -67,7 +67,7 @@ let {{
             self.memFlags = ["ArmISA::TLB::MustBeOne"]
             self.codeBlobs = { "postacc_code" : "" }
 
-        def emitHelper(self, base = 'Memory'):
+        def emitHelper(self, base = 'Memory', wbDecl = None):
 
             global header_output, decoder_output, exec_output
 
@@ -76,7 +76,7 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                                           self.memFlags, [], base)
+                                           self.memFlags, [], base, wbDecl)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -137,11 +137,24 @@ let {{
             super(StoreImmInst, self).__init__(*args, **kargs)
             self.offset = self.op + " imm"
 
+            if self.add:
+                self.wbDecl = "MicroAddiUop(machInst, base, base, imm);"
+            else:
+                self.wbDecl = "MicroSubiUop(machInst, base, base, imm);"
+
     class StoreRegInst(StoreInst):
         def __init__(self, *args, **kargs):
             super(StoreRegInst, self).__init__(*args, **kargs)
             self.offset = self.op + " shift_rm_imm(Index, shiftAmt," + \
                                     " shiftType, CondCodes<29:>)"
+            if self.add:
+                 self.wbDecl = '''
+                     MicroAddUop(machInst, base, base, index, shiftAmt, shiftType);
+                 '''
+            else:
+                 self.wbDecl = '''
+                     MicroSubUop(machInst, base, base, index, shiftAmt, shiftType);
+                 '''
 
     class StoreSingle(StoreInst):
         def __init__(self, *args, **kargs):
@@ -186,14 +199,14 @@ let {{
             accCode = accCode % \
                 { "suffix" : buildMemSuffix(self.sign, self.size) }
 
-            if self.writeback:
-                accCode += "Base = Base %s;\n" % self.offset
-
             self.codeBlobs["memacc_code"] = accCode
 
             # Push it out to the output files
             base = buildMemBase(self.basePrefix, self.post, self.writeback)
-            self.emitHelper(base)
+            wbDecl = None
+            if self.writeback:
+                wbDecl = self.wbDecl
+            self.emitHelper(base, wbDecl)
 
     def storeImmClassName(post, add, writeback, size=4, sign=False, user=False):
         return memClassName("STORE_IMM", post, add, writeback, size, sign, user)
@@ -217,7 +230,7 @@ let {{
         return memClassName("STORE_REG", post, add, writeback, size, sign, user)
 
     class StoreReg(StoreRegInst, StoreSingle):
-        decConstBase = 'LoadStoreReg'
+        decConstBase = 'StoreReg'
         basePrefix = 'MemoryReg'
         nameFunc = staticmethod(storeRegClassName)
 
@@ -265,14 +278,14 @@ let {{
                          ((uint64_t)cSwap(Dest2.uw, cpsr.e) << 32);
                 '''
 
-            if self.writeback:
-                accCode += "Base = Base %s;\n" % self.offset
-
             self.codeBlobs["memacc_code"] = accCode
 
             # Push it out to the output files
             base = buildMemBase(self.basePrefix, self.post, self.writeback)
-            self.emitHelper(base)
+            wbDecl = None
+            if self.writeback:
+                wbDecl = self.wbDecl
+            self.emitHelper(base, wbDecl)
 
     def storeDoubleImmClassName(post, add, writeback):
         return memClassName("STORE_IMMD", post, add, writeback, 4, False, False)
@@ -296,7 +309,7 @@ let {{
         return memClassName("STORE_REGD", post, add, writeback, 4, False, False)
 
     class StoreDoubleReg(StoreRegInst, StoreDouble):
-        decConstBase = 'LoadStoreDReg'
+        decConstBase = 'StoreDReg'
         basePrefix = 'MemoryDReg'
         nameFunc = staticmethod(storeDoubleRegClassName)
 

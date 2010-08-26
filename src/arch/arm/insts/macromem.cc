@@ -185,7 +185,7 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
     if (wb) {
         if (rm != 15 && rm != 13) {
             microOps[uopIdx++] =
-                new MicroAddUop(machInst, rn, rn, rm);
+                new MicroAddUop(machInst, rn, rn, rm, 0, ArmISA::LSL);
         } else {
             microOps[uopIdx++] =
                 new MicroAddiUop(machInst, rn, rn, regs * 8);
@@ -320,7 +320,7 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
     if (wb) {
         if (rm != 15 && rm != 13) {
             microOps[uopIdx++] =
-                new MicroAddUop(machInst, rn, rn, rm);
+                new MicroAddUop(machInst, rn, rn, rm, 0, ArmISA::LSL);
         } else {
             microOps[uopIdx++] =
                 new MicroAddiUop(machInst, rn, rn, loadSize);
@@ -566,7 +566,7 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
     if (wb) {
         if (rm != 15 && rm != 13) {
             microOps[uopIdx++] =
-                new MicroAddUop(machInst, rn, rn, rm);
+                new MicroAddUop(machInst, rn, rn, rm, 0, ArmISA::LSL);
         } else {
             microOps[uopIdx++] =
                 new MicroAddiUop(machInst, rn, rn, regs * 8);
@@ -762,7 +762,7 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
     if (wb) {
         if (rm != 15 && rm != 13) {
             microOps[uopIdx++] =
-                new MicroAddUop(machInst, rn, rn, rm);
+                new MicroAddUop(machInst, rn, rn, rm, 0, ArmISA::LSL);
         } else {
             microOps[uopIdx++] =
                 new MicroAddiUop(machInst, rn, rn, storeSize);
@@ -874,6 +874,17 @@ MicroIntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     printReg(ss, urb);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
+    return ss.str();
+}
+
+std::string
+MicroIntMov::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printReg(ss, ura);
+    ss << ", ";
+    printReg(ss, urb);
     return ss.str();
 }
 

@@ -146,7 +146,8 @@ def template PredOpExecute {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0) {
+        if (fault == NoFault && machInst.itstateMask != 0&&
+                (!isMicroop() || isLastMicroop())) {
             xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 

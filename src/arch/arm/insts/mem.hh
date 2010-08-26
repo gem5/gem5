@@ -77,12 +77,28 @@ class RfeOp : public PredOp
     IntRegIndex base;
     AddrMode mode;
     bool wb;
+    static const unsigned numMicroops = 2;
+
+    StaticInstPtr *uops;
 
     RfeOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
           IntRegIndex _base, AddrMode _mode, bool _wb)
         : PredOp(mnem, _machInst, __opClass),
-          base(_base), mode(_mode), wb(_wb)
+          base(_base), mode(_mode), wb(_wb), uops(NULL)
     {}
+
+    virtual
+    ~RfeOp()
+    {
+        delete uops;
+    }
+
+    StaticInstPtr
+    fetchMicroop(MicroPC microPC)
+    {
+        assert(uops != NULL && microPC < numMicroops);
+        return uops[microPC];
+    }
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
@@ -101,12 +117,28 @@ class SrsOp : public PredOp
     uint32_t regMode;
     AddrMode mode;
     bool wb;
+    static const unsigned numMicroops = 2;
+
+    StaticInstPtr *uops;
 
     SrsOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
           uint32_t _regMode, AddrMode _mode, bool _wb)
         : PredOp(mnem, _machInst, __opClass),
-          regMode(_regMode), mode(_mode), wb(_wb)
+          regMode(_regMode), mode(_mode), wb(_wb), uops(NULL)
     {}
+
+    virtual
+    ~SrsOp()
+    {
+        delete uops;
+    }
+
+    StaticInstPtr
+    fetchMicroop(MicroPC microPC)
+    {
+        assert(uops != NULL && microPC < numMicroops);
+        return uops[microPC];
+    }
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
@@ -125,12 +157,28 @@ class Memory : public PredOp
     IntRegIndex dest;
     IntRegIndex base;
     bool add;
+    static const unsigned numMicroops = 3;
+
+    StaticInstPtr *uops;
 
     Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
            IntRegIndex _dest, IntRegIndex _base, bool _add)
         : PredOp(mnem, _machInst, __opClass),
-          dest(_dest), base(_base), add(_add)
+          dest(_dest), base(_base), add(_add), uops(NULL)
     {}
+
+    virtual
+    ~Memory()
+    {
+        delete [] uops;
+    }
+
+    StaticInstPtr
+    fetchMicroop(MicroPC microPC)
+    {
+        assert(uops != NULL && microPC < numMicroops);
+        return uops[microPC];
+    }
 
     virtual void
     printOffset(std::ostream &os) const

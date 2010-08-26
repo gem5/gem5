@@ -67,7 +67,7 @@ let {{
             self.memFlags = ["ArmISA::TLB::MustBeOne"]
             self.codeBlobs = {"postacc_code" : ""}
 
-        def emitHelper(self, base = 'Memory'):
+        def emitHelper(self, base = 'Memory', wbDecl = None):
 
             global header_output, decoder_output, exec_output
 
@@ -76,7 +76,7 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                                           self.memFlags, [], base)
+                                           self.memFlags, [], base, wbDecl)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -113,22 +113,36 @@ let {{
             Cpsr = ~CondCodesMask & newCpsr;
             CondCodes = CondCodesMask & newCpsr;
             '''
-            if self.writeback:
-                accCode += "Base = Base + %s;\n" % wbDiff
             self.codeBlobs["memacc_code"] = accCode
 
-            self.emitHelper('RfeOp')
+            wbDecl = None
+            if self.writeback:
+                wbDecl = "MicroAddiUop(machInst, base, base, %d);" % wbDiff
+            self.emitHelper('RfeOp', wbDecl)
 
     class LoadImmInst(LoadInst):
         def __init__(self, *args, **kargs):
             super(LoadImmInst, self).__init__(*args, **kargs)
             self.offset = self.op + " imm"
 
+            if self.add:
+                self.wbDecl = "MicroAddiUop(machInst, base, base, imm);"
+            else:
+                self.wbDecl = "MicroSubiUop(machInst, base, base, imm);"
+
     class LoadRegInst(LoadInst):
         def __init__(self, *args, **kargs):
             super(LoadRegInst, self).__init__(*args, **kargs)
             self.offset = self.op + " shift_rm_imm(Index, shiftAmt," + \
                                     " shiftType, CondCodes<29:>)"
+            if self.add:
+                 self.wbDecl = '''
+                     MicroAddUop(machInst, base, base, wbIndexReg, shiftAmt, shiftType);
+                 '''
+            else:
+                 self.wbDecl = '''
+                     MicroSubUop(machInst, base, base, wbIndexReg, shiftAmt, shiftType);
+                 '''
 
     class LoadSingle(LoadInst):
         def __init__(self, *args, **kargs):
@@ -175,20 +189,20 @@ let {{
                 accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);"
             accCode = accCode % buildMemSuffix(self.sign, self.size)
 
-            if self.writeback:
-                accCode += "Base = Base %s;\n" % self.offset
-
             self.codeBlobs["memacc_code"] = accCode
 
             # Push it out to the output files
             base = buildMemBase(self.basePrefix, self.post, self.writeback)
-            self.emitHelper(base)
+            wbDecl = None
+            if self.writeback:
+                wbDecl = self.wbDecl
+            self.emitHelper(base, wbDecl)
 
     def loadImmClassName(post, add, writeback, size=4, sign=False, user=False):
         return memClassName("LOAD_IMM", post, add, writeback, size, sign, user)
 
     class LoadImm(LoadImmInst, LoadSingle):
-        decConstBase = 'LoadStoreImm'
+        decConstBase = 'LoadImm'
         basePrefix = 'MemoryImm'
         nameFunc = staticmethod(loadImmClassName)
 
@@ -196,7 +210,7 @@ let {{
         return memClassName("LOAD_REG", post, add, writeback, size, sign, user)
 
     class LoadReg(LoadRegInst, LoadSingle):
-        decConstBase = 'LoadStoreReg'
+        decConstBase = 'LoadReg'
         basePrefix = 'MemoryReg'
         nameFunc = staticmethod(loadRegClassName)
 
@@ -244,14 +258,14 @@ let {{
                 FpDest2.uw = (uint32_t)(swappedMem >> 32);
                 '''
 
-            if self.writeback:
-                accCode += "Base = Base %s;\n" % self.offset
-
             self.codeBlobs["memacc_code"] = accCode
 
             # Push it out to the output files
             base = buildMemBase(self.basePrefix, self.post, self.writeback)
-            self.emitHelper(base)
+            wbDecl = None
+            if self.writeback:
+                wbDecl = self.wbDecl
+            self.emitHelper(base, wbDecl)
 
     def loadDoubleImmClassName(post, add, writeback):
         return memClassName("LOAD_IMMD", post, add, writeback, 4, False, False)
@@ -265,7 +279,7 @@ let {{
         return memClassName("LOAD_REGD", post, add, writeback, 4, False, False)
 
     class LoadDoubleReg(LoadRegInst, LoadDouble):
-        decConstBase = 'LoadStoreDReg'
+        decConstBase = 'LoadDReg'
         basePrefix = 'MemoryDReg'
         nameFunc = staticmethod(loadDoubleRegClassName)
 

@@ -48,7 +48,7 @@ let {{
             self.constructTemplate = eval(self.decConstBase + 'Constructor')
 
         def fillTemplates(self, name, Name, codeBlobs, memFlags, instFlags,
-                          base = 'Memory'):
+                          base = 'Memory', wbDecl = None):
             # Make sure flags are in lists (convert to lists if not).
             memFlags = makeList(memFlags)
             instFlags = makeList(instFlags)
@@ -62,14 +62,38 @@ let {{
 
             codeBlobs["ea_code"] = eaCode
 
-            iop = InstObjParams(name, Name, base, codeBlobs, instFlags)
+            macroName = Name
+            instFlagsCopy = list(instFlags)
+            codeBlobsCopy = dict(codeBlobs)
+            if wbDecl is not None:
+                instFlagsCopy.append('IsMicroop')
+                Name = Name + 'Acc'
+            codeBlobsCopy['acc_name'] = Name
+            codeBlobsCopy['wb_decl'] = wbDecl
+            codeBlobsCopy['use_uops'] = 0
 
-            # (header_output, decoder_output, decode_block, exec_output)
-            return (self.declareTemplate.subst(iop),
-                    self.constructTemplate.subst(iop),
-                    self.fullExecTemplate.subst(iop)
-                    + self.initiateAccTemplate.subst(iop)
-                    + self.completeAccTemplate.subst(iop))
+            iop = InstObjParams(name, Name, base,
+                                codeBlobsCopy, instFlagsCopy)
+
+            header_output = self.declareTemplate.subst(iop)
+            decoder_output = self.constructTemplate.subst(iop)
+            exec_output = self.fullExecTemplate.subst(iop) + \
+                          self.initiateAccTemplate.subst(iop) + \
+                          self.completeAccTemplate.subst(iop)
+
+            if wbDecl is not None:
+                iop = InstObjParams(name, macroName, base,
+                                    { "wb_decl" : wbDecl,
+                                      "acc_name" : Name,
+                                      "use_uops" : 1 },
+                                    ['IsMacroop'])
+                header_output += self.declareTemplate.subst(iop)
+                decoder_output += self.constructTemplate.subst(iop)
+                exec_output += PanicExecute.subst(iop) + \
+                               PanicInitiateAcc.subst(iop) + \
+                               PanicCompleteAcc.subst(iop)
+
+            return (header_output, decoder_output, exec_output)
 
     def pickPredicate(blobs):
         for val in blobs.values():
