@@ -199,6 +199,17 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmsrIop);
     exec_output += PredOpExecute.subst(vmsrIop);
 
+    vmsrFpscrCode = vmsrrsEnabledCheckCode + '''
+    Fpscr = Op1 & ~FpCondCodesMask;
+    FpCondCodes = Op1 & FpCondCodesMask;
+    '''
+    vmsrFpscrIop = InstObjParams("vmsr", "VmsrFpscr", "FpRegRegOp",
+                                 { "code": vmsrFpscrCode,
+                                   "predicate_test": predicateTest }, [])
+    header_output += FpRegRegOpDeclare.subst(vmsrFpscrIop);
+    decoder_output += FpRegRegOpConstructor.subst(vmsrFpscrIop);
+    exec_output += PredOpExecute.subst(vmsrFpscrIop);
+
     vmrsIop = InstObjParams("vmrs", "Vmrs", "FpRegRegOp",
                             { "code": vmsrrsEnabledCheckCode + \
                                       "Dest = MiscOp1;",
@@ -207,13 +218,34 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmrsIop);
     exec_output += PredOpExecute.subst(vmrsIop);
 
-    vmrsApsrCode = "Dest = (MiscOp1 & imm) | (Dest & ~imm);"
+    vmrsFpscrIop = InstObjParams("vmrs", "VmrsFpscr", "FpRegRegOp",
+                                 { "code": vmsrrsEnabledCheckCode + \
+                                           "Dest = Fpscr | FpCondCodes;",
+                                   "predicate_test": predicateTest }, [])
+    header_output += FpRegRegOpDeclare.subst(vmrsFpscrIop);
+    decoder_output += FpRegRegOpConstructor.subst(vmrsFpscrIop);
+    exec_output += PredOpExecute.subst(vmrsFpscrIop);
+
+    vmrsApsrCode = vmsrrsEnabledCheckCode + '''
+        Dest = (MiscOp1 & imm) | (Dest & ~imm);
+    '''
     vmrsApsrIop = InstObjParams("vmrs", "VmrsApsr", "FpRegRegImmOp",
                                 { "code": vmrsApsrCode,
                                   "predicate_test": predicateTest }, [])
     header_output += FpRegRegImmOpDeclare.subst(vmrsApsrIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrIop);
     exec_output += PredOpExecute.subst(vmrsApsrIop);
+
+    vmrsApsrFpscrCode = vmsrrsEnabledCheckCode + '''
+    assert((imm & ~FpCondCodesMask) == 0);
+    Dest = (FpCondCodes & imm) | (Dest & ~imm);
+    '''
+    vmrsApsrFpscrIop = InstObjParams("vmrs", "VmrsApsrFpscr", "FpRegRegImmOp",
+                                     { "code": vmrsApsrFpscrCode,
+                                       "predicate_test": predicateTest }, [])
+    header_output += FpRegRegImmOpDeclare.subst(vmrsApsrFpscrIop);
+    decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrFpscrIop);
+    exec_output += PredOpExecute.subst(vmrsApsrFpscrIop);
 
     vmovImmSCode = vfpEnabledCheckCode + '''
         FpDest.uw = bits(imm, 31, 0);
@@ -397,17 +429,17 @@ let {{
     exec_output = ""
 
     singleCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         FpDest = %(op)s;
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     singleBinOp = "binaryOp(fpscr, FpOp1, FpOp2," + \
                 "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode)"
     singleUnaryOp = "unaryOp(fpscr, FpOp1, %(func)s, fpscr.fz, fpscr.rMode)"
     doubleCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double dest = %(op)s;
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(dest);
         FpDestP1.uw = dblHi(dest);
     '''
@@ -503,12 +535,12 @@ let {{
     exec_output = ""
 
     vmlaSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
         FpDest = binaryOp(fpscr, FpDest, mid, fpAddS,
                 fpscr.fz, fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vmlaSIop = InstObjParams("vmlas", "VmlaS", "FpRegRegRegOp",
                                      { "code": vmlaSCode,
@@ -518,14 +550,14 @@ let {{
     exec_output += PredOpExecute.subst(vmlaSIop);
 
     vmlaDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
                                      fpMulD, fpscr.fz, fpscr.dn, fpscr.rMode);
         double dest = binaryOp(fpscr, dbl(FpDestP0.uw, FpDestP1.uw),
                                       mid, fpAddD, fpscr.fz,
                                       fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(dest);
         FpDestP1.uw = dblHi(dest);
     '''
@@ -537,12 +569,12 @@ let {{
     exec_output += PredOpExecute.subst(vmlaDIop);
 
     vmlsSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
         FpDest = binaryOp(fpscr, FpDest, -mid, fpAddS,
                 fpscr.fz, fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vmlsSIop = InstObjParams("vmlss", "VmlsS", "FpRegRegRegOp",
                                      { "code": vmlsSCode,
@@ -552,14 +584,14 @@ let {{
     exec_output += PredOpExecute.subst(vmlsSIop);
 
     vmlsDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
                                      fpMulD, fpscr.fz, fpscr.dn, fpscr.rMode);
         double dest = binaryOp(fpscr, dbl(FpDestP0.uw, FpDestP1.uw),
                                       -mid, fpAddD, fpscr.fz,
                                       fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(dest);
         FpDestP1.uw = dblHi(dest);
     '''
@@ -571,12 +603,12 @@ let {{
     exec_output += PredOpExecute.subst(vmlsDIop);
 
     vnmlaSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
         FpDest = binaryOp(fpscr, -FpDest, -mid, fpAddS,
                 fpscr.fz, fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vnmlaSIop = InstObjParams("vnmlas", "VnmlaS", "FpRegRegRegOp",
                                      { "code": vnmlaSCode,
@@ -586,14 +618,14 @@ let {{
     exec_output += PredOpExecute.subst(vnmlaSIop);
 
     vnmlaDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
                                      fpMulD, fpscr.fz, fpscr.dn, fpscr.rMode);
         double dest = binaryOp(fpscr, -dbl(FpDestP0.uw, FpDestP1.uw),
                                       -mid, fpAddD, fpscr.fz,
                                       fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(dest);
         FpDestP1.uw = dblHi(dest);
     '''
@@ -605,12 +637,12 @@ let {{
     exec_output += PredOpExecute.subst(vnmlaDIop);
 
     vnmlsSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         float mid = binaryOp(fpscr, FpOp1, FpOp2,
                 fpMulS, fpscr.fz, fpscr.dn, fpscr.rMode);
         FpDest = binaryOp(fpscr, -FpDest, mid, fpAddS,
                 fpscr.fz, fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vnmlsSIop = InstObjParams("vnmlss", "VnmlsS", "FpRegRegRegOp",
                                      { "code": vnmlsSCode,
@@ -620,14 +652,14 @@ let {{
     exec_output += PredOpExecute.subst(vnmlsSIop);
 
     vnmlsDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double mid = binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                      dbl(FpOp2P0.uw, FpOp2P1.uw),
                                      fpMulD, fpscr.fz, fpscr.dn, fpscr.rMode);
         double dest = binaryOp(fpscr, -dbl(FpDestP0.uw, FpDestP1.uw),
                                       mid, fpAddD, fpscr.fz,
                                       fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(dest);
         FpDestP1.uw = dblHi(dest);
     '''
@@ -639,10 +671,10 @@ let {{
     exec_output += PredOpExecute.subst(vnmlsDIop);
 
     vnmulSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         FpDest = -binaryOp(fpscr, FpOp1, FpOp2, fpMulS,
                 fpscr.fz, fpscr.dn, fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vnmulSIop = InstObjParams("vnmuls", "VnmulS", "FpRegRegRegOp",
                                      { "code": vnmulSCode,
@@ -652,12 +684,12 @@ let {{
     exec_output += PredOpExecute.subst(vnmulSIop);
 
     vnmulDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double dest = -binaryOp(fpscr, dbl(FpOp1P0.uw, FpOp1P1.uw),
                                        dbl(FpOp2P0.uw, FpOp2P1.uw),
                                        fpMulD, fpscr.fz, fpscr.dn,
                                        fpscr.rMode);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(dest);
         FpDestP1.uw = dblHi(dest);
     '''
@@ -676,13 +708,13 @@ let {{
     exec_output = ""
 
     vcvtUIntFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.uw) : "m" (FpOp1.uw));
         FpDest = FpOp1.uw;
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtUIntFpSIop = InstObjParams("vcvt", "VcvtUIntFpS", "FpRegRegOp",
                                      { "code": vcvtUIntFpSCode,
@@ -692,13 +724,13 @@ let {{
     exec_output += PredOpExecute.subst(vcvtUIntFpSIop);
 
     vcvtUIntFpDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1P0.uw) : "m" (FpOp1P0.uw));
         double cDest = (uint64_t)FpOp1P0.uw;
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(cDest);
         FpDestP1.uw = dblHi(cDest);
     '''
@@ -710,13 +742,13 @@ let {{
     exec_output += PredOpExecute.subst(vcvtUIntFpDIop);
 
     vcvtSIntFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.sw) : "m" (FpOp1.sw));
         FpDest = FpOp1.sw;
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtSIntFpSIop = InstObjParams("vcvt", "VcvtSIntFpS", "FpRegRegOp",
                                      { "code": vcvtSIntFpSCode,
@@ -726,13 +758,13 @@ let {{
     exec_output += PredOpExecute.subst(vcvtSIntFpSIop);
 
     vcvtSIntFpDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1P0.sw) : "m" (FpOp1P0.sw));
         double cDest = FpOp1P0.sw;
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(cDest);
         FpDestP1.uw = dblHi(cDest);
     '''
@@ -744,14 +776,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtSIntFpDIop);
 
     vcvtFpUIntSRCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         vfpFlushToZero(fpscr, FpOp1);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest.uw = vfpFpSToFixed(FpOp1, false, false, 0, false);
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpUIntSRIop = InstObjParams("vcvt", "VcvtFpUIntSR", "FpRegRegOp",
                                      { "code": vcvtFpUIntSRCode,
@@ -761,7 +793,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUIntSRIop);
 
     vcvtFpUIntDRCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -769,7 +801,7 @@ let {{
         uint64_t result = vfpFpDToFixed(cOp1, false, false, 0, false);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = result;
     '''
     vcvtFpUIntDRIop = InstObjParams("vcvtr", "VcvtFpUIntDR", "FpRegRegOp",
@@ -780,14 +812,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUIntDRIop);
 
     vcvtFpSIntSRCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         vfpFlushToZero(fpscr, FpOp1);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest.sw = vfpFpSToFixed(FpOp1, true, false, 0, false);
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpSIntSRIop = InstObjParams("vcvtr", "VcvtFpSIntSR", "FpRegRegOp",
                                      { "code": vcvtFpSIntSRCode,
@@ -797,7 +829,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSIntSRIop);
 
     vcvtFpSIntDRCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -805,7 +837,7 @@ let {{
         int64_t result = vfpFpDToFixed(cOp1, true, false, 0, false);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = result;
     '''
     vcvtFpSIntDRIop = InstObjParams("vcvtr", "VcvtFpSIntDR", "FpRegRegOp",
@@ -816,7 +848,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSIntDRIop);
 
     vcvtFpUIntSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
@@ -824,7 +856,7 @@ let {{
         FpDest.uw = vfpFpSToFixed(FpOp1, false, false, 0);
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpUIntSIop = InstObjParams("vcvt", "VcvtFpUIntS", "FpRegRegOp",
                                      { "code": vcvtFpUIntSCode,
@@ -834,7 +866,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUIntSIop);
 
     vcvtFpUIntDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -843,7 +875,7 @@ let {{
         uint64_t result = vfpFpDToFixed(cOp1, false, false, 0);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = result;
     '''
     vcvtFpUIntDIop = InstObjParams("vcvt", "VcvtFpUIntD", "FpRegRegOp",
@@ -854,7 +886,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUIntDIop);
 
     vcvtFpSIntSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
@@ -862,7 +894,7 @@ let {{
         FpDest.sw = vfpFpSToFixed(FpOp1, true, false, 0);
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpSIntSIop = InstObjParams("vcvt", "VcvtFpSIntS", "FpRegRegOp",
                                      { "code": vcvtFpSIntSCode,
@@ -872,7 +904,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSIntSIop);
 
     vcvtFpSIntDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -881,7 +913,7 @@ let {{
         int64_t result = vfpFpDToFixed(cOp1, true, false, 0);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = result;
     '''
     vcvtFpSIntDIop = InstObjParams("vcvt", "VcvtFpSIntD", "FpRegRegOp",
@@ -892,14 +924,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSIntDIop);
 
     vcvtFpSFpDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         double cDest = fixFpSFpDDest(Fpscr, FpOp1);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(cDest);
         FpDestP1.uw = dblHi(cDest);
     '''
@@ -911,7 +943,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSFpDIop);
 
     vcvtFpDFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -919,7 +951,7 @@ let {{
         FpDest = fixFpDFpSDest(Fpscr, cOp1);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpDFpSIop = InstObjParams("vcvt", "VcvtFpDFpS", "FpRegRegOp",
                                      { "code": vcvtFpDFpSCode,
@@ -929,7 +961,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
 
     vcvtFpHTFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
@@ -937,7 +969,7 @@ let {{
                             bits(fpToBits(FpOp1), 31, 16));
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpHTFpSIop = InstObjParams("vcvtt", "VcvtFpHTFpS", "FpRegRegOp",
                                    { "code": vcvtFpHTFpSCode,
@@ -947,14 +979,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpHTFpSIop);
 
     vcvtFpHBFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest = vcvtFpHFpS(fpscr, fpscr.dn, fpscr.ahp,
                             bits(fpToBits(FpOp1), 15, 0));
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpHBFpSIop = InstObjParams("vcvtb", "VcvtFpHBFpS", "FpRegRegOp",
                                    { "code": vcvtFpHBFpSCode,
@@ -964,7 +996,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpHBFpSIop);
 
     vcvtFpSFpHTCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1), "=m" (FpDest.uw)
@@ -974,7 +1006,7 @@ let {{
                                fpscr.rMode, fpscr.ahp, FpOp1));
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpSFpHTIop = InstObjParams("vcvtt", "VcvtFpSFpHT", "FpRegRegOp",
                                     { "code": vcvtFpHTFpSCode,
@@ -984,7 +1016,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSFpHTIop);
 
     vcvtFpSFpHBCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1), "=m" (FpDest.uw)
@@ -994,7 +1026,7 @@ let {{
                                fpscr.rMode, fpscr.ahp, FpOp1));
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpSFpHBIop = InstObjParams("vcvtb", "VcvtFpSFpHB", "FpRegRegOp",
                                    { "code": vcvtFpSFpHBCode,
@@ -1004,7 +1036,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSFpHBIop);
 
     vcmpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpDest, FpOp1);
         if (FpDest == FpOp1) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
@@ -1022,7 +1054,7 @@ let {{
                 fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpSIop = InstObjParams("vcmps", "VcmpS", "FpRegRegOp",
                                      { "code": vcmpSCode,
@@ -1034,7 +1066,7 @@ let {{
     vcmpDCode = vfpEnabledCheckCode + '''
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, cDest, cOp1);
         if (cDest == cOp1) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
@@ -1052,7 +1084,7 @@ let {{
                 fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpDIop = InstObjParams("vcmpd", "VcmpD", "FpRegRegOp",
                                      { "code": vcmpDCode,
@@ -1062,7 +1094,7 @@ let {{
     exec_output += PredOpExecute.subst(vcmpDIop);
 
     vcmpZeroSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpDest);
         // This only handles imm == 0 for now.
         assert(imm == 0);
@@ -1080,7 +1112,7 @@ let {{
                 fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpZeroSIop = InstObjParams("vcmpZeros", "VcmpZeroS", "FpRegImmOp",
                                      { "code": vcmpZeroSCode,
@@ -1093,7 +1125,7 @@ let {{
         // This only handles imm == 0 for now.
         assert(imm == 0);
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, cDest);
         if (cDest == imm) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
@@ -1109,7 +1141,7 @@ let {{
                 fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpZeroDIop = InstObjParams("vcmpZerod", "VcmpZeroD", "FpRegImmOp",
                                      { "code": vcmpZeroDCode,
@@ -1119,7 +1151,7 @@ let {{
     exec_output += PredOpExecute.subst(vcmpZeroDIop);
 
     vcmpeSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpDest, FpOp1);
         if (FpDest == FpOp1) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
@@ -1131,7 +1163,7 @@ let {{
             fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpeSIop = InstObjParams("vcmpes", "VcmpeS", "FpRegRegOp",
                                      { "code": vcmpeSCode,
@@ -1143,7 +1175,7 @@ let {{
     vcmpeDCode = vfpEnabledCheckCode + '''
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, cDest, cOp1);
         if (cDest == cOp1) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
@@ -1155,7 +1187,7 @@ let {{
             fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpeDIop = InstObjParams("vcmped", "VcmpeD", "FpRegRegOp",
                                      { "code": vcmpeDCode,
@@ -1165,7 +1197,7 @@ let {{
     exec_output += PredOpExecute.subst(vcmpeDIop);
 
     vcmpeZeroSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpDest);
         if (FpDest == imm) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
@@ -1177,7 +1209,7 @@ let {{
             fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpeZeroSIop = InstObjParams("vcmpeZeros", "VcmpeZeroS", "FpRegImmOp",
                                      { "code": vcmpeZeroSCode,
@@ -1188,7 +1220,7 @@ let {{
 
     vcmpeZeroDCode = vfpEnabledCheckCode + '''
         double cDest = dbl(FpDestP0.uw, FpDestP1.uw);
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, cDest);
         if (cDest == imm) {
             fpscr.n = 0; fpscr.z = 1; fpscr.c = 1; fpscr.v = 0;
@@ -1200,7 +1232,7 @@ let {{
             fpscr.ioc = 1;
             fpscr.n = 0; fpscr.z = 0; fpscr.c = 1; fpscr.v = 1;
         }
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcmpeZeroDIop = InstObjParams("vcmpeZerod", "VcmpeZeroD", "FpRegImmOp",
                                      { "code": vcmpeZeroDCode,
@@ -1217,14 +1249,14 @@ let {{
     exec_output = ""
 
     vcvtFpSFixedSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest.sw = vfpFpSToFixed(FpOp1, true, false, imm);
         __asm__ __volatile__("" :: "m" (FpDest.sw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpSFixedSIop = InstObjParams("vcvt", "VcvtFpSFixedS", "FpRegRegImmOp",
                                      { "code": vcvtFpSFixedSCode,
@@ -1234,7 +1266,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSFixedSIop);
 
     vcvtFpSFixedDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1242,7 +1274,7 @@ let {{
         uint64_t mid = vfpFpDToFixed(cOp1, true, false, imm);
         __asm__ __volatile__("" :: "m" (mid));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = mid;
         FpDestP1.uw = mid >> 32;
     '''
@@ -1254,14 +1286,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSFixedDIop);
 
     vcvtFpUFixedSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest.uw = vfpFpSToFixed(FpOp1, false, false, imm);
         __asm__ __volatile__("" :: "m" (FpDest.uw));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpUFixedSIop = InstObjParams("vcvt", "VcvtFpUFixedS", "FpRegRegImmOp",
                                      { "code": vcvtFpUFixedSCode,
@@ -1271,7 +1303,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUFixedSIop);
 
     vcvtFpUFixedDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1279,7 +1311,7 @@ let {{
         uint64_t mid = vfpFpDToFixed(cOp1, false, false, imm);
         __asm__ __volatile__("" :: "m" (mid));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = mid;
         FpDestP1.uw = mid >> 32;
     '''
@@ -1291,13 +1323,13 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUFixedDIop);
 
     vcvtSFixedFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.sw) : "m" (FpOp1.sw));
         FpDest = vfpSFixedToFpS(fpscr.fz, fpscr.dn, FpOp1.sw, false, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtSFixedFpSIop = InstObjParams("vcvt", "VcvtSFixedFpS", "FpRegRegImmOp",
                                      { "code": vcvtSFixedFpSCode,
@@ -1307,14 +1339,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtSFixedFpSIop);
 
     vcvtSFixedFpDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
         double cDest = vfpSFixedToFpD(fpscr.fz, fpscr.dn, mid, false, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(cDest);
         FpDestP1.uw = dblHi(cDest);
     '''
@@ -1326,13 +1358,13 @@ let {{
     exec_output += PredOpExecute.subst(vcvtSFixedFpDIop);
 
     vcvtUFixedFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.uw) : "m" (FpOp1.uw));
         FpDest = vfpUFixedToFpS(fpscr.fz, fpscr.dn, FpOp1.uw, false, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtUFixedFpSIop = InstObjParams("vcvt", "VcvtUFixedFpS", "FpRegRegImmOp",
                                      { "code": vcvtUFixedFpSCode,
@@ -1342,14 +1374,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtUFixedFpSIop);
 
     vcvtUFixedFpDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
         double cDest = vfpUFixedToFpD(fpscr.fz, fpscr.dn, mid, false, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(cDest);
         FpDestP1.uw = dblHi(cDest);
     '''
@@ -1361,14 +1393,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtUFixedFpDIop);
 
     vcvtFpSHFixedSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest.sh = vfpFpSToFixed(FpOp1, true, true, imm);
         __asm__ __volatile__("" :: "m" (FpDest.sh));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpSHFixedSIop = InstObjParams("vcvt", "VcvtFpSHFixedS",
                                       "FpRegRegImmOp",
@@ -1379,7 +1411,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSHFixedSIop);
 
     vcvtFpSHFixedDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1387,7 +1419,7 @@ let {{
         uint64_t result = vfpFpDToFixed(cOp1, true, true, imm);
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = result;
         FpDestP1.uw = result >> 32;
     '''
@@ -1400,14 +1432,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpSHFixedDIop);
 
     vcvtFpUHFixedSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
         FpDest.uh = vfpFpSToFixed(FpOp1, false, true, imm);
         __asm__ __volatile__("" :: "m" (FpDest.uh));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtFpUHFixedSIop = InstObjParams("vcvt", "VcvtFpUHFixedS",
                                       "FpRegRegImmOp",
@@ -1418,7 +1450,7 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUHFixedSIop);
 
     vcvtFpUHFixedDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         double cOp1 = dbl(FpOp1P0.uw, FpOp1P1.uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
@@ -1426,7 +1458,7 @@ let {{
         uint64_t mid = vfpFpDToFixed(cOp1, false, true, imm);
         __asm__ __volatile__("" :: "m" (mid));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = mid;
         FpDestP1.uw = mid >> 32;
     '''
@@ -1439,13 +1471,13 @@ let {{
     exec_output += PredOpExecute.subst(vcvtFpUHFixedDIop);
 
     vcvtSHFixedFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.sh) : "m" (FpOp1.sh));
         FpDest = vfpSFixedToFpS(fpscr.fz, fpscr.dn, FpOp1.sh, true, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtSHFixedFpSIop = InstObjParams("vcvt", "VcvtSHFixedFpS",
                                       "FpRegRegImmOp",
@@ -1456,14 +1488,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtSHFixedFpSIop);
 
     vcvtSHFixedFpDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
         double cDest = vfpSFixedToFpD(fpscr.fz, fpscr.dn, mid, true, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(cDest);
         FpDestP1.uw = dblHi(cDest);
     '''
@@ -1476,13 +1508,13 @@ let {{
     exec_output += PredOpExecute.subst(vcvtSHFixedFpDIop);
 
     vcvtUHFixedFpSCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (FpOp1.uh) : "m" (FpOp1.uh));
         FpDest = vfpUFixedToFpS(fpscr.fz, fpscr.dn, FpOp1.uh, true, imm);
         __asm__ __volatile__("" :: "m" (FpDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vcvtUHFixedFpSIop = InstObjParams("vcvt", "VcvtUHFixedFpS",
                                       "FpRegRegImmOp",
@@ -1493,14 +1525,14 @@ let {{
     exec_output += PredOpExecute.subst(vcvtUHFixedFpSIop);
 
     vcvtUHFixedFpDCode = vfpEnabledCheckCode + '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = Fpscr | FpCondCodes;
         uint64_t mid = ((uint64_t)FpOp1P0.uw | ((uint64_t)FpOp1P1.uw << 32));
         VfpSavedState state = prepFpState(fpscr.rMode);
         __asm__ __volatile__("" : "=m" (mid) : "m" (mid));
         double cDest = vfpUFixedToFpD(fpscr.fz, fpscr.dn, mid, true, imm);
         __asm__ __volatile__("" :: "m" (cDest));
         finishVfp(fpscr, state, fpscr.fz);
-        Fpscr = fpscr;
+        FpCondCodes = fpscr & FpCondCodesMask;
         FpDestP0.uw = dblLow(cDest);
         FpDestP1.uw = dblHi(cDest);
     '''

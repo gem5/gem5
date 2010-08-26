@@ -1969,7 +1969,11 @@ let {{
                   default:
                     return new Unknown(machInst);
                 }
-                return new Vmsr(machInst, (IntRegIndex)specReg, rt);
+                if (specReg == MISCREG_FPSCR) {
+                    return new VmsrFpscr(machInst, (IntRegIndex)specReg, rt);
+                } else {
+                    return new Vmsr(machInst, (IntRegIndex)specReg, rt);
+                }
             }
         } else if (l == 0 && c == 1) {
             if (bits(a, 2) == 0) {
@@ -2061,8 +2065,15 @@ let {{
                     cpsrMask.z = 1;
                     cpsrMask.c = 1;
                     cpsrMask.v = 1;
-                    return new VmrsApsr(machInst, INTREG_CONDCODES,
-                            (IntRegIndex)specReg, (uint32_t)cpsrMask);
+                    if (specReg == MISCREG_FPSCR) {
+                        return new VmrsApsrFpscr(machInst, INTREG_CONDCODES,
+                                (IntRegIndex)specReg, (uint32_t)cpsrMask);
+                    } else {
+                        return new VmrsApsr(machInst, INTREG_CONDCODES,
+                                (IntRegIndex)specReg, (uint32_t)cpsrMask);
+                    }
+                } else if (specReg == MISCREG_FPSCR) {
+                    return new VmrsFpscr(machInst, rt, (IntRegIndex)specReg);
                 } else {
                     return new Vmrs(machInst, rt, (IntRegIndex)specReg);
                 }

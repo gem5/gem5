@@ -354,6 +354,10 @@ namespace ArmISA
         Bitfield<31> n;
     EndBitUnion(FPSCR)
 
+    // This mask selects bits of the FPSCR that actually go in the FpCondCodes
+    // integer register to allow renaming.
+    static const uint32_t FpCondCodesMask = 0xF800009F;
+
     BitUnion32(FPEXC)
         Bitfield<31> ex;
         Bitfield<30> en;

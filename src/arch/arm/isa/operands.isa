@@ -182,6 +182,7 @@ def operands {{
     'OptCondCodes': ('IntReg', 'uw',
             '''(condCode == COND_AL || condCode == COND_UC) ?
                INTREG_ZERO : INTREG_CONDCODES''', None, 2),
+    'FpCondCodes': ('IntReg', 'uw', 'INTREG_FPCONDCODES', None, 2),
 
     #Register fields for microops
     'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 2, maybePCRead, maybePCWrite),
