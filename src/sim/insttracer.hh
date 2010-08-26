@@ -96,14 +96,13 @@ class InstRecord
         : when(_when), thread(_thread),
           staticInst(_staticInst), PC(_pc),
           macroStaticInst(_macroStaticInst), upc(_upc),
-          misspeculating(spec)
+          misspeculating(spec), predicate(true)
     {
         data_status = DataInvalid;
         addr_valid = false;
 
         fetch_seq_valid = false;
         cp_seq_valid = false;
-        predicate = false;
     }
 
     virtual ~InstRecord() { }
