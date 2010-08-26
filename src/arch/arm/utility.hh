@@ -123,9 +123,27 @@ namespace ArmISA {
     void initCPU(ThreadContext *tc, int cpuId);
     
     static inline bool
+    inUserMode(CPSR cpsr)
+    {
+        return cpsr.mode == MODE_USER;
+    }
+
+    static inline bool
     inUserMode(ThreadContext *tc)
     {
-        return (tc->readMiscRegNoEffect(MISCREG_CPSR) & 0x1f) == MODE_USER;
+        return inUserMode(tc->readMiscRegNoEffect(MISCREG_CPSR));
+    }
+
+    static inline bool
+    inPrivilegedMode(CPSR cpsr)
+    {
+        return !inUserMode(cpsr);
+    }
+
+    static inline bool
+    inPrivilegedMode(ThreadContext *tc)
+    {
+        return !inUserMode(tc);
     }
 
 uint64_t getArgument(ThreadContext *tc, int number, bool fp);
