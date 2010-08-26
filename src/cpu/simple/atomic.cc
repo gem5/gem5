@@ -687,8 +687,7 @@ AtomicSimpleCPU::tick()
                 // keep an instruction count
                 if (fault == NoFault)
                     countInst();
-                else if (traceData) {
-                    // If there was a fault, we should trace this instruction.
+                else if (traceData && !DTRACE(ExecFaulting)) {
                     delete traceData;
                     traceData = NULL;
                 }

@@ -817,8 +817,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         // keep an instruction count
         if (fault == NoFault)
             countInst();
-        else if (traceData) {
-            // If there was a fault, we shouldn't trace this instruction.
+        else if (traceData && !DTRACE(ExecFaulting)) {
             delete traceData;
             traceData = NULL;
         }
