@@ -115,7 +115,7 @@ proto_l1 = BaseCache(size = '32kB', assoc = 4, block_size = block_size,
 if options.blocking:
      proto_l1.mshrs = 1
 else:
-     proto_l1.mshrs = 8
+     proto_l1.mshrs = 4
 
 # build a list of prototypes, one for each level of treespec, starting
 # at the end (last entry is tester objects)
@@ -129,13 +129,14 @@ if len(treespec) > 1:
      prototypes.insert(0, proto_l1)
 
 # now add additional cache levels (if any) by scaling L1 params
-while len(prototypes) < len(treespec):
+for scale in treespec[:-2]:
      # clone previous level and update params
      prev = prototypes[0]
      next = prev()
-     next.size = prev.size * 4
+     next.size = prev.size * scale
      next.latency = prev.latency * 10
-     next.assoc = prev.assoc * 2
+     next.assoc = prev.assoc * scale
+     next.mshrs = prev.mshrs * scale
      prototypes.insert(0, next)
 
 # system simulated
