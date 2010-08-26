@@ -113,7 +113,7 @@ namespace ArmISA
     const uint32_t HighVecs = 0xFFFF0000;
 
     // Memory accesses cannot be unaligned
-    const bool HasUnalignedMemAcc = false;
+    const bool HasUnalignedMemAcc = true;
 
     enum InterruptTypes
     {
