@@ -74,11 +74,11 @@ ISA::clear()
      * Variant = 0,
      */
     miscRegs[MISCREG_MIDR] =
-        (0x35 << 24) | //Implementor is '5' from "M5"
-        (0 << 20)    | //Variant
-        (0xf << 16)  | //Architecture from CPUID scheme
-        (0 << 4)     | //Primary part number
-        (0 << 0)     | //Revision
+        (0x35 << 24) | // Implementor is '5' from "M5"
+        (0 << 20)    | // Variant
+        (0xf << 16)  | // Architecture from CPUID scheme
+        (0xf00 << 4) | // Primary part number
+        (0 << 0)     | // Revision
         0;
 
     // Separate Instruction and Data TLBs.
