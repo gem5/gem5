@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 25 2010 20:52:35
-M5 revision ffac9df60637 7512 default tip
-M5 started Jul 26 2010 23:53:12
+M5 compiled Aug 24 2010 15:34:40
+M5 revision 1c687284910c 7619 default qtip round2.patch tip qbase
+M5 started Aug 24 2010 15:41:22
 M5 executing on zizzer
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second

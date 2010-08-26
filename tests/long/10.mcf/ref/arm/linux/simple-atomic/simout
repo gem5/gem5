@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 25 2010 20:52:35
-M5 revision ffac9df60637 7512 default tip
-M5 started Jul 26 2010 23:59:27
+M5 compiled Aug 24 2010 15:34:40
+M5 revision 1c687284910c 7619 default qtip round2.patch tip qbase
+M5 started Aug 24 2010 15:38:49
 M5 executing on zizzer
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/10.mcf/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/long/10.mcf/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
@@ -28,4 +28,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 54182628000 because target called exit()
+Exiting @ tick 54215549000 because target called exit()

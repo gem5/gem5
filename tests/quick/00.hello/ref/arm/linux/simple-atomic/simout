@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun  1 2010 16:08:15
-M5 revision 4b3bf0363048 7414 default qtip tip ext/linux_se_structs.patch
-M5 started Jun  1 2010 16:09:04
-M5 executing on harpertown2
-command line: ./build/ARM_SE/m5.debug -r -e tests/run.py quick/00.hello/arm/linux/simple-atomic
+M5 compiled Aug 24 2010 15:34:40
+M5 revision 1c687284910c 7619 default qtip round2.patch tip qbase
+M5 started Aug 24 2010 15:34:42
+M5 executing on zizzer
+command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 2761000 because target called exit()
+Exiting @ tick 2816000 because target called exit()

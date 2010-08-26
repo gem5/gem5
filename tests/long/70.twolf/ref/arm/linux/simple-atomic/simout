@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 25 2010 20:52:35
-M5 revision ffac9df60637 7512 default tip
-M5 started Jul 26 2010 23:53:12
+M5 compiled Aug 24 2010 15:34:40
+M5 revision 1c687284910c 7619 default qtip round2.patch tip qbase
+M5 started Aug 24 2010 15:37:46
 M5 executing on zizzer
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/70.twolf/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/long/70.twolf/arm/linux/simple-atomic
 Couldn't unlink  build/ARM_SE/tests/fast/long/70.twolf/arm/linux/simple-atomic/smred.sav
@@ -28,4 +28,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 102027363500 because target called exit()
+122 123 124 Exiting @ tick 102180734000 because target called exit()
