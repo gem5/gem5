@@ -108,12 +108,11 @@ def create_system(options, system, piobus = None, dma_devices = []):
         numa_bit = options.numa_high_bit
     else:
         # if not specified, use the lowest bits above the block offest
-        if options.numa_high_bit == 0:
-            if dir_bits > 0:
-                # add 5 because bits 0-5 are the block offset
-                numa_bit = dir_bits + 5
-            else:
-                numa_bit = 6
+        if dir_bits > 0:
+            # add 5 because bits 0-5 are the block offset
+            numa_bit = dir_bits + 5
+        else:
+            numa_bit = 6
         
     for dir_cntrl in dir_cntrls:
         total_mem_size.value += dir_cntrl.directory.size.value
