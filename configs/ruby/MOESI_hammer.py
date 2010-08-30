@@ -152,7 +152,8 @@ def create_system(options, system, piobus, dma_devices):
         dir_size = MemorySize('0B')
         dir_size.value = mem_module_size
 
-        pf = ProbeFilter(size = pf_size, assoc = 4)
+        pf = ProbeFilter(size = pf_size, assoc = 4,
+                         start_index_bit = pf_start_bit)
 
         dir_cntrl = Directory_Controller(version = i,
                                          directory = \
@@ -164,8 +165,7 @@ def create_system(options, system, piobus, dma_devices):
                                                     options.map_levels),
                                          probeFilter = pf,
                                          memBuffer = mem_cntrl,
-                                         probe_filter_enabled = \
-                                           options.pf_on)
+                                         probe_filter_enabled = options.pf_on)
 
         if options.recycle_latency:
             dir_cntrl.recycle_latency = options.recycle_latency
