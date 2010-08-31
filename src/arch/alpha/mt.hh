@@ -39,8 +39,6 @@
  */
 
 #include "arch/isa_traits.hh"
-#include "arch/mips/faults.hh"
-#include "arch/mips/mt_constants.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "base/misc.hh"
