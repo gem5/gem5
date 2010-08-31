@@ -101,13 +101,6 @@ namespace ArmISA {
         tc->activate(0);
     }
 
-    template <class XC>
-    Fault
-    checkFpEnableFault(XC *xc)
-    {
-        return NoFault;
-    }
-
     static inline void
     copyRegs(ThreadContext *src, ThreadContext *dest)
     {
