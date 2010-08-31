@@ -387,7 +387,6 @@ class BaseSimpleCPU : public BaseCPU
 
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
-    void ev5_trap(Fault fault) { fault->invoke(tc); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else
     void syscall(int64_t callnum) { thread->syscall(callnum); }
