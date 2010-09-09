@@ -131,12 +131,12 @@ class code_formatter(object):
         if args:
             self.__call__(args)
 
-    def indent(self):
-        self._indent_level += self._indent_spaces
+    def indent(self, count=1):
+        self._indent_level += self._indent_spaces * count
 
-    def dedent(self):
-        assert self._indent_level >= self._indent_spaces
-        self._indent_level -= self._indent_spaces
+    def dedent(self, count=1):
+        assert self._indent_level >= (self._indent_spaces * count)
+        self._indent_level -= self._indent_spaces * count
 
     def fix(self, status):
         previous = self._fix_newlines
@@ -200,10 +200,14 @@ class code_formatter(object):
 
             initial_newline = False
 
-    def insert_newline(self):
-        self._data.append('\n')
+    def __call__(self, *args, **kwargs):
+        if not args:
+            self._data.append('\n')
+            return
 
-    def __call__(self, format, *args, **kwargs):
+        format = args[0]
+        args = args[1:]
+
         frame = inspect.currentframe().f_back
 
         l = lookup(self, frame, *args, **kwargs)

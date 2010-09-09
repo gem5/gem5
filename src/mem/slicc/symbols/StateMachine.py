@@ -559,17 +559,17 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
 
 
         # Set the queue consumers
-        code.insert_newline()
+        code()
         for port in self.in_ports:
             code('${{port.code}}.setConsumer(this);')
 
         # Set the queue descriptions
-        code.insert_newline()
+        code()
         for port in self.in_ports:
             code('${{port.code}}.setDescription("[Version " + to_string(m_version) + ", $ident, $port]");')
 
         # Initialize the transition profiling
-        code.insert_newline()
+        code()
         for trans in self.transitions:
             # Figure out if we stall
             stall = False
