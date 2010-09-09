@@ -759,21 +759,44 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
 {
     Addr blk_addr = blockAlign(pkt->getAddr());
     BlkType *blk = tags->findBlock(pkt->getAddr());
+    MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
     pkt->pushLabel(name());
 
     CacheBlkPrintWrapper cbpw(blk);
-    bool done =
-        (blk && pkt->checkFunctional(&cbpw, blk_addr, blkSize, blk->data))
+
+    // Note that just because an L2/L3 has valid data doesn't mean an
+    // L1 doesn't have a more up-to-date modified copy that still
+    // needs to be found.  As a result we always update the request if
+    // we have it, but only declare it satisfied if we are the owner.
+
+    // see if we have data at all (owned or otherwise)
+    bool have_data = blk && blk->isValid()
+        && pkt->checkFunctional(&cbpw, blk_addr, blkSize, blk->data);
+
+    // data we have is dirty if marked as such or if valid & ownership
+    // pending due to outstanding UpgradeReq
+    bool have_dirty =
+        have_data && (blk->isDirty() ||
+                      (mshr && mshr->inService && mshr->isPendingDirty()));
+
+    bool done = have_dirty
         || incomingPort->checkFunctional(pkt)
         || mshrQueue.checkFunctional(pkt, blk_addr)
         || writeBuffer.checkFunctional(pkt, blk_addr)
         || otherSidePort->checkFunctional(pkt);
 
+    DPRINTF(Cache, "functional %s %x %s%s%s\n",
+            pkt->cmdString(), pkt->getAddr(),
+            (blk && blk->isValid()) ? "valid " : "",
+            have_data ? "data " : "", done ? "done " : "");
+
     // We're leaving the cache, so pop cache->name() label
     pkt->popLabel();
 
-    if (!done) {
+    if (done) {
+        pkt->makeResponse();
+    } else {
         otherSidePort->sendFunctional(pkt);
     }
 }

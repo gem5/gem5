@@ -325,8 +325,10 @@ Bridge::BridgePort::recvFunctional(PacketPtr pkt)
     pkt->pushLabel(name());
 
     for (i = sendQueue.begin();  i != sendQueue.end(); ++i) {
-        if (pkt->checkFunctional((*i)->pkt))
+        if (pkt->checkFunctional((*i)->pkt)) {
+            pkt->makeResponse();
             return;
+        }
     }
 
     pkt->popLabel();

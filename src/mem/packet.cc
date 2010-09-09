@@ -179,7 +179,6 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
         if (func_start >= val_start && func_end <= val_end) {
             allocate();
             memcpy(getPtr<uint8_t>(), data + offset, getSize());
-            makeResponse();
             return true;
         } else {
             // In this case the timing packet only partially satisfies
