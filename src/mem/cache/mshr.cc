@@ -89,6 +89,19 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
 }
 
 
+static void
+replaceUpgrade(PacketPtr pkt)
+{
+    if (pkt->cmd == MemCmd::UpgradeReq) {
+        pkt->cmd = MemCmd::ReadExReq;
+        DPRINTF(Cache, "Replacing UpgradeReq with ReadExReq\n");
+    } else if (pkt->cmd == MemCmd::SCUpgradeReq) {
+        pkt->cmd = MemCmd::SCUpgradeFailReq;
+        DPRINTF(Cache, "Replacing SCUpgradeReq with SCUpgradeFailReq\n");
+    }
+}
+
+
 void
 MSHR::TargetList::replaceUpgrades()
 {
@@ -97,13 +110,7 @@ MSHR::TargetList::replaceUpgrades()
 
     Iterator end_i = end();
     for (Iterator i = begin(); i != end_i; ++i) {
-        if (i->pkt->cmd == MemCmd::UpgradeReq) {
-            i->pkt->cmd = MemCmd::ReadExReq;
-            DPRINTF(Cache, "Replacing UpgradeReq with ReadExReq\n");
-        } else if (i->pkt->cmd == MemCmd::SCUpgradeReq) {
-            i->pkt->cmd = MemCmd::SCUpgradeFailReq;
-            DPRINTF(Cache, "Replacing SCUpgradeReq with SCUpgradeFailReq\n");
-        }
+        replaceUpgrade(i->pkt);
     }
 
     hasUpgrade = false;
@@ -180,8 +187,6 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
         Target::FromPrefetcher : Target::FromCPU;
     targets->add(target, whenReady, _order, source, true);
     assert(deferredTargets->isReset());
-    pendingInvalidate = false;
-    pendingShared = false;
     data = NULL;
 }
 
@@ -197,7 +202,7 @@ MSHR::clearDownstreamPending()
 }
 
 bool
-MSHR::markInService()
+MSHR::markInService(PacketPtr pkt)
 {
     assert(!inService);
     if (isForwardNoResponse()) {
@@ -208,6 +213,10 @@ MSHR::markInService()
         return true;
     }
     inService = true;
+    pendingDirty = (targets->needsExclusive ||
+                    (!pkt->sharedAsserted() && pkt->memInhibitAsserted()));
+    postInvalidate = postDowngrade = false;
+
     if (!downstreamPending) {
         // let upstream caches know that the request has made it to a
         // level where it's going to get a response
@@ -225,8 +234,6 @@ MSHR::deallocate()
     assert(deferredTargets->isReset());
     assert(ntargets == 0);
     inService = false;
-    //allocIter = NULL;
-    //readyIter = NULL;
 }
 
 /*
@@ -241,17 +248,22 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
     // - there are other targets already deferred
     // - there's a pending invalidate to be applied after the response
     //   comes back (but before this target is processed)
-    // - the outstanding request is for a non-exclusive block and this
-    //   target requires an exclusive block
+    // - this target requires an exclusive block and either we're not
+    //   getting an exclusive block back or we have already snooped
+    //   another read request that will downgrade our exclusive block
+    //   to shared
 
     // assume we'd never issue a prefetch when we've got an
     // outstanding miss
     assert(pkt->cmd != MemCmd::HardPFReq);
 
     if (inService &&
-        (!deferredTargets->empty() || pendingInvalidate ||
-         (!targets->needsExclusive && pkt->needsExclusive()))) {
+        (!deferredTargets->empty() || hasPostInvalidate() ||
+         (pkt->needsExclusive() &&
+          (!isPendingDirty() || hasPostDowngrade() || isForward)))) {
         // need to put on deferred list
+        if (hasPostInvalidate())
+            replaceUpgrade(pkt);
         deferredTargets->add(pkt, whenReady, _order, Target::FromCPU, true);
     } else {
         // No request outstanding, or still OK to append to
@@ -291,49 +303,49 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
 
     // From here on down, the request issued by this MSHR logically
     // precedes the request we're snooping.
-
     if (pkt->needsExclusive()) {
         // snooped request still precedes the re-request we'll have to
         // issue for deferred targets, if any...
         deferredTargets->replaceUpgrades();
     }
 
-    if (pendingInvalidate) {
+    if (hasPostInvalidate()) {
         // a prior snoop has already appended an invalidation, so
         // logically we don't have the block anymore; no need for
         // further snooping.
         return true;
     }
 
-    if (targets->needsExclusive || pkt->needsExclusive()) {
-        // actual target device (typ. PhysicalMemory) will delete the
-        // packet on reception, so we need to save a copy here
+    if (isPendingDirty() || pkt->isInvalidate()) {
+        // We need to save and replay the packet in two cases:
+        // 1. We're awaiting an exclusive copy, so ownership is pending,
+        //    and we need to respond after we receive data.
+        // 2. It's an invalidation (e.g., UpgradeReq), and we need
+        //    to forward the snoop up the hierarchy after the current
+        //    transaction completes.
+        
+        // Actual target device (typ. PhysicalMemory) will delete the
+        // packet on reception, so we need to save a copy here.
         PacketPtr cp_pkt = new Packet(pkt, true);
         targets->add(cp_pkt, curTick, _order, Target::FromSnoop,
                      downstreamPending && targets->needsExclusive);
         ++ntargets;
 
-        if (targets->needsExclusive) {
-            // We're awaiting an exclusive copy, so ownership is pending.
-            // It's up to us to respond once the data arrives.
+        if (isPendingDirty()) {
             pkt->assertMemInhibit();
             pkt->setSupplyExclusive();
-        } else {
-            // Someone else may respond before we get around to
-            // processing this snoop, which means the copied request
-            // pointer will no longer be valid
-            cp_pkt->req = NULL;
         }
 
         if (pkt->needsExclusive()) {
             // This transaction will take away our pending copy
-            pendingInvalidate = true;
+            postInvalidate = true;
         }
-    } else {
-        // Read to a read: no conflict, so no need to record as
-        // target, but make sure neither reader thinks he's getting an
-        // exclusive copy
-        pendingShared = true;
+    }
+
+    if (!pkt->needsExclusive()) {
+        // This transaction will get a read-shared copy, downgrading
+        // our copy if we had an exclusive one
+        postDowngrade = true;
         pkt->assertShared();
     }
 
@@ -359,8 +371,6 @@ MSHR::promoteDeferredTargets()
     // clear deferredTargets flags
     deferredTargets->resetFlags();
 
-    pendingInvalidate = false;
-    pendingShared = false;
     order = targets->front().order;
     readyTime = std::max(curTick, targets->front().readyTime);
 
@@ -371,13 +381,8 @@ MSHR::promoteDeferredTargets()
 void
 MSHR::handleFill(Packet *pkt, CacheBlk *blk)
 {
-    if (pendingShared) {
-        // we snooped another read while this read was in
-        // service... assert shared line on its behalf
-        pkt->assertShared();
-    }
-
-    if (!pkt->sharedAsserted() && !pendingInvalidate
+    if (!pkt->sharedAsserted()
+        && !(hasPostInvalidate() || hasPostDowngrade())
         && deferredTargets->needsExclusive) {
         // We got an exclusive response, but we have deferred targets
         // which are waiting to request an exclusive copy (not because
@@ -427,8 +432,8 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              _isUncacheable ? "Unc" : "",
              inService ? "InSvc" : "",
              downstreamPending ? "DwnPend" : "",
-             pendingInvalidate ? "PendInv" : "",
-             pendingShared ? "PendShared" : "");
+             hasPostInvalidate() ? "PostInv" : "",
+             hasPostDowngrade() ? "PostDowngr" : "");
 
     ccprintf(os, "%s  Targets:\n", prefix);
     targets->print(os, verbosity, prefix + "    ");

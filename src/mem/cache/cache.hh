@@ -178,7 +178,9 @@ class Cache : public BaseCache
     BlkType *handleFill(PacketPtr pkt, BlkType *blk,
                         PacketList &writebacks);
 
-    void satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk);
+    void satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
+                               bool deferred_response = false,
+                               bool pending_downgrade = false);
     bool satisfyMSHR(MSHR *mshr, PacketPtr pkt, BlkType *blk);
 
     void doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
@@ -292,7 +294,7 @@ class Cache : public BaseCache
      * are successfully sent.
      * @param pkt The request that was sent on the bus.
      */
-    void markInService(MSHR *mshr);
+    void markInService(MSHR *mshr, PacketPtr pkt = 0);
 
     /**
      * Perform the given writeback request.

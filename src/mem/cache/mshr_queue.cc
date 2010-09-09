@@ -197,9 +197,9 @@ MSHRQueue::moveToFront(MSHR *mshr)
 }
 
 void
-MSHRQueue::markInService(MSHR *mshr)
+MSHRQueue::markInService(MSHR *mshr, PacketPtr pkt)
 {
-    if (mshr->markInService()) {
+    if (mshr->markInService(pkt)) {
         deallocate(mshr);
     } else {
         readyList.erase(mshr->readyIter);

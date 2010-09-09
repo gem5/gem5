@@ -170,11 +170,11 @@ class BaseCache : public MemObject
         return mshr;
     }
 
-    void markInServiceInternal(MSHR *mshr)
+    void markInServiceInternal(MSHR *mshr, PacketPtr pkt)
     {
         MSHRQueue *mq = mshr->queue;
         bool wasFull = mq->isFull();
-        mq->markInService(mshr);
+        mq->markInService(mshr, pkt);
         if (wasFull && !mq->isFull()) {
             clearBlocked((BlockedCause)mq->index);
         }

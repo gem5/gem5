@@ -134,8 +134,28 @@ class MSHR : public Packet::SenderState, public Printable
 
     bool downstreamPending;
 
-    bool pendingInvalidate;
-    bool pendingShared;
+    /** The pending* and post* flags are only valid if inService is
+     *  true.  Using the accessor functions lets us detect if these
+     *  flags are accessed improperly.
+     */
+
+    /** Will we have a dirty copy after this request? */
+    bool pendingDirty;
+    bool isPendingDirty() const {
+        assert(inService); return pendingDirty;
+    }
+
+    /** Did we snoop an invalidate while waiting for data? */
+    bool postInvalidate;
+    bool hasPostInvalidate() const {
+        assert(inService); return postInvalidate;
+    }
+
+    /** Did we snoop a read while waiting for data? */
+    bool postDowngrade;
+    bool hasPostDowngrade() const {
+        assert(inService); return postDowngrade;
+    }
 
     /** Thread number of the miss. */
     ThreadID threadNum;
@@ -180,7 +200,7 @@ public:
     void allocate(Addr addr, int size, PacketPtr pkt,
                   Tick when, Counter _order);
 
-    bool markInService();
+    bool markInService(PacketPtr pkt);
 
     void clearDownstreamPending();
 

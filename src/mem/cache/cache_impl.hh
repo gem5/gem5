@@ -165,16 +165,18 @@ Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 
 template<class TagStore>
 void
-Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
+Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
+                                       bool deferred_response,
+                                       bool pending_downgrade)
 {
-    assert(blk);
+    assert(blk && blk->isValid());
     // Occasionally this is not true... if we are a lower-level cache
     // satisfying a string of Read and ReadEx requests from
     // upper-level caches, a Read will mark the block as shared but we
     // can satisfy a following ReadEx anyway since we can rely on the
     // Read requester(s) to have buffered the ReadEx snoop and to
     // invalidate their blocks after receiving them.
-    // assert(pkt->needsExclusive() ? blk->isWritable() : blk->isValid());
+    // assert(!pkt->needsExclusive() || blk->isWritable());
     assert(pkt->getOffset(blkSize) + pkt->getSize() <= blkSize);
 
     // Check RMW operations first since both isRead() and
@@ -195,13 +197,43 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
             // special handling for coherent block requests from
             // upper-level caches
             if (pkt->needsExclusive()) {
-                // on ReadExReq we give up our copy
+                // if we have a dirty copy, make sure the recipient
+                // keeps it marked dirty
+                if (blk->isDirty()) {
+                    pkt->assertMemInhibit();
+                }
+                // on ReadExReq we give up our copy unconditionally
                 tags->invalidateBlk(blk);
+            } else if (blk->isWritable() && !pending_downgrade
+                       && !pkt->sharedAsserted()) {
+                // we can give the requester an exclusive copy (by not
+                // asserting shared line) on a read request if:
+                // - we have an exclusive copy at this level (& below)
+                // - we don't have a pending snoop from below
+                //   signaling another read request
+                // - no other cache above has a copy (otherwise it
+                //   would have asseretd shared line on request)
+                
+                if (blk->isDirty()) {
+                    // special considerations if we're owner:
+                    if (!deferred_response) {
+                        // if we are responding immediately and can
+                        // signal that we're transferring ownership
+                        // along with exclusivity, do so
+                        pkt->assertMemInhibit();
+                        blk->status &= ~BlkDirty;
+                    } else {
+                        // if we're responding after our own miss,
+                        // there's a window where the recipient didn't
+                        // know it was getting ownership and may not
+                        // have responded to snoops correctly, so we
+                        // can't pass off ownership *or* exclusivity
+                        pkt->assertShared();
+                    }
+                }
             } else {
-                // on ReadReq we create shareable copies here and in
-                // the requester
+                // otherwise only respond with a shared copy
                 pkt->assertShared();
-                blk->status &= ~BlkWritable;
             }
         }
     } else {
@@ -223,9 +255,9 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
 
 template<class TagStore>
 void
-Cache<TagStore>::markInService(MSHR *mshr)
+Cache<TagStore>::markInService(MSHR *mshr, PacketPtr pkt)
 {
-    markInServiceInternal(mshr);
+    markInServiceInternal(mshr, pkt);
 #if 0
         if (mshr->originalCmd == MemCmd::HardPFReq) {
             DPRINTF(HWPrefetch, "%s:Marking a HW_PF in service\n",
@@ -829,7 +861,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
           case MSHR::Target::FromCPU:
             Tick completion_time;
             if (is_fill) {
-                satisfyCpuSideRequest(target->pkt, blk);
+                satisfyCpuSideRequest(target->pkt, blk,
+                                      true, mshr->hasPostDowngrade());
                 // How many bytes past the first request is this one
                 int transfer_offset =
                     target->pkt->getOffset(blkSize) - initial_offset;
@@ -860,12 +893,11 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             // if this packet is an error copy that to the new packet
             if (is_error)
                 target->pkt->copyError(pkt);
-            if (pkt->isInvalidate()) {
+            if (target->pkt->cmd == MemCmd::ReadResp &&
+                (pkt->isInvalidate() || mshr->hasPostInvalidate())) {
                 // If intermediate cache got ReadRespWithInvalidate,
                 // propagate that.  Response should not have
                 // isInvalidate() set otherwise.
-                assert(target->pkt->cmd == MemCmd::ReadResp);
-                assert(pkt->cmd == MemCmd::ReadRespWithInvalidate);
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
             }
             cpuSidePort->respond(target->pkt, completion_time);
@@ -884,8 +916,9 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             assert(!is_error);
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
+            assert(!(pkt->isInvalidate() && !mshr->hasPostInvalidate()));
             handleSnoop(target->pkt, blk, true, true,
-                        mshr->pendingInvalidate || pkt->isInvalidate());
+                        mshr->hasPostInvalidate());
             break;
 
           default:
@@ -895,14 +928,20 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         mshr->popTarget();
     }
 
-    if (pkt->isInvalidate()) {
-        tags->invalidateBlk(blk);
+    if (blk) {
+        if (pkt->isInvalidate() || mshr->hasPostInvalidate()) {
+            tags->invalidateBlk(blk);
+        } else if (mshr->hasPostDowngrade()) {
+            blk->status &= ~BlkWritable;
+        }
     }
 
     if (mshr->promoteDeferredTargets()) {
         // avoid later read getting stale data while write miss is
         // outstanding.. see comment in timingAccess()
-        blk->status &= ~BlkReadable;
+        if (blk) {
+            blk->status &= ~BlkReadable;
+        }
         MSHRQueue *mq = mshr->queue;
         mq->markPending(mshr);
         requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
@@ -1017,14 +1056,19 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
             tags->insertBlock(pkt->getAddr(), blk, id);
         }
+
+        // starting from scratch with a new block
+        blk->status = 0;
     } else {
         // existing block... probably an upgrade
         assert(blk->tag == tags->extractTag(addr));
         // either we're getting new data or the block should already be valid
         assert(pkt->hasData() || blk->isValid());
+        // don't clear block status... if block is already dirty we
+        // don't want to lose that
     }
 
-    blk->status = BlkValid | BlkReadable;
+    blk->status |= BlkValid | BlkReadable;
 
     if (!pkt->sharedAsserted()) {
         blk->status |= BlkWritable;
@@ -1587,7 +1631,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
                     delete pkt;
                 }
             } else {
-                myCache()->markInService(mshr);
+                myCache()->markInService(mshr, pkt);
             }
         }
     }

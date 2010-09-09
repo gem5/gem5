@@ -160,7 +160,7 @@ class MSHRQueue
      * readyList. Deallocates the MSHR if it does not expect a response.
      * @param mshr The MSHR to mark in service.
      */
-    void markInService(MSHR *mshr);
+    void markInService(MSHR *mshr, PacketPtr pkt);
 
     /**
      * Mark an in service entry as pending, used to resend a request.
