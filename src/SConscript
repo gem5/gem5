@@ -399,7 +399,7 @@ for name,obj in sorted(sim_objects.iteritems()):
 # calculate extra dependencies
 #
 module_depends = ["m5", "m5.SimObject", "m5.params"]
-depends = [ PySource.modules[dep].tnode for dep in module_depends ]
+depends = [ PySource.modules[dep].snode for dep in module_depends ]
 
 ########################################################################
 #
@@ -470,6 +470,7 @@ def createSwigParam(target, source, env):
     param = all_params[name]
 
     code = code_formatter()
+    code('%module(package="m5.internal.swig") ${name}_$0', param.file_ext)
     param.swig_decl(code)
     code.write(target[0].abspath)
 
@@ -493,6 +494,24 @@ def createEnumParam(target, source, env):
     obj.cxx_decl(code)
     code.write(target[0].abspath)
 
+def createEnumSwig(target, source, env):
+    assert len(target) == 1 and len(source) == 1
+
+    name = str(source[0].get_contents())
+    obj = all_enums[name]
+
+    code = code_formatter()
+    code('''\
+%module(package="m5.internal.enums") $name
+
+%{
+#include "enums/$name.hh"
+%}
+
+%include "enums/$name.hh"
+''')
+    code.write(target[0].abspath)
+
 # Generate all of the SimObject param struct header files
 params_hh_files = []
 for name,simobj in sorted(sim_objects.iteritems()):
@@ -511,6 +530,7 @@ for name,param in all_params.iteritems():
     params_i_files.append(i_file)
     env.Command(i_file, Value(name), createSwigParam)
     env.Depends(i_file, depends)
+    SwigSource('m5.internal.swig', i_file)
 
 # Generate all enum header files
 for name,enum in sorted(all_enums.iteritems()):
@@ -526,95 +546,49 @@ for name,enum in sorted(all_enums.iteritems()):
     env.Command(hh_file, Value(name), createEnumParam)
     env.Depends(hh_file, depends + extra_deps)
 
-# Build the big monolithic swigged params module (wraps all SimObject
-# param structs and enum structs)
-def buildParams(target, source, env):
-    names = [ s.get_contents() for s in source ]
-    objs = [ sim_objects[name] for name in names ]
+    i_file = File('enums/%s.i' % name)
+    env.Command(i_file, Value(name), createEnumSwig)
+    env.Depends(i_file, depends + extra_deps)
+    SwigSource('m5.internal.enums', i_file)
 
-    ordered_objs = []
-    obj_seen = set()
-    def order_obj(obj):
-        name = str(obj)
-        if name in obj_seen:
-            return
-
-        obj_seen.add(name)
-        if str(obj) != 'SimObject':
-            order_obj(obj.__bases__[0])
-
-        ordered_objs.append(obj)
-
-    for obj in objs:
-        order_obj(obj)
+def buildParam(target, source, env):
+    name = source[0].get_contents()
+    obj = sim_objects[name]
+    class_path = obj.cxx_class.split('::')
+    classname = class_path[-1]
+    namespaces = class_path[:-1]
+    params = obj._params.local.values()
 
     code = code_formatter()
-    code('%module params')
 
+    code('%module(package="m5.internal.params") $name')
+    code()
     code('%{')
-    for obj in ordered_objs:
-        code('#include "params/$obj.hh"')
+    code('#include "params/$obj.hh"')
+    for param in params:
+        param.cxx_predecls(code)
     code('%}')
+    code()
 
-    for obj in ordered_objs:
-        params = obj._params.local.values()
-        for param in params:
-            param.swig_predecls(code)
+    for param in params:
+        param.swig_predecls(code)
 
-    enums = set()
-    for obj in ordered_objs:
-        params = obj._params.local.values()
-        for param in params:
-            ptype = param.ptype
-            if issubclass(ptype, m5.params.Enum) and ptype not in enums:
-                enums.add(ptype)
-                code('%include "enums/$0.hh"', ptype.__name__)
-    
-    for obj in ordered_objs:
-        obj.swig_objdecls(code)
-        code()
+    code()
+    if obj._base:
+        code('%import "params/${{obj._base}}.i"')
+    code()
+    obj.swig_objdecls(code)
+    code()
 
-    for obj in ordered_objs:
-        continue
-        if obj.swig_objdecls:
-            obj.swig_objdecls(code)
-            continue
-
-        class_path = obj.cxx_class.split('::')
-        classname = class_path[-1]
-        namespaces = class_path[:-1]
-
-        for ns in namespaces:
-            code('namespace $ns {')
-
-        if namespaces:
-            code('// avoid name conflicts')
-            sep_string = '_COLONS_'
-            flat_name = sep_string.join(class_path)
-            code('%rename($flat_name) $classname;')
-
-        code('// stop swig from creating/wrapping default ctor/dtor')
-        code('%nodefault $classname;')
-        if obj._base:
-            code('class $classname : public ${{obj._base.cxx_class}} {};')
-        else:
-            code('class $classname {};')
-
-        for ns in reversed(namespaces):
-            code('/* namespace $ns */ }')
-        code()
-
-    code('%include "src/sim/sim_object_params.hh"')
-    for obj in ordered_objs:
-        code('%include "params/$obj.hh"')
+    code('%include "params/$obj.hh"')
 
     code.write(target[0].abspath)
 
-params_file = File('params/params.i')
-names = sorted(sim_objects.keys())
-env.Command(params_file, map(Value, names), buildParams)
-env.Depends(params_file, params_hh_files + params_i_files + depends)
-SwigSource('m5.objects', params_file)
+for name in sim_objects.iterkeys():
+    params_file = File('params/%s.i' % name)
+    env.Command(params_file, Value(name), buildParam)
+    env.Depends(params_file, depends)
+    SwigSource('m5.internal.params', params_file)
 
 # Generate the main swig init file
 def makeEmbeddedSwigInit(target, source, env):

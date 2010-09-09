@@ -28,9 +28,12 @@
  * Authors: Nathan Binkert
  */
 
-%module sim_object
+%{
+#include "sim/system.hh"
+%}
 
-%include "enums/MemoryMode.hh"
+%import "python/swig/sim_object.i"
+%import "enums/MemoryMode.hh"
 
 class System : public SimObject
 {

@@ -28,8 +28,6 @@
  * Authors: Nathan Binkert
  */
 
-%module sim_object
-
 %{
 #include "python/swig/pyobject.hh"
 %}
@@ -39,6 +37,7 @@
 %include "std_string.i"
 
 %include "base/types.hh"
+%include "sim/sim_object_params.hh"
 
 class BaseCPU;
 

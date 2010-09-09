@@ -98,15 +98,10 @@ allClasses = {}
 instanceDict = {}
 
 def default_cxx_predecls(cls, code):
-    '''A forward class declaration is sufficient since we are
-    just declaring a pointer.'''
+    code('#include "params/$cls.hh"')
 
-    class_path = cls._value_dict['cxx_class'].split('::')
-    for ns in class_path[:-1]:
-        code('namespace $ns {')
-    code('class $0;', class_path[-1])
-    for ns in reversed(class_path[:-1]):
-        code('/* namespace $ns */ }')
+def default_swig_predecls(cls, code):
+    code('%import "params/$cls.i"')
 
 def default_swig_objdecls(cls, code):
     class_path = cls.cxx_class.split('::')
@@ -233,7 +228,8 @@ class MetaSimObject(type):
                 setattr(cls, 'cxx_predecls', m)
 
             if 'swig_predecls' not in cls.__dict__:
-                setattr(cls, 'swig_predecls', getattr(cls, 'cxx_predecls'))
+                m = MethodType(default_swig_predecls, cls, MetaSimObject)
+                setattr(cls, 'swig_predecls', m)
 
         if 'swig_objdecls' not in cls.__dict__:
             m = MethodType(default_swig_objdecls, cls, MetaSimObject)
@@ -346,6 +342,15 @@ class MetaSimObject(type):
               "Class %s has no parameter \'%s\'" % (cls.__name__, attr)
 
     def __getattr__(cls, attr):
+        if attr == 'cxx_class_path':
+            return cls.cxx_class.split('::')
+
+        if attr == 'cxx_class_name':
+            return cls.cxx_class_path[-1]
+
+        if attr == 'cxx_namespaces':
+            return cls.cxx_class_path[:-1]
+
         if cls._values.has_key(attr):
             return cls._values[attr]
 
@@ -359,12 +364,6 @@ class MetaSimObject(type):
         return cls.__name__
 
     def cxx_decl(cls, code):
-        code('''\
-#ifndef __PARAMS__${cls}__
-#define __PARAMS__${cls}__
-
-''')
-
         # The 'dict' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
         # will also be inherited from the base class's param struct
@@ -377,8 +376,23 @@ class MetaSimObject(type):
             print params
             raise
 
-        # get all predeclarations
-        cls.cxx_predecls(code)
+        class_path = cls._value_dict['cxx_class'].split('::')
+
+        code('''\
+#ifndef __PARAMS__${cls}__
+#define __PARAMS__${cls}__
+
+''')
+
+        # A forward class declaration is sufficient since we are just
+        # declaring a pointer.
+        for ns in class_path[:-1]:
+            code('namespace $ns {')
+        code('class $0;', class_path[-1])
+        for ns in reversed(class_path[:-1]):
+            code('/* namespace $ns */ }')
+        code()
+
         for param in params:
             param.cxx_predecls(code)
         code()
@@ -394,7 +408,6 @@ class MetaSimObject(type):
 
         cls.cxx_struct(code, cls._base, params)
 
-        # close #ifndef __PARAMS__* guard
         code()
         code('#endif // __PARAMS__${cls}__')
         return code

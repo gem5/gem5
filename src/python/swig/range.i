@@ -28,10 +28,18 @@
  * Authors: Nathan Binkert
  */
 
-%rename(assign) *::operator=;
+%module(package="m5.internal") range
 
-%include "base/range.hh"
+%{
+#include "base/range.hh"
+#include "base/types.hh"
+%}
+
+%include "stdint.i"
 %include "base/types.hh"
+
+%rename(assign) *::operator=;
+%include "base/range.hh"
 
 %template(AddrRange) Range<Addr>;
 %template(TickRange) Range<Tick>;

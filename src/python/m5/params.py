@@ -241,17 +241,42 @@ class VectorParamDesc(ParamDesc):
             return VectorParamValue(tmp_list)
 
     def swig_predecls(self, code):
-        code('%include "${{self.ptype_str}}_vptype.i"')
+        code('%import "${{self.ptype_str}}_vptype.i"')
 
     def swig_decl(self, code):
-        cxx_type = re.sub('std::', '', self.ptype.cxx_type)
-        code('%include "std_vector.i"')
+        code('%{')
+        self.ptype.cxx_predecls(code)
+        code('%}')
+        code()
         self.ptype.swig_predecls(code)
+        code()
+        code('%include "std_vector.i"')
+        code()
+
+        ptype = self.ptype_str
+        cxx_type = self.ptype.cxx_type
+
         code('''\
-namespace std {
-%template(vector_${{self.ptype_str}}) vector< $cxx_type >;
+%typemap(in) std::vector< $cxx_type >::value_type {
+    if (SWIG_ConvertPtr($$input, (void **)&$$1, $$1_descriptor, 0) == -1) {
+        if (SWIG_ConvertPtr($$input, (void **)&$$1,
+                            $$descriptor($cxx_type), 0) == -1) {
+            return NULL;
+        }
+    }
+}
+
+%typemap(in) std::vector< $cxx_type >::value_type * {
+    if (SWIG_ConvertPtr($$input, (void **)&$$1, $$1_descriptor, 0) == -1) {
+        if (SWIG_ConvertPtr($$input, (void **)&$$1,
+                            $$descriptor($cxx_type *), 0) == -1) {
+            return NULL;
+        }
+    }
 }
 ''')
+
+        code('%template(vector_$ptype) std::vector< $cxx_type >;')
 
     def cxx_predecls(self, code):
         code('#include <vector>')
@@ -537,18 +562,19 @@ class Range(ParamValue):
 
     @classmethod
     def cxx_predecls(cls, code):
-        code('#include "base/range.hh"')
         cls.type.cxx_predecls(code)
+        code('#include "base/range.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        cls.type.swig_predecls(code)
+        code('%import "python/swig/range.i"')
 
 class AddrRange(Range):
     type = Addr
 
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "python/swig/range.i"')
-
     def getValue(self):
-        from m5.objects.params import AddrRange
+        from m5.internal.range import AddrRange
 
         value = AddrRange()
         value.start = long(self.first)
@@ -558,12 +584,8 @@ class AddrRange(Range):
 class TickRange(Range):
     type = Tick
 
-    @classmethod
-    def swig_predecls(cls, code):
-        code('%include "python/swig/range.i"')
-
     def getValue(self):
-        from m5.objects.params import TickRange
+        from m5.internal.range import TickRange
 
         value = TickRange()
         value.start = long(self.first)
@@ -837,6 +859,14 @@ class Enum(ParamValue):
             raise TypeError, "Enum param got bad value '%s' (not in %s)" \
                   % (value, self.vals)
         self.value = value
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "enums/$0.hh"', cls.__name__)
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%import "enums/$0.i"', cls.__name__)
 
     def getValue(self):
         return int(self.map[self.value])

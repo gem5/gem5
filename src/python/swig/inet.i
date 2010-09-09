@@ -32,6 +32,9 @@
 #include "base/inet.hh"
 %}
 
+%import "stdint.i"
+%import "std_string.i"
+
 namespace Net {
 struct EthAddr
 {
