@@ -34,19 +34,43 @@
 /*
  * Data structure describing an embedded python file.
  */
-struct EmbeddedPyModule
+#include <list>
+
+#ifndef PyObject_HEAD
+struct _object;
+typedef _object PyObject;
+#endif
+
+struct EmbeddedPython
 {
     const char *filename;
     const char *abspath;
     const char *modpath;
     const char *code;
-    const char *code_end;
     int zlen;
-    int mlen;
+    int len;
+
+    EmbeddedPython(const char *filename, const char *abspath,
+        const char *modpath, const char *code, int zlen, int len);
+
+    PyObject *getCode() const;
+    bool addModule() const;
+
+    static EmbeddedPython *importer;
+    static PyObject *importerModule;
+    static std::list<EmbeddedPython *> &getList();
+    static int initAll();
 };
 
-extern const EmbeddedPyModule embeddedPyImporter;
-extern const EmbeddedPyModule embeddedPyModules[];
+struct EmbeddedSwig
+{
+    void (*initFunc)();
+
+    EmbeddedSwig(void (*init_func)());
+
+    static std::list<EmbeddedSwig *> &getList();
+    static void initAll();
+};
 
 void initSignals();
 int initM5Python();

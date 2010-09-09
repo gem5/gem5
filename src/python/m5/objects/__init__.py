@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# Copyright (c) 2010 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,45 +24,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Nathan Binkert
+# Authors: Nathan Binkert
 
-Import('*')
+from m5.objects.params import *
+from m5.SimObject import *
 
-Source('swig/pyevent.cc')
-Source('swig/pyobject.cc')
+try:
+    modules = __loader__.modules
+except NameError:
+    modules = { }
 
-PySource('', 'importer.py')
-PySource('m5', 'm5/__init__.py')
-PySource('m5', 'm5/SimObject.py')
-PySource('m5', 'm5/config.py')
-PySource('m5', 'm5/core.py')
-PySource('m5', 'm5/debug.py')
-PySource('m5', 'm5/event.py')
-PySource('m5', 'm5/main.py')
-PySource('m5', 'm5/options.py')
-PySource('m5', 'm5/params.py')
-PySource('m5', 'm5/proxy.py')
-PySource('m5', 'm5/simulate.py')
-PySource('m5', 'm5/stats.py')
-PySource('m5', 'm5/ticks.py')
-PySource('m5', 'm5/trace.py')
-PySource('m5.objects', 'm5/objects/__init__.py')
-PySource('m5.util', 'm5/util/__init__.py')
-PySource('m5.util', 'm5/util/attrdict.py')
-PySource('m5.util', 'm5/util/code_formatter.py')
-PySource('m5.util', 'm5/util/convert.py')
-PySource('m5.util', 'm5/util/grammar.py')
-PySource('m5.util', 'm5/util/jobfile.py')
-PySource('m5.util', 'm5/util/multidict.py')
-PySource('m5.util', 'm5/util/orderdict.py')
-PySource('m5.util', 'm5/util/smartdict.py')
-PySource('m5.util', 'm5/util/sorteddict.py')
-
-SwigSource('m5.internal', 'swig/core.i')
-SwigSource('m5.internal', 'swig/debug.i')
-SwigSource('m5.internal', 'swig/event.i')
-SwigSource('m5.internal', 'swig/random.i')
-SwigSource('m5.internal', 'swig/stats.i')
-SwigSource('m5.internal', 'swig/trace.i')
-PySource('m5.internal', 'm5/internal/__init__.py')
+for module in modules.iterkeys():
+    if module.startswith('m5.objects.') and module != 'm5.objects.params':
+        exec "from %s import *" % module

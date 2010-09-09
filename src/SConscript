@@ -51,6 +51,8 @@ Export('env')
 
 build_env = [(opt, env[opt]) for opt in export_vars]
 
+from m5.util import code_formatter
+
 ########################################################################
 # Code for adding source files of various types
 #
@@ -142,8 +144,8 @@ class PySource(SourceFile):
         self.arcname = joinpath(*arcpath)
         self.abspath = abspath
         self.compiled = File(self.filename + 'c')
-        self.assembly = File(self.filename + '.s')
-        self.symname = "PyEMB_" + PySource.invalid_sym_char.sub('_', modpath)
+        self.cpp = File(self.filename + '.cc')
+        self.symname = PySource.invalid_sym_char.sub('_', modpath)
 
         PySource.modules[modpath] = self
         PySource.tnodes[self.tnode] = self
@@ -446,24 +448,6 @@ env.Command('python/m5/info.py',
             makeInfoPyFile)
 PySource('m5', 'python/m5/info.py')
 
-# Generate the __init__.py file for m5.objects
-def makeObjectsInitFile(target, source, env):
-    code = code_formatter()
-    code('''\
-from params import *
-from m5.SimObject import *
-''')
-
-    for module in source:
-        code('from $0 import *', module.get_contents())
-    code.write(str(target[0]))
-
-# Generate an __init__.py file for the objects package
-env.Command('python/m5/objects/__init__.py',
-            map(Value, SimObject.modnames),
-            makeObjectsInitFile)
-PySource('m5.objects', 'python/m5/objects/__init__.py')
-
 ########################################################################
 #
 # Create all of the SimObject param headers and enum headers
@@ -632,38 +616,31 @@ env.Command(params_file, map(Value, names), buildParams)
 env.Depends(params_file, params_hh_files + params_i_files + depends)
 SwigSource('m5.objects', params_file)
 
+# Generate the main swig init file
+def makeEmbeddedSwigInit(target, source, env):
+    code = code_formatter()
+    module = source[0].get_contents()
+    code('''\
+#include "sim/init.hh"
+
+extern "C" {
+    void init_${module}();
+}
+
+EmbeddedSwig embed_swig_${module}(init_${module});
+''')
+    code.write(str(target[0]))
+    
 # Build all swig modules
 for swig in SwigSource.all:
     env.Command([swig.cc_source.tnode, swig.py_source.tnode], swig.tnode,
                 '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
                 '-o ${TARGETS[0]} $SOURCES')
+    init_file = 'python/swig/init_%s.cc' % swig.module
+    env.Command(init_file, Value(swig.module), makeEmbeddedSwigInit)
+    Source(init_file)
     env.Depends(swig.py_source.tnode, swig.tnode)
     env.Depends(swig.cc_source.tnode, swig.tnode)
-
-# Generate the main swig init file
-def makeSwigInit(target, source, env):
-    code = code_formatter()
-
-    code('extern "C" {')
-    code.indent()
-    for module in source:
-        code('void init_$0();', module.get_contents())
-    code.dedent()
-    code('}')
-
-    code('void initSwig() {')
-    code.indent()
-    for module in source:
-        code('init_$0();', module.get_contents())
-    code.dedent()
-    code('}')
-
-    code.write(str(target[0]))
-
-env.Command('python/swig/init.cc',
-            map(Value, sorted(s.module for s in SwigSource.all)),
-            makeSwigInit)
-Source('python/swig/init.cc')
 
 def getFlags(source_flags):
     flagsMap = {}
@@ -892,13 +869,17 @@ env.Command('base/traceflags.hh', flags, traceFlagsHH)
 env.Command('base/traceflags.cc', flags, traceFlagsCC)
 Source('base/traceflags.cc')
 
-# embed python files.  All .py files that have been indicated by a
+# Embed python files.  All .py files that have been indicated by a
 # PySource() call in a SConscript need to be embedded into the M5
 # library.  To do that, we compile the file to byte code, marshal the
-# byte code, compress it, and then generate an assembly file that
-# inserts the result into the data section with symbols indicating the
-# beginning, and end (and with the size at the end)
-def objectifyPyFile(target, source, env):
+# byte code, compress it, and then generate a c++ file that
+# inserts the result into an array.
+def embedPyFile(target, source, env):
+    def c_str(string):
+        if string is None:
+            return "0"
+        return '"%s"' % string
+
     '''Action function to compile a .py into a code object, marshal
     it, compress it, and stick it into an asm file so the code appears
     as just bytes with a label in the data section'''
@@ -910,90 +891,40 @@ def objectifyPyFile(target, source, env):
     marshalled = marshal.dumps(compiled)
     compressed = zlib.compress(marshalled)
     data = compressed
+    sym = pysource.symname
 
-    # Some C/C++ compilers prepend an underscore to global symbol
-    # names, so if they're going to do that, we need to prepend that
-    # leading underscore to globals in the assembly file.
-    if env['LEADING_UNDERSCORE']:
-        sym = '_' + pysource.symname
-    else:
-        sym = pysource.symname
-
-    step = 16
     code = code_formatter()
     code('''\
-.data
-.globl ${sym}_beg
-.globl ${sym}_end
-${sym}_beg:''')
+#include "sim/init.hh"
 
+namespace {
+
+const char data_${sym}[] = {
+''')
+    code.indent()
+    step = 16
     for i in xrange(0, len(data), step):
         x = array.array('B', data[i:i+step])
-        bytes = ','.join([str(d) for d in x])
-        code('.byte $bytes')
-    code('${sym}_end:')
-    code('.long $0', len(marshalled))
+        code(''.join('%d,' % d for d in x))
+    code.dedent()
+    
+    code('''};
 
+EmbeddedPython embedded_${sym}(
+    ${{c_str(pysource.arcname)}},
+    ${{c_str(pysource.abspath)}},
+    ${{c_str(pysource.modpath)}},
+    data_${sym},
+    ${{len(data)}},
+    ${{len(marshalled)}});
+
+/* namespace */ }
+''')
     code.write(str(target[0]))
 
 for source in PySource.all:
-    env.Command(source.assembly, source.tnode, objectifyPyFile)
-    Source(source.assembly)
-
-# Generate init_python.cc which creates a bunch of EmbeddedPyModule
-# structs that describe the embedded python code.  One such struct
-# contains information about the importer that python uses to get at
-# the embedded files, and then there's a list of all of the rest that
-# the importer uses to load the rest on demand.
-def pythonInit(target, source, env):
-    code = code_formatter()
-
-    def dump_mod(sym, endchar=','):
-        def c_str(string):
-            if string is None:
-                return "0"
-            return '"%s"' % string
-
-        pysource = PySource.symnames[sym]
-        arcname = c_str(pysource.arcname)
-        abspath = c_str(pysource.abspath)
-        modpath = c_str(pysource.modpath)
-        code.indent()
-        code('''\
-{ $arcname,
-  $abspath,
-  $modpath,
-  ${sym}_beg, ${sym}_end,
-  ${sym}_end - ${sym}_beg,
-  *(int *)${sym}_end }$endchar
-''')
-        code.dedent()
-
-    code('#include "sim/init.hh"')
-    for sym in source:
-        sym = sym.get_contents()
-        code('extern const char ${sym}_beg[], ${sym}_end[];')
-
-    code('const EmbeddedPyModule embeddedPyImporter = ')
-    dump_mod("PyEMB_importer", endchar=';')
-    code()
-
-    code('const EmbeddedPyModule embeddedPyModules[] = {')
-    for i,sym in enumerate(source):
-        sym = sym.get_contents()
-        if sym == "PyEMB_importer":
-            # Skip the importer since we've already exported it
-            continue
-        dump_mod(sym)
-    code('    { 0, 0, 0, 0, 0, 0, 0 }')
-    code('};')
-
-    code.write(str(target[0]))
-
-env.Command('sim/init_python.cc',
-            map(Value, (s.symname for s in PySource.all)),
-            pythonInit)
-Source('sim/init_python.cc')
+    env.Command(source.cpp, source.tnode, embedPyFile)
+    Source(source.cpp)
 
 ########################################################################
 #
