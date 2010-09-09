@@ -1,3 +1,5 @@
+Redirecting stdout to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp/simout
+Redirecting stderr to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,10 +7,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul  1 2010 14:40:18
-M5 revision acd9f15a9c7c 7493 default qtip tip simobj-parent-fix-stats-udpate
-M5 started Jul  1 2010 14:40:36
-M5 executing on phenom
+M5 compiled Aug 26 2010 13:03:41
+M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
+M5 started Aug 26 2010 13:03:45
+M5 executing on zizzer
 command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -84,4 +86,4 @@ Iteration 9 completed
 [Iteration 10, Thread 3] Critical section done, previously next=1, now next=3
 Iteration 10 completed
 PASSED :-)
-Exiting @ tick 263312000 because target called exit()
+Exiting @ tick 262295000 because target called exit()

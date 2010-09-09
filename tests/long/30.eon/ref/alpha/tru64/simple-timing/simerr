@@ -46,3 +46,6 @@ Writing to chair.cook.ppm
 12  8  14
 13  8  14
 14  8  14
+warn: ignoring syscall sigprocmask(18446744073709547831, 1, ...)
+For more information see: http://www.m5sim.org/warn/5c5b547f
+hack: be nice to actually delete the event here

@@ -1,5 +1,5 @@
-Redirecting stdout to build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing/simout
-Redirecting stderr to build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing/simerr
+Redirecting stdout to build/SPARC_SE/tests/opt/quick/02.insttest/sparc/linux/o3-timing/simout
+Redirecting stderr to build/SPARC_SE/tests/opt/quick/02.insttest/sparc/linux/o3-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun  6 2010 04:01:36
-M5 revision ba1a0193c050 7448 default tip
-M5 started Jun  6 2010 04:04:37
+M5 compiled Aug 26 2010 13:03:41
+M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
+M5 started Aug 26 2010 13:03:47
 M5 executing on zizzer
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing
+command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/quick/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/opt/quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Begining test of difficult SPARC instructions...
@@ -25,4 +25,4 @@ LDTX:		Passed
 LDTW:		Passed
 STTW:		Passed
 Done
-Exiting @ tick 27640500 because target called exit()
+Exiting @ tick 27419000 because target called exit()

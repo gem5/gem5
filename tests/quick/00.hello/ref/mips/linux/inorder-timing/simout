@@ -1,3 +1,5 @@
+Redirecting stdout to build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing/simout
+Redirecting stderr to build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,13 +7,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun 25 2010 15:39:33
-M5 revision 93b1ca421839+ 7482+ default qtip tip update_regr
-M5 started Jun 25 2010 15:39:34
-M5 executing on zooks
-command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/inorder-timing
+M5 compiled Aug 26 2010 12:56:28
+M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
+M5 started Aug 26 2010 12:56:32
+M5 executing on zizzer
+command line: build/MIPS_SE/m5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 29206500 because target called exit()
+Exiting @ tick 28659500 because target called exit()

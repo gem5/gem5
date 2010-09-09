@@ -1,3 +1,5 @@
+Redirecting stdout to build/ARM_SE/tests/opt/long/50.vortex/arm/linux/simple-timing/simout
+Redirecting stderr to build/ARM_SE/tests/opt/long/50.vortex/arm/linux/simple-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,12 +7,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 24 2010 15:34:40
-M5 revision 1c687284910c 7619 default qtip round2.patch tip qbase
-M5 started Aug 24 2010 15:39:36
+M5 compiled Aug 26 2010 13:52:30
+M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
+M5 started Aug 26 2010 13:53:04
 M5 executing on zizzer
-command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/50.vortex/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/long/50.vortex/arm/linux/simple-timing
+command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/long/50.vortex/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/opt/long/50.vortex/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 133556162000 because target called exit()
+Exiting @ tick 133464153000 because target called exit()

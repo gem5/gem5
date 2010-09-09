@@ -1,3 +1,5 @@
+Redirecting stdout to build/SPARC_SE/tests/opt/long/10.mcf/sparc/linux/simple-timing/simout
+Redirecting stderr to build/SPARC_SE/tests/opt/long/10.mcf/sparc/linux/simple-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 25 2010 03:11:27
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 03:30:29
-M5 executing on SC2B0619
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-timing -re tests/run.py build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-timing
+M5 compiled Aug 26 2010 13:03:41
+M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
+M5 started Aug 26 2010 13:06:13
+M5 executing on zizzer
+command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/long/10.mcf/sparc/linux/simple-timing -re tests/run.py build/SPARC_SE/tests/opt/long/10.mcf/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -28,4 +30,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 366435406000 because target called exit()
+Exiting @ tick 366433850000 because target called exit()

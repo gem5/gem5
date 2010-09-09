@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_SE/tests/opt/long/60.bzip2/alpha/tru64/simple-timing/simout
+Redirecting stderr to build/ALPHA_SE/tests/opt/long/60.bzip2/alpha/tru64/simple-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:12:40
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 02:20:02
-M5 executing on SC2B0619
-command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/60.bzip2/alpha/tru64/simple-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/60.bzip2/alpha/tru64/simple-timing
+M5 compiled Aug 26 2010 11:51:59
+M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
+M5 started Aug 26 2010 12:06:37
+M5 executing on zizzer
+command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/long/60.bzip2/alpha/tru64/simple-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/60.bzip2/alpha/tru64/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
@@ -28,3 +30,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
+Exiting @ tick 2705279137000 because target called exit()
