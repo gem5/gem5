@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module debug
+%module(package="m5.internal") debug
 
 %{
 #include "base/types.hh"
@@ -38,9 +38,3 @@
 %include "stdint.i"
 %include "base/types.hh"
 %include "sim/debug.hh"
-
-%wrapper %{
-// fix up module name to reflect the fact that it's inside the m5 package
-#undef SWIG_name
-#define SWIG_name "m5.internal._debug"
-%}

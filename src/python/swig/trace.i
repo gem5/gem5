@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module trace
+%module(package="m5.internal") trace
 
 %{
 #include "base/trace.hh"
@@ -67,10 +67,4 @@ extern void set(const char *string);
 extern void clear(const char *string);
 extern void ignore(const char *expr);
 extern bool enabled;
-%}
-
-%wrapper %{
-// fix up module name to reflect the fact that it's inside the m5 package
-#undef SWIG_name
-#define SWIG_name "m5.internal._trace"
 %}

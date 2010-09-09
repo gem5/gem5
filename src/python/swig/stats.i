@@ -28,7 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-%module stats
+%module(package="m5.internal") stats
 
 %include "std_list.i"
 %include "std_string.i"
@@ -60,9 +60,3 @@ void reset();
 std::list<Info *> &statsList();
 
 /* namespace Stats */ }
-
-%wrapper %{
-// fix up module name to reflect the fact that it's inside the m5 package
-#undef SWIG_name
-#define SWIG_name "m5.internal._stats"
-%}
