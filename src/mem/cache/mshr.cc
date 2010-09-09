@@ -72,7 +72,10 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
             needsExclusive = true;
         }
 
-        if (pkt->isUpgrade()) {
+        // StoreCondReq is effectively an upgrade if it's in an MSHR
+        // since it would have been failed already if we didn't have a
+        // read-only copy
+        if (pkt->isUpgrade() || pkt->cmd == MemCmd::StoreCondReq) {
             hasUpgrade = true;
         }
     }
@@ -98,6 +101,9 @@ replaceUpgrade(PacketPtr pkt)
     } else if (pkt->cmd == MemCmd::SCUpgradeReq) {
         pkt->cmd = MemCmd::SCUpgradeFailReq;
         DPRINTF(Cache, "Replacing SCUpgradeReq with SCUpgradeFailReq\n");
+    } else if (pkt->cmd == MemCmd::StoreCondReq) {
+        pkt->cmd = MemCmd::StoreCondFailReq;
+        DPRINTF(Cache, "Replacing StoreCondReq with StoreCondFailReq\n");
     }
 }
 

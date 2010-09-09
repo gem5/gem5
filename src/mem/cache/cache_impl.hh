@@ -900,9 +900,10 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 assert(!target->pkt->req->isUncacheable());
                 missLatency[target->pkt->cmdToIndex()][0/*pkt->req->threadId()*/] +=
                     completion_time - target->recvTime;
-            } else if (target->pkt->cmd == MemCmd::StoreCondReq &&
-                       pkt->cmd == MemCmd::UpgradeFailResp) {
+            } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
                 // failed StoreCond upgrade
+                assert(target->pkt->cmd == MemCmd::StoreCondReq ||
+                       target->pkt->cmd == MemCmd::StoreCondFailReq);
                 completion_time = tags->getHitLatency() + pkt->finishTime;
                 target->pkt->req->setExtraData(0);
             } else {
@@ -1443,10 +1444,11 @@ Cache<TagStore>::getTimingPacket()
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
     PacketPtr pkt = NULL;
 
-    if (tgt_pkt->cmd == MemCmd::SCUpgradeFailReq) {
-        // SCUpgradeReq saw invalidation while queued in MSHR, so now
-        // that we are getting around to processing it, just treat it
-        // as if we got a failure response
+    if (tgt_pkt->cmd == MemCmd::SCUpgradeFailReq ||
+        tgt_pkt->cmd == MemCmd::StoreCondFailReq) {
+        // SCUpgradeReq or StoreCondReq saw invalidation while queued
+        // in MSHR, so now that we are getting around to processing
+        // it, just treat it as if we got a failure response
         pkt = new Packet(tgt_pkt);
         pkt->cmd = MemCmd::UpgradeFailResp;
         pkt->senderState = mshr;

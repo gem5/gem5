@@ -123,6 +123,10 @@ MemCmd::commandInfo[] =
     { SET6(IsWrite, NeedsExclusive, IsLlsc,
            IsRequest, NeedsResponse, HasData),
             StoreCondResp, "StoreCondReq" },
+    /* StoreCondFailReq: generates failing StoreCondResp ASAP */
+    { SET6(IsWrite, NeedsExclusive, IsLlsc,
+           IsRequest, NeedsResponse, HasData),
+            StoreCondResp, "StoreCondFailReq" },
     /* StoreCondResp */
     { SET4(IsWrite, NeedsExclusive, IsLlsc, IsResponse),
             InvalidCmd, "StoreCondResp" },

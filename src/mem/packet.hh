@@ -90,6 +90,7 @@ class MemCmd
         ReadExResp,
         LoadLockedReq,
         StoreCondReq,
+        StoreCondFailReq,       // Failed StoreCondReq in MSHR (never sent)
         StoreCondResp,
         SwapReq,
         SwapResp,
