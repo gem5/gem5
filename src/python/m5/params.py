@@ -80,8 +80,13 @@ class MetaParamValue(type):
 class ParamValue(object):
     __metaclass__ = MetaParamValue
 
-    cxx_predecls = []
-    swig_predecls = []
+    @classmethod
+    def cxx_predecls(cls, code):
+        pass
+
+    @classmethod
+    def swig_predecls(cls, code):
+        pass
 
     # default for printing to .ini file is regular string conversion.
     # will be overridden in some cases
@@ -152,14 +157,14 @@ class ParamDesc(object):
             return value
         return self.ptype(value)
 
-    def cxx_predecls(self):
-        return self.ptype.cxx_predecls
+    def cxx_predecls(self, code):
+        self.ptype.cxx_predecls(code)
 
-    def swig_predecls(self):
-        return self.ptype.swig_predecls
+    def swig_predecls(self, code):
+        self.ptype.swig_predecls(code)
 
-    def cxx_decl(self):
-        return '%s %s;' % (self.ptype.cxx_type, self.name)
+    def cxx_decl(self, code):
+        code('${{self.ptype.cxx_type}} ${{self.name}};')
 
 # Vector-valued parameter description.  Just like ParamDesc, except
 # that the value is a vector (list) of the specified type instead of a
@@ -235,20 +240,25 @@ class VectorParamDesc(ParamDesc):
         else:
             return VectorParamValue(tmp_list)
 
-    def swig_predecls(self):
-        return ['%%include "%s_vptype.i"' % self.ptype_str]
+    def swig_predecls(self, code):
+        code('%include "${{self.ptype_str}}_vptype.i"')
 
-    def swig_decl(self):
+    def swig_decl(self, code):
         cxx_type = re.sub('std::', '', self.ptype.cxx_type)
-        vdecl = 'namespace std { %%template(vector_%s) vector< %s >; }' % \
-                (self.ptype_str, cxx_type)
-        return ['%include "std_vector.i"'] + self.ptype.swig_predecls + [vdecl]
+        code('%include "std_vector.i"')
+        self.ptype.swig_predecls(code)
+        code('''\
+namespace std {
+%template(vector_${{self.ptype_str}}) vector< $cxx_type >;
+}
+''')
 
-    def cxx_predecls(self):
-        return ['#include <vector>'] + self.ptype.cxx_predecls
+    def cxx_predecls(self, code):
+        code('#include <vector>')
+        self.ptype.cxx_predecls(code)
 
-    def cxx_decl(self):
-        return 'std::vector< %s > %s;' % (self.ptype.cxx_type, self.name)
+    def cxx_decl(self, code):
+        code('std::vector< ${{self.ptype.cxx_type}} > ${{self.name}};')
 
 class ParamFactory(object):
     def __init__(self, param_desc_class, ptype_str = None):
@@ -291,10 +301,14 @@ VectorParam = ParamFactory(VectorParamDesc)
 # built-in str class.
 class String(ParamValue,str):
     cxx_type = 'std::string'
-    cxx_predecls = ['#include <string>']
-    swig_predecls = ['%include "std_string.i"\n' +
-                     '%apply const std::string& {std::string *};']
-    swig_predecls = ['%include "std_string.i"' ]
+
+    @classmethod
+    def cxx_predecls(self, code):
+        code('#include <string>')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "std_string.i"')
 
     def getValue(self):
         return self
@@ -350,15 +364,6 @@ class CheckedIntType(MetaParamValue):
         if name == 'CheckedInt':
             return
 
-        if not cls.cxx_predecls:
-            # most derived types require this, so we just do it here once
-            cls.cxx_predecls = ['#include "base/types.hh"']
-
-        if not cls.swig_predecls:
-            # most derived types require this, so we just do it here once
-            cls.swig_predecls = ['%import "stdint.i"\n' +
-                                 '%import "base/types.hh"']
-
         if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
             if not (hasattr(cls, 'size') and hasattr(cls, 'unsigned')):
                 panic("CheckedInt subclass %s must define either\n" \
@@ -392,6 +397,17 @@ class CheckedInt(NumericParamValue):
             raise TypeError, "Can't convert object of type %s to CheckedInt" \
                   % type(value).__name__
         self._check()
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        # most derived types require this, so we just do it here once
+        code('#include "base/types.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        # most derived types require this, so we just do it here once
+        code('%import "stdint.i"')
+        code('%import "base/types.hh"')
 
     def getValue(self):
         return long(self.value)
@@ -476,8 +492,6 @@ class MetaRange(MetaParamValue):
         if name == 'Range':
             return
         cls.cxx_type = 'Range< %s >' % cls.type.cxx_type
-        cls.cxx_predecls = \
-                       ['#include "base/range.hh"'] + cls.type.cxx_predecls
 
 class Range(ParamValue):
     __metaclass__ = MetaRange
@@ -521,9 +535,17 @@ class Range(ParamValue):
     def __str__(self):
         return '%s:%s' % (self.first, self.second)
 
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/range.hh"')
+        cls.type.cxx_predecls(code)
+
 class AddrRange(Range):
     type = Addr
-    swig_predecls = ['%include "python/swig/range.i"']
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "python/swig/range.i"')
 
     def getValue(self):
         from m5.objects.params import AddrRange
@@ -535,7 +557,10 @@ class AddrRange(Range):
 
 class TickRange(Range):
     type = Tick
-    swig_predecls = ['%include "python/swig/range.i"']
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "python/swig/range.i"')
 
     def getValue(self):
         from m5.objects.params import TickRange
@@ -589,8 +614,15 @@ def NextEthernetAddr():
 
 class EthernetAddr(ParamValue):
     cxx_type = 'Net::EthAddr'
-    cxx_predecls = ['#include "base/inet.hh"']
-    swig_predecls = ['%include "python/swig/inet.i"']
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/inet.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "python/swig/inet.i"')
+
     def __init__(self, value):
         if value == NextEthernetAddr:
             self.value = value
@@ -661,8 +693,15 @@ def parse_time(value):
 
 class Time(ParamValue):
     cxx_type = 'tm'
-    cxx_predecls = [ '#include <time.h>' ]
-    swig_predecls = [ '%include "python/swig/time.i"' ]
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include <time.h>')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "python/swig/time.i"')
+
     def __init__(self, value):
         self.value = parse_time(value)
 
@@ -749,34 +788,44 @@ class MetaEnum(MetaParamValue):
     # Generate C++ class declaration for this enum type.
     # Note that we wrap the enum in a class/struct to act as a namespace,
     # so that the enum strings can be brief w/o worrying about collisions.
-    def cxx_decl(cls):
+    def cxx_decl(cls, code):
         name = cls.__name__
-        code = "#ifndef __ENUM__%s\n" % name
-        code += '#define __ENUM__%s\n' % name
-        code += '\n'
-        code += 'namespace Enums {\n'
-        code += '    enum %s {\n' % name
-        for val in cls.vals:
-            code += '        %s = %d,\n' % (val, cls.map[val])
-        code += '        Num_%s = %d,\n' % (name, len(cls.vals))
-        code += '    };\n'
-        code += '    extern const char *%sStrings[Num_%s];\n' % (name, name)
-        code += '}\n'
-        code += '\n'
-        code += '#endif\n'
-        return code
+        code('''\
+#ifndef __ENUM__${name}__
+#define __ENUM__${name}__
 
-    def cxx_def(cls):
-        name = cls.__name__
-        code = '#include "enums/%s.hh"\n' % name
-        code += 'namespace Enums {\n'
-        code += '    const char *%sStrings[Num_%s] =\n' % (name, name)
-        code += '    {\n'
+namespace Enums {
+    enum $name {
+''')
+        code.indent(2)
         for val in cls.vals:
-            code += '        "%s",\n' % val
-        code += '    };\n'
-        code += '}\n'
-        return code
+            code('$val = ${{cls.map[val]}},')
+        code('Num_$name = ${{len(cls.vals)}},')
+        code.dedent(2)
+        code('''\
+    };
+extern const char *${name}Strings[Num_${name}];
+}
+
+#endif // __ENUM__${name}__
+''')
+
+    def cxx_def(cls, code):
+        name = cls.__name__
+        code('''\
+#include "enums/${name}.hh"
+namespace Enums {
+    const char *${name}Strings[Num_${name}] =
+    {
+''')
+        code.indent(2)
+        for val in cls.vals:
+            code('"$val",')
+        code.dedent(2)
+        code('''
+    };
+/* namespace Enums */ }
+''')
 
 # Base class for enum types.
 class Enum(ParamValue):
@@ -800,9 +849,15 @@ frequency_tolerance = 0.001  # 0.1%
 
 class TickParamValue(NumericParamValue):
     cxx_type = 'Tick'
-    cxx_predecls = ['#include "base/types.hh"']
-    swig_predecls = ['%import "stdint.i"\n' +
-                     '%import "base/types.hh"']
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/types.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%import "stdint.i"')
+        code('%import "base/types.hh"')
 
     def getValue(self):
         return long(self.value)
@@ -878,9 +933,16 @@ class Frequency(TickParamValue):
 # An explicit conversion to a Latency or Frequency must be made first.
 class Clock(ParamValue):
     cxx_type = 'Tick'
-    cxx_predecls = ['#include "base/types.hh"']
-    swig_predecls = ['%import "stdint.i"\n' +
-                     '%import "base/types.hh"']
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/types.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%import "stdint.i"')
+        code('%import "base/types.hh"')
+
     def __init__(self, value):
         if isinstance(value, (Latency, Clock)):
             self.ticks = value.ticks

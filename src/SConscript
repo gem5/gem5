@@ -259,10 +259,8 @@ for opt in export_vars:
     env.ConfigFile(opt)
 
 def makeTheISA(source, target, env):
-    f = file(str(target[0]), 'w')
-
     isas = [ src.get_contents() for src in source ]
-    target = env['TARGET_ISA']
+    target_isa = env['TARGET_ISA']
     def define(isa):
         return isa.upper() + '_ISA'
     
@@ -270,16 +268,24 @@ def makeTheISA(source, target, env):
         return isa[0].upper() + isa[1:].lower() + 'ISA' 
 
 
-    print >>f, '#ifndef __CONFIG_THE_ISA_HH__'
-    print >>f, '#define __CONFIG_THE_ISA_HH__'
-    print >>f
+    code = code_formatter()
+    code('''\
+#ifndef __CONFIG_THE_ISA_HH__
+#define __CONFIG_THE_ISA_HH__
+
+''')
+
     for i,isa in enumerate(isas):
-        print >>f, '#define %s %d' % (define(isa), i + 1)
-    print >>f
-    print >>f, '#define THE_ISA %s' % (define(target))
-    print >>f, '#define TheISA %s' % (namespace(target))
-    print >>f
-    print >>f, '#endif // __CONFIG_THE_ISA_HH__'  
+        code('#define $0 $1', define(isa), i + 1)
+
+    code('''
+
+#define THE_ISA ${{define(target_isa)}}
+#define TheISA ${{namespace(target_isa)}}
+
+#endif // __CONFIG_THE_ISA_HH__''')
+
+    code.write(str(target[0]))
 
 env.Command('config/the_isa.hh', map(Value, all_isa_list), makeTheISA)
 
@@ -347,6 +353,7 @@ class DictImporter(object):
 
 import m5.SimObject
 import m5.params
+from m5.util import code_formatter
 
 m5.SimObject.clear()
 m5.params.clear()
@@ -402,7 +409,7 @@ depends = [ PySource.modules[dep].tnode for dep in module_depends ]
 def makeDefinesPyFile(target, source, env):
     build_env, hg_info = [ x.get_contents() for x in source ]
 
-    code = m5.util.code_formatter()
+    code = code_formatter()
     code("""
 import m5.internal
 import m5.util
@@ -418,7 +425,7 @@ for key,val in m5.internal.core.__dict__.iteritems():
         _globals[flag] = val
 del _globals
 """)
-    code.write(str(target[0]))
+    code.write(target[0].abspath)
 
 defines_info = [ Value(build_env), Value(env['HG_INFO']) ]
 # Generate a file with all of the compile options in it
@@ -427,11 +434,11 @@ PySource('m5', 'python/m5/defines.py')
 
 # Generate python file containing info about the M5 source code
 def makeInfoPyFile(target, source, env):
-    f = file(str(target[0]), 'w')
+    code = code_formatter()
     for src in source:
         data = ''.join(file(src.srcnode().abspath, 'r').xreadlines())
-        print >>f, "%s = %s" % (src, repr(data))
-    f.close()
+        code('$src = ${{repr(data)}}')
+    code.write(str(target[0]))
 
 # Generate a file that wraps the basic top level files
 env.Command('python/m5/info.py',
@@ -441,12 +448,15 @@ PySource('m5', 'python/m5/info.py')
 
 # Generate the __init__.py file for m5.objects
 def makeObjectsInitFile(target, source, env):
-    f = file(str(target[0]), 'w')
-    print >>f, 'from params import *'
-    print >>f, 'from m5.SimObject import *'
+    code = code_formatter()
+    code('''\
+from params import *
+from m5.SimObject import *
+''')
+
     for module in source:
-        print >>f, 'from %s import *' % module.get_contents()
-    f.close()
+        code('from $0 import *', module.get_contents())
+    code.write(str(target[0]))
 
 # Generate an __init__.py file for the objects package
 env.Command('python/m5/objects/__init__.py',
@@ -462,43 +472,42 @@ PySource('m5.objects', 'python/m5/objects/__init__.py')
 def createSimObjectParam(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
-    hh_file = file(target[0].abspath, 'w')
     name = str(source[0].get_contents())
     obj = sim_objects[name]
 
-    print >>hh_file, obj.cxx_decl()
-    hh_file.close()
+    code = code_formatter()
+    obj.cxx_decl(code)
+    code.write(target[0].abspath)
 
 def createSwigParam(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
-    i_file = file(target[0].abspath, 'w')
     name = str(source[0].get_contents())
     param = all_params[name]
 
-    for line in param.swig_decl():
-        print >>i_file, line
-    i_file.close()
+    code = code_formatter()
+    param.swig_decl(code)
+    code.write(target[0].abspath)
 
 def createEnumStrings(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
-    cc_file = file(target[0].abspath, 'w')
     name = str(source[0].get_contents())
     obj = all_enums[name]
 
-    print >>cc_file, obj.cxx_def()
-    cc_file.close()
+    code = code_formatter()
+    obj.cxx_def(code)
+    code.write(target[0].abspath)
 
 def createEnumParam(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
-    hh_file = file(target[0].abspath, 'w')
     name = str(source[0].get_contents())
     obj = all_enums[name]
 
-    print >>hh_file, obj.cxx_decl()
-    hh_file.close()
+    code = code_formatter()
+    obj.cxx_decl(code)
+    code.write(target[0].abspath)
 
 # Generate all of the SimObject param struct header files
 params_hh_files = []
@@ -538,7 +547,6 @@ for name,enum in sorted(all_enums.iteritems()):
 def buildParams(target, source, env):
     names = [ s.get_contents() for s in source ]
     objs = [ sim_objects[name] for name in names ]
-    out = file(target[0].abspath, 'w')
 
     ordered_objs = []
     obj_seen = set()
@@ -556,82 +564,67 @@ def buildParams(target, source, env):
     for obj in objs:
         order_obj(obj)
 
-    enums = set()
-    predecls = []
-    pd_seen = set()
+    code = code_formatter()
+    code('%module params')
 
-    def add_pds(*pds):
-        for pd in pds:
-            if pd not in pd_seen:
-                predecls.append(pd)
-                pd_seen.add(pd)
+    code('%{')
+    for obj in ordered_objs:
+        code('#include "params/$obj.hh"')
+    code('%}')
 
     for obj in ordered_objs:
         params = obj._params.local.values()
         for param in params:
+            param.swig_predecls(code)
+
+    enums = set()
+    for obj in ordered_objs:
+        params = obj._params.local.values()
+        for param in params:
             ptype = param.ptype
-            if issubclass(ptype, m5.params.Enum):
-                if ptype not in enums:
-                    enums.add(ptype)
-            pds = param.swig_predecls()
-            if isinstance(pds, (list, tuple)):
-                add_pds(*pds)
-            else:
-                add_pds(pds)
-
-    print >>out, '%module params'
-
-    print >>out, '%{'
+            if issubclass(ptype, m5.params.Enum) and ptype not in enums:
+                enums.add(ptype)
+                code('%include "enums/$0.hh"', ptype.__name__)
+    
     for obj in ordered_objs:
-        print >>out, '#include "params/%s.hh"' % obj
-    print >>out, '%}'
-
-    for pd in predecls:
-        print >>out, pd
-
-    enums = list(enums)
-    enums.sort()
-    for enum in enums:
-        print >>out, '%%include "enums/%s.hh"' % enum.__name__
-    print >>out
+        obj.swig_objdecls(code)
+        code()
 
     for obj in ordered_objs:
+        continue
         if obj.swig_objdecls:
-            for decl in obj.swig_objdecls:
-                print >>out, decl
+            obj.swig_objdecls(code)
             continue
 
         class_path = obj.cxx_class.split('::')
         classname = class_path[-1]
         namespaces = class_path[:-1]
-        namespaces.reverse()
-
-        code = ''
-
-        if namespaces:
-            code += '// avoid name conflicts\n'
-            sep_string = '_COLONS_'
-            flat_name = sep_string.join(class_path)
-            code += '%%rename(%s) %s;\n' % (flat_name, classname)
-
-        code += '// stop swig from creating/wrapping default ctor/dtor\n'
-        code += '%%nodefault %s;\n' % classname
-        code += 'class %s ' % classname
-        if obj._base:
-            code += ': public %s' % obj._base.cxx_class
-        code += ' {};\n'
 
         for ns in namespaces:
-            new_code = 'namespace %s {\n' % ns
-            new_code += code
-            new_code += '}\n'
-            code = new_code
+            code('namespace $ns {')
 
-        print >>out, code
+        if namespaces:
+            code('// avoid name conflicts')
+            sep_string = '_COLONS_'
+            flat_name = sep_string.join(class_path)
+            code('%rename($flat_name) $classname;')
 
-    print >>out, '%%include "src/sim/sim_object_params.hh"' % obj
+        code('// stop swig from creating/wrapping default ctor/dtor')
+        code('%nodefault $classname;')
+        if obj._base:
+            code('class $classname : public ${{obj._base.cxx_class}} {};')
+        else:
+            code('class $classname {};')
+
+        for ns in reversed(namespaces):
+            code('/* namespace $ns */ }')
+        code()
+
+    code('%include "src/sim/sim_object_params.hh"')
     for obj in ordered_objs:
-        print >>out, '%%include "params/%s.hh"' % obj
+        code('%include "params/$obj.hh"')
+
+    code.write(target[0].abspath)
 
 params_file = File('params/params.i')
 names = sorted(sim_objects.keys())
@@ -649,16 +642,23 @@ for swig in SwigSource.all:
 
 # Generate the main swig init file
 def makeSwigInit(target, source, env):
-    f = file(str(target[0]), 'w')
-    print >>f, 'extern "C" {'
+    code = code_formatter()
+
+    code('extern "C" {')
+    code.indent()
     for module in source:
-        print >>f, '    void init_%s();' % module.get_contents()
-    print >>f, '}'
-    print >>f, 'void initSwig() {'
+        code('void init_$0();', module.get_contents())
+    code.dedent()
+    code('}')
+
+    code('void initSwig() {')
+    code.indent()
     for module in source:
-        print >>f, '    init_%s();' % module.get_contents()
-    print >>f, '}'
-    f.close()
+        code('init_$0();', module.get_contents())
+    code.dedent()
+    code('}')
+
+    code.write(str(target[0]))
 
 env.Command('python/swig/init.cc',
             map(Value, sorted(s.module for s in SwigSource.all)),
@@ -689,55 +689,61 @@ def getFlags(source_flags):
 # Generate traceflags.py
 def traceFlagsPy(target, source, env):
     assert(len(target) == 1)
+    code = code_formatter()
 
-    f = file(str(target[0]), 'w')
-   
     allFlags = getFlags(source)
 
-    print >>f, 'basic = ['
+    code('basic = [')
+    code.indent()
     for flag, compound, desc in allFlags:
         if not compound:
-            print >>f, "    '%s'," % flag
-    print >>f, "    ]"
-    print >>f
+            code("'$flag',")
+    code(']')
+    code.dedent()
+    code()
 
-    print >>f, 'compound = ['
-    print >>f, "    'All',"
+    code('compound = [')
+    code.indent()
+    code("'All',")
     for flag, compound, desc in allFlags:
         if compound:
-            print >>f, "    '%s'," % flag
-    print >>f, "    ]"
-    print >>f
+            code("'$flag',")
+    code("]")
+    code.dedent()
+    code()
 
-    print >>f, "all = frozenset(basic + compound)"
-    print >>f
+    code("all = frozenset(basic + compound)")
+    code()
 
-    print >>f, 'compoundMap = {'
+    code('compoundMap = {')
+    code.indent()
     all = tuple([flag for flag,compound,desc in allFlags if not compound])
-    print >>f, "    'All' : %s," % (all, )
+    code("'All' : $all,")
     for flag, compound, desc in allFlags:
         if compound:
-            print >>f, "    '%s' : %s," % (flag, compound)
-    print >>f, "    }"
-    print >>f
+            code("'$flag' : $compound,")
+    code('}')
+    code.dedent()
+    code()
 
-    print >>f, 'descriptions = {'
-    print >>f, "    'All' : 'All flags',"
+    code('descriptions = {')
+    code.indent()
+    code("'All' : 'All flags',")
     for flag, compound, desc in allFlags:
-        print >>f, "    '%s' : '%s'," % (flag, desc)
-    print >>f, "    }"
+        code("'$flag' : '$desc',")
+    code("}")
+    code.dedent()
 
-    f.close()
+    code.write(str(target[0]))
 
 def traceFlagsCC(target, source, env):
     assert(len(target) == 1)
 
-    f = file(str(target[0]), 'w')
-
     allFlags = getFlags(source)
+    code = code_formatter()
 
     # file header
-    print >>f, '''
+    code('''
 /*
  * DO NOT EDIT THIS FILE! Automatically generated
  */
@@ -747,70 +753,74 @@ def traceFlagsCC(target, source, env):
 using namespace Trace;
 
 const char *Trace::flagStrings[] =
-{'''
+{''')
 
+    code.indent()
     # The string array is used by SimpleEnumParam to map the strings
     # provided by the user to enum values.
     for flag, compound, desc in allFlags:
         if not compound:
-            print >>f, '    "%s",' % flag
+            code('"$flag",')
 
-    print >>f, '    "All",'
+    code('"All",')
     for flag, compound, desc in allFlags:
         if compound:
-            print >>f, '    "%s",' % flag
+            code('"$flag",')
+    code.dedent()
 
-    print >>f, '};'
-    print >>f
-    print >>f, 'const int Trace::numFlagStrings = %d;' % (len(allFlags) + 1)
-    print >>f
+    code('''\
+};
 
-    #
+const int Trace::numFlagStrings = ${{len(allFlags) + 1}};
+
+''')
+
     # Now define the individual compound flag arrays.  There is an array
     # for each compound flag listing the component base flags.
-    #
     all = tuple([flag for flag,compound,desc in allFlags if not compound])
-    print >>f, 'static const Flags AllMap[] = {'
+    code('static const Flags AllMap[] = {')
+    code.indent()
     for flag, compound, desc in allFlags:
         if not compound:
-            print >>f, "    %s," % flag
-    print >>f, '};'
-    print >>f
+            code('$flag,')
+    code.dedent()
+    code('};')
+    code()
 
     for flag, compound, desc in allFlags:
         if not compound:
             continue
-        print >>f, 'static const Flags %sMap[] = {' % flag
+        code('static const Flags ${flag}Map[] = {')
+        code.indent()
         for flag in compound:
-            print >>f, "    %s," % flag
-        print >>f, "    (Flags)-1"
-        print >>f, '};'
-        print >>f
+            code('$flag,')
+        code('(Flags)-1')
+        code.dedent()
+        code('};')
+        code()
 
-    #
     # Finally the compoundFlags[] array maps the compound flags
     # to their individual arrays/
-    #
-    print >>f, 'const Flags *Trace::compoundFlags[] ='
-    print >>f, '{'
-    print >>f, '    AllMap,'
+    code('const Flags *Trace::compoundFlags[] = {')
+    code.indent()
+    code('AllMap,')
     for flag, compound, desc in allFlags:
         if compound:
-            print >>f, '    %sMap,' % flag
+            code('${flag}Map,')
     # file trailer
-    print >>f, '};'
+    code.dedent()
+    code('};')
 
-    f.close()
+    code.write(str(target[0]))
 
 def traceFlagsHH(target, source, env):
     assert(len(target) == 1)
 
-    f = file(str(target[0]), 'w')
-
     allFlags = getFlags(source)
+    code = code_formatter()
 
     # file header boilerplate
-    print >>f, '''
+    code('''\
 /*
  * DO NOT EDIT THIS FILE!
  *
@@ -822,36 +832,41 @@ def traceFlagsHH(target, source, env):
 
 namespace Trace {
 
-enum Flags {'''
+enum Flags {''')
 
     # Generate the enum.  Base flags come first, then compound flags.
     idx = 0
+    code.indent()
     for flag, compound, desc in allFlags:
         if not compound:
-            print >>f, '    %s = %d,' % (flag, idx)
+            code('$flag = $idx,')
             idx += 1
 
     numBaseFlags = idx
-    print >>f, '    NumFlags = %d,' % idx
+    code('NumFlags = $idx,')
+    code.dedent()
+    code()
 
     # put a comment in here to separate base from compound flags
-    print >>f, '''
+    code('''
 // The remaining enum values are *not* valid indices for Trace::flags.
 // They are "compound" flags, which correspond to sets of base
-// flags, and are used by changeFlag.'''
+// flags, and are used by changeFlag.''')
 
-    print >>f, '    All = %d,' % idx
+    code.indent()
+    code('All = $idx,')
     idx += 1
     for flag, compound, desc in allFlags:
         if compound:
-            print >>f, '    %s = %d,' % (flag, idx)
+            code('$flag = $idx,')
             idx += 1
 
     numCompoundFlags = idx - numBaseFlags
-    print >>f, '    NumCompoundFlags = %d' % numCompoundFlags
+    code('NumCompoundFlags = $numCompoundFlags')
+    code.dedent()
 
     # trailer boilerplate
-    print >>f, '''\
+    code('''\
 }; // enum Flags
 
 // Array of strings for SimpleEnumParam
@@ -865,9 +880,9 @@ extern const Flags *compoundFlags[];
 /* namespace Trace */ }
 
 #endif // __BASE_TRACE_FLAGS_HH__
-'''
+''')
 
-    f.close()
+    code.write(str(target[0]))
 
 flags = map(Value, trace_flags.values())
 env.Command('base/traceflags.py', flags, traceFlagsPy)
@@ -889,7 +904,6 @@ def objectifyPyFile(target, source, env):
     as just bytes with a label in the data section'''
 
     src = file(str(source[0]), 'r').read()
-    dst = file(str(target[0]), 'w')
 
     pysource = PySource.tnodes[source[0]]
     compiled = compile(src, pysource.abspath, 'exec')
@@ -906,15 +920,21 @@ def objectifyPyFile(target, source, env):
         sym = pysource.symname
 
     step = 16
-    print >>dst, ".data"
-    print >>dst, ".globl %s_beg" % sym
-    print >>dst, ".globl %s_end" % sym
-    print >>dst, "%s_beg:" % sym
+    code = code_formatter()
+    code('''\
+.data
+.globl ${sym}_beg
+.globl ${sym}_end
+${sym}_beg:''')
+
     for i in xrange(0, len(data), step):
         x = array.array('B', data[i:i+step])
-        print >>dst, ".byte", ','.join([str(d) for d in x])
-    print >>dst, "%s_end:" % sym
-    print >>dst, ".long %d" % len(marshalled)
+        bytes = ','.join([str(d) for d in x])
+        code('.byte $bytes')
+    code('${sym}_end:')
+    code('.long $0', len(marshalled))
+
+    code.write(str(target[0]))
 
 for source in PySource.all:
     env.Command(source.assembly, source.tnode, objectifyPyFile)
@@ -926,41 +946,49 @@ for source in PySource.all:
 # the embedded files, and then there's a list of all of the rest that
 # the importer uses to load the rest on demand.
 def pythonInit(target, source, env):
-    dst = file(str(target[0]), 'w')
+    code = code_formatter()
 
     def dump_mod(sym, endchar=','):
         def c_str(string):
             if string is None:
                 return "0"
             return '"%s"' % string
-        pysource = PySource.symnames[sym]
-        print >>dst, '    { %s,' % c_str(pysource.arcname)
-        print >>dst, '      %s,' % c_str(pysource.abspath)
-        print >>dst, '      %s,' % c_str(pysource.modpath)
-        print >>dst, '      %s_beg, %s_end,' % (sym, sym)
-        print >>dst, '      %s_end - %s_beg,' % (sym, sym)
-        print >>dst, '      *(int *)%s_end }%s'  % (sym, endchar)
-    
-    print >>dst, '#include "sim/init.hh"'
 
+        pysource = PySource.symnames[sym]
+        arcname = c_str(pysource.arcname)
+        abspath = c_str(pysource.abspath)
+        modpath = c_str(pysource.modpath)
+        code.indent()
+        code('''\
+{ $arcname,
+  $abspath,
+  $modpath,
+  ${sym}_beg, ${sym}_end,
+  ${sym}_end - ${sym}_beg,
+  *(int *)${sym}_end }$endchar
+''')
+        code.dedent()
+
+    code('#include "sim/init.hh"')
     for sym in source:
         sym = sym.get_contents()
-        print >>dst, "extern const char %s_beg[], %s_end[];" % (sym, sym)
+        code('extern const char ${sym}_beg[], ${sym}_end[];')
 
-    print >>dst, "const EmbeddedPyModule embeddedPyImporter = "
-    dump_mod("PyEMB_importer", endchar=';');
-    print >>dst
+    code('const EmbeddedPyModule embeddedPyImporter = ')
+    dump_mod("PyEMB_importer", endchar=';')
+    code()
 
-    print >>dst, "const EmbeddedPyModule embeddedPyModules[] = {"
+    code('const EmbeddedPyModule embeddedPyModules[] = {')
     for i,sym in enumerate(source):
         sym = sym.get_contents()
         if sym == "PyEMB_importer":
             # Skip the importer since we've already exported it
             continue
         dump_mod(sym)
-    print >>dst, "    { 0, 0, 0, 0, 0, 0, 0 }"
-    print >>dst, "};"
+    code('    { 0, 0, 0, 0, 0, 0, 0 }')
+    code('};')
 
+    code.write(str(target[0]))
 
 env.Command('sim/init_python.cc',
             map(Value, (s.symname for s in PySource.all)),

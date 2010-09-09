@@ -29,7 +29,7 @@
 #          Nathan Binkert
 
 import sys
-from types import FunctionType
+from types import FunctionType, MethodType
 
 try:
     import pydot
@@ -97,6 +97,46 @@ allClasses = {}
 # dict to look up SimObjects based on path
 instanceDict = {}
 
+def default_cxx_predecls(cls, code):
+    '''A forward class declaration is sufficient since we are
+    just declaring a pointer.'''
+
+    class_path = cls._value_dict['cxx_class'].split('::')
+    for ns in class_path[:-1]:
+        code('namespace $ns {')
+    code('class $0;', class_path[-1])
+    for ns in reversed(class_path[:-1]):
+        code('/* namespace $ns */ }')
+
+def default_swig_objdecls(cls, code):
+    class_path = cls.cxx_class.split('::')
+    classname = class_path[-1]
+    namespaces = class_path[:-1]
+
+    for ns in namespaces:
+        code('namespace $ns {')
+
+    if namespaces:
+        code('// avoid name conflicts')
+        sep_string = '_COLONS_'
+        flat_name = sep_string.join(class_path)
+        code('%rename($flat_name) $classname;')
+
+    code()
+    code('// stop swig from creating/wrapping default ctor/dtor')
+    code('%nodefault $classname;')
+    code('class $classname')
+    if cls._base:
+        code('    : public ${{cls._base.cxx_class}}')
+    code('{};')
+
+    for ns in reversed(namespaces):
+        code('/* namespace $ns */ }')
+
+def public_value(key, value):
+    return key.startswith('_') or \
+               isinstance(value, (FunctionType, MethodType, classmethod, type))
+
 # The metaclass for SimObject.  This class controls how new classes
 # that derive from SimObject are instantiated, and provides inherited
 # class behavior (just like a class controls how instances of that
@@ -106,9 +146,9 @@ class MetaSimObject(type):
     init_keywords = { 'abstract' : bool,
                       'cxx_class' : str,
                       'cxx_type' : str,
-                      'cxx_predecls' : list,
-                      'swig_objdecls' : list,
-                      'swig_predecls' : list,
+                      'cxx_predecls'  : MethodType,
+                      'swig_objdecls' : MethodType,
+                      'swig_predecls' : MethodType,
                       'type' : str }
     # Attributes that can be set any time
     keywords = { 'check' : FunctionType }
@@ -127,9 +167,7 @@ class MetaSimObject(type):
         cls_dict = {}
         value_dict = {}
         for key,val in dict.items():
-            if key.startswith('_') or isinstance(val, (FunctionType,
-                                                       classmethod,
-                                                       type)):
+            if public_value(key, val):
                 cls_dict[key] = val
             else:
                 # must be a param/port setting
@@ -190,24 +228,16 @@ class MetaSimObject(type):
 
             cls._value_dict['cxx_type'] = '%s *' % cls._value_dict['cxx_class']
                 
-            if 'cxx_predecls' not in cls._value_dict:
-                # A forward class declaration is sufficient since we are
-                # just declaring a pointer.
-                class_path = cls._value_dict['cxx_class'].split('::')
-                class_path.reverse()
-                decl = 'class %s;' % class_path[0]
-                for ns in class_path[1:]:
-                    decl = 'namespace %s { %s }' % (ns, decl)
-                cls._value_dict['cxx_predecls'] = [decl]
+            if 'cxx_predecls' not in cls.__dict__:
+                m = MethodType(default_cxx_predecls, cls, MetaSimObject)
+                setattr(cls, 'cxx_predecls', m)
 
-            if 'swig_predecls' not in cls._value_dict:
-                # A forward class declaration is sufficient since we are
-                # just declaring a pointer.
-                cls._value_dict['swig_predecls'] = \
-                    cls._value_dict['cxx_predecls']
+            if 'swig_predecls' not in cls.__dict__:
+                setattr(cls, 'swig_predecls', getattr(cls, 'cxx_predecls'))
 
-        if 'swig_objdecls' not in cls._value_dict:
-            cls._value_dict['swig_objdecls'] = []
+        if 'swig_objdecls' not in cls.__dict__:
+            m = MethodType(default_swig_objdecls, cls, MetaSimObject)
+            setattr(cls, 'swig_objdecls', m)
 
         # Now process the _value_dict items.  They could be defining
         # new (or overriding existing) parameters or ports, setting
@@ -282,7 +312,7 @@ class MetaSimObject(type):
     # instance of class cls).
     def __setattr__(cls, attr, value):
         # normal processing for private attributes
-        if attr.startswith('_'):
+        if public_value(attr, value):
             type.__setattr__(cls, attr, value)
             return
 
@@ -328,9 +358,12 @@ class MetaSimObject(type):
     def __str__(cls):
         return cls.__name__
 
-    def cxx_decl(cls):
-        code = "#ifndef __PARAMS__%s\n" % cls
-        code += "#define __PARAMS__%s\n\n" % cls
+    def cxx_decl(cls, code):
+        code('''\
+#ifndef __PARAMS__${cls}__
+#define __PARAMS__${cls}__
+
+''')
 
         # The 'dict' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
@@ -344,59 +377,57 @@ class MetaSimObject(type):
             print params
             raise
 
-        # get a list of lists of predeclaration lines
-        predecls = []
-        predecls.extend(cls.cxx_predecls)
-        for p in params:
-            predecls.extend(p.cxx_predecls())
-        # remove redundant lines
-        predecls2 = []
-        for pd in predecls:
-            if pd not in predecls2:
-                predecls2.append(pd)
-        predecls2.sort()
-        code += "\n".join(predecls2)
-        code += "\n\n";
+        # get all predeclarations
+        cls.cxx_predecls(code)
+        for param in params:
+            param.cxx_predecls(code)
+        code()
 
         if cls._base:
-            code += '#include "params/%s.hh"\n\n' % cls._base.type
+            code('#include "params/${{cls._base.type}}.hh"')
+            code()
 
         for ptype in ptypes:
             if issubclass(ptype, Enum):
-                code += '#include "enums/%s.hh"\n' % ptype.__name__
-                code += "\n\n"
+                code('#include "enums/${{ptype.__name__}}.hh"')
+                code()
 
-        code += cls.cxx_struct(cls._base, params)
+        cls.cxx_struct(code, cls._base, params)
 
         # close #ifndef __PARAMS__* guard
-        code += "\n#endif\n"
+        code()
+        code('#endif // __PARAMS__${cls}__')
         return code
 
-    def cxx_struct(cls, base, params):
+    def cxx_struct(cls, code, base, params):
         if cls == SimObject:
-            return '#include "sim/sim_object_params.hh"\n'
+            code('#include "sim/sim_object_params.hh"')
+            return
 
         # now generate the actual param struct
-        code = "struct %sParams" % cls
+        code("struct ${cls}Params")
         if base:
-            code += " : public %sParams" % base.type
-        code += "\n{\n"
+            code("    : public ${{base.type}}Params")
+        code("{")
         if not hasattr(cls, 'abstract') or not cls.abstract:
             if 'type' in cls.__dict__:
-                code += "    %s create();\n" % cls.cxx_type
-        decls = [p.cxx_decl() for p in params]
-        decls.sort()
-        code += "".join(["    %s\n" % d for d in decls])
-        code += "};\n"
+                code("    ${{cls.cxx_type}} create();")
 
-        return code
+        code.indent()
+        for param in params:
+            param.cxx_decl(code)
+        code.dedent()
+        code('};')
 
-    def swig_decl(cls):
-        code = '%%module %s\n' % cls
+    def swig_decl(cls, code):
+        code('''\
+%module $cls
 
-        code += '%{\n'
-        code += '#include "params/%s.hh"\n' % cls
-        code += '%}\n\n'
+%{
+#include "params/$cls.hh"
+%}
+
+''')
 
         # The 'dict' attribute restricts us to the params declared in
         # the object itself, not including inherited params (which
@@ -405,32 +436,22 @@ class MetaSimObject(type):
         params = cls._params.local.values()
         ptypes = [p.ptype for p in params]
 
-        # get a list of lists of predeclaration lines
-        predecls = []
-        predecls.extend([ p.swig_predecls() for p in params ])
-        # flatten
-        predecls = reduce(lambda x,y:x+y, predecls, [])
-        # remove redundant lines
-        predecls2 = []
-        for pd in predecls:
-            if pd not in predecls2:
-                predecls2.append(pd)
-        predecls2.sort()
-        code += "\n".join(predecls2)
-        code += "\n\n";
+        # get all predeclarations
+        for param in params:
+            param.swig_predecls(code)
+        code()
 
         if cls._base:
-            code += '%%import "params/%s.i"\n\n' % cls._base.type
+            code('%import "params/${{cls._base.type}}.i"')
+            code()
 
         for ptype in ptypes:
             if issubclass(ptype, Enum):
-                code += '%%import "enums/%s.hh"\n' % ptype.__name__
-                code += "\n\n"
+                code('%import "enums/${{ptype.__name__}}.hh"')
+                code()
 
-        code += '%%import "params/%s_type.hh"\n\n' % cls
-        code += '%%include "params/%s.hh"\n\n' % cls
-
-        return code
+        code('%import "params/${cls}_type.hh"')
+        code('%include "params/${cls}.hh"')
 
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
@@ -442,7 +463,9 @@ class SimObject(object):
     type = 'SimObject'
     abstract = True
 
-    swig_objdecls = [ '%include "python/swig/sim_object.i"' ]
+    @classmethod
+    def swig_objdecls(cls, code):
+        code('%include "python/swig/sim_object.i"')
 
     # Initialize new instance.  For objects with SimObject-valued
     # children, we need to recursively clone the classes represented
