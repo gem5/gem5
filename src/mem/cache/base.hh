@@ -38,10 +38,10 @@
 #ifndef __BASE_CACHE_HH__
 #define __BASE_CACHE_HH__
 
-#include <vector>
-#include <string>
-#include <list>
 #include <algorithm>
+#include <list>
+#include <string>
+#include <vector>
 
 #include "base/misc.hh"
 #include "base/statistics.hh"

@@ -31,11 +31,8 @@
 #include <string>
 
 #include "base/loader/aout_object.hh"
-
 #include "base/loader/symtab.hh"
-
-#include "base/trace.hh"        // for DPRINTF
-
+#include "base/trace.hh"
 #include "base/loader/exec_aout.h"
 
 using namespace std;

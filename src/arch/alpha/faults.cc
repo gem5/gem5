@@ -35,6 +35,7 @@
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "base/trace.hh"
+
 #if !FULL_SYSTEM
 #include "sim/process.hh"
 #include "mem/page_table.hh"

@@ -47,7 +47,6 @@
 #include "mem/page_table.hh"
 #include "params/MipsTLB.hh"
 
-
 using namespace std;
 using namespace MipsISA;
 

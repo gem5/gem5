@@ -37,10 +37,11 @@
  * Authors: Gabe Black
  */
 
+#include <string>
+
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/condcodes.hh"
-#include <string>
 
 namespace X86ISA
 {

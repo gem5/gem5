@@ -33,11 +33,9 @@
 #include "arch/mips/linux/linux.hh"
 #include "arch/mips/linux/process.hh"
 #include "arch/mips/isa_traits.hh"
-
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
-
 #include "sim/process.hh"
 #include "sim/system.hh"
 #include "sim/syscall_emul.hh"

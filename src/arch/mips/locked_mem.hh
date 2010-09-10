@@ -42,7 +42,6 @@
 #include "base/trace.hh"
 #include "mem/request.hh"
 
-
 namespace MipsISA
 {
 

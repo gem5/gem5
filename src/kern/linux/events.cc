@@ -29,15 +29,15 @@
  *          Ali Saidi
  */
 
-#include "sim/arguments.hh"
+#include <sstream>
+
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
+#include "sim/arguments.hh"
 #include "sim/system.hh"
-
-#include <sstream>
 
 namespace Linux {
 

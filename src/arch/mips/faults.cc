@@ -32,13 +32,14 @@
  */
 
 #include "arch/mips/faults.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/base.hh"
-#include "base/trace.hh"
 #include "arch/mips/pra_constants.hh"
+#include "base/trace.hh"
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
+
 #if !FULL_SYSTEM
-#include "sim/process.hh"
 #include "mem/page_table.hh"
+#include "sim/process.hh"
 #endif
 
 namespace MipsISA

@@ -35,11 +35,11 @@
 
 #include <string>
 
-#include "mem/cache/base.hh"
 #include "base/intmath.hh"
+#include "mem/cache/base.hh"
+#include "mem/cache/tags/cacheset.hh"
 #include "mem/cache/tags/lru.hh"
 #include "sim/core.hh"
-#include "cacheset.hh"
 
 using namespace std;
 

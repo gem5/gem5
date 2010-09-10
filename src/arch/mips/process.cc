@@ -32,14 +32,11 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/process.hh"
-
 #include "base/loader/object_file.hh"
 #include "base/loader/elf_object.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
-
 #include "mem/page_table.hh"
-
 #include "sim/process.hh"
 #include "sim/process_impl.hh"
 #include "sim/system.hh"

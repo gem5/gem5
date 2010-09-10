@@ -39,13 +39,13 @@
 #include <vector>
 
 #include "base/inifile.hh"
-#include "base/intmath.hh" // for isPowerOf2(
+#include "base/intmath.hh"
 #include "base/misc.hh"
-#include "base/str.hh"  // for to_number
+#include "base/str.hh"
 #include "base/trace.hh"
+#include "dev/alpha/tsunamireg.h"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"
-#include "dev/alpha/tsunamireg.h"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/byteswap.hh"

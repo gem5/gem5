@@ -50,7 +50,6 @@
 #include "params/PowerTLB.hh"
 #include "sim/process.hh"
 
-
 using namespace std;
 using namespace PowerISA;
 

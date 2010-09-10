@@ -34,18 +34,15 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <vector>
 
-#include <math.h>
-
+#include "base/intmath.hh"
+#include "base/trace.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/tags/iic.hh"
-#include "base/intmath.hh"
-#include "sim/core.hh" // for curTick
-
-#include "base/trace.hh" // for DPRINTF
-
+#include "sim/core.hh"
 
 using namespace std;
 

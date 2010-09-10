@@ -32,11 +32,9 @@
 #include "arch/alpha/linux/linux.hh"
 #include "arch/alpha/linux/process.hh"
 #include "arch/alpha/isa_traits.hh"
-
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
-
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
 
