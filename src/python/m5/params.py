@@ -241,7 +241,7 @@ class VectorParamDesc(ParamDesc):
             return VectorParamValue(tmp_list)
 
     def swig_predecls(self, code):
-        code('%import "${{self.ptype_str}}_vptype.i"')
+        code('%import "vptype_${{self.ptype_str}}.i"')
 
     def swig_decl(self, code):
         code('%{')
@@ -669,7 +669,7 @@ class EthernetAddr(ParamValue):
         return self
 
     def getValue(self):
-        from m5.objects.params import EthAddr
+        from m5.internal.params import EthAddr
         return EthAddr(self.value)
 
     def ini_str(self):
@@ -728,7 +728,7 @@ class Time(ParamValue):
         self.value = parse_time(value)
 
     def getValue(self):
-        from m5.objects.params import tm
+        from m5.internal.params import tm
 
         c_time = tm()
         py_time = self.value
@@ -835,7 +835,7 @@ extern const char *${name}Strings[Num_${name}];
     def cxx_def(cls, code):
         name = cls.__name__
         code('''\
-#include "enums/${name}.hh"
+#include "enums/$name.hh"
 namespace Enums {
     const char *${name}Strings[Num_${name}] =
     {
@@ -866,7 +866,7 @@ class Enum(ParamValue):
 
     @classmethod
     def swig_predecls(cls, code):
-        code('%import "enums/$0.i"', cls.__name__)
+        code('%import "python/m5/internal/enum_$0.i"', cls.__name__)
 
     def getValue(self):
         return int(self.map[self.value])
@@ -1168,7 +1168,7 @@ class PortRef(object):
 
     # Call C++ to create corresponding port connection between C++ objects
     def ccConnect(self):
-        from m5.objects.params import connectPorts
+        from m5.internal.params import connectPorts
 
         if self.ccConnected: # already done this
             return

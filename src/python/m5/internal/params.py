@@ -26,4 +26,11 @@
 #
 # Authors: Nathan Binkert
 
-from m5.internal.params import *
+try:
+    modules = __loader__.modules
+except NameError:
+    modules = { }
+
+for module in modules.iterkeys():
+    if module.startswith('m5.internal.param_'):
+        exec "from %s import *" % module

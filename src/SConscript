@@ -470,7 +470,7 @@ def createSwigParam(target, source, env):
     param = all_params[name]
 
     code = code_formatter()
-    code('%module(package="m5.internal.swig") ${name}_$0', param.file_ext)
+    code('%module(package="m5.internal") $0_${name}', param.file_ext)
     param.swig_decl(code)
     code.write(target[0].abspath)
 
@@ -502,7 +502,7 @@ def createEnumSwig(target, source, env):
 
     code = code_formatter()
     code('''\
-%module(package="m5.internal.enums") $name
+%module(package="m5.internal") enum_$name
 
 %{
 #include "enums/$name.hh"
@@ -526,11 +526,11 @@ for name,simobj in sorted(sim_objects.iteritems()):
 # Generate any parameter header files needed
 params_i_files = []
 for name,param in all_params.iteritems():
-    i_file = File('params/%s_%s.i' % (name, param.file_ext))
+    i_file = File('python/m5/internal/%s_%s.i' % (param.file_ext, name))
     params_i_files.append(i_file)
     env.Command(i_file, Value(name), createSwigParam)
     env.Depends(i_file, depends)
-    SwigSource('m5.internal.swig', i_file)
+    SwigSource('m5.internal', i_file)
 
 # Generate all enum header files
 for name,enum in sorted(all_enums.iteritems()):
@@ -546,10 +546,10 @@ for name,enum in sorted(all_enums.iteritems()):
     env.Command(hh_file, Value(name), createEnumParam)
     env.Depends(hh_file, depends + extra_deps)
 
-    i_file = File('enums/%s.i' % name)
+    i_file = File('python/m5/internal/enum_%s.i' % name)
     env.Command(i_file, Value(name), createEnumSwig)
     env.Depends(i_file, depends + extra_deps)
-    SwigSource('m5.internal.enums', i_file)
+    SwigSource('m5.internal', i_file)
 
 def buildParam(target, source, env):
     name = source[0].get_contents()
@@ -561,7 +561,7 @@ def buildParam(target, source, env):
 
     code = code_formatter()
 
-    code('%module(package="m5.internal.params") $name')
+    code('%module(package="m5.internal") param_$name')
     code()
     code('%{')
     code('#include "params/$obj.hh"')
@@ -575,7 +575,7 @@ def buildParam(target, source, env):
 
     code()
     if obj._base:
-        code('%import "params/${{obj._base}}.i"')
+        code('%import "python/m5/internal/param_${{obj._base}}.i"')
     code()
     obj.swig_objdecls(code)
     code()
@@ -585,10 +585,10 @@ def buildParam(target, source, env):
     code.write(target[0].abspath)
 
 for name in sim_objects.iterkeys():
-    params_file = File('params/%s.i' % name)
+    params_file = File('python/m5/internal/param_%s.i' % name)
     env.Command(params_file, Value(name), buildParam)
     env.Depends(params_file, depends)
-    SwigSource('m5.internal.params', params_file)
+    SwigSource('m5.internal', params_file)
 
 # Generate the main swig init file
 def makeEmbeddedSwigInit(target, source, env):

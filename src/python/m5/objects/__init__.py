@@ -26,7 +26,7 @@
 #
 # Authors: Nathan Binkert
 
-from m5.objects.params import *
+from m5.internal import params
 from m5.SimObject import *
 
 try:
@@ -35,5 +35,5 @@ except NameError:
     modules = { }
 
 for module in modules.iterkeys():
-    if module.startswith('m5.objects.') and module != 'm5.objects.params':
+    if module.startswith('m5.objects.'):
         exec "from %s import *" % module

@@ -101,7 +101,7 @@ def default_cxx_predecls(cls, code):
     code('#include "params/$cls.hh"')
 
 def default_swig_predecls(cls, code):
-    code('%import "params/$cls.i"')
+    code('%import "python/m5/internal/param_$cls.i"')
 
 def default_swig_objdecls(cls, code):
     class_path = cls.cxx_class.split('::')
@@ -455,7 +455,7 @@ class MetaSimObject(type):
         code()
 
         if cls._base:
-            code('%import "params/${{cls._base.type}}.i"')
+            code('%import "python/m5/internal/param_${{cls._base.type}}.i"')
             code()
 
         for ptype in ptypes:
@@ -780,7 +780,7 @@ class SimObject(object):
         if self._ccParams:
             return self._ccParams
 
-        cc_params_struct = getattr(m5.objects.params, '%sParams' % self.type)
+        cc_params_struct = getattr(m5.internal.params, '%sParams' % self.type)
         cc_params = cc_params_struct()
         cc_params.pyobj = self
         cc_params.name = str(self)
