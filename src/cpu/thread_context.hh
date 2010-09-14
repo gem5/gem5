@@ -36,9 +36,6 @@
 #include "base/types.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
-#include "mem/request.hh"
-#include "sim/byteswap.hh"
-#include "sim/faults.hh"
 #include "sim/serialize.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and

@@ -31,13 +31,13 @@
 #ifndef __ARCH_SPARC_UTILITY_HH__
 #define __ARCH_SPARC_UTILITY_HH__
 
-#include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/tlb.hh"
 #include "base/misc.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
+#include "sim/fault.hh"
 
 namespace SparcISA
 {
@@ -57,14 +57,7 @@ namespace SparcISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
-    inline void
-    initCPU(ThreadContext *tc, int cpuId)
-    {
-        static Fault por = new PowerOnReset();
-        if (cpuId == 0)
-            por->invoke(tc);
-
-    }
+    void initCPU(ThreadContext *tc, int cpuId);
 
     inline void
     startupCPU(ThreadContext *tc, int cpuId)

@@ -48,6 +48,7 @@
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
 #include "base/hashmap.hh"
+#include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"

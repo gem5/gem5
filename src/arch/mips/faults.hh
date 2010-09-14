@@ -53,7 +53,9 @@ class MipsFault : public FaultBase
     Addr entryHiVPN2X;
     Addr contextBadVPN2;
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc) {};
+    void invoke(ThreadContext * tc,
+            StaticInst::StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    {}
     void setExceptionState(ThreadContext *, uint8_t);
     void setHandlerPC(Addr, ThreadContext *);
 #endif
@@ -111,7 +113,8 @@ class AddressErrorFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 
 };
@@ -127,7 +130,8 @@ class StoreAddressErrorFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -155,7 +159,8 @@ class TLBRefillIFetchFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class TLBInvalidIFetchFault : public MipsFault
@@ -169,7 +174,8 @@ class TLBInvalidIFetchFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class NDtbMissFault : public MipsFault
@@ -231,7 +237,8 @@ class CacheErrorFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 
@@ -257,7 +264,8 @@ class ResetFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 
 };
 
@@ -271,7 +279,8 @@ class SystemCallFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class SoftResetFault : public MipsFault
@@ -284,7 +293,8 @@ class SoftResetFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class DebugSingleStep : public MipsFault
@@ -297,7 +307,8 @@ class DebugSingleStep : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class DebugInterrupt : public MipsFault
@@ -310,7 +321,8 @@ class DebugInterrupt : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class CoprocessorUnusableFault : public MipsFault
@@ -324,7 +336,8 @@ class CoprocessorUnusableFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
     CoprocessorUnusableFault(int _procid){ coProcID = _procid;}
 };
 
@@ -338,7 +351,8 @@ class ReservedInstructionFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class ThreadFault : public MipsFault
@@ -351,7 +365,8 @@ class ThreadFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class ArithmeticFault : public MipsFault
@@ -367,7 +382,8 @@ class ArithmeticFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -385,7 +401,8 @@ class InterruptFault : public MipsFault
     FaultStat & countStat() {return _count;}
 
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -400,7 +417,8 @@ class TrapFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -415,7 +433,8 @@ class BreakpointFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -430,7 +449,8 @@ class ItbRefillFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -445,7 +465,8 @@ class DtbRefillFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -460,7 +481,8 @@ class ItbPageFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -475,7 +497,8 @@ class ItbInvalidFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -490,7 +513,8 @@ class TLBModifiedFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -505,7 +529,8 @@ class DtbInvalidFault : public MipsFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInst::StaticInstPtr inst = nullStaticInstPtr);
 #endif
 };
 
@@ -567,7 +592,8 @@ class DspStateDisabledFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 } // MipsISA namespace

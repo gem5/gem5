@@ -136,7 +136,7 @@ InOrderCPU::CPUEvent::process()
         break;
 
       case Trap:
-        cpu->trapCPU(fault, tid);
+        cpu->trapCPU(fault, tid, inst);
         break;
 
       default:
@@ -649,16 +649,16 @@ InOrderCPU::updateMemPorts()
 #endif
 
 void
-InOrderCPU::trap(Fault fault, ThreadID tid, int delay)
+InOrderCPU::trap(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
 {
     //@ Squash Pipeline during TRAP
-    scheduleCpuEvent(Trap, fault, tid, dummyInst[tid], delay);
+    scheduleCpuEvent(Trap, fault, tid, inst, delay);
 }
 
 void
-InOrderCPU::trapCPU(Fault fault, ThreadID tid)
+InOrderCPU::trapCPU(Fault fault, ThreadID tid, DynInstPtr inst)
 {
-    fault->invoke(tcBase(tid));
+    fault->invoke(tcBase(tid), inst->staticInst);
 }
 
 void 

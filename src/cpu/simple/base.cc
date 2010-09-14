@@ -506,7 +506,7 @@ BaseSimpleCPU::advancePC(Fault fault)
     fetchOffset = 0;
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
-        fault->invoke(tc);
+        fault->invoke(tc, curStaticInst);
         predecoder.reset();
     } else {
         //If we're at the last micro op for this instruction

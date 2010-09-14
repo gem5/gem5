@@ -33,6 +33,7 @@
 #include "arch/sparc/nativetrace.hh"
 #include "cpu/thread_context.hh"
 #include "params/SparcNativeTrace.hh"
+#include "sim/byteswap.hh"
 
 namespace Trace {
 

@@ -48,8 +48,8 @@
 #include "mem/request.hh"
 #include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
-#include "sim/faults.hh"
 #include "sim/eventq.hh"
+#include "sim/fault.hh"
 
 class DmaPort;
 class ThreadContext;

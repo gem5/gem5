@@ -36,6 +36,7 @@
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
+#include "sim/byteswap.hh"
 #include "sim/process_impl.hh"
 #include "sim/system.hh"
 

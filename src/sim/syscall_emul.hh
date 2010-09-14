@@ -62,6 +62,7 @@
 #include "cpu/thread_context.hh"
 #include "mem/translating_port.hh"
 #include "mem/page_table.hh"
+#include "sim/byteswap.hh"
 #include "sim/system.hh"
 #include "sim/process.hh"
 

@@ -43,6 +43,7 @@
 #include "arch/x86/insts/microop.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "sim/faults.hh"
 
 namespace X86ISA
 {

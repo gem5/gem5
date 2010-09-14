@@ -45,6 +45,7 @@
 #include "arch/arm/nativetrace.hh"
 #include "cpu/thread_context.hh"
 #include "params/ArmNativeTrace.hh"
+#include "sim/byteswap.hh"
 
 namespace Trace {
 

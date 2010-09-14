@@ -34,6 +34,7 @@
 
 #include "config/full_system.hh"
 #include "kern/operatingsystem.hh"
+#include "sim/byteswap.hh"
 
 #if FULL_SYSTEM
 

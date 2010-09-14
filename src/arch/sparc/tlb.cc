@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "arch/sparc/asi.hh"
+#include "arch/sparc/faults.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/tlb.hh"
 #include "base/bitfield.hh"

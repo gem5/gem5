@@ -155,7 +155,7 @@ template <class Impl>
 void
 BaseO3DynInst<Impl>::trap(Fault fault)
 {
-    this->cpu->trap(fault, this->threadNumber);
+    this->cpu->trap(fault, this->threadNumber, this);
 }
 
 template <class Impl>

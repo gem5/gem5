@@ -35,6 +35,7 @@
 #include <string>
 
 #include "cpu/static_inst.hh"
+#include "sim/stats.hh"
 #include "sim/serialize.hh"
 
 class BaseCPU;

@@ -34,6 +34,7 @@
 #include "arch/x86/regs/int.hh"
 #include "cpu/thread_context.hh"
 #include "params/X86NativeTrace.hh"
+#include "sim/byteswap.hh"
 
 namespace Trace {
 

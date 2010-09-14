@@ -75,4 +75,8 @@ const Addr MaxAddr = (Addr)-1;
 typedef int16_t ThreadID;
 const ThreadID InvalidThreadID = (ThreadID)-1;
 
+class FaultBase;
+template <class T> class RefCountingPtr;
+typedef RefCountingPtr<FaultBase> Fault;
+
 #endif // __BASE_TYPES_HH__

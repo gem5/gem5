@@ -49,6 +49,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/translation.hh"
 #include "mem/packet.hh"
+#include "sim/byteswap.hh"
 #include "sim/system.hh"
 #include "sim/tlb.hh"
 

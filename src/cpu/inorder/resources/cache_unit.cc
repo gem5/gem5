@@ -434,7 +434,7 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
 
         scheduleEvent(slot_idx, 1);
 
-        cpu->trap(cache_req->fault, tid);
+        cpu->trap(cache_req->fault, tid, inst);
     } else {
         DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
                 "to phys. addr:%08p.\n", tid, inst->seqNum,

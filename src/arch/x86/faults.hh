@@ -86,7 +86,8 @@ namespace X86ISA
         }
 
 #if FULL_SYSTEM
-        void invoke(ThreadContext * tc);
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 
         virtual std::string describe() const;
 #endif
@@ -114,7 +115,8 @@ namespace X86ISA
         {}
 
 #if FULL_SYSTEM
-        void invoke(ThreadContext * tc);
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
     };
 
@@ -128,7 +130,8 @@ namespace X86ISA
         {}
 
 #if FULL_SYSTEM
-        void invoke(ThreadContext * tc);
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
     };
 
@@ -150,7 +153,8 @@ namespace X86ISA
             return "unimplemented_micro";
         }
 
-        void invoke(ThreadContext * tc)
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr)
         {
             panic("Unimplemented instruction!");
         }
@@ -327,7 +331,8 @@ namespace X86ISA
             errorCode = code;
         }
 
-        void invoke(ThreadContext * tc);
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 
 #if FULL_SYSTEM
         virtual std::string describe() const;
@@ -397,7 +402,8 @@ namespace X86ISA
             X86Interrupt("INIT Interrupt", "#INIT", _vector)
         {}
 
-        void invoke(ThreadContext * tc);
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
     };
 
     class StartupInterrupt : public X86Interrupt
@@ -407,7 +413,8 @@ namespace X86ISA
             X86Interrupt("Startup Interrupt", "#SIPI", _vector)
         {}
 
-        void invoke(ThreadContext * tc);
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
     };
 
     class SoftwareInterrupt : public X86Interrupt

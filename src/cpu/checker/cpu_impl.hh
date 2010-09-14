@@ -240,7 +240,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
 
         if (fault != NoFault) {
 #if FULL_SYSTEM
-            fault->invoke(tc);
+            fault->invoke(tc, curStaticInst);
             willChangePC = true;
             newPC = thread->readPC();
             DPRINTF(Checker, "Fault, PC is now %#x\n", newPC);

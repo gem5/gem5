@@ -38,12 +38,12 @@
 #include "mem/page_table.hh"
 
 #if !FULL_SYSTEM
-void FaultBase::invoke(ThreadContext * tc)
+void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
     panic("fault (%s) detected @ PC %p", name(), tc->readPC());
 }
 #else
-void FaultBase::invoke(ThreadContext * tc)
+void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
     DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), tc->readPC());
 
@@ -51,13 +51,13 @@ void FaultBase::invoke(ThreadContext * tc)
 }
 #endif
 
-void UnimpFault::invoke(ThreadContext * tc)
+void UnimpFault::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
     panic("Unimpfault: %s\n", panicStr.c_str());
 }
 
 #if !FULL_SYSTEM
-void GenericPageTableFault::invoke(ThreadContext *tc)
+void GenericPageTableFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     Process *p = tc->getProcessPtr();
 
@@ -66,7 +66,7 @@ void GenericPageTableFault::invoke(ThreadContext *tc)
 
 }
 
-void GenericAlignmentFault::invoke(ThreadContext *tc)
+void GenericAlignmentFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     panic("Alignment fault when accessing virtual address %#x\n", vaddr);
 }

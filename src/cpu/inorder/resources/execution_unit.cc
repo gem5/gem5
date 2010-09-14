@@ -236,7 +236,7 @@ ExecutionUnit::execute(int slot_num)
                 } else {
                     warn("inst [sn:%i] had a %s fault",
                          seq_num, fault->name());
-                    cpu->trap(fault, tid);
+                    cpu->trap(fault, tid, inst);
                 }
             }
         }

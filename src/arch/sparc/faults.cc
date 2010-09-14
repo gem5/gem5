@@ -505,7 +505,7 @@ void getPrivVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT, MiscRe
 
 #if FULL_SYSTEM
 
-void SparcFaultBase::invoke(ThreadContext * tc)
+void SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
     //panic("Invoking a second fault!\n");
     FaultBase::invoke(tc);
@@ -559,7 +559,7 @@ void SparcFaultBase::invoke(ThreadContext * tc)
     tc->setNextNPC(NPC + sizeof(MachInst));
 }
 
-void PowerOnReset::invoke(ThreadContext * tc)
+void PowerOnReset::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
     //For SPARC, when a system is first started, there is a power
     //on reset Trap which sets the processor into the following state.
@@ -620,7 +620,8 @@ void PowerOnReset::invoke(ThreadContext * tc)
 
 #else // !FULL_SYSTEM
 
-void FastInstructionAccessMMUMiss::invoke(ThreadContext *tc)
+void FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
+                                          StaticInstPtr inst)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
@@ -634,7 +635,7 @@ void FastInstructionAccessMMUMiss::invoke(ThreadContext *tc)
     }
 }
 
-void FastDataAccessMMUMiss::invoke(ThreadContext *tc)
+void FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
@@ -652,7 +653,7 @@ void FastDataAccessMMUMiss::invoke(ThreadContext *tc)
     }
 }
 
-void SpillNNormal::invoke(ThreadContext *tc)
+void SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     doNormalFault(tc, trapType(), false);
 
@@ -669,7 +670,7 @@ void SpillNNormal::invoke(ThreadContext *tc)
     tc->setNextNPC(spillStart + 2*sizeof(MachInst));
 }
 
-void FillNNormal::invoke(ThreadContext *tc)
+void FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     doNormalFault(tc, trapType(), false);
 
@@ -686,7 +687,7 @@ void FillNNormal::invoke(ThreadContext *tc)
     tc->setNextNPC(fillStart + 2*sizeof(MachInst));
 }
 
-void TrapInstruction::invoke(ThreadContext *tc)
+void TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     //In SE, this mechanism is how the process requests a service from the
     //operating system. We'll get the process object from the thread context

@@ -33,6 +33,7 @@
 #ifndef __CPU_TRANSLATION_HH__
 #define __CPU_TRANSLATION_HH__
 
+#include "sim/faults.hh"
 #include "sim/tlb.hh"
 
 /**

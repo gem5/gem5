@@ -33,7 +33,7 @@
 
 #include "base/misc.hh"
 #include "mem/request.hh"
-#include "sim/faults.hh"
+#include "sim/fault.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;

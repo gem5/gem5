@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2010 Advanced Micro Devices
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,52 +25,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Steve Reinhardt
+ * Authors: Gabe Black
  */
 
-#ifndef __SIM_PROCESS_IMPL_HH__
-#define __SIM_PROCESS_IMPL_HH__
+#ifndef __SIM_FAULT_HH__
+#define __SIM_FAULT_HH__
 
-//
-// The purpose of this code is to fake the loader & syscall mechanism
-// when there's no OS: thus there's no reason to use it in FULL_SYSTEM
-// mode when we do have an OS.
-//
-#include "config/full_system.hh"
+class FaultBase;
+template <class T> class RefCountingPtr;
+typedef RefCountingPtr<FaultBase> Fault;
 
-#if !FULL_SYSTEM
-
-#include <string>
-#include <vector>
-
-#include "mem/translating_port.hh"
-#include "sim/byteswap.hh"
-
-
-//This needs to be templated for cases where 32 bit pointers are needed.
-template<class AddrType>
-void
-copyStringArray(std::vector<std::string> &strings,
-        AddrType array_ptr, AddrType data_ptr,
-        TranslatingPort* memPort)
-{
-    AddrType data_ptr_swap;
-    for (std::vector<std::string>::size_type i = 0; i < strings.size(); ++i) {
-        data_ptr_swap = htog(data_ptr);
-        memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
-                sizeof(AddrType));
-        memPort->writeString(data_ptr, strings[i].c_str());
-        array_ptr += sizeof(AddrType);
-        data_ptr += strings[i].size() + 1;
-    }
-    // add NULL terminator
-    data_ptr = 0;
-
-    memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(AddrType));
-}
-
-
-#endif // !FULL_SYSTEM
-
-#endif
+#endif // __SIM_FAULT_HH__

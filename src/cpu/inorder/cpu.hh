@@ -347,8 +347,8 @@ class InOrderCPU : public BaseCPU
     /** trap() - sets up a trap event on the cpuTraps to handle given fault.
      *  trapCPU() - Traps to handle given fault
      */
-    void trap(Fault fault, ThreadID tid, int delay = 0);
-    void trapCPU(Fault fault, ThreadID tid);
+    void trap(Fault fault, ThreadID tid, DynInstPtr inst, int delay = 0);
+    void trapCPU(Fault fault, ThreadID tid, DynInstPtr inst);
 
     /** Add Thread to Active Threads List. */
     void activateContext(ThreadID tid, int delay = 0);

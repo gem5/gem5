@@ -217,7 +217,7 @@ MipsFault::setExceptionState(ThreadContext *tc, uint8_t excCode)
 }
 
 void
-ArithmeticFault::invoke(ThreadContext *tc)
+ArithmeticFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0xC);
@@ -237,7 +237,7 @@ ArithmeticFault::invoke(ThreadContext *tc)
 }
 
 void
-StoreAddressErrorFault::invoke(ThreadContext *tc)
+StoreAddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x5);
@@ -251,7 +251,7 @@ StoreAddressErrorFault::invoke(ThreadContext *tc)
 }
 
 void
-TrapFault::invoke(ThreadContext *tc)
+TrapFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0xD);
@@ -264,7 +264,7 @@ TrapFault::invoke(ThreadContext *tc)
 }
 
 void
-BreakpointFault::invoke(ThreadContext *tc)
+BreakpointFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     setExceptionState(tc, 0x9);
 
@@ -276,7 +276,7 @@ BreakpointFault::invoke(ThreadContext *tc)
 }
 
 void
-DtbInvalidFault::invoke(ThreadContext *tc)
+DtbInvalidFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
 
@@ -301,7 +301,7 @@ DtbInvalidFault::invoke(ThreadContext *tc)
 }
 
 void
-AddressErrorFault::invoke(ThreadContext *tc)
+AddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x4);
@@ -315,7 +315,7 @@ AddressErrorFault::invoke(ThreadContext *tc)
 }
 
 void
-ItbInvalidFault::invoke(ThreadContext *tc)
+ItbInvalidFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x2);
@@ -341,7 +341,7 @@ ItbInvalidFault::invoke(ThreadContext *tc)
 }
 
 void
-ItbRefillFault::invoke(ThreadContext *tc)
+ItbRefillFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered (%x).\n", name(), MISCREG_BADVADDR);
     Addr HandlerBase;
@@ -371,7 +371,7 @@ ItbRefillFault::invoke(ThreadContext *tc)
 }
 
 void
-DtbRefillFault::invoke(ThreadContext *tc)
+DtbRefillFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     // Set new PC
     DPRINTF(MipsPRA, "%s encountered.\n", name());
@@ -404,7 +404,7 @@ DtbRefillFault::invoke(ThreadContext *tc)
 }
 
 void
-TLBModifiedFault::invoke(ThreadContext *tc)
+TLBModifiedFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
@@ -428,7 +428,7 @@ TLBModifiedFault::invoke(ThreadContext *tc)
 }
 
 void
-SystemCallFault::invoke(ThreadContext *tc)
+SystemCallFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x8);
@@ -441,7 +441,7 @@ SystemCallFault::invoke(ThreadContext *tc)
 }
 
 void
-InterruptFault::invoke(ThreadContext *tc)
+InterruptFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
 #if  FULL_SYSTEM
     DPRINTF(MipsPRA, "%s encountered.\n", name());
@@ -464,7 +464,7 @@ InterruptFault::invoke(ThreadContext *tc)
 #endif // FULL_SYSTEM
 
 void
-ResetFault::invoke(ThreadContext *tc)
+ResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
 #if FULL_SYSTEM
     DPRINTF(MipsPRA, "%s encountered.\n", name());
@@ -482,7 +482,7 @@ ResetFault::invoke(ThreadContext *tc)
 }
 
 void
-ReservedInstructionFault::invoke(ThreadContext *tc)
+ReservedInstructionFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
 #if  FULL_SYSTEM
     DPRINTF(MipsPRA, "%s encountered.\n", name());
@@ -497,21 +497,21 @@ ReservedInstructionFault::invoke(ThreadContext *tc)
 }
 
 void
-ThreadFault::invoke(ThreadContext *tc)
+ThreadFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     panic("%s encountered.\n", name());
 }
 
 void
-DspStateDisabledFault::invoke(ThreadContext *tc)
+DspStateDisabledFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     panic("%s encountered.\n", name());
 }
 
 void
-CoprocessorUnusableFault::invoke(ThreadContext *tc)
+CoprocessorUnusableFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
 #if FULL_SYSTEM
     DPRINTF(MipsPRA, "%s encountered.\n", name());

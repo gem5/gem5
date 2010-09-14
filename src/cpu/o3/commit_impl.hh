@@ -1068,7 +1068,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         // needed to update the state as soon as possible.  This
         // prevents external agents from changing any specific state
         // that the trap need.
-        cpu->trap(inst_fault, tid);
+        cpu->trap(inst_fault, tid, head_inst);
 
         // Exit state update mode to avoid accidental updating.
         thread[tid]->inSyscall = false;

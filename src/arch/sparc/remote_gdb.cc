@@ -133,6 +133,7 @@
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
+#include "sim/byteswap.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
 

@@ -110,7 +110,7 @@ FaultStat IntegerOverflowFault::_count;
 #if FULL_SYSTEM
 
 void
-AlphaFault::invoke(ThreadContext *tc)
+AlphaFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     FaultBase::invoke(tc);
     countStat()++;
@@ -130,14 +130,14 @@ AlphaFault::invoke(ThreadContext *tc)
 }
 
 void
-ArithmeticFault::invoke(ThreadContext *tc)
+ArithmeticFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     FaultBase::invoke(tc);
     panic("Arithmetic traps are unimplemented!");
 }
 
 void
-DtbFault::invoke(ThreadContext *tc)
+DtbFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     // Set fault address and flags.  Even though we're modeling an
     // EV5, we use the EV6 technique of not latching fault registers
@@ -150,9 +150,10 @@ DtbFault::invoke(ThreadContext *tc)
         tc->setMiscRegNoEffect(IPR_VA, vaddr);
 
         // set MM_STAT register flags
+        MachInst machInst = inst->machInst;
         tc->setMiscRegNoEffect(IPR_MM_STAT,
-            (((Opcode(tc->getInst()) & 0x3f) << 11) |
-             ((Ra(tc->getInst()) & 0x1f) << 6) |
+            (((Opcode(machInst) & 0x3f) << 11) |
+             ((Ra(machInst) & 0x1f) << 6) |
              (flags & 0x3f)));
 
         // set VA_FORM register with faulting formatted address
@@ -164,7 +165,7 @@ DtbFault::invoke(ThreadContext *tc)
 }
 
 void
-ItbFault::invoke(ThreadContext *tc)
+ItbFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (!tc->misspeculating()) {
         tc->setMiscRegNoEffect(IPR_ITB_TAG, pc);
@@ -178,7 +179,7 @@ ItbFault::invoke(ThreadContext *tc)
 #else
 
 void
-ItbPageFault::invoke(ThreadContext *tc)
+ItbPageFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
@@ -192,7 +193,7 @@ ItbPageFault::invoke(ThreadContext *tc)
 }
 
 void
-NDtbMissFault::invoke(ThreadContext *tc)
+NDtbMissFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;

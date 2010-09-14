@@ -33,6 +33,7 @@
 #define __SPARC_FAULTS_HH__
 
 #include "config/full_system.hh"
+#include "cpu/static_inst.hh"
 #include "sim/faults.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
@@ -66,7 +67,8 @@ class SparcFaultBase : public FaultBase
         FaultStat count;
     };
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
     virtual TrapType trapType() = 0;
     virtual FaultPriority priority() = 0;
@@ -92,7 +94,10 @@ class SparcFault : public SparcFaultBase
 
 class PowerOnReset : public SparcFault<PowerOnReset>
 {
-    void invoke(ThreadContext * tc);
+#if FULL_SYSTEM
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+#endif
 };
 
 class WatchDogReset : public SparcFault<WatchDogReset> {};
@@ -210,7 +215,8 @@ class FastInstructionAccessMMUMiss :
   public:
     FastInstructionAccessMMUMiss(Addr addr) : vaddr(addr)
     {}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -222,7 +228,8 @@ class FastDataAccessMMUMiss : public SparcFault<FastDataAccessMMUMiss>
   public:
     FastDataAccessMMUMiss(Addr addr) : vaddr(addr)
     {}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -242,7 +249,8 @@ class SpillNNormal : public EnumeratedFault<SpillNNormal>
     SpillNNormal(uint32_t n) : EnumeratedFault<SpillNNormal>(n) {;}
     //These need to be handled specially to enable spill traps in SE
 #if !FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -258,7 +266,8 @@ class FillNNormal : public EnumeratedFault<FillNNormal>
     FillNNormal(uint32_t n) : EnumeratedFault<FillNNormal>(n) {;}
     //These need to be handled specially to enable fill traps in SE
 #if !FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -274,7 +283,8 @@ class TrapInstruction : public EnumeratedFault<TrapInstruction>
     TrapInstruction(uint32_t n) : EnumeratedFault<TrapInstruction>(n) {;}
     //In SE, trap instructions are requesting services from the OS.
 #if !FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 

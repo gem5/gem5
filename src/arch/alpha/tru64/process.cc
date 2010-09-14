@@ -34,6 +34,7 @@
 #include "arch/alpha/tru64/process.hh"
 #include "cpu/thread_context.hh"
 #include "kern/tru64/tru64.hh"
+#include "sim/byteswap.hh"
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
 

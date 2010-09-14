@@ -108,7 +108,8 @@ class ArmFault : public FaultBase
     };
 
 #if FULL_SYSTEM
-    void invoke(ThreadContext *tc);
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
     virtual FaultStat& countStat() = 0;
     virtual FaultOffset offset() = 0;
@@ -140,7 +141,8 @@ class Reset : public ArmFaultVals<Reset>
 #if FULL_SYSTEM
 {
   public:
-    void invoke(ThreadContext *tc);
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 #else
 {};
@@ -165,7 +167,8 @@ class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
     {
     }
 
-    void invoke(ThreadContext *tc);
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -179,7 +182,8 @@ class SupervisorCall : public ArmFaultVals<SupervisorCall>
     SupervisorCall(ExtMachInst _machInst) : machInst(_machInst)
     {}
 
-    void invoke(ThreadContext *tc);
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -199,7 +203,8 @@ class AbortFault : public ArmFaultVals<T>
         domain(_domain), status(_status)
     {}
 
-    void invoke(ThreadContext *tc);
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class PrefetchAbort : public AbortFault<PrefetchAbort>
@@ -232,7 +237,8 @@ class FlushPipe : public ArmFaultVals<FlushPipe>
 {
   public:
     FlushPipe() {}
-    void invoke(ThreadContext *tc);
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 static inline Fault genMachineCheckFault()

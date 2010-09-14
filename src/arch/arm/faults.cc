@@ -94,7 +94,7 @@ ArmFault::getVector(ThreadContext *tc)
 #if FULL_SYSTEM
 
 void 
-ArmFault::invoke(ThreadContext *tc)
+ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     // ARM ARM B1.6.3
     FaultBase::invoke(tc);
@@ -150,7 +150,7 @@ ArmFault::invoke(ThreadContext *tc)
 }
 
 void
-Reset::invoke(ThreadContext *tc)
+Reset::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     tc->getCpuPtr()->clearInterrupts();
     tc->clearArchRegs();
@@ -160,7 +160,7 @@ Reset::invoke(ThreadContext *tc)
 #else
 
 void
-UndefinedInstruction::invoke(ThreadContext *tc)
+UndefinedInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     // If the mnemonic isn't defined this has to be an unknown instruction.
     assert(unknown || mnemonic != NULL);
@@ -177,7 +177,7 @@ UndefinedInstruction::invoke(ThreadContext *tc)
 }
 
 void
-SupervisorCall::invoke(ThreadContext *tc)
+SupervisorCall::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     // As of now, there isn't a 32 bit thumb version of this instruction.
     assert(!machInst.bigThumb);
@@ -203,7 +203,7 @@ SupervisorCall::invoke(ThreadContext *tc)
 
 template<class T>
 void
-AbortFault<T>::invoke(ThreadContext *tc)
+AbortFault<T>::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     ArmFaultVals<T>::invoke(tc);
     FSR fsr = 0;
@@ -217,7 +217,7 @@ AbortFault<T>::invoke(ThreadContext *tc)
 }
 
 void
-FlushPipe::invoke(ThreadContext *tc) {
+FlushPipe::invoke(ThreadContext *tc, StaticInstPtr inst) {
     DPRINTF(Faults, "Invoking FlushPipe Fault\n");
 
     // Set the PC to the next instruction of the faulting instruction.
@@ -229,8 +229,10 @@ FlushPipe::invoke(ThreadContext *tc) {
     tc->setNextMicroPC(1);
 }
 
-template void AbortFault<PrefetchAbort>::invoke(ThreadContext *tc);
-template void AbortFault<DataAbort>::invoke(ThreadContext *tc);
+template void AbortFault<PrefetchAbort>::invoke(ThreadContext *tc,
+                                                StaticInstPtr inst);
+template void AbortFault<DataAbort>::invoke(ThreadContext *tc,
+                                            StaticInstPtr inst);
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm
 

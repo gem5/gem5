@@ -29,6 +29,7 @@
  *          Ali Saidi
  */
 
+#include "arch/sparc/faults.hh"
 #include "arch/sparc/utility.hh"
 #if FULL_SYSTEM
 #include "arch/sparc/vtophys.hh"
@@ -216,4 +217,13 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->setNextPC(src->readNextPC());
     dest->setNextNPC(src->readNextNPC());
 }
+
+void
+initCPU(ThreadContext *tc, int cpuId)
+{
+    static Fault por = new PowerOnReset();
+    if (cpuId == 0)
+        por->invoke(tc);
+}
+
 } //namespace SPARC_ISA

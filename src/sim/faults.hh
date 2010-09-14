@@ -33,12 +33,13 @@
 #define __FAULTS_HH__
 
 #include "base/refcnt.hh"
+#include "base/types.hh"
+#include "sim/fault.hh"
 #include "sim/stats.hh"
 #include "config/full_system.hh"
+#include "cpu/static_inst.hh"
 
 class ThreadContext;
-class FaultBase;
-typedef RefCountingPtr<FaultBase> Fault;
 
 typedef const char * FaultName;
 typedef Stats::Scalar FaultStat;
@@ -54,7 +55,8 @@ class FaultBase : public RefCounted
 {
   public:
     virtual FaultName name() const = 0;
-    virtual void invoke(ThreadContext * tc);
+    virtual void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
     virtual bool isMachineCheckFault() const {return false;}
     virtual bool isAlignmentFault() const {return false;}
 };
@@ -71,7 +73,8 @@ class UnimpFault : public FaultBase
     { }
 
     FaultName name() const {return "Unimplemented simulator feature";}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 #if !FULL_SYSTEM
@@ -82,7 +85,8 @@ class GenericPageTableFault : public FaultBase
   public:
     FaultName name() const {return "Generic page table fault";}
     GenericPageTableFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 class GenericAlignmentFault : public FaultBase
@@ -92,7 +96,8 @@ class GenericAlignmentFault : public FaultBase
   public:
     FaultName name() const {return "Generic alignment fault";}
     GenericAlignmentFault(Addr va) : vaddr(va) {}
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 #endif
 

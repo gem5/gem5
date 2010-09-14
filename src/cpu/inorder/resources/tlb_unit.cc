@@ -176,7 +176,7 @@ TLBUnit::execute(int slot_idx)
                     scheduleEvent(slot_idx, 1);
 
                     // Let CPU handle the fault
-                    cpu->trap(tlb_req->fault, tid);
+                    cpu->trap(tlb_req->fault, tid, inst);
                 }
             } else {
                 DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "

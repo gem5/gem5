@@ -34,6 +34,7 @@
 
 #include "arch/alpha/pagetable.hh"
 #include "config/full_system.hh"
+#include "mem/request.hh"
 #include "sim/faults.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
@@ -49,7 +50,8 @@ class AlphaFault : public FaultBase
     virtual bool setRestartAddress() {return true;}
   public:
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
     virtual FaultVect vect() = 0;
     virtual FaultStat & countStat() = 0;
@@ -116,7 +118,8 @@ class ArithmeticFault : public AlphaFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -151,7 +154,8 @@ class DtbFault : public AlphaFault
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -170,7 +174,8 @@ class NDtbMissFault : public DtbFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if !FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -249,7 +254,8 @@ class ItbFault : public AlphaFault
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
 #if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
@@ -266,7 +272,8 @@ class ItbPageFault : public ItbFault
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 #if !FULL_SYSTEM
-    void invoke(ThreadContext * tc);
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 

@@ -241,13 +241,6 @@ class SimpleThread : public ThreadState
 
     virtual bool misspeculating();
 
-    Fault instRead(RequestPtr &req)
-    {
-        panic("instRead not implemented");
-        // return funcPhysMem->read(req, inst);
-        return NoFault;
-    }
-
     void copyArchRegs(ThreadContext *tc);
 
     void clearArchRegs()

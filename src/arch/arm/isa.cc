@@ -39,6 +39,7 @@
  */
 
 #include "arch/arm/isa.hh"
+#include "sim/faults.hh"
 
 namespace ArmISA
 {

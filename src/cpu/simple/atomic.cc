@@ -38,6 +38,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AtomicSimpleCPU.hh"
+#include "sim/faults.hh"
 #include "sim/system.hh"
 
 using namespace std;

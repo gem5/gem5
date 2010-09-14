@@ -56,7 +56,7 @@
 namespace X86ISA
 {
 #if FULL_SYSTEM
-    void X86FaultBase::invoke(ThreadContext * tc)
+    void X86FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         Addr pc = tc->readPC();
         DPRINTF(Faults, "RIP %#x: vector %d: %s\n", pc, vector, describe());
@@ -102,7 +102,7 @@ namespace X86ISA
         return ss.str();
     }
     
-    void X86Trap::invoke(ThreadContext * tc)
+    void X86Trap::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         X86FaultBase::invoke(tc);
         // This is the same as a fault, but it happens -after- the instruction.
@@ -111,12 +111,12 @@ namespace X86ISA
         tc->setNextNPC(tc->readNextNPC() + sizeof(MachInst));
     }
 
-    void X86Abort::invoke(ThreadContext * tc)
+    void X86Abort::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         panic("Abort exception!");
     }
 
-    void PageFault::invoke(ThreadContext * tc)
+    void PageFault::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
         X86FaultBase::invoke(tc);
@@ -141,7 +141,7 @@ namespace X86ISA
     }
 
     void
-    InitInterrupt::invoke(ThreadContext *tc)
+    InitInterrupt::invoke(ThreadContext *tc, StaticInstPtr inst)
     {
         DPRINTF(Faults, "Init interrupt.\n");
         // The otherwise unmodified integer registers should be set to 0.
@@ -248,7 +248,7 @@ namespace X86ISA
     }
 
     void
-    StartupInterrupt::invoke(ThreadContext *tc)
+    StartupInterrupt::invoke(ThreadContext *tc, StaticInstPtr inst)
     {
         DPRINTF(Faults, "Startup interrupt with vector %#x.\n", vector);
         HandyM5Reg m5Reg = tc->readMiscReg(MISCREG_M5_REG);
@@ -270,7 +270,7 @@ namespace X86ISA
 #else
 
     void
-    PageFault::invoke(ThreadContext * tc)
+    PageFault::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         PageFaultErrorCode code = errorCode;
         const char *modeStr = "";

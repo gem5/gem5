@@ -301,7 +301,7 @@ MultDivUnit::exeMulDiv(int slot_num)
                 inst->readTid(), inst->readIntResult(0));
     } else {
         warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
-        cpu->trap(fault, tid);
+        cpu->trap(fault, tid, inst);
     }    
 }
 
