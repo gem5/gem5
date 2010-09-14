@@ -304,12 +304,6 @@ InorderBackEnd<Impl>::executeInsts()
 
             thread->inSyscall = true;
 
-            // Hack for now; DTB will sometimes need the machine instruction
-            // for when faults happen.  So we will set it here, prior to the
-            // DTB possibly needing it for this translation.
-            thread->setInst(
-                static_cast<TheISA::MachInst>(inst->staticInst->machInst));
-
             // Consider holding onto the trap and waiting until the trap event
             // happens for this to be executed.
             inst_fault->invoke(xc);

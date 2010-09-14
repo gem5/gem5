@@ -456,10 +456,6 @@ BaseSimpleCPU::preExecute()
         DPRINTF(Decode,"Decode: Decoded %s instruction: 0x%x\n",
                 curStaticInst->getName(), curStaticInst->machInst);
 #endif // TRACING_ON
-
-#if FULL_SYSTEM
-        thread->setInst(inst);
-#endif // FULL_SYSTEM
     }
 }
 

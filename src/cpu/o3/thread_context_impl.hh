@@ -216,13 +216,6 @@ O3ThreadContext<Impl>::profileSample()
 #endif
 
 template <class Impl>
-TheISA::MachInst
-O3ThreadContext<Impl>:: getInst()
-{
-    return thread->getInst();
-}
-
-template <class Impl>
 void
 O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 {

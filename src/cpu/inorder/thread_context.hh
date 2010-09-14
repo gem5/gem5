@@ -177,11 +177,6 @@ class InOrderThreadContext : public ThreadContext
     /** Returns this thread's ID number. */
     int getThreadNum() { return thread->readTid(); }
 
-    /** Returns the instruction this thread is currently committing.
-     *  Only used when an instruction faults.
-     */
-    TheISA::MachInst getInst();
-
     /** Copies the architectural registers from another TC into this TC. */
     void copyArchRegs(ThreadContext *src_tc);
 

@@ -181,7 +181,6 @@ SimpleThread::copyState(ThreadContext *oldContext)
 #if !FULL_SYSTEM
     funcExeInst = oldContext->readFuncExeInst();
 #endif
-    inst = oldContext->getInst();
 
     _threadId = oldContext->threadId();
     _contextId = oldContext->contextId();

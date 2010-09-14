@@ -209,10 +209,6 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
                                                          thread->getTC()));
 #endif
 
-#if FULL_SYSTEM
-            thread->setInst(machInst);
-#endif // FULL_SYSTEM
-
             fault = inst->getFault();
         }
 

@@ -171,9 +171,6 @@ class OzoneCPU : public BaseCPU
 
         int threadId();
 
-        // Also somewhat obnoxious.  Really only used for the TLB fault.
-        TheISA::MachInst getInst();
-
         void copyArchRegs(ThreadContext *tc);
 
         void clearArchRegs();

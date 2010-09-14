@@ -154,9 +154,6 @@ class CheckerThreadContext : public ThreadContext
     int threadId() { return actualTC->threadId(); }
 
     // @todo: Do I need this?
-    MachInst getInst() { return actualTC->getInst(); }
-
-    // @todo: Do I need this?
     void copyArchRegs(ThreadContext *tc)
     {
         actualTC->copyArchRegs(tc);

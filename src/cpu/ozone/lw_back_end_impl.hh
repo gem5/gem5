@@ -1171,9 +1171,6 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         }
 #endif
 
-        thread->setInst(
-            static_cast<TheISA::MachInst>(inst->staticInst->machInst));
-
         handleFault(inst_fault);
         return false;
     }

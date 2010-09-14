@@ -122,12 +122,6 @@ struct ThreadState {
     void setMemPort(TranslatingPort *_port) { port = _port; }
 #endif
 
-    /** Sets the current instruction being committed. */
-    void setInst(TheISA::MachInst _inst) { inst = _inst; }
-
-    /** Returns the current instruction being committed. */
-    TheISA::MachInst getInst() { return inst; }
-
     /** Reads the number of instructions functionally executed and
      * committed.
      */
@@ -204,11 +198,6 @@ struct ThreadState {
 
     Process *process;
 #endif
-
-    /** Current instruction the thread is committing.  Only set and
-     * used for DTB faults currently.
-     */
-    TheISA::MachInst inst;
 
   public:
     /**

@@ -171,10 +171,6 @@ class ThreadContext
     virtual void profileSample() = 0;
 #endif
 
-    // Also somewhat obnoxious.  Really only used for the TLB fault.
-    // However, may be quite useful in SPARC.
-    virtual TheISA::MachInst getInst() = 0;
-
     virtual void copyArchRegs(ThreadContext *tc) = 0;
 
     virtual void clearArchRegs() = 0;
@@ -352,8 +348,6 @@ class ProxyThreadContext : public ThreadContext
     void profileClear() { return actualTC->profileClear(); }
     void profileSample() { return actualTC->profileSample(); }
 #endif
-    // @todo: Do I need this?
-    MachInst getInst() { return actualTC->getInst(); }
 
     // @todo: Do I need this?
     void copyArchRegs(ThreadContext *tc) { actualTC->copyArchRegs(tc); }

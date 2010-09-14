@@ -1033,12 +1033,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     }
 #endif
 
-    // DTB will sometimes need the machine instruction for when
-    // faults happen.  So we will set it here, prior to the DTB
-    // possibly needing it for its fault.
-    thread[tid]->setInst(
-        static_cast<TheISA::MachInst>(head_inst->staticInst->machInst));
-
     if (inst_fault != NoFault) {
         DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
                 head_inst->seqNum, head_inst->readPC());

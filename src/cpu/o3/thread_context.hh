@@ -151,10 +151,6 @@ class O3ThreadContext : public ThreadContext
     /** Samples the function profiling information. */
     virtual void profileSample();
 #endif
-    /** Returns the instruction this thread is currently committing.
-     *  Only used when an instruction faults.
-     */
-    virtual TheISA::MachInst getInst();
 
     /** Copies the architectural registers from another TC into this TC. */
     virtual void copyArchRegs(ThreadContext *tc);

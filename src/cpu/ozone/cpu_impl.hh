@@ -771,7 +771,6 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
     setCpuId(old_context->cpuId());
     setContextId(old_context->contextId());
 
-    thread->setInst(old_context->getInst());
 #if !FULL_SYSTEM
     setFuncExeInst(old_context->readFuncExeInst());
 #else
@@ -860,13 +859,6 @@ int
 OzoneCPU<Impl>::OzoneTC::threadId()
 {
     return thread->threadId();
-}
-
-template <class Impl>
-TheISA::MachInst
-OzoneCPU<Impl>::OzoneTC::getInst()
-{
-    return thread->getInst();
 }
 
 template <class Impl>

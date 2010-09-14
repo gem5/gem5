@@ -171,12 +171,6 @@ InOrderThreadContext::unserialize(Checkpoint *cp, const std::string &section)
     panic("unserialize unimplemented");    
 }
 
-TheISA::MachInst
-InOrderThreadContext:: getInst()
-{
-    return thread->getInst();
-}
-
 
 void
 InOrderThreadContext::copyArchRegs(ThreadContext *src_tc)
