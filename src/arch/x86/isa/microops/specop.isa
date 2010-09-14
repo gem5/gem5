@@ -61,7 +61,9 @@ output header {{
       public:
         MicroHalt(ExtMachInst _machInst, const char * instMnem,
                 uint64_t setFlags) :
-            X86MicroopBase(_machInst, "halt", instMnem, setFlags, No_OpClass)
+            X86MicroopBase(_machInst, "halt", instMnem,
+                           setFlags | (ULL(1) << StaticInst::IsNonSpeculative),
+                           No_OpClass)
         {
         }
 
