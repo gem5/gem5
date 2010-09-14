@@ -77,8 +77,7 @@ output exec {{
         Fault Unknown::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
-            warn("No instructions are implemented for X86!\n");
-            return NoFault;
+            return new InvalidOpcode();
         }
 }};
 

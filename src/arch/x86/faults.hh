@@ -250,6 +250,11 @@ namespace X86ISA
         InvalidOpcode() :
             X86Fault("Invalid-Opcode", "#UD", 6)
         {}
+
+#if !FULL_SYSTEM
+        void invoke(ThreadContext * tc,
+                StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+#endif
     };
 
     class DeviceNotAvailable : public X86Fault

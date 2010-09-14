@@ -270,6 +270,13 @@ namespace X86ISA
 #else
 
     void
+    InvalidOpcode::invoke(ThreadContext * tc, StaticInstPtr inst)
+    {
+        panic("Unrecognized/invalid instruction executed:\n %s",
+                inst->machInst);
+    }
+
+    void
     PageFault::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         PageFaultErrorCode code = errorCode;
