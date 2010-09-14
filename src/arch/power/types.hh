@@ -32,6 +32,7 @@
 #define __ARCH_POWER_TYPES_HH__
 
 #include "base/bitunion.hh"
+#include "base/hashmap.hh"
 #include "base/types.hh"
 
 namespace PowerISA
@@ -87,5 +88,16 @@ struct CoreSpecific {
 };
 
 } // PowerISA namspace
+
+namespace __hash_namespace {
+
+template<>
+struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
+    size_t operator()(const PowerISA::ExtMachInst &emi) const {
+        return hash<uint32_t>::operator()((uint32_t)emi);
+    };
+};
+
+} // __hash_namespace namespace
 
 #endif // __ARCH_POWER_TYPES_HH__

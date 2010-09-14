@@ -35,9 +35,8 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
-#include "arch/utility.hh"
+#include "arch/registers.hh"
 #include "config/the_isa.hh"
-#include "base/bitfield.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"
 #include "base/refcnt.hh"

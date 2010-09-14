@@ -36,6 +36,7 @@
 #include <iostream>
 #include <string>
 
+#include "arch/utility.hh"
 #include "sim/syscall_emul.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"

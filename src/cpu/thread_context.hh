@@ -31,12 +31,14 @@
 #ifndef __CPU_THREAD_CONTEXT_HH__
 #define __CPU_THREAD_CONTEXT_HH__
 
+#include <string>
+#include <iostream>
+
 #include "arch/registers.hh"
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
-#include "sim/serialize.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
@@ -45,8 +47,8 @@ namespace TheISA
     class TLB;
 }
 class BaseCPU;
+class Checkpoint;
 class EndQuiesceEvent;
-class Event;
 class TranslatingPort;
 class FunctionalPort;
 class VirtualPort;

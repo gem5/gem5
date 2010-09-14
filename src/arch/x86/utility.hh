@@ -50,26 +50,6 @@
 
 class ThreadContext;
 
-namespace __hash_namespace {
-    template<>
-    struct hash<X86ISA::ExtMachInst> {
-        size_t operator()(const X86ISA::ExtMachInst &emi) const {
-            return (((uint64_t)emi.legacy << 56) |
-                    ((uint64_t)emi.rex  << 48) |
-                    ((uint64_t)emi.modRM << 40) |
-                    ((uint64_t)emi.sib << 32) |
-                    ((uint64_t)emi.opcode.num << 24) |
-                    ((uint64_t)emi.opcode.prefixA << 16) |
-                    ((uint64_t)emi.opcode.prefixB << 8) |
-                    ((uint64_t)emi.opcode.op)) ^
-                    emi.immediate ^ emi.displacement ^
-                    emi.mode ^
-                    emi.opSize ^ emi.addrSize ^
-                    emi.stackSize ^ emi.dispSize;
-        };
-    };
-}
-
 namespace X86ISA
 {
     uint64_t getArgument(ThreadContext *tc, int number, bool fp);

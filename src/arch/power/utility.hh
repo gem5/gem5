@@ -35,22 +35,8 @@
 #ifndef __ARCH_POWER_UTILITY_HH__
 #define __ARCH_POWER_UTILITY_HH__
 
-#include "arch/power/miscregs.hh"
-#include "arch/power/types.hh"
-#include "base/hashmap.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
-
-namespace __hash_namespace {
-
-template<>
-struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
-    size_t operator()(const PowerISA::ExtMachInst &emi) const {
-        return hash<uint32_t>::operator()((uint32_t)emi);
-    };
-};
-
-} // __hash_namespace namespace
 
 namespace PowerISA {
 

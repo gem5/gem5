@@ -33,6 +33,7 @@
 #include "arch/alpha/isa.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
+#include "sim/serialize.hh"
 
 namespace AlphaISA
 {

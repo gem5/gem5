@@ -34,6 +34,7 @@
 #include <iomanip>
 
 #include "arch/isa_traits.hh"
+#include "arch/utility.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"

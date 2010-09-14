@@ -44,6 +44,7 @@
 #define __ARCH_ARM_TYPES_HH__
 
 #include "base/bitunion.hh"
+#include "base/hashmap.hh"
 #include "base/types.hh"
 
 namespace ArmISA
@@ -268,5 +269,14 @@ namespace ArmISA
     };
 
 } // namespace ArmISA
+
+namespace __hash_namespace {
+    template<>
+    struct hash<ArmISA::ExtMachInst> : public hash<uint32_t> {
+        size_t operator()(const ArmISA::ExtMachInst &emi) const {
+            return hash<uint32_t>::operator()((uint32_t)emi);
+        };
+    };
+}
 
 #endif
