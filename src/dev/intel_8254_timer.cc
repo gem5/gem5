@@ -32,7 +32,6 @@
 
 #include "base/misc.hh"
 #include "dev/intel_8254_timer.hh"
-#include "sim/sim_object.hh"
 
 using namespace std;
 
@@ -68,17 +67,6 @@ Intel8254Timer::writeControl(const CtrlReg data)
         counter[sel]->setMode(data.mode);
         counter[sel]->setBCD(data.bcd);
     }
-}
-
-unsigned int 
-Intel8254Timer::drain(Event *de)
-{
-    unsigned int count = 0;
-    count += counter[0]->drain(de);
-    count += counter[1]->drain(de);
-    count += counter[2]->drain(de);
-    assert(count == 0);
-    return count;
 }
 
 void
@@ -228,18 +216,6 @@ Intel8254Timer::Counter::outputHigh()
     return output_high;
 }
 
-unsigned int 
-Intel8254Timer::Counter::drain(Event *de)
-{
-    if (event.scheduled()) {
-        event_tick = event.when();
-        parent->deschedule(event);
-    } else {
-        event_tick = 0;
-    }
-    return 0;
-}
-
 void
 Intel8254Timer::Counter::serialize(const string &base, ostream &os)
 {
@@ -251,6 +227,10 @@ Intel8254Timer::Counter::serialize(const string &base, ostream &os)
     paramOut(os, base + ".latch_on", latch_on);
     paramOut(os, base + ".read_byte", read_byte);
     paramOut(os, base + ".write_byte", write_byte);
+
+    Tick event_tick = 0;
+    if (event.scheduled())
+        event_tick = event.when();
     paramOut(os, base + ".event_tick", event_tick);
 }
 
@@ -267,6 +247,7 @@ Intel8254Timer::Counter::unserialize(const string &base, Checkpoint *cp,
     paramIn(cp, section, base + ".read_byte", read_byte);
     paramIn(cp, section, base + ".write_byte", write_byte);
 
+    Tick event_tick;
     paramIn(cp, section, base + ".event_tick", event_tick);
     if (event_tick)
         parent->schedule(event, event_tick);

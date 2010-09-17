@@ -141,12 +141,6 @@ class TsunamiIO : public BasicPioDevice
     void clearPIC(uint8_t bitvector);
 
     /**
-     * Drain the io state including all associated events.
-     * @param drainEvent
-     */
-    unsigned int drain(Event *de);
-
-    /**
      * Serialize this object to the given output stream.
      * @param os The stream to serialize to.
      */

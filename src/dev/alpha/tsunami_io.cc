@@ -249,17 +249,6 @@ TsunamiIO::clearPIC(uint8_t bitvector)
     }
 }
 
-unsigned int 
-TsunamiIO::drain(Event *de)
-{
-    unsigned int count = 0;
-    count += pitimer.drain(de);
-    count += rtc.drain(de);
-    assert(count == 0);
-    changeState(SimObject::Drained);
-    return count;
-}
-
 void
 TsunamiIO::serialize(ostream &os)
 {
