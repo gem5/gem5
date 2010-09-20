@@ -367,7 +367,7 @@ class FullO3CPU : public BaseO3CPU
     { return globalSeqNum++; }
 
     /** Traps to handle given fault. */
-    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+    void trap(Fault fault, ThreadID tid, StaticInstPtr inst);
 
 #if FULL_SYSTEM
     /** HW return from error interrupt. */

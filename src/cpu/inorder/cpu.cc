@@ -633,7 +633,9 @@ InOrderCPU::processInterrupts(Fault interrupt)
     this->interrupts->updateIntrInfo(this->threadContexts[0]);
 
     DPRINTF(InOrderCPU, "Interrupt %s being handled\n", interrupt->name());
-    this->trap(interrupt, 0);
+    static StaticInstPtr dummyStatic(TheISA::NoopMachInst, 0);
+    static DynInstPtr dummyDyn = new Impl::DynInst(dummyStatic);
+    this->trap(interrupt, dummyDyn);
 }
 
 

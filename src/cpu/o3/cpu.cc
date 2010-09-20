@@ -926,8 +926,7 @@ FullO3CPU<Impl>::processInterrupts(Fault interrupt)
     this->interrupts->updateIntrInfo(this->threadContexts[0]);
 
     DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
-    DynInstPtr dummyInst;
-    this->trap(interrupt, 0, dummyInst);
+    this->trap(interrupt, 0, NULL);
 }
 
 template <class Impl>
@@ -944,10 +943,10 @@ FullO3CPU<Impl>::updateMemPorts()
 
 template <class Impl>
 void
-FullO3CPU<Impl>::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+FullO3CPU<Impl>::trap(Fault fault, ThreadID tid, StaticInstPtr inst)
 {
     // Pass the thread's TC into the invoke method.
-    fault->invoke(this->threadContexts[tid], inst->staticInst);
+    fault->invoke(this->threadContexts[tid], inst);
 }
 
 #if !FULL_SYSTEM
