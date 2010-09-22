@@ -1,5 +1,3 @@
-Redirecting stdout to build/ARM_SE/tests/opt/long/00.gzip/arm/linux/simple-timing/simout
-Redirecting stderr to build/ARM_SE/tests/opt/long/00.gzip/arm/linux/simple-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 26 2010 13:52:30
-M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
-M5 started Aug 26 2010 13:54:54
-M5 executing on zizzer
+M5 compiled Sep 20 2010 15:04:50
+M5 revision 0c4a7d867247 7686 default qtip print-identical tip
+M5 started Sep 20 2010 15:05:18
+M5 executing on phenom
 command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/long/00.gzip/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/opt/long/00.gzip/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -45,4 +43,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 807517408000 because target called exit()
+Exiting @ tick 796759936000 because target called exit()

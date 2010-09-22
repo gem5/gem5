@@ -1,5 +1,3 @@
-Redirecting stdout to build/SPARC_SE/tests/opt/long/00.gzip/sparc/linux/o3-timing/simout
-Redirecting stderr to build/SPARC_SE/tests/opt/long/00.gzip/sparc/linux/o3-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 26 2010 13:03:41
-M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
-M5 started Aug 26 2010 13:05:09
-M5 executing on zizzer
+M5 compiled Sep 20 2010 15:04:49
+M5 revision 0c4a7d867247 7686 default qtip print-identical tip
+M5 started Sep 20 2010 16:20:33
+M5 executing on phenom
 command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/long/00.gzip/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/opt/long/00.gzip/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -45,4 +43,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 1088441503500 because target called exit()
+Exiting @ tick 1095331467500 because target called exit()

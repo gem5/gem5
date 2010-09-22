@@ -1,5 +1,3 @@
-Redirecting stdout to build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing/simout
-Redirecting stderr to build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 26 2010 11:51:59
-M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
-M5 started Aug 26 2010 11:53:46
-M5 executing on zizzer
+M5 compiled Sep 20 2010 15:04:49
+M5 revision 0c4a7d867247 7686 default qtip print-identical tip
+M5 started Sep 20 2010 15:41:46
+M5 executing on phenom
 command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 27109454000 because target called exit()
+Exiting @ tick 27033689000 because target called exit()
