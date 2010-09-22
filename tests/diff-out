@@ -33,23 +33,17 @@
 
 use Getopt::Std;
 
-#
-# -t thresh sets threshold for ignoring differences (in %)
-# -p sorts differences by % chg (default is alphabetic)
-# -d ignores all distributions
-#
-
-getopts('dfn:pt:h');
+getopts('adn:t:h');
 
 if ($#ARGV < 1)
 {
     print "\nError: need two file arguments (<reference> <new>).\n";
-    print "   Options: -d  =  Ignore distributions\n";
-    print "            -p  =  Sort errors by percentage\n";
-    print "            -h  =  Diff header info separately from stats\n";
-    print "            -n <num>  =  Print top <num> errors (default 20)\n";
-    print "            -t <num>  =  Error threshold in percent (default 1)\n\n";
-    die -1;
+    print "   Options: -d = Ignore distributions\n";
+    print "            -a = Sort errors alphabetically (default: by percentage)\n";
+    print "            -h = Diff header info separately from stats\n";
+    print "            -n <num> = Print top <num> errors (default 20, 0 for all)\n";
+    print "            -t <num> = Ignore errors below <num> percent (default 0)\n\n";
+    exit;
 }
 
 open(REF, "<$ARGV[0]") or die "Error: can't open $ARGV[0].\n";
@@ -61,10 +55,10 @@ open(NEW, "<$ARGV[1]") or die "Error: can't open $ARGV[1].\n";
 #
 
 # Ignorable error (in percent)
-$err_thresh = ($opt_t) ? $opt_t : 0;
+$err_thresh = defined($opt_t) ? $opt_t : 0;
 
 # Number of stats to print before omitting
-$omit_count = ($opt_n) ? $opt_n : 20;
+$omit_count = defined($opt_n) ? $opt_n : 20;
 
 
 #
@@ -291,15 +285,17 @@ foreach $key_stat (@key_stats)
 	   $newvalue - $refvalue, pct_diff($refvalue, $newvalue));
 }
 
-printf("\nLargest $omit_count relative errors (> %d%%):\n\n", $err_thresh);
+printf("\nDifferences > %d%%:\n\n", $err_thresh);
 
-$num_errs = 0;
-
-if ($opt_p)
-{
+if ($opt_a) {
+    # leave stats sorted alphabetically, doesn't make sense to cut them off
+    $omit_count = 0;
+} else {
     # sort differences by percent change
     @errs = sort { abs($$b[3]) <=> abs($$a[3]) } @errs;
 }
+
+$num_errs = 0;
 
 foreach $err (@errs)
 {
@@ -318,9 +314,9 @@ foreach $err (@errs)
 	   $statname, $refvalue, $newvalue, $newvalue - $refvalue, $reldiff);
 
     # only print top N errors
-    if (++$num_errs >= $omit_count)
+    if ($omit_count > 0 && ++$num_errs >= $omit_count)
     {
-	print "[... additional errors omitted ...]\n";
+	print "[... showing top $omit_count errors only, additional errors omitted ...]\n";
 	last;
     }
 }
