@@ -108,7 +108,7 @@ def run_test(target, source, env):
         # Run diff on output & ref directories to find differences.
         # Exclude the stats file since we will use diff-out on that.
         outdiff = os.path.join(tgt_dir, 'outdiff')
-        diffcmd = 'diff -ubr %s ${SOURCES[2].dir} %s > %s' \
+        diffcmd = 'diff -ubrs %s ${SOURCES[2].dir} %s > %s' \
                   % (output_ignore_args, tgt_dir, outdiff)
         env.Execute(env.subst(diffcmd, target=target, source=source))
         print "===== Output differences ====="
