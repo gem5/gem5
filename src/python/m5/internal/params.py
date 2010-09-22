@@ -32,5 +32,6 @@ except NameError:
     modules = { }
 
 for module in modules.iterkeys():
-    if module.startswith('m5.internal.param_'):
+    if module.startswith('m5.internal.param_') or \
+           module.startswith('m5.internal.enum_'):
         exec "from %s import *" % module
