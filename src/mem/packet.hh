@@ -422,6 +422,7 @@ class Packet : public FastAlloc, public Printable
     void setExpressSnoop()      { flags.set(EXPRESS_SNOOP); }
     bool isExpressSnoop()       { return flags.isSet(EXPRESS_SNOOP); }
     void setSupplyExclusive()   { flags.set(SUPPLY_EXCLUSIVE); }
+    void clearSupplyExclusive() { flags.clear(SUPPLY_EXCLUSIVE); }
     bool isSupplyExclusive()    { return flags.isSet(SUPPLY_EXCLUSIVE); }
 
     // Network error conditions... encapsulate them as methods since

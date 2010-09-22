@@ -360,6 +360,9 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
         blk->status |= BlkDirty;
+        if (pkt->isSupplyExclusive()) {
+            blk->status |= BlkWritable;
+        }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
         incHitCount(pkt, id);
@@ -1007,6 +1010,9 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
     PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, -1);
+    if (blk->isWritable()) {
+        writeback->setSupplyExclusive();
+    }
     writeback->allocate();
     std::memcpy(writeback->getPtr<uint8_t>(), blk->data, blkSize);
 
@@ -1307,6 +1313,8 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
             pkt->assertMemInhibit();
             if (!pkt->needsExclusive()) {
                 pkt->assertShared();
+                // the writeback is no longer the exclusive copy in the system
+                wb_pkt->clearSupplyExclusive();
             } else {
                 // if we're not asserting the shared line, we need to
                 // invalidate our copy.  we'll do that below as long as
