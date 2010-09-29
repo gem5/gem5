@@ -75,8 +75,7 @@ def macroop BT_P_R {
     rdip t7
     srai t2, reg, 3, dataSize=asz
     srai t3, t2, ldsz, dataSize=asz
-    lea t3, flatseg, [ldsz, t3, base], dataSize=asz
-    ld t1, seg, [1, t3, t7], disp
+    ld t1, seg, [dsz, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
 };
 
@@ -155,13 +154,12 @@ def macroop BTC_P_R {
     rdip t7, dataSize=asz
     srai t2, reg, 3, dataSize=asz
     srai t3, t2, ldsz, dataSize=asz
-    lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, 1
     rol t4, t4, reg
-    ldst t1, seg, [1, t2, t7], disp
+    ldst t1, seg, [dsz, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
     xor t1, t1, t4
-    st t1, seg, [1, t2, t7], disp
+    st t1, seg, [dsz, t3, t7], disp
 };
 
 def macroop BTC_LOCKED_M_R {
@@ -180,13 +178,12 @@ def macroop BTC_LOCKED_P_R {
     rdip t7, dataSize=asz
     srai t2, reg, 3, dataSize=asz
     srai t3, t2, ldsz, dataSize=asz
-    lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, 1
     rol t4, t4, reg
-    ldstl t1, seg, [1, t2, t7], disp
+    ldstl t1, seg, [dsz, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
     xor t1, t1, t4
-    stul t1, seg, [1, t2, t7], disp
+    stul t1, seg, [dsz, t3, t7], disp
 };
 
 def macroop BTR_R_I {
@@ -261,13 +258,12 @@ def macroop BTR_P_R {
     rdip t7, dataSize=asz
     srai t2, reg, 3, dataSize=asz
     srai t3, t2, ldsz, dataSize=asz
-    lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, "(uint64_t(-(2ULL)))"
     rol t4, t4, reg
-    ldst t1, seg, [1, t3, t7], disp
+    ldst t1, seg, [dsz, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
     and t1, t1, t4
-    st t1, seg, [1, t3, t7], disp
+    st t1, seg, [dsz, t3, t7], disp
 };
 
 def macroop BTR_LOCKED_M_R {
@@ -286,13 +282,12 @@ def macroop BTR_LOCKED_P_R {
     rdip t7, dataSize=asz
     srai t2, reg, 3, dataSize=asz
     srai t3, t2, ldsz, dataSize=asz
-    lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, "(uint64_t(-(2ULL)))"
     rol t4, t4, reg
-    ldstl t1, seg, [1, t3, t7], disp
+    ldstl t1, seg, [dsz, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
     and t1, t1, t4
-    stul t1, seg, [1, t3, t7], disp
+    stul t1, seg, [dsz, t3, t7], disp
 };
 
 def macroop BTS_R_I {
