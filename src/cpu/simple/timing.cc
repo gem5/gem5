@@ -274,7 +274,7 @@ TimingSimpleCPU::sendData(RequestPtr req, uint8_t *data, uint64_t *res,
 {
     PacketPtr pkt;
     buildPacket(pkt, req, read);
-    pkt->dataDynamic<uint8_t>(data);
+    pkt->dataDynamicArray<uint8_t>(data);
     if (req->getFlags().isSet(Request::NO_ACCESS)) {
         assert(!dcache_pkt);
         pkt->makeResponse();
@@ -402,7 +402,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     PacketPtr pkt = new Packet(req, pkt1->cmd.responseCommand(),
                                Packet::Broadcast);
 
-    pkt->dataDynamic<uint8_t>(data);
+    pkt->dataDynamicArray<uint8_t>(data);
     pkt1->dataStatic<uint8_t>(data);
     pkt2->dataStatic<uint8_t>(data + req1->getSize());
 
@@ -602,7 +602,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     if (traceData) {
         traceData->setData(data);
     }
-    T *dataP = new T;
+    T *dataP = (T*) new uint8_t[sizeof(T)];
     *dataP = TheISA::htog(data);
 
     return writeTheseBytes((uint8_t *)dataP, sizeof(T), addr, flags, res);
@@ -674,7 +674,7 @@ TimingSimpleCPU::finishTranslation(WholeTranslationState *state)
         if (state->isPrefetch()) {
             state->setNoFault();
         }
-        delete state->data;
+        delete [] state->data;
         state->deleteReqs();
         translationFault(state->getFault());
     } else {

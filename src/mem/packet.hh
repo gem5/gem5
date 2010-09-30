@@ -705,7 +705,8 @@ class Packet : public FastAlloc, public Printable
     void
     setData(uint8_t *p)
     {
-        std::memcpy(getPtr<uint8_t>(), p, getSize());
+        if (p != getPtr<uint8_t>())
+            std::memcpy(getPtr<uint8_t>(), p, getSize());
     }
 
     /**
