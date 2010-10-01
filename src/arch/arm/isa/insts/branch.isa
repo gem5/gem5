@@ -51,8 +51,7 @@ let {{
         '''
         if (link):
             bCode += '''
-                Addr tBit = curPc & (ULL(1) << PcTBitShift);
-                if (!tBit)
+                if (!isThumb(curPc))
                     LR = curPc - 4;
                 else
                     LR = curPc | 1;
@@ -67,10 +66,7 @@ let {{
 
     # BX, BLX
     blxCode = '''
-    Addr curPc = readPC(xc);
-    Addr tBit = curPc & (ULL(1) << PcTBitShift);
-    bool arm = !tBit;
-    arm = arm; // In case it's not used otherwise.
+    Addr curPc M5_VAR_USED = readPC(xc);
     %(link)s
     // Switch modes
     %(branch)s
@@ -86,7 +82,7 @@ let {{
             Name += "Imm"
             # Since we're switching ISAs, the target ISA will be the opposite
             # of the current ISA. !arm is whether the target is ARM.
-            newPC = '(!arm ? (roundDown(curPc, 4) + imm) : (curPc + imm))'
+            newPC = '(isThumb(curPc) ? (roundDown(curPc, 4) + imm) : (curPc + imm))'
             base = "BranchImmCond"
             declare = BranchImmCondDeclare
             constructor = BranchImmCondConstructor
@@ -101,14 +97,14 @@ let {{
                 // The immediate version of the blx thumb instruction
                 // is 32 bits wide, but "next pc" doesn't reflect that
                 // so we don't want to substract 2 from it at this point
-                if (arm)
+                if (!isThumb(curPc))
                     LR = curPc - 4;
                 else
                     LR = curPc  | 1;
             '''
         elif link:
             linkStr = '''
-                if (arm)
+                if (!isThumb(curPc))
                     LR = curPc - 4;
                 else
                     LR = (curPc - 2) | 1;
@@ -119,7 +115,7 @@ let {{
         if imm and link: #blx with imm
             branchStr = '''
                 Addr tempPc = ((%(newPC)s) & mask(32)) | (curPc & ~mask(32));
-                FNPC = tempPc ^ (ULL(1) << PcTBitShift);
+                FNPC = tempPc ^ PcTBit;
             '''
         else:
             branchStr = "IWNPC = %(newPC)s;"

@@ -173,7 +173,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
             cpsr.j = 1;
         else
             cpsr.j = 0;
-        if (pc & (ULL(1) << PcTBitShift))
+        if (isThumb(pc))
             cpsr.t = 1;
         else
             cpsr.t = 0;
@@ -241,9 +241,9 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 miscRegs[misc_reg], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
         Addr npc = tc->readNextPC() & ~PcModeMask;
         if (cpsr.j)
-            npc = npc | (ULL(1) << PcJBitShift);
+            npc = npc | PcJBit;
         if (cpsr.t)
-            npc = npc | (ULL(1) << PcTBitShift);
+            npc = npc | PcTBit;
 
         tc->setNextPC(npc);
     } else if (misc_reg >= MISCREG_CP15_UNIMP_START &&

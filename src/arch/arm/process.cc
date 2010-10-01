@@ -362,7 +362,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 
     Addr prog_entry = objFile->entryPoint();
     if (arch == ObjectFile::Thumb)
-        prog_entry = (prog_entry & ~mask(1)) | (ULL(1) << PcTBitShift);
+        prog_entry = (prog_entry & ~mask(1)) | PcTBit;
     tc->setPC(prog_entry);
     tc->setNextPC(prog_entry + sizeof(MachInst));
 

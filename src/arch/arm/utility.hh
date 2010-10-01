@@ -45,6 +45,7 @@
 #ifndef __ARCH_ARM_UTILITY_HH__
 #define __ARCH_ARM_UTILITY_HH__
 
+#include "arch/arm/isa_traits.hh"
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
 #include "base/misc.hh"
@@ -90,6 +91,12 @@ namespace ArmISA {
     inline void startupCPU(ThreadContext *tc, int cpuId)
     {
         tc->activate(0);
+    }
+
+    static inline bool
+    isThumb(Addr pc)
+    {
+        return (pc & PcTBit);
     }
 
     static inline void

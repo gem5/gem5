@@ -43,6 +43,7 @@
 #define __ARCH_ARM_INSTS_STATICINST_HH__
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 
@@ -219,8 +220,7 @@ class ArmStaticInst : public StaticInst
     readPC(XC *xc)
     {
         Addr pc = xc->readPC();
-        Addr tBit = pc & (ULL(1) << PcTBitShift);
-        if (tBit)
+        if (isThumb(pc))
             return pc + 4;
         else
             return pc + 8;
@@ -232,7 +232,7 @@ class ArmStaticInst : public StaticInst
     setNextPC(XC *xc, Addr val)
     {
         Addr npc = xc->readNextPC();
-        if (npc & (ULL(1) << PcTBitShift)) {
+        if (isThumb(npc)) {
             val &= ~mask(1);
         } else {
             val &= ~mask(2);
@@ -280,8 +280,8 @@ class ArmStaticInst : public StaticInst
     setIWNextPC(XC *xc, Addr val)
     {
         Addr stateBits = xc->readPC() & PcModeMask;
-        Addr jBit = (ULL(1) << PcJBitShift);
-        Addr tBit = (ULL(1) << PcTBitShift);
+        Addr jBit = PcJBit;
+        Addr tBit = PcTBit;
         bool thumbEE = (stateBits == (tBit | jBit));
 
         Addr newPc = (val & ~PcModeMask);
@@ -312,8 +312,8 @@ class ArmStaticInst : public StaticInst
     setAIWNextPC(XC *xc, Addr val)
     {
         Addr stateBits = xc->readPC() & PcModeMask;
-        Addr jBit = (ULL(1) << PcJBitShift);
-        Addr tBit = (ULL(1) << PcTBitShift);
+        Addr jBit = PcJBit;
+        Addr tBit = PcTBit;
         if (!jBit && !tBit) {
             setIWNextPC(xc, val);
         } else {

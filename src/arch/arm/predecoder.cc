@@ -43,6 +43,7 @@
 
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/predecoder.hh"
+#include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 
@@ -151,7 +152,7 @@ Predecoder::moreBytes(Addr pc, Addr fetchPC, MachInst inst)
 {
     data = inst;
     offset = (fetchPC >= pc) ? 0 : pc - fetchPC;
-    emi.thumb = (pc & (ULL(1) << PcTBitShift)) ? 1 : 0;
+    emi.thumb = isThumb(pc);
     FPSCR fpscr = tc->readMiscReg(MISCREG_FPSCR);
     emi.fpscrLen = fpscr.len;
     emi.fpscrStride = fpscr.stride;

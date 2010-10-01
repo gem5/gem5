@@ -638,7 +638,7 @@ let {{
     exec_output += PredOpExecute.subst(mcr15UserIop)
 
     enterxCode = '''
-        FNPC = NPC | (1ULL << PcJBitShift) | (1ULL << PcTBitShift);
+        FNPC = NPC | PcJBit | PcTBit;
     '''
     enterxIop = InstObjParams("enterx", "Enterx", "PredOp",
                               { "code": enterxCode,
@@ -648,7 +648,7 @@ let {{
     exec_output += PredOpExecute.subst(enterxIop)
 
     leavexCode = '''
-        FNPC = (NPC & ~(1ULL << PcJBitShift)) | (1ULL << PcTBitShift);
+        FNPC = (NPC & ~PcJBit) | PcTBit;
     '''
     leavexIop = InstObjParams("leavex", "Leavex", "PredOp",
                               { "code": leavexCode,

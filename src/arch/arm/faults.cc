@@ -140,7 +140,7 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     }
 
     Addr pc M5_VAR_USED = tc->readPC();
-    Addr newPc = getVector(tc) | (sctlr.te ? (ULL(1) << PcTBitShift) : 0);
+    Addr newPc = getVector(tc) | (sctlr.te ? PcTBit : 0);
     DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x\n",
             name(), cpsr, pc, tc->readIntReg(INTREG_LR), newPc);
     tc->setPC(newPc);
