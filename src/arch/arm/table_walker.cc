@@ -110,12 +110,10 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
     currState->vaddr = currState->req->getVaddr() & ~PcModeMask;
     currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR);
     sctlr = currState->sctlr;
-    currState->cpsr = currState->tc->readMiscReg(MISCREG_CPSR);
     currState->N = currState->tc->readMiscReg(MISCREG_TTBCR);
 
     currState->isFetch = (currState->mode == TLB::Execute);
     currState->isWrite = (currState->mode == TLB::Write);
-    currState->isPriv = (currState->cpsr.mode != MODE_USER);
 
     Addr ttbr = 0;
 

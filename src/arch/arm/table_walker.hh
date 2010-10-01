@@ -60,7 +60,7 @@ class TLB;
 
 class TableWalker : public MemObject
 {
-  protected:
+  public:
     struct L1Descriptor {
         /** Type of page table entry ARM DDI 0406B: B3-8*/
         enum EntryType {
@@ -95,6 +95,14 @@ class TableWalker : public MemObject
                 panic("Super sections not implemented\n");
             return mbits(data, 31,20);
         }
+        /** Return the physcal address of the entry, bits in position*/
+        Addr paddr(Addr va) const
+        {
+            if (supersection())
+                panic("Super sections not implemented\n");
+            return mbits(data, 31,20) | mbits(va, 20, 0);
+        }
+
 
         /** Return the physical frame, bits shifted right */
         Addr pfn() const
@@ -220,6 +228,15 @@ class TableWalker : public MemObject
             return large() ? bits(data, 31, 16) : bits(data, 31, 12);
         }
 
+        /** Return complete physical address given a VA */
+        Addr paddr(Addr va) const
+        {
+            if (large())
+                return mbits(data, 31, 16) | mbits(va, 15, 0);
+            else
+                return mbits(data, 31, 12) | mbits(va, 11, 0);
+        }
+
         /** If the section is shareable. See texcb() comment. */
         bool shareable() const
         {
@@ -266,17 +283,11 @@ class TableWalker : public MemObject
         /** Cached copy of the sctlr as it existed when translation began */
         SCTLR sctlr;
 
-        /** Cached copy of the cpsr as it existed when the translation began */
-        CPSR cpsr;
-
         /** Width of the base address held in TTRB0 */
         uint32_t N;
 
         /** If the access is a write */
         bool isWrite;
-
-        /** If the access is not from user mode */
-        bool isPriv;
 
         /** If the access is a fetch (for execution, and no-exec) must be checked?*/
         bool isFetch;

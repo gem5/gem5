@@ -97,7 +97,13 @@ class TLB : public BaseTLB
 #endif
 
     void nextnlu() { if (++nlu >= size) nlu = 0; }
-    TlbEntry *lookup(Addr vpn, uint8_t asn);
+    /** Lookup an entry in the TLB
+     * @param vpn virtual address
+     * @param asn context id/address space id to use
+     * @param functional if the lookup should modify state
+     * @return pointer to TLB entrry if it exists
+     */
+    TlbEntry *lookup(Addr vpn, uint8_t asn, bool functional = false);
 
     // Access Stats
     mutable Stats::Scalar read_hits;
@@ -153,6 +159,16 @@ class TLB : public BaseTLB
     }
 
     static bool validVirtualAddress(Addr vaddr);
+
+    /**
+     * Do a functional lookup on the TLB (for debugging)
+     * and don't modify any internal state
+     * @param tc thread context to get the context id from
+     * @param vaddr virtual address to translate
+     * @param pa returned physical address
+     * @return if the translation was successful
+     */
+    bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
 
     /** Accessor functions for memory attributes for last accessed TLB entry
      */

@@ -84,8 +84,19 @@ TLB::~TLB()
         delete [] table;
 }
 
+bool
+TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
+{
+    uint32_t context_id = tc->readMiscReg(MISCREG_CONTEXTIDR);
+    TlbEntry *e = lookup(va, context_id, true);
+    if (!e)
+        return false;
+    pa = e->pAddr(va);
+    return true;
+}
+
 TlbEntry*
-TLB::lookup(Addr va, uint8_t cid)
+TLB::lookup(Addr va, uint8_t cid, bool functional)
 {
     // XXX This should either turn into a TlbMap or add caching
 
@@ -97,7 +108,7 @@ TLB::lookup(Addr va, uint8_t cid)
     while (retval == NULL && x < size) {
         if (table[x].match(va, cid)) {
             retval = &table[x];
-            if (x == nlu)
+            if (x == nlu && !functional)
                 nextnlu();
 
             break;

@@ -59,7 +59,6 @@ if env['TARGET_ISA'] == 'arm':
     Source('predecoder.cc')
     Source('nativetrace.cc')
     Source('tlb.cc')
-    Source('vtophys.cc')
     Source('utility.cc')
 
     SimObject('ArmNativeTrace.py')
@@ -73,6 +72,7 @@ if env['TARGET_ISA'] == 'arm':
         Source('interrupts.cc')
         Source('stacktrace.cc')
         Source('system.cc')
+        Source('vtophys.cc')
         Source('linux/system.cc')
         Source('table_walker.cc')
         
