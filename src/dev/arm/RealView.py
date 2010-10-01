@@ -101,6 +101,7 @@ class RealViewPBX(RealView):
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff, warn_access="1")
+    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x4000000)
     dmac_fake     = AmbaFake(pio_addr=0x10030000)
     uart1_fake    = AmbaFake(pio_addr=0x1000a000)
     uart2_fake    = AmbaFake(pio_addr=0x1000b000)
@@ -153,6 +154,7 @@ class RealViewPBX(RealView):
        self.kmi0_fake.pio     = bus.port
        self.kmi1_fake.pio     = bus.port
        self.rtc_fake.pio      = bus.port
+       self.flash_fake.pio    = bus.port
 
 class RealViewEB(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
