@@ -65,10 +65,11 @@ using namespace std;
 using namespace ArmISA;
 
 TLB::TLB(const Params *p)
-    : BaseTLB(p), size(p->size), nlu(0)
+    : BaseTLB(p), size(p->size)
 #if FULL_SYSTEM
       , tableWalker(p->walker)
 #endif
+    , rangeMRU(1)
 {
     table = new TlbEntry[size];
     memset(table, 0, sizeof(TlbEntry[size]));
@@ -98,19 +99,25 @@ TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
 TlbEntry*
 TLB::lookup(Addr va, uint8_t cid, bool functional)
 {
-    // XXX This should either turn into a TlbMap or add caching
 
     TlbEntry *retval = NULL;
 
-    // Do some kind of caching, fast indexing, anything
+    // Maitaining LRU array
 
     int x = 0;
     while (retval == NULL && x < size) {
         if (table[x].match(va, cid)) {
-            retval = &table[x];
-            if (x == nlu && !functional)
-                nextnlu();
 
+            // We only move the hit entry ahead when the position is higher than rangeMRU
+            if (x > rangeMRU) {
+                TlbEntry tmp_entry = table[x];
+                for(int i = x; i > 0; i--)
+                    table[i] = table[i-1];
+                table[0] = tmp_entry;
+                retval = &table[0];
+            } else {
+                retval = &table[x];
+            }
             break;
         }
         x++;
@@ -134,16 +141,17 @@ TLB::insert(Addr addr, TlbEntry &entry)
             entry.N, entry.global, entry.valid, entry.nonCacheable, entry.sNp,
             entry.xn, entry.ap, entry.domain);
 
-    if (table[nlu].valid)
+    if (table[size-1].valid)
         DPRINTF(TLB, " - Replacing Valid entry %#x, asn %d ppn %#x size: %#x ap:%d\n",
-            table[nlu].vpn << table[nlu].N, table[nlu].asid, table[nlu].pfn << table[nlu].N,
-            table[nlu].size, table[nlu].ap);
+                table[size-1].vpn << table[size-1].N, table[size-1].asid,
+                table[size-1].pfn << table[size-1].N, table[size-1].size,
+                table[size-1].ap);
 
-    // XXX Update caching, lookup table etc
-    table[nlu] = entry;
+    //inserting to MRU position and evicting the LRU one
 
-    // XXX Figure out how entries are generally inserted in ARM
-    nextnlu();
+    for(int i = size-1; i > 0; i--)
+      table[i] = table[i-1];
+    table[0] = entry;
 }
 
 void
@@ -177,7 +185,6 @@ TLB::flushAll()
     }
 
     memset(table, 0, sizeof(TlbEntry[size]));
-    nlu = 0;
 }
 
 

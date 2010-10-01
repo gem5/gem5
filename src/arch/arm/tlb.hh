@@ -88,7 +88,6 @@ class TLB : public BaseTLB
 
     TlbEntry *table;	// the Page Table
     int size;			// TLB Size
-    int nlu;			// not last used entry (for replacement)
 
     uint32_t _attr;      // Memory attributes for last accessed TLB entry
 
@@ -96,7 +95,6 @@ class TLB : public BaseTLB
     TableWalker *tableWalker;
 #endif
 
-    void nextnlu() { if (++nlu >= size) nlu = 0; }
     /** Lookup an entry in the TLB
      * @param vpn virtual address
      * @param asn context id/address space id to use
@@ -118,6 +116,7 @@ class TLB : public BaseTLB
     Stats::Formula misses;
     Stats::Formula accesses;
 
+    int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
 
   public:
     typedef ArmTLBParams Params;
