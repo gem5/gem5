@@ -138,6 +138,9 @@ class Gic : public PioDevice
      * one bit per interrupt, 32 bit per word = 32 words */
     uint32_t activeInt[32];
 
+    /** read only running priroity register, 1 per cpu*/
+    uint32_t iccrpr[8];
+
     /** an 8 bit priority (lower is higher priority) for each
      * of the 1020 possible supported interrupts.
      */
@@ -164,6 +167,9 @@ class Gic : public PioDevice
     /** highest interrupt that is interrupting CPU */
     uint32_t cpuHighestInt[8];
 
+    /** IRQ Enable Used for debug */
+    bool irqEnable;
+
     /** software generated interrupt
      * @param data data to decode that indicates which cpus to interrupt
      */
@@ -173,6 +179,10 @@ class Gic : public PioDevice
      * @param hint which set of interrupts needs to be checked
      */
     void updateIntState(int hint);
+
+    /** Update the register that records priority of the highest priority
+     *  active interrupt*/
+    void updateRunPri();
 
     int intNumToWord(int num) const { return num >> 5; }
     int intNumToBit(int num) const { return num % 32; }
@@ -232,6 +242,11 @@ class Gic : public PioDevice
      * @param number number of interrupt to send */
     void clearInt(uint32_t number);
 
+    /* Various functions fer testing and debugging */
+    void driveSPI(uint32_t spi);
+    void driveLegIRQ(bool state);
+    void driveLegFIQ(bool state);
+    void driveIrqEn(bool state);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

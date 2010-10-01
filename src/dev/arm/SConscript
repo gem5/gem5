@@ -51,3 +51,4 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'arm':
     Source('realview.cc')
 
     TraceFlag('AMBA')
+    TraceFlag('GIC')
