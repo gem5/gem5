@@ -45,7 +45,7 @@ class ThreadContext;
 
 namespace MipsISA {
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp);
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -102,6 +102,8 @@ void startupCPU(ThreadContext *tc, int cpuId);
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
+void skipFunction(ThreadContext *tc);
 
 };
 

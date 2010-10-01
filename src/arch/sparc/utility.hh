@@ -41,7 +41,7 @@
 
 namespace SparcISA
 {
-    uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+    uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp);
 
     static inline bool
     inUserMode(ThreadContext *tc)
@@ -74,6 +74,8 @@ namespace SparcISA
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
+    void skipFunction(ThreadContext *tc);
 
 } // namespace SparcISA
 

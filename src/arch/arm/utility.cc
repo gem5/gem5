@@ -42,6 +42,10 @@
 #include "arch/arm/utility.hh"
 #include "cpu/thread_context.hh"
 
+#if FULL_SYSTEM
+#include "arch/arm/vtophys.hh"
+#include "mem/vport.hh"
+#endif
 
 namespace ArmISA {
 
@@ -57,17 +61,43 @@ initCPU(ThreadContext *tc, int cpuId)
         reset->invoke(tc);
 }
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
+uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp) {
 #if FULL_SYSTEM
+    if (fp)
+        panic("getArgument(): Floating point arguments not implemented\n");
+
     if (number < NumArgumentRegs) {
-        if (fp)
-            panic("getArgument(): Floating point arguments not implemented\n");
-        else
-            return tc->readIntReg(number);
-    }
-    else {
-        panic("getArgument(): Argument index %d beyond max supported (%d).\n",
-              number, NumArgumentRegs - 1);
+        // If the argument is 64 bits, it must be in an even regiser number
+        // Increment the number here if it isn't even
+        if (size == sizeof(uint64_t)) {
+            if ((number % 2) != 0)
+                number++;
+            // Read the two halves of the data
+            // number is inc here to get the second half of the 64 bit reg
+            uint64_t tmp;
+            tmp = tc->readIntReg(number++);
+            tmp |= tc->readIntReg(number) << 32;
+            return tmp;
+        } else {
+           return tc->readIntReg(number);
+        }
+    } else {
+        Addr sp = tc->readIntReg(StackPointerReg);
+        VirtualPort *vp = tc->getVirtPort();
+        uint64_t arg;
+        if (size == sizeof(uint64_t)) {
+            // If the argument is even it must be aligned
+            if ((number % 2) != 0)
+                number++;
+            arg = vp->read<uint64_t>(sp +
+                    (number-NumArgumentRegs) * sizeof(uint32_t));
+            // since two 32 bit args == 1 64 bit arg, increment number
+            number++;
+        } else {
+            arg = vp->read<uint32_t>(sp +
+                           (number-NumArgumentRegs) * sizeof(uint32_t));
+        }
+        return arg;
     }
 #else
     panic("getArgument() only implemented for FULL_SYSTEM\n");
@@ -88,6 +118,18 @@ readCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2)
    return new UnimpFault(csprintf("MRC CP15: CRn: %d opc1: %d CRm: %d opc1: %d\n", 
            CRn, opc1, CRm, opc2));
 
+}
+
+void
+skipFunction(ThreadContext *tc)
+{
+    Addr newpc = tc->readIntReg(ReturnAddressReg);
+    newpc &= ~ULL(1);
+    if (isThumb(tc->readPC()))
+        tc->setPC(newpc | PcTBit);
+    else
+        tc->setPC(newpc);
+    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
 }
 
 

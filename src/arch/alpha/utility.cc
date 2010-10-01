@@ -40,7 +40,7 @@
 namespace AlphaISA {
 
 uint64_t
-getArgument(ThreadContext *tc, int number, bool fp)
+getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp)
 {
 #if FULL_SYSTEM
     const int NumArgumentRegs = 6;
@@ -95,6 +95,15 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 
     copyIprs(src, dest);
 }
+
+void
+skipFunction(ThreadContext *tc)
+{
+    Addr newpc = tc->readIntReg(ReturnAddressReg);
+    tc->setPC(newpc);
+    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
+}
+
 
 } // namespace AlphaISA
 

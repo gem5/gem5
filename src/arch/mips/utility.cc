@@ -52,7 +52,7 @@ using namespace std;
 namespace MipsISA {
 
 uint64_t
-getArgument(ThreadContext *tc, int number, bool fp)
+getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp)
 {
 #if FULL_SYSTEM
     if (number < 4) {
@@ -264,5 +264,14 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
     panic("Copy Misc. Regs Not Implemented Yet\n");
 }
+void
+skipFunction(ThreadContext *tc)
+{
+    Addr newpc = tc->readIntReg(ReturnAddressReg);
+    tc->setPC(newpc);
+    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
+    tc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
+}
+
 
 } // namespace MipsISA

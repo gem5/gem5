@@ -45,7 +45,7 @@ class Arguments
   protected:
     ThreadContext *tc;
     int number;
-    uint64_t getArg(bool fp = false);
+    uint64_t getArg(uint8_t size, bool fp = false);
 
   protected:
     class Data : public RefCounted
@@ -82,7 +82,7 @@ class Arguments
 
     // for checking if an argument is NULL
     bool operator!() {
-        return getArg() == 0;
+        return getArg(TheISA::MachineBytes) == 0;
     }
 
     Arguments &operator++() {
@@ -130,20 +130,20 @@ class Arguments
     template <class T>
     operator T() {
         assert(sizeof(T) <= sizeof(uint64_t));
-        T data = static_cast<T>(getArg());
+        T data = static_cast<T>(getArg(sizeof(T)));
         return data;
     }
 
     template <class T>
     operator T *() {
         T *buf = (T *)data->alloc(sizeof(T));
-        CopyData(tc, buf, getArg(), sizeof(T));
+        CopyData(tc, buf, getArg(sizeof(T)), sizeof(T));
         return buf;
     }
 
     operator char *() {
         char *buf = data->alloc(2048);
-        CopyStringOut(tc, buf, getArg(), 2048);
+        CopyStringOut(tc, buf, getArg(TheISA::MachineBytes), 2048);
         return buf;
     }
 };

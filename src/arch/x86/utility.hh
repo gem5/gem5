@@ -52,7 +52,7 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+    uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp);
 
     static inline bool
     inUserMode(ThreadContext *tc)
@@ -83,6 +83,8 @@ namespace X86ISA
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
+    void skipFunction(ThreadContext *tc);
 };
 
 #endif // __ARCH_X86_UTILITY_HH__

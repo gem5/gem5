@@ -30,6 +30,7 @@
  */
 
 #include "arch/isa_traits.hh"
+#include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
@@ -40,14 +41,9 @@ using namespace TheISA;
 void
 SkipFuncEvent::process(ThreadContext *tc)
 {
-    Addr newpc = tc->readIntReg(ReturnAddressReg);
-
     DPRINTF(PCEvent, "skipping %s: pc=%x, newpc=%x\n", description,
-            tc->readPC(), newpc);
+            tc->readPC(), tc->readIntReg(ReturnAddressReg));
 
-    tc->setPC(newpc);
-    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
-#if ISA_HAS_DELAY_SLOT
-    tc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
-#endif
+    // Call ISA specific code to do the skipping
+    TheISA::skipFunction(tc);
 }

@@ -45,7 +45,7 @@ namespace SparcISA {
 //the sixth are passed on the stack past the 16 word window save area,
 //space for the struct/union return pointer, and space reserved for the
 //first 6 arguments which the caller may use but doesn't have to.
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
+uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp) {
 #if FULL_SYSTEM
     const int NumArgumentRegs = 6;
     if (number < NumArgumentRegs) {
@@ -217,6 +217,16 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->setNextPC(src->readNextPC());
     dest->setNextNPC(src->readNextNPC());
 }
+
+void
+skipFunction(ThreadContext *tc)
+{
+    Addr newpc = tc->readIntReg(ReturnAddressReg);
+    tc->setPC(newpc);
+    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
+    tc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
+}
+
 
 void
 initCPU(ThreadContext *tc, int cpuId)

@@ -67,7 +67,10 @@ class ArmSystem : public System
     
     virtual Addr fixFuncEventAddr(Addr addr)
     {
-        //XXX This may eventually have to do something useful.
+        // Remove the low bit that thumb symbols have set
+        // but that aren't actually odd aligned
+        if (addr & 0x1)
+            return (addr & ~1) | PcTBit;
         return addr;
     }
 };

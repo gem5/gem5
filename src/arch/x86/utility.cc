@@ -52,7 +52,7 @@
 
 namespace X86ISA {
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
+uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp) {
 #if FULL_SYSTEM
     panic("getArgument() not implemented for x86!\n");
 #else
@@ -232,5 +232,12 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->setPC(src->readPC());
     dest->setNextPC(src->readNextPC());
 }
+
+void
+skipFunction(ThreadContext *tc)
+{
+    panic("Not implemented for x86\n");
+}
+
 
 } //namespace X86_ISA

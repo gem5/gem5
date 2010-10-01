@@ -41,7 +41,7 @@
 
 namespace AlphaISA {
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size,  bool fp);
 
 inline bool
 inUserMode(ThreadContext *tc)
@@ -94,6 +94,7 @@ void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
+void skipFunction(ThreadContext *tc);
 } // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_UTILITY_HH__

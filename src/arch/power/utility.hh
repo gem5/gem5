@@ -61,6 +61,8 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
 }
 
+void skipFunction(ThreadContext *tc);
+
 } // PowerISA namespace
 
 #endif // __ARCH_POWER_UTILITY_HH__

@@ -55,4 +55,11 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->setNextPC(src->readNextPC());
 }
 
+void
+skipFunction(ThreadContext *tc)
+{
+    panic("Not Implemented for POWER");
+}
+
+
 } // PowerISA namespace
