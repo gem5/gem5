@@ -63,7 +63,8 @@ enum MiscRegIndex
     MISCREG_UNIQ,
     MISCREG_LOCKFLAG,
     MISCREG_LOCKADDR,
-    MISCREG_INTR
+    MISCREG_INTR,
+    NUM_MISCREGS
 };
 
 // semantically meaningful register indices
@@ -84,15 +85,14 @@ const RegIndex SyscallSuccessReg = 19;
 const int NumIntArchRegs = 32;
 const int NumPALShadowRegs = 8;
 const int NumFloatArchRegs = 32;
-// @todo: Figure out what this number really should be.
-const int NumMiscArchRegs = 77;
+const int NumMiscArchRegs = NUM_MISCREGS;
 
 const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
 const int NumFloatRegs = NumFloatArchRegs;
 const int NumMiscRegs = NumMiscArchRegs;
 
 const int TotalNumRegs =
-    NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs;
+    NumIntRegs + NumFloatRegs + NumMiscRegs;
 
 const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 

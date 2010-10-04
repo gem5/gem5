@@ -111,6 +111,21 @@ class Scoreboard
 
     /** The logical index of the zero register. */
     int zeroRegIdx;
+
+    int currentSize;
+
+    void
+    resize(int newSize)
+    {
+        currentSize = newSize;
+        regScoreBoard.resize(newSize);
+    }
+
+    bool
+    indexInBounds(int idx)
+    {
+        return idx < currentSize;
+    }
 };
 
 #endif

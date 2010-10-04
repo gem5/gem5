@@ -51,22 +51,25 @@ Scoreboard::Scoreboard(unsigned activeThreads,
     numPhysicalRegs = numPhysicalIntRegs  + numPhysicalFloatRegs;
 
     //Resize scoreboard appropriately
-    regScoreBoard.resize(numPhysicalRegs + (numMiscRegs * activeThreads));
+    resize(numPhysicalRegs + (numMiscRegs * activeThreads));
 
     //Initialize values
     for (int i=0; i < numLogicalIntRegs * activeThreads; i++) {
+        assert(indexInBounds(i));
         regScoreBoard[i] = 1;
     }
 
     for (int i= numPhysicalIntRegs;
          i < numPhysicalIntRegs + (numLogicalFloatRegs * activeThreads);
          i++) {
+        assert(indexInBounds(i));
         regScoreBoard[i] = 1;
     }
 
     for (int i = numPhysicalRegs;
          i < numPhysicalRegs + (numMiscRegs * activeThreads);
          i++) {
+        assert(indexInBounds(i));
         regScoreBoard[i] = 1;
     }
 }
@@ -93,6 +96,7 @@ Scoreboard::getReg(PhysRegIndex phys_reg)
     }
 #endif
 
+    assert(indexInBounds(phys_reg));
     return regScoreBoard[phys_reg];
 }
 
@@ -101,6 +105,7 @@ Scoreboard::setReg(PhysRegIndex phys_reg)
 {
     DPRINTF(Scoreboard, "Setting reg %i as ready\n", phys_reg);
 
+    assert(indexInBounds(phys_reg));
     regScoreBoard[phys_reg] = 1;
 }
 
@@ -120,5 +125,6 @@ Scoreboard::unsetReg(PhysRegIndex ready_reg)
     }
 #endif
 
+    assert(indexInBounds(ready_reg));
     regScoreBoard[ready_reg] = 0;
 }
