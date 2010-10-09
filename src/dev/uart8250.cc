@@ -161,6 +161,7 @@ Uart8250::read(PacketPtr pkt)
             pkt->set(LCR);
             break;
         case 0x4: // Modem Control Register (MCR)
+            pkt->set(MCR);
             break;
         case 0x5: // Line Status Register (LSR)
             uint8_t lsr;
