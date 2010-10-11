@@ -31,6 +31,8 @@
 #ifndef __ARCH_ALPHA_ISA_HH__
 #define __ARCH_ALPHA_ISA_HH__
 
+#include <string.h>
+
 #include <string>
 #include <iostream>
 

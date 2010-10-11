@@ -99,6 +99,7 @@ ISA::clear()
     memset(tnpc, 0, sizeof(tnpc));
     memset(tstate, 0, sizeof(tstate));
     memset(tt, 0, sizeof(tt));
+    tba = 0;
     pstate = 0;
     tl = 0;
     pil = 0;
@@ -123,10 +124,21 @@ ISA::clear()
     lsuCtrlReg = 0;
 
     memset(scratchPad, 0, sizeof(scratchPad));
+
+    cpu_mondo_head = 0;
+    cpu_mondo_tail = 0;
+    dev_mondo_head = 0;
+    dev_mondo_tail = 0;
+    res_error_head = 0;
+    res_error_tail = 0;
+    nres_error_head = 0;
+    nres_error_tail = 0;
+
 #if FULL_SYSTEM
-    tickCompare = NULL;
-    sTickCompare = NULL;
-    hSTickCompare = NULL;
+    // If one of these events is active, it's not obvious to me how to get
+    // rid of it cleanly. For now we'll just assert that they're not.
+    if (tickCompare != NULL && sTickCompare != NULL && hSTickCompare != NULL)
+        panic("Tick comparison event active when clearing the ISA object.\n");
 #endif
 }
 

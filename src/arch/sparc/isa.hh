@@ -205,6 +205,12 @@ namespace SparcISA
 
         ISA()
         {
+#if FULL_SYSTEM
+            tickCompare = NULL;
+            sTickCompare = NULL;
+            hSTickCompare = NULL;
+#endif
+
             clear();
         }
     };
