@@ -205,7 +205,8 @@ AlphaLiveProcess::initState()
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     tc->setIntReg(GlobalPointerReg, objFile->globalPointer());
     //Operate in user mode
-    tc->setMiscRegNoEffect(IPR_ICM, 0x18);
+    tc->setMiscRegNoEffect(IPR_ICM, mode_user << 3);
+    tc->setMiscRegNoEffect(IPR_DTB_CM, mode_user << 3);
     //No super page mapping
     tc->setMiscRegNoEffect(IPR_MCSR, 0);
 }
