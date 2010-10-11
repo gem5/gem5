@@ -81,6 +81,7 @@ namespace AlphaISA
             lock_flag = 0;
             lock_addr = 0;
             intr_flag = 0;
+            memset(ipr, 0, sizeof(ipr));
         }
 
         void serialize(EventManager *em, std::ostream &os);
