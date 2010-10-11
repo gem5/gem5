@@ -60,7 +60,10 @@ X86System::X86System(Params *p) :
     mpFloatingPointer(p->intel_mp_pointer),
     mpConfigTable(p->intel_mp_table),
     rsdp(p->acpi_description_table_pointer)
-{}
+{
+    if (kernel->getArch() == ObjectFile::I386)
+        fatal("Loading a 32 bit x86 kernel is not supported.\n");
+}
 
 static void
 installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
