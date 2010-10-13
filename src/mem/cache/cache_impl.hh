@@ -306,7 +306,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                         int &lat, PacketList &writebacks)
 {
     if (pkt->req->isUncacheable()) {
-        if (pkt->req->isClrex()) {
+        if (pkt->req->isClearLL()) {
             tags->clearLocks();
         } else {
            blk = tags->findBlock(pkt->getAddr());
@@ -449,7 +449,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     if (pkt->req->isUncacheable()) {
-        if (pkt->req->isClrex()) {
+        if (pkt->req->isClearLL()) {
             tags->clearLocks();
         } else {
             BlkType *blk = tags->findBlock(pkt->getAddr());

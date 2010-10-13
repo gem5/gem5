@@ -72,7 +72,7 @@ class Request : public FastAlloc
     /** This request is to a memory mapped register. */
     static const FlagsType MMAPED_IPR                  = 0x00002000;
     /** This request is a clear exclusive. */
-    static const FlagsType CLREX                       = 0x00004000;
+    static const FlagsType CLEAR_LL                    = 0x00004000;
 
     /** The request should ignore unaligned access faults */
     static const FlagsType NO_ALIGN_FAULT              = 0x00020000;
@@ -458,7 +458,7 @@ class Request : public FastAlloc
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isMmapedIpr() const { return _flags.isSet(MMAPED_IPR); }
-    bool isClrex() const { return _flags.isSet(CLREX); }
+    bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
 
     bool
     isMisaligned() const

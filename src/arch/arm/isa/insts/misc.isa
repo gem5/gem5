@@ -671,7 +671,8 @@ let {{
     exec_output += PredOpExecute.subst(setendIop)
 
     clrexCode = '''
-        unsigned memAccessFlags = Request::CLREX|3|Request::LLSC;
+        unsigned memAccessFlags = Request::CLEAR_LL |
+            ArmISA::TLB::AlignWord | Request::LLSC;
         fault = xc->read(0, (uint32_t&)Mem, memAccessFlags);
     '''
     clrexIop = InstObjParams("clrex", "Clrex","PredOp",

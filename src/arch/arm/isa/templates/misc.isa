@@ -367,7 +367,8 @@ def template ClrexInitiateAcc {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                unsigned memAccessFlags = Request::CLREX|3|Request::LLSC;
+                unsigned memAccessFlags = Request::CLEAR_LL |
+                    ArmISA::TLB::AlignWord | Request::LLSC;
                 fault = xc->read(0, (uint32_t&)Mem, memAccessFlags);
             }
         } else {
