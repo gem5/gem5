@@ -52,7 +52,6 @@ if env['TARGET_ISA'] == 'sparc':
         SimObject('SparcInterrupts.py')
 
         Source('interrupts.cc')
-        Source('stacktrace.cc')
         Source('system.cc')
         Source('ua2005.cc')
         Source('vtophys.cc')
