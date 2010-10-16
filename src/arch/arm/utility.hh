@@ -156,7 +156,7 @@ namespace ArmISA {
         return !cpacr.asedis && vfpEnabled(cpacr, cpsr, fpexc);
     }
 
-uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp);
+uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
     
 Fault setCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);
 Fault readCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);

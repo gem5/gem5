@@ -39,6 +39,7 @@
 
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "cpu/thread_context.hh"
 
@@ -61,8 +62,12 @@ initCPU(ThreadContext *tc, int cpuId)
         reset->invoke(tc);
 }
 
-uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp) {
+uint64_t
+getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
+{
 #if FULL_SYSTEM
+    if (size == (uint16_t)(-1))
+        size = ArmISA::MachineBytes;
     if (fp)
         panic("getArgument(): Floating point arguments not implemented\n");
 

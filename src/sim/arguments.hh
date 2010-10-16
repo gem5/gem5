@@ -45,7 +45,7 @@ class Arguments
   protected:
     ThreadContext *tc;
     int number;
-    uint64_t getArg(uint8_t size, bool fp = false);
+    uint64_t getArg(uint16_t size = (uint16_t)(-1), bool fp = false);
 
   protected:
     class Data : public RefCounted
@@ -82,7 +82,7 @@ class Arguments
 
     // for checking if an argument is NULL
     bool operator!() {
-        return getArg(TheISA::MachineBytes) == 0;
+        return getArg() == 0;
     }
 
     Arguments &operator++() {
@@ -143,7 +143,7 @@ class Arguments
 
     operator char *() {
         char *buf = data->alloc(2048);
-        CopyStringOut(tc, buf, getArg(TheISA::MachineBytes), 2048);
+        CopyStringOut(tc, buf, getArg(), 2048);
         return buf;
     }
 };

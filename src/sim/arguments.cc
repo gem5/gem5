@@ -50,7 +50,7 @@ Arguments::Data::alloc(size_t size)
 }
 
 uint64_t
-Arguments::getArg(uint8_t size, bool fp)
+Arguments::getArg(uint16_t size, bool fp)
 {
     return TheISA::getArgument(tc, number, size, fp);
 }

@@ -52,7 +52,9 @@
 
 namespace X86ISA {
 
-uint64_t getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp) {
+uint64_t
+getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
+{
 #if FULL_SYSTEM
     panic("getArgument() not implemented for x86!\n");
 #else

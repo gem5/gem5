@@ -52,7 +52,7 @@ using namespace std;
 namespace MipsISA {
 
 uint64_t
-getArgument(ThreadContext *tc, int &number, uint8_t size, bool fp)
+getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
 #if FULL_SYSTEM
     if (number < 4) {
