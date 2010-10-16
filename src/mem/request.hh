@@ -74,10 +74,6 @@ class Request : public FastAlloc
     /** This request is a clear exclusive. */
     static const FlagsType CLEAR_LL                    = 0x00004000;
 
-    /** The request should ignore unaligned access faults */
-    static const FlagsType NO_ALIGN_FAULT              = 0x00020000;
-    /** The request should ignore unaligned access faults */
-    static const FlagsType NO_HALF_WORD_ALIGN_FAULT    = 0x00040000;
     /** The request should not cause a memory access. */
     static const FlagsType NO_ACCESS                   = 0x00080000;
     /** This request will lock or unlock the accessed memory. When used with
@@ -459,24 +455,6 @@ class Request : public FastAlloc
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isMmapedIpr() const { return _flags.isSet(MMAPED_IPR); }
     bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
-
-    bool
-    isMisaligned() const
-    {
-        if (_flags.isSet(NO_ALIGN_FAULT))
-            return false;
-
-        if ((_vaddr & 0x1))
-            return true;
-
-        if (_flags.isSet(NO_HALF_WORD_ALIGN_FAULT))
-            return false;
-
-        if ((_vaddr & 0x2))
-            return true;
-
-        return false;
-    }
 };
 
 #endif // __MEM_REQUEST_HH__

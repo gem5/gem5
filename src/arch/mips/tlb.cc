@@ -302,19 +302,23 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 
     return NoFault;
 #else
-    if (IsKSeg0(req->getVaddr())) {
+    Addr vaddr = req->getVaddr();
+
+    bool misaligned = (req->getSize() - 1) & vaddr;
+
+    if (IsKSeg0(vaddr)) {
         // Address will not be translated through TLB, set response, and go!
-        req->setPaddr(KSeg02Phys(req->getVaddr()));
+        req->setPaddr(KSeg02Phys(vaddr));
         if (getOperatingMode(tc->readMiscReg(MISCREG_STATUS)) != mode_kernel ||
-                req->isMisaligned()) {
+                misaligned) {
             AddressErrorFault *Flt = new AddressErrorFault();
             /* BadVAddr must be set */
-            Flt->badVAddr = req->getVaddr();
+            Flt->badVAddr = vaddr;
             return Flt;
         }
-    } else if(IsKSeg1(req->getVaddr())) {
+    } else if(IsKSeg1(vaddr)) {
         // Address will not be translated through TLB, set response, and go!
-        req->setPaddr(KSeg02Phys(req->getVaddr()));
+        req->setPaddr(KSeg02Phys(vaddr));
     } else {
       /* 
        * This is an optimization - smallPages is updated every time a TLB
@@ -323,16 +327,16 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
        */
       Addr VPN;
       if (smallPages == 1) {
-        VPN = ((req->getVaddr() >> 11));
+        VPN = (vaddr >> 11);
       } else {
-        VPN = ((req->getVaddr() >> 11) & 0xFFFFFFFC);
+        VPN = ((vaddr >> 11) & 0xFFFFFFFC);
       }
       uint8_t Asid = req->getAsid();
-      if (req->isMisaligned()) {
+      if (misaligned) {
           // Unaligned address!
           AddressErrorFault *Flt = new AddressErrorFault();
           /* BadVAddr must be set */
-          Flt->badVAddr = req->getVaddr();
+          Flt->badVAddr = vaddr;
           return Flt;
       }
       PTE *pte = lookup(VPN,Asid);
@@ -341,7 +345,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
           /* Check for valid bits */
           int EvenOdd;
           bool Valid;
-          if ((((req->getVaddr()) >> pte->AddrShiftAmount) & 1) == 0) {
+          if ((((vaddr) >> pte->AddrShiftAmount) & 1) == 0) {
               // Check even bits
               Valid = pte->V0;
               EvenOdd = 0;
@@ -360,7 +364,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
               Flt->entryHiVPN2X = (VPN & 0x3);
 
               /* BadVAddr must be set */
-              Flt->badVAddr = req->getVaddr();
+              Flt->badVAddr = vaddr;
 
               /* Context must be set */
               Flt->contextBadVPN2 = (VPN >> 2);
@@ -375,7 +379,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
               }
               PAddr >>= (pte->AddrShiftAmount - 12);
               PAddr <<= pte->AddrShiftAmount;
-              PAddr |= ((req->getVaddr()) & pte->OffsetMask);
+              PAddr |= (vaddr & pte->OffsetMask);
               req->setPaddr(PAddr);
             }
         } else {
@@ -387,7 +391,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
             Flt->entryHiVPN2X = (VPN & 0x3);
 
             /* BadVAddr must be set */
-            Flt->badVAddr = req->getVaddr();
+            Flt->badVAddr = vaddr;
 
             /* Context must be set */
             Flt->contextBadVPN2 = (VPN >> 2);
@@ -422,37 +426,41 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 
     return NoFault;
 #else
-    if (IsKSeg0(req->getVaddr())) {
+    Addr vaddr = req->getVaddr();
+
+    bool misaligned = (req->getSize() - 1) & vaddr;
+
+    if (IsKSeg0(vaddr)) {
         // Address will not be translated through TLB, set response, and go!
-        req->setPaddr(KSeg02Phys(req->getVaddr()));
+        req->setPaddr(KSeg02Phys(vaddr));
         if (getOperatingMode(tc->readMiscReg(MISCREG_STATUS)) != mode_kernel ||
-                req->isMisaligned()) {
+                misaligned) {
             StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
             /* BadVAddr must be set */
-            Flt->badVAddr = req->getVaddr();
+            Flt->badVAddr = vaddr;
 
             return Flt;
         }
-    } else if(IsKSeg1(req->getVaddr())) {
+    } else if(IsKSeg1(vaddr)) {
       // Address will not be translated through TLB, set response, and go!
-      req->setPaddr(KSeg02Phys(req->getVaddr()));
+      req->setPaddr(KSeg02Phys(vaddr));
     } else {
         /* 
          * This is an optimization - smallPages is updated every time a TLB
          * operation is performed. That way, we don't need to look at
          * Config3 _ SP and PageGrain _ ESP every time we do a TLB lookup
          */
-        Addr VPN = ((req->getVaddr() >> 11) & 0xFFFFFFFC);
+        Addr VPN = (vaddr >> 11) & 0xFFFFFFFC;
         if (smallPages == 1) {
-            VPN = ((req->getVaddr() >> 11));
+            VPN = vaddr >> 11;
         }
         uint8_t Asid = req->getAsid();
         PTE *pte = lookup(VPN, Asid);
-        if (req->isMisaligned()) {
+        if (misaligned) {
             // Unaligned address!
             StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
             /* BadVAddr must be set */
-            Flt->badVAddr = req->getVaddr();
+            Flt->badVAddr = vaddr;
             return Flt;
         }
         if (pte != NULL) {
@@ -461,7 +469,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             int EvenOdd;
             bool Valid;
             bool Dirty;
-            if (((((req->getVaddr()) >> pte->AddrShiftAmount) & 1)) == 0) {
+            if ((((vaddr >> pte->AddrShiftAmount) & 1)) == 0) {
                 // Check even bits
                 Valid = pte->V0;
                 Dirty = pte->D0;
@@ -482,7 +490,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 Flt->entryHiVPN2X = (VPN & 0x3);
 
                 /* BadVAddr must be set */
-                Flt->badVAddr = req->getVaddr();
+                Flt->badVAddr = vaddr;
 
                 /* Context must be set */
                 Flt->contextBadVPN2 = (VPN >> 2);
@@ -498,7 +506,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                     Flt->entryHiVPN2X = (VPN & 0x3);
 
                     /* BadVAddr must be set */
-                    Flt->badVAddr = req->getVaddr();
+                    Flt->badVAddr = vaddr;
 
                     /* Context must be set */
                     Flt->contextBadVPN2 = (VPN >> 2);
@@ -512,7 +520,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 }
                 PAddr >>= (pte->AddrShiftAmount - 12);
                 PAddr <<= pte->AddrShiftAmount;
-                PAddr |= ((req->getVaddr()) & pte->OffsetMask);
+                PAddr |= (vaddr & pte->OffsetMask);
                 req->setPaddr(PAddr);
             }
         } else {
@@ -524,7 +532,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             Flt->entryHiVPN2X = (VPN & 0x3);
 
             /* BadVAddr must be set */
-            Flt->badVAddr = req->getVaddr();
+            Flt->badVAddr = vaddr;
 
             /* Context must be set */
             Flt->contextBadVPN2 = (VPN >> 2);

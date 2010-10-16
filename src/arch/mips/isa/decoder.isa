@@ -2491,12 +2491,11 @@ decode OPCODE_HI default Unknown::unknown() {
 
     0x4: decode OPCODE_LO {
         format LoadMemory {
-          0x0: lb({{ Rt.sw = Mem.sb; }}, mem_flags = NO_ALIGN_FAULT);
-          0x1: lh({{ Rt.sw = Mem.sh; }}, mem_flags = NO_HALF_WORD_ALIGN_FAULT);
+          0x0: lb({{ Rt.sw = Mem.sb; }});
+          0x1: lh({{ Rt.sw = Mem.sh; }});
             0x3: lw({{ Rt.sw = Mem.sw; }});
-            0x4: lbu({{ Rt.uw = Mem.ub;}}, mem_flags = NO_ALIGN_FAULT);
-            0x5: lhu({{ Rt.uw = Mem.uh; }},
-                     mem_flags = NO_HALF_WORD_ALIGN_FAULT);
+            0x4: lbu({{ Rt.uw = Mem.ub;}});
+            0x5: lhu({{ Rt.uw = Mem.uh; }});
         }
 
         format LoadUnalignedMemory {
@@ -2514,9 +2513,8 @@ decode OPCODE_HI default Unknown::unknown() {
 
     0x5: decode OPCODE_LO {
         format StoreMemory {
-            0x0: sb({{ Mem.ub = Rt<7:0>; }}, mem_flags = NO_ALIGN_FAULT);
-            0x1: sh({{ Mem.uh = Rt<15:0>; }},
-                    mem_flags = NO_HALF_WORD_ALIGN_FAULT);
+            0x0: sb({{ Mem.ub = Rt<7:0>; }});
+            0x1: sh({{ Mem.uh = Rt<15:0>; }});
             0x3: sw({{ Mem.uw = Rt<31:0>; }});
         }
 
