@@ -32,12 +32,10 @@
 Import('*')
 
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'mips':
-    SimObject('MipsBackdoor.py')
     SimObject('Malta.py')
 
     TraceFlag('Malta')
 
-    Source('backdoor.cc')
     Source('malta.cc')
     Source('malta_cchip.cc')
     Source('malta_io.cc')
