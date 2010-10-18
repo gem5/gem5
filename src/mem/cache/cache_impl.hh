@@ -906,7 +906,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
                 // failed StoreCond upgrade
                 assert(target->pkt->cmd == MemCmd::StoreCondReq ||
-                       target->pkt->cmd == MemCmd::StoreCondFailReq);
+                       target->pkt->cmd == MemCmd::StoreCondFailReq ||
+                       target->pkt->cmd == MemCmd::SCUpgradeFailReq);
                 completion_time = tags->getHitLatency() + pkt->finishTime;
                 target->pkt->req->setExtraData(0);
             } else {
