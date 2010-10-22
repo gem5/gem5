@@ -1,4 +1,6 @@
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// -*- mode:c++ -*-
+
+// Copyright (c) 2010 Advanced Micro Devices
 // All rights reserved.
 //
 // The license below extends only to copyright in the software and shall
@@ -9,9 +11,6 @@
 // terms below provided that you ensure that this notice is replicated
 // unmodified and in its entirety in all distributions of the software,
 // modified or unmodified, in source code or in binary form.
-//
-// Copyright (c) 2007 The Regents of The University of Michigan
-// All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,34 +37,53 @@
 //
 // Authors: Gabe Black
 
-//Include the basic format
-//Templates from this format are used later
-##include "basic.isa"
+////////////////////////////////////////////////////////////////////
+//
+// "Format" which describes an instruction whose only purpose is to
+// call a syscall in SE mode.
+//
 
-//Include a format to generate a CPUID instruction.
-##include "cpuid.isa"
+output header {{
+    class NopInst : public X86ISA::X86StaticInst
+    {
+      public:
+        static const RegIndex foldOBit = 0;
+        /// Constructor
+        NopInst(const char *_mnemonic, ExtMachInst _machInst,
+                OpClass __opClass) :
+            X86ISA::X86StaticInst(_mnemonic, _machInst, __opClass)
+        {
+        }
 
-//Include the "unknown" format
-##include "unknown.isa"
+        std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+    };
+}};
 
-//Include the "unimp" format
-##include "unimp.isa"
+output decoder {{
+    std::string NopInst::generateDisassembly(Addr PC,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
 
-//Include a format to signal m5 internal errors. This is used to indicate a
-//malfunction of the decode mechanism.
-##include "error.isa"
+        printMnemonic(response, mnemonic);
+        return response.str();
+    }
+}};
 
-//Include a format which implements a batch of instructions which do the same
-//thing on a variety of inputs
-##include "multi.isa"
+def template NopExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
 
-//Include a format for a non-microcoded nop.
-##include "nop.isa"
+def format NopInst(*opt_flags) {{
+    iop = InstObjParams(name, Name, 'NopInst', "", opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = NopExecute.subst(iop)
+}};
 
-//Include a format which implements an extra layer of decoding to handle the
-//repe and repne prefixes
-##include "string.isa"
-
-//Include a format which makes instructions who's sole purpose is to generate
-//a syscall.
-##include "syscall.isa"
