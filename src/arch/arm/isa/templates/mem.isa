@@ -131,10 +131,6 @@ def template SwapInitiateAcc {{
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, &memData);
             }
-
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
         } else {
             xc->setPredicate(false);
         }
@@ -393,11 +389,6 @@ def template StoreExInitiateAcc {{
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, NULL);
             }
-
-            // Need to write back any potential address register update
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
         } else {
             xc->setPredicate(false);
         }
@@ -430,11 +421,6 @@ def template StoreInitiateAcc {{
             if (fault == NoFault) {
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, NULL);
-            }
-
-            // Need to write back any potential address register update
-            if (fault == NoFault) {
-                %(op_wb)s;
             }
         } else {
             xc->setPredicate(false);
@@ -472,11 +458,6 @@ def template NeonStoreInitiateAcc {{
             if (fault == NoFault) {
                 fault = xc->writeBytes(memUnion.bytes, %(size)d, EA,
                                        memAccessFlags, NULL);
-            }
-
-            // Need to write back any potential address register update
-            if (fault == NoFault) {
-                %(op_wb)s;
             }
         }
 
