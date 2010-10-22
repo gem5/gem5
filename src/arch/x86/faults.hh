@@ -160,11 +160,6 @@ namespace X86ISA
         }
     };
 
-    static inline Fault genMachineCheckFault()
-    {
-        panic("Machine check fault not implemented in x86!\n");
-    }
-
     // Below is a summary of the interrupt/exception information in the
     // architecture manuals.
 
@@ -367,6 +362,11 @@ namespace X86ISA
             X86Abort("Machine-Check", "#MC", 18)
         {}
     };
+
+    static inline Fault genMachineCheckFault()
+    {
+        return new MachineCheck;
+    }
 
     class SIMDFloatingPointFault : public X86Fault
     {
