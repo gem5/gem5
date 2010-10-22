@@ -272,15 +272,6 @@ def template StoreCompleteAcc {{
         Fault %(class_name)s::completeAcc(PacketPtr, %(CPU_exec_context)s * xc,
                 Trace::InstRecord * traceData) const
         {
-            Fault fault = NoFault;
-            %(op_decl)s;
-
-            %(op_rd)s;
-            %(postacc_code)s;
-            if (fault == NoFault)
-            {
-                %(op_wb)s;
-            }
             return NoFault;
         }
 }};

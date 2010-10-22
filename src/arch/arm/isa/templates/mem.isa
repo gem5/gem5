@@ -595,23 +595,11 @@ def template StoreCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
-        %(op_decl)s;
-        %(op_rd)s;
-
-        if (%(predicate_test)s)
-        {
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0) {
+        if (machInst.itstateMask != 0) {
+            warn_once("Complete acc isn't called on normal stores in O3.");
             xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
-
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -621,23 +609,11 @@ def template NeonStoreCompleteAcc {{
             PacketPtr pkt, %(CPU_exec_context)s *xc,
             Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
-        %(op_decl)s;
-        %(op_rd)s;
-
-        if (%(predicate_test)s)
-        {
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0) {
+        if (machInst.itstateMask != 0) {
+            warn_once("Complete acc isn't called on normal stores in O3.");
             xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
-
-        return fault;
+        return NoFault;
     }
 }};
 

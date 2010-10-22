@@ -387,17 +387,11 @@ def template ClrexCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
-        %(op_decl)s;
-        %(op_rd)s;
-
-
-        if (fault == NoFault && machInst.itstateMask != 0) {
+        if (machInst.itstateMask != 0) {
             xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
-        return fault;
+        return NoFault;
     }
 }};
 

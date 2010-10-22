@@ -212,15 +212,7 @@ def template StoreCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
-
-        %(op_dest_decl)s;
-
-        if (fault == NoFault) {
-          %(op_wb)s;
-        }
-
-        return fault;
+        return NoFault;
     }
 }};
 
