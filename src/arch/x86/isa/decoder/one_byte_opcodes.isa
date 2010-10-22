@@ -402,7 +402,8 @@
                 // the first byte.
                 0x5: decode IMMEDIATE {
                     -0x80:
-                         SyscallInst::int80('xc->syscall(Rax)', IsSyscall);
+                         SyscallInst::int80('xc->syscall(Rax)',
+                                 IsSyscall, IsNonSpeculative);
                     default: int_Ib();
                 }
 #endif
