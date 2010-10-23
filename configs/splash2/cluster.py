@@ -234,7 +234,6 @@ for cluster in clusters:
     for cpu in cluster.cpus:
         cpu.icache_port = cluster.clusterbus.port
         cpu.dcache_port = cluster.clusterbus.port
-        cpu.mem = cluster.l1
 
 # ----------------------
 # Define the root

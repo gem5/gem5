@@ -217,7 +217,6 @@ system.l2.mem_side = system.membus.port
 for cpu in cpus:
     cpu.addPrivateSplitL1Caches(L1(size = options.l1size, assoc = 1),
                                 L1(size = options.l1size, assoc = 4))
-    cpu.mem = cpu.dcache
     # connect cpu level-1 caches to shared level-2 cache
     cpu.connectMemPorts(system.toL2bus)
 
