@@ -202,7 +202,6 @@ template <class Impl>
 void
 ROB<Impl>::insertInst(DynInstPtr &inst)
 {
-    //assert(numInstsInROB == countInsts());
     assert(inst);
 
     DPRINTF(ROB, "Adding inst PC %#x to the ROB.\n", inst->readPC());
@@ -234,31 +233,10 @@ ROB<Impl>::insertInst(DynInstPtr &inst)
     DPRINTF(ROB, "[tid:%i] Now has %d instructions.\n", tid, threadEntries[tid]);
 }
 
-// Whatever calls this function needs to ensure that it properly frees up
-// registers prior to this function.
-/*
-template <class Impl>
-void
-ROB<Impl>::retireHead()
-{
-    //assert(numInstsInROB == countInsts());
-    assert(numInstsInROB > 0);
-
-    ThreadID tid = (*head)->threadNumber;
-
-    retireHead(tid);
-
-    if (numInstsInROB == 0) {
-        tail = instList[tid].end();
-    }
-}
-*/
-
 template <class Impl>
 void
 ROB<Impl>::retireHead(ThreadID tid)
 {
-    //assert(numInstsInROB == countInsts());
     assert(numInstsInROB > 0);
 
     // Get the head ROB instruction.
@@ -288,18 +266,7 @@ ROB<Impl>::retireHead(ThreadID tid)
     // iterator will become invalidated.
     cpu->removeFrontInst(head_inst);
 }
-/*
-template <class Impl>
-bool
-ROB<Impl>::isHeadReady()
-{
-    if (numInstsInROB != 0) {
-        return (*head)->readyToCommit();
-    }
 
-    return false;
-}
-*/
 template <class Impl>
 bool
 ROB<Impl>::isHeadReady(ThreadID tid)
@@ -334,8 +301,6 @@ template <class Impl>
 unsigned
 ROB<Impl>::numFreeEntries()
 {
-    //assert(numInstsInROB == countInsts());
-
     return numEntries - numInstsInROB;
 }
 
@@ -532,19 +497,6 @@ ROB<Impl>::squash(InstSeqNum squash_num, ThreadID tid)
         doSquash(tid);
     }
 }
-/*
-template <class Impl>
-typename Impl::DynInstPtr
-ROB<Impl>::readHeadInst()
-{
-    if (numInstsInROB != 0) {
-        assert((*head)->isInROB()==true);
-        return *head;
-    } else {
-        return dummyInst;
-    }
-}
-*/
 
 template <class Impl>
 typename Impl::DynInstPtr
@@ -561,137 +513,13 @@ ROB<Impl>::readHeadInst(ThreadID tid)
     }
 }
 
-/*
-template <class Impl>
-uint64_t
-ROB<Impl>::readHeadPC()
-{
-    //assert(numInstsInROB == countInsts());
-
-    DynInstPtr head_inst = *head;
-
-    return head_inst->readPC();
-}
-
-template <class Impl>
-uint64_t
-ROB<Impl>::readHeadPC(ThreadID tid)
-{
-    //assert(numInstsInROB == countInsts());
-    InstIt head_thread = instList[tid].begin();
-
-    return (*head_thread)->readPC();
-}
-
-
-template <class Impl>
-uint64_t
-ROB<Impl>::readHeadNextPC()
-{
-    //assert(numInstsInROB == countInsts());
-
-    DynInstPtr head_inst = *head;
-
-    return head_inst->readNextPC();
-}
-
-template <class Impl>
-uint64_t
-ROB<Impl>::readHeadNextPC(ThreadID tid)
-{
-    //assert(numInstsInROB == countInsts());
-    InstIt head_thread = instList[tid].begin();
-
-    return (*head_thread)->readNextPC();
-}
-
-template <class Impl>
-InstSeqNum
-ROB<Impl>::readHeadSeqNum()
-{
-    //assert(numInstsInROB == countInsts());
-    DynInstPtr head_inst = *head;
-
-    return head_inst->seqNum;
-}
-
-template <class Impl>
-InstSeqNum
-ROB<Impl>::readHeadSeqNum(ThreadID tid)
-{
-    InstIt head_thread = instList[tid].begin();
-
-    return ((*head_thread)->seqNum);
-}
-
-template <class Impl>
-typename Impl::DynInstPtr
-ROB<Impl>::readTailInst()
-{
-    //assert(numInstsInROB == countInsts());
-    //assert(tail != instList[0].end());
-
-    return (*tail);
-}
-*/
 template <class Impl>
 typename Impl::DynInstPtr
 ROB<Impl>::readTailInst(ThreadID tid)
 {
-    //assert(tail_thread[tid] != instList[tid].end());
-
     InstIt tail_thread = instList[tid].end();
     tail_thread--;
 
     return *tail_thread;
 }
 
-/*
-template <class Impl>
-uint64_t
-ROB<Impl>::readTailPC()
-{
-    //assert(numInstsInROB == countInsts());
-
-    //assert(tail != instList[0].end());
-
-    return (*tail)->readPC();
-}
-
-template <class Impl>
-uint64_t
-ROB<Impl>::readTailPC(ThreadID tid)
-{
-    //assert(tail_thread[tid] != instList[tid].end());
-
-    InstIt tail_thread = instList[tid].end();
-    tail_thread--;
-
-    return (*tail_thread)->readPC();
-}
-
-template <class Impl>
-InstSeqNum
-ROB<Impl>::readTailSeqNum()
-{
-    // Return the last sequence number that has not been squashed.  Other
-    // stages can use it to squash any instructions younger than the current
-    // tail.
-    return (*tail)->seqNum;
-}
-
-template <class Impl>
-InstSeqNum
-ROB<Impl>::readTailSeqNum(ThreadID tid)
-{
-    // Return the last sequence number that has not been squashed.  Other
-    // stages can use it to squash any instructions younger than the current
-    // tail.
-    //    assert(tail_thread[tid] != instList[tid].end());
-
-    InstIt tail_thread = instList[tid].end();
-    tail_thread--;
-
-    return (*tail_thread)->seqNum;
-}
-*/
