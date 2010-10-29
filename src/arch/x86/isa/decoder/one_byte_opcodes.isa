@@ -403,7 +403,7 @@
                 0x5: decode IMMEDIATE {
                     -0x80:
                          SyscallInst::int80('xc->syscall(Rax)',
-                                 IsSyscall, IsNonSpeculative);
+                                 IsSyscall, IsNonSpeculative, IsSerializeAfter);
                     default: int_Ib();
                 }
 #endif

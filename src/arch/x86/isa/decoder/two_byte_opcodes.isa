@@ -229,7 +229,7 @@
                 }
 #else
                 0x05: SyscallInst::syscall('xc->syscall(Rax)',
-                              IsSyscall, IsNonSpeculative);
+                              IsSyscall, IsNonSpeculative, IsSerializeAfter);
 #endif
                 0x06: Inst::CLTS();
                 0x07: decode MODE_SUBMODE {
@@ -406,7 +406,7 @@
                 0x4: sysenter();
 #else
                 0x4: SyscallInst::sysenter('xc->syscall(Rax)',
-                             IsSyscall, IsNonSpeculative);
+                             IsSyscall, IsNonSpeculative, IsSerializeAfter);
 #endif
                 0x5: sysexit();
                 0x6: Inst::UD2();
