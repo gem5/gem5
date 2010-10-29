@@ -178,8 +178,7 @@ output decoder {{
             uint64_t &quotient, uint64_t &remainder)
     {
         //Check for divide by zero.
-        if (divisor == 0)
-            panic("Divide by zero!\\n");
+        assert(divisor != 0);
         //If the divisor is bigger than the dividend, don't do anything.
         if (divisor <= dividend) {
             //Shift the divisor so it's msb lines up with the dividend.
@@ -518,11 +517,15 @@ let {{
             //This is a temporary just for consistency and clarity.
             uint64_t dividend = remainder;
             //Do the division.
-            divide(dividend, divisor, quotient, remainder);
-            //Record the final results.
-            Remainder = remainder;
-            Quotient = quotient;
-            Divisor = divisor;
+            if (divisor == 0) {
+                fault = new DivideByZero;
+            } else {
+                divide(dividend, divisor, quotient, remainder);
+                //Record the final results.
+                Remainder = remainder;
+                Quotient = quotient;
+                Divisor = divisor;
+            }
             '''
 
     # Step divide
@@ -535,7 +538,9 @@ let {{
             int remaining = op2;
             //If we overshot, do nothing. This lets us unrool division loops a
             //little.
-            if (remaining) {
+            if (divisor == 0) {
+                fault = new DivideByZero;
+            } else if (remaining) {
                 if (divisor & (ULL(1) << 63)) {
                     while (remaining && !(dividend & (ULL(1) << 63))) {
                         dividend = (dividend << 1) |
