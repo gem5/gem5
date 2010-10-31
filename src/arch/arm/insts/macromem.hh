@@ -77,6 +77,18 @@ class MicroOp : public PredOp
     {
         flags[IsDelayedCommit] = true;
     }
+
+    void
+    advancePC(PCState &pcState) const
+    {
+        if (flags[IsLastMicroop]) {
+            pcState.uEnd();
+        } else if (flags[IsMicroop]) {
+            pcState.uAdvance();
+        } else {
+            pcState.advance();
+        }
+    }
 };
 
 /**

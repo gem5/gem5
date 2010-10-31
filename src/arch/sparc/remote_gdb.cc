@@ -179,12 +179,14 @@ RemoteGDB::getregs()
 {
     memset(gdbregs.regs, 0, gdbregs.size);
 
+    PCState pc = context->pcState();
+
     if (context->readMiscReg(MISCREG_PSTATE) &
            PSTATE::am) {
         uint32_t *regs;
         regs = (uint32_t*)gdbregs.regs;
-        regs[Reg32Pc] = htobe((uint32_t)context->readPC());
-        regs[Reg32Npc] = htobe((uint32_t)context->readNextPC());
+        regs[Reg32Pc] = htobe((uint32_t)pc.pc());
+        regs[Reg32Npc] = htobe((uint32_t)pc.npc());
         for(int x = RegG0; x <= RegI0 + 7; x++)
             regs[x] = htobe((uint32_t)context->readIntReg(x - RegG0));
 
@@ -193,8 +195,8 @@ RemoteGDB::getregs()
         regs[Reg32Fsr] = htobe((uint32_t)context->readMiscReg(MISCREG_FSR));
         regs[Reg32Csr] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 2));
     } else {
-        gdbregs.regs[RegPc] = htobe(context->readPC());
-        gdbregs.regs[RegNpc] = htobe(context->readNextPC());
+        gdbregs.regs[RegPc] = htobe(pc.pc());
+        gdbregs.regs[RegNpc] = htobe(pc.npc());
         for(int x = RegG0; x <= RegI0 + 7; x++)
             gdbregs.regs[x] = htobe(context->readIntReg(x - RegG0));
 
@@ -224,8 +226,13 @@ RemoteGDB::getregs()
 void
 RemoteGDB::setregs()
 {
-    context->setPC(gdbregs.regs[RegPc]);
-    context->setNextPC(gdbregs.regs[RegNpc]);
+    PCState pc;
+    pc.pc(gdbregs.regs[RegPc]);
+    pc.npc(gdbregs.regs[RegNpc]);
+    pc.nnpc(pc.npc() + sizeof(MachInst));
+    pc.upc(0);
+    pc.nupc(1);
+    context->pcState(pc);
     for(int x = RegG0; x <= RegI0 + 7; x++)
         context->setIntReg(x - RegG0, gdbregs.regs[x]);
     //Only the integer registers, pc and npc are set in netbsd
@@ -241,6 +248,6 @@ RemoteGDB::clearSingleStep()
 void
 RemoteGDB::setSingleStep()
 {
-    nextBkpt = context->readNextPC();
+    nextBkpt = context->pcState().npc();
     setTempBreakpoint(nextBkpt);
 }

@@ -115,9 +115,11 @@ AlphaFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     FaultBase::invoke(tc);
     countStat()++;
 
+    PCState pc = tc->pcState();
+
     // exception restart address
-    if (setRestartAddress() || !(tc->readPC() & 0x3))
-        tc->setMiscRegNoEffect(IPR_EXC_ADDR, tc->readPC());
+    if (setRestartAddress() || !(pc.pc() & 0x3))
+        tc->setMiscRegNoEffect(IPR_EXC_ADDR, pc.pc());
 
     if (skipFaultingInstruction()) {
         // traps...  skip faulting instruction.
@@ -125,8 +127,8 @@ AlphaFault::invoke(ThreadContext *tc, StaticInstPtr inst)
                    tc->readMiscRegNoEffect(IPR_EXC_ADDR) + 4);
     }
 
-    tc->setPC(tc->readMiscRegNoEffect(IPR_PAL_BASE) + vect());
-    tc->setNextPC(tc->readPC() + sizeof(MachInst));
+    pc.set(tc->readMiscRegNoEffect(IPR_PAL_BASE) + vect());
+    tc->pcState(pc);
 }
 
 void

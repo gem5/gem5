@@ -94,7 +94,7 @@ namespace ArmISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr pc, Addr fetchPC, MachInst inst);
+        void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
 
         //Use this to give data to the predecoder. This should be used
         //when instructions are executed in order.
@@ -121,9 +121,10 @@ namespace ArmISA
         }
 
         //This returns a constant reference to the ExtMachInst to avoid a copy
-        ExtMachInst getExtMachInst()
+        ExtMachInst getExtMachInst(PCState &pc)
         {
             ExtMachInst thisEmi = emi;
+            pc.npc(pc.pc() + getInstSize());
             emi = 0;
             return thisEmi;
         }

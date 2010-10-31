@@ -176,10 +176,7 @@ MipsLiveProcess::argsInit(int pageSize)
     setSyscallArg(tc, 1, argv_array_base);
     tc->setIntReg(StackPointerReg, stack_min);
 
-    Addr prog_entry = objFile->entryPoint();
-    tc->setPC(prog_entry);
-    tc->setNextPC(prog_entry + sizeof(MachInst));
-    tc->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    tc->pcState(objFile->entryPoint());
 }
 
 

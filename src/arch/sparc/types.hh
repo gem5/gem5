@@ -33,11 +33,14 @@
 
 #include "base/bigint.hh"
 #include "base/types.hh"
+#include "arch/generic/types.hh"
 
 namespace SparcISA
 {
     typedef uint32_t MachInst;
     typedef uint64_t ExtMachInst;
+
+    typedef GenericISA::DelaySlotUPCState<MachInst> PCState;
 
     typedef Twin64_t LargestRead;
 

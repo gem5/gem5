@@ -39,11 +39,21 @@
 #include "base/misc.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
 class ThreadContext;
 
 namespace MipsISA {
+
+inline PCState
+buildRetPC(const PCState &curPC, const PCState &callPC)
+{
+    PCState ret = callPC;
+    ret.advance();
+    ret.pc(curPC.npc());
+    return ret;
+}
 
 uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 
@@ -104,6 +114,12 @@ void copyRegs(ThreadContext *src, ThreadContext *dest);
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 void skipFunction(ThreadContext *tc);
+
+inline void
+advancePC(PCState &pc, const StaticInstPtr inst)
+{
+    pc.advance();
+}
 
 };
 

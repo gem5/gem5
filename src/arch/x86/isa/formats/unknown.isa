@@ -47,13 +47,13 @@ output header {{
         /**
          * Class for Unknown/Illegal instructions
          */
-        class Unknown : public StaticInst
+        class Unknown : public X86ISA::X86StaticInst
         {
           public:
 
             // Constructor
             Unknown(ExtMachInst _machInst) :
-                    StaticInst("unknown", _machInst, No_OpClass)
+                    X86ISA::X86StaticInst("unknown", _machInst, No_OpClass)
             {
             }
 

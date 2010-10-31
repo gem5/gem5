@@ -93,7 +93,9 @@ let {{
             cpsrWriteByInstr(cpsr | CondCodes, Spsr, 0xF, true, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
-        IWNPC = cSwap(Mem.uw, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
+        ArmISA::PCState pc = PCS;
+        pc.instIWNPC(cSwap(Mem.uw, cpsr.e) | ((Spsr & 0x20) ? 1 : 0));
+        PCS = pc;
     '''
     microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
                                       'MicroMemOp',

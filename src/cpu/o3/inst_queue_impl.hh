@@ -504,8 +504,8 @@ InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
     // Make sure the instruction is valid
     assert(new_inst);
 
-    DPRINTF(IQ, "Adding instruction [sn:%lli] PC %#x to the IQ.\n",
-            new_inst->seqNum, new_inst->readPC());
+    DPRINTF(IQ, "Adding instruction [sn:%lli] PC %s to the IQ.\n",
+            new_inst->seqNum, new_inst->pcState());
 
     assert(freeEntries != 0);
 
@@ -547,9 +547,9 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &new_inst)
 
     nonSpecInsts[new_inst->seqNum] = new_inst;
 
-    DPRINTF(IQ, "Adding non-speculative instruction [sn:%lli] PC %#x "
+    DPRINTF(IQ, "Adding non-speculative instruction [sn:%lli] PC %s "
             "to the IQ.\n",
-            new_inst->seqNum, new_inst->readPC());
+            new_inst->seqNum, new_inst->pcState());
 
     assert(freeEntries != 0);
 
@@ -767,9 +767,9 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 }
             }
 
-            DPRINTF(IQ, "Thread %i: Issuing instruction PC %#x "
+            DPRINTF(IQ, "Thread %i: Issuing instruction PC %s "
                     "[sn:%lli]\n",
-                    tid, issuing_inst->readPC(),
+                    tid, issuing_inst->pcState(),
                     issuing_inst->seqNum);
 
             readyInsts[op_class].pop();
@@ -910,7 +910,7 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 
         while (dep_inst) {
             DPRINTF(IQ, "Waking up a dependent instruction, [sn:%lli] "
-                    "PC%#x.\n", dep_inst->seqNum, dep_inst->readPC());
+                    "PC %s.\n", dep_inst->seqNum, dep_inst->pcState());
 
             // Might want to give more information to the instruction
             // so that it knows which of its source registers is
@@ -955,8 +955,8 @@ InstructionQueue<Impl>::addReadyMemInst(DynInstPtr &ready_inst)
     }
 
     DPRINTF(IQ, "Instruction is ready to issue, putting it onto "
-            "the ready list, PC %#x opclass:%i [sn:%lli].\n",
-            ready_inst->readPC(), op_class, ready_inst->seqNum);
+            "the ready list, PC %s opclass:%i [sn:%lli].\n",
+            ready_inst->pcState(), op_class, ready_inst->seqNum);
 }
 
 template <class Impl>
@@ -981,8 +981,8 @@ InstructionQueue<Impl>::completeMemInst(DynInstPtr &completed_inst)
 {
     ThreadID tid = completed_inst->threadNumber;
 
-    DPRINTF(IQ, "Completing mem instruction PC:%#x [sn:%lli]\n",
-            completed_inst->readPC(), completed_inst->seqNum);
+    DPRINTF(IQ, "Completing mem instruction PC: %s [sn:%lli]\n",
+            completed_inst->pcState(), completed_inst->seqNum);
 
     ++freeEntries;
 
@@ -1050,9 +1050,8 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
             (squashed_inst->isMemRef() &&
              !squashed_inst->memOpDone)) {
 
-            DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %#x "
-                    "squashed.\n",
-                    tid, squashed_inst->seqNum, squashed_inst->readPC());
+            DPRINTF(IQ, "[tid:%i]: Instruction [sn:%lli] PC %s squashed.\n",
+                    tid, squashed_inst->seqNum, squashed_inst->pcState());
 
             // Remove the instruction from the dependency list.
             if (!squashed_inst->isNonSpeculative() &&
@@ -1147,9 +1146,9 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
             if (src_reg >= numPhysRegs) {
                 continue;
             } else if (regScoreboard[src_reg] == false) {
-                DPRINTF(IQ, "Instruction PC %#x has src reg %i that "
+                DPRINTF(IQ, "Instruction PC %s has src reg %i that "
                         "is being added to the dependency chain.\n",
-                        new_inst->readPC(), src_reg);
+                        new_inst->pcState(), src_reg);
 
                 dependGraph.insert(src_reg, new_inst);
 
@@ -1157,9 +1156,9 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
                 // was added to the dependency graph.
                 return_val = true;
             } else {
-                DPRINTF(IQ, "Instruction PC %#x has src reg %i that "
+                DPRINTF(IQ, "Instruction PC %s has src reg %i that "
                         "became ready before it reached the IQ.\n",
-                        new_inst->readPC(), src_reg);
+                        new_inst->pcState(), src_reg);
                 // Mark a register ready within the instruction.
                 new_inst->markSrcRegReady(src_reg_idx);
             }
@@ -1228,8 +1227,8 @@ InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
         OpClass op_class = inst->opClass();
 
         DPRINTF(IQ, "Instruction is ready to issue, putting it onto "
-                "the ready list, PC %#x opclass:%i [sn:%lli].\n",
-                inst->readPC(), op_class, inst->seqNum);
+                "the ready list, PC %s opclass:%i [sn:%lli].\n",
+                inst->pcState(), op_class, inst->seqNum);
 
         readyInsts[op_class].push(inst);
 
@@ -1299,7 +1298,7 @@ InstructionQueue<Impl>::dumpLists()
     cprintf("Non speculative list: ");
 
     while (non_spec_it != non_spec_end_it) {
-        cprintf("%#x [sn:%lli]", (*non_spec_it).second->readPC(),
+        cprintf("%s [sn:%lli]", (*non_spec_it).second->pcState(),
                 (*non_spec_it).second->seqNum);
         ++non_spec_it;
     }
@@ -1348,9 +1347,9 @@ InstructionQueue<Impl>::dumpInsts()
                 }
             }
 
-            cprintf("PC:%#x\n[sn:%lli]\n[tid:%i]\n"
+            cprintf("PC: %s\n[sn:%lli]\n[tid:%i]\n"
                     "Issued:%i\nSquashed:%i\n",
-                    (*inst_list_it)->readPC(),
+                    (*inst_list_it)->pcState(),
                     (*inst_list_it)->seqNum,
                     (*inst_list_it)->threadNumber,
                     (*inst_list_it)->isIssued(),
@@ -1390,9 +1389,9 @@ InstructionQueue<Impl>::dumpInsts()
             }
         }
 
-        cprintf("PC:%#x\n[sn:%lli]\n[tid:%i]\n"
+        cprintf("PC: %s\n[sn:%lli]\n[tid:%i]\n"
                 "Issued:%i\nSquashed:%i\n",
-                (*inst_list_it)->readPC(),
+                (*inst_list_it)->pcState(),
                 (*inst_list_it)->seqNum,
                 (*inst_list_it)->threadNumber,
                 (*inst_list_it)->isIssued(),

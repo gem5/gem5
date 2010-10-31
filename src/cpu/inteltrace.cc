@@ -48,7 +48,7 @@ Trace::IntelTraceRecord::dump()
 {
     ostream &outs = Trace::output();
     ccprintf(outs, "%7d ) ", when);
-    outs << "0x" << hex << PC << ":\t";
+    outs << "0x" << hex << pc.instAddr() << ":\t";
     if (staticInst->isLoad()) {
         ccprintf(outs, "<RD %#x>", addr);
     } else if (staticInst->isStore()) {

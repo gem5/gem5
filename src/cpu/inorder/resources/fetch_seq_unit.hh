@@ -80,22 +80,7 @@ class FetchSeqUnit : public Resource {
     bool pcValid[ThePipeline::MaxThreads];
     int pcBlockStage[ThePipeline::MaxThreads];
 
-    TheISA::IntReg PC[ThePipeline::MaxThreads];
-    TheISA::IntReg nextPC[ThePipeline::MaxThreads];
-    TheISA::IntReg nextNPC[ThePipeline::MaxThreads];
-
-    /** Tracks delay slot information for threads in ISAs which use
-     *	delay slots;
-     */
-    struct DelaySlotInfo {
-        InstSeqNum delaySlotSeqNum;
-        InstSeqNum branchSeqNum;
-        int numInsts;
-        Addr targetAddr;
-        bool targetReady;
-    };
-
-    DelaySlotInfo delaySlotInfo[ThePipeline::MaxThreads];
+    TheISA::PCState pc[ThePipeline::MaxThreads];
 
     /** Squash Seq. Nums*/
     InstSeqNum squashSeqNum[ThePipeline::MaxThreads];

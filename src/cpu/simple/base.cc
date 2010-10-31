@@ -368,19 +368,13 @@ BaseSimpleCPU::checkForInterrupts()
 void
 BaseSimpleCPU::setupFetchRequest(Request *req)
 {
-    Addr threadPC = thread->readPC();
+    Addr instAddr = thread->instAddr();
 
     // set up memory request for instruction fetch
-#if ISA_HAS_DELAY_SLOT
-    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p NNPC:%08p\n",threadPC,
-            thread->readNextPC(),thread->readNextNPC());
-#else
-    DPRINTF(Fetch,"Fetch: PC:%08p NPC:%08p\n",threadPC,
-            thread->readNextPC());
-#endif
+    DPRINTF(Fetch, "Fetch: PC:%08p\n", instAddr);
 
-    Addr fetchPC = (threadPC & PCMask) + fetchOffset;
-    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH, threadPC);
+    Addr fetchPC = (instAddr & PCMask) + fetchOffset;
+    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH, instAddr);
 }
 
 
@@ -399,11 +393,12 @@ BaseSimpleCPU::preExecute()
     // decode the instruction
     inst = gtoh(inst);
 
-    MicroPC upc = thread->readMicroPC();
+    TheISA::PCState pcState = thread->pcState();
 
-    if (isRomMicroPC(upc)) {
+    if (isRomMicroPC(pcState.microPC())) {
         stayAtPC = false;
-        curStaticInst = microcodeRom.fetchMicroop(upc, curMacroStaticInst);
+        curStaticInst = microcodeRom.fetchMicroop(pcState.microPC(),
+                                                  curMacroStaticInst);
     } else if (!curMacroStaticInst) {
         //We're not in the middle of a macro instruction
         StaticInstPtr instPtr = NULL;
@@ -412,21 +407,19 @@ BaseSimpleCPU::preExecute()
         //This should go away once the constructor can be set up properly
         predecoder.setTC(thread->getTC());
         //If more fetch data is needed, pass it in.
-        Addr fetchPC = (thread->readPC() & PCMask) + fetchOffset;
+        Addr fetchPC = (pcState.instAddr() & PCMask) + fetchOffset;
         //if(predecoder.needMoreBytes())
-            predecoder.moreBytes(thread->readPC(), fetchPC, inst);
+            predecoder.moreBytes(pcState, fetchPC, inst);
         //else
         //    predecoder.process();
 
         //If an instruction is ready, decode it. Otherwise, we'll have to
         //fetch beyond the MachInst at the current pc.
         if (predecoder.extMachInstReady()) {
-#if THE_ISA == X86_ISA || THE_ISA == ARM_ISA
-            thread->setNextPC(thread->readPC() + predecoder.getInstSize());
-#endif // X86_ISA
             stayAtPC = false;
-            instPtr = StaticInst::decode(predecoder.getExtMachInst(),
-                                         thread->readPC());
+            ExtMachInst machInst = predecoder.getExtMachInst(pcState);
+            thread->pcState(pcState);
+            instPtr = StaticInst::decode(machInst, pcState.instAddr());
         } else {
             stayAtPC = true;
             fetchOffset += sizeof(MachInst);
@@ -436,13 +429,13 @@ BaseSimpleCPU::preExecute()
         //out micro ops
         if (instPtr && instPtr->isMacroop()) {
             curMacroStaticInst = instPtr;
-            curStaticInst = curMacroStaticInst->fetchMicroop(upc);
+            curStaticInst = curMacroStaticInst->fetchMicroop(pcState.microPC());
         } else {
             curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
-        curStaticInst = curMacroStaticInst->fetchMicroop(upc);
+        curStaticInst = curMacroStaticInst->fetchMicroop(pcState.microPC());
     }
 
     //If we decoded an instruction this "tick", record information about it.
@@ -450,8 +443,7 @@ BaseSimpleCPU::preExecute()
     {
 #if TRACING_ON
         traceData = tracer->getInstRecord(curTick, tc,
-                curStaticInst, thread->readPC(),
-                curMacroStaticInst, thread->readMicroPC());
+                curStaticInst, thread->pcState(), curMacroStaticInst);
 
         DPRINTF(Decode,"Decode: Decoded %s instruction: 0x%x\n",
                 curStaticInst->getName(), curStaticInst->machInst);
@@ -462,10 +454,14 @@ BaseSimpleCPU::preExecute()
 void
 BaseSimpleCPU::postExecute()
 {
+    assert(curStaticInst);
+
+    TheISA::PCState pc = tc->pcState();
+    Addr instAddr = pc.instAddr();
 #if FULL_SYSTEM
-    if (thread->profile && curStaticInst) {
+    if (thread->profile) {
         bool usermode = TheISA::inUserMode(tc);
-        thread->profilePC = usermode ? 1 : thread->readPC();
+        thread->profilePC = usermode ? 1 : instAddr;
         ProfileNode *node = thread->profile->consume(tc, curStaticInst);
         if (node)
             thread->profileNode = node;
@@ -482,10 +478,10 @@ BaseSimpleCPU::postExecute()
     }
 
     if (CPA::available()) {
-        CPA::cpa()->swAutoBegin(tc, thread->readNextPC());
+        CPA::cpa()->swAutoBegin(tc, pc.nextInstAddr());
     }
 
-    traceFunctions(thread->readPC());
+    traceFunctions(instAddr);
 
     if (traceData) {
         traceData->dump();
@@ -505,30 +501,12 @@ BaseSimpleCPU::advancePC(Fault fault)
         fault->invoke(tc, curStaticInst);
         predecoder.reset();
     } else {
-        //If we're at the last micro op for this instruction
-        if (curStaticInst && curStaticInst->isLastMicroop()) {
-            //We should be working with a macro op or be in the ROM
-            assert(curMacroStaticInst ||
-                    isRomMicroPC(thread->readMicroPC()));
-            //Close out this macro op, and clean up the
-            //microcode state
-            curMacroStaticInst = StaticInst::nullStaticInstPtr;
-            thread->setMicroPC(normalMicroPC(0));
-            thread->setNextMicroPC(normalMicroPC(1));
-        }
-        //If we're still in a macro op
-        if (curMacroStaticInst || isRomMicroPC(thread->readMicroPC())) {
-            //Advance the micro pc
-            thread->setMicroPC(thread->readNextMicroPC());
-            //Advance the "next" micro pc. Note that there are no delay
-            //slots, and micro ops are "word" addressed.
-            thread->setNextMicroPC(thread->readNextMicroPC() + 1);
-        } else {
-            // go to the next instruction
-            thread->setPC(thread->readNextPC());
-            thread->setNextPC(thread->readNextNPC());
-            thread->setNextNPC(thread->readNextNPC() + sizeof(MachInst));
-            assert(thread->readNextPC() != thread->readNextNPC());
+        if (curStaticInst) {
+            if (curStaticInst->isLastMicroop())
+                curMacroStaticInst = StaticInst::nullStaticInstPtr;
+            TheISA::PCState pcState = thread->pcState();
+            TheISA::advancePC(pcState, curStaticInst);
+            thread->pcState(pcState);
         }
     }
 }

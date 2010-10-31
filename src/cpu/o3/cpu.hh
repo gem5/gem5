@@ -444,35 +444,20 @@ class FullO3CPU : public BaseO3CPU
 
     void setArchFloatRegInt(int reg_idx, uint64_t val, ThreadID tid);
 
-    /** Reads the commit PC of a specific thread. */
-    Addr readPC(ThreadID tid);
+    /** Sets the commit PC state of a specific thread. */
+    void pcState(const TheISA::PCState &newPCState, ThreadID tid);
 
-    /** Sets the commit PC of a specific thread. */
-    void setPC(Addr new_PC, ThreadID tid);
+    /** Reads the commit PC state of a specific thread. */
+    TheISA::PCState pcState(ThreadID tid);
+
+    /** Reads the commit PC of a specific thread. */
+    Addr instAddr(ThreadID tid);
 
     /** Reads the commit micro PC of a specific thread. */
-    Addr readMicroPC(ThreadID tid);
-
-    /** Sets the commmit micro PC of a specific thread. */
-    void setMicroPC(Addr new_microPC, ThreadID tid);
+    MicroPC microPC(ThreadID tid);
 
     /** Reads the next PC of a specific thread. */
-    Addr readNextPC(ThreadID tid);
-
-    /** Sets the next PC of a specific thread. */
-    void setNextPC(Addr val, ThreadID tid);
-
-    /** Reads the next NPC of a specific thread. */
-    Addr readNextNPC(ThreadID tid);
-
-    /** Sets the next NPC of a specific thread. */
-    void setNextNPC(Addr val, ThreadID tid);
-
-    /** Reads the commit next micro PC of a specific thread. */
-    Addr readNextMicroPC(ThreadID tid);
-
-    /** Sets the commit next micro PC of a specific thread. */
-    void setNextMicroPC(Addr val, ThreadID tid);
+    Addr nextInstAddr(ThreadID tid);
 
     /** Initiates a squash of all in-flight instructions for a given
      * thread.  The source of the squash is an external update of

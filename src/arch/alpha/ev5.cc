@@ -60,8 +60,7 @@ initCPU(ThreadContext *tc, int cpuId)
 
     AlphaFault *reset = new ResetFault;
 
-    tc->setPC(tc->readMiscRegNoEffect(IPR_PAL_BASE) + reset->vect());
-    tc->setNextPC(tc->readPC() + sizeof(MachInst));
+    tc->pcState(tc->readMiscRegNoEffect(IPR_PAL_BASE) + reset->vect());
 
     delete reset;
 }
@@ -494,12 +493,14 @@ using namespace AlphaISA;
 Fault
 SimpleThread::hwrei()
 {
-    if (!(readPC() & 0x3))
+    PCState pc = pcState();
+    if (!(pc.pc() & 0x3))
         return new UnimplementedOpcodeFault;
 
-    setNextPC(readMiscRegNoEffect(IPR_EXC_ADDR));
+    pc.npc(readMiscRegNoEffect(IPR_EXC_ADDR));
+    pcState(pc);
 
-    CPA::cpa()->swAutoBegin(tc, readNextPC());
+    CPA::cpa()->swAutoBegin(tc, pc.npc());
 
     if (!misspeculating()) {
         if (kernelStats)

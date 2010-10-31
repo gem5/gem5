@@ -69,41 +69,39 @@ SparcLiveProcess::SparcLiveProcess(LiveProcessParams * params,
 
 void SparcLiveProcess::handleTrap(int trapNum, ThreadContext *tc)
 {
+    PCState pc = tc->pcState();
     switch(trapNum)
     {
       case 0x01: //Software breakpoint
-        warn("Software breakpoint encountered at pc %#x.\n", tc->readPC());
+        warn("Software breakpoint encountered at pc %#x.\n", pc.pc());
         break;
       case 0x02: //Division by zero
-        warn("Software signaled a division by zero at pc %#x.\n",
-                tc->readPC());
+        warn("Software signaled a division by zero at pc %#x.\n", pc.pc());
         break;
       case 0x03: //Flush window trap
         flushWindows(tc);
         break;
       case 0x04: //Clean windows
         warn("Ignoring process request for clean register "
-                "windows at pc %#x.\n", tc->readPC());
+                "windows at pc %#x.\n", pc.pc());
         break;
       case 0x05: //Range check
-        warn("Software signaled a range check at pc %#x.\n",
-                tc->readPC());
+        warn("Software signaled a range check at pc %#x.\n", pc.pc());
         break;
       case 0x06: //Fix alignment
         warn("Ignoring process request for os assisted unaligned accesses "
-                "at pc %#x.\n", tc->readPC());
+                "at pc %#x.\n", pc.pc());
         break;
       case 0x07: //Integer overflow
-        warn("Software signaled an integer overflow at pc %#x.\n",
-                tc->readPC());
+        warn("Software signaled an integer overflow at pc %#x.\n", pc.pc());
         break;
       case 0x32: //Get integer condition codes
         warn("Ignoring process request to get the integer condition codes "
-                "at pc %#x.\n", tc->readPC());
+                "at pc %#x.\n", pc.pc());
         break;
       case 0x33: //Set integer condition codes
         warn("Ignoring process request to set the integer condition codes "
-                "at pc %#x.\n", tc->readPC());
+                "at pc %#x.\n", pc.pc());
         break;
       default:
         panic("Unimplemented trap to operating system: trap number %#x.\n", trapNum);
@@ -402,10 +400,7 @@ SparcLiveProcess::argsInit(int pageSize)
     // don't have anything like that, it should be set to 0.
     tc->setIntReg(1, 0);
 
-    Addr prog_entry = objFile->entryPoint();
-    tc->setPC(prog_entry);
-    tc->setNextPC(prog_entry + sizeof(MachInst));
-    tc->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    tc->pcState(objFile->entryPoint());
 
     //Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);

@@ -449,27 +449,18 @@ template<class Impl>
 void
 DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 {
-    DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, PC: %#x "
-            "[sn:%i].\n", tid, inst->readPC(), inst->seqNum);
+    DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, PC: %s "
+            "[sn:%i].\n", tid, inst->pcState(), inst->seqNum);
 
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
-    toCommit->mispredPC[tid] = inst->readPC();
+    toCommit->mispredPC[tid] = inst->instAddr();
     toCommit->branchMispredict[tid] = true;
 
-#if ISA_HAS_DELAY_SLOT
-    int instSize = sizeof(TheISA::MachInst);
-    toCommit->branchTaken[tid] =
-        !(inst->readNextPC() + instSize == inst->readNextNPC() &&
-          (inst->readNextPC() == inst->readPC() + instSize ||
-           inst->readNextPC() == inst->readPC() + 2 * instSize));
-#else
-    toCommit->branchTaken[tid] = inst->readNextPC() !=
-        (inst->readPC() + sizeof(TheISA::MachInst));
-#endif
-    toCommit->nextPC[tid] = inst->readNextPC();
-    toCommit->nextNPC[tid] = inst->readNextNPC();
-    toCommit->nextMicroPC[tid] = inst->readNextMicroPC();
+    toCommit->branchTaken[tid] = inst->pcState().branching();
+    TheISA::PCState pc = inst->pcState();
+    TheISA::advancePC(pc, inst->staticInst);
+    toCommit->pc[tid] = pc;
 
     toCommit->includeSquashInst[tid] = false;
 
@@ -481,12 +472,13 @@ void
 DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, "
-            "PC: %#x [sn:%i].\n", tid, inst->readPC(), inst->seqNum);
+            "PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
 
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
-    toCommit->nextPC[tid] = inst->readNextPC();
-    toCommit->nextNPC[tid] = inst->readNextNPC();
+    TheISA::PCState pc = inst->pcState();
+    TheISA::advancePC(pc, inst->staticInst);
+    toCommit->pc[tid] = pc;
     toCommit->branchMispredict[tid] = false;
 
     toCommit->includeSquashInst[tid] = false;
@@ -499,12 +491,11 @@ void
 DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Memory blocked, squashing load and younger insts, "
-            "PC: %#x [sn:%i].\n", tid, inst->readPC(), inst->seqNum);
+            "PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
 
     toCommit->squash[tid] = true;
     toCommit->squashedSeqNum[tid] = inst->seqNum;
-    toCommit->nextPC[tid] = inst->readPC();
-    toCommit->nextNPC[tid] = inst->readNextPC();
+    toCommit->pc[tid] = inst->pcState();
     toCommit->branchMispredict[tid] = false;
 
     // Must include the broadcasted SN in the squash.
@@ -628,9 +619,9 @@ DefaultIEW<Impl>::skidInsert(ThreadID tid)
 
         insts[tid].pop();
 
-        DPRINTF(Decode,"[tid:%i]: Inserting [sn:%lli] PC:%#x into "
+        DPRINTF(Decode,"[tid:%i]: Inserting [sn:%lli] PC:%s into "
                 "dispatch skidBuffer %i\n",tid, inst->seqNum,
-                inst->readPC(),tid);
+                inst->pcState(),tid);
 
         skidBuffer[tid].push(inst);
     }
@@ -986,9 +977,9 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
         // Make sure there's a valid instruction there.
         assert(inst);
 
-        DPRINTF(IEW, "[tid:%i]: Issue: Adding PC %#x [sn:%lli] [tid:%i] to "
+        DPRINTF(IEW, "[tid:%i]: Issue: Adding PC %s [sn:%lli] [tid:%i] to "
                 "IQ.\n",
-                tid, inst->readPC(), inst->seqNum, inst->threadNumber);
+                tid, inst->pcState(), inst->seqNum, inst->threadNumber);
 
         // Be sure to mark these instructions as ready so that the
         // commit stage can go ahead and execute them, and mark
@@ -1165,7 +1156,7 @@ DefaultIEW<Impl>::printAvailableInsts()
 
         if (inst%3==0) std::cout << "\n\t";
 
-        std::cout << "PC: " << fromIssue->insts[inst]->readPC()
+        std::cout << "PC: " << fromIssue->insts[inst]->pcState()
              << " TN: " << fromIssue->insts[inst]->threadNumber
              << " SN: " << fromIssue->insts[inst]->seqNum << " | ";
 
@@ -1205,8 +1196,8 @@ DefaultIEW<Impl>::executeInsts()
 
         DynInstPtr inst = instQueue.getInstToExecute();
 
-        DPRINTF(IEW, "Execute: Processing PC %#x, [tid:%i] [sn:%i].\n",
-                inst->readPC(), inst->threadNumber,inst->seqNum);
+        DPRINTF(IEW, "Execute: Processing PC %s, [tid:%i] [sn:%i].\n",
+                inst->pcState(), inst->threadNumber,inst->seqNum);
 
         // Check if the instruction is squashed; if so then skip it
         if (inst->isSquashed()) {
@@ -1298,10 +1289,9 @@ DefaultIEW<Impl>::executeInsts()
 
                 DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
                 DPRINTF(IEW, "Predicted target was PC:%#x, NPC:%#x.\n",
-                        inst->readPredPC(), inst->readPredNPC());
-                DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x,"
-                        " NPC: %#x.\n", inst->readNextPC(),
-                        inst->readNextNPC());
+                        inst->predInstAddr(), inst->predNextInstAddr());
+                DPRINTF(IEW, "Execute: Redirecting fetch to PC: %s.\n",
+                        inst->pcState(), inst->nextInstAddr());
                 // If incorrect, then signal the ROB that it must be squashed.
                 squashDueToBranch(inst, tid);
 
@@ -1318,16 +1308,11 @@ DefaultIEW<Impl>::executeInsts()
                 DynInstPtr violator;
                 violator = ldstQueue.getMemDepViolator(tid);
 
-                DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %#x "
-                        "[sn:%lli], inst PC: %#x [sn:%lli]. Addr is: %#x.\n",
-                        violator->readPC(), violator->seqNum,
-                        inst->readPC(), inst->seqNum, inst->physEffAddr);
-                // Ensure the violating instruction is older than
-                // current squash
-/*                if (fetchRedirect[tid] &&
-                    violator->seqNum >= toCommit->squashedSeqNum[tid] + 1)
-                    continue;
-*/
+                DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %s "
+                        "[sn:%lli], inst PC: %s [sn:%lli]. Addr is: %#x.\n",
+                        violator->pcState(), violator->seqNum,
+                        inst->pcState(), inst->seqNum, inst->physEffAddr);
+
                 fetchRedirect[tid] = true;
 
                 // Tell the instruction queue that a violation has occured.
@@ -1342,8 +1327,8 @@ DefaultIEW<Impl>::executeInsts()
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "Load operation couldn't execute because the "
-                        "memory system is blocked.  PC: %#x [sn:%lli]\n",
-                        inst->readPC(), inst->seqNum);
+                        "memory system is blocked.  PC: %s [sn:%lli]\n",
+                        inst->pcState(), inst->seqNum);
 
                 squashDueToMemBlocked(inst, tid);
             }
@@ -1356,8 +1341,9 @@ DefaultIEW<Impl>::executeInsts()
                 DynInstPtr violator = ldstQueue.getMemDepViolator(tid);
 
                 DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
-                        "%#x, inst PC: %#x.  Addr is: %#x.\n",
-                        violator->readPC(), inst->readPC(), inst->physEffAddr);
+                        "%s, inst PC: %s.  Addr is: %#x.\n",
+                        violator->pcState(), inst->pcState(),
+                        inst->physEffAddr);
                 DPRINTF(IEW, "Violation will not be handled because "
                         "already squashing\n");
 
@@ -1366,8 +1352,8 @@ DefaultIEW<Impl>::executeInsts()
             if (ldstQueue.loadBlocked(tid) &&
                 !ldstQueue.isLoadBlockedHandled(tid)) {
                 DPRINTF(IEW, "Load operation couldn't execute because the "
-                        "memory system is blocked.  PC: %#x [sn:%lli]\n",
-                        inst->readPC(), inst->seqNum);
+                        "memory system is blocked.  PC: %s [sn:%lli]\n",
+                        inst->pcState(), inst->seqNum);
                 DPRINTF(IEW, "Blocked load will not be handled because "
                         "already squashing\n");
 
@@ -1408,8 +1394,8 @@ DefaultIEW<Impl>::writebackInsts()
         DynInstPtr inst = toCommit->insts[inst_num];
         ThreadID tid = inst->threadNumber;
 
-        DPRINTF(IEW, "Sending instructions to commit, [sn:%lli] PC %#x.\n",
-                inst->seqNum, inst->readPC());
+        DPRINTF(IEW, "Sending instructions to commit, [sn:%lli] PC %s.\n",
+                inst->seqNum, inst->pcState());
 
         iewInstsToCommit[tid]++;
 
@@ -1613,10 +1599,10 @@ DefaultIEW<Impl>::checkMisprediction(DynInstPtr &inst)
 
             DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
             DPRINTF(IEW, "Predicted target was PC:%#x, NPC:%#x.\n",
-                    inst->readPredPC(), inst->readPredNPC());
+                    inst->predInstAddr(), inst->predNextInstAddr());
             DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x,"
-                    " NPC: %#x.\n", inst->readNextPC(),
-                    inst->readNextNPC());
+                    " NPC: %#x.\n", inst->nextInstAddr(),
+                    inst->nextInstAddr());
             // If incorrect, then signal the ROB that it must be squashed.
             squashDueToBranch(inst, tid);
 

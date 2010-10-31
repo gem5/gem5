@@ -83,11 +83,12 @@ class BPredUnit
      * Predicts whether or not the instruction is a taken branch, and the
      * target of the branch if it is taken.
      * @param inst The branch instruction.
-     * @param pred_PC The predicted PC is passed back through this parameter.
+     * @param predPC The predicted PC is passed back through this parameter.
      * @param tid The thread id.
      * @return Returns if the branch is taken or not.
      */
-    bool predict(ThePipeline::DynInstPtr &inst, Addr &pred_PC, ThreadID tid);
+    bool predict(ThePipeline::DynInstPtr &inst,
+            TheISA::PCState &predPC, ThreadID tid);
 
     // @todo: Rename this function.
     void BPUncond(void * &bp_history);
@@ -114,12 +115,13 @@ class BPredUnit
      * corrects that sn's update with the proper address and taken/not taken.
      * @param squashed_sn The sequence number to squash any younger updates up
      * until.
-     * @param corr_target The correct branch target.
+     * @param corrTarget The correct branch target.
      * @param actually_taken The correct branch direction.
      * @param tid The thread id.
      */
-    void squash(const InstSeqNum &squashed_sn, const Addr &corr_target,
-                bool actually_taken, ThreadID tid, ThreadID asid = 0);
+    void squash(const InstSeqNum &squashed_sn,
+                const TheISA::PCState &corrTarget, bool actually_taken,
+                ThreadID tid, ThreadID asid = 0);
 
     /**
      * @param bp_history Pointer to the history object.  The predictor
@@ -134,7 +136,7 @@ class BPredUnit
      * has the branch predictor state associated with the lookup.
      * @return Whether the branch is taken or not taken.
      */
-    bool BPLookup(Addr &inst_PC, void * &bp_history);
+    bool BPLookup(Addr instPC, void * &bp_history);
 
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
@@ -149,26 +151,26 @@ class BPredUnit
      * @param inst_PC The PC to look up.
      * @return The address of the target of the branch.
      */
-    Addr BTBLookup(Addr &inst_PC)
-    { return BTB.lookup(inst_PC, 0); }
+    TheISA::PCState BTBLookup(Addr instPC)
+    { return BTB.lookup(instPC, 0); }
 
     /**
      * Updates the BP with taken/not taken information.
-     * @param inst_PC The branch's PC that will be updated.
+     * @param instPC The branch's PC that will be updated.
      * @param taken Whether the branch was taken or not taken.
      * @param bp_history Pointer to the branch predictor state that is
      * associated with the branch lookup that is being updated.
      * @todo Make this update flexible enough to handle a global predictor.
      */
-    void BPUpdate(Addr &inst_PC, bool taken, void *bp_history);
+    void BPUpdate(Addr instPC, bool taken, void *bp_history);
 
     /**
      * Updates the BTB with the target of a branch.
      * @param inst_PC The branch's PC that will be updated.
      * @param target_PC The branch's target that will be added to the BTB.
      */
-    void BTBUpdate(Addr &inst_PC, Addr &target_PC)
-    { BTB.update(inst_PC, target_PC,0); }
+    void BTBUpdate(Addr instPC, const TheISA::PCState &targetPC)
+    { BTB.update(instPC, targetPC, 0); }
 
     void dump();
 
@@ -181,22 +183,22 @@ class BPredUnit
          * Makes a predictor history struct that contains any
          * information needed to update the predictor, BTB, and RAS.
          */
-        PredictorHistory(const InstSeqNum &seq_num, const Addr &inst_PC,
-                         bool pred_taken, void *bp_history,
-                         ThreadID _tid)
-            : seqNum(seq_num), PC(inst_PC), RASTarget(0),
-              RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0),
-              wasCall(0), bpHistory(bp_history)
-        { }
+        PredictorHistory(const InstSeqNum &seq_num,
+                         const TheISA::PCState &instPC, bool pred_taken,
+                         void *bp_history, ThreadID _tid)
+            : seqNum(seq_num), pc(instPC), rasTarget(0), RASIndex(0),
+              tid(_tid), predTaken(pred_taken), usedRAS(0), wasCall(0),
+              bpHistory(bp_history)
+        {}
 
         /** The sequence number for the predictor history entry. */
         InstSeqNum seqNum;
 
         /** The PC associated with the sequence number. */
-        Addr PC;
+        TheISA::PCState pc;
 
         /** The RAS target (only valid if a return). */
-        Addr RASTarget;
+        TheISA::PCState rasTarget;
 
         /** The RAS index of the instruction (only valid if a call). */
         unsigned RASIndex;

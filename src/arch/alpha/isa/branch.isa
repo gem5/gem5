@@ -81,7 +81,7 @@ output header {{
         {
         }
 
-        Addr branchTarget(Addr branchPC) const;
+        AlphaISA::PCState branchTarget(const AlphaISA::PCState &branchPC) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -106,7 +106,7 @@ output header {{
         {
         }
 
-        Addr branchTarget(ThreadContext *tc) const;
+        AlphaISA::PCState branchTarget(ThreadContext *tc) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -114,18 +114,19 @@ output header {{
 }};
 
 output decoder {{
-    Addr
-    Branch::branchTarget(Addr branchPC) const
+    AlphaISA::PCState
+    Branch::branchTarget(const AlphaISA::PCState &branchPC) const
     {
-        return branchPC + 4 + disp;
+        return branchPC.pc() + 4 + disp;
     }
 
-    Addr
+    AlphaISA::PCState
     Jump::branchTarget(ThreadContext *tc) const
     {
-        Addr NPC = tc->readPC() + 4;
+        PCState pc = tc->pcState();
         uint64_t Rb = tc->readIntReg(_srcRegIdx[0]);
-        return (Rb & ~3) | (NPC & 1);
+        pc.set((Rb & ~3) | (pc.pc() & 1));
+        return pc;
     }
 
     const std::string &
@@ -217,7 +218,14 @@ def template JumpOrBranchDecode {{
 }};
 
 def format CondBranch(code) {{
-    code = 'bool cond;\n' + code + '\nif (cond) NPC = NPC + disp;\n';
+    code = '''
+        bool cond;
+        %(code)s;
+        PCState pc = PCS;
+        if (cond)
+            pc.npc(pc.npc() + disp);
+        PCS = pc;
+    ''' % { "code" : code }
     iop = InstObjParams(name, Name, 'Branch', code,
                         ('IsDirectControl', 'IsCondControl'))
     header_output = BasicDeclare.subst(iop)
@@ -229,16 +237,18 @@ def format CondBranch(code) {{
 let {{
 def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
     # Declare basic control transfer w/o link (i.e. link reg is R31)
-    nolink_code = 'NPC = %s;\n' % npc_expr
-    nolink_iop = InstObjParams(name, Name, base_class, nolink_code, flags)
+    readpc_code = 'PCState pc = PCS;'
+    nolink_code = 'pc.npc(%s);\nPCS = pc' % npc_expr
+    nolink_iop = InstObjParams(name, Name, base_class,
+                               readpc_code + nolink_code, flags)
     header_output = BasicDeclare.subst(nolink_iop)
     decoder_output = BasicConstructor.subst(nolink_iop)
     exec_output = BasicExecute.subst(nolink_iop)
 
     # Generate declaration of '*AndLink' version, append to decls
-    link_code = 'Ra = NPC & ~3;\n' + nolink_code
+    link_code = 'Ra = pc.npc() & ~3;\n' + nolink_code
     link_iop = InstObjParams(name, Name + 'AndLink', base_class,
-                             link_code, flags)
+                             readpc_code + link_code, flags)
     header_output += BasicDeclare.subst(link_iop)
     decoder_output += BasicConstructor.subst(link_iop)
     exec_output += BasicExecute.subst(link_iop)
@@ -253,13 +263,13 @@ def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
 def format UncondBranch(*flags) {{
     flags += ('IsUncondControl', 'IsDirectControl')
     (header_output, decoder_output, decode_block, exec_output) = \
-        UncondCtrlBase(name, Name, 'Branch', 'NPC + disp', flags)
+        UncondCtrlBase(name, Name, 'Branch', 'pc.npc() + disp', flags)
 }};
 
 def format Jump(*flags) {{
     flags += ('IsUncondControl', 'IsIndirectControl')
     (header_output, decoder_output, decode_block, exec_output) = \
-        UncondCtrlBase(name, Name, 'Jump', '(Rb & ~3) | (NPC & 1)', flags)
+        UncondCtrlBase(name, Name, 'Jump', '(Rb & ~3) | (pc.npc() & 1)', flags)
 }};
 
 

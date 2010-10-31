@@ -81,10 +81,11 @@ output header {{
 
             StaticInstPtr * microops;
 
-            StaticInstPtr fetchMicroop(MicroPC microPC)
+            StaticInstPtr
+            fetchMicroop(MicroPC upc) const
             {
-                assert(microPC < numMicroops);
-                return microops[microPC];
+                assert(upc < numMicroops);
+                return microops[upc];
             }
 
             %(MacroExecute)s
@@ -101,6 +102,15 @@ output header {{
                         : SparcStaticInst(mnem, _machInst, __opClass)
             {
                 flags[IsMicroop] = true;
+            }
+
+            void
+            advancePC(SparcISA::PCState &pcState) const
+            {
+                if (flags[IsLastMicroop])
+                    pcState.uEnd();
+                else
+                    pcState.uAdvance();
             }
         };
 

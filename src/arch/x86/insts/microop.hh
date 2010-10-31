@@ -114,6 +114,15 @@ namespace X86ISA
         }
 
         bool checkCondition(uint64_t flags, int condition) const;
+
+        void
+        advancePC(PCState &pcState) const
+        {
+            if (flags[IsLastMicroop])
+                pcState.uEnd();
+            else
+                pcState.uAdvance();
+        }
     };
 }
 

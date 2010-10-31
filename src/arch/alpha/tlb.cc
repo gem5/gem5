@@ -443,8 +443,6 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 Fault
 TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 {
-    Addr pc = tc->readPC();
-
     mode_type mode =
         (mode_type)DTB_CM_CM(tc->readMiscRegNoEffect(IPR_DTB_CM));
 
@@ -458,7 +456,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         return new DtbAlignmentFault(req->getVaddr(), req->getFlags(), flags);
     }
 
-    if (PcPAL(pc)) {
+    if (PcPAL(tc->pcState().pc())) {
         mode = (req->getFlags() & Request::ALTMODE) ?
             (mode_type)ALT_MODE_AM(
                 tc->readMiscRegNoEffect(IPR_ALT_MODE))

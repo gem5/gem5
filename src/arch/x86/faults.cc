@@ -58,7 +58,8 @@ namespace X86ISA
 #if FULL_SYSTEM
     void X86FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
-        Addr pc = tc->readPC();
+        PCState pcState = tc->pcState();
+        Addr pc = pcState.pc();
         DPRINTF(Faults, "RIP %#x: vector %d: %s\n", pc, vector, describe());
         using namespace X86ISAInst::RomLabels;
         HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
@@ -86,8 +87,9 @@ namespace X86ISA
             assert(!isSoft());
             tc->setIntReg(INTREG_MICRO(15), errorCode);
         }
-        tc->setMicroPC(romMicroPC(entry));
-        tc->setNextMicroPC(romMicroPC(entry) + 1);
+        pcState.upc(romMicroPC(entry));
+        pcState.nupc(romMicroPC(entry) + 1);
+        tc->pcState(pcState);
     }
 
     std::string
@@ -106,9 +108,8 @@ namespace X86ISA
     {
         X86FaultBase::invoke(tc);
         // This is the same as a fault, but it happens -after- the instruction.
-        tc->setPC(tc->readNextPC());
-        tc->setNextPC(tc->readNextNPC());
-        tc->setNextNPC(tc->readNextNPC() + sizeof(MachInst));
+        PCState pc = tc->pcState();
+        pc.uEnd();
     }
 
     void X86Abort::invoke(ThreadContext * tc, StaticInstPtr inst)
@@ -207,9 +208,8 @@ namespace X86ISA
         tc->setMiscReg(MISCREG_CS_LIMIT, 0xffffffff);
         tc->setMiscReg(MISCREG_CS_ATTR, codeAttr);
 
-        tc->setPC(0x000000000000fff0ULL +
-                tc->readMiscReg(MISCREG_CS_BASE));
-        tc->setNextPC(tc->readPC() + sizeof(MachInst));
+        PCState pc(0x000000000000fff0ULL + tc->readMiscReg(MISCREG_CS_BASE));
+        tc->pcState(pc);
 
         tc->setMiscReg(MISCREG_TSG_BASE, 0);
         tc->setMiscReg(MISCREG_TSG_LIMIT, 0xffff);
@@ -243,8 +243,9 @@ namespace X86ISA
         // Update the handy M5 Reg.
         tc->setMiscReg(MISCREG_M5_REG, 0);
         MicroPC entry = X86ISAInst::RomLabels::extern_label_initIntHalt;
-        tc->setMicroPC(romMicroPC(entry));
-        tc->setNextMicroPC(romMicroPC(entry) + 1);
+        pc.upc(romMicroPC(entry));
+        pc.nupc(romMicroPC(entry) + 1);
+        tc->pcState(pc);
     }
 
     void
@@ -263,8 +264,7 @@ namespace X86ISA
         // This has the base value pre-added.
         tc->setMiscReg(MISCREG_CS_LIMIT, 0xffff);
 
-        tc->setPC(tc->readMiscReg(MISCREG_CS_BASE));
-        tc->setNextPC(tc->readPC() + sizeof(MachInst));
+        tc->pcState(tc->readMiscReg(MISCREG_CS_BASE));
     }
 
 #else

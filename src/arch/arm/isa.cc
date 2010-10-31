@@ -168,15 +168,9 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 {
     if (misc_reg == MISCREG_CPSR) {
         CPSR cpsr = miscRegs[misc_reg];
-        Addr pc = tc->readPC();
-        if (pc & (ULL(1) << PcJBitShift))
-            cpsr.j = 1;
-        else
-            cpsr.j = 0;
-        if (isThumb(pc))
-            cpsr.t = 1;
-        else
-            cpsr.t = 0;
+        PCState pc = tc->pcState();
+        cpsr.j = pc.jazelle() ? 1 : 0;
+        cpsr.t = pc.thumb() ? 1 : 0;
         return cpsr;
     }
     if (misc_reg >= MISCREG_CP15_UNIMP_START &&
@@ -239,13 +233,10 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         CPSR cpsr = val;
         DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
                 miscRegs[misc_reg], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
-        Addr npc = tc->readNextPC() & ~PcModeMask;
-        if (cpsr.j)
-            npc = npc | PcJBit;
-        if (cpsr.t)
-            npc = npc | PcTBit;
-
-        tc->setNextPC(npc);
+        PCState pc = tc->pcState();
+        pc.nextThumb(cpsr.t);
+        pc.nextJazelle(cpsr.j);
+        tc->pcState(pc);
     } else if (misc_reg >= MISCREG_CP15_UNIMP_START &&
         misc_reg < MISCREG_CP15_END) {
         panic("Unimplemented CP15 register %s wrote with %#x.\n",
@@ -414,7 +405,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                   default:
                       panic("Security Extensions not implemented!");
               }
-              req->setVirt(0, val, 1, flags, tc->readPC());
+              req->setVirt(0, val, 1, flags, tc->pcState().pc());
               fault = tc->getDTBPtr()->translateAtomic(req, tc, mode);
               if (fault == NoFault) {
                   miscRegs[MISCREG_PAR] =

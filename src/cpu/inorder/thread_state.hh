@@ -111,9 +111,7 @@ class InOrderThreadState : public ThreadState {
     
     /** Is last instruction graduated a branch? */
     bool lastGradIsBranch;
-    Addr lastBranchPC;    
-    Addr lastBranchNextPC;    
-    Addr lastBranchNextNPC;    
+    TheISA::PCState lastBranchPC;
 };
 
 #endif // __CPU_INORDER_THREAD_STATE_HH__

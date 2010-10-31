@@ -83,7 +83,7 @@ PCEventQueue::schedule(PCEvent *event)
 bool
 PCEventQueue::doService(ThreadContext *tc)
 {
-    Addr pc = tc->readPC() & ~0x3;
+    Addr pc = tc->instAddr() & ~0x3;
     int serviced = 0;
     range_t range = equal_range(pc);
     for (iterator i = range.first; i != range.second; ++i) {
@@ -91,7 +91,7 @@ PCEventQueue::doService(ThreadContext *tc)
         // another event.  This for example, prevents two invocations
         // of the SkipFuncEvent.  Maybe we should have separate PC
         // event queues for each processor?
-        if (pc != (tc->readPC() & ~0x3))
+        if (pc != (tc->instAddr() & ~0x3))
             continue;
 
         DPRINTF(PCEvent, "PC based event serviced at %#x: %s\n",

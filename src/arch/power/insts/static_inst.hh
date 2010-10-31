@@ -63,6 +63,12 @@ class PowerStaticInst : public StaticInst
 
     std::string
     generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+    void
+    advancePC(PowerISA::PCState &pcState) const
+    {
+        pcState.advance();
+    }
 };
 
 } // PowerISA namespace

@@ -63,8 +63,28 @@ class Swap : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
+class MightBeMicro : public PredOp
+{
+  protected:
+    MightBeMicro(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : PredOp(mnem, _machInst, __opClass)
+    {}
+
+    void
+    advancePC(PCState &pcState) const
+    {
+        if (flags[IsLastMicroop]) {
+            pcState.uEnd();
+        } else if (flags[IsMicroop]) {
+            pcState.uAdvance();
+        } else {
+            pcState.advance();
+        }
+    }
+};
+
 // The address is a base register plus an immediate.
-class RfeOp : public PredOp
+class RfeOp : public MightBeMicro
 {
   public:
     enum AddrMode {
@@ -83,7 +103,7 @@ class RfeOp : public PredOp
 
     RfeOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
           IntRegIndex _base, AddrMode _mode, bool _wb)
-        : PredOp(mnem, _machInst, __opClass),
+        : MightBeMicro(mnem, _machInst, __opClass),
           base(_base), mode(_mode), wb(_wb), uops(NULL)
     {}
 
@@ -94,7 +114,7 @@ class RfeOp : public PredOp
     }
 
     StaticInstPtr
-    fetchMicroop(MicroPC microPC)
+    fetchMicroop(MicroPC microPC) const
     {
         assert(uops != NULL && microPC < numMicroops);
         return uops[microPC];
@@ -104,7 +124,7 @@ class RfeOp : public PredOp
 };
 
 // The address is a base register plus an immediate.
-class SrsOp : public PredOp
+class SrsOp : public MightBeMicro
 {
   public:
     enum AddrMode {
@@ -123,7 +143,7 @@ class SrsOp : public PredOp
 
     SrsOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
           uint32_t _regMode, AddrMode _mode, bool _wb)
-        : PredOp(mnem, _machInst, __opClass),
+        : MightBeMicro(mnem, _machInst, __opClass),
           regMode(_regMode), mode(_mode), wb(_wb), uops(NULL)
     {}
 
@@ -134,7 +154,7 @@ class SrsOp : public PredOp
     }
 
     StaticInstPtr
-    fetchMicroop(MicroPC microPC)
+    fetchMicroop(MicroPC microPC) const
     {
         assert(uops != NULL && microPC < numMicroops);
         return uops[microPC];
@@ -143,7 +163,7 @@ class SrsOp : public PredOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-class Memory : public PredOp
+class Memory : public MightBeMicro
 {
   public:
     enum AddrMode {
@@ -163,7 +183,7 @@ class Memory : public PredOp
 
     Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
            IntRegIndex _dest, IntRegIndex _base, bool _add)
-        : PredOp(mnem, _machInst, __opClass),
+        : MightBeMicro(mnem, _machInst, __opClass),
           dest(_dest), base(_base), add(_add), uops(NULL)
     {}
 
@@ -174,7 +194,7 @@ class Memory : public PredOp
     }
 
     StaticInstPtr
-    fetchMicroop(MicroPC microPC)
+    fetchMicroop(MicroPC microPC) const
     {
         assert(uops != NULL && microPC < numMicroops);
         return uops[microPC];

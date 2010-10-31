@@ -31,8 +31,10 @@
 #ifndef __CPU_O3_BTB_HH__
 #define __CPU_O3_BTB_HH__
 
+#include "arch/types.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 
 class DefaultBTB
 {
@@ -41,14 +43,13 @@ class DefaultBTB
     {
         BTBEntry()
             : tag(0), target(0), valid(false)
-        {
-        }
+        {}
 
         /** The entry's tag. */
         Addr tag;
 
         /** The entry's target. */
-        Addr target;
+        TheISA::PCState target;
 
         /** The entry's thread id. */
         ThreadID tid;
@@ -74,21 +75,21 @@ class DefaultBTB
      *  @param tid The thread id.
      *  @return Returns the target of the branch.
      */
-    Addr lookup(const Addr &inst_PC, ThreadID tid);
+    TheISA::PCState lookup(Addr instPC, ThreadID tid);
 
     /** Checks if a branch is in the BTB.
      *  @param inst_PC The address of the branch to look up.
      *  @param tid The thread id.
      *  @return Whether or not the branch exists in the BTB.
      */
-    bool valid(const Addr &inst_PC, ThreadID tid);
+    bool valid(Addr instPC, ThreadID tid);
 
     /** Updates the BTB with the target of a branch.
      *  @param inst_PC The address of the branch being updated.
      *  @param target_PC The target address of the branch.
      *  @param tid The thread id.
      */
-    void update(const Addr &inst_PC, const Addr &target_PC,
+    void update(Addr instPC, const TheISA::PCState &targetPC,
                 ThreadID tid);
 
   private:
@@ -96,13 +97,13 @@ class DefaultBTB
      *  @param inst_PC The branch to look up.
      *  @return Returns the index into the BTB.
      */
-    inline unsigned getIndex(const Addr &inst_PC);
+    inline unsigned getIndex(Addr instPC);
 
     /** Returns the tag bits of a given address.
      *  @param inst_PC The branch's address.
      *  @return Returns the tag bits.
      */
-    inline Addr getTag(const Addr &inst_PC);
+    inline Addr getTag(Addr instPC);
 
     /** The actual BTB. */
     std::vector<BTBEntry> btb;

@@ -47,17 +47,16 @@ using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
 
-InOrderDynInst::InOrderDynInst(TheISA::ExtMachInst machInst, Addr inst_PC,
-                               Addr pred_PC, InstSeqNum seq_num,
-                               InOrderCPU *cpu)
-  : staticInst(machInst, inst_PC), traceData(NULL), cpu(cpu)
+InOrderDynInst::InOrderDynInst(TheISA::ExtMachInst machInst,
+                               const TheISA::PCState &instPC,
+                               const TheISA::PCState &_predPC,
+                               InstSeqNum seq_num, InOrderCPU *cpu)
+  : staticInst(machInst, instPC.instAddr()), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
-    PC = inst_PC;
-    nextPC = PC + sizeof(MachInst);
-    nextNPC = nextPC + sizeof(MachInst);
-    predPC = pred_PC;
+    pc = instPC;
+    predPC = _predPC;
 
     initVars();
 }
@@ -94,7 +93,7 @@ int InOrderDynInst::instcount = 0;
 void
 InOrderDynInst::setMachInst(ExtMachInst machInst)
 {
-    staticInst = StaticInst::decode(machInst, PC);
+    staticInst = StaticInst::decode(machInst, pc.instAddr());
 
     for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
         _destRegIdx[i] = this->staticInst->destRegIdx(i);
@@ -747,8 +746,8 @@ InOrderDynInst::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 void
 InOrderDynInst::dump()
 {
-    cprintf("T%d : %#08d `", threadNumber, PC);
-    cout << staticInst->disassemble(PC);
+    cprintf("T%d : %#08d `", threadNumber, pc.instAddr());
+    cout << staticInst->disassemble(pc.instAddr());
     cprintf("'\n");
 }
 
@@ -756,8 +755,8 @@ void
 InOrderDynInst::dump(std::string &outstring)
 {
     std::ostringstream s;
-    s << "T" << threadNumber << " : 0x" << PC << " "
-      << staticInst->disassemble(PC);
+    s << "T" << threadNumber << " : " << pc << " "
+      << staticInst->disassemble(pc.instAddr());
 
     outstring = s.str();
 }

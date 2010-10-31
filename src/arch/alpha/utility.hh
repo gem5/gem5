@@ -37,9 +37,18 @@
 #include "arch/alpha/registers.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
 namespace AlphaISA {
+
+inline PCState
+buildRetPC(const PCState &curPC, const PCState &callPC)
+{
+    PCState retPC = callPC;
+    retPC.advance();
+    return retPC;
+}
 
 uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 
@@ -95,6 +104,13 @@ void copyRegs(ThreadContext *src, ThreadContext *dest);
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 void skipFunction(ThreadContext *tc);
+
+inline void
+advancePC(PCState &pc, const StaticInstPtr inst)
+{
+    pc.advance();
+}
+
 } // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_UTILITY_HH__

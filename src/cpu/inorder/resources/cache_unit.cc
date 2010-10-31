@@ -392,15 +392,16 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
     unsigned slot_idx = cache_req->getSlot();
 
     if (tlb_mode == TheISA::TLB::Execute) {
-            inst->fetchMemReq = new Request(inst->readTid(), aligned_addr,
-                                            acc_size, flags, inst->readPC(),
-                                            cpu->readCpuId(), inst->readTid());
-            cache_req->memReq = inst->fetchMemReq;
+        inst->fetchMemReq =
+            new Request(inst->readTid(), aligned_addr, acc_size, flags,
+                        inst->instAddr(), cpu->readCpuId(), inst->readTid());
+        cache_req->memReq = inst->fetchMemReq;
     } else {
         if (!cache_req->is2ndSplit()) {            
-            inst->dataMemReq = new Request(cpu->asid[tid], aligned_addr,
-                                           acc_size, flags, inst->readPC(),
-                                           cpu->readCpuId(), inst->readTid());
+            inst->dataMemReq =
+                new Request(cpu->asid[tid], aligned_addr, acc_size, flags,
+                            inst->instAddr(), cpu->readCpuId(),
+                            inst->readTid());
             cache_req->memReq = inst->dataMemReq;
         } else {
             assert(inst->splitInst);
@@ -409,7 +410,7 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                                             inst->split2ndAddr,
                                             acc_size, 
                                             flags, 
-                                            inst->readPC(),
+                                            inst->instAddr(),
                                             cpu->readCpuId(), 
                                             tid);
             cache_req->memReq = inst->splitMemReq;            
@@ -754,7 +755,8 @@ CacheUnit::execute(int slot_num)
 
 
             DPRINTF(InOrderCachePort, "[tid:%i]: Instruction [sn:%i] is: %s\n",
-                    tid, seq_num, inst->staticInst->disassemble(inst->PC));
+                    tid, seq_num,
+                    inst->staticInst->disassemble(inst->instAddr()));
 
             removeAddrDependency(inst);
             
@@ -771,7 +773,7 @@ CacheUnit::execute(int slot_num)
                     tid, inst->seqNum);
             DPRINTF(InOrderStall,
                     "STALL: [tid:%i]: Fetch miss from %08p\n",
-                    tid, cache_req->inst->readPC());
+                    tid, cache_req->inst->instAddr());
             cache_req->setCompleted(false);
             //cache_req->setMemStall(true);            
         }
@@ -1046,21 +1048,22 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
             // @todo: update thsi
             ExtMachInst ext_inst;
             StaticInstPtr staticInst = NULL;
-            Addr inst_pc = inst->readPC();
+            TheISA::PCState instPC = inst->pcState();
             MachInst mach_inst = 
                 TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
                              (cache_pkt->getPtr<uint8_t>()));
 
             predecoder.setTC(cpu->thread[tid]->getTC());
-            predecoder.moreBytes(inst_pc, inst_pc, mach_inst);
-            ext_inst = predecoder.getExtMachInst();
+            predecoder.moreBytes(instPC, inst->instAddr(), mach_inst);
+            ext_inst = predecoder.getExtMachInst(instPC);
+            inst->pcState(instPC);
 
             inst->setMachInst(ext_inst);
 
             // Set Up More TraceData info
             if (inst->traceData) {
                 inst->traceData->setStaticInst(inst->staticInst);
-                inst->traceData->setPC(inst->readPC());
+                inst->traceData->setPC(instPC);
             }
 
         } else if (inst->staticInst && inst->isMemRef()) {
@@ -1149,7 +1152,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     } else {
         DPRINTF(InOrderCachePort,
                 "[tid:%u] Miss on block @ %08p completed, but squashed\n",
-                tid, cache_req->inst->readPC());
+                tid, cache_req->inst->instAddr());
         cache_req->setMemAccCompleted();
     }
 }

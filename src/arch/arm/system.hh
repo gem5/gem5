@@ -70,7 +70,7 @@ class ArmSystem : public System
         // Remove the low bit that thumb symbols have set
         // but that aren't actually odd aligned
         if (addr & 0x1)
-            return (addr & ~1) | PcTBit;
+            return addr & ~1;
         return addr;
     }
 };

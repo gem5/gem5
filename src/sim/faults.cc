@@ -40,13 +40,12 @@
 #if !FULL_SYSTEM
 void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
-    panic("fault (%s) detected @ PC %p", name(), tc->readPC());
+    panic("fault (%s) detected @ PC %s", name(), tc->pcState());
 }
 #else
 void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
-    DPRINTF(Fault, "Fault %s at PC: %#x\n", name(), tc->readPC());
-
+    DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
     assert(!tc->misspeculating());
 }
 #endif

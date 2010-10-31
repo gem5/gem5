@@ -104,6 +104,7 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     CPSR saved_cpsr = tc->readMiscReg(MISCREG_CPSR) | 
                       tc->readIntReg(INTREG_CONDCODES);
+    Addr curPc M5_VAR_USED = tc->pcState().pc();
  
 
     cpsr.mode = nextMode();
@@ -116,7 +117,7 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     cpsr.i = 1;
     cpsr.e = sctlr.ee;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
-    tc->setIntReg(INTREG_LR, tc->readPC() + 
+    tc->setIntReg(INTREG_LR, curPc +
             (saved_cpsr.t ? thumbPcOffset() : armPcOffset()));
 
     switch (nextMode()) {
@@ -139,14 +140,15 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
         panic("unknown Mode\n");
     }
 
-    Addr pc M5_VAR_USED = tc->readPC();
-    Addr newPc = getVector(tc) | (sctlr.te ? PcTBit : 0);
+    Addr newPc = getVector(tc);
     DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x\n",
-            name(), cpsr, pc, tc->readIntReg(INTREG_LR), newPc);
-    tc->setPC(newPc);
-    tc->setNextPC(newPc + cpsr.t ? 2 : 4 );
-    tc->setMicroPC(0);
-    tc->setNextMicroPC(1);
+            name(), cpsr, curPc, tc->readIntReg(INTREG_LR), newPc);
+    PCState pc(newPc);
+    pc.thumb(cpsr.t);
+    pc.nextThumb(pc.thumb());
+    pc.jazelle(cpsr.j);
+    pc.nextJazelle(pc.jazelle());
+    tc->pcState(pc);
 }
 
 void
@@ -193,10 +195,10 @@ SupervisorCall::invoke(ThreadContext *tc, StaticInstPtr inst)
     tc->syscall(callNum);
 
     // Advance the PC since that won't happen automatically.
-    tc->setPC(tc->readNextPC());
-    tc->setNextPC(tc->readNextNPC());
-    tc->setMicroPC(0);
-    tc->setNextMicroPC(1);
+    PCState pc = tc->pcState();
+    assert(inst);
+    inst->advancePC(pc);
+    tc->pcState(pc);
 }
 
 #endif // FULL_SYSTEM
@@ -223,10 +225,10 @@ FlushPipe::invoke(ThreadContext *tc, StaticInstPtr inst) {
     // Set the PC to the next instruction of the faulting instruction.
     // Net effect is simply squashing all instructions behind and
     // start refetching from the next instruction.
-    tc->setPC(tc->readNextPC());
-    tc->setNextPC(tc->readNextNPC());
-    tc->setMicroPC(0);
-    tc->setNextMicroPC(1);
+    PCState pc = tc->pcState();
+    assert(inst);
+    inst->advancePC(pc);
+    tc->pcState(pc);
 }
 
 template void AbortFault<PrefetchAbort>::invoke(ThreadContext *tc,

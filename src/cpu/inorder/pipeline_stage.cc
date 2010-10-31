@@ -350,27 +350,21 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
         toPrevStages->stageInfo[stageNum][tid].squash = true;
         toPrevStages->stageInfo[stageNum][tid].nextPC = inst->readPredTarg();
 
+        toPrevStages->stageInfo[stageNum][tid].branchTaken =
+            inst->pcState().branching();
 
 #if ISA_HAS_DELAY_SLOT
-        toPrevStages->stageInfo[stageNum][tid].branchTaken = 
-            inst->readNextNPC() !=
-            (inst->readNextPC() + sizeof(TheISA::MachInst));
-
-        toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = 
+        toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum =
             inst->bdelaySeqNum;
 
         InstSeqNum squash_seq_num = inst->bdelaySeqNum;
 #else
-        toPrevStages->stageInfo[stageNum][tid].branchTaken = 
-            inst->readNextPC() !=
-            (inst->readPC() + sizeof(TheISA::MachInst));
-
         toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = inst->seqNum;
         InstSeqNum squash_seq_num = inst->seqNum;
 #endif
 
         DPRINTF(InOrderStage, "Target being re-set to %08p\n", 
-                inst->readPredTarg());
+                inst->predInstAddr());
         DPRINTF(InOrderStage, "[tid:%i]: Squashing after [sn:%i], "
                 "due to [sn:%i] branch.\n", tid, squash_seq_num, 
                 inst->seqNum);
@@ -398,10 +392,10 @@ PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid)
             prevStage->insts[i]->seqNum > squash_seq_num) {
             // Change Comment to Annulling previous instruction
             DPRINTF(InOrderStage, "[tid:%i]: Squashing instruction, "
-                    "[sn:%i] PC %08p.\n",
+                    "[sn:%i] PC %s.\n",
                     tid,
                     prevStage->insts[i]->seqNum,
-                    prevStage->insts[i]->readPC());
+                    prevStage->insts[i]->pcState());
             prevStage->insts[i]->setSquashed();
 
             prevStage->insts[i] = cpu->dummyBufferInst;
@@ -429,8 +423,8 @@ PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
             break;
         }
         DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
-                " PC %08p.\n", tid, skidBuffer[tid].front()->seqNum, 
-                skidBuffer[tid].front()->PC);
+                " PC %s.\n", tid, skidBuffer[tid].front()->seqNum,
+                skidBuffer[tid].front()->pc);
         skidBuffer[tid].pop();
     }
 
@@ -488,8 +482,8 @@ PipelineStage::skidInsert(ThreadID tid)
 
         assert(tid == inst->threadNumber);
 
-        DPRINTF(InOrderStage,"[tid:%i]: Inserting [sn:%lli] PC:%#x into stage "
-                "skidBuffer %i\n", tid, inst->seqNum, inst->readPC(), 
+        DPRINTF(InOrderStage,"[tid:%i]: Inserting [sn:%lli] PC:%s into stage "
+                "skidBuffer %i\n", tid, inst->seqNum, inst->pcState(),
                 inst->threadNumber);
 
         skidBuffer[tid].push(inst);
@@ -571,9 +565,9 @@ PipelineStage::activateThread(ThreadID tid)
         } else {
             DynInstPtr inst = switchedOutBuffer[tid];
 
-            DPRINTF(InOrderStage,"[tid:%i]: Re-Inserting [sn:%lli] PC:%#x into"
+            DPRINTF(InOrderStage,"[tid:%i]: Re-Inserting [sn:%lli] PC:%s into"
                     " stage skidBuffer %i\n", tid, inst->seqNum,
-                    inst->readPC(), inst->threadNumber);
+                    inst->pcState(), inst->threadNumber);
 
             // Make instruction available for pipeline processing
             skidBuffer[tid].push(inst);            
@@ -895,13 +889,12 @@ PipelineStage::processInsts(ThreadID tid)
         inst = insts_to_stage.front();
 
         DPRINTF(InOrderStage, "[tid:%u]: Processing instruction [sn:%lli] "
-                "with PC %#x\n",
-                tid, inst->seqNum, inst->readPC());
+                "with PC %s\n", tid, inst->seqNum, inst->pcState());
 
         if (inst->isSquashed()) {
-            DPRINTF(InOrderStage, "[tid:%u]: Instruction %i with PC %#x is "
+            DPRINTF(InOrderStage, "[tid:%u]: Instruction %i with PC %s is "
                     "squashed, skipping.\n",
-                    tid, inst->seqNum, inst->readPC());
+                    tid, inst->seqNum, inst->pcState());
 
             insts_to_stage.pop();
 
@@ -1001,8 +994,8 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     switchedOutValid[tid] = true;
                     
                     // Remove Thread From Pipeline & Resource Pool
-                    inst->squashingStage = stageNum;         
-                    inst->bdelaySeqNum = inst->seqNum;                               
+                    inst->squashingStage = stageNum;
+                    inst->bdelaySeqNum = inst->seqNum;
                     cpu->squashFromMemStall(inst, tid);  
 
                     // Switch On Cache Miss
@@ -1038,9 +1031,9 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
             res_stage_num = inst->nextResStage();
         }
     } else {
-        DPRINTF(InOrderStage, "[tid:%u]: Instruction [sn:%i] with PC %#x "
+        DPRINTF(InOrderStage, "[tid:%u]: Instruction [sn:%i] with PC %s "
                 " needed no resources in stage %i.\n",
-                tid, inst->seqNum, inst->readPC(), stageNum);
+                tid, inst->seqNum, inst->pcState(), stageNum);
     }
 
     return last_req_completed;
@@ -1134,8 +1127,8 @@ PipelineStage::dumpInsts()
         while (!copy_buff.empty()) {
             DynInstPtr inst = copy_buff.front();
 
-            cprintf("Inst. PC:%#x\n[tid:%i]\n[sn:%i]\n\n",
-                    inst->readPC(), inst->threadNumber, inst->seqNum);
+            cprintf("Inst. PC:%s\n[tid:%i]\n[sn:%i]\n\n",
+                    inst->pcState(), inst->threadNumber, inst->seqNum);
 
             copy_buff.pop();
         }

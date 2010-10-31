@@ -171,7 +171,7 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
                 storeBarrierSN);
         producing_store = storeBarrierSN;
     } else {
-        producing_store = depPred.checkInst(inst->readPC());
+        producing_store = depPred.checkInst(inst->instAddr());
     }
 
     MemDepEntryPtr store_entry = NULL;
@@ -191,7 +191,7 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
     // are ready.
     if (!store_entry) {
         DPRINTF(MemDepUnit, "No dependency for inst PC "
-                "%#x [sn:%lli].\n", inst->readPC(), inst->seqNum);
+                "%s [sn:%lli].\n", inst->pcState(), inst->seqNum);
 
         inst_entry->memDepReady = true;
 
@@ -203,8 +203,8 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
     } else {
         // Otherwise make the instruction dependent on the store/barrier.
         DPRINTF(MemDepUnit, "Adding to dependency list; "
-                "inst PC %#x is dependent on [sn:%lli].\n",
-                inst->readPC(), producing_store);
+                "inst PC %s is dependent on [sn:%lli].\n",
+                inst->pcState(), producing_store);
 
         if (inst->readyToIssue()) {
             inst_entry->regsReady = true;
@@ -224,10 +224,10 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
     }
 
     if (inst->isStore()) {
-        DPRINTF(MemDepUnit, "Inserting store PC %#x [sn:%lli].\n",
-                inst->readPC(), inst->seqNum);
+        DPRINTF(MemDepUnit, "Inserting store PC %s [sn:%lli].\n",
+                inst->pcState(), inst->seqNum);
 
-        depPred.insertStore(inst->readPC(), inst->seqNum, inst->threadNumber);
+        depPred.insertStore(inst->instAddr(), inst->seqNum, inst->threadNumber);
 
         ++insertedStores;
     } else if (inst->isLoad()) {
@@ -260,10 +260,10 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
     // Might want to turn this part into an inline function or something.
     // It's shared between both insert functions.
     if (inst->isStore()) {
-        DPRINTF(MemDepUnit, "Inserting store PC %#x [sn:%lli].\n",
-                inst->readPC(), inst->seqNum);
+        DPRINTF(MemDepUnit, "Inserting store PC %s [sn:%lli].\n",
+                inst->pcState(), inst->seqNum);
 
-        depPred.insertStore(inst->readPC(), inst->seqNum, inst->threadNumber);
+        depPred.insertStore(inst->instAddr(), inst->seqNum, inst->threadNumber);
 
         ++insertedStores;
     } else if (inst->isLoad()) {
@@ -313,8 +313,8 @@ void
 MemDepUnit<MemDepPred, Impl>::regsReady(DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking registers as ready for "
-            "instruction PC %#x [sn:%lli].\n",
-            inst->readPC(), inst->seqNum);
+            "instruction PC %s [sn:%lli].\n",
+            inst->pcState(), inst->seqNum);
 
     MemDepEntryPtr inst_entry = findInHash(inst);
 
@@ -336,8 +336,8 @@ void
 MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking non speculative "
-            "instruction PC %#x as ready [sn:%lli].\n",
-            inst->readPC(), inst->seqNum);
+            "instruction PC %s as ready [sn:%lli].\n",
+            inst->pcState(), inst->seqNum);
 
     MemDepEntryPtr inst_entry = findInHash(inst);
 
@@ -363,9 +363,8 @@ MemDepUnit<MemDepPred, Impl>::replay(DynInstPtr &inst)
 
         MemDepEntryPtr inst_entry = findInHash(temp_inst);
 
-        DPRINTF(MemDepUnit, "Replaying mem instruction PC %#x "
-                "[sn:%lli].\n",
-                temp_inst->readPC(), temp_inst->seqNum);
+        DPRINTF(MemDepUnit, "Replaying mem instruction PC %s [sn:%lli].\n",
+                temp_inst->pcState(), temp_inst->seqNum);
 
         moveToReady(inst_entry);
 
@@ -377,9 +376,8 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::completed(DynInstPtr &inst)
 {
-    DPRINTF(MemDepUnit, "Completed mem instruction PC %#x "
-            "[sn:%lli].\n",
-            inst->readPC(), inst->seqNum);
+    DPRINTF(MemDepUnit, "Completed mem instruction PC %s [sn:%lli].\n",
+            inst->pcState(), inst->seqNum);
 
     ThreadID tid = inst->threadNumber;
 
@@ -507,10 +505,10 @@ MemDepUnit<MemDepPred, Impl>::violation(DynInstPtr &store_inst,
                                         DynInstPtr &violating_load)
 {
     DPRINTF(MemDepUnit, "Passing violating PCs to store sets,"
-            " load: %#x, store: %#x\n", violating_load->readPC(),
-            store_inst->readPC());
+            " load: %#x, store: %#x\n", violating_load->instAddr(),
+            store_inst->instAddr());
     // Tell the memory dependence unit of the violation.
-    depPred.violation(violating_load->readPC(), store_inst->readPC());
+    depPred.violation(violating_load->instAddr(), store_inst->instAddr());
 }
 
 template <class MemDepPred, class Impl>
@@ -518,9 +516,9 @@ void
 MemDepUnit<MemDepPred, Impl>::issue(DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Issuing instruction PC %#x [sn:%lli].\n",
-            inst->readPC(), inst->seqNum);
+            inst->instAddr(), inst->seqNum);
 
-    depPred.issued(inst->readPC(), inst->seqNum, inst->isStore());
+    depPred.issued(inst->instAddr(), inst->seqNum, inst->isStore());
 }
 
 template <class MemDepPred, class Impl>
@@ -559,9 +557,9 @@ MemDepUnit<MemDepPred, Impl>::dumpLists()
         int num = 0;
 
         while (inst_list_it != instList[tid].end()) {
-            cprintf("Instruction:%i\nPC:%#x\n[sn:%i]\n[tid:%i]\nIssued:%i\n"
+            cprintf("Instruction:%i\nPC: %s\n[sn:%i]\n[tid:%i]\nIssued:%i\n"
                     "Squashed:%i\n\n",
-                    num, (*inst_list_it)->readPC(),
+                    num, (*inst_list_it)->pcState(),
                     (*inst_list_it)->seqNum,
                     (*inst_list_it)->threadNumber,
                     (*inst_list_it)->isIssued(),

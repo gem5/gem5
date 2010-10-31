@@ -83,7 +83,7 @@ class Predecoder
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void
-    moreBytes(Addr pc, Addr fetchPC, MachInst inst)
+    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     {
         emi = inst;
     }
@@ -110,7 +110,7 @@ class Predecoder
 
     // This returns a constant reference to the ExtMachInst to avoid a copy
     const ExtMachInst &
-    getExtMachInst()
+    getExtMachInst(PCState &pcState)
     {
         return emi;
     }

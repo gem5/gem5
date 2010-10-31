@@ -31,6 +31,7 @@
 #ifndef __ARCH_POWER_TYPES_HH__
 #define __ARCH_POWER_TYPES_HH__
 
+#include "arch/generic/types.hh"
 #include "base/bitunion.hh"
 #include "base/hashmap.hh"
 #include "base/types.hh"
@@ -77,6 +78,8 @@ BitUnion32(ExtMachInst)
     // FXM field for mtcrf instruction
     Bitfield<19, 12> fxm;
 EndBitUnion(ExtMachInst)
+
+typedef GenericISA::SimplePCState<MachInst> PCState;
 
 // typedef uint64_t LargestRead;
 // // Need to use 64 bits to make sure that read requests get handled properly

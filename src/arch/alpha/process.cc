@@ -162,15 +162,7 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
     setSyscallArg(tc, 1, argv_array_base);
     tc->setIntReg(StackPointerReg, stack_min);
 
-    Addr prog_entry = objFile->entryPoint();
-    tc->setPC(prog_entry);
-    tc->setNextPC(prog_entry + sizeof(MachInst));
-
-    // MIPS/Sparc need NNPC for delay slot handling, while
-    // Alpha has no delay slots... However, CPU models
-    // cycle PCs by PC=NPC, NPC=NNPC, etc. so setting this
-    // here ensures CPU-Model Compatibility across board
-    tc->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    tc->pcState(objFile->entryPoint());
 }
 
 void

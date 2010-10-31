@@ -41,6 +41,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/mt.hh"
 #include "arch/types.hh"
+#include "arch/utility.hh"
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
@@ -108,12 +109,13 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** BaseDynInst constructor given a binary instruction.
      *  @param inst The binary instruction.
      *  @param PC The PC of the instruction.
-     *  @param pred_PC The predicted next PC.
+     *  @param predPC The predicted next PC.
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      */
-    InOrderDynInst(ExtMachInst inst, Addr PC, Addr pred_PC, InstSeqNum seq_num,
-                 InOrderCPU *cpu);
+    InOrderDynInst(ExtMachInst inst, const TheISA::PCState &PC,
+                   const TheISA::PCState &predPC, InstSeqNum seq_num,
+                   InOrderCPU *cpu);
 
     /** BaseDynInst constructor given a binary instruction.
      *  @param seq_num The sequence number of the instruction.
@@ -269,28 +271,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     InstResult instResult[MaxInstDestRegs];
 
     /** PC of this instruction. */
-    Addr PC;
-
-    /** Next non-speculative PC.  It is not filled in at fetch, but rather
-     *  once the target of the branch is truly known (either decode or
-     *  execute).
-     */
-    Addr nextPC;
-
-    /** Next next non-speculative PC.  It is not filled in at fetch, but rather
-     *  once the target of the branch is truly known (either decode or
-     *  execute).
-     */
-    Addr nextNPC;
+    TheISA::PCState pc;
 
     /** Predicted next PC. */
-    Addr predPC;
-
-    /** Predicted next NPC. */
-    Addr predNPC;
-
-    /** Predicted next microPC */
-    Addr predMicroPC;
+    TheISA::PCState predPC;
 
     /** Address to fetch from */
     Addr fetchAddr;
@@ -540,33 +524,14 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     //
     ////////////////////////////////////////////////////////////
     /** Read the PC of this instruction. */
-    const Addr readPC() const { return PC; }
+    const TheISA::PCState &pcState() const { return pc; }
 
     /** Sets the PC of this instruction. */
-    void setPC(Addr pc) { PC = pc; }
+    void pcState(const TheISA::PCState &_pc) { pc = _pc; }
 
-    /** Returns the next PC.  This could be the speculative next PC if it is
-     *  called prior to the actual branch target being calculated.
-     */
-    Addr readNextPC() { return nextPC; }
-
-    /** Set the next PC of this instruction (its actual target). */
-    void setNextPC(uint64_t val) { nextPC = val; }
-
-    /** Returns the next NPC.  This could be the speculative next NPC if it is
-     *  called prior to the actual branch target being calculated.
-     */
-    Addr readNextNPC()
-    {
-#if ISA_HAS_DELAY_SLOT
-        return nextNPC;
-#else
-        return nextPC + sizeof(TheISA::MachInst);
-#endif
-    }
-
-    /** Set the next PC of this instruction (its actual target). */
-    void setNextNPC(uint64_t val) { nextNPC = val; }
+    const Addr instAddr() { return pc.instAddr(); }
+    const Addr nextInstAddr() { return pc.nextInstAddr(); }
+    const MicroPC microPC() { return pc.microPC(); }
 
     ////////////////////////////////////////////////////////////
     //
@@ -574,38 +539,36 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     //
     ////////////////////////////////////////////////////////////
     /** Set the predicted target of this current instruction. */
-    void setPredTarg(Addr predicted_PC) { predPC = predicted_PC; }
+    void setPredTarg(const TheISA::PCState &predictedPC)
+    { predPC = predictedPC; }
 
     /** Returns the predicted target of the branch. */
-    Addr readPredTarg() { return predPC; }
+    TheISA::PCState readPredTarg() { return predPC; }
 
     /** Returns the predicted PC immediately after the branch. */
-    Addr readPredPC() { return predPC; }
+    Addr predInstAddr() { return predPC.instAddr(); }
 
     /** Returns the predicted PC two instructions after the branch */
-    Addr readPredNPC() { return predNPC; }
+    Addr predNextInstAddr() { return predPC.nextInstAddr(); }
 
     /** Returns the predicted micro PC after the branch */
-    Addr readPredMicroPC() { return predMicroPC; }
+    Addr readPredMicroPC() { return predPC.microPC(); }
 
     /** Returns whether the instruction was predicted taken or not. */
     bool predTaken() { return predictTaken; }
 
     /** Returns whether the instruction mispredicted. */
-    bool mispredicted()
+    bool
+    mispredicted()
     {
-#if ISA_HAS_DELAY_SLOT
-        return predPC != nextNPC;
-#else
-        return predPC != nextPC;
-#endif
+        TheISA::PCState nextPC = pc;
+        TheISA::advancePC(nextPC, staticInst);
+        return !(nextPC == predPC);
     }
 
-    /** Returns whether the instruction mispredicted. */
-    bool mistargeted() { return predPC != nextNPC; }
-
     /** Returns the branch target address. */
-    Addr branchTarget() const { return staticInst->branchTarget(PC); }
+    TheISA::PCState branchTarget() const
+    { return staticInst->branchTarget(pc); }
 
     /** Checks whether or not this instruction has had its branch target
      *  calculated yet.  For now it is not utilized and is hacked to be

@@ -193,7 +193,7 @@ def template JumpExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            NNPC = xc->readNextNPC();
+            PCS = PCS;
             %(code)s;
 
             if(fault == NoFault)
@@ -289,15 +289,24 @@ let {{
 
     def doCondBranch(name, Name, base, cond, code, opt_flags):
         return doBranch(name, Name, base, cond, code, code,
-                'NPC = NPC; NNPC = NNPC;',
-                'NNPC = NPC + 8; NPC = NPC + 4',
+                'PCS = PCS;',
+                '''
+                SparcISA::PCState pc = PCS;
+                pc.nnpc(pc.npc() + 8);
+                pc.npc(pc.npc() + 4);
+                PCS = pc;
+                ''',
                 opt_flags)
 
     def doUncondBranch(name, Name, base, code, annul_code, opt_flags):
         return doBranch(name, Name, base, "true", code, annul_code,
                 ";", ";", opt_flags)
 
-    default_branch_code = "NNPC = xc->readPC() + disp;"
+    default_branch_code = '''
+    SparcISA::PCState pc = PCS;
+    pc.nnpc(pc.pc() + disp);
+    PCS = pc;
+    '''
 }};
 
 // Format for branch instructions with n bit displacements:

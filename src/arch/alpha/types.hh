@@ -33,11 +33,14 @@
 #define __ARCH_ALPHA_TYPES_HH__
 
 #include "base/types.hh"
+#include "arch/generic/types.hh"
 
 namespace AlphaISA {
 
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
+
+typedef GenericISA::SimplePCState<MachInst> PCState;
 
 typedef uint64_t LargestRead;
 

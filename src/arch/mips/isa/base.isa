@@ -56,6 +56,13 @@ output header {{
         void printReg(std::ostream &os, int reg) const;
 
         std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+      public:
+        void
+        advancePC(MipsISA::PCState &pc) const
+        {
+            pc.advance();
+        }
     };
 
 }};

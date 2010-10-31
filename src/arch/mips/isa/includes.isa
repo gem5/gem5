@@ -39,6 +39,7 @@ output header {{
 #include <iomanip>
 
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/types.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 }};

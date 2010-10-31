@@ -273,9 +273,7 @@ class InOrderCPU : public BaseCPU
     PipelineStage *pipelineStage[ThePipeline::NumStages];
 
     /** Program Counters */
-    TheISA::IntReg PC[ThePipeline::MaxThreads];
-    TheISA::IntReg nextPC[ThePipeline::MaxThreads];
-    TheISA::IntReg nextNPC[ThePipeline::MaxThreads];
+    TheISA::PCState pc[ThePipeline::MaxThreads];
 
     /** The Register File for the CPU */
     union {
@@ -471,22 +469,22 @@ class InOrderCPU : public BaseCPU
                            ThreadID tid);
 
     /** Reads the commit PC of a specific thread. */
-    uint64_t readPC(ThreadID tid);
+    TheISA::PCState
+    pcState(ThreadID tid)
+    {
+        return pc[tid];
+    }
 
     /** Sets the commit PC of a specific thread. */
-    void setPC(Addr new_PC, ThreadID tid);
+    void
+    pcState(const TheISA::PCState &newPC, ThreadID tid)
+    {
+        pc[tid] = newPC;
+    }
 
-    /** Reads the next PC of a specific thread. */
-    uint64_t readNextPC(ThreadID tid);
-
-    /** Sets the next PC of a specific thread. */
-    void setNextPC(uint64_t val, ThreadID tid);
-
-    /** Reads the next NPC of a specific thread. */
-    uint64_t readNextNPC(ThreadID tid);
-
-    /** Sets the next NPC of a specific thread. */
-    void setNextNPC(uint64_t val, ThreadID tid);
+    Addr instAddr(ThreadID tid) { return pc[tid].instAddr(); }
+    Addr nextInstAddr(ThreadID tid) { return pc[tid].nextInstAddr(); }
+    MicroPC microPC(ThreadID tid) { return pc[tid].microPC(); }
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.

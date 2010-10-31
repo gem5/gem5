@@ -381,12 +381,20 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch relative to PC based on CR and CTR.
         format BranchPCRelCondCtr {
-            0: bc({{ NPC = PC + disp; }});
+            0: bc({{
+                PowerISA::PCState pc = PCS;
+                pc.npc((uint32_t)(pc.pc() + disp));
+                PCS = pc;
+            }});
         }
 
         // Conditionally branch to fixed address based on CR and CTR.
         format BranchNonPCRelCondCtr {
-            1: bca({{ NPC = targetAddr; }});
+            1: bca({{
+                PowerISA::PCState pc = PCS;
+                pc.npc(targetAddr);
+                PCS = pc;
+            }});
         }
     }
 
@@ -394,12 +402,20 @@ decode OPCODE default Unknown::unknown() {
 
         // Unconditionally branch relative to PC.
         format BranchPCRel {
-            0: b({{ NPC = PC + disp; }});
+            0: b({{
+                PowerISA::PCState pc = PCS;
+                pc.npc((uint32_t)(pc.pc() + disp));
+                PCS = pc;
+            }});
         }
 
         // Unconditionally branch to fixed address.
         format BranchNonPCRel {
-            1: ba({{ NPC = targetAddr; }});
+            1: ba({{
+                PowerISA::PCState pc = PCS;
+                pc.npc(targetAddr);
+                PCS = pc;
+            }});
         }
     }
 
@@ -407,12 +423,20 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch to address in LR based on CR and CTR.
         format BranchLrCondCtr {
-           16: bclr({{ NPC = LR & 0xfffffffc; }});
+           16: bclr({{
+               PowerISA::PCState pc = PCS;
+               pc.npc(LR & 0xfffffffc);
+               PCS = pc;
+           }});
         }
 
         // Conditionally branch to address in CTR based on CR.
         format BranchCtrCond {
-           528: bcctr({{ NPC = CTR & 0xfffffffc; }});
+           528: bcctr({{
+               PowerISA::PCState pc = PCS;
+               pc.npc(CTR & 0xfffffffc);
+               PCS = pc;
+           }});
         }
 
         // Condition register manipulation instructions.

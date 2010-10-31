@@ -732,9 +732,7 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
     //this->copyFromTC(tid);
 
     //Set PC/NPC/NNPC
-    setPC(src_tc->readPC(), tid);
-    setNextPC(src_tc->readNextPC(), tid);
-    setNextNPC(src_tc->readNextNPC(), tid);
+    pcState(src_tc->pcState(), tid);
 
     src_tc->setStatus(ThreadContext::Active);
 
@@ -778,7 +776,7 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
 
     // Squash Throughout Pipeline
     InstSeqNum squash_seq_num = commit.rob->readHeadInst(tid)->seqNum;
-    fetch.squash(0, sizeof(TheISA::MachInst), 0, squash_seq_num, tid);
+    fetch.squash(0, squash_seq_num, tid);
     decode.squash(tid);
     rename.squash(squash_seq_num, tid);
     iew.squash(tid);
@@ -1306,73 +1304,38 @@ FullO3CPU<Impl>::setArchFloatRegInt(int reg_idx, uint64_t val, ThreadID tid)
 }
 
 template <class Impl>
-uint64_t
-FullO3CPU<Impl>::readPC(ThreadID tid)
+TheISA::PCState
+FullO3CPU<Impl>::pcState(ThreadID tid)
 {
-    return commit.readPC(tid);
+    return commit.pcState(tid);
 }
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setPC(Addr new_PC, ThreadID tid)
+FullO3CPU<Impl>::pcState(const TheISA::PCState &val, ThreadID tid)
 {
-    commit.setPC(new_PC, tid);
+    commit.pcState(val, tid);
 }
 
 template <class Impl>
-uint64_t
-FullO3CPU<Impl>::readMicroPC(ThreadID tid)
+Addr
+FullO3CPU<Impl>::instAddr(ThreadID tid)
 {
-    return commit.readMicroPC(tid);
+    return commit.instAddr(tid);
 }
 
 template <class Impl>
-void
-FullO3CPU<Impl>::setMicroPC(Addr new_PC, ThreadID tid)
+Addr
+FullO3CPU<Impl>::nextInstAddr(ThreadID tid)
 {
-    commit.setMicroPC(new_PC, tid);
+    return commit.nextInstAddr(tid);
 }
 
 template <class Impl>
-uint64_t
-FullO3CPU<Impl>::readNextPC(ThreadID tid)
+MicroPC
+FullO3CPU<Impl>::microPC(ThreadID tid)
 {
-    return commit.readNextPC(tid);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::setNextPC(uint64_t val, ThreadID tid)
-{
-    commit.setNextPC(val, tid);
-}
-
-template <class Impl>
-uint64_t
-FullO3CPU<Impl>::readNextNPC(ThreadID tid)
-{
-    return commit.readNextNPC(tid);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::setNextNPC(uint64_t val, ThreadID tid)
-{
-    commit.setNextNPC(val, tid);
-}
-
-template <class Impl>
-uint64_t
-FullO3CPU<Impl>::readNextMicroPC(ThreadID tid)
-{
-    return commit.readNextMicroPC(tid);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::setNextMicroPC(Addr new_PC, ThreadID tid)
-{
-    commit.setNextMicroPC(new_PC, tid);
+    return commit.microPC(tid);
 }
 
 template <class Impl>
@@ -1419,9 +1382,9 @@ template <class Impl>
 void
 FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 {
-    DPRINTF(O3CPU, "Removing committed instruction [tid:%i] PC %#x "
+    DPRINTF(O3CPU, "Removing committed instruction [tid:%i] PC %s "
             "[sn:%lli]\n",
-            inst->threadNumber, inst->readPC(), inst->seqNum);
+            inst->threadNumber, inst->pcState(), inst->seqNum);
 
     removeInstsThisCycle = true;
 
@@ -1509,10 +1472,10 @@ FullO3CPU<Impl>::squashInstIt(const ListIt &instIt, ThreadID tid)
 {
     if ((*instIt)->threadNumber == tid) {
         DPRINTF(O3CPU, "Squashing instruction, "
-                "[tid:%i] [sn:%lli] PC %#x\n",
+                "[tid:%i] [sn:%lli] PC %s\n",
                 (*instIt)->threadNumber,
                 (*instIt)->seqNum,
-                (*instIt)->readPC());
+                (*instIt)->pcState());
 
         // Mark it as squashed.
         (*instIt)->setSquashed();
@@ -1530,10 +1493,10 @@ FullO3CPU<Impl>::cleanUpRemovedInsts()
 {
     while (!removeList.empty()) {
         DPRINTF(O3CPU, "Removing instruction, "
-                "[tid:%i] [sn:%lli] PC %#x\n",
+                "[tid:%i] [sn:%lli] PC %s\n",
                 (*removeList.front())->threadNumber,
                 (*removeList.front())->seqNum,
-                (*removeList.front())->readPC());
+                (*removeList.front())->pcState());
 
         instList.erase(removeList.front());
 
@@ -1563,7 +1526,7 @@ FullO3CPU<Impl>::dumpInsts()
     while (inst_list_it != instList.end()) {
         cprintf("Instruction:%i\nPC:%#x\n[tid:%i]\n[sn:%lli]\nIssued:%i\n"
                 "Squashed:%i\n\n",
-                num, (*inst_list_it)->readPC(), (*inst_list_it)->threadNumber,
+                num, (*inst_list_it)->instAddr(), (*inst_list_it)->threadNumber,
                 (*inst_list_it)->seqNum, (*inst_list_it)->isIssued(),
                 (*inst_list_it)->isSquashed());
         inst_list_it++;

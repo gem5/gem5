@@ -72,10 +72,7 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 
     std::string sym_str;
     Addr sym_addr;
-    Addr cur_pc = PC;
-#if THE_ISA == ARM_ISA
-    cur_pc &= ~PcModeMask;
-#endif
+    Addr cur_pc = pc.instAddr();
     if (debugSymbolTable
         && IsOn(ExecSymbol)
 #if FULL_SYSTEM
@@ -85,13 +82,12 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
         if (cur_pc != sym_addr)
             sym_str += csprintf("+%d",cur_pc - sym_addr);
         outs << "@" << sym_str;
-    }
-    else {
+    } else {
         outs << "0x" << hex << cur_pc;
     }
 
     if (inst->isMicroop()) {
-        outs << "." << setw(2) << dec << upc;
+        outs << "." << setw(2) << dec << pc.microPC();
     } else {
         outs << "   ";
     }

@@ -84,41 +84,34 @@ BranchPredictor::execute(int slot_num)
                 DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, "
                         "skipping prediction \n", tid, inst->seqNum);
             } else {
-                Addr pred_PC = inst->readNextPC();
+                TheISA::PCState predPC = inst->pcState();
+                TheISA::advancePC(predPC, inst->staticInst);
 
                 if (inst->isControl()) {
                     // If not, the pred_PC be updated to pc+8
                     // If predicted, the pred_PC will be updated to new target
                     // value
-                    bool predict_taken = branchPred.predict(inst, pred_PC, tid);
+                    bool predict_taken = branchPred.predict(inst, predPC, tid);
 
                     if (predict_taken) {
                         DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch "
                                 "predicted true.\n", tid, seq_num);
-
-                        inst->setPredTarg(pred_PC);
-
                         predictedTaken++;
                     } else {
                         DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch "
                                 "predicted false.\n", tid, seq_num);
-
-                        if (inst->isCondDelaySlot())
-                        {
-                            inst->setPredTarg(inst->readPC() + (2 * instSize));
-                        } else {
-                            inst->setPredTarg(pred_PC);
-                        }
-
                         predictedNotTaken++;
                     }
+
+                    inst->setPredTarg(predPC);
 
                     inst->setBranchPred(predict_taken);
 
                     DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Predicted PC is "
-                            "%08p.\n", tid, seq_num, pred_PC);
+                            "%s.\n", tid, seq_num, predPC);
 
                 } else {
+                    inst->setPredTarg(predPC);
                     //DPRINTF(InOrderBPred, "[tid:%i]: Ignoring [sn:%i] "
                     //      "because this isn't "
                     //      "a control instruction.\n", tid, seq_num);
@@ -166,10 +159,9 @@ BranchPredictor::squash(DynInstPtr inst, int squash_stage,
     squash_seq_num = squash_seq_num - 1;
 #endif
 
-    if(squash_stage>=ThePipeline::BackEndStartStage) {
-        Addr corr_targ=inst->readPredPC();
-        bool taken=inst->predTaken();
-        branchPred.squash(squash_seq_num,corr_targ,taken,tid);
+    if (squash_stage >= ThePipeline::BackEndStartStage) {
+        bool taken = inst->predTaken();
+        branchPred.squash(squash_seq_num, inst->readPredTarg(), taken, tid);
     } else {
         branchPred.squash(squash_seq_num, tid);
     }

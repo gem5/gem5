@@ -116,10 +116,12 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
 void
 I386LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
 {
-    Addr eip = tc->readPC();
+    TheISA::PCState pc = tc->pcState();
+    Addr eip = pc.pc();
     if (eip >= vsyscallPage.base &&
             eip < vsyscallPage.base + vsyscallPage.size) {
-        tc->setNextPC(vsyscallPage.base + vsyscallPage.vsysexitOffset);
+        pc.npc(vsyscallPage.base + vsyscallPage.vsysexitOffset);
+        tc->pcState(pc);
     }
     X86LiveProcess::syscall(callnum, tc);
 }
@@ -645,11 +647,9 @@ X86LiveProcess::argsInit(int pageSize,
     //Set the stack pointer register
     tc->setIntReg(StackPointerReg, stack_min);
 
-    Addr prog_entry = objFile->entryPoint();
     // There doesn't need to be any segment base added in since we're dealing
     // with the flat segmentation model.
-    tc->setPC(prog_entry);
-    tc->setNextPC(prog_entry + sizeof(MachInst));
+    tc->pcState(objFile->entryPoint());
 
     //Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);

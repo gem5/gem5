@@ -107,7 +107,7 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
 
     /** @todo These should be cached or grabbed from cached copies in
      the TLB, all these miscreg reads are expensive */
-    currState->vaddr = currState->req->getVaddr() & ~PcModeMask;
+    currState->vaddr = currState->req->getVaddr();
     currState->sctlr = currState->tc->readMiscReg(MISCREG_SCTLR);
     sctlr = currState->sctlr;
     currState->N = currState->tc->readMiscReg(MISCREG_TTBCR);

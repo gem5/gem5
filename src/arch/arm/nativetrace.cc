@@ -106,7 +106,7 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
     }
 
     //R15, aliased with the PC
-    newState[STATE_PC] = tc->readNextPC();
+    newState[STATE_PC] = tc->pcState().npc();
     changed[STATE_PC] = (newState[STATE_PC] != oldState[STATE_PC]);
 
     //CPSR
@@ -121,7 +121,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     ThreadContext *tc = record->getThread();
     // This area is read only on the target. It can't stop there to tell us
     // what's going on, so we should skip over anything there also.
-    if (tc->readNextPC() > 0xffff0000)
+    if (tc->nextInstAddr() > 0xffff0000)
         return;
     nState.update(this);
     mState.update(tc);

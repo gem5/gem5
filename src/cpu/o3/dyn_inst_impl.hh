@@ -33,24 +33,18 @@
 
 template <class Impl>
 BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr staticInst,
-                                   Addr PC, Addr NPC, Addr microPC,
-                                   Addr Pred_PC, Addr Pred_NPC,
-                                   Addr Pred_MicroPC,
+                                   TheISA::PCState pc, TheISA::PCState predPC,
                                    InstSeqNum seq_num, O3CPU *cpu)
-    : BaseDynInst<Impl>(staticInst, PC, NPC, microPC,
-                        Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
+    : BaseDynInst<Impl>(staticInst, pc, predPC, seq_num, cpu)
 {
     initVars();
 }
 
 template <class Impl>
 BaseO3DynInst<Impl>::BaseO3DynInst(ExtMachInst inst,
-                                   Addr PC, Addr NPC, Addr microPC,
-                                   Addr Pred_PC, Addr Pred_NPC,
-                                   Addr Pred_MicroPC,
+                                   TheISA::PCState pc, TheISA::PCState predPC,
                                    InstSeqNum seq_num, O3CPU *cpu)
-    : BaseDynInst<Impl>(inst, PC, NPC, microPC,
-                        Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
+    : BaseDynInst<Impl>(inst, pc, predPC, seq_num, cpu)
 {
     initVars();
 }
@@ -131,15 +125,17 @@ BaseO3DynInst<Impl>::hwrei()
 {
 #if THE_ISA == ALPHA_ISA
     // Can only do a hwrei when in pal mode.
-    if (!(this->readPC() & 0x3))
+    if (!(this->instAddr() & 0x3))
         return new AlphaISA::UnimplementedOpcodeFault;
 
     // Set the next PC based on the value of the EXC_ADDR IPR.
-    this->setNextPC(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
-                                           this->threadNumber));
+    AlphaISA::PCState pc = this->pcState();
+    pc.npc(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
+                                          this->threadNumber));
+    this->pcState(pc);
     if (CPA::available()) {
         ThreadContext *tc = this->cpu->tcBase(this->threadNumber);
-        CPA::cpa()->swAutoBegin(tc, this->readNextPC());
+        CPA::cpa()->swAutoBegin(tc, this->nextInstAddr());
     }
 
     // Tell CPU to clear any state it needs to if a hwrei is taken.
@@ -175,11 +171,11 @@ BaseO3DynInst<Impl>::syscall(int64_t callnum)
     // HACK: check CPU's nextPC before and after syscall. If it
     // changes, update this instruction's nextPC because the syscall
     // must have changed the nextPC.
-    Addr cpu_next_pc = this->cpu->readNextPC(this->threadNumber);
+    TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
     this->cpu->syscall(callnum, this->threadNumber);
-    Addr new_next_pc = this->cpu->readNextPC(this->threadNumber);
-    if (cpu_next_pc != new_next_pc) {
-        this->setNextPC(new_next_pc);
+    TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
+    if (!(curPC == newPC)) {
+        this->pcState(newPC);
     }
 }
 #endif

@@ -73,7 +73,8 @@ class MacroopBase : public X86StaticInst
 
     StaticInstPtr * microops;
 
-    StaticInstPtr fetchMicroop(MicroPC microPC)
+    StaticInstPtr
+    fetchMicroop(MicroPC microPC) const
     {
         assert(microPC < numMicroops);
         return microops[microPC];

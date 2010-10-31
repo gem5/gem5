@@ -31,6 +31,7 @@
 #include <list>
 #include <vector>
 
+#include "arch/utility.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
 #include "config/the_isa.hh"
@@ -149,7 +150,7 @@ BPredUnit::takeOverFrom()
 
 
 bool
-BPredUnit::predict(DynInstPtr &inst, Addr &pred_PC, ThreadID tid)
+BPredUnit::predict(DynInstPtr &inst, TheISA::PCState &predPC, ThreadID tid)
 {
     // See if branch predictor predicts taken.
     // If so, get its target addr either from the BTB or the RAS.
@@ -160,12 +161,13 @@ BPredUnit::predict(DynInstPtr &inst, Addr &pred_PC, ThreadID tid)
     
     int asid = inst->asid;
     bool pred_taken = false;
-    Addr target;
+    TheISA::PCState target;
 
     ++lookups;
-    DPRINTF(InOrderBPred, "[tid:%i] [sn:%i] %s ... PC%#x doing branch "
+    DPRINTF(InOrderBPred, "[tid:%i] [sn:%i] %s ... PC %s doing branch "
             "prediction\n", tid, inst->seqNum,
-            inst->staticInst->disassemble(inst->PC), inst->readPC());
+            inst->staticInst->disassemble(inst->instAddr()),
+            inst->pcState());
 
 
     void *bp_history = NULL;
@@ -185,14 +187,14 @@ BPredUnit::predict(DynInstPtr &inst, Addr &pred_PC, ThreadID tid)
     } else {
         ++condPredicted;
 
-        pred_taken = BPLookup(pred_PC, bp_history);
+        pred_taken = BPLookup(predPC.instAddr(), bp_history);
 
         DPRINTF(InOrderBPred, "[tid:%i]: Branch predictor predicted %i "
-                "for PC %#x\n",
-                tid, pred_taken, inst->readPC());
+                "for PC %s\n",
+                tid, pred_taken, inst->pcState());
     }
 
-    PredictorHistory predict_record(inst->seqNum, pred_PC, pred_taken,
+    PredictorHistory predict_record(inst->seqNum, predPC, pred_taken,
                                     bp_history, tid);
 
     // Now lookup in the BTB or RAS.
@@ -202,40 +204,37 @@ BPredUnit::predict(DynInstPtr &inst, Addr &pred_PC, ThreadID tid)
 
             // If it's a function return call, then look up the address
             // in the RAS.
-            target = RAS[tid].top();
+            TheISA::PCState rasTop = RAS[tid].top();
+            target = TheISA::buildRetPC(inst->pcState(), rasTop);
 
             // Record the top entry of the RAS, and its index.
             predict_record.usedRAS = true;
             predict_record.RASIndex = RAS[tid].topIdx();
-            predict_record.RASTarget = target;
+            predict_record.rasTarget = rasTop;
 
             assert(predict_record.RASIndex < 16);
 
             RAS[tid].pop();
 
-            DPRINTF(InOrderBPred, "[tid:%i]: Instruction %#x is a return, "
-                    "RAS predicted target: %#x, RAS index: %i.\n",
-                    tid, inst->readPC(), target, predict_record.RASIndex);
+            DPRINTF(InOrderBPred, "[tid:%i]: Instruction %s is a return, "
+                    "RAS predicted target: %s, RAS index: %i.\n",
+                    tid, inst->pcState(), target,
+                    predict_record.RASIndex);
         } else {
             ++BTBLookups;
 
             if (inst->isCall()) {
 
-#if ISA_HAS_DELAY_SLOT
-                Addr ras_pc = pred_PC + instSize; // Next Next PC
-#else
-                Addr ras_pc = pred_PC; // Next PC
-#endif
-
-                RAS[tid].push(ras_pc);
+                RAS[tid].push(inst->pcState());
 
                 // Record that it was a call so that the top RAS entry can
                 // be popped off if the speculation is incorrect.
                 predict_record.wasCall = true;
 
-                DPRINTF(InOrderBPred, "[tid:%i]: Instruction %#x was a call"
-                        ", adding %#x to the RAS index: %i.\n",
-                        tid, inst->readPC(), ras_pc, RAS[tid].topIdx());
+                DPRINTF(InOrderBPred, "[tid:%i]: Instruction %s was a call"
+                        ", adding %s to the RAS index: %i.\n",
+                        tid, inst->pcState(), predPC,
+                        RAS[tid].topIdx());
             }
 
             if (inst->isCall() &&
@@ -243,18 +242,18 @@ BPredUnit::predict(DynInstPtr &inst, Addr &pred_PC, ThreadID tid)
                 inst->isDirectCtrl()) {
                 target = inst->branchTarget();
 
-                DPRINTF(InOrderBPred, "[tid:%i]: Setting %#x predicted"
-                        " target to %#x.\n",
-                        tid, inst->readPC(), target);
-            } else if (BTB.valid(pred_PC, asid)) {
+                DPRINTF(InOrderBPred, "[tid:%i]: Setting %s predicted"
+                        " target to %s.\n",
+                        tid, inst->pcState(), target);
+            } else if (BTB.valid(predPC.instAddr(), asid)) {
                 ++BTBHits;
 
                 // If it's not a return, use the BTB to get the target addr.
-                target = BTB.lookup(pred_PC, asid);
+                target = BTB.lookup(predPC.instAddr(), asid);
 
-                DPRINTF(InOrderBPred, "[tid:%i]: [asid:%i] Instruction %#x "
-                        "predicted target is %#x.\n",
-                        tid, asid, inst->readPC(), target);
+                DPRINTF(InOrderBPred, "[tid:%i]: [asid:%i] Instruction %s "
+                        "predicted target is %s.\n",
+                        tid, asid, inst->pcState(), target);
             } else {
                 DPRINTF(InOrderBPred, "[tid:%i]: BTB doesn't have a "
                         "valid entry.\n",tid);
@@ -265,14 +264,7 @@ BPredUnit::predict(DynInstPtr &inst, Addr &pred_PC, ThreadID tid)
 
     if (pred_taken) {
         // Set the PC and the instruction's predicted target.
-        pred_PC = target;
-    } else {
-#if ISA_HAS_DELAY_SLOT
-        // This value will be inst->PC + 4 (nextPC)
-        // Delay Slot archs need this to be inst->PC + 8 (nextNPC)
-        // so we increment one more time here.
-        pred_PC = pred_PC + instSize;
-#endif
+        predPC = target;
     }
 
     predHist[tid].push_front(predict_record);
@@ -296,7 +288,7 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
     while (!predHist[tid].empty() &&
            predHist[tid].back().seqNum <= done_sn) {
         // Update the branch predictor with the correct results.
-        BPUpdate(predHist[tid].back().PC,
+        BPUpdate(predHist[tid].back().pc.instAddr(),
                  predHist[tid].back().predTaken,
                  predHist[tid].back().bpHistory);
 
@@ -314,13 +306,13 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid, ThreadID asid)
            pred_hist.front().seqNum > squashed_sn) {
         if (pred_hist.front().usedRAS) {
             DPRINTF(InOrderBPred, "BranchPred: [tid:%i]: Restoring top of RAS "
-                    "to: %i, target: %#x.\n",
+                    "to: %i, target: %s.\n",
                     tid,
                     pred_hist.front().RASIndex,
-                    pred_hist.front().RASTarget);
+                    pred_hist.front().rasTarget);
 
             RAS[tid].restore(pred_hist.front().RASIndex,
-                             pred_hist.front().RASTarget);
+                             pred_hist.front().rasTarget);
 
         } else if (pred_hist.front().wasCall) {
             DPRINTF(InOrderBPred, "BranchPred: [tid:%i]: Removing speculative "
@@ -340,7 +332,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid, ThreadID asid)
 
 void
 BPredUnit::squash(const InstSeqNum &squashed_sn,
-                  const Addr &corr_target,
+                  const TheISA::PCState &corrTarget,
                   bool actually_taken,
                   ThreadID tid,
                   ThreadID asid)
@@ -354,8 +346,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     ++condIncorrect;
 
     DPRINTF(InOrderBPred, "[tid:%i]: Squashing from sequence number %i, "
-            "setting target to %#x.\n",
-            tid, squashed_sn, corr_target);
+            "setting target to %s.\n",
+            tid, squashed_sn, corrTarget);
 
     squash(squashed_sn, tid);
 
@@ -380,13 +372,13 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             ++RASIncorrect;
         }
 
-        BPUpdate((*hist_it).PC, actually_taken,
+        BPUpdate((*hist_it).pc.instAddr(), actually_taken,
                  pred_hist.front().bpHistory);
 
-        BTB.update((*hist_it).PC, corr_target, asid);
+        BTB.update((*hist_it).pc.instAddr(), corrTarget, asid);
 
         DPRINTF(InOrderBPred, "[tid:%i]: Removing history for [sn:%i] "
-                "PC %#x.\n", tid, (*hist_it).seqNum, (*hist_it).PC);
+                "PC %s.\n", tid, (*hist_it).seqNum, (*hist_it).pc);
 
         pred_hist.erase(hist_it);
 
@@ -424,7 +416,7 @@ BPredUnit::BPSquash(void *bp_history)
 
 
 bool
-BPredUnit::BPLookup(Addr &inst_PC, void * &bp_history)
+BPredUnit::BPLookup(Addr inst_PC, void * &bp_history)
 {
     if (predictor == Local) {
         return localBP->lookup(inst_PC, bp_history);
@@ -437,7 +429,7 @@ BPredUnit::BPLookup(Addr &inst_PC, void * &bp_history)
 
 
 void
-BPredUnit::BPUpdate(Addr &inst_PC, bool taken, void *bp_history)
+BPredUnit::BPUpdate(Addr inst_PC, bool taken, void *bp_history)
 {
     if (predictor == Local) {
         localBP->update(inst_PC, taken, bp_history);

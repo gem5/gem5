@@ -158,6 +158,12 @@ namespace X86ISA
                 panic("Tried to pick with unrecognized size %d.\n", size);
             }
         }
+
+        void
+        advancePC(PCState &pcState) const
+        {
+            pcState.advance();
+        }
     };
 }
 

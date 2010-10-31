@@ -72,8 +72,10 @@ void initCPU(ThreadContext *tc, int cpuId)
     InitInterrupt init(0);
     init.invoke(tc);
 
-    tc->setMicroPC(0);
-    tc->setNextMicroPC(1);
+    PCState pc = tc->pcState();
+    pc.upc(0);
+    pc.nupc(1);
+    tc->pcState(pc);
 
     // These next two loops zero internal microcode and implicit registers.
     // They aren't specified by the ISA but are used internally by M5's
@@ -231,8 +233,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     //copy float regs
     copyMiscRegs(src, dest);
 
-    dest->setPC(src->readPC());
-    dest->setNextPC(src->readNextPC());
+    dest->pcState(src->pcState());
 }
 
 void

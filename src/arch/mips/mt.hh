@@ -77,11 +77,12 @@ haltThread(TC *tc)
         // Save last known PC in TCRestart
         // @TODO: Needs to check if this is a branch and if so,
         // take previous instruction
-        tc->setMiscReg(MISCREG_TC_RESTART, tc->readNextPC());
+        PCState pc = tc->pcState();
+        tc->setMiscReg(MISCREG_TC_RESTART, pc.npc());
 
         warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x",
                 curTick, tc->threadId(), tc->getCpuPtr()->name(),
-                tc->readPC(), tc->readNextPC());
+                pc.pc(), pc.npc());
     }
 }
 
@@ -91,17 +92,14 @@ restoreThread(TC *tc)
 {
     if (tc->status() != TC::Active) {
         // Restore PC from TCRestart
-        IntReg pc = tc->readMiscRegNoEffect(MISCREG_TC_RESTART);
+        Addr restartPC = tc->readMiscRegNoEffect(MISCREG_TC_RESTART);
 
         // TODO: SET PC WITH AN EVENT INSTEAD OF INSTANTANEOUSLY
-        tc->setPC(pc);
-        tc->setNextPC(pc + 4);
-        tc->setNextNPC(pc + 8);
+        tc->pcState(restartPC);
         tc->activate(0);
 
         warn("%i: Restoring thread %i in %s @ PC %x",
-                curTick, tc->threadId(), tc->getCpuPtr()->name(),
-                tc->readPC());
+                curTick, tc->threadId(), tc->getCpuPtr()->name(), restartPC);
     }
 }
 

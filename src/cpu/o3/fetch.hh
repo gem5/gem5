@@ -229,7 +229,7 @@ class DefaultFetch
      * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC, Addr &next_NPC, Addr &next_MicroPC);
+    bool lookupAndUpdateNextPC(DynInstPtr &inst, TheISA::PCState &pc);
 
     /**
      * Fetches the cache line that contains fetch_PC.  Returns any
@@ -244,14 +244,12 @@ class DefaultFetch
     bool fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. */
-    inline void doSquash(const Addr &new_PC, const Addr &new_NPC,
-                         const Addr &new_MicroPC, ThreadID tid);
+    inline void doSquash(const TheISA::PCState &newPC, ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode that should be sqaushed.
      */
-    void squashFromDecode(const Addr &new_PC, const Addr &new_NPC,
-                          const Addr &new_MicroPC,
+    void squashFromDecode(const TheISA::PCState &newPC,
                           const InstSeqNum &seq_num, ThreadID tid);
 
     /** Checks if a thread is stalled. */
@@ -266,8 +264,7 @@ class DefaultFetch
      * remove any instructions that are not in the ROB. The source of this
      * squash should be the commit stage.
      */
-    void squash(const Addr &new_PC, const Addr &new_NPC,
-                const Addr &new_MicroPC,
+    void squash(const TheISA::PCState &newPC,
                 const InstSeqNum &seq_num, ThreadID tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
@@ -348,14 +345,7 @@ class DefaultFetch
     /** Predecoder. */
     TheISA::Predecoder predecoder;
 
-    /** Per-thread fetch PC. */
-    Addr PC[Impl::MaxThreads];
-
-    /** Per-thread fetch micro PC. */
-    Addr microPC[Impl::MaxThreads];
-
-    /** Per-thread next PC. */
-    Addr nextPC[Impl::MaxThreads];
+    TheISA::PCState pc[Impl::MaxThreads];
 
     /** Memory request used to access cache. */
     RequestPtr memReq[Impl::MaxThreads];

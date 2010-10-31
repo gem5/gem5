@@ -148,11 +148,11 @@ Predecoder::process()
 //Use this to give data to the predecoder. This should be used
 //when there is control flow.
 void
-Predecoder::moreBytes(Addr pc, Addr fetchPC, MachInst inst)
+Predecoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
 {
     data = inst;
-    offset = (fetchPC >= pc) ? 0 : pc - fetchPC;
-    emi.thumb = isThumb(pc);
+    offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
+    emi.thumb = pc.thumb();
     FPSCR fpscr = tc->readMiscReg(MISCREG_FPSCR);
     emi.fpscrLen = fpscr.len;
     emi.fpscrStride = fpscr.stride;

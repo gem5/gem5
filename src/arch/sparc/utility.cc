@@ -213,20 +213,16 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     // Copy misc. registers
     copyMiscRegs(src, dest);
 
-
     // Lastly copy PC/NPC
-    dest->setPC(src->readPC());
-    dest->setNextPC(src->readNextPC());
-    dest->setNextNPC(src->readNextNPC());
+    dest->pcState(src->pcState());
 }
 
 void
 skipFunction(ThreadContext *tc)
 {
-    Addr newpc = tc->readIntReg(ReturnAddressReg);
-    tc->setPC(newpc);
-    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
-    tc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
+    TheISA::PCState newPC = tc->pcState();
+    newPC.set(tc->readIntReg(ReturnAddressReg));
+    tc->pcState(newPC);
 }
 
 

@@ -248,11 +248,7 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 
     // Then finally set the PC, the next PC, the nextNPC, the micropc, and the
     // next micropc.
-    cpu->setPC(tc->readPC(), tid);
-    cpu->setNextPC(tc->readNextPC(), tid);
-    cpu->setNextNPC(tc->readNextNPC(), tid);
-    cpu->setMicroPC(tc->readMicroPC(), tid);
-    cpu->setNextMicroPC(tc->readNextMicroPC(), tid);
+    cpu->pcState(tc->pcState(), tid);
 #if !FULL_SYSTEM
     this->thread->funcExeInst = tc->readFuncExeInst();
 #endif
@@ -327,45 +323,9 @@ O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setPC(uint64_t val)
+O3ThreadContext<Impl>::pcState(const TheISA::PCState &val)
 {
-    cpu->setPC(val, thread->threadId());
-
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setNextPC(uint64_t val)
-{
-    cpu->setNextPC(val, thread->threadId());
-
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setMicroPC(uint64_t val)
-{
-    cpu->setMicroPC(val, thread->threadId());
-
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setNextMicroPC(uint64_t val)
-{
-    cpu->setNextMicroPC(val, thread->threadId());
+    cpu->pcState(val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {

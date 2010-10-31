@@ -105,12 +105,16 @@ let {{
             accCode = '''
             CPSR cpsr = Cpsr;
             SCTLR sctlr = Sctlr;
-            NPC = cSwap<uint32_t>(Mem.ud, cpsr.e);
+            ArmISA::PCState pc = PCS;
+            pc.instNPC(cSwap<uint32_t>(Mem.ud, cpsr.e));
             uint32_t newCpsr =
                 cpsrWriteByInstr(cpsr | CondCodes,
                                  cSwap<uint32_t>(Mem.ud >> 32, cpsr.e),
                                  0xF, true, sctlr.nmfi);
             Cpsr = ~CondCodesMask & newCpsr;
+            pc.nextThumb(((CPSR)newCpsr).t);
+            pc.nextJazelle(((CPSR)newCpsr).j);
+            PCS = pc;
             CondCodes = CondCodesMask & newCpsr;
             '''
             self.codeBlobs["memacc_code"] = accCode

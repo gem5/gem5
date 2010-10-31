@@ -192,25 +192,15 @@ class ThreadContext
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
 
-    virtual uint64_t readPC() = 0;
+    virtual TheISA::PCState pcState() = 0;
 
-    virtual void setPC(uint64_t val) = 0;
+    virtual void pcState(const TheISA::PCState &val) = 0;
 
-    virtual uint64_t readNextPC() = 0;
+    virtual Addr instAddr() = 0;
 
-    virtual void setNextPC(uint64_t val) = 0;
+    virtual Addr nextInstAddr() = 0;
 
-    virtual uint64_t readNextNPC() = 0;
-
-    virtual void setNextNPC(uint64_t val) = 0;
-
-    virtual uint64_t readMicroPC() = 0;
-
-    virtual void setMicroPC(uint64_t val) = 0;
-
-    virtual uint64_t readNextMicroPC() = 0;
-
-    virtual void setNextMicroPC(uint64_t val) = 0;
+    virtual MicroPC microPC() = 0;
 
     virtual MiscReg readMiscRegNoEffect(int misc_reg) = 0;
 
@@ -377,25 +367,13 @@ class ProxyThreadContext : public ThreadContext
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     { actualTC->setFloatRegBits(reg_idx, val); }
 
-    uint64_t readPC() { return actualTC->readPC(); }
+    TheISA::PCState pcState() { return actualTC->pcState(); }
 
-    void setPC(uint64_t val) { actualTC->setPC(val); }
+    void pcState(const TheISA::PCState &val) { actualTC->pcState(val); }
 
-    uint64_t readNextPC() { return actualTC->readNextPC(); }
-
-    void setNextPC(uint64_t val) { actualTC->setNextPC(val); }
-
-    uint64_t readNextNPC() { return actualTC->readNextNPC(); }
-
-    void setNextNPC(uint64_t val) { actualTC->setNextNPC(val); }
-
-    uint64_t readMicroPC() { return actualTC->readMicroPC(); }
-
-    void setMicroPC(uint64_t val) { actualTC->setMicroPC(val); }
-
-    uint64_t readNextMicroPC() { return actualTC->readMicroPC(); }
-
-    void setNextMicroPC(uint64_t val) { actualTC->setNextMicroPC(val); }
+    Addr instAddr() { return actualTC->instAddr(); }
+    Addr nextInstAddr() { return actualTC->nextInstAddr(); }
+    MicroPC microPC() { return actualTC->microPC(); }
 
     bool readPredicate() { return actualTC->readPredicate(); }
 

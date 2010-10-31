@@ -41,9 +41,10 @@ using namespace TheISA;
 void
 SkipFuncEvent::process(ThreadContext *tc)
 {
-    DPRINTF(PCEvent, "skipping %s: pc=%x, newpc=%x\n", description,
-            tc->readPC(), tc->readIntReg(ReturnAddressReg));
+    TheISA::PCState oldPC M5_VAR_USED = tc->pcState();
 
     // Call ISA specific code to do the skipping
     TheISA::skipFunction(tc);
+    DPRINTF(PCEvent, "skipping %s: pc = %s, newpc = %s\n", description,
+            oldPC, tc->pcState());
 }

@@ -67,16 +67,17 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
         checkReg(*(regName++), regVal, realRegVal);
     }
 
+    SparcISA::PCState pc = tc->pcState();
     // PC
     read(&realRegVal, sizeof(realRegVal));
     realRegVal = SparcISA::gtoh(realRegVal);
-    regVal = tc->readNextPC();
+    regVal = pc.npc();
     checkReg("pc", regVal, realRegVal);
 
     // NPC
     read(&realRegVal, sizeof(realRegVal));
     realRegVal = SparcISA::gtoh(realRegVal);
-    regVal = tc->readNextNPC();
+    pc.nnpc();
     checkReg("npc", regVal, realRegVal);
 
     // CCR

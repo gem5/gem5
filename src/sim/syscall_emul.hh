@@ -512,8 +512,8 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return -ENOTTY;
 
       default:
-        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ 0x%llx\n",
-              fd, req, tc->readPC());
+        fatal("Unsupported ioctl call: ioctl(%d, 0x%x, ...) @ \n",
+              fd, req, tc->pcState());
     }
 }
 

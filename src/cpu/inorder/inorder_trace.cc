@@ -70,15 +70,15 @@ InOrderTrace::getInstRecord(unsigned num_stages, bool stage_tracing,
     if (!Trace::enabled)
         return NULL;
 
-    return new InOrderTraceRecord(num_stages, stage_tracing, tc);
+    return new InOrderTraceRecord(num_stages, stage_tracing, tc, 0);
 }
 
 InOrderTraceRecord *
 InOrderTrace::getInstRecord(Tick when, ThreadContext *tc,
-        const StaticInstPtr staticInst, Addr pc,
-        const StaticInstPtr macroStaticInst, MicroPC upc)
+        const StaticInstPtr staticInst, TheISA::PCState _pc,
+        const StaticInstPtr macroStaticInst)
 {
-    return new InOrderTraceRecord(ThePipeline::NumStages, true, tc);
+    return new InOrderTraceRecord(ThePipeline::NumStages, true, tc, _pc);
 }
 
 /* namespace Trace */ }

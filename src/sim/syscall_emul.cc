@@ -824,9 +824,7 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
         #endif
 
-        ctc->setPC(tc->readNextPC());
-        ctc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
-        ctc->setNextNPC(tc->readNextNPC() + sizeof(TheISA::MachInst));
+        ctc->pcState(tc->nextInstAddr());
 
         ctc->activate();
 

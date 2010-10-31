@@ -84,8 +84,8 @@ FirstStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
             break;
         }
         DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
-                "PC %08p.\n", tid, insts[tid].front()->seqNum, 
-                insts[tid].front()->PC);
+                "PC %s.\n", tid, insts[tid].front()->seqNum,
+                insts[tid].front()->pc);
         insts[tid].pop();
     }
 

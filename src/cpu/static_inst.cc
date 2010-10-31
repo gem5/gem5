@@ -68,7 +68,8 @@ StaticInst::dumpDecodeCacheStats()
 }
 
 bool
-StaticInst::hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const
+StaticInst::hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
+                            TheISA::PCState &tgt) const
 {
     if (isDirectCtrl()) {
         tgt = branchTarget(pc);
@@ -84,21 +85,21 @@ StaticInst::hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const
 }
 
 StaticInstPtr
-StaticInst::fetchMicroop(MicroPC micropc)
+StaticInst::fetchMicroop(MicroPC upc) const
 {
     panic("StaticInst::fetchMicroop() called on instruction "
           "that is not microcoded.");
 }
 
-Addr
-StaticInst::branchTarget(Addr branchPC) const
+TheISA::PCState
+StaticInst::branchTarget(const TheISA::PCState &pc) const
 {
     panic("StaticInst::branchTarget() called on instruction "
           "that is not a PC-relative branch.");
     M5_DUMMY_RETURN;
 }
 
-Addr
+TheISA::PCState
 StaticInst::branchTarget(ThreadContext *tc) const
 {
     panic("StaticInst::branchTarget() called on instruction "

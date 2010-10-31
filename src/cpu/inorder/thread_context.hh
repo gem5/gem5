@@ -204,23 +204,21 @@ class InOrderThreadContext : public ThreadContext
                                    ThreadID tid);
 
     /** Reads this thread's PC. */
-    uint64_t readPC()
-    { return cpu->readPC(thread->readTid()); }
+    TheISA::PCState pcState()
+    { return cpu->pcState(thread->readTid()); }
 
     /** Sets this thread's PC. */
-    void setPC(uint64_t val);
+    void pcState(const TheISA::PCState &val)
+    { cpu->pcState(val, thread->readTid()); }
 
-    /** Reads this thread's next PC. */
-    uint64_t readNextPC()
-    { return cpu->readNextPC(thread->readTid()); }
+    Addr instAddr()
+    { return cpu->instAddr(thread->readTid()); }
 
-    /** Sets this thread's next PC. */
-    void setNextPC(uint64_t val);
+    Addr nextInstAddr()
+    { return cpu->nextInstAddr(thread->readTid()); }
 
-    uint64_t readNextNPC()
-    { return cpu->readNextNPC(thread->readTid()); }
-
-    void setNextNPC(uint64_t val);
+    MicroPC microPC()
+    { return cpu->microPC(thread->readTid()); }
 
     /** Reads a miscellaneous register. */
     MiscReg readMiscRegNoEffect(int misc_reg)

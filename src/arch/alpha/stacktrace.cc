@@ -145,7 +145,7 @@ StackTrace::trace(ThreadContext *_tc, bool is_call)
     bool usermode =
         (tc->readMiscRegNoEffect(IPR_DTB_CM) & 0x18) != 0;
 
-    Addr pc = tc->readNextPC();
+    Addr pc = tc->pcState().pc();
     bool kernel = sys->kernelStart <= pc && pc <= sys->kernelEnd;
 
     if (usermode) {
@@ -168,7 +168,7 @@ StackTrace::trace(ThreadContext *_tc, bool is_call)
             panic("could not find address %#x", pc);
 
         stack.push_back(addr);
-        pc = tc->readPC();
+        pc = tc->pcState().pc();
     }
 
     while (ksp > bottom) {

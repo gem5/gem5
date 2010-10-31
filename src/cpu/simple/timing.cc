@@ -422,7 +422,7 @@ TimingSimpleCPU::readBytes(Addr addr, uint8_t *data,
     Fault fault;
     const int asid = 0;
     const ThreadID tid = 0;
-    const Addr pc = thread->readPC();
+    const Addr pc = thread->instAddr();
     unsigned block_size = dcachePort.peerBlockSize();
     BaseTLB::Mode mode = BaseTLB::Read;
 
@@ -545,7 +545,7 @@ TimingSimpleCPU::writeTheseBytes(uint8_t *data, unsigned size,
 {
     const int asid = 0;
     const ThreadID tid = 0;
-    const Addr pc = thread->readPC();
+    const Addr pc = thread->instAddr();
     unsigned block_size = dcachePort.peerBlockSize();
     BaseTLB::Mode mode = BaseTLB::Write;
 
@@ -701,9 +701,10 @@ TimingSimpleCPU::fetch()
 
     checkPcEventQueue();
 
-    bool fromRom = isRomMicroPC(thread->readMicroPC());
+    TheISA::PCState pcState = thread->pcState();
+    bool needToFetch = !isRomMicroPC(pcState.microPC()) && !curMacroStaticInst;
 
-    if (!fromRom && !curMacroStaticInst) {
+    if (needToFetch) {
         Request *ifetch_req = new Request();
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);

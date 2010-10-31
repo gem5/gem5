@@ -128,11 +128,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
         committedStores[tid] = false;
         trapSquash[tid] = false;
         tcSquash[tid] = false;
-        microPC[tid] = 0;
-        nextMicroPC[tid] = 0;
-        PC[tid] = 0;
-        nextPC[tid] = 0;
-        nextNPC[tid] = 0;
+        pc[tid].set(0);
     }
 #if FULL_SYSTEM
     interrupt = NoFault;
@@ -513,9 +509,7 @@ DefaultCommit<Impl>::squashAll(ThreadID tid)
 
     toIEW->commitInfo[tid].branchMispredict = false;
 
-    toIEW->commitInfo[tid].nextPC = PC[tid];
-    toIEW->commitInfo[tid].nextNPC = nextPC[tid];
-    toIEW->commitInfo[tid].nextMicroPC = nextMicroPC[tid];
+    toIEW->commitInfo[tid].pc = pc[tid];
 }
 
 template <class Impl>
@@ -524,7 +518,7 @@ DefaultCommit<Impl>::squashFromTrap(ThreadID tid)
 {
     squashAll(tid);
 
-    DPRINTF(Commit, "Squashing from trap, restarting at PC %#x\n", PC[tid]);
+    DPRINTF(Commit, "Squashing from trap, restarting at PC %s\n", pc[tid]);
 
     thread[tid]->trapPending = false;
     thread[tid]->inSyscall = false;
@@ -542,7 +536,7 @@ DefaultCommit<Impl>::squashFromTC(ThreadID tid)
 {
     squashAll(tid);
 
-    DPRINTF(Commit, "Squashing from TC, restarting at PC %#x\n", PC[tid]);
+    DPRINTF(Commit, "Squashing from TC, restarting at PC %s\n", pc[tid]);
 
     thread[tid]->inSyscall = false;
     assert(!thread[tid]->trapPending);
@@ -611,16 +605,16 @@ DefaultCommit<Impl>::tick()
 
             DynInstPtr inst = rob->readHeadInst(tid);
 
-            DPRINTF(Commit,"[tid:%i]: Instruction [sn:%lli] PC %#x is head of"
+            DPRINTF(Commit,"[tid:%i]: Instruction [sn:%lli] PC %s is head of"
                     " ROB and ready to commit\n",
-                    tid, inst->seqNum, inst->readPC());
+                    tid, inst->seqNum, inst->pcState());
 
         } else if (!rob->isEmpty(tid)) {
             DynInstPtr inst = rob->readHeadInst(tid);
 
             DPRINTF(Commit,"[tid:%i]: Can't commit, Instruction [sn:%lli] PC "
-                    "%#x is head of ROB and not ready\n",
-                    tid, inst->seqNum, inst->readPC());
+                    "%s is head of ROB and not ready\n",
+                    tid, inst->seqNum, inst->pcState());
         }
 
         DPRINTF(Commit, "[tid:%i]: ROB has %d insts & %d free entries.\n",
@@ -738,7 +732,7 @@ DefaultCommit<Impl>::commit()
 
             DPRINTF(Commit, "[tid:%i]: Redirecting to PC %#x\n",
                     tid,
-                    fromIEW->nextPC[tid]);
+                    fromIEW->pc[tid].nextInstAddr());
 
             commitStatus[tid] = ROBSquashing;
 
@@ -771,9 +765,7 @@ DefaultCommit<Impl>::commit()
             toIEW->commitInfo[tid].branchTaken =
                 fromIEW->branchTaken[tid];
 
-            toIEW->commitInfo[tid].nextPC = fromIEW->nextPC[tid];
-            toIEW->commitInfo[tid].nextNPC = fromIEW->nextNPC[tid];
-            toIEW->commitInfo[tid].nextMicroPC = fromIEW->nextMicroPC[tid];
+            toIEW->commitInfo[tid].pc = fromIEW->pc[tid];
 
             toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
 
@@ -880,10 +872,7 @@ DefaultCommit<Impl>::commitInsts()
             // Record that the number of ROB entries has changed.
             changedROBNumEntries[tid] = true;
         } else {
-            PC[tid] = head_inst->readPC();
-            nextPC[tid] = head_inst->readNextPC();
-            nextNPC[tid] = head_inst->readNextNPC();
-            nextMicroPC[tid] = head_inst->readNextMicroPC();
+            pc[tid] = head_inst->pcState();
 
             // Increment the total number of non-speculative instructions
             // executed.
@@ -911,11 +900,7 @@ DefaultCommit<Impl>::commitInsts()
                     cpu->instDone(tid);
                 }
 
-                PC[tid] = nextPC[tid];
-                nextPC[tid] = nextNPC[tid];
-                nextNPC[tid] = nextNPC[tid] + sizeof(TheISA::MachInst);
-                microPC[tid] = nextMicroPC[tid];
-                nextMicroPC[tid] = microPC[tid] + 1;
+                TheISA::advancePC(pc[tid], head_inst->staticInst);
 
                 int count = 0;
                 Addr oldpc;
@@ -923,19 +908,19 @@ DefaultCommit<Impl>::commitInsts()
                 // currently updating state while handling PC events.
                 assert(!thread[tid]->inSyscall && !thread[tid]->trapPending);
                 do {
-                    oldpc = PC[tid];
+                    oldpc = pc[tid].instAddr();
                     cpu->system->pcEventQueue.service(thread[tid]->getTC());
                     count++;
-                } while (oldpc != PC[tid]);
+                } while (oldpc != pc[tid].instAddr());
                 if (count > 1) {
                     DPRINTF(Commit,
                             "PC skip function event, stopping commit\n");
                     break;
                 }
             } else {
-                DPRINTF(Commit, "Unable to commit head instruction PC:%#x "
+                DPRINTF(Commit, "Unable to commit head instruction PC:%s "
                         "[tid:%i] [sn:%i].\n",
-                        head_inst->readPC(), tid ,head_inst->seqNum);
+                        head_inst->pcState(), tid ,head_inst->seqNum);
                 break;
             }
         }
@@ -970,8 +955,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             head_inst->isWriteBarrier()) {
 
             DPRINTF(Commit, "Encountered a barrier or non-speculative "
-                    "instruction [sn:%lli] at the head of the ROB, PC %#x.\n",
-                    head_inst->seqNum, head_inst->readPC());
+                    "instruction [sn:%lli] at the head of the ROB, PC %s.\n",
+                    head_inst->seqNum, head_inst->pcState());
 
             if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
@@ -994,8 +979,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
             }
 
             assert(head_inst->uncacheable());
-            DPRINTF(Commit, "[sn:%lli]: Uncached load, PC %#x.\n",
-                    head_inst->seqNum, head_inst->readPC());
+            DPRINTF(Commit, "[sn:%lli]: Uncached load, PC %s.\n",
+                    head_inst->seqNum, head_inst->pcState());
 
             // Send back the non-speculative instruction's sequence
             // number.  Tell the lsq to re-execute the load.
@@ -1034,8 +1019,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 #endif
 
     if (inst_fault != NoFault) {
-        DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
-                head_inst->seqNum, head_inst->readPC());
+        DPRINTF(Commit, "Inst [sn:%lli] PC %s has a fault\n",
+                head_inst->seqNum, head_inst->pcState());
 
         if (iewStage->hasStoresToWB(tid) || inst_num > 0) {
             DPRINTF(Commit, "Stores outstanding, fault must wait.\n");
@@ -1081,7 +1066,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
         // Generate trap squash event.
         generateTrapEvent(tid);
-//        warn("%lli fault (%d) handled @ PC %08p", curTick, inst_fault->name(), head_inst->readPC());
         return false;
     }
 
@@ -1089,9 +1073,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
 #if FULL_SYSTEM
     if (thread[tid]->profile) {
-//        bool usermode = TheISA::inUserMode(thread[tid]->getTC());
-//        thread[tid]->profilePC = usermode ? 1 : head_inst->readPC();
-        thread[tid]->profilePC = head_inst->readPC();
+        thread[tid]->profilePC = head_inst->instAddr();
         ProfileNode *node = thread[tid]->profile->consume(thread[tid]->getTC(),
                                                           head_inst->staticInst);
 
@@ -1101,7 +1083,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
     if (CPA::available()) {
         if (head_inst->isControl()) {
             ThreadContext *tc = thread[tid]->getTC();
-            CPA::cpa()->swAutoBegin(tc, head_inst->readNextPC());
+            CPA::cpa()->swAutoBegin(tc, head_inst->nextInstAddr());
         }
     }
 #endif
@@ -1154,8 +1136,8 @@ DefaultCommit<Impl>::getInsts()
             commitStatus[tid] != TrapPending) {
             changedROBNumEntries[tid] = true;
 
-            DPRINTF(Commit, "Inserting PC %#x [sn:%i] [tid:%i] into ROB.\n",
-                    inst->readPC(), inst->seqNum, tid);
+            DPRINTF(Commit, "Inserting PC %s [sn:%i] [tid:%i] into ROB.\n",
+                    inst->pcState(), inst->seqNum, tid);
 
             rob->insertInst(inst);
 
@@ -1163,9 +1145,9 @@ DefaultCommit<Impl>::getInsts()
 
             youngestSeqNum[tid] = inst->seqNum;
         } else {
-            DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
+            DPRINTF(Commit, "Instruction PC %s [sn:%i] [tid:%i] was "
                     "squashed, skipping.\n",
-                    inst->readPC(), inst->seqNum, tid);
+                    inst->pcState(), inst->seqNum, tid);
         }
     }
 }
@@ -1181,14 +1163,14 @@ DefaultCommit<Impl>::skidInsert()
         DynInstPtr inst = fromRename->insts[inst_num];
 
         if (!inst->isSquashed()) {
-            DPRINTF(Commit, "Inserting PC %#x [sn:%i] [tid:%i] into ",
-                    "skidBuffer.\n", inst->readPC(), inst->seqNum,
+            DPRINTF(Commit, "Inserting PC %s [sn:%i] [tid:%i] into ",
+                    "skidBuffer.\n", inst->pcState(), inst->seqNum,
                     inst->threadNumber);
             skidBuffer.push(inst);
         } else {
-            DPRINTF(Commit, "Instruction PC %#x [sn:%i] [tid:%i] was "
+            DPRINTF(Commit, "Instruction PC %s [sn:%i] [tid:%i] was "
                     "squashed, skipping.\n",
-                    inst->readPC(), inst->seqNum, inst->threadNumber);
+                    inst->pcState(), inst->seqNum, inst->threadNumber);
         }
     }
 }
@@ -1204,10 +1186,10 @@ DefaultCommit<Impl>::markCompletedInsts()
          ++inst_num)
     {
         if (!fromIEW->insts[inst_num]->isSquashed()) {
-            DPRINTF(Commit, "[tid:%i]: Marking PC %#x, [sn:%lli] ready "
+            DPRINTF(Commit, "[tid:%i]: Marking PC %s, [sn:%lli] ready "
                     "within ROB.\n",
                     fromIEW->insts[inst_num]->threadNumber,
-                    fromIEW->insts[inst_num]->readPC(),
+                    fromIEW->insts[inst_num]->pcState(),
                     fromIEW->insts[inst_num]->seqNum);
 
             // Mark the instruction as ready to commit.

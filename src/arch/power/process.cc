@@ -256,9 +256,7 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
     //Set the stack pointer register
     tc->setIntReg(StackPointerReg, stack_min);
 
-    Addr prog_entry = objFile->entryPoint();
-    tc->setPC(prog_entry);
-    tc->setNextPC(prog_entry + sizeof(MachInst));
+    tc->pcState(objFile->entryPoint());
 
     //Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);

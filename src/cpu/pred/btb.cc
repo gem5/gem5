@@ -68,25 +68,25 @@ DefaultBTB::reset()
 
 inline
 unsigned
-DefaultBTB::getIndex(const Addr &inst_PC)
+DefaultBTB::getIndex(Addr instPC)
 {
     // Need to shift PC over by the word offset.
-    return (inst_PC >> instShiftAmt) & idxMask;
+    return (instPC >> instShiftAmt) & idxMask;
 }
 
 inline
 Addr
-DefaultBTB::getTag(const Addr &inst_PC)
+DefaultBTB::getTag(Addr instPC)
 {
-    return (inst_PC >> tagShiftAmt) & tagMask;
+    return (instPC >> tagShiftAmt) & tagMask;
 }
 
 bool
-DefaultBTB::valid(const Addr &inst_PC, ThreadID tid)
+DefaultBTB::valid(Addr instPC, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(inst_PC);
+    unsigned btb_idx = getIndex(instPC);
 
-    Addr inst_tag = getTag(inst_PC);
+    Addr inst_tag = getTag(instPC);
 
     assert(btb_idx < numEntries);
 
@@ -102,12 +102,12 @@ DefaultBTB::valid(const Addr &inst_PC, ThreadID tid)
 // @todo Create some sort of return struct that has both whether or not the
 // address is valid, and also the address.  For now will just use addr = 0 to
 // represent invalid entry.
-Addr
-DefaultBTB::lookup(const Addr &inst_PC, ThreadID tid)
+TheISA::PCState
+DefaultBTB::lookup(Addr instPC, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(inst_PC);
+    unsigned btb_idx = getIndex(instPC);
 
-    Addr inst_tag = getTag(inst_PC);
+    Addr inst_tag = getTag(instPC);
 
     assert(btb_idx < numEntries);
 
@@ -121,14 +121,14 @@ DefaultBTB::lookup(const Addr &inst_PC, ThreadID tid)
 }
 
 void
-DefaultBTB::update(const Addr &inst_PC, const Addr &target, ThreadID tid)
+DefaultBTB::update(Addr instPC, const TheISA::PCState &target, ThreadID tid)
 {
-    unsigned btb_idx = getIndex(inst_PC);
+    unsigned btb_idx = getIndex(instPC);
 
     assert(btb_idx < numEntries);
 
     btb[btb_idx].tid = tid;
     btb[btb_idx].valid = true;
     btb[btb_idx].target = target;
-    btb[btb_idx].tag = getTag(inst_PC);
+    btb[btb_idx].tag = getTag(instPC);
 }

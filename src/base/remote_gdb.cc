@@ -645,8 +645,8 @@ BaseRemoteGDB::trap(int type)
     bufferSize = gdbregs.bytes() * 2 + 256;
     buffer = (char*)malloc(bufferSize);
 
-    DPRINTF(GDBMisc, "trap: PC=%#x NPC=%#x\n",
-            context->readPC(), context->readNextPC());
+    TheISA::PCState pc = context->pcState();
+    DPRINTF(GDBMisc, "trap: PC=%s\n", pc);
 
     clearSingleStep();
 
@@ -806,8 +806,7 @@ BaseRemoteGDB::trap(int type)
             subcmd = hex2i(&p);
             if (*p++ == ';') {
                 val = hex2i(&p);
-                context->setPC(val);
-                context->setNextPC(val + sizeof(MachInst));
+                context->pcState(val);
             }
             clearSingleStep();
             goto out;
@@ -815,8 +814,7 @@ BaseRemoteGDB::trap(int type)
           case GDBCont:
             if (p - data < (ptrdiff_t)datalen) {
                 val = hex2i(&p);
-                context->setPC(val);
-                context->setNextPC(val + sizeof(MachInst));
+                context->pcState(val);
             }
             clearSingleStep();
             goto out;
@@ -825,8 +823,7 @@ BaseRemoteGDB::trap(int type)
             subcmd = hex2i(&p);
             if (*p++ == ';') {
                 val = hex2i(&p);
-                context->setPC(val);
-                context->setNextPC(val + sizeof(MachInst));
+                context->pcState(val);
             }
             setSingleStep();
             goto out;
@@ -834,8 +831,7 @@ BaseRemoteGDB::trap(int type)
           case GDBStep:
             if (p - data < (ptrdiff_t)datalen) {
                 val = hex2i(&p);
-                context->setPC(val);
-                context->setNextPC(val + sizeof(MachInst));
+                context->pcState(val);
             }
             setSingleStep();
             goto out;

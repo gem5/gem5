@@ -47,8 +47,8 @@ class InOrderTraceRecord : public ExeTracerRecord
 {
   public:
     InOrderTraceRecord(unsigned num_stages, bool _stage_tracing,
-           ThreadContext *_thread, bool spec = false)
-        : ExeTracerRecord(0, _thread, NULL, 0, spec)
+           ThreadContext *_thread, TheISA::PCState _pc, bool spec = false)
+        : ExeTracerRecord(0, _thread, NULL, _pc, spec)
     {
         stageTrace = _stage_tracing;
         stageCycle.resize(num_stages);
@@ -75,7 +75,8 @@ class InOrderTraceRecord : public ExeTracerRecord
     {
         staticInst = _staticInst;
     }
-    void setPC(Addr _pc) { PC = _pc; }
+
+    void setPC(TheISA::PCState _pc) { pc = _pc; }
 };
 
 class InOrderTrace : public InstTracer
@@ -87,9 +88,9 @@ class InOrderTrace : public InstTracer
     InOrderTraceRecord *
     getInstRecord(unsigned num_stages, bool stage_tracing, ThreadContext *tc);
 
-    virtual InOrderTraceRecord *getInstRecord(Tick when, ThreadContext *tc,
-            const StaticInstPtr staticInst, Addr pc,
-            const StaticInstPtr macroStaticInst = NULL, MicroPC upc = 0);
+    InOrderTraceRecord *getInstRecord(Tick when, ThreadContext *tc,
+            const StaticInstPtr staticInst, TheISA::PCState pc,
+            const StaticInstPtr macroStaticInst = NULL);
 };
 
 /* namespace Trace */ }

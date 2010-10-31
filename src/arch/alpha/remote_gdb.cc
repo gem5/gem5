@@ -211,7 +211,7 @@ RemoteGDB::getregs()
 {
     memset(gdbregs.regs, 0, gdbregs.bytes());
 
-    gdbregs.regs[KGDB_REG_PC] = context->readPC();
+    gdbregs.regs[KGDB_REG_PC] = context->pcState().pc();
 
     // @todo: Currently this is very Alpha specific.
     if (PcPAL(gdbregs.regs[KGDB_REG_PC])) {
@@ -254,7 +254,7 @@ RemoteGDB::setregs()
         context->setFloatRegBits(i, gdbregs.regs[i + KGDB_REG_F0]);
     }
 #endif
-    context->setPC(gdbregs.regs[KGDB_REG_PC]);
+    context->pcState(gdbregs.regs[KGDB_REG_PC]);
 }
 
 void
@@ -273,30 +273,28 @@ RemoteGDB::clearSingleStep()
 void
 RemoteGDB::setSingleStep()
 {
-    Addr pc = context->readPC();
-    Addr npc, bpc;
+    PCState pc = context->pcState();
+    PCState bpc;
     bool set_bt = false;
-
-    npc = pc + sizeof(MachInst);
 
     // User was stopped at pc, e.g. the instruction at pc was not
     // executed.
-    MachInst inst = read<MachInst>(pc);
-    StaticInstPtr si(inst, pc);
+    MachInst inst = read<MachInst>(pc.pc());
+    StaticInstPtr si(inst, pc.pc());
     if (si->hasBranchTarget(pc, context, bpc)) {
         // Don't bother setting a breakpoint on the taken branch if it
         // is the same as the next pc
-        if (bpc != npc)
+        if (bpc.pc() != pc.npc())
             set_bt = true;
     }
 
     DPRINTF(GDBMisc, "setSingleStep bt_addr=%#x nt_addr=%#x\n",
             takenBkpt, notTakenBkpt);
 
-    setTempBreakpoint(notTakenBkpt = npc);
+    setTempBreakpoint(notTakenBkpt = pc.npc());
 
     if (set_bt)
-        setTempBreakpoint(takenBkpt = bpc);
+        setTempBreakpoint(takenBkpt = bpc.pc());
 }
 
 // Write bytes to kernel address space for debugger.

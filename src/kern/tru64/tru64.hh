@@ -509,7 +509,9 @@ class Tru64 : public OperatingSystem
         // Note that we'll advance PC <- NPC before the end of the cycle,
         // so we need to restore the desired PC into NPC.
         // The current regs->pc will get clobbered.
-        tc->setNextPC(htog(sc->sc_pc));
+        PCState pc = tc->pcState();
+        pc.npc(htog(sc->sc_pc));
+        tc->pcState(pc);
 
         for (int i = 0; i < 31; ++i) {
             tc->setIntReg(i, htog(sc->sc_regs[i]));
@@ -703,8 +705,7 @@ class Tru64 : public OperatingSystem
         tc->setIntReg(TheISA::StackPointerReg, gtoh(attrp->registers.sp));
         tc->setMiscRegNoEffect(AlphaISA::MISCREG_UNIQ, uniq_val);
 
-        tc->setPC(gtoh(attrp->registers.pc));
-        tc->setNextPC(gtoh(attrp->registers.pc) + sizeof(TheISA::MachInst));
+        tc->pcState(gtoh(attrp->registers.pc));
 
         tc->activate();
     }

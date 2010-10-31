@@ -251,8 +251,8 @@ DependencyGraph<DynInstPtr>::dump()
         curr = &dependGraph[i];
 
         if (curr->inst) {
-            cprintf("dependGraph[%i]: producer: %#x [sn:%lli] consumer: ",
-                    i, curr->inst->readPC(), curr->inst->seqNum);
+            cprintf("dependGraph[%i]: producer: %s [sn:%lli] consumer: ",
+                    i, curr->inst->pcState(), curr->inst->seqNum);
         } else {
             cprintf("dependGraph[%i]: No producer. consumer: ", i);
         }
@@ -260,8 +260,8 @@ DependencyGraph<DynInstPtr>::dump()
         while (curr->next != NULL) {
             curr = curr->next;
 
-            cprintf("%#x [sn:%lli] ",
-                    curr->inst->readPC(), curr->inst->seqNum);
+            cprintf("%s [sn:%lli] ",
+                    curr->inst->pcState(), curr->inst->seqNum);
         }
 
         cprintf("\n");

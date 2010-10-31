@@ -172,29 +172,24 @@ class O3ThreadContext : public ThreadContext
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val);
 
-    /** Reads this thread's PC. */
-    virtual uint64_t readPC()
-    { return cpu->readPC(thread->threadId()); }
+    /** Reads this thread's PC state. */
+    virtual TheISA::PCState pcState()
+    { return cpu->pcState(thread->threadId()); }
 
-    /** Sets this thread's PC. */
-    virtual void setPC(uint64_t val);
+    /** Sets this thread's PC state. */
+    virtual void pcState(const TheISA::PCState &val);
+
+    /** Reads this thread's PC. */
+    virtual Addr instAddr()
+    { return cpu->instAddr(thread->threadId()); }
 
     /** Reads this thread's next PC. */
-    virtual uint64_t readNextPC()
-    { return cpu->readNextPC(thread->threadId()); }
+    virtual Addr nextInstAddr()
+    { return cpu->nextInstAddr(thread->threadId()); }
 
-    /** Sets this thread's next PC. */
-    virtual void setNextPC(uint64_t val);
-
-    virtual uint64_t readMicroPC()
-    { return cpu->readMicroPC(thread->threadId()); }
-
-    virtual void setMicroPC(uint64_t val);
-
-    virtual uint64_t readNextMicroPC()
-    { return cpu->readNextMicroPC(thread->threadId()); }
-
-    virtual void setNextMicroPC(uint64_t val);
+    /** Reads this thread's next PC. */
+    virtual MicroPC microPC()
+    { return cpu->microPC(thread->threadId()); }
 
     /** Reads a miscellaneous register. */
     virtual MiscReg readMiscRegNoEffect(int misc_reg)
@@ -247,15 +242,6 @@ class O3ThreadContext : public ThreadContext
     }
 #endif
 
-    virtual uint64_t readNextNPC()
-    {
-        return this->cpu->readNextNPC(this->thread->threadId());
-    }
-
-    virtual void setNextNPC(uint64_t val)
-    {
-        this->cpu->setNextNPC(val, this->thread->threadId());
-    }
 };
 
 #endif

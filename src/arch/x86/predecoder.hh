@@ -188,11 +188,11 @@ namespace X86ISA
 
         //Use this to give data to the predecoder. This should be used
         //when there is control flow.
-        void moreBytes(Addr pc, Addr fetchPC, MachInst data)
+        void moreBytes(const PCState &pc, Addr fetchPC, MachInst data)
         {
             DPRINTF(Predecoder, "Getting more bytes.\n");
             basePC = fetchPC;
-            offset = (fetchPC >= pc) ? 0 : pc - fetchPC;
+            offset = (fetchPC >= pc.instAddr()) ? 0 : pc.instAddr() - fetchPC;
             fetchChunk = data;
             outOfBytes = false;
             process();
@@ -208,21 +208,25 @@ namespace X86ISA
             return emiIsReady;
         }
 
+        int
+        getInstSize()
+        {
+            int size = basePC + offset - origPC;
+            DPRINTF(Predecoder,
+                    "Calculating the instruction size: "
+                    "basePC: %#x offset: %#x origPC: %#x size: %d\n",
+                    basePC, offset, origPC, size);
+            return size;
+        }
+
         //This returns a constant reference to the ExtMachInst to avoid a copy
-        const ExtMachInst & getExtMachInst()
+        const ExtMachInst &
+        getExtMachInst(X86ISA::PCState &nextPC)
         {
             assert(emiIsReady);
             emiIsReady = false;
+            nextPC.npc(nextPC.pc() + getInstSize());
             return emi;
-        }
-
-        int getInstSize()
-        {
-            DPRINTF(Predecoder,
-                    "Calculating the instruction size: "
-                    "basePC: %#x offset: %#x origPC: %#x\n",
-                    basePC, offset, origPC);
-            return basePC + offset - origPC;
         }
     };
 };

@@ -42,6 +42,7 @@
 
 #include <iostream>
 
+#include "arch/generic/types.hh"
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
 #include "base/hashmap.hh"
@@ -220,6 +221,8 @@ namespace X86ISA
             return false;
         return true;
     }
+
+    typedef GenericISA::UPCState<MachInst> PCState;
 
     struct CoreSpecific {
         int core_type;

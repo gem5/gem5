@@ -211,7 +211,7 @@ Trace::LegionTraceRecord::dump()
     if(!staticInst->isMicroop() || staticInst->isLastMicroop()) {
         while (!compared) {
             if (shared_data->flags == OWN_M5) {
-                m5Pc = PC & SparcISA::PAddrImplMask;
+                m5Pc = pc.instAddr() & SparcISA::PAddrImplMask;
                 if (bits(shared_data->pstate,3,3)) {
                     m5Pc &= mask(32);
                 }
@@ -432,13 +432,14 @@ Trace::LegionTraceRecord::dump()
                          << endl;
 
                     predecoder.setTC(thread);
-                    predecoder.moreBytes(m5Pc, m5Pc,
-                            shared_data->instruction);
+                    predecoder.moreBytes(m5Pc, m5Pc, shared_data->instruction);
 
                     assert(predecoder.extMachInstReady());
 
+                    PCState tempPC = pc;
                     StaticInstPtr legionInst =
-                        StaticInst::decode(predecoder.getExtMachInst(), lgnPc);
+                        StaticInst::decode(predecoder.getExtMachInst(tempPC),
+                                           lgnPc);
                     outs << setfill(' ') << setw(15)
                          << " Legion Inst: "
                          << "0x" << setw(8) << setfill('0') << hex

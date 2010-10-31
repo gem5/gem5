@@ -65,16 +65,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     }
 #endif
 
-    Addr pc1 = one->readPC();
-    Addr pc2 = two->readPC();
-    if (pc1 != pc2)
-        panic("PCs doesn't match, one: %#x, two: %#x", pc1, pc2);
-
-    Addr npc1 = one->readNextPC();
-    Addr npc2 = two->readNextPC();
-    if (npc1 != npc2)
-        panic("NPCs doesn't match, one: %#x, two: %#x", npc1, npc2);
-
+    if (!(one->pcState() == two->pcState()))
+        panic("PC state doesn't match.");
     int id1 = one->cpuId();
     int id2 = two->cpuId();
     if (id1 != id2)

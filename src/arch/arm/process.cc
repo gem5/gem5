@@ -360,11 +360,11 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
         tc->setIntReg(ArgumentReg2, 0);
     }
 
-    Addr prog_entry = objFile->entryPoint();
-    if (arch == ObjectFile::Thumb)
-        prog_entry = (prog_entry & ~mask(1)) | PcTBit;
-    tc->setPC(prog_entry);
-    tc->setNextPC(prog_entry + sizeof(MachInst));
+    PCState pc;
+    pc.thumb(arch == ObjectFile::Thumb);
+    pc.nextThumb(pc.thumb());
+    pc.set(objFile->entryPoint() & ~mask(1));
+    tc->pcState(pc);
 
     //Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);

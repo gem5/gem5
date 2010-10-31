@@ -75,8 +75,8 @@ struct TimeStruct {
         // struct as it is used pretty frequently.
         bool branchMispredict;
         bool branchTaken;
-        uint64_t mispredPC;
-        uint64_t nextPC;
+        Addr mispredPC;
+        TheISA::PCState nextPC;
 
         unsigned branchCount;
 

@@ -856,15 +856,16 @@ decode OPCODE default Unknown::unknown() {
             // invalid pal function code, or attempt to do privileged
             // PAL call in non-kernel mode
             fault = new UnimplementedOpcodeFault;
-        }
-        else {
+        } else {
             // check to see if simulator wants to do something special
             // on this PAL call (including maybe suppress it)
             bool dopal = xc->simPalCheck(palFunc);
 
             if (dopal) {
-                xc->setMiscReg(IPR_EXC_ADDR, NPC);
-                NPC = xc->readMiscReg(IPR_PAL_BASE) + palOffset;
+                PCState pc = PCS;
+                xc->setMiscReg(IPR_EXC_ADDR, pc.npc());
+                pc.npc(xc->readMiscReg(IPR_PAL_BASE) + palOffset);
+                PCS = pc;
             }
         }
     }}, IsNonSpeculative);
@@ -1030,13 +1031,14 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
 #endif
             0x54: m5panic({{
-                panic("M5 panic instruction called at pc=%#x.", xc->readPC());
+                panic("M5 panic instruction called at pc=%#x.",
+                    xc->pcState().pc());
             }}, IsNonSpeculative);
 #define  CPANN(lbl) CPA::cpa()->lbl(xc->tcBase())
             0x55: decode RA {
                 0x00: m5a_old({{
                     panic("Deprecated M5 annotate instruction executed at pc=%#x\n",
-                        xc->readPC());
+                        xc->pcState().pc());
                 }}, IsNonSpeculative);
                 0x01: m5a_bsm({{
                     CPANN(swSmBegin);

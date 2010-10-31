@@ -312,7 +312,7 @@ class PredMacroOp : public PredOp
     }
 
     StaticInstPtr
-    fetchMicroop(MicroPC microPC)
+    fetchMicroop(MicroPC microPC) const
     {
         assert(microPC < numMicroops);
         return microOps[microPC];
@@ -331,6 +331,15 @@ class PredMicroop : public PredOp
                 PredOp(mnem, _machInst, __opClass)
     {
         flags[IsMicroop] = true;
+    }
+
+    void
+    advancePC(PCState &pcState) const
+    {
+        if (flags[IsLastMicroop])
+            pcState.uEnd();
+        else
+            pcState.uAdvance();
     }
 };
 }

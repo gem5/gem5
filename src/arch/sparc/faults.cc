@@ -307,15 +307,11 @@ void doREDFault(ThreadContext *tc, TrapType tt)
     //MiscReg CANSAVE = tc->readMiscRegNoEffect(MISCREG_CANSAVE);
     MiscReg CANSAVE = tc->readMiscRegNoEffect(NumIntArchRegs + 3);
     MiscReg GL = tc->readMiscRegNoEffect(MISCREG_GL);
-    MiscReg PC = tc->readPC();
-    MiscReg NPC = tc->readNextPC();
+    PCState pc = tc->pcState();
 
     TL++;
 
-    if (bits(PSTATE, 3,3)) {
-        PC &= mask(32);
-        NPC &= mask(32);
-    }
+    Addr pcMask = bits(PSTATE, 3) ? mask(32) : mask(64);
 
     //set TSTATE.gl to gl
     replaceBits(TSTATE, 42, 40, GL);
@@ -332,9 +328,9 @@ void doREDFault(ThreadContext *tc, TrapType tt)
     tc->setMiscRegNoEffect(MISCREG_TSTATE, TSTATE);
 
     //set TPC to PC
-    tc->setMiscRegNoEffect(MISCREG_TPC, PC);
+    tc->setMiscRegNoEffect(MISCREG_TPC, pc.pc() & pcMask);
     //set TNPC to NPC
-    tc->setMiscRegNoEffect(MISCREG_TNPC, NPC);
+    tc->setMiscRegNoEffect(MISCREG_TNPC, pc.npc() & pcMask);
 
     //set HTSTATE.hpstate to hpstate
     tc->setMiscRegNoEffect(MISCREG_HTSTATE, HPSTATE);
@@ -394,17 +390,13 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     //MiscReg CANSAVE = tc->readMiscRegNoEffect(MISCREG_CANSAVE);
     MiscReg CANSAVE = tc->readIntReg(NumIntArchRegs + 3);
     MiscReg GL = tc->readMiscRegNoEffect(MISCREG_GL);
-    MiscReg PC = tc->readPC();
-    MiscReg NPC = tc->readNextPC();
-
-    if (bits(PSTATE, 3,3)) {
-        PC &= mask(32);
-        NPC &= mask(32);
-    }
+    PCState pc = tc->pcState();
 
     //Increment the trap level
     TL++;
     tc->setMiscRegNoEffect(MISCREG_TL, TL);
+
+    Addr pcMask = bits(PSTATE, 3) ? mask(32) : mask(64);
 
     //Save off state
 
@@ -423,9 +415,9 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     tc->setMiscRegNoEffect(MISCREG_TSTATE, TSTATE);
 
     //set TPC to PC
-    tc->setMiscRegNoEffect(MISCREG_TPC, PC);
+    tc->setMiscRegNoEffect(MISCREG_TPC, pc.pc() & pcMask);
     //set TNPC to NPC
-    tc->setMiscRegNoEffect(MISCREG_TNPC, NPC);
+    tc->setMiscRegNoEffect(MISCREG_TNPC, pc.npc() & pcMask);
 
     //set HTSTATE.hpstate to hpstate
     tc->setMiscRegNoEffect(MISCREG_HTSTATE, HPSTATE);
@@ -479,7 +471,7 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     }
 }
 
-void getREDVector(MiscReg TT, Addr & PC, Addr & NPC)
+void getREDVector(MiscReg TT, Addr &PC, Addr &NPC)
 {
     //XXX The following constant might belong in a header file.
     const Addr RSTVAddr = 0xFFF0000000ULL;
@@ -554,9 +546,13 @@ void SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
         getPrivVector(tc, PC, NPC, trapType(), tl+1);
     }
 
-    tc->setPC(PC);
-    tc->setNextPC(NPC);
-    tc->setNextNPC(NPC + sizeof(MachInst));
+    PCState pc;
+    pc.pc(PC);
+    pc.npc(NPC);
+    pc.nnpc(NPC + sizeof(MachInst));
+    pc.upc(0);
+    pc.nupc(1);
+    tc->pcState(pc);
 }
 
 void PowerOnReset::invoke(ThreadContext * tc, StaticInstPtr inst)
@@ -593,9 +589,14 @@ void PowerOnReset::invoke(ThreadContext * tc, StaticInstPtr inst)
 
     Addr PC, NPC;
     getREDVector(trapType(), PC, NPC);
-    tc->setPC(PC);
-    tc->setNextPC(NPC);
-    tc->setNextNPC(NPC + sizeof(MachInst));
+
+    PCState pc;
+    pc.pc(PC);
+    pc.npc(NPC);
+    pc.nnpc(NPC + sizeof(MachInst));
+    pc.upc(0);
+    pc.nupc(1);
+    tc->pcState(pc);
 
     //These registers are specified as "undefined" after a POR, and they
     //should have reasonable values after the miscregfile is reset
@@ -664,10 +665,7 @@ void SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
     assert(lp);
 
     //Then adjust the PC and NPC
-    Addr spillStart = lp->readSpillStart();
-    tc->setPC(spillStart);
-    tc->setNextPC(spillStart + sizeof(MachInst));
-    tc->setNextNPC(spillStart + 2*sizeof(MachInst));
+    tc->pcState(lp->readSpillStart());
 }
 
 void FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
@@ -681,10 +679,7 @@ void FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
     assert(lp);
 
     //Then adjust the PC and NPC
-    Addr fillStart = lp->readFillStart();
-    tc->setPC(fillStart);
-    tc->setNextPC(fillStart + sizeof(MachInst));
-    tc->setNextNPC(fillStart + 2*sizeof(MachInst));
+    tc->pcState(lp->readFillStart());
 }
 
 void TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
@@ -702,9 +697,9 @@ void TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 
     //We need to explicitly advance the pc, since that's not done for us
     //on a faulting instruction
-    tc->setPC(tc->readNextPC());
-    tc->setNextPC(tc->readNextNPC());
-    tc->setNextNPC(tc->readNextNPC() + sizeof(MachInst));
+    PCState pc = tc->pcState();
+    pc.advance();
+    tc->pcState(pc);
 }
 
 #endif

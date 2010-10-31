@@ -35,6 +35,7 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
+#include "arch/types.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
 #include "base/hashmap.hh"
@@ -68,28 +69,6 @@ class AddrDecodePage;
 
 namespace Trace {
     class InstRecord;
-}
-
-typedef uint16_t MicroPC;
-
-static const MicroPC MicroPCRomBit = 1 << (sizeof(MicroPC) * 8 - 1);
-
-static inline MicroPC
-romMicroPC(MicroPC upc)
-{
-    return upc | MicroPCRomBit;
-}
-
-static inline MicroPC
-normalMicroPC(MicroPC upc)
-{
-    return upc & ~MicroPCRomBit;
-}
-
-static inline bool
-isRomMicroPC(MicroPC upc)
-{
-    return MicroPCRomBit & upc;
 }
 
 /**
@@ -392,18 +371,20 @@ class StaticInst : public StaticInstBase
  */
 #include "cpu/static_inst_exec_sigs.hh"
 
+    virtual void advancePC(TheISA::PCState &pcState) const = 0;
+
     /**
      * Return the microop that goes with a particular micropc. This should
      * only be defined/used in macroops which will contain microops
      */
-    virtual StaticInstPtr fetchMicroop(MicroPC micropc);
+    virtual StaticInstPtr fetchMicroop(MicroPC upc) const;
 
     /**
      * Return the target address for a PC-relative branch.
      * Invalid if not a PC-relative branch (i.e. isDirectCtrl()
      * should be true).
      */
-    virtual Addr branchTarget(Addr branchPC) const;
+    virtual TheISA::PCState branchTarget(const TheISA::PCState &pc) const;
 
     /**
      * Return the target address for an indirect branch (jump).  The
@@ -412,13 +393,14 @@ class StaticInst : public StaticInstBase
      * execute the branch in question.  Invalid if not an indirect
      * branch (i.e. isIndirectCtrl() should be true).
      */
-    virtual Addr branchTarget(ThreadContext *tc) const;
+    virtual TheISA::PCState branchTarget(ThreadContext *tc) const;
 
     /**
      * Return true if the instruction is a control transfer, and if so,
      * return the target address as well.
      */
-    bool hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const;
+    bool hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
+                         TheISA::PCState &tgt) const;
 
     /**
      * Return string representation of disassembled instruction.

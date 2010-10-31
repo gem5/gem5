@@ -103,8 +103,7 @@ LinuxArmSystem::startup()
     ThreadContext *tc = threadContexts[0];
 
     // Set the initial PC to be at start of the kernel code
-    tc->setPC(tc->getSystemPtr()->kernelEntry & loadAddrMask);
-    tc->setNextPC(tc->readPC() + sizeof(MachInst));
+    tc->pcState(tc->getSystemPtr()->kernelEntry & loadAddrMask);
 
     // Setup the machine type
     tc->setIntReg(0, 0);

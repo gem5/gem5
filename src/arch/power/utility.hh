@@ -36,9 +36,18 @@
 #define __ARCH_POWER_UTILITY_HH__
 
 #include "base/types.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
 namespace PowerISA {
+
+inline PCState
+buildRetPC(const PCState &curPC, const PCState &callPC)
+{
+    PCState retPC = callPC;
+    retPC.advance();
+    return retPC;
+}
 
 /**
  * Function to ensure ISA semantics about 0 registers.
@@ -62,6 +71,12 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 }
 
 void skipFunction(ThreadContext *tc);
+
+inline void
+advancePC(PCState &pc, const StaticInstPtr inst)
+{
+    pc.advance();
+}
 
 } // PowerISA namespace
 

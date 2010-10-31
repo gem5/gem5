@@ -111,6 +111,8 @@ output header {{
 
             void printRegArray(std::ostream &os,
                 const RegIndex indexArray[], int num) const;
+
+            void advancePC(SparcISA::PCState &pcState) const;
         };
 
         bool passesFpCondition(uint32_t fcc, uint32_t condition);
@@ -258,6 +260,12 @@ output decoder {{
                 os << ", ";
                 printReg(os, indexArray[x]);
             }
+        }
+
+        void
+        SparcStaticInst::advancePC(SparcISA::PCState &pcState) const
+        {
+            pcState.advance();
         }
 
         void

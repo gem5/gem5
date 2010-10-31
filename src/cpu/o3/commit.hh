@@ -277,40 +277,21 @@ class DefaultCommit
     ThreadID oldestReady();
 
   public:
-    /** Returns the PC of the head instruction of the ROB.
-     * @todo: Probably remove this function as it returns only thread 0.
-     */
-    Addr readPC() { return PC[0]; }
-
-    /** Returns the PC of a specific thread. */
-    Addr readPC(ThreadID tid) { return PC[tid]; }
+    /** Reads the PC of a specific thread. */
+    TheISA::PCState pcState(ThreadID tid) { return pc[tid]; }
 
     /** Sets the PC of a specific thread. */
-    void setPC(Addr val, ThreadID tid) { PC[tid] = val; }
+    void pcState(const TheISA::PCState &val, ThreadID tid)
+    { pc[tid] = val; }
+
+    /** Returns the PC of a specific thread. */
+    Addr instAddr(ThreadID tid) { return pc[tid].instAddr(); }
+
+    /** Returns the next PC of a specific thread. */
+    Addr nextInstAddr(ThreadID tid) { return pc[tid].nextInstAddr(); }
 
     /** Reads the micro PC of a specific thread. */
-    Addr readMicroPC(ThreadID tid) { return microPC[tid]; }
-
-    /** Sets the micro PC of a specific thread */
-    void setMicroPC(Addr val, ThreadID tid) { microPC[tid] = val; }
-
-    /** Reads the next PC of a specific thread. */
-    Addr readNextPC(ThreadID tid) { return nextPC[tid]; }
-
-    /** Sets the next PC of a specific thread. */
-    void setNextPC(Addr val, ThreadID tid) { nextPC[tid] = val; }
-
-    /** Reads the next NPC of a specific thread. */
-    Addr readNextNPC(ThreadID tid) { return nextNPC[tid]; }
-
-    /** Sets the next NPC of a specific thread. */
-    void setNextNPC(Addr val, ThreadID tid) { nextNPC[tid] = val; }
-
-    /** Reads the micro PC of a specific thread. */
-    Addr readNextMicroPC(ThreadID tid) { return nextMicroPC[tid]; }
-
-    /** Sets the micro PC of a specific thread */
-    void setNextMicroPC(Addr val, ThreadID tid) { nextMicroPC[tid] = val; }
+    Addr microPC(ThreadID tid) { return pc[tid].microPC(); }
 
   private:
     /** Time buffer interface. */
@@ -410,24 +391,10 @@ class DefaultCommit
     /** The interrupt fault. */
     Fault interrupt;
 
-    /** The commit PC of each thread.  Refers to the instruction that
+    /** The commit PC state of each thread.  Refers to the instruction that
      * is currently being processed/committed.
      */
-    Addr PC[Impl::MaxThreads];
-
-    /** The commit micro PC of each thread.  Refers to the instruction that
-     * is currently being processed/committed.
-     */
-    Addr microPC[Impl::MaxThreads];
-
-    /** The next PC of each thread. */
-    Addr nextPC[Impl::MaxThreads];
-
-    /** The next NPC of each thread. */
-    Addr nextNPC[Impl::MaxThreads];
-
-    /** The next micro PC of each thread. */
-    Addr nextMicroPC[Impl::MaxThreads];
+    TheISA::PCState pc[Impl::MaxThreads];
 
     /** The sequence number of the youngest valid instruction in the ROB. */
     InstSeqNum youngestSeqNum[Impl::MaxThreads];

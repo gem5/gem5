@@ -88,11 +88,12 @@ class BaseSimpleCPU : public BaseCPU
     Trace::InstRecord *traceData;
 
     inline void checkPcEventQueue() {
-        Addr oldpc;
+        Addr oldpc, pc = thread->instAddr();
         do {
-            oldpc = thread->readPC();
+            oldpc = pc;
             system->pcEventQueue.service(tc);
-        } while (oldpc != thread->readPC());
+            pc = thread->instAddr();
+        } while (oldpc != pc);
     }
 
   public:
@@ -282,18 +283,7 @@ class BaseSimpleCPU : public BaseCPU
         thread->setFloatRegBits(reg_idx, val);
     }
 
-    uint64_t readPC() { return thread->readPC(); }
-    uint64_t readMicroPC() { return thread->readMicroPC(); }
-    uint64_t readNextPC() { return thread->readNextPC(); }
-    uint64_t readNextMicroPC() { return thread->readNextMicroPC(); }
-    uint64_t readNextNPC() { return thread->readNextNPC(); }
     bool readPredicate() { return thread->readPredicate(); }
-
-    void setPC(uint64_t val) { thread->setPC(val); }
-    void setMicroPC(uint64_t val) { thread->setMicroPC(val); }
-    void setNextPC(uint64_t val) { thread->setNextPC(val); }
-    void setNextMicroPC(uint64_t val) { thread->setNextMicroPC(val); }
-    void setNextNPC(uint64_t val) { thread->setNextNPC(val); }
     void setPredicate(bool val)
     {
         thread->setPredicate(val);
@@ -301,6 +291,11 @@ class BaseSimpleCPU : public BaseCPU
             traceData->setPredicate(val);
         }
     }
+    TheISA::PCState pcState() { return thread->pcState(); }
+    void pcState(const TheISA::PCState &val) { thread->pcState(val); }
+    Addr instAddr() { return thread->instAddr(); }
+    Addr nextInstAddr() { return thread->nextInstAddr(); }
+    MicroPC microPC() { return thread->microPC(); }
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     {

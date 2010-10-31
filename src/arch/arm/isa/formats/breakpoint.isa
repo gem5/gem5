@@ -83,7 +83,7 @@ output exec {{
     Breakpoint::execute(%(CPU_exec_context)s *xc,
                      Trace::InstRecord *traceData) const
     {
-        return new PrefetchAbort(xc->readPC(), ArmFault::DebugEvent);
+        return new PrefetchAbort(xc->pcState().pc(), ArmFault::DebugEvent);
     }
 }};
 

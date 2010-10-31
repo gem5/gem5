@@ -106,27 +106,7 @@ class SimpleThread : public ThreadState
     TheISA::IntReg intRegs[TheISA::NumIntRegs];
     TheISA::ISA isa;    // one "instance" of the current ISA.
 
-    /** The current microcode pc for the currently executing macro
-     * operation.
-     */
-    MicroPC microPC;
-
-    /** The next microcode pc for the currently executing macro
-     * operation.
-     */
-    MicroPC nextMicroPC;
-
-    /** The current pc.
-     */
-    Addr PC;
-
-    /** The next pc.
-     */
-    Addr nextPC;
-
-    /** The next next pc.
-     */
-    Addr nextNPC;
+    TheISA::PCState _pcState;
 
     /** Did this instruction execute or is it predicated false */
     bool predicate;
@@ -245,9 +225,7 @@ class SimpleThread : public ThreadState
 
     void clearArchRegs()
     {
-        microPC = 0;
-        nextMicroPC = 1;
-        PC = nextPC = nextNPC = 0;
+        _pcState = 0;
         memset(intRegs, 0, sizeof(intRegs));
         memset(floatRegs.i, 0, sizeof(floatRegs.i));
         isa.clear();
@@ -313,60 +291,34 @@ class SimpleThread : public ThreadState
                 reg_idx, flatIndex, val, floatRegs.f[flatIndex]);
     }
 
-    uint64_t readPC()
+    TheISA::PCState
+    pcState()
     {
-        return PC;
+        return _pcState;
     }
 
-    void setPC(uint64_t val)
+    void
+    pcState(const TheISA::PCState &val)
     {
-        PC = val;
+        _pcState = val;
     }
 
-    uint64_t readMicroPC()
+    Addr
+    instAddr()
     {
-        return microPC;
+        return _pcState.instAddr();
     }
 
-    void setMicroPC(uint64_t val)
+    Addr
+    nextInstAddr()
     {
-        microPC = val;
+        return _pcState.nextInstAddr();
     }
 
-    uint64_t readNextPC()
+    MicroPC
+    microPC()
     {
-        return nextPC;
-    }
-
-    void setNextPC(uint64_t val)
-    {
-        nextPC = val;
-    }
-
-    uint64_t readNextMicroPC()
-    {
-        return nextMicroPC;
-    }
-
-    void setNextMicroPC(uint64_t val)
-    {
-        nextMicroPC = val;
-    }
-
-    uint64_t readNextNPC()
-    {
-#if ISA_HAS_DELAY_SLOT
-        return nextNPC;
-#else
-        return nextPC + sizeof(TheISA::MachInst);
-#endif
-    }
-
-    void setNextNPC(uint64_t val)
-    {
-#if ISA_HAS_DELAY_SLOT
-        nextNPC = val;
-#endif
+        return _pcState.microPC();
     }
 
     bool readPredicate()

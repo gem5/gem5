@@ -54,9 +54,8 @@ class InstRecord
     // need to make this ref-counted so it doesn't go away before we
     // dump the record
     StaticInstPtr staticInst;
-    Addr PC;
+    TheISA::PCState pc;
     StaticInstPtr macroStaticInst;
-    MicroPC upc;
     bool misspeculating;
     bool predicate;
 
@@ -90,12 +89,11 @@ class InstRecord
   public:
     InstRecord(Tick _when, ThreadContext *_thread,
                const StaticInstPtr _staticInst,
-               Addr _pc, bool spec,
-               const StaticInstPtr _macroStaticInst = NULL,
-               MicroPC _upc = 0)
+               TheISA::PCState _pc, bool spec,
+               const StaticInstPtr _macroStaticInst = NULL)
         : when(_when), thread(_thread),
-          staticInst(_staticInst), PC(_pc),
-          macroStaticInst(_macroStaticInst), upc(_upc),
+          staticInst(_staticInst), pc(_pc),
+          macroStaticInst(_macroStaticInst),
           misspeculating(spec), predicate(true)
     {
         data_status = DataInvalid;
@@ -137,9 +135,8 @@ class InstRecord
     Tick getWhen() { return when; }
     ThreadContext *getThread() { return thread; }
     StaticInstPtr getStaticInst() { return staticInst; }
-    Addr getPC() { return PC; }
+    TheISA::PCState getPCState() { return pc; }
     StaticInstPtr getMacroStaticInst() { return macroStaticInst; }
-    MicroPC getUPC() { return upc; } 
     bool getMisspeculating() { return misspeculating; }
 
     Addr getAddr() { return addr; }
@@ -167,9 +164,8 @@ class InstTracer : public SimObject
 
     virtual InstRecord *
         getInstRecord(Tick when, ThreadContext *tc,
-                const StaticInstPtr staticInst, Addr pc,
-                const StaticInstPtr macroStaticInst = NULL,
-                MicroPC _upc = 0) = 0;
+                const StaticInstPtr staticInst, TheISA::PCState pc,
+                const StaticInstPtr macroStaticInst = NULL) = 0;
 };
 
 

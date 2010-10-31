@@ -91,8 +91,8 @@ ExecutionUnit::execute(int slot_num)
 
     exec_req->fault = NoFault;
 
-    DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%#x] %s.\n",
-            tid, seq_num, inst->readPC(), inst->instName());
+    DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%s] %s.\n",
+            tid, seq_num, inst->pcState(), inst->instName());
 
     switch (exec_req->cmd)
     {
@@ -124,58 +124,61 @@ ExecutionUnit::execute(int slot_num)
                         if (inst->isDirectCtrl()) {
                             assert(!inst->isIndirectCtrl());
 
+                            TheISA::PCState pc = inst->pcState();
+                            TheISA::advancePC(pc, inst->staticInst);
+                            inst->setPredTarg(pc);
+
                             if (inst->predTaken() && inst->isCondDelaySlot()) {
                                 inst->bdelaySeqNum = seq_num;
-                                inst->setPredTarg(inst->nextPC);
 
                                 DPRINTF(InOrderExecute, "[tid:%i]: Conditional"
-                                        " branch inst [sn:%i] PC %#x mis"
+                                        " branch inst [sn:%i] PC %s mis"
                                         "predicted as taken.\n", tid,
-                                        seq_num, inst->PC);
+                                        seq_num, inst->pcState());
                             } else if (!inst->predTaken() &&
                                        inst->isCondDelaySlot()) {
                                 inst->bdelaySeqNum = seq_num;
-                                inst->setPredTarg(inst->nextPC);
                                 inst->procDelaySlotOnMispred = true;
 
                                 DPRINTF(InOrderExecute, "[tid:%i]: Conditional"
-                                        " branch inst [sn:%i] PC %#x mis"
+                                        " branch inst [sn:%i] PC %s mis"
                                         "predicted as not taken.\n", tid,
-                                        seq_num, inst->PC);
+                                        seq_num, inst->pcState());
                             } else {
 #if ISA_HAS_DELAY_SLOT
                                 inst->bdelaySeqNum = seq_num + 1;
-                                inst->setPredTarg(inst->nextNPC);
 #else
                                 inst->bdelaySeqNum = seq_num;
-                                inst->setPredTarg(inst->nextPC);
 #endif
                                 DPRINTF(InOrderExecute, "[tid:%i]: "
                                         "Misprediction detected at "
-                                        "[sn:%i] PC %#x,\n\t squashing after "
+                                        "[sn:%i] PC %s,\n\t squashing after "
                                         "delay slot instruction [sn:%i].\n",
-                                        tid, seq_num, inst->PC,
+                                        tid, seq_num, inst->pcState(),
                                         inst->bdelaySeqNum);
                                 DPRINTF(InOrderStall, "STALL: [tid:%i]: Branch"
-                                        " misprediction at %#x\n",
-                                        tid, inst->PC);
+                                        " misprediction at %s\n",
+                                        tid, inst->pcState());
                             }
 
                             DPRINTF(InOrderExecute, "[tid:%i] Redirecting "
-                                    "fetch to %#x.\n", tid,
+                                    "fetch to %s.\n", tid,
                                     inst->readPredTarg());
 
-                        } else if(inst->isIndirectCtrl()){
+                        } else if (inst->isIndirectCtrl()){
+                            TheISA::PCState pc = inst->pcState();
+                            TheISA::advancePC(pc, inst->staticInst);
+                            inst->seqNum = seq_num;
+                            inst->setPredTarg(pc);
+
 #if ISA_HAS_DELAY_SLOT
-                            inst->setPredTarg(inst->nextNPC);
                             inst->bdelaySeqNum = seq_num + 1;
 #else
-                            inst->setPredTarg(inst->nextPC);
                             inst->bdelaySeqNum = seq_num;
 #endif
 
                             DPRINTF(InOrderExecute, "[tid:%i] Redirecting"
-                                    " fetch to %#x.\n", tid,
+                                    " fetch to %s.\n", tid,
                                     inst->readPredTarg());
                         } else {
                             panic("Non-control instruction (%s) mispredict"
@@ -197,14 +200,20 @@ ExecutionUnit::execute(int slot_num)
 
                         if (inst->predTaken()) {
                             predictedTakenIncorrect++;
-                            DPRINTF(InOrderExecute, "[tid:%i] [sn:%i] %s ... PC%#x ... Mispredicts! (Taken)\n",
-                                    tid, inst->seqNum, inst->staticInst->disassemble(inst->PC),
-                                    inst->readPC());
+                            DPRINTF(InOrderExecute, "[tid:%i] [sn:%i] %s ..."
+                                    "PC %s ... Mispredicts! (Taken)\n",
+                                    tid, inst->seqNum,
+                                    inst->staticInst->disassemble(
+                                        inst->instAddr()),
+                                    inst->pcState());
                         } else {
                             predictedNotTakenIncorrect++;
-                            DPRINTF(InOrderExecute, "[tid:%i] [sn:%i] %s ... PC%#x ... Mispredicts! (Not Taken)\n",
-                                    tid, inst->seqNum, inst->staticInst->disassemble(inst->PC),
-                                    inst->readPC());
+                            DPRINTF(InOrderExecute, "[tid:%i] [sn:%i] %s ..."
+                                    "PC %s ... Mispredicts! (Not Taken)\n",
+                                    tid, inst->seqNum,
+                                    inst->staticInst->disassemble(
+                                        inst->instAddr()),
+                                    inst->pcState());
                         }
                         predictedIncorrect++;
                     } else {

@@ -609,7 +609,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
 #else
                 DPRINTF(TLB, "Handling a TLB miss for "
                         "address %#x at pc %#x.\n",
-                        vaddr, tc->readPC());
+                        vaddr, tc->instAddr());
 
                 Process *p = tc->getProcessPtr();
                 TlbEntry newEntry;

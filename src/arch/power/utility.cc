@@ -52,8 +52,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     copyMiscRegs(src, dest);
 
     // Lastly copy PC/NPC
-    dest->setPC(src->readPC());
-    dest->setNextPC(src->readNextPC());
+    dest->pcState(src->pcState());
 }
 
 void

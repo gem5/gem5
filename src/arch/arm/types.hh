@@ -43,8 +43,10 @@
 #ifndef __ARCH_ARM_TYPES_HH__
 #define __ARCH_ARM_TYPES_HH__
 
+#include "arch/generic/types.hh"
 #include "base/bitunion.hh"
 #include "base/hashmap.hh"
+#include "base/misc.hh"
 #include "base/types.hh"
 
 namespace ArmISA
@@ -187,6 +189,189 @@ namespace ArmISA
         Bitfield<11, 8>  ltrd;
         Bitfield<11, 8>  ltcoproc;
     EndBitUnion(ExtMachInst)
+
+    class PCState : public GenericISA::UPCState<MachInst>
+    {
+      protected:
+
+        typedef GenericISA::UPCState<MachInst> Base;
+
+        enum FlagBits {
+            ThumbBit = (1 << 0),
+            JazelleBit = (1 << 1)
+        };
+        uint8_t flags;
+        uint8_t nextFlags;
+
+      public:
+        PCState() : flags(0), nextFlags(0)
+        {}
+
+        void
+        set(Addr val)
+        {
+            Base::set(val);
+            npc(val + (thumb() ? 2 : 4));
+        }
+
+        PCState(Addr val) : flags(0), nextFlags(0)
+        { set(val); }
+
+        bool
+        thumb() const
+        {
+            return flags & ThumbBit;
+        }
+
+        void
+        thumb(bool val)
+        {
+            if (val)
+                flags |= ThumbBit;
+            else
+                flags &= ~ThumbBit;
+        }
+
+        bool
+        nextThumb() const
+        {
+            return nextFlags & ThumbBit;
+        }
+
+        void
+        nextThumb(bool val)
+        {
+            if (val)
+                nextFlags |= ThumbBit;
+            else
+                nextFlags &= ~ThumbBit;
+        }
+
+        bool
+        jazelle() const
+        {
+            return flags & JazelleBit;
+        }
+
+        void
+        jazelle(bool val)
+        {
+            if (val)
+                flags |= JazelleBit;
+            else
+                flags &= ~JazelleBit;
+        }
+
+        bool
+        nextJazelle() const
+        {
+            return nextFlags & JazelleBit;
+        }
+
+        void
+        nextJazelle(bool val)
+        {
+            if (val)
+                nextFlags |= JazelleBit;
+            else
+                nextFlags &= ~JazelleBit;
+        }
+
+        void
+        advance()
+        {
+            Base::advance();
+            npc(pc() + (thumb() ? 2 : 4));
+            flags = nextFlags;
+        }
+
+        void
+        uEnd()
+        {
+            advance();
+            upc(0);
+            nupc(1);
+        }
+
+        Addr
+        instPC() const
+        {
+            return pc() + (thumb() ? 4 : 8);
+        }
+
+        void
+        instNPC(uint32_t val)
+        {
+            npc(val &~ mask(nextThumb() ? 1 : 2));
+        }
+
+        Addr
+        instNPC() const
+        {
+            return npc();
+        }
+
+        // Perform an interworking branch.
+        void
+        instIWNPC(uint32_t val)
+        {
+            bool thumbEE = (thumb() && jazelle());
+
+            Addr newPC = val;
+            if (thumbEE) {
+                if (bits(newPC, 0)) {
+                    newPC = newPC & ~mask(1);
+                } else {
+                    panic("Bad thumbEE interworking branch address %#x.\n",
+                            newPC);
+                }
+            } else {
+                if (bits(newPC, 0)) {
+                    nextThumb(true);
+                    newPC = newPC & ~mask(1);
+                } else if (!bits(newPC, 1)) {
+                    nextThumb(false);
+                } else {
+                    warn("Bad interworking branch address %#x.\n", newPC);
+                }
+            }
+            npc(newPC);
+        }
+
+        // Perform an interworking branch in ARM mode, a regular branch
+        // otherwise.
+        void
+        instAIWNPC(uint32_t val)
+        {
+            if (!thumb() && !jazelle())
+                instIWNPC(val);
+            else
+                instNPC(val);
+        }
+
+        bool
+        operator == (const PCState &opc) const
+        {
+            return Base::operator == (opc) &&
+                flags == opc.flags && nextFlags == opc.nextFlags;
+        }
+
+        void
+        serialize(std::ostream &os)
+        {
+            Base::serialize(os);
+            SERIALIZE_SCALAR(flags);
+            SERIALIZE_SCALAR(nextFlags);
+        }
+
+        void
+        unserialize(Checkpoint *cp, const std::string &section)
+        {
+            Base::unserialize(cp, section);
+            UNSERIALIZE_SCALAR(flags);
+            UNSERIALIZE_SCALAR(nextFlags);
+        }
+    };
 
     // Shift types for ARM instructions
     enum ArmShiftType {

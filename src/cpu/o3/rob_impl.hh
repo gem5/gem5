@@ -204,7 +204,7 @@ ROB<Impl>::insertInst(DynInstPtr &inst)
 {
     assert(inst);
 
-    DPRINTF(ROB, "Adding inst PC %#x to the ROB.\n", inst->readPC());
+    DPRINTF(ROB, "Adding inst PC %s to the ROB.\n", inst->pcState());
 
     assert(numInstsInROB != numEntries);
 
@@ -247,7 +247,7 @@ ROB<Impl>::retireHead(ThreadID tid)
     assert(head_inst->readyToCommit());
 
     DPRINTF(ROB, "[tid:%u]: Retiring head instruction, "
-            "instruction PC %#x,[sn:%lli]\n", tid, head_inst->readPC(),
+            "instruction PC %s, [sn:%lli]\n", tid, head_inst->pcState(),
             head_inst->seqNum);
 
     --numInstsInROB;
@@ -338,9 +338,9 @@ ROB<Impl>::doSquash(ThreadID tid)
          (*squashIt[tid])->seqNum > squashedSeqNum[tid];
          ++numSquashed)
     {
-        DPRINTF(ROB, "[tid:%u]: Squashing instruction PC %#x, seq num %i.\n",
+        DPRINTF(ROB, "[tid:%u]: Squashing instruction PC %s, seq num %i.\n",
                 (*squashIt[tid])->threadNumber,
-                (*squashIt[tid])->readPC(),
+                (*squashIt[tid])->pcState(),
                 (*squashIt[tid])->seqNum);
 
         // Mark the instruction as squashed, and ready to commit so that

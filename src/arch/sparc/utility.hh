@@ -36,11 +36,22 @@
 #include "arch/sparc/tlb.hh"
 #include "base/misc.hh"
 #include "base/bitfield.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/fault.hh"
 
 namespace SparcISA
 {
+
+    inline PCState
+    buildRetPC(const PCState &curPC, const PCState &callPC)
+    {
+        PCState ret = callPC;
+        ret.uEnd();
+        ret.pc(curPC.npc());
+        return ret;
+    }
+
     uint64_t
     getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 
@@ -77,6 +88,12 @@ namespace SparcISA
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
     void skipFunction(ThreadContext *tc);
+
+    inline void
+    advancePC(PCState &pc, const StaticInstPtr inst)
+    {
+        inst->advancePC(pc);
+    }
 
 } // namespace SparcISA
 

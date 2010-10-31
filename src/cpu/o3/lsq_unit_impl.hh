@@ -352,8 +352,8 @@ LSQUnit<Impl>::insertLoad(DynInstPtr &load_inst)
     assert((loadTail + 1) % LQEntries != loadHead);
     assert(loads < LQEntries);
 
-    DPRINTF(LSQUnit, "Inserting load PC %#x, idx:%i [sn:%lli]\n",
-            load_inst->readPC(), loadTail, load_inst->seqNum);
+    DPRINTF(LSQUnit, "Inserting load PC %s, idx:%i [sn:%lli]\n",
+            load_inst->pcState(), loadTail, load_inst->seqNum);
 
     load_inst->lqIdx = loadTail;
 
@@ -378,8 +378,8 @@ LSQUnit<Impl>::insertStore(DynInstPtr &store_inst)
     assert((storeTail + 1) % SQEntries != storeHead);
     assert(stores < SQEntries);
 
-    DPRINTF(LSQUnit, "Inserting store PC %#x, idx:%i [sn:%lli]\n",
-            store_inst->readPC(), storeTail, store_inst->seqNum);
+    DPRINTF(LSQUnit, "Inserting store PC %s, idx:%i [sn:%lli]\n",
+            store_inst->pcState(), storeTail, store_inst->seqNum);
 
     store_inst->sqIdx = storeTail;
     store_inst->lqIdx = loadTail;
@@ -444,8 +444,8 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
     // Execute a specific load.
     Fault load_fault = NoFault;
 
-    DPRINTF(LSQUnit, "Executing load PC %#x, [sn:%lli]\n",
-            inst->readPC(),inst->seqNum);
+    DPRINTF(LSQUnit, "Executing load PC %s, [sn:%lli]\n",
+            inst->pcState(),inst->seqNum);
 
     assert(!inst->isSquashed());
 
@@ -519,8 +519,8 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
 
     int store_idx = store_inst->sqIdx;
 
-    DPRINTF(LSQUnit, "Executing store PC %#x [sn:%lli]\n",
-            store_inst->readPC(), store_inst->seqNum);
+    DPRINTF(LSQUnit, "Executing store PC %s [sn:%lli]\n",
+            store_inst->pcState(), store_inst->seqNum);
 
     assert(!store_inst->isSquashed());
 
@@ -531,8 +531,8 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
     Fault store_fault = store_inst->initiateAcc();
 
     if (storeQueue[store_idx].size == 0) {
-        DPRINTF(LSQUnit,"Fault on Store PC %#x, [sn:%lli],Size = 0\n",
-                store_inst->readPC(),store_inst->seqNum);
+        DPRINTF(LSQUnit,"Fault on Store PC %s, [sn:%lli],Size = 0\n",
+                store_inst->pcState(), store_inst->seqNum);
 
         return store_fault;
     }
@@ -593,8 +593,8 @@ LSQUnit<Impl>::commitLoad()
 {
     assert(loadQueue[loadHead]);
 
-    DPRINTF(LSQUnit, "Committing head load instruction, PC %#x\n",
-            loadQueue[loadHead]->readPC());
+    DPRINTF(LSQUnit, "Committing head load instruction, PC %s\n",
+            loadQueue[loadHead]->pcState());
 
     loadQueue[loadHead] = NULL;
 
@@ -631,8 +631,8 @@ LSQUnit<Impl>::commitStores(InstSeqNum &youngest_inst)
                 break;
             }
             DPRINTF(LSQUnit, "Marking store as able to write back, PC "
-                    "%#x [sn:%lli]\n",
-                    storeQueue[store_idx].inst->readPC(),
+                    "%s [sn:%lli]\n",
+                    storeQueue[store_idx].inst->pcState(),
                     storeQueue[store_idx].inst->seqNum);
 
             storeQueue[store_idx].canWB = true;
@@ -757,9 +757,9 @@ LSQUnit<Impl>::writebackStores()
             req = sreqLow;
         }
 
-        DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
+        DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%s "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
-                storeWBIdx, inst->readPC(),
+                storeWBIdx, inst->pcState(),
                 req->getPaddr(), (int)*(inst->memData),
                 inst->seqNum);
 
@@ -861,9 +861,9 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
     decrLdIdx(load_idx);
 
     while (loads != 0 && loadQueue[load_idx]->seqNum > squashed_num) {
-        DPRINTF(LSQUnit,"Load Instruction PC %#x squashed, "
+        DPRINTF(LSQUnit,"Load Instruction PC %s squashed, "
                 "[sn:%lli]\n",
-                loadQueue[load_idx]->readPC(),
+                loadQueue[load_idx]->pcState(),
                 loadQueue[load_idx]->seqNum);
 
         if (isStalled() && load_idx == stallingLoadIdx) {
@@ -906,9 +906,9 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
             break;
         }
 
-        DPRINTF(LSQUnit,"Store Instruction PC %#x squashed, "
+        DPRINTF(LSQUnit,"Store Instruction PC %s squashed, "
                 "idx:%i [sn:%lli]\n",
-                storeQueue[store_idx].inst->readPC(),
+                storeQueue[store_idx].inst->pcState(),
                 store_idx, storeQueue[store_idx].inst->seqNum);
 
         // I don't think this can happen.  It should have been cleared
@@ -1156,7 +1156,7 @@ LSQUnit<Impl>::dumpInsts()
     int load_idx = loadHead;
 
     while (load_idx != loadTail && loadQueue[load_idx]) {
-        cprintf("%#x ", loadQueue[load_idx]->readPC());
+        cprintf("%s ", loadQueue[load_idx]->pcState());
 
         incrLdIdx(load_idx);
     }
@@ -1167,7 +1167,7 @@ LSQUnit<Impl>::dumpInsts()
     int store_idx = storeHead;
 
     while (store_idx != storeTail && storeQueue[store_idx].inst) {
-        cprintf("%#x ", storeQueue[store_idx].inst->readPC());
+        cprintf("%s ", storeQueue[store_idx].inst->pcState());
 
         incrStIdx(store_idx);
     }

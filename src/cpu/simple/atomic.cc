@@ -321,7 +321,7 @@ AtomicSimpleCPU::readBytes(Addr addr, uint8_t * data,
     dcache_latency = 0;
 
     while (1) {
-        req->setVirt(0, addr, size, flags, thread->readPC());
+        req->setVirt(0, addr, size, flags, thread->pcState().instAddr());
 
         // translate to physical address
         Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Read);
@@ -475,7 +475,7 @@ AtomicSimpleCPU::writeBytes(uint8_t *data, unsigned size,
     dcache_latency = 0;
 
     while(1) {
-        req->setVirt(0, addr, size, flags, thread->readPC());
+        req->setVirt(0, addr, size, flags, thread->pcState().instAddr());
 
         // translate to physical address
         Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Write);
@@ -643,8 +643,11 @@ AtomicSimpleCPU::tick()
 
         Fault fault = NoFault;
 
-        bool fromRom = isRomMicroPC(thread->readMicroPC());
-        if (!fromRom && !curMacroStaticInst) {
+        TheISA::PCState pcState = thread->pcState();
+
+        bool needToFetch = !isRomMicroPC(pcState.microPC()) &&
+                           !curMacroStaticInst;
+        if (needToFetch) {
             setupFetchRequest(&ifetch_req);
             fault = thread->itb->translateAtomic(&ifetch_req, tc,
                                                  BaseTLB::Execute);
@@ -655,7 +658,7 @@ AtomicSimpleCPU::tick()
             bool icache_access = false;
             dcache_access = false; // assume no dcache access
 
-            if (!fromRom && !curMacroStaticInst) {
+            if (needToFetch) {
                 // This is commented out because the predecoder would act like
                 // a tiny cache otherwise. It wouldn't be flushed when needed
                 // like the I cache. It should be flushed, and when that works

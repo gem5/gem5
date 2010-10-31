@@ -67,6 +67,28 @@ const Tick MaxTick = LL(0x7fffffffffffffff);
  */
 typedef uint64_t Addr;
 
+typedef uint16_t MicroPC;
+
+static const MicroPC MicroPCRomBit = 1 << (sizeof(MicroPC) * 8 - 1);
+
+static inline MicroPC
+romMicroPC(MicroPC upc)
+{
+    return upc | MicroPCRomBit;
+}
+
+static inline MicroPC
+normalMicroPC(MicroPC upc)
+{
+    return upc & ~MicroPCRomBit;
+}
+
+static inline bool
+isRomMicroPC(MicroPC upc)
+{
+    return MicroPCRomBit & upc;
+}
+
 const Addr MaxAddr = (Addr)-1;
 
 /**

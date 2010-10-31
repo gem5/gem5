@@ -62,32 +62,14 @@ my_hash_t thishash;
 
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
-                               Addr inst_PC, Addr inst_NPC,
-                               Addr inst_MicroPC,
-                               Addr pred_PC, Addr pred_NPC,
-                               Addr pred_MicroPC,
+                               TheISA::PCState _pc, TheISA::PCState _predPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
   : staticInst(_staticInst), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
-    bool nextIsMicro =
-        staticInst->isMicroop() && !staticInst->isLastMicroop();
-
-    PC = inst_PC;
-    microPC = inst_MicroPC;
-    if (nextIsMicro) {
-        nextPC = inst_PC;
-        nextNPC = inst_NPC;
-        nextMicroPC = microPC + 1;
-    } else {
-        nextPC = inst_NPC;
-        nextNPC = nextPC + sizeof(TheISA::MachInst);
-        nextMicroPC = 0;
-    }
-    predPC = pred_PC;
-    predNPC = pred_NPC;
-    predMicroPC = pred_MicroPC;
+    pc = _pc;
+    predPC = _predPC;
     predTaken = false;
 
     initVars();
@@ -95,32 +77,14 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
 
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst inst,
-                               Addr inst_PC, Addr inst_NPC,
-                               Addr inst_MicroPC,
-                               Addr pred_PC, Addr pred_NPC,
-                               Addr pred_MicroPC,
+                               TheISA::PCState _pc, TheISA::PCState _predPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(inst, inst_PC), traceData(NULL), cpu(cpu)
+  : staticInst(inst, _pc.instAddr()), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
-    bool nextIsMicro =
-        staticInst->isMicroop() && !staticInst->isLastMicroop();
-
-    PC = inst_PC;
-    microPC = inst_MicroPC;
-    if (nextIsMicro) {
-        nextPC = inst_PC;
-        nextNPC = inst_NPC;
-        nextMicroPC = microPC + 1;
-    } else {
-        nextPC = inst_NPC;
-        nextNPC = nextPC + sizeof(TheISA::MachInst);
-        nextMicroPC = 0;
-    }
-    predPC = pred_PC;
-    predNPC = pred_NPC;
-    predMicroPC = pred_MicroPC;
+    pc = _pc;
+    predPC = _predPC;
     predTaken = false;
 
     initVars();
@@ -301,8 +265,8 @@ template <class Impl>
 void
 BaseDynInst<Impl>::dump()
 {
-    cprintf("T%d : %#08d `", threadNumber, PC);
-    std::cout << staticInst->disassemble(PC);
+    cprintf("T%d : %#08d `", threadNumber, pc.instAddr());
+    std::cout << staticInst->disassemble(pc.instAddr());
     cprintf("'\n");
 }
 
@@ -311,8 +275,8 @@ void
 BaseDynInst<Impl>::dump(std::string &outstring)
 {
     std::ostringstream s;
-    s << "T" << threadNumber << " : 0x" << PC << " "
-      << staticInst->disassemble(PC);
+    s << "T" << threadNumber << " : 0x" << pc.instAddr() << " "
+      << staticInst->disassemble(pc.instAddr());
 
     outstring = s.str();
 }

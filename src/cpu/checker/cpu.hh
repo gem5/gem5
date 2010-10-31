@@ -241,13 +241,9 @@ class CheckerCPU : public BaseCPU
         result.integer = val;
     }
 
-    uint64_t readPC() { return thread->readPC(); }
+    uint64_t instAddr() { return thread->instAddr(); }
 
-    uint64_t readNextPC() { return thread->readNextPC(); }
-
-    void setNextPC(uint64_t val) {
-        thread->setNextPC(val);
-    }
+    uint64_t nextInstAddr() { return thread->nextInstAddr(); }
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     {

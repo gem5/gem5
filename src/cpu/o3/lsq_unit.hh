@@ -530,8 +530,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         (load_idx != loadHead || !load_inst->isAtCommit())) {
         iewStage->rescheduleMemInst(load_inst);
         ++lsqRescheduledLoads;
-        DPRINTF(LSQUnit, "Uncachable load [sn:%lli] PC %#x\n",
-                load_inst->seqNum, load_inst->readPC());
+        DPRINTF(LSQUnit, "Uncachable load [sn:%lli] PC %s\n",
+                load_inst->seqNum, load_inst->pcState());
 
         // Must delete request now that it wasn't handed off to
         // memory.  This is quite ugly.  @todo: Figure out the proper
@@ -687,8 +687,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
     }
 
     // If there's no forwarding case, then go access memory
-    DPRINTF(LSQUnit, "Doing memory access for inst [sn:%lli] PC %#x\n",
-            load_inst->seqNum, load_inst->readPC());
+    DPRINTF(LSQUnit, "Doing memory access for inst [sn:%lli] PC %s\n",
+            load_inst->seqNum, load_inst->pcState());
 
     assert(!load_inst->memData);
     load_inst->memData = new uint8_t[64];

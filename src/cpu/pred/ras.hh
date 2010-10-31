@@ -33,7 +33,9 @@
 
 #include <vector>
 
+#include "arch/types.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
@@ -52,7 +54,7 @@ class ReturnAddrStack
     void reset();
 
     /** Returns the top address on the RAS. */
-    Addr top()
+    TheISA::PCState top()
     { return addrStack[tos]; }
 
     /** Returns the index of the top of the RAS. */
@@ -60,7 +62,7 @@ class ReturnAddrStack
     { return tos; }
 
     /** Pushes an address onto the RAS. */
-    void push(const Addr &return_addr);
+    void push(const TheISA::PCState &return_addr);
 
     /** Pops the top address from the RAS. */
     void pop();
@@ -68,9 +70,9 @@ class ReturnAddrStack
     /** Changes index to the top of the RAS, and replaces the top address with
      *  a new target.
      *  @param top_entry_idx The index of the RAS that will now be the top.
-     *  @param restored_target The new target address of the new top of the RAS.
+     *  @param restored The new target address of the new top of the RAS.
      */
-    void restore(unsigned top_entry_idx, const Addr &restored_target);
+    void restore(unsigned top_entry_idx, const TheISA::PCState &restored);
 
      bool empty() { return usedEntries == 0; }
 
@@ -85,7 +87,7 @@ class ReturnAddrStack
     { tos = (tos == 0 ? numEntries - 1 : tos - 1); }
 
     /** The RAS itself. */
-    std::vector<Addr> addrStack;
+    std::vector<TheISA::PCState> addrStack;
 
     /** The number of entries in the RAS. */
     unsigned numEntries;

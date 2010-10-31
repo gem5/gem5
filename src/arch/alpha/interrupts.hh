@@ -133,7 +133,7 @@ class Interrupts : public SimObject
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        return (intstatus != 0) && !(tc->readPC() & 0x3);
+        return (intstatus != 0) && !(tc->pcState().pc() & 0x3);
     }
 
     Fault

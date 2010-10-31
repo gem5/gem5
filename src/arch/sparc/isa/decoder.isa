@@ -46,14 +46,18 @@ decode OP default Unknown::unknown()
             {
                 //Branch Always
                 0x8: bpa(19, annul_code={{
-                                 NPC = xc->readPC() + disp;
-                                 NNPC = NPC + 4;
+                                 SparcISA::PCState pc = PCS;
+                                 pc.npc(pc.pc() + disp);
+                                 pc.nnpc(pc.npc() + 4);
+                                 PCS = pc;
                              }});
                 //Branch Never
                 0x0: bpn(19, {{;}},
                              annul_code={{
-                                 NNPC = NPC + 8;
-                                 NPC = NPC + 4;
+                                 SparcISA::PCState pc = PCS;
+                                 pc.nnpc(pc.npc() + 8);
+                                 pc.npc(pc.npc() + 4);
+                                 PCS = pc;
                              }});
                 default: decode BPCC
                 {
@@ -66,14 +70,18 @@ decode OP default Unknown::unknown()
             {
                 //Branch Always
                 0x8: ba(22, annul_code={{
-                                NPC = xc->readPC() + disp;
-                                NNPC = NPC + 4;
+                                SparcISA::PCState pc = PCS;
+                                pc.npc(pc.pc() + disp);
+                                pc.nnpc(pc.npc() + 4);
+                                PCS = pc;
                             }});
                 //Branch Never
                 0x0: bn(22, {{;}},
                             annul_code={{
-                                NNPC = NPC + 8;
-                                NPC = NPC + 4;
+                                SparcISA::PCState pc = PCS;
+                                pc.nnpc(pc.npc() + 8);
+                                pc.npc(pc.npc() + 4);
+                                PCS = pc;
                             }});
                 default: bicc(22, test={{passesCondition(Ccr<3:0>, COND2)}});
             }
@@ -97,14 +105,18 @@ decode OP default Unknown::unknown()
             format BranchN {
                 //Branch Always
                 0x8: fbpa(22, annul_code={{
-                                  NPC = xc->readPC() + disp;
-                                  NNPC = NPC + 4;
+                                  SparcISA::PCState pc = PCS;
+                                  pc.npc(pc.pc() + disp);
+                                  pc.nnpc(pc.npc() + 4);
+                                  PCS = pc;
                               }});
                 //Branch Never
                 0x0: fbpn(22, {{;}},
                              annul_code={{
-                                 NNPC = NPC + 8;
-                                 NPC = NPC + 4;
+                                 SparcISA::PCState pc = PCS;
+                                 pc.nnpc(pc.npc() + 8);
+                                 pc.npc(pc.npc() + 4);
+                                 PCS = pc;
                              }});
                 default: decode BPCC {
                     0x0: fbpfcc0(19, test=
@@ -123,14 +135,18 @@ decode OP default Unknown::unknown()
             format BranchN {
                 //Branch Always
                 0x8: fba(22, annul_code={{
-                                 NPC = xc->readPC() + disp;
-                                 NNPC = NPC + 4;
+                                 SparcISA::PCState pc = PCS;
+                                 pc.npc(pc.pc() + disp);
+                                 pc.nnpc(pc.npc() + 4);
+                                 PCS = pc;
                              }});
                 //Branch Never
                 0x0: fbn(22, {{;}},
                              annul_code={{
-                                 NNPC = NPC + 8;
-                                 NPC = NPC + 4;
+                                 SparcISA::PCState pc = PCS;
+                                 pc.nnpc(pc.npc() + 8);
+                                 pc.npc(pc.npc() + 4);
+                                 PCS = pc;
                              }});
                 default: fbfcc(22, test=
                                {{passesFpCondition(Fsr<11:10>, COND2)}});
@@ -138,11 +154,13 @@ decode OP default Unknown::unknown()
         }
     }
     0x1: BranchN::call(30, {{
+            SparcISA::PCState pc = PCS;
             if (Pstate<3:>)
-                R15 = (xc->readPC())<31:0>;
+                R15 = (pc.pc())<31:0>;
             else
-                R15 = xc->readPC();
-            NNPC = R15 + disp;
+                R15 = pc.pc();
+            pc.nnpc(R15 + disp);
+            PCS = pc;
     }});
     0x2: decode OP3 {
         format IntOp {
@@ -316,10 +334,12 @@ decode OP default Unknown::unknown()
                 0x03: NoPriv::rdasi({{Rd = Asi;}});
                 0x04: Priv::rdtick({{Rd = Tick;}}, {{Tick<63:>}});
                 0x05: NoPriv::rdpc({{
+                    SparcISA::PCState pc = PCS;
                     if(Pstate<3:>)
-                        Rd = (xc->readPC())<31:0>;
+                        Rd = (pc.pc())<31:0>;
                     else
-                        Rd = xc->readPC();}});
+                        Rd = pc.pc();
+                }});
                 0x06: NoPriv::rdfprs({{
                     //Wait for all fpops to finish.
                     Rd = Fprs;
@@ -973,7 +993,8 @@ decode OP default Unknown::unknown()
                     0x51: m5break({{PseudoInst::debugbreak(xc->tcBase());
                                   }}, IsNonSpeculative);
                     0x54: m5panic({{
-                                  panic("M5 panic instruction called at pc=%#x.", xc->readPC());
+                                  SparcISA::PCState pc = PCS;
+                                  panic("M5 panic instruction called at pc=%#x.", pc.pc());
                                   }}, No_OpClass, IsNonSpeculative);
                 }
 #endif
@@ -985,11 +1006,13 @@ decode OP default Unknown::unknown()
                     fault = new MemAddressNotAligned;
                 else
                 {
+                    SparcISA::PCState pc = PCS;
                     if (Pstate<3:>)
-                        Rd = (xc->readPC())<31:0>;
+                        Rd = (pc.pc())<31:0>;
                     else
-                        Rd = xc->readPC();
-                    NNPC = target;
+                        Rd = pc.pc();
+                    pc.nnpc(target);
+                    PCS = pc;
                 }
             }});
             0x39: Branch::return({{
@@ -1010,7 +1033,9 @@ decode OP default Unknown::unknown()
                         fault = new MemAddressNotAligned;
                     else
                     {
-                        NNPC = target;
+                        SparcISA::PCState pc = PCS;
+                        pc.nnpc(target);
+                        PCS = pc;
                         Cwp = (Cwp - 1 + NWindows) % NWindows;
                         Cansave = Cansave + 1;
                         Canrestore = Canrestore - 1;
@@ -1082,8 +1107,10 @@ decode OP default Unknown::unknown()
                     Ccr = Tstate<39:32>;
                     Gl = Tstate<42:40>;
                     Hpstate = Htstate;
-                    NPC = Tnpc;
-                    NNPC = Tnpc + 4;
+                    SparcISA::PCState pc = PCS;
+                    pc.npc(Tnpc);
+                    pc.nnpc(Tnpc + 4);
+                    PCS = pc;
                     Tl = Tl - 1;
                 }}, checkTl=true);
                 0x1: Priv::retry({{
@@ -1093,8 +1120,10 @@ decode OP default Unknown::unknown()
                     Ccr = Tstate<39:32>;
                     Gl = Tstate<42:40>;
                     Hpstate = Htstate;
-                    NPC = Tpc;
-                    NNPC = Tnpc;
+                    SparcISA::PCState pc = PCS;
+                    pc.npc(Tpc);
+                    pc.nnpc(Tnpc);
+                    PCS = pc;
                     Tl = Tl - 1;
                 }}, checkTl=true);
             }

@@ -155,6 +155,12 @@ class ArmStaticInst : public StaticInst
                        IntRegIndex rs, uint32_t shiftAmt, ArmShiftType type,
                        uint32_t imm) const;
 
+    void
+    advancePC(PCState &pcState) const
+    {
+        pcState.advance();
+    }
+
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
     static inline uint32_t
@@ -219,26 +225,16 @@ class ArmStaticInst : public StaticInst
     static inline Addr
     readPC(XC *xc)
     {
-        Addr pc = xc->readPC();
-        if (isThumb(pc))
-            return pc + 4;
-        else
-            return pc + 8;
+        return xc->pcState().instPC();
     }
 
-    // Perform an regular branch.
     template<class XC>
     static inline void
     setNextPC(XC *xc, Addr val)
     {
-        Addr npc = xc->readNextPC();
-        if (isThumb(npc)) {
-            val &= ~mask(1);
-        } else {
-            val &= ~mask(2);
-        }
-        xc->setNextPC((npc & PcModeMask) |
-                      (val & ~PcModeMask));
+        PCState pc = xc->pcState();
+        pc.instNPC(val);
+        xc->pcState(pc);
     }
 
     template<class T>
@@ -279,30 +275,9 @@ class ArmStaticInst : public StaticInst
     static inline void
     setIWNextPC(XC *xc, Addr val)
     {
-        Addr stateBits = xc->readPC() & PcModeMask;
-        Addr jBit = PcJBit;
-        Addr tBit = PcTBit;
-        bool thumbEE = (stateBits == (tBit | jBit));
-
-        Addr newPc = (val & ~PcModeMask);
-        if (thumbEE) {
-            if (bits(newPc, 0)) {
-                newPc = newPc & ~mask(1);
-            } else {
-                panic("Bad thumbEE interworking branch address %#x.\n", newPc);
-            }
-        } else {
-            if (bits(newPc, 0)) {
-                stateBits = tBit;
-                newPc = newPc & ~mask(1);
-            } else if (!bits(newPc, 1)) {
-                stateBits = 0;
-            } else {
-                warn("Bad interworking branch address %#x.\n", newPc);
-            }
-        }
-        newPc = newPc | stateBits;
-        xc->setNextPC(newPc);
+        PCState pc = xc->pcState();
+        pc.instIWNPC(val);
+        xc->pcState(pc);
     }
 
     // Perform an interworking branch in ARM mode, a regular branch
@@ -311,14 +286,9 @@ class ArmStaticInst : public StaticInst
     static inline void
     setAIWNextPC(XC *xc, Addr val)
     {
-        Addr stateBits = xc->readPC() & PcModeMask;
-        Addr jBit = PcJBit;
-        Addr tBit = PcTBit;
-        if (!jBit && !tBit) {
-            setIWNextPC(xc, val);
-        } else {
-            setNextPC(xc, val);
-        }
+        PCState pc = xc->pcState();
+        pc.instAIWNPC(val);
+        xc->pcState(pc);
     }
 
     inline Fault

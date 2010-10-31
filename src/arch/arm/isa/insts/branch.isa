@@ -46,15 +46,17 @@ let {{
     # B, BL
     for (mnem, link) in (("b", False), ("bl", True)):
         bCode = '''
-        Addr curPc = readPC(xc);
-        NPC = ((curPc + imm) & mask(32)) | (curPc & ~mask(32));
+        ArmISA::PCState pc = PCS;
+        Addr curPc = pc.instPC();
+        pc.instNPC((uint32_t)(curPc + imm));
+        PCS = pc;
         '''
         if (link):
             bCode += '''
-                if (!isThumb(curPc))
-                    LR = curPc - 4;
-                else
+                if (pc.thumb())
                     LR = curPc | 1;
+                else
+                    LR = curPc - 4;
             '''
 
         bIop = InstObjParams(mnem, mnem.capitalize(), "BranchImmCond",
@@ -66,10 +68,12 @@ let {{
 
     # BX, BLX
     blxCode = '''
-    Addr curPc M5_VAR_USED = readPC(xc);
+    ArmISA::PCState pc = PCS;
+    Addr curPc M5_VAR_USED = pc.instPC();
     %(link)s
     // Switch modes
     %(branch)s
+    PCS = pc;
     '''
 
     blxList = (("blx", True, True),
@@ -81,8 +85,8 @@ let {{
         if imm:
             Name += "Imm"
             # Since we're switching ISAs, the target ISA will be the opposite
-            # of the current ISA. !arm is whether the target is ARM.
-            newPC = '(isThumb(curPc) ? (roundDown(curPc, 4) + imm) : (curPc + imm))'
+            # of the current ISA. pc.thumb() is whether the target is ARM.
+            newPC = '(pc.thumb() ? (roundDown(curPc, 4) + imm) : (curPc + imm))'
             base = "BranchImmCond"
             declare = BranchImmCondDeclare
             constructor = BranchImmCondConstructor
@@ -97,28 +101,28 @@ let {{
                 // The immediate version of the blx thumb instruction
                 // is 32 bits wide, but "next pc" doesn't reflect that
                 // so we don't want to substract 2 from it at this point
-                if (!isThumb(curPc))
-                    LR = curPc - 4;
-                else
+                if (pc.thumb())
                     LR = curPc  | 1;
+                else
+                    LR = curPc - 4;
             '''
         elif link:
             linkStr = '''
-                if (!isThumb(curPc))
-                    LR = curPc - 4;
-                else
+                if (pc.thumb())
                     LR = (curPc - 2) | 1;
+                else
+                    LR = curPc - 4;
             '''
         else:
             linkStr = ""
 
         if imm and link: #blx with imm
             branchStr = '''
-                Addr tempPc = ((%(newPC)s) & mask(32)) | (curPc & ~mask(32));
-                FNPC = tempPc ^ PcTBit;
+                pc.nextThumb(!pc.thumb());
+                pc.instNPC(%(newPC)s);
             '''
         else:
-            branchStr = "IWNPC = %(newPC)s;"
+            branchStr = "pc.instIWNPC(%(newPC)s);"
         branchStr = branchStr % { "newPC" : newPC }
 
         code = blxCode % {"link": linkStr,
@@ -136,8 +140,10 @@ let {{
     #CBNZ, CBZ. These are always unconditional as far as predicates
     for (mnem, test) in (("cbz", "=="), ("cbnz", "!=")):
         code = '''
-        Addr curPc = readPC(xc);
-        NPC = ((curPc + imm) & mask(32)) | (curPc & ~mask(32));
+        ArmISA::PCState pc = PCS;
+        Addr curPc = pc.instPC();
+        pc.instNPC((uint32_t)(curPc + imm));
+        PCS = pc;
         '''
         predTest = "Op1 %(test)s 0" % {"test": test}
         iop = InstObjParams(mnem, mnem.capitalize(), "BranchImmReg",
@@ -155,7 +161,11 @@ let {{
                                       ArmISA::TLB::MustBeOne;
             EA = Op1 + Op2 * 2
             '''
-            accCode = "NPC = readPC(xc) + 2 * (Mem.uh);"
+            accCode = '''
+            ArmISA::PCState pc = PCS;
+            pc.instNPC(pc.instPC() + 2 * (Mem.uh));
+            PCS = pc;
+            '''
             mnem = "tbh"
         else:
             eaCode = '''
@@ -164,7 +174,11 @@ let {{
                                       ArmISA::TLB::MustBeOne;
             EA = Op1 + Op2
             '''
-            accCode = "NPC = readPC(xc) + 2 * (Mem.ub);"
+            accCode = '''
+            ArmISA::PCState pc = PCS;
+            pc.instNPC(pc.instPC() + 2 * (Mem.ub));
+            PCS = pc;
+            '''
             mnem = "tbb"
         iop = InstObjParams(mnem, mnem.capitalize(), "BranchRegReg",
                             {'ea_code': eaCode,

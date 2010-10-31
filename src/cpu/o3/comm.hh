@@ -33,6 +33,7 @@
 
 #include <vector>
 
+#include "arch/types.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "sim/faults.hh"
@@ -88,9 +89,7 @@ struct DefaultIEWDefaultCommit {
     bool branchMispredict[Impl::MaxThreads];
     bool branchTaken[Impl::MaxThreads];
     Addr mispredPC[Impl::MaxThreads];
-    Addr nextPC[Impl::MaxThreads];
-    Addr nextNPC[Impl::MaxThreads];
-    Addr nextMicroPC[Impl::MaxThreads];
+    TheISA::PCState pc[Impl::MaxThreads];
     InstSeqNum squashedSeqNum[Impl::MaxThreads];
 
     bool includeSquashInst[Impl::MaxThreads];
@@ -120,9 +119,7 @@ struct TimeBufStruct {
         bool branchMispredict;
         bool branchTaken;
         Addr mispredPC;
-        Addr nextPC;
-        Addr nextNPC;
-        Addr nextMicroPC;
+        TheISA::PCState nextPC;
 
         unsigned branchCount;
     };
@@ -161,9 +158,7 @@ struct TimeBufStruct {
         bool branchMispredict;
         bool branchTaken;
         Addr mispredPC;
-        Addr nextPC;
-        Addr nextNPC;
-        Addr nextMicroPC;
+        TheISA::PCState pc;
 
         // Represents the instruction that has either been retired or
         // squashed.  Similar to having a single bus that broadcasts the

@@ -52,10 +52,10 @@ PCDependentDisassembly::disassemble(Addr pc, const SymbolTable *symtab) const
     return *cachedDisassembly;
 }
 
-Addr
-BranchPCRel::branchTarget(Addr pc) const
+PowerISA::PCState
+BranchPCRel::branchTarget(const PowerISA::PCState &pc) const
 {
-    return (uint32_t)(pc + disp);
+    return (uint32_t)(pc.pc() + disp);
 }
 
 std::string
@@ -76,8 +76,8 @@ BranchPCRel::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     return ss.str();
 }
 
-Addr
-BranchNonPCRel::branchTarget(Addr pc) const
+PowerISA::PCState
+BranchNonPCRel::branchTarget(const PowerISA::PCState &pc) const
 {
     return targetAddr;
 }
@@ -98,10 +98,10 @@ BranchNonPCRel::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     return ss.str();
 }
 
-Addr
-BranchPCRelCond::branchTarget(Addr pc) const
+PowerISA::PCState
+BranchPCRelCond::branchTarget(const PowerISA::PCState &pc) const
 {
-    return (uint32_t)(pc + disp);
+    return (uint32_t)(pc.pc() + disp);
 }
 
 std::string
@@ -124,8 +124,8 @@ BranchPCRelCond::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     return ss.str();
 }
 
-Addr
-BranchNonPCRelCond::branchTarget(Addr pc) const
+PowerISA::PCState
+BranchNonPCRelCond::branchTarget(const PowerISA::PCState &pc) const
 {
     return targetAddr;
 }
@@ -149,11 +149,11 @@ BranchNonPCRelCond::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-Addr
+PowerISA::PCState
 BranchRegCond::branchTarget(ThreadContext *tc) const
 {
     uint32_t regVal = tc->readIntReg(_srcRegIdx[_numSrcRegs - 1]);
-    return (regVal & 0xfffffffc);
+    return regVal & 0xfffffffc;
 }
 
 std::string

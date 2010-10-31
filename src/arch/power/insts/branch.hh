@@ -86,7 +86,7 @@ class BranchPCRel : public PCDependentDisassembly
         }
     }
 
-    Addr branchTarget(Addr pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
@@ -112,7 +112,7 @@ class BranchNonPCRel : public PCDependentDisassembly
         }
     }
 
-    Addr branchTarget(Addr pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
@@ -187,7 +187,7 @@ class BranchPCRelCond : public BranchCond
         }
     }
 
-    Addr branchTarget(Addr pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
@@ -213,7 +213,7 @@ class BranchNonPCRelCond : public BranchCond
         }
     }
 
-    Addr branchTarget(Addr pc) const;
+    PowerISA::PCState branchTarget(const PowerISA::PCState &pc) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
@@ -231,7 +231,7 @@ class BranchRegCond : public BranchCond
     {
     }
 
-    Addr branchTarget(ThreadContext *tc) const;
+    PowerISA::PCState branchTarget(ThreadContext *tc) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };

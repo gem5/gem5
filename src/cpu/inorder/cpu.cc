@@ -988,47 +988,6 @@ InOrderCPU::getPipeStage(int stage_num)
 }
 
 uint64_t
-InOrderCPU::readPC(ThreadID tid)
-{
-    return PC[tid];
-}
-
-
-void
-InOrderCPU::setPC(Addr new_PC, ThreadID tid)
-{
-    PC[tid] = new_PC;
-}
-
-
-uint64_t
-InOrderCPU::readNextPC(ThreadID tid)
-{
-    return nextPC[tid];
-}
-
-
-void
-InOrderCPU::setNextPC(uint64_t new_NPC, ThreadID tid)
-{
-    nextPC[tid] = new_NPC;
-}
-
-
-uint64_t
-InOrderCPU::readNextNPC(ThreadID tid)
-{
-    return nextNPC[tid];
-}
-
-
-void
-InOrderCPU::setNextNPC(uint64_t new_NNPC, ThreadID tid)
-{
-    nextNPC[tid] = new_NNPC;
-}
-
-uint64_t
 InOrderCPU::readIntReg(int reg_idx, ThreadID tid)
 {
     return intRegs[tid][reg_idx];
@@ -1156,15 +1115,12 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     // Set the CPU's PCs - This contributes to the precise state of the CPU 
     // which can be used when restoring a thread to the CPU after after any
     // type of context switching activity (fork, exception, etc.)
-    setPC(inst->readPC(), tid);
-    setNextPC(inst->readNextPC(), tid);
-    setNextNPC(inst->readNextNPC(), tid);
+    pcState(inst->pcState(), tid);
 
     if (inst->isControl()) {
         thread[tid]->lastGradIsBranch = true;
-        thread[tid]->lastBranchPC = inst->readPC();
-        thread[tid]->lastBranchNextPC = inst->readNextPC();
-        thread[tid]->lastBranchNextNPC = inst->readNextNPC();        
+        thread[tid]->lastBranchPC = inst->pcState();
+        TheISA::advancePC(thread[tid]->lastBranchPC, inst->staticInst);
     } else {
         thread[tid]->lastGradIsBranch = false;
     }
@@ -1236,15 +1192,15 @@ InOrderCPU::addToRemoveList(DynInstPtr &inst)
 {
     removeInstsThisCycle = true;
     if (!inst->isRemoveList()) {            
-        DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %#x "
+        DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %s "
                 "[sn:%lli] to remove list\n",
-                inst->threadNumber, inst->readPC(), inst->seqNum);
+                inst->threadNumber, inst->pcState(), inst->seqNum);
         inst->setRemoveList();        
         removeList.push(inst->getInstListIt());
     }  else {
-        DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %#x "
+        DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %s "
                 "[sn:%lli], already remove list\n",
-                inst->threadNumber, inst->readPC(), inst->seqNum);
+                inst->threadNumber, inst->pcState(), inst->seqNum);
     }
     
 }
@@ -1252,23 +1208,23 @@ InOrderCPU::addToRemoveList(DynInstPtr &inst)
 void
 InOrderCPU::removeInst(DynInstPtr &inst)
 {
-    DPRINTF(InOrderCPU, "Removing graduated instruction [tid:%i] PC %#x "
+    DPRINTF(InOrderCPU, "Removing graduated instruction [tid:%i] PC %s "
             "[sn:%lli]\n",
-            inst->threadNumber, inst->readPC(), inst->seqNum);
+            inst->threadNumber, inst->pcState(), inst->seqNum);
 
     removeInstsThisCycle = true;
 
     // Remove the instruction.
     if (!inst->isRemoveList()) {            
-        DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %#x "
+        DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %s "
                 "[sn:%lli] to remove list\n",
-                inst->threadNumber, inst->readPC(), inst->seqNum);
+                inst->threadNumber, inst->pcState(), inst->seqNum);
         inst->setRemoveList();        
         removeList.push(inst->getInstListIt());
     } else {
-        DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %#x "
+        DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %s "
                 "[sn:%lli], already on remove list\n",
-                inst->threadNumber, inst->readPC(), inst->seqNum);
+                inst->threadNumber, inst->pcState(), inst->seqNum);
     }
 
 }
@@ -1307,24 +1263,24 @@ InOrderCPU::squashInstIt(const ListIt &instIt, ThreadID tid)
 {
     if ((*instIt)->threadNumber == tid) {
         DPRINTF(InOrderCPU, "Squashing instruction, "
-                "[tid:%i] [sn:%lli] PC %#x\n",
+                "[tid:%i] [sn:%lli] PC %s\n",
                 (*instIt)->threadNumber,
                 (*instIt)->seqNum,
-                (*instIt)->readPC());
+                (*instIt)->pcState());
 
         (*instIt)->setSquashed();
 
         if (!(*instIt)->isRemoveList()) {            
-            DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %#x "
+            DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %s "
                     "[sn:%lli] to remove list\n",
-                    (*instIt)->threadNumber, (*instIt)->readPC(), 
+                    (*instIt)->threadNumber, (*instIt)->pcState(),
                     (*instIt)->seqNum);
             (*instIt)->setRemoveList();        
             removeList.push(instIt);
         } else {
             DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i]"
-                    " PC %#x [sn:%lli], already on remove list\n",
-                    (*instIt)->threadNumber, (*instIt)->readPC(), 
+                    " PC %s [sn:%lli], already on remove list\n",
+                    (*instIt)->threadNumber, (*instIt)->pcState(),
                     (*instIt)->seqNum);
         }
     
@@ -1338,10 +1294,10 @@ InOrderCPU::cleanUpRemovedInsts()
 {
     while (!removeList.empty()) {
         DPRINTF(InOrderCPU, "Removing instruction, "
-                "[tid:%i] [sn:%lli] PC %#x\n",
+                "[tid:%i] [sn:%lli] PC %s\n",
                 (*removeList.front())->threadNumber,
                 (*removeList.front())->seqNum,
-               (*removeList.front())->readPC());
+               (*removeList.front())->pcState());
 
         DynInstPtr inst = *removeList.front();
         ThreadID tid = inst->threadNumber;
@@ -1417,9 +1373,10 @@ InOrderCPU::dumpInsts()
     cprintf("Dumping Instruction List\n");
 
     while (inst_list_it != instList[0].end()) {
-        cprintf("Instruction:%i\nPC:%#x\n[tid:%i]\n[sn:%lli]\nIssued:%i\n"
+        cprintf("Instruction:%i\nPC:%s\n[tid:%i]\n[sn:%lli]\nIssued:%i\n"
                 "Squashed:%i\n\n",
-                num, (*inst_list_it)->readPC(), (*inst_list_it)->threadNumber,
+                num, (*inst_list_it)->pcState(),
+                (*inst_list_it)->threadNumber,
                 (*inst_list_it)->seqNum, (*inst_list_it)->isIssued(),
                 (*inst_list_it)->isSquashed());
         inst_list_it++;

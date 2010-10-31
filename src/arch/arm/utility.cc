@@ -128,13 +128,9 @@ readCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2)
 void
 skipFunction(ThreadContext *tc)
 {
-    Addr newpc = tc->readIntReg(ReturnAddressReg);
-    newpc &= ~ULL(1);
-    if (isThumb(tc->readPC()))
-        tc->setPC(newpc | PcTBit);
-    else
-        tc->setPC(newpc);
-    tc->setNextPC(tc->readPC() + sizeof(TheISA::MachInst));
+    TheISA::PCState newPC = tc->pcState();
+    newPC.set(tc->readIntReg(ReturnAddressReg) & ~ULL(1));
+    tc->pcState(newPC);
 }
 
 

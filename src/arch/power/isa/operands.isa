@@ -59,8 +59,7 @@ def operands {{
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 8),
 
     # Program counter and next
-    'PC': ('PC', 'uw', None, (None, None, 'IsControl'), 9),
-    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 9),
+    'PCS': ('PCState', 'uq', None, (None, None, 'IsControl'), 9),
 
     # Control registers
     'CR': ('IntReg', 'uw', 'INTREG_CR', 'IsInteger', 9),

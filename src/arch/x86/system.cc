@@ -320,8 +320,7 @@ X86System::initState()
     cr0.pg = 1;
     tc->setMiscReg(MISCREG_CR0, cr0);
 
-    tc->setPC(tc->getSystemPtr()->kernelEntry);
-    tc->setNextPC(tc->readPC());
+    tc->pcState(tc->getSystemPtr()->kernelEntry);
 
     // We should now be in long mode. Yay!
 

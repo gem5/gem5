@@ -169,15 +169,23 @@ let {{
             return super(Eret, self).getAllocator(microFlags)
 
     iop = InstObjParams("br", "MicroBranchFlags", "SeqOpBase",
-            {"code": "nuIP = target",
-             "else_code": "nuIP = nuIP",
+            {"code": '''
+             X86ISA::PCState pc = PCS;
+             pc.nupc(target);
+             PCS = pc;
+             ''',
+             "else_code": "PCS = PCS",
              "cond_test": "checkCondition(ccFlagBits, cc)"})
     exec_output += SeqOpExecute.subst(iop)
     header_output += SeqOpDeclare.subst(iop)
     decoder_output += SeqOpConstructor.subst(iop)
     iop = InstObjParams("br", "MicroBranch", "SeqOpBase",
-            {"code": "nuIP = target",
-             "else_code": "nuIP = nuIP",
+            {"code": '''
+             X86ISA::PCState pc = PCS;
+             pc.nupc(target);
+             PCS = pc;
+             ''',
+             "else_code": "PCS = PCS",
              "cond_test": "true"})
     exec_output += SeqOpExecute.subst(iop)
     header_output += SeqOpDeclare.subst(iop)

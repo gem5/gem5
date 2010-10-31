@@ -316,7 +316,7 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         Translation *translation, bool &delay, bool timing)
 {
     // XXX Cache misc registers and have miscreg write function inv cache
-    Addr vaddr = req->getVaddr() & ~PcModeMask;
+    Addr vaddr = req->getVaddr();
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     uint32_t flags = req->getFlags();
 
@@ -362,7 +362,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         Translation *translation, bool &delay, bool timing)
 {
     // XXX Cache misc registers and have miscreg write function inv cache
-    Addr vaddr = req->getVaddr() & ~PcModeMask;
+    Addr vaddr = req->getVaddr();
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     uint32_t flags = req->getFlags();

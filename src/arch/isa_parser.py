@@ -681,15 +681,25 @@ class MemOperand(Operand):
     def makeAccSize(self):
         return self.size
 
+class PCStateOperand(Operand):
+    def makeConstructor(self):
+        return ''
+
+    def makeRead(self):
+        return '%s = xc->pcState();\n' % self.base_name
+
+    def makeWrite(self):
+        return 'xc->pcState(%s);\n' % self.base_name
+
+    def makeDecl(self):
+        return 'TheISA::PCState ' + self.base_name + ' M5_VAR_USED;\n';
+
 class PCOperand(Operand):
     def makeConstructor(self):
         return ''
 
     def makeRead(self):
-        return '%s = xc->readPC();\n' % self.base_name
-
-    def makeWrite(self):
-        return 'xc->setPC(%s);\n' % self.base_name
+        return '%s = xc->instAddr();\n' % self.base_name
 
 class UPCOperand(Operand):
     def makeConstructor(self):
@@ -697,27 +707,8 @@ class UPCOperand(Operand):
 
     def makeRead(self):
         if self.read_code != None:
-            return self.buildReadCode('readMicroPC')
-        return '%s = xc->readMicroPC();\n' % self.base_name
-
-    def makeWrite(self):
-        if self.write_code != None:
-            return self.buildWriteCode('setMicroPC')
-        return 'xc->setMicroPC(%s);\n' % self.base_name
-
-class NUPCOperand(Operand):
-    def makeConstructor(self):
-        return ''
-
-    def makeRead(self):
-        if self.read_code != None:
-            return self.buildReadCode('readNextMicroPC')
-        return '%s = xc->readNextMicroPC();\n' % self.base_name
-
-    def makeWrite(self):
-        if self.write_code != None:
-            return self.buildWriteCode('setNextMicroPC')
-        return 'xc->setNextMicroPC(%s);\n' % self.base_name
+            return self.buildReadCode('microPC')
+        return '%s = xc->microPC();\n' % self.base_name
 
 class NPCOperand(Operand):
     def makeConstructor(self):
@@ -725,27 +716,8 @@ class NPCOperand(Operand):
 
     def makeRead(self):
         if self.read_code != None:
-            return self.buildReadCode('readNextPC')
-        return '%s = xc->readNextPC();\n' % self.base_name
-
-    def makeWrite(self):
-        if self.write_code != None:
-            return self.buildWriteCode('setNextPC')
-        return 'xc->setNextPC(%s);\n' % self.base_name
-
-class NNPCOperand(Operand):
-    def makeConstructor(self):
-        return ''
-
-    def makeRead(self):
-        if self.read_code != None:
-            return self.buildReadCode('readNextNPC')
-        return '%s = xc->readNextNPC();\n' % self.base_name
-
-    def makeWrite(self):
-        if self.write_code != None:
-            return self.buildWriteCode('setNextNPC')
-        return 'xc->setNextNPC(%s);\n' % self.base_name
+            return self.buildReadCode('nextInstAddr')
+        return '%s = xc->nextInstAddr();\n' % self.base_name
 
 class OperandList(object):
     '''Find all the operands in the given code block.  Returns an operand

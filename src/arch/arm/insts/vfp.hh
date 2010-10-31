@@ -459,6 +459,18 @@ class FpOp : public PredOp
     unaryOp(FPSCR &fpscr, fpType op1,
             fpType (*func)(fpType),
             bool flush, uint32_t rMode) const;
+
+    void
+    advancePC(PCState &pcState) const
+    {
+        if (flags[IsLastMicroop]) {
+            pcState.uEnd();
+        } else if (flags[IsMicroop]) {
+            pcState.uAdvance();
+        } else {
+            pcState.advance();
+        }
+    }
 };
 
 class FpRegRegOp : public FpOp

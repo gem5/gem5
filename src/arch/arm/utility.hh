@@ -51,9 +51,18 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
 namespace ArmISA {
+
+    inline PCState
+    buildRetPC(const PCState &curPC, const PCState &callPC)
+    {
+        PCState retPC = callPC;
+        retPC.uEnd();
+        return retPC;
+    }
 
     inline bool
     testPredicate(CPSR cpsr, ConditionCode code)
@@ -91,12 +100,6 @@ namespace ArmISA {
     inline void startupCPU(ThreadContext *tc, int cpuId)
     {
         tc->activate(0);
-    }
-
-    static inline bool
-    isThumb(Addr pc)
-    {
-        return (pc & PcTBit);
     }
 
     static inline void
@@ -162,6 +165,12 @@ Fault setCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);
 Fault readCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);
 
 void skipFunction(ThreadContext *tc);
+
+inline void
+advancePC(PCState &pc, const StaticInstPtr inst)
+{
+    inst->advancePC(pc);
+}
 
 };
 

@@ -31,6 +31,7 @@
 #ifndef __ARCH_MIPS_TYPES_HH__
 #define __ARCH_MIPS_TYPES_HH__
 
+#include "arch/generic/types.hh"
 #include "base/types.hh"
 
 namespace MipsISA
@@ -38,6 +39,8 @@ namespace MipsISA
 
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
+
+typedef GenericISA::DelaySlotPCState<MachInst> PCState;
 
 typedef uint64_t LargestRead;
 

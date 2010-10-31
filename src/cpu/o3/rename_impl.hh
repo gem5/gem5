@@ -591,15 +591,14 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         insts_to_rename.pop_front();
 
         if (renameStatus[tid] == Unblocking) {
-            DPRINTF(Rename,"[tid:%u]: Removing [sn:%lli] PC:%#x from rename "
-                    "skidBuffer\n",
-                    tid, inst->seqNum, inst->readPC());
+            DPRINTF(Rename,"[tid:%u]: Removing [sn:%lli] PC:%s from rename "
+                    "skidBuffer\n", tid, inst->seqNum, inst->pcState());
         }
 
         if (inst->isSquashed()) {
-            DPRINTF(Rename, "[tid:%u]: instruction %i with PC %#x is "
-                    "squashed, skipping.\n",
-                    tid, inst->seqNum, inst->readPC());
+            DPRINTF(Rename, "[tid:%u]: instruction %i with PC %s is "
+                    "squashed, skipping.\n", tid, inst->seqNum,
+                    inst->pcState());
 
             ++renameSquashedInsts;
 
@@ -610,8 +609,7 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         }
 
         DPRINTF(Rename, "[tid:%u]: Processing instruction [sn:%lli] with "
-                "PC %#x.\n",
-                tid, inst->seqNum, inst->readPC());
+                "PC %s.\n", tid, inst->seqNum, inst->pcState());
 
         // Handle serializeAfter/serializeBefore instructions.
         // serializeAfter marks the next instruction as serializeBefore.
@@ -716,8 +714,8 @@ DefaultRename<Impl>::skidInsert(ThreadID tid)
 
         assert(tid == inst->threadNumber);
 
-        DPRINTF(Rename, "[tid:%u]: Inserting [sn:%lli] PC:%#x into Rename "
-                "skidBuffer\n", tid, inst->seqNum, inst->readPC());
+        DPRINTF(Rename, "[tid:%u]: Inserting [sn:%lli] PC: %s into Rename "
+                "skidBuffer\n", tid, inst->seqNum, inst->pcState());
 
         ++renameSkidInsts;
 
@@ -731,7 +729,7 @@ DefaultRename<Impl>::skidInsert(ThreadID tid)
         for(it = skidBuffer[tid].begin(); it != skidBuffer[tid].end(); it++)
         {
             warn("[tid:%u]: %s [sn:%i].\n", tid,
-                    (*it)->staticInst->disassemble(inst->readPC()),
+                    (*it)->staticInst->disassemble(inst->instAddr()),
                     (*it)->seqNum);
         }
         panic("Skidbuffer Exceeded Max Size");
@@ -1287,8 +1285,7 @@ DefaultRename<Impl>::checkSignalsAndUpdate(ThreadID tid)
         unblock(tid);
 
         DPRINTF(Rename, "[tid:%u]: Processing instruction [%lli] with "
-                "PC %#x.\n",
-                tid, serial_inst->seqNum, serial_inst->readPC());
+                "PC %s.\n", tid, serial_inst->seqNum, serial_inst->pcState());
 
         // Put instruction into queue here.
         serial_inst->clearSerializeBefore();

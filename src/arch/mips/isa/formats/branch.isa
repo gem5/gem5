@@ -89,7 +89,7 @@ output header {{
             }
         }
 
-        Addr branchTarget(Addr branchPC) const;
+        MipsISA::PCState branchTarget(const MipsISA::PCState &branchPC) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -116,7 +116,7 @@ output header {{
         {
         }
 
-        Addr branchTarget(ThreadContext *tc) const;
+        MipsISA::PCState branchTarget(ThreadContext *tc) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -124,17 +124,25 @@ output header {{
 }};
 
 output decoder {{
-    Addr
-    Branch::branchTarget(Addr branchPC) const
+    MipsISA::PCState
+    Branch::branchTarget(const MipsISA::PCState &branchPC) const
     {
-        return branchPC + 4 + disp;
+        MipsISA::PCState target = branchPC;
+        target.advance();
+        target.npc(branchPC.pc() + sizeof(MachInst) + disp);
+        target.nnpc(target.npc() + sizeof(MachInst));
+        return target;
     }
 
-    Addr
+    MipsISA::PCState
     Jump::branchTarget(ThreadContext *tc) const
     {
-      Addr NPC = tc->readNextPC();
-      return (NPC & 0xF0000000) | (disp);
+        MipsISA::PCState target = tc->pcState();
+        Addr pc = target.pc();
+        target.advance();
+        target.npc((pc & 0xF0000000) | disp);
+        target.nnpc(target.npc() + sizeof(MachInst));
+        return target;
     }
 
     const std::string &
@@ -217,19 +225,16 @@ output decoder {{
 }};
 
 def format Branch(code, *opt_flags) {{
-    not_taken_code = '  NNPC = NNPC;\n'
-    not_taken_code += '} \n'
+    not_taken_code = ''
 
     #Build Instruction Flags
     #Use Link & Likely Flags to Add Link/Condition Code
     inst_flags = ('IsDirectControl', )
     for x in opt_flags:
         if x == 'Link':
-            code += 'R31 = NNPC;\n'
+            code += 'R31 = pc.nnpc();\n'
         elif x == 'Likely':
-            not_taken_code = '  NPC = NNPC;\n'
-            not_taken_code += '  NNPC = NNPC + 4;\n'
-            not_taken_code += '} \n'
+            not_taken_code = 'pc.advance();'
             inst_flags += ('IsCondDelaySlot', )
         else:
             inst_flags += (x, )
@@ -241,11 +246,17 @@ def format Branch(code, *opt_flags) {{
          inst_flags += ('IsCondControl', )
 
     #Condition code
-    code = 'bool cond;\n' + code
-    code += 'if (cond) {\n'
-    code += '  NNPC = NPC + disp;\n'
-    code += '} else {\n'
-    code += not_taken_code
+    code = '''
+    bool cond;
+    MipsISA::PCState pc = PCS;
+    %(code)s
+    if (cond) {
+        pc.nnpc(pc.npc() + disp);
+    } else {
+        %(not_taken_code)s
+    }
+    PCS = pc;
+    ''' % { "code" : code, "not_taken_code" : not_taken_code }
 
     iop = InstObjParams(name, Name, 'Branch', code, inst_flags)
     header_output = BasicDeclare.subst(iop)
@@ -255,19 +266,16 @@ def format Branch(code, *opt_flags) {{
 }};
 
 def format DspBranch(code, *opt_flags) {{
-    not_taken_code = '  NNPC = NNPC;\n'
-    not_taken_code += '} \n'
+    not_taken_code = ''
 
     #Build Instruction Flags
     #Use Link & Likely Flags to Add Link/Condition Code
     inst_flags = ('IsDirectControl', )
     for x in opt_flags:
         if x == 'Link':
-            code += 'R31 = NNPC;\n'
+            code += 'R32 = pc.nnpc();'
         elif x == 'Likely':
-            not_taken_code = '  NPC = NNPC;\n'
-            not_taken_code += '  NNPC = NNPC + 4;\n'
-            not_taken_code += '} \n'
+            not_taken_code = 'pc.advance();'
             inst_flags += ('IsCondDelaySlot', )
         else:
             inst_flags += (x, )
@@ -278,19 +286,19 @@ def format DspBranch(code, *opt_flags) {{
     else:
          inst_flags += ('IsCondControl', )
 
-    #Declaration code
-    decl_code = 'bool cond;\n'
-    decl_code += 'uint32_t dspctl;\n'
-
-    #Fetch code
-    fetch_code = 'dspctl = DSPControl;\n'
-
     #Condition code
-    code = decl_code + fetch_code + code
-    code += 'if (cond) {\n'
-    code += '  NNPC = NPC + disp;\n'
-    code += '} else {\n'
-    code += not_taken_code
+    code = '''
+    MipsISA::PCState pc = PCS;
+    bool cond;
+    uint32_t dspctl = DSPControl;
+    %(code)s
+    if (cond) {
+        pc.nnpc(pc.npc() + disp);
+    } else {
+        %(not_taken_code)s
+    }
+    PCS = pc;
+    ''' % { "code" : code, "not_taken_code" : not_taken_code }
 
     iop = InstObjParams(name, Name, 'Branch', code, inst_flags)
     header_output = BasicDeclare.subst(iop)
@@ -305,11 +313,17 @@ def format Jump(code, *opt_flags) {{
     inst_flags = ('IsIndirectControl', 'IsUncondControl')
     for x in opt_flags:
         if x == 'Link':
-            code = 'R31 = NNPC;\n' + code
+            code = '''
+            R31 = pc.nnpc();
+            ''' + code
         elif x == 'ClearHazards':
             code += '/* Code Needed to Clear Execute & Inst Hazards */\n'
         else:
             inst_flags += (x, )
+
+    code = '''
+    MipsISA::PCState pc = PCS;
+    ''' + code
 
     iop = InstObjParams(name, Name, 'Jump', code, inst_flags)
     header_output = BasicDeclare.subst(iop)

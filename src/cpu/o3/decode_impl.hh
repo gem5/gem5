@@ -264,29 +264,16 @@ template<class Impl>
 void
 DefaultDecode<Impl>::squash(DynInstPtr &inst, ThreadID tid)
 {
-    DPRINTF(Decode, "[tid:%i]: [sn:%i] Squashing due to incorrect branch prediction "
-            "detected at decode.\n", tid, inst->seqNum);
+    DPRINTF(Decode, "[tid:%i]: [sn:%i] Squashing due to incorrect branch "
+            "prediction detected at decode.\n", tid, inst->seqNum);
 
     // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
     toFetch->decodeInfo[tid].predIncorrect = true;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
-    toFetch->decodeInfo[tid].nextMicroPC = inst->readMicroPC();
-
-#if ISA_HAS_DELAY_SLOT
-    toFetch->decodeInfo[tid].nextPC = inst->readPC() + sizeof(TheISA::MachInst);
-    toFetch->decodeInfo[tid].nextNPC = inst->branchTarget();
-    toFetch->decodeInfo[tid].branchTaken = inst->readNextNPC() !=
-        (inst->readNextPC() + sizeof(TheISA::MachInst));
-#else
     toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
-    toFetch->decodeInfo[tid].nextNPC =
-        inst->branchTarget() + sizeof(TheISA::MachInst);
-    toFetch->decodeInfo[tid].branchTaken =
-        inst->readNextPC() != (inst->readPC() + sizeof(TheISA::MachInst));
-#endif
-
+    toFetch->decodeInfo[tid].branchTaken = inst->pcState().branching();
 
     InstSeqNum squash_seq_num = inst->seqNum;
 
@@ -382,8 +369,8 @@ DefaultDecode<Impl>::skidInsert(ThreadID tid)
 
         assert(tid == inst->threadNumber);
 
-        DPRINTF(Decode,"Inserting [sn:%lli] PC:%#x into decode skidBuffer %i\n",
-                inst->seqNum, inst->readPC(), inst->threadNumber);
+        DPRINTF(Decode,"Inserting [sn:%lli] PC: %s into decode skidBuffer %i\n",
+                inst->seqNum, inst->pcState(), inst->threadNumber);
 
         skidBuffer[tid].push(inst);
     }
@@ -681,13 +668,12 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         insts_to_decode.pop();
 
         DPRINTF(Decode, "[tid:%u]: Processing instruction [sn:%lli] with "
-                "PC %#x\n",
-                tid, inst->seqNum, inst->readPC());
+                "PC %s\n", tid, inst->seqNum, inst->pcState());
 
         if (inst->isSquashed()) {
-            DPRINTF(Decode, "[tid:%u]: Instruction %i with PC %#x is "
+            DPRINTF(Decode, "[tid:%u]: Instruction %i with PC %s is "
                     "squashed, skipping.\n",
-                    tid, inst->seqNum, inst->readPC());
+                    tid, inst->seqNum, inst->pcState());
 
             ++decodeSquashedInsts;
 
@@ -717,9 +703,6 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
         if (inst->readPredTaken() && !inst->isControl()) {
-            DPRINTF(Decode, "PredPC : %#x != NextPC: %#x\n",
-                    inst->readPredPC(), inst->readNextPC() + 4);
-
             panic("Instruction predicted as a branch!");
 
             ++decodeControlMispred;
@@ -735,26 +718,18 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         if (inst->isDirectCtrl() && inst->isUncondCtrl()) {
             ++decodeBranchResolved;
 
-            if (inst->branchTarget() != inst->readPredPC()) {
+            if (!(inst->branchTarget() == inst->readPredTarg())) {
                 ++decodeBranchMispred;
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
                 squash(inst, inst->threadNumber);
-                Addr target = inst->branchTarget();
+                TheISA::PCState target = inst->branchTarget();
 
-#if ISA_HAS_DELAY_SLOT
-                DPRINTF(Decode, "[sn:%i]: Updating predictions: PredPC: %#x  PredNextPC: %#x\n",
-                        inst->seqNum, inst->readPC() + sizeof(TheISA::MachInst), target);
-
+                DPRINTF(Decode, "[sn:%i]: Updating predictions: PredPC: %s\n",
+                        inst->seqNum, target);
                 //The micro pc after an instruction level branch should be 0
-                inst->setPredTarg(inst->readPC() + sizeof(TheISA::MachInst), target, 0);
-#else
-                DPRINTF(Decode, "[sn:%i]: Updating predictions: PredPC: %#x  PredNextPC: %#x\n",
-                        inst->seqNum, target, target + sizeof(TheISA::MachInst));
-                //The micro pc after an instruction level branch should be 0
-                inst->setPredTarg(target, target + sizeof(TheISA::MachInst), 0);
-#endif
+                inst->setPredTarg(target);
                 break;
             }
         }

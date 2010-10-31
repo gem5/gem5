@@ -193,11 +193,7 @@ SimpleThread::serialize(ostream &os)
     ThreadState::serialize(os);
     SERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
-    SERIALIZE_SCALAR(microPC);
-    SERIALIZE_SCALAR(nextMicroPC);
-    SERIALIZE_SCALAR(PC);
-    SERIALIZE_SCALAR(nextPC);
-    SERIALIZE_SCALAR(nextNPC);
+    _pcState.serialize(os);
     // thread_num and cpu_id are deterministic from the config
 
     // 
@@ -213,11 +209,7 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     ThreadState::unserialize(cp, section);
     UNSERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
-    UNSERIALIZE_SCALAR(microPC);
-    UNSERIALIZE_SCALAR(nextMicroPC);
-    UNSERIALIZE_SCALAR(PC);
-    UNSERIALIZE_SCALAR(nextPC);
-    UNSERIALIZE_SCALAR(nextNPC);
+    _pcState.unserialize(cp, section);
     // thread_num and cpu_id are deterministic from the config
 
     // 
