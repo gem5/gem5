@@ -1,5 +1,3 @@
-Redirecting stdout to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simout
-Redirecting stderr to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 26 2010 13:03:41
-M5 revision 85cafc6ccb42 7662 default qtip tip sc-fail-fix
-M5 started Aug 26 2010 13:03:47
-M5 executing on zizzer
+M5 compiled Sep 26 2010 21:00:10
+M5 revision eb8d8f78ca15 7689 default qtip tip pctype.patch qbase
+M5 started Sep 26 2010 21:00:16
+M5 executing on burrito
 command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -22,68 +20,68 @@ Init done
 [Iteration 1, Thread 1] Got lock
 [Iteration 1, Thread 1] Critical section done, previously next=3, now next=1
 Iteration 1 completed
-[Iteration 2, Thread 2] Got lock
-[Iteration 2, Thread 2] Critical section done, previously next=0, now next=2
 [Iteration 2, Thread 1] Got lock
-[Iteration 2, Thread 1] Critical section done, previously next=2, now next=1
+[Iteration 2, Thread 1] Critical section done, previously next=0, now next=1
+[Iteration 2, Thread 2] Got lock
+[Iteration 2, Thread 2] Critical section done, previously next=1, now next=2
 [Iteration 2, Thread 3] Got lock
-[Iteration 2, Thread 3] Critical section done, previously next=1, now next=3
+[Iteration 2, Thread 3] Critical section done, previously next=2, now next=3
 Iteration 2 completed
-[Iteration 3, Thread 1] Got lock
-[Iteration 3, Thread 1] Critical section done, previously next=0, now next=1
 [Iteration 3, Thread 3] Got lock
-[Iteration 3, Thread 3] Critical section done, previously next=1, now next=3
+[Iteration 3, Thread 3] Critical section done, previously next=0, now next=3
+[Iteration 3, Thread 1] Got lock
+[Iteration 3, Thread 1] Critical section done, previously next=3, now next=1
 [Iteration 3, Thread 2] Got lock
-[Iteration 3, Thread 2] Critical section done, previously next=3, now next=2
+[Iteration 3, Thread 2] Critical section done, previously next=1, now next=2
 Iteration 3 completed
-[Iteration 4, Thread 3] Got lock
-[Iteration 4, Thread 3] Critical section done, previously next=0, now next=3
-[Iteration 4, Thread 1] Got lock
-[Iteration 4, Thread 1] Critical section done, previously next=3, now next=1
 [Iteration 4, Thread 2] Got lock
-[Iteration 4, Thread 2] Critical section done, previously next=1, now next=2
+[Iteration 4, Thread 2] Critical section done, previously next=0, now next=2
+[Iteration 4, Thread 1] Got lock
+[Iteration 4, Thread 1] Critical section done, previously next=2, now next=1
+[Iteration 4, Thread 3] Got lock
+[Iteration 4, Thread 3] Critical section done, previously next=1, now next=3
 Iteration 4 completed
-[Iteration 5, Thread 2] Got lock
-[Iteration 5, Thread 2] Critical section done, previously next=0, now next=2
 [Iteration 5, Thread 3] Got lock
-[Iteration 5, Thread 3] Critical section done, previously next=2, now next=3
+[Iteration 5, Thread 3] Critical section done, previously next=0, now next=3
 [Iteration 5, Thread 1] Got lock
 [Iteration 5, Thread 1] Critical section done, previously next=3, now next=1
+[Iteration 5, Thread 2] Got lock
+[Iteration 5, Thread 2] Critical section done, previously next=1, now next=2
 Iteration 5 completed
-[Iteration 6, Thread 3] Got lock
-[Iteration 6, Thread 3] Critical section done, previously next=0, now next=3
 [Iteration 6, Thread 1] Got lock
-[Iteration 6, Thread 1] Critical section done, previously next=3, now next=1
+[Iteration 6, Thread 1] Critical section done, previously next=0, now next=1
+[Iteration 6, Thread 3] Got lock
+[Iteration 6, Thread 3] Critical section done, previously next=1, now next=3
 [Iteration 6, Thread 2] Got lock
-[Iteration 6, Thread 2] Critical section done, previously next=1, now next=2
+[Iteration 6, Thread 2] Critical section done, previously next=3, now next=2
 Iteration 6 completed
-[Iteration 7, Thread 3] Got lock
-[Iteration 7, Thread 3] Critical section done, previously next=0, now next=3
-[Iteration 7, Thread 2] Got lock
-[Iteration 7, Thread 2] Critical section done, previously next=3, now next=2
 [Iteration 7, Thread 1] Got lock
-[Iteration 7, Thread 1] Critical section done, previously next=2, now next=1
+[Iteration 7, Thread 1] Critical section done, previously next=0, now next=1
+[Iteration 7, Thread 2] Got lock
+[Iteration 7, Thread 2] Critical section done, previously next=1, now next=2
+[Iteration 7, Thread 3] Got lock
+[Iteration 7, Thread 3] Critical section done, previously next=2, now next=3
 Iteration 7 completed
 [Iteration 8, Thread 1] Got lock
 [Iteration 8, Thread 1] Critical section done, previously next=0, now next=1
-[Iteration 8, Thread 2] Got lock
-[Iteration 8, Thread 2] Critical section done, previously next=1, now next=2
 [Iteration 8, Thread 3] Got lock
-[Iteration 8, Thread 3] Critical section done, previously next=2, now next=3
+[Iteration 8, Thread 3] Critical section done, previously next=1, now next=3
+[Iteration 8, Thread 2] Got lock
+[Iteration 8, Thread 2] Critical section done, previously next=3, now next=2
 Iteration 8 completed
 [Iteration 9, Thread 3] Got lock
 [Iteration 9, Thread 3] Critical section done, previously next=0, now next=3
-[Iteration 9, Thread 2] Got lock
-[Iteration 9, Thread 2] Critical section done, previously next=3, now next=2
 [Iteration 9, Thread 1] Got lock
-[Iteration 9, Thread 1] Critical section done, previously next=2, now next=1
+[Iteration 9, Thread 1] Critical section done, previously next=3, now next=1
+[Iteration 9, Thread 2] Got lock
+[Iteration 9, Thread 2] Critical section done, previously next=1, now next=2
 Iteration 9 completed
+[Iteration 10, Thread 2] Got lock
+[Iteration 10, Thread 2] Critical section done, previously next=0, now next=2
 [Iteration 10, Thread 3] Got lock
-[Iteration 10, Thread 3] Critical section done, previously next=0, now next=3
+[Iteration 10, Thread 3] Critical section done, previously next=2, now next=3
 [Iteration 10, Thread 1] Got lock
 [Iteration 10, Thread 1] Critical section done, previously next=3, now next=1
-[Iteration 10, Thread 2] Got lock
-[Iteration 10, Thread 2] Critical section done, previously next=1, now next=2
 Iteration 10 completed
 PASSED :-)
-Exiting @ tick 216428500 because target called exit()
+Exiting @ tick 117567000 because target called exit()
