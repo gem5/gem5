@@ -248,14 +248,14 @@ for root, dirs, files in os.walk(base_dir, topdown=True):
 
     if 'SConscript' in files:
         build_dir = joinpath(env['BUILDDIR'], root[len(base_dir) + 1:])
-        SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
+        SConscript(joinpath(root, 'SConscript'), variant_dir=build_dir)
 
 for extra_dir in extras_dir_list:
     prefix_len = len(dirname(extra_dir)) + 1
     for root, dirs, files in os.walk(extra_dir, topdown=True):
         if 'SConscript' in files:
             build_dir = joinpath(env['BUILDDIR'], root[prefix_len:])
-            SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
+            SConscript(joinpath(root, 'SConscript'), variant_dir=build_dir)
 
 for opt in export_vars:
     env.ConfigFile(opt)
