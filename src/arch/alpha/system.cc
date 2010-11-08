@@ -38,6 +38,7 @@
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "mem/physical.hh"
+#include "mem/vport.hh"
 #include "params/AlphaSystem.hh"
 #include "sim/byteswap.hh"
 
@@ -65,8 +66,8 @@ AlphaSystem::AlphaSystem(Params *p)
 
 
     // Load program sections into memory
-    pal->loadSections(&functionalPort, loadAddrMask);
-    console->loadSections(&functionalPort, loadAddrMask);
+    pal->loadSections(functionalPort, loadAddrMask);
+    console->loadSections(functionalPort, loadAddrMask);
 
     // load symbols
     if (!console->loadGlobalSymbols(consoleSymtab))
@@ -99,7 +100,7 @@ AlphaSystem::AlphaSystem(Params *p)
      * others do.)
      */
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
-        virtPort.writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
+        virtPort->writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
                 strlen(params()->boot_osflags.c_str()));
     }
 
@@ -110,9 +111,9 @@ AlphaSystem::AlphaSystem(Params *p)
     if (consoleSymtab->findAddress("m5_rpb", addr)) {
         uint64_t data;
         data = htog(params()->system_type);
-        virtPort.write(addr+0x50, data);
+        virtPort->write(addr+0x50, data);
         data = htog(params()->system_rev);
-        virtPort.write(addr+0x58, data);
+        virtPort->write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
 }
@@ -168,8 +169,8 @@ AlphaSystem::fixFuncEventAddr(Addr addr)
     // lda  gp,Y(gp): opcode 8, Ra = 29, rb = 29
     const uint32_t gp_lda_pattern  = (8 << 26) | (29 << 21) | (29 << 16);
 
-    uint32_t i1 = virtPort.read<uint32_t>(addr);
-    uint32_t i2 = virtPort.read<uint32_t>(addr + sizeof(MachInst));
+    uint32_t i1 = virtPort->read<uint32_t>(addr);
+    uint32_t i2 = virtPort->read<uint32_t>(addr + sizeof(MachInst));
 
     if ((i1 & inst_mask) == gp_ldah_pattern &&
         (i2 & inst_mask) == gp_lda_pattern) {
@@ -186,7 +187,7 @@ AlphaSystem::setAlphaAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
-        virtPort.write(addr, htog(Phys2K0Seg(access)));
+        virtPort->write(addr, htog(Phys2K0Seg(access)));
     } else {
         panic("could not find m5AlphaAccess\n");
     }

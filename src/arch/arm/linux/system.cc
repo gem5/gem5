@@ -43,8 +43,10 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/linux/atag.hh"
 #include "arch/arm/linux/system.hh"
+#include "arch/arm/utility.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 
 using namespace ArmISA;
@@ -87,7 +89,7 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
     DDUMP(Loader, boot_data, size << 2);
 
-    functionalPort.writeBlob(ParamsList, boot_data, size << 2);
+    functionalPort->writeBlob(ParamsList, boot_data, size << 2);
 
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");

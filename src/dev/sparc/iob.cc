@@ -39,6 +39,7 @@
 
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/faults.hh"
+#include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
 #include "dev/sparc/iob.hh"

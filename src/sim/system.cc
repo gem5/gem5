@@ -49,6 +49,7 @@
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
 #include "kern/kernel_stats.hh"
+#include "mem/vport.hh"
 #else
 #include "params/System.hh"
 #endif
@@ -64,8 +65,6 @@ System::System(Params *p)
     : SimObject(p), physmem(p->physmem), _numContexts(0),
 #if FULL_SYSTEM
       init_param(p->init_param),
-      functionalPort(p->name + "-fport"),
-      virtPort(p->name + "-vport"),
       loadAddrMask(p->load_addr_mask),
 #else
       page_ptr(0),
@@ -86,13 +85,15 @@ System::System(Params *p)
      * Get a functional port to memory
      */
     Port *mem_port;
+    functionalPort = new FunctionalPort(name() + "-fport");
     mem_port = physmem->getPort("functional");
-    functionalPort.setPeer(mem_port);
-    mem_port->setPeer(&functionalPort);
+    functionalPort->setPeer(mem_port);
+    mem_port->setPeer(functionalPort);
 
+    virtPort = new VirtualPort(name() + "-fport");
     mem_port = physmem->getPort("functional");
-    virtPort.setPeer(mem_port);
-    mem_port->setPeer(&virtPort);
+    virtPort->setPeer(mem_port);
+    mem_port->setPeer(virtPort);
 
 
     /**
@@ -110,7 +111,7 @@ System::System(Params *p)
             fatal("Could not load kernel file %s", params()->kernel);
 
         // Load program sections into memory
-        kernel->loadSections(&functionalPort, loadAddrMask);
+        kernel->loadSections(functionalPort, loadAddrMask);
 
         // setup entry points
         kernelStart = kernel->textBase();

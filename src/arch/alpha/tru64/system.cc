@@ -40,6 +40,7 @@
 #include "kern/system_events.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
+#include "mem/vport.hh"
 
 using namespace std;
 
@@ -48,7 +49,7 @@ Tru64AlphaSystem::Tru64AlphaSystem(Tru64AlphaSystem::Params *p)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("enable_async_printf", addr)) {
-        virtPort.write(addr, (uint32_t)0);
+        virtPort->write(addr, (uint32_t)0);
     }
 
 #ifdef DEBUG

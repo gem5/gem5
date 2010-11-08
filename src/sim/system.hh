@@ -48,7 +48,6 @@
 
 #if FULL_SYSTEM
 #include "kern/system_events.hh"
-#include "mem/vport.hh"
 #endif
 
 class BaseCPU;
@@ -58,6 +57,8 @@ class PhysicalMemory;
 
 #if FULL_SYSTEM
 class Platform;
+class FunctionalPort;
+class VirtualPort;
 #endif
 class GDBListener;
 class BaseRemoteGDB;
@@ -108,8 +109,8 @@ class System : public SimObject
 
     /** Port to physical memory used for writing object files into ram at
      * boot.*/
-    FunctionalPort functionalPort;
-    VirtualPort virtPort;
+    FunctionalPort *functionalPort;
+    VirtualPort *virtPort;
 
     /** kernel symbol table */
     SymbolTable *kernelSymtab;

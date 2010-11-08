@@ -126,6 +126,7 @@
 
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
+#include "mem/vport.hh"
 #endif
 
 #include "base/intmath.hh"

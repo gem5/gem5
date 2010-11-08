@@ -44,7 +44,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace ArmISA;
 using namespace Linux;
 
 ArmSystem::ArmSystem(Params *p)

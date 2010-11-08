@@ -50,6 +50,7 @@
 #include "base/trace.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
+#include "mem/vport.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #else
