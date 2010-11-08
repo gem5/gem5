@@ -312,6 +312,7 @@ global_sticky_vars.AddVariables(
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
+    ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),
     ('EXTRAS', 'Add Extra directories to the compilation', '',
      PathListAllExist, PathListMakeAbsolute),
     )
@@ -548,6 +549,12 @@ py_libs.append(py_version)
 
 main.Append(CPPPATH=py_includes)
 main.Append(LIBPATH=py_lib_path)
+
+# Cache build files in the supplied directory.
+if main['M5_BUILD_CACHE']:
+    print 'Using build cache located at', main['M5_BUILD_CACHE']
+    CacheDir(main['M5_BUILD_CACHE'])
+
 
 # verify that this stuff works
 if not conf.CheckHeader('Python.h', '<>'):
