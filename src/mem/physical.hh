@@ -149,12 +149,12 @@ class PhysicalMemory : public MemObject
     std::vector<MemoryPort*> ports;
     typedef std::vector<MemoryPort*>::iterator PortIterator;
 
-    uint64_t cachedSize;
-    uint64_t cachedStart;
+    uint64_t _size;
+    uint64_t _start;
   public:
     Addr new_page();
-    uint64_t size() { return cachedSize; }
-    uint64_t start() { return cachedStart; }
+    uint64_t size() { return _size; }
+    uint64_t start() { return _start; }
 
   public:
     typedef PhysicalMemoryParams Params;

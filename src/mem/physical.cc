@@ -31,6 +31,7 @@
 
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <sys/user.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -41,6 +42,7 @@
 #include <string>
 
 #include "arch/registers.hh"
+#include "base/intmath.hh"
 #include "base/misc.hh"
 #include "base/random.hh"
 #include "base/types.hh"
@@ -56,26 +58,39 @@ using namespace TheISA;
 PhysicalMemory::PhysicalMemory(const Params *p)
     : MemObject(p), pmemAddr(NULL), pagePtr(0),
       lat(p->latency), lat_var(p->latency_var),
-      cachedSize(params()->range.size()), cachedStart(params()->range.start)
+      _size(params()->range.size()), _start(params()->range.start)
 {
-    if (params()->range.size() % TheISA::PageBytes != 0)
+    if (size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
 
     if (params()->null)
         return;
 
-    int map_flags = MAP_ANON | MAP_PRIVATE;
-    pmemAddr = (uint8_t *)mmap(NULL, params()->range.size(),
-                               PROT_READ | PROT_WRITE, map_flags, -1, 0);
+
+    if (params()->file == "") {
+        int map_flags = MAP_ANON | MAP_PRIVATE;
+        pmemAddr = (uint8_t *)mmap(NULL, size(),
+                                   PROT_READ | PROT_WRITE, map_flags, -1, 0);
+    } else {
+        int map_flags = MAP_PRIVATE;
+        int fd = open(params()->file.c_str(), O_RDONLY);
+        _size = lseek(fd, 0, SEEK_END);
+        lseek(fd, 0, SEEK_SET);
+        pmemAddr = (uint8_t *)mmap(NULL, roundUp(size(), PAGE_SIZE),
+                                   PROT_READ | PROT_WRITE, map_flags, fd, 0);
+    }
 
     if (pmemAddr == (void *)MAP_FAILED) {
         perror("mmap");
-        fatal("Could not mmap!\n");
+        if (params()->file == "")
+            fatal("Could not mmap!\n");
+        else
+            fatal("Could not find file: %s\n", params()->file);
     }
 
     //If requested, initialize all the memory to 0
     if (p->zero)
-        memset(pmemAddr, 0, p->range.size());
+        memset(pmemAddr, 0, size());
 }
 
 void
@@ -94,8 +109,7 @@ PhysicalMemory::init()
 PhysicalMemory::~PhysicalMemory()
 {
     if (pmemAddr)
-        munmap((char*)pmemAddr, params()->range.size());
-    //Remove memPorts?
+        munmap((char*)pmemAddr, size());
 }
 
 Addr
@@ -408,7 +422,7 @@ PhysicalMemory::getAddressRanges(AddrRangeList &resp, bool &snoop)
 {
     snoop = false;
     resp.clear();
-    resp.push_back(RangeSize(start(), params()->range.size()));
+    resp.push_back(RangeSize(start(), size()));
 }
 
 unsigned
@@ -463,6 +477,7 @@ PhysicalMemory::serialize(ostream &os)
     string filename = name() + ".physmem";
 
     SERIALIZE_SCALAR(filename);
+    SERIALIZE_SCALAR(_size);
 
     // write memory file
     string thefile = Checkpoint::dir() + "/" + filename.c_str();
@@ -477,8 +492,7 @@ PhysicalMemory::serialize(ostream &os)
         fatal("Insufficient memory to allocate compression state for %s\n",
                 filename);
 
-    if (gzwrite(compressedMem, pmemAddr, params()->range.size()) !=
-        (int)params()->range.size()) {
+    if (gzwrite(compressedMem, pmemAddr, size()) != (int)size()) {
         fatal("Write failed on physical memory checkpoint file '%s'\n",
               filename);
     }
@@ -522,9 +536,13 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
     // unmap file that was mmaped in the constructor
     // This is done here to make sure that gzip and open don't muck with our
     // nice large space of memory before we reallocate it
-    munmap((char*)pmemAddr, params()->range.size());
+    munmap((char*)pmemAddr, size());
 
-    pmemAddr = (uint8_t *)mmap(NULL, params()->range.size(),
+    UNSERIALIZE_SCALAR(_size);
+    if (size() > params()->range.size())
+        fatal("Memory size has changed!\n");
+
+    pmemAddr = (uint8_t *)mmap(NULL, size(),
         PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 
     if (pmemAddr == (void *)MAP_FAILED) {
@@ -538,7 +556,7 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
         fatal("Unable to malloc memory to read file %s\n", filename);
 
     /* Only copy bytes that are non-zero, so we don't give the VM system hell */
-    while (curSize < params()->range.size()) {
+    while (curSize < size()) {
         bytesRead = gzread(compressedMem, tempPage, chunkSize);
         if (bytesRead == 0)
             break;

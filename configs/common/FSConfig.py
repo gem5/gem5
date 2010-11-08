@@ -200,9 +200,12 @@ def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
     self.membus.badaddr_responder.warn_access = "warn"
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()), zero = True)
+    self.diskmem = PhysicalMemory(range = AddrRange(Addr('128MB'), size = '128MB'),
+                                  file = disk('ael-arm.ext2'))
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
     self.physmem.port = self.membus.port
+    self.diskmem.port = self.membus.port
 
     self.mem_mode = mem_mode
 
@@ -224,7 +227,10 @@ def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
 
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
-    self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0 lpj=19988480 norandmaps'
+    self.kernel = binary('vmlinux.arm')
+    self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0 lpj=19988480' + \
+                        ' norandmaps slram=slram0,0x8000000,+0x8000000' +      \
+                        ' mtdparts=slram0:- rw loglevel=8 root=/dev/mtdblock0'
 
     return self
 
