@@ -73,12 +73,6 @@ class MicroOp : public PredOp
 
   public:
     void
-    setDelayedCommit()
-    {
-        flags[IsDelayedCommit] = true;
-    }
-
-    void
     advancePC(PCState &pcState) const
     {
         if (flags[IsLastMicroop]) {

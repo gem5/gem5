@@ -263,6 +263,8 @@ class StaticInstBase : public RefCounted
     //@}
 
     void setLastMicroop() { flags[IsLastMicroop] = true; }
+    void setDelayedCommit() { flags[IsDelayedCommit] = true; }
+
     /// Operation class.  Used to select appropriate function unit in issue.
     OpClass opClass()     const { return _opClass; }
 };
