@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep 20 2010 15:04:50
-M5 revision 0c4a7d867247 7686 default qtip print-identical tip
-M5 started Sep 20 2010 15:14:22
-M5 executing on phenom
-command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/long/10.mcf/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/opt/long/10.mcf/arm/linux/simple-timing
+M5 compiled Oct  5 2010 14:46:04
+M5 revision 878ec5a6f4d1+ 7707+ default qtip tip ext/fs_regressions.patch
+M5 started Oct  5 2010 15:02:21
+M5 executing on aus-bc2-b14
+command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/10.mcf/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/long/10.mcf/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 

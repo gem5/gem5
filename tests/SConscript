@@ -30,7 +30,7 @@
 #          Kevin Lim
 
 import os, signal
-import sys
+import sys, time
 import glob
 from SCons.Script.SConscript import SConsEnvironment
 
@@ -102,11 +102,26 @@ def run_test(target, source, env):
     if env['BATCH']:
         cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
 
+    pre_exec_time = time.time()
     status = env.Execute(env.subst(cmd, target=target, source=source))
     if status == 0:
         # M5 terminated normally.
         # Run diff on output & ref directories to find differences.
         # Exclude the stats file since we will use diff-out on that.
+
+        # NFS file systems can be annoying and not have updated yet
+        # wait until we see the file modified
+        statsdiff = os.path.join(tgt_dir, 'statsdiff')
+        m_time = 0
+        nap = 0
+        while m_time < pre_exec_time and nap < 10:
+            try:
+                m_time = os.stat(statsdiff).st_mtime
+            except OSError:
+                pass
+            time.sleep(1)
+            nap += 1
+
         outdiff = os.path.join(tgt_dir, 'outdiff')
         diffcmd = 'diff -ubrs %s ${SOURCES[2].dir} %s > %s' \
                   % (output_ignore_args, tgt_dir, outdiff)
@@ -114,7 +129,6 @@ def run_test(target, source, env):
         print "===== Output differences ====="
         print contents(outdiff)
         # Run diff-out on stats.txt file
-        statsdiff = os.path.join(tgt_dir, 'statsdiff')
         diffcmd = '$DIFFOUT ${SOURCES[2]} %s > %s' \
                   % (os.path.join(tgt_dir, 'stats.txt'), statsdiff)
         diffcmd = env.subst(diffcmd, target=target, source=source)
@@ -260,6 +274,9 @@ if env['FULL_SYSTEM']:
     if env['TARGET_ISA'] == 'sparc':
         configs += ['t1000-simple-atomic',
                     't1000-simple-timing']
+    if env['TARGET_ISA'] == 'arm':
+        configs += ['realview-simple-atomic',
+                    'realview-simple-timing']
 
 else:
     configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',

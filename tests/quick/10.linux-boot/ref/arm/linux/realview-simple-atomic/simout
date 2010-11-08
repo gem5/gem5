@@ -1,0 +1,16 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Oct  1 2010 22:55:27
+M5 revision 8dd1bd50f739 7724 default qtip tip ext/vfp_serial_nonspec_flags.patch
+M5 started Oct  1 2010 23:07:06
+M5 executing on aus-bc3-b7
+command line: build/ARM_FS/m5.opt -d build/ARM_FS/tests/opt/quick/10.linux-boot/arm/linux/realview-simple-atomic -re tests/run.py build/ARM_FS/tests/opt/quick/10.linux-boot/arm/linux/realview-simple-atomic
+Global frequency set at 1000000000000 ticks per second
+info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux.arm
+info: Entering event queue @ 0.  Starting simulation...
+Exiting @ tick 25749159000 because m5_exit instruction encountered
