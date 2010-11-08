@@ -180,10 +180,10 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
     }
     switch (misc_reg) {
       case MISCREG_CLIDR:
-        warn("The clidr register always reports 0 caches.\n");
+        warn_once("The clidr register always reports 0 caches.\n");
         break;
       case MISCREG_CCSIDR:
-        warn("The ccsidr register isn't implemented and "
+        warn_once("The ccsidr register isn't implemented and "
                 "always reads as 0.\n");
         break;
       case MISCREG_ID_PFR0:
@@ -268,7 +268,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             }
             break;
           case MISCREG_CSSELR:
-            warn("The csselr register isn't implemented.\n");
+            warn_once("The csselr register isn't implemented.\n");
             break;
           case MISCREG_FPSCR:
             {
@@ -319,7 +319,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             return;
           case MISCREG_TLBIALLIS:
           case MISCREG_TLBIALL:
-            warn("Need to flush all TLBs in MP\n");
+            warn_once("Need to flush all TLBs in MP\n");
             tc->getITBPtr()->flushAll();
             tc->getDTBPtr()->flushAll();
             return;
@@ -331,7 +331,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             return;
           case MISCREG_TLBIMVAIS:
           case MISCREG_TLBIMVA:
-            warn("Need to flush all TLBs in MP\n");
+            warn_once("Need to flush all TLBs in MP\n");
             tc->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
                     bits(newVal, 7,0));
             tc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
@@ -339,13 +339,13 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             return;
           case MISCREG_TLBIASIDIS:
           case MISCREG_TLBIASID:
-            warn("Need to flush all TLBs in MP\n");
+            warn_once("Need to flush all TLBs in MP\n");
             tc->getITBPtr()->flushAsid(bits(newVal, 7,0));
             tc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
             return;
           case MISCREG_TLBIMVAAIS:
           case MISCREG_TLBIMVAA:
-            warn("Need to flush all TLBs in MP\n");
+            warn_once("Need to flush all TLBs in MP\n");
             tc->getITBPtr()->flushMva(mbits(newVal, 31,12));
             tc->getDTBPtr()->flushMva(mbits(newVal, 31,12));
             return;
