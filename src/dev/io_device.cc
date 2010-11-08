@@ -51,6 +51,8 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
     snoop = false;
     device->addressRanges(resp);
+    for (AddrRangeIter i = resp.begin(); i != resp.end(); i++)
+         DPRINTF(BusAddrRanges, "Adding Range %#x-%#x\n", i->start, i->end);
 }
 
 
@@ -95,6 +97,7 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 {
     assert(pioSize != 0);
     range_list.clear();
+    DPRINTF(BusAddrRanges, "registering range: %#x-%#x\n", pioAddr, pioSize);
     range_list.push_back(RangeSize(pioAddr, pioSize));
 }
 
