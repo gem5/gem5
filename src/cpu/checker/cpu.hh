@@ -178,20 +178,6 @@ class CheckerCPU : public BaseCPU
     void setEA(Addr EA) { panic("SimpleCPU::setEA() not implemented\n"); }
     Addr getEA()        { panic("SimpleCPU::getEA() not implemented\n"); }
 
-    void prefetch(Addr addr, unsigned flags)
-    {
-        // need to do this...
-    }
-
-    void writeHint(Addr addr, int size, unsigned flags)
-    {
-        // need to do this...
-    }
-
-    Fault copySrcTranslate(Addr src);
-
-    Fault copy(Addr dest);
-
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural
     // register index, to simplify the implementation of register

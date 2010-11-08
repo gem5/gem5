@@ -396,6 +396,7 @@ def template MiscExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
+        warn_once("Prefetch instrutions is Alpha do not do anything\n");
         if (fault == NoFault) {
             %(memacc_code)s;
         }
@@ -404,6 +405,8 @@ def template MiscExecute {{
     }
 }};
 
+// Prefetches in Alpha don't actually do anything
+// They just build an effective address and complete
 def template MiscInitiateAcc {{
     Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
@@ -530,12 +533,10 @@ def format LoadOrPrefetch(memacc_code, ea_code = {{ EA = Rb + disp; }},
     inst_flags = makeList(inst_flags)
 
     pf_mem_flags = mem_flags + pf_flags + ['PREFETCH']
-    pf_inst_flags = inst_flags + ['IsMemRef', 'IsLoad',
-                                  'IsDataPrefetch', 'MemReadOp']
+    pf_inst_flags = inst_flags
 
     (pf_header_output, pf_decoder_output, _, pf_exec_output) = \
-        LoadStoreBase(name, Name + 'Prefetch', ea_code,
-                      'xc->prefetch(EA, memAccessFlags);',
+        LoadStoreBase(name, Name + 'Prefetch', ea_code, ';',
                       pf_mem_flags, pf_inst_flags, exec_template_base = 'Misc')
 
     header_output += pf_header_output

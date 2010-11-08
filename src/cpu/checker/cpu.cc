@@ -134,18 +134,6 @@ CheckerCPU::unserialize(Checkpoint *cp, const string &section)
 */
 }
 
-Fault
-CheckerCPU::copySrcTranslate(Addr src)
-{
-    panic("Unimplemented!");
-}
-
-Fault
-CheckerCPU::copy(Addr dest)
-{
-    panic("Unimplemented!");
-}
-
 template <class T>
 Fault
 CheckerCPU::read(Addr addr, T &data, unsigned flags)

@@ -842,43 +842,6 @@ CacheUnit::execute(int slot_num)
     }
 }
 
-void
-CacheUnit::prefetch(DynInstPtr inst)
-{
-    warn_once("Prefetching currently unimplemented");
-
-    CacheReqPtr cache_req
-        = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
-    assert(cache_req);
-
-    // Clean-Up cache resource request so
-    // other memory insts. can use them
-    cache_req->setCompleted();
-    cachePortBlocked = false;
-    cache_req->setMemAccPending(false);
-    cache_req->setMemAccCompleted();
-    inst->unsetMemAddr();
-}
-
-
-void
-CacheUnit::writeHint(DynInstPtr inst)
-{
-    warn_once("Write Hints currently unimplemented");
-
-    CacheReqPtr cache_req
-        = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
-    assert(cache_req);
-
-    // Clean-Up cache resource request so
-    // other memory insts. can use them
-    cache_req->setCompleted();
-    cachePortBlocked = false;
-    cache_req->setMemAccPending(false);
-    cache_req->setMemAccCompleted();
-    inst->unsetMemAddr();
-}
-
 // @TODO: Split into doCacheRead() and doCacheWrite()
 Fault
 CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,

@@ -409,20 +409,6 @@ class OzoneCPU : public BaseCPU
         return backEnd->write(req, data, store_idx);
     }
 
-    void prefetch(Addr addr, unsigned flags)
-    {
-        // need to do this...
-    }
-
-    void writeHint(Addr addr, int size, unsigned flags)
-    {
-        // need to do this...
-    }
-
-    Fault copySrcTranslate(Addr src);
-
-    Fault copy(Addr dest);
-
   public:
     void squashFromTC();
 

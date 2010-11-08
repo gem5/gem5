@@ -346,38 +346,6 @@ InOrderDynInst::syscall(int64_t callnum)
 #endif
 
 void
-InOrderDynInst::prefetch(Addr addr, unsigned flags)
-{
-    cpu->prefetch(this);
-}
-
-void
-InOrderDynInst::writeHint(Addr addr, int size, unsigned flags)
-{
-    cpu->writeHint(this);
-}
-
-/**
- * @todo Need to find a way to get the cache block size here.
- */
-Fault
-InOrderDynInst::copySrcTranslate(Addr src)
-{
-    // Not currently supported.
-    return NoFault;
-}
-
-/**
- * @todo Need to find a way to get the cache block size here.
- */
-Fault
-InOrderDynInst::copy(Addr dest)
-{
-    // Not currently supported.
-    return NoFault;
-}
-
-void
 InOrderDynInst::releaseReq(ResourceRequest* req)
 {
     std::list<ResourceRequest*>::iterator list_it = reqList.begin();

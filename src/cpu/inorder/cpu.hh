@@ -530,16 +530,6 @@ class InOrderCPU : public BaseCPU
     Fault write(DynInstPtr inst, uint8_t *data, unsigned size,
                 Addr addr, unsigned flags, uint64_t *write_res = NULL);
 
-    /** Forwards an instruction prefetch to the appropriate data
-     *  resource (indexes into Resource Pool thru "dataPortIdx")
-     */
-    void prefetch(DynInstPtr inst);
-
-    /** Forwards an instruction writeHint to the appropriate data
-     *  resource (indexes into Resource Pool thru "dataPortIdx")
-     */
-    void writeHint(DynInstPtr inst);
-
     /** Executes a syscall.*/
     void syscall(int64_t callnum, ThreadID tid);
 

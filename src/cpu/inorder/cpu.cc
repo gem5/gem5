@@ -1445,21 +1445,6 @@ InOrderCPU::syscall(int64_t callnum, ThreadID tid)
 }
 #endif
 
-void
-InOrderCPU::prefetch(DynInstPtr inst)
-{
-    Resource *mem_res = resPool->getResource(dataPortIdx);
-    return mem_res->prefetch(inst);
-}
-
-void
-InOrderCPU::writeHint(DynInstPtr inst)
-{
-    Resource *mem_res = resPool->getResource(dataPortIdx);
-    return mem_res->writeHint(inst);
-}
-
-
 TheISA::TLB*
 InOrderCPU::getITBPtr()
 {

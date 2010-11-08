@@ -506,10 +506,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Calls a syscall. */
     void syscall(int64_t callnum);
 #endif
-    void prefetch(Addr addr, unsigned flags);
-    void writeHint(Addr addr, int size, unsigned flags);
-    Fault copySrcTranslate(Addr src);
-    Fault copy(Addr dest);
 
     ////////////////////////////////////////////////////////////
     //

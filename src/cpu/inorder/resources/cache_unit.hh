@@ -176,10 +176,6 @@ class CacheUnit : public Resource
     Fault doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL,
                         CacheReqPtr split_req=NULL);
 
-    void prefetch(DynInstPtr inst);
-
-    void writeHint(DynInstPtr inst);
-
     uint64_t getMemData(Packet *packet);
 
     void setAddrDependency(DynInstPtr inst);

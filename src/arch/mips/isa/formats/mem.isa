@@ -452,7 +452,7 @@ def template MiscExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
-        Addr EA;
+        Addr EA M5_VAR_USED = 0;
         Fault fault = NoFault;
 
         %(fp_enable_check)s;
@@ -577,12 +577,11 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
 def format Prefetch(ea_code = {{ EA = Rs + disp; }},
                           mem_flags = [], pf_flags = [], inst_flags = []) {{
     pf_mem_flags = mem_flags + pf_flags + ['PREFETCH']
-    pf_inst_flags = inst_flags + ['IsMemRef', 'IsLoad',
-                                  'IsDataPrefetch', 'MemReadOp']
+    pf_inst_flags = inst_flags
 
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, ea_code,
-                      'xc->prefetch(EA, memAccessFlags);',
+                      'warn_once("Prefetching not implemented for MIPS\\n");',
                       pf_mem_flags, pf_inst_flags, exec_template_base = 'Misc')
 
 }};

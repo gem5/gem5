@@ -150,11 +150,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Finish a DTB address translation. */
     void finishTranslation(WholeTranslationState *state);
 
-    void prefetch(Addr addr, unsigned flags);
-    void writeHint(Addr addr, int size, unsigned flags);
-    Fault copySrcTranslate(Addr src);
-    Fault copy(Addr dest);
-
     /** @todo: Consider making this private. */
   public:
     /** The sequence number of the instruction. */

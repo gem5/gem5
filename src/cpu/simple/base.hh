@@ -230,13 +230,6 @@ class BaseSimpleCPU : public BaseCPU
     Addr getEA()        { panic("BaseSimpleCPU::getEA() not implemented\n");
         M5_DUMMY_RETURN}
 
-    void prefetch(Addr addr, unsigned flags);
-    void writeHint(Addr addr, int size, unsigned flags);
-
-    Fault copySrcTranslate(Addr src);
-
-    Fault copy(Addr dest);
-
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural
     // register index, to simplify the implementation of register

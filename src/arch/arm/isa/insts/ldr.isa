@@ -161,8 +161,13 @@ let {{
             if self.user:
                 self.memFlags.append("ArmISA::TLB::UserMode")
 
-            if self.flavor == "prefetch":
+            self.instFlags = []
+            if self.flavor == "dprefetch":
                 self.memFlags.append("Request::PREFETCH")
+                self.instFlags = ['IsDataPrefetch']
+            elif self.flavor == "iprefetch":
+                self.memFlags.append("Request::PREFETCH")
+                self.instFlags = ['IsInstPrefetch']
             elif self.flavor == "exclusive":
                 self.memFlags.append("Request::LLSC")
             elif self.flavor == "normal":
@@ -185,7 +190,7 @@ let {{
             self.codeBlobs["ea_code"] = eaCode
 
             # Code that actually handles the access
-            if self.flavor == "prefetch":
+            if self.flavor == "dprefetch" or self.flavor == "iprefetch":
                 accCode = 'uint64_t temp = Mem%s; temp = temp;'
             elif self.flavor == "fp":
                 accCode = "FpDest.uw = cSwap(Mem%s, ((CPSR)Cpsr).e);\n"
@@ -200,7 +205,7 @@ let {{
             wbDecl = None
             if self.writeback:
                 wbDecl = self.wbDecl
-            self.emitHelper(base, wbDecl)
+            self.emitHelper(base, wbDecl, self.instFlags)
 
     def loadImmClassName(post, add, writeback, size=4, sign=False, user=False):
         return memClassName("LOAD_IMM", post, add, writeback, size, sign, user)
@@ -325,11 +330,11 @@ let {{
         RfeInst(mnem, False, False, True).emit()
         RfeInst(mnem, False, False, False).emit()
 
-    def buildPrefetches(mnem):
-        LoadReg(mnem, False, False, False, size=1, flavor="prefetch").emit()
-        LoadImm(mnem, False, False, False, size=1, flavor="prefetch").emit()
-        LoadReg(mnem, False, True, False, size=1, flavor="prefetch").emit()
-        LoadImm(mnem, False, True, False, size=1, flavor="prefetch").emit()
+    def buildPrefetches(mnem, type):
+        LoadReg(mnem, False, False, False, size=1, flavor=type).emit()
+        LoadImm(mnem, False, False, False, size=1, flavor=type).emit()
+        LoadReg(mnem, False, True, False, size=1, flavor=type).emit()
+        LoadImm(mnem, False, True, False, size=1, flavor=type).emit()
 
     buildLoads("ldr")
     buildLoads("ldrt", user=True)
@@ -346,9 +351,9 @@ let {{
 
     buildRfeLoads("rfe")
 
-    buildPrefetches("pld")
-    buildPrefetches("pldw")
-    buildPrefetches("pli")
+    buildPrefetches("pld", "dprefetch")
+    buildPrefetches("pldw", "dprefetch")
+    buildPrefetches("pli", "iprefetch")
 
     LoadImm("ldrex", False, True, False, size=4, flavor="exclusive").emit()
     LoadImm("ldrexh", False, True, False, size=2, flavor="exclusive").emit()

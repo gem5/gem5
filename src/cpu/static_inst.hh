@@ -226,6 +226,8 @@ class StaticInstBase : public RefCounted
     bool isStoreConditional()     const { return flags[IsStoreConditional]; }
     bool isInstPrefetch() const { return flags[IsInstPrefetch]; }
     bool isDataPrefetch() const { return flags[IsDataPrefetch]; }
+    bool isPrefetch()     const { return isInstPrefetch() ||
+                                         isDataPrefetch(); }
     bool isCopy()         const { return flags[IsCopy];}
 
     bool isInteger()      const { return flags[IsInteger]; }

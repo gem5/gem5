@@ -122,15 +122,6 @@ class ExecContext {
     Fault writeBytes(uint8_t *data, unsigned size,
                      Addr addr, unsigned flags, uint64_t *res);
 
-    /** Prefetches an address, creating a memory request with the
-     * given flags. */
-    void prefetch(Addr addr, unsigned flags);
-
-    /** Hints to the memory system that an address will be written to
-     * soon, with the given size.  Creates a memory request with the
-     * given flags. */
-    void writeHint(Addr addr, int size, unsigned flags);
-
 #if FULL_SYSTEM
     /** Somewhat Alpha-specific function that handles returning from
      * an error or interrupt. */
