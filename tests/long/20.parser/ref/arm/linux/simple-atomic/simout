@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 24 2010 15:34:40
-M5 revision 1c687284910c 7619 default qtip round2.patch tip qbase
-M5 started Aug 24 2010 15:44:22
-M5 executing on zizzer
-command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/20.parser/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/long/20.parser/arm/linux/simple-atomic
+M5 compiled Oct 11 2010 18:37:23
+M5 revision c4e3d74d9a68 7726 default ext/mp_boot.patch qtip tip
+M5 started Oct 11 2010 18:37:50
+M5 executing on aus-bc3-b4
+command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/long/20.parser/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/opt/long/20.parser/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
