@@ -60,6 +60,7 @@ else:
     Source('process.cc')
     Source('syscall_emul.cc')
 
+TraceFlag('Checkpoint')
 TraceFlag('Config')
 TraceFlag('Event')
 TraceFlag('Fault')

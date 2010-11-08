@@ -105,6 +105,11 @@ class PhysicalMemory : public MemObject
               contextId(req->contextId())
         {
         }
+        // constructor for unserialization use
+        LockedAddr(Addr _addr, int _cid)
+            : addr(_addr), contextId(_cid)
+        {
+        }
     };
 
     std::list<LockedAddr> lockedAddrList;

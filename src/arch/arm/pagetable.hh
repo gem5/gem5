@@ -48,6 +48,8 @@
 #include "arch/arm/vtophys.hh"
 #include "config/full_system.hh"
 
+#include "sim/serialize.hh"
+
 namespace ArmISA {
 
 struct VAddr
@@ -70,39 +72,6 @@ struct PTE
     }
 
 };
-
-struct TlbRange
-{
-    Addr va;
-    Addr size;
-    int contextId;
-    bool global;
-
-    inline bool
-    operator<(const TlbRange &r2) const
-    {
-        if (!(global || r2.global)) {
-            if (contextId < r2.contextId)
-                return true;
-            else if (contextId > r2.contextId)
-                return false;
-        }
-
-        if (va < r2.va)
-            return true;
-        return false;
-    }
-
-    inline bool
-    operator==(const TlbRange &r2) const
-    {
-        return va == r2.va &&
-               size == r2.size &&
-               contextId == r2.contextId &&
-               global == r2.global;
-    }
-};
-
 
 // ITB/DTB table entry
 struct TlbEntry
@@ -143,10 +112,8 @@ struct TlbEntry
 
     // Access permissions
     bool xn;                // Execute Never
-    uint8_t ap:3;           // Access permissions bits
-    uint8_t domain:4;       // Access Domain
-
-    TlbRange range;         // For fast TLB searching
+    uint8_t ap;           // Access permissions bits
+    uint8_t domain;       // Access Domain
 
     //Construct an entry that maps to physical address addr for SE mode
     TlbEntry(Addr _asn, Addr _vaddr, Addr _paddr)
@@ -196,9 +163,49 @@ struct TlbEntry
         return (pfn << N) | (va & size);
     }
 
-    void serialize(std::ostream &os) { panic("Need to Implement\n"); }
-    void unserialize(Checkpoint *cp, const std::string &section)
-                   { panic("Need to Implement\n");}
+    void
+    serialize(std::ostream &os)
+    {
+        SERIALIZE_SCALAR(pfn);
+        SERIALIZE_SCALAR(size);
+        SERIALIZE_SCALAR(vpn);
+        SERIALIZE_SCALAR(asid);
+        SERIALIZE_SCALAR(N);
+        SERIALIZE_SCALAR(global);
+        SERIALIZE_SCALAR(valid);
+        SERIALIZE_SCALAR(nonCacheable);
+        SERIALIZE_SCALAR(sNp);
+        SERIALIZE_ENUM(mtype);
+        SERIALIZE_SCALAR(innerAttrs);
+        SERIALIZE_SCALAR(outerAttrs);
+        SERIALIZE_SCALAR(shareable);
+        SERIALIZE_SCALAR(attributes);
+        SERIALIZE_SCALAR(xn);
+        SERIALIZE_SCALAR(ap);
+        SERIALIZE_SCALAR(domain);
+    }
+    void
+    unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_SCALAR(pfn);
+        UNSERIALIZE_SCALAR(size);
+        UNSERIALIZE_SCALAR(vpn);
+        UNSERIALIZE_SCALAR(asid);
+        UNSERIALIZE_SCALAR(N);
+        UNSERIALIZE_SCALAR(global);
+        UNSERIALIZE_SCALAR(valid);
+        UNSERIALIZE_SCALAR(nonCacheable);
+        UNSERIALIZE_SCALAR(sNp);
+        UNSERIALIZE_ENUM(mtype);
+        UNSERIALIZE_SCALAR(innerAttrs);
+        UNSERIALIZE_SCALAR(outerAttrs);
+        UNSERIALIZE_SCALAR(shareable);
+        UNSERIALIZE_SCALAR(attributes);
+        UNSERIALIZE_SCALAR(xn);
+        UNSERIALIZE_SCALAR(ap);
+        UNSERIALIZE_SCALAR(domain);
+    }
+
 };
 
 

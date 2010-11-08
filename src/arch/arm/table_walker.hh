@@ -350,7 +350,7 @@ class TableWalker : public MemObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual unsigned int drain(Event *de) { panic("write me\n"); }
+    virtual unsigned int drain(Event *de);
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     Fault walk(RequestPtr req, ThreadContext *tc, uint8_t cid, TLB::Mode mode,

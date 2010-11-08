@@ -495,13 +495,53 @@ Gic::addressRanges(AddrRangeList &range_list)
 void
 Gic::serialize(std::ostream &os)
 {
-    panic("Need to implement serialization\n");
+    DPRINTF(Checkpoint, "Serializing Arm GIC\n");
+
+    SERIALIZE_SCALAR(distAddr);
+    SERIALIZE_SCALAR(cpuAddr);
+    SERIALIZE_SCALAR(distPioDelay);
+    SERIALIZE_SCALAR(cpuPioDelay);
+    SERIALIZE_SCALAR(enabled);
+    SERIALIZE_SCALAR(itLines);
+    SERIALIZE_SCALAR(itLinesLog2);
+    SERIALIZE_ARRAY(intEnabled, 32);
+    SERIALIZE_ARRAY(pendingInt, 32);
+    SERIALIZE_ARRAY(activeInt, 32);
+    SERIALIZE_ARRAY(iccrpr, 8);
+    SERIALIZE_ARRAY(intPriority, 1020);
+    SERIALIZE_ARRAY(cpuTarget, 1020);
+    SERIALIZE_ARRAY(intConfig, 64);
+    SERIALIZE_ARRAY(cpuEnabled, 8);
+    SERIALIZE_ARRAY(cpuPriority, 8);
+    SERIALIZE_ARRAY(cpuBpr, 8);
+    SERIALIZE_ARRAY(cpuHighestInt, 8);
+    SERIALIZE_SCALAR(irqEnable);
 }
 
 void
 Gic::unserialize(Checkpoint *cp, const std::string &section)
 {
-    panic("Need to implement serialization\n");
+    DPRINTF(Checkpoint, "Unserializing Arm GIC\n");
+
+    UNSERIALIZE_SCALAR(distAddr);
+    UNSERIALIZE_SCALAR(cpuAddr);
+    UNSERIALIZE_SCALAR(distPioDelay);
+    UNSERIALIZE_SCALAR(cpuPioDelay);
+    UNSERIALIZE_SCALAR(enabled);
+    UNSERIALIZE_SCALAR(itLines);
+    UNSERIALIZE_SCALAR(itLinesLog2);
+    UNSERIALIZE_ARRAY(intEnabled, 32);
+    UNSERIALIZE_ARRAY(pendingInt, 32);
+    UNSERIALIZE_ARRAY(activeInt, 32);
+    UNSERIALIZE_ARRAY(iccrpr, 8);
+    UNSERIALIZE_ARRAY(intPriority, 1020);
+    UNSERIALIZE_ARRAY(cpuTarget, 1020);
+    UNSERIALIZE_ARRAY(intConfig, 64);
+    UNSERIALIZE_ARRAY(cpuEnabled, 8);
+    UNSERIALIZE_ARRAY(cpuPriority, 8);
+    UNSERIALIZE_ARRAY(cpuBpr, 8);
+    UNSERIALIZE_ARRAY(cpuHighestInt, 8);
+    UNSERIALIZE_SCALAR(irqEnable);
 }
 
 Gic *

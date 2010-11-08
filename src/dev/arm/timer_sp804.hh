@@ -121,6 +121,10 @@ class Sp804 : public AmbaDevice
 
         /** Handle write for a single timer */
         void write(PacketPtr pkt, Addr daddr);
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+
     };
 
     /** Pointer to the GIC for causing an interrupt */

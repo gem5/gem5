@@ -99,9 +99,9 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
 }
 
 void
-LinuxArmSystem::startup()
+LinuxArmSystem::initState()
 {
-    ArmSystem::startup();
+    ArmSystem::initState();
     ThreadContext *tc = threadContexts[0];
 
     // Set the initial PC to be at start of the kernel code
@@ -116,7 +116,6 @@ LinuxArmSystem::startup()
 LinuxArmSystem::~LinuxArmSystem()
 {
 }
-
 
 LinuxArmSystem *
 LinuxArmSystemParams::create()

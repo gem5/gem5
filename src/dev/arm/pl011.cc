@@ -274,13 +274,51 @@ Pl011::generateInterrupt()
 void
 Pl011::serialize(std::ostream &os)
 {
-    panic("Need to implement serialization\n");
+    DPRINTF(Checkpoint, "Serializing Arm PL011\n");
+    SERIALIZE_SCALAR(control);
+    SERIALIZE_SCALAR(fbrd);
+    SERIALIZE_SCALAR(ibrd);
+    SERIALIZE_SCALAR(lcrh);
+    SERIALIZE_SCALAR(ifls);
+
+    uint16_t imsc_serial = imsc;
+    SERIALIZE_SCALAR(imsc_serial);
+
+    uint16_t rawInt_serial = rawInt;
+    SERIALIZE_SCALAR(rawInt_serial);
+
+    uint16_t maskInt_serial = maskInt;
+    SERIALIZE_SCALAR(maskInt_serial);
+
+    SERIALIZE_SCALAR(endOnEOT);
+    SERIALIZE_SCALAR(intDelay);
 }
 
 void
 Pl011::unserialize(Checkpoint *cp, const std::string &section)
 {
-    panic("Need to implement serialization\n");
+    DPRINTF(Checkpoint, "Unserializing Arm PL011\n");
+
+    UNSERIALIZE_SCALAR(control);
+    UNSERIALIZE_SCALAR(fbrd);
+    UNSERIALIZE_SCALAR(ibrd);
+    UNSERIALIZE_SCALAR(lcrh);
+    UNSERIALIZE_SCALAR(ifls);
+
+    uint16_t imsc_serial;
+    UNSERIALIZE_SCALAR(imsc_serial);
+    imsc = imsc_serial;
+
+    uint16_t rawInt_serial;
+    UNSERIALIZE_SCALAR(rawInt_serial);
+    rawInt = rawInt_serial;
+
+    uint16_t maskInt_serial;
+    UNSERIALIZE_SCALAR(maskInt_serial);
+    maskInt = maskInt_serial;
+
+    UNSERIALIZE_SCALAR(endOnEOT);
+    UNSERIALIZE_SCALAR(intDelay);
 }
 
 Pl011 *

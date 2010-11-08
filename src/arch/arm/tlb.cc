@@ -245,14 +245,24 @@ TLB::flushMva(Addr mva)
 void
 TLB::serialize(ostream &os)
 {
-    panic("Implement Serialize\n");
+    DPRINTF(Checkpoint, "Serializing Arm TLB\n");
+
+    SERIALIZE_SCALAR(_attr);
+    for(int i = 0; i < size; i++){
+        nameOut(os, csprintf("%s.TlbEntry%d", name(), i));
+        table[i].serialize(os);
+    }
 }
 
 void
 TLB::unserialize(Checkpoint *cp, const string &section)
 {
+    DPRINTF(Checkpoint, "Unserializing Arm TLB\n");
 
-    panic("Need to properly unserialize TLB\n");
+    UNSERIALIZE_SCALAR(_attr);
+    for(int i = 0; i < size; i++){
+        table[i].unserialize(cp, csprintf("%s.TlbEntry%d", section, i));
+    }
 }
 
 void

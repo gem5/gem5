@@ -67,8 +67,8 @@ class LinuxArmSystem : public ArmSystem
     LinuxArmSystem(Params *p);
     ~LinuxArmSystem();
 
-    /** Initialize the CPU for booting */
-    void startup();
+    void initState();
+
   private:
 #ifndef NDEBUG
     /** Event to halt the simulator if the kernel calls panic()  */

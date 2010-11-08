@@ -229,7 +229,7 @@ System::numRunningContexts()
 }
 
 void
-System::startup()
+System::initState()
 {
 #if FULL_SYSTEM
     int i;

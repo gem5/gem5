@@ -59,10 +59,20 @@ TableWalker::~TableWalker()
 }
 
 
-unsigned int
-drain(Event *de)
+unsigned int TableWalker::drain(Event *de)
 {
-    panic("Not implemented\n");
+    if (stateQueueL1.size() != 0 || stateQueueL2.size() != 0)
+    {
+        changeState(Draining);
+        DPRINTF(Checkpoint, "TableWalker busy, wait to drain\n");
+        return 1;
+    }
+    else
+    {
+        changeState(Drained);
+        DPRINTF(Checkpoint, "TableWalker free, no need to drain\n");
+        return 0;
+    }
 }
 
 Port*

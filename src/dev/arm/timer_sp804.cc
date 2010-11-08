@@ -219,17 +219,72 @@ Sp804::Timer::counterAtZero()
         restartCounter(loadValue);
 }
 
+void
+Sp804::Timer::serialize(std::ostream &os)
+{
+    DPRINTF(Checkpoint, "Serializing Arm Sp804\n");
+    SERIALIZE_SCALAR(intNum);
+    SERIALIZE_SCALAR(clock);
+
+    uint32_t control_serial = control;
+    SERIALIZE_SCALAR(control_serial);
+
+    SERIALIZE_SCALAR(rawInt);
+    SERIALIZE_SCALAR(pendingInt);
+    SERIALIZE_SCALAR(loadValue);
+
+    bool is_in_event = zeroEvent.scheduled();
+    SERIALIZE_SCALAR(is_in_event);
+
+    Tick event_time;
+    if (is_in_event){
+        event_time = zeroEvent.when();
+        SERIALIZE_SCALAR(event_time);
+    }
+}
+
+void
+Sp804::Timer::unserialize(Checkpoint *cp, const std::string &section)
+{
+    DPRINTF(Checkpoint, "Unserializing Arm Sp804\n");
+
+    UNSERIALIZE_SCALAR(intNum);
+    UNSERIALIZE_SCALAR(clock);
+
+    uint32_t control_serial;
+    UNSERIALIZE_SCALAR(control_serial);
+    control = control_serial;
+
+    UNSERIALIZE_SCALAR(rawInt);
+    UNSERIALIZE_SCALAR(pendingInt);
+    UNSERIALIZE_SCALAR(loadValue);
+
+    bool is_in_event;
+    UNSERIALIZE_SCALAR(is_in_event);
+
+    Tick event_time;
+    if (is_in_event){
+        UNSERIALIZE_SCALAR(event_time);
+        parent->schedule(zeroEvent, event_time);
+    }
+}
+
+
 
 void
 Sp804::serialize(std::ostream &os)
 {
-    panic("Need to implement serialization\n");
+    nameOut(os, csprintf("%s.timer0", name()));
+    timer0.serialize(os);
+    nameOut(os, csprintf("%s.timer1", name()));
+    timer1.serialize(os);
 }
 
 void
 Sp804::unserialize(Checkpoint *cp, const std::string &section)
 {
-    panic("Need to implement serialization\n");
+    timer0.unserialize(cp, csprintf("%s.timer0", section));
+    timer1.unserialize(cp, csprintf("%s.timer1", section));
 }
 
 Sp804 *

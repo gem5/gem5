@@ -208,7 +208,7 @@ class System : public SimObject
     System(Params *p);
     ~System();
 
-    void startup();
+    void initState();
 
     const Params *params() const { return (const Params *)_params; }
 

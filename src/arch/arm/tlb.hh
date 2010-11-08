@@ -83,8 +83,6 @@ class TLB : public BaseTLB
         MustBeOne = 0x80
     };
   protected:
-    typedef std::multimap<Addr, int> PageTable;
-    PageTable lookupTable;	// Quick lookup into page table
 
     TlbEntry *table;	// the Page Table
     int size;			// TLB Size

@@ -97,13 +97,11 @@ RealViewCtrl::write(PacketPtr pkt)
 void
 RealViewCtrl::serialize(std::ostream &os)
 {
-    panic("Need to implement serialization\n");
 }
 
 void
 RealViewCtrl::unserialize(Checkpoint *cp, const std::string &section)
 {
-    panic("Need to implement serialization\n");
 }
 
 RealViewCtrl *
