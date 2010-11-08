@@ -41,13 +41,14 @@
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "dev/io_device.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 
 using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
-    : MemObject(p), port(NULL), tlb(NULL),
-      currState(NULL), doL1DescEvent(this), doL2DescEvent(this)
+    : MemObject(p), port(NULL), tlb(NULL), currState(NULL), pending(false),
+      doL1DescEvent(this), doL2DescEvent(this), doProcessEvent(this)
 {
     sctlr = 0;
 }
@@ -115,6 +116,35 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
     currState->isFetch = (currState->mode == TLB::Execute);
     currState->isWrite = (currState->mode == TLB::Write);
 
+
+    if (!currState->timing)
+        return processWalk();
+
+    if (pending) {
+        pendingQueue.push_back(currState);
+        currState = NULL;
+    } else {
+        pending = true;
+        processWalk();
+    }
+
+    return NoFault;
+}
+
+void
+TableWalker::processWalkWrapper()
+{
+    assert(!currState);
+    assert(pendingQueue.size());
+    currState = pendingQueue.front();
+    pendingQueue.pop_front();
+    pending = true;
+    processWalk();
+}
+
+Fault
+TableWalker::processWalk()
+{
     Addr ttbr = 0;
 
     // If translation isn't enabled, we shouldn't be here
@@ -146,6 +176,9 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
         if (currState->timing) {
             currState->transState->finish(f, currState->req,
                                           currState->tc, currState->mode);
+
+            pending = false;
+            nextWalk(currState->tc);
             currState = NULL;
         } else {
             currState->tc = NULL;
@@ -156,7 +189,8 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
 
     if (currState->timing) {
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
-                &doL1DescEvent, (uint8_t*)&currState->l1Desc.data, (Tick)0);
+                &doL1DescEvent, (uint8_t*)&currState->l1Desc.data,
+                currState->tc->getCpuPtr()->ticks(1));
         DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
                 stateQueueL1.size());
         stateQueueL1.push_back(currState);
@@ -167,7 +201,8 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
            flag = Request::UNCACHEABLE;
         }
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
-                NULL, (uint8_t*)&currState->l1Desc.data, (Tick)0, flag);
+                NULL, (uint8_t*)&currState->l1Desc.data,
+                currState->tc->getCpuPtr()->ticks(1), flag);
         doL1Descriptor();
         f = currState->fault;
     }
@@ -498,10 +533,12 @@ TableWalker::doL1Descriptor()
         if (currState->timing) {
             currState->delayed = true;
             port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
-                    &doL2DescEvent, (uint8_t*)&currState->l2Desc.data, 0);
+                    &doL2DescEvent, (uint8_t*)&currState->l2Desc.data,
+                    currState->tc->getCpuPtr()->ticks(1));
         } else {
             port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
-                    NULL, (uint8_t*)&currState->l2Desc.data, 0);
+                    NULL, (uint8_t*)&currState->l2Desc.data,
+                    currState->tc->getCpuPtr()->ticks(1));
             doL2Descriptor();
         }
         return;
@@ -589,6 +626,9 @@ TableWalker::doL1DescriptorWrapper()
         currState->transState->finish(currState->fault, currState->req,
                                       currState->tc, currState->mode);
 
+        pending = false;
+        nextWalk(currState->tc);
+
         currState->req = NULL;
         currState->tc = NULL;
         currState->delayed = false;
@@ -600,10 +640,12 @@ TableWalker::doL1DescriptorWrapper()
         currState->fault = tlb->translateTiming(currState->req, currState->tc,
                                        currState->transState, currState->mode);
 
+        pending = false;
+        nextWalk(currState->tc);
+
         currState->req = NULL;
         currState->tc = NULL;
         currState->delayed = false;
-
         delete currState;
     } else {
         // need to do L2 descriptor
@@ -633,14 +675,27 @@ TableWalker::doL2DescriptorWrapper()
                                       currState->transState, currState->mode);
     }
 
+
+    stateQueueL2.pop_front();
+    pending = false;
+    nextWalk(currState->tc);
+
     currState->req = NULL;
     currState->tc = NULL;
     currState->delayed = false;
 
-    stateQueueL2.pop_front();
     delete currState;
     currState = NULL;
 }
+
+void
+TableWalker::nextWalk(ThreadContext *tc)
+{
+    if (pendingQueue.size())
+        schedule(doProcessEvent, tc->getCpuPtr()->nextCycle(curTick+1));
+}
+
+
 
 ArmISA::TableWalker *
 ArmTableWalkerParams::create()

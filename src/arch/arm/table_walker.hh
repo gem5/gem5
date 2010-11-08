@@ -320,6 +320,11 @@ class TableWalker : public MemObject
      * require an additional level. */
     std::list<WalkerState *> stateQueueL2;
 
+    /** Queue of requests that have passed are waiting because the walker is
+     * currently busy. */
+    std::list<WalkerState *> pendingQueue;;
+
+
     /** Port to issue translation requests from */
     DmaPort *port;
 
@@ -330,6 +335,9 @@ class TableWalker : public MemObject
     SCTLR sctlr;
 
     WalkerState *currState;
+
+    /** If a timing translation is currently in progress */
+    bool pending;
 
   public:
     typedef ArmTableWalkerParams Params;
@@ -362,7 +370,11 @@ class TableWalker : public MemObject
     void doL2DescriptorWrapper();
     EventWrapper<TableWalker, &TableWalker::doL2DescriptorWrapper> doL2DescEvent;
 
+    Fault processWalk();
+    void processWalkWrapper();
+    EventWrapper<TableWalker, &TableWalker::processWalkWrapper> doProcessEvent;
 
+    void nextWalk(ThreadContext *tc);
 };
 
 
