@@ -152,6 +152,8 @@ TLB::insert(Addr addr, TlbEntry &entry)
     for(int i = size-1; i > 0; i--)
       table[i] = table[i-1];
     table[0] = entry;
+
+    inserts++;
 }
 
 void
@@ -178,13 +180,17 @@ TLB::flushAll()
     TlbEntry *te;
     while (x < size) {
        te = &table[x];
-       if (te->valid)
+       if (te->valid) {
            DPRINTF(TLB, " -  %#x, asn %d ppn %#x size: %#x ap:%d\n",
                 te->vpn << te->N, te->asid, te->pfn << te->N, te->size, te->ap);
+           flushedEntries++;
+       }
        x++;
     }
 
     memset(table, 0, sizeof(TlbEntry[size]));
+
+    flushTlb++;
 }
 
 
@@ -199,8 +205,10 @@ TLB::flushMvaAsid(Addr mva, uint64_t asn)
      DPRINTF(TLB, " -  %#x, asn %d ppn %#x size: %#x ap:%d\n",
             te->vpn << te->N, te->asid, te->pfn << te->N, te->size, te->ap);
         te->valid = false;
+        flushedEntries++;
         te = lookup(mva,asn);
     }
+    flushTlbMvaAsid++;
 }
 
 void
@@ -217,9 +225,11 @@ TLB::flushAsid(uint64_t asn)
             te->valid = false;
             DPRINTF(TLB, " -  %#x, asn %d ppn %#x size: %#x ap:%d\n",
                 te->vpn << te->N, te->asid, te->pfn << te->N, te->size, te->ap);
+            flushedEntries++;
         }
         x++;
     }
+    flushTlbAsid++;
 }
 
 void
@@ -237,9 +247,11 @@ TLB::flushMva(Addr mva)
             te->valid = false;
             DPRINTF(TLB, " -  %#x, asn %d ppn %#x size: %#x ap:%d\n",
                 te->vpn << te->N, te->asid, te->pfn << te->N, te->size, te->ap);
+            flushedEntries++;
         }
         x++;
     }
+    flushTlbMva++;
 }
 
 void
@@ -268,34 +280,47 @@ TLB::unserialize(Checkpoint *cp, const string &section)
 void
 TLB::regStats()
 {
-    read_hits
+    instHits
+        .name(name() + ".inst_hits")
+        .desc("ITB inst hits")
+        ;
+
+    instMisses
+        .name(name() + ".inst_misses")
+        .desc("ITB inst misses")
+        ;
+
+    instAccesses
+        .name(name() + ".inst_accesses")
+        .desc("ITB inst accesses")
+        ;
+
+    readHits
         .name(name() + ".read_hits")
         .desc("DTB read hits")
         ;
 
-    read_misses
+    readMisses
         .name(name() + ".read_misses")
         .desc("DTB read misses")
         ;
 
-
-    read_accesses
+    readAccesses
         .name(name() + ".read_accesses")
         .desc("DTB read accesses")
         ;
 
-    write_hits
+    writeHits
         .name(name() + ".write_hits")
         .desc("DTB write hits")
         ;
 
-    write_misses
+    writeMisses
         .name(name() + ".write_misses")
         .desc("DTB write misses")
         ;
 
-
-    write_accesses
+    writeAccesses
         .name(name() + ".write_accesses")
         .desc("DTB write accesses")
         ;
@@ -315,9 +340,57 @@ TLB::regStats()
         .desc("DTB accesses")
         ;
 
-    hits = read_hits + write_hits;
-    misses = read_misses + write_misses;
-    accesses = read_accesses + write_accesses;
+    flushTlb
+        .name(name() + ".flush_tlb")
+        .desc("Number of times complete TLB was flushed")
+        ;
+
+    flushTlbMva
+        .name(name() + ".flush_tlb_mva")
+        .desc("Number of times TLB was flushed by MVA")
+        ;
+
+    flushTlbMvaAsid
+        .name(name() + ".flush_tlb_mva_asid")
+        .desc("Number of times TLB was flushed by MVA & ASID")
+        ;
+
+    flushTlbAsid
+        .name(name() + ".flush_tlb_asid")
+        .desc("Number of times TLB was flushed by ASID")
+        ;
+
+    flushedEntries
+        .name(name() + ".flush_entries")
+        .desc("Number of entries that have been flushed from TLB")
+        ;
+
+    alignFaults
+        .name(name() + ".align_faults")
+        .desc("Number of TLB faults due to alignment restrictions")
+        ;
+
+    prefetchFaults
+        .name(name() + ".prefetch_faults")
+        .desc("Number of TLB faults due to prefetch")
+        ;
+
+    domainFaults
+        .name(name() + ".domain_faults")
+        .desc("Number of TLB faults due to domain restrictions")
+        ;
+
+    permsFaults
+        .name(name() + ".perms_faults")
+        .desc("Number of TLB faults due to permissions restrictions")
+        ;
+
+    instAccesses = instHits + instMisses;
+    readAccesses = readHits + readMisses;
+    writeAccesses = writeHits + writeMisses;
+    hits = readHits + writeHits + instHits;
+    misses = readMisses + writeMisses + instMisses;
+    accesses = readAccesses + writeAccesses + instAccesses;
 }
 
 #if !FULL_SYSTEM
@@ -400,6 +473,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         assert(flags & MustBeOne);
         if (sctlr.a || !(flags & AllowUnaligned)) {
             if (vaddr & flags & AlignmentMask) {
+                alignFaults++;
                 return new DataAbort(vaddr, 0, is_write, ArmFault::AlignmentFault);
             }
         }
@@ -441,8 +515,17 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         if (req->isPrefetch()){
            //if the request is a prefetch don't attempt to fill the TLB
            //or go any further with the memory access
+           prefetchFaults++;
            return new PrefetchAbort(vaddr, ArmFault::PrefetchTLBMiss);
         }
+
+        if (is_fetch)
+            instMisses++;
+        else if (is_write)
+            writeMisses++;
+        else
+            readMisses++;
+
         // start translation table walk, pass variables rather than
         // re-retreaving in table walker for speed
         DPRINTF(TLB, "TLB Miss: Starting hardware table walker for %#x(%d)\n",
@@ -461,6 +544,13 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         if (!te)
             printTlb();
         assert(te);
+    } else {
+        if (is_fetch)
+            instHits++;
+        else if (is_write)
+            writeHits++;
+        else
+            readHits++;
     }
 
     // Set memory attributes
@@ -474,6 +564,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     uint32_t dacr = tc->readMiscReg(MISCREG_DACR);
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:
+        domainFaults++;
         DPRINTF(TLB, "TLB Fault: Data abort on domain. DACR: %#x domain: %#x"
                " write:%d sNp:%d\n", dacr, te->domain, is_write, te->sNp);
         if (is_fetch)
@@ -548,12 +639,14 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         panic("Unknown permissions\n");
     }
     if ((is_fetch) && (abt || te->xn)) {
+        permsFaults++;
         DPRINTF(TLB, "TLB Fault: Prefetch abort on permission check. AP:%d priv:%d"
                " write:%d sNp:%d\n", ap, is_priv, is_write, te->sNp);
         return new PrefetchAbort(vaddr,
                 (te->sNp ? ArmFault::Permission0 :
                  ArmFault::Permission1));
     } else if (abt) {
+        permsFaults++;
         DPRINTF(TLB, "TLB Fault: Data abort on permission check. AP:%d priv:%d"
                " write:%d sNp:%d\n", ap, is_priv, is_write, te->sNp);
         return new DataAbort(vaddr, te->domain, is_write,
