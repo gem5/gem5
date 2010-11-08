@@ -84,6 +84,7 @@ decode BIGTHUMB {
                         default: WarnUnimpl::cdp(); // cdp2
                     }
                     0x1: decode LTCOPROC {
+                        0x1: M5ops::m5ops();
                         0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                         0xf: McrMrc15::mcrMrc15();
                     }
@@ -125,7 +126,6 @@ decode BIGTHUMB {
                     0x0: LoadByteMemoryHints::loadByteMemoryHints();
                     0x1: LoadHalfwordMemoryHints::loadHalfwordMemoryHints();
                     0x2: Thumb32LoadWord::thumb32LoadWord();
-                    0x3: Unknown::undefined();
                 }
             }
             0x1: decode HTOPCODE_8_7 {
@@ -140,6 +140,7 @@ decode BIGTHUMB {
                         default: WarnUnimpl::cdp(); // cdp2
                     }
                     0x1: decode LTCOPROC {
+                        0x1: M5ops::m5ops();
                         0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                         0xf: McrMrc15::mcrMrc15();
                     }

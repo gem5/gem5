@@ -1,5 +1,4 @@
-// -*- mode:c++ -*-
-
+//
 // Copyright (c) 2010 ARM Limited
 // All rights reserved
 //
@@ -11,9 +10,6 @@
 // terms below provided that you ensure that this notice is replicated
 // unmodified and in its entirety in all distributions of the software,
 // modified or unmodified, in source code or in binary form.
-//
-// Copyright (c) 2007-2008 The Florida State University
-// All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,60 +34,45 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Authors: Stephen Hines
+// Authors: Gene Wu
+///
 
-////////////////////////////////////////////////////////////////////
-//
-// Output include file directives.
-//
-
-output header {{
-#include <sstream>
-#include <iostream>
-
-#include "arch/arm/insts/branch.hh"
-#include "arch/arm/insts/macromem.hh"
-#include "arch/arm/insts/mem.hh"
-#include "arch/arm/insts/misc.hh"
-#include "arch/arm/insts/mult.hh"
-#include "arch/arm/insts/pred_inst.hh"
-#include "arch/arm/insts/static_inst.hh"
-#include "arch/arm/insts/vfp.hh"
-#include "arch/arm/isa_traits.hh"
-#include "mem/packet.hh"
-#include "sim/faults.hh"
-}};
-
-output decoder {{
-#include "arch/arm/faults.hh"
-#include "arch/arm/intregs.hh"
-#include "arch/arm/isa_traits.hh"
-#include "arch/arm/utility.hh"
-#include "base/cprintf.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"
-
-using namespace ArmISA;
-}};
-
-output exec {{
-#include "arch/arm/faults.hh"
-#include "arch/arm/isa_traits.hh"
-#include "arch/arm/utility.hh"
-#include "base/condcodes.hh"
-#include "sim/pseudo_inst.hh"
-
-#include <cmath>
-#if defined(linux)
-#include <fenv.h>
+def format M5ops() {{
+    decode_block = '''
+    {
+        const uint32_t m5func = bits(machInst, 23, 16);
+        switch(m5func) {
+#if FULL_SYSTEM
+            case 0x00: return new Arm(machInst);
+            case 0x01: return new Quiesce(machInst);
+            case 0x02: return new QuiesceNs(machInst);
+            case 0x03: return new QuiesceCycles(machInst);
+            case 0x04: return new QuiesceTime(machInst);
 #endif
-
-#include "base/cp_annotate.hh"
-#include "mem/packet.hh"
-#include "mem/packet_access.hh"
-#include "sim/sim_exit.hh"
-
-using namespace ArmISA;
-using std::isnan;
+            case 0x07: return new Rpns(machInst);
+            case 0x09: return new WakeCPU(machInst);
+            case 0x10: return new Deprecated_ivlb(machInst);
+            case 0x11: return new Deprecated_ivle(machInst);
+            case 0x20: return new Deprecated_exit (machInst);
+            case 0x21: return new M5exit(machInst);
+#if FULL_SYSTEM
+            case 0x31: return new Loadsymbol(machInst);
+            case 0x30: return new Initparam(machInst);
+#endif
+            case 0x40: return new Resetstats(machInst);
+            case 0x41: return new Dumpstats(machInst);
+            case 0x42: return new Dumpresetstats(machInst);
+            case 0x43: return new M5checkpoint(machInst);
+#if FULL_SYSTEM
+            case 0x50: return new M5readfile(machInst);
+#endif
+            case 0x51: return new M5break(machInst);
+            case 0x52: return new M5switchcpu(machInst);
+#if FULL_SYSTEM
+            case 0x53: return new M5addsymbol(machInst);
+#endif
+            case 0x54: return new M5panic(machInst);
+        }
+   }
+   '''
 }};
-

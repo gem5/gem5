@@ -1,0 +1,275 @@
+//
+// Copyright (c) 2010 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gene Wu
+
+
+let {{
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    armCode = '''
+#if FULL_SYSTEM
+    PseudoInst::arm(xc->tcBase());
+#endif
+    '''
+    armIop = InstObjParams("arm", "Arm", "PredOp",
+                           { "code": armCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(armIop)
+    decoder_output += BasicConstructor.subst(armIop)
+    exec_output += PredOpExecute.subst(armIop)
+
+    quiesceCode = '''
+#if FULL_SYSTEM
+    PseudoInst::quiesceNs(xc->tcBase(), R0);
+#endif
+    '''
+    quiesceIop = InstObjParams("quiesce", "Quiesce", "PredOp",
+                           { "code": quiesceCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative", "IsQuiesce"])
+    header_output += BasicDeclare.subst(quiesceIop)
+    decoder_output += BasicConstructor.subst(quiesceIop)
+    exec_output += PredOpExecute.subst(quiesceIop)
+
+    quiesceNsCode = '''
+#if FULL_SYSTEM
+    PseudoInst::quiesceNs(xc->tcBase(), R0);
+#endif
+    '''
+
+    quiesceNsIop = InstObjParams("quiesceNs", "QuiesceNs", "PredOp",
+                           { "code": quiesceNsCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative", "IsQuiesce"])
+    header_output += BasicDeclare.subst(quiesceNsIop)
+    decoder_output += BasicConstructor.subst(quiesceNsIop)
+    exec_output += PredOpExecute.subst(quiesceNsIop)
+
+    quiesceCyclesCode = '''
+#if FULL_SYSTEM
+    PseudoInst::quiesceCycles(xc->tcBase(), R0);
+#endif
+    '''
+
+    quiesceCyclesIop = InstObjParams("quiesceCycles", "QuiesceCycles", "PredOp",
+                           { "code": quiesceCyclesCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative", "IsQuiesce", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(quiesceCyclesIop)
+    decoder_output += BasicConstructor.subst(quiesceCyclesIop)
+    exec_output += PredOpExecute.subst(quiesceCyclesIop)
+
+    quiesceTimeCode = '''
+#if FULL_SYSTEM
+    R0 = PseudoInst::quiesceTime(xc->tcBase());
+#endif
+    '''
+
+    quiesceTimeIop = InstObjParams("quiesceTime", "QuiesceTime", "PredOp",
+                           { "code": quiesceTimeCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(quiesceTimeIop)
+    decoder_output += BasicConstructor.subst(quiesceTimeIop)
+    exec_output += PredOpExecute.subst(quiesceTimeIop)
+
+    rpnsIop = InstObjParams("rpns", "Rpns", "PredOp",
+                           { "code": "R0 = PseudoInst::rpns(xc->tcBase());",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(rpnsIop)
+    decoder_output += BasicConstructor.subst(rpnsIop)
+    exec_output += PredOpExecute.subst(rpnsIop)
+
+    wakeCPUIop = InstObjParams("wakeCPU", "WakeCPU", "PredOp",
+                           { "code": "PseudoInst::wakeCPU(xc->tcBase(), R0);",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(wakeCPUIop)
+    decoder_output += BasicConstructor.subst(wakeCPUIop)
+    exec_output += PredOpExecute.subst(wakeCPUIop)
+
+    deprecated_ivlbIop = InstObjParams("deprecated_ivlb", "Deprecated_ivlb", "PredOp",
+                           { "code": '''warn_once("Obsolete M5 ivlb instruction encountered.\\n");''',
+                             "predicate_test": predicateTest })
+    header_output += BasicDeclare.subst(deprecated_ivlbIop)
+    decoder_output += BasicConstructor.subst(deprecated_ivlbIop)
+    exec_output += PredOpExecute.subst(deprecated_ivlbIop)
+
+    deprecated_ivleIop = InstObjParams("deprecated_ivle", "Deprecated_ivle", "PredOp",
+                           { "code": '''warn_once("Obsolete M5 ivle instruction encountered.\\n");''',
+                             "predicate_test": predicateTest })
+    header_output += BasicDeclare.subst(deprecated_ivleIop)
+    decoder_output += BasicConstructor.subst(deprecated_ivleIop)
+    exec_output += PredOpExecute.subst(deprecated_ivleIop)
+
+    deprecated_exit_code = '''
+        warn_once("Obsolete M5 exit instruction encountered.\\n");
+        PseudoInst::m5exit(xc->tcBase(), 0);
+    '''
+
+    deprecated_exitIop = InstObjParams("deprecated_exit", "Deprecated_exit", "PredOp",
+                           { "code": deprecated_exit_code,
+                             "predicate_test": predicateTest },
+                             ["No_OpClass", "IsNonSpeculative"])
+    header_output += BasicDeclare.subst(deprecated_exitIop)
+    decoder_output += BasicConstructor.subst(deprecated_exitIop)
+    exec_output += PredOpExecute.subst(deprecated_exitIop)
+
+    m5exitIop = InstObjParams("m5exit", "M5exit", "PredOp",
+                           { "code": "PseudoInst::m5exit(xc->tcBase(), R0)",
+                             "predicate_test": predicateTest },
+                             ["No_OpClass", "IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5exitIop)
+    decoder_output += BasicConstructor.subst(m5exitIop)
+    exec_output += PredOpExecute.subst(m5exitIop)
+
+    loadsymbolCode = '''
+#if FULL_SYSTEM
+    PseudoInst::loadsymbol(xc->tcBase());
+#endif
+    '''
+
+    loadsymbolIop = InstObjParams("loadsymbol", "Loadsymbol", "PredOp",
+                           { "code": loadsymbolCode,
+                             "predicate_test": predicateTest },
+                             ["No_OpClass", "IsNonSpeculative"])
+    header_output += BasicDeclare.subst(loadsymbolIop)
+    decoder_output += BasicConstructor.subst(loadsymbolIop)
+    exec_output += PredOpExecute.subst(loadsymbolIop)
+
+    initparamCode = '''
+#if FULL_SYSTEM
+    Rt = xc->tcBase()->getCpuPtr()->system->init_param;
+#endif
+    '''
+
+    initparamIop = InstObjParams("initparam", "Initparam", "PredOp",
+                           { "code": initparamCode,
+                             "predicate_test": predicateTest })
+    header_output += BasicDeclare.subst(initparamIop)
+    decoder_output += BasicConstructor.subst(initparamIop)
+    exec_output += PredOpExecute.subst(initparamIop)
+
+    resetstatsIop = InstObjParams("resetstats", "Resetstats", "PredOp",
+                           { "code": "PseudoInst::resetstats(xc->tcBase(), R0, R1);",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(resetstatsIop)
+    decoder_output += BasicConstructor.subst(resetstatsIop)
+    exec_output += PredOpExecute.subst(resetstatsIop)
+
+    dumpstatsIop = InstObjParams("dumpstats", "Dumpstats", "PredOp",
+                           { "code": "PseudoInst::dumpstats(xc->tcBase(), R0, R1);",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(dumpstatsIop)
+    decoder_output += BasicConstructor.subst(dumpstatsIop)
+    exec_output += PredOpExecute.subst(dumpstatsIop)
+
+    dumpresetstatsIop = InstObjParams("dumpresetstats", "Dumpresetstats", "PredOp",
+                           { "code": "PseudoInst::dumpresetstats(xc->tcBase(), R0, R1);",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(dumpresetstatsIop)
+    decoder_output += BasicConstructor.subst(dumpresetstatsIop)
+    exec_output += PredOpExecute.subst(dumpresetstatsIop)
+
+    m5checkpointIop = InstObjParams("m5checkpoint", "M5checkpoint", "PredOp",
+                           { "code": "PseudoInst::m5checkpoint(xc->tcBase(), R0, R1);",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5checkpointIop)
+    decoder_output += BasicConstructor.subst(m5checkpointIop)
+    exec_output += PredOpExecute.subst(m5checkpointIop)
+
+    m5readfileCode = '''
+#if FULL_SYSTEM
+    R0 = PseudoInst::readfile(xc->tcBase(), R0, R1, R2);
+#endif
+    '''
+    m5readfileIop = InstObjParams("m5readfile", "M5readfile", "PredOp",
+                           { "code": m5readfileCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5readfileIop)
+    decoder_output += BasicConstructor.subst(m5readfileIop)
+    exec_output += PredOpExecute.subst(m5readfileIop)
+
+    m5breakIop = InstObjParams("m5break", "M5break", "PredOp",
+                           { "code": "PseudoInst::debugbreak(xc->tcBase());",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5breakIop)
+    decoder_output += BasicConstructor.subst(m5breakIop)
+    exec_output += PredOpExecute.subst(m5breakIop)
+
+    m5switchcpuIop = InstObjParams("m5switchcpu", "M5switchcpu", "PredOp",
+                           { "code": "PseudoInst::switchcpu(xc->tcBase());",
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5switchcpuIop)
+    decoder_output += BasicConstructor.subst(m5switchcpuIop)
+    exec_output += PredOpExecute.subst(m5switchcpuIop)
+
+    m5addsymbolCode = '''
+#if FULL_SYSTEM
+    PseudoInst::addsymbol(xc->tcBase(), R0, R1);
+#endif
+    '''
+    m5addsymbolIop = InstObjParams("m5addsymbol", "M5addsymbol", "PredOp",
+                           { "code": m5addsymbolCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5addsymbolIop)
+    decoder_output += BasicConstructor.subst(m5addsymbolIop)
+    exec_output += PredOpExecute.subst(m5addsymbolIop)
+
+    m5panicCode = '''panic("M5 panic instruction called at pc=%#x.",
+                     xc->pcState().pc());'''
+    m5panicIop = InstObjParams("m5panic", "M5panic", "PredOp",
+                     { "code": m5panicCode,
+                       "predicate_test": predicateTest },
+                       ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5panicIop)
+    decoder_output += BasicConstructor.subst(m5panicIop)
+    exec_output += PredOpExecute.subst(m5panicIop)
+
+}};

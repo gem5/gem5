@@ -170,6 +170,9 @@ def operands {{
     'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 3, maybePCRead, maybePCWrite),
     'R7': ('IntReg', 'uw', '7', 'IsInteger', 3),
     'R0': ('IntReg', 'uw', '0', 'IsInteger', 3),
+    'R1': ('IntReg', 'uw', '0', 'IsInteger', 3),
+    'R2': ('IntReg', 'uw', '1', 'IsInteger', 3),
+    'Rt' : ('IntReg', 'uw', 'RT', 'IsInteger', 3, maybePCRead, maybePCWrite),
 
     'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 3),
     'CondCodes': ('IntReg', 'uw', 'INTREG_CONDCODES', None, 3),

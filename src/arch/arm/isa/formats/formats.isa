@@ -79,3 +79,6 @@
 
 //Unconditional instructions
 ##include "uncond.isa"
+
+//M5 Psuedo-ops
+##include "m5ops.isa"

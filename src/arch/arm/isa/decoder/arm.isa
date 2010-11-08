@@ -90,7 +90,12 @@ format DataOp {
             0x0: ArmParallelAddSubtract::armParallelAddSubtract();
             0x1: ArmPackUnpackSatReverse::armPackUnpackSatReverse();
             0x2: ArmSignedMultiplies::armSignedMultiplies();
-            0x3: ArmMiscMedia::armMiscMedia();
+            0x3: decode MEDIA_OPCODE {
+                     0x1F: decode OPC2 {
+                         default: ArmMiscMedia::armMiscMedia();
+                     }
+                     default: ArmMiscMedia::armMiscMedia();
+                 }
         }
     }
     0x4: ArmMacroMem::armMacroMem();
@@ -107,6 +112,7 @@ format DataOp {
                 0xa, 0xb: VfpData::vfpData();
             } // CPNUM
             1: decode CPNUM { // 27-24=1110,4 ==1
+                0x1: M5ops::m5ops();
                 0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                 0xf: McrMrc15::mcrMrc15();
             } // CPNUM  (OP4 == 1)

@@ -75,3 +75,6 @@
 
 //Neon
 ##include "neon.isa"
+
+//m5 Psuedo-ops
+##include "m5ops.isa"

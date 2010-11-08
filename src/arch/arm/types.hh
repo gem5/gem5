@@ -141,7 +141,7 @@ namespace ArmISA
         Bitfield<2,  0>  fpImm;
         Bitfield<24, 20> punwl;
 
-        Bitfield<7,  0>  m5Func;
+        Bitfield<15,  8>  m5Func;
 
         // 16 bit thumb bitfields
         Bitfield<15, 13> topcode15_13;
