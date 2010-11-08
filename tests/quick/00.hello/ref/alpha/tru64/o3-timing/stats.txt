@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  34398                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 203876                       # Number of bytes of host memory used
-host_seconds                                     0.07                       # Real time elapsed on the host
-host_tick_rate                              104794717                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 101462                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 236800                       # Number of bytes of host memory used
+host_seconds                                     0.02                       # Real time elapsed on the host
+host_tick_rate                              307213198                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                        2387                       # Number of instructions simulated
 sim_seconds                                  0.000007                       # Number of seconds simulated
@@ -228,7 +228,7 @@ system.cpu.idleCycles                            7900                       # To
 system.cpu.iew.EXEC:branches                      601                       # Number of branches executed
 system.cpu.iew.EXEC:nop                           306                       # number of nop insts executed
 system.cpu.iew.EXEC:rate                     0.241079                       # Inst execution rate
-system.cpu.iew.EXEC:refs                         1019                       # number of memory reference insts executed
+system.cpu.iew.EXEC:refs                         1017                       # number of memory reference insts executed
 system.cpu.iew.EXEC:stores                        368                       # Number of stores executed
 system.cpu.iew.EXEC:swp                             0                       # number of swp insts executed
 system.cpu.iew.WB:consumers                      1981                       # num instructions consuming a value
@@ -241,12 +241,12 @@ system.cpu.iew.WB:rate                       0.232998                       # in
 system.cpu.iew.WB:sent                           3452                       # cumulative count of insts sent to commit
 system.cpu.iew.branchMispredicts                  164                       # Number of branch mispredicts detected at execute
 system.cpu.iew.iewBlockCycles                      55                       # Number of cycles IEW is blocking
-system.cpu.iew.iewDispLoadInsts                   795                       # Number of dispatched load instructions
+system.cpu.iew.iewDispLoadInsts                   793                       # Number of dispatched load instructions
 system.cpu.iew.iewDispNonSpecInsts                  6                       # Number of dispatched non-speculative instructions
 system.cpu.iew.iewDispSquashedInsts                68                       # Number of squashed instructions skipped by dispatch
 system.cpu.iew.iewDispStoreInsts                  435                       # Number of dispatched store instructions
 system.cpu.iew.iewDispatchedInsts                4588                       # Number of instructions dispatched to IQ
-system.cpu.iew.iewExecLoadInsts                   651                       # Number of load instructions executed
+system.cpu.iew.iewExecLoadInsts                   649                       # Number of load instructions executed
 system.cpu.iew.iewExecSquashedInsts               111                       # Number of squashed instructions skipped in execute
 system.cpu.iew.iewExecutedInsts                  3520                       # Number of executed instructions
 system.cpu.iew.iewIQFullEvents                      3                       # Number of times the IQ has become full, causing a stall
@@ -262,7 +262,7 @@ system.cpu.iew.lsq.thread.0.invAddrLoads            0                       # Nu
 system.cpu.iew.lsq.thread.0.invAddrSwpfs            0                       # Number of software prefetches ignored due to an invalid address
 system.cpu.iew.lsq.thread.0.memOrderViolation           13                       # Number of memory ordering violations
 system.cpu.iew.lsq.thread.0.rescheduledLoads            0                       # Number of loads that were rescheduled
-system.cpu.iew.lsq.thread.0.squashedLoads          380                       # Number of loads squashed
+system.cpu.iew.lsq.thread.0.squashedLoads          378                       # Number of loads squashed
 system.cpu.iew.lsq.thread.0.squashedStores          141                       # Number of stores squashed
 system.cpu.iew.memOrderViolationEvents             13                       # Number of memory order violations
 system.cpu.iew.predictedNotTakenIncorrect          109                       # Number of branches that were predicted not taken incorrectly
@@ -270,16 +270,16 @@ system.cpu.iew.predictedTakenIncorrect             55                       # Nu
 system.cpu.ipc                               0.163482                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.163482                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0::No_OpClass            0      0.00%      0.00% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::IntAlu            2582     71.11%     71.11% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::IntMult              1      0.03%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::IntDiv               0      0.00%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatAdd             0      0.00%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatCmp             0      0.00%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatCvt             0      0.00%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatMult            0      0.00%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatDiv             0      0.00%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%     71.14% # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::MemRead            675     18.59%     89.73% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::IntAlu            2584     71.16%     71.16% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::IntMult              1      0.03%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::IntDiv               0      0.00%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatAdd             0      0.00%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatCmp             0      0.00%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatCvt             0      0.00%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatMult            0      0.00%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatDiv             0      0.00%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%     71.19% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::MemRead            673     18.53%     89.73% # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0::MemWrite           373     10.27%    100.00% # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0::IprAccess            0      0.00%    100.00% # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0::InstPrefetch            0      0.00%    100.00% # Type of FU issued
@@ -406,7 +406,7 @@ system.cpu.l2cache.warmup_cycle                     0                       # Cy
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
 system.cpu.memDep0.conflictingLoads                16                       # Number of conflicting loads.
 system.cpu.memDep0.conflictingStores               16                       # Number of conflicting stores.
-system.cpu.memDep0.insertedLoads                  795                       # Number of loads inserted to the mem dependence unit.
+system.cpu.memDep0.insertedLoads                  793                       # Number of loads inserted to the mem dependence unit.
 system.cpu.memDep0.insertedStores                 435                       # Number of stores inserted to the mem dependence unit.
 system.cpu.numCycles                            14601                       # number of cpu cycles simulated
 system.cpu.rename.RENAME:BlockCycles               63                       # Number of cycles rename is blocking

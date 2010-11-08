@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic/simout
+Redirecting stderr to build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,13 +7,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun 14 2010 18:16:48
-M5 revision 22c414a5ff89+ 7455+ default stats_funcinit.diff qtip tip
-M5 started Jun 14 2010 18:19:53
-M5 executing on maize
-command line: /n/blue/z/binkert/build/work/build/ALPHA_FS/m5.fast -d /n/blue/z/binkert/build/work/build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic -re tests/run.py /n/blue/z/binkert/build/work/build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
+M5 compiled Nov  2 2010 23:00:12
+M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
+M5 started Nov  2 2010 23:11:17
+M5 executing on aus-bc2-b15
+command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic -re tests/run.py build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/vmlinux
-info: kernel located at: /dist/m5/system/binaries/vmlinux
+info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux
+info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 4300236804024 because checkpoint

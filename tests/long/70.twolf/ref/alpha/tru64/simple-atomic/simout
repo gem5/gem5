@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/simple-atomic/simout
+Redirecting stderr to build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/simple-atomic/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,10 +7,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:12:40
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 03:01:12
-M5 executing on SC2B0619
+M5 compiled Nov  2 2010 21:30:55
+M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
+M5 started Nov  2 2010 21:32:41
+M5 executing on aus-bc2-b15
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/simple-atomic -re tests/run.py build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -26,4 +28,4 @@ Authors: Carl Sechen, Bill Swartz
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 
+122 123 124 Exiting @ tick 45951567500 because target called exit()

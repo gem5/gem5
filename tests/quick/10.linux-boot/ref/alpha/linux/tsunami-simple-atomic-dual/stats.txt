@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                2584495                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 281712                       # Number of bytes of host memory used
-host_seconds                                    24.44                       # Real time elapsed on the host
-host_tick_rate                            76540345609                       # Simulator tick rate (ticks/s)
+host_inst_rate                                4418519                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 326752                       # Number of bytes of host memory used
+host_seconds                                    14.29                       # Real time elapsed on the host
+host_tick_rate                           130854140423                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    63154034                       # Number of instructions simulated
 sim_seconds                                  1.870336                       # Number of seconds simulated
@@ -306,7 +306,7 @@ system.cpu0.kern.syscall::total                   226                       # nu
 system.cpu0.not_idle_fraction                0.015300                       # Percentage of non-idle cycles
 system.cpu0.numCycles                      3740670933                       # number of cpu cycles simulated
 system.cpu0.num_insts                        57222076                       # Number of instructions executed
-system.cpu0.num_refs                         15330887                       # Number of memory references
+system.cpu0.num_refs                         15135515                       # Number of memory references
 system.cpu1.dcache.LoadLockedReq_accesses::0        16418                       # number of LoadLockedReq accesses(hits+misses)
 system.cpu1.dcache.LoadLockedReq_accesses::total        16418                       # number of LoadLockedReq accesses(hits+misses)
 system.cpu1.dcache.LoadLockedReq_hits::0        15129                       # number of LoadLockedReq hits
@@ -588,7 +588,7 @@ system.cpu1.kern.syscall::total                   100                       # nu
 system.cpu1.not_idle_fraction                0.001587                       # Percentage of non-idle cycles
 system.cpu1.numCycles                      3740248881                       # number of cpu cycles simulated
 system.cpu1.num_insts                         5931958                       # Number of instructions executed
-system.cpu1.num_refs                          1926645                       # Number of memory references
+system.cpu1.num_refs                          1926244                       # Number of memory references
 system.disk0.dma_read_bytes                      1024                       # Number of bytes transfered via DMA reads (not PRD).
 system.disk0.dma_read_full_pages                    0                       # Number of full page size DMA reads (not PRD).
 system.disk0.dma_read_txs                           1                       # Number of DMA read transactions (not PRD).

@@ -1,9 +1,5 @@
 warn: Sockets disabled, not accepting gdb connections
 For more information see: http://www.m5sim.org/warn/d946bea6
-warn: Prefetching currently unimplemented
-For more information see: http://www.m5sim.org/warn/8028fa22
-warn: Write Hints currently unimplemented
-For more information see: http://www.m5sim.org/warn/cfb3293b
 warn: ignoring syscall sigprocmask(18446744073709547831, 1, ...)
 For more information see: http://www.m5sim.org/warn/5c5b547f
 hack: be nice to actually delete the event here

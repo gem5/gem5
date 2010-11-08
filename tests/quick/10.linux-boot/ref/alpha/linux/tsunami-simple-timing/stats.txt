@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1445061                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 277124                       # Number of bytes of host memory used
-host_seconds                                    38.85                       # Real time elapsed on the host
-host_tick_rate                            49309117653                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1917155                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 322176                       # Number of bytes of host memory used
+host_seconds                                    29.28                       # Real time elapsed on the host
+host_tick_rate                            65417896896                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    56137087                       # Number of instructions simulated
 sim_seconds                                  1.915549                       # Number of seconds simulated
@@ -342,7 +342,7 @@ system.cpu.kern.syscall::total                    326                       # nu
 system.cpu.not_idle_fraction                 0.063469                       # Percentage of non-idle cycles
 system.cpu.numCycles                       3831097734                       # number of cpu cycles simulated
 system.cpu.num_insts                         56137087                       # Number of instructions executed
-system.cpu.num_refs                          15658046                       # Number of memory references
+system.cpu.num_refs                          15462519                       # Number of memory references
 system.disk0.dma_read_bytes                      1024                       # Number of bytes transfered via DMA reads (not PRD).
 system.disk0.dma_read_full_pages                    0                       # Number of full page size DMA reads (not PRD).
 system.disk0.dma_read_txs                           1                       # Number of DMA read transactions (not PRD).

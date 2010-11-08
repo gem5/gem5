@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing/simout
+Redirecting stderr to build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep 20 2010 15:04:49
-M5 revision 0c4a7d867247 7686 default qtip print-identical tip
-M5 started Sep 20 2010 16:19:32
-M5 executing on phenom
-command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/inorder-timing
+M5 compiled Nov  2 2010 21:30:55
+M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
+M5 started Nov  2 2010 22:06:02
+M5 executing on aus-bc2-b15
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.

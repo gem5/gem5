@@ -1,14 +1,14 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  54763                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 197304                       # Number of bytes of host memory used
-host_seconds                                  1678.20                       # Real time elapsed on the host
-host_tick_rate                               58595727                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  68324                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 244132                       # Number of bytes of host memory used
+host_seconds                                  1345.11                       # Real time elapsed on the host
+host_tick_rate                               73105878                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    91903056                       # Number of instructions simulated
 sim_seconds                                  0.098335                       # Number of seconds simulated
 sim_ticks                                 98335161000                       # Number of ticks simulated
-system.cpu.AGEN-Unit.agens                   26537108                       # Number of Address Generations
+system.cpu.AGEN-Unit.agens                   26497301                       # Number of Address Generations
 system.cpu.Branch-Predictor.BTBHitPct       64.034182                       # BTB Hit Percentage
 system.cpu.Branch-Predictor.BTBHits           5496951                       # Number of BTB hits
 system.cpu.Branch-Predictor.BTBLookups        8584401                       # Number of BTB lookups
@@ -19,7 +19,7 @@ system.cpu.Branch-Predictor.lookups          10240685                       # Nu
 system.cpu.Branch-Predictor.predictedNotTaken      2702033                       # Number of Branches Predicted As Not Taken (False).
 system.cpu.Branch-Predictor.predictedTaken      7538652                       # Number of Branches Predicted As Taken (True).
 system.cpu.Branch-Predictor.usedRAS           1029596                       # Number of times the RAS was used to get a target.
-system.cpu.Execution-Unit.executions         64907696                       # Number of Instructions Executed.
+system.cpu.Execution-Unit.executions         64947503                       # Number of Instructions Executed.
 system.cpu.Execution-Unit.mispredictPct     22.664900                       # Percentage of Incorrect Branches Predicts
 system.cpu.Execution-Unit.mispredicted        2321041                       # Number of Branches Incorrectly Predicted
 system.cpu.Execution-Unit.predicted           7919644                       # Number of Branches Incorrectly Predicted
@@ -31,14 +31,14 @@ system.cpu.RegFile-Manager.regFileAccesses    185972268                       # 
 system.cpu.RegFile-Manager.regFileReads     117544907                       # Number of Reads from Register File
 system.cpu.RegFile-Manager.regFileWrites     68427361                       # Number of Writes to Register File
 system.cpu.RegFile-Manager.regForwards        2843090                       # Number of Registers Read Through Forwarding Logic
-system.cpu.activity                         95.462227                       # Percentage of cycles cpu is active
+system.cpu.activity                         95.462226                       # Percentage of cycles cpu is active
 system.cpu.comBranches                       10240685                       # Number of Branches instructions committed
 system.cpu.comFloats                          3775974                       # Number of Floating Point instructions committed
-system.cpu.comInts                           43625545                       # Number of Integer instructions committed
-system.cpu.comLoads                          20034413                       # Number of Load instructions committed
+system.cpu.comInts                           43665352                       # Number of Integer instructions committed
+system.cpu.comLoads                          19996198                       # Number of Load instructions committed
 system.cpu.comNonSpec                             389                       # Number of Non-Speculative instructions committed
 system.cpu.comNops                            7723346                       # Number of Nop instructions committed
-system.cpu.comStores                          6502695                       # Number of Store instructions committed
+system.cpu.comStores                          6501103                       # Number of Store instructions committed
 system.cpu.committedInsts                    91903056                       # Number of Instructions Simulated (Per-Thread)
 system.cpu.committedInsts_total              91903056                       # Number of Instructions Simulated (Total)
 system.cpu.contextSwitches                          1                       # Number of context switches
@@ -181,7 +181,7 @@ system.cpu.icache.tagsinuse               1428.759296                       # Cy
 system.cpu.icache.total_refs                101754083                       # Total number of references to valid blocks.
 system.cpu.icache.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.writebacks                        0                       # number of writebacks
-system.cpu.idleCycles                         8924453                       # Number of cycles cpu's stages were not processed
+system.cpu.idleCycles                         8924455                       # Number of cycles cpu's stages were not processed
 system.cpu.ipc                               0.467295                       # IPC: Instructions Per Cycle (Per-Thread)
 system.cpu.ipc_total                         0.467295                       # IPC: Total IPC of All Threads
 system.cpu.itb.data_accesses                        0                       # DTB accesses
@@ -270,7 +270,7 @@ system.cpu.l2cache.total_refs                    5998                       # To
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
 system.cpu.numCycles                        196670323                       # number of cpu cycles simulated
-system.cpu.runCycles                        187745870                       # Number of cycles cpu stages are processed.
+system.cpu.runCycles                        187745868                       # Number of cycles cpu stages are processed.
 system.cpu.smtCommittedInsts                        0                       # Number of SMT Instructions Simulated (Per-Thread)
 system.cpu.smtCycles                                0                       # Total number of cycles that the CPU was in SMT-mode
 system.cpu.smt_cpi                           no_value                       # CPI: Total SMT-CPI
@@ -284,9 +284,9 @@ system.cpu.stage-1.utilization              46.860407                       # Pe
 system.cpu.stage-2.idleCycles               103177839                       # Number of cycles 0 instructions are processed.
 system.cpu.stage-2.runCycles                 93492484                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage-2.utilization              47.537667                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.stage-3.idleCycles               170133192                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-3.runCycles                 26537131                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-3.utilization              13.493206                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage-3.idleCycles               170172999                       # Number of cycles 0 instructions are processed.
+system.cpu.stage-3.runCycles                 26497324                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage-3.utilization              13.472965                       # Percentage of cycles stage was utilized (processing insts).
 system.cpu.stage-4.idleCycles               104767267                       # Number of cycles 0 instructions are processed.
 system.cpu.stage-4.runCycles                 91903056                       # Number of cycles 1+ instructions are processed.
 system.cpu.stage-4.utilization              46.729499                       # Percentage of cycles stage was utilized (processing insts).

@@ -94,7 +94,7 @@ drivesys.cpu.kern.syscall::total                   22                       # nu
 drivesys.cpu.not_idle_fraction               0.000010                       # Percentage of non-idle cycles
 drivesys.cpu.numCycles                   199571362884                       # number of cpu cycles simulated
 drivesys.cpu.num_insts                        1958129                       # Number of instructions executed
-drivesys.cpu.num_refs                          626223                       # Number of memory references
+drivesys.cpu.num_refs                          625939                       # Number of memory references
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -156,10 +156,10 @@ drivesys.tsunami.ethernet.txPPS                    25                       # Pa
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
 drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
-host_inst_rate                              296969022                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 463340                       # Number of bytes of host memory used
-host_seconds                                     0.92                       # Real time elapsed on the host
-host_tick_rate                           217224993666                       # Simulator tick rate (ticks/s)
+host_inst_rate                              245765975                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 512700                       # Number of bytes of host memory used
+host_seconds                                     1.11                       # Real time elapsed on the host
+host_tick_rate                           179775828937                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.200001                       # Number of seconds simulated
@@ -268,7 +268,7 @@ testsys.cpu.kern.syscall::total                    83                       # nu
 testsys.cpu.not_idle_fraction                0.000018                       # Percentage of non-idle cycles
 testsys.cpu.numCycles                    199569460393                       # number of cpu cycles simulated
 testsys.cpu.num_insts                         3560411                       # Number of instructions executed
-testsys.cpu.num_refs                          1173571                       # Number of memory references
+testsys.cpu.num_refs                          1173234                       # Number of memory references
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
@@ -431,10 +431,10 @@ drivesys.tsunami.ethernet.totalSwi                  0                       # to
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-host_inst_rate                           197240139250                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 463340                       # Number of bytes of host memory used
+host_inst_rate                           151538155765                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 512700                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-host_tick_rate                              532144888                       # Simulator tick rate (ticks/s)
+host_tick_rate                              415641460                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated

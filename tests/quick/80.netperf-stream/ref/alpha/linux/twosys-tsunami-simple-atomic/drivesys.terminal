@@ -59,7 +59,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 eth0: ns83820.c: 0x22c: 00000000, subsystem: 0000:0000
 eth0: enabling optical transceiver
 eth0: using 64 bit addressing.
-eth0: ns83820 v0.22: DP83820 v1.3: 00:90:00:00:00:01 io=0x09000000 irq=30 f=h,sg
+eth0: ns83820 v0.22: DP83820 v1.3: 00:90:00:00:00:02 io=0x09000000 irq=30 f=h,sg
 tun: Universal TUN/TAP device driver, 1.6
 tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
 Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1810362                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 184036                       # Number of bytes of host memory used
-host_seconds                                   332.45                       # Real time elapsed on the host
-host_tick_rate                              905187706                       # Simulator tick rate (ticks/s)
+host_inst_rate                                6224890                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 232016                       # Number of bytes of host memory used
+host_seconds                                    96.69                       # Real time elapsed on the host
+host_tick_rate                             3112463113                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   601856964                       # Number of instructions simulated
 sim_seconds                                  0.300931                       # Number of seconds simulated
@@ -44,7 +44,7 @@ system.cpu.itb.write_misses                         0                       # DT
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.numCycles                        601861917                       # number of cpu cycles simulated
 system.cpu.num_insts                        601856964                       # Number of instructions executed
-system.cpu.num_refs                         154866966                       # Number of memory references
+system.cpu.num_refs                         153970296                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls              17                       # Number of system calls
 
 ---------- End Simulation Statistics   ----------

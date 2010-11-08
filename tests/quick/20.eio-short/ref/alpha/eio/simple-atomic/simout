@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-atomic/simout
+Redirecting stderr to build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-atomic/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,13 +7,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:12:40
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 03:02:04
-M5 executing on SC2B0619
+M5 compiled Nov  2 2010 21:30:55
+M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
+M5 started Nov  2 2010 21:33:04
+M5 executing on aus-bc2-b15
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-atomic -re tests/run.py build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-atomic
-Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
-main dictionary has 1245 entries
-49508 bytes wasted
->Exiting @ tick 250015500 because a thread reached the max instruction count
