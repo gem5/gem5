@@ -106,7 +106,7 @@ if not SCons.Tool.m4.exists(m4env):
          "Please install M4 and try again."
    Exit(1)
 
-m4env.Append(M4FLAGS='-DSRCDIR=%s' % Dir('.').path)
+m4env.Append(M4FLAGS=['-DSRCDIR=%s' % Dir('.').path])
 m4env['M4COM'] = '$M4 $M4FLAGS $SOURCES > $TARGET'
 m4env.M4(target=File('libelf_convert.c'),
          source=[File('elf_types.m4'), File('libelf_convert.m4')])

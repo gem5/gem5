@@ -358,10 +358,10 @@ if main['GCC'] + main['SUNCC'] + main['ICC'] > 1:
 
 # Set up default C++ compiler flags
 if main['GCC']:
-    main.Append(CCFLAGS='-pipe')
-    main.Append(CCFLAGS='-fno-strict-aliasing')
+    main.Append(CCFLAGS=['-pipe'])
+    main.Append(CCFLAGS=['-fno-strict-aliasing'])
     main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
-    main.Append(CXXFLAGS='-Wno-deprecated')
+    main.Append(CXXFLAGS=['-Wno-deprecated'])
     # Read the GCC version to check for versions with bugs
     # Note CCVERSION doesn't work here because it is run with the CC
     # before we override it from the command line
@@ -369,16 +369,16 @@ if main['GCC']:
     if not compareVersions(gcc_version, '4.4.1') or \
        not compareVersions(gcc_version, '4.4.2'):
         print 'Info: Tree vectorizer in GCC 4.4.1 & 4.4.2 is buggy, disabling.'
-        main.Append(CCFLAGS='-fno-tree-vectorize')
+        main.Append(CCFLAGS=['-fno-tree-vectorize'])
 elif main['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings
 elif main['SUNCC']:
-    main.Append(CCFLAGS='-Qoption ccfe')
-    main.Append(CCFLAGS='-features=gcc')
-    main.Append(CCFLAGS='-features=extensions')
-    main.Append(CCFLAGS='-library=stlport4')
-    main.Append(CCFLAGS='-xar')
-    #main.Append(CCFLAGS='-instances=semiexplicit')
+    main.Append(CCFLAGS=['-Qoption ccfe'])
+    main.Append(CCFLAGS=['-features=gcc'])
+    main.Append(CCFLAGS=['-features=extensions'])
+    main.Append(CCFLAGS=['-library=stlport4'])
+    main.Append(CCFLAGS=['-xar'])
+    #main.Append(CCFLAGS=['-instances=semiexplicit'])
 else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
     print '       Please fix SConstruct and src/SConscript and try again.'
@@ -399,7 +399,7 @@ if main['BATCH']:
 
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
-    main.Append(CCFLAGS="-Wno-uninitialized")
+    main.Append(CCFLAGS=["-Wno-uninitialized"])
 
 # Check for SWIG
 if not main.has_key('SWIG'):
@@ -489,10 +489,10 @@ try:
     uname = platform.uname()
     if uname[0] == 'Darwin' and compareVersions(uname[2], '9.0.0') >= 0:
         if int(readCommand('sysctl -n hw.cpu64bit_capable')[0]):
-            main.Append(CCFLAGS='-arch x86_64')
-            main.Append(CFLAGS='-arch x86_64')
-            main.Append(LINKFLAGS='-arch x86_64')
-            main.Append(ASFLAGS='-arch x86_64')
+            main.Append(CCFLAGS=['-arch x86_64'])
+            main.Append(CFLAGS=['-arch x86_64'])
+            main.Append(LINKFLAGS=['-arch x86_64'])
+            main.Append(ASFLAGS=['-arch x86_64'])
 except:
     pass
 
@@ -887,7 +887,7 @@ for variant_path in variant_paths:
     sticky_vars.Save(current_vars_file, env)
 
     if env['USE_SSE2']:
-        env.Append(CCFLAGS='-msse2')
+        env.Append(CCFLAGS=['-msse2'])
 
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
