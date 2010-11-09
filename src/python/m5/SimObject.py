@@ -666,7 +666,7 @@ class SimObject(object):
                   "add_child('%s'): child '%s' already has parent '%s'" % \
                   (name, child._name, child._parent)
         if self._children.has_key(name):
-            clear_child(name)
+            self.clear_child(name)
         child.set_parent(self, name)
         self._children[name] = child
 
