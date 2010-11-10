@@ -1,9 +1,15 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-  File "/arm/scratch/alisai01/m5/src/python/m5/main.py", line 359, in main
-    exec filecode in scope
-  File "tests/run.py", line 78, in <module>
-    execfile(joinpath(tests_root, category, name, 'test.py'))
-  File "tests/quick/30.eio-mp/test.py", line 29, in <module>
-    process = EioProcess(file = binpath('anagram', 'anagram-vshort.eio.gz'))
-NameError: name 'EioProcess' is not defined
+warn: Sockets disabled, not accepting gdb connections
+For more information see: http://www.m5sim.org/warn/d946bea6
+warn: Prefetch instrutions is Alpha do not do anything
+For more information see: http://www.m5sim.org/warn/3e0eccba
+warn: Prefetch instrutions is Alpha do not do anything
+For more information see: http://www.m5sim.org/warn/3e0eccba
+hack: be nice to actually delete the event here
+
+gzip: stdout: Broken pipe
+
+gzip: stdout: Broken pipe
+
+gzip: stdout: Broken pipe
+
+gzip: stdout: Broken pipe
