@@ -111,26 +111,30 @@ class SparcSystem : public System
 
     /** Add a function-based event to reset binary. */
     template <class T>
-    T *addResetFuncEvent(const char *lbl)
+    T *
+    addResetFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(resetSymtab, lbl);
     }
 
     /** Add a function-based event to the hypervisor. */
     template <class T>
-    T *addHypervisorFuncEvent(const char *lbl)
+    T *
+    addHypervisorFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(hypervisorSymtab, lbl);
     }
 
     /** Add a function-based event to the openboot. */
     template <class T>
-    T *addOpenbootFuncEvent(const char *lbl)
+    T *
+    addOpenbootFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(openbootSymtab, lbl);
     }
 
-    virtual Addr fixFuncEventAddr(Addr addr)
+    virtual Addr
+    fixFuncEventAddr(Addr addr)
     {
         //XXX This may eventually have to do something useful.
         return addr;

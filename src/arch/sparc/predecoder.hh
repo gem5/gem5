@@ -42,68 +42,72 @@ class ThreadContext;
 
 namespace SparcISA
 {
-    class Predecoder
+
+class Predecoder
+{
+  protected:
+    ThreadContext * tc;
+    // The extended machine instruction being generated
+    ExtMachInst emi;
+
+  public:
+    Predecoder(ThreadContext * _tc) : tc(_tc)
+    {}
+
+    ThreadContext *
+    getTC()
     {
-      protected:
-        ThreadContext * tc;
-        //The extended machine instruction being generated
-        ExtMachInst emi;
+        return tc;
+    }
 
-      public:
-        Predecoder(ThreadContext * _tc) : tc(_tc)
-        {}
+    void
+    setTC(ThreadContext * _tc)
+    {
+        tc = _tc;
+    }
 
-        ThreadContext * getTC()
-        {
-            return tc;
+    void process() {}
+    void reset() {}
+
+    // Use this to give data to the predecoder. This should be used
+    // when there is control flow.
+    void
+    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+    {
+        emi = inst;
+        // The I bit, bit 13, is used to figure out where the ASI
+        // should come from. Use that in the ExtMachInst. This is
+        // slightly redundant, but it removes the need to put a condition
+        // into all the execute functions
+        if (inst & (1 << 13)) {
+            emi |= (static_cast<ExtMachInst>(
+                        tc->readMiscRegNoEffect(MISCREG_ASI))
+                    << (sizeof(MachInst) * 8));
+        } else {
+            emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
+                    << (sizeof(MachInst) * 8));
         }
+    }
 
-        void setTC(ThreadContext * _tc)
-        {
-            tc = _tc;
-        }
+    bool
+    needMoreBytes()
+    {
+        return true;
+    }
 
-        void process()
-        {
-        }
+    bool
+    extMachInstReady()
+    {
+        return true;
+    }
 
-        void reset()
-        {}
-
-        //Use this to give data to the predecoder. This should be used
-        //when there is control flow.
-        void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
-        {
-            emi = inst;
-            //The I bit, bit 13, is used to figure out where the ASI
-            //should come from. Use that in the ExtMachInst. This is
-            //slightly redundant, but it removes the need to put a condition
-            //into all the execute functions
-            if(inst & (1 << 13))
-                emi |= (static_cast<ExtMachInst>(
-                            tc->readMiscRegNoEffect(MISCREG_ASI))
-                        << (sizeof(MachInst) * 8));
-            else
-                emi |= (static_cast<ExtMachInst>(bits(inst, 12, 5))
-                        << (sizeof(MachInst) * 8));
-        }
-
-        bool needMoreBytes()
-        {
-            return true;
-        }
-
-        bool extMachInstReady()
-        {
-            return true;
-        }
-
-        //This returns a constant reference to the ExtMachInst to avoid a copy
-        const ExtMachInst & getExtMachInst(PCState &pcState)
-        {
-            return emi;
-        }
-    };
+    // This returns a constant reference to the ExtMachInst to avoid a copy
+    const ExtMachInst &
+    getExtMachInst(PCState &pcState)
+    {
+        return emi;
+    }
+};
 };
 
 #endif // __ARCH_SPARC_PREDECODER_HH__

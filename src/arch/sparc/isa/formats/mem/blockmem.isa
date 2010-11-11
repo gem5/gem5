@@ -100,8 +100,7 @@ output decoder {{
             bool save = flags[IsStore];
 
             printMnemonic(response, mnemonic);
-            if(save)
-            {
+            if (save) {
                 printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
@@ -110,8 +109,7 @@ output decoder {{
             ccprintf(response, " + ");
             printReg(response, _srcRegIdx[!save ? 1 : 2]);
             ccprintf(response, " ]");
-            if(load)
-            {
+            if (load) {
                 ccprintf(response, ", ");
                 printReg(response, _destRegIdx[0]);
             }
@@ -127,19 +125,17 @@ output decoder {{
             bool save = flags[IsStore];
 
             printMnemonic(response, mnemonic);
-            if(save)
-            {
+            if (save) {
                 printReg(response, _srcRegIdx[1]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[ ");
             printReg(response, _srcRegIdx[0]);
-            if(imm >= 0)
+            if (imm >= 0)
                 ccprintf(response, " + 0x%x ]", imm);
             else
                 ccprintf(response, " + -0x%x ]", -imm);
-            if(load)
-            {
+            if (load) {
                 ccprintf(response, ", ");
                 printReg(response, _destRegIdx[0]);
             }
@@ -156,14 +152,14 @@ def template BlockMemDeclare {{
         class %(class_name)s : public %(base_class)s
         {
           public:
-            //Constructor
+            // Constructor
             %(class_name)s(ExtMachInst machInst);
 
           protected:
             class %(class_name)s_0 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_0(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s
@@ -173,7 +169,7 @@ def template BlockMemDeclare {{
             class %(class_name)s_1 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_1(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s
@@ -183,7 +179,7 @@ def template BlockMemDeclare {{
             class %(class_name)s_2 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_2(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s
@@ -193,7 +189,7 @@ def template BlockMemDeclare {{
             class %(class_name)s_3 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_3(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s
@@ -203,7 +199,7 @@ def template BlockMemDeclare {{
             class %(class_name)s_4 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_4(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s
@@ -213,7 +209,7 @@ def template BlockMemDeclare {{
             class %(class_name)s_5 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_5(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s
@@ -223,7 +219,7 @@ def template BlockMemDeclare {{
             class %(class_name)s_6 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_6(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s
@@ -233,7 +229,7 @@ def template BlockMemDeclare {{
             class %(class_name)s_7 : public %(base_class)sMicro
             {
               public:
-                //Constructor
+                // Constructor
                 %(class_name)s_7(ExtMachInst machInst);
                 %(BasicExecDeclare)s
                 %(InitiateAccDeclare)s

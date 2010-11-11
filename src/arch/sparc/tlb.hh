@@ -49,12 +49,12 @@ namespace SparcISA
 class TLB : public BaseTLB
 {
 #if !FULL_SYSTEM
-    //These faults need to be able to populate the tlb in SE mode.
+    // These faults need to be able to populate the tlb in SE mode.
     friend class FastInstructionAccessMMUMiss;
     friend class FastDataAccessMMUMiss;
 #endif
 
-    //TLB state
+    // TLB state
   protected:
     // Only used when this is the data TLB.
     uint64_t sfar;
@@ -156,7 +156,8 @@ class TLB : public BaseTLB
     typedef SparcTLBParams Params;
     TLB(const Params *p);
 
-    void demapPage(Addr vaddr, uint64_t asn)
+    void
+    demapPage(Addr vaddr, uint64_t asn)
     {
         panic("demapPage(Addr) is not implemented.\n");
     }

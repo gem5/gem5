@@ -26,34 +26,34 @@
 //
 // Authors: Gabe Black
 
-//Include the basic format
-//Templates from this format are used later
+// Include the basic format
+// Templates from this format are used later
 ##include "basic.isa"
 
-//Include base classes for microcoding instructions
+// Include base classes for microcoding instructions
 ##include "micro.isa"
 
-//Include the noop format
+// Include the noop format
 ##include "nop.isa"
 
-//Include the integerOp and integerOpCc format
+// Include the integerOp and integerOpCc format
 ##include "integerop.isa"
 
-//Include the memory formats
+// Include the memory formats
 ##include "mem/mem.isa"
 
-//Include the trap format
+// Include the trap format
 ##include "trap.isa"
 
-//Include the unimplemented format
+// Include the unimplemented format
 ##include "unimp.isa"
 
-//Include the "unknown" format
+// Include the "unknown" format
 ##include "unknown.isa"
 
-//Include the priveleged mode format
+// Include the priveleged mode format
 ##include "priv.isa"
 
-//Include the branch format
+// Include the branch format
 ##include "branch.isa"
 

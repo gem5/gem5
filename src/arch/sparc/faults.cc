@@ -272,18 +272,19 @@ template<> SparcFaultBase::FaultVals
  * effects which go with entering RED state because of a trap.
  */
 
-void enterREDState(ThreadContext *tc)
+void
+enterREDState(ThreadContext *tc)
 {
     //@todo Disable the mmu?
     //@todo Disable watchpoints?
     MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    //HPSTATE.red = 1
+    // HPSTATE.red = 1
     HPSTATE |= (1 << 5);
-    //HPSTATE.hpriv = 1
+    // HPSTATE.hpriv = 1
     HPSTATE |= (1 << 2);
     tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
-    //PSTATE.priv is set to 1 here. The manual says it should be 0, but
-    //Legion sets it to 1.
+    // PSTATE.priv is set to 1 here. The manual says it should be 0, but
+    // Legion sets it to 1.
     MiscReg PSTATE = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     PSTATE |= (1 << 2);
     tc->setMiscReg(MISCREG_PSTATE, PSTATE);
@@ -294,17 +295,16 @@ void enterREDState(ThreadContext *tc)
  * the handler.
  */
 
-void doREDFault(ThreadContext *tc, TrapType tt)
+void
+doREDFault(ThreadContext *tc, TrapType tt)
 {
     MiscReg TL = tc->readMiscRegNoEffect(MISCREG_TL);
     MiscReg TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
     MiscReg PSTATE = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    //MiscReg CCR = tc->readMiscRegNoEffect(MISCREG_CCR);
     MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
     MiscReg ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
     MiscReg CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
-    //MiscReg CANSAVE = tc->readMiscRegNoEffect(MISCREG_CANSAVE);
     MiscReg CANSAVE = tc->readMiscRegNoEffect(NumIntArchRegs + 3);
     MiscReg GL = tc->readMiscRegNoEffect(MISCREG_GL);
     PCState pc = tc->pcState();
@@ -313,60 +313,59 @@ void doREDFault(ThreadContext *tc, TrapType tt)
 
     Addr pcMask = bits(PSTATE, 3) ? mask(32) : mask(64);
 
-    //set TSTATE.gl to gl
+    // set TSTATE.gl to gl
     replaceBits(TSTATE, 42, 40, GL);
-    //set TSTATE.ccr to ccr
+    // set TSTATE.ccr to ccr
     replaceBits(TSTATE, 39, 32, CCR);
-    //set TSTATE.asi to asi
+    // set TSTATE.asi to asi
     replaceBits(TSTATE, 31, 24, ASI);
-    //set TSTATE.pstate to pstate
+    // set TSTATE.pstate to pstate
     replaceBits(TSTATE, 20, 8, PSTATE);
-    //set TSTATE.cwp to cwp
+    // set TSTATE.cwp to cwp
     replaceBits(TSTATE, 4, 0, CWP);
 
-    //Write back TSTATE
+    // Write back TSTATE
     tc->setMiscRegNoEffect(MISCREG_TSTATE, TSTATE);
 
-    //set TPC to PC
+    // set TPC to PC
     tc->setMiscRegNoEffect(MISCREG_TPC, pc.pc() & pcMask);
-    //set TNPC to NPC
+    // set TNPC to NPC
     tc->setMiscRegNoEffect(MISCREG_TNPC, pc.npc() & pcMask);
 
-    //set HTSTATE.hpstate to hpstate
+    // set HTSTATE.hpstate to hpstate
     tc->setMiscRegNoEffect(MISCREG_HTSTATE, HPSTATE);
 
-    //TT = trap type;
+    // TT = trap type;
     tc->setMiscRegNoEffect(MISCREG_TT, tt);
 
-    //Update GL
+    // Update GL
     tc->setMiscReg(MISCREG_GL, min<int>(GL+1, MaxGL));
 
     PSTATE = mbits(PSTATE, 2, 2); // just save the priv bit
-    PSTATE |= (1 << 4); //set PSTATE.pef to 1
+    PSTATE |= (1 << 4); // set PSTATE.pef to 1
     tc->setMiscRegNoEffect(MISCREG_PSTATE, PSTATE);
 
-    //set HPSTATE.red to 1
+    // set HPSTATE.red to 1
     HPSTATE |= (1 << 5);
-    //set HPSTATE.hpriv to 1
+    // set HPSTATE.hpriv to 1
     HPSTATE |= (1 << 2);
-    //set HPSTATE.ibe to 0
+    // set HPSTATE.ibe to 0
     HPSTATE &= ~(1 << 10);
-    //set HPSTATE.tlz to 0
+    // set HPSTATE.tlz to 0
     HPSTATE &= ~(1 << 0);
     tc->setMiscRegNoEffect(MISCREG_HPSTATE, HPSTATE);
 
     bool changedCWP = true;
-    if(tt == 0x24)
+    if (tt == 0x24)
         CWP++;
-    else if(0x80 <= tt && tt <= 0xbf)
+    else if (0x80 <= tt && tt <= 0xbf)
         CWP += (CANSAVE + 2);
-    else if(0xc0 <= tt && tt <= 0xff)
+    else if (0xc0 <= tt && tt <= 0xff)
         CWP--;
     else
         changedCWP = false;
 
-    if(changedCWP)
-    {
+    if (changedCWP) {
         CWP = (CWP + NWindows) % NWindows;
         tc->setMiscReg(MISCREG_CWP, CWP);
     }
@@ -377,79 +376,77 @@ void doREDFault(ThreadContext *tc, TrapType tt)
  * the handler.
  */
 
-void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
+void
+doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 {
     MiscReg TL = tc->readMiscRegNoEffect(MISCREG_TL);
     MiscReg TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
     MiscReg PSTATE = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    //MiscReg CCR = tc->readMiscRegNoEffect(MISCREG_CCR);
     MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
     MiscReg ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
     MiscReg CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
-    //MiscReg CANSAVE = tc->readMiscRegNoEffect(MISCREG_CANSAVE);
     MiscReg CANSAVE = tc->readIntReg(NumIntArchRegs + 3);
     MiscReg GL = tc->readMiscRegNoEffect(MISCREG_GL);
     PCState pc = tc->pcState();
 
-    //Increment the trap level
+    // Increment the trap level
     TL++;
     tc->setMiscRegNoEffect(MISCREG_TL, TL);
 
     Addr pcMask = bits(PSTATE, 3) ? mask(32) : mask(64);
 
-    //Save off state
+    // Save off state
 
-    //set TSTATE.gl to gl
+    // set TSTATE.gl to gl
     replaceBits(TSTATE, 42, 40, GL);
-    //set TSTATE.ccr to ccr
+    // set TSTATE.ccr to ccr
     replaceBits(TSTATE, 39, 32, CCR);
-    //set TSTATE.asi to asi
+    // set TSTATE.asi to asi
     replaceBits(TSTATE, 31, 24, ASI);
-    //set TSTATE.pstate to pstate
+    // set TSTATE.pstate to pstate
     replaceBits(TSTATE, 20, 8, PSTATE);
-    //set TSTATE.cwp to cwp
+    // set TSTATE.cwp to cwp
     replaceBits(TSTATE, 4, 0, CWP);
 
-    //Write back TSTATE
+    // Write back TSTATE
     tc->setMiscRegNoEffect(MISCREG_TSTATE, TSTATE);
 
-    //set TPC to PC
+    // set TPC to PC
     tc->setMiscRegNoEffect(MISCREG_TPC, pc.pc() & pcMask);
-    //set TNPC to NPC
+    // set TNPC to NPC
     tc->setMiscRegNoEffect(MISCREG_TNPC, pc.npc() & pcMask);
 
-    //set HTSTATE.hpstate to hpstate
+    // set HTSTATE.hpstate to hpstate
     tc->setMiscRegNoEffect(MISCREG_HTSTATE, HPSTATE);
 
-    //TT = trap type;
+    // TT = trap type;
     tc->setMiscRegNoEffect(MISCREG_TT, tt);
 
-    //Update the global register level
+    // Update the global register level
     if (!gotoHpriv)
-        tc->setMiscReg(MISCREG_GL, min<int>(GL+1, MaxPGL));
+        tc->setMiscReg(MISCREG_GL, min<int>(GL + 1, MaxPGL));
     else
-        tc->setMiscReg(MISCREG_GL, min<int>(GL+1, MaxGL));
+        tc->setMiscReg(MISCREG_GL, min<int>(GL + 1, MaxGL));
 
-    //PSTATE.mm is unchanged
-    PSTATE |= (1 << 4); //PSTATE.pef = whether or not an fpu is present
-    PSTATE &= ~(1 << 3); //PSTATE.am = 0
-    PSTATE &= ~(1 << 1); //PSTATE.ie = 0
-    //PSTATE.tle is unchanged
-    //PSTATE.tct = 0
+    // PSTATE.mm is unchanged
+    PSTATE |= (1 << 4); // PSTATE.pef = whether or not an fpu is present
+    PSTATE &= ~(1 << 3); // PSTATE.am = 0
+    PSTATE &= ~(1 << 1); // PSTATE.ie = 0
+    // PSTATE.tle is unchanged
+    // PSTATE.tct = 0
 
-    if (gotoHpriv)
-    {
+    if (gotoHpriv) {
         PSTATE &= ~(1 << 9); // PSTATE.cle = 0
-        //The manual says PSTATE.priv should be 0, but Legion leaves it alone
-        HPSTATE &= ~(1 << 5); //HPSTATE.red = 0
-        HPSTATE |= (1 << 2); //HPSTATE.hpriv = 1
-        HPSTATE &= ~(1 << 10); //HPSTATE.ibe = 0
-        //HPSTATE.tlz is unchanged
+        // The manual says PSTATE.priv should be 0, but Legion leaves it alone
+        HPSTATE &= ~(1 << 5); // HPSTATE.red = 0
+        HPSTATE |= (1 << 2); // HPSTATE.hpriv = 1
+        HPSTATE &= ~(1 << 10); // HPSTATE.ibe = 0
+        // HPSTATE.tlz is unchanged
         tc->setMiscRegNoEffect(MISCREG_HPSTATE, HPSTATE);
     } else { // we are going to priv
-        PSTATE |= (1 << 2); //PSTATE.priv = 1
-        replaceBits(PSTATE, 9, 9, PSTATE >> 8); //PSTATE.cle = PSTATE.tle
+        PSTATE |= (1 << 2); // PSTATE.priv = 1
+        replaceBits(PSTATE, 9, 9, PSTATE >> 8); // PSTATE.cle = PSTATE.tle
     }
     tc->setMiscRegNoEffect(MISCREG_PSTATE, PSTATE);
 
@@ -464,14 +461,14 @@ void doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     else
         changedCWP = false;
 
-    if (changedCWP)
-    {
+    if (changedCWP) {
         CWP = (CWP + NWindows) % NWindows;
         tc->setMiscReg(MISCREG_CWP, CWP);
     }
 }
 
-void getREDVector(MiscReg TT, Addr &PC, Addr &NPC)
+void
+getREDVector(MiscReg TT, Addr &PC, Addr &NPC)
 {
     //XXX The following constant might belong in a header file.
     const Addr RSTVAddr = 0xFFF0000000ULL;
@@ -479,14 +476,16 @@ void getREDVector(MiscReg TT, Addr &PC, Addr &NPC)
     NPC = PC + sizeof(MachInst);
 }
 
-void getHyperVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT)
+void
+getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, MiscReg TT)
 {
     Addr HTBA = tc->readMiscRegNoEffect(MISCREG_HTBA);
     PC = (HTBA & ~mask(14)) | ((TT << 5) & mask(14));
     NPC = PC + sizeof(MachInst);
 }
 
-void getPrivVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT, MiscReg TL)
+void
+getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, MiscReg TT, MiscReg TL)
 {
     Addr TBA = tc->readMiscRegNoEffect(MISCREG_TBA);
     PC = (TBA & ~mask(15)) |
@@ -497,14 +496,14 @@ void getPrivVector(ThreadContext * tc, Addr & PC, Addr & NPC, MiscReg TT, MiscRe
 
 #if FULL_SYSTEM
 
-void SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
+void
+SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
-    //panic("Invoking a second fault!\n");
     FaultBase::invoke(tc);
     countStat()++;
 
-    //We can refer to this to see what the trap level -was-, but something
-    //in the middle could change it in the regfile out from under us.
+    // We can refer to this to see what the trap level -was-, but something
+    // in the middle could change it in the regfile out from under us.
     MiscReg tl = tc->readMiscRegNoEffect(MISCREG_TL);
     MiscReg tt = tc->readMiscRegNoEffect(MISCREG_TT);
     MiscReg pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
@@ -525,16 +524,16 @@ void SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
     if ((hpstate & HPSTATE::red) || (tl == MaxTL - 1)) {
         getREDVector(5, PC, NPC);
         doREDFault(tc, tt);
-        //This changes the hpstate and pstate, so we need to make sure we
-        //save the old version on the trap stack in doREDFault.
+        // This changes the hpstate and pstate, so we need to make sure we
+        // save the old version on the trap stack in doREDFault.
         enterREDState(tc);
     } else if (tl == MaxTL) {
         panic("Should go to error state here.. crap\n");
-        //Do error_state somehow?
-        //Probably inject a WDR fault using the interrupt mechanism.
-        //What should the PC and NPC be set to?
+        // Do error_state somehow?
+        // Probably inject a WDR fault using the interrupt mechanism.
+        // What should the PC and NPC be set to?
     } else if (tl > MaxPTL && level == Privileged) {
-        //guest_watchdog fault
+        // guest_watchdog fault
         doNormalFault(tc, trapType(), true);
         getHyperVector(tc, PC, NPC, 2);
     } else if (level == Hyperprivileged ||
@@ -543,7 +542,7 @@ void SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
         getHyperVector(tc, PC, NPC, trapType());
     } else {
         doNormalFault(tc, trapType(), false);
-        getPrivVector(tc, PC, NPC, trapType(), tl+1);
+        getPrivVector(tc, PC, NPC, trapType(), tl + 1);
     }
 
     PCState pc;
@@ -555,36 +554,37 @@ void SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
     tc->pcState(pc);
 }
 
-void PowerOnReset::invoke(ThreadContext * tc, StaticInstPtr inst)
+void
+PowerOnReset::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    //For SPARC, when a system is first started, there is a power
-    //on reset Trap which sets the processor into the following state.
-    //Bits that aren't set aren't defined on startup.
+    // For SPARC, when a system is first started, there is a power
+    // on reset Trap which sets the processor into the following state.
+    // Bits that aren't set aren't defined on startup.
 
     tc->setMiscRegNoEffect(MISCREG_TL, MaxTL);
     tc->setMiscRegNoEffect(MISCREG_TT, trapType());
     tc->setMiscReg(MISCREG_GL, MaxGL);
 
-    //Turn on pef and priv, set everything else to 0
+    // Turn on pef and priv, set everything else to 0
     tc->setMiscRegNoEffect(MISCREG_PSTATE, (1 << 4) | (1 << 2));
 
-    //Turn on red and hpriv, set everything else to 0
+    // Turn on red and hpriv, set everything else to 0
     MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    //HPSTATE.red = 1
+    // HPSTATE.red = 1
     HPSTATE |= (1 << 5);
-    //HPSTATE.hpriv = 1
+    // HPSTATE.hpriv = 1
     HPSTATE |= (1 << 2);
-    //HPSTATE.ibe = 0
+    // HPSTATE.ibe = 0
     HPSTATE &= ~(1 << 10);
-    //HPSTATE.tlz = 0
+    // HPSTATE.tlz = 0
     HPSTATE &= ~(1 << 0);
     tc->setMiscRegNoEffect(MISCREG_HPSTATE, HPSTATE);
 
-    //The tick register is unreadable by nonprivileged software
+    // The tick register is unreadable by nonprivileged software
     tc->setMiscRegNoEffect(MISCREG_TICK, 1ULL << 63);
 
-    //Enter RED state. We do this last so that the actual state preserved in
-    //the trap stack is the state from before this fault.
+    // Enter RED state. We do this last so that the actual state preserved in
+    // the trap stack is the state from before this fault.
     enterREDState(tc);
 
     Addr PC, NPC;
@@ -598,8 +598,8 @@ void PowerOnReset::invoke(ThreadContext * tc, StaticInstPtr inst)
     pc.nupc(1);
     tc->pcState(pc);
 
-    //These registers are specified as "undefined" after a POR, and they
-    //should have reasonable values after the miscregfile is reset
+    // These registers are specified as "undefined" after a POR, and they
+    // should have reasonable values after the miscregfile is reset
     /*
     // Clear all the soft interrupt bits
     softint = 0;
@@ -607,7 +607,7 @@ void PowerOnReset::invoke(ThreadContext * tc, StaticInstPtr inst)
     tc->setMiscRegNoEffect(MISCREG_
     tick_cmprFields.int_dis = 1;
     tick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
-    stickFields.npt = 1; //The TICK register is unreadable by by !priv
+    stickFields.npt = 1; // The TICK register is unreadable by by !priv
     stick_cmprFields.int_dis = 1; // disable timer compare interrupts
     stick_cmprFields.tick_cmpr = 0; // Reset to 0 for pretty printing
 
@@ -621,13 +621,13 @@ void PowerOnReset::invoke(ThreadContext * tc, StaticInstPtr inst)
 
 #else // !FULL_SYSTEM
 
-void FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
-                                          StaticInstPtr inst)
+void
+FastInstructionAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
     bool success = p->pTable->lookup(vaddr, entry);
-    if(!success) {
+    if (!success) {
         panic("Tried to execute unmapped address %#x.\n", vaddr);
     } else {
         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
@@ -636,16 +636,17 @@ void FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
     }
 }
 
-void FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
+void
+FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
     bool success = p->pTable->lookup(vaddr, entry);
-    if(!success) {
+    if (!success) {
         p->checkAndAllocNextPage(vaddr);
         success = p->pTable->lookup(vaddr, entry);
     }
-    if(!success) {
+    if (!success) {
         panic("Tried to access unmapped address %#x.\n", vaddr);
     } else {
         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
@@ -654,7 +655,8 @@ void FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
     }
 }
 
-void SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
+void
+SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     doNormalFault(tc, trapType(), false);
 
@@ -664,29 +666,31 @@ void SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
     SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
     assert(lp);
 
-    //Then adjust the PC and NPC
+    // Then adjust the PC and NPC
     tc->pcState(lp->readSpillStart());
 }
 
-void FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
+void
+FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     doNormalFault(tc, trapType(), false);
 
-    Process * p = tc->getProcessPtr();
+    Process *p = tc->getProcessPtr();
 
     //XXX This will only work in faults from a SparcLiveProcess
     SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
     assert(lp);
 
-    //Then adjust the PC and NPC
+    // Then adjust the PC and NPC
     tc->pcState(lp->readFillStart());
 }
 
-void TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
+void
+TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    //In SE, this mechanism is how the process requests a service from the
-    //operating system. We'll get the process object from the thread context
-    //and let it service the request.
+    // In SE, this mechanism is how the process requests a service from the
+    // operating system. We'll get the process object from the thread context
+    // and let it service the request.
 
     Process *p = tc->getProcessPtr();
 
@@ -695,8 +699,8 @@ void TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 
     lp->handleTrap(_n, tc);
 
-    //We need to explicitly advance the pc, since that's not done for us
-    //on a faulting instruction
+    // We need to explicitly advance the pc, since that's not done for us
+    // on a faulting instruction
     PCState pc = tc->pcState();
     pc.advance();
     tc->pcState(pc);

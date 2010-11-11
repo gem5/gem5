@@ -153,16 +153,16 @@ bool
 RemoteGDB::acc(Addr va, size_t len)
 {
     //@Todo In NetBSD, this function checks if all addresses
-    //from va to va + len have valid page map entries. Not
-    //sure how this will work for other OSes or in general.
+    // from va to va + len have valid page map entries. Not
+    // sure how this will work for other OSes or in general.
 #if FULL_SYSTEM
     if (va)
         return true;
     return false;
 #else
     TlbEntry entry;
-    //Check to make sure the first byte is mapped into the processes address
-    //space.
+    // Check to make sure the first byte is mapped into the processes address
+    // space.
     if (context->getProcessPtr()->pTable->lookup(va, entry))
         return true;
     return false;
@@ -187,7 +187,7 @@ RemoteGDB::getregs()
         regs = (uint32_t*)gdbregs.regs;
         regs[Reg32Pc] = htobe((uint32_t)pc.pc());
         regs[Reg32Npc] = htobe((uint32_t)pc.npc());
-        for(int x = RegG0; x <= RegI0 + 7; x++)
+        for (int x = RegG0; x <= RegI0 + 7; x++)
             regs[x] = htobe((uint32_t)context->readIntReg(x - RegG0));
 
         regs[Reg32Y] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 1));
@@ -197,7 +197,7 @@ RemoteGDB::getregs()
     } else {
         gdbregs.regs[RegPc] = htobe(pc.pc());
         gdbregs.regs[RegNpc] = htobe(pc.npc());
-        for(int x = RegG0; x <= RegI0 + 7; x++)
+        for (int x = RegG0; x <= RegI0 + 7; x++)
             gdbregs.regs[x] = htobe(context->readIntReg(x - RegG0));
 
         gdbregs.regs[RegFsr] = htobe(context->readMiscReg(MISCREG_FSR));
@@ -212,9 +212,9 @@ RemoteGDB::getregs()
 
     DPRINTF(GDBRead, "PC=%#x\n", gdbregs.regs[RegPc]);
 
-    //Floating point registers are left at 0 in netbsd
-    //All registers other than the pc, npc and int regs
-    //are ignored as well.
+    // Floating point registers are left at 0 in netbsd
+    // All registers other than the pc, npc and int regs
+    // are ignored as well.
 }
 
 ///////////////////////////////////////////////////////////
@@ -233,9 +233,9 @@ RemoteGDB::setregs()
     pc.upc(0);
     pc.nupc(1);
     context->pcState(pc);
-    for(int x = RegG0; x <= RegI0 + 7; x++)
+    for (int x = RegG0; x <= RegI0 + 7; x++)
         context->setIntReg(x - RegG0, gdbregs.regs[x]);
-    //Only the integer registers, pc and npc are set in netbsd
+    // Only the integer registers, pc and npc are set in netbsd
 }
 
 void

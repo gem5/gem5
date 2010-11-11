@@ -37,9 +37,9 @@
 
 namespace SparcISA {
 
-//This contains all of the common elements of a SPARC Linux process which
-//are not shared by other operating systems. The rest come from the common
-//SPARC process class.
+// This contains all of the common elements of a SPARC Linux process which
+// are not shared by other operating systems. The rest come from the common
+// SPARC process class.
 class SparcLinuxProcess
 {
   public:
@@ -64,7 +64,8 @@ class Sparc32LinuxProcess : public SparcLinuxProcess, public Sparc32LiveProcess
     /// Constructor.
     Sparc32LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
 
-    SyscallDesc* getDesc(int callnum)
+    SyscallDesc*
+    getDesc(int callnum)
     {
         return SparcLinuxProcess::getDesc32(callnum);
     }
@@ -79,7 +80,8 @@ class Sparc64LinuxProcess : public SparcLinuxProcess, public Sparc64LiveProcess
     /// Constructor.
     Sparc64LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
 
-    SyscallDesc* getDesc(int callnum)
+    SyscallDesc*
+    getDesc(int callnum)
     {
         return SparcLinuxProcess::getDesc(callnum);
     }

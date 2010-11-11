@@ -142,7 +142,7 @@ output header {{
 
 def template SetHiDecode {{
     {
-        if(RD == 0 && IMM22 == 0)
+        if (RD == 0 && IMM22 == 0)
             return (SparcStaticInst *)(new Nop("nop", machInst, No_OpClass));
         else
             return (SparcStaticInst *)(new %(class_name)s(machInst));
@@ -151,11 +151,11 @@ def template SetHiDecode {{
 
 output decoder {{
 
-        bool IntOp::printPseudoOps(std::ostream &os, Addr pc,
+        bool
+        IntOp::printPseudoOps(std::ostream &os, Addr pc,
                 const SymbolTable *symbab) const
         {
-            if(!std::strcmp(mnemonic, "or") && _srcRegIdx[0] == 0)
-            {
+            if (!std::strcmp(mnemonic, "or") && _srcRegIdx[0] == 0) {
                 printMnemonic(os, "mov");
                 printSrcReg(os, 1);
                 ccprintf(os, ", ");
@@ -165,25 +165,21 @@ output decoder {{
             return false;
         }
 
-        bool IntOpImm::printPseudoOps(std::ostream &os, Addr pc,
+        bool
+        IntOpImm::printPseudoOps(std::ostream &os, Addr pc,
                 const SymbolTable *symbab) const
         {
-            if(!std::strcmp(mnemonic, "or"))
-            {
-                if(_numSrcRegs > 0 && _srcRegIdx[0] == 0)
-                {
-                    if(imm == 0)
+            if (!std::strcmp(mnemonic, "or")) {
+                if (_numSrcRegs > 0 && _srcRegIdx[0] == 0) {
+                    if (imm == 0) {
                         printMnemonic(os, "clr");
-                    else
-                    {
+                    } else {
                         printMnemonic(os, "mov");
                         ccprintf(os, " 0x%x, ", imm);
                     }
                     printDestReg(os, 0);
                     return true;
-                }
-                else if(imm == 0)
-                {
+                } else if (imm == 0) {
                     printMnemonic(os, "mov");
                     printSrcReg(os, 0);
                     ccprintf(os, ", ");
@@ -194,41 +190,42 @@ output decoder {{
             return false;
         }
 
-        std::string IntOp::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
+        std::string
+        IntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream response;
 
-            if(printPseudoOps(response, pc, symtab))
+            if (printPseudoOps(response, pc, symtab))
                 return response.str();
             printMnemonic(response, mnemonic);
             printRegArray(response, _srcRegIdx, _numSrcRegs);
-            if(_numDestRegs && _numSrcRegs)
+            if (_numDestRegs && _numSrcRegs)
                 response << ", ";
             printDestReg(response, 0);
             return response.str();
         }
 
-        std::string IntOpImm::generateDisassembly(Addr pc,
+        std::string
+        IntOpImm::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
             std::stringstream response;
 
-            if(printPseudoOps(response, pc, symtab))
+            if (printPseudoOps(response, pc, symtab))
                 return response.str();
             printMnemonic(response, mnemonic);
             printRegArray(response, _srcRegIdx, _numSrcRegs);
-            if(_numSrcRegs > 0)
+            if (_numSrcRegs > 0)
                 response << ", ";
             ccprintf(response, "0x%x", imm);
-            if(_numDestRegs > 0)
+            if (_numDestRegs > 0)
                 response << ", ";
             printDestReg(response, 0);
             return response.str();
         }
 
-        std::string SetHi::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
+        std::string
+        SetHi::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream response;
 
@@ -249,9 +246,8 @@ def template IntOpExecute {{
             %(op_rd)s;
             %(code)s;
 
-            //Write the resulting state to the execution context
-            if(fault == NoFault)
-            {
+            // Write the resulting state to the execution context
+            if (fault == NoFault) {
                 %(cc_code)s;
                 %(op_wb)s;
             }

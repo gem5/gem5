@@ -55,8 +55,8 @@ output header {{
 }};
 
 output decoder {{
-        std::string Trap::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
+        std::string
+        Trap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream response;
 
@@ -71,7 +71,8 @@ output decoder {{
 }};
 
 def template TrapExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault
+        %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -83,7 +84,8 @@ def template TrapExecute {{
 }};
 
 def template FpUnimplExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault
+        %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -113,8 +115,8 @@ output header {{
             {
             }
 
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const
+            std::string
+            generateDisassembly(Addr pc,  const SymbolTable *symtab) const
             {
                 return mnemonic;
             }

@@ -35,7 +35,8 @@ def template BasicExecDeclare {{
 
 // Definitions of execute methods that panic.
 def template BasicExecPanic {{
-        Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
+        Fault
+        execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
         {
             panic("Execute method called when it shouldn't!");
             M5_DUMMY_RETURN
@@ -91,7 +92,8 @@ def template BasicConstructorWithMnemonic {{
 
 // Basic instruction class execute method template.
 def template BasicExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault
+        %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -101,8 +103,7 @@ def template BasicExecute {{
             %(op_rd)s;
             %(code)s;
 
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
             return fault;

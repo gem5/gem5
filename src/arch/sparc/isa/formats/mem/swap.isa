@@ -27,14 +27,14 @@
 // Authors: Gabe Black
 //          Ali Saidi
 
-//This template provides the execute functions for a swap
+// This template provides the execute functions for a swap
 def template SwapExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
-            //This is to support the conditional store in cas instructions.
-            //It should be optomized out in all the others
+            // This is to support the conditional store in cas instructions.
+            // It should be optomized out in all the others
             bool storeCond = true;
             Addr EA;
             %(fp_enable_check)s;
@@ -45,25 +45,21 @@ def template SwapExecute {{
             %(ea_code)s;
             DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(code)s;
             }
-            if(storeCond && fault == NoFault)
-            {
+            if (storeCond && fault == NoFault) {
                 %(EA_trunc)s
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, &mem_data);
             }
-            if(fault == NoFault)
-            {
-                    //Handle the swapping
-                    %(postacc_code)s;
+            if (fault == NoFault) {
+                // Handle the swapping
+                %(postacc_code)s;
             }
-            if(fault == NoFault)
-            {
-                    //Write the resulting state to the execution context
-                    %(op_wb)s;
+            if (fault == NoFault) {
+                // Write the resulting state to the execution context
+                %(op_wb)s;
             }
 
             return fault;
@@ -86,12 +82,10 @@ def template SwapInitiateAcc {{
             DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
 
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(code)s;
             }
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(EA_trunc)s
                 fault = xc->write((uint%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, &mem_data);
@@ -111,15 +105,13 @@ def template SwapCompleteAcc {{
 
             uint64_t mem_data = pkt->get<uint%(mem_acc_size)s_t>();
 
-            if(fault == NoFault)
-            {
-                    //Handle the swapping
-                    %(postacc_code)s;
+            if (fault == NoFault) {
+                // Handle the swapping
+                %(postacc_code)s;
             }
-            if(fault == NoFault)
-            {
-                    //Write the resulting state to the execution context
-                    %(op_wb)s;
+            if (fault == NoFault) {
+                // Write the resulting state to the execution context
+                %(op_wb)s;
             }
 
             return fault;

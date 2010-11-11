@@ -45,175 +45,175 @@ class ThreadContext;
 
 namespace SparcISA
 {
-    class ISA
-    {
-      private:
+class ISA
+{
+  private:
 
-        /* ASR Registers */
-        //uint64_t y;           // Y (used in obsolete multiplication)
-        //uint8_t ccr;          // Condition Code Register
-        uint8_t asi;            // Address Space Identifier
-        uint64_t tick;          // Hardware clock-tick counter
-        uint8_t fprs;           // Floating-Point Register State
-        uint64_t gsr;           // General Status Register
-        uint64_t softint;
-        uint64_t tick_cmpr;     // Hardware tick compare registers
-        uint64_t stick;         // Hardware clock-tick counter
-        uint64_t stick_cmpr;    // Hardware tick compare registers
+    /* ASR Registers */
+    // uint64_t y;          // Y (used in obsolete multiplication)
+    // uint8_t ccr;         // Condition Code Register
+    uint8_t asi;            // Address Space Identifier
+    uint64_t tick;          // Hardware clock-tick counter
+    uint8_t fprs;           // Floating-Point Register State
+    uint64_t gsr;           // General Status Register
+    uint64_t softint;
+    uint64_t tick_cmpr;     // Hardware tick compare registers
+    uint64_t stick;         // Hardware clock-tick counter
+    uint64_t stick_cmpr;    // Hardware tick compare registers
 
 
-        /* Privileged Registers */
-        uint64_t tpc[MaxTL];    // Trap Program Counter (value from
-                                // previous trap level)
-        uint64_t tnpc[MaxTL];   // Trap Next Program Counter (value from
-                                // previous trap level)
-        uint64_t tstate[MaxTL]; // Trap State
-        uint16_t tt[MaxTL];     // Trap Type (Type of trap which occured
-                                // on the previous level)
-        uint64_t tba;           // Trap Base Address
+    /* Privileged Registers */
+    uint64_t tpc[MaxTL];    // Trap Program Counter (value from
+                            // previous trap level)
+    uint64_t tnpc[MaxTL];   // Trap Next Program Counter (value from
+                            // previous trap level)
+    uint64_t tstate[MaxTL]; // Trap State
+    uint16_t tt[MaxTL];     // Trap Type (Type of trap which occured
+                            // on the previous level)
+    uint64_t tba;           // Trap Base Address
 
-        uint16_t pstate;        // Process State Register
-        uint8_t tl;             // Trap Level
-        uint8_t pil;            // Process Interrupt Register
-        uint8_t cwp;            // Current Window Pointer
-        //uint8_t cansave;      // Savable windows
-        //uint8_t canrestore;   // Restorable windows
-        //uint8_t cleanwin;     // Clean windows
-        //uint8_t otherwin;     // Other windows
-        //uint8_t wstate;               // Window State
-        uint8_t gl;             // Global level register
+    uint16_t pstate;        // Process State Register
+    uint8_t tl;             // Trap Level
+    uint8_t pil;            // Process Interrupt Register
+    uint8_t cwp;            // Current Window Pointer
+    // uint8_t cansave;     // Savable windows
+    // uint8_t canrestore;  // Restorable windows
+    // uint8_t cleanwin;    // Clean windows
+    // uint8_t otherwin;    // Other windows
+    // uint8_t wstate;      // Window State
+    uint8_t gl;             // Global level register
 
-        /** Hyperprivileged Registers */
-        uint64_t hpstate;       // Hyperprivileged State Register
-        uint64_t htstate[MaxTL];// Hyperprivileged Trap State Register
-        uint64_t hintp;
-        uint64_t htba;          // Hyperprivileged Trap Base Address register
-        uint64_t hstick_cmpr;   // Hardware tick compare registers
+    /** Hyperprivileged Registers */
+    uint64_t hpstate;       // Hyperprivileged State Register
+    uint64_t htstate[MaxTL];// Hyperprivileged Trap State Register
+    uint64_t hintp;
+    uint64_t htba;          // Hyperprivileged Trap Base Address register
+    uint64_t hstick_cmpr;   // Hardware tick compare registers
 
-        uint64_t strandStatusReg;// Per strand status register
+    uint64_t strandStatusReg;// Per strand status register
 
-        /** Floating point misc registers. */
-        uint64_t fsr;           // Floating-Point State Register
+    /** Floating point misc registers. */
+    uint64_t fsr;           // Floating-Point State Register
 
-        /** MMU Internal Registers */
-        uint16_t priContext;
-        uint16_t secContext;
-        uint16_t partId;
-        uint64_t lsuCtrlReg;
+    /** MMU Internal Registers */
+    uint16_t priContext;
+    uint16_t secContext;
+    uint16_t partId;
+    uint64_t lsuCtrlReg;
 
-        uint64_t scratchPad[8];
+    uint64_t scratchPad[8];
 
-        uint64_t cpu_mondo_head;
-        uint64_t cpu_mondo_tail;
-        uint64_t dev_mondo_head;
-        uint64_t dev_mondo_tail;
-        uint64_t res_error_head;
-        uint64_t res_error_tail;
-        uint64_t nres_error_head;
-        uint64_t nres_error_tail;
+    uint64_t cpu_mondo_head;
+    uint64_t cpu_mondo_tail;
+    uint64_t dev_mondo_head;
+    uint64_t dev_mondo_tail;
+    uint64_t res_error_head;
+    uint64_t res_error_tail;
+    uint64_t nres_error_head;
+    uint64_t nres_error_tail;
 
-        // These need to check the int_dis field and if 0 then
-        // set appropriate bit in softint and checkinterrutps on the cpu
+    // These need to check the int_dis field and if 0 then
+    // set appropriate bit in softint and checkinterrutps on the cpu
 #if FULL_SYSTEM
-        void  setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc);
-        MiscReg readFSReg(int miscReg, ThreadContext * tc);
+    void  setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc);
+    MiscReg readFSReg(int miscReg, ThreadContext * tc);
 
-        // Update interrupt state on softint or pil change
-        void checkSoftInt(ThreadContext *tc);
+    // Update interrupt state on softint or pil change
+    void checkSoftInt(ThreadContext *tc);
 
-        /** Process a tick compare event and generate an interrupt on the cpu if
-         * appropriate. */
-        void processTickCompare(ThreadContext *tc);
-        void processSTickCompare(ThreadContext *tc);
-        void processHSTickCompare(ThreadContext *tc);
+    /** Process a tick compare event and generate an interrupt on the cpu if
+     * appropriate. */
+    void processTickCompare(ThreadContext *tc);
+    void processSTickCompare(ThreadContext *tc);
+    void processHSTickCompare(ThreadContext *tc);
 
-        typedef CpuEventWrapper<ISA,
-                &ISA::processTickCompare> TickCompareEvent;
-        TickCompareEvent *tickCompare;
+    typedef CpuEventWrapper<ISA,
+            &ISA::processTickCompare> TickCompareEvent;
+    TickCompareEvent *tickCompare;
 
-        typedef CpuEventWrapper<ISA,
-                &ISA::processSTickCompare> STickCompareEvent;
-        STickCompareEvent *sTickCompare;
+    typedef CpuEventWrapper<ISA,
+            &ISA::processSTickCompare> STickCompareEvent;
+    STickCompareEvent *sTickCompare;
 
-        typedef CpuEventWrapper<ISA,
-                &ISA::processHSTickCompare> HSTickCompareEvent;
-        HSTickCompareEvent *hSTickCompare;
+    typedef CpuEventWrapper<ISA,
+            &ISA::processHSTickCompare> HSTickCompareEvent;
+    HSTickCompareEvent *hSTickCompare;
 #endif
 
-        static const int NumGlobalRegs = 8;
-        static const int NumWindowedRegs = 24;
-        static const int WindowOverlap = 8;
+    static const int NumGlobalRegs = 8;
+    static const int NumWindowedRegs = 24;
+    static const int WindowOverlap = 8;
 
-        static const int TotalGlobals = (MaxGL + 1) * NumGlobalRegs;
-        static const int RegsPerWindow = NumWindowedRegs - WindowOverlap;
-        static const int TotalWindowed = NWindows * RegsPerWindow;
+    static const int TotalGlobals = (MaxGL + 1) * NumGlobalRegs;
+    static const int RegsPerWindow = NumWindowedRegs - WindowOverlap;
+    static const int TotalWindowed = NWindows * RegsPerWindow;
 
-        enum InstIntRegOffsets {
-            CurrentGlobalsOffset = 0,
-            CurrentWindowOffset = CurrentGlobalsOffset + NumGlobalRegs,
-            MicroIntOffset = CurrentWindowOffset + NumWindowedRegs,
-            NextGlobalsOffset = MicroIntOffset + NumMicroIntRegs,
-            NextWindowOffset = NextGlobalsOffset + NumGlobalRegs,
-            PreviousGlobalsOffset = NextWindowOffset + NumWindowedRegs,
-            PreviousWindowOffset = PreviousGlobalsOffset + NumGlobalRegs,
-            TotalInstIntRegs = PreviousWindowOffset + NumWindowedRegs
-        };
-
-        RegIndex intRegMap[TotalInstIntRegs];
-        void installWindow(int cwp, int offset);
-        void installGlobals(int gl, int offset);
-        void reloadRegMap();
-
-      public:
-
-        void clear();
-
-        void serialize(EventManager *em, std::ostream & os);
-
-        void unserialize(EventManager *em, Checkpoint *cp,
-                         const std::string & section);
-
-      protected:
-
-        bool isHyperPriv() { return (hpstate & (1 << 2)); }
-        bool isPriv() { return (hpstate & (1 << 2)) || (pstate & (1 << 2)); }
-        bool isNonPriv() { return !isPriv(); }
-
-      public:
-
-        MiscReg readMiscRegNoEffect(int miscReg);
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
-
-        void setMiscRegNoEffect(int miscReg, const MiscReg val);
-        void setMiscReg(int miscReg, const MiscReg val,
-                ThreadContext *tc);
-
-        int
-        flattenIntIndex(int reg)
-        {
-            assert(reg < TotalInstIntRegs);
-            RegIndex flatIndex = intRegMap[reg];
-            assert(flatIndex < NumIntRegs);
-            return flatIndex;
-        }
-
-        int
-        flattenFloatIndex(int reg)
-        {
-            return reg;
-        }
-
-        ISA()
-        {
-#if FULL_SYSTEM
-            tickCompare = NULL;
-            sTickCompare = NULL;
-            hSTickCompare = NULL;
-#endif
-
-            clear();
-        }
+    enum InstIntRegOffsets {
+        CurrentGlobalsOffset = 0,
+        CurrentWindowOffset = CurrentGlobalsOffset + NumGlobalRegs,
+        MicroIntOffset = CurrentWindowOffset + NumWindowedRegs,
+        NextGlobalsOffset = MicroIntOffset + NumMicroIntRegs,
+        NextWindowOffset = NextGlobalsOffset + NumGlobalRegs,
+        PreviousGlobalsOffset = NextWindowOffset + NumWindowedRegs,
+        PreviousWindowOffset = PreviousGlobalsOffset + NumGlobalRegs,
+        TotalInstIntRegs = PreviousWindowOffset + NumWindowedRegs
     };
+
+    RegIndex intRegMap[TotalInstIntRegs];
+    void installWindow(int cwp, int offset);
+    void installGlobals(int gl, int offset);
+    void reloadRegMap();
+
+  public:
+
+    void clear();
+
+    void serialize(EventManager *em, std::ostream & os);
+
+    void unserialize(EventManager *em, Checkpoint *cp,
+                     const std::string & section);
+
+  protected:
+
+    bool isHyperPriv() { return (hpstate & (1 << 2)); }
+    bool isPriv() { return (hpstate & (1 << 2)) || (pstate & (1 << 2)); }
+    bool isNonPriv() { return !isPriv(); }
+
+  public:
+
+    MiscReg readMiscRegNoEffect(int miscReg);
+    MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+
+    void setMiscRegNoEffect(int miscReg, const MiscReg val);
+    void setMiscReg(int miscReg, const MiscReg val,
+            ThreadContext *tc);
+
+    int
+    flattenIntIndex(int reg)
+    {
+        assert(reg < TotalInstIntRegs);
+        RegIndex flatIndex = intRegMap[reg];
+        assert(flatIndex < NumIntRegs);
+        return flatIndex;
+    }
+
+    int
+    flattenFloatIndex(int reg)
+    {
+        return reg;
+    }
+
+    ISA()
+    {
+#if FULL_SYSTEM
+        tickCompare = NULL;
+        sTickCompare = NULL;
+        hSTickCompare = NULL;
+#endif
+
+        clear();
+    }
+};
 }
 
 #endif

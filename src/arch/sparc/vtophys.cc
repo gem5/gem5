@@ -71,14 +71,14 @@ vtophys(ThreadContext *tc, Addr addr)
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
     bool hpriv = bits(tlbdata,0,0);
-    //bool priv = bits(tlbdata,2,2);
+    // bool priv = bits(tlbdata,2,2);
     bool addr_mask = bits(tlbdata,3,3);
     bool data_real = !bits(tlbdata,5,5);
     bool inst_real = !bits(tlbdata,4,4);
     bool ctx_zero  = bits(tlbdata,18,16) > 0;
     int part_id = bits(tlbdata,15,8);
     int pri_context = bits(tlbdata,47,32);
-    //int sec_context = bits(tlbdata,63,48);
+    // int sec_context = bits(tlbdata,63,48);
 
     FunctionalPort *mem = tc->getPhysPort();
     TLB* itb = tc->getITBPtr();

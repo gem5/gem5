@@ -63,7 +63,7 @@ ISA::checkSoftInt(ThreadContext *tc)
     }
 }
 
-//These functions map register indices to names
+// These functions map register indices to names
 static inline string
 getMiscRegName(RegIndex index)
 {
@@ -267,7 +267,7 @@ ISA::readFSReg(int miscReg, ThreadContext * tc)
         return ULL(0x3e) << 48 |
                ULL(0x23) << 32 |
                ULL(0x20) << 24 |
-                   //MaxGL << 16 | XXX For some reason legion doesn't set GL
+                   // MaxGL << 16 | XXX For some reason legion doesn't set GL
                    MaxTL << 8  |
            (NWindows -1) << 0;
 
@@ -334,8 +334,9 @@ ISA::processSTickCompare(ThreadContext *tc)
         if (!(tc->readMiscRegNoEffect(MISCREG_STICK_CMPR) & (ULL(1) << 63))) {
             setMiscReg(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
-    } else
+    } else {
         cpu->schedule(sTickCompare, curTick + ticks * cpu->ticks(1));
+    }
 }
 
 void
@@ -361,7 +362,8 @@ ISA::processHSTickCompare(ThreadContext *tc)
             setMiscReg(MISCREG_HINTP, 1, tc);
         }
         // Need to do something to cause interrupt to happen here !!! @todo
-    } else
+    } else {
         cpu->schedule(hSTickCompare, curTick + ticks * cpu->ticks(1));
+    }
 }
 

@@ -82,11 +82,13 @@ class SparcFault : public SparcFaultBase
   protected:
     static FaultVals vals;
   public:
-    FaultName name() const {return vals.name;}
-    TrapType trapType() {return vals.trapType;}
-    FaultPriority priority() {return vals.priority;}
-    FaultStat & countStat() {return vals.count;}
-    PrivilegeLevel getNextLevel(PrivilegeLevel current)
+    FaultName name() const { return vals.name; }
+    TrapType trapType() { return vals.trapType; }
+    FaultPriority priority() { return vals.priority; }
+    FaultStat & countStat() { return vals.count; }
+
+    PrivilegeLevel
+    getNextLevel(PrivilegeLevel current)
     {
         return vals.nextPrivilegeLevel[current];
     }
@@ -112,7 +114,7 @@ class StoreError : public SparcFault<StoreError> {};
 
 class InstructionAccessException : public SparcFault<InstructionAccessException> {};
 
-//class InstructionAccessMMUMiss : public SparcFault<InstructionAccessMMUMiss> {};
+// class InstructionAccessMMUMiss : public SparcFault<InstructionAccessMMUMiss> {};
 
 class InstructionAccessError : public SparcFault<InstructionAccessError> {};
 
@@ -120,9 +122,9 @@ class IllegalInstruction : public SparcFault<IllegalInstruction> {};
 
 class PrivilegedOpcode : public SparcFault<PrivilegedOpcode> {};
 
-//class UnimplementedLDD : public SparcFault<UnimplementedLDD> {};
+// class UnimplementedLDD : public SparcFault<UnimplementedLDD> {};
 
-//class UnimplementedSTD : public SparcFault<UnimplementedSTD> {};
+// class UnimplementedSTD : public SparcFault<UnimplementedSTD> {};
 
 class FpDisabled : public SparcFault<FpDisabled> {};
 
@@ -140,16 +142,17 @@ class InternalProcessorError :
     public SparcFault<InternalProcessorError>
 {
   public:
-    bool isMachineCheckFault() const {return true;}
+    bool isMachineCheckFault() const { return true; }
 };
 
-class InstructionInvalidTSBEntry : public SparcFault<InstructionInvalidTSBEntry> {};
+class InstructionInvalidTSBEntry :
+    public SparcFault<InstructionInvalidTSBEntry> {};
 
 class DataInvalidTSBEntry : public SparcFault<DataInvalidTSBEntry> {};
 
 class DataAccessException : public SparcFault<DataAccessException> {};
 
-//class DataAccessMMUMiss : public SparcFault<DataAccessMMUMiss> {};
+// class DataAccessMMUMiss : public SparcFault<DataAccessMMUMiss> {};
 
 class DataAccessError : public SparcFault<DataAccessError> {};
 
@@ -159,7 +162,7 @@ class MemAddressNotAligned :
     public SparcFault<MemAddressNotAligned>
 {
   public:
-    bool isAlignmentFault() const {return true;}
+    bool isAlignmentFault() const { return true; }
 };
 
 class LDDFMemAddressNotAligned : public SparcFault<LDDFMemAddressNotAligned> {};
@@ -177,7 +180,7 @@ class InstructionRealTranslationMiss :
 
 class DataRealTranslationMiss : public SparcFault<DataRealTranslationMiss> {};
 
-//class AsyncDataError : public SparcFault<AsyncDataError> {};
+// class AsyncDataError : public SparcFault<AsyncDataError> {};
 
 template <class T>
 class EnumeratedFault : public SparcFault<T>
@@ -186,14 +189,14 @@ class EnumeratedFault : public SparcFault<T>
     uint32_t _n;
   public:
     EnumeratedFault(uint32_t n) : SparcFault<T>(), _n(n) {}
-    TrapType trapType() {return SparcFault<T>::trapType() + _n;}
+    TrapType trapType() { return SparcFault<T>::trapType() + _n; }
 };
 
 class InterruptLevelN : public EnumeratedFault<InterruptLevelN>
 {
   public:
     InterruptLevelN(uint32_t n) : EnumeratedFault<InterruptLevelN>(n) {;}
-    FaultPriority priority() {return 3200 - _n*100;}
+    FaultPriority priority() { return 3200 - _n*100; }
 };
 
 class HstickMatch : public SparcFault<HstickMatch> {};
@@ -247,7 +250,7 @@ class SpillNNormal : public EnumeratedFault<SpillNNormal>
 {
   public:
     SpillNNormal(uint32_t n) : EnumeratedFault<SpillNNormal>(n) {;}
-    //These need to be handled specially to enable spill traps in SE
+    // These need to be handled specially to enable spill traps in SE
 #if !FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -257,14 +260,16 @@ class SpillNNormal : public EnumeratedFault<SpillNNormal>
 class SpillNOther : public EnumeratedFault<SpillNOther>
 {
   public:
-    SpillNOther(uint32_t n) : EnumeratedFault<SpillNOther>(n) {;}
+    SpillNOther(uint32_t n) : EnumeratedFault<SpillNOther>(n)
+    {}
 };
 
 class FillNNormal : public EnumeratedFault<FillNNormal>
 {
   public:
-    FillNNormal(uint32_t n) : EnumeratedFault<FillNNormal>(n) {;}
-    //These need to be handled specially to enable fill traps in SE
+    FillNNormal(uint32_t n) : EnumeratedFault<FillNNormal>(n)
+    {}
+    // These need to be handled specially to enable fill traps in SE
 #if !FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -274,21 +279,24 @@ class FillNNormal : public EnumeratedFault<FillNNormal>
 class FillNOther : public EnumeratedFault<FillNOther>
 {
   public:
-    FillNOther(uint32_t n) : EnumeratedFault<FillNOther>(n) {;}
+    FillNOther(uint32_t n) : EnumeratedFault<FillNOther>(n)
+    {}
 };
 
 class TrapInstruction : public EnumeratedFault<TrapInstruction>
 {
   public:
-    TrapInstruction(uint32_t n) : EnumeratedFault<TrapInstruction>(n) {;}
-    //In SE, trap instructions are requesting services from the OS.
+    TrapInstruction(uint32_t n) : EnumeratedFault<TrapInstruction>(n)
+    {}
+    // In SE, trap instructions are requesting services from the OS.
 #if !FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-static inline Fault genMachineCheckFault()
+static inline Fault
+genMachineCheckFault()
 {
     return new InternalProcessorError;
 }

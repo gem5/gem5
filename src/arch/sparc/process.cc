@@ -62,44 +62,44 @@ SparcLiveProcess::SparcLiveProcess(LiveProcessParams * params,
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
-    //Initialize these to 0s
+    // Initialize these to 0s
     fillStart = 0;
     spillStart = 0;
 }
 
-void SparcLiveProcess::handleTrap(int trapNum, ThreadContext *tc)
+void
+SparcLiveProcess::handleTrap(int trapNum, ThreadContext *tc)
 {
     PCState pc = tc->pcState();
-    switch(trapNum)
-    {
-      case 0x01: //Software breakpoint
+    switch (trapNum) {
+      case 0x01: // Software breakpoint
         warn("Software breakpoint encountered at pc %#x.\n", pc.pc());
         break;
-      case 0x02: //Division by zero
+      case 0x02: // Division by zero
         warn("Software signaled a division by zero at pc %#x.\n", pc.pc());
         break;
-      case 0x03: //Flush window trap
+      case 0x03: // Flush window trap
         flushWindows(tc);
         break;
-      case 0x04: //Clean windows
+      case 0x04: // Clean windows
         warn("Ignoring process request for clean register "
                 "windows at pc %#x.\n", pc.pc());
         break;
-      case 0x05: //Range check
+      case 0x05: // Range check
         warn("Software signaled a range check at pc %#x.\n", pc.pc());
         break;
-      case 0x06: //Fix alignment
+      case 0x06: // Fix alignment
         warn("Ignoring process request for os assisted unaligned accesses "
                 "at pc %#x.\n", pc.pc());
         break;
-      case 0x07: //Integer overflow
+      case 0x07: // Integer overflow
         warn("Software signaled an integer overflow at pc %#x.\n", pc.pc());
         break;
-      case 0x32: //Get integer condition codes
+      case 0x32: // Get integer condition codes
         warn("Ignoring process request to get the integer condition codes "
                 "at pc %#x.\n", pc.pc());
         break;
-      case 0x33: //Set integer condition codes
+      case 0x33: // Set integer condition codes
         warn("Ignoring process request to set the integer condition codes "
                 "at pc %#x.\n", pc.pc());
         break;
@@ -114,9 +114,9 @@ SparcLiveProcess::initState()
     LiveProcess::initState();
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    //From the SPARC ABI
+    // From the SPARC ABI
 
-    //Setup default FP state
+    // Setup default FP state
     tc->setMiscRegNoEffect(MISCREG_FSR, 0);
 
     tc->setMiscRegNoEffect(MISCREG_TICK, 0);
@@ -125,32 +125,32 @@ SparcLiveProcess::initState()
      * Register window management registers
      */
 
-    //No windows contain info from other programs
-    //tc->setMiscRegNoEffect(MISCREG_OTHERWIN, 0);
+    // No windows contain info from other programs
+    // tc->setMiscRegNoEffect(MISCREG_OTHERWIN, 0);
     tc->setIntReg(NumIntArchRegs + 6, 0);
-    //There are no windows to pop
-    //tc->setMiscRegNoEffect(MISCREG_CANRESTORE, 0);
+    // There are no windows to pop
+    // tc->setMiscRegNoEffect(MISCREG_CANRESTORE, 0);
     tc->setIntReg(NumIntArchRegs + 4, 0);
-    //All windows are available to save into
-    //tc->setMiscRegNoEffect(MISCREG_CANSAVE, NWindows - 2);
+    // All windows are available to save into
+    // tc->setMiscRegNoEffect(MISCREG_CANSAVE, NWindows - 2);
     tc->setIntReg(NumIntArchRegs + 3, NWindows - 2);
-    //All windows are "clean"
-    //tc->setMiscRegNoEffect(MISCREG_CLEANWIN, NWindows);
+    // All windows are "clean"
+    // tc->setMiscRegNoEffect(MISCREG_CLEANWIN, NWindows);
     tc->setIntReg(NumIntArchRegs + 5, NWindows);
-    //Start with register window 0
+    // Start with register window 0
     tc->setMiscReg(MISCREG_CWP, 0);
-    //Always use spill and fill traps 0
-    //tc->setMiscRegNoEffect(MISCREG_WSTATE, 0);
+    // Always use spill and fill traps 0
+    // tc->setMiscRegNoEffect(MISCREG_WSTATE, 0);
     tc->setIntReg(NumIntArchRegs + 7, 0);
-    //Set the trap level to 0
+    // Set the trap level to 0
     tc->setMiscRegNoEffect(MISCREG_TL, 0);
-    //Set the ASI register to something fixed
+    // Set the ASI register to something fixed
     tc->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
 
     /*
      * T1 specific registers
      */
-    //Turn on the icache, dcache, dtb translation, and itb translation.
+    // Turn on the icache, dcache, dtb translation, and itb translation.
     tc->setMiscRegNoEffect(MISCREG_MMU_LSU_CTRL, 15);
 }
 
@@ -160,7 +160,7 @@ Sparc32LiveProcess::initState()
     SparcLiveProcess::initState();
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    //The process runs in user mode with 32 bit addresses
+    // The process runs in user mode with 32 bit addresses
     tc->setMiscReg(MISCREG_PSTATE, 0x0a);
 
     argsInit(32 / 8, VMPageSize);
@@ -172,7 +172,7 @@ Sparc64LiveProcess::initState()
     SparcLiveProcess::initState();
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    //The process runs in user mode
+    // The process runs in user mode
     tc->setMiscReg(MISCREG_PSTATE, 0x02);
 
     argsInit(sizeof(IntReg), VMPageSize);
@@ -189,13 +189,13 @@ SparcLiveProcess::argsInit(int pageSize)
     std::vector<auxv_t> auxv;
 
     string filename;
-    if(argv.size() < 1)
+    if (argv.size() < 1)
         filename = "";
     else
         filename = argv[0];
 
-    //Even for a 32 bit process, the ABI says we still need to
-    //maintain double word alignment of the stack pointer.
+    // Even for a 32 bit process, the ABI says we still need to
+    // maintain double word alignment of the stack pointer.
     uint64_t align = 16;
 
     // load object file into target memory
@@ -208,9 +208,9 @@ SparcLiveProcess::argsInit(int pageSize)
         M5_HWCAP_SPARC_SWAP = 4,
         M5_HWCAP_SPARC_MULDIV = 8,
         M5_HWCAP_SPARC_V9 = 16,
-        //This one should technically only be set
-        //if there is a cheetah or cheetah_plus tlb,
-        //but we'll use it all the time
+        // This one should technically only be set
+        // if there is a cheetah or cheetah_plus tlb,
+        // but we'll use it all the time
         M5_HWCAP_SPARC_ULTRA3 = 32
     };
 
@@ -222,17 +222,16 @@ SparcLiveProcess::argsInit(int pageSize)
         M5_HWCAP_SPARC_V9 |
         M5_HWCAP_SPARC_ULTRA3;
 
-    //Setup the auxilliary vectors. These will already have endian conversion.
-    //Auxilliary vectors are loaded only for elf formatted executables.
+    // Setup the auxilliary vectors. These will already have endian conversion.
+    // Auxilliary vectors are loaded only for elf formatted executables.
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
-    if(elfObject)
-    {
-        //Bits which describe the system hardware capabilities
+    if (elfObject) {
+        // Bits which describe the system hardware capabilities
         auxv.push_back(auxv_t(M5_AT_HWCAP, hwcap));
-        //The system page size
+        // The system page size
         auxv.push_back(auxv_t(M5_AT_PAGESZ, SparcISA::VMPageSize));
-        //Defined to be 100 in the kernel source.
-        //Frequency at which times() increments
+        // Defined to be 100 in the kernel source.
+        // Frequency at which times() increments
         auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
         // For statically linked executables, this is the virtual address of the
         // program header tables if they appear in the executable image
@@ -241,30 +240,30 @@ SparcLiveProcess::argsInit(int pageSize)
         auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
         auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
-        //This is the address of the elf "interpreter", It should be set
-        //to 0 for regular executables. It should be something else
-        //(not sure what) for dynamic libraries.
+        // This is the address of the elf "interpreter", It should be set
+        // to 0 for regular executables. It should be something else
+        // (not sure what) for dynamic libraries.
         auxv.push_back(auxv_t(M5_AT_BASE, 0));
-        //This is hardwired to 0 in the elf loading code in the kernel
+        // This is hardwired to 0 in the elf loading code in the kernel
         auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
-        //The entry point to the program
+        // The entry point to the program
         auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
-        //Different user and group IDs
+        // Different user and group IDs
         auxv.push_back(auxv_t(M5_AT_UID, uid()));
         auxv.push_back(auxv_t(M5_AT_EUID, euid()));
         auxv.push_back(auxv_t(M5_AT_GID, gid()));
         auxv.push_back(auxv_t(M5_AT_EGID, egid()));
-        //Whether to enable "secure mode" in the executable
+        // Whether to enable "secure mode" in the executable
         auxv.push_back(auxv_t(M5_AT_SECURE, 0));
     }
 
-    //Figure out how big the initial stack needs to be
+    // Figure out how big the initial stack needs to be
 
     // The unaccounted for 8 byte 0 at the top of the stack
     int sentry_size = 8;
 
-    //This is the name of the file which is present on the initial stack
-    //It's purpose is to let the user space linker examine the original file.
+    // This is the name of the file which is present on the initial stack
+    // It's purpose is to let the user space linker examine the original file.
     int file_name_size = filename.size() + 1;
 
     int env_data_size = 0;
@@ -276,7 +275,7 @@ SparcLiveProcess::argsInit(int pageSize)
         arg_data_size += argv[i].size() + 1;
     }
 
-    //The info_block.
+    // The info_block.
     int base_info_block_size =
         sentry_size + file_name_size + env_data_size + arg_data_size;
 
@@ -284,7 +283,7 @@ SparcLiveProcess::argsInit(int pageSize)
 
     int info_block_padding = info_block_size - base_info_block_size;
 
-    //Each auxilliary vector is two words
+    // Each auxilliary vector is two words
     int aux_array_size = intSize * 2 * (auxv.size() + 1);
 
     int envp_array_size = intSize * (envp.size() + 1);
@@ -293,7 +292,7 @@ SparcLiveProcess::argsInit(int pageSize)
     int argc_size = intSize;
     int window_save_size = intSize * 16;
 
-    //Figure out the size of the contents of the actual initial frame
+    // Figure out the size of the contents of the actual initial frame
     int frame_size =
         aux_array_size +
         envp_array_size +
@@ -301,8 +300,8 @@ SparcLiveProcess::argsInit(int pageSize)
         argc_size +
         window_save_size;
 
-    //There needs to be padding after the auxiliary vector data so that the
-    //very bottom of the stack is aligned properly.
+    // There needs to be padding after the auxiliary vector data so that the
+    // very bottom of the stack is aligned properly.
     int aligned_partial_size = roundUp(frame_size, align);
     int aux_padding = aligned_partial_size - frame_size;
 
@@ -354,24 +353,23 @@ SparcLiveProcess::argsInit(int pageSize)
     IntType argc = argv.size();
     IntType guestArgc = SparcISA::htog(argc);
 
-    //Write out the sentry void *
+    // Write out the sentry void *
     uint64_t sentry_NULL = 0;
     initVirtMem->writeBlob(sentry_base,
             (uint8_t*)&sentry_NULL, sentry_size);
 
-    //Write the file name
+    // Write the file name
     initVirtMem->writeString(file_name_base, filename.c_str());
 
-    //Copy the aux stuff
-    for(int x = 0; x < auxv.size(); x++)
-    {
+    // Copy the aux stuff
+    for (int x = 0; x < auxv.size(); x++) {
         initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
         initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
                 (uint8_t*)&(auxv[x].a_val), intSize);
     }
 
-    //Write out the terminating zeroed auxilliary vector
+    // Write out the terminating zeroed auxilliary vector
     const IntType zero = 0;
     initVirtMem->writeBlob(auxv_array_base + intSize * 2 * auxv.size(),
             (uint8_t*)&zero, intSize);
@@ -383,17 +381,17 @@ SparcLiveProcess::argsInit(int pageSize)
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
-    //Set up space for the trap handlers into the processes address space.
-    //Since the stack grows down and there is reserved address space abov
-    //it, we can put stuff above it and stay out of the way.
+    // Set up space for the trap handlers into the processes address space.
+    // Since the stack grows down and there is reserved address space abov
+    // it, we can put stuff above it and stay out of the way.
     fillStart = stack_base;
     spillStart = fillStart + sizeof(MachInst) * numFillInsts;
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    //Set up the thread context to start running the process
-    //assert(NumArgumentRegs >= 2);
-    //tc->setIntReg(ArgumentReg[0], argc);
-    //tc->setIntReg(ArgumentReg[1], argv_array_base);
+    // Set up the thread context to start running the process
+    // assert(NumArgumentRegs >= 2);
+    // tc->setIntReg(ArgumentReg[0], argc);
+    // tc->setIntReg(ArgumentReg[1], argv_array_base);
     tc->setIntReg(StackPointerReg, stack_min - StackBias);
 
     // %g1 is a pointer to a function that should be run at exit. Since we
@@ -402,7 +400,7 @@ SparcLiveProcess::argsInit(int pageSize)
 
     tc->pcState(objFile->entryPoint());
 
-    //Align the "stack_min" to a page boundary.
+    // Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);
 
 //    num_processes++;
@@ -440,13 +438,12 @@ void Sparc32LiveProcess::flushWindows(ThreadContext *tc)
     MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
     MiscReg origCWP = CWP;
     CWP = (CWP + Cansave + 2) % NWindows;
-    while(NWindows - 2 - Cansave != 0)
-    {
+    while (NWindows - 2 - Cansave != 0) {
         if (Otherwin) {
             panic("Otherwin non-zero.\n");
         } else {
             tc->setMiscReg(MISCREG_CWP, CWP);
-            //Do the stores
+            // Do the stores
             IntReg sp = tc->readIntReg(StackPointerReg);
             for (int index = 16; index < 32; index++) {
                 uint32_t regVal = tc->readIntReg(index);
@@ -467,7 +464,8 @@ void Sparc32LiveProcess::flushWindows(ThreadContext *tc)
     tc->setMiscReg(MISCREG_CWP, origCWP);
 }
 
-void Sparc64LiveProcess::flushWindows(ThreadContext *tc)
+void
+Sparc64LiveProcess::flushWindows(ThreadContext *tc)
 {
     IntReg Cansave = tc->readIntReg(NumIntArchRegs + 3);
     IntReg Canrestore = tc->readIntReg(NumIntArchRegs + 4);
@@ -475,13 +473,12 @@ void Sparc64LiveProcess::flushWindows(ThreadContext *tc)
     MiscReg CWP = tc->readMiscReg(MISCREG_CWP);
     MiscReg origCWP = CWP;
     CWP = (CWP + Cansave + 2) % NWindows;
-    while(NWindows - 2 - Cansave != 0)
-    {
+    while (NWindows - 2 - Cansave != 0) {
         if (Otherwin) {
             panic("Otherwin non-zero.\n");
         } else {
             tc->setMiscReg(MISCREG_CWP, CWP);
-            //Do the stores
+            // Do the stores
             IntReg sp = tc->readIntReg(StackPointerReg);
             for (int index = 16; index < 32; index++) {
                 IntReg regVal = tc->readIntReg(index);
@@ -541,7 +538,7 @@ SparcLiveProcess::setSyscallReturn(ThreadContext *tc,
         // no error, clear XCC.C
         tc->setIntReg(NumIntArchRegs + 2,
                 tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
-        //tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) & 0xEE);
+        // tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) & 0xEE);
         IntReg val = return_value.value();
         if (bits(tc->readMiscRegNoEffect(
                         SparcISA::MISCREG_PSTATE), 3, 3)) {
@@ -552,7 +549,7 @@ SparcLiveProcess::setSyscallReturn(ThreadContext *tc,
         // got an error, set XCC.C
         tc->setIntReg(NumIntArchRegs + 2,
                 tc->readIntReg(NumIntArchRegs + 2) | 0x11);
-        //tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) | 0x11);
+        // tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) | 0x11);
         IntReg val = -return_value.value();
         if (bits(tc->readMiscRegNoEffect(
                         SparcISA::MISCREG_PSTATE), 3, 3)) {

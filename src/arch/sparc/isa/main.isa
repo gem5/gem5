@@ -34,7 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////
 
-//Include the C++ include directives
+// Include the C++ include directives
 ##include "includes.isa"
 
 ////////////////////////////////////////////////////////////////////
@@ -45,17 +45,17 @@
 
 namespace SparcISA;
 
-//Include the bitfield definitions
+// Include the bitfield definitions
 ##include "bitfields.isa"
 
-//Include the operand_types and operand definitions
+// Include the operand_types and operand definitions
 ##include "operands.isa"
 
-//Include the base class for sparc instructions, and some support code
+// Include the base class for sparc instructions, and some support code
 ##include "base.isa"
 
-//Include the definitions for the instruction formats
+// Include the definitions for the instruction formats
 ##include "formats/formats.isa"
 
-//Include the decoder definition
+// Include the decoder definition
 ##include "decoder.isa"

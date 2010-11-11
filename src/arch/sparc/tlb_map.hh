@@ -46,7 +46,8 @@ class TlbMap
   public:
     typedef RangeMap::iterator iterator;
 
-    iterator find(const TlbRange &r)
+    iterator
+    find(const TlbRange &r)
     {
         iterator i;
 
@@ -79,7 +80,8 @@ class TlbMap
         return tree.end();
     }
 
-    bool intersect(const TlbRange &r)
+    bool
+    intersect(const TlbRange &r)
     {
         iterator i;
         i = find(r);
@@ -89,7 +91,8 @@ class TlbMap
     }
 
 
-    iterator insert(TlbRange &r, TlbEntry *d)
+    iterator
+    insert(TlbRange &r, TlbEntry *d)
     {
         if (intersect(r))
             return tree.end();
@@ -97,47 +100,56 @@ class TlbMap
         return tree.insert(std::make_pair<TlbRange,TlbEntry*>(r, d)).first;
     }
 
-    size_t erase(TlbRange k)
+    size_t
+    erase(TlbRange k)
     {
         return tree.erase(k);
     }
 
-    void erase(iterator p)
+    void
+    erase(iterator p)
     {
         tree.erase(p);
     }
 
-    void erase(iterator p, iterator q)
+    void
+    erase(iterator p, iterator q)
     {
         tree.erase(p,q);
     }
 
-    void clear()
+    void
+    clear()
     {
         tree.erase(tree.begin(), tree.end());
     }
 
-    iterator begin()
+    iterator
+    begin()
     {
         return tree.begin();
     }
 
-    iterator end()
+    iterator
+    end()
     {
         return tree.end();
     }
 
-    size_t size()
+    size_t
+    size()
     {
         return tree.size();
     }
 
-    bool empty()
+    bool
+    empty()
     {
         return tree.empty();
     }
 
-    void print()
+    void
+    print()
     {
         iterator i;
         i = tree.begin();

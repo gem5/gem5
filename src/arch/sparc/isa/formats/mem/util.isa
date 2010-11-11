@@ -79,21 +79,18 @@ output decoder {{
             bool store = flags[IsStore];
 
             printMnemonic(response, mnemonic);
-            if(store)
-            {
+            if (store) {
                 printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[");
-            if(_srcRegIdx[!store ? 0 : 1] != 0)
-            {
+            if (_srcRegIdx[!store ? 0 : 1] != 0) {
                 printSrcReg(response, !store ? 0 : 1);
                 ccprintf(response, " + ");
             }
             printSrcReg(response, !store ? 1 : 2);
             ccprintf(response, "]");
-            if(load)
-            {
+            if (load) {
                 ccprintf(response, ", ");
                 printReg(response, _destRegIdx[0]);
             }
@@ -109,23 +106,20 @@ output decoder {{
             bool save = flags[IsStore];
 
             printMnemonic(response, mnemonic);
-            if(save)
-            {
+            if (save) {
                 printReg(response, _srcRegIdx[0]);
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[");
-            if(_srcRegIdx[!save ? 0 : 1] != 0)
-            {
+            if (_srcRegIdx[!save ? 0 : 1] != 0) {
                 printReg(response, _srcRegIdx[!save ? 0 : 1]);
                 ccprintf(response, " + ");
             }
-            if(imm >= 0)
+            if (imm >= 0)
                 ccprintf(response, "0x%x]", imm);
             else
                 ccprintf(response, "-0x%x]", -imm);
-            if(load)
-            {
+            if (load) {
                 ccprintf(response, ", ");
                 printReg(response, _destRegIdx[0]);
             }
@@ -134,7 +128,7 @@ output decoder {{
         }
 }};
 
-//This template provides the execute functions for a load
+// This template provides the execute functions for a load
 def template LoadExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
@@ -147,19 +141,16 @@ def template LoadExecute {{
             %(ea_code)s;
             DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(EA_trunc)s
                 fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(code)s;
             }
-            if(fault == NoFault)
-            {
-                    //Write the resulting state to the execution context
-                    %(op_wb)s;
+            if (fault == NoFault) {
+                // Write the resulting state to the execution context
+                %(op_wb)s;
             }
 
             return fault;
@@ -178,8 +169,7 @@ def template LoadInitiateAcc {{
             %(ea_code)s;
             DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(EA_trunc)s
                 fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
             }
@@ -196,22 +186,21 @@ def template LoadCompleteAcc {{
             %(op_rd)s;
             Mem = pkt->get<typeof(Mem)>();
             %(code)s;
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
             return fault;
         }
 }};
 
-//This template provides the execute functions for a store
+// This template provides the execute functions for a store
 def template StoreExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
-            //This is to support the conditional store in cas instructions.
-            //It should be optomized out in all the others
+            // This is to support the conditional store in cas instructions.
+            // It should be optomized out in all the others
             bool storeCond = true;
             Addr EA;
             %(fp_enable_check)s;
@@ -220,20 +209,17 @@ def template StoreExecute {{
             %(ea_code)s;
             DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(code)s;
             }
-            if(storeCond && fault == NoFault)
-            {
+            if (storeCond && fault == NoFault) {
                 %(EA_trunc)s
                 fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, 0);
             }
-            if(fault == NoFault)
-            {
-                    //Write the resulting state to the execution context
-                    %(op_wb)s;
+            if (fault == NoFault) {
+                // Write the resulting state to the execution context
+                %(op_wb)s;
             }
 
             return fault;
@@ -254,12 +240,10 @@ def template StoreInitiateAcc {{
             %(ea_code)s;
             DPRINTF(Sparc, "%s: The address is 0x%x\n", mnemonic, EA);
             %(fault_check)s;
-            if(fault == NoFault)
-            {
+            if (fault == NoFault) {
                 %(code)s;
             }
-            if(storeCond && fault == NoFault)
-            {
+            if (storeCond && fault == NoFault) {
                 %(EA_trunc)s
                 fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, 0);
@@ -276,17 +260,17 @@ def template StoreCompleteAcc {{
         }
 }};
 
-//This delcares the initiateAcc function in memory operations
+// This delcares the initiateAcc function in memory operations
 def template InitiateAccDeclare {{
     Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
-//This declares the completeAcc function in memory operations
+// This declares the completeAcc function in memory operations
 def template CompleteAccDeclare {{
     Fault completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
-//Here are some code snippets which check for various fault conditions
+// Here are some code snippets which check for various fault conditions
 let {{
     LoadFuncs = [LoadExecute, LoadInitiateAcc, LoadCompleteAcc]
     StoreFuncs = [StoreExecute, StoreInitiateAcc, StoreCompleteAcc]
@@ -294,15 +278,15 @@ let {{
     # The LSB can be zero, since it's really the MSB in doubles and quads
     # and we're dealing with doubles
     BlockAlignmentFaultCheck = '''
-        if(RD & 0xe)
+        if (RD & 0xe)
             fault = new IllegalInstruction;
-        else if(EA & 0x3f)
+        else if (EA & 0x3f)
             fault = new MemAddressNotAligned;
     '''
     TwinAlignmentFaultCheck = '''
-        if(RD & 0x1)
+        if (RD & 0x1)
             fault = new IllegalInstruction;
-        else if(EA & 0xf)
+        else if (EA & 0xf)
             fault = new MemAddressNotAligned;
     '''
     # XXX Need to take care of pstate.hpriv as well. The lower ASIs
@@ -310,10 +294,10 @@ let {{
     # those that are only available in hpriv
     AlternateASIPrivFaultCheck = '''
         if ((!bits(Pstate,2,2) && !bits(Hpstate,2,2) &&
-             !AsiIsUnPriv((ASI)EXT_ASI)) ||
-            (!bits(Hpstate,2,2) && AsiIsHPriv((ASI)EXT_ASI)))
+             !asiIsUnPriv((ASI)EXT_ASI)) ||
+            (!bits(Hpstate,2,2) && asiIsHPriv((ASI)EXT_ASI)))
             fault = new PrivilegedAction;
-        else if (AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
+        else if (asiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
             fault = new PrivilegedAction;
     '''
 
@@ -324,18 +308,18 @@ let {{
     '''
 }};
 
-//A simple function to generate the name of the macro op of a certain
-//instruction at a certain micropc
+// A simple function to generate the name of the macro op of a certain
+// instruction at a certain micropc
 let {{
     def makeMicroName(name, microPc):
             return name + "::" + name + "_" + str(microPc)
 }};
 
-//This function properly generates the execute functions for one of the
-//templates above. This is needed because in one case, ea computation,
-//fault checks and the actual code all occur in the same function,
-//and in the other they're distributed across two. Also note that for
-//execute functions, the name of the base class doesn't matter.
+// This function properly generates the execute functions for one of the
+// templates above. This is needed because in one case, ea computation,
+// fault checks and the actual code all occur in the same function,
+// and in the other they're distributed across two. Also note that for
+// execute functions, the name of the base class doesn't matter.
 let {{
     def doSplitExecute(execute, name, Name, asi, opt_flags, microParam):
         microParam["asi_val"] = asi;

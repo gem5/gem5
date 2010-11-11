@@ -119,7 +119,8 @@ output header {{
 
         bool passesCondition(uint32_t codes, uint32_t condition);
 
-        inline int64_t sign_ext(uint64_t data, int origWidth)
+        inline int64_t
+        sign_ext(uint64_t data, int origWidth)
         {
             int shiftAmount = 64 - origWidth;
             return (((int64_t)data) << shiftAmount) >> shiftAmount;
@@ -130,22 +131,22 @@ output decoder {{
 
         const char *CondTestAbbrev[] =
         {
-            "nev", //Never
-            "e", //Equal
-            "le", //Less or Equal
-            "l", //Less
-            "leu", //Less or Equal Unsigned
-            "c", //Carry set
-            "n", //Negative
-            "o", //Overflow set
-            "a", //Always
-            "ne", //Not Equal
-            "g", //Greater
-            "ge", //Greater or Equal
-            "gu", //Greater Unsigned
-            "cc", //Carry clear
-            "p", //Positive
-            "oc" //Overflow Clear
+            "nev", // Never
+            "e", // Equal
+            "le", // Less or Equal
+            "l", // Less
+            "leu", // Less or Equal Unsigned
+            "c", // Carry set
+            "n", // Negative
+            "o", // Overflow set
+            "a", // Always
+            "ne", // Not Equal
+            "g", // Greater
+            "ge", // Greater or Equal
+            "gu", // Greater Unsigned
+            "cc", // Carry clear
+            "p", // Positive
+            "oc" // Overflow Clear
         };
 }};
 
@@ -252,11 +253,10 @@ output decoder {{
         void SparcStaticInst::printRegArray(std::ostream &os,
             const RegIndex indexArray[], int num) const
         {
-            if(num <= 0)
+            if (num <= 0)
                 return;
             printReg(os, indexArray[0]);
-            for(int x = 1; x < num; x++)
-            {
+            for (int x = 1; x < num; x++) {
                 os << ", ";
                 printReg(os, indexArray[x]);
             }
@@ -271,14 +271,14 @@ output decoder {{
         void
         SparcStaticInst::printSrcReg(std::ostream &os, int reg) const
         {
-            if(_numSrcRegs > reg)
+            if (_numSrcRegs > reg)
                 printReg(os, _srcRegIdx[reg]);
         }
 
         void
         SparcStaticInst::printDestReg(std::ostream &os, int reg) const
         {
-            if(_numDestRegs > reg)
+            if (_numDestRegs > reg)
                 printReg(os, _destRegIdx[reg]);
         }
 
@@ -291,25 +291,25 @@ output decoder {{
             const int MaxInput = 32;
             const int MaxMicroReg = 40;
             if (reg < FP_Base_DepTag) {
-                //If we used a register from the next or previous window,
-                //take out the offset.
+                // If we used a register from the next or previous window,
+                // take out the offset.
                 while (reg >= MaxMicroReg)
                     reg -= MaxMicroReg;
                 if (reg == FramePointerReg)
                     ccprintf(os, "%%fp");
                 else if (reg == StackPointerReg)
                     ccprintf(os, "%%sp");
-                else if(reg < MaxGlobal)
+                else if (reg < MaxGlobal)
                     ccprintf(os, "%%g%d", reg);
-                else if(reg < MaxOutput)
+                else if (reg < MaxOutput)
                     ccprintf(os, "%%o%d", reg - MaxGlobal);
-                else if(reg < MaxLocal)
+                else if (reg < MaxLocal)
                     ccprintf(os, "%%l%d", reg - MaxOutput);
-                else if(reg < MaxInput)
+                else if (reg < MaxInput)
                     ccprintf(os, "%%i%d", reg - MaxLocal);
-                else if(reg < MaxMicroReg)
+                else if (reg < MaxMicroReg)
                     ccprintf(os, "%%u%d", reg - MaxInput);
-                //The fake int regs that are really control regs
+                // The fake int regs that are really control regs
                 else {
                     switch (reg - MaxMicroReg) {
                       case 1:
@@ -435,8 +435,9 @@ output decoder {{
             }
         }
 
-        std::string SparcStaticInst::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+        std::string
+        SparcStaticInst::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
         {
             std::stringstream ss;
 
@@ -445,21 +446,17 @@ output decoder {{
             // just print the first two source regs... if there's
             // a third one, it's a read-modify-write dest (Rc),
             // e.g. for CMOVxx
-            if(_numSrcRegs > 0)
-            {
+            if (_numSrcRegs > 0)
                 printReg(ss, _srcRegIdx[0]);
-            }
-            if(_numSrcRegs > 1)
-            {
+            if (_numSrcRegs > 1) {
                 ss << ",";
                 printReg(ss, _srcRegIdx[1]);
             }
 
             // just print the first dest... if there's a second one,
             // it's generally implicit
-            if(_numDestRegs > 0)
-            {
-                if(_numSrcRegs > 0)
+            if (_numDestRegs > 0) {
+                if (_numSrcRegs > 0)
                     ss << ",";
                     printReg(ss, _destRegIdx[0]);
             }
@@ -467,14 +464,14 @@ output decoder {{
             return ss.str();
         }
 
-        bool passesFpCondition(uint32_t fcc, uint32_t condition)
+        bool
+        passesFpCondition(uint32_t fcc, uint32_t condition)
         {
             bool u = (fcc == 3);
             bool g = (fcc == 2);
             bool l = (fcc == 1);
             bool e = (fcc == 0);
-            switch(condition)
-            {
+            switch (condition) {
               case FAlways:
                 return 1;
               case FNever:
@@ -512,7 +509,8 @@ output decoder {{
                     "condition code %d", condition);
         }
 
-        bool passesCondition(uint32_t codes, uint32_t condition)
+        bool
+        passesCondition(uint32_t codes, uint32_t condition)
         {
             CondCodes condCodes;
             condCodes.bits =  0;
@@ -521,8 +519,7 @@ output decoder {{
             condCodes.z = codes & 0x4 ? 1 : 0;
             condCodes.n = codes & 0x8 ? 1 : 0;
 
-            switch(condition)
-            {
+            switch (condition) {
               case Always:
                 return true;
               case Never:
@@ -567,17 +564,20 @@ output exec {{
     /// @retval Full-system mode: NoFault if FP is enabled, FpDisabled
     /// if not.  Non-full-system mode: always returns NoFault.
 #if FULL_SYSTEM
-    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+    inline Fault
+    checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
         Fault fault = NoFault;	// dummy... this ipr access should not fault
         if (xc->readMiscReg(MISCREG_PSTATE) & PSTATE::pef &&
-            xc->readMiscReg(MISCREG_FPRS) & 0x4)
+            xc->readMiscReg(MISCREG_FPRS) & 0x4) {
             return NoFault;
-        else
+        } else {
             return new FpDisabled;
+        }
     }
 #else
-    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
+    inline Fault
+    checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
         return NoFault;
     }

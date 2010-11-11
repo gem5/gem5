@@ -46,7 +46,7 @@ class SparcLiveProcess : public LiveProcess
 
     const Addr StackBias;
 
-    //The locations of the fill and spill handlers
+    // The locations of the fill and spill handlers
     Addr fillStart, spillStart;
 
     SparcLiveProcess(LiveProcessParams * params,
@@ -59,14 +59,11 @@ class SparcLiveProcess : public LiveProcess
 
   public:
 
-    //Handles traps which request services from the operating system
+    // Handles traps which request services from the operating system
     virtual void handleTrap(int trapNum, ThreadContext *tc);
 
-    Addr readFillStart()
-    { return fillStart; }
-
-    Addr readSpillStart()
-    { return spillStart; }
+    Addr readFillStart() { return fillStart; }
+    Addr readSpillStart() { return spillStart; }
 
     virtual void flushWindows(ThreadContext *tc) = 0;
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);

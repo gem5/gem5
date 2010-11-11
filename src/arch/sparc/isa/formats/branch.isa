@@ -127,28 +127,29 @@ output decoder {{
 
         template class BranchNBits<30>;
 
-        std::string Branch::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
+        std::string
+        Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream response;
 
             printMnemonic(response, mnemonic);
             printRegArray(response, _srcRegIdx, _numSrcRegs);
-            if(_numDestRegs && _numSrcRegs)
+            if (_numDestRegs && _numSrcRegs)
                     response << ", ";
             printDestReg(response, 0);
 
             return response.str();
         }
 
-        std::string BranchImm13::generateDisassembly(Addr pc,
+        std::string
+        BranchImm13::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
             std::stringstream response;
 
             printMnemonic(response, mnemonic);
             printRegArray(response, _srcRegIdx, _numSrcRegs);
-            if(_numSrcRegs > 0)
+            if (_numSrcRegs > 0)
                 response << ", ";
             ccprintf(response, "0x%x", imm);
             if (_numDestRegs > 0)
@@ -158,7 +159,8 @@ output decoder {{
             return response.str();
         }
 
-        std::string BranchDisp::generateDisassembly(Addr pc,
+        std::string
+        BranchDisp::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
             std::stringstream response;
@@ -170,10 +172,10 @@ output decoder {{
             printMnemonic(response, mnemonic);
             ccprintf(response, "0x%x", target);
 
-            if(symtab && symtab->findNearestSymbol(target, symbol, symbolAddr))
-            {
+            if (symtab &&
+                    symtab->findNearestSymbol(target, symbol, symbolAddr)) {
                 ccprintf(response, " <%s", symbol);
-                if(symbolAddr != target)
+                if (symbolAddr != target)
                     ccprintf(response, "+%d>", target - symbolAddr);
                 else
                     ccprintf(response, ">");
@@ -187,7 +189,7 @@ def template JumpExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
-            //Attempt to execute the instruction
+            // Attempt to execute the instruction
             Fault fault = NoFault;
 
             %(op_decl)s;
@@ -196,9 +198,8 @@ def template JumpExecute {{
             PCS = PCS;
             %(code)s;
 
-            if(fault == NoFault)
-            {
-                //Write the resulting state to the execution context
+            if (fault == NoFault) {
+                // Write the resulting state to the execution context
                 %(op_wb)s;
             }
 
@@ -207,10 +208,11 @@ def template JumpExecute {{
 }};
 
 def template BranchExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault
+        %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
-            //Attempt to execute the instruction
+            // Attempt to execute the instruction
             Fault fault = NoFault;
 
             %(op_decl)s;
@@ -222,9 +224,8 @@ def template BranchExecute {{
                 %(fail)s;
             }
 
-            if(fault == NoFault)
-            {
-                //Write the resulting state to the execution context
+            if (fault == NoFault) {
+                // Write the resulting state to the execution context
                 %(op_wb)s;
             }
 

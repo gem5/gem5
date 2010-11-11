@@ -67,8 +67,7 @@ Sparc32LinuxProcess::Sparc32LinuxProcess(LiveProcessParams * params,
 
 void Sparc32LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
 {
-    switch(trapNum)
-    {
+    switch (trapNum) {
       case 0x10: //Linux 32 bit syscall trap
         tc->syscall(tc->readIntReg(1));
         break;
@@ -84,10 +83,9 @@ Sparc64LinuxProcess::Sparc64LinuxProcess(LiveProcessParams * params,
 
 void Sparc64LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
 {
-    switch(trapNum)
-    {
-      //case 0x10: //Linux 32 bit syscall trap
-      case 0x6d: //Linux 64 bit syscall trap
+    switch (trapNum) {
+      // case 0x10: // Linux 32 bit syscall trap
+      case 0x6d: // Linux 64 bit syscall trap
         tc->syscall(tc->readIntReg(1));
         break;
       default:

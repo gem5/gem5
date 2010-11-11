@@ -39,23 +39,26 @@
 class ThreadContext;
 namespace SparcISA
 {
-    class StackTrace
+
+class StackTrace
+{
+  private:
+    std::vector<Addr> stack;
+
+  public:
+    bool
+    trace(ThreadContext *tc, StaticInstPtr inst)
     {
-      private:
-        std::vector<Addr> stack;
+        panic("StackTrace::trace not implemented for SPARC.\n");
+        return false;
+    }
 
-      public:
-        bool trace(ThreadContext *tc, StaticInstPtr inst)
-        {
-            panic("StackTrace::trace not implemented for SPARC.\n");
-            return false;
-        }
+    const std::vector<Addr> &getstack() const { return stack; }
 
-        const std::vector<Addr> &getstack() const { return stack; }
+  public:
+    void dprintf() {}
+};
 
-      public:
-        void dprintf() {}
-    };
 }
 
 #endif // __ARCH_SPARC_STACKTRACE_HH__

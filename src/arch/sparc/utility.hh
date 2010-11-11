@@ -43,57 +43,56 @@
 namespace SparcISA
 {
 
-    inline PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC)
-    {
-        PCState ret = callPC;
-        ret.uEnd();
-        ret.pc(curPC.npc());
-        return ret;
-    }
+inline PCState
+buildRetPC(const PCState &curPC, const PCState &callPC)
+{
+    PCState ret = callPC;
+    ret.uEnd();
+    ret.pc(curPC.npc());
+    return ret;
+}
 
-    uint64_t
-    getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
+uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 
-    static inline bool
-    inUserMode(ThreadContext *tc)
-    {
-        return !((tc->readMiscRegNoEffect(MISCREG_PSTATE) & (1 << 2)) ||
-                 (tc->readMiscRegNoEffect(MISCREG_HPSTATE) & (1 << 2)));
-    }
+static inline bool
+inUserMode(ThreadContext *tc)
+{
+    return !((tc->readMiscRegNoEffect(MISCREG_PSTATE) & (1 << 2)) ||
+             (tc->readMiscRegNoEffect(MISCREG_HPSTATE) & (1 << 2)));
+}
 
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
+/**
+ * Function to insure ISA semantics about 0 registers.
+ * @param tc The thread context.
+ */
+template <class TC>
+void zeroRegisters(TC *tc);
 
-    void initCPU(ThreadContext *tc, int cpuId);
+void initCPU(ThreadContext *tc, int cpuId);
 
-    inline void
-    startupCPU(ThreadContext *tc, int cpuId)
-    {
+inline void
+startupCPU(ThreadContext *tc, int cpuId)
+{
 #if FULL_SYSTEM
-        // Other CPUs will get activated by IPIs
-        if (cpuId == 0)
-            tc->activate(0);
-#else
+    // Other CPUs will get activated by IPIs
+    if (cpuId == 0)
         tc->activate(0);
+#else
+    tc->activate(0);
 #endif
-    }
+}
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
+void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
-    void skipFunction(ThreadContext *tc);
+void skipFunction(ThreadContext *tc);
 
-    inline void
-    advancePC(PCState &pc, const StaticInstPtr inst)
-    {
-        inst->advancePC(pc);
-    }
+inline void
+advancePC(PCState &pc, const StaticInstPtr inst)
+{
+    inst->advancePC(pc);
+}
 
 } // namespace SparcISA
 

@@ -33,6 +33,7 @@
 
 namespace SparcISA
 {
+
 void
 TlbEntry::serialize(std::ostream &os)
 {
@@ -67,8 +68,8 @@ TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 
-int PageTableEntry::pageSizes[] = {8*1024, 64*1024, 0, 4*1024*1024, 0,
-            256*1024*1024L};
+int PageTableEntry::pageSizes[] =
+    { 8 * 1024, 64 * 1024, 0, 4 * 1024 * 1024, 0, 256 * 1024 * 1024L} ;
 
 
 }

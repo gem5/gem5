@@ -45,6 +45,7 @@
 
 namespace SparcISA
 {
+
 inline Tick
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
@@ -54,7 +55,6 @@ handleIprRead(ThreadContext *xc, Packet *pkt)
     panic("Shouldn't have a memory mapped register in SE\n");
 #endif
 }
-
 
 inline Tick
 handleIprWrite(ThreadContext *xc, Packet *pkt)

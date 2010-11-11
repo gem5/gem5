@@ -41,7 +41,7 @@ namespace SparcISA
 
 enum RegMask
 {
-        PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
+    PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
 };
 
 void
@@ -85,8 +85,8 @@ ISA::clear()
     gl = 0;
     reloadRegMap();
 
-    //y = 0;
-    //ccr = 0;
+    // y = 0;
+    // ccr = 0;
     asi = 0;
     tick = ULL(1) << 63;
     fprs = 0;
@@ -103,18 +103,18 @@ ISA::clear()
     pstate = 0;
     tl = 0;
     pil = 0;
-    //cansave = 0;
-    //canrestore = 0;
-    //cleanwin = 0;
-    //otherwin = 0;
-    //wstate = 0;
-    //In a T1, bit 11 is apparently always 1
+    // cansave = 0;
+    // canrestore = 0;
+    // cleanwin = 0;
+    // otherwin = 0;
+    // wstate = 0;
+    // In a T1, bit 11 is apparently always 1
     hpstate = (1 << 11);
     memset(htstate, 0, sizeof(htstate));
     hintp = 0;
     htba = 0;
     hstick_cmpr = 0;
-    //This is set this way in Legion for some reason
+    // This is set this way in Legion for some reason
     strandStatusReg = 0x50000;
     fsr = 0;
 
@@ -175,11 +175,11 @@ ISA::readMiscRegNoEffect(int miscReg)
   }
 
     switch (miscReg) {
-      //case MISCREG_TLB_DATA:
+      // case MISCREG_TLB_DATA:
       //  [original contents see above]
-      //case MISCREG_Y:
+      // case MISCREG_Y:
       //  return y;
-      //case MISCREG_CCR:
+      // case MISCREG_CCR:
       //  return ccr;
       case MISCREG_ASI:
         return asi;
@@ -221,21 +221,21 @@ ISA::readMiscRegNoEffect(int miscReg)
         return tl;
       case MISCREG_PIL:
         return pil;
-      //CWP, GL moved
-      //case MISCREG_CWP:
-      //  return cwp;
-      //case MISCREG_CANSAVE:
-      //  return cansave;
-      //case MISCREG_CANRESTORE:
-      //  return canrestore;
-      //case MISCREG_CLEANWIN:
-      //  return cleanwin;
-      //case MISCREG_OTHERWIN:
-      //  return otherwin;
-      //case MISCREG_WSTATE:
-      //  return wstate;
-      //case MISCREG_GL:
-      //  return gl;
+      // CWP, GL moved
+      // case MISCREG_CWP:
+      //   return cwp;
+      // case MISCREG_CANSAVE:
+      //   return cansave;
+      // case MISCREG_CANRESTORE:
+      //   return canrestore;
+      // case MISCREG_CLEANWIN:
+      //   return cleanwin;
+      // case MISCREG_OTHERWIN:
+      //   return otherwin;
+      // case MISCREG_WSTATE:
+      //   return wstate;
+      // case MISCREG_GL:
+      //   return gl;
 
         /** Hyper privileged registers */
       case MISCREG_HPSTATE:
@@ -349,10 +349,10 @@ ISA::readMiscReg(int miscReg, ThreadContext * tc)
         return readFSReg(miscReg, tc);
 #else
       case MISCREG_HPSTATE:
-        //HPSTATE is special because because sometimes in privilege
-        //checks for instructions it will read HPSTATE to make sure
-        //the priv. level is ok So, we'll just have to tell it it
-        //isn't, instead of panicing.
+        // HPSTATE is special because because sometimes in privilege
+        // checks for instructions it will read HPSTATE to make sure
+        // the priv. level is ok So, we'll just have to tell it it
+        // isn't, instead of panicing.
         return 0;
 
       panic("Accessing Fullsystem register %d in SE mode\n", miscReg);
@@ -557,10 +557,10 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
         DPRINTF(Timer, "Writing TICK=%#X\n", val);
         break;
       case MISCREG_FPRS:
-        //Configure the fpu based on the fprs
+        // Configure the fpu based on the fprs
         break;
       case MISCREG_PCR:
-        //Set up performance counting based on pcr value
+        // Set up performance counting based on pcr value
         break;
       case MISCREG_PSTATE:
         pstate = val & PSTATE_MASK;
@@ -614,8 +614,8 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
         return;
 #else
       case MISCREG_HPSTATE:
-        //HPSTATE is special because normal trap processing saves HPSTATE when
-        //it goes into a trap, and restores it when it returns.
+        // HPSTATE is special because normal trap processing saves HPSTATE when
+        // it goes into a trap, and restores it when it returns.
         return;
       panic("Accessing Fullsystem register %d to %#x in SE mode\n",
               miscReg, val);

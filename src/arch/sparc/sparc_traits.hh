@@ -33,25 +33,23 @@
 
 namespace SparcISA
 {
-    // Max trap levels
-    const int MaxPTL = 2;
-    const int MaxTL  = 6;
-    const int MaxGL  = 3;
-    const int MaxPGL = 2;
+// Max trap levels
+const int MaxPTL = 2;
+const int MaxTL  = 6;
+const int MaxGL  = 3;
+const int MaxPGL = 2;
 
-    // Number of register windows, can legally be 3 to 32
-    const int NWindows = 8;
-    //const int NumMicroIntRegs = 1;
-    const int NumMicroIntRegs = 9;
+// Number of register windows, can legally be 3 to 32
+const int NWindows = 8;
+// const int NumMicroIntRegs = 1;
+const int NumMicroIntRegs = 9;
 
-//    const int NumRegularIntRegs = MaxGL * 8 + NWindows * 16;
-//    const int NumMicroIntRegs = 1;
-//    const int NumIntRegs =
-//      NumRegularIntRegs +
-//      NumMicroIntRegs;
-    const int NumFloatRegs = 64;
-    const int NumFloatArchRegs = NumFloatRegs;
-//    const int NumMiscRegs = 40;
+// const int NumRegularIntRegs = MaxGL * 8 + NWindows * 16;
+// const int NumMicroIntRegs = 1;
+// const int NumIntRegs = NumRegularIntRegs + NumMicroIntRegs;
+const int NumFloatRegs = 64;
+const int NumFloatArchRegs = NumFloatRegs;
+// const int NumMiscRegs = 40;
 }
 
-#endif // __ARCH_SPARC_ISA_TRAITS_HH__
+#endif // __ARCH_SPARC_SPARC_TRAITS_HH__

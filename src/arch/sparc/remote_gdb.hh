@@ -44,34 +44,36 @@ class PhysicalMemory;
 
 namespace SparcISA
 {
-    class RemoteGDB : public BaseRemoteGDB
+
+class RemoteGDB : public BaseRemoteGDB
+{
+  protected:
+    enum RegisterConstants
     {
-      protected:
-        enum RegisterConstants
-        {
-            RegG0 = 0, RegO0 = 8, RegL0 = 16, RegI0 = 24,
-            RegF0 = 32,
-            RegPc = 64, RegNpc, RegState, RegFsr, RegFprs, RegY,
-            /*RegState contains data in same format as tstate */
-            Reg32Y = 64, Reg32Psr = 65, Reg32Tbr = 66, Reg32Pc = 67,
-            Reg32Npc = 68, Reg32Fsr = 69, Reg32Csr = 70,
-            NumGDBRegs
-        };
-
-      public:
-        RemoteGDB(System *system, ThreadContext *context);
-
-        bool acc(Addr addr, size_t len);
-
-      protected:
-        void getregs();
-        void setregs();
-
-        void clearSingleStep();
-        void setSingleStep();
-
-        Addr nextBkpt;
+        RegG0 = 0, RegO0 = 8, RegL0 = 16, RegI0 = 24,
+        RegF0 = 32,
+        RegPc = 64, RegNpc, RegState, RegFsr, RegFprs, RegY,
+        /*RegState contains data in same format as tstate */
+        Reg32Y = 64, Reg32Psr = 65, Reg32Tbr = 66, Reg32Pc = 67,
+        Reg32Npc = 68, Reg32Fsr = 69, Reg32Csr = 70,
+        NumGDBRegs
     };
+
+  public:
+    RemoteGDB(System *system, ThreadContext *context);
+
+    bool acc(Addr addr, size_t len);
+
+  protected:
+    void getregs();
+    void setregs();
+
+    void clearSingleStep();
+    void setSingleStep();
+
+    Addr nextBkpt;
+};
+
 }
 
 #endif /* __ARCH_SPARC_REMOTE_GDB_H__ */

@@ -39,42 +39,43 @@
 
 namespace SparcISA
 {
-    using SparcISAInst::MaxInstSrcRegs;
-    using SparcISAInst::MaxInstDestRegs;
 
-    typedef uint64_t IntReg;
-    typedef uint64_t MiscReg;
-    typedef float FloatReg;
-    typedef uint32_t FloatRegBits;
-    typedef union
-    {
-        IntReg intReg;
-        FloatReg fpreg;
-        MiscReg ctrlreg;
-    } AnyReg;
+using SparcISAInst::MaxInstSrcRegs;
+using SparcISAInst::MaxInstDestRegs;
 
-    typedef uint16_t RegIndex;
+typedef uint64_t IntReg;
+typedef uint64_t MiscReg;
+typedef float FloatReg;
+typedef uint32_t FloatRegBits;
+typedef union
+{
+    IntReg intReg;
+    FloatReg fpreg;
+    MiscReg ctrlreg;
+} AnyReg;
 
-    // These enumerate all the registers for dependence tracking.
-    enum DependenceTags {
-        FP_Base_DepTag = 32*3+9,
-        Ctrl_Base_DepTag = FP_Base_DepTag + 64,
-        Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs
-    };
+typedef uint16_t RegIndex;
 
-    // semantically meaningful register indices
-    const int ZeroReg = 0;      // architecturally meaningful
-    // the rest of these depend on the ABI
-    const int ReturnAddressReg = 31; // post call, precall is 15
-    const int ReturnValueReg = 8;  // Post return, 24 is pre-return.
-    const int StackPointerReg = 14;
-    const int FramePointerReg = 30;
+// These enumerate all the registers for dependence tracking.
+enum DependenceTags {
+    FP_Base_DepTag = 32*3+9,
+    Ctrl_Base_DepTag = FP_Base_DepTag + 64,
+    Max_DepTag = Ctrl_Base_DepTag + NumMiscRegs
+};
 
-    // Some OS syscall use a second register (o1) to return a second value
-    const int SyscallPseudoReturnReg = 9;
+// semantically meaningful register indices
+const int ZeroReg = 0;      // architecturally meaningful
+// the rest of these depend on the ABI
+const int ReturnAddressReg = 31; // post call, precall is 15
+const int ReturnValueReg = 8;  // Post return, 24 is pre-return.
+const int StackPointerReg = 14;
+const int FramePointerReg = 30;
 
-    const int NumIntArchRegs = 32;
-    const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
+// Some OS syscall use a second register (o1) to return a second value
+const int SyscallPseudoReturnReg = 9;
+
+const int NumIntArchRegs = 32;
+const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 
 } // namespace SparcISA
 

@@ -37,21 +37,21 @@ decode OP default Unknown::unknown()
 {
     0x0: decode OP2
     {
-        //Throw an illegal instruction acception
+        // Throw an illegal instruction acception
         0x0: Trap::illtrap({{fault = new IllegalInstruction;}});
         format BranchN
         {
-            //bpcc
+            // bpcc
             0x1: decode COND2
             {
-                //Branch Always
+                // Branch Always
                 0x8: bpa(19, annul_code={{
                                  SparcISA::PCState pc = PCS;
                                  pc.npc(pc.pc() + disp);
                                  pc.nnpc(pc.npc() + 4);
                                  PCS = pc;
                              }});
-                //Branch Never
+                // Branch Never
                 0x0: bpn(19, {{;}},
                              annul_code={{
                                  SparcISA::PCState pc = PCS;
@@ -65,17 +65,17 @@ decode OP default Unknown::unknown()
                     0x2: bpccx(19, test={{passesCondition(Ccr<7:4>, COND2)}});
                 }
             }
-            //bicc
+            // bicc
             0x2: decode COND2
             {
-                //Branch Always
+                // Branch Always
                 0x8: ba(22, annul_code={{
                                 SparcISA::PCState pc = PCS;
                                 pc.npc(pc.pc() + disp);
                                 pc.nnpc(pc.npc() + 4);
                                 PCS = pc;
                             }});
-                //Branch Never
+                // Branch Never
                 0x0: bn(22, {{;}},
                             annul_code={{
                                 SparcISA::PCState pc = PCS;
@@ -98,19 +98,19 @@ decode OP default Unknown::unknown()
                 0x7: bprge(test={{Rs1.sdw >= 0}});
             }
         }
-        //SETHI (or NOP if rd == 0 and imm == 0)
+        // SETHI (or NOP if rd == 0 and imm == 0)
         0x4: SetHi::sethi({{Rd.udw = imm;}});
-        //fbpfcc
+        // fbpfcc
         0x5: decode COND2 {
             format BranchN {
-                //Branch Always
+                // Branch Always
                 0x8: fbpa(22, annul_code={{
                                   SparcISA::PCState pc = PCS;
                                   pc.npc(pc.pc() + disp);
                                   pc.nnpc(pc.npc() + 4);
                                   PCS = pc;
                               }});
-                //Branch Never
+                // Branch Never
                 0x0: fbpn(22, {{;}},
                              annul_code={{
                                  SparcISA::PCState pc = PCS;
@@ -130,17 +130,17 @@ decode OP default Unknown::unknown()
                 }
             }
         }
-        //fbfcc
+        // fbfcc
         0x6: decode COND2 {
             format BranchN {
-                //Branch Always
+                // Branch Always
                 0x8: fba(22, annul_code={{
                                  SparcISA::PCState pc = PCS;
                                  pc.npc(pc.pc() + disp);
                                  pc.nnpc(pc.npc() + 4);
                                  PCS = pc;
                              }});
-                //Branch Never
+                // Branch Never
                 0x0: fbn(22, {{;}},
                              annul_code={{
                                  SparcISA::PCState pc = PCS;
@@ -184,28 +184,33 @@ decode OP default Unknown::unknown()
             }});
             0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
             0x0D: udivx({{
-                if(Rs2_or_imm13 == 0) fault = new DivisionByZero;
-                else Rd.udw = Rs1.udw / Rs2_or_imm13;
+                if (Rs2_or_imm13 == 0)
+                    fault = new DivisionByZero;
+                else
+                    Rd.udw = Rs1.udw / Rs2_or_imm13;
             }});
             0x0E: udiv({{
-                if(Rs2_or_imm13 == 0) fault = new DivisionByZero;
-                else
-                {
+                if (Rs2_or_imm13 == 0) {
+                    fault = new DivisionByZero;
+                } else {
                     Rd.udw = ((Y << 32) | Rs1.udw<31:0>) / Rs2_or_imm13;
-                    if(Rd.udw >> 32 != 0)
+                    if (Rd.udw >> 32 != 0)
                         Rd.udw = 0xFFFFFFFF;
                 }
             }});
             0x0F: sdiv({{
-                if(Rs2_or_imm13.sdw == 0)
+                if (Rs2_or_imm13.sdw == 0) {
                     fault = new DivisionByZero;
-                else
-                {
-                    Rd.udw = ((int64_t)((Y << 32) | Rs1.sdw<31:0>)) / Rs2_or_imm13.sdw;
-                    if((int64_t)Rd.udw >= std::numeric_limits<int32_t>::max())
+                } else {
+                    Rd.udw = ((int64_t)((Y << 32) |
+                            Rs1.sdw<31:0>)) / Rs2_or_imm13.sdw;
+                    if ((int64_t)Rd.udw >=
+                        std::numeric_limits<int32_t>::max()) {
                         Rd.udw = 0x7FFFFFFF;
-                    else if((int64_t)Rd.udw <= std::numeric_limits<int32_t>::min())
+                    } else if ((int64_t)Rd.udw <=
+                        std::numeric_limits<int32_t>::min()) {
                         Rd.udw = ULL(0xFFFFFFFF80000000);
+                    }
                 }
             }});
         }
@@ -241,32 +246,38 @@ decode OP default Unknown::unknown()
                     Rd = res = op1 - op2 - Ccr<0:>;
                 }}, sub=True);
             0x1D: IntOpCcRes::udivxcc({{
-                if(Rs2_or_imm13.udw == 0) fault = new DivisionByZero;
-                else Rd = Rs1.udw / Rs2_or_imm13.udw;}});
+                if (Rs2_or_imm13.udw == 0)
+                    fault = new DivisionByZero;
+                else
+                    Rd = Rs1.udw / Rs2_or_imm13.udw;}});
             0x1E: IntOpCcRes::udivcc({{
                     uint64_t resTemp;
                     uint32_t val2 = Rs2_or_imm13.udw;
                     int32_t overflow = 0;
-                    if(val2 == 0) fault = new DivisionByZero;
-                    else
-                    {
+                    if (val2 == 0) {
+                        fault = new DivisionByZero;
+                    } else {
                         resTemp = (uint64_t)((Y << 32) | Rs1.udw<31:0>) / val2;
                         overflow = (resTemp<63:32> != 0);
-                        if(overflow) Rd = resTemp = 0xFFFFFFFF;
-                        else Rd = resTemp;
+                        if (overflow)
+                            Rd = resTemp = 0xFFFFFFFF;
+                        else
+                            Rd = resTemp;
                     }
                 }}, iv={{overflow}});
             0x1F: IntOpCcRes::sdivcc({{
                     int64_t val2 = Rs2_or_imm13.sdw<31:0>;
                     bool overflow = false, underflow = false;
-                    if(val2 == 0) fault = new DivisionByZero;
-                    else
-                    {
+                    if (val2 == 0) {
+                        fault = new DivisionByZero;
+                    } else {
                         Rd = (int64_t)((Y << 32) | Rs1.sdw<31:0>) / val2;
                         overflow = ((int64_t)Rd >= std::numeric_limits<int32_t>::max());
                         underflow = ((int64_t)Rd <= std::numeric_limits<int32_t>::min());
-                        if(overflow) Rd = 0x7FFFFFFF;
-                        else if(underflow) Rd = ULL(0xFFFFFFFF80000000);
+                        if (overflow)
+                            Rd = 0x7FFFFFFF;
+                        else if (underflow)
+                            Rd = ULL(0xFFFFFFFF80000000);
                     }
                 }}, iv={{overflow || underflow}});
             0x20: taddcc({{
@@ -288,28 +299,30 @@ decode OP default Unknown::unknown()
                     Rd = res = op1 + op2;
                     bool overflow = (op1 & mask(2)) || (op2 & mask(2)) ||
                         findOverflow(32, res, op1, op2);
-                    if(overflow) fault = new TagOverflow;
+                    if (overflow)
+                        fault = new TagOverflow;
                 }}, iv={{overflow}});
             0x23: tsubcctv({{
                     int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
                     Rd = res = op1 - op2;
                     bool overflow = (op1 & mask(2)) || (op2 & mask(2)) ||
                         findOverflow(32, res, op1, ~op2);
-                    if(overflow) fault = new TagOverflow;
+                    if (overflow)
+                        fault = new TagOverflow;
                 }}, iv={{overflow}}, sub=True);
             0x24: mulscc({{
                     int32_t savedLSB = Rs1<0:>;
 
-                    //Step 1
+                    // Step 1
                     int64_t multiplicand = Rs2_or_imm13;
-                    //Step 2
+                    // Step 2
                     int32_t partialP = Rs1<31:1> |
                         ((Ccr<3:3> ^ Ccr<1:1>) << 31);
-                    //Step 3
+                    // Step 3
                     int32_t added = Y<0:> ? multiplicand : 0;
                     int64_t res, op1 = partialP, op2 = added;
                     Rd = res = partialP + added;
-                    //Steps 4 & 5
+                    // Steps 4 & 5
                     Y = Y<31:1> | (savedLSB << 31);
                 }});
         }
@@ -329,59 +342,59 @@ decode OP default Unknown::unknown()
             }
             0x28: decode RS1 {
                 0x00: NoPriv::rdy({{Rd = Y<31:0>;}});
-                //1 should cause an illegal instruction exception
+                // 1 should cause an illegal instruction exception
                 0x02: NoPriv::rdccr({{Rd = Ccr;}});
                 0x03: NoPriv::rdasi({{Rd = Asi;}});
                 0x04: Priv::rdtick({{Rd = Tick;}}, {{Tick<63:>}});
                 0x05: NoPriv::rdpc({{
                     SparcISA::PCState pc = PCS;
-                    if(Pstate<3:>)
+                    if (Pstate<3:>)
                         Rd = (pc.pc())<31:0>;
                     else
                         Rd = pc.pc();
                 }});
                 0x06: NoPriv::rdfprs({{
-                    //Wait for all fpops to finish.
+                    // Wait for all fpops to finish.
                     Rd = Fprs;
                 }});
-                //7-14 should cause an illegal instruction exception
+                // 7-14 should cause an illegal instruction exception
                 0x0F: decode I {
                     0x0: Nop::stbar({{/*stuff*/}}, IsWriteBarrier, MemWriteOp);
                     0x1: Nop::membar({{/*stuff*/}}, IsMemBarrier, MemReadOp);
                 }
                 0x10: Priv::rdpcr({{Rd = Pcr;}});
                 0x11: Priv::rdpic({{Rd = Pic;}}, {{Pcr<0:>}});
-                //0x12 should cause an illegal instruction exception
+                // 0x12 should cause an illegal instruction exception
                 0x13: NoPriv::rdgsr({{
                        fault = checkFpEnableFault(xc);
                        if (fault)
                             return fault;
                        Rd = Gsr;
                 }});
-                //0x14-0x15 should cause an illegal instruction exception
+                // 0x14-0x15 should cause an illegal instruction exception
                 0x16: Priv::rdsoftint({{Rd = Softint;}});
                 0x17: Priv::rdtick_cmpr({{Rd = TickCmpr;}});
                 0x18: Priv::rdstick({{Rd = Stick}}, {{Stick<63:>}});
                 0x19: Priv::rdstick_cmpr({{Rd = StickCmpr;}});
                 0x1A: Priv::rdstrand_sts_reg({{
-                    if(Pstate<2:> && !Hpstate<2:>)
+                    if (Pstate<2:> && !Hpstate<2:>)
                         Rd = StrandStsReg<0:>;
                     else
                         Rd = StrandStsReg;
                 }});
-                //0x1A is supposed to be reserved, but it reads the strand
-                //status register.
-                //0x1B-0x1F should cause an illegal instruction exception
+                // 0x1A is supposed to be reserved, but it reads the strand
+                // status register.
+                // 0x1B-0x1F should cause an illegal instruction exception
             }
             0x29: decode RS1 {
                 0x00: HPriv::rdhprhpstate({{Rd = Hpstate;}});
                 0x01: HPriv::rdhprhtstate({{Rd = Htstate;}}, checkTl=true);
-                //0x02 should cause an illegal instruction exception
+                // 0x02 should cause an illegal instruction exception
                 0x03: HPriv::rdhprhintp({{Rd = Hintp;}});
-                //0x04 should cause an illegal instruction exception
+                // 0x04 should cause an illegal instruction exception
                 0x05: HPriv::rdhprhtba({{Rd = Htba;}});
                 0x06: HPriv::rdhprhver({{Rd = Hver;}});
-                //0x07-0x1E should cause an illegal instruction exception
+                // 0x07-0x1E should cause an illegal instruction exception
                 0x1F: HPriv::rdhprhstick_cmpr({{Rd = HstickCmpr;}});
             }
             0x2A: decode RS1 {
@@ -400,14 +413,13 @@ decode OP default Unknown::unknown()
                 0x0C: Priv::rdprcleanwin({{Rd = Cleanwin;}});
                 0x0D: Priv::rdprotherwin({{Rd = Otherwin;}});
                 0x0E: Priv::rdprwstate({{Rd = Wstate;}});
-                //0x0F should cause an illegal instruction exception
+                // 0x0F should cause an illegal instruction exception
                 0x10: Priv::rdprgl({{Rd = Gl;}});
-                //0x11-0x1F should cause an illegal instruction exception
+                // 0x11-0x1F should cause an illegal instruction exception
             }
             0x2B: BasicOperate::flushw({{
-                if(NWindows - 2 - Cansave != 0)
-                {
-                    if(Otherwin)
+                if (NWindows - 2 - Cansave != 0) {
+                    if (Otherwin)
                         fault = new SpillNOther(4*Wstate<5:3>);
                     else
                         fault = new SpillNNormal(4*Wstate<2:0>);
@@ -418,25 +430,25 @@ decode OP default Unknown::unknown()
                 0x0: decode CC
                 {
                     0x0: movccfcc0({{
-                        if(passesCondition(Fsr<11:10>, COND4))
+                        if (passesCondition(Fsr<11:10>, COND4))
                             Rd = Rs2_or_imm11;
                         else
                             Rd = Rd;
                     }});
                     0x1: movccfcc1({{
-                        if(passesCondition(Fsr<33:32>, COND4))
+                        if (passesCondition(Fsr<33:32>, COND4))
                             Rd = Rs2_or_imm11;
                         else
                             Rd = Rd;
                     }});
                     0x2: movccfcc2({{
-                        if(passesCondition(Fsr<35:34>, COND4))
+                        if (passesCondition(Fsr<35:34>, COND4))
                             Rd = Rs2_or_imm11;
                         else
                             Rd = Rd;
                     }});
                     0x3: movccfcc3({{
-                        if(passesCondition(Fsr<37:36>, COND4))
+                        if (passesCondition(Fsr<37:36>, COND4))
                             Rd = Rs2_or_imm11;
                         else
                             Rd = Rd;
@@ -445,13 +457,13 @@ decode OP default Unknown::unknown()
                 0x1: decode CC
                 {
                     0x0: movcci({{
-                        if(passesCondition(Ccr<3:0>, COND4))
+                        if (passesCondition(Ccr<3:0>, COND4))
                             Rd = Rs2_or_imm11;
                         else
                             Rd = Rd;
                     }});
                     0x2: movccx({{
-                        if(passesCondition(Ccr<7:4>, COND4))
+                        if (passesCondition(Ccr<7:4>, COND4))
                             Rd = Rs2_or_imm11;
                         else
                             Rd = Rd;
@@ -459,8 +471,10 @@ decode OP default Unknown::unknown()
                 }
             }
             0x2D: sdivx({{
-                if(Rs2_or_imm13.sdw == 0) fault = new DivisionByZero;
-                else Rd.sdw = Rs1.sdw / Rs2_or_imm13.sdw;
+                if (Rs2_or_imm13.sdw == 0)
+                    fault = new DivisionByZero;
+                else
+                    Rd.sdw = Rs1.sdw / Rs2_or_imm13.sdw;
             }});
             0x2E: Trap::popc({{fault = new IllegalInstruction;}});
             0x2F: decode RCOND3
@@ -474,18 +488,18 @@ decode OP default Unknown::unknown()
             }
             0x30: decode RD {
                 0x00: NoPriv::wry({{Y = (Rs1 ^ Rs2_or_imm13)<31:0>;}});
-                //0x01 should cause an illegal instruction exception
+                // 0x01 should cause an illegal instruction exception
                 0x02: NoPriv::wrccr({{Ccr = Rs1 ^ Rs2_or_imm13;}});
                 0x03: NoPriv::wrasi({{Asi = Rs1 ^ Rs2_or_imm13;}});
-                //0x04-0x05 should cause an illegal instruction exception
+                // 0x04-0x05 should cause an illegal instruction exception
                 0x06: NoPriv::wrfprs({{Fprs = Rs1 ^ Rs2_or_imm13;}});
-                //0x07-0x0E should cause an illegal instruction exception
+                // 0x07-0x0E should cause an illegal instruction exception
                 0x0F: Trap::softreset({{fault = new SoftwareInitiatedReset;}});
                 0x10: Priv::wrpcr({{Pcr = Rs1 ^ Rs2_or_imm13;}});
                 0x11: Priv::wrpic({{Pic = Rs1 ^ Rs2_or_imm13;}}, {{Pcr<0:>}});
-                //0x12 should cause an illegal instruction exception
+                // 0x12 should cause an illegal instruction exception
                 0x13: NoPriv::wrgsr({{
-                    if(Fprs<2:> == 0 || Pstate<4:> == 0)
+                    if (Fprs<2:> == 0 || Pstate<4:> == 0)
                         return new FpDisabled;
                     Gsr = Rs1 ^ Rs2_or_imm13;
                 }});
@@ -494,7 +508,7 @@ decode OP default Unknown::unknown()
                 0x16: Priv::wrsoftint({{Softint = Rs1 ^ Rs2_or_imm13;}});
                 0x17: Priv::wrtick_cmpr({{TickCmpr = Rs1 ^ Rs2_or_imm13;}});
                 0x18: NoPriv::wrstick({{
-                    if(!Hpstate<2:>)
+                    if (!Hpstate<2:>)
                         return new IllegalInstruction;
                     Stick = Rs1 ^ Rs2_or_imm13;
                 }});
@@ -502,16 +516,16 @@ decode OP default Unknown::unknown()
                 0x1A: Priv::wrstrand_sts_reg({{
                         StrandStsReg = Rs1 ^ Rs2_or_imm13;
                 }});
-                //0x1A is supposed to be reserved, but it writes the strand
-                //status register.
-                //0x1B-0x1F should cause an illegal instruction exception
+                // 0x1A is supposed to be reserved, but it writes the strand
+                // status register.
+                // 0x1B-0x1F should cause an illegal instruction exception
             }
             0x31: decode FCN {
                 0x0: Priv::saved({{
                     assert(Cansave < NWindows - 2);
                     assert(Otherwin || Canrestore);
                     Cansave = Cansave + 1;
-                    if(Otherwin == 0)
+                    if (Otherwin == 0)
                         Canrestore = Canrestore - 1;
                     else
                         Otherwin = Otherwin - 1;
@@ -520,12 +534,12 @@ decode OP default Unknown::unknown()
                     assert(Cansave || Otherwin);
                     assert(Canrestore < NWindows - 2);
                     Canrestore = Canrestore + 1;
-                    if(Otherwin == 0)
+                    if (Otherwin == 0)
                         Cansave = Cansave - 1;
                     else
                         Otherwin = Otherwin - 1;
 
-                    if(Cleanwin < NWindows - 1)
+                    if (Cleanwin < NWindows - 1)
                         Cleanwin = Cleanwin + 1;
                 }});
             }
@@ -542,7 +556,7 @@ decode OP default Unknown::unknown()
                 0x05: Priv::wrprtba({{Tba = Rs1 ^ Rs2_or_imm13;}});
                 0x06: Priv::wrprpstate({{Pstate = Rs1 ^ Rs2_or_imm13;}});
                 0x07: Priv::wrprtl({{
-                    if(Pstate<2:> && !Hpstate<2:>)
+                    if (Pstate<2:> && !Hpstate<2:>)
                         Tl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxPTL);
                     else
                         Tl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxTL);
@@ -554,24 +568,24 @@ decode OP default Unknown::unknown()
                 0x0C: Priv::wrprcleanwin({{Cleanwin = Rs1 ^ Rs2_or_imm13;}});
                 0x0D: Priv::wrprotherwin({{Otherwin = Rs1 ^ Rs2_or_imm13;}});
                 0x0E: Priv::wrprwstate({{Wstate = Rs1 ^ Rs2_or_imm13;}});
-                //0x0F should cause an illegal instruction exception
+                // 0x0F should cause an illegal instruction exception
                 0x10: Priv::wrprgl({{
-                    if(Pstate<2:> && !Hpstate<2:>)
+                    if (Pstate<2:> && !Hpstate<2:>)
                         Gl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxPGL);
                     else
                         Gl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxGL);
                 }});
-                //0x11-0x1F should cause an illegal instruction exception
+                // 0x11-0x1F should cause an illegal instruction exception
             }
             0x33: decode RD {
                 0x00: HPriv::wrhprhpstate({{Hpstate = Rs1 ^ Rs2_or_imm13;}});
                 0x01: HPriv::wrhprhtstate(
                               {{Htstate = Rs1 ^ Rs2_or_imm13;}}, checkTl=true);
-                //0x02 should cause an illegal instruction exception
+                // 0x02 should cause an illegal instruction exception
                 0x03: HPriv::wrhprhintp({{Hintp = Rs1 ^ Rs2_or_imm13;}});
-                //0x04 should cause an illegal instruction exception
+                // 0x04 should cause an illegal instruction exception
                 0x05: HPriv::wrhprhtba({{Htba = Rs1 ^ Rs2_or_imm13;}});
-                //0x06-0x01D should cause an illegal instruction exception
+                // 0x06-0x01D should cause an illegal instruction exception
                 0x1F: HPriv::wrhprhstick_cmpr({{HstickCmpr = Rs1 ^ Rs2_or_imm13;}});
             }
             0x34: decode OPF{
@@ -636,52 +650,52 @@ decode OP default Unknown::unknown()
             0x35: decode OPF{
                 format FpBasic{
                     0x01: fmovs_fcc0({{
-                        if(passesFpCondition(Fsr<11:10>, COND4))
+                        if (passesFpCondition(Fsr<11:10>, COND4))
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x02: fmovd_fcc0({{
-                        if(passesFpCondition(Fsr<11:10>, COND4))
+                        if (passesFpCondition(Fsr<11:10>, COND4))
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0x03: FpUnimpl::fmovq_fcc0();
                     0x25: fmovrsz({{
-                        if(Rs1 == 0)
+                        if (Rs1 == 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x26: fmovrdz({{
-                        if(Rs1 == 0)
+                        if (Rs1 == 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0x27: FpUnimpl::fmovrqz();
                     0x41: fmovs_fcc1({{
-                        if(passesFpCondition(Fsr<33:32>, COND4))
+                        if (passesFpCondition(Fsr<33:32>, COND4))
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x42: fmovd_fcc1({{
-                        if(passesFpCondition(Fsr<33:32>, COND4))
+                        if (passesFpCondition(Fsr<33:32>, COND4))
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0x43: FpUnimpl::fmovq_fcc1();
                     0x45: fmovrslez({{
-                        if(Rs1 <= 0)
+                        if (Rs1 <= 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x46: fmovrdlez({{
-                        if(Rs1 <= 0)
+                        if (Rs1 <= 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
@@ -689,161 +703,161 @@ decode OP default Unknown::unknown()
                     0x47: FpUnimpl::fmovrqlez();
                     0x51: fcmps({{
                           uint8_t fcc;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if (isnan(Frs1s) || isnan(Frs2s))
                               fcc = 3;
-                          else if(Frs1s < Frs2s)
+                          else if (Frs1s < Frs2s)
                               fcc = 1;
-                          else if(Frs1s > Frs2s)
+                          else if (Frs1s > Frs2s)
                               fcc = 2;
                           else
                               fcc = 0;
                           uint8_t firstbit = 10;
-                          if(FCMPCC)
+                          if (FCMPCC)
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
                     0x52: fcmpd({{
                           uint8_t fcc;
-                          if(isnan(Frs1) || isnan(Frs2))
+                          if (isnan(Frs1) || isnan(Frs2))
                               fcc = 3;
-                          else if(Frs1 < Frs2)
+                          else if (Frs1 < Frs2)
                               fcc = 1;
-                          else if(Frs1 > Frs2)
+                          else if (Frs1 > Frs2)
                               fcc = 2;
                           else
                               fcc = 0;
                           uint8_t firstbit = 10;
-                          if(FCMPCC)
+                          if (FCMPCC)
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
                     0x53: FpUnimpl::fcmpq();
                     0x55: fcmpes({{
                           uint8_t fcc = 0;
-                          if(isnan(Frs1s) || isnan(Frs2s))
+                          if (isnan(Frs1s) || isnan(Frs2s))
                               fault = new FpExceptionIEEE754;
-                          if(Frs1s < Frs2s)
+                          if (Frs1s < Frs2s)
                               fcc = 1;
-                          else if(Frs1s > Frs2s)
+                          else if (Frs1s > Frs2s)
                               fcc = 2;
                           uint8_t firstbit = 10;
-                          if(FCMPCC)
+                          if (FCMPCC)
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
                     0x56: fcmped({{
                           uint8_t fcc = 0;
-                          if(isnan(Frs1) || isnan(Frs2))
+                          if (isnan(Frs1) || isnan(Frs2))
                               fault = new FpExceptionIEEE754;
-                          if(Frs1 < Frs2)
+                          if (Frs1 < Frs2)
                               fcc = 1;
-                          else if(Frs1 > Frs2)
+                          else if (Frs1 > Frs2)
                               fcc = 2;
                           uint8_t firstbit = 10;
-                          if(FCMPCC)
+                          if (FCMPCC)
                               firstbit = FCMPCC * 2 + 30;
                           Fsr = insertBits(Fsr, firstbit +1, firstbit, fcc);
                     }});
                     0x57: FpUnimpl::fcmpeq();
                     0x65: fmovrslz({{
-                        if(Rs1 < 0)
+                        if (Rs1 < 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x66: fmovrdlz({{
-                        if(Rs1 < 0)
+                        if (Rs1 < 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0x67: FpUnimpl::fmovrqlz();
                     0x81: fmovs_fcc2({{
-                        if(passesFpCondition(Fsr<35:34>, COND4))
+                        if (passesFpCondition(Fsr<35:34>, COND4))
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x82: fmovd_fcc2({{
-                        if(passesFpCondition(Fsr<35:34>, COND4))
+                        if (passesFpCondition(Fsr<35:34>, COND4))
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0x83: FpUnimpl::fmovq_fcc2();
                     0xA5: fmovrsnz({{
-                        if(Rs1 != 0)
+                        if (Rs1 != 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0xA6: fmovrdnz({{
-                        if(Rs1 != 0)
+                        if (Rs1 != 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0xA7: FpUnimpl::fmovrqnz();
                     0xC1: fmovs_fcc3({{
-                        if(passesFpCondition(Fsr<37:36>, COND4))
+                        if (passesFpCondition(Fsr<37:36>, COND4))
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0xC2: fmovd_fcc3({{
-                        if(passesFpCondition(Fsr<37:36>, COND4))
+                        if (passesFpCondition(Fsr<37:36>, COND4))
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0xC3: FpUnimpl::fmovq_fcc3();
                     0xC5: fmovrsgz({{
-                        if(Rs1 > 0)
+                        if (Rs1 > 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0xC6: fmovrdgz({{
-                        if(Rs1 > 0)
+                        if (Rs1 > 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0xC7: FpUnimpl::fmovrqgz();
                     0xE5: fmovrsgez({{
-                        if(Rs1 >= 0)
+                        if (Rs1 >= 0)
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0xE6: fmovrdgez({{
-                        if(Rs1 >= 0)
+                        if (Rs1 >= 0)
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0xE7: FpUnimpl::fmovrqgez();
                     0x101: fmovs_icc({{
-                        if(passesCondition(Ccr<3:0>, COND4))
+                        if (passesCondition(Ccr<3:0>, COND4))
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x102: fmovd_icc({{
-                        if(passesCondition(Ccr<3:0>, COND4))
+                        if (passesCondition(Ccr<3:0>, COND4))
                             Frd = Frs2;
                         else
                             Frd = Frd;
                     }});
                     0x103: FpUnimpl::fmovq_icc();
                     0x181: fmovs_xcc({{
-                        if(passesCondition(Ccr<7:4>, COND4))
+                        if (passesCondition(Ccr<7:4>, COND4))
                             Frds = Frs2s;
                         else
                             Frds = Frds;
                     }});
                     0x182: fmovd_xcc({{
-                        if(passesCondition(Ccr<7:4>, COND4))
+                        if (passesCondition(Ccr<7:4>, COND4))
                             Frd = Frs2;
                         else
                             Frd = Frd;
@@ -852,8 +866,8 @@ decode OP default Unknown::unknown()
                     default: FailUnimpl::fpop2();
                 }
             }
-            //This used to be just impdep1, but now it's a whole bunch
-            //of instructions
+            // This used to be just impdep1, but now it's a whole bunch
+            // of instructions
             0x36: decode OPF{
                 0x00: FailUnimpl::edge8();
                 0x01: FailUnimpl::edge8n();
@@ -903,27 +917,26 @@ decode OP default Unknown::unknown()
                 0x48: BasicOperate::faligndata({{
                         uint64_t msbX = Frs1.udw;
                         uint64_t lsbX = Frs2.udw;
-                        //Some special cases need to be split out, first
-                        //because they're the most likely to be used, and
-                        //second because otherwise, we end up shifting by
-                        //greater than the width of the type being shifted,
-                        //namely 64, which produces undefined results according
-                        //to the C standard.
-                        switch(Gsr<2:0>)
-                        {
-                            case 0:
-                                Frd.udw = msbX;
-                                break;
-                            case 8:
-                                Frd.udw = lsbX;
-                                break;
-                            default:
-                                uint64_t msbShift = Gsr<2:0> * 8;
-                                uint64_t lsbShift = (8 - Gsr<2:0>) * 8;
-                                uint64_t msbMask = ((uint64_t)(-1)) >> msbShift;
-                                uint64_t lsbMask = ((uint64_t)(-1)) << lsbShift;
-                                Frd.udw = ((msbX & msbMask) << msbShift) |
-                                        ((lsbX & lsbMask) >> lsbShift);
+                        // Some special cases need to be split out, first
+                        // because they're the most likely to be used, and
+                        // second because otherwise, we end up shifting by
+                        // greater than the width of the type being shifted,
+                        // namely 64, which produces undefined results
+                        // according to the C standard.
+                        switch (Gsr<2:0>) {
+                          case 0:
+                            Frd.udw = msbX;
+                            break;
+                          case 8:
+                            Frd.udw = lsbX;
+                            break;
+                          default:
+                            uint64_t msbShift = Gsr<2:0> * 8;
+                            uint64_t lsbShift = (8 - Gsr<2:0>) * 8;
+                            uint64_t msbMask = ((uint64_t)(-1)) >> msbShift;
+                            uint64_t lsbMask = ((uint64_t)(-1)) << lsbShift;
+                            Frd.udw = ((msbX & msbMask) << msbShift) |
+                                      ((lsbX & lsbMask) >> lsbShift);
                         }
                 }});
                 0x4B: Trap::fpmerge({{fault = new IllegalInstruction;}});
@@ -1002,10 +1015,9 @@ decode OP default Unknown::unknown()
             }
             0x38: Branch::jmpl({{
                 Addr target = Rs1 + Rs2_or_imm13;
-                if(target & 0x3)
+                if (target & 0x3) {
                     fault = new MemAddressNotAligned;
-                else
-                {
+                } else {
                     SparcISA::PCState pc = PCS;
                     if (Pstate<3:>)
                         Rd = (pc.pc())<31:0>;
@@ -1017,22 +1029,17 @@ decode OP default Unknown::unknown()
             }});
             0x39: Branch::return({{
                 Addr target = Rs1 + Rs2_or_imm13;
-                if(fault == NoFault)
-                {
-                    //Check for fills which are higher priority than alignment
-                    //faults.
-                    if(Canrestore == 0)
-                    {
-                        if(Otherwin)
+                if (fault == NoFault) {
+                    // Check for fills which are higher priority than alignment
+                    // faults.
+                    if (Canrestore == 0) {
+                        if (Otherwin)
                             fault = new FillNOther(4*Wstate<5:3>);
                         else
                             fault = new FillNNormal(4*Wstate<2:0>);
-                    }
-                    //Check for alignment faults
-                    else if(target & 0x3)
+                    } else if (target & 0x3) { // Check for alignment faults
                         fault = new MemAddressNotAligned;
-                    else
-                    {
+                    } else {
                         SparcISA::PCState pc = PCS;
                         pc.nnpc(target);
                         PCS = pc;
@@ -1045,16 +1052,14 @@ decode OP default Unknown::unknown()
             0x3A: decode CC
             {
                 0x0: Trap::tcci({{
-                    if(passesCondition(Ccr<3:0>, COND2))
-                    {
+                    if (passesCondition(Ccr<3:0>, COND2)) {
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
                         fault = new TrapInstruction(lTrapNum);
                     }
                 }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
                 0x2: Trap::tccx({{
-                    if(passesCondition(Ccr<7:4>, COND2))
-                    {
+                    if (passesCondition(Ccr<7:4>, COND2)) {
                         int lTrapNum = I ? (Rs1 + SW_TRAP) : (Rs1 + Rs2);
                         DPRINTF(Sparc, "The trap number is %d\n", lTrapNum);
                         fault = new TrapInstruction(lTrapNum);
@@ -1064,19 +1069,14 @@ decode OP default Unknown::unknown()
             0x3B: Nop::flush({{/*Instruction memory flush*/}}, IsWriteBarrier,
                           MemWriteOp);
             0x3C: save({{
-                if(Cansave == 0)
-                {
-                    if(Otherwin)
+                if (Cansave == 0) {
+                    if (Otherwin)
                         fault = new SpillNOther(4*Wstate<5:3>);
                     else
                         fault = new SpillNNormal(4*Wstate<2:0>);
-                }
-                else if(Cleanwin - Canrestore == 0)
-                {
+                } else if (Cleanwin - Canrestore == 0) {
                     fault = new CleanWindow;
-                }
-                else
-                {
+                } else {
                     Cwp = (Cwp + 1) % NWindows;
                     Rd_next = Rs1 + Rs2_or_imm13;
                     Cansave = Cansave - 1;
@@ -1084,15 +1084,12 @@ decode OP default Unknown::unknown()
                 }
             }});
             0x3D: restore({{
-                if(Canrestore == 0)
-                {
-                    if(Otherwin)
+                if (Canrestore == 0) {
+                    if (Otherwin)
                         fault = new FillNOther(4*Wstate<5:3>);
                     else
                         fault = new FillNNormal(4*Wstate<2:0>);
-                }
-                else
-                {
+                } else {
                     Cwp = (Cwp - 1 + NWindows) % NWindows;
                     Rd_prev = Rs1 + Rs2_or_imm13;
                     Cansave = Cansave + 1;
@@ -1144,10 +1141,10 @@ decode OP default Unknown::unknown()
             0x05: stb({{Mem.ub = Rd.sb;}});
             0x06: sth({{Mem.uhw = Rd.shw;}});
             0x07: sttw({{
-                      //This temporary needs to be here so that the parser
-                      //will correctly identify this instruction as a store.
-                      //It's probably either the parenthesis or referencing
-                      //the member variable that throws confuses it.
+                      // This temporary needs to be here so that the parser
+                      // will correctly identify this instruction as a store.
+                      // It's probably either the parenthesis or referencing
+                      // the member variable that throws confuses it.
                       Twin32_t temp;
                       temp.a = RdLow<31:0>;
                       temp.b = RdHigh<31:0>;
@@ -1176,59 +1173,59 @@ decode OP default Unknown::unknown()
             0x11: lduba({{Rd = Mem.ub;}});
             0x12: lduha({{Rd = Mem.uhw;}});
             0x13: decode EXT_ASI {
-                //ASI_LDTD_AIUP
+                // ASI_LDTD_AIUP
                 0x22: TwinLoad::ldtx_aiup(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTD_AIUS
+                // ASI_LDTD_AIUS
                 0x23: TwinLoad::ldtx_aius(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_QUAD_LDD
+                // ASI_QUAD_LDD
                 0x24: TwinLoad::ldtx_quad_ldd(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_REAL
+                // ASI_LDTX_REAL
                 0x26: TwinLoad::ldtx_real(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_N
+                // ASI_LDTX_N
                 0x27: TwinLoad::ldtx_n(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_AIUP_L
+                // ASI_LDTX_AIUP_L
                 0x2A: TwinLoad::ldtx_aiup_l(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_AIUS_L
+                // ASI_LDTX_AIUS_L
                 0x2B: TwinLoad::ldtx_aius_l(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_L
+                // ASI_LDTX_L
                 0x2C: TwinLoad::ldtx_l(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_REAL_L
+                // ASI_LDTX_REAL_L
                 0x2E: TwinLoad::ldtx_real_l(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_N_L
+                // ASI_LDTX_N_L
                 0x2F: TwinLoad::ldtx_n_l(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_P
+                // ASI_LDTX_P
                 0xE2: TwinLoad::ldtx_p(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_S
+                // ASI_LDTX_S
                 0xE3: TwinLoad::ldtx_s(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_PL
+                // ASI_LDTX_PL
                 0xEA: TwinLoad::ldtx_pl(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
-                //ASI_LDTX_SL
+                // ASI_LDTX_SL
                 0xEB: TwinLoad::ldtx_sl(
                     {{RdLow.udw = (Mem.tudw).a;
                       RdHigh.udw = (Mem.tudw).b;}});
@@ -1242,10 +1239,10 @@ decode OP default Unknown::unknown()
             0x15: stba({{Mem.ub = Rd;}});
             0x16: stha({{Mem.uhw = Rd;}});
             0x17: sttwa({{
-                      //This temporary needs to be here so that the parser
-                      //will correctly identify this instruction as a store.
-                      //It's probably either the parenthesis or referencing
-                      //the member variable that throws confuses it.
+                      // This temporary needs to be here so that the parser
+                      // will correctly identify this instruction as a store.
+                      // It's probably either the parenthesis or referencing
+                      // the member variable that throws confuses it.
                       Twin32_t temp;
                       temp.a = RdLow<31:0>;
                       temp.b = RdHigh<31:0>;
@@ -1304,81 +1301,81 @@ decode OP default Unknown::unknown()
             0x32: ldqfa({{fault = new FpDisabled;}});
             format LoadAlt {
                 0x33: decode EXT_ASI {
-                    //ASI_NUCLEUS
+                    // ASI_NUCLEUS
                     0x04: FailUnimpl::lddfa_n();
-                    //ASI_NUCLEUS_LITTLE
+                    // ASI_NUCLEUS_LITTLE
                     0x0C: FailUnimpl::lddfa_nl();
-                    //ASI_AS_IF_USER_PRIMARY
+                    // ASI_AS_IF_USER_PRIMARY
                     0x10: FailUnimpl::lddfa_aiup();
-                    //ASI_AS_IF_USER_PRIMARY_LITTLE
+                    // ASI_AS_IF_USER_PRIMARY_LITTLE
                     0x18: FailUnimpl::lddfa_aiupl();
-                    //ASI_AS_IF_USER_SECONDARY
+                    // ASI_AS_IF_USER_SECONDARY
                     0x11: FailUnimpl::lddfa_aius();
-                    //ASI_AS_IF_USER_SECONDARY_LITTLE
+                    // ASI_AS_IF_USER_SECONDARY_LITTLE
                     0x19: FailUnimpl::lddfa_aiusl();
-                    //ASI_REAL
+                    // ASI_REAL
                     0x14: FailUnimpl::lddfa_real();
-                    //ASI_REAL_LITTLE
+                    // ASI_REAL_LITTLE
                     0x1C: FailUnimpl::lddfa_real_l();
-                    //ASI_REAL_IO
+                    // ASI_REAL_IO
                     0x15: FailUnimpl::lddfa_real_io();
-                    //ASI_REAL_IO_LITTLE
+                    // ASI_REAL_IO_LITTLE
                     0x1D: FailUnimpl::lddfa_real_io_l();
-                    //ASI_PRIMARY
+                    // ASI_PRIMARY
                     0x80: FailUnimpl::lddfa_p();
-                    //ASI_PRIMARY_LITTLE
+                    // ASI_PRIMARY_LITTLE
                     0x88: FailUnimpl::lddfa_pl();
-                    //ASI_SECONDARY
+                    // ASI_SECONDARY
                     0x81: FailUnimpl::lddfa_s();
-                    //ASI_SECONDARY_LITTLE
+                    // ASI_SECONDARY_LITTLE
                     0x89: FailUnimpl::lddfa_sl();
-                    //ASI_PRIMARY_NO_FAULT
+                    // ASI_PRIMARY_NO_FAULT
                     0x82: FailUnimpl::lddfa_pnf();
-                    //ASI_PRIMARY_NO_FAULT_LITTLE
+                    // ASI_PRIMARY_NO_FAULT_LITTLE
                     0x8A: FailUnimpl::lddfa_pnfl();
-                    //ASI_SECONDARY_NO_FAULT
+                    // ASI_SECONDARY_NO_FAULT
                     0x83: FailUnimpl::lddfa_snf();
-                    //ASI_SECONDARY_NO_FAULT_LITTLE
+                    // ASI_SECONDARY_NO_FAULT_LITTLE
                     0x8B: FailUnimpl::lddfa_snfl();
 
                     format BlockLoad {
                         // LDBLOCKF
-                        //ASI_BLOCK_AS_IF_USER_PRIMARY
+                        // ASI_BLOCK_AS_IF_USER_PRIMARY
                         0x16: FailUnimpl::ldblockf_aiup();
-                        //ASI_BLOCK_AS_IF_USER_SECONDARY
+                        // ASI_BLOCK_AS_IF_USER_SECONDARY
                         0x17: FailUnimpl::ldblockf_aius();
-                        //ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE
+                        // ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE
                         0x1E: FailUnimpl::ldblockf_aiupl();
-                        //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
+                        // ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::ldblockf_aiusl();
-                        //ASI_BLOCK_PRIMARY
+                        // ASI_BLOCK_PRIMARY
                         0xF0: ldblockf_p({{Frd_N.udw = Mem.udw;}});
-                        //ASI_BLOCK_SECONDARY
+                        // ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::ldblockf_s();
-                        //ASI_BLOCK_PRIMARY_LITTLE
+                        // ASI_BLOCK_PRIMARY_LITTLE
                         0xF8: FailUnimpl::ldblockf_pl();
-                        //ASI_BLOCK_SECONDARY_LITTLE
+                        // ASI_BLOCK_SECONDARY_LITTLE
                         0xF9: FailUnimpl::ldblockf_sl();
                     }
 
-                    //LDSHORTF
-                    //ASI_FL8_PRIMARY
+                    // LDSHORTF
+                    // ASI_FL8_PRIMARY
                     0xD0: FailUnimpl::ldshortf_8p();
-                    //ASI_FL8_SECONDARY
+                    // ASI_FL8_SECONDARY
                     0xD1: FailUnimpl::ldshortf_8s();
-                    //ASI_FL8_PRIMARY_LITTLE
+                    // ASI_FL8_PRIMARY_LITTLE
                     0xD8: FailUnimpl::ldshortf_8pl();
-                    //ASI_FL8_SECONDARY_LITTLE
+                    // ASI_FL8_SECONDARY_LITTLE
                     0xD9: FailUnimpl::ldshortf_8sl();
-                    //ASI_FL16_PRIMARY
+                    // ASI_FL16_PRIMARY
                     0xD2: FailUnimpl::ldshortf_16p();
-                    //ASI_FL16_SECONDARY
+                    // ASI_FL16_SECONDARY
                     0xD3: FailUnimpl::ldshortf_16s();
-                    //ASI_FL16_PRIMARY_LITTLE
+                    // ASI_FL16_PRIMARY_LITTLE
                     0xDA: FailUnimpl::ldshortf_16pl();
-                    //ASI_FL16_SECONDARY_LITTLE
+                    // ASI_FL16_SECONDARY_LITTLE
                     0xDB: FailUnimpl::ldshortf_16sl();
-                    //Not an ASI which is legal with lddfa
+                    // Not an ASI which is legal with lddfa
                     default: Trap::lddfa_bad_asi(
                         {{fault = new DataAccessException;}});
                 }
@@ -1387,81 +1384,81 @@ decode OP default Unknown::unknown()
             0x36: stqfa({{fault = new FpDisabled;}});
             format StoreAlt {
                 0x37: decode EXT_ASI {
-                    //ASI_NUCLEUS
+                    // ASI_NUCLEUS
                     0x04: FailUnimpl::stdfa_n();
-                    //ASI_NUCLEUS_LITTLE
+                    // ASI_NUCLEUS_LITTLE
                     0x0C: FailUnimpl::stdfa_nl();
-                    //ASI_AS_IF_USER_PRIMARY
+                    // ASI_AS_IF_USER_PRIMARY
                     0x10: FailUnimpl::stdfa_aiup();
-                    //ASI_AS_IF_USER_PRIMARY_LITTLE
+                    // ASI_AS_IF_USER_PRIMARY_LITTLE
                     0x18: FailUnimpl::stdfa_aiupl();
-                    //ASI_AS_IF_USER_SECONDARY
+                    // ASI_AS_IF_USER_SECONDARY
                     0x11: FailUnimpl::stdfa_aius();
-                    //ASI_AS_IF_USER_SECONDARY_LITTLE
+                    // ASI_AS_IF_USER_SECONDARY_LITTLE
                     0x19: FailUnimpl::stdfa_aiusl();
-                    //ASI_REAL
+                    // ASI_REAL
                     0x14: FailUnimpl::stdfa_real();
-                    //ASI_REAL_LITTLE
+                    // ASI_REAL_LITTLE
                     0x1C: FailUnimpl::stdfa_real_l();
-                    //ASI_REAL_IO
+                    // ASI_REAL_IO
                     0x15: FailUnimpl::stdfa_real_io();
-                    //ASI_REAL_IO_LITTLE
+                    // ASI_REAL_IO_LITTLE
                     0x1D: FailUnimpl::stdfa_real_io_l();
-                    //ASI_PRIMARY
+                    // ASI_PRIMARY
                     0x80: FailUnimpl::stdfa_p();
-                    //ASI_PRIMARY_LITTLE
+                    // ASI_PRIMARY_LITTLE
                     0x88: FailUnimpl::stdfa_pl();
-                    //ASI_SECONDARY
+                    // ASI_SECONDARY
                     0x81: FailUnimpl::stdfa_s();
-                    //ASI_SECONDARY_LITTLE
+                    // ASI_SECONDARY_LITTLE
                     0x89: FailUnimpl::stdfa_sl();
-                    //ASI_PRIMARY_NO_FAULT
+                    // ASI_PRIMARY_NO_FAULT
                     0x82: FailUnimpl::stdfa_pnf();
-                    //ASI_PRIMARY_NO_FAULT_LITTLE
+                    // ASI_PRIMARY_NO_FAULT_LITTLE
                     0x8A: FailUnimpl::stdfa_pnfl();
-                    //ASI_SECONDARY_NO_FAULT
+                    // ASI_SECONDARY_NO_FAULT
                     0x83: FailUnimpl::stdfa_snf();
-                    //ASI_SECONDARY_NO_FAULT_LITTLE
+                    // ASI_SECONDARY_NO_FAULT_LITTLE
                     0x8B: FailUnimpl::stdfa_snfl();
 
                     format BlockStore {
                         // STBLOCKF
-                        //ASI_BLOCK_AS_IF_USER_PRIMARY
+                        // ASI_BLOCK_AS_IF_USER_PRIMARY
                         0x16: FailUnimpl::stblockf_aiup();
-                        //ASI_BLOCK_AS_IF_USER_SECONDARY
+                        // ASI_BLOCK_AS_IF_USER_SECONDARY
                         0x17: FailUnimpl::stblockf_aius();
-                        //ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE
+                        // ASI_BLOCK_AS_IF_USER_PRIMARY_LITTLE
                         0x1E: FailUnimpl::stblockf_aiupl();
-                        //ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
+                        // ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::stblockf_aiusl();
-                        //ASI_BLOCK_PRIMARY
+                        // ASI_BLOCK_PRIMARY
                         0xF0: stblockf_p({{Mem.udw = Frd_N.udw;}});
-                        //ASI_BLOCK_SECONDARY
+                        // ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::stblockf_s();
-                        //ASI_BLOCK_PRIMARY_LITTLE
+                        // ASI_BLOCK_PRIMARY_LITTLE
                         0xF8: FailUnimpl::stblockf_pl();
-                        //ASI_BLOCK_SECONDARY_LITTLE
+                        // ASI_BLOCK_SECONDARY_LITTLE
                         0xF9: FailUnimpl::stblockf_sl();
                     }
 
-                    //STSHORTF
-                    //ASI_FL8_PRIMARY
+                    // STSHORTF
+                    // ASI_FL8_PRIMARY
                     0xD0: FailUnimpl::stshortf_8p();
-                    //ASI_FL8_SECONDARY
+                    // ASI_FL8_SECONDARY
                     0xD1: FailUnimpl::stshortf_8s();
-                    //ASI_FL8_PRIMARY_LITTLE
+                    // ASI_FL8_PRIMARY_LITTLE
                     0xD8: FailUnimpl::stshortf_8pl();
-                    //ASI_FL8_SECONDARY_LITTLE
+                    // ASI_FL8_SECONDARY_LITTLE
                     0xD9: FailUnimpl::stshortf_8sl();
-                    //ASI_FL16_PRIMARY
+                    // ASI_FL16_PRIMARY
                     0xD2: FailUnimpl::stshortf_16p();
-                    //ASI_FL16_SECONDARY
+                    // ASI_FL16_SECONDARY
                     0xD3: FailUnimpl::stshortf_16s();
-                    //ASI_FL16_PRIMARY_LITTLE
+                    // ASI_FL16_PRIMARY_LITTLE
                     0xDA: FailUnimpl::stshortf_16pl();
-                    //ASI_FL16_SECONDARY_LITTLE
+                    // ASI_FL16_SECONDARY_LITTLE
                     0xDB: FailUnimpl::stshortf_16sl();
-                    //Not an ASI which is legal with lddfa
+                    // Not an ASI which is legal with lddfa
                     default: Trap::stdfa_bad_asi(
                         {{fault = new DataAccessException;}});
                 }

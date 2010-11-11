@@ -131,21 +131,6 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
         }
     }
 
-/*
-    i = lookupTable.find(tr);
-    if (i != lookupTable.end()) {
-        i->second->valid = false;
-        if (i->second->used) {
-            i->second->used = false;
-            usedEntries--;
-        }
-        freeList.push_front(i->second);
-        DPRINTF(TLB, "TLB: Found conflicting entry %#X , deleting it\n",
-                i->second);
-        lookupTable.erase(i);
-    }
-*/
-
     if (entry != -1) {
         assert(entry < size && entry >= 0);
         new_entry = &tlb[entry];
@@ -164,13 +149,6 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
             lastReplaced = x;
             new_entry = &tlb[x];
         }
-        /*
-        for (x = 0; x < size; x++) {
-            if (!tlb[x].valid || !tlb[x].used)  {
-                new_entry = &tlb[x];
-                break;
-            }
-        }*/
     }
 
 insertAllLocked:
@@ -642,24 +620,24 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         }
     } else {
         // We need to check for priv level/asi priv
-        if (!priv && !hpriv && !AsiIsUnPriv(asi)) {
+        if (!priv && !hpriv && !asiIsUnPriv(asi)) {
             // It appears that context should be Nucleus in these cases?
             writeSfsr(vaddr, write, Nucleus, false, IllegalAsi, asi);
             return new PrivilegedAction;
         }
 
-        if (!hpriv && AsiIsHPriv(asi)) {
+        if (!hpriv && asiIsHPriv(asi)) {
             writeSfsr(vaddr, write, Nucleus, false, IllegalAsi, asi);
             return new DataAccessException;
         }
 
-        if (AsiIsPrimary(asi)) {
+        if (asiIsPrimary(asi)) {
             context = pri_context;
             ct = Primary;
-        } else if (AsiIsSecondary(asi)) {
+        } else if (asiIsSecondary(asi)) {
             context = sec_context;
             ct = Secondary;
-        } else if (AsiIsNucleus(asi)) {
+        } else if (asiIsNucleus(asi)) {
             ct = Nucleus;
             context = 0;
         } else {  // ????
@@ -669,34 +647,34 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     }
 
     if (!implicit && asi != ASI_P && asi != ASI_S) {
-        if (AsiIsLittle(asi))
+        if (asiIsLittle(asi))
             panic("Little Endian ASIs not supported\n");
 
         //XXX It's unclear from looking at the documentation how a no fault
-        //load differs from a regular one, other than what happens concerning
-        //nfo and e bits in the TTE
-//        if (AsiIsNoFault(asi))
+        // load differs from a regular one, other than what happens concerning
+        // nfo and e bits in the TTE
+//        if (asiIsNoFault(asi))
 //            panic("No Fault ASIs not supported\n");
 
-        if (AsiIsPartialStore(asi))
+        if (asiIsPartialStore(asi))
             panic("Partial Store ASIs not supported\n");
 
-        if (AsiIsCmt(asi))
+        if (asiIsCmt(asi))
             panic("Cmt ASI registers not implmented\n");
 
-        if (AsiIsInterrupt(asi))
+        if (asiIsInterrupt(asi))
             goto handleIntRegAccess;
-        if (AsiIsMmu(asi))
+        if (asiIsMmu(asi))
             goto handleMmuRegAccess;
-        if (AsiIsScratchPad(asi))
+        if (asiIsScratchPad(asi))
             goto handleScratchRegAccess;
-        if (AsiIsQueue(asi))
+        if (asiIsQueue(asi))
             goto handleQueueRegAccess;
-        if (AsiIsSparcError(asi))
+        if (asiIsSparcError(asi))
             goto handleSparcErrorRegAccess;
 
-        if (!AsiIsReal(asi) && !AsiIsNucleus(asi) && !AsiIsAsIfUser(asi) &&
-                !AsiIsTwin(asi) && !AsiIsBlock(asi) && !AsiIsNoFault(asi))
+        if (!asiIsReal(asi) && !asiIsNucleus(asi) && !asiIsAsIfUser(asi) &&
+                !asiIsTwin(asi) && !asiIsBlock(asi) && !asiIsNoFault(asi))
             panic("Accessing ASI %#X. Should we?\n", asi);
     }
 
@@ -714,12 +692,12 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         return new DataAccessException;
     }
 
-    if ((!lsu_dm && !hpriv && !red) || AsiIsReal(asi)) {
+    if ((!lsu_dm && !hpriv && !red) || asiIsReal(asi)) {
         real = true;
         context = 0;
     }
 
-    if (hpriv && (implicit || (!AsiIsAsIfUser(asi) && !AsiIsReal(asi)))) {
+    if (hpriv && (implicit || (!asiIsAsIfUser(asi) && !asiIsReal(asi)))) {
         req->setPaddr(vaddr & PAddrImplMask);
         return NoFault;
     }
@@ -752,13 +730,13 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         return new FastDataAccessProtection;
     }
 
-    if (e->pte.nofault() && !AsiIsNoFault(asi)) {
+    if (e->pte.nofault() && !asiIsNoFault(asi)) {
         writeTagAccess(vaddr, context);
         writeSfsr(vaddr, write, ct, e->pte.sideffect(), LoadFromNfo, asi);
         return new DataAccessException;
     }
 
-    if (e->pte.sideffect() && AsiIsNoFault(asi)) {
+    if (e->pte.sideffect() && asiIsNoFault(asi)) {
         writeTagAccess(vaddr, context);
         writeSfsr(vaddr, write, ct, e->pte.sideffect(), SideEffect, asi);
         return new DataAccessException;
@@ -1207,13 +1185,13 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             ignore = true;
         }
 
-        switch(bits(va,7,6)) {
+        switch (bits(va,7,6)) {
           case 0: // demap page
             if (!ignore)
                 tc->getITBPtr()->demapPage(mbits(va,63,13), part_id,
                         bits(va,9,9), ctx_id);
             break;
-          case 1: //demap context
+          case 1: // demap context
             if (!ignore)
                 tc->getITBPtr()->demapContext(part_id, ctx_id);
             break;
@@ -1258,12 +1236,12 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             ignore = true;
         }
 
-        switch(bits(va,7,6)) {
+        switch (bits(va,7,6)) {
           case 0: // demap page
             if (!ignore)
                 demapPage(mbits(va,63,13), part_id, bits(va,9,9), ctx_id);
             break;
-          case 1: //demap context
+          case 1: // demap context
             if (!ignore)
                 demapContext(part_id, ctx_id);
             break;

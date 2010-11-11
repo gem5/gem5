@@ -65,8 +65,8 @@ class TteTag
         return *this;
     }
 
-    bool valid() const {assert(populated); return !bits(entry,62,62); }
-    Addr va()    const {assert(populated); return bits(entry,41,0); }
+    bool valid() const { assert(populated); return !bits(entry,62,62); }
+    Addr va()    const { assert(populated); return bits(entry,41,0); }
 };
 
 
@@ -86,8 +86,7 @@ class PageTableEntry
     bool populated;
 
   public:
-    PageTableEntry()
-        : entry(0), type(invalid), populated(false)
+    PageTableEntry() : entry(0), type(invalid), populated(false)
     {}
 
     PageTableEntry(uint64_t e, EntryType t = sun4u)
@@ -96,7 +95,8 @@ class PageTableEntry
         populate(entry, type);
     }
 
-    void populate(uint64_t e, EntryType t = sun4u)
+    void
+    populate(uint64_t e, EntryType t = sun4u)
     {
         entry = e;
         type = t;
@@ -107,18 +107,18 @@ class PageTableEntry
             entry4u = entry;
         else {
             entry4u = 0;
-            entry4u |= mbits(entry,63,63);         //valid
-            entry4u |= bits(entry,1,0) << 61;      //size[1:0]
-            entry4u |= bits(entry,62,62) << 60;    //nfo
-            entry4u |= bits(entry,12,12) << 59;    //ie
-            entry4u |= bits(entry,2,2) << 48;      //size[2]
-            entry4u |= mbits(entry,39,13);         //paddr
+            entry4u |= mbits(entry,63,63);         // valid
+            entry4u |= bits(entry,1,0) << 61;      // size[1:0]
+            entry4u |= bits(entry,62,62) << 60;    // nfo
+            entry4u |= bits(entry,12,12) << 59;    // ie
+            entry4u |= bits(entry,2,2) << 48;      // size[2]
+            entry4u |= mbits(entry,39,13);         // paddr
             entry4u |= bits(entry,61,61) << 6;;    // locked
-            entry4u |= bits(entry,10,10) << 5;     //cp
-            entry4u |= bits(entry,9,9) << 4;       //cv
-            entry4u |= bits(entry,11,11) << 3;     //e
-            entry4u |= bits(entry,8,8) << 2;       //p
-            entry4u |= bits(entry,6,6) << 1;       //w
+            entry4u |= bits(entry,10,10) << 5;     // cp
+            entry4u |= bits(entry,9,9) << 4;       // cv
+            entry4u |= bits(entry,11,11) << 3;     // e
+            entry4u |= bits(entry,8,8) << 2;       // p
+            entry4u |= bits(entry,6,6) << 1;       // w
         }
     }
 
@@ -131,6 +131,7 @@ class PageTableEntry
     static int pageSizes[6];
 
     uint64_t operator()() const { assert(populated); return entry4u; }
+
     const PageTableEntry &
     operator=(uint64_t e)
     {
@@ -261,7 +262,8 @@ struct TlbEntry
     bool used;
     bool valid;
 
-    Addr pageStart()
+    Addr
+    pageStart()
     {
         return pte.paddr();
     }

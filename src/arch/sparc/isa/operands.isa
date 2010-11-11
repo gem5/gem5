@@ -48,17 +48,20 @@ output header {{
     // A function to "decompress" double and quad floating point
     // register numbers stuffed into 5 bit fields. These have their
     // MSB put in the LSB position but are otherwise normal.
-    static inline unsigned int dfpr(unsigned int regNum)
+    static inline unsigned int
+    dfpr(unsigned int regNum)
     {
         return (regNum & (~1)) | ((regNum & 1) << 5);
     }
 
-    static inline unsigned int dfprl(unsigned int regNum)
+    static inline unsigned int
+    dfprl(unsigned int regNum)
     {
         return dfpr(regNum) & (~0x1);
     }
 
-    static inline unsigned int dfprh(unsigned int regNum)
+    static inline unsigned int
+    dfprh(unsigned int regNum)
     {
         return dfpr(regNum) | 0x1;
     }

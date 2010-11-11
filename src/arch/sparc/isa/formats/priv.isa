@@ -50,12 +50,12 @@ output header {{
                     const SymbolTable *symtab) const;
         };
 
-        //This class is for instructions that explicitly read control
-        //registers. It provides a special generateDisassembly function.
+        // This class is for instructions that explicitly read control
+        // registers. It provides a special generateDisassembly function.
         class RdPriv : public Priv
         {
           protected:
-            //Constructor
+            // Constructor
             RdPriv(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, char const * _regName) :
                 Priv(mnem, _machInst, __opClass), regName(_regName)
@@ -68,12 +68,12 @@ output header {{
             char const * regName;
         };
 
-        //This class is for instructions that explicitly write control
-        //registers. It provides a special generateDisassembly function.
+        // This class is for instructions that explicitly write control
+        // registers. It provides a special generateDisassembly function.
         class WrPriv : public Priv
         {
           protected:
-            //Constructor
+            // Constructor
             WrPriv(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, char const * _regName) :
                 Priv(mnem, _machInst, __opClass), regName(_regName)
@@ -102,12 +102,12 @@ output header {{
             int32_t imm;
         };
 
-        //This class is for instructions that explicitly write control
-        //registers. It provides a special generateDisassembly function.
+        // This class is for instructions that explicitly write control
+        // registers. It provides a special generateDisassembly function.
         class WrPrivImm : public PrivImm
         {
           protected:
-            //Constructor
+            // Constructor
             WrPrivImm(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, char const * _regName) :
                 PrivImm(mnem, _machInst, __opClass), regName(_regName)
@@ -122,8 +122,8 @@ output header {{
 }};
 
 output decoder {{
-        std::string Priv::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
+        std::string
+        Priv::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream response;
 
@@ -132,8 +132,8 @@ output decoder {{
             return response.str();
         }
 
-        std::string RdPriv::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
+        std::string
+        RdPriv::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream response;
 
@@ -145,18 +145,17 @@ output decoder {{
             return response.str();
         }
 
-        std::string WrPriv::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
+        std::string
+        WrPriv::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         {
             std::stringstream response;
 
             printMnemonic(response, mnemonic);
 
             ccprintf(response, " ");
-            //If the first reg is %g0, don't print it.
-            //This improves readability
-            if(_srcRegIdx[0] != 0)
-            {
+            // If the first reg is %g0, don't print it.
+            // This improves readability
+            if (_srcRegIdx[0] != 0) {
                 printSrcReg(response, 0);
                 ccprintf(response, ", ");
             }
@@ -174,10 +173,9 @@ output decoder {{
             printMnemonic(response, mnemonic);
 
             ccprintf(response, " ");
-            //If the first reg is %g0, don't print it.
-            //This improves readability
-            if(_srcRegIdx[0] != 0)
-            {
+            // If the first reg is %g0, don't print it.
+            // This improves readability
+            if (_srcRegIdx[0] != 0) {
                 printSrcReg(response, 0);
                 ccprintf(response, ", ");
             }
@@ -203,11 +201,11 @@ def template PrivExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        //If the processor isn't in privileged mode, fault out right away
-        if(%(check)s)
+        // If the processor isn't in privileged mode, fault out right away
+        if (%(check)s)
             return new PrivilegedAction;
 
-        if(%(tlCheck)s)
+        if (%(tlCheck)s)
             return new IllegalInstruction;
 
         Fault fault = NoFault;

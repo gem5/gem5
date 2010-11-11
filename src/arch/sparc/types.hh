@@ -37,16 +37,19 @@
 
 namespace SparcISA
 {
-    typedef uint32_t MachInst;
-    typedef uint64_t ExtMachInst;
 
-    typedef GenericISA::DelaySlotUPCState<MachInst> PCState;
+typedef uint32_t MachInst;
+typedef uint64_t ExtMachInst;
 
-    typedef Twin64_t LargestRead;
+typedef GenericISA::DelaySlotUPCState<MachInst> PCState;
 
-    struct CoreSpecific {
-        int core_type;
-    };
+typedef Twin64_t LargestRead;
+
+struct CoreSpecific
+{
+    int core_type;
+};
+
 }
 
 #endif

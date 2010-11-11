@@ -181,9 +181,7 @@ class Interrupts : public SimObject
 
     void
     updateIntrInfo(ThreadContext *tc)
-    {
-
-    }
+    {}
 
     uint64_t
     get_vec(int int_num)

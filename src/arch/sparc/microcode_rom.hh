@@ -35,7 +35,7 @@
 
 namespace SparcISA
 {
-    using ::MicrocodeRom;
+using ::MicrocodeRom;
 }
 
 #endif // __ARCH_SPARC_MICROCODE_ROM_HH__

@@ -26,9 +26,10 @@
 //
 // Authors: Gabe Black
 
-//This delcares the initiateAcc function in memory operations
+// This delcares the initiateAcc function in memory operations
 def template MacroInitiateAcc {{
-    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const
+    Fault
+    initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;
@@ -36,17 +37,18 @@ def template MacroInitiateAcc {{
 }};
 
 def template MacroCompleteAcc {{
-    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *,
-            Trace::InstRecord *) const
+    Fault
+    completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;
     }
 }};
 
-//This template provides the execute functions for a store
+// This template provides the execute functions for a store
 def template MacroExecute {{
-    Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
+    Fault
+    execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;
@@ -60,7 +62,7 @@ output header {{
           protected:
             const uint32_t numMicroops;
 
-            //Constructor.
+            // Constructor.
             SparcMacroInst(const char *mnem, ExtMachInst _machInst,
                     OpClass __opClass, uint32_t _numMicroops)
                         : SparcStaticInst(mnem, _machInst, __opClass),
@@ -96,7 +98,7 @@ output header {{
         class SparcMicroInst : public SparcStaticInst
         {
           protected:
-            //Constructor.
+            // Constructor.
             SparcMicroInst(const char *mnem,
                     ExtMachInst _machInst, OpClass __opClass)
                         : SparcStaticInst(mnem, _machInst, __opClass)
@@ -117,7 +119,7 @@ output header {{
         class SparcDelayedMicroInst : public SparcMicroInst
         {
           protected:
-            //Constructor.
+            // Constructor.
             SparcDelayedMicroInst(const char *mnem,
                     ExtMachInst _machInst, OpClass __opClass)
                         : SparcMicroInst(mnem, _machInst, __opClass)
@@ -129,7 +131,8 @@ output header {{
 
 output decoder {{
 
-        std::string SparcMacroInst::generateDisassembly(Addr pc,
+        std::string
+        SparcMacroInst::generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const
         {
             std::stringstream response;
