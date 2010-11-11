@@ -652,7 +652,8 @@ class SimObject(object):
     def get_parent(self):
         return self._parent
 
-    # clear out child with given name
+    # clear out child with given name. This code is not likely to be exercised.
+    # See comment in add_child.
     def clear_child(self, name):
         child = self._children[name]
         child.clear_parent(self)
@@ -666,6 +667,10 @@ class SimObject(object):
                   "add_child('%s'): child '%s' already has parent '%s'" % \
                   (name, child._name, child._parent)
         if self._children.has_key(name):
+            # This code path had an undiscovered bug that would make it fail
+            # at runtime. It had been here for a long time and was only
+            # exposed by a buggy script. Changes here will probably not be
+            # exercised without specialized testing.
             self.clear_child(name)
         child.set_parent(self, name)
         self._children[name] = child
