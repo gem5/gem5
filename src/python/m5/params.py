@@ -658,7 +658,7 @@ class EthernetAddr(ParamValue):
             raise TypeError, 'invalid ethernet address %s' % value
 
         for byte in bytes:
-            if not 0 <= int(byte) <= 256:
+            if not 0 <= int(byte) <= 0xff:
                 raise TypeError, 'invalid ethernet address %s' % value
 
         self.value = value
@@ -1023,7 +1023,7 @@ class NetworkBandwidth(float,ParamValue):
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
     def __new__(cls, value):
-        # we want the number of ticks per byte of data
+        # convert to bytes per second
         val = convert.toMemoryBandwidth(value)
         return super(cls, MemoryBandwidth).__new__(cls, val)
 
