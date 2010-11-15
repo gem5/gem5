@@ -87,7 +87,7 @@ def gen_cpu_exec_signatures(target, source, env):
 
 # Generate string that gets printed when header is rebuilt
 def gen_sigs_string(target, source, env):
-    return "Generating static_inst_exec_sigs.hh: " \
+    return " [GENERATE] static_inst_exec_sigs.hh: " \
            + ', '.join(temp_cpu_list)
 
 # Add command to generate header to environment.

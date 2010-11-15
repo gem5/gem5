@@ -1945,7 +1945,7 @@ StaticInstPtr
             else:
                 print 'File', file, 'is unchanged'
         else:
-            print 'Generating', file
+            print ' [GENERATE]', file
             update = True
         if update:
             f = open(file, 'w')

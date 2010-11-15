@@ -272,6 +272,7 @@ for t in abs_targets:
 # Make sure build_root exists (might not if this is the first build there)
 if not isdir(build_root):
     mkdir(build_root)
+main['BUILDROOT'] = build_root
 
 Export('main')
 
@@ -306,6 +307,7 @@ def PathListAllExist(key, val, env):
 global_sticky_vars_file = joinpath(build_root, 'variables.global')
 
 global_sticky_vars = Variables(global_sticky_vars_file, args=ARGUMENTS)
+global_nonsticky_vars = Variables(args=ARGUMENTS)
 
 global_sticky_vars.AddVariables(
     ('CC', 'C compiler', environ.get('CC', main['CC'])),
@@ -317,6 +319,12 @@ global_sticky_vars.AddVariables(
      PathListAllExist, PathListMakeAbsolute),
     )
 
+global_nonsticky_vars.AddVariables(
+    ('VERBOSE', 'Print full tool command lines', False),
+    ('update_ref', 'Update test reference outputs', False)
+    )
+
+
 # base help text
 help_text = '''
 Usage: scons [scons options] [build options] [target(s)]
@@ -326,8 +334,10 @@ Global sticky options:
 
 # Update main environment with values from ARGUMENTS & global_sticky_vars_file
 global_sticky_vars.Update(main)
+global_nonsticky_vars.Update(main)
 
 help_text += global_sticky_vars.GenerateHelpText(main)
+help_text += global_nonsticky_vars.GenerateHelpText(main)
 
 # Save sticky variable settings back to current variables file
 global_sticky_vars.Save(global_sticky_vars_file, main)
@@ -345,6 +355,40 @@ Export('extras_dir_list')
 
 # the ext directory should be on the #includes path
 main.Append(CPPPATH=[Dir('ext')])
+
+def _STRIP(path, env):
+    path = str(path)
+    variant_base = env['BUILDROOT'] + os.path.sep
+    if path.startswith(variant_base):
+        path = path[len(variant_base):]
+    elif path.startswith('build/'):
+        path = path[6:]
+    return path
+
+def _STRIP_SOURCE(target, source, env, for_signature):
+    return _STRIP(source[0], env)
+main['STRIP_SOURCE'] = _STRIP_SOURCE
+
+def _STRIP_TARGET(target, source, env, for_signature):
+    return _STRIP(target[0], env)
+main['STRIP_TARGET'] = _STRIP_TARGET
+
+if main['VERBOSE']:
+    def MakeAction(action, string, *args, **kwargs):
+        return Action(action, *args, **kwargs)
+else:
+    MakeAction = Action
+    main['CCCOMSTR']        = ' [      CC] $STRIP_SOURCE'
+    main['CXXCOMSTR']       = ' [     CXX] $STRIP_SOURCE'
+    main['ASCOMSTR']        = ' [      AS] $STRIP_SOURCE'
+    main['SWIGCOMSTR']      = ' [    SWIG] $STRIP_SOURCE'
+    main['ARCOMSTR']        = ' [      AR] $STRIP_TARGET'
+    main['LINKCOMSTR']      = ' [    LINK] $STRIP_TARGET'
+    main['RANLIBCOMSTR']    = ' [  RANLIB] $STRIP_TARGET'
+    main['M4COMSTR']        = ' [      M4] $STRIP_TARGET'
+    main['SHCCCOMSTR']      = ' [    SHCC] $STRIP_TARGET'
+    main['SHCXXCOMSTR']     = ' [   SHCXX] $STRIP_TARGET'
+Export('MakeAction')
 
 CXX_version = readCommand([main['CXX'],'--version'], exception=False)
 CXX_V = readCommand([main['CXX'],'-V'], exception=False)
@@ -666,10 +710,6 @@ Export('sticky_vars')
 export_vars = []
 Export('export_vars')
 
-# Non-sticky variables only apply to the current build.
-nonsticky_vars = Variables(args=ARGUMENTS)
-Export('nonsticky_vars')
-
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above variables
 for bdir in [ base_dir ] + extras_dir_list:
@@ -704,10 +744,6 @@ sticky_vars.AddVariables(
     BoolVariable('USE_CHECKER', 'Use checker for detailed CPU models', False),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
     BoolVariable('RUBY', 'Build with Ruby', False),
-    )
-
-nonsticky_vars.AddVariables(
-    BoolVariable('update_ref', 'Update test reference outputs', False)
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
@@ -787,15 +823,11 @@ def make_switching_dir(dname, switch_headers, env):
         print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
         f.close()
 
-    # String to print when generating header
-    def gen_switch_hdr_string(target, source, env):
-        return "Generating switch header " + str(target[0])
-
     # Build SCons Action object. 'varlist' specifies env vars that this
     # action depends on; when env['ALL_ISA_LIST'] changes these actions
     # should get re-executed.
-    switch_hdr_action = Action(gen_switch_hdr, gen_switch_hdr_string,
-                               varlist=['ALL_ISA_LIST'])
+    switch_hdr_action = MakeAction(gen_switch_hdr,
+                     " [GENERATE] $STRIP_TARGET", varlist=['ALL_ISA_LIST'])
 
     # Instantiate actions for each header
     for hdr in switch_headers:
@@ -852,12 +884,9 @@ for variant_path in variant_paths:
 
     # Apply current variable settings to env
     sticky_vars.Update(env)
-    nonsticky_vars.Update(env)
 
     help_text += "\nSticky variables for %s:\n" % variant_dir \
-                 + sticky_vars.GenerateHelpText(env) \
-                 + "\nNon-sticky variables for %s:\n" % variant_dir \
-                 + nonsticky_vars.GenerateHelpText(env)
+                 + sticky_vars.GenerateHelpText(env)
 
     # Process variable settings.
 

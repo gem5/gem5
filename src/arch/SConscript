@@ -109,7 +109,7 @@ ARCH_DIR = Dir('.')
 # import ply here because SCons screws with sys.path when performing actions.
 import ply
 
-def isa_desc_action(target, source, env):
+def isa_desc_action_func(target, source, env):
     # Add the current directory to the system path so we can import files
     sys.path[0:0] = [ ARCH_DIR.srcnode().abspath ]
     import isa_parser
@@ -118,6 +118,7 @@ def isa_desc_action(target, source, env):
     cpu_models = [CpuModel.dict[cpu] for cpu in models]
     parser = isa_parser.ISAParser(target[0].dir.abspath, cpu_models)
     parser.parse_isa_desc(source[0].abspath)
+isa_desc_action = MakeAction(isa_desc_action_func, " [ISA DESC] $STRIP_SOURCE")
 
 # Also include the CheckerCPU as one of the models if it is being
 # enabled via command line.
