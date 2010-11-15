@@ -227,10 +227,20 @@ ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 void
 ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
 {
+
     MiscReg newVal = val;
     if (misc_reg == MISCREG_CPSR) {
         updateRegMap(val);
+
+
+        CPSR old_cpsr = miscRegs[MISCREG_CPSR];
+        int old_mode = old_cpsr.mode;
         CPSR cpsr = val;
+        if (old_mode != cpsr.mode) {
+            tc->getITBPtr()->invalidateMiscReg();
+            tc->getDTBPtr()->invalidateMiscReg();
+        }
+
         DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
                 miscRegs[misc_reg], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
         PCState pc = tc->pcState();
@@ -309,6 +319,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 SCTLR new_sctlr = newVal;
                 new_sctlr.nmfi =  (bool)sctlr.nmfi;
                 miscRegs[MISCREG_SCTLR] = (MiscReg)new_sctlr;
+                tc->getITBPtr()->invalidateMiscReg();
+                tc->getDTBPtr()->invalidateMiscReg();
                 return;
             }
           case MISCREG_TLBTR:
@@ -426,6 +438,14 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
               }
               return;
             }
+          case MISCREG_CONTEXTIDR:
+          case MISCREG_PRRR:
+          case MISCREG_NMRR:
+          case MISCREG_DACR:
+            tc->getITBPtr()->invalidateMiscReg();
+            tc->getDTBPtr()->invalidateMiscReg();
+            break;
+
         }
     }
     setMiscRegNoEffect(misc_reg, newVal);

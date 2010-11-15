@@ -48,6 +48,8 @@
 #include "mem/vport.hh"
 #endif
 
+#include "arch/arm/tlb.hh"
+
 namespace ArmISA {
 
 void
@@ -148,7 +150,11 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     // e.g. updateRegMap(val)
     dest->setMiscReg(MISCREG_CPSR, src->readMiscRegNoEffect(MISCREG_CPSR));
 
-    // Lastly copy PC/NPC
+    // Copy over the PC State
     dest->pcState(src->pcState());
+
+    // Invalidate the tlb misc register cache
+    dest->getITBPtr()->invalidateMiscReg();
+    dest->getDTBPtr()->invalidateMiscReg();
 }
 }

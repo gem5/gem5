@@ -208,6 +208,32 @@ class TLB : public BaseTLB
     void unserialize(Checkpoint *cp, const std::string &section);
 
     void regStats();
+
+    // Caching misc register values here.
+    // Writing to misc registers needs to invalidate them.
+    // translateFunctional/translateSe/translateFs checks if they are
+    // invalid and call updateMiscReg if necessary.
+protected:
+    SCTLR sctlr;
+    bool isPriv;
+    uint32_t contextId;
+    PRRR prrr;
+    NMRR nmrr;
+    uint32_t dacr;
+    bool miscRegValid;
+    void updateMiscReg(ThreadContext *tc)
+    {
+        sctlr = tc->readMiscReg(MISCREG_SCTLR);
+        CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+        isPriv = cpsr.mode != MODE_USER;
+        contextId = tc->readMiscReg(MISCREG_CONTEXTIDR);
+        prrr = tc->readMiscReg(MISCREG_PRRR);
+        nmrr = tc->readMiscReg(MISCREG_NMRR);
+        dacr = tc->readMiscReg(MISCREG_DACR);
+        miscRegValid = true;
+    }
+public:
+    inline void invalidateMiscReg() { miscRegValid = false; }
 };
 
 /* namespace ArmISA */ }

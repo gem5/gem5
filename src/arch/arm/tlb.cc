@@ -69,7 +69,7 @@ TLB::TLB(const Params *p)
 #if FULL_SYSTEM
       , tableWalker(p->walker)
 #endif
-    , rangeMRU(1)
+    , rangeMRU(1), miscRegValid(false)
 {
     table = new TlbEntry[size];
     memset(table, 0, sizeof(TlbEntry[size]));
@@ -88,8 +88,9 @@ TLB::~TLB()
 bool
 TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
 {
-    uint32_t context_id = tc->readMiscReg(MISCREG_CONTEXTIDR);
-    TlbEntry *e = lookup(va, context_id, true);
+    if (!miscRegValid)
+        updateMiscReg(tc);
+    TlbEntry *e = lookup(va, contextId, true);
     if (!e)
         return false;
     pa = e->pAddr(va);
@@ -275,6 +276,7 @@ TLB::unserialize(Checkpoint *cp, const string &section)
     for(int i = 0; i < size; i++){
         table[i].unserialize(cp, csprintf("%s.TlbEntry%d", section, i));
     }
+    miscRegValid = false;
 }
 
 void
@@ -398,9 +400,9 @@ Fault
 TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         Translation *translation, bool &delay, bool timing)
 {
-    // XXX Cache misc registers and have miscreg write function inv cache
+    if (!miscRegValid)
+        updateMiscReg(tc);
     Addr vaddr = req->getVaddr();
-    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     uint32_t flags = req->getFlags();
 
     bool is_fetch = (mode == Execute);
@@ -444,18 +446,18 @@ Fault
 TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         Translation *translation, bool &delay, bool timing)
 {
-    // XXX Cache misc registers and have miscreg write function inv cache
+    if (!miscRegValid)
+        updateMiscReg(tc);
+
     Addr vaddr = req->getVaddr();
-    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     uint32_t flags = req->getFlags();
 
     bool is_fetch = (mode == Execute);
     bool is_write = (mode == Write);
-    bool is_priv = (cpsr.mode != MODE_USER) && !(flags & UserMode);
+    bool is_priv = isPriv && !(flags & UserMode);
 
-    DPRINTF(TLBVerbose, "CPSR is user:%d UserMode:%d\n", cpsr.mode == MODE_USER, flags
-            & UserMode);
+    DPRINTF(TLBVerbose, "CPSR is user:%d UserMode:%d\n",
+            isPriv, flags & UserMode);
     // If this is a clrex instruction, provide a PA of 0 with no fault
     // This will force the monitor to set the tracked address to 0
     // a bit of a hack but this effectively clrears this processors monitor
@@ -479,18 +481,13 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
-    uint32_t context_id = tc->readMiscReg(MISCREG_CONTEXTIDR);
     Fault fault;
-
 
     if (!sctlr.m) {
         req->setPaddr(vaddr);
         if (sctlr.tre == 0) {
             req->setFlags(Request::UNCACHEABLE);
         } else {
-            PRRR prrr = tc->readMiscReg(MISCREG_PRRR);
-            NMRR nmrr = tc->readMiscReg(MISCREG_NMRR);
-
             if (nmrr.ir0 == 0 || nmrr.or0 == 0 || prrr.tr0 != 0x2)
                req->setFlags(Request::UNCACHEABLE);
         }
@@ -507,10 +504,10 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         return trickBoxCheck(req, mode, 0, false);
     }
 
-    DPRINTF(TLBVerbose, "Translating vaddr=%#x context=%d\n", vaddr, context_id);
+    DPRINTF(TLBVerbose, "Translating vaddr=%#x context=%d\n", vaddr, contextId);
     // Translation enabled
 
-    TlbEntry *te = lookup(vaddr, context_id);
+    TlbEntry *te = lookup(vaddr, contextId);
     if (te == NULL) {
         if (req->isPrefetch()){
            //if the request is a prefetch don't attempt to fill the TLB
@@ -529,8 +526,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         // start translation table walk, pass variables rather than
         // re-retreaving in table walker for speed
         DPRINTF(TLB, "TLB Miss: Starting hardware table walker for %#x(%d)\n",
-                vaddr, context_id);
-        fault = tableWalker->walk(req, tc, context_id, mode, translation,
+                vaddr, contextId);
+        fault = tableWalker->walk(req, tc, contextId, mode, translation,
                 timing);
         if (timing) {
             delay = true;
@@ -540,7 +537,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         if (fault)
             return fault;
 
-        te = lookup(vaddr, context_id);
+        te = lookup(vaddr, contextId);
         if (!te)
             printTlb();
         assert(te);
@@ -561,7 +558,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     setAttr(te->attributes);
     if (te->nonCacheable)
         req->setFlags(Request::UNCACHEABLE);
-    uint32_t dacr = tc->readMiscReg(MISCREG_DACR);
+
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:
         domainFaults++;
