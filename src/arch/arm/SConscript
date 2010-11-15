@@ -60,6 +60,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('nativetrace.cc')
     Source('tlb.cc')
     Source('utility.cc')
+    Source('remote_gdb.cc')
 
     SimObject('ArmNativeTrace.py')
     SimObject('ArmTLB.py')

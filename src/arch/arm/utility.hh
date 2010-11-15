@@ -168,6 +168,9 @@ advancePC(PCState &pc, const StaticInstPtr inst)
     inst->advancePC(pc);
 }
 
+Addr truncPage(Addr addr);
+Addr roundPage(Addr addr);
+
 };
 
 

@@ -157,4 +157,17 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->getITBPtr()->invalidateMiscReg();
     dest->getDTBPtr()->invalidateMiscReg();
 }
+
+Addr
+truncPage(Addr addr)
+{
+    return addr & ~(PageBytes - 1);
 }
+
+Addr
+roundPage(Addr addr)
+{
+    return (addr + PageBytes - 1) & ~(PageBytes - 1);
+}
+
+} // namespace ArmISA

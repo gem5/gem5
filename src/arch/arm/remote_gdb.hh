@@ -35,32 +35,39 @@
 
 #include "base/remote_gdb.hh"
 
+class System;
+class ThreadContext;
+class PhysicalMemory;
+
 namespace ArmISA
 {
-    class RemoteGDB : public BaseRemoteGDB
-    {
-      public:
-        //These needs to be written to suit ARM
+// registers for arm with vfpv3/neon
+const int NUMREGS   = 41;  /* r0-r15, cpsr, d0-d31, fpscr */
+const int REG_R0 = 0;
+const int REG_F0 = 8;
+const int REG_CPSR  = 8;   /* bit 512 to bit 543  */
+const int REG_FPSCR = 40;  /* bit 2592 to bit 2623 */
 
-        RemoteGDB(System *system, ThreadContext *context)
-            : BaseRemoteGDB(system, context, 1)
-        {}
+class RemoteGDB : public BaseRemoteGDB
+{
 
-        bool acc(Addr, size_t)
-        { panic("acc not implemented for ARM!"); }
+protected:
+  Addr notTakenBkpt;
+  Addr takenBkpt;
 
-        void getregs()
-        { panic("getregs not implemented for ARM!"); }
+protected:
+  bool acc(Addr addr, size_t len);
+  bool write(Addr addr, size_t size, const char *data);
 
-        void setregs()
-        { panic("setregs not implemented for ARM!"); }
+  void getregs();
+  void setregs();
 
-        void clearSingleStep()
-        { panic("clearSingleStep not implemented for ARM!"); }
+  void clearSingleStep();
+  void setSingleStep();
 
-        void setSingleStep()
-        { panic("setSingleStep not implemented for ARM!"); }
-    };
-}
+public:
+  RemoteGDB(System *_system, ThreadContext *tc);
+};
+} // namespace ArmISA
 
 #endif /* __ARCH_ARM_REMOTE_GDB_H__ */
