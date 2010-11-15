@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep 26 2010 21:00:10
-M5 revision eb8d8f78ca15 7689 default qtip tip pctype.patch qbase
-M5 started Sep 26 2010 21:00:16
-M5 executing on burrito
-command line: build/SPARC_SE/m5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
+M5 compiled Nov 15 2010 00:04:22
+M5 revision f440cdaf1c2d+ 7743+ default tip
+M5 started Nov 15 2010 00:06:46
+M5 executing on zizzer
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Init done

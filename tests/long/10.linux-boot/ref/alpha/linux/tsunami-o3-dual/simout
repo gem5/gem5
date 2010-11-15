@@ -1,5 +1,3 @@
-Redirecting stdout to build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual/simout
-Redirecting stderr to build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  2 2010 23:00:12
-M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
-M5 started Nov  2 2010 23:04:53
-M5 executing on aus-bc2-b15
+M5 compiled Nov 14 2010 23:49:18
+M5 revision f440cdaf1c2d+ 7743+ default tip
+M5 started Nov 14 2010 23:51:27
+M5 executing on zizzer
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual -re tests/run.py build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux
+info: kernel located at: /dist/m5/system/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 info: Launching CPU 1 @ 118370500
 Exiting @ tick 1900844230500 because m5_exit instruction encountered
