@@ -112,8 +112,6 @@ let {{
             Mem.ud = (uint64_t)cSwap(LR.uw, cpsr.e) |
                      ((uint64_t)cSwap(Spsr.uw, cpsr.e) << 32);
             '''
-            if self.writeback:
-                accCode += "SpMode = SpMode + %s;\n" % wbDiff
 
             global header_output, decoder_output, exec_output
 
@@ -122,11 +120,18 @@ let {{
                           "postacc_code": "" }
             codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
 
+            wbDecl = None
+            if self.writeback:
+                wbDecl = '''MicroAddiUop(machInst,
+                              intRegInMode((OperatingMode)regMode, INTREG_SP),
+                              intRegInMode((OperatingMode)regMode, INTREG_SP),
+                              %d);''' % wbDiff
+
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
                  ["ArmISA::TLB::AlignWord", "ArmISA::TLB::MustBeOne"], [],
-                 base = 'SrsOp')
+                 'SrsOp', wbDecl)
 
             header_output += newHeader
             decoder_output += newDecoder
