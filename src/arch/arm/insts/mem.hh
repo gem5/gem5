@@ -110,7 +110,7 @@ class RfeOp : public MightBeMicro
     virtual
     ~RfeOp()
     {
-        delete uops;
+        delete [] uops;
     }
 
     StaticInstPtr
