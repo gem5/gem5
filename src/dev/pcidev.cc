@@ -76,7 +76,8 @@ PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
                                               bool &snoop)
 {
     snoop = false;;
-    resp.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
+    if (configAddr != ULL(-1))
+        resp.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
 }
 
 

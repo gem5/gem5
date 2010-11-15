@@ -133,6 +133,8 @@ class IdeController : public PciDev
     bool ioEnabled;
     bool bmEnabled;
 
+    uint32_t ioShift, ctrlOffset;
+
     void dispatchAccess(PacketPtr pkt, bool read);
 
   public:

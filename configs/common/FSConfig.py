@@ -209,6 +209,16 @@ def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
 
     self.mem_mode = mem_mode
 
+    #self.cf0 = CowIdeDisk(driveID='master')
+    #self.cf0.childImage(mdesc.disk())
+    #self.cf_ctrl = IdeController(disks=[self.cf0],
+    #                             pci_func = 0, pci_dev = 0, pci_bus = 0,
+    #                             io_shift = 1, ctrl_offset = 2, Command = 0x1,
+    #                             BAR0 = 0x18000000, BAR0Size = '16B',
+    #                             BAR1 = 0x18000100, BAR1Size = '1B',
+    #                             BAR0LegacyIO = True, BAR1LegacyIO = True,)
+    #self.cf_ctrl.pio = self.iobus.port
+
     if machine_type == "RealView_PBX":
         self.realview = RealViewPBX()
     elif machine_type == "RealView_EB":

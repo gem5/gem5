@@ -84,7 +84,8 @@ IdeController::IdeController(Params *p)
     primaryTiming(htole(timeRegWithDecodeEn)),
     secondaryTiming(htole(timeRegWithDecodeEn)),
     deviceTiming(0), udmaControl(0), udmaTiming(0), ideConfig(0),
-    ioEnabled(false), bmEnabled(false)
+    ioEnabled(false), bmEnabled(false),
+    ioShift(p->io_shift), ctrlOffset(p->ctrl_offset)
 {
     if (params()->disks.size() > 3)
         panic("IDE controllers support a maximum of 4 devices attached!\n");
@@ -105,6 +106,15 @@ IdeController::IdeController(Params *p)
     }
     primary.select(false);
     secondary.select(false);
+
+    if ((BARAddrs[0] & ~BAR_IO_MASK) != 0){
+        primary.cmdAddr = BARAddrs[0];  primary.cmdSize = BARSize[0];
+        primary.ctrlAddr = BARAddrs[1]; primary.ctrlSize = BARAddrs[1];
+    }
+    if ((BARAddrs[2] & ~BAR_IO_MASK) != 0){
+        secondary.cmdAddr = BARAddrs[2];  secondary.cmdSize = BARSize[2];
+        secondary.ctrlAddr = BARAddrs[3]; secondary.ctrlSize = BARAddrs[3];
+    }
 
     ioEnabled = (config.command & htole(PCI_CMD_IOSE));
     bmEnabled = (config.command & htole(PCI_CMD_BME));
@@ -441,10 +451,14 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
     if (addr >= primary.cmdAddr &&
             addr < (primary.cmdAddr + primary.cmdSize)) {
         addr -= primary.cmdAddr;
+        // linux may have shifted the address by ioShift,
+        // here we shift it back, similarly for ctrlOffset.
+        addr >>= ioShift;
         primary.accessCommand(addr, size, dataPtr, read);
     } else if (addr >= primary.ctrlAddr &&
                addr < (primary.ctrlAddr + primary.ctrlSize)) {
         addr -= primary.ctrlAddr;
+        addr += ctrlOffset;
         primary.accessControl(addr, size, dataPtr, read);
     } else if (addr >= secondary.cmdAddr &&
                addr < (secondary.cmdAddr + secondary.cmdSize)) {

@@ -64,3 +64,5 @@ class IdeController(PciDevice):
     BAR3Size = '4B'
     BAR4Size = '16B'
 
+    io_shift = Param.UInt32(0x0, "IO port shift");
+    ctrl_offset = Param.UInt32(0x0, "IDE disk control offset")

@@ -108,15 +108,13 @@ RealView::pciToDma(Addr pciAddr) const
 Addr
 RealView::calcPciConfigAddr(int bus, int dev, int func)
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    return ULL(-1);
 }
 
 Addr
 RealView::calcPciIOAddr(Addr addr)
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    return addr;
 }
 
 Addr
