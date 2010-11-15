@@ -113,7 +113,16 @@ template <class Impl>
 Fault
 BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
 {
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the TC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the TC).  Fix this.
+    bool in_syscall = this->thread->inSyscall;
+    this->thread->inSyscall = true;
+
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
+
+    this->thread->inSyscall = in_syscall;
 
     return this->fault;
 }
