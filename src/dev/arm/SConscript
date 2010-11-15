@@ -47,10 +47,12 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'arm':
     Source('gic.cc')
     Source('pl011.cc')
     Source('pl111.cc')
+    Source('kmi.cc')
     Source('timer_sp804.cc')
     Source('rv_ctrl.cc')
     Source('realview.cc')
 
     TraceFlag('AMBA')
     TraceFlag('PL111')
+    TraceFlag('Pl050')
     TraceFlag('GIC')

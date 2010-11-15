@@ -38,6 +38,7 @@
 #
 # Authors: Ali Saidi
 #          Gabe Black
+#          William Wang
 
 from m5.params import *
 from m5.proxy import *
@@ -93,6 +94,13 @@ class Sp804(AmbaDevice):
     clock1 = Param.Clock('1MHz', "Clock speed of the input")
     amba_id = 0x00141804
 
+class Pl050(AmbaDevice):
+    type = 'Pl050'
+    gic = Param.Gic(Parent.any, "Gic to use for interrupting")
+    int_num = Param.UInt32("Interrupt number that connects to GIC")
+    int_delay = Param.Latency("100ns", "Time between action and interrupt generation by UART")
+    amba_id = 0x00141050
+
 class Pl111(AmbaDmaDevice):
     type = 'Pl111'
     clock = Param.Clock('24MHz', "Clock speed of the input")
@@ -112,6 +120,8 @@ class RealViewPBX(RealView):
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
     clcd = Pl111(pio_addr=0x10020000, int_num=55)
+    kmi0   = Pl050(pio_addr=0x10006000, int_num=52)
+    kmi1   = Pl050(pio_addr=0x10007000, int_num=53)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff)
     flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x4000000)
@@ -129,8 +139,6 @@ class RealViewPBX(RealView):
     sci_fake      = AmbaFake(pio_addr=0x1000e000)
     aaci_fake     = AmbaFake(pio_addr=0x10004000)
     mmc_fake      = AmbaFake(pio_addr=0x10005000)
-    kmi0_fake     = AmbaFake(pio_addr=0x10006000)
-    kmi1_fake     = AmbaFake(pio_addr=0x10007000)
     rtc_fake      = AmbaFake(pio_addr=0x10017000, amba_id=0x41031)
 
 
@@ -149,6 +157,8 @@ class RealViewPBX(RealView):
        self.timer0.pio        = bus.port
        self.timer1.pio        = bus.port
        self.clcd.pio          = bus.port
+       self.kmi0.pio          = bus.port
+       self.kmi1.pio          = bus.port
        self.dmac_fake.pio     = bus.port
        self.uart1_fake.pio    = bus.port
        self.uart2_fake.pio    = bus.port
@@ -163,19 +173,21 @@ class RealViewPBX(RealView):
        self.sci_fake.pio      = bus.port
        self.aaci_fake.pio     = bus.port
        self.mmc_fake.pio      = bus.port
-       self.kmi0_fake.pio     = bus.port
-       self.kmi1_fake.pio     = bus.port
        self.rtc_fake.pio      = bus.port
        self.flash_fake.pio    = bus.port
 
-# Interrupt numbers are wrong here
+# Reference for memory map and interrupt number
+# RealView Emulation Baseboard User Guide (ARM DUI 0143B)
+# Chapter 4: Programmer's Reference
 class RealViewEB(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
     realview_io = RealViewCtrl(pio_addr=0x10000000)
     gic = Gic(dist_addr=0x10041000, cpu_addr=0x10040000)
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
-    clcd = Pl111(pio_addr=0x10020000, int_num=55)
+    clcd   = Pl111(pio_addr=0x10020000, int_num=23)
+    kmi0   = Pl050(pio_addr=0x10006000, int_num=20)
+    kmi1   = Pl050(pio_addr=0x10007000, int_num=21)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff, warn_access="1")
     dmac_fake     = AmbaFake(pio_addr=0x10030000)
@@ -192,8 +204,6 @@ class RealViewEB(RealView):
     sci_fake      = AmbaFake(pio_addr=0x1000e000)
     aaci_fake     = AmbaFake(pio_addr=0x10004000)
     mmc_fake      = AmbaFake(pio_addr=0x10005000)
-    kmi0_fake     = AmbaFake(pio_addr=0x10006000)
-    kmi1_fake     = AmbaFake(pio_addr=0x10007000)
     rtc_fake      = AmbaFake(pio_addr=0x10017000, amba_id=0x41031)
 
 
@@ -212,6 +222,8 @@ class RealViewEB(RealView):
        self.timer0.pio        = bus.port
        self.timer1.pio        = bus.port
        self.clcd.pio          = bus.port
+       self.kmi0.pio          = bus.port
+       self.kmi1.pio          = bus.port
        self.dmac_fake.pio     = bus.port
        self.uart1_fake.pio    = bus.port
        self.uart2_fake.pio    = bus.port
@@ -226,7 +238,5 @@ class RealViewEB(RealView):
        self.sci_fake.pio      = bus.port
        self.aaci_fake.pio     = bus.port
        self.mmc_fake.pio      = bus.port
-       self.kmi0_fake.pio     = bus.port
-       self.kmi1_fake.pio     = bus.port
        self.rtc_fake.pio      = bus.port
 
