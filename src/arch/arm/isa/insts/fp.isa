@@ -194,7 +194,8 @@ let {{
     vmsrIop = InstObjParams("vmsr", "Vmsr", "FpRegRegOp",
                             { "code": vmsrEnabledCheckCode + \
                                       "MiscDest = Op1;",
-                              "predicate_test": predicateTest },
+                              "predicate_test": predicateTest,
+                              "op_class": "SimdFloatMiscOp" },
                              ["IsSerializeAfter","IsNonSpeculative"])
     header_output += FpRegRegOpDeclare.subst(vmsrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmsrIop);
@@ -206,15 +207,17 @@ let {{
     '''
     vmsrFpscrIop = InstObjParams("vmsr", "VmsrFpscr", "FpRegRegOp",
                                  { "code": vmsrFpscrCode,
-                                   "predicate_test": predicateTest }, [])
+                                   "predicate_test": predicateTest,
+                                   "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vmsrFpscrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmsrFpscrIop);
     exec_output += PredOpExecute.subst(vmsrFpscrIop);
 
     vmrsIop = InstObjParams("vmrs", "Vmrs", "FpRegRegOp",
                             { "code": vmrsEnabledCheckCode + \
-                                      "Dest = MiscOp1;",
-                              "predicate_test": predicateTest }, [])
+                                    "Dest = MiscOp1;",
+                              "predicate_test": predicateTest,
+                              "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vmrsIop);
     decoder_output += FpRegRegOpConstructor.subst(vmrsIop);
     exec_output += PredOpExecute.subst(vmrsIop);
@@ -222,7 +225,8 @@ let {{
     vmrsFpscrIop = InstObjParams("vmrs", "VmrsFpscr", "FpRegRegOp",
                                  { "code": vmrsEnabledCheckCode + \
                                            "Dest = Fpscr | FpCondCodes;",
-                                   "predicate_test": predicateTest }, [])
+                                   "predicate_test": predicateTest,
+                                   "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vmrsFpscrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmrsFpscrIop);
     exec_output += PredOpExecute.subst(vmrsFpscrIop);
@@ -232,7 +236,8 @@ let {{
     '''
     vmrsApsrIop = InstObjParams("vmrs", "VmrsApsr", "FpRegRegImmOp",
                                 { "code": vmrsApsrCode,
-                                  "predicate_test": predicateTest }, [])
+                                  "predicate_test": predicateTest,
+                                  "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vmrsApsrIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrIop);
     exec_output += PredOpExecute.subst(vmrsApsrIop);
@@ -243,7 +248,8 @@ let {{
     '''
     vmrsApsrFpscrIop = InstObjParams("vmrs", "VmrsApsrFpscr", "FpRegRegImmOp",
                                      { "code": vmrsApsrFpscrCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vmrsApsrFpscrIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrFpscrIop);
     exec_output += PredOpExecute.subst(vmrsApsrFpscrIop);
@@ -253,7 +259,8 @@ let {{
     '''
     vmovImmSIop = InstObjParams("vmov", "VmovImmS", "FpRegImmOp",
                                 { "code": vmovImmSCode,
-                                  "predicate_test": predicateTest }, [])
+                                  "predicate_test": predicateTest,
+                                  "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegImmOpDeclare.subst(vmovImmSIop);
     decoder_output += FpRegImmOpConstructor.subst(vmovImmSIop);
     exec_output += PredOpExecute.subst(vmovImmSIop);
@@ -264,7 +271,8 @@ let {{
     '''
     vmovImmDIop = InstObjParams("vmov", "VmovImmD", "FpRegImmOp",
                                 { "code": vmovImmDCode,
-                                  "predicate_test": predicateTest }, [])
+                                  "predicate_test": predicateTest,
+                                  "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegImmOpDeclare.subst(vmovImmDIop);
     decoder_output += FpRegImmOpConstructor.subst(vmovImmDIop);
     exec_output += PredOpExecute.subst(vmovImmDIop);
@@ -277,7 +285,8 @@ let {{
     '''
     vmovImmQIop = InstObjParams("vmov", "VmovImmQ", "FpRegImmOp",
                                 { "code": vmovImmQCode,
-                                  "predicate_test": predicateTest }, [])
+                                  "predicate_test": predicateTest,
+                                  "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegImmOpDeclare.subst(vmovImmQIop);
     decoder_output += FpRegImmOpConstructor.subst(vmovImmQIop);
     exec_output += PredOpExecute.subst(vmovImmQIop);
@@ -287,7 +296,8 @@ let {{
     '''
     vmovRegSIop = InstObjParams("vmov", "VmovRegS", "FpRegRegOp",
                                 { "code": vmovRegSCode,
-                                  "predicate_test": predicateTest }, [])
+                                  "predicate_test": predicateTest,
+                                  "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vmovRegSIop);
     decoder_output += FpRegRegOpConstructor.subst(vmovRegSIop);
     exec_output += PredOpExecute.subst(vmovRegSIop);
@@ -298,7 +308,8 @@ let {{
     '''
     vmovRegDIop = InstObjParams("vmov", "VmovRegD", "FpRegRegOp",
                                 { "code": vmovRegDCode,
-                                  "predicate_test": predicateTest }, [])
+                                  "predicate_test": predicateTest,
+                                  "op_class": "SimdFloatMiscOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vmovRegDIop);
     decoder_output += FpRegRegOpConstructor.subst(vmovRegDIop);
     exec_output += PredOpExecute.subst(vmovRegDIop);
@@ -311,7 +322,8 @@ let {{
     '''
     vmovRegQIop = InstObjParams("vmov", "VmovRegQ", "FpRegRegOp",
                                 { "code": vmovRegQCode,
-                                  "predicate_test": predicateTest }, [])
+                                  "predicate_test": predicateTest,
+                                  "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegOpDeclare.subst(vmovRegQIop);
     decoder_output  += FpRegRegOpConstructor.subst(vmovRegQIop);
     exec_output += PredOpExecute.subst(vmovRegQIop);
@@ -321,7 +333,8 @@ let {{
     '''
     vmovCoreRegBIop = InstObjParams("vmov", "VmovCoreRegB", "FpRegRegImmOp",
                                     { "code": vmovCoreRegBCode,
-                                      "predicate_test": predicateTest }, [])
+                                      "predicate_test": predicateTest,
+                                      "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegImmOpDeclare.subst(vmovCoreRegBIop);
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovCoreRegBIop);
     exec_output += PredOpExecute.subst(vmovCoreRegBIop);
@@ -331,7 +344,8 @@ let {{
     '''
     vmovCoreRegHIop = InstObjParams("vmov", "VmovCoreRegH", "FpRegRegImmOp",
                                     { "code": vmovCoreRegHCode,
-                                      "predicate_test": predicateTest }, [])
+                                      "predicate_test": predicateTest,
+                                      "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegImmOpDeclare.subst(vmovCoreRegHIop);
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovCoreRegHIop);
     exec_output += PredOpExecute.subst(vmovCoreRegHIop);
@@ -341,7 +355,8 @@ let {{
     '''
     vmovCoreRegWIop = InstObjParams("vmov", "VmovCoreRegW", "FpRegRegOp",
                                     { "code": vmovCoreRegWCode,
-                                      "predicate_test": predicateTest }, [])
+                                      "predicate_test": predicateTest,
+                                      "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegOpDeclare.subst(vmovCoreRegWIop);
     decoder_output  += FpRegRegOpConstructor.subst(vmovCoreRegWIop);
     exec_output += PredOpExecute.subst(vmovCoreRegWIop);
@@ -352,7 +367,8 @@ let {{
     '''
     vmovRegCoreUBIop = InstObjParams("vmov", "VmovRegCoreUB", "FpRegRegImmOp",
                                      { "code": vmovRegCoreUBCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreUBIop);
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreUBIop);
     exec_output += PredOpExecute.subst(vmovRegCoreUBIop);
@@ -363,7 +379,8 @@ let {{
     '''
     vmovRegCoreUHIop = InstObjParams("vmov", "VmovRegCoreUH", "FpRegRegImmOp",
                                      { "code": vmovRegCoreUHCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreUHIop);
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreUHIop);
     exec_output += PredOpExecute.subst(vmovRegCoreUHIop);
@@ -374,7 +391,8 @@ let {{
     '''
     vmovRegCoreSBIop = InstObjParams("vmov", "VmovRegCoreSB", "FpRegRegImmOp",
                                      { "code": vmovRegCoreSBCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreSBIop);
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreSBIop);
     exec_output += PredOpExecute.subst(vmovRegCoreSBIop);
@@ -385,7 +403,8 @@ let {{
     '''
     vmovRegCoreSHIop = InstObjParams("vmov", "VmovRegCoreSH", "FpRegRegImmOp",
                                      { "code": vmovRegCoreSHCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegImmOpDeclare.subst(vmovRegCoreSHIop);
     decoder_output  += FpRegRegImmOpConstructor.subst(vmovRegCoreSHIop);
     exec_output += PredOpExecute.subst(vmovRegCoreSHIop);
@@ -395,7 +414,8 @@ let {{
     '''
     vmovRegCoreWIop = InstObjParams("vmov", "VmovRegCoreW", "FpRegRegOp",
                                      { "code": vmovRegCoreWCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegOpDeclare.subst(vmovRegCoreWIop);
     decoder_output  += FpRegRegOpConstructor.subst(vmovRegCoreWIop);
     exec_output += PredOpExecute.subst(vmovRegCoreWIop);
@@ -406,7 +426,8 @@ let {{
     '''
     vmov2Reg2CoreIop = InstObjParams("vmov", "Vmov2Reg2Core", "FpRegRegRegOp",
                                      { "code": vmov2Reg2CoreCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vmov2Reg2CoreIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vmov2Reg2CoreIop);
     exec_output += PredOpExecute.subst(vmov2Reg2CoreIop);
@@ -417,7 +438,8 @@ let {{
     '''
     vmov2Core2RegIop = InstObjParams("vmov", "Vmov2Core2Reg", "FpRegRegRegOp",
                                      { "code": vmov2Core2RegCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMiscOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vmov2Core2RegIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vmov2Core2RegIop);
     exec_output += PredOpExecute.subst(vmov2Core2RegIop);
@@ -454,17 +476,21 @@ let {{
                 fpscr.fz, fpscr.rMode)
     '''
 
-    def buildBinFpOp(name, Name, base, singleOp, doubleOp):
+    def buildBinFpOp(name, Name, base, opClass, singleOp, doubleOp):
         global header_output, decoder_output, exec_output
 
         code = singleCode % { "op": singleBinOp }
         code = code % { "func": singleOp }
         sIop = InstObjParams(name + "s", Name + "S", base,
-                { "code": code, "predicate_test": predicateTest }, [])
+                { "code": code,
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
         code = doubleCode % { "op": doubleBinOp }
         code = code % { "func": doubleOp }
         dIop = InstObjParams(name + "d", Name + "D", base,
-                { "code": code, "predicate_test": predicateTest }, [])
+                { "code": code,
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
 
         declareTempl = eval(base + "Declare");
         constructorTempl = eval(base + "Constructor");
@@ -474,12 +500,16 @@ let {{
             decoder_output += constructorTempl.subst(iop)
             exec_output += PredOpExecute.subst(iop)
 
-    buildBinFpOp("vadd", "Vadd", "FpRegRegRegOp", "fpAddS", "fpAddD")
-    buildBinFpOp("vsub", "Vsub", "FpRegRegRegOp", "fpSubS", "fpSubD")
-    buildBinFpOp("vdiv", "Vdiv", "FpRegRegRegOp", "fpDivS", "fpDivD")
-    buildBinFpOp("vmul", "Vmul", "FpRegRegRegOp", "fpMulS", "fpMulD")
+    buildBinFpOp("vadd", "Vadd", "FpRegRegRegOp", "SimdFloatAddOp", "fpAddS",
+                 "fpAddD")
+    buildBinFpOp("vsub", "Vsub", "FpRegRegRegOp", "SimdFloatAddOp", "fpSubS",
+                 "fpSubD")
+    buildBinFpOp("vdiv", "Vdiv", "FpRegRegRegOp", "SimdFloatDivOp", "fpDivS",
+                 "fpDivD")
+    buildBinFpOp("vmul", "Vmul", "FpRegRegRegOp", "SimdFloatMultOp", "fpMulS",
+                 "fpMulD")
 
-    def buildUnaryFpOp(name, Name, base, singleOp, doubleOp = None):
+    def buildUnaryFpOp(name, Name, base, opClass, singleOp, doubleOp = None):
         if doubleOp is None:
             doubleOp = singleOp
         global header_output, decoder_output, exec_output
@@ -487,11 +517,15 @@ let {{
         code = singleCode % { "op": singleUnaryOp }
         code = code % { "func": singleOp }
         sIop = InstObjParams(name + "s", Name + "S", base,
-                { "code": code, "predicate_test": predicateTest }, [])
+                { "code": code,
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
         code = doubleCode % { "op": doubleUnaryOp }
         code = code % { "func": doubleOp }
         dIop = InstObjParams(name + "d", Name + "D", base,
-                { "code": code, "predicate_test": predicateTest }, [])
+                { "code": code,
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
 
         declareTempl = eval(base + "Declare");
         constructorTempl = eval(base + "Constructor");
@@ -501,19 +535,23 @@ let {{
             decoder_output += constructorTempl.subst(iop)
             exec_output += PredOpExecute.subst(iop)
 
-    buildUnaryFpOp("vsqrt", "Vsqrt", "FpRegRegOp", "sqrtf", "sqrt")
+    buildUnaryFpOp("vsqrt", "Vsqrt", "FpRegRegOp", "SimdFloatSqrtOp", "sqrtf",
+                   "sqrt")
 
-    def buildSimpleUnaryFpOp(name, Name, base, singleOp, doubleOp = None):
+    def buildSimpleUnaryFpOp(name, Name, base, opClass, singleOp,
+                             doubleOp = None):
         if doubleOp is None:
             doubleOp = singleOp
         global header_output, decoder_output, exec_output
 
         sIop = InstObjParams(name + "s", Name + "S", base,
                 { "code": singleCode % { "op": singleOp },
-                  "predicate_test": predicateTest }, [])
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
         dIop = InstObjParams(name + "d", Name + "D", base,
                 { "code": doubleCode % { "op": doubleOp },
-                  "predicate_test": predicateTest }, [])
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
 
         declareTempl = eval(base + "Declare");
         constructorTempl = eval(base + "Constructor");
@@ -523,9 +561,9 @@ let {{
             decoder_output += constructorTempl.subst(iop)
             exec_output += PredOpExecute.subst(iop)
 
-    buildSimpleUnaryFpOp("vneg", "Vneg", "FpRegRegOp",
+    buildSimpleUnaryFpOp("vneg", "Vneg", "FpRegRegOp", "SimdFloatMiscOp",
                          "-FpOp1", "-dbl(FpOp1P0.uw, FpOp1P1.uw)")
-    buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp",
+    buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp", "SimdFloatMiscOp",
                          "fabsf(FpOp1)", "fabs(dbl(FpOp1P0.uw, FpOp1P1.uw))")
 }};
 
@@ -545,7 +583,8 @@ let {{
     '''
     vmlaSIop = InstObjParams("vmlas", "VmlaS", "FpRegRegRegOp",
                                      { "code": vmlaSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vmlaSIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlaSIop);
     exec_output += PredOpExecute.subst(vmlaSIop);
@@ -564,7 +603,8 @@ let {{
     '''
     vmlaDIop = InstObjParams("vmlad", "VmlaD", "FpRegRegRegOp",
                                      { "code": vmlaDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vmlaDIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlaDIop);
     exec_output += PredOpExecute.subst(vmlaDIop);
@@ -579,7 +619,8 @@ let {{
     '''
     vmlsSIop = InstObjParams("vmlss", "VmlsS", "FpRegRegRegOp",
                                      { "code": vmlsSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vmlsSIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlsSIop);
     exec_output += PredOpExecute.subst(vmlsSIop);
@@ -598,7 +639,8 @@ let {{
     '''
     vmlsDIop = InstObjParams("vmlsd", "VmlsD", "FpRegRegRegOp",
                                      { "code": vmlsDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vmlsDIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vmlsDIop);
     exec_output += PredOpExecute.subst(vmlsDIop);
@@ -613,7 +655,8 @@ let {{
     '''
     vnmlaSIop = InstObjParams("vnmlas", "VnmlaS", "FpRegRegRegOp",
                                      { "code": vnmlaSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vnmlaSIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlaSIop);
     exec_output += PredOpExecute.subst(vnmlaSIop);
@@ -632,7 +675,8 @@ let {{
     '''
     vnmlaDIop = InstObjParams("vnmlad", "VnmlaD", "FpRegRegRegOp",
                                      { "code": vnmlaDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vnmlaDIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlaDIop);
     exec_output += PredOpExecute.subst(vnmlaDIop);
@@ -646,8 +690,9 @@ let {{
         FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vnmlsSIop = InstObjParams("vnmlss", "VnmlsS", "FpRegRegRegOp",
-                                     { "code": vnmlsSCode,
-                                       "predicate_test": predicateTest }, [])
+                              { "code": vnmlsSCode,
+                                "predicate_test": predicateTest,
+                                "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vnmlsSIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlsSIop);
     exec_output += PredOpExecute.subst(vnmlsSIop);
@@ -665,8 +710,9 @@ let {{
         FpDestP1.uw = dblHi(dest);
     '''
     vnmlsDIop = InstObjParams("vnmlsd", "VnmlsD", "FpRegRegRegOp",
-                                     { "code": vnmlsDCode,
-                                       "predicate_test": predicateTest }, [])
+                              { "code": vnmlsDCode,
+                                "predicate_test": predicateTest,
+                                "op_class": "SimdFloatMultAccOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vnmlsDIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmlsDIop);
     exec_output += PredOpExecute.subst(vnmlsDIop);
@@ -678,8 +724,9 @@ let {{
         FpCondCodes = fpscr & FpCondCodesMask;
     '''
     vnmulSIop = InstObjParams("vnmuls", "VnmulS", "FpRegRegRegOp",
-                                     { "code": vnmulSCode,
-                                       "predicate_test": predicateTest }, [])
+                              { "code": vnmulSCode,
+                                "predicate_test": predicateTest,
+                                "op_class": "SimdFloatMultOp" }, [])
     header_output  += FpRegRegRegOpDeclare.subst(vnmulSIop);
     decoder_output  += FpRegRegRegOpConstructor.subst(vnmulSIop);
     exec_output += PredOpExecute.subst(vnmulSIop);
@@ -696,7 +743,8 @@ let {{
     '''
     vnmulDIop = InstObjParams("vnmuld", "VnmulD", "FpRegRegRegOp",
                                      { "code": vnmulDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatMultOp" }, [])
     header_output += FpRegRegRegOpDeclare.subst(vnmulDIop);
     decoder_output += FpRegRegRegOpConstructor.subst(vnmulDIop);
     exec_output += PredOpExecute.subst(vnmulDIop);
@@ -719,7 +767,8 @@ let {{
     '''
     vcvtUIntFpSIop = InstObjParams("vcvt", "VcvtUIntFpS", "FpRegRegOp",
                                      { "code": vcvtUIntFpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtUIntFpSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtUIntFpSIop);
     exec_output += PredOpExecute.subst(vcvtUIntFpSIop);
@@ -737,7 +786,8 @@ let {{
     '''
     vcvtUIntFpDIop = InstObjParams("vcvt", "VcvtUIntFpD", "FpRegRegOp",
                                      { "code": vcvtUIntFpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtUIntFpDIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtUIntFpDIop);
     exec_output += PredOpExecute.subst(vcvtUIntFpDIop);
@@ -753,7 +803,8 @@ let {{
     '''
     vcvtSIntFpSIop = InstObjParams("vcvt", "VcvtSIntFpS", "FpRegRegOp",
                                      { "code": vcvtSIntFpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtSIntFpSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtSIntFpSIop);
     exec_output += PredOpExecute.subst(vcvtSIntFpSIop);
@@ -771,7 +822,8 @@ let {{
     '''
     vcvtSIntFpDIop = InstObjParams("vcvt", "VcvtSIntFpD", "FpRegRegOp",
                                      { "code": vcvtSIntFpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtSIntFpDIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtSIntFpDIop);
     exec_output += PredOpExecute.subst(vcvtSIntFpDIop);
@@ -788,7 +840,8 @@ let {{
     '''
     vcvtFpUIntSRIop = InstObjParams("vcvt", "VcvtFpUIntSR", "FpRegRegOp",
                                      { "code": vcvtFpUIntSRCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpUIntSRIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntSRIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntSRIop);
@@ -807,7 +860,8 @@ let {{
     '''
     vcvtFpUIntDRIop = InstObjParams("vcvtr", "VcvtFpUIntDR", "FpRegRegOp",
                                      { "code": vcvtFpUIntDRCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpUIntDRIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntDRIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntDRIop);
@@ -824,7 +878,8 @@ let {{
     '''
     vcvtFpSIntSRIop = InstObjParams("vcvtr", "VcvtFpSIntSR", "FpRegRegOp",
                                      { "code": vcvtFpSIntSRCode,
-                                       "predicate_test": predicateTest }, [])
+                                        "predicate_test": predicateTest,
+                                        "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSIntSRIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntSRIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntSRIop);
@@ -843,7 +898,8 @@ let {{
     '''
     vcvtFpSIntDRIop = InstObjParams("vcvtr", "VcvtFpSIntDR", "FpRegRegOp",
                                      { "code": vcvtFpSIntDRCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSIntDRIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDRIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDRIop);
@@ -861,7 +917,8 @@ let {{
     '''
     vcvtFpUIntSIop = InstObjParams("vcvt", "VcvtFpUIntS", "FpRegRegOp",
                                      { "code": vcvtFpUIntSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpUIntSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntSIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntSIop);
@@ -881,7 +938,8 @@ let {{
     '''
     vcvtFpUIntDIop = InstObjParams("vcvt", "VcvtFpUIntD", "FpRegRegOp",
                                      { "code": vcvtFpUIntDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpUIntDIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntDIop);
     exec_output += PredOpExecute.subst(vcvtFpUIntDIop);
@@ -899,7 +957,8 @@ let {{
     '''
     vcvtFpSIntSIop = InstObjParams("vcvt", "VcvtFpSIntS", "FpRegRegOp",
                                      { "code": vcvtFpSIntSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSIntSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntSIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntSIop);
@@ -919,7 +978,8 @@ let {{
     '''
     vcvtFpSIntDIop = InstObjParams("vcvt", "VcvtFpSIntD", "FpRegRegOp",
                                      { "code": vcvtFpSIntDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSIntDIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDIop);
@@ -938,7 +998,8 @@ let {{
     '''
     vcvtFpSFpDIop = InstObjParams("vcvt", "VcvtFpSFpD", "FpRegRegOp",
                                      { "code": vcvtFpSFpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSFpDIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpDIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpDIop);
@@ -956,7 +1017,8 @@ let {{
     '''
     vcvtFpDFpSIop = InstObjParams("vcvt", "VcvtFpDFpS", "FpRegRegOp",
                                      { "code": vcvtFpDFpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpDFpSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpDFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpDFpSIop);
@@ -974,7 +1036,8 @@ let {{
     '''
     vcvtFpHTFpSIop = InstObjParams("vcvtt", "VcvtFpHTFpS", "FpRegRegOp",
                                    { "code": vcvtFpHTFpSCode,
-                                     "predicate_test": predicateTest }, [])
+                                     "predicate_test": predicateTest,
+                                     "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpHTFpSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpHTFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpHTFpSIop);
@@ -991,7 +1054,8 @@ let {{
     '''
     vcvtFpHBFpSIop = InstObjParams("vcvtb", "VcvtFpHBFpS", "FpRegRegOp",
                                    { "code": vcvtFpHBFpSCode,
-                                     "predicate_test": predicateTest }, [])
+                                     "predicate_test": predicateTest,
+                                     "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpHBFpSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpHBFpSIop);
     exec_output += PredOpExecute.subst(vcvtFpHBFpSIop);
@@ -1011,7 +1075,8 @@ let {{
     '''
     vcvtFpSFpHTIop = InstObjParams("vcvtt", "VcvtFpSFpHT", "FpRegRegOp",
                                     { "code": vcvtFpHTFpSCode,
-                                      "predicate_test": predicateTest }, [])
+                                      "predicate_test": predicateTest,
+                                      "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSFpHTIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHTIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpHTIop);
@@ -1031,7 +1096,8 @@ let {{
     '''
     vcvtFpSFpHBIop = InstObjParams("vcvtb", "VcvtFpSFpHB", "FpRegRegOp",
                                    { "code": vcvtFpSFpHBCode,
-                                     "predicate_test": predicateTest }, [])
+                                     "predicate_test": predicateTest,
+                                     "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcvtFpSFpHBIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHBIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpHBIop);
@@ -1059,7 +1125,8 @@ let {{
     '''
     vcmpSIop = InstObjParams("vcmps", "VcmpS", "FpRegRegOp",
                                      { "code": vcmpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcmpSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcmpSIop);
     exec_output += PredOpExecute.subst(vcmpSIop);
@@ -1089,7 +1156,8 @@ let {{
     '''
     vcmpDIop = InstObjParams("vcmpd", "VcmpD", "FpRegRegOp",
                                      { "code": vcmpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcmpDIop);
     decoder_output += FpRegRegOpConstructor.subst(vcmpDIop);
     exec_output += PredOpExecute.subst(vcmpDIop);
@@ -1117,7 +1185,8 @@ let {{
     '''
     vcmpZeroSIop = InstObjParams("vcmpZeros", "VcmpZeroS", "FpRegImmOp",
                                      { "code": vcmpZeroSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegImmOpDeclare.subst(vcmpZeroSIop);
     decoder_output += FpRegImmOpConstructor.subst(vcmpZeroSIop);
     exec_output += PredOpExecute.subst(vcmpZeroSIop);
@@ -1146,7 +1215,8 @@ let {{
     '''
     vcmpZeroDIop = InstObjParams("vcmpZerod", "VcmpZeroD", "FpRegImmOp",
                                      { "code": vcmpZeroDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegImmOpDeclare.subst(vcmpZeroDIop);
     decoder_output += FpRegImmOpConstructor.subst(vcmpZeroDIop);
     exec_output += PredOpExecute.subst(vcmpZeroDIop);
@@ -1168,7 +1238,8 @@ let {{
     '''
     vcmpeSIop = InstObjParams("vcmpes", "VcmpeS", "FpRegRegOp",
                                      { "code": vcmpeSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcmpeSIop);
     decoder_output += FpRegRegOpConstructor.subst(vcmpeSIop);
     exec_output += PredOpExecute.subst(vcmpeSIop);
@@ -1192,7 +1263,8 @@ let {{
     '''
     vcmpeDIop = InstObjParams("vcmped", "VcmpeD", "FpRegRegOp",
                                      { "code": vcmpeDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegRegOpDeclare.subst(vcmpeDIop);
     decoder_output += FpRegRegOpConstructor.subst(vcmpeDIop);
     exec_output += PredOpExecute.subst(vcmpeDIop);
@@ -1214,7 +1286,8 @@ let {{
     '''
     vcmpeZeroSIop = InstObjParams("vcmpeZeros", "VcmpeZeroS", "FpRegImmOp",
                                      { "code": vcmpeZeroSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegImmOpDeclare.subst(vcmpeZeroSIop);
     decoder_output += FpRegImmOpConstructor.subst(vcmpeZeroSIop);
     exec_output += PredOpExecute.subst(vcmpeZeroSIop);
@@ -1237,7 +1310,8 @@ let {{
     '''
     vcmpeZeroDIop = InstObjParams("vcmpeZerod", "VcmpeZeroD", "FpRegImmOp",
                                      { "code": vcmpeZeroDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCmpOp" }, [])
     header_output += FpRegImmOpDeclare.subst(vcmpeZeroDIop);
     decoder_output += FpRegImmOpConstructor.subst(vcmpeZeroDIop);
     exec_output += PredOpExecute.subst(vcmpeZeroDIop);
@@ -1261,7 +1335,8 @@ let {{
     '''
     vcvtFpSFixedSIop = InstObjParams("vcvt", "VcvtFpSFixedS", "FpRegRegImmOp",
                                      { "code": vcvtFpSFixedSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpSFixedSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpSFixedSIop);
@@ -1281,7 +1356,8 @@ let {{
     '''
     vcvtFpSFixedDIop = InstObjParams("vcvt", "VcvtFpSFixedD", "FpRegRegImmOp",
                                      { "code": vcvtFpSFixedDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpSFixedDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpSFixedDIop);
@@ -1298,7 +1374,8 @@ let {{
     '''
     vcvtFpUFixedSIop = InstObjParams("vcvt", "VcvtFpUFixedS", "FpRegRegImmOp",
                                      { "code": vcvtFpUFixedSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpUFixedSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpUFixedSIop);
@@ -1318,7 +1395,8 @@ let {{
     '''
     vcvtFpUFixedDIop = InstObjParams("vcvt", "VcvtFpUFixedD", "FpRegRegImmOp",
                                      { "code": vcvtFpUFixedDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpUFixedDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpUFixedDIop);
@@ -1334,7 +1412,8 @@ let {{
     '''
     vcvtSFixedFpSIop = InstObjParams("vcvt", "VcvtSFixedFpS", "FpRegRegImmOp",
                                      { "code": vcvtSFixedFpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtSFixedFpSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtSFixedFpSIop);
@@ -1353,7 +1432,8 @@ let {{
     '''
     vcvtSFixedFpDIop = InstObjParams("vcvt", "VcvtSFixedFpD", "FpRegRegImmOp",
                                      { "code": vcvtSFixedFpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtSFixedFpDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtSFixedFpDIop);
@@ -1369,7 +1449,8 @@ let {{
     '''
     vcvtUFixedFpSIop = InstObjParams("vcvt", "VcvtUFixedFpS", "FpRegRegImmOp",
                                      { "code": vcvtUFixedFpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtUFixedFpSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtUFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtUFixedFpSIop);
@@ -1388,7 +1469,8 @@ let {{
     '''
     vcvtUFixedFpDIop = InstObjParams("vcvt", "VcvtUFixedFpD", "FpRegRegImmOp",
                                      { "code": vcvtUFixedFpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtUFixedFpDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtUFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtUFixedFpDIop);
@@ -1406,7 +1488,8 @@ let {{
     vcvtFpSHFixedSIop = InstObjParams("vcvt", "VcvtFpSHFixedS",
                                       "FpRegRegImmOp",
                                      { "code": vcvtFpSHFixedSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpSHFixedSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSHFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpSHFixedSIop);
@@ -1427,7 +1510,8 @@ let {{
     vcvtFpSHFixedDIop = InstObjParams("vcvt", "VcvtFpSHFixedD",
                                       "FpRegRegImmOp",
                                      { "code": vcvtFpSHFixedDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpSHFixedDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpSHFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpSHFixedDIop);
@@ -1445,7 +1529,8 @@ let {{
     vcvtFpUHFixedSIop = InstObjParams("vcvt", "VcvtFpUHFixedS",
                                       "FpRegRegImmOp",
                                      { "code": vcvtFpUHFixedSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpUHFixedSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUHFixedSIop);
     exec_output += PredOpExecute.subst(vcvtFpUHFixedSIop);
@@ -1466,7 +1551,8 @@ let {{
     vcvtFpUHFixedDIop = InstObjParams("vcvt", "VcvtFpUHFixedD",
                                       "FpRegRegImmOp",
                                      { "code": vcvtFpUHFixedDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtFpUHFixedDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtFpUHFixedDIop);
     exec_output += PredOpExecute.subst(vcvtFpUHFixedDIop);
@@ -1483,7 +1569,8 @@ let {{
     vcvtSHFixedFpSIop = InstObjParams("vcvt", "VcvtSHFixedFpS",
                                       "FpRegRegImmOp",
                                      { "code": vcvtSHFixedFpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtSHFixedFpSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSHFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtSHFixedFpSIop);
@@ -1503,7 +1590,8 @@ let {{
     vcvtSHFixedFpDIop = InstObjParams("vcvt", "VcvtSHFixedFpD",
                                       "FpRegRegImmOp",
                                      { "code": vcvtSHFixedFpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtSHFixedFpDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtSHFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtSHFixedFpDIop);
@@ -1520,7 +1608,8 @@ let {{
     vcvtUHFixedFpSIop = InstObjParams("vcvt", "VcvtUHFixedFpS",
                                       "FpRegRegImmOp",
                                      { "code": vcvtUHFixedFpSCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtUHFixedFpSIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtUHFixedFpSIop);
     exec_output += PredOpExecute.subst(vcvtUHFixedFpSIop);
@@ -1540,7 +1629,8 @@ let {{
     vcvtUHFixedFpDIop = InstObjParams("vcvt", "VcvtUHFixedFpD",
                                       "FpRegRegImmOp",
                                      { "code": vcvtUHFixedFpDCode,
-                                       "predicate_test": predicateTest }, [])
+                                       "predicate_test": predicateTest,
+                                       "op_class": "SimdFloatCvtOp" }, [])
     header_output += FpRegRegImmOpDeclare.subst(vcvtUHFixedFpDIop);
     decoder_output += FpRegRegImmOpConstructor.subst(vcvtUHFixedFpDIop);
     exec_output += PredOpExecute.subst(vcvtUHFixedFpDIop);

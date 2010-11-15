@@ -37,4 +37,4 @@ class FUPool(SimObject):
 
 class DefaultFUPool(FUPool):
     FUList = [ IntALU(), IntMultDiv(), FP_ALU(), FP_MultDiv(), ReadPort(),
-               WritePort(), RdWrPort(), IprPort() ]
+               SIMD_Unit(), WritePort(), RdWrPort(), IprPort() ]

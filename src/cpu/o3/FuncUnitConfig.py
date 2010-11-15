@@ -1,3 +1,15 @@
+# Copyright (c) 2010 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -50,6 +62,29 @@ class FP_MultDiv(FUDesc):
                OpDesc(opClass='FloatDiv', opLat=12, issueLat=12),
                OpDesc(opClass='FloatSqrt', opLat=24, issueLat=24) ]
     count = 2
+
+class SIMD_Unit(FUDesc):
+    opList = [ OpDesc(opClass='SimdAdd'),
+               OpDesc(opClass='SimdAddAcc'),
+               OpDesc(opClass='SimdAlu'),
+               OpDesc(opClass='SimdCmp'),
+               OpDesc(opClass='SimdCvt'),
+               OpDesc(opClass='SimdMisc'),
+               OpDesc(opClass='SimdMult'),
+               OpDesc(opClass='SimdMultAcc'),
+               OpDesc(opClass='SimdShift'),
+               OpDesc(opClass='SimdShiftAcc'),
+               OpDesc(opClass='SimdSqrt'),
+               OpDesc(opClass='SimdFloatAdd'),
+               OpDesc(opClass='SimdFloatAlu'),
+               OpDesc(opClass='SimdFloatCmp'),
+               OpDesc(opClass='SimdFloatCvt'),
+               OpDesc(opClass='SimdFloatDiv'),
+               OpDesc(opClass='SimdFloatMisc'),
+               OpDesc(opClass='SimdFloatMult'),
+               OpDesc(opClass='SimdFloatMultAcc'),
+               OpDesc(opClass='SimdFloatSqrt') ]
+    count = 4
 
 class ReadPort(FUDesc):
     opList = [ OpDesc(opClass='MemRead') ]

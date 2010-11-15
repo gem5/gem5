@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -50,6 +62,26 @@ const OpClass FloatCvtOp = Enums::FloatCvt;
 const OpClass FloatMultOp = Enums::FloatMult;
 const OpClass FloatDivOp = Enums::FloatDiv;
 const OpClass FloatSqrtOp = Enums::FloatSqrt;
+const OpClass SimdAddOp = Enums::SimdAdd;
+const OpClass SimdAddAccOp = Enums::SimdAddAcc;
+const OpClass SimdAluOp = Enums::SimdAlu;
+const OpClass SimdCmpOp = Enums::SimdCmp;
+const OpClass SimdCvtOp = Enums::SimdCvt;
+const OpClass SimdMiscOp = Enums::SimdMisc;
+const OpClass SimdMultOp = Enums::SimdMult;
+const OpClass SimdMultAccOp = Enums::SimdMultAcc;
+const OpClass SimdShiftOp = Enums::SimdShift;
+const OpClass SimdShiftAccOp = Enums::SimdShiftAcc;
+const OpClass SimdSqrtOp = Enums::SimdSqrt;
+const OpClass SimdFloatAddOp = Enums::SimdFloatAdd;
+const OpClass SimdFloatAluOp = Enums::SimdFloatAlu;
+const OpClass SimdFloatCmpOp = Enums::SimdFloatCmp;
+const OpClass SimdFloatCvtOp = Enums::SimdFloatCvt;
+const OpClass SimdFloatDivOp = Enums::SimdFloatDiv;
+const OpClass SimdFloatMiscOp = Enums::SimdFloatMisc;
+const OpClass SimdFloatMultOp = Enums::SimdFloatMult;
+const OpClass SimdFloatMultAccOp = Enums::SimdFloatMultAcc;
+const OpClass SimdFloatSqrtOp = Enums::SimdFloatSqrt;
 const OpClass MemReadOp = Enums::MemRead;
 const OpClass MemWriteOp = Enums::MemWrite;
 const OpClass IprAccessOp = Enums::IprAccess;
