@@ -56,104 +56,104 @@
 
 namespace ArmISA {
 
-    inline PCState
-    buildRetPC(const PCState &curPC, const PCState &callPC)
+inline PCState
+buildRetPC(const PCState &curPC, const PCState &callPC)
+{
+    PCState retPC = callPC;
+    retPC.uEnd();
+    return retPC;
+}
+
+inline bool
+testPredicate(CPSR cpsr, ConditionCode code)
+{
+    switch (code)
     {
-        PCState retPC = callPC;
-        retPC.uEnd();
-        return retPC;
+        case COND_EQ: return  cpsr.z;
+        case COND_NE: return !cpsr.z;
+        case COND_CS: return  cpsr.c;
+        case COND_CC: return !cpsr.c;
+        case COND_MI: return  cpsr.n;
+        case COND_PL: return !cpsr.n;
+        case COND_VS: return  cpsr.v;
+        case COND_VC: return !cpsr.v;
+        case COND_HI: return  (cpsr.c && !cpsr.z);
+        case COND_LS: return !(cpsr.c && !cpsr.z);
+        case COND_GE: return !(cpsr.n ^ cpsr.v);
+        case COND_LT: return  (cpsr.n ^ cpsr.v);
+        case COND_GT: return !(cpsr.n ^ cpsr.v || cpsr.z);
+        case COND_LE: return  (cpsr.n ^ cpsr.v || cpsr.z);
+        case COND_AL: return true;
+        case COND_UC: return true;
+        default:
+            panic("Unhandled predicate condition: %d\n", code);
     }
+}
 
-    inline bool
-    testPredicate(CPSR cpsr, ConditionCode code)
-    {
-        switch (code)
-        {
-            case COND_EQ: return  cpsr.z;
-            case COND_NE: return !cpsr.z;
-            case COND_CS: return  cpsr.c;
-            case COND_CC: return !cpsr.c;
-            case COND_MI: return  cpsr.n;
-            case COND_PL: return !cpsr.n;
-            case COND_VS: return  cpsr.v;
-            case COND_VC: return !cpsr.v;
-            case COND_HI: return  (cpsr.c && !cpsr.z);
-            case COND_LS: return !(cpsr.c && !cpsr.z);
-            case COND_GE: return !(cpsr.n ^ cpsr.v);
-            case COND_LT: return  (cpsr.n ^ cpsr.v);
-            case COND_GT: return !(cpsr.n ^ cpsr.v || cpsr.z);
-            case COND_LE: return  (cpsr.n ^ cpsr.v || cpsr.z);
-            case COND_AL: return true;
-            case COND_UC: return true;
-            default:
-                panic("Unhandled predicate condition: %d\n", code);
-        }
-    }
+/**
+ * Function to insure ISA semantics about 0 registers.
+ * @param tc The thread context.
+ */
+template <class TC>
+void zeroRegisters(TC *tc);
 
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
+inline void startupCPU(ThreadContext *tc, int cpuId)
+{
+    tc->activate(0);
+}
 
-    inline void startupCPU(ThreadContext *tc, int cpuId)
-    {
-        tc->activate(0);
-    }
+void copyRegs(ThreadContext *src, ThreadContext *dest);
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
+static inline void
+copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    panic("Copy Misc. Regs Not Implemented Yet\n");
+}
 
-    static inline void
-    copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-    {
-        panic("Copy Misc. Regs Not Implemented Yet\n");
-    }
+void initCPU(ThreadContext *tc, int cpuId);
 
-    void initCPU(ThreadContext *tc, int cpuId);
-    
-    static inline bool
-    inUserMode(CPSR cpsr)
-    {
-        return cpsr.mode == MODE_USER;
-    }
+static inline bool
+inUserMode(CPSR cpsr)
+{
+    return cpsr.mode == MODE_USER;
+}
 
-    static inline bool
-    inUserMode(ThreadContext *tc)
-    {
-        return inUserMode(tc->readMiscRegNoEffect(MISCREG_CPSR));
-    }
+static inline bool
+inUserMode(ThreadContext *tc)
+{
+    return inUserMode(tc->readMiscRegNoEffect(MISCREG_CPSR));
+}
 
-    static inline bool
-    inPrivilegedMode(CPSR cpsr)
-    {
-        return !inUserMode(cpsr);
-    }
+static inline bool
+inPrivilegedMode(CPSR cpsr)
+{
+    return !inUserMode(cpsr);
+}
 
-    static inline bool
-    inPrivilegedMode(ThreadContext *tc)
-    {
-        return !inUserMode(tc);
-    }
+static inline bool
+inPrivilegedMode(ThreadContext *tc)
+{
+    return !inUserMode(tc);
+}
 
-    static inline bool
-    vfpEnabled(CPACR cpacr, CPSR cpsr)
-    {
-        return cpacr.cp10 == 0x3 ||
-            (cpacr.cp10 == 0x1 && inPrivilegedMode(cpsr));
-    }
+static inline bool
+vfpEnabled(CPACR cpacr, CPSR cpsr)
+{
+    return cpacr.cp10 == 0x3 ||
+        (cpacr.cp10 == 0x1 && inPrivilegedMode(cpsr));
+}
 
-    static inline bool
-    vfpEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
-    {
-        return fpexc.en && vfpEnabled(cpacr, cpsr);
-    }
+static inline bool
+vfpEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
+{
+    return fpexc.en && vfpEnabled(cpacr, cpsr);
+}
 
-    static inline bool
-    neonEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
-    {
-        return !cpacr.asedis && vfpEnabled(cpacr, cpsr, fpexc);
-    }
+static inline bool
+neonEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
+{
+    return !cpacr.asedis && vfpEnabled(cpacr, cpsr, fpexc);
+}
 
 uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
     
