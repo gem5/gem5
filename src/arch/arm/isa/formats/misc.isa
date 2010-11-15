@@ -180,6 +180,10 @@ let {{
 
             // Read/write, priveleged only.
           default:
+            if (miscReg >= MISCREG_CP15_UNIMP_START)
+                return new FailUnimplemented(csprintf("%s %s",
+                    isRead ? "mrc" : "mcr", miscRegName[miscReg]).c_str(),
+                    machInst);
             if (isRead) {
                 return new Mrc15(machInst, rt, (IntRegIndex)miscReg);
             } else {
