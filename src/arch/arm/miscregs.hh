@@ -262,6 +262,12 @@ namespace ArmISA
     EndBitUnion(CPSR)
 
     BitUnion8(ITSTATE)
+        /* Note that the split (cond, mask) below is not as in ARM ARM.
+         * But it is more convenient for simulation. The condition
+         * is always the concatenation of the top 3 bits and the next bit,
+         * which applies when one of the bottom 4 bits is set.
+         * Refer to predecoder.cc for the use case.
+         */
         Bitfield<7, 4> cond;
         Bitfield<3, 0> mask;
         // Bitfields for moving to/from CPSR
