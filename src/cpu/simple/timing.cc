@@ -999,7 +999,16 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
         if (next_tick == curTick) {
             cpu->completeDataAccess(pkt);
         } else {
-            tickEvent.schedule(pkt, next_tick);
+            if (!tickEvent.scheduled()) {
+                tickEvent.schedule(pkt, next_tick);
+            } else {
+                // In the case of a split transaction and a cache that is
+                // faster than a CPU we could get two responses before
+                // next_tick expires
+                if (!retryEvent.scheduled())
+                    schedule(retryEvent, next_tick);
+                return false;
+            }
         }
 
         return true;

@@ -140,7 +140,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         CpuPort(const std::string &_name, TimingSimpleCPU *_cpu, Tick _lat)
-            : Port(_name, _cpu), cpu(_cpu), lat(_lat)
+            : Port(_name, _cpu), cpu(_cpu), lat(_lat), retryEvent(this)
         { }
 
         bool snoopRangeSent;
@@ -161,12 +161,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
         {
             PacketPtr pkt;
             TimingSimpleCPU *cpu;
+            CpuPort *port;
 
             TickEvent(TimingSimpleCPU *_cpu) : cpu(_cpu) {}
             const char *description() const { return "Timing CPU tick"; }
             void schedule(PacketPtr _pkt, Tick t);
         };
 
+        EventWrapper<Port, &Port::sendRetry> retryEvent;
     };
 
     class IcachePort : public CpuPort
