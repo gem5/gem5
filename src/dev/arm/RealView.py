@@ -54,6 +54,10 @@ class AmbaDevice(BasicPioDevice):
 class AmbaDmaDevice(DmaDevice):
     type = 'AmbaDmaDevice'
     abstract = True
+    pio_addr = Param.Addr("Address for AMBA slave interface")
+    pio_latency = Param.Latency("10ns", "Time between action and write/read result by AMBA DMA Device")
+    gic = Param.Gic(Parent.any, "Gic to use for interrupting")
+    int_num = Param.UInt32("Interrupt number that connects to GIC")
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 
 class RealViewCtrl(BasicPioDevice):
@@ -89,16 +93,25 @@ class Sp804(AmbaDevice):
     clock1 = Param.Clock('1MHz', "Clock speed of the input")
     amba_id = 0x00141804
 
+class Pl111(AmbaDmaDevice):
+    type = 'Pl111'
+    clock = Param.Clock('24MHz', "Clock speed of the input")
+    amba_id = 0x00141111
+
 class RealView(Platform):
     type = 'RealView'
     system = Param.System(Parent.any, "system")
 
+# Reference for memory map and interrupt number
+# RealView Platform Baseboard Explore for Cortex-A9 User Guide(ARM DUI 0440A)
+# Chapter 4: Programmer's Reference
 class RealViewPBX(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
     realview_io = RealViewCtrl(pio_addr=0x10000000)
     gic = Gic()
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
+    clcd = Pl111(pio_addr=0x10020000, int_num=55)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff)
     flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x4000000)
@@ -107,7 +120,6 @@ class RealViewPBX(RealView):
     uart2_fake    = AmbaFake(pio_addr=0x1000b000)
     uart3_fake    = AmbaFake(pio_addr=0x1000c000)
     smc_fake      = AmbaFake(pio_addr=0x100e1000)
-    clcd_fake     = AmbaFake(pio_addr=0x10020000)
     sp810_fake    = AmbaFake(pio_addr=0x10001000, ignore_access=True)
     watchdog_fake = AmbaFake(pio_addr=0x10010000)
     gpio0_fake    = AmbaFake(pio_addr=0x10013000)
@@ -136,12 +148,12 @@ class RealViewPBX(RealView):
        self.realview_io.pio   = bus.port
        self.timer0.pio        = bus.port
        self.timer1.pio        = bus.port
+       self.clcd.pio          = bus.port
        self.dmac_fake.pio     = bus.port
        self.uart1_fake.pio    = bus.port
        self.uart2_fake.pio    = bus.port
        self.uart3_fake.pio    = bus.port
        self.smc_fake.pio      = bus.port
-       self.clcd_fake.pio     = bus.port
        self.sp810_fake.pio    = bus.port
        self.watchdog_fake.pio = bus.port
        self.gpio0_fake.pio    = bus.port
@@ -156,12 +168,14 @@ class RealViewPBX(RealView):
        self.rtc_fake.pio      = bus.port
        self.flash_fake.pio    = bus.port
 
+# Interrupt numbers are wrong here
 class RealViewEB(RealView):
     uart = Pl011(pio_addr=0x10009000, int_num=44)
     realview_io = RealViewCtrl(pio_addr=0x10000000)
     gic = Gic(dist_addr=0x10041000, cpu_addr=0x10040000)
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
+    clcd = Pl111(pio_addr=0x10020000, int_num=55)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff, warn_access="1")
     dmac_fake     = AmbaFake(pio_addr=0x10030000)
@@ -169,7 +183,6 @@ class RealViewEB(RealView):
     uart2_fake    = AmbaFake(pio_addr=0x1000b000)
     uart3_fake    = AmbaFake(pio_addr=0x1000c000)
     smc_fake      = AmbaFake(pio_addr=0x100e1000)
-    clcd_fake     = AmbaFake(pio_addr=0x10020000)
     sp810_fake    = AmbaFake(pio_addr=0x10001000, ignore_access=True)
     watchdog_fake = AmbaFake(pio_addr=0x10010000)
     gpio0_fake    = AmbaFake(pio_addr=0x10013000)
@@ -198,12 +211,12 @@ class RealViewEB(RealView):
        self.realview_io.pio   = bus.port
        self.timer0.pio        = bus.port
        self.timer1.pio        = bus.port
+       self.clcd.pio          = bus.port
        self.dmac_fake.pio     = bus.port
        self.uart1_fake.pio    = bus.port
        self.uart2_fake.pio    = bus.port
        self.uart3_fake.pio    = bus.port
        self.smc_fake.pio      = bus.port
-       self.clcd_fake.pio     = bus.port
        self.sp810_fake.pio    = bus.port
        self.watchdog_fake.pio = bus.port
        self.gpio0_fake.pio    = bus.port

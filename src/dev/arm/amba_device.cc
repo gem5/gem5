@@ -42,19 +42,22 @@
 
 #include "base/trace.hh"
 #include "dev/arm/amba_fake.hh"
+#include "dev/arm/amba_device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+const uint64_t AmbaVendor = ULL(0xb105f00d00000000);
 AmbaDevice::AmbaDevice(const Params *p)
-    : BasicPioDevice(p), ambaId(ULL(0xb105f00d00000000) | p->amba_id)
+    : BasicPioDevice(p), ambaId(AmbaVendor | p->amba_id)
 {
 }
 
 AmbaDmaDevice::AmbaDmaDevice(const Params *p)
-    : DmaDevice(p), ambaId(ULL(0xb105f00d00000000) | p->amba_id)
+    : DmaDevice(p), ambaId(AmbaVendor | p->amba_id),
+      pioAddr(p->pio_addr), pioSize(0),
+      pioDelay(p->pio_latency),intNum(p->int_num), gic(p->gic)
 {
 }
-
 
 namespace AmbaDev {
 bool

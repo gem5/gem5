@@ -46,13 +46,14 @@
  * Implementer ID calls.
  */
 
-#ifndef __DEV_ARM_AMBA_DEVICE_H__
-#define __DEV_ARM_AMBA_DEVICE_H__
+#ifndef __DEV_ARM_AMBA_DEVICE_HH__
+#define __DEV_ARM_AMBA_DEVICE_HH__
 
 #include "base/range.hh"
+#include "dev/io_device.hh"
+#include "dev/arm/gic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "dev/io_device.hh"
 #include "params/AmbaDevice.hh"
 #include "params/AmbaDmaDevice.hh"
 
@@ -84,6 +85,11 @@ class AmbaDmaDevice : public DmaDevice
 {
   protected:
     uint64_t ambaId;
+    Addr     pioAddr;
+    Addr     pioSize;
+    Tick     pioDelay;
+    int      intNum;
+    Gic      *gic;
 
   public:
     typedef AmbaDmaDeviceParams Params;
@@ -91,4 +97,4 @@ class AmbaDmaDevice : public DmaDevice
 };
 
 
-#endif //__DEV_ARM_AMBA_DEVICE_H__
+#endif //__DEV_ARM_AMBA_DEVICE_HH__
