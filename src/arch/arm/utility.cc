@@ -133,5 +133,22 @@ skipFunction(ThreadContext *tc)
     tc->pcState(newPC);
 }
 
+void
+copyRegs(ThreadContext *src, ThreadContext *dest)
+{
+    int i;
+    for(i = 0; i < TheISA::NumIntRegs; i++)
+        dest->setIntReg(i, src->readIntReg(i));
+    for(i = 0; i < TheISA::NumFloatRegs; i++)
+        dest->setFloatReg(i, src->readFloatReg(i));
+    for(i = 0; i < TheISA::NumMiscRegs; i++)
+        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
 
+    // setMiscReg "with effect" will set the misc register mapping correctly.
+    // e.g. updateRegMap(val)
+    dest->setMiscReg(MISCREG_CPSR, src->readMiscRegNoEffect(MISCREG_CPSR));
+
+    // Lastly copy PC/NPC
+    dest->pcState(src->pcState());
+}
 }

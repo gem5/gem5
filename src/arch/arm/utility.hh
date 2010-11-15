@@ -102,11 +102,7 @@ namespace ArmISA {
         tc->activate(0);
     }
 
-    static inline void
-    copyRegs(ThreadContext *src, ThreadContext *dest)
-    {
-        panic("Copy Regs Not Implemented Yet\n");
-    }
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     static inline void
     copyMiscRegs(ThreadContext *src, ThreadContext *dest)

@@ -43,6 +43,7 @@
 #include "dev/io_device.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "sim/system.hh"
 
 using namespace ArmISA;
 
@@ -59,9 +60,10 @@ TableWalker::~TableWalker()
 }
 
 
-unsigned int TableWalker::drain(Event *de)
+unsigned int
+TableWalker::drain(Event *de)
 {
-    if (stateQueueL1.size() != 0 || stateQueueL2.size() != 0)
+    if (stateQueueL1.size() || stateQueueL2.size() || pendingQueue.size())
     {
         changeState(Draining);
         DPRINTF(Checkpoint, "TableWalker busy, wait to drain\n");
@@ -72,6 +74,16 @@ unsigned int TableWalker::drain(Event *de)
         changeState(Drained);
         DPRINTF(Checkpoint, "TableWalker free, no need to drain\n");
         return 0;
+    }
+}
+
+void
+TableWalker::resume()
+{
+    MemObject::resume();
+    if ((params()->sys->getMemoryMode() == Enums::timing) && currState) {
+            delete currState;
+            currState = NULL;
     }
 }
 
