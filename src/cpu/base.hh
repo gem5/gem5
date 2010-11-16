@@ -180,6 +180,9 @@ class BaseCPU : public MemObject
 
   public:
 
+    // Mask to align PCs to MachInst sized boundaries
+    static const Addr PCMask = ~((Addr)sizeof(TheISA::MachInst) - 1);
+
     /// Provide access to the tracer pointer
     Trace::InstTracer * getTracer() { return tracer; }
 

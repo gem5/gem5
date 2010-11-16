@@ -47,9 +47,10 @@ class Predecoder
     ThreadContext * tc;
     //The extended machine instruction being generated
     ExtMachInst emi;
+    bool emiIsReady;
 
   public:
-    Predecoder(ThreadContext * _tc) : tc(_tc)
+    Predecoder(ThreadContext * _tc) : tc(_tc), emiIsReady(false)
     {}
 
     ThreadContext *getTC()
@@ -70,7 +71,9 @@ class Predecoder
 
     void
     reset()
-    {}
+    {
+        emiIsReady = false;
+    }
 
     //Use this to give data to the predecoder. This should be used
     //when there is control flow.
@@ -78,6 +81,7 @@ class Predecoder
     moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     {
         emi = inst;
+        emiIsReady = true;
     }
 
     bool
@@ -89,13 +93,14 @@ class Predecoder
     bool
     extMachInstReady()
     {
-        return true;
+        return emiIsReady;
     }
 
     //This returns a constant reference to the ExtMachInst to avoid a copy
     const ExtMachInst &
     getExtMachInst(PCState &pc)
     {
+        emiIsReady = false;
         return emi;
     }
 };

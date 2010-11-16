@@ -317,6 +317,8 @@ DefaultFetch<Impl>::initStage()
     // Setup PC and nextPC with initial state.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         pc[tid] = cpu->pcState(tid);
+        fetchOffset[tid] = 0;
+        macroop[tid] = NULL;
     }
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
@@ -534,7 +536,8 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
 
 template <class Impl>
 bool
-DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid)
+DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid,
+                                   Addr pc)
 {
     Fault fault = NoFault;
 
@@ -547,7 +550,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, switched out\n",
                 tid);
         return false;
-    } else if (interruptPending && !(fetch_PC & 0x3)) {
+    } else if (interruptPending && !(pc & 0x3)) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -557,8 +560,8 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid
         return false;
     }
 
-    // Align the fetch PC so it's at the start of a cache block.
-    Addr block_PC = icacheBlockAlignPC(fetch_PC);
+    // Align the fetch address so it's at the start of a cache block.
+    Addr block_PC = icacheBlockAlignPC(vaddr);
 
     // If we've already got the block, no need to try to fetch it again.
     if (cacheDataValid[tid] && block_PC == cacheDataPC[tid]) {
@@ -570,7 +573,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid
     // Build request here.
     RequestPtr mem_req =
         new Request(tid, block_PC, cacheBlkSize, Request::INST_FETCH,
-                    fetch_PC, cpu->thread[tid]->contextId(), tid);
+                    pc, cpu->thread[tid]->contextId(), tid);
 
     memReq[tid] = mem_req;
 
@@ -645,6 +648,9 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC, ThreadID tid)
             tid, newPC);
 
     pc[tid] = newPC;
+    fetchOffset[tid] = 0;
+    macroop[tid] = NULL;
+    predecoder.reset();
 
     // Clear the icache miss if it's outstanding.
     if (fetchStatus[tid] == IcacheWaitResponse) {
@@ -958,6 +964,53 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
 }
 
 template<class Impl>
+typename Impl::DynInstPtr
+DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
+                              StaticInstPtr curMacroop, TheISA::PCState thisPC,
+                              TheISA::PCState nextPC, bool trace)
+{
+    // Get a sequence number.
+    InstSeqNum seq = cpu->getAndIncrementInstSeq();
+
+    // Create a new DynInst from the instruction fetched.
+    DynInstPtr instruction =
+        new DynInst(staticInst, thisPC, nextPC, seq, cpu);
+    instruction->setTid(tid);
+
+    instruction->setASID(tid);
+
+    instruction->setThreadState(cpu->thread[tid]);
+
+    DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x (%d) created "
+            "[sn:%lli]\n", tid, thisPC.instAddr(),
+            thisPC.microPC(), seq);
+
+    DPRINTF(Fetch, "[tid:%i]: Instruction is: %s\n", tid,
+            instruction->staticInst->
+            disassemble(thisPC.instAddr()));
+
+#if TRACING_ON
+    if (trace) {
+        instruction->traceData =
+            cpu->getTracer()->getInstRecord(curTick, cpu->tcBase(tid),
+                    instruction->staticInst, thisPC, curMacroop);
+    }
+#else
+    instruction->traceData = NULL;
+#endif
+
+    // Add instruction to the CPU's list of instructions.
+    instruction->setInstListIt(cpu->addInst(instruction));
+
+    // Write the instruction to the first slot in the queue
+    // that heads to decode.
+    assert(numInst < fetchWidth);
+    toDecode->insts[toDecode->size++] = instruction;
+
+    return instruction;
+}
+
+template<class Impl>
 void
 DefaultFetch<Impl>::fetch(bool &status_change)
 {
@@ -977,25 +1030,28 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     DPRINTF(Fetch, "Attempting to fetch from [tid:%i]\n", tid);
 
     // The current PC.
-    TheISA::PCState fetchPC = pc[tid];
+    TheISA::PCState thisPC = pc[tid];
 
     // Fault code for memory access.
     Fault fault = NoFault;
+
+    Addr pcOffset = fetchOffset[tid];
+    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
 
     // If returning from the delay of a cache miss, then update the status
     // to running, otherwise do the cache access.  Possibly move this up
     // to tick() function.
     if (fetchStatus[tid] == IcacheAccessComplete) {
-        DPRINTF(Fetch, "[tid:%i]: Icache miss is complete.\n",
-                tid);
+        DPRINTF(Fetch, "[tid:%i]: Icache miss is complete.\n",tid);
 
         fetchStatus[tid] = Running;
         status_change = true;
     } else if (fetchStatus[tid] == Running) {
         DPRINTF(Fetch, "[tid:%i]: Attempting to translate and read "
-                "instruction, starting at PC %s.\n", tid, fetchPC);
+                "instruction, starting at PC %#x.\n", tid, fetchAddr);
 
-        bool fetch_success = fetchCacheLine(fetchPC.instAddr(), fault, tid);
+        bool fetch_success = fetchCacheLine(fetchAddr, fault, tid,
+                                            thisPC.instAddr());
         if (!fetch_success) {
             if (cacheBlocked) {
                 ++icacheStallCycles;
@@ -1033,142 +1089,132 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         return;
     }
 
-    TheISA::PCState nextPC = fetchPC;
-
-    InstSeqNum inst_seq;
-    MachInst inst;
-    ExtMachInst ext_inst;
+    TheISA::PCState nextPC = thisPC;
 
     StaticInstPtr staticInst = NULL;
-    StaticInstPtr macroop = NULL;
+    StaticInstPtr curMacroop = macroop[tid];
 
     if (fault == NoFault) {
-        //XXX Masking out pal mode bit. This will break x86. Alpha needs
-        //to pull the pal mode bit ouf ot the instruction address.
-        unsigned offset = (fetchPC.instAddr() & ~1) - cacheDataPC[tid];
-        assert(offset < cacheBlkSize);
 
         // If the read of the first instruction was successful, then grab the
         // instructions from the rest of the cache line and put them into the
         // queue heading to decode.
 
-        DPRINTF(Fetch, "[tid:%i]: Adding instructions to queue to "
-                "decode.\n",tid);
+        DPRINTF(Fetch,
+                "[tid:%i]: Adding instructions to queue to decode.\n", tid);
 
         // Need to keep track of whether or not a predicted branch
         // ended this fetch block.
-        bool predicted_branch = false;
+        bool predictedBranch = false;
 
-        while (offset < cacheBlkSize &&
+        TheISA::MachInst *cacheInsts =
+            reinterpret_cast<TheISA::MachInst *>(cacheData[tid]);
+
+        const unsigned numInsts = cacheBlkSize / instSize;
+        unsigned blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
+
+        // Loop through instruction memory from the cache.
+        while (blkOffset < numInsts &&
                numInst < fetchWidth &&
-               !predicted_branch) {
+               !predictedBranch) {
 
-            // Make sure this is a valid index.
-            assert(offset <= cacheBlkSize - instSize);
-
-            if (!macroop) {
-                // Get the instruction from the array of the cache line.
-                inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
-                            (&cacheData[tid][offset]));
+            // If we need to process more memory, do it now.
+            if (!curMacroop && !predecoder.extMachInstReady()) {
+                if (ISA_HAS_DELAY_SLOT && pcOffset == 0) {
+                    // Walk past any annulled delay slot instructions.
+                    Addr pcAddr = thisPC.instAddr() & BaseCPU::PCMask;
+                    while (fetchAddr != pcAddr && blkOffset < numInsts) {
+                        blkOffset++;
+                        fetchAddr += instSize;
+                    }
+                    if (blkOffset >= numInsts)
+                        break;
+                }
+                MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
 
                 predecoder.setTC(cpu->thread[tid]->getTC());
-                predecoder.moreBytes(fetchPC, fetchPC.instAddr(), inst);
+                predecoder.moreBytes(thisPC, fetchAddr, inst);
 
-                ext_inst = predecoder.getExtMachInst(fetchPC);
-                staticInst = StaticInstPtr(ext_inst, fetchPC.instAddr());
-                if (staticInst->isMacroop())
-                    macroop = staticInst;
+                if (predecoder.needMoreBytes()) {
+                    blkOffset++;
+                    fetchAddr += instSize;
+                    pcOffset += instSize;
+                }
             }
+
+            // Extract as many instructions and/or microops as we can from
+            // the memory we've processed so far.
             do {
-                if (macroop) {
-                    staticInst = macroop->fetchMicroop(fetchPC.microPC());
+                if (!curMacroop) {
+                    if (predecoder.extMachInstReady()) {
+                        ExtMachInst extMachInst;
+
+                        extMachInst = predecoder.getExtMachInst(thisPC);
+                        pcOffset = 0;
+                        staticInst = StaticInstPtr(extMachInst,
+                                                   thisPC.instAddr());
+
+                        // Increment stat of fetched instructions.
+                        ++fetchedInsts;
+
+                        if (staticInst->isMacroop())
+                            curMacroop = staticInst;
+                    } else {
+                        // We need more bytes for this instruction.
+                        break;
+                    }
+                }
+                if (curMacroop) {
+                    staticInst = curMacroop->fetchMicroop(thisPC.microPC());
                     if (staticInst->isLastMicroop())
-                        macroop = NULL;
+                        curMacroop = NULL;
                 }
 
-                // Get a sequence number.
-                inst_seq = cpu->getAndIncrementInstSeq();
+                DynInstPtr instruction =
+                    buildInst(tid, staticInst, curMacroop,
+                              thisPC, nextPC, true);
 
-                // Create a new DynInst from the instruction fetched.
-                DynInstPtr instruction = new DynInst(staticInst,
-                                                     fetchPC, nextPC,
-                                                     inst_seq, cpu);
-                instruction->setTid(tid);
+                numInst++;
 
-                instruction->setASID(tid);
-
-                instruction->setThreadState(cpu->thread[tid]);
-
-                DPRINTF(Fetch, "[tid:%i]: Instruction PC %s (%d) created "
-                        "[sn:%lli]\n", tid, instruction->pcState(),
-                        instruction->microPC(), inst_seq);
-
-                //DPRINTF(Fetch, "[tid:%i]: MachInst is %#x\n", tid, ext_inst);
-
-                DPRINTF(Fetch, "[tid:%i]: Instruction is: %s\n", tid,
-                        instruction->staticInst->
-                        disassemble(fetchPC.instAddr()));
-
-#if TRACING_ON
-                instruction->traceData =
-                    cpu->getTracer()->getInstRecord(curTick, cpu->tcBase(tid),
-                            instruction->staticInst, fetchPC, macroop);
-#else
-                instruction->traceData = NULL;
-#endif
+                nextPC = thisPC;
 
                 // If we're branching after this instruction, quite fetching
                 // from the same block then.
-                predicted_branch = fetchPC.branching();
-                predicted_branch |=
+                predictedBranch |= thisPC.branching();
+                predictedBranch |=
                     lookupAndUpdateNextPC(instruction, nextPC);
-                if (predicted_branch) {
-                    DPRINTF(Fetch, "Branch detected with PC = %s\n", fetchPC);
+                if (predictedBranch) {
+                    DPRINTF(Fetch, "Branch detected with PC = %s\n", thisPC);
                 }
 
-                // Add instruction to the CPU's list of instructions.
-                instruction->setInstListIt(cpu->addInst(instruction));
-
-                // Write the instruction to the first slot in the queue
-                // that heads to decode.
-                toDecode->insts[numInst] = instruction;
-
-                toDecode->size++;
-
-                // Increment stat of fetched instructions.
-                ++fetchedInsts;
-
                 // Move to the next instruction, unless we have a branch.
-                fetchPC = nextPC;
+                thisPC = nextPC;
 
                 if (instruction->isQuiesce()) {
-                    DPRINTF(Fetch, "Quiesce instruction encountered, halting fetch!",
-                            curTick);
+                    DPRINTF(Fetch,
+                            "Quiesce instruction encountered, halting fetch!");
                     fetchStatus[tid] = QuiescePending;
-                    ++numInst;
                     status_change = true;
                     break;
                 }
-
-                ++numInst;
-            } while (staticInst->isMicroop() &&
-                     !staticInst->isLastMicroop() &&
+            } while ((curMacroop || predecoder.extMachInstReady()) &&
                      numInst < fetchWidth);
-            //XXX Masking out pal mode bit.
-            offset = (fetchPC.instAddr() & ~1) - cacheDataPC[tid];
         }
 
-        if (predicted_branch) {
+        if (predictedBranch) {
             DPRINTF(Fetch, "[tid:%i]: Done fetching, predicted branch "
                     "instruction encountered.\n", tid);
         } else if (numInst >= fetchWidth) {
             DPRINTF(Fetch, "[tid:%i]: Done fetching, reached fetch bandwidth "
                     "for this cycle.\n", tid);
-        } else if (offset >= cacheBlkSize) {
+        } else if (blkOffset >= cacheBlkSize) {
             DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of cache "
                     "block.\n", tid);
         }
     }
+
+    macroop[tid] = curMacroop;
+    fetchOffset[tid] = pcOffset;
 
     if (numInst > 0) {
         wroteToTimeBuffer = true;
@@ -1188,34 +1234,16 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         // Send the fault to commit.  This thread will not do anything
         // until commit handles the fault.  The only other way it can
-        // wake up is if a squash comes along and changes the PC.
-        assert(numInst < fetchWidth);
-        // Get a sequence number.
-        inst_seq = cpu->getAndIncrementInstSeq();
-        // We will use a nop in order to carry the fault.
-        ext_inst = TheISA::NoopMachInst;
+        // wake up is if a squash comes along and changes the PC.  Send the
+        // fault on a dummy nop.
+        staticInst = StaticInstPtr(TheISA::NoopMachInst, thisPC.instAddr());
 
-        // Create a new DynInst from the dummy nop.
-        DynInstPtr instruction = new DynInst(ext_inst, fetchPC, nextPC,
-                                             inst_seq, cpu);
-        TheISA::advancePC(nextPC, instruction->staticInst);
+        DynInstPtr instruction =
+            buildInst(tid, staticInst, NULL, thisPC, nextPC, false);
+
+        TheISA::advancePC(nextPC, staticInst);
         instruction->setPredTarg(nextPC);
-        instruction->setTid(tid);
-
-        instruction->setASID(tid);
-
-        instruction->setThreadState(cpu->thread[tid]);
-
-        instruction->traceData = NULL;
-
-        instruction->setInstListIt(cpu->addInst(instruction));
-
         instruction->fault = fault;
-
-        toDecode->insts[numInst] = instruction;
-        toDecode->size++;
-
-        wroteToTimeBuffer = true;
 
         DPRINTF(Fetch, "[tid:%i]: Blocked, need to handle the trap.\n",tid);
 
@@ -1223,7 +1251,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         status_change = true;
 
         DPRINTF(Fetch, "[tid:%i]: fault (%s) detected @ PC %s",
-                tid, fault->name(), pc[tid]);
+                tid, fault->name(), thisPC);
     }
 }
 

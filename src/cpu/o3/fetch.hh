@@ -235,13 +235,14 @@ class DefaultFetch
      * Fetches the cache line that contains fetch_PC.  Returns any
      * fault that happened.  Puts the data into the class variable
      * cacheData.
-     * @param fetch_PC The PC address that is being fetched from.
+     * @param vaddr The memory address that is being fetched from.
      * @param ret_fault The fault reference that will be set to the result of
      * the icache access.
      * @param tid Thread id.
+     * @param pc The actual PC of the current instruction.
      * @return Any fault that occured.
      */
-    bool fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid);
+    bool fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid, Addr pc);
 
     /** Squashes a specific thread and resets the PC. */
     inline void doSquash(const TheISA::PCState &newPC, ThreadID tid);
@@ -291,6 +292,10 @@ class DefaultFetch
     }
 
   private:
+    DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
+                         StaticInstPtr curMacroop, TheISA::PCState thisPC,
+                         TheISA::PCState nextPC, bool trace);
+
     /** Handles retrying the fetch access. */
     void recvRetry();
 
@@ -346,6 +351,10 @@ class DefaultFetch
     TheISA::Predecoder predecoder;
 
     TheISA::PCState pc[Impl::MaxThreads];
+
+    Addr fetchOffset[Impl::MaxThreads];
+
+    StaticInstPtr macroop[Impl::MaxThreads];
 
     /** Memory request used to access cache. */
     RequestPtr memReq[Impl::MaxThreads];
