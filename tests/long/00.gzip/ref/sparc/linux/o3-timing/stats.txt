@@ -136,12 +136,12 @@ system.cpu.fetch.Branches                   105812900                       # Nu
 system.cpu.fetch.CacheLines                 173095521                       # Number of cache lines fetched
 system.cpu.fetch.Cycles                     548231197                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu.fetch.IcacheSquashes               1429406                       # Number of outstanding Icache misses that were squashed
-system.cpu.fetch.Insts                     1760522570                       # Number of instructions fetch has processed
+system.cpu.fetch.Insts                     1755969057                       # Number of instructions fetch has processed
 system.cpu.fetch.SquashCycles                 6170035                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.branchRate                  0.087964                       # Number of branch fetches per cycle
 system.cpu.fetch.icacheStallCycles          173095521                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu.fetch.predictedBranches           98804348                       # Number of branches that fetch has predicted taken
-system.cpu.fetch.rate                        1.463554                       # Number of inst fetches per cycle
+system.cpu.fetch.rate                        1.459768                       # Number of inst fetches per cycle
 system.cpu.fetch.rateDist::samples         1202543536                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::mean              1.463999                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::stdev             2.699989                       # Number of instructions fetched each cycle (Total)
