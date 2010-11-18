@@ -246,7 +246,7 @@ def run(options, root, testsys, cpu_class):
         else:
             print "Switch at curTick count:%s" % str(10000)
             exit_event = m5.simulate(10000)
-        print "Switched CPUS @ cycle = %s" % (m5.curTick())
+        print "Switched CPUS @ tick %s" % (m5.curTick())
 
         # when you change to Timing (or Atomic), you halt the system
         # given as argument.  When you are finished with the system
@@ -267,7 +267,7 @@ def run(options, root, testsys, cpu_class):
                 exit_event = m5.simulate()
             else:
                 exit_event = m5.simulate(options.warmup)
-            print "Switching CPUS @ cycle = %s" % (m5.curTick())
+            print "Switching CPUS @ tick %s" % (m5.curTick())
             print "Simulation ends instruction count:%d" % \
                     (testsys.switch_cpus_1[0].max_insts_any_thread)
             m5.drain(testsys)
@@ -367,7 +367,7 @@ def run(options, root, testsys, cpu_class):
 
     if exit_cause == '':
         exit_cause = exit_event.getCause()
-    print 'Exiting @ cycle %i because %s' % (m5.curTick(), exit_cause)
+    print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_cause)
 
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))
