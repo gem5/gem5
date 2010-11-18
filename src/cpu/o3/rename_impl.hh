@@ -959,14 +959,19 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
         RegIndex flat_src_reg = src_reg;
         if (src_reg < TheISA::FP_Base_DepTag) {
             flat_src_reg = inst->tcBase()->flattenIntIndex(src_reg);
-            DPRINTF(Rename, "Flattening index %d to %d.\n", (int)src_reg, (int)flat_src_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n",
+                    (int)src_reg, (int)flat_src_reg);
         } else if (src_reg < TheISA::Ctrl_Base_DepTag) {
             src_reg = src_reg - TheISA::FP_Base_DepTag;
             flat_src_reg = inst->tcBase()->flattenFloatIndex(src_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n",
+                    (int)src_reg, (int)flat_src_reg);
             flat_src_reg += TheISA::NumIntRegs;
         } else if (src_reg < TheISA::Max_DepTag) {
-            flat_src_reg = src_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
-            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", src_reg, flat_src_reg);
+            flat_src_reg = src_reg - TheISA::Ctrl_Base_DepTag +
+                           TheISA::NumFloatRegs + TheISA::NumIntRegs;
+            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n",
+                    src_reg, flat_src_reg);
         } else {
             panic("Reg index is out of bound: %d.", src_reg);
         }
@@ -985,11 +990,13 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
 
         // See if the register is ready or not.
         if (scoreboard->getReg(renamed_reg) == true) {
-            DPRINTF(Rename, "[tid:%u]: Register %d is ready.\n", tid, renamed_reg);
+            DPRINTF(Rename, "[tid:%u]: Register %d is ready.\n",
+                    tid, renamed_reg);
 
             inst->markSrcRegReady(src_idx);
         } else {
-            DPRINTF(Rename, "[tid:%u]: Register %d is not ready.\n", tid, renamed_reg);
+            DPRINTF(Rename, "[tid:%u]: Register %d is not ready.\n",
+                    tid, renamed_reg);
         }
 
         ++renameRenameLookups;
@@ -1011,12 +1018,21 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
         if (dest_reg < TheISA::FP_Base_DepTag) {
             // Integer registers are flattened.
             flat_dest_reg = inst->tcBase()->flattenIntIndex(dest_reg);
-            DPRINTF(Rename, "Flattening index %d to %d.\n", (int)dest_reg, (int)flat_dest_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n",
+                    (int)dest_reg, (int)flat_dest_reg);
+        } else if (dest_reg < TheISA::Ctrl_Base_DepTag) {
+            dest_reg = dest_reg - TheISA::FP_Base_DepTag;
+            flat_dest_reg = inst->tcBase()->flattenFloatIndex(dest_reg);
+            DPRINTF(Rename, "Flattening index %d to %d.\n",
+                    (int)dest_reg, (int)flat_dest_reg);
+            flat_dest_reg += TheISA::NumIntRegs;
         } else if (dest_reg < TheISA::Max_DepTag) {
             // Floating point and Miscellaneous registers need their indexes
             // adjusted to account for the expanded number of flattened int regs.
-            flat_dest_reg = dest_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
-            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n", dest_reg, flat_dest_reg);
+            flat_dest_reg = dest_reg - TheISA::Ctrl_Base_DepTag +
+                            TheISA::NumIntRegs + TheISA::NumFloatRegs;
+            DPRINTF(Rename, "Adjusting reg index from %d to %d.\n",
+                    dest_reg, flat_dest_reg);
         } else {
             panic("Reg index is out of bound: %d.", dest_reg);
         }
