@@ -533,10 +533,10 @@ try:
     uname = platform.uname()
     if uname[0] == 'Darwin' and compareVersions(uname[2], '9.0.0') >= 0:
         if int(readCommand('sysctl -n hw.cpu64bit_capable')[0]):
-            main.Append(CCFLAGS=['-arch x86_64'])
-            main.Append(CFLAGS=['-arch x86_64'])
-            main.Append(LINKFLAGS=['-arch x86_64'])
-            main.Append(ASFLAGS=['-arch x86_64'])
+            main.Append(CCFLAGS=['-arch', 'x86_64'])
+            main.Append(CFLAGS=['-arch', 'x86_64'])
+            main.Append(LINKFLAGS=['-arch', 'x86_64'])
+            main.Append(ASFLAGS=['-arch', 'x86_64'])
 except:
     pass
 
