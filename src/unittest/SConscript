@@ -30,6 +30,9 @@
 
 Import('*')
 
+if env['TARGET_ISA'] == 'no':
+    Return()
+
 UnitTest('bitvectest', 'bitvectest.cc')
 UnitTest('circletest', 'circletest.cc')
 UnitTest('cprintftest', 'cprintftest.cc')

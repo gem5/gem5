@@ -37,6 +37,9 @@ import SCons
 
 Import('*')
 
+if env['TARGET_ISA'] == 'no':
+    Return()
+
 if not env['RUBY']:
     Return()
 

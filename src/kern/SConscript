@@ -30,6 +30,9 @@
 
 Import('*')
 
+if env['TARGET_ISA'] == 'no':
+    Return()
+
 if env['FULL_SYSTEM']:
     Source('kernel_stats.cc')
     Source('system_events.cc')

@@ -31,10 +31,8 @@
 #include <Python.h>
 
 #include "base/types.hh"
-#include "cpu/base.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
-#include "sim/system.hh"
 
 extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
 SimObject *resolveSimObject(const std::string &name);

@@ -32,28 +32,30 @@ Import('*')
 
 SimObject('BaseTLB.py')
 SimObject('Root.py')
-SimObject('System.py')
 SimObject('InstTracer.py')
 
 Source('async.cc')
 Source('core.cc')
 Source('debug.cc')
 Source('eventq.cc')
-Source('faults.cc')
 Source('init.cc')
 Source('main.cc', bin_only=True)
-Source('pseudo_inst.cc')
 Source('root.cc')
 Source('serialize.cc')
 Source('sim_events.cc')
 Source('sim_object.cc')
 Source('simulate.cc')
 Source('stat_control.cc')
-Source('system.cc')
+
+if env['TARGET_ISA'] != 'no':
+    SimObject('System.py')
+    Source('faults.cc')
+    Source('pseudo_inst.cc')
+    Source('system.cc')
 
 if env['FULL_SYSTEM']:
     Source('arguments.cc')
-else:
+elif env['TARGET_ISA'] != 'no':
     Source('tlb.cc')
     SimObject('Process.py')
 

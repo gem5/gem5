@@ -30,6 +30,9 @@
 
 Import('*')
 
+if env['TARGET_ISA'] == 'no':
+    Return()
+
 Source('base.cc')
 Source('ghb.cc')
 Source('stride.cc')

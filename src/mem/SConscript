@@ -33,21 +33,23 @@ Import('*')
 SimObject('Bridge.py')
 SimObject('Bus.py')
 SimObject('MemObject.py')
-SimObject('PhysicalMemory.py')
 
 Source('bridge.cc')
 Source('bus.cc')
-Source('dram.cc')
 Source('mem_object.cc')
 Source('packet.cc')
-Source('physical.cc')
 Source('port.cc')
 Source('tport.cc')
 Source('mport.cc')
 
+if env['TARGET_ISA'] != 'no':
+    SimObject('PhysicalMemory.py')
+    Source('dram.cc')
+    Source('physical.cc')
+
 if env['FULL_SYSTEM']:
     Source('vport.cc')
-else:
+elif env['TARGET_ISA'] != 'no':
     Source('page_table.cc')
     Source('translating_port.cc')
 
