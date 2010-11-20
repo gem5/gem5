@@ -29,6 +29,13 @@
  *          Ali Saidi
  */
 
+/*
+ * Mersenne Twister random number generator has a period of
+ * 2^19937-1.
+ *
+ * The actual math is in its own file to keep the license clear.
+ */
+
 #ifndef __BASE_RANDOM_HH__
 #define __BASE_RANDOM_HH__
 
