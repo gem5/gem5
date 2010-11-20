@@ -68,8 +68,7 @@ using namespace std;
 using namespace TheISA;
 
 PhysicalMemory::PhysicalMemory(const Params *p)
-    : MemObject(p), pmemAddr(NULL), pagePtr(0),
-      lat(p->latency), lat_var(p->latency_var),
+    : MemObject(p), pmemAddr(NULL), lat(p->latency), lat_var(p->latency_var),
       _size(params()->range.size()), _start(params()->range.start)
 {
     if (size() % TheISA::PageBytes != 0)
@@ -122,16 +121,6 @@ PhysicalMemory::~PhysicalMemory()
 {
     if (pmemAddr)
         munmap((char*)pmemAddr, size());
-}
-
-Addr
-PhysicalMemory::new_page()
-{
-    Addr return_addr = pagePtr << LogVMPageSize;
-    return_addr += start();
-
-    ++pagePtr;
-    return return_addr;
 }
 
 unsigned

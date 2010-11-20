@@ -67,8 +67,8 @@ System::System(Params *p)
       init_param(p->init_param),
       loadAddrMask(p->load_addr_mask),
 #else
-      page_ptr(0),
-      next_PID(0),
+      pagePtr(0),
+      nextPID(0),
 #endif
       memoryMode(p->mem_mode), _params(p)
 {
@@ -255,8 +255,8 @@ System::replaceThreadContext(ThreadContext *tc, int context_id)
 Addr
 System::new_page()
 {
-    Addr return_addr = page_ptr << LogVMPageSize;
-    ++page_ptr;
+    Addr return_addr = pagePtr << LogVMPageSize;
+    ++pagePtr;
     if (return_addr >= physmem->size())
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
@@ -271,7 +271,7 @@ System::memSize()
 Addr
 System::freeMemSize()
 {
-   return physmem->size() - (page_ptr << LogVMPageSize);
+   return physmem->size() - (pagePtr << LogVMPageSize);
 }
 
 #endif
@@ -282,7 +282,8 @@ System::serialize(ostream &os)
 #if FULL_SYSTEM
     kernelSymtab->serialize("kernel_symtab", os);
 #else // !FULL_SYSTEM
-    SERIALIZE_SCALAR(page_ptr);
+    SERIALIZE_SCALAR(pagePtr);
+    SERIALIZE_SCALAR(nextPID);
 #endif
 }
 
@@ -293,7 +294,8 @@ System::unserialize(Checkpoint *cp, const string &section)
 #if FULL_SYSTEM
     kernelSymtab->unserialize("kernel_symtab", cp, section);
 #else // !FULL_SYSTEM
-    UNSERIALIZE_SCALAR(page_ptr);
+    UNSERIALIZE_SCALAR(pagePtr);
+    UNSERIALIZE_SCALAR(nextPID);
 #endif
 }
 

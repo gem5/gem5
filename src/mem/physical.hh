@@ -148,7 +148,6 @@ class PhysicalMemory : public MemObject
     }
 
     uint8_t *pmemAddr;
-    int pagePtr;
     Tick lat;
     Tick lat_var;
     std::vector<MemoryPort*> ports;
@@ -157,7 +156,6 @@ class PhysicalMemory : public MemObject
     uint64_t _size;
     uint64_t _start;
   public:
-    Addr new_page();
     uint64_t size() { return _size; }
     uint64_t start() { return _start; }
 

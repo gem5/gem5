@@ -137,15 +137,15 @@ class System : public SimObject
 
 #else
 
-    int page_ptr;
+    Addr pagePtr;
 
   protected:
-    uint64_t next_PID;
+    uint64_t nextPID;
 
   public:
     uint64_t allocatePID()
     {
-        return next_PID++;
+        return nextPID++;
     }
 
     /** Amount of physical memory that is still free */
