@@ -107,11 +107,11 @@ IdeController::IdeController(Params *p)
     primary.select(false);
     secondary.select(false);
 
-    if ((BARAddrs[0] & ~BAR_IO_MASK) != 0){
+    if ((BARAddrs[0] & ~BAR_IO_MASK) && !legacyIO[0]){
         primary.cmdAddr = BARAddrs[0];  primary.cmdSize = BARSize[0];
         primary.ctrlAddr = BARAddrs[1]; primary.ctrlSize = BARAddrs[1];
     }
-    if ((BARAddrs[2] & ~BAR_IO_MASK) != 0){
+    if ((BARAddrs[2] & ~BAR_IO_MASK) && !legacyIO[2]){
         secondary.cmdAddr = BARAddrs[2];  secondary.cmdSize = BARSize[2];
         secondary.ctrlAddr = BARAddrs[3]; secondary.ctrlSize = BARAddrs[3];
     }
