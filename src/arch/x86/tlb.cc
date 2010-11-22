@@ -511,6 +511,7 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
             req->setFlags(Request::MMAPED_IPR);
             req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(MiscReg));
         } else if ((IOPort & ~mask(2)) == 0xCFC) {
+            req->setFlags(Request::UNCACHEABLE);
             Addr configAddress =
                 tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS);
             if (bits(configAddress, 31, 31)) {
@@ -519,6 +520,7 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
                         (IOPort & mask(2)));
             }
         } else {
+            req->setFlags(Request::UNCACHEABLE);
             req->setPaddr(PhysAddrPrefixIO | IOPort);
         }
         return NoFault;
