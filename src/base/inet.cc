@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Gabe Black
  */
 
 #include <cstdio>

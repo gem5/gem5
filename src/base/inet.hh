@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Gabe Black
  */
 
 #ifndef __BASE_INET_HH__
