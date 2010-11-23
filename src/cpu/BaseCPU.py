@@ -167,7 +167,7 @@ class BaseCPU(MemObject):
                 exec('self.%s = bus.port' % p)
 
     def addPrivateSplitL1Caches(self, ic, dc):
-        assert(len(self._mem_ports) < 6)
+        assert(len(self._mem_ports) < 8)
         self.icache = ic
         self.dcache = dc
         self.icache_port = ic.cpu_side
@@ -176,6 +176,8 @@ class BaseCPU(MemObject):
         if buildEnv['FULL_SYSTEM']:
             if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
                 self._mem_ports += ["itb.walker.port", "dtb.walker.port"]
+            if buildEnv['TARGET_ISA'] == 'x86':
+                self._mem_ports += ["interrupts.pio", "interrupts.int_port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
         self.addPrivateSplitL1Caches(ic, dc)
