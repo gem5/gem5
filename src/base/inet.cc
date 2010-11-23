@@ -117,6 +117,73 @@ operator<<(ostream &stream, const EthAddr &ea)
     return stream;
 }
 
+string
+IpAddress::string() const
+{
+    stringstream stream;
+    stream << *this;
+    return stream.str();
+}
+
+bool
+operator==(const IpAddress &left, const IpAddress &right)
+{
+    return left.ip() == right.ip();
+}
+
+ostream &
+operator<<(ostream &stream, const IpAddress &ia)
+{
+    uint32_t ip = ia.ip();
+    ccprintf(stream, "%x.%x.%x.%x",
+            (uint8_t)(ip >> 0),  (uint8_t)(ip >> 8),
+            (uint8_t)(ip >> 16), (uint8_t)(ip >> 24));
+    return stream;
+}
+
+string
+IpNetmask::string() const
+{
+    stringstream stream;
+    stream << *this;
+    return stream.str();
+}
+
+bool
+operator==(const IpNetmask &left, const IpNetmask &right)
+{
+    return (left.ip() == right.ip()) &&
+        (left.netmask() == right.netmask());
+}
+
+ostream &
+operator<<(ostream &stream, const IpNetmask &in)
+{
+    ccprintf(stream, "%s/%d", (const IpAddress &)in, in.netmask());
+    return stream;
+}
+
+string
+IpWithPort::string() const
+{
+    stringstream stream;
+    stream << *this;
+    return stream.str();
+}
+
+bool
+operator==(const IpWithPort &left, const IpWithPort &right)
+{
+    return (left.ip() == right.ip()) && (left.port() == right.port());
+}
+
+ostream &
+operator<<(ostream &stream, const IpWithPort &iwp)
+{
+    ccprintf(stream, "%s:%d", (const IpAddress &)iwp, iwp.port());
+    return stream;
+}
+
 uint16_t
 cksum(const IpPtr &ptr)
 {

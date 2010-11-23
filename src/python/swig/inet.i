@@ -42,5 +42,24 @@ struct EthAddr
     EthAddr(const uint8_t ea[6]);
     EthAddr(const std::string &addr);
 };
+
+struct IpAddress
+{
+    IpAddress();
+    IpAddress(const uint32_t __addr);
+};
+
+struct IpNetmask : IpAddress
+{
+    IpNetmask();
+    IpNetmask(const uint32_t __addr, const uint8_t __netmask);
+};
+
+struct IpWithPort : IpAddress
+{
+    IpWithPort();
+    IpWithPort(const uint32_t __addr, const uint16_t __port);
+};
+
 }
 

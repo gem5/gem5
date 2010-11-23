@@ -147,6 +147,65 @@ class EthPtr
 /*
  * IP Stuff
  */
+struct IpAddress
+{
+  protected:
+    uint32_t _ip;
+
+  public:
+    IpAddress() : _ip(0)
+    {}
+    IpAddress(const uint32_t __ip) : _ip(__ip)
+    {}
+
+    uint32_t ip() const { return _ip; }
+
+    std::string string() const;
+};
+
+std::ostream &operator<<(std::ostream &stream, const IpAddress &ia);
+bool operator==(const IpAddress &left, const IpAddress &right);
+
+struct IpNetmask : public IpAddress
+{
+  protected:
+    uint8_t _netmask;
+
+  public:
+    IpNetmask() : IpAddress(), _netmask(0)
+    {}
+    IpNetmask(const uint32_t __ip, const uint8_t __netmask) :
+        IpAddress(__ip), _netmask(__netmask)
+    {}
+
+    uint8_t netmask() const { return _netmask; }
+
+    std::string string() const;
+};
+
+std::ostream &operator<<(std::ostream &stream, const IpNetmask &in);
+bool operator==(const IpNetmask &left, const IpNetmask &right);
+
+struct IpWithPort : public IpAddress
+{
+  protected:
+    uint16_t _port;
+
+  public:
+    IpWithPort() : IpAddress(), _port(0)
+    {}
+    IpWithPort(const uint32_t __ip, const uint16_t __port) :
+        IpAddress(__ip), _port(__port)
+    {}
+
+    uint8_t port() const { return _port; }
+
+    std::string string() const;
+};
+
+std::ostream &operator<<(std::ostream &stream, const IpWithPort &iwp);
+bool operator==(const IpWithPort &left, const IpWithPort &right);
+
 struct IpOpt;
 struct IpHdr : public ip_hdr
 {

@@ -675,6 +675,163 @@ class EthernetAddr(ParamValue):
     def ini_str(self):
         return self.value
 
+# When initializing an IpAddress, pass in an existing IpAddress, a string of
+# the form "a.b.c.d", or an integer representing an IP.
+class IpAddress(ParamValue):
+    cxx_type = 'Net::IpAddress'
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/inet.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "python/swig/inet.i"')
+
+    def __init__(self, value):
+        if isinstance(value, IpAddress):
+            self.ip = value.ip
+        else:
+            try:
+                self.ip = convert.toIpAddress(value)
+            except TypeError:
+                self.ip = long(value)
+        self.verifyIp()
+
+    def verifyIp(self):
+        if self.ip < 0 or self.ip >= (1 << 32):
+            raise TypeError, "invalid ip address %#08x" % ip
+
+    def getValue(self):
+        from m5.internal.params import IpAddress
+        return IpAddress(self.ip)
+
+    def ini_str(self):
+        return self.ip
+
+# When initializing an IpNetmask, pass in an existing IpNetmask, a string of
+# the form "a.b.c.d/n" or "a.b.c.d/e.f.g.h", or an ip and netmask as
+# positional or keyword arguments.
+class IpNetmask(IpAddress):
+    cxx_type = 'Net::IpNetmask'
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/inet.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "python/swig/inet.i"')
+
+    def __init__(self, *args, **kwargs):
+        def handle_kwarg(self, kwargs, key, elseVal = None):
+            if key in kwargs:
+                setattr(self, key, kwargs.pop(key))
+            elif elseVal:
+                setattr(self, key, elseVal)
+            else:
+                raise TypeError, "No value set for %s" % key
+
+        if len(args) == 0:
+            handle_kwarg(self, kwargs, 'ip')
+            handle_kwarg(self, kwargs, 'netmask')
+
+        elif len(args) == 1:
+            if kwargs:
+                if not 'ip' in kwargs and not 'netmask' in kwargs:
+                    raise TypeError, "Invalid arguments"
+                handle_kwarg(self, kwargs, 'ip', args[0])
+                handle_kwarg(self, kwargs, 'netmask', args[0])
+            elif isinstance(args[0], IpNetmask):
+                self.ip = args[0].ip
+                self.netmask = args[0].netmask
+            else:
+                (self.ip, self.netmask) = convert.toIpNetmask(args[0])
+
+        elif len(args) == 2:
+            self.ip = args[0]
+            self.netmask = args[1]
+        else:
+            raise TypeError, "Too many arguments specified"
+
+        if kwargs:
+            raise TypeError, "Too many keywords: %s" % kwargs.keys()
+
+        self.verify()
+
+    def verify(self):
+        self.verifyIp()
+        if self.netmask < 0 or self.netmask > 32:
+            raise TypeError, "invalid netmask %d" % netmask
+
+    def getValue(self):
+        from m5.internal.params import IpNetmask
+        return IpNetmask(self.ip, self.netmask)
+
+    def ini_str(self):
+        return "%08x/%d" % (self.ip, self.netmask)
+
+# When initializing an IpWithPort, pass in an existing IpWithPort, a string of
+# the form "a.b.c.d:p", or an ip and port as positional or keyword arguments.
+class IpWithPort(IpAddress):
+    cxx_type = 'Net::IpWithPort'
+
+    @classmethod
+    def cxx_predecls(cls, code):
+        code('#include "base/inet.hh"')
+
+    @classmethod
+    def swig_predecls(cls, code):
+        code('%include "python/swig/inet.i"')
+
+    def __init__(self, *args, **kwargs):
+        def handle_kwarg(self, kwargs, key, elseVal = None):
+            if key in kwargs:
+                setattr(self, key, kwargs.pop(key))
+            elif elseVal:
+                setattr(self, key, elseVal)
+            else:
+                raise TypeError, "No value set for %s" % key
+
+        if len(args) == 0:
+            handle_kwarg(self, kwargs, 'ip')
+            handle_kwarg(self, kwargs, 'port')
+
+        elif len(args) == 1:
+            if kwargs:
+                if not 'ip' in kwargs and not 'port' in kwargs:
+                    raise TypeError, "Invalid arguments"
+                handle_kwarg(self, kwargs, 'ip', args[0])
+                handle_kwarg(self, kwargs, 'port', args[0])
+            elif isinstance(args[0], IpWithPort):
+                self.ip = args[0].ip
+                self.port = args[0].port
+            else:
+                (self.ip, self.port) = convert.toIpWithPort(args[0])
+
+        elif len(args) == 2:
+            self.ip = args[0]
+            self.port = args[1]
+        else:
+            raise TypeError, "Too many arguments specified"
+
+        if kwargs:
+            raise TypeError, "Too many keywords: %s" % kwargs.keys()
+
+        self.verify()
+
+    def verify(self):
+        self.verifyIp()
+        if self.port < 0 or self.port > 0xffff:
+            raise TypeError, "invalid port %d" % self.port
+
+    def getValue(self):
+        from m5.internal.params import IpWithPort
+        return IpWithPort(self.ip, self.port)
+
+    def ini_str(self):
+        return "%08x:%d" % (self.ip, self.port)
+
 time_formats = [ "%a %b %d %H:%M:%S %Z %Y",
                  "%a %b %d %H:%M:%S %Z %Y",
                  "%Y/%m/%d %H:%M:%S",
@@ -1317,6 +1474,7 @@ __all__ = ['Param', 'VectorParam',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
            'TcpPort', 'UdpPort', 'EthernetAddr',
+           'IpAddress', 'IpNetmask', 'IpWithPort',
            'MemorySize', 'MemorySize32',
            'Latency', 'Frequency', 'Clock',
            'NetworkBandwidth', 'MemoryBandwidth',
