@@ -653,6 +653,8 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             Addr paddr = entry->paddr | (vaddr & (entry->size-1));
             DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
             req->setPaddr(paddr);
+            if (entry->uncacheable)
+                req->setFlags(Request::UNCACHEABLE);
         } else {
             //Use the address which already has segmentation applied.
             DPRINTF(TLB, "Paging disabled.\n");
