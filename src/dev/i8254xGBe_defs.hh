@@ -484,12 +484,12 @@ struct Regs {
         unsigned descSize()
         {
             switch(bsize()) {
-                case 0: return bsex() == 0 ? 2048 : -1;
+                case 0: return bsex() == 0 ? 2048 : 0;
                 case 1: return bsex() == 0 ? 1024 : 16384;
                 case 2: return bsex() == 0 ? 512 : 8192;
                 case 3: return bsex() == 0 ? 256 : 4096;
                 default:
-                        return -1;
+                        return 0;
             }
         }
     };
