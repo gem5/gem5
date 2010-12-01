@@ -43,7 +43,7 @@ hit(int64_t id)
 {
     if (request_map.find(id) == request_map.end()) {
         ERROR_OUT("Request ID not found in the map");
-        DEBUG_EXPR(STOREBUFFER_COMP, MedPrio, id);
+        DPRINTF(RubyStorebuffer, "id: %lld\n", id);
         ASSERT(0);
     } else {
         request_map[id]->complete(id);
@@ -73,11 +73,6 @@ StoreBuffer::StoreBuffer(uint32 id, uint32 block_bits, int storebuffer_size)
     if (m_storebuffer_size > 0){
         m_use_storebuffer = true;
     }
-
-#ifdef DEBUG_WRITE_BUFFER
-    DEBUG_OUT("*******storebuffer_t::Using Write Buffer? %d\n",
-              m_use_storebuffer);
-#endif
 }
 
 StoreBuffer::~StoreBuffer()
@@ -100,7 +95,7 @@ StoreBuffer::addToStoreBuffer(RubyRequest request)
         uint64_t id = libruby_issue_request(m_port, request);
         if (request_map.find(id) != request_map.end()) {
             ERROR_OUT("Request ID is already in the map");
-            DEBUG_EXPR(STOREBUFFER_COMP, MedPrio, id);
+            DPRINTF(RubyStorebuffer, "id: %lld\n", id);
             ASSERT(0);
         } else {
             request_map.insert(make_pair(id, this));
@@ -109,12 +104,6 @@ StoreBuffer::addToStoreBuffer(RubyRequest request)
         return;
     }
 
-
-#ifdef DEBUG_WRITE_BUFFER
-    DEBUG_OUT("\n***StoreBuffer: addToStoreBuffer BEGIN, contents:\n");
-    DEBUG_OUT("\n");
-    DEBUG_OUT("\t INSERTING new request\n");
-#endif
 
     buffer.push_front(SBEntry(request, NULL));
 
@@ -128,11 +117,6 @@ StoreBuffer::addToStoreBuffer(RubyRequest request)
     }
 
     iseq++;
-
-#ifdef DEBUG_WRITE_BUFFER
-    DEBUG_OUT("***StoreBuffer: addToStoreBuffer END, contents:\n");
-    DEBUG_OUT("\n");
-#endif
 }
 
 
@@ -161,7 +145,7 @@ StoreBuffer::handleLoad(RubyRequest request)
         uint64_t id = libruby_issue_request(m_port, request);
         if (request_map.find(id) != request_map.end()) {
             ERROR_OUT("Request ID is already in the map");
-            DEBUG_EXPR(STOREBUFFER_COMP, MedPrio, id);
+            DPRINTF(RubyStorebuffer, "id: %lld\n", id);
             ASSERT(0);
         } else {
             request_map.insert(make_pair(id, this));
@@ -285,11 +269,6 @@ StoreBuffer::flushStoreBuffer()
         return;
     }
 
-#ifdef DEBUG_WRITE_BUFFER
-    DEBUG_OUT("\n***StoreBuffer: flushStoreBuffer BEGIN, contents:\n");
-    DEBUG_OUT("\n");
-#endif
-
     m_storebuffer_flushing = (m_buffer_size > 0);
 }
 
@@ -318,10 +297,6 @@ StoreBuffer::complete(uint64_t id)
     physical_address_t physical_address =
         outstanding_requests.find(id)->second.paddr;
     RubyRequestType type = outstanding_requests.find(id)->second.type;
-#ifdef DEBUG_WRITE_BUFFER
-    DEBUG_OUT("\n***StoreBuffer: complete BEGIN, contents:\n");
-    DEBUG_OUT("\n");
-#endif
 
     if (type == RubyRequestType_ST) {
         physical_address_t lineaddr = physical_address & m_block_mask;
@@ -357,10 +332,6 @@ StoreBuffer::complete(uint64_t id)
             ASSERT(0);
         }
 
-#ifdef DEBUG_WRITE_BUFFER
-        DEBUG_OUT("***StoreBuffer: complete END, contents:\n");
-        DEBUG_OUT("\n");
-#endif
     } else if (type == RubyRequestType_LD) {
         m_hit_callback(id);
     }
@@ -372,13 +343,10 @@ StoreBuffer::complete(uint64_t id)
 void
 StoreBuffer::print()
 {
-    DEBUG_OUT("[%d] StoreBuffer: Total entries: %d Outstanding: %d\n",
-              m_id, m_buffer_size);
+    DPRINTF(RubyStorebuffer, "[%d] StoreBuffer: Total entries: %d "
+            "Outstanding: %d\n",
+            m_id, m_storebuffer_size, m_buffer_size);
 
     if (!m_use_storebuffer)
-        DEBUG_OUT("\t WRITE BUFFER NOT USED\n");
+        DPRINTF(RubyStorebuffer, "\t WRITE BUFFER NOT USED\n");
 }
-
-
-
-

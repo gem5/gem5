@@ -298,8 +298,7 @@ machine(L1Cache, "Directory protocol")
     if (requestNetwork_in.isReady()) {
       peek(requestNetwork_in, RequestMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
-        DEBUG_EXPR("MRM_DEBUG: L1 received");
-        DEBUG_EXPR(in_msg.Type);
+        DPRINTF(RubySlicc, "L1 received: %s\n", in_msg.Type);
 if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID && in_msg.RequestorMachine == MachineType:L1Cache) {
             trigger(Event:Own_GETX, in_msg.Address);
@@ -479,8 +478,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Acks := in_msg.Acks;
           out_msg.MessageSize := MessageSizeType:Response_Data;
         }
-        DEBUG_EXPR("Sending data to L2");
-        DEBUG_EXPR(in_msg.Address);
+        DPRINTF(RubySlicc, "Sending data to L2: %s\n", in_msg.Address);
       }
       else {
         enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
@@ -494,7 +492,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Acks := in_msg.Acks;
           out_msg.MessageSize := MessageSizeType:ResponseLocal_Data;
         }
-        DEBUG_EXPR("Sending data to L1");
+        DPRINTF(RubySlicc, "Sending data to L1\n");
       }
     }
   }
@@ -529,7 +527,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Acks := in_msg.Acks;
           out_msg.MessageSize := MessageSizeType:Response_Data;
         }
-        DEBUG_EXPR("Sending exclusive data to L2");
+        DPRINTF(RubySlicc, "Sending exclusive data to L2\n");
       }
       else {
         enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
@@ -543,7 +541,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Acks := in_msg.Acks;
           out_msg.MessageSize := MessageSizeType:ResponseLocal_Data;
         }
-        DEBUG_EXPR("Sending exclusive data to L1");
+        DPRINTF(RubySlicc, "Sending exclusive data to L1\n");
       }
     }
   }
@@ -599,12 +597,12 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
   }
 
   action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
     sequencer.readCallback(address, getCacheEntry(address).DataBlk);
   }
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
     sequencer.writeCallback(address, getCacheEntry(address).DataBlk);
     getCacheEntry(address).Dirty := true;
   }
@@ -634,8 +632,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
 
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
     peek(responseToL1Cache_in, ResponseMsg) {
-      DEBUG_EXPR("MRM_DEBUG: L1 decrementNumberOfMessages");
-      DEBUG_EXPR(in_msg.Acks);
+      DPRINTF(RubySlicc, "L1 decrementNumberOfMessages: %d\n", in_msg.Acks);
       TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - in_msg.Acks;
     }
   }

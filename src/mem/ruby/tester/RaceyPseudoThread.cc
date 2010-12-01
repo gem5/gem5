@@ -60,9 +60,7 @@ void RaceyPseudoThread::checkForDeadlock() {
 void RaceyPseudoThread::performCallback(int proc, Address address, uint8_t * data ) {
   assert(proc == m_proc_id);
 
-  DEBUG_EXPR(TESTER_COMP, LowPrio, proc);
-  DEBUG_EXPR(TESTER_COMP, LowPrio, address);
-
+  DPRINTF(RubyTester, "proc: %d, address: %s\n", proc, address);
 
   m_last_progress = m_driver.eventQueue->getTime();
 

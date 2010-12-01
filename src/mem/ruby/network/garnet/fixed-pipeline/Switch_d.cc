@@ -62,8 +62,8 @@ Switch_d::init()
 void
 Switch_d::wakeup()
 {
-    DEBUG_MSG(NETWORK_COMP, HighPrio, "Switch woke up");
-    DEBUG_EXPR(NETWORK_COMP, HighPrio, g_eventQueue_ptr->getTime());
+    DPRINTF(RubyNetwork, "Switch woke up at time: %lld\n",
+            g_eventQueue_ptr->getTime());
 
     for (int inport = 0; inport < m_num_inports; inport++) {
         if (!m_switch_buffer[inport]->isReady())

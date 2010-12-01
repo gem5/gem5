@@ -167,7 +167,7 @@ machine(Directory, "Directory protocol")
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
           trigger(Event:Memory_Ack, in_msg.Address);
         } else {
-          DEBUG_EXPR(in_msg.Type);
+          DPRINTF(RubySlicc,"%s\n", in_msg.Type);
           error("Invalid message");
         }
       }
@@ -369,7 +369,7 @@ machine(Directory, "Directory protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc,"%s\n", out_msg);
       }
     }
   }
@@ -383,7 +383,7 @@ machine(Directory, "Directory protocol")
         //out_msg.OriginalRequestorMachId := machineID;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc,"%s\n", out_msg);
       }
     }
   }
@@ -399,7 +399,7 @@ machine(Directory, "Directory protocol")
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc,"%s\n", out_msg);
       }
     }
   }
@@ -416,7 +416,7 @@ machine(Directory, "Directory protocol")
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc,"%s\n", out_msg);
       }
     }
   }
@@ -434,7 +434,7 @@ machine(Directory, "Directory protocol")
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc,"%s\n", out_msg);
       }
     }
   }

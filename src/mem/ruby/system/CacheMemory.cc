@@ -166,7 +166,7 @@ CacheMemory::tryCacheAccess(const Address& address, CacheRequestType type,
                             DataBlock*& data_ptr)
 {
     assert(address == line_address(address));
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+    DPRINTF(RubyCache, "address: %s\n", address);
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if (loc != -1) {
@@ -194,7 +194,7 @@ CacheMemory::testCacheAccess(const Address& address, CacheRequestType type,
                              DataBlock*& data_ptr)
 {
     assert(address == line_address(address));
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+    DPRINTF(RubyCache, "address: %s\n", address);
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
 
@@ -223,12 +223,10 @@ CacheMemory::isTagPresent(const Address& address) const
 
     if (loc == -1) {
         // We didn't find the tag
-        DEBUG_EXPR(CACHE_COMP, LowPrio, address);
-        DEBUG_MSG(CACHE_COMP, LowPrio, "No tag match");
+        DPRINTF(RubyCache, "No tag match for address: %s\n", address);
         return false;
     }
-    DEBUG_EXPR(CACHE_COMP, LowPrio, address);
-    DEBUG_MSG(CACHE_COMP, LowPrio, "found");
+    DPRINTF(RubyCache, "address: %s found\n", address);
     return true;
 }
 
@@ -263,7 +261,7 @@ CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
     assert(address == line_address(address));
     assert(!isTagPresent(address));
     assert(cacheAvail(address));
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+    DPRINTF(RubyCache, "address: %s\n", address);
 
     // Find the first open slot
     Index cacheSet = addressToCacheSet(address);
@@ -292,7 +290,7 @@ CacheMemory::deallocate(const Address& address)
 {
     assert(address == line_address(address));
     assert(isTagPresent(address));
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+    DPRINTF(RubyCache, "address: %s\n", address);
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     if (loc != -1) {

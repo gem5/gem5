@@ -743,7 +743,7 @@ void $c_ident::clearStats() {
 void
 $c_ident::${{action.ident}}(const Address& addr)
 {
-    DEBUG_MSG(GENERATED_COMP, HighPrio, "executing");
+    DPRINTF(RubyGenerated, "executing\\n");
     ${{action["c_code"]}}
 }
 
@@ -814,7 +814,6 @@ ${ident}_Controller::wakeup()
         break;  // If we got this far, we have nothing left todo
     }
     // g_eventQueue_ptr->scheduleEvent(this, 1);
-    // DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
 }
 ''')
 
@@ -849,19 +848,19 @@ ${ident}_Controller::doTransition(${ident}_Event event,
 {
     ${ident}_State next_state = state;
 
-    DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
-    DEBUG_MSG(GENERATED_COMP, MedPrio, *this);
-    DEBUG_EXPR(GENERATED_COMP, MedPrio, g_eventQueue_ptr->getTime());
-    DEBUG_EXPR(GENERATED_COMP, MedPrio,state);
-    DEBUG_EXPR(GENERATED_COMP, MedPrio,event);
-    DEBUG_EXPR(GENERATED_COMP, MedPrio,addr);
+    DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %s\\n",
+            *this,
+            g_eventQueue_ptr->getTime(),
+            ${ident}_State_to_string(state),
+            ${ident}_Event_to_string(event),
+            addr);
 
     TransitionResult result =
         doTransitionWorker(event, state, next_state, addr);
 
     if (result == TransitionResult_Valid) {
-        DEBUG_EXPR(GENERATED_COMP, MedPrio, next_state);
-        DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
+        DPRINTF(RubyGenerated, "next_state: %s\\n",
+                ${ident}_State_to_string(next_state));
         m_profiler.countTransition(state, event);
         if (Debug::getProtocolTrace()) {
             g_system_ptr->getProfiler()->profileTransition("${ident}",
@@ -884,8 +883,7 @@ ${ident}_Controller::doTransition(${ident}_Event event,
                    "Resource Stall");
         }
     } else if (result == TransitionResult_ProtocolStall) {
-        DEBUG_MSG(GENERATED_COMP, HighPrio, "stalling");
-        DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
+        DPRINTF(RubyGenerated, "stalling\\n");
         if (Debug::getProtocolTrace()) {
             g_system_ptr->getProfiler()->profileTransition("${ident}",
                    m_version, addr,

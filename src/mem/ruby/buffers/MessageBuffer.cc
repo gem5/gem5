@@ -99,10 +99,9 @@ MessageBuffer::areNSlotsAvailable(int n)
     if (current_size + n <= m_max_size) {
         return true;
     } else {
-        DEBUG_MSG(QUEUE_COMP, MedPrio, n);
-        DEBUG_MSG(QUEUE_COMP, MedPrio, current_size);
-        DEBUG_MSG(QUEUE_COMP, MedPrio, m_size);
-        DEBUG_MSG(QUEUE_COMP, MedPrio, m_max_size);
+        DPRINTF(RubyQueue, "n: %d, current_size: %d, m_size: %d, "
+                "m_max_size: %d\n",
+                n, current_size, m_size, m_max_size);
         m_not_avail_count++;
         return false;
     }
@@ -119,18 +118,14 @@ MessageBuffer::getMsgPtrCopy() const
 const Message*
 MessageBuffer::peekAtHeadOfQueue() const
 {
-    DEBUG_NEWLINE(QUEUE_COMP, MedPrio);
-
-    DEBUG_MSG(QUEUE_COMP, MedPrio,
-              csprintf("Peeking at head of queue %s time: %d.",
-                       m_name, g_eventQueue_ptr->getTime()));
+    DPRINTF(RubyQueue, "Peeking at head of queue %s time: %lld\n",
+            m_name, g_eventQueue_ptr->getTime());
     assert(isReady());
 
     const Message* msg_ptr = m_prio_heap.front().m_msgptr.get();
     assert(msg_ptr);
 
-    DEBUG_EXPR(QUEUE_COMP, MedPrio, *msg_ptr);
-    DEBUG_NEWLINE(QUEUE_COMP, MedPrio);
+    DPRINTF(RubyQueue, "Message: %s\n", (*msg_ptr));
     return msg_ptr;
 }
 
@@ -149,12 +144,8 @@ random_time()
 void
 MessageBuffer::enqueue(MsgPtr message, Time delta)
 {
-    DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
-    DEBUG_MSG(QUEUE_COMP, HighPrio,
-              csprintf("enqueue %s time: %d.", m_name,
-                       g_eventQueue_ptr->getTime()));
-    DEBUG_EXPR(QUEUE_COMP, MedPrio, message);
-    DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
+    DPRINTF(RubyQueue, "Enqueue %s time: %lld, message: %s.\n",
+            m_name, g_eventQueue_ptr->getTime(), (*(message.get())));
 
     m_msg_counter++;
     m_size++;
@@ -229,12 +220,10 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
 
-    DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
-    DEBUG_MSG(QUEUE_COMP, HighPrio,
-              csprintf("enqueue %s with arrival_time %d cur_time: %d.",
-                       m_name, arrival_time, g_eventQueue_ptr->getTime()));
-    DEBUG_EXPR(QUEUE_COMP, MedPrio, message);
-    DEBUG_NEWLINE(QUEUE_COMP, HighPrio);
+    DPRINTF(RubyQueue, "Enqueue %s with arrival_time %lld cur_time: %lld, "
+            "message: %s.\n",
+            m_name, arrival_time, g_eventQueue_ptr->getTime(),
+            (*(message.get())));
 
     // Schedule the wakeup
     if (m_consumer_ptr != NULL) {
@@ -263,11 +252,11 @@ MessageBuffer::dequeue_getDelayCycles(MsgPtr& message)
 void
 MessageBuffer::dequeue(MsgPtr& message)
 {
-    DEBUG_MSG(QUEUE_COMP, MedPrio, "dequeue from " + m_name);
+    DPRINTF(RubyQueue, "Dequeue from %s\n", m_name);
     message = m_prio_heap.front().m_msgptr;
 
     pop();
-    DEBUG_EXPR(QUEUE_COMP, MedPrio, message);
+    DPRINTF(RubyQueue, "Enqueue message is %s\n", (*(message.get())));
 }
 
 int
@@ -290,7 +279,7 @@ MessageBuffer::dequeue_getDelayCycles()
 void
 MessageBuffer::pop()
 {
-    DEBUG_MSG(QUEUE_COMP, MedPrio, "pop from " + m_name);
+    DPRINTF(RubyQueue, "Pop from %s\n", m_name);
     assert(isReady());
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
@@ -321,7 +310,7 @@ MessageBuffer::clear()
 void
 MessageBuffer::recycle()
 {
-    DEBUG_MSG(QUEUE_COMP, MedPrio, "recycling " + m_name);
+    DPRINTF(RubyQueue, "Recycling %s\n", m_name);
     assert(isReady());
     MessageBufferNode node = m_prio_heap.front();
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
@@ -337,7 +326,7 @@ MessageBuffer::recycle()
 void
 MessageBuffer::reanalyzeMessages(const Address& addr)
 {
-    DEBUG_MSG(QUEUE_COMP, MedPrio, "reanalyzeMessages " + m_name);
+    DPRINTF(RubyQueue, "ReanalyzeMessages %s\n", m_name);
     assert(m_stall_msg_map.count(addr) > 0);
 
     //
@@ -362,7 +351,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 void
 MessageBuffer::stallMessage(const Address& addr)
 {
-    DEBUG_MSG(QUEUE_COMP, MedPrio, "stalling " + m_name);
+    DPRINTF(RubyQueue, "Stalling %s\n", m_name);
     assert(isReady());
     assert(addr.getOffset() == 0);
     MsgPtr message = m_prio_heap.front().m_msgptr;

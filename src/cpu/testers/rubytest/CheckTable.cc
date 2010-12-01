@@ -111,8 +111,7 @@ CheckTable::getRandomCheck()
 Check*
 CheckTable::getCheck(const Address& address)
 {
-    DEBUG_MSG(TESTER_COMP, MedPrio, "Looking for check by address");
-    DEBUG_EXPR(TESTER_COMP, MedPrio, address);
+    DPRINTF(RubyTest, "Looking for check by address: %s", address);
 
     m5::hash_map<Address, Check*>::iterator i = m_lookup_map.find(address);
 

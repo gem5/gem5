@@ -123,7 +123,7 @@ PerfectSwitch::~PerfectSwitch()
 void
 PerfectSwitch::wakeup()
 {
-    DEBUG_EXPR(NETWORK_COMP, MedPrio, m_switch_id);
+    DPRINTF(RubyNetwork, "m_switch_id: %d\n",m_switch_id);
 
     MsgPtr msg_ptr;
 
@@ -168,12 +168,12 @@ PerfectSwitch::wakeup()
 
             // Is there a message waiting?
             while (m_in[incoming][vnet]->isReady()) {
-                DEBUG_EXPR(NETWORK_COMP, MedPrio, incoming);
+                DPRINTF(RubyNetwork, "incoming: %d\n", incoming);
 
                 // Peek at message
                 msg_ptr = m_in[incoming][vnet]->peekMsgPtr();
                 net_msg_ptr = safe_cast<NetworkMessage*>(msg_ptr.get());
-                DEBUG_EXPR(NETWORK_COMP, MedPrio, *net_msg_ptr);
+                DPRINTF(RubyNetwork, "Message: %s\n", (*net_msg_ptr));
 
                 output_links.clear();
                 output_link_destinations.clear();
@@ -216,7 +216,7 @@ PerfectSwitch::wakeup()
                     // pick the next link to look at
                     int link = m_link_order[i].m_link;
                     NetDest dst = m_routing_table[link];
-                    DEBUG_EXPR(NETWORK_COMP, MedPrio, dst);
+                    DPRINTF(RubyNetwork, "dst: %s\n", dst);
 
                     if (!msg_dsts.intersectionIsNotEmpty(dst))
                         continue;
@@ -246,19 +246,17 @@ PerfectSwitch::wakeup()
                     int outgoing = output_links[i];
                     if (!m_out[outgoing][vnet]->areNSlotsAvailable(1))
                         enough = false;
-                    DEBUG_MSG(NETWORK_COMP, HighPrio,
-                        "checking if node is blocked");
-                    DEBUG_EXPR(NETWORK_COMP, HighPrio, outgoing);
-                    DEBUG_EXPR(NETWORK_COMP, HighPrio, vnet);
-                    DEBUG_EXPR(NETWORK_COMP, HighPrio, enough);
+                    DPRINTF(RubyNetwork, "Checking if node is blocked\n"
+                            "outgoing: %d, vnet: %d, enough: %d\n",
+                            outgoing, vnet, enough);
                 }
 
                 // There were not enough resources
                 if (!enough) {
                     g_eventQueue_ptr->scheduleEvent(this, 1);
-                    DEBUG_MSG(NETWORK_COMP, HighPrio,
-                        "Can't deliver message since a node is blocked");
-                    DEBUG_EXPR(NETWORK_COMP, HighPrio, *net_msg_ptr);
+                    DPRINTF(RubyNetwork, "Can't deliver message since a node "
+                            "is blocked\n"
+                            "Message: %s\n", (*net_msg_ptr));
                     break; // go to next incoming port
                 }
 
@@ -295,13 +293,10 @@ PerfectSwitch::wakeup()
                         output_link_destinations[i];
 
                     // Enqeue msg
-                    DEBUG_NEWLINE(NETWORK_COMP,HighPrio);
-                    DEBUG_MSG(NETWORK_COMP, HighPrio,
-                        csprintf("switch: %d enqueuing net msg from "
-                            "inport[%d][%d] to outport [%d][%d] time: %d.",
+                    DPRINTF(RubyNetwork, "Switch: %d enqueuing net msg from "
+                            "inport[%d][%d] to outport [%d][%d] time: %lld.\n",
                             m_switch_id, incoming, vnet, outgoing, vnet,
-                            g_eventQueue_ptr->getTime()));
-                    DEBUG_NEWLINE(NETWORK_COMP,HighPrio);
+                            g_eventQueue_ptr->getTime());
 
                     m_out[outgoing][vnet]->enqueue(msg_ptr);
                 }

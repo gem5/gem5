@@ -157,7 +157,7 @@ DirectoryMemory::lookup(PhysAddress address)
     assert(isPresent(address));
     Directory_Entry* entry;
     uint64 idx;
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+    DPRINTF(RubyCache, "address: %s\n", address);
 
     if (m_use_map) {
         if (m_sparseMemory->exist(address)) {

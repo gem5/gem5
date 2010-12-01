@@ -50,6 +50,3 @@ Source('RubyPort.cc')
 Source('Sequencer.cc', Werror=False)
 Source('System.cc')
 Source('TimerTable.cc')
-
-TraceFlag('RubyCache')
-TraceFlag('RubyDma')

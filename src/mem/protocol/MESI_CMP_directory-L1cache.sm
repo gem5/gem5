@@ -329,8 +329,8 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
-        DEBUG_EXPR(address);
-        //DEBUG_EXPR(out_msg.Destination);
+        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+                address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -346,8 +346,8 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
-        DEBUG_EXPR(address);
-        //DEBUG_EXPR(out_msg.Destination);
+        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+                address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -362,11 +362,11 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
-        //DEBUG_EXPR(machineID);
+        DPRINTF(RubySlicc, "%s\n", machineID);
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
-        DEBUG_EXPR(address);
-        //DEBUG_EXPR(out_msg.Destination);
+        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+                address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -382,8 +382,8 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
-        DEBUG_EXPR(address);
-        //DEBUG_EXPR(out_msg.Destination);
+        DPRINTF(RubySlicc, "address: %s, destination: %s\n",
+                address, out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -522,7 +522,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Response_Control;
-      DEBUG_EXPR(address);
+      DPRINTF(RubySlicc, "%s\n", address);
       
     }
   }
@@ -535,7 +535,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Response_Control;
-      DEBUG_EXPR(address);
+      DPRINTF(RubySlicc, "%s\n", address);
 
     }
   }
@@ -543,12 +543,12 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
 
   action(h_load_hit, "h", desc="If not prefetch, notify sequencer the load completed.") {
-    //DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getL1CacheEntry(address).DataBlk);
     sequencer.readCallback(address, getL1CacheEntry(address).DataBlk);
   }
 
   action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
-    //DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getL1CacheEntry(address).DataBlk);
     sequencer.writeCallback(address, getL1CacheEntry(address).DataBlk);
     getL1CacheEntry(address).Dirty := true;
   }

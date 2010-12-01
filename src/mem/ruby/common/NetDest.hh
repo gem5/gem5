@@ -55,7 +55,7 @@ class NetDest
 
     ~NetDest()
     {
-        DEBUG_MSG(MEMORY_COMP, LowPrio, "NetDest Destructor");
+        DPRINTF(RubyMemory, "NetDest Destructor\n");
     }
 
     void add(MachineID newElement);

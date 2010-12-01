@@ -405,13 +405,11 @@ shortest_path_to_node(SwitchID src, SwitchID next, const Matrix& weights,
         }
     }
 
-    DEBUG_MSG(NETWORK_COMP, MedPrio, "returning shortest path");
-    DEBUG_EXPR(NETWORK_COMP, MedPrio, (src-(2*max_machines)));
-    DEBUG_EXPR(NETWORK_COMP, MedPrio, (next-(2*max_machines)));
-    DEBUG_EXPR(NETWORK_COMP, MedPrio, src);
-    DEBUG_EXPR(NETWORK_COMP, MedPrio, next);
-    DEBUG_EXPR(NETWORK_COMP, MedPrio, result);
-    DEBUG_NEWLINE(NETWORK_COMP, MedPrio);
+    DPRINTF(RubyNetwork, "Returning shortest path\n"
+            "(src-(2*max_machines)): %d, (next-(2*max_machines)): %d, "
+            "src: %d, next: %d, result: %s\n",
+            (src-(2*max_machines)), (next-(2*max_machines)),
+            src, next, result);
 
     return result;
 }

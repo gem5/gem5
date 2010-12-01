@@ -36,7 +36,6 @@
 #include <string>
 #include <vector>
 
-#include "config/ruby_debug.hh"
 #include "mem/ruby/common/Global.hh"
 #include "sim/sim_object.hh"
 
@@ -226,62 +225,6 @@ const bool ASSERT_FLAG = true;
                            << #EXPR << " is "                   \
                            << (EXPR) << endl << flush;          \
     }                                                           \
-} while (0)
-
-#define DEBUG_MSG(module, priority, MESSAGE) do {               \
-    using namespace std;                                        \
-    if (RUBY_DEBUG) {                                           \
-        if (g_debug_ptr->validDebug(module, priority)) {        \
-            (* debug_cout_ptr) << "Debug: in fn "               \
-                               << __PRETTY_FUNCTION__           \
-                               << " in " << __FILE__ << ":"     \
-                               << __LINE__ << ": "              \
-                               << (MESSAGE) << endl << flush;   \
-        }                                                       \
-    }                                                           \
-} while (0)
-
-#define DEBUG_EXPR(module, priority, EXPR) do {                 \
-    using namespace std;                                        \
-    if (RUBY_DEBUG) {                                           \
-        if (g_debug_ptr->validDebug(module, priority)) {        \
-            (* debug_cout_ptr) << "Debug: in fn "               \
-                               << __PRETTY_FUNCTION__           \
-                               << " in " << __FILE__ << ":"     \
-                               << __LINE__ << ": "              \
-                               << #EXPR << " is "               \
-                               << (EXPR) << endl << flush;      \
-        }                                                       \
-    }                                                           \
-} while (0)
-
-#define DEBUG_NEWLINE(module, priority) do {                    \
-    using namespace std;                                        \
-    if (RUBY_DEBUG) {                                           \
-        if (g_debug_ptr->validDebug(module, priority)) {        \
-            (* debug_cout_ptr) << endl << flush;                \
-        }                                                       \
-    }                                                           \
-} while (0)
-
-#define DEBUG_SLICC(priority, LINE, MESSAGE) do {                       \
-    using namespace std;                                                \
-    if (RUBY_DEBUG) {                                                   \
-        if (g_debug_ptr->validDebug(SLICC_COMP, priority)) {            \
-            (* debug_cout_ptr) << (LINE) << (MESSAGE) << endl << flush; \
-        }                                                               \
-    }                                                                   \
-} while (0)
-
-#define DEBUG_OUT(rest... ) do {                \
-    using namespace std;                        \
-    if (RUBY_DEBUG) {                           \
-        cout << "Debug: in fn "                 \
-             << __PRETTY_FUNCTION__             \
-             << " in " << __FILE__ << ":"       \
-             << __LINE__ << ": ";               \
-        g_debug_ptr->debugMsg(rest);            \
-    }                                           \
 } while (0)
 
 #define ERROR_OUT( rest... ) do {               \

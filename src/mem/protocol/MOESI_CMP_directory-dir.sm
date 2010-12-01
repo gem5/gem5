@@ -256,7 +256,7 @@ machine(Directory, "Directory protocol")
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
           trigger(Event:Memory_Ack, in_msg.Address);
         } else {
-          DEBUG_EXPR(in_msg.Type);
+          DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
         }
       }
@@ -409,16 +409,16 @@ machine(Directory, "Directory protocol")
       assert(in_msg.Dirty);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
       getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+              in_msg.Address, in_msg.DataBlk);
     }
   }
 
   action(p_writeFwdDataToMemory, "p", desc="Write Response data to memory") {
      peek(unblockNetwork_in, ResponseMsg) {
       getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+              in_msg.Address, in_msg.DataBlk);
     }
  }
 
@@ -470,7 +470,7 @@ machine(Directory, "Directory protocol")
         if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
           out_msg.Acks := out_msg.Acks - 1;
         }
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -490,7 +490,7 @@ machine(Directory, "Directory protocol")
         // Not used:
         out_msg.ReadX := false;
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -508,7 +508,7 @@ machine(Directory, "Directory protocol")
         // Not used:
         out_msg.ReadX := false;
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }

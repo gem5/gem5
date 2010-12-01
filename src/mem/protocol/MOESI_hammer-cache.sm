@@ -513,7 +513,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := getCacheEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg.DataBlk);
+        DPRINTF(RubySlicc, "%s\n", out_msg.DataBlk);
         out_msg.Dirty := getCacheEntry(address).Dirty;
         if (in_msg.DirectedProbe) {
           out_msg.Acks := machineCount(MachineType:L1Cache);
@@ -535,7 +535,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination := in_msg.MergedRequestors;
         out_msg.DataBlk := getCacheEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg.DataBlk);
+        DPRINTF(RubySlicc, "%s\n", out_msg.DataBlk);
         out_msg.Dirty := getCacheEntry(address).Dirty;
         out_msg.Acks := machineCount(MachineType:L1Cache);
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -609,7 +609,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
 
     sequencer.readCallback(address, 
                            testAndClearLocalHit(address), 
@@ -618,7 +618,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   action(hx_external_load_hit, "hx", desc="load required external msgs") {
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
     peek(responseToCache_in, ResponseMsg) {
 
       sequencer.readCallback(address, 
@@ -632,7 +632,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
     peek(mandatoryQueue_in, CacheMsg) {
       sequencer.writeCallback(address, 
                               testAndClearLocalHit(address), 
@@ -646,7 +646,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   action(sx_external_store_hit, "sx", desc="store required external msgs.") {
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
     peek(responseToCache_in, ResponseMsg) {
 
       sequencer.writeCallback(address, 
@@ -661,7 +661,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   action(sxt_trig_ext_store_hit, "sxt", desc="store required external msgs.") {
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
 
     sequencer.writeCallback(address, 
                             getNondirectHitMachType(address, 
@@ -697,9 +697,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
     peek(responseToCache_in, ResponseMsg) {
       assert(in_msg.Acks > 0);
-      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      DPRINTF(RubySlicc, "%d\n", TBEs[address].NumPendingMsgs);
       TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - in_msg.Acks;
-      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      DPRINTF(RubySlicc, "%d\n", TBEs[address].NumPendingMsgs);
       TBEs[address].LastResponder := in_msg.Sender;
       if (TBEs[address].InitialRequestTime != zero_time() && in_msg.InitialRequestTime != zero_time()) {
         assert(TBEs[address].InitialRequestTime == in_msg.InitialRequestTime);
@@ -763,7 +763,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
-        DEBUG_EXPR(out_msg.Destination);
+        DPRINTF(RubySlicc, "%s\n", out_msg.Destination);
         out_msg.DataBlk := TBEs[address].DataBlk;
         out_msg.Dirty := TBEs[address].Dirty;
         if (in_msg.DirectedProbe) {
@@ -785,7 +785,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination := in_msg.MergedRequestors;
-        DEBUG_EXPR(out_msg.Destination);
+        DPRINTF(RubySlicc, "%s\n", out_msg.Destination);
         out_msg.DataBlk := TBEs[address].DataBlk;
         out_msg.Dirty := TBEs[address].Dirty;
         out_msg.Acks := machineCount(MachineType:L1Cache);
@@ -854,8 +854,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   action(v_writeDataToCacheVerify, "v", desc="Write data to cache, assert it was same as before") {
     peek(responseToCache_in, ResponseMsg) {
-      DEBUG_EXPR(getCacheEntry(address).DataBlk);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Cached Data Block: %s, Msg Data Block: %s\n",
+              getCacheEntry(address).DataBlk, in_msg.DataBlk);
       assert(getCacheEntry(address).DataBlk == in_msg.DataBlk);
       getCacheEntry(address).DataBlk := in_msg.DataBlk;
       getCacheEntry(address).Dirty := in_msg.Dirty || getCacheEntry(address).Dirty;

@@ -208,13 +208,6 @@ Debug::checkFilterString(const char *filter_str)
         return false; // no error
     }
 
-    if (RUBY_DEBUG == false) {
-        cerr << "Error: User specified set of debug components, but the "
-             << "RUBY_DEBUG compile-time flag is false." << endl
-             << "Solution: Re-compile with RUBY_DEBUG set to true." << endl;
-        return true; // error
-    }
-
     if (string(filter_str) == "all") {
         return false; // no error
     }

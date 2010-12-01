@@ -333,8 +333,8 @@ machine(Directory, "Directory protocol") {
       assert(in_msg.Dirty);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
       directory[in_msg.Address].DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+              in_msg.Address, in_msg.DataBlk);
     }
   }
 

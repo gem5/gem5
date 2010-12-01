@@ -161,12 +161,10 @@ Throttle::wakeup()
                 m_units_remaining[vnet] +=
                     network_message_to_size(net_msg_ptr);
 
-                DEBUG_NEWLINE(NETWORK_COMP,HighPrio);
-                DEBUG_MSG(NETWORK_COMP, HighPrio,
-                    csprintf("throttle: %d my bw %d bw spent enqueueing "
-                        "net msg %d time: %d.",
+                DPRINTF(RubyNetwork, "throttle: %d my bw %d bw spent "
+                        "enqueueing net msg %d time: %lld.\n",
                         m_node, getLinkBandwidth(), m_units_remaining[vnet],
-                        g_eventQueue_ptr->getTime()));
+                        g_eventQueue_ptr->getTime());
 
                 // Move the message
                 m_out[vnet]->enqueue(m_in[vnet]->peekMsgPtr(), m_link_latency);
@@ -175,8 +173,7 @@ Throttle::wakeup()
                 // Count the message
                 m_message_counters[net_msg_ptr->getMessageSize()][vnet]++;
 
-                DEBUG_MSG(NETWORK_COMP,LowPrio,*m_out[vnet]);
-                DEBUG_NEWLINE(NETWORK_COMP,HighPrio);
+                DPRINTF(RubyNetwork, "%s\n", *m_out[vnet]);
             }
 
             // Calculate the amount of bandwidth we spent on this message
@@ -188,7 +185,7 @@ Throttle::wakeup()
         if (bw_remaining > 0 &&
             (m_in[vnet]->isReady() || m_units_remaining[vnet] > 0) &&
             !m_out[vnet]->areNSlotsAvailable(1)) {
-            DEBUG_MSG(NETWORK_COMP,LowPrio,vnet);
+            DPRINTF(RubyNetwork, "vnet: %d", vnet);
             // schedule me to wakeup again because I'm waiting for my
             // output queue to become available
             schedule_wakeup = true;
@@ -209,11 +206,9 @@ Throttle::wakeup()
         // We have extra bandwidth and our output buffer was
         // available, so we must not have anything else to do until
         // another message arrives.
-        DEBUG_MSG(NETWORK_COMP, LowPrio, *this);
-        DEBUG_MSG(NETWORK_COMP, LowPrio, "not scheduled again");
+        DPRINTF(RubyNetwork, "%s not scheduled again\n", *this);
     } else {
-        DEBUG_MSG(NETWORK_COMP, LowPrio, *this);
-        DEBUG_MSG(NETWORK_COMP, LowPrio, "scheduled again");
+        DPRINTF(RubyNetwork, "%s scheduled again\n", *this);
 
         // We are out of bandwidth for this cycle, so wakeup next
         // cycle and continue

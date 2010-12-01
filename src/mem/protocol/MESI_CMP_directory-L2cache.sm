@@ -188,9 +188,8 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   void addSharer(Address addr, MachineID requestor) {
-    //DEBUG_EXPR(machineID);
-    //DEBUG_EXPR(requestor);
-    //DEBUG_EXPR(addr);
+    DPRINTF(RubySlicc, "machineID: %s, requestor: %s, address: %s\n",
+            machineID, requestor, addr);
     getL2CacheEntry(addr).Sharers.add(requestor);
   }
 
@@ -251,8 +250,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         return Event:L1_PUTX_old;
       }
     } else {
-      DEBUG_EXPR(addr);
-      DEBUG_EXPR(type);
+      DPRINTF(RubySlicc, "address: %s, Request Type: %s\n", addr, type);
       error("Invalid L1 forwarded request type");
     }
   }
@@ -267,11 +265,9 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   in_port(L1unblockNetwork_in, ResponseMsg, unblockToL2Cache) {
     if(L1unblockNetwork_in.isReady()) {
       peek(L1unblockNetwork_in,  ResponseMsg) {
-        DEBUG_EXPR(in_msg.Address);
-	DEBUG_EXPR(getState(in_msg.Address));
-        DEBUG_EXPR(in_msg.Sender);
-        DEBUG_EXPR(in_msg.Type);
-        DEBUG_EXPR(in_msg.Destination);
+        DPRINTF(RubySlicc, "Addr: %s State: %s Sender: %s Type: %s Dest: %s\n",
+                in_msg.Address, getState(in_msg.Address), in_msg.Sender,
+                in_msg.Type, in_msg.Destination);
 
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:EXCLUSIVE_UNBLOCK) {
@@ -329,12 +325,9 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   in_port(L1RequestIntraChipL2Network_in, RequestMsg, L1RequestToL2Cache) {
     if(L1RequestIntraChipL2Network_in.isReady()) {
       peek(L1RequestIntraChipL2Network_in,  RequestMsg) {
-        DEBUG_EXPR(in_msg.Address);
-        //DEBUG_EXPR(id);
-        DEBUG_EXPR(getState(in_msg.Address));
-        //DEBUG_EXPR(in_msg.Requestor);
-        DEBUG_EXPR(in_msg.Type);
-        //DEBUG_EXPR(in_msg.Destination);
+        DPRINTF(RubySlicc, "Addr: %s State: %s Req: %s Type: %s Dest: %s\n",
+                in_msg.Address, getState(in_msg.Address), in_msg.Requestor,
+                in_msg.Type, in_msg.Destination);
         assert(machineIDToMachineType(in_msg.Requestor) == MachineType:L1Cache);
         assert(in_msg.Destination.isElement(machineID));
         if (L2cacheMemory.isTagPresent(in_msg.Address)) {
@@ -506,12 +499,11 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
       out_msg.Destination.add(L2_TBEs[address].L1_GetX_ID);
-      //DEBUG_EXPR(out_msg.Destination);
+      DPRINTF(RubySlicc, "%s\n", out_msg.Destination);
       out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
       out_msg.Dirty := getL2CacheEntry(address).Dirty;
-      DEBUG_EXPR(out_msg.Address);
-      //DEBUG_EXPR(out_msg.Destination);
-      //DEBUG_EXPR(out_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Destination: %s, DataBlock: %s\n",
+              out_msg.Address, out_msg.Destination, out_msg.DataBlk);
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }

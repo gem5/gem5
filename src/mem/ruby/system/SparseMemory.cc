@@ -112,7 +112,7 @@ SparseMemory::exist(const Address& address) const
     int highBit = m_total_number_of_bits + RubySystem::getBlockSizeBits();
     int lowBit;
     assert(address == line_address(address));
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+    DPRINTF(RubyCache, "address: %s\n", address);
 
     for (int level = 0; level < m_number_of_levels; level++) {
         // Create the appropriate sub address for this level
@@ -122,10 +122,9 @@ SparseMemory::exist(const Address& address) const
         lowBit = highBit - m_number_of_bits_per_level[level];
         curAddress.setAddress(address.bitSelect(lowBit, highBit - 1));
 
-        DEBUG_EXPR(CACHE_COMP, HighPrio, level);
-        DEBUG_EXPR(CACHE_COMP, HighPrio, lowBit);
-        DEBUG_EXPR(CACHE_COMP, HighPrio, highBit - 1);
-        DEBUG_EXPR(CACHE_COMP, HighPrio, curAddress);
+        DPRINTF(RubyCache, "level: %d, lowBit: %d, highBit - 1: %d, "
+                "curAddress: %s\n",
+                level, lowBit, highBit - 1, curAddress);
 
         // Adjust the highBit value for the next level
         highBit -= m_number_of_bits_per_level[level];
@@ -135,12 +134,12 @@ SparseMemory::exist(const Address& address) const
         if (curTable->count(curAddress) != 0) {
             curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
         } else {
-            DEBUG_MSG(CACHE_COMP, HighPrio, "Not found");
+            DPRINTF(RubyCache, "Not found\n");
             return false;
         }
     }
 
-    DEBUG_MSG(CACHE_COMP, HighPrio, "Entry found");
+    DPRINTF(RubyCache, "Entry found\n");
     return true;
 }
 
@@ -224,11 +223,10 @@ SparseMemory::recursivelyRemoveLevels(const Address& address,
     curAddress.setAddress(address.bitSelect(curInfo.lowBit,
                                             curInfo.highBit - 1));
 
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
-    DEBUG_EXPR(CACHE_COMP, HighPrio, curInfo.level);
-    DEBUG_EXPR(CACHE_COMP, HighPrio, curInfo.lowBit);
-    DEBUG_EXPR(CACHE_COMP, HighPrio, curInfo.highBit - 1);
-    DEBUG_EXPR(CACHE_COMP, HighPrio, curAddress);
+    DPRINTF(RubyCache, "address: %s, curInfo.level: %d, curInfo.lowBit: %d, "
+            "curInfo.highBit - 1: %d, curAddress: %s\n",
+            address, curInfo.level, curInfo.lowBit,
+            curInfo.highBit - 1, curAddress);
 
     assert(curInfo.curTable->count(curAddress) != 0);
 
@@ -307,7 +305,7 @@ SparseMemory::lookup(const Address& address)
     assert(exist(address));
     assert(address == line_address(address));
 
-    DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+    DPRINTF(RubyCache, "address: %s\n", address);
 
     Address curAddress;
     SparseMapType* curTable = m_map_head;
@@ -327,10 +325,9 @@ SparseMemory::lookup(const Address& address)
         lowBit = highBit - m_number_of_bits_per_level[level];
         curAddress.setAddress(address.bitSelect(lowBit, highBit - 1));
 
-        DEBUG_EXPR(CACHE_COMP, HighPrio, level);
-        DEBUG_EXPR(CACHE_COMP, HighPrio, lowBit);
-        DEBUG_EXPR(CACHE_COMP, HighPrio, highBit - 1);
-        DEBUG_EXPR(CACHE_COMP, HighPrio, curAddress);
+        DPRINTF(RubyCache, "level: %d, lowBit: %d, highBit - 1: %d, "
+                "curAddress: %s\n",
+                level, lowBit, highBit - 1, curAddress);
 
         // Adjust the highBit value for the next level
         highBit -= m_number_of_bits_per_level[level];

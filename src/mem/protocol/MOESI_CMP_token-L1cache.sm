@@ -190,13 +190,14 @@ machine(L1Cache, "Token protocol")
   int averageLatencyCounter, default="(500 << (*m_L1Cache_averageLatencyHysteresis_ptr))";
 
   int averageLatencyEstimate() {
-    DEBUG_EXPR( (averageLatencyCounter >> averageLatencyHysteresis) );
+    DPRINTF(RubySlicc, "%d\n",
+            (averageLatencyCounter >> averageLatencyHysteresis));
     //profile_average_latency_estimate( (averageLatencyCounter >> averageLatencyHysteresis) );
     return averageLatencyCounter >> averageLatencyHysteresis;
   }
 
   void updateAverageLatencyEstimate(int latency) {
-    DEBUG_EXPR( latency );
+    DPRINTF(RubySlicc, "%d\n", latency);
     assert(latency >= 0);
 
     // By subtracting the current average and then adding the most
@@ -890,8 +891,8 @@ machine(L1Cache, "Token protocol")
         // Increment IssueCount
         L1_TBEs[address].IssueCount := L1_TBEs[address].IssueCount + 1;
 
-        DEBUG_EXPR("incremented issue count");
-        DEBUG_EXPR(L1_TBEs[address].IssueCount);
+        DPRINTF(RubySlicc, "incremented issue count to %d\n",
+                L1_TBEs[address].IssueCount);
 
         // Set a wakeup timer
         if (dynamic_timeout_enabled) {
@@ -1203,8 +1204,8 @@ machine(L1Cache, "Token protocol")
 
 
   action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getCacheEntry(address).DataBlk);
 
     sequencer.readCallback(address, 
                            GenericMachineType:L1Cache, 
@@ -1213,8 +1214,8 @@ machine(L1Cache, "Token protocol")
   }
 
   action(x_external_load_hit, "x", desc="Notify sequencer the load completed.") {
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getCacheEntry(address).DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
 
       sequencer.readCallback(address, 
@@ -1225,20 +1226,20 @@ machine(L1Cache, "Token protocol")
   }
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getCacheEntry(address).DataBlk);
 
     sequencer.writeCallback(address, 
                             GenericMachineType:L1Cache, 
                             getCacheEntry(address).DataBlk);
 
     getCacheEntry(address).Dirty := true;
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
   }
 
   action(xx_external_store_hit, "\x", desc="Notify sequencer that store completed.") {
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getCacheEntry(address).DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
 
       sequencer.writeCallback(address,
@@ -1247,7 +1248,7 @@ machine(L1Cache, "Token protocol")
 
     }
     getCacheEntry(address).Dirty := true;
-    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getCacheEntry(address).DataBlk);
   }
 
   action(i_allocateTBE, "i", desc="Allocate TBE") {
@@ -1317,11 +1318,10 @@ machine(L1Cache, "Token protocol")
   action(q_updateTokensFromResponse, "q", desc="Update the token count based on the incoming response message") {
     peek(responseNetwork_in, ResponseMsg) {
       assert(in_msg.Tokens != 0);
-      DEBUG_EXPR("MRM_DEBUG L1 received tokens");
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.Tokens);
+      DPRINTF(RubySlicc, "L1 received tokens for address: %s, tokens: %d\n",
+              in_msg.Address, in_msg.Tokens);
       getCacheEntry(address).Tokens := getCacheEntry(address).Tokens + in_msg.Tokens;
-      DEBUG_EXPR(getCacheEntry(address).Tokens);
+      DPRINTF(RubySlicc, "%d\n", getCacheEntry(address).Tokens);
 
       if (getCacheEntry(address).Dirty == false && in_msg.Dirty) {
         getCacheEntry(address).Dirty := true;

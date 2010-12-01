@@ -742,8 +742,8 @@ machine(L2Cache, "Token protocol")
       out_msg.Dirty := false;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+		        address, L2_TBEs[address].DataBlk);
   }
 
   action(c_sendDataFromTBEToL1GETX, "\c", desc="Send data from TBE to L1 requestors in TBE") {
@@ -758,8 +758,8 @@ machine(L2Cache, "Token protocol")
       out_msg.Acks := L2_TBEs[address].Local_GETX_IntAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, L2_TBEs[address].DataBlk);
   }
 
   action(c_sendExclusiveDataFromTBEToL1GETS, "\cc", desc="Send data from TBE to L1 requestors in TBE") {
@@ -802,8 +802,8 @@ machine(L2Cache, "Token protocol")
       out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, L2_TBEs[address].DataBlk);
   }
 
   action(c_sendExclusiveDataFromTBEToFwdGETS, "\ccc", desc="Send data from TBE to external GETX") {
@@ -818,8 +818,8 @@ machine(L2Cache, "Token protocol")
       out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, L2_TBEs[address].DataBlk);
   }
 
   action(d_sendDataToL1GETS, "d", desc="Send data directly to L1 requestor") {
@@ -836,8 +836,8 @@ machine(L2Cache, "Token protocol")
         out_msg.MessageSize := MessageSizeType:ResponseL2hit_Data;
       }
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getL2CacheEntry(address).DataBlk);
   }
 
   action(d_sendDataToL1GETX, "\d", desc="Send data and a token from TBE to L1 requestor") {
@@ -854,8 +854,8 @@ machine(L2Cache, "Token protocol")
         out_msg.Acks := L2_TBEs[address].Local_GETX_IntAcks;
       }
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getL2CacheEntry(address).DataBlk);
   }
 
   action(dd_sendDataToFwdGETX, "dd", desc="send data") {
@@ -872,8 +872,8 @@ machine(L2Cache, "Token protocol")
         out_msg.Acks := in_msg.Acks;
       }
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getL2CacheEntry(address).DataBlk);
   }
 
 
@@ -891,8 +891,8 @@ machine(L2Cache, "Token protocol")
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+            address, getL2CacheEntry(address).DataBlk);
   }
 
   action(dd_sendExclusiveDataToFwdGETS, "\d\d", desc="send data") {
@@ -950,12 +950,12 @@ machine(L2Cache, "Token protocol")
 
   action(ee_sendLocalInv, "\ee", desc="Send local invalidates") {
     L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
-    DEBUG_EXPR(address);
-    DEBUG_EXPR(getLocalSharers(address));
-    DEBUG_EXPR(L2_TBEs[address].NumIntPendingAcks);
+    DPRINTF(RubySlicc, "Address: %s, Local Sharers: %s, Pending Acks: %d\n",
+            address, getLocalSharers(address),
+            L2_TBEs[address].NumIntPendingAcks);
     if (isLocalOwnerValid(address)) {
       L2_TBEs[address].NumIntPendingAcks := L2_TBEs[address].NumIntPendingAcks + 1;
-      DEBUG_EXPR(getLocalOwner(address));
+      DPRINTF(RubySlicc, "%s\n", getLocalOwner(address));
     }
 
     enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {

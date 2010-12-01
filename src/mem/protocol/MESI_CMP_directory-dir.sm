@@ -167,7 +167,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Address));          
         } else {
-          DEBUG_EXPR(in_msg);
+          DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Invalid message");
         }
       }
@@ -183,7 +183,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:CleanReplacement, in_msg.Address);
         } else {
-          DEBUG_EXPR(in_msg.Type);
+          DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
         }
       }
@@ -199,7 +199,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
           trigger(Event:Memory_Ack, in_msg.Address);
         } else {
-          DEBUG_EXPR(in_msg.Type);
+          DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
         }
       }
@@ -271,7 +271,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
 
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -287,7 +287,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -295,8 +295,8 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   action(m_writeDataToMemory, "m", desc="Write dirty writeback to memory") {
     peek(responseNetwork_in, ResponseMsg) {
       getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+              in_msg.Address, in_msg.DataBlk);
     }
   }
 //added by SS for dma
@@ -309,7 +309,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.OriginalRequestorMachId := machineID;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -349,7 +349,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -439,7 +439,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
    
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }

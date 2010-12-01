@@ -258,9 +258,8 @@ NetworkInterface::wakeup()
     if (inNetLink->isReady()) {
         flit *t_flit = inNetLink->consumeLink();
         if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
-            DEBUG_EXPR(NETWORK_COMP, HighPrio, m_id);
-            DEBUG_MSG(NETWORK_COMP, HighPrio, "Message got delivered");
-            DEBUG_EXPR(NETWORK_COMP, HighPrio, g_eventQueue_ptr->getTime());
+            DPRINTF(RubyNetwork, "m_id: %d, Message delivered at time: %lld\n",
+                    m_id, g_eventQueue_ptr->getTime());
 
             // When we are doing network only testing, the messages do not
             // have to be buffered into the message buffers of the protocol

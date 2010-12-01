@@ -309,8 +309,8 @@ Router::wakeup()
 
         // checking the incoming link
         if (m_in_link[incoming_port]->isReady()) {
-            DEBUG_EXPR(NETWORK_COMP, HighPrio, m_id);
-            DEBUG_EXPR(NETWORK_COMP, HighPrio, g_eventQueue_ptr->getTime());
+            DPRINTF(RubyNetwork, "m_id: %d, Time: %lld\n",
+                    m_id, g_eventQueue_ptr->getTime());
             t_flit = m_in_link[incoming_port]->peekLink();
             routeCompute(t_flit, incoming_port);
             m_in_link[incoming_port]->consumeLink();

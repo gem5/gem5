@@ -227,7 +227,7 @@ machine(Directory, "Token protocol")
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
           trigger(Event:Memory_Ack, in_msg.Address);
         } else {
-          DEBUG_EXPR(in_msg.Type);
+          DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
         }
       }
@@ -254,7 +254,7 @@ machine(Directory, "Token protocol")
           } else if (in_msg.Type == CoherenceResponseType:ACK) {
             trigger(Event:Ack_All_Tokens, in_msg.Address);
           } else {
-            DEBUG_EXPR(in_msg.Type);
+            DPRINTF(RubySlicc, "%s\n", in_msg.Type);
             error("Invalid message");
           }
         } else {
@@ -266,7 +266,7 @@ machine(Directory, "Token protocol")
           } else if (in_msg.Type == CoherenceResponseType:ACK_OWNER) {
             trigger(Event:Ack_Owner, in_msg.Address);
           } else {
-            DEBUG_EXPR(in_msg.Type);
+            DPRINTF(RubySlicc, "%s\n", in_msg.Type);
             error("Invalid message");
           }
         }
@@ -590,7 +590,7 @@ machine(Directory, "Token protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -603,7 +603,7 @@ machine(Directory, "Token protocol")
       out_msg.OriginalRequestorMachId := persistentTable.findSmallest(address);
       out_msg.MessageSize := MessageSizeType:Request_Control;
       out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-      DEBUG_EXPR(out_msg);
+      DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
 
@@ -616,7 +616,7 @@ machine(Directory, "Token protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -625,7 +625,7 @@ machine(Directory, "Token protocol")
     enqueue(memQueue_out, MemoryMsg, latency="1") {
       out_msg.Address := address;
       out_msg.Type := MemoryRequestType:MEMORY_WB;
-      DEBUG_EXPR(out_msg);
+      DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
 
@@ -637,7 +637,7 @@ machine(Directory, "Token protocol")
       out_msg.DataBlk := TBEs[address].DataBlk;
       // then add the dma write data
       out_msg.DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
-      DEBUG_EXPR(out_msg);
+      DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
 
@@ -647,7 +647,7 @@ machine(Directory, "Token protocol")
       out_msg.Type := MemoryRequestType:MEMORY_WB;
       // first, initialize the data blk to the current version of system memory
       out_msg.DataBlk := TBEs[address].DataBlk;
-      DEBUG_EXPR(out_msg);
+      DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
 
@@ -755,8 +755,8 @@ machine(Directory, "Token protocol")
   action(m_writeDataToMemory, "m", desc="Write dirty writeback to memory") {
     peek(responseNetwork_in, ResponseMsg) {
       getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+              in_msg.Address, in_msg.DataBlk);
     }
   }
 

@@ -311,7 +311,7 @@ machine(Directory, "AMD Hammer-like protocol")
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
           trigger(Event:Memory_Ack, in_msg.Address);
         } else {
-          DEBUG_EXPR(in_msg.Type);
+          DPRINTF(RubySlicc, "%d\n", in_msg.Type);
           error("Invalid message");
         }
       }
@@ -483,28 +483,28 @@ machine(Directory, "AMD Hammer-like protocol")
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
     peek(responseToDir_in, ResponseMsg) {
       assert(in_msg.Acks > 0);
-      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      DPRINTF(RubySlicc, "%d\n", TBEs[address].NumPendingMsgs);
       //
       // Note that cache data responses will have an ack count of 2.  However, 
       // directory DMA requests must wait for acks from all LLC caches, so 
       // only decrement by 1.
       //
       TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - 1;
-      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      DPRINTF(RubySlicc, "%d\n", TBEs[address].NumPendingMsgs);
     }
   }
 
   action(mu_decrementNumberOfUnblocks, "mu", desc="Decrement the number of messages for which we're waiting") {
     peek(unblockNetwork_in, ResponseMsg) {
       assert(in_msg.Type == CoherenceResponseType:UNBLOCKS);
-      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      DPRINTF(RubySlicc, "%d\n", TBEs[address].NumPendingMsgs);
       //
       // Note that cache data responses will have an ack count of 2.  However, 
       // directory DMA requests must wait for acks from all LLC caches, so 
       // only decrement by 1.
       //
       TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - 1;
-      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      DPRINTF(RubySlicc, "%d\n", TBEs[address].NumPendingMsgs);
     }
   }
 
@@ -566,10 +566,10 @@ machine(Directory, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
         out_msg.DataBlk := in_msg.DataBlk;
-        DEBUG_EXPR(out_msg.DataBlk);
+        DPRINTF(RubySlicc, "%s\n", out_msg.DataBlk);
         out_msg.Dirty := false; // By definition, the block is now clean
         out_msg.Acks := TBEs[address].Acks;
-        DEBUG_EXPR(out_msg.Acks);
+        DPRINTF(RubySlicc, "%d\n", out_msg.Acks);
         assert(out_msg.Acks > 0);
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
@@ -656,7 +656,7 @@ machine(Directory, "AMD Hammer-like protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -670,7 +670,7 @@ machine(Directory, "AMD Hammer-like protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -876,8 +876,8 @@ machine(Directory, "AMD Hammer-like protocol")
   action(wr_writeResponseDataToMemory, "wr", desc="Write response data to memory") {
     peek(responseToDir_in, ResponseMsg) {
       getDirectoryEntry(address).DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+              in_msg.Address, in_msg.DataBlk);
     }
   }
 
@@ -886,23 +886,23 @@ machine(Directory, "AMD Hammer-like protocol")
       assert(in_msg.Dirty);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
       getDirectoryEntry(address).DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
+              in_msg.Address, in_msg.DataBlk);
     }
   }
 
   action(dwt_writeDmaDataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    DEBUG_EXPR(getDirectoryEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getDirectoryEntry(address).DataBlk);
     getDirectoryEntry(address).DataBlk := TBEs[address].DataBlk;
-    DEBUG_EXPR(getDirectoryEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getDirectoryEntry(address).DataBlk);
     getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
-    DEBUG_EXPR(getDirectoryEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getDirectoryEntry(address).DataBlk);
   }
 
   action(wdt_writeDataFromTBE, "wdt", desc="DMA Write data to memory from TBE") {
-    DEBUG_EXPR(getDirectoryEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getDirectoryEntry(address).DataBlk);
     getDirectoryEntry(address).DataBlk := TBEs[address].DataBlk;
-    DEBUG_EXPR(getDirectoryEntry(address).DataBlk);
+    DPRINTF(RubySlicc, "%s\n", getDirectoryEntry(address).DataBlk);
   }
 
   action(a_assertCacheData, "ac", desc="Assert that a cache provided the data") {
@@ -922,7 +922,7 @@ machine(Directory, "AMD Hammer-like protocol")
       enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
-        DEBUG_EXPR(out_msg);
+        DPRINTF(RubySlicc, "%s\n", out_msg);
       }
     }
   }
@@ -935,7 +935,7 @@ machine(Directory, "AMD Hammer-like protocol")
       out_msg.DataBlk := TBEs[address].DataBlk;
       // then add the dma write data
       out_msg.DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
-      DEBUG_EXPR(out_msg);
+      DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
 

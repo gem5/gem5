@@ -311,7 +311,7 @@ machine(L2Cache, "Token protocol")
     } else if(type == CoherenceRequestType:GETX) {
       return GenericRequestType:GETX;
     } else {
-      DEBUG_EXPR(type);
+      DPRINTF(RubySlicc, "%s\n", type);
       error("invalid CoherenceRequestType");
     }
   }
@@ -475,7 +475,7 @@ machine(L2Cache, "Token protocol")
           } else if (in_msg.Type == CoherenceResponseType:INV) {
             trigger(Event:L1_INV, in_msg.Address);
           } else {
-            DEBUG_EXPR(in_msg.Type);
+            DPRINTF(RubySlicc, "%s\n", in_msg.Type);
             error("Unexpected message");
           }
         }
@@ -765,8 +765,8 @@ machine(L2Cache, "Token protocol")
     peek(requestNetwork_in, RequestMsg) {
       if (filtering_enabled == true && in_msg.RetryNum == 0 && sharersExist(in_msg.Address) == false) {
         //profile_filter_action(1);
-        DEBUG_EXPR("filtered message");
-        DEBUG_EXPR(in_msg.RetryNum);
+        DPRINTF(RubySlicc, "filtered message, Retry Num: %d\n",
+                in_msg.RetryNum);
       }
       else {
         enqueue(localRequestNetwork_out, RequestMsg, latency=l2_response_latency ) {

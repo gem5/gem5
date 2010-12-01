@@ -59,4 +59,18 @@ TraceFlag('BusBridge')
 TraceFlag('LLSC')
 TraceFlag('MMU')
 TraceFlag('MemoryAccess')
-TraceFlag('Ruby')
+
+TraceFlag('RubyCache')
+TraceFlag('RubyDma')
+TraceFlag('RubyGenerated')
+TraceFlag('RubyMemory')
+TraceFlag('RubyNetwork')
+TraceFlag('RubyQueue')
+TraceFlag('RubyPort')
+TraceFlag('RubySlicc')
+TraceFlag('RubyStorebuffer')
+TraceFlag('RubyTester')
+
+CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
+    'RubyGenerated', 'RubySlicc', 'RubyStorebuffer', 'RubyCache', 
+    'RubyMemory', 'RubyDma'])

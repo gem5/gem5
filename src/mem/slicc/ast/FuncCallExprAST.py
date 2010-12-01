@@ -40,11 +40,33 @@ class FuncCallExprAST(ExprAST):
     def generate(self, code):
         machine = self.state_machine
 
-        # DEBUG_EXPR is strange since it takes parameters of multiple types
-        if self.proc_name == "DEBUG_EXPR":
-            # FIXME - check for number of parameters
-            code('DEBUG_SLICC(MedPrio, "$0: ", $1)',
-                 self.exprs[0].location, self.exprs[0].inline())
+        if self.proc_name == "DPRINTF":
+            # Code for inserting the location of the DPRINTF()
+            # statement in the .sm file in the statement it self.
+            # 'self.exprs[0].location' represents the location.
+            # 'format' represents the second argument of the
+            # original DPRINTF() call. It is left unmodified.
+            # str_list is used for concatenating the argument
+            # list following the format specifier. A DPRINTF()
+            # call may or may not contain any arguments following
+            # the format specifier. These two cases need to be
+            # handled differently. Hence the check whether or not
+            # the str_list is empty.
+
+            format = "%s" % (self.exprs[1].inline())
+            format_length = len(format)
+            str_list = []
+
+            for i in range(2, len(self.exprs)):
+                str_list.append("%s" % self.exprs[i].inline())
+
+            if len(str_list) == 0:
+                code('DPRINTF(RubySlicc, "$0: $1")',
+                     self.exprs[0].location, format[2:format_length-2])
+            else:
+                code('DPRINTF(RubySlicc, "$0: $1", $2)',
+                     self.exprs[0].location, format[2:format_length-2],
+                     ', '.join(str_list))
 
             return self.symtab.find("void", Type)
 
