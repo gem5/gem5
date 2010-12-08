@@ -92,8 +92,7 @@ TableWalker::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "port") {
         if (port != NULL)
-            fatal("%s: port already connected to %s",
-                  name(), port->getPeer()->name());
+            return port;
         System *sys = params()->sys;
         Tick minb = params()->min_backoff;
         Tick maxb = params()->max_backoff;

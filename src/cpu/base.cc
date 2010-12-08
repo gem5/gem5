@@ -33,6 +33,7 @@
 #include <string>
 #include <sstream>
 
+#include "arch/tlb.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
@@ -359,6 +360,26 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
            if (DTRACE(Context))
             ThreadContext::compare(oldTC, newTC);
         */
+
+        Port  *old_itb_port, *old_dtb_port, *new_itb_port, *new_dtb_port;
+        old_itb_port = oldTC->getITBPtr()->getPort();
+        old_dtb_port = oldTC->getDTBPtr()->getPort();
+        new_itb_port = newTC->getITBPtr()->getPort();
+        new_dtb_port = newTC->getDTBPtr()->getPort();
+
+        // Move over any table walker ports if they exist
+        if (new_itb_port && !new_itb_port->isConnected()) {
+            assert(old_itb_port);
+            Port *peer = old_itb_port->getPeer();;
+            new_itb_port->setPeer(peer);
+            peer->setPeer(new_itb_port);
+        }
+        if (new_dtb_port && !new_dtb_port->isConnected()) {
+            assert(old_dtb_port);
+            Port *peer = old_dtb_port->getPeer();;
+            new_dtb_port->setPeer(peer);
+            peer->setPeer(new_dtb_port);
+        }
     }
 
 #if FULL_SYSTEM

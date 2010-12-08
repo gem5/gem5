@@ -693,6 +693,18 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
     return fault;
 }
 
+Port*
+TLB::getPort()
+{
+#if FULL_SYSTEM
+    return tableWalker->getPort("port");
+#else
+    return NULL;
+#endif
+}
+
+
+
 ArmISA::TLB *
 ArmTLBParams::create()
 {

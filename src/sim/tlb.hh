@@ -38,6 +38,7 @@
 
 class ThreadContext;
 class Packet;
+class Port;
 
 class BaseTLB : public SimObject
 {
@@ -51,6 +52,11 @@ class BaseTLB : public SimObject
 
   public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
+
+    /** Get any port that the TLB or hardware table walker needs.
+     * This is used for migrating port connections during a takeOverFrom()
+     * call. */
+    virtual Port*  getPort() { return NULL; }
 
     class Translation
     {

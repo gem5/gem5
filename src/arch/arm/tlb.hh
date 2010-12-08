@@ -209,6 +209,9 @@ class TLB : public BaseTLB
 
     void regStats();
 
+    // Get the port from the table walker and return it
+    virtual Port *getPort();
+
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.
     // translateFunctional/translateSe/translateFs checks if they are
