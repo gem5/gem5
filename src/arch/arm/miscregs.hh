@@ -78,6 +78,8 @@ namespace ArmISA
         MISCREG_FPSR,
         MISCREG_FPSID,
         MISCREG_FPSCR,
+        MISCREG_FPSCR_QC,  // Cumulative saturation flag
+        MISCREG_FPSCR_EXC,  // Cumulative FP exception flags
         MISCREG_FPEXC,
         MISCREG_MVFR0,
         MISCREG_MVFR1,
@@ -206,7 +208,8 @@ namespace ArmISA
     const char * const miscRegName[NUM_MISCREGS] = {
         "cpsr", "itstate", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
         "spsr_mon", "spsr_und", "spsr_abt",
-        "fpsr", "fpsid", "fpscr", "fpexc", "mvfr0", "mvfr1",
+        "fpsr", "fpsid", "fpscr", "fpscr_qc", "fpscr_exc", "fpexc",
+        "mvfr0", "mvfr1",
         "sctlr_rst", "sev_mailbox",
         "sctlr", "dccisw", "dccimvac", "dccmvac",
         "contextidr", "tpidrurw", "tpidruro", "tpidrprw",
@@ -362,7 +365,11 @@ namespace ArmISA
 
     // This mask selects bits of the FPSCR that actually go in the FpCondCodes
     // integer register to allow renaming.
-    static const uint32_t FpCondCodesMask = 0xF800009F;
+    static const uint32_t FpCondCodesMask = 0xF0000000;
+    // This mask selects the cumulative FP exception flags of the FPSCR.
+    static const uint32_t FpscrExcMask = 0x0000009F;
+    // This mask selects the cumulative saturation flag of the FPSCR.
+    static const uint32_t FpscrQcMask = 0x08000000;
 
     BitUnion32(FPEXC)
         Bitfield<31> ex;

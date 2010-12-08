@@ -1632,12 +1632,12 @@ let {{
 
     vqaddUCode = '''
         destElem = srcElem1 + srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (destElem < srcElem1 || destElem < srcElem2) {
             destElem = (Element)(-1);
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqadd", "VqaddUD", "SimdAddOp", unsignedTypes, 2, vqaddUCode)
     threeEqualRegInst("vqadd", "VqaddUQ", "SimdAddOp", unsignedTypes, 4, vqaddUCode)
@@ -1655,7 +1655,7 @@ let {{
 
     vqaddSCode = '''
         destElem = srcElem1 + srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         bool negDest = (destElem < 0);
         bool negSrc1 = (srcElem1 < 0);
         bool negSrc2 = (srcElem2 < 0);
@@ -1665,26 +1665,26 @@ let {{
                 destElem -= 1;
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqadd", "VqaddSD", "SimdAddOp", signedTypes, 2, vqaddSCode)
     threeEqualRegInst("vqadd", "VqaddSQ", "SimdAddOp", signedTypes, 4, vqaddSCode)
 
     vqsubUCode = '''
         destElem = srcElem1 - srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (destElem > srcElem1) {
             destElem = 0;
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqsub", "VqsubUD", "SimdAddOp", unsignedTypes, 2, vqsubUCode)
     threeEqualRegInst("vqsub", "VqsubUQ", "SimdAddOp", unsignedTypes, 4, vqsubUCode)
 
     vqsubSCode = '''
         destElem = srcElem1 - srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         bool negDest = (destElem < 0);
         bool negSrc1 = (srcElem1 < 0);
         bool posSrc2 = (srcElem2 >= 0);
@@ -1694,7 +1694,7 @@ let {{
                 destElem -= 1;
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqsub", "VqsubSD", "SimdAddOp", signedTypes, 2, vqsubSCode)
     threeEqualRegInst("vqsub", "VqsubSQ", "SimdAddOp", signedTypes, 4, vqsubSCode)
@@ -1779,7 +1779,7 @@ let {{
 
     vqshlUCode = '''
         int16_t shiftAmt = (int8_t)srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (shiftAmt < 0) {
             shiftAmt = -shiftAmt;
             if (shiftAmt >= sizeof(Element) * 8) {
@@ -1808,14 +1808,14 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqshl", "VqshlUD", "SimdAluOp", unsignedTypes, 2, vqshlUCode)
     threeEqualRegInst("vqshl", "VqshlUQ", "SimdAluOp", unsignedTypes, 4, vqshlUCode)
 
     vqshlSCode = '''
         int16_t shiftAmt = (int8_t)srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (shiftAmt < 0) {
             shiftAmt = -shiftAmt;
             if (shiftAmt >= sizeof(Element) * 8) {
@@ -1854,14 +1854,14 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqshl", "VqshlSD", "SimdCmpOp", signedTypes, 2, vqshlSCode)
     threeEqualRegInst("vqshl", "VqshlSQ", "SimdCmpOp", signedTypes, 4, vqshlSCode)
 
     vqrshlUCode = '''
         int16_t shiftAmt = (int8_t)srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (shiftAmt < 0) {
             shiftAmt = -shiftAmt;
             Element rBit = 0;
@@ -1892,14 +1892,14 @@ let {{
                 }
             }
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqrshl", "VqrshlUD", "SimdCmpOp", unsignedTypes, 2, vqrshlUCode)
     threeEqualRegInst("vqrshl", "VqrshlUQ", "SimdCmpOp", unsignedTypes, 4, vqrshlUCode)
 
     vqrshlSCode = '''
         int16_t shiftAmt = (int8_t)srcElem2;
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (shiftAmt < 0) {
             shiftAmt = -shiftAmt;
             Element rBit = 0;
@@ -1944,7 +1944,7 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqrshl", "VqrshlSD", "SimdCmpOp", signedTypes, 2, vqrshlSCode)
     threeEqualRegInst("vqrshl", "VqrshlSQ", "SimdCmpOp", signedTypes, 4, vqrshlSCode)
@@ -2002,7 +2002,7 @@ let {{
     threeRegLongInst("vmlal", "Vmlal", "SimdMultAccOp", smallTypes, vmlalCode, True)
 
     vqdmlalCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
         Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
         Element halfNeg = maxNeg / 2;
@@ -2022,12 +2022,12 @@ let {{
                 destElem = ~destElem;
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeRegLongInst("vqdmlal", "Vqdmlal", "SimdMultAccOp", smallTypes, vqdmlalCode, True)
 
     vqdmlslCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
         Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
         Element halfNeg = maxNeg / 2;
@@ -2047,12 +2047,12 @@ let {{
                 destElem = ~destElem;
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeRegLongInst("vqdmlsl", "Vqdmlsl", "SimdMultAccOp", smallTypes, vqdmlslCode, True)
 
     vqdmullCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
         if (srcElem1 == srcElem2 &&
                 srcElem1 == (Element)((Element)1 <<
@@ -2060,7 +2060,7 @@ let {{
             destElem = ~((BigElement)srcElem1 << (sizeof(Element) * 8));
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeRegLongInst("vqdmull", "Vqdmull", "SimdMultAccOp", smallTypes, vqdmullCode)
 
@@ -2099,7 +2099,7 @@ let {{
     threeEqualRegInst("vpmin", "VpminQ", "SimdCmpOp", allTypes, 4, vminCode, pairwise=True)
 
     vqdmulhCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2) >>
                    (sizeof(Element) * 8);
         if (srcElem1 == srcElem2 &&
@@ -2108,13 +2108,13 @@ let {{
             destElem = ~srcElem1;
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqdmulh", "VqdmulhD", "SimdMultOp", smallSignedTypes, 2, vqdmulhCode)
     threeEqualRegInst("vqdmulh", "VqdmulhQ", "SimdMultOp", smallSignedTypes, 4, vqdmulhCode)
 
     vqrdmulhCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2 +
                     ((int64_t)1 << (sizeof(Element) * 8 - 1))) >>
                    (sizeof(Element) * 8);
@@ -2130,7 +2130,7 @@ let {{
             }
             fpscr.qc = 1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     threeEqualRegInst("vqrdmulh", "VqrdmulhD",
             "SimdMultOp", smallSignedTypes, 2, vqrdmulhCode)
@@ -2138,7 +2138,7 @@ let {{
             "SimdMultOp", smallSignedTypes, 4, vqrdmulhCode)
 
     vmaxfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         bool done;
         destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
         if (!done) {
@@ -2147,13 +2147,13 @@ let {{
         } else if (flushToZero(srcReg1, srcReg2)) {
             fpscr.idc = 1;
         }
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vmax", "VmaxDFp", "SimdFloatCmpOp", ("float",), 2, vmaxfpCode)
     threeEqualRegInstFp("vmax", "VmaxQFp", "SimdFloatCmpOp", ("float",), 4, vmaxfpCode)
 
     vminfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         bool done;
         destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
         if (!done) {
@@ -2162,7 +2162,7 @@ let {{
         } else if (flushToZero(srcReg1, srcReg2)) {
             fpscr.idc = 1;
         }
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vmin", "VminDFp", "SimdFloatCmpOp", ("float",), 2, vminfpCode)
     threeEqualRegInstFp("vmin", "VminQFp", "SimdFloatCmpOp", ("float",), 4, vminfpCode)
@@ -2178,10 +2178,10 @@ let {{
                         4, vminfpCode, pairwise=True)
 
     vaddfpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpAddS,
                            true, true, VfpRoundNearest);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vadd", "VaddDFp", "SimdFloatAddOp", ("float",), 2, vaddfpCode)
     threeEqualRegInstFp("vadd", "VaddQFp", "SimdFloatAddOp", ("float",), 4, vaddfpCode)
@@ -2192,53 +2192,53 @@ let {{
                         4, vaddfpCode, pairwise=True)
 
     vsubfpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpSubS,
                            true, true, VfpRoundNearest);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vsub", "VsubDFp", "SimdFloatAddOp", ("float",), 2, vsubfpCode)
     threeEqualRegInstFp("vsub", "VsubQFp", "SimdFloatAddOp", ("float",), 4, vsubfpCode)
 
     vmulfpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMulS,
                            true, true, VfpRoundNearest);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vmul", "NVmulDFp", "SimdFloatMultOp", ("float",), 2, vmulfpCode)
     threeEqualRegInstFp("vmul", "NVmulQFp", "SimdFloatMultOp", ("float",), 4, vmulfpCode)
 
     vmlafpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float mid = binaryOp(fpscr, srcReg1, srcReg2, fpMulS,
                              true, true, VfpRoundNearest);
         destReg = binaryOp(fpscr, mid, destReg, fpAddS,
                            true, true, VfpRoundNearest);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vmla", "NVmlaDFp", "SimdFloatMultAccOp", ("float",), 2, vmlafpCode, True)
     threeEqualRegInstFp("vmla", "NVmlaQFp", "SimdFloatMultAccOp", ("float",), 4, vmlafpCode, True)
 
     vmlsfpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float mid = binaryOp(fpscr, srcReg1, srcReg2, fpMulS,
                              true, true, VfpRoundNearest);
         destReg = binaryOp(fpscr, destReg, mid, fpSubS,
                            true, true, VfpRoundNearest);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vmls", "NVmlsDFp", "SimdFloatMultAccOp", ("float",), 2, vmlsfpCode, True)
     threeEqualRegInstFp("vmls", "NVmlsQFp", "SimdFloatMultAccOp", ("float",), 4, vmlsfpCode, True)
 
     vcgtfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, srcReg2, vcgtFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vcgt", "VcgtDFp", "SimdFloatCmpOp", ("float",),
             2, vcgtfpCode, toInt = True)
@@ -2246,13 +2246,13 @@ let {{
             4, vcgtfpCode, toInt = True)
 
     vcgefpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, srcReg2, vcgeFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vcge", "VcgeDFp", "SimdFloatCmpOp", ("float",),
             2, vcgefpCode, toInt = True)
@@ -2260,13 +2260,13 @@ let {{
             4, vcgefpCode, toInt = True)
 
     vacgtfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, srcReg2, vacgtFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vacgt", "VacgtDFp", "SimdFloatCmpOp", ("float",),
             2, vacgtfpCode, toInt = True)
@@ -2274,13 +2274,13 @@ let {{
             4, vacgtfpCode, toInt = True)
 
     vacgefpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, srcReg2, vacgeFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vacge", "VacgeDFp", "SimdFloatCmpOp", ("float",),
             2, vacgefpCode, toInt = True)
@@ -2288,13 +2288,13 @@ let {{
             4, vacgefpCode, toInt = True)
 
     vceqfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, srcReg2, vceqFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vceq", "VceqDFp", "SimdFloatCmpOp", ("float",),
             2, vceqfpCode, toInt = True)
@@ -2302,29 +2302,29 @@ let {{
             4, vceqfpCode, toInt = True)
 
     vrecpsCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpRecpsS,
                            true, true, VfpRoundNearest);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vrecps", "VrecpsDFp", "SimdFloatMultAccOp", ("float",), 2, vrecpsCode)
     threeEqualRegInstFp("vrecps", "VrecpsQFp", "SimdFloatMultAccOp", ("float",), 4, vrecpsCode)
 
     vrsqrtsCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpRSqrtsS,
                            true, true, VfpRoundNearest);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vrsqrts", "VrsqrtsDFp", "SimdFloatMiscOp", ("float",), 2, vrsqrtsCode)
     threeEqualRegInstFp("vrsqrts", "VrsqrtsQFp", "SimdFloatMiscOp", ("float",), 4, vrsqrtsCode)
 
     vabdfpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float mid = binaryOp(fpscr, srcReg1, srcReg2, fpSubS,
                              true, true, VfpRoundNearest);
         destReg = fabs(mid);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     threeEqualRegInstFp("vabd", "VabdDFp", "SimdFloatAddOp", ("float",), 2, vabdfpCode)
     threeEqualRegInstFp("vabd", "VabdQFp", "SimdFloatAddOp", ("float",), 4, vabdfpCode)
@@ -2441,7 +2441,7 @@ let {{
     twoRegShiftInst("vsli", "NVsliQ", "SimdShiftOp", unsignedTypes, 4, vsliCode, True)
 
     vqshlCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm >= sizeof(Element) * 8) {
             if (srcElem1 != 0) {
                 destElem = (Element)1 << (sizeof(Element) * 8 - 1);
@@ -2465,13 +2465,13 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegShiftInst("vqshl", "NVqshlD", "SimdShiftOp", signedTypes, 2, vqshlCode)
     twoRegShiftInst("vqshl", "NVqshlQ", "SimdShiftOp", signedTypes, 4, vqshlCode)
 
     vqshluCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm >= sizeof(Element) * 8) {
             if (srcElem1 != 0) {
                 destElem = mask(sizeof(Element) * 8);
@@ -2491,13 +2491,13 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegShiftInst("vqshlu", "NVqshluD", "SimdShiftOp", unsignedTypes, 2, vqshluCode)
     twoRegShiftInst("vqshlu", "NVqshluQ", "SimdShiftOp", unsignedTypes, 4, vqshluCode)
 
     vqshlusCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm >= sizeof(Element) * 8) {
             if (srcElem1 < 0) {
                 destElem = 0;
@@ -2528,7 +2528,7 @@ let {{
                 destElem = srcElem1;
             }
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegShiftInst("vqshlus", "NVqshlusD", "SimdShiftOp", signedTypes, 2, vqshlusCode)
     twoRegShiftInst("vqshlus", "NVqshlusQ", "SimdShiftOp", signedTypes, 4, vqshlusCode)
@@ -2555,7 +2555,7 @@ let {{
     twoRegNarrowShiftInst("vrshrn", "NVrshrn", "SimdShiftOp", smallUnsignedTypes, vrshrnCode)
 
     vqshrnCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm > sizeof(srcElem1) * 8) {
             if (srcElem1 != 0 && srcElem1 != -1)
                 fpscr.qc = 1;
@@ -2575,12 +2575,12 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegNarrowShiftInst("vqshrn", "NVqshrn", "SimdShiftOp", smallSignedTypes, vqshrnCode)
 
     vqshrunCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm > sizeof(srcElem1) * 8) {
             if (srcElem1 != 0)
                 fpscr.qc = 1;
@@ -2596,13 +2596,13 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegNarrowShiftInst("vqshrun", "NVqshrun",
                           "SimdShiftOp", smallUnsignedTypes, vqshrunCode)
 
     vqshrunsCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm > sizeof(srcElem1) * 8) {
             if (srcElem1 != 0)
                 fpscr.qc = 1;
@@ -2623,13 +2623,13 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegNarrowShiftInst("vqshrun", "NVqshruns",
                           "SimdShiftOp", smallSignedTypes, vqshrunsCode)
 
     vqrshrnCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm > sizeof(srcElem1) * 8) {
             if (srcElem1 != 0 && srcElem1 != -1)
                 fpscr.qc = 1;
@@ -2659,13 +2659,13 @@ let {{
                 destElem = srcElem1;
             }
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegNarrowShiftInst("vqrshrn", "NVqrshrn",
                           "SimdShiftOp", smallSignedTypes, vqrshrnCode)
 
     vqrshrunCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm > sizeof(srcElem1) * 8) {
             if (srcElem1 != 0)
                 fpscr.qc = 1;
@@ -2689,13 +2689,13 @@ let {{
                 destElem = srcElem1;
             }
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegNarrowShiftInst("vqrshrun", "NVqrshrun",
                           "SimdShiftOp", smallUnsignedTypes, vqrshrunCode)
 
     vqrshrunsCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm > sizeof(srcElem1) * 8) {
             if (srcElem1 != 0)
                 fpscr.qc = 1;
@@ -2726,7 +2726,7 @@ let {{
                 destElem = srcElem1;
             }
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegNarrowShiftInst("vqrshrun", "NVqrshruns",
                           "SimdShiftOp", smallSignedTypes, vqrshrunsCode)
@@ -2746,7 +2746,7 @@ let {{
     twoRegLongShiftInst("vmovl", "NVmovl", "SimdMiscOp", smallTypes, vmovlCode)
 
     vcvt2ufxCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         if (flushToZero(srcElem1))
             fpscr.idc = 1;
         VfpSavedState state = prepFpState(VfpRoundNearest);
@@ -2754,7 +2754,7 @@ let {{
         destReg = vfpFpSToFixed(srcElem1, false, false, imm);
         __asm__ __volatile__("" :: "m" (destReg));
         finishVfp(fpscr, state, true);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegShiftInst("vcvt", "NVcvt2ufxD", "SimdCvtOp", ("float",),
             2, vcvt2ufxCode, toInt = True)
@@ -2762,7 +2762,7 @@ let {{
             4, vcvt2ufxCode, toInt = True)
 
     vcvt2sfxCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         if (flushToZero(srcElem1))
             fpscr.idc = 1;
         VfpSavedState state = prepFpState(VfpRoundNearest);
@@ -2770,7 +2770,7 @@ let {{
         destReg = vfpFpSToFixed(srcElem1, true, false, imm);
         __asm__ __volatile__("" :: "m" (destReg));
         finishVfp(fpscr, state, true);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegShiftInst("vcvt", "NVcvt2sfxD", "SimdCvtOp", ("float",),
             2, vcvt2sfxCode, toInt = True)
@@ -2778,13 +2778,13 @@ let {{
             4, vcvt2sfxCode, toInt = True)
 
     vcvtu2fpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcReg1) : "m" (srcReg1));
         destElem = vfpUFixedToFpS(true, true, srcReg1, false, imm);
         __asm__ __volatile__("" :: "m" (destElem));
         finishVfp(fpscr, state, true);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegShiftInst("vcvt", "NVcvtu2fpD", "SimdCvtOp", ("float",),
             2, vcvtu2fpCode, fromInt = True)
@@ -2792,13 +2792,13 @@ let {{
             4, vcvtu2fpCode, fromInt = True)
 
     vcvts2fpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcReg1) : "m" (srcReg1));
         destElem = vfpSFixedToFpS(true, true, srcReg1, false, imm);
         __asm__ __volatile__("" :: "m" (destElem));
         finishVfp(fpscr, state, true);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegShiftInst("vcvt", "NVcvts2fpD", "SimdCvtOp", ("float",),
             2, vcvts2fpCode, fromInt = True)
@@ -2806,7 +2806,7 @@ let {{
             4, vcvts2fpCode, fromInt = True)
 
     vcvts2hCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float srcFp1 = bitsToFp(srcElem1, (float)0.0);
         if (flushToZero(srcFp1))
             fpscr.idc = 1;
@@ -2817,19 +2817,19 @@ let {{
                               fpscr.ahp, srcFp1);
         __asm__ __volatile__("" :: "m" (destElem));
         finishVfp(fpscr, state, true);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegNarrowMiscInst("vcvt", "NVcvts2h", "SimdCvtOp", ("uint16_t",), vcvts2hCode)
 
     vcvth2sCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
         __asm__ __volatile__("" : "=m" (srcElem1), "=m" (destElem)
                                 : "m" (srcElem1), "m" (destElem));
         destElem = fpToBits(vcvtFpHFpS(fpscr, true, fpscr.ahp, srcElem1));
         __asm__ __volatile__("" :: "m" (destElem));
         finishVfp(fpscr, state, true);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegLongMiscInst("vcvt", "NVcvth2s", "SimdCvtOp", ("uint16_t",), vcvth2sCode)
 
@@ -2840,11 +2840,11 @@ let {{
     twoRegMiscInst("vrsqrte", "NVrsqrteQ", "SimdSqrtOp", ("uint32_t",), 4, vrsqrteCode)
 
     vrsqrtefpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         if (flushToZero(srcReg1))
             fpscr.idc = 1;
         destReg = fprSqrtEstimate(fpscr, srcReg1);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegMiscInstFp("vrsqrte", "NVrsqrteDFp", "SimdFloatSqrtOp", ("float",), 2, vrsqrtefpCode)
     twoRegMiscInstFp("vrsqrte", "NVrsqrteQFp", "SimdFloatSqrtOp", ("float",), 4, vrsqrtefpCode)
@@ -2856,11 +2856,11 @@ let {{
     twoRegMiscInst("vrecpe", "NVrecpeQ", "SimdMultAccOp", ("uint32_t",), 4, vrecpeCode)
 
     vrecpefpCode = '''
-        FPSCR fpscr = Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         if (flushToZero(srcReg1))
             fpscr.idc = 1;
         destReg = fpRecipEstimate(fpscr, srcReg1);
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegMiscInstFp("vrecpe", "NVrecpeDFp", "SimdFloatMultAccOp", ("float",), 2, vrecpefpCode)
     twoRegMiscInstFp("vrecpe", "NVrecpeQFp", "SimdFloatMultAccOp", ("float",), 4, vrecpefpCode)
@@ -2954,7 +2954,7 @@ let {{
     twoRegMiscInst("vmvn", "NVmvnQ", "SimdAluOp", ("uint64_t",), 4, vmvnCode)
 
     vqabsCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
             fpscr.qc = 1;
             destElem = ~srcElem1;
@@ -2963,20 +2963,20 @@ let {{
         } else {
             destElem = srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegMiscInst("vqabs", "NVqabsD", "SimdAluOp", signedTypes, 2, vqabsCode)
     twoRegMiscInst("vqabs", "NVqabsQ", "SimdAluOp", signedTypes, 4, vqabsCode)
 
     vqnegCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrQc;
         if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
             fpscr.qc = 1;
             destElem = ~srcElem1;
         } else {
             destElem = -srcElem1;
         }
-        Fpscr = fpscr;
+        FpscrQc = fpscr;
     '''
     twoRegMiscInst("vqneg", "NVqnegD", "SimdAluOp", signedTypes, 2, vqnegCode)
     twoRegMiscInst("vqneg", "NVqnegQ", "SimdAluOp", signedTypes, 4, vqnegCode)
@@ -3019,13 +3019,13 @@ let {{
     twoRegMiscInst("vcgt", "NVcgtD", "SimdCmpOp", signedTypes, 2, vcgtCode)
     twoRegMiscInst("vcgt", "NVcgtQ", "SimdCmpOp", signedTypes, 4, vcgtCode)
     vcgtfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcgtFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegMiscInstFp("vcgt", "NVcgtDFp", "SimdFloatCmpOp", ("float",),
             2, vcgtfpCode, toInt = True)
@@ -3036,13 +3036,13 @@ let {{
     twoRegMiscInst("vcge", "NVcgeD", "SimdCmpOp", signedTypes, 2, vcgeCode)
     twoRegMiscInst("vcge", "NVcgeQ", "SimdCmpOp", signedTypes, 4, vcgeCode)
     vcgefpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcgeFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegMiscInstFp("vcge", "NVcgeDFp", "SimdFloatCmpOp", ("float",),
             2, vcgefpCode, toInt = True)
@@ -3053,13 +3053,13 @@ let {{
     twoRegMiscInst("vceq", "NVceqD", "SimdCmpOp", signedTypes, 2, vceqCode)
     twoRegMiscInst("vceq", "NVceqQ", "SimdCmpOp", signedTypes, 4, vceqCode)
     vceqfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vceqFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegMiscInstFp("vceq", "NVceqDFp", "SimdFloatCmpOp", ("float",),
             2, vceqfpCode, toInt = True)
@@ -3070,13 +3070,13 @@ let {{
     twoRegMiscInst("vcle", "NVcleD", "SimdCmpOp", signedTypes, 2, vcleCode)
     twoRegMiscInst("vcle", "NVcleQ", "SimdCmpOp", signedTypes, 4, vcleCode)
     vclefpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcleFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegMiscInstFp("vcle", "NVcleDFp", "SimdFloatCmpOp", ("float",),
             2, vclefpCode, toInt = True)
@@ -3087,13 +3087,13 @@ let {{
     twoRegMiscInst("vclt", "NVcltD", "SimdCmpOp", signedTypes, 2, vcltCode)
     twoRegMiscInst("vclt", "NVcltQ", "SimdCmpOp", signedTypes, 4, vcltCode)
     vcltfpCode = '''
-        FPSCR fpscr = (FPSCR)Fpscr;
+        FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcltFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
             fpscr.ioc = 1;
-        Fpscr = fpscr;
+        FpscrExc = fpscr;
     '''
     twoRegMiscInstFp("vclt", "NVcltDFp", "SimdFloatCmpOp", ("float",),
             2, vcltfpCode, toInt = True)
@@ -3203,7 +3203,7 @@ let {{
     oneRegImmInst("vbic", "NVbiciQ", "SimdAluOp", ("uint64_t",), 4, vbicCode, True)
 
     vqmovnCode = '''
-    FPSCR fpscr = (FPSCR)Fpscr;
+    FPSCR fpscr = (FPSCR) FpscrQc;
     destElem = srcElem1;
     if ((BigElement)destElem != srcElem1) {
         fpscr.qc = 1;
@@ -3211,24 +3211,24 @@ let {{
         if (srcElem1 < 0)
             destElem = ~destElem;
     }
-    Fpscr = fpscr;
+    FpscrQc = fpscr;
     '''
     twoRegNarrowMiscInst("vqmovn", "NVqmovn", "SimdMiscOp", smallSignedTypes, vqmovnCode)
 
     vqmovunCode = '''
-    FPSCR fpscr = (FPSCR)Fpscr;
+    FPSCR fpscr = (FPSCR) FpscrQc;
     destElem = srcElem1;
     if ((BigElement)destElem != srcElem1) {
         fpscr.qc = 1;
         destElem = mask(sizeof(Element) * 8);
     }
-    Fpscr = fpscr;
+    FpscrQc = fpscr;
     '''
     twoRegNarrowMiscInst("vqmovun", "NVqmovun",
             "SimdMiscOp", smallUnsignedTypes, vqmovunCode)
 
     vqmovunsCode = '''
-    FPSCR fpscr = (FPSCR)Fpscr;
+    FPSCR fpscr = (FPSCR) FpscrQc;
     destElem = srcElem1;
     if (srcElem1 < 0 ||
             ((BigElement)destElem & mask(sizeof(Element) * 8)) != srcElem1) {
@@ -3237,7 +3237,7 @@ let {{
         if (srcElem1 < 0)
             destElem = ~destElem;
     }
-    Fpscr = fpscr;
+    FpscrQc = fpscr;
     '''
     twoRegNarrowMiscInst("vqmovun", "NVqmovuns",
             "SimdMiscOp", smallSignedTypes, vqmovunsCode)

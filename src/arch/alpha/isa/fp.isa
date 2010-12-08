@@ -229,7 +229,7 @@ def template FloatingPointExecute {{
             %(code)s;
         } else {
             m5_fesetround(getC99RoundingMode(
-                           xc->readMiscRegNoEffect(MISCREG_FPCR)));
+                           xc->readMiscReg(MISCREG_FPCR)));
             %(code)s;
             m5_fesetround(M5_FE_TONEAREST);
         }

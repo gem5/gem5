@@ -419,24 +419,6 @@ InOrderDynInst::readMiscReg(int misc_reg)
     return this->cpu->readMiscReg(misc_reg, threadNumber);
 }
 
-/** Reads a misc. register, including any side-effects the read
- * might have as defined by the architecture.
- */
-MiscReg
-InOrderDynInst::readMiscRegNoEffect(int misc_reg)
-{
-    return this->cpu->readMiscRegNoEffect(misc_reg, threadNumber);
-}
-
-/** Reads a miscellaneous register. */
-MiscReg
-InOrderDynInst::readMiscRegOperandNoEffect(const StaticInst *si, int idx)
-{
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Misc. Reg Source Value %i"
-            " read as %#x.\n", threadNumber, seqNum, idx,
-            instSrc[idx].integer);
-    return instSrc[idx].integer;
-}
 
 /** Reads a misc. register, including any side-effects the read
  * might have as defined by the architecture.
@@ -444,24 +426,12 @@ InOrderDynInst::readMiscRegOperandNoEffect(const StaticInst *si, int idx)
 MiscReg
 InOrderDynInst::readMiscRegOperand(const StaticInst *si, int idx)
 {
-    // For In-Order, the side-effect of reading a register happens
-    // when explicitly executing a "ReadSrc" command. This simply returns
-    // a value.
-    return readMiscRegOperandNoEffect(si, idx);
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Misc. Reg Source Value %i"
+            " read as %#x.\n", threadNumber, seqNum, idx,
+            instSrc[idx].integer);
+    return instSrc[idx].integer;
 }
 
-/** Sets a misc. register. */
-void
-InOrderDynInst::setMiscRegOperandNoEffect(const StaticInst * si, int idx,
-                                          const MiscReg &val)
-{
-    instResult[idx].type = Integer;
-    instResult[idx].val.integer = val;
-    instResult[idx].tick = curTick;
-
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Misc Reg. Operand %i "
-            "being set to %#x.\n", threadNumber, seqNum, idx, val);
-}
 
 /** Sets a misc. register, including any side-effects the write
  * might have as defined by the architecture.
@@ -470,10 +440,12 @@ void
 InOrderDynInst::setMiscRegOperand(const StaticInst *si, int idx,
                        const MiscReg &val)
 {
-    // For In-Order, the side-effect of setting a register happens
-    // when explicitly writing back the register value. This
-    // simply maintains the operand value.
-    setMiscRegOperandNoEffect(si, idx, val);
+    instResult[idx].type = Integer;
+    instResult[idx].val.integer = val;
+    instResult[idx].tick = curTick;
+
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Misc Reg. Operand %i "
+            "being set to %#x.\n", threadNumber, seqNum, idx, val);
 }
 
 MiscReg
@@ -532,14 +504,6 @@ InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Float Reg. %i "
             "being set to %#x (result-tick:%i).\n",
             threadNumber, seqNum, idx, val, instResult[idx].tick);
-}
-
-/** Sets a misc. register. */
-/* Alter this when wanting to *speculate* on Miscellaneous registers */
-void
-InOrderDynInst::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
-{
-    this->cpu->setMiscRegNoEffect(misc_reg, val, threadNumber);
 }
 
 /** Sets a misc. register, including any side-effects the write

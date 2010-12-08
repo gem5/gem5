@@ -297,32 +297,15 @@ class BaseSimpleCPU : public BaseCPU
         return thread->readMiscReg(misc_reg);
     }
 
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
-    {
-        return thread->setMiscRegNoEffect(misc_reg, val);
-    }
-
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
         return thread->setMiscReg(misc_reg, val);
-    }
-
-    MiscReg readMiscRegOperandNoEffect(const StaticInst *si, int idx)
-    {
-        int reg_idx = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
-        return thread->readMiscRegNoEffect(reg_idx);
     }
 
     MiscReg readMiscRegOperand(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
         return thread->readMiscReg(reg_idx);
-    }
-
-    void setMiscRegOperandNoEffect(const StaticInst *si, int idx, const MiscReg &val)
-    {
-        int reg_idx = si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
-        return thread->setMiscRegNoEffect(reg_idx, val);
     }
 
     void setMiscRegOperand(

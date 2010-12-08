@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -99,13 +111,18 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Initializes variables. */
     void initVars();
 
-  public:
-    /** Reads a miscellaneous register. */
-    MiscReg readMiscRegNoEffect(int misc_reg)
-    {
-        return this->cpu->readMiscRegNoEffect(misc_reg, this->threadNumber);
-    }
+  protected:
+    /** Indexes of the destination misc. registers. They are needed to defer
+     * the write accesses to the misc. registers until the commit stage, when
+     * the instruction is out of its speculative state.
+     */
+    int _destMiscRegIdx[MaxInstDestRegs];
+    /** Values to be written to the destination misc. registers. */
+    MiscReg _destMiscRegVal[MaxInstDestRegs];
+    /** Number of destination misc. registers. */
+    int _numDestMiscRegs;
 
+  public:
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
@@ -114,28 +131,17 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         return this->cpu->readMiscReg(misc_reg, this->threadNumber);
     }
 
-    /** Sets a misc. register. */
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
-    {
-        this->instResult.integer = val;
-        return this->cpu->setMiscRegNoEffect(misc_reg, val, this->threadNumber);
-    }
-
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
-        return this->cpu->setMiscReg(misc_reg, val,
-                                               this->threadNumber);
-    }
-
-    /** Reads a miscellaneous register. */
-    TheISA::MiscReg readMiscRegOperandNoEffect(const StaticInst *si, int idx)
-    {
-        return this->cpu->readMiscRegNoEffect(
-                si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
-                this->threadNumber);
+        /** Writes to misc. registers are recorded and deferred until the
+         * commit stage, when updateMiscRegs() is called.
+         */
+        _destMiscRegIdx[_numDestMiscRegs] = misc_reg;
+        _destMiscRegVal[_numDestMiscRegs] = val;
+        _numDestMiscRegs++;
     }
 
     /** Reads a misc. register, including any side-effects the read
@@ -148,24 +154,31 @@ class BaseO3DynInst : public BaseDynInst<Impl>
                 this->threadNumber);
     }
 
-    /** Sets a misc. register. */
-    void setMiscRegOperandNoEffect(const StaticInst * si, int idx, const MiscReg &val)
-    {
-        this->instResult.integer = val;
-        return this->cpu->setMiscRegNoEffect(
-                si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
-                val, this->threadNumber);
-    }
-
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
     void setMiscRegOperand(const StaticInst *si, int idx,
                                      const MiscReg &val)
     {
-        return this->cpu->setMiscReg(
-                si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
-                val, this->threadNumber);
+        int misc_reg = si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
+        setMiscReg(misc_reg, val);
+    }
+
+    /** Called at the commit stage to update the misc. registers. */
+    void updateMiscRegs()
+    {
+        // @todo: Pretty convoluted way to avoid squashing from happening when
+        // using the TC during an instruction's execution (specifically for
+        // instructions that have side-effects that use the TC).  Fix this.
+        // See cpu/o3/dyn_inst_impl.hh.
+        bool in_syscall = this->thread->inSyscall;
+        this->thread->inSyscall = true;
+
+        for (int i = 0; i < _numDestMiscRegs; i++)
+            this->cpu->setMiscReg(
+                _destMiscRegIdx[i], _destMiscRegVal[i], this->threadNumber);
+
+        this->thread->inSyscall = in_syscall;
     }
 
 #if FULL_SYSTEM

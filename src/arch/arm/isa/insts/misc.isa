@@ -64,7 +64,7 @@ let {{
     mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
                                { "code": mrsCpsrCode,
                                  "predicate_test": condPredicateTest },
-                               ["IsSerializeAfter"])
+                               ["IsSerializeBefore"])
     header_output += MrsDeclare.subst(mrsCpsrIop)
     decoder_output += MrsConstructor.subst(mrsCpsrIop)
     exec_output += PredOpExecute.subst(mrsCpsrIop)
@@ -73,7 +73,7 @@ let {{
     mrsSpsrIop = InstObjParams("mrs", "MrsSpsr", "MrsOp",
                                { "code": mrsSpsrCode,
                                  "predicate_test": predicateTest },
-                               ["IsSerializeAfter"])
+                               ["IsSerializeBefore"])
     header_output += MrsDeclare.subst(mrsSpsrIop)
     decoder_output += MrsConstructor.subst(mrsSpsrIop)
     exec_output += PredOpExecute.subst(mrsSpsrIop)

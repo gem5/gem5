@@ -203,6 +203,8 @@ def operands {{
     'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', None, 3),
     'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', None, 3),
     'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', None, 3),
+    'FpscrQc': ('ControlReg', 'uw', 'MISCREG_FPSCR_QC', None, 3),
+    'FpscrExc': ('ControlReg', 'uw', 'MISCREG_FPSCR_EXC', None, 3),
     'Cpacr': ('ControlReg', 'uw', 'MISCREG_CPACR', (None, None, 'IsControl'), 3),
     'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 3),
     'Sctlr': ('ControlReg', 'uw', 'MISCREG_SCTLR', None, 3),

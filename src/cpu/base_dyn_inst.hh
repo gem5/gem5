@@ -859,7 +859,8 @@ BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
     if (fault != NoFault) {
         // Return a fixed value to keep simulation deterministic even
         // along misspeculated paths.
-        bzero(data, size);
+        if (data)
+            bzero(data, size);
     }
 
     if (traceData) {

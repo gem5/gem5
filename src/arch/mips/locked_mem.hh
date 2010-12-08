@@ -49,8 +49,8 @@ template <class XC>
 inline void
 handleLockedRead(XC *xc, Request *req)
 {
-    xc->setMiscRegNoEffect(MISCREG_LLADDR, req->getPaddr() & ~0xf);
-    xc->setMiscRegNoEffect(MISCREG_LLFLAG, true);
+    xc->setMiscReg(MISCREG_LLADDR, req->getPaddr() & ~0xf);
+    xc->setMiscReg(MISCREG_LLFLAG, true);
     DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link"
                   " Address set to %x.\n",
             req->threadId(), req->getPaddr() & ~0xf);
@@ -66,14 +66,14 @@ handleLockedWrite(XC *xc, Request *req)
         req->setExtraData(2);
     } else {
         // standard store conditional
-        bool lock_flag = xc->readMiscRegNoEffect(MISCREG_LLFLAG);
-        Addr lock_addr = xc->readMiscRegNoEffect(MISCREG_LLADDR);
+        bool lock_flag = xc->readMiscReg(MISCREG_LLFLAG);
+        Addr lock_addr = xc->readMiscReg(MISCREG_LLADDR);
 
         if (!lock_flag || (req->getPaddr() & ~0xf) != lock_addr) {
             // Lock flag not set or addr mismatch in CPU;
             // don't even bother sending to memory system
             req->setExtraData(0);
-            xc->setMiscRegNoEffect(MISCREG_LLFLAG, false);
+            xc->setMiscReg(MISCREG_LLFLAG, false);
 
             // the rest of this code is not architectural;
             // it's just a debugging aid to help detect
