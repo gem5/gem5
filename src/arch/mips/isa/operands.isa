@@ -151,5 +151,7 @@ def operands {{
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 4),
 
     #Program Counter Operands
-    'PCS': ('PCState', 'uw', None, (None, None, 'IsControl'), 4)
+    'PC': ('PCState', 'uw', 'pc', (None, None, 'IsControl'), 4),
+    'NPC': ('PCState', 'uw', 'npc', (None, None, 'IsControl'), 4),
+    'NNPC': ('PCState', 'uw', 'nnpc', (None, None, 'IsControl'), 4)
 }};

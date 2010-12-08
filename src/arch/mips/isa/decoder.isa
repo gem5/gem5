@@ -133,33 +133,29 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x1: jr_hb({{
                             Config1Reg config1 = Config1;
                             if (config1.ca == 0) {
-                                pc.nnpc(Rs);
+                                NNPC = Rs;
                             } else {
                                 panic("MIPS16e not supported\n");
                             }
-                            PCS = pc;
                         }}, IsReturn, ClearHazards);
                         default: jr({{
                             Config1Reg config1 = Config1;
                             if (config1.ca == 0) {
-                                pc.nnpc(Rs);
+                                NNPC = Rs;
                             } else {
                                 panic("MIPS16e not supported\n");
                             }
-                            PCS = pc;
                         }}, IsReturn);
                     }
 
                     0x1: decode HINT {
                         0x1: jalr_hb({{
-                            Rd = pc.nnpc();
-                            pc.nnpc(Rs);
-                            PCS = pc;
+                            Rd = NNPC;
+                            NNPC = Rs;
                         }}, IsCall, ClearHazards);
                         default: jalr({{
-                            Rd = pc.nnpc();
-                            pc.nnpc(Rs);
-                            PCS = pc;
+                            Rd = NNPC;
+                            NNPC = Rs;
                         }}, IsCall);
                     }
                 }
@@ -332,14 +328,9 @@ decode OPCODE_HI default Unknown::unknown() {
         }
 
         format Jump {
-            0x2: j({{
-                pc.nnpc((pc.npc() & 0xF0000000) | (JMPTARG << 2));
-                PCS = pc;
-            }});
-            0x3: jal({{
-                pc.nnpc((pc.npc() & 0xF0000000) | (JMPTARG << 2));
-                PCS = pc;
-            }}, IsCall, Link);
+            0x2: j({{ NNPC = (NPC & 0xF0000000) | (JMPTARG << 2); }});
+            0x3: jal({{ NNPC = (NPC & 0xF0000000) | (JMPTARG << 2); }},
+                     IsCall, Link);
         }
 
         format Branch {
@@ -708,16 +699,15 @@ decode OPCODE_HI default Unknown::unknown() {
                         ConfigReg config = Config;
                         SRSCtlReg srsCtl = SRSCtl;
                         DPRINTF(MipsPRA,"Restoring PC - %x\n",EPC);
-                        MipsISA::PCState pc = PCS;
                         if (status.erl == 1) {
                             status.erl = 0;
-                            pc.npc(ErrorEPC);
+                            NPC = ErrorEPC;
                             // Need to adjust NNPC, otherwise things break
-                            pc.nnpc(ErrorEPC + sizeof(MachInst));
+                            NNPC = ErrorEPC + sizeof(MachInst);
                         } else {
-                            pc.npc(EPC);
+                            NPC = EPC;
                             // Need to adjust NNPC, otherwise things break
-                            pc.nnpc(EPC + sizeof(MachInst));
+                            NNPC = EPC + sizeof(MachInst);
                             status.exl = 0;
                             if (config.ar >=1 &&
                                     srsCtl.hss > 0 &&
@@ -726,7 +716,6 @@ decode OPCODE_HI default Unknown::unknown() {
                                 //xc->setShadowSet(srsCtl.pss);
                             }
                         }
-                        PCS = pc;
                         LLFlag = 0;
                         Status = status;
                         SRSCtl = srsCtl;
@@ -734,15 +723,14 @@ decode OPCODE_HI default Unknown::unknown() {
 
                     0x1F: deret({{
                         DebugReg debug = Debug;
-                        MipsISA::PCState pc = PCS;
                         if (debug.dm == 1) {
                             debug.dm = 1;
                             debug.iexi = 0;
-                            pc.npc(DEPC);
+                            NPC = DEPC;
                         } else {
+                            NPC = NPC;
                             // Undefined;
                         }
-                        PCS = pc;
                         Debug = debug;
                     }}, IsReturn, IsSerializing, IsERET);
                 }
