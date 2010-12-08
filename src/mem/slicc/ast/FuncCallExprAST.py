@@ -165,9 +165,11 @@ class FuncCallExprAST(ExprAST):
         elif self.proc_name == "assert":
             error = self.exprs[0].embedError('"assert failure"')
             code('''
-if (ASSERT_FLAG && !(${{cvec[0]}})) {
+#ifndef NDEBUG
+if (!(${{cvec[0]}})) {
     $error
 }
+#endif
 ''')
 
         elif self.proc_name == "continueProcessing":
