@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov 15 2010 00:04:22
-M5 revision f440cdaf1c2d+ 7743+ default tip
-M5 started Nov 15 2010 00:04:25
+M5 compiled Dec  2 2010 15:11:52
+M5 revision 9fcc50998835+ 7780+ default qtip tip set.patch qbase
+M5 started Dec  2 2010 19:10:47
 M5 executing on zizzer
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
@@ -23,4 +23,4 @@ LDTX:		Passed
 LDTW:		Passed
 STTW:		Passed
 Done
-Exiting @ tick 18639500 because target called exit()
+Exiting @ tick 18731500 because target called exit()
