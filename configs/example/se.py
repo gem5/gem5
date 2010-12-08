@@ -59,7 +59,8 @@ parser = optparse.OptionParser()
 
 # Benchmark options
 parser.add_option("-c", "--cmd",
-    default=joinpath(m5_root, "tests/test-progs/hello/bin/alpha/linux/hello"),
+    default=joinpath(m5_root, "tests/test-progs/hello/bin/%s/linux/hello" % \
+            buildEnv['TARGET_ISA']),
     help="The binary to run in syscall emulation mode.")
 parser.add_option("-o", "--options", default="",
     help='The options to pass to the binary, use " " around the entire string')
