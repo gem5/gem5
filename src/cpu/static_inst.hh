@@ -158,7 +158,7 @@ class StaticInstBase : public RefCounted
         //This flag doesn't do anything yet
         IsMicroBranch,  ///< This microop branches within the microcode for a macroop
         IsDspOp,
-
+        IsSquashAfter, ///< Squash all uncommitted state after executed
         NumFlags
     };
 
@@ -248,6 +248,7 @@ class StaticInstBase : public RefCounted
                                       flags[IsSerializeAfter]; }
     bool isSerializeBefore() const { return flags[IsSerializeBefore]; }
     bool isSerializeAfter() const { return flags[IsSerializeAfter]; }
+    bool isSquashAfter() const { return flags[IsSquashAfter]; }
     bool isMemBarrier()   const { return flags[IsMemBarrier]; }
     bool isWriteBarrier() const { return flags[IsWriteBarrier]; }
     bool isNonSpeculative() const { return flags[IsNonSpeculative]; }

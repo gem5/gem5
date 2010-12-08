@@ -245,6 +245,13 @@ class DefaultCommit
     /** Handles squashing due to an TC write. */
     void squashFromTC(ThreadID tid);
 
+    /** Handles squashing from instruction with SquashAfter set.
+     * This differs from the other squashes as it squashes following
+     * instructions instead of the current instruction and doesn't
+     * clean up various status bits about traps/tc writes pending.
+     */
+    void squashAfter(ThreadID tid, uint64_t squash_after_seq_num);
+
 #if FULL_SYSTEM
     /** Handles processing an interrupt. */
     void handleInterrupt();

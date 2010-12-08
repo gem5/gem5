@@ -478,6 +478,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     { return staticInst->isSerializeBefore() || status[SerializeBefore]; }
     bool isSerializeAfter() const
     { return staticInst->isSerializeAfter() || status[SerializeAfter]; }
+    bool isSquashAfter() const { return staticInst->isSquashAfter(); }
     bool isMemBarrier()   const { return staticInst->isMemBarrier(); }
     bool isWriteBarrier() const { return staticInst->isWriteBarrier(); }
     bool isNonSpeculative() const { return staticInst->isNonSpeculative(); }

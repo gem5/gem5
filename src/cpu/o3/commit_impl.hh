@@ -561,6 +561,33 @@ DefaultCommit<Impl>::squashFromTC(ThreadID tid)
 
 template <class Impl>
 void
+DefaultCommit<Impl>::squashAfter(ThreadID tid, uint64_t squash_after_seq_num)
+{
+    youngestSeqNum[tid] = squash_after_seq_num;
+
+    rob->squash(squash_after_seq_num, tid);
+    changedROBNumEntries[tid] = true;
+
+    // Send back the sequence number of the squashed instruction.
+    toIEW->commitInfo[tid].doneSeqNum = squash_after_seq_num;
+
+    // Send back the squash signal to tell stages that they should squash.
+    toIEW->commitInfo[tid].squash = true;
+
+    // Send back the rob squashing signal so other stages know that
+    // the ROB is in the process of squashing.
+    toIEW->commitInfo[tid].robSquashing = true;
+
+    toIEW->commitInfo[tid].branchMispredict = false;
+
+    toIEW->commitInfo[tid].pc = pc[tid];
+    DPRINTF(Commit, "Executing squash after for [tid:%i] inst [sn:%lli]\n",
+            tid, squash_after_seq_num);
+    commitStatus[tid] = ROBSquashing;
+}
+
+template <class Impl>
+void
 DefaultCommit<Impl>::tick()
 {
     wroteToTimeBuffer = false;
@@ -916,6 +943,11 @@ DefaultCommit<Impl>::commitInsts()
                 head_inst->updateMiscRegs();
 
                 TheISA::advancePC(pc[tid], head_inst->staticInst);
+
+                // If this is an instruction that doesn't play nicely with
+                // others squash everything and restart fetch
+                if (head_inst->isSquashAfter())
+                    squashAfter(tid, head_inst->seqNum);
 
                 int count = 0;
                 Addr oldpc;
