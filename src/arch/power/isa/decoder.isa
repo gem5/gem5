@@ -381,20 +381,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch relative to PC based on CR and CTR.
         format BranchPCRelCondCtr {
-            0: bc({{
-                PowerISA::PCState pc = PCS;
-                pc.npc((uint32_t)(pc.pc() + disp));
-                PCS = pc;
-            }});
+            0: bc({{ NPC = (uint32_t)(PC + disp); }});
         }
 
         // Conditionally branch to fixed address based on CR and CTR.
         format BranchNonPCRelCondCtr {
-            1: bca({{
-                PowerISA::PCState pc = PCS;
-                pc.npc(targetAddr);
-                PCS = pc;
-            }});
+            1: bca({{ NPC = targetAddr; }});
         }
     }
 
@@ -402,20 +394,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Unconditionally branch relative to PC.
         format BranchPCRel {
-            0: b({{
-                PowerISA::PCState pc = PCS;
-                pc.npc((uint32_t)(pc.pc() + disp));
-                PCS = pc;
-            }});
+            0: b({{ NPC = (uint32_t)(PC + disp); }});
         }
 
         // Unconditionally branch to fixed address.
         format BranchNonPCRel {
-            1: ba({{
-                PowerISA::PCState pc = PCS;
-                pc.npc(targetAddr);
-                PCS = pc;
-            }});
+            1: ba({{ NPC = targetAddr; }});
         }
     }
 
@@ -423,20 +407,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch to address in LR based on CR and CTR.
         format BranchLrCondCtr {
-           16: bclr({{
-               PowerISA::PCState pc = PCS;
-               pc.npc(LR & 0xfffffffc);
-               PCS = pc;
-           }});
+           16: bclr({{ NPC = LR & 0xfffffffc; }});
         }
 
         // Conditionally branch to address in CTR based on CR.
         format BranchCtrCond {
-           528: bcctr({{
-               PowerISA::PCState pc = PCS;
-               pc.npc(CTR & 0xfffffffc);
-               PCS = pc;
-           }});
+           528: bcctr({{ NPC = CTR & 0xfffffffc; }});
         }
 
         // Condition register manipulation instructions.
