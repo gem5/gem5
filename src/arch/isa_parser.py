@@ -171,6 +171,8 @@ class Template(object):
             operands = SubOperandList(self.parser, compositeCode, d.operands)
 
             myDict['op_decl'] = operands.concatAttrStrings('op_decl')
+            if operands.readPC or operands.setPC:
+                myDict['op_decl'] += 'TheISA::PCState __parserAutoPCState;\n'
 
             is_src = lambda op: op.is_src
             is_dest = lambda op: op.is_dest
@@ -181,7 +183,25 @@ class Template(object):
                       operands.concatSomeAttrStrings(is_dest, 'op_dest_decl')
 
             myDict['op_rd'] = operands.concatAttrStrings('op_rd')
-            myDict['op_wb'] = operands.concatAttrStrings('op_wb')
+            if operands.readPC:
+                myDict['op_rd'] = '__parserAutoPCState = xc->pcState();\n' + \
+                                  myDict['op_rd']
+
+            # Compose the op_wb string. If we're going to write back the
+            # PC state because we changed some of its elements, we'll need to
+            # do that as early as possible. That allows later uncoordinated
+            # modifications to the PC to layer appropriately.
+            reordered = list(operands.items)
+            reordered.reverse()
+            op_wb_str = ''
+            pcWbStr = 'xc->pcState(__parserAutoPCState);\n'
+            for op_desc in reordered:
+                if op_desc.isPCPart() and op_desc.is_dest:
+                    op_wb_str = op_desc.op_wb + pcWbStr + op_wb_str
+                    pcWbStr = ''
+                else:
+                    op_wb_str = op_desc.op_wb + op_wb_str
+            myDict['op_wb'] = op_wb_str
 
             if d.operands.memOperand:
                 myDict['mem_acc_size'] = d.operands.memOperand.mem_acc_size
@@ -433,11 +453,12 @@ class Operand(object):
         # extension, if one was explicitly provided, or the default.
         if ext:
             self.eff_ext = ext
-        else:
+        elif hasattr(self, 'dflt_ext'):
             self.eff_ext = self.dflt_ext
 
-        self.size, self.ctype, self.is_signed = \
-                    parser.operandTypeMap[self.eff_ext]
+        if hasattr(self, 'eff_ext'):
+            self.size, self.ctype, self.is_signed = \
+                        parser.operandTypeMap[self.eff_ext]
 
         # note that mem_acc_size is undefined for non-mem operands...
         # template must be careful not to use it if it doesn't apply.
@@ -485,6 +506,12 @@ class Operand(object):
 
     def isControlReg(self):
         return 0
+
+    def isPCState(self):
+        return 0
+
+    def isPCPart(self):
+        return self.isPCState() and self.reg_spec
 
     def getFlags(self):
         # note the empty slice '[:]' gives us a copy of self.flags[0]
@@ -686,38 +713,31 @@ class PCStateOperand(Operand):
         return ''
 
     def makeRead(self):
-        return '%s = xc->pcState();\n' % self.base_name
+        if self.reg_spec:
+            # A component of the PC state.
+            return '%s = __parserAutoPCState.%s();\n' % \
+                (self.base_name, self.reg_spec)
+        else:
+            # The whole PC state itself.
+            return '%s = xc->pcState();\n' % self.base_name
 
     def makeWrite(self):
-        return 'xc->pcState(%s);\n' % self.base_name
+        if self.reg_spec:
+            # A component of the PC state.
+            return '__parserAutoPCState.%s(%s);\n' % \
+                (self.reg_spec, self.base_name)
+        else:
+            # The whole PC state itself.
+            return 'xc->pcState(%s);\n' % self.base_name
 
     def makeDecl(self):
-        return 'TheISA::PCState ' + self.base_name + ' M5_VAR_USED;\n';
+        ctype = 'TheISA::PCState'
+        if self.isPCPart():
+            ctype = self.ctype
+        return "%s %s;\n" % (ctype, self.base_name)
 
-class PCOperand(Operand):
-    def makeConstructor(self):
-        return ''
-
-    def makeRead(self):
-        return '%s = xc->instAddr();\n' % self.base_name
-
-class UPCOperand(Operand):
-    def makeConstructor(self):
-        return ''
-
-    def makeRead(self):
-        if self.read_code != None:
-            return self.buildReadCode('microPC')
-        return '%s = xc->microPC();\n' % self.base_name
-
-class NPCOperand(Operand):
-    def makeConstructor(self):
-        return ''
-
-    def makeRead(self):
-        if self.read_code != None:
-            return self.buildReadCode('nextInstAddr')
-        return '%s = xc->nextInstAddr();\n' % self.base_name
+    def isPCState(self):
+        return 1
 
 class OperandList(object):
     '''Find all the operands in the given code block.  Returns an operand
@@ -868,7 +888,25 @@ class SubOperandList(OperandList):
             next_pos = match.end()
         self.sort()
         self.memOperand = None
+        # Whether the whole PC needs to be read so parts of it can be accessed
+        self.readPC = False
+        # Whether the whole PC needs to be written after parts of it were
+        # changed
+        self.setPC = False
+        # Whether this instruction manipulates the whole PC or parts of it.
+        # Mixing the two is a bad idea and flagged as an error.
+        self.pcPart = None
         for op_desc in self.items:
+            if op_desc.isPCPart():
+                self.readPC = True
+                if op_desc.is_dest:
+                    self.setPC = True
+            if op_desc.isPCState():
+                if self.pcPart is not None:
+                    if self.pcPart and not op_desc.isPCPart() or \
+                            not self.pcPart and op_desc.isPCPart():
+                        error("Mixed whole and partial PC state operands.")
+                self.pcPart = op_desc.isPCPart()
             if op_desc.isMem():
                 if self.memOperand:
                     error("Code block has more than one memory operand.")
@@ -1847,8 +1885,6 @@ StaticInstPtr
                       'error: too many attributes for operand "%s"' %
                       base_cls_name)
 
-            (dflt_size, dflt_ctype, dflt_is_signed) = \
-                        self.operandTypeMap[dflt_ext]
             # Canonical flag structure is a triple of lists, where each list
             # indicates the set of flags implied by this operand always, when
             # used as a source, and when used as a dest, respectively.
@@ -1871,9 +1907,14 @@ StaticInstPtr
                          makeList(src_flags), makeList(dest_flags))
             # Accumulate attributes of new operand class in tmp_dict
             tmp_dict = {}
-            for attr in ('dflt_ext', 'reg_spec', 'flags', 'sort_pri',
-                         'dflt_size', 'dflt_ctype', 'dflt_is_signed',
-                         'read_code', 'write_code'):
+            attrList = ['reg_spec', 'flags', 'sort_pri',
+                        'read_code', 'write_code']
+            if dflt_ext:
+                (dflt_size, dflt_ctype, dflt_is_signed) = \
+                            self.operandTypeMap[dflt_ext]
+                attrList.extend(['dflt_size', 'dflt_ctype',
+                                 'dflt_is_signed', 'dflt_ext'])
+            for attr in attrList:
                 tmp_dict[attr] = eval(attr)
             tmp_dict['base_name'] = op_name
             # New class name will be e.g. "IntReg_Ra"
