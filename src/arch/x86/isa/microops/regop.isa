@@ -944,12 +944,8 @@ let {{
         code = 'DoubleBits = psrc1 ^ op2;'
 
     class Wrip(WrRegOp, CondRegOp):
-        code = '''
-        X86ISA::PCState pc = PCS;
-        pc.npc(psrc1 + sop2 + CSBase);
-        PCS = pc;
-        '''
-        else_code = "PCS = PCS;"
+        code = 'NRIP = psrc1 + sop2 + CSBase;'
+        else_code = "NRIP = NRIP;"
 
     class Wruflags(WrRegOp):
         code = 'ccFlagBits = psrc1 ^ op2'
@@ -965,10 +961,7 @@ let {{
         '''
 
     class Rdip(RdRegOp):
-        code = '''
-        X86ISA::PCState pc = PCS;
-        DestReg = pc.npc() - CSBase;
-        '''
+        code = 'DestReg = NRIP - CSBase;'
 
     class Ruflags(RdRegOp):
         code = 'DestReg = ccFlagBits'

@@ -97,7 +97,11 @@ def operands {{
         'FpSrcReg2':     floatReg('src2', 21),
         'FpDestReg':     floatReg('dest', 22),
         'FpData':        floatReg('data', 23),
-        'PCS':           ('PCState', 'udw', None,
+        'RIP':           ('PCState', 'uqw', 'pc',
+                          (None, None, 'IsControl'), 50),
+        'NRIP':          ('PCState', 'uqw', 'npc',
+                          (None, None, 'IsControl'), 50),
+        'nuIP':          ('PCState', 'uqw', 'nupc',
                           (None, None, 'IsControl'), 50),
         # This holds the condition code portion of the flag register. The
         # nccFlagBits version holds the rest.

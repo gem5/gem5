@@ -198,8 +198,8 @@
                         }}, IsNonSpeculative);
 #endif
                         0x54: m5panic({{
-                            panic("M5 panic instruction called at pc=%#x.\n",
-                                xc->pcState().pc());
+                            panic("M5 panic instruction called at pc = %#x.\n",
+                                  RIP);
                         }}, IsNonSpeculative);
                         0x55: m5reserved1({{
                             warn("M5 reserved opcode 1 ignored.\n");
