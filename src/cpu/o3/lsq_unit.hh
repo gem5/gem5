@@ -63,8 +63,6 @@ class DerivO3CPUParams;
  */
 template <class Impl>
 class LSQUnit {
-  protected:
-    typedef TheISA::IntReg IntReg;
   public:
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -338,7 +336,7 @@ class LSQUnit {
         /** The size of the store. */
         int size;
         /** The store data. */
-        char data[sizeof(IntReg)];
+        char data[16];
         /** Whether or not the store is split into two requests. */
         bool isSplit;
         /** Whether or not the store can writeback. */
