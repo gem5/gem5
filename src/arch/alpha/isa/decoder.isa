@@ -850,10 +850,8 @@ decode OPCODE default Unknown::unknown() {
             bool dopal = xc->simPalCheck(palFunc);
 
             if (dopal) {
-                PCState pc = PCS;
-                xc->setMiscReg(IPR_EXC_ADDR, pc.npc());
-                pc.npc(xc->readMiscReg(IPR_PAL_BASE) + palOffset);
-                PCS = pc;
+                xc->setMiscReg(IPR_EXC_ADDR, NPC);
+                NPC = xc->readMiscReg(IPR_PAL_BASE) + palOffset;
             }
         }
     }}, IsNonSpeculative);
@@ -1019,14 +1017,13 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
 #endif
             0x54: m5panic({{
-                panic("M5 panic instruction called at pc=%#x.",
-                    xc->pcState().pc());
+                panic("M5 panic instruction called at pc = %#x.", PC);
             }}, IsNonSpeculative);
 #define  CPANN(lbl) CPA::cpa()->lbl(xc->tcBase())
             0x55: decode RA {
                 0x00: m5a_old({{
-                    panic("Deprecated M5 annotate instruction executed at pc=%#x\n",
-                        xc->pcState().pc());
+                    panic("Deprecated M5 annotate instruction executed "
+                          "at pc = %#x\n", PC);
                 }}, IsNonSpeculative);
                 0x01: m5a_bsm({{
                     CPANN(swSmBegin);

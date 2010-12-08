@@ -221,10 +221,10 @@ def format CondBranch(code) {{
     code = '''
         bool cond;
         %(code)s;
-        PCState pc = PCS;
         if (cond)
-            pc.npc(pc.npc() + disp);
-        PCS = pc;
+            NPC = NPC + disp;
+        else
+            NPC = NPC;
     ''' % { "code" : code }
     iop = InstObjParams(name, Name, 'Branch', code,
                         ('IsDirectControl', 'IsCondControl'))
@@ -237,18 +237,17 @@ def format CondBranch(code) {{
 let {{
 def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
     # Declare basic control transfer w/o link (i.e. link reg is R31)
-    readpc_code = 'PCState pc = PCS;'
-    nolink_code = 'pc.npc(%s);\nPCS = pc' % npc_expr
+    nolink_code = 'NPC = %s;\n' % npc_expr
     nolink_iop = InstObjParams(name, Name, base_class,
-                               readpc_code + nolink_code, flags)
+                               nolink_code, flags)
     header_output = BasicDeclare.subst(nolink_iop)
     decoder_output = BasicConstructor.subst(nolink_iop)
     exec_output = BasicExecute.subst(nolink_iop)
 
     # Generate declaration of '*AndLink' version, append to decls
-    link_code = 'Ra = pc.npc() & ~3;\n' + nolink_code
+    link_code = 'Ra = NPC & ~3;\n' + nolink_code
     link_iop = InstObjParams(name, Name + 'AndLink', base_class,
-                             readpc_code + link_code, flags)
+                             link_code, flags)
     header_output += BasicDeclare.subst(link_iop)
     decoder_output += BasicConstructor.subst(link_iop)
     exec_output += BasicExecute.subst(link_iop)
@@ -263,13 +262,13 @@ def UncondCtrlBase(name, Name, base_class, npc_expr, flags):
 def format UncondBranch(*flags) {{
     flags += ('IsUncondControl', 'IsDirectControl')
     (header_output, decoder_output, decode_block, exec_output) = \
-        UncondCtrlBase(name, Name, 'Branch', 'pc.npc() + disp', flags)
+        UncondCtrlBase(name, Name, 'Branch', 'NPC + disp', flags)
 }};
 
 def format Jump(*flags) {{
     flags += ('IsUncondControl', 'IsIndirectControl')
     (header_output, decoder_output, decode_block, exec_output) = \
-        UncondCtrlBase(name, Name, 'Jump', '(Rb & ~3) | (pc.npc() & 1)', flags)
+        UncondCtrlBase(name, Name, 'Jump', '(Rb & ~3) | (NPC & 1)', flags)
 }};
 
 
