@@ -195,7 +195,6 @@ def template JumpExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            PCS = PCS;
             %(code)s;
 
             if (fault == NoFault) {
@@ -242,6 +241,7 @@ def template BranchDecode {{
 
 // Primary format for branch instructions:
 def format Branch(code, *opt_flags) {{
+    code = 'NNPC = NNPC;\n' + code
     (usesImm, code, immCode,
      rString, iString) = splitOutImm(code)
     iop = InstObjParams(name, Name, 'Branch', code, opt_flags)
@@ -290,24 +290,15 @@ let {{
 
     def doCondBranch(name, Name, base, cond, code, opt_flags):
         return doBranch(name, Name, base, cond, code, code,
-                'PCS = PCS;',
-                '''
-                SparcISA::PCState pc = PCS;
-                pc.nnpc(pc.npc() + 8);
-                pc.npc(pc.npc() + 4);
-                PCS = pc;
-                ''',
+                'NNPC = NNPC; NPC = NPC;\n',
+                'NNPC = NPC + 8; NPC = NPC + 4;\n',
                 opt_flags)
 
     def doUncondBranch(name, Name, base, code, annul_code, opt_flags):
         return doBranch(name, Name, base, "true", code, annul_code,
                 ";", ";", opt_flags)
 
-    default_branch_code = '''
-    SparcISA::PCState pc = PCS;
-    pc.nnpc(pc.pc() + disp);
-    PCS = pc;
-    '''
+    default_branch_code = 'NNPC = PC + disp;\n'
 }};
 
 // Format for branch instructions with n bit displacements:

@@ -129,7 +129,9 @@ def operands {{
     #'Frs2':		('FloatReg', 'df', 'dfpr(RS2)', 'IsFloating', 12),
     'Frs2_low':		('FloatReg', 'uw', 'dfprl(RS2)', 'IsFloating', 12),
     'Frs2_high':	('FloatReg', 'uw', 'dfprh(RS2)', 'IsFloating', 12),
-    'PCS':              ('PCState', 'udw', None, (None, None, 'IsControl'), 30),
+    'PC':               ('PCState', 'udw', 'pc', (None, None, 'IsControl'), 30),
+    'NPC':              ('PCState', 'udw', 'npc', (None, None, 'IsControl'), 30),
+    'NNPC':             ('PCState', 'udw', 'nnpc', (None, None, 'IsControl'), 30),
     # Registers which are used explicitly in instructions
     'R0':  		('IntReg', 'udw', '0', None, 6),
     'R1':  		('IntReg', 'udw', '1', None, 7),
