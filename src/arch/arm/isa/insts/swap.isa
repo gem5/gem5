@@ -65,7 +65,9 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                                           self.memFlags, [], base = 'Swap')
+                                           self.memFlags,
+                                           ['IsStoreConditional'],
+                                           base = 'Swap')
             header_output += newHeader
             decoder_output += newDecoder
             exec_output += newExec

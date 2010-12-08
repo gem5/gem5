@@ -531,9 +531,13 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
     Fault store_fault = store_inst->initiateAcc();
 
     if (storeQueue[store_idx].size == 0) {
-        DPRINTF(LSQUnit,"Fault on Store PC %s, [sn:%lli],Size = 0\n",
+        DPRINTF(LSQUnit,"Fault on Store PC %s, [sn:%lli], Size = 0\n",
                 store_inst->pcState(), store_inst->seqNum);
 
+        return store_fault;
+    } else if (store_inst->readPredicate() == false) {
+        DPRINTF(LSQUnit, "Store [sn:%lli] not executed from predication\n",
+                store_inst->seqNum);
         return store_fault;
     }
 

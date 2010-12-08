@@ -1236,20 +1236,13 @@ DefaultIEW<Impl>::executeInsts()
                 fault = ldstQueue.executeStore(inst);
 
                 // If the store had a fault then it may not have a mem req
-                if (!inst->isStoreConditional() && fault == NoFault) {
-                    inst->setExecuted();
-
-                    instToCommit(inst);
-                } else if (fault != NoFault) {
-                    // If the instruction faulted, then we need to send it along to commit
-                    // without the instruction completing.
-                    DPRINTF(IEW, "Store has fault %s! [sn:%lli]\n",
-                            fault->name(), inst->seqNum);
-
+                if (fault != NoFault || inst->readPredicate() == false ||
+                        !inst->isStoreConditional()) {
+                    // If the instruction faulted, then we need to send it along
+                    // to commit without the instruction completing.
                     // Send this instruction to commit, also make sure iew stage
                     // realizes there is activity.
                     inst->setExecuted();
-
                     instToCommit(inst);
                     activityThisCycle();
                 }
