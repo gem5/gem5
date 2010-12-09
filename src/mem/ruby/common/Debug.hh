@@ -122,59 +122,44 @@ operator<<(std::ostream& out, const Debug& obj)
 const bool ERROR_MESSAGE_FLAG = true;
 const bool WARNING_MESSAGE_FLAG = true;
 
-#ifdef RUBY_NO_ASSERT
-const bool ASSERT_FLAG = false;
-#else
-const bool ASSERT_FLAG = true;
-#endif
-
 #undef assert
 #define assert(EXPR) ASSERT(EXPR)
 #undef ASSERT
-#define ASSERT(EXPR) do {                                               \
-    using namespace std;                                                \
-    if (ASSERT_FLAG) {                                                  \
-        if (!(EXPR)) {                                                  \
-            cerr << "failed assertion '"                                \
-                 << #EXPR << "' at fn "                                 \
-                 << __PRETTY_FUNCTION__ << " in "                       \
-                 << __FILE__ << ":"                                     \
-                 << __LINE__ << endl << flush;                          \
-            (*debug_cout_ptr) << "failed assertion '"                   \
-                               << #EXPR << "' at fn "                   \
-                               << __PRETTY_FUNCTION__ << " in "         \
-                               << __FILE__ << ":"                       \
-                               << __LINE__ << endl << flush;            \
-            if (isatty(STDIN_FILENO)) {                                 \
-                cerr << "At this point you might want to attach a debug to " \
-                     << "the running and get to the" << endl            \
-                     << "crash site; otherwise press enter to continue" \
-                     << endl                                            \
-                     << "PID: " << getpid()                             \
-                     << endl << flush;                                  \
-                char c;                                                 \
-                cin.get(c);                                             \
-            }                                                           \
-            abort();                                                    \
-        }                                                               \
-    }                                                                   \
+
+#ifndef NDEBUG
+
+#define ASSERT(EXPR) do {                                           \
+    using namespace std;                                            \
+    if (!(EXPR)) {                                                  \
+        cerr << "failed assertion '"                                \
+             << #EXPR << "' at fn "                                 \
+             << __PRETTY_FUNCTION__ << " in "                       \
+             << __FILE__ << ":"                                     \
+             << __LINE__ << endl << flush;                          \
+        (*debug_cout_ptr) << "failed assertion '"                   \
+                          << #EXPR << "' at fn "                    \
+                          << __PRETTY_FUNCTION__ << " in "          \
+                          << __FILE__ << ":"                        \
+                          << __LINE__ << endl << flush;             \
+        if (isatty(STDIN_FILENO)) {                                 \
+            cerr << "At this point you might want to attach a debug to " \
+                 << "the running and get to the" << endl            \
+                 << "crash site; otherwise press enter to continue" \
+                 << endl                                            \
+                 << "PID: " << getpid()                             \
+                 << endl << flush;                                  \
+            char c;                                                 \
+            cin.get(c);                                             \
+        }                                                           \
+        abort();                                                    \
+    }                                                               \
 } while (0)
 
-#define BREAK(X) do {                                   \
-    using namespace std;                                \
-    cerr << "breakpoint '"                              \
-         << #X << "' reached at fn "                    \
-         << __PRETTY_FUNCTION__ << " in "               \
-         << __FILE__ << ":"                             \
-         << __LINE__ << endl << flush;                  \
-    if(isatty(STDIN_FILENO)) {                          \
-        cerr << "press enter to continue" << endl;      \
-        cerr << "PID: " << getpid();                    \
-        cerr << endl << flush;                          \
-        char c;                                         \
-        cin.get(c);                                     \
-    }                                                   \
-} while (0)
+#else
+
+#define ASSERT(EXPR) do {} while (0)
+
+#endif // NDEBUG
 
 #define ERROR_MSG(MESSAGE) do {                                 \
     using namespace std;                                        \
