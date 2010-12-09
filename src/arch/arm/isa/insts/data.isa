@@ -239,10 +239,8 @@ let {{
                 cpsrWriteByInstr(Cpsr | CondCodes, Spsr, 0xF, true, sctlr.nmfi);
             Cpsr = ~CondCodesMask & newCpsr;
             CondCodes = CondCodesMask & newCpsr;
-            ArmISA::PCState pc = PCS;
-            pc.nextThumb(((CPSR)newCpsr).t);
-            pc.nextJazelle(((CPSR)newCpsr).j);
-            PCS = pc;
+            NextThumb = ((CPSR)newCpsr).t;
+            NextJazelle = ((CPSR)newCpsr).j;
             '''
             buildImmDataInst(mnem + 's', code, flagType,
                              suffix = "ImmPclr", buildCc = False,
@@ -257,8 +255,7 @@ let {{
     buildDataInst("rsb", "Dest = resTemp = secondOp - Op1;", "rsb")
     buildDataInst("add", "Dest = resTemp = Op1 + secondOp;", "add")
     buildImmDataInst("adr", '''
-                               ArmISA::PCState pc = PCS;
-                               Dest = resTemp = (pc.instPC() & ~0x3) +
+                               Dest = resTemp = (PC & ~0x3) +
                                (op1 ? secondOp : -secondOp);
                             ''')
     buildDataInst("adc", "Dest = resTemp = Op1 + secondOp + %s;" % oldC, "add")

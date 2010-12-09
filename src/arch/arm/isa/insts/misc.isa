@@ -83,10 +83,8 @@ let {{
         uint32_t newCpsr =
             cpsrWriteByInstr(Cpsr | CondCodes, Op1, byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
-        ArmISA::PCState pc = PCS;
-        pc.nextThumb(((CPSR)newCpsr).t);
-        pc.nextJazelle(((CPSR)newCpsr).j);
-        PCS = pc;
+        NextThumb = ((CPSR)newCpsr).t;
+        NextJazelle = ((CPSR)newCpsr).j;
         CondCodes = CondCodesMask & newCpsr;
     '''
     msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
@@ -111,10 +109,8 @@ let {{
         uint32_t newCpsr =
             cpsrWriteByInstr(Cpsr | CondCodes, imm, byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
-        ArmISA::PCState pc = PCS;
-        pc.nextThumb(((CPSR)newCpsr).t);
-        pc.nextJazelle(((CPSR)newCpsr).j);
-        PCS = pc;
+        NextThumb = ((CPSR)newCpsr).t;
+        NextJazelle = ((CPSR)newCpsr).j;
         CondCodes = CondCodesMask & newCpsr;
     '''
     msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
@@ -470,10 +466,7 @@ let {{
     decoder_output += RegRegRegRegOpConstructor.subst(usada8Iop)
     exec_output += PredOpExecute.subst(usada8Iop)
 
-    bkptCode = '''
-    ArmISA::PCState pc = PCS;
-    return new PrefetchAbort(pc.pc(), ArmFault::DebugEvent);
-    '''
+    bkptCode = 'return new PrefetchAbort(PC, ArmFault::DebugEvent);\n'
     bkptIop = InstObjParams("bkpt", "BkptInst", "ArmStaticInst",
             bkptCode)
     header_output += BasicDeclare.subst(bkptIop)
@@ -650,10 +643,8 @@ let {{
     exec_output += PredOpExecute.subst(mcr15UserIop)
 
     enterxCode = '''
-        ArmISA::PCState pc = PCS;
-        pc.nextThumb(true);
-        pc.nextJazelle(true);
-        PCS = pc;
+        NextThumb = true;
+        NextJazelle = true;
     '''
     enterxIop = InstObjParams("enterx", "Enterx", "PredOp",
                               { "code": enterxCode,
@@ -663,10 +654,8 @@ let {{
     exec_output += PredOpExecute.subst(enterxIop)
 
     leavexCode = '''
-        ArmISA::PCState pc = PCS;
-        pc.nextThumb(true);
-        pc.nextJazelle(false);
-        PCS = pc;
+        NextThumb = true;
+        NextJazelle = false;
     '''
     leavexIop = InstObjParams("leavex", "Leavex", "PredOp",
                               { "code": leavexCode,

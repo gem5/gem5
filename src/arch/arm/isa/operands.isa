@@ -80,133 +80,178 @@ let {{
             xc->%(func)s(this, %(op_idx)s, %(final_val)s);
         }
     '''
+
+    #PCState operands need to have a sorting index (the number at the end)
+    #less than all the integer registers which might update the PC. That way
+    #if the flag bits of the pc state are updated and a branch happens through
+    #R15, the updates are layered properly and the R15 update isn't lost.
+    srtNormal = 5
+    srtCpsr = 4
+    srtBase = 3
+    srtPC = 2
+    srtMode = 1
+    srtEPC = 0
+
+    def floatReg(idx):
+        return ('FloatReg', 'sf', idx, 'IsFloating', srtNormal)
+
+    def intReg(idx):
+        return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
+                maybePCRead, maybePCWrite)
+
+    def intRegNPC(idx):
+        return ('IntReg', 'uw', idx, 'IsInteger', srtNormal)
+
+    def intRegAPC(idx, id = srtNormal):
+        return ('IntReg', 'uw', idx, 'IsInteger', id,
+                maybeAlignedPCRead, maybePCWrite)
+
+    def intRegIWPC(idx):
+        return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
+                maybePCRead, maybeIWPCWrite)
+
+    def intRegAIWPC(idx):
+        return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
+                maybePCRead, maybeAIWPCWrite)
+
+    def intRegCC(idx):
+        return ('IntReg', 'uw', idx, None, srtNormal)
+
+    def cntrlReg(idx, id = srtNormal, type = 'uw'):
+        return ('ControlReg', type, idx, (None, None, 'IsControl'), id)
+
+    def cntrlRegNC(idx, id = srtNormal, type = 'uw'):
+        return ('ControlReg', type, idx, None, id)
+
+    def pcStateReg(idx, id):
+        return ('PCState', 'uw', idx, (None, None, 'IsControl'), id)
 }};
 
 def operands {{
     #Abstracted integer reg operands
-    'Dest': ('IntReg', 'uw', 'dest', 'IsInteger', 3,
-             maybePCRead, maybePCWrite),
-    'FpDest': ('FloatReg', 'sf', '(dest + 0)', 'IsFloating', 3),
-    'FpDestP0': ('FloatReg', 'sf', '(dest + 0)', 'IsFloating', 3),
-    'FpDestP1': ('FloatReg', 'sf', '(dest + 1)', 'IsFloating', 3),
-    'FpDestP2': ('FloatReg', 'sf', '(dest + 2)', 'IsFloating', 3),
-    'FpDestP3': ('FloatReg', 'sf', '(dest + 3)', 'IsFloating', 3),
-    'FpDestP4': ('FloatReg', 'sf', '(dest + 4)', 'IsFloating', 3),
-    'FpDestP5': ('FloatReg', 'sf', '(dest + 5)', 'IsFloating', 3),
-    'FpDestP6': ('FloatReg', 'sf', '(dest + 6)', 'IsFloating', 3),
-    'FpDestP7': ('FloatReg', 'sf', '(dest + 7)', 'IsFloating', 3),
-    'FpDestS0P0': ('FloatReg', 'sf', '(dest + step * 0 + 0)', 'IsFloating', 3),
-    'FpDestS0P1': ('FloatReg', 'sf', '(dest + step * 0 + 1)', 'IsFloating', 3),
-    'FpDestS1P0': ('FloatReg', 'sf', '(dest + step * 1 + 0)', 'IsFloating', 3),
-    'FpDestS1P1': ('FloatReg', 'sf', '(dest + step * 1 + 1)', 'IsFloating', 3),
-    'FpDestS2P0': ('FloatReg', 'sf', '(dest + step * 2 + 0)', 'IsFloating', 3),
-    'FpDestS2P1': ('FloatReg', 'sf', '(dest + step * 2 + 1)', 'IsFloating', 3),
-    'FpDestS3P0': ('FloatReg', 'sf', '(dest + step * 3 + 0)', 'IsFloating', 3),
-    'FpDestS3P1': ('FloatReg', 'sf', '(dest + step * 3 + 1)', 'IsFloating', 3),
-    'Result': ('IntReg', 'uw', 'result', 'IsInteger', 3,
-               maybePCRead, maybePCWrite),
-    'Dest2': ('IntReg', 'uw', 'dest2', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'FpDest2': ('FloatReg', 'sf', '(dest2 + 0)', 'IsFloating', 3),
-    'FpDest2P0': ('FloatReg', 'sf', '(dest2 + 0)', 'IsFloating', 3),
-    'FpDest2P1': ('FloatReg', 'sf', '(dest2 + 1)', 'IsFloating', 3),
-    'FpDest2P2': ('FloatReg', 'sf', '(dest2 + 2)', 'IsFloating', 3),
-    'FpDest2P3': ('FloatReg', 'sf', '(dest2 + 3)', 'IsFloating', 3),
-    'IWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 3,
-               maybePCRead, maybeIWPCWrite),
-    'AIWDest': ('IntReg', 'uw', 'dest', 'IsInteger', 3,
-                maybePCRead, maybeAIWPCWrite),
-    'SpMode': ('IntReg', 'uw',
-               'intRegInMode((OperatingMode)regMode, INTREG_SP)',
-               'IsInteger', 3),
-    'MiscDest': ('ControlReg', 'uw', 'dest', (None, None, 'IsControl'), 3),
-    'Base': ('IntReg', 'uw', 'base', 'IsInteger', 1,
-             maybeAlignedPCRead, maybePCWrite),
-    'Index': ('IntReg', 'uw', 'index', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'Op1': ('IntReg', 'uw', 'op1', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'FpOp1': ('FloatReg', 'sf', '(op1 + 0)', 'IsFloating', 3),
-    'FpOp1P0': ('FloatReg', 'sf', '(op1 + 0)', 'IsFloating', 3),
-    'FpOp1P1': ('FloatReg', 'sf', '(op1 + 1)', 'IsFloating', 3),
-    'FpOp1P2': ('FloatReg', 'sf', '(op1 + 2)', 'IsFloating', 3),
-    'FpOp1P3': ('FloatReg', 'sf', '(op1 + 3)', 'IsFloating', 3),
-    'FpOp1P4': ('FloatReg', 'sf', '(op1 + 4)', 'IsFloating', 3),
-    'FpOp1P5': ('FloatReg', 'sf', '(op1 + 5)', 'IsFloating', 3),
-    'FpOp1P6': ('FloatReg', 'sf', '(op1 + 6)', 'IsFloating', 3),
-    'FpOp1P7': ('FloatReg', 'sf', '(op1 + 7)', 'IsFloating', 3),
-    'FpOp1S0P0': ('FloatReg', 'sf', '(op1 + step * 0 + 0)', 'IsFloating', 3),
-    'FpOp1S0P1': ('FloatReg', 'sf', '(op1 + step * 0 + 1)', 'IsFloating', 3),
-    'FpOp1S1P0': ('FloatReg', 'sf', '(op1 + step * 1 + 0)', 'IsFloating', 3),
-    'FpOp1S1P1': ('FloatReg', 'sf', '(op1 + step * 1 + 1)', 'IsFloating', 3),
-    'FpOp1S2P0': ('FloatReg', 'sf', '(op1 + step * 2 + 0)', 'IsFloating', 3),
-    'FpOp1S2P1': ('FloatReg', 'sf', '(op1 + step * 2 + 1)', 'IsFloating', 3),
-    'FpOp1S3P0': ('FloatReg', 'sf', '(op1 + step * 3 + 0)', 'IsFloating', 3),
-    'FpOp1S3P1': ('FloatReg', 'sf', '(op1 + step * 3 + 1)', 'IsFloating', 3),
-    'MiscOp1': ('ControlReg', 'uw', 'op1', (None, None, 'IsControl'), 3),
-    'Op2': ('IntReg', 'uw', 'op2', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'FpOp2': ('FloatReg', 'sf', '(op2 + 0)', 'IsFloating', 3),
-    'FpOp2P0': ('FloatReg', 'sf', '(op2 + 0)', 'IsFloating', 3),
-    'FpOp2P1': ('FloatReg', 'sf', '(op2 + 1)', 'IsFloating', 3),
-    'FpOp2P2': ('FloatReg', 'sf', '(op2 + 2)', 'IsFloating', 3),
-    'FpOp2P3': ('FloatReg', 'sf', '(op2 + 3)', 'IsFloating', 3),
-    'Op3': ('IntReg', 'uw', 'op3', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'Shift': ('IntReg', 'uw', 'shift', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'Reg0': ('IntReg', 'uw', 'reg0', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'Reg1': ('IntReg', 'uw', 'reg1', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'Reg2': ('IntReg', 'uw', 'reg2', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    'Reg3': ('IntReg', 'uw', 'reg3', 'IsInteger', 3,
-              maybePCRead, maybePCWrite),
-    #General Purpose Integer Reg Operands
-    'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 3, maybePCRead, maybePCWrite),
-    'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 3, maybePCRead, maybePCWrite),
-    'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3, maybePCRead, maybePCWrite),
-    'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 3, maybePCRead, maybePCWrite),
-    'R7': ('IntReg', 'uw', '7', 'IsInteger', 3),
-    'R0': ('IntReg', 'uw', '0', 'IsInteger', 3),
-    'R1': ('IntReg', 'uw', '0', 'IsInteger', 3),
-    'R2': ('IntReg', 'uw', '1', 'IsInteger', 3),
-    'Rt' : ('IntReg', 'uw', 'RT', 'IsInteger', 3, maybePCRead, maybePCWrite),
+    'Dest': intReg('dest'),
+    'IWDest': intRegIWPC('dest'),
+    'AIWDest': intRegAIWPC('dest'),
+    'Dest2': intReg('dest2'),
+    'Result': intReg('result'),
+    'Base': intRegAPC('base', id = srtBase),
+    'Index': intReg('index'),
+    'Shift': intReg('shift'),
+    'Op1': intReg('op1'),
+    'Op2': intReg('op2'),
+    'Op3': intReg('op3'),
+    'Reg0': intReg('reg0'),
+    'Reg1': intReg('reg1'),
+    'Reg2': intReg('reg2'),
+    'Reg3': intReg('reg3'),
 
-    'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 3),
-    'CondCodes': ('IntReg', 'uw', 'INTREG_CONDCODES', None, 3),
-    'OptCondCodes': ('IntReg', 'uw',
+    #Fixed index integer reg operands
+    'SpMode': intRegNPC('intRegInMode((OperatingMode)regMode, INTREG_SP)'),
+    'LR': intRegNPC('INTREG_LR'),
+    'R7': intRegNPC('7'),
+    'R0': intRegNPC('0'),
+    'R1': intRegNPC('0'),
+    'R2': intRegNPC('1'),
+
+    #Pseudo integer condition code registers
+    'CondCodes': intRegCC('INTREG_CONDCODES'),
+    'OptCondCodes': intRegCC(
             '''(condCode == COND_AL || condCode == COND_UC) ?
-               INTREG_ZERO : INTREG_CONDCODES''', None, 3),
-    'FpCondCodes': ('IntReg', 'uw', 'INTREG_FPCONDCODES', None, 3),
+               INTREG_ZERO : INTREG_CONDCODES'''),
+    'FpCondCodes': intRegCC('INTREG_FPCONDCODES'),
+
+    #Abstracted floating point reg operands
+    'FpDest': floatReg('(dest + 0)'),
+    'FpDestP0': floatReg('(dest + 0)'),
+    'FpDestP1': floatReg('(dest + 1)'),
+    'FpDestP2': floatReg('(dest + 2)'),
+    'FpDestP3': floatReg('(dest + 3)'),
+    'FpDestP4': floatReg('(dest + 4)'),
+    'FpDestP5': floatReg('(dest + 5)'),
+    'FpDestP6': floatReg('(dest + 6)'),
+    'FpDestP7': floatReg('(dest + 7)'),
+    'FpDestS0P0': floatReg('(dest + step * 0 + 0)'),
+    'FpDestS0P1': floatReg('(dest + step * 0 + 1)'),
+    'FpDestS1P0': floatReg('(dest + step * 1 + 0)'),
+    'FpDestS1P1': floatReg('(dest + step * 1 + 1)'),
+    'FpDestS2P0': floatReg('(dest + step * 2 + 0)'),
+    'FpDestS2P1': floatReg('(dest + step * 2 + 1)'),
+    'FpDestS3P0': floatReg('(dest + step * 3 + 0)'),
+    'FpDestS3P1': floatReg('(dest + step * 3 + 1)'),
+
+    'FpDest2': floatReg('(dest2 + 0)'),
+    'FpDest2P0': floatReg('(dest2 + 0)'),
+    'FpDest2P1': floatReg('(dest2 + 1)'),
+    'FpDest2P2': floatReg('(dest2 + 2)'),
+    'FpDest2P3': floatReg('(dest2 + 3)'),
+
+    'FpOp1': floatReg('(op1 + 0)'),
+    'FpOp1P0': floatReg('(op1 + 0)'),
+    'FpOp1P1': floatReg('(op1 + 1)'),
+    'FpOp1P2': floatReg('(op1 + 2)'),
+    'FpOp1P3': floatReg('(op1 + 3)'),
+    'FpOp1P4': floatReg('(op1 + 4)'),
+    'FpOp1P5': floatReg('(op1 + 5)'),
+    'FpOp1P6': floatReg('(op1 + 6)'),
+    'FpOp1P7': floatReg('(op1 + 7)'),
+    'FpOp1S0P0': floatReg('(op1 + step * 0 + 0)'),
+    'FpOp1S0P1': floatReg('(op1 + step * 0 + 1)'),
+    'FpOp1S1P0': floatReg('(op1 + step * 1 + 0)'),
+    'FpOp1S1P1': floatReg('(op1 + step * 1 + 1)'),
+    'FpOp1S2P0': floatReg('(op1 + step * 2 + 0)'),
+    'FpOp1S2P1': floatReg('(op1 + step * 2 + 1)'),
+    'FpOp1S3P0': floatReg('(op1 + step * 3 + 0)'),
+    'FpOp1S3P1': floatReg('(op1 + step * 3 + 1)'),
+
+    'FpOp2': floatReg('(op2 + 0)'),
+    'FpOp2P0': floatReg('(op2 + 0)'),
+    'FpOp2P1': floatReg('(op2 + 1)'),
+    'FpOp2P2': floatReg('(op2 + 2)'),
+    'FpOp2P3': floatReg('(op2 + 3)'),
+
+    #Abstracted control reg operands
+    'MiscDest': cntrlReg('dest'),
+    'MiscOp1': cntrlReg('op1'),
+
+    #Fixed index control regs
+    'Cpsr': cntrlReg('MISCREG_CPSR', srtCpsr),
+    'Itstate': cntrlRegNC('MISCREG_ITSTATE', type = 'ub'),
+    'Spsr': cntrlRegNC('MISCREG_SPSR'),
+    'Fpsr': cntrlRegNC('MISCREG_FPSR'),
+    'Fpsid': cntrlRegNC('MISCREG_FPSID'),
+    'Fpscr': cntrlRegNC('MISCREG_FPSCR'),
+    'FpscrQc': cntrlRegNC('MISCREG_FPSCR_QC'),
+    'FpscrExc': cntrlRegNC('MISCREG_FPSCR_EXC'),
+    'Cpacr': cntrlReg('MISCREG_CPACR'),
+    'Fpexc': cntrlRegNC('MISCREG_FPEXC'),
+    'Sctlr': cntrlRegNC('MISCREG_SCTLR'),
+    'SevMailbox': cntrlRegNC('MISCREG_SEV_MAILBOX'),
 
     #Register fields for microops
-    'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 3, maybePCRead, maybePCWrite),
-    'IWRa' : ('IntReg', 'uw', 'ura', 'IsInteger', 3,
-            maybePCRead, maybeIWPCWrite),
-    'Fa' : ('FloatReg', 'sf', 'ura', 'IsFloating', 3),
-    'Rb' : ('IntReg', 'uw', 'urb', 'IsInteger', 3, maybePCRead, maybePCWrite),
-    'Rc' : ('IntReg', 'uw', 'urc', 'IsInteger', 3, maybePCRead, maybePCWrite),
+    'Ra' : intReg('ura'),
+    'IWRa' : intRegIWPC('ura'),
+    'Fa' : floatReg('ura'),
+    'Rb' : intReg('urb'),
+    'Rc' : intReg('urc'),
 
     #Memory Operand
-    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 3),
+    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), srtNormal),
 
-    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', (None, None, 'IsControl'), 2),
-    'Itstate': ('ControlReg', 'ub', 'MISCREG_ITSTATE', None, 3),
-    'Spsr': ('ControlReg', 'uw', 'MISCREG_SPSR', None, 3),
-    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', None, 3),
-    'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', None, 3),
-    'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', None, 3),
-    'FpscrQc': ('ControlReg', 'uw', 'MISCREG_FPSCR_QC', None, 3),
-    'FpscrExc': ('ControlReg', 'uw', 'MISCREG_FPSCR_EXC', None, 3),
-    'Cpacr': ('ControlReg', 'uw', 'MISCREG_CPACR', (None, None, 'IsControl'), 3),
-    'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', None, 3),
-    'Sctlr': ('ControlReg', 'uw', 'MISCREG_SCTLR', None, 3),
-    'SevMailbox': ('ControlReg', 'uw', 'MISCREG_SEV_MAILBOX', None, 3),
-    #PCS needs to have a sorting index (the number at the end) less than all
-    #the integer registers which might update the PC. That way if the flag
-    #bits of the pc state are updated and a branch happens through R15, the
-    #updates are layered properly and the R15 update isn't lost.
-    'PCS': ('PCState', 'uw', None, (None, None, 'IsControl'), 0)
+    #PCState fields
+    'PC': pcStateReg('instPC', srtPC),
+    'NPC': pcStateReg('instNPC', srtPC),
+    'pNPC': pcStateReg('instNPC', srtEPC),
+    'IWNPC': pcStateReg('instIWNPC', srtPC),
+    'Thumb': pcStateReg('thumb', srtPC),
+    'NextThumb': pcStateReg('nextThumb', srtMode),
+    'NextJazelle': pcStateReg('nextJazelle', srtMode),
+
+    #Register operands depending on a field in the instruction encoding. These
+    #should be avoided since they may not be portable across different
+    #encodings of the same instruction.
+    'Rd': intReg('RD'),
+    'Rm': intReg('RM'),
+    'Rs': intReg('RS'),
+    'Rn': intReg('RN'),
+    'Rt': intReg('RT')
 }};
