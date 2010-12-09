@@ -189,11 +189,6 @@ def operands {{
     'Rb' : ('IntReg', 'uw', 'urb', 'IsInteger', 3, maybePCRead, maybePCWrite),
     'Rc' : ('IntReg', 'uw', 'urc', 'IsInteger', 3, maybePCRead, maybePCWrite),
 
-    #General Purpose Floating Point Reg Operands
-    'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 3),
-    'Fn': ('FloatReg', 'df', 'FN', 'IsFloating', 3),
-    'Fm': ('FloatReg', 'df', 'FM', 'IsFloating', 3),
-
     #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 3),
 
