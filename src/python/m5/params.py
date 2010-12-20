@@ -701,7 +701,7 @@ class IpAddress(ParamValue):
 
     def verifyIp(self):
         if self.ip < 0 or self.ip >= (1 << 32):
-            raise TypeError, "invalid ip address %#08x" % ip
+            raise TypeError, "invalid ip address %#08x" % self.ip
 
     def getValue(self):
         from m5.internal.params import IpAddress
