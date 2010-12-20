@@ -32,9 +32,9 @@
 //
 // Floating-point instructions
 //
-//	Note that many FP-type instructions which do not support all the
-//	various rounding & trapping modes use the simpler format
-//	BasicOperateWithNopCheck.
+//      Note that many FP-type instructions which do not support all the
+//      various rounding & trapping modes use the simpler format
+//      BasicOperateWithNopCheck.
 //
 
 output exec {{
@@ -45,7 +45,7 @@ output exec {{
 #if FULL_SYSTEM
     inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
-        Fault fault = NoFault;	// dummy... this ipr access should not fault
+        Fault fault = NoFault;  // dummy... this ipr access should not fault
         if (!ICSR_FPE(xc->readMiscReg(IPR_ICSR))) {
             fault = new FloatEnableFault;
         }
@@ -71,11 +71,11 @@ output header {{
       public:
         /// Alpha FP rounding modes.
         enum RoundingMode {
-            Chopped = 0,	///< round toward zero
+            Chopped = 0,        ///< round toward zero
             Minus_Infinity = 1, ///< round toward minus infinity
-            Normal = 2,		///< round to nearest (default)
-            Dynamic = 3,	///< use FPCR setting (in instruction)
-            Plus_Infinity = 3	///< round to plus inifinity (in FPCR)
+            Normal = 2,         ///< round to nearest (default)
+            Dynamic = 3,        ///< use FPCR setting (in instruction)
+            Plus_Infinity = 3   ///< round to plus inifinity (in FPCR)
         };
 
         /// Alpha FP trapping modes.
@@ -84,10 +84,10 @@ output header {{
         /// the assembly modifier is V rather than U.
         enum TrappingMode {
             /// default: nothing enabled
-            Imprecise = 0,		   ///< no modifier
+            Imprecise = 0,                 ///< no modifier
             /// underflow/overflow traps enabled, inexact disabled
-            Underflow_Imprecise = 1,	   ///< /U or /V
-            Underflow_Precise = 5,	   ///< /SU or /SV
+            Underflow_Imprecise = 1,       ///< /U or /V
+            Underflow_Precise = 5,         ///< /SU or /SV
             /// underflow/overflow and inexact traps enabled
             Underflow_Inexact_Precise = 7  ///< /SUI or /SVI
         };
@@ -192,10 +192,10 @@ output decoder {{
     }
 
     const int AlphaFP::alphaToC99RoundingMode[] = {
-        M5_FE_TOWARDZERO,	// Chopped
-        M5_FE_DOWNWARD,	// Minus_Infinity
-        M5_FE_TONEAREST,	// Normal
-        M5_FE_UPWARD	// Dynamic in inst, Plus_Infinity in FPCR
+        M5_FE_TOWARDZERO,       // Chopped
+        M5_FE_DOWNWARD, // Minus_Infinity
+        M5_FE_TONEAREST,        // Normal
+        M5_FE_UPWARD    // Dynamic in inst, Plus_Infinity in FPCR
     };
 
     const char *AlphaFP::roundingModeSuffix[] = { "c", "m", "", "d" };

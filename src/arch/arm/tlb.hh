@@ -84,10 +84,10 @@ class TLB : public BaseTLB
     };
   protected:
 
-    TlbEntry *table;	// the Page Table
-    int size;			// TLB Size
+    TlbEntry *table;    // the Page Table
+    int size;           // TLB Size
 
-    uint32_t _attr;      // Memory attributes for last accessed TLB entry
+    uint32_t _attr;     // Memory attributes for last accessed TLB entry
 
 #if FULL_SYSTEM
     TableWalker *tableWalker;

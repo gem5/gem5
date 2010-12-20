@@ -99,7 +99,7 @@ namespace ArmISA
     // return a no-op instruction... used for instruction fetch faults
     const ExtMachInst NoopMachInst = 0x00000000;
 
-    const int LogVMPageSize = 12;	// 4K bytes
+    const int LogVMPageSize = 12;       // 4K bytes
     const int VMPageSize = (1 << LogVMPageSize);
 
     // Shouldn't this be 1 because of Thumb?! Dynamic? --Ali

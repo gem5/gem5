@@ -258,7 +258,7 @@ class CacheRequest : public ResourceRequest
     }
 
     virtual PacketDataPtr getData()
-    { 	return reqData; }
+    { return reqData; }
 
     void
     setMemAccCompleted(bool completed = true)

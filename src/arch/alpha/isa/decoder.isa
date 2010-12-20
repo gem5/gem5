@@ -100,7 +100,7 @@ decode OPCODE default Unknown::unknown() {
 
     format IntegerOperate {
 
-        0x10: decode INTFUNC {	// integer arithmetic operations
+        0x10: decode INTFUNC {  // integer arithmetic operations
 
             0x00: addl({{ Rc.sl = Ra.sl + Rb_or_imm.sl; }});
             0x40: addlv({{
@@ -173,7 +173,7 @@ decode OPCODE default Unknown::unknown() {
             }});
         }
 
-        0x11: decode INTFUNC {	// integer logical operations
+        0x11: decode INTFUNC {  // integer logical operations
 
             0x00: and({{ Rc = Ra & Rb_or_imm; }});
             0x08: bic({{ Rc = Ra & ~Rb_or_imm; }});
@@ -291,7 +291,7 @@ decode OPCODE default Unknown::unknown() {
             }});
         }
 
-        0x13: decode INTFUNC {	// integer multiplies
+        0x13: decode INTFUNC {  // integer multiplies
             0x00: mull({{ Rc.sl = Ra.sl * Rb_or_imm.sl; }}, IntMultOp);
             0x20: mulq({{ Rc    = Ra    * Rb_or_imm;    }}, IntMultOp);
             0x30: umulh({{
@@ -301,7 +301,7 @@ decode OPCODE default Unknown::unknown() {
             }}, IntMultOp);
             0x40: mullv({{
                 // 32-bit multiply with trap on overflow
-                int64_t Rax = Ra.sl;	// sign extended version of Ra.sl
+                int64_t Rax = Ra.sl;    // sign extended version of Ra.sl
                 int64_t Rbx = Rb_or_imm.sl;
                 int64_t tmp = Rax * Rbx;
                 // To avoid overflow, all the upper 32 bits must match
@@ -587,7 +587,7 @@ decode OPCODE default Unknown::unknown() {
                 format BasicOperateWithNopCheck {
                     0x004: itofs({{ Fc.uq = s_to_t(Ra.ul); }}, FloatCvtOp);
                     0x024: itoft({{ Fc.uq = Ra.uq; }}, FloatCvtOp);
-                    0x014: FailUnimpl::itoff();	// VAX-format conversion
+                    0x014: FailUnimpl::itoff(); // VAX-format conversion
                 }
             }
         }

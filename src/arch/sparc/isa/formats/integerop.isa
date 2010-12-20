@@ -259,7 +259,7 @@ let {{
     def doIntFormat(code, ccCode, name, Name, opt_flags):
         (usesImm, code, immCode,
          rString, iString) = splitOutImm(code)
-        iop = InstObjParams(name, Name,	'IntOp',
+        iop = InstObjParams(name, Name, 'IntOp',
                 {"code": code, "cc_code": ccCode},
                 opt_flags)
         header_output = BasicDeclare.subst(iop)

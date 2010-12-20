@@ -1131,7 +1131,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                             UnorderedFalse);
                                 0x3: c_ueq_s({{ cond = (Fs.sf == Ft.sf); }},
                                              UnorderedTrue);
-                                0x4: c_olt_s({{ cond = (Fs.sf < Ft.sf);	}},
+                                0x4: c_olt_s({{ cond = (Fs.sf < Ft.sf); }},
                                              UnorderedFalse);
                                 0x5: c_ult_s({{ cond = (Fs.sf < Ft.sf); }},
                                              UnorderedTrue);
@@ -1252,7 +1252,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                             UnorderedFalse);
                                 0x3: c_ueq_d({{ cond = (Fs.df == Ft.df); }},
                                              UnorderedTrue);
-                                0x4: c_olt_d({{ cond = (Fs.df < Ft.df);	}},
+                                0x4: c_olt_d({{ cond = (Fs.df < Ft.df); }},
                                              UnorderedFalse);
                                 0x5: c_ult_d({{ cond = (Fs.df < Ft.df); }},
                                              UnorderedTrue);

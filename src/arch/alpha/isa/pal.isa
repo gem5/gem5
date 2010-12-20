@@ -84,10 +84,10 @@ output header {{
     class CallPalBase : public AlphaStaticInst
     {
       protected:
-        int palFunc;	///< Function code part of instruction
-        int palOffset;	///< Target PC, offset from IPR_PAL_BASE
-        bool palValid;	///< is the function code valid?
-        bool palPriv;	///< is this call privileged?
+        int palFunc;    ///< Function code part of instruction
+        int palOffset;  ///< Target PC, offset from IPR_PAL_BASE
+        bool palValid;  ///< is the function code valid?
+        bool palPriv;   ///< is this call privileged?
 
         /// Constructor.
         CallPalBase(const char *mnem, ExtMachInst _machInst,

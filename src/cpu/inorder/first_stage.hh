@@ -64,7 +64,7 @@ class FirstStage : public PipelineStage {
     void squashDueToMemStall(InstSeqNum seq_num, ThreadID tid);
 
     /** There are no insts. coming from previous stages, so there is
-     *	no need to sort insts here
+     *  no need to sort insts here
      */
     void sortInsts() {}
 

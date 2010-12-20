@@ -567,7 +567,7 @@ output exec {{
     inline Fault
     checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
-        Fault fault = NoFault;	// dummy... this ipr access should not fault
+        Fault fault = NoFault;  // dummy... this ipr access should not fault
         if (xc->readMiscReg(MISCREG_PSTATE) & PSTATE::pef &&
             xc->readMiscReg(MISCREG_FPRS) & 0x4) {
             return NoFault;

@@ -102,30 +102,30 @@ namespace AlphaISA;
 
 // Universal (format-independent) fields
 def bitfield PALMODE    <32:32>;
-def bitfield OPCODE	<31:26>;
-def bitfield RA		<25:21>;
-def bitfield RB		<20:16>;
+def bitfield OPCODE     <31:26>;
+def bitfield RA         <25:21>;
+def bitfield RB         <20:16>;
 
 // Memory format
 def signed bitfield MEMDISP <15: 0>; // displacement
 def        bitfield MEMFUNC <15: 0>; // function code (same field, unsigned)
 
 // Memory-format jumps
-def bitfield JMPFUNC	<15:14>; // function code (disp<15:14>)
-def bitfield JMPHINT	<13: 0>; // tgt Icache idx hint (disp<13:0>)
+def bitfield JMPFUNC    <15:14>; // function code (disp<15:14>)
+def bitfield JMPHINT    <13: 0>; // tgt Icache idx hint (disp<13:0>)
 
 // Branch format
 def signed bitfield BRDISP <20: 0>; // displacement
 
 // Integer operate format(s>;
-def bitfield INTIMM	<20:13>; // integer immediate (literal)
-def bitfield IMM	<12:12>; // immediate flag
-def bitfield INTFUNC	<11: 5>; // function code
-def bitfield RC		< 4: 0>; // dest reg
+def bitfield INTIMM     <20:13>; // integer immediate (literal)
+def bitfield IMM        <12:12>; // immediate flag
+def bitfield INTFUNC    <11: 5>; // function code
+def bitfield RC         < 4: 0>; // dest reg
 
 // Floating-point operate format
-def bitfield FA		  <25:21>;
-def bitfield FB		  <20:16>;
+def bitfield FA           <25:21>;
+def bitfield FB           <20:16>;
 def bitfield FP_FULLFUNC  <15: 5>; // complete function code
     def bitfield FP_TRAPMODE  <15:13>; // trapping mode
     def bitfield FP_ROUNDMODE <12:11>; // rounding mode
@@ -133,10 +133,10 @@ def bitfield FP_FULLFUNC  <15: 5>; // complete function code
         def bitfield FP_SRCTYPE   <10: 9>; // source reg type
         def bitfield FP_SHORTFUNC < 8: 5>; // short function code
         def bitfield FP_SHORTFUNC_TOP2 <8:7>; // top 2 bits of short func code
-def bitfield FC		  < 4: 0>; // dest reg
+def bitfield FC           < 4: 0>; // dest reg
 
 // PALcode format
-def bitfield PALFUNC	<25: 0>; // function code
+def bitfield PALFUNC    <25: 0>; // function code
 
 // EV5 PAL instructions:
 // HW_LD/HW_ST
@@ -154,7 +154,7 @@ def bitfield HW_REI_TYP <15:14>; // type: stalling vs. non-stallingk
 def bitfield HW_REI_MBZ <13: 0>; // must be zero
 
 // HW_MTPR/MW_MFPR
-def bitfield HW_IPR_IDX <15:0>;	 // IPR index
+def bitfield HW_IPR_IDX <15:0>;  // IPR index
 
 // M5 instructions
 def bitfield M5FUNC <7:0>;
