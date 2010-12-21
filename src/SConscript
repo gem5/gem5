@@ -622,8 +622,6 @@ for swig in SwigSource.all:
     env.Command(init_file, Value(swig.module),
                 MakeAction(makeEmbeddedSwigInit, " [EMBED SW] $STRIP_TARGET"))
     Source(init_file)
-    env.Depends(swig.py_source.tnode, swig.tnode)
-    env.Depends(swig.cc_source.tnode, swig.tnode)
 
 def getFlags(source_flags):
     flagsMap = {}
