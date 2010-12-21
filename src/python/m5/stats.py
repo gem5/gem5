@@ -59,6 +59,8 @@ def dump():
 def reset():
     # call reset stats on all SimObjects
     root = Root.getInstance()
-    for obj in root.descendants(): obj.resetStats()
+    if root:
+        for obj in root.descendants(): obj.resetStats()
+
     # call any other registered stats reset callbacks
     internal.stats.reset()
