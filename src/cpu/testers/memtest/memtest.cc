@@ -147,13 +147,6 @@ MemTest::MemTest(const Params *p)
       maxLoads(p->max_loads),
       atomic(p->atomic)
 {
- 
-    vector<string> cmd;
-    cmd.push_back("/bin/ls");
-    vector<string> null_vec;
-    //  thread = new SimpleThread(NULL, 0, NULL, 0, mainMem);
-    curTick = 0;
-
     cachePort.snoopRangeSent = false;
     funcPort.snoopRangeSent = true;
 
