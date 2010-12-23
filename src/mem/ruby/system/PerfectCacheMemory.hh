@@ -124,6 +124,7 @@ PerfectCacheMemory<ENTRY>::tryCacheAccess(const CacheMsg& msg,
                                           bool& block_stc, ENTRY*& entry)
 {
     panic("not implemented");
+    return true;
 }
 
 // tests to see if an address is present in the cache
@@ -167,6 +168,7 @@ inline Address
 PerfectCacheMemory<ENTRY>::cacheProbe(const Address& newAddress) const
 {
     panic("cacheProbe called in perfect cache");
+    return newAddress;
 }
 
 // looks an address up in the cache
