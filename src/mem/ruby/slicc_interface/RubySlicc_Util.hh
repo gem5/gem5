@@ -148,12 +148,6 @@ getPreviousDelayedCycles(Time t1, Time t2)
     }
 }
 
-inline void
-WARN_ERROR_TIME(Time time)
-{
-    WARN_EXPR(time);
-}
-
 // Return type for time_to_int is "Time" and not "int" so we get a
 // 64-bit integer
 inline Time

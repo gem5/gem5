@@ -829,6 +829,7 @@ ${ident}_Controller::wakeup()
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
+#include "base/misc.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_State.hh"
@@ -972,12 +973,9 @@ if (!%s.areNSlotsAvailable(%s))
 
         code('''
       default:
-        WARN_EXPR(m_version);
-        WARN_EXPR(g_eventQueue_ptr->getTime());
-        WARN_EXPR(addr);
-        WARN_EXPR(event);
-        WARN_EXPR(state);
-        ERROR_MSG(\"Invalid transition\");
+        fatal("Invalid transition\\n"
+              "version: %d time: %d addr: %s event: %s state: %s\\n",
+              m_version, g_eventQueue_ptr->getTime(), addr, event, state);
     }
     return TransitionResult_Valid;
 }

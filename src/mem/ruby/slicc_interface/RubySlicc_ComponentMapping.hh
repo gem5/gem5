@@ -151,8 +151,7 @@ ConvertMachToGenericMach(MachineType machType)
     if (machType == MachineType_Directory)
         return GenericMachineType_Directory;
 
-    ERROR_MSG("cannot convert to a GenericMachineType");
-    return GenericMachineType_NULL;
+    panic("cannot convert to a GenericMachineType");
 }
 
 inline int

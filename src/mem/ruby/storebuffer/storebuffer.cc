@@ -42,9 +42,7 @@ void
 hit(int64_t id)
 {
     if (request_map.find(id) == request_map.end()) {
-        ERROR_OUT("Request ID not found in the map");
-        DPRINTF(RubyStorebuffer, "id: %lld\n", id);
-        ASSERT(0);
+        panic("Request ID %d not found in the map\n", id);
     } else {
         request_map[id]->complete(id);
         request_map.erase(id);
@@ -94,9 +92,7 @@ StoreBuffer::addToStoreBuffer(RubyRequest request)
         // make request to libruby
         uint64_t id = libruby_issue_request(m_port, request);
         if (request_map.find(id) != request_map.end()) {
-            ERROR_OUT("Request ID is already in the map");
-            DPRINTF(RubyStorebuffer, "id: %lld\n", id);
-            ASSERT(0);
+            panic("Request ID: %d is already in the map\n", id);
         } else {
             request_map.insert(make_pair(id, this));
             outstanding_requests.insert(make_pair(id, request));
@@ -144,9 +140,7 @@ StoreBuffer::handleLoad(RubyRequest request)
         // make request to libruby and return the id
         uint64_t id = libruby_issue_request(m_port, request);
         if (request_map.find(id) != request_map.end()) {
-            ERROR_OUT("Request ID is already in the map");
-            DPRINTF(RubyStorebuffer, "id: %lld\n", id);
-            ASSERT(0);
+            panic("Request ID: %d is already in the map\n", id);
         } else {
             request_map.insert(make_pair(id, this));
             outstanding_requests.insert(make_pair(id, request));
@@ -165,8 +159,7 @@ StoreBuffer::checkForLoadHit(RubyRequest request)
     if (!m_use_storebuffer) {
         // this function should never be called if we are not using a
         // store buffer
-        ERROR_OUT("checkForLoadHit called while write buffer is not in use");
-        ASSERT(0);
+        panic("checkForLoadHit called while write buffer is not in use\n");
     }
 
     physical_address_t physical_address = request.paddr;
@@ -217,8 +210,7 @@ void
 StoreBuffer::returnMatchedData(RubyRequest request)
 {
     if (!m_use_storebuffer) {
-        ERROR_OUT("returnMatchedData called while write buffer is not in use");
-        ASSERT(0);
+        panic("returnMatchedData called while write buffer is not in use\n");
     }
 
     uint8_t * data = new uint8_t[64];
@@ -304,7 +296,7 @@ StoreBuffer::complete(uint64_t id)
         // Note fastpath hits are handled like regular requests - they
         // must remove the WB entry!
         if (lineaddr != physical_address) {
-            ERROR_OUT("error: StoreBuffer: ruby returns pa 0x%0llx "
+            warn("error: StoreBuffer: ruby returns pa 0x%0llx "
                       "which is not a cache line: 0x%0llx\n",
                       physical_address, lineaddr);
         }
@@ -326,10 +318,10 @@ StoreBuffer::complete(uint64_t id)
 
             m_storebuffer_full = false;
         } else {
-            ERROR_OUT("[%d] error: StoreBuffer: at complete, address 0x%0llx "
-                      "not found.\n", m_id, lineaddr);
-            ERROR_OUT("StoreBuffer:: complete FAILS\n");
-            ASSERT(0);
+            panic("[%d] error: StoreBuffer: at complete, address 0x%0llx "
+                 "not found.\n"
+                 "StoreBuffer:: complete FAILS\n",
+                 m_id, lineaddr);
         }
 
     } else if (type == RubyRequestType_LD) {

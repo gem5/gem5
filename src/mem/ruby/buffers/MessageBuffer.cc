@@ -27,6 +27,7 @@
  */
 
 #include "base/cprintf.hh"
+#include "base/misc.hh"
 #include "base/stl_helpers.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
@@ -161,9 +162,7 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     // the plus one is a kluge because of a SLICC issue
 
     if (!m_ordering_set) {
-        //    WARN_EXPR(*this);
-        WARN_EXPR(m_name);
-        ERROR_MSG("Ordering property of this queue has not been set");
+        panic("Ordering property of %s has not been set", m_name);
     }
 
     // Calculate the arrival time of the message, that is, the first
@@ -191,13 +190,10 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     assert(arrival_time > current_time);
     if (m_strict_fifo) {
         if (arrival_time < m_last_arrival_time) {
-            WARN_EXPR(*this);
-            WARN_EXPR(m_name);
-            WARN_EXPR(current_time);
-            WARN_EXPR(delta);
-            WARN_EXPR(arrival_time);
-            WARN_EXPR(m_last_arrival_time);
-            ERROR_MSG("FIFO ordering violated");
+            panic("FIFO ordering violated: %s name: %s current time: %d "
+                  "delta: %d arrival_time: %d last arrival_time: %d\n",
+                  *this, m_name, current_time, delta, arrival_time,
+                  m_last_arrival_time);
         }
     }
     m_last_arrival_time = arrival_time;
@@ -229,9 +225,7 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     if (m_consumer_ptr != NULL) {
         g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, arrival_time);
     } else {
-        WARN_EXPR(*this);
-        WARN_EXPR(m_name);
-        ERROR_MSG("No consumer");
+        panic("No consumer: %s name: %s\n", *this, m_name);
     }
 }
 

@@ -32,6 +32,7 @@
  *
  */
 
+#include "base/misc.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/tester/Tester_Globals.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
@@ -89,7 +90,7 @@ DeterministicDriver::DeterministicDriver(string generator_type, int num_completi
       m_generator_vector[i] = new DetermSeriesGETSGenerator(i, *this);
       break;
     default:
-      ERROR_MSG("Unexpected specified generator type");
+      fatal("Unexpected specified generator type");
     }
   }
 

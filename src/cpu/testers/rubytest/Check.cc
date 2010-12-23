@@ -270,15 +270,13 @@ Check::performCallback(NodeID proc, SubBlock* data)
         // Perform load/check
         for (int byte_number=0; byte_number<CHECK_SIZE; byte_number++) {
             if (uint8(m_value + byte_number) != data->getByte(byte_number)) {
-                WARN_EXPR(proc);
-                WARN_EXPR(address);
-                WARN_EXPR(data);
-                WARN_EXPR(byte_number);
-                WARN_EXPR((int)m_value + byte_number);
-                WARN_EXPR((int)data->getByte(byte_number));
-                WARN_EXPR(*this);
-                WARN_EXPR(g_eventQueue_ptr->getTime());
-                ERROR_MSG("Action/check failure");
+                panic("Action/check failure: proc: %d address: %s data: %s "
+                      "byte_number: %d m_value+byte_number: %d byte: %d %s"
+                      "Time: %d\n",
+                      proc, address, data, byte_number,
+                      (int)m_value + byte_number,
+                      (int)data->getByte(byte_number), *this,
+                      g_eventQueue_ptr->getTime());
             }
         }
         DPRINTF(RubyTest, "Action/check success\n");
@@ -291,12 +289,9 @@ Check::performCallback(NodeID proc, SubBlock* data)
         pickValue();
 
     } else {
-        WARN_EXPR(*this);
-        WARN_EXPR(proc);
-        WARN_EXPR(data);
-        WARN_EXPR(m_status);
-        WARN_EXPR(g_eventQueue_ptr->getTime());
-        ERROR_MSG("Unexpected TesterStatus");
+        panic("Unexpected TesterStatus: %s proc: %d data: %s m_status: %s "
+              "time: %d\n",
+              *this, proc, data, m_status, g_eventQueue_ptr->getTime());
     }
 
     DPRINTF(RubyTest, "proc: %d, Address: 0x%x\n", proc,

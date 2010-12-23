@@ -27,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/misc.hh"
 #include "cpu/testers/rubytest/Check.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/ruby/common/Global.hh"
@@ -173,11 +174,10 @@ RubyTester::checkForDeadlock()
     for (int processor = 0; processor < size; processor++) {
         if ((current_time - m_last_progress_vector[processor]) >
                 m_deadlock_threshold) {
-            WARN_EXPR(current_time);
-            WARN_EXPR(m_last_progress_vector[processor]);
-            WARN_EXPR(current_time - m_last_progress_vector[processor]);
-            WARN_EXPR(processor);
-            ERROR_MSG("Deadlock detected.");
+            panic("Deadlock detected: current_time: %d last_progress_time: %d "
+                  "difference:  %d processor: %d\n",
+                  current_time, m_last_progress_vector[processor],
+                  current_time - m_last_progress_vector[processor], processor);
         }
     }
 }

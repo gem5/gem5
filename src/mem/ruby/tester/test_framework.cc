@@ -34,6 +34,7 @@
 
 using namespace std;
 
+#include "base/misc.hh"
 #include "mem/ruby/tester/test_framework.hh"
 #include "mem/protocol/protocol_name.hh"
 #include "getopt.hh"
@@ -211,7 +212,7 @@ void tester_playback_trace()
   int read = replayer->playbackTrace(trace_filename);
   cout << "(" << read << " requests read)" << endl;
   if (read == 0) {
-    ERROR_MSG("Zero items read from tracefile.");
+    fatal("Zero items read from tracefile.");
   }
 }
 

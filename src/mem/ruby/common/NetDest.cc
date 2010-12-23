@@ -151,7 +151,7 @@ NetDest::smallestElement() const
             }
         }
     }
-    ERROR_MSG("No smallest element of an empty set.");
+    panic("No smallest element of an empty set.");
 }
 
 MachineID
@@ -165,7 +165,7 @@ NetDest::smallestElement(MachineType machine) const
         }
     }
 
-    ERROR_MSG("No smallest element of given MachineType.");
+    panic("No smallest element of given MachineType.");
 }
 
 // Returns true iff all bits are set

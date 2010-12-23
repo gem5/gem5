@@ -156,7 +156,7 @@ GarnetNetwork_d::makeInLink(NodeID src, SwitchID dest,
         m_router_ptr_vector[dest]->addInPort(net_link, credit_link);
         m_ni_ptr_vector[src]->addOutPort(net_link, credit_link);
     } else {
-        ERROR_MSG("Fatal Error:: Reconfiguration not allowed here");
+        panic("Fatal Error:: Reconfiguration not allowed here");
         // do nothing
     }
 }
@@ -188,7 +188,7 @@ GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest,
                                              link_weight, credit_link);
         m_ni_ptr_vector[dest]->addInPort(net_link, credit_link);
     } else {
-        ERROR_MSG("Fatal Error:: Reconfiguration not allowed here");
+        fatal("Fatal Error:: Reconfiguration not allowed here");
         // do nothing
     }
 }
@@ -214,7 +214,7 @@ GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest,
         m_router_ptr_vector[src]->addOutPort(net_link, routing_table_entry,
                                              link_weight, credit_link);
     } else {
-        ERROR_MSG("Fatal Error:: Reconfiguration not allowed here");
+        fatal("Fatal Error:: Reconfiguration not allowed here");
         // do nothing
     }
 }

@@ -46,7 +46,6 @@ Time getTimeModInt(Time time, int modulus);
 Time getTimePlusInt(Time addend1, int addend2);
 Time getTimeMinusTime(Time t1, Time t2);
 Time getPreviousDelayedCycles(Time t1, Time t2);
-void WARN_ERROR_TIME(Time time);
 void procProfileCoherenceRequest(NodeID node, bool needCLB);
 void dirProfileCoherenceRequest(NodeID node, bool needCLB);
 bool isPerfectProtocol();

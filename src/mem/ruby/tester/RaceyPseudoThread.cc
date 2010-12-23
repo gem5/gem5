@@ -50,10 +50,9 @@ RaceyPseudoThread::~RaceyPseudoThread() {
 void RaceyPseudoThread::checkForDeadlock() {
   Time current_time = m_driver.eventQueue->getTime();
   if(!m_done && (current_time - m_last_progress) > g_DEADLOCK_THRESHOLD) {
-    WARN_EXPR(m_proc_id);
-    WARN_EXPR(m_ic_counter);
-    WARN_EXPR(m_last_progress);
-    ERROR_MSG("Deadlock detected.");
+    panic("Deadlock detected: m_proc_id: %d m_ic_counter: %d "
+          "m_last_progress: %d\n",
+          m_proc_id, m_ic_counter, m_last_progress);
   }
 }
 
@@ -123,8 +122,7 @@ void RaceyPseudoThread::wakeup() {
   case 10:
     goto L10;
   default:
-    WARN_EXPR(m_stop);
-    ERROR_MSG("RaceyPseudoThread: Bad context point!");
+    fatal("RaceyPseudoThread: Bad context point %u!", m_stop);
   }
 
   //

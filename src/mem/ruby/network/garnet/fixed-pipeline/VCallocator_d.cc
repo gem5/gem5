@@ -241,8 +241,7 @@ VCallocator_d::get_vnet(int invc)
             return i;
         }
     }
-    ERROR_MSG("Could not determine vc");
-    return -1;
+    fatal("Could not determine vc");
 }
 
 void

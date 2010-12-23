@@ -282,7 +282,7 @@ CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
             return;
         }
     }
-    ERROR_MSG("Allocate didn't find an available entry");
+    panic("Allocate didn't find an available entry");
 }
 
 void

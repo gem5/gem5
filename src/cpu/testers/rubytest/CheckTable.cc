@@ -81,7 +81,7 @@ CheckTable::addCheck(const Address& address)
 {
     if (floorLog2(CHECK_SIZE) != 0) {
         if (address.bitSelect(0, CHECK_SIZE_BITS - 1) != 0) {
-            ERROR_MSG("Check not aligned");
+            panic("Check not aligned");
         }
     }
 

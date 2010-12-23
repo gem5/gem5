@@ -333,8 +333,7 @@ NetworkInterface_d::get_vnet(int vc)
             return i;
         }
     }
-    ERROR_MSG("Could not determine vc");
-    return -1;
+    fatal("Could not determine vc");
 }
 
 void

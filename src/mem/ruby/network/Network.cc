@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "base/misc.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/simple/Topology.hh"
@@ -64,7 +65,7 @@ Network::MessageSizeType_to_int(MessageSizeType size_type)
 {
     switch(size_type) {
       case MessageSizeType_Undefined:
-        ERROR_MSG("Can't convert Undefined MessageSizeType to integer");
+        panic("Can't convert Undefined MessageSizeType to integer");
         break;
       case MessageSizeType_Control:
       case MessageSizeType_Request_Control:
@@ -85,10 +86,9 @@ Network::MessageSizeType_to_int(MessageSizeType size_type)
       case MessageSizeType_Writeback_Data:
         return m_data_msg_size;
       default:
-        ERROR_MSG("Invalid range for type MessageSizeType");
+        panic("Invalid range for type MessageSizeType");
         break;
     }
-    return 0;
 }
 
 const std::vector<Throttle*>*

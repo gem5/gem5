@@ -29,6 +29,7 @@
 // modified (rewritten) 05/20/05 by Dan Gibson to accomimdate FASTER
 // >32 bit set sizes
 
+#include "base/misc.hh"
 #include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/System.hh"
 
@@ -199,13 +200,11 @@ Set::smallestElement() const
                 x = x >> 1;
             }
 
-            ERROR_MSG("No smallest element of an empty set.");
+            panic("No smallest element of an empty set.");
         }
     }
 
-    ERROR_MSG("No smallest element of an empty set.");
-
-    return 0;
+    panic("No smallest element of an empty set.");
 }
 
 /*

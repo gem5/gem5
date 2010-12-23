@@ -119,9 +119,6 @@ operator<<(std::ostream& out, const Debug& obj)
     return out;
 }
 
-const bool ERROR_MESSAGE_FLAG = true;
-const bool WARNING_MESSAGE_FLAG = true;
-
 #undef assert
 #define assert(EXPR) ASSERT(EXPR)
 #undef ASSERT
@@ -160,68 +157,6 @@ const bool WARNING_MESSAGE_FLAG = true;
 #define ASSERT(EXPR) do {} while (0)
 
 #endif // NDEBUG
-
-#define ERROR_MSG(MESSAGE) do {                                 \
-    using namespace std;                                        \
-    if (ERROR_MESSAGE_FLAG) {                                   \
-        cerr << "Fatal Error: in fn "                           \
-             << __PRETTY_FUNCTION__ << " in "                   \
-             << __FILE__ << ":"                                 \
-             << __LINE__ << ": "                                \
-             << (MESSAGE) << endl << flush;                     \
-        (* debug_cout_ptr) << "Fatal Error: in fn "             \
-                           << __PRETTY_FUNCTION__ << " in "     \
-                           << __FILE__ << ":"                   \
-                           << __LINE__ << ": "                  \
-                           << (MESSAGE) << endl << flush;       \
-        abort();                                                \
-    }                                                           \
-} while(0)
-
-#define WARN_MSG(MESSAGE) do {                                  \
-    using namespace std;                                        \
-    if (WARNING_MESSAGE_FLAG) {                                 \
-        cerr << "Warning: in fn "                               \
-             << __PRETTY_FUNCTION__ << " in "                   \
-             << __FILE__ << ":"                                 \
-             << __LINE__ << ": "                                \
-             << (MESSAGE) << endl << flush;                     \
-        (* debug_cout_ptr) << "Warning: in fn "                 \
-                           << __PRETTY_FUNCTION__ << " in "     \
-                           << __FILE__ << ":"                   \
-                           << __LINE__ << ": "                  \
-                           << (MESSAGE) << endl << flush;       \
-    }                                                           \
-} while (0)
-
-#define WARN_EXPR(EXPR) do {                                    \
-    using namespace std;                                        \
-    if (WARNING_MESSAGE_FLAG) {                                 \
-        cerr << "Warning: in fn "                               \
-             << __PRETTY_FUNCTION__ << " in "                   \
-             << __FILE__ << ":"                                 \
-             << __LINE__ << ": "                                \
-             << #EXPR << " is "                                 \
-             << (EXPR) << endl << flush;                        \
-        (* debug_cout_ptr) << "Warning: in fn "                 \
-                           << __PRETTY_FUNCTION__ << " in "     \
-                           << __FILE__ << ":"                   \
-                           << __LINE__ << ": "                  \
-                           << #EXPR << " is "                   \
-                           << (EXPR) << endl << flush;          \
-    }                                                           \
-} while (0)
-
-#define ERROR_OUT( rest... ) do {               \
-    using namespace std;                        \
-    if (ERROR_MESSAGE_FLAG) {                   \
-        cout << "error: in fn "                 \
-             << __PRETTY_FUNCTION__ << " in "   \
-             << __FILE__ << ":"                 \
-             << __LINE__ << ": ";               \
-        g_debug_ptr->debugMsg(rest);            \
-    }                                           \
-} while (0)
 
 #endif // __MEM_RUBY_COMMON_DEBUG_HH__
 

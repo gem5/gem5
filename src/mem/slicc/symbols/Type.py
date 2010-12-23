@@ -511,6 +511,7 @@ std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 #include <iostream>
 #include <string>
 
+#include "base/misc.hh"
 #include "mem/protocol/${{self.c_ident}}.hh"
 
 using namespace std;
@@ -548,8 +549,7 @@ ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
         # Trailer
         code('''
       default:
-        ERROR_MSG("Invalid range for type ${{self.c_ident}}");
-        return "";
+        panic("Invalid range for type ${{self.c_ident}}");
     }
 }
 
@@ -570,8 +570,7 @@ string_to_${{self.c_ident}}(const string& str)
 
         code('''
     } else {
-        WARN_EXPR(str);
-        ERROR_MSG("Invalid string conversion for type ${{self.c_ident}}");
+        panic("Invalid string conversion for %s, type ${{self.c_ident}}", str);
     }
 }
 
@@ -613,8 +612,7 @@ ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
         return ${{len(self.enums)}};
 
       default:
-        ERROR_MSG("Invalid range for type ${{self.c_ident}}");
-        return -1;
+        panic("Invalid range for type ${{self.c_ident}}");
     }
 }
 
@@ -638,8 +636,7 @@ ${{self.c_ident}}_from_base_level(int type)
             # Trailer
             code('''
       default:
-        ERROR_MSG("Invalid range for type ${{self.c_ident}}");
-        return MachineType_NUM;
+        panic("Invalid range for type ${{self.c_ident}}");
     }
 }
 
@@ -666,8 +663,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
 
             code('''
       default:
-        ERROR_MSG("Invalid range for type ${{self.c_ident}}");
-        return -1;
+        panic("Invalid range for type ${{self.c_ident}}");
     }
 
     return base;
@@ -693,8 +689,7 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
             code('''
       case ${{self.c_ident}}_NUM:
       default:
-        ERROR_MSG("Invalid range for type ${{self.c_ident}}");
-        return -1;
+        panic("Invalid range for type ${{self.c_ident}}");
     }
 }
 ''')

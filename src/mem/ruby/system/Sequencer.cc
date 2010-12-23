@@ -27,6 +27,7 @@
  */
 
 #include "base/str.hh"
+#include "base/misc.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/Protocol.hh"
@@ -99,14 +100,12 @@ Sequencer::wakeup()
         if (current_time - request->issue_time < m_deadlock_threshold)
             continue;
 
-        WARN_MSG("Possible Deadlock detected");
-        WARN_EXPR(m_version);
-        WARN_EXPR(request->ruby_request.paddr);
-        WARN_EXPR(m_readRequestTable.size());
-        WARN_EXPR(current_time);
-        WARN_EXPR(request->issue_time);
-        WARN_EXPR(current_time - request->issue_time);
-        ERROR_MSG("Aborting");
+        panic("Possible Deadlock detected. Aborting!\n"
+             "version: %d request.paddr: %d m_readRequestTable: %d "
+             "current time: %u issue_time: %d difference: %d\n", m_version,
+             request->ruby_request.paddr, m_readRequestTable.size(),
+             current_time, request->issue_time,
+             current_time - request->issue_time);
     }
 
     RequestTable::iterator write = m_writeRequestTable.begin();
@@ -116,14 +115,12 @@ Sequencer::wakeup()
         if (current_time - request->issue_time < m_deadlock_threshold)
             continue;
 
-        WARN_MSG("Possible Deadlock detected");
-        WARN_EXPR(m_version);
-        WARN_EXPR(request->ruby_request.paddr);
-        WARN_EXPR(current_time);
-        WARN_EXPR(request->issue_time);
-        WARN_EXPR(current_time - request->issue_time);
-        WARN_EXPR(m_writeRequestTable.size());
-        ERROR_MSG("Aborting");
+        panic("Possible Deadlock detected. Aborting!\n"
+             "version: %d request.paddr: %d m_writeRequestTable: %d "
+             "current time: %u issue_time: %d difference: %d\n", m_version,
+             request->ruby_request.paddr, m_writeRequestTable.size(),
+             current_time, request->issue_time,
+             current_time - request->issue_time);
     }
 
     total_outstanding += m_writeRequestTable.size();

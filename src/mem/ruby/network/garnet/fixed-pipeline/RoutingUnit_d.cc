@@ -81,7 +81,7 @@ RoutingUnit_d::routeCompute(flit_d *t_flit)
     }
 
     if (output_link == -1) {
-        ERROR_MSG("Fatal Error:: No Route exists from this Router.");
+        fatal("Fatal Error:: No Route exists from this Router.");
         exit(0);
     }
 
