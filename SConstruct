@@ -165,6 +165,7 @@ style = %s/util/style.py
 
 [hooks]
 pretxncommit.style = python:style.check_whitespace
+pre-qrefresh.style = python:style.check_whitespace
 """ % (main.root)
 
 mercurial_bin_not_found = """

@@ -32,47 +32,17 @@ import re
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(__file__))
+
+from file_types import lang_type
+
 lead = re.compile(r'^([ \t]+)')
 trail = re.compile(r'([ \t]+)$')
 any_control = re.compile(r'\b(if|while|for)[ \t]*[(]')
 good_control = re.compile(r'\b(if|while|for) [(]')
 
-lang_types = { 'c'   : "C",
-               'h'   : "C",
-               'cc'  : "C++",
-               'hh'  : "C++",
-               'cxx' : "C++",
-               'hxx' : "C++",
-               'cpp' : "C++",
-               'hpp' : "C++",
-               'C'   : "C++",
-               'H'   : "C++",
-               'i'   : "swig",
-               'py'  : "python",
-               's'   : "asm",
-               'S'   : "asm",
-               'isa' : "isa" }
-def file_type(filename):
-    extension = filename.split('.')
-    extension = len(extension) > 1 and extension[-1]
-    return lang_types.get(extension, None)
-
-whitespace_types = ('C', 'C++', 'swig', 'python', 'asm', 'isa')
-def whitespace_file(filename):
-    if file_type(filename) in whitespace_types:
-        return True
-
-    if filename.startswith("SCons"):
-        return True
-
-    return False
-
-format_types = ( 'C', 'C++' )
-def format_file(filename):
-    if file_type(filename) in format_types:
-        return True
-
-    return True 
+whitespace_types = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
+format_types = set(('C', 'C++'))
 
 def checkwhite_line(line):
     match = lead.search(line)
@@ -86,7 +56,7 @@ def checkwhite_line(line):
     return True
 
 def checkwhite(filename):
-    if not whitespace_file(filename):
+    if lang_type(filename) not in whitespace_types:
         return
 
     try:
@@ -116,7 +86,7 @@ def fixwhite_line(line, tabsize):
     return line.rstrip() + '\n'
 
 def fixwhite(filename, tabsize, fixonly=None):
-    if not whitespace_file(filename):
+    if lang_type(filename) not in whitespace_types:
         return
 
     try:
@@ -174,7 +144,7 @@ class ValidationStats(object):
                self.trailwhite or self.badcontrol or self.cret
 
 def validate(filename, stats, verbose, exit_code):
-    if not format_file(filename):
+    if lang_type(filename) not in format_types:
         return
 
     def msg(lineno, line, message):
@@ -185,13 +155,6 @@ def validate(filename, stats, verbose, exit_code):
     def bad():
         if exit_code is not None:
             sys.exit(exit_code)
-
-    cpp = filename.endswith('.cc') or filename.endswith('.hh')
-    py = filename.endswith('.py')
-
-    if py + cpp != 1:
-        raise AttributeError, \
-              "I don't know how to deal with the file %s" % filename
 
     try:
         f = file(filename, 'r')
@@ -314,7 +277,7 @@ def do_check_whitespace(ui, repo, *files, **args):
         if skip(fname):
             continue
 
-        if not whitespace_file(fname):
+        if lang_type(fname) not in whitespace_types:
             continue
 
         fctx = wctx.filectx(fname)
@@ -348,19 +311,7 @@ def do_check_whitespace(ui, repo, *files, **args):
             if prompt(fname, fixonly):
                 return True
 
-def check_whitespace(ui, repo, hooktype, node, parent1, parent2, **kwargs):
-    if hooktype != 'pretxncommit':
-        raise AttributeError, \
-              "This hook is only meant for pretxncommit, not %s" % hooktype
-
-    args = { 'tabsize' : 8 }
-    return do_check_whitespace(ui, repo, **args)
-
-def check_format(ui, repo, hooktype, node, parent1, parent2, **kwargs):
-    if hooktype != 'pretxncommit':
-        raise AttributeError, \
-              "This hook is only meant for pretxncommit, not %s" % hooktype
-
+def do_check_format(ui, repo, **args):
     modified, added, removed, deleted, unknown, ignore, clean = repo.status()
 
     verbose = 0
@@ -381,6 +332,21 @@ def check_format(ui, repo, hooktype, node, parent1, parent2, **kwargs):
 
     return False
 
+def check_hook(hooktype):
+    if hooktype not in ('pretxncommit', 'pre-qrefresh'):
+        raise AttributeError, \
+              "This hook is not meant for %s" % hooktype
+
+def check_whitespace(ui, repo, hooktype, **kwargs):
+    check_hook(hooktype)
+    args = { 'tabsize' : 8 }
+    return do_check_whitespace(ui, repo, **args)
+
+def check_format(ui, repo, hooktype, **kwargs):
+    check_hook(hooktype)
+    args = {}
+    return do_check_format(ui, repo, **args)
+
 try:
     from mercurial.i18n import _
 except ImportError:
@@ -392,8 +358,13 @@ cmdtable = {
     ( do_check_whitespace,
       [ ('a', 'auto', False, _("automatically fix whitespace")),
         ('t', 'tabsize', 8, _("Number of spaces TAB indents")) ],
-      _('hg m5check [-t <tabsize>] [FILE]...')),
+      _('hg m5style [-a] [-t <tabsize>] [FILE]...')),
+    '^m5format' :
+    ( do_check_format,
+      [ ],
+      _('hg m5format [FILE]...')),
 }
+
 if __name__ == '__main__':
     import getopt
 
