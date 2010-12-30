@@ -56,8 +56,9 @@ const bool flag_TRACING_ON = TRACING_ON;
 inline void disableAllListeners() { ListenSocket::disableAll(); }
 %}
 
-%include "stdint.i"
-%include "std_string.i"
+%include <stdint.i>
+%include <std_string.i>
+
 %include "base/types.hh"
 
 void setOutputDir(const std::string &dir);

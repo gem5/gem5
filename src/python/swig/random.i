@@ -30,7 +30,7 @@
 
 %module(package="m5.internal") random
 
-%include "stdint.i"
+%include <stdint.i>
 
 %{
 #include <cstdlib>

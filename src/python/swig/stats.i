@@ -30,8 +30,8 @@
 
 %module(package="m5.internal") stats
 
-%include "std_list.i"
-%include "std_string.i"
+%include <std_list.i>
+%include <std_string.i>
 
 %{
 #include "base/statistics.hh"

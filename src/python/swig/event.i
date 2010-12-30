@@ -73,8 +73,8 @@
 %import "base/fast_alloc.hh"
 %import "sim/serialize.hh"
 
-%include "stdint.i"
-%include "std_string.i"
+%include <stdint.i>
+%include <std_string.i>
 
 %include "base/types.hh"
 %include "sim/eventq.hh"

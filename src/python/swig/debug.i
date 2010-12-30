@@ -35,6 +35,7 @@
 #include "sim/debug.hh"
 %}
 
-%include "stdint.i"
+%include <stdint.i>
+
 %include "base/types.hh"
 %include "sim/debug.hh"

@@ -35,11 +35,11 @@
 #include "base/types.hh"
 %}
 
-%include "stdint.i"
-%include "base/types.hh"
+%include <stdint.i>
 
 %rename(assign) *::operator=;
 %include "base/range.hh"
+%include "base/types.hh"
 
 %template(AddrRange) Range<Addr>;
 %template(TickRange) Range<Tick>;

@@ -33,8 +33,8 @@
 %}
 
 // import these files for SWIG to wrap
-%include "stdint.i"
-%include "std_string.i"
+%include <stdint.i>
+%include <std_string.i>
 
 %include "base/types.hh"
 %include "sim/sim_object_params.hh"
