@@ -56,7 +56,10 @@ def define_options(parser):
 
     parser.add_option("--recycle-latency", type="int", default=10,
                       help="Recycle latency for ruby controller input buffers")
-    
+
+    parser.add_option("--random_seed", type="int", default=1234,
+                      help="Used for seeding the random number generator")
+
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)
@@ -135,5 +138,6 @@ def create_system(options, system, piobus = None, dma_devices = []):
                       mem_size = total_mem_size)
 
     ruby.cpu_ruby_ports = cpu_sequencers
+    ruby.random_seed    = options.random_seed
 
     return ruby
