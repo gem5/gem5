@@ -129,4 +129,4 @@ vtophys(ThreadContext *tc, Addr addr)
     return pte.translate(addr);
 }
 
-} /* namespace SparcISA */
+} // namespace SparcISA

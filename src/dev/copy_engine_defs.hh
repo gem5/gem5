@@ -220,6 +220,6 @@ struct ChanRegs {
 
 };
 
-} //namespace CopyEngineReg
+} // namespace CopyEngineReg
 
 

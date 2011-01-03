@@ -87,7 +87,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
     checkReg("ccr", regVal, realRegVal);
 }
 
-} /* namespace Trace */
+} // namespace Trace
 
 ////////////////////////////////////////////////////////////////////////
 //

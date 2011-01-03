@@ -126,7 +126,7 @@ def default_swig_objdecls(cls, code):
     code('{};')
 
     for ns in reversed(namespaces):
-        code('/* namespace $ns */ }')
+        code('} // namespace $ns')
 
 def public_value(key, value):
     return key.startswith('_') or \
@@ -390,7 +390,7 @@ class MetaSimObject(type):
             code('namespace $ns {')
         code('class $0;', class_path[-1])
         for ns in reversed(class_path[:-1]):
-            code('/* namespace $ns */ }')
+            code('} // namespace $ns')
         code()
 
         for param in params:

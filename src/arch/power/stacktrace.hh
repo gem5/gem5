@@ -143,6 +143,6 @@ StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
     return true;
 }
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_STACKTRACE_HH__

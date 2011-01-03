@@ -38,7 +38,7 @@
 #include "arch/power/types.hh"
 #include "base/types.hh"
 
-namespace BigEndianGuest {};
+namespace BigEndianGuest {}
 
 class StaticInstPtr;
 
@@ -73,6 +73,6 @@ const ExtMachInst NoopMachInst = 0x60000000;
 // Memory accesses can be unaligned
 const bool HasUnalignedMemAcc = true;
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_ISA_TRAITS_HH__

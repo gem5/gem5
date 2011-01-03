@@ -111,6 +111,6 @@ class I8254 : public BasicPioDevice
     }
 };
 
-}; // namespace X86ISA
+} // namespace X86ISA
 
 #endif //__DEV_X86_SOUTH_BRIDGE_I8254_HH__

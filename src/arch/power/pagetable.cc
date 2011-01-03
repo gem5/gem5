@@ -79,4 +79,4 @@ PTE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(OffsetMask);
 }
 
-} // PowerISA namespace
+} // namespace PowerISA

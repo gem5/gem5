@@ -74,6 +74,6 @@ class Speaker : public BasicPioDevice
     Tick write(PacketPtr pkt);
 };
 
-}; // namespace X86ISA
+} // namespace X86ISA
 
 #endif //__DEV_X86_SPEAKER_HH__

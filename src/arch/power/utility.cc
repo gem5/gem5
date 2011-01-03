@@ -62,4 +62,4 @@ skipFunction(ThreadContext *tc)
 }
 
 
-} // PowerISA namespace
+} // namespace PowerISA

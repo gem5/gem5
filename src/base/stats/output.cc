@@ -63,7 +63,7 @@ dump()
     }
 }
 
-/* namespace Stats */ }
+} // namespace Stats
 
 void
 debugDumpStats()

@@ -52,6 +52,6 @@ class MiscOp : public PowerStaticInst
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif //__ARCH_POWER_INSTS_MISC_HH__

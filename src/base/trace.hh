@@ -60,7 +60,7 @@ void dprintf(Tick when, const std::string &name, const char *format,
              CPRINTF_DECLARATION);
 void dump(Tick when, const std::string &name, const void *data, int len);
 
-/* namespace Trace */ }
+} // namespace Trace
 
 // This silly little class allows us to wrap a string in a functor
 // object so that we can give a name() that DPRINTF will like

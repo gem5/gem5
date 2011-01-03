@@ -179,6 +179,6 @@ initMySQL(std::string host, std::string user, std::string password,
 }
 #endif
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __BASE_STATS_MYSQL_HH__

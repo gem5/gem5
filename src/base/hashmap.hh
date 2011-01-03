@@ -92,6 +92,6 @@ namespace __hash_namespace {
             return (__stl_hash_string(r.first.c_str())) ^ r.second;
         }
     };
-/* namespace __hash_namespace */ }
+} // namespace __hash_namespace
 
 #endif // __HASHMAP_HH__

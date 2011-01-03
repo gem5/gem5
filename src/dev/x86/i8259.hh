@@ -110,6 +110,6 @@ class I8259 : public BasicPioDevice, public IntDev
     int getVector();
 };
 
-}; // namespace X86ISA
+} // namespace X86ISA
 
 #endif //__DEV_X86_I8259_HH__

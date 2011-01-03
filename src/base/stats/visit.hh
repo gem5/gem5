@@ -55,6 +55,6 @@ struct Visit
     virtual void visit(const FormulaInfo &info) = 0;
 };
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __BASE_STATS_VISIT_HH__

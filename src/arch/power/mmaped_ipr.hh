@@ -61,6 +61,6 @@ handleIprWrite(ThreadContext *xc, Packet *pkt)
     panic("No implementation for handleIprWrite in POWER\n");
 }
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_MMAPED_IPR_HH__

@@ -377,4 +377,4 @@ registerResetCallback(Callback *cb)
     resetQueue.add(cb);
 }
 
-/* namespace Stats */ }
+} // namespace Stats

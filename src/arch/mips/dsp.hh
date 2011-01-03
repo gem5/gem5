@@ -199,6 +199,6 @@ void simdUnpack(int32_t reg, uint64_t *values_ptr, int32_t fmt, int32_t sign);
 void writeDSPControl(uint32_t *dspctl, uint32_t value, uint32_t mask);
 uint32_t readDSPControl(uint32_t *dspctl, uint32_t mask);
 
-} /* namespace MipsISA */
+} // namespace MipsISA
 
 #endif // __ARCH_MIPS_DSP_HH__

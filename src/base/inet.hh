@@ -472,6 +472,6 @@ uint16_t cksum(const UdpPtr &ptr);
 
 int hsplit(const EthPacketPtr &ptr);
 
-/* namespace Net */ }
+} // namespace Net
 
 #endif // __BASE_INET_HH__

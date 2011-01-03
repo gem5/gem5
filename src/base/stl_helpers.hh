@@ -92,7 +92,7 @@ operator<<(std::ostream& out, const C<T,A> &vec)
     return out;
 }
 
-/* namespace stl_helpers */ }
-/* namespace m5 */ }
+} // namespace stl_helpers
+} // namespace m5
 
 #endif // __BASE_STL_HELPERS_HH__

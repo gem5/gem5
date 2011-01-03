@@ -234,6 +234,6 @@ class IntLine : public SimObject
     }
 };
 
-}; // namespace X86ISA
+} // namespace X86ISA
 
 #endif //__DEV_X86_INTDEV_HH__

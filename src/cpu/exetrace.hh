@@ -86,6 +86,6 @@ class ExeTracer : public InstTracer
     }
 };
 
-/* namespace Trace */ }
+} // namespace Trace
 
 #endif // __CPU_EXETRACE_HH__

@@ -349,6 +349,6 @@ class Interface : public EtherInt
     virtual void sendDone() { dev->transferDone(); }
 };
 
-/* namespace Sinic */ }
+} // namespace Sinic
 
 #endif // __DEV_SINIC_HH__

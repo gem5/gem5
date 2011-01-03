@@ -297,4 +297,4 @@ hsplit(const EthPacketPtr &ptr)
 }
 
 
-/* namespace Net */ }
+} // namespace Net

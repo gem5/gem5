@@ -93,6 +93,6 @@ class InOrderTrace : public InstTracer
             const StaticInstPtr macroStaticInst = NULL);
 };
 
-/* namespace Trace */ }
+} // namespace Trace
 
 #endif // __CPU_INORDER_INORDER_TRACE_HH__

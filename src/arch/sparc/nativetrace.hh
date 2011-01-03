@@ -47,6 +47,6 @@ class SparcNativeTrace : public NativeTrace
     void check(NativeTraceRecord *record);
 };
 
-} /* namespace Trace */
+} // namespace Trace
 
 #endif // __CPU_NATIVETRACE_HH__

@@ -55,7 +55,7 @@ extern double Hz;
 extern double kHz;
 extern double MHz;
 extern double GHZ;
-/* namespace Float */ }
+} // namespace Float
 
 namespace Int {
 extern Tick s;
@@ -63,8 +63,8 @@ extern Tick ms;
 extern Tick us;
 extern Tick ns;
 extern Tick ps;
-/* namespace Int */ }
-/* namespace SimClock */ }
+} // namespace Int
+} // namespace SimClock
 
 void setClockFrequency(Tick ticksPerSecond);
 

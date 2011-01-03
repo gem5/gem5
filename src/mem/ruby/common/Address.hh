@@ -277,7 +277,7 @@ template <> struct hash<Address>
         return (size_t)s.getAddress();
     }
 };
-/* namespace __hash_namespace */ }
+} // namespace __hash_namespace
 
 namespace std {
 template <> struct equal_to<Address>
@@ -288,6 +288,6 @@ template <> struct equal_to<Address>
         return s1 == s2;
     }
 };
-/* namespace std */ }
+} // namespace std
 
 #endif // __MEM_RUBY_COMMON_ADDRESS_HH__

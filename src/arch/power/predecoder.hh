@@ -120,6 +120,6 @@ class Predecoder
     }
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_PREDECODER_HH__

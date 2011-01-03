@@ -2784,6 +2784,6 @@ void registerResetCallback(Callback *cb);
 
 std::list<Info *> &statsList();
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __BASE_STATISTICS_HH__

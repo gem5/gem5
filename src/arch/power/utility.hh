@@ -78,6 +78,6 @@ advancePC(PCState &pc, const StaticInstPtr inst)
     pc.advance();
 }
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_UTILITY_HH__

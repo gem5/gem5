@@ -85,6 +85,6 @@ class X86NativeTrace : public NativeTrace
     void check(NativeTraceRecord *record);
 };
 
-} /* namespace Trace */
+} // namespace Trace
 
 #endif // __ARCH_X86_NATIVETRACE_HH__

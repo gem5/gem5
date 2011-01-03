@@ -79,6 +79,6 @@ class RemoteGDB : public BaseRemoteGDB
     }
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif /* __ARCH_POWER_REMOTE_GDB_H__ */

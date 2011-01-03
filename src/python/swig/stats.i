@@ -59,4 +59,4 @@ void reset();
 
 std::list<Info *> &statsList();
 
-/* namespace Stats */ }
+} // namespace Stats

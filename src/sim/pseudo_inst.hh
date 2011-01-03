@@ -64,4 +64,4 @@ void m5checkpoint(ThreadContext *tc, Tick delay, Tick period);
 void debugbreak(ThreadContext *tc);
 void switchcpu(ThreadContext *tc);
 
-/* namespace PseudoInst */ }
+} // namespace PseudoInst

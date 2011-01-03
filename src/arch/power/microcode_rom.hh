@@ -40,6 +40,6 @@ namespace PowerISA
 
 using ::MicrocodeRom;
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_MICROCODE_ROM_HH__

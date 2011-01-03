@@ -109,4 +109,4 @@ Connection::query(const string &sql)
 }
 
 
-/* namespace MySQL */ }
+} // namespace MySQL

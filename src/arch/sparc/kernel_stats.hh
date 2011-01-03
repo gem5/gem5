@@ -51,7 +51,7 @@ class Statistics : public ::Kernel::Statistics
     {}
 };
 
-} /* end namespace AlphaISA::Kernel */
-} /* end namespace AlphaISA */
+} // namespace AlphaISA::Kernel
+} // namespace AlphaISA
 
 #endif // __ARCH_SPARC_KERNEL_STATS_HH__

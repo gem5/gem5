@@ -232,6 +232,6 @@ class FormulaInfo : public VectorInfo
 };
 
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __BASE_STATS_INFO_HH__

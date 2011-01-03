@@ -51,7 +51,7 @@ class Statistics : public ::Kernel::Statistics
     {}
 };
 
-} /* end namespace ArmISA::Kernel */
-} /* end namespace ArmISA */
+} // namespace ArmISA::Kernel
+} // namespace ArmISA
 
 #endif // __ARCH_ARM_KERNEL_STATS_HH__

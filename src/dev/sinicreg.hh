@@ -178,7 +178,7 @@ struct Info
     const char *name;
 };
 
-/* namespace Regs */ }
+} // namespace Regs
 
 inline const Regs::Info&
 regInfo(Addr daddr)
@@ -234,6 +234,6 @@ regValid(Addr daddr)
     return true;
 }
 
-/* namespace Sinic */ }
+} // namespace Sinic
 
 #endif // __DEV_SINICREG_HH__

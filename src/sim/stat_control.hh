@@ -36,6 +36,6 @@ namespace Stats {
 void initSimStats();
 void StatEvent(bool dump, bool reset, Tick when = curTick, Tick repeat = 0);
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __SIM_STAT_CONTROL_HH__

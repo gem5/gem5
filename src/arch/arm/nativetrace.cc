@@ -192,7 +192,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     }
 }
 
-} /* namespace Trace */
+} // namespace Trace
 
 ////////////////////////////////////////////////////////////////////////
 //

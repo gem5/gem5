@@ -152,7 +152,7 @@ struct PTE
     void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_PAGETABLE_H__
 

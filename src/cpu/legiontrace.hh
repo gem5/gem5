@@ -76,6 +76,6 @@ class LegionTrace : public InstTracer
     }
 };
 
-/* namespace Trace */ }
+} // namespace Trace
 
 #endif // __CPU_LEGIONTRACE_HH__

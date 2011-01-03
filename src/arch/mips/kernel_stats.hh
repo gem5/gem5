@@ -48,7 +48,7 @@ class Statistics : public ::Kernel::Statistics
 };
 
 
-} /* end namespace MipsISA::Kernel */
-} /* end namespace MipsISA */
+} // namespace MipsISA::Kernel
+} // namespace MipsISA
 
 #endif // __ARCH_MIPS_KERNEL_STATS_HH__

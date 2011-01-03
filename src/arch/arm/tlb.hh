@@ -239,6 +239,6 @@ public:
     inline void invalidateMiscReg() { miscRegValid = false; }
 };
 
-/* namespace ArmISA */ }
+} // namespace ArmISA
 
 #endif // __ARCH_ARM_TLB_HH__

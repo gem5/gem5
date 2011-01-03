@@ -71,6 +71,6 @@ class PowerStaticInst : public StaticInst
     }
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif //__ARCH_POWER_INSTS_STATICINST_HH__

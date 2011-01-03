@@ -420,6 +420,6 @@ class Statement
 }
 #endif
 
-/* namespace MySQL */ }
+} // namespace MySQL
 
 #endif // __BASE_MYSQL_HH__

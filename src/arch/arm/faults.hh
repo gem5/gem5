@@ -246,6 +246,6 @@ static inline Fault genMachineCheckFault()
     return new Reset();
 }
 
-} // ArmISA namespace
+} // namespace ArmISA
 
 #endif // __ARM_FAULTS_HH__

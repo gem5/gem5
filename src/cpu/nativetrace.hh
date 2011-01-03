@@ -119,6 +119,6 @@ class NativeTrace : public ExeTracer
     check(NativeTraceRecord *record) = 0;
 };
 
-} /* namespace Trace */
+} // namespace Trace
 
 #endif // __CPU_NATIVETRACE_HH__

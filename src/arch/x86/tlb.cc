@@ -737,7 +737,7 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
 {
 }
 
-/* end namespace X86ISA */ }
+} // namespace X86ISA
 
 X86ISA::TLB *
 X86TLBParams::create()

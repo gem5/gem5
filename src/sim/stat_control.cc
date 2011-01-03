@@ -201,4 +201,4 @@ StatEvent(bool dump, bool reset, Tick when, Tick repeat)
     mainEventQueue.schedule(event, when);
 }
 
-/* namespace Stats */ }
+} // namespace Stats

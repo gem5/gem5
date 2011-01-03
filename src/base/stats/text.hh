@@ -75,6 +75,6 @@ class Text : public Output
 
 bool initText(const std::string &filename, bool desc);
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __BASE_STATS_TEXT_HH__

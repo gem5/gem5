@@ -139,4 +139,4 @@ Statistics::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(iplLastTick);
 }
 
-/* end namespace Kernel */ }
+} // namespace Kernel

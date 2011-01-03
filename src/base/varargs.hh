@@ -303,6 +303,6 @@ class List
     }
 };
 
-/* end namespace VarArgs */ }
+} // namespace VarArgs
 
 #endif /* __BASE_VARARGS_HH__ */

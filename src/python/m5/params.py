@@ -1004,7 +1004,7 @@ namespace Enums {
         code.dedent(2)
         code('''
     };
-/* namespace Enums */ }
+} // namespace Enums
 ''')
 
 # Base class for enum types.

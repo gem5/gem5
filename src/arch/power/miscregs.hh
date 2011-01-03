@@ -95,6 +95,6 @@ BitUnion32(Fpscr)
     Bitfield<2,1> rn;
 EndBitUnion(Fpscr)
 
-}; // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_MISCREGS_HH__

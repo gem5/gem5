@@ -81,7 +81,7 @@ InOrderTrace::getInstRecord(Tick when, ThreadContext *tc,
     return new InOrderTraceRecord(ThePipeline::NumStages, true, tc, _pc);
 }
 
-/* namespace Trace */ }
+} // namespace Trace
 
 ////////////////////////////////////////////////////////////////////////
 //

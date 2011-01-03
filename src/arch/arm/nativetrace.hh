@@ -107,6 +107,6 @@ class ArmNativeTrace : public NativeTrace
     void check(NativeTraceRecord *record);
 };
 
-} /* namespace Trace */
+} // namespace Trace
 
 #endif // __ARCH_ARM_NATIVETRACE_HH__

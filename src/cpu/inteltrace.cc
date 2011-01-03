@@ -57,7 +57,7 @@ Trace::IntelTraceRecord::dump()
     outs << endl;
 }
 
-/* namespace Trace */ }
+} // namespace Trace
 
 ////////////////////////////////////////////////////////////////////////
 //

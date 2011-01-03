@@ -44,6 +44,6 @@ struct Output : public Visit
     virtual bool valid() const = 0;
 };
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __BASE_STATS_OUTPUT_HH__

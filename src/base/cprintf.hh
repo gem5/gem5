@@ -125,7 +125,7 @@ struct Print
     void end_args();
 };
 
-/* end namespace cp */ }
+} // namespace cp
 
 typedef VarArgs::List<cp::Print> CPrintfArgsList;
 

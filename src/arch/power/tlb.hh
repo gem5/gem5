@@ -167,6 +167,6 @@ class TLB : public BaseTLB
     void regStats();
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_TLB_HH__

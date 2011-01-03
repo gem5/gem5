@@ -186,7 +186,7 @@ X86NativeTrace::check(NativeTraceRecord *record)
     checkXMM(15, mState.xmm, nState.xmm);
 }
 
-} /* namespace Trace */
+} // namespace Trace
 
 ////////////////////////////////////////////////////////////////////////
 //

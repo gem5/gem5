@@ -38,4 +38,4 @@ Visit::Visit()
 Visit::~Visit()
 {}
 
-/* namespace Stats */ }
+} // namespace Stats

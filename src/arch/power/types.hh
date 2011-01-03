@@ -101,6 +101,6 @@ struct hash<PowerISA::ExtMachInst> : public hash<uint32_t> {
     };
 };
 
-} // __hash_namespace namespace
+} // namespace __hash_namespace
 
 #endif // __ARCH_POWER_TYPES_HH__

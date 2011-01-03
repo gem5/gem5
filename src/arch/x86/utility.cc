@@ -243,4 +243,4 @@ skipFunction(ThreadContext *tc)
 }
 
 
-} //namespace X86_ISA
+} // namespace X86_ISA

@@ -1714,7 +1714,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-/* namespace Sinic */ }
+} // namespace Sinic
 
 Sinic::Device *
 SinicParams::create()

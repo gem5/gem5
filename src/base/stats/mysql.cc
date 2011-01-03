@@ -836,4 +836,4 @@ initMySQL(string host, string user, string password, string database,
     return true;
 }
 
-/* end namespace Stats */ }
+} // namespace Stats

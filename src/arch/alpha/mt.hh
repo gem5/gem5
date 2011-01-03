@@ -66,6 +66,6 @@ getTargetThread(TC *tc)
     return 0;
 }
 
-}//namespace AlphaISA
+} // namespace AlphaISA
 
 #endif

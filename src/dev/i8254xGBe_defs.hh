@@ -851,4 +851,4 @@ struct Regs {
         UNSERIALIZE_SCALAR(sw_fw_sync);
     }
 };
-} // iGbReg namespace
+} // namespace iGbReg

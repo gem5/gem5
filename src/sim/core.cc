@@ -55,7 +55,7 @@ double Hz;
 double kHz;
 double MHz;
 double GHZ;
-/* namespace Float */ }
+} // namespace Float
 
 namespace Int {
 Tick s;
@@ -63,9 +63,9 @@ Tick ms;
 Tick us;
 Tick ns;
 Tick ps;
-/* namespace Float */ }
+} // namespace Float
 
-/* namespace SimClock */ }
+} // namespace SimClock
 
 void
 setClockFrequency(Tick ticksPerSecond)

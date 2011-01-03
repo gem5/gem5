@@ -835,7 +835,7 @@ extern const int numFlagStrings;
 // base flags to set.  Inidividual flag arrays are terminated by -1.
 extern const Flags *compoundFlags[];
 
-/* namespace Trace */ }
+} // namespace Trace
 
 #endif // __BASE_TRACE_FLAGS_HH__
 ''')
@@ -902,7 +902,7 @@ EmbeddedPython embedded_${sym}(
     ${{len(data)}},
     ${{len(marshalled)}});
 
-/* namespace */ }
+} // anonymous namespace
 ''')
     code.write(str(target[0]))
 

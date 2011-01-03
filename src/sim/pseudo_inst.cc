@@ -326,4 +326,4 @@ switchcpu(ThreadContext *tc)
     exitSimLoop("switchcpu");
 }
 
-/* namespace PseudoInst */ }
+} // namespace PseudoInst

@@ -1408,7 +1408,7 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(sfar);
 }
 
-/* end namespace SparcISA */ }
+} // namespace SparcISA
 
 SparcISA::TLB *
 SparcTLBParams::create()

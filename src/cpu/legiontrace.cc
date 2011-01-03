@@ -587,7 +587,7 @@ Trace::LegionTraceRecord::dump()
     } // if not microop
 }
 
-/* namespace Trace */ }
+} // namespace Trace
 
 ////////////////////////////////////////////////////////////////////////
 //

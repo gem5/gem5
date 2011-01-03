@@ -62,6 +62,6 @@ struct MySqlRun
     uint16_t run() const { return run_id; }
 };
 
-/* namespace Stats */ }
+} // namespace Stats
 
 #endif // __BASE_STATS_MYSQL_RUN_HH__

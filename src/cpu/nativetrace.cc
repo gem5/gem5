@@ -62,4 +62,4 @@ Trace::NativeTraceRecord::dump()
         parent->check(this);
 }
 
-} /* namespace Trace */
+} // namespace Trace

@@ -39,7 +39,7 @@
 #include "base/types.hh"
 #include "config/full_system.hh"
 
-namespace LittleEndianGuest {};
+namespace LittleEndianGuest {}
 
 class StaticInstPtr;
 
@@ -164,6 +164,6 @@ const uint32_t ITOUCH_ANNOTE = 0xffffffff;
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;
 
-};
+} // namespace MipsISA
 
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__

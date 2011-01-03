@@ -82,6 +82,6 @@ class IntelTrace : public InstTracer
     }
 };
 
-/* namespace Trace */ }
+} // namespace Trace
 
 #endif // __CPU_INTELTRACE_HH__

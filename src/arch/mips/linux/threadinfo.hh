@@ -148,6 +148,6 @@ class ThreadInfo
     }
 };
 
-/* namespace Linux */ }
+} // namespace Linux
 
 #endif // __ARCH_MIPS_LINUX_LINUX_THREADINFO_HH__

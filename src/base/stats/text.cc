@@ -594,4 +594,4 @@ initText(const string &filename, bool desc)
     return true;
 }
 
-/* namespace Stats */ }
+} // namespace Stats

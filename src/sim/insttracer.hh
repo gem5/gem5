@@ -170,6 +170,6 @@ class InstTracer : public SimObject
 
 
 
-}; // namespace Trace
+} // namespace Trace
 
 #endif // __INSTRECORD_HH__

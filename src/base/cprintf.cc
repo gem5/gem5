@@ -291,4 +291,4 @@ Print::end_args()
     stream.precision(saved_precision);
 }
 
-/* end namespace cp */ }
+} // namespace cp

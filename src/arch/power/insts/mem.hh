@@ -86,6 +86,6 @@ class MemDispOp : public MemOp
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif //__ARCH_POWER_INSTS_MEM_HH__

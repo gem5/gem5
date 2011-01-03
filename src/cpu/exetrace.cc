@@ -155,7 +155,7 @@ Trace::ExeTracerRecord::dump()
     }
 }
 
-/* namespace Trace */ }
+} // namespace Trace
 
 ////////////////////////////////////////////////////////////////////////
 //

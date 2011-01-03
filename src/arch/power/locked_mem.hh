@@ -59,6 +59,6 @@ handleLockedWrite(XC *xc, Request *req)
     return true;
 }
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_LOCKED_MEM_HH__

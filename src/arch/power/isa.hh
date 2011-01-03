@@ -110,6 +110,6 @@ class ISA
     }
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_ISA_HH__

@@ -98,6 +98,6 @@ genMachineCheckFault()
     return new MachineCheckFault();
 }
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_FAULTS_HH__

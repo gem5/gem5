@@ -596,6 +596,6 @@ class DspStateDisabledFault : public MipsFault
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-} // MipsISA namespace
+} // namespace MipsISA
 
 #endif // __MIPS_FAULTS_HH__

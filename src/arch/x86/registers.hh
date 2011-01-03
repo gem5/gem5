@@ -111,6 +111,6 @@ typedef union
 
 typedef uint16_t RegIndex;
 
-}; // namespace X86ISA
+} // namespace X86ISA
 
 #endif // __ARCH_X86_REGFILE_HH__

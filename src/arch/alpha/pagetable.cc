@@ -61,4 +61,4 @@ TlbEntry::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(valid);
 }
 
-} //namespace AlphaISA
+} // namespace AlphaISA

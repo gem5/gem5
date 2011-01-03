@@ -51,7 +51,7 @@ PteAddr(Addr a)
     return (a & PteMask) << PteShift;
 }
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_VTOPHYS_HH__
 

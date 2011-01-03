@@ -48,7 +48,7 @@
 #include "arch/arm/types.hh"
 #include "base/types.hh"
 
-namespace LittleEndianGuest {};
+namespace LittleEndianGuest {}
 
 #define TARGET_ARM
 
@@ -123,7 +123,7 @@ namespace ArmISA
         INT_FIQ,
         NumInterruptTypes
     };
-};
+} // namespace ArmISA
 
 using namespace ArmISA;
 

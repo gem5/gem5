@@ -595,7 +595,7 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
-/* end namespace AlphaISA */ }
+} // namespace AlphaISA
 
 AlphaISA::TLB *
 AlphaTLBParams::create()

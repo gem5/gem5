@@ -188,7 +188,7 @@ dumpStatus()
     }
 }
 
-/* namespace Trace */ }
+} // namespace Trace
 
 
 // add a set of functions that can easily be invoked from gdb

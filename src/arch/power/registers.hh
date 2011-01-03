@@ -101,6 +101,6 @@ enum MiscIntRegNums {
     INTREG_RSV_ADDR
 };
 
-} // PowerISA namespace
+} // namespace PowerISA
 
 #endif // __ARCH_POWER_REGISTERS_HH__

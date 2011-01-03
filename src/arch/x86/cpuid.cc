@@ -158,4 +158,4 @@ namespace X86ISA {
         }
         return true;
     }
-} //namespace X86ISA
+} // namespace X86ISA

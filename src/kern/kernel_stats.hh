@@ -85,6 +85,6 @@ class Statistics : public Serializable
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-/* end namespace Kernel */ }
+} // namespace Kernel
 
 #endif // __KERNEL_STATS_HH__

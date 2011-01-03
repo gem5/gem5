@@ -302,6 +302,6 @@ genMachineCheckFault()
 }
 
 
-} // SparcISA namespace
+} // namespace SparcISA
 
 #endif // __SPARC_FAULTS_HH__
