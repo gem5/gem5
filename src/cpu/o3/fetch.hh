@@ -35,7 +35,7 @@
 #include "arch/utility.hh"
 #include "arch/predecoder.hh"
 #include "base/statistics.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
 #include "mem/packet.hh"

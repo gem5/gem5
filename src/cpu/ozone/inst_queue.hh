@@ -37,7 +37,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 

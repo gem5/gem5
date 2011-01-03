@@ -34,7 +34,7 @@
 #include <set>
 
 #include "base/statistics.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"

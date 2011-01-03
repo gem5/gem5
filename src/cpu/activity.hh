@@ -31,7 +31,7 @@
 #ifndef __CPU_ACTIVITY_HH__
 #define __CPU_ACTIVITY_HH__
 
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "base/trace.hh"
 
 /**

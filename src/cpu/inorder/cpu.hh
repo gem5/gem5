@@ -42,7 +42,7 @@
 #include "arch/types.hh"
 #include "arch/registers.hh"
 #include "base/statistics.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"

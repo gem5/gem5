@@ -34,7 +34,7 @@
 #include <list>
 
 #include "sim/faults.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"

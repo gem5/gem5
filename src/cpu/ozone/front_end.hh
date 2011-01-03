@@ -34,7 +34,7 @@
 #include <deque>
 
 #include "arch/utility.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/bpred_unit.hh"

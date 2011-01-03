@@ -46,7 +46,7 @@
 
 #include <queue>
 
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"

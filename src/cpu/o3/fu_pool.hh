@@ -36,7 +36,7 @@
 #include <string>
 #include <vector>
 
-#include "base/sched_list.hh"
+#include "cpu/sched_list.hh"
 #include "cpu/op_class.hh"
 #include "params/FUPool.hh"
 #include "sim/sim_object.hh"

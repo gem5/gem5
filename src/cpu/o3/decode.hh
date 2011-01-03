@@ -34,7 +34,7 @@
 #include <queue>
 
 #include "base/statistics.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 
 class DerivO3CPUParams;
 

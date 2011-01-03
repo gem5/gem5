@@ -36,7 +36,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
-#include "base/timebuf.hh"
+#include "cpu/timebuf.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/comm.hh"
 #include "params/InOrderCPU.hh"
