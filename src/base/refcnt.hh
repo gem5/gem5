@@ -109,7 +109,7 @@ bool operator==(const RefCountingPtr<T> &l, const T *r)
 { return l.get() == r; }
 
 template<class T>
-bool operator==(const T &l, const RefCountingPtr<T> &r)
+bool operator==(const T *l, const RefCountingPtr<T> &r)
 { return l == r.get(); }
 
 template<class T>
@@ -121,7 +121,7 @@ bool operator!=(const RefCountingPtr<T> &l, const T *r)
 { return l.get() != r; }
 
 template<class T>
-bool operator!=(const T &l, const RefCountingPtr<T> &r)
+bool operator!=(const T *l, const RefCountingPtr<T> &r)
 { return l != r.get(); }
 
 #endif // __BASE_REFCNT_HH__
