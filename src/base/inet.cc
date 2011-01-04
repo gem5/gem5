@@ -138,8 +138,8 @@ operator<<(ostream &stream, const IpAddress &ia)
 {
     uint32_t ip = ia.ip();
     ccprintf(stream, "%x.%x.%x.%x",
-            (uint8_t)(ip >> 0),  (uint8_t)(ip >> 8),
-            (uint8_t)(ip >> 16), (uint8_t)(ip >> 24));
+            (uint8_t)(ip >> 24), (uint8_t)(ip >> 16),
+            (uint8_t)(ip >> 8),  (uint8_t)(ip >> 0));
     return stream;
 }
 
