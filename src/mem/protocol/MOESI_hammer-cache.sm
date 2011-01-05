@@ -689,9 +689,20 @@ machine(L1Cache, "AMD Hammer-like protocol")
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
     mandatoryQueue_in.dequeue();
   }
-  
+
   action(l_popForwardQueue, "l", desc="Pop forwareded request queue.") {
     forwardToCache_in.dequeue();
+  }
+
+  action(hp_copyFromTBEToL2, "li", desc="Copy data from TBE to L2 cache entry.") {
+    getCacheEntry(address).Dirty   := TBEs[address].Dirty;
+    getCacheEntry(address).DataBlk := TBEs[address].DataBlk;
+  }
+
+  action(nb_copyFromTBEToL1, "fu", desc="Copy data from TBE to L1 cache entry.") {
+    getCacheEntry(address).Dirty   := TBEs[address].Dirty;
+    getCacheEntry(address).DataBlk := TBEs[address].DataBlk;
+    getCacheEntry(address).FromL2 := true;
   }
 
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
@@ -890,28 +901,6 @@ machine(L1Cache, "AMD Hammer-like protocol")
     L2cacheMemory.deallocate(address);
   }
 
-  action(ss_copyFromL1toL2, "\s", desc="Copy data block from L1 (I or D) to L2") {
-    if (L1DcacheMemory.isTagPresent(address)) {
-      static_cast(Entry, L2cacheMemory[address]).Dirty := static_cast(Entry, L1DcacheMemory[address]).Dirty;
-      static_cast(Entry, L2cacheMemory[address]).DataBlk := static_cast(Entry, L1DcacheMemory[address]).DataBlk;
-    } else {
-      static_cast(Entry, L2cacheMemory[address]).Dirty := static_cast(Entry, L1IcacheMemory[address]).Dirty;
-      static_cast(Entry, L2cacheMemory[address]).DataBlk := static_cast(Entry, L1IcacheMemory[address]).DataBlk;
-    }
-  }
-  
-  action(tt_copyFromL2toL1, "\t", desc="Copy data block from L2 to L1 (I or D)") {
-    if (L1DcacheMemory.isTagPresent(address)) {
-      static_cast(Entry, L1DcacheMemory[address]).Dirty := static_cast(Entry, L2cacheMemory[address]).Dirty;
-      static_cast(Entry, L1DcacheMemory[address]).DataBlk := static_cast(Entry, L2cacheMemory[address]).DataBlk;
-      static_cast(Entry, L1DcacheMemory[address]).FromL2 := true;
-    } else {
-      static_cast(Entry, L1IcacheMemory[address]).Dirty := static_cast(Entry, L2cacheMemory[address]).Dirty;
-      static_cast(Entry, L1IcacheMemory[address]).DataBlk := static_cast(Entry, L2cacheMemory[address]).DataBlk;
-      static_cast(Entry, L1IcacheMemory[address]).FromL2 := true;
-    }
-  }
-
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(mandatoryQueue_in, CacheMsg) {
       if (L1IcacheMemory.isTagPresent(address)) {
@@ -956,97 +945,119 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   // Transitions moving data between the L1 and L2 caches
   transition({I, S, O, M, MM}, L1_to_L2) {
-    vv_allocateL2CacheBlock;
-    ss_copyFromL1toL2; // Not really needed for state I
+    i_allocateTBE;
     gg_deallocateL1CacheBlock;
+    vv_allocateL2CacheBlock;
+    hp_copyFromTBEToL2;
+    s_deallocateTBE;
   }
-  
+
   transition(I, Trigger_L2_to_L1D, IT) {
-    ii_allocateL1DCacheBlock;
-    tt_copyFromL2toL1; // Not really needed for state I
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    ii_allocateL1DCacheBlock;
+    nb_copyFromTBEToL1; // Not really needed for state I
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(S, Trigger_L2_to_L1D, ST) {
-    ii_allocateL1DCacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    ii_allocateL1DCacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(O, Trigger_L2_to_L1D, OT) {
-    ii_allocateL1DCacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    ii_allocateL1DCacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(M, Trigger_L2_to_L1D, MT) {
-    ii_allocateL1DCacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    ii_allocateL1DCacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(MM, Trigger_L2_to_L1D, MMT) {
-    ii_allocateL1DCacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    ii_allocateL1DCacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(I, Trigger_L2_to_L1I, IT) {
-    jj_allocateL1ICacheBlock;
-    tt_copyFromL2toL1; // Not really needed for state I
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    jj_allocateL1ICacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(S, Trigger_L2_to_L1I, ST) {
-    jj_allocateL1ICacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    jj_allocateL1ICacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(O, Trigger_L2_to_L1I, OT) {
-    jj_allocateL1ICacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    jj_allocateL1ICacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(M, Trigger_L2_to_L1I, MT) {
-    jj_allocateL1ICacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    jj_allocateL1ICacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(MM, Trigger_L2_to_L1I, MMT) {
-    jj_allocateL1ICacheBlock;
-    tt_copyFromL2toL1;
-    uu_profileMiss;
+    i_allocateTBE;
     rr_deallocateL2CacheBlock;
+    jj_allocateL1ICacheBlock;
+    nb_copyFromTBEToL1;
+    s_deallocateTBE;
+    uu_profileMiss;
     zz_recycleMandatoryQueue;
     ll_L2toL1Transfer;
   }
