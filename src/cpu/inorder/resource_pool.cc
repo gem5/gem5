@@ -541,13 +541,8 @@ void
 ResourcePool::ResPoolEvent::scheduleEvent(int delay)
 {
     InOrderCPU *cpu = resPool->cpu;
-    Tick when = cpu->nextCycle(curTick + cpu->ticks(delay));
-
-    if (squashed()) {
-        cpu->reschedule(this, when);
-    } else if (!scheduled()) {
-        cpu->schedule(this, when);
-    }
+    assert(!scheduled() || squashed());
+    cpu->reschedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)), true);
 }
 
 /** Unschedule resource event, regardless of its current state. */

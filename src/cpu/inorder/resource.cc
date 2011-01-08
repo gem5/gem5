@@ -502,11 +502,7 @@ ResourceEvent::description()
 void
 ResourceEvent::scheduleEvent(int delay)
 {
-    InOrderCPU *cpu = resource->cpu;
-    Tick when = curTick + resource->ticks(delay);
-
-    if (squashed())
-        cpu->reschedule(this, when);
-    else if (!scheduled())
-        cpu->schedule(this, when);
+    assert(!scheduled() || squashed());
+    resource->cpu->reschedule(this,
+                              curTick + resource->ticks(delay), true);
 }

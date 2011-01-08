@@ -156,12 +156,8 @@ class InOrderCPU : public BaseCPU
     /** Schedule tick event, regardless of its current state. */
     void scheduleTickEvent(int delay)
     {
-        Tick when = nextCycle(curTick + ticks(delay));
-
-        if (tickEvent.squashed())
-            reschedule(&tickEvent, when);
-        else if (!tickEvent.scheduled())
-            schedule(&tickEvent, when);
+        assert(!tickEvent.scheduled() || tickEvent.squashed());
+        reschedule(&tickEvent, nextCycle(curTick + ticks(delay)), true);
     }
 
     /** Unschedule tick event, regardless of its current state. */

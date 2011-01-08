@@ -157,12 +157,8 @@ InOrderCPU::CPUEvent::description()
 void
 InOrderCPU::CPUEvent::scheduleEvent(int delay)
 {
-    Tick when = cpu->nextCycle(curTick + cpu->ticks(delay));
-
-    if (squashed())
-        cpu->reschedule(this, when);
-    else if (!scheduled())
-        cpu->schedule(this, when);
+    assert(!scheduled() || squashed());
+    cpu->reschedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)), true);
 }
 
 void
