@@ -34,7 +34,8 @@
 namespace Stats {
 
 void initSimStats();
-void StatEvent(bool dump, bool reset, Tick when = curTick, Tick repeat = 0);
+void schedStatEvent(bool dump, bool reset, Tick when = curTick,
+                    Tick repeat = 0);
 
 } // namespace Stats
 

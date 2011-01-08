@@ -93,7 +93,7 @@ simulate(Tick num_cycles)
         if (async_event) {
             async_event = false;
             if (async_statdump || async_statreset) {
-                Stats::StatEvent(async_statdump, async_statreset);
+                Stats::schedStatEvent(async_statdump, async_statreset);
                 async_statdump = false;
                 async_statreset = false;
             }

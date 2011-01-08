@@ -236,7 +236,7 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
-    Stats::StatEvent(false, true, when, repeat);
+    Stats::schedStatEvent(false, true, when, repeat);
 }
 
 void
@@ -249,7 +249,7 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
-    Stats::StatEvent(true, false, when, repeat);
+    Stats::schedStatEvent(true, false, when, repeat);
 }
 
 void
@@ -262,7 +262,7 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
-    Stats::StatEvent(true, true, when, repeat);
+    Stats::schedStatEvent(true, true, when, repeat);
 }
 
 void

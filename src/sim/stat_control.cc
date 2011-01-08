@@ -48,6 +48,7 @@
 #endif
 
 #include "sim/eventq.hh"
+#include "sim/stat_control.hh"
 
 using namespace std;
 
@@ -164,7 +165,7 @@ initSimStats()
     static Global global;
 }
 
-class _StatEvent : public Event
+class StatEvent : public Event
 {
   private:
     bool dump;
@@ -172,7 +173,7 @@ class _StatEvent : public Event
     Tick repeat;
 
   public:
-    _StatEvent(bool _dump, bool _reset, Tick _repeat)
+    StatEvent(bool _dump, bool _reset, Tick _repeat)
         : Event(Stat_Event_Pri), dump(_dump), reset(_reset), repeat(_repeat)
     {
         setFlags(AutoDelete);
@@ -188,16 +189,15 @@ class _StatEvent : public Event
             Stats::reset();
 
         if (repeat) {
-            Event *event = new _StatEvent(dump, reset, repeat);
-            mainEventQueue.schedule(event, curTick + repeat);
+            Stats::schedStatEvent(dump, reset, curTick + repeat, repeat);
         }
     }
 };
 
 void
-StatEvent(bool dump, bool reset, Tick when, Tick repeat)
+schedStatEvent(bool dump, bool reset, Tick when, Tick repeat)
 {
-    Event *event = new _StatEvent(dump, reset, repeat);
+    Event *event = new StatEvent(dump, reset, repeat);
     mainEventQueue.schedule(event, when);
 }
 

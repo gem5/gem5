@@ -28,7 +28,7 @@
 
 import internal
 
-from internal.stats import StatEvent as event
+from internal.stats import schedStatEvent as schedEvent
 from objects import Root
 
 def initText(filename, desc=True):

@@ -50,7 +50,8 @@ void initMySQL(std::string host, std::string database, std::string user,
     std::string passwd, std::string project, std::string name,
     std::string sample);
 
-void StatEvent(bool dump, bool reset, Tick when = curTick, Tick repeat = 0);
+void schedStatEvent(bool dump, bool reset,
+                    Tick when = curTick, Tick repeat = 0);
 
 void enable();
 void prepare();
