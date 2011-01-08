@@ -290,7 +290,7 @@ def makeTheISA(source, target, env):
     code.write(str(target[0]))
 
 env.Command('config/the_isa.hh', map(Value, all_isa_list),
-            MakeAction(makeTheISA, " [ CFG ISA] $STRIP_TARGET"))
+            MakeAction(makeTheISA, Transform("CFG ISA", 0)))
 
 ########################################################################
 #
@@ -433,7 +433,7 @@ del _globals
 defines_info = [ Value(build_env), Value(env['HG_INFO']) ]
 # Generate a file with all of the compile options in it
 env.Command('python/m5/defines.py', defines_info,
-            MakeAction(makeDefinesPyFile, " [ DEFINES] $STRIP_TARGET"))
+            MakeAction(makeDefinesPyFile, Transform("DEFINES", 0)))
 PySource('m5', 'python/m5/defines.py')
 
 # Generate python file containing info about the M5 source code
@@ -447,7 +447,7 @@ def makeInfoPyFile(target, source, env):
 # Generate a file that wraps the basic top level files
 env.Command('python/m5/info.py',
             [ '#/AUTHORS', '#/LICENSE', '#/README', '#/RELEASE_NOTES' ],
-            MakeAction(makeInfoPyFile, " [    INFO] $STRIP_TARGET"))
+            MakeAction(makeInfoPyFile, Transform("INFO")))
 PySource('m5', 'python/m5/info.py')
 
 ########################################################################
@@ -523,7 +523,7 @@ for name,simobj in sorted(sim_objects.iteritems()):
     hh_file = File('params/%s.hh' % name)
     params_hh_files.append(hh_file)
     env.Command(hh_file, Value(name),
-                MakeAction(createSimObjectParam, " [SO PARAM] $STRIP_TARGET"))
+                MakeAction(createSimObjectParam, Transform("SO PARAM")))
     env.Depends(hh_file, depends + extra_deps)
 
 # Generate any parameter header files needed
@@ -532,7 +532,7 @@ for name,param in all_params.iteritems():
     i_file = File('python/m5/internal/%s_%s.i' % (param.file_ext, name))
     params_i_files.append(i_file)
     env.Command(i_file, Value(name),
-                MakeAction(createSwigParam, " [SW PARAM] $STRIP_TARGET"))
+                MakeAction(createSwigParam, Transform("SW PARAM")))
     env.Depends(i_file, depends)
     SwigSource('m5.internal', i_file)
 
@@ -543,18 +543,18 @@ for name,enum in sorted(all_enums.iteritems()):
 
     cc_file = File('enums/%s.cc' % name)
     env.Command(cc_file, Value(name),
-                MakeAction(createEnumStrings, " [ENUM STR] $STRIP_TARGET"))
+                MakeAction(createEnumStrings, Transform("ENUM STR")))
     env.Depends(cc_file, depends + extra_deps)
     Source(cc_file)
 
     hh_file = File('enums/%s.hh' % name)
     env.Command(hh_file, Value(name),
-                MakeAction(createEnumParam, " [EN PARAM] $STRIP_TARGET"))
+                MakeAction(createEnumParam, Transform("EN PARAM")))
     env.Depends(hh_file, depends + extra_deps)
 
     i_file = File('python/m5/internal/enum_%s.i' % name)
     env.Command(i_file, Value(name),
-                MakeAction(createEnumSwig, " [ENUMSWIG] $STRIP_TARGET"))
+                MakeAction(createEnumSwig, Transform("ENUMSWIG")))
     env.Depends(i_file, depends + extra_deps)
     SwigSource('m5.internal', i_file)
 
@@ -594,7 +594,7 @@ def buildParam(target, source, env):
 for name in sim_objects.iterkeys():
     params_file = File('python/m5/internal/param_%s.i' % name)
     env.Command(params_file, Value(name),
-                MakeAction(buildParam, " [BLDPARAM] $STRIP_TARGET"))
+                MakeAction(buildParam, Transform("BLDPARAM")))
     env.Depends(params_file, depends)
     SwigSource('m5.internal', params_file)
 
@@ -617,10 +617,10 @@ EmbeddedSwig embed_swig_${module}(init_${module});
 for swig in SwigSource.all:
     env.Command([swig.cc_source.tnode, swig.py_source.tnode], swig.tnode,
                 MakeAction('$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
-                '-o ${TARGETS[0]} $SOURCES', " [    SWIG] $STRIP_TARGET"))
+                '-o ${TARGETS[0]} $SOURCES', Transform("SWIG")))
     init_file = 'python/swig/init_%s.cc' % swig.module
     env.Command(init_file, Value(swig.module),
-                MakeAction(makeEmbeddedSwigInit, " [EMBED SW] $STRIP_TARGET"))
+                MakeAction(makeEmbeddedSwigInit, Transform("EMBED SW")))
     Source(init_file)
 
 def getFlags(source_flags):
@@ -844,13 +844,13 @@ extern const Flags *compoundFlags[];
 
 flags = map(Value, trace_flags.values())
 env.Command('base/traceflags.py', flags, 
-            MakeAction(traceFlagsPy, " [ TRACING] $STRIP_TARGET"))
+            MakeAction(traceFlagsPy, Transform("TRACING", 0)))
 PySource('m5', 'base/traceflags.py')
 
 env.Command('base/traceflags.hh', flags,
-            MakeAction(traceFlagsHH, " [ TRACING] $STRIP_TARGET"))
+            MakeAction(traceFlagsHH, Transform("TRACING", 0)))
 env.Command('base/traceflags.cc', flags, 
-            MakeAction(traceFlagsCC, " [ TRACING] $STRIP_TARGET"))
+            MakeAction(traceFlagsCC, Transform("TRACING", 0)))
 Source('base/traceflags.cc')
 
 # Embed python files.  All .py files that have been indicated by a
@@ -908,7 +908,7 @@ EmbeddedPython embedded_${sym}(
 
 for source in PySource.all:
     env.Command(source.cpp, source.tnode, 
-                MakeAction(embedPyFile, " [EMBED PY] $STRIP_TARGET"))
+                MakeAction(embedPyFile, Transform("EMBED PY")))
     Source(source.cpp)
 
 ########################################################################
@@ -1000,7 +1000,7 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         else:
             cmd = 'strip $SOURCE -o $TARGET'
         targets = new_env.Command(exename, progname,
-                    MakeAction(cmd, " [   STRIP] $STRIP_TARGET"))
+                    MakeAction(cmd, Transform("STRIP")))
             
     new_env.M5Binary = targets[0]
     envList.append(new_env)

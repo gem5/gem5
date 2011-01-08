@@ -1980,13 +1980,11 @@ StaticInstPtr
             old_contents = f.read()
             f.close()
             if contents != old_contents:
-                print 'Updating', file
                 os.remove(file) # in case it's write-protected
                 update = True
             else:
                 print 'File', file, 'is unchanged'
         else:
-            print ' [GENERATE]', file
             update = True
         if update:
             f = open(file, 'w')
