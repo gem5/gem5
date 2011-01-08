@@ -85,14 +85,14 @@ exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat)
 }
 
 CountedDrainEvent::CountedDrainEvent()
-    : SimLoopExitEvent("Finished drain", 0), count(0)
+    : count(0)
 { }
 
 void
 CountedDrainEvent::process()
 {
     if (--count == 0)
-        exitSimLoop(cause, code);
+        exitSimLoop("Finished drain", 0);
 }
 
 //

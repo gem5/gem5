@@ -55,7 +55,7 @@ class SimLoopExitEvent : public Event
     virtual const char *description() const;
 };
 
-class CountedDrainEvent : public SimLoopExitEvent
+class CountedDrainEvent : public Event
 {
   private:
     // Count of how many objects have not yet drained
