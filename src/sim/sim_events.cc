@@ -123,36 +123,3 @@ CountedExitEvent::description() const
 {
     return "counted exit";
 }
-
-CheckSwapEvent::CheckSwapEvent(int ival)
-    : interval(ival)
-{
-    mainEventQueue.schedule(this, curTick + interval);
-}
-
-void
-CheckSwapEvent::process()
-{
-    /*  Check the amount of free swap space  */
-    long swap;
-
-    /*  returns free swap in KBytes  */
-    swap = procInfo("/proc/meminfo", "SwapFree:");
-
-    if (swap < 1000)
-        ccprintf(cerr, "\a\a\aWarning! Swap space is low (%d)\n", swap);
-
-    if (swap < 100) {
-        cerr << "\a\aAborting Simulation! Inadequate swap space!\n\n";
-        exitSimLoop("Lack of swap space");
-    }
-
-    assert(getFlags(IsMainQueue));
-    mainEventQueue.schedule(this, curTick + interval);
-}
-
-const char *
-CheckSwapEvent::description() const
-{
-    return "check swap";
-}

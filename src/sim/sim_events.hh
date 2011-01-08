@@ -90,19 +90,5 @@ class CountedExitEvent : public Event
     virtual const char *description() const;
 };
 
-//
-// Event to check swap usage
-//
-class CheckSwapEvent : public Event
-{
-  private:
-    int interval;
-
-  public:
-    CheckSwapEvent(int ival);
-    void process();     // process event
-
-    virtual const char *description() const;
-};
 
 #endif  // __SIM_SIM_EVENTS_HH__
