@@ -78,10 +78,10 @@ SimLoopExitEvent::description() const
 }
 
 void
-exitSimLoop(const std::string &message, int exit_code)
+exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat)
 {
-    Event *event = new SimLoopExitEvent(message, exit_code);
-    mainEventQueue.schedule(event, curTick);
+    Event *event = new SimLoopExitEvent(message, exit_code, repeat);
+    mainEventQueue.schedule(event, when);
 }
 
 CountedDrainEvent::CountedDrainEvent()

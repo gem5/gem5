@@ -88,17 +88,19 @@ quiesce(ThreadContext *tc)
 void
 quiesceNs(ThreadContext *tc, uint64_t ns)
 {
-    if (!tc->getCpuPtr()->params()->do_quiesce || ns == 0)
+    BaseCPU *cpu = tc->getCpuPtr();
+
+    if (!cpu->params()->do_quiesce || ns == 0)
         return;
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
     Tick resume = curTick + SimClock::Int::ns * ns;
 
-    mainEventQueue.reschedule(quiesceEvent, resume, true);
+    cpu->reschedule(quiesceEvent, resume, true);
 
     DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
-            tc->getCpuPtr()->name(), ns, resume);
+            cpu->name(), ns, resume);
 
     tc->suspend();
     if (tc->getKernelStats())
@@ -108,17 +110,19 @@ quiesceNs(ThreadContext *tc, uint64_t ns)
 void
 quiesceCycles(ThreadContext *tc, uint64_t cycles)
 {
-    if (!tc->getCpuPtr()->params()->do_quiesce || cycles == 0)
+    BaseCPU *cpu = tc->getCpuPtr();
+
+    if (!cpu->params()->do_quiesce || cycles == 0)
         return;
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick + tc->getCpuPtr()->ticks(cycles);
+    Tick resume = curTick + cpu->ticks(cycles);
 
-    mainEventQueue.reschedule(quiesceEvent, resume, true);
+    cpu->reschedule(quiesceEvent, resume, true);
 
     DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
-            tc->getCpuPtr()->name(), cycles, resume);
+            cpu->name(), cycles, resume);
 
     tc->suspend();
     if (tc->getKernelStats())
@@ -153,8 +157,7 @@ void
 m5exit(ThreadContext *tc, Tick delay)
 {
     Tick when = curTick + delay * SimClock::Int::ns;
-    Event *event = new SimLoopExitEvent("m5_exit instruction encountered", 0);
-    mainEventQueue.schedule(event, when);
+    exitSimLoop("m5_exit instruction encountered", 0, when);
 }
 
 #if FULL_SYSTEM
@@ -271,8 +274,7 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
-    Event *event = new SimLoopExitEvent("checkpoint", 0, repeat);
-    mainEventQueue.schedule(event, when);
+    exitSimLoop("checkpoint", 0, when, repeat);
 }
 
 #if FULL_SYSTEM
