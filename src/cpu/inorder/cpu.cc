@@ -157,12 +157,12 @@ InOrderCPU::CPUEvent::description()
 void
 InOrderCPU::CPUEvent::scheduleEvent(int delay)
 {
+    Tick when = cpu->nextCycle(curTick + cpu->ticks(delay));
+
     if (squashed())
-        mainEventQueue.reschedule(this, cpu->nextCycle(curTick +
-                                                       cpu->ticks(delay)));
+        cpu->reschedule(this, when);
     else if (!scheduled())
-        mainEventQueue.schedule(this, cpu->nextCycle(curTick +
-                                                     cpu->ticks(delay)));
+        cpu->schedule(this, when);
 }
 
 void
@@ -540,7 +540,7 @@ InOrderCPU::tick()
         } else {
             //Tick next_tick = curTick + cycles(1);
             //tickEvent.schedule(next_tick);
-            mainEventQueue.schedule(&tickEvent, nextCycle(curTick + 1));
+            schedule(&tickEvent, nextCycle(curTick + 1));
             DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", 
                     nextCycle(curTick + 1));
         }
@@ -701,7 +701,7 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     if (delay >= 0) {
         DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i, [tid:%i].\n",
                 eventNames[c_event], curTick + delay, tid);
-        mainEventQueue.schedule(cpu_event, sked_tick);
+        schedule(cpu_event, sked_tick);
     } else {
         cpu_event->process();
         cpuEventRemoveList.push(cpu_event);
@@ -1403,7 +1403,7 @@ InOrderCPU::wakeCPU()
 
     numCycles += extra_cycles;
 
-    mainEventQueue.schedule(&tickEvent, nextCycle(curTick));
+    schedule(&tickEvent, nextCycle(curTick));
 }
 
 #if FULL_SYSTEM

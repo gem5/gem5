@@ -244,6 +244,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 {
     assert(delay >= 0);
 
+    Tick when = cpu->nextCycle(curTick + cpu->ticks(delay));
+
     switch (e_type)
     {
       case InOrderCPU::ActivateThread:
@@ -258,9 +260,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->squashingStage,
                                  inst->bdelaySeqNum,
                                  inst->readTid());
-            mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick +
-                                                   cpu->ticks(delay)));
+            cpu->schedule(res_pool_event, when);
         }
         break;
 
@@ -278,19 +278,17 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->bdelaySeqNum,
                                  tid);
 
-            mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick +
-                                                   cpu->ticks(delay)));
-
+            cpu->schedule(res_pool_event, when);
         }
         break;
 
       case InOrderCPU::SuspendThread:
         {
+            // not sure why we add another nextCycle() call here...
+            Tick sked_tick = cpu->nextCycle(when);
 
             DPRINTF(Resource, "Scheduling Suspend Thread Resource Pool "
-                    "Event for tick %i.\n",
-                    cpu->nextCycle(cpu->nextCycle(curTick + cpu->ticks(delay))));
+                    "Event for tick %i.\n", sked_tick);
 
             ResPoolEvent *res_pool_event = new ResPoolEvent(this,
                                                             e_type,
@@ -299,10 +297,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                                             inst->bdelaySeqNum,
                                                             tid);
 
-            Tick sked_tick = curTick + cpu->ticks(delay);
-            mainEventQueue.schedule(res_pool_event,
-                                    cpu->nextCycle(cpu->nextCycle(sked_tick)));
-
+            cpu->schedule(res_pool_event, sked_tick);
         }
         break;
 
@@ -316,10 +311,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->squashingStage,
                                  inst->seqNum,
                                  inst->readTid());
-            mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick +
-                                                   cpu->ticks(delay)));
-
+            cpu->schedule(res_pool_event, when);
         }
         break;
 
@@ -333,9 +325,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->squashingStage,
                                  inst->bdelaySeqNum,
                                  inst->readTid());
-            mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick +
-                                                   cpu->ticks(delay)));
+            cpu->schedule(res_pool_event, when);
         }
         break;
 
@@ -350,23 +340,21 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->squashingStage,
                                  inst->seqNum - 1,
                                  inst->readTid());
-            mainEventQueue.schedule(res_pool_event, 
-                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
+            cpu->schedule(res_pool_event, when);
         }
         break;
 
       case ResourcePool::UpdateAfterContextSwitch:
         {
-            DPRINTF(Resource, "Scheduling UpdatePC Resource Pool Event for tick %i.\n",
+            DPRINTF(Resource, "Scheduling UpdatePC Resource Pool Event "
+                    "for tick %i.\n",
                     curTick + delay);
             ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
                                                             inst,
                                                             inst->squashingStage,
                                                             inst->seqNum,
                                                             inst->readTid());
-            mainEventQueue.schedule(res_pool_event,
-                                    cpu->nextCycle(curTick + cpu->ticks(delay)));
-
+            cpu->schedule(res_pool_event, when);
         }
         break;
 
@@ -552,16 +540,13 @@ ResourcePool::ResPoolEvent::description()
 void
 ResourcePool::ResPoolEvent::scheduleEvent(int delay)
 {
+    InOrderCPU *cpu = resPool->cpu;
+    Tick when = cpu->nextCycle(curTick + cpu->ticks(delay));
+
     if (squashed()) {
-        mainEventQueue.reschedule(this,
-                                  resPool->cpu->nextCycle(curTick +
-                                                          resPool->
-                                                          cpu->ticks(delay)));
+        cpu->reschedule(this, when);
     } else if (!scheduled()) {
-        mainEventQueue.schedule(this,
-                                resPool->cpu->nextCycle(curTick +
-                                                        resPool->
-                                                        cpu->ticks(delay)));
+        cpu->schedule(this, when);
     }
 }
 

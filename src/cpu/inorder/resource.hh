@@ -277,13 +277,7 @@ class ResourceEvent : public Event
     void setSlot(int slot) { slotIdx = slot; }
 
     /** Schedule resource event, regardless of its current state. */
-    void scheduleEvent(int delay)
-    {
-        if (squashed())
-          mainEventQueue.reschedule(this, curTick + resource->ticks(delay));
-        else if (!scheduled())
-          mainEventQueue.schedule(this, curTick + resource->ticks(delay));
-    }
+    void scheduleEvent(int delay);
 
     /** Unschedule resource event, regardless of its current state. */
     void unscheduleEvent()

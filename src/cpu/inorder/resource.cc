@@ -498,3 +498,15 @@ ResourceEvent::description()
 
     return desc.c_str();
 }
+
+void
+ResourceEvent::scheduleEvent(int delay)
+{
+    InOrderCPU *cpu = resource->cpu;
+    Tick when = curTick + resource->ticks(delay);
+
+    if (squashed())
+        cpu->reschedule(this, when);
+    else if (!scheduled())
+        cpu->schedule(this, when);
+}
