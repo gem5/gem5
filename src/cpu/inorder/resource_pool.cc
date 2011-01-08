@@ -244,14 +244,14 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 {
     assert(delay >= 0);
 
-    Tick when = cpu->nextCycle(curTick + cpu->ticks(delay));
+    Tick when = cpu->nextCycle(curTick() + cpu->ticks(delay));
 
     switch (e_type)
     {
       case InOrderCPU::ActivateThread:
         {
             DPRINTF(Resource, "Scheduling Activate Thread Resource Pool Event "
-                    "for tick %i, [tid:%i].\n", curTick + delay, 
+                    "for tick %i, [tid:%i].\n", curTick() + delay, 
                     inst->readTid());
             ResPoolEvent *res_pool_event = 
                 new ResPoolEvent(this,
@@ -269,7 +269,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
 
             DPRINTF(Resource, "Scheduling Deactivate Thread Resource Pool "
-                    "Event for tick %i.\n", curTick + delay);
+                    "Event for tick %i.\n", curTick() + delay);
             ResPoolEvent *res_pool_event = 
                 new ResPoolEvent(this,
                                  e_type,
@@ -304,7 +304,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
       case ResourcePool::InstGraduated:
         {
             DPRINTF(Resource, "Scheduling Inst-Graduated Resource Pool "
-                    "Event for tick %i.\n", curTick + delay);
+                    "Event for tick %i.\n", curTick() + delay);
             ResPoolEvent *res_pool_event = 
                 new ResPoolEvent(this,e_type,
                                  inst,
@@ -318,7 +318,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
       case ResourcePool::SquashAll:
         {
             DPRINTF(Resource, "Scheduling Squash Resource Pool Event for "
-                    "tick %i.\n", curTick + delay);
+                    "tick %i.\n", curTick() + delay);
             ResPoolEvent *res_pool_event = 
                 new ResPoolEvent(this,e_type,
                                  inst,
@@ -333,7 +333,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
             DPRINTF(Resource, "Scheduling Squash Due to Memory Stall Resource "
                     "Pool Event for tick %i.\n",
-                    curTick + delay);
+                    curTick() + delay);
             ResPoolEvent *res_pool_event = 
                 new ResPoolEvent(this,e_type,
                                  inst,
@@ -348,7 +348,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
             DPRINTF(Resource, "Scheduling UpdatePC Resource Pool Event "
                     "for tick %i.\n",
-                    curTick + delay);
+                    curTick() + delay);
             ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
                                                             inst,
                                                             inst->squashingStage,
@@ -542,7 +542,7 @@ ResourcePool::ResPoolEvent::scheduleEvent(int delay)
 {
     InOrderCPU *cpu = resPool->cpu;
     assert(!scheduled() || squashed());
-    cpu->reschedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)), true);
+    cpu->reschedule(this, cpu->nextCycle(curTick() + cpu->ticks(delay)), true);
 }
 
 /** Unschedule resource event, regardless of its current state. */

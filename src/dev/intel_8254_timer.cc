@@ -281,9 +281,9 @@ Intel8254Timer::Counter::CounterEvent::setTo(int clocks)
 {
     if (clocks == 0)
         panic("Timer can't be set to go off instantly.\n");
-    DPRINTF(Intel8254Timer, "Timer set to curTick + %d\n",
+    DPRINTF(Intel8254Timer, "Timer set to curTick() + %d\n",
             clocks * interval);
-    counter->parent->schedule(this, curTick + clocks * interval);
+    counter->parent->schedule(this, curTick() + clocks * interval);
 }
 
 int
@@ -291,7 +291,7 @@ Intel8254Timer::Counter::CounterEvent::clocksLeft()
 {
     if (!scheduled())
         return -1;
-    return (when() - curTick + interval - 1) / interval;
+    return (when() - curTick() + interval - 1) / interval;
 }
 
 const char *

@@ -161,7 +161,7 @@ CPA::swSmBegin(ThreadContext *tc)
     StringWrap name(sys->name());
 
     if (!sm[0])
-        warn("Got null SM at tick %d\n", curTick);
+        warn("Got null SM at tick %d\n", curTick());
 
     int sysi = getSys(sys);
     int smi = getSm(sysi, sm, args[1]);
@@ -273,7 +273,7 @@ CPA::doSwSmEnd(System *sys, int cpuid, string sm, uint64_t frame)
         DPRINTF(Annotate, "Ending machine: %s; end stack: %s\n", sm,
                 smMap[smib-1].second.first);
 
-        warn("State machine stack not unwinding correctly at %d\n", curTick);
+        warn("State machine stack not unwinding correctly at %d\n", curTick());
     } else {
         DPRINTF(Annotate, 
                 "State machine ending:%s sysi:%d id:%#x back:%d getSm:%d\n",
@@ -316,7 +316,7 @@ CPA::swExplictBegin(ThreadContext *tc)
     DPRINTF(Annotate, "Explict begin of state %s\n", st);
     uint32_t flags = args[0];
     if (flags & FL_BAD)
-        warn("BAD state encountered: at cycle %d: %s\n", curTick, st);
+        warn("BAD state encountered: at cycle %d: %s\n", curTick(), st);
     swBegin(tc->getSystemPtr(), tc->contextId(), st, getFrame(tc), true, args[0]);
 }
 
@@ -688,10 +688,10 @@ CPA::swAq(ThreadContext *tc)
 
         warn("%d: Queue Assert: SW said there should be %d byte(s) in %s," 
                 "however there are %d byte(s)\n",
-            curTick, size, q, qBytes[qi-1]);
+            curTick(), size, q, qBytes[qi-1]);
         DPRINTF(AnnotateQ, "%d: Queue Assert: SW said there should be %d"
                 " byte(s) in %s, however there are %d byte(s)\n",
-            curTick, size, q, qBytes[qi-1]);
+            curTick(), size, q, qBytes[qi-1]);
     }
 }
 
@@ -813,7 +813,7 @@ CPA::AnnDataPtr
 CPA::add(int t, int f, int c, int sm, int stq, int32_t d)
 {
     AnnDataPtr an = new AnnotateData;
-    an->time = curTick;
+    an->time = curTick();
     an->data = d;
     an->orig_data = d;
     an->op = t;

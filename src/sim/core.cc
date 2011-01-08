@@ -38,10 +38,10 @@
 
 using namespace std;
 
-Tick curTick = 0;
+Tick _curTick = 0;
 
 namespace SimClock {
-/// The simulated frequency of curTick. (In ticks per second)
+/// The simulated frequency of curTick(). (In ticks per second)
 Tick Frequency;
 
 namespace Float {

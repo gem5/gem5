@@ -442,7 +442,7 @@ InOrderDynInst::setMiscRegOperand(const StaticInst *si, int idx,
 {
     instResult[idx].type = Integer;
     instResult[idx].val.integer = val;
-    instResult[idx].tick = curTick;
+    instResult[idx].tick = curTick();
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Misc Reg. Operand %i "
             "being set to %#x.\n", threadNumber, seqNum, idx, val);
@@ -472,7 +472,7 @@ InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
 {
     instResult[idx].type = Integer;
     instResult[idx].val.integer = val;
-    instResult[idx].tick = curTick;
+    instResult[idx].tick = curTick();
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Int Reg. %i "
             "being set to %#x (result-tick:%i).\n",
@@ -485,7 +485,7 @@ InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
 {
     instResult[idx].val.dbl = val;
     instResult[idx].type = Float;
-    instResult[idx].tick = curTick;
+    instResult[idx].tick = curTick();
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Float Reg. %i "
             "being set to %#x (result-tick:%i).\n",
@@ -499,7 +499,7 @@ InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
 {
     instResult[idx].type = Integer;
     instResult[idx].val.integer = val;
-    instResult[idx].tick = curTick;
+    instResult[idx].tick = curTick();
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Float Reg. %i "
             "being set to %#x (result-tick:%i).\n",

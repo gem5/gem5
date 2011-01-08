@@ -318,7 +318,7 @@ bool
 RubyPort::M5Port::sendTiming(PacketPtr pkt)
 {
     //minimum latency, must be > 0
-    schedSendTiming(pkt, curTick + (1 * g_eventQueue_ptr->getClock()));
+    schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
     return true;
 }
 
@@ -326,7 +326,7 @@ bool
 RubyPort::PioPort::sendTiming(PacketPtr pkt)
 {
     //minimum latency, must be > 0
-    schedSendTiming(pkt, curTick + (1 * g_eventQueue_ptr->getClock()));
+    schedSendTiming(pkt, curTick() + (1 * g_eventQueue_ptr->getClock()));
     return true;
 }
 

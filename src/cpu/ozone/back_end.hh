@@ -468,7 +468,7 @@ BackEnd<Impl>::read(RequestPtr req, T &data, int load_idx)
     if (fault == NoFault && dcacheInterface) {
         memReq->cmd = Read;
         memReq->completionEvent = NULL;
-        memReq->time = curTick;
+        memReq->time = curTick();
         memReq->flags &= ~INST_READ;
         MemAccessResult result = dcacheInterface->access(memReq);
 
@@ -481,7 +481,7 @@ BackEnd<Impl>::read(RequestPtr req, T &data, int load_idx)
             --funcExeInst;
 
             memReq->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
+            lastDcacheStall = curTick();
 //          unscheduleTickEvent();
 //          status = DcacheMissStall;
             DPRINTF(OzoneCPU, "Dcache miss stall!\n");
@@ -510,7 +510,7 @@ BackEnd<Impl>::write(RequestPtr req, T &data, int store_idx)
         memReq->cmd = Write;
         memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
-        memReq->time = curTick;
+        memReq->time = curTick();
         memReq->flags &= ~INST_READ;
         MemAccessResult result = dcacheInterface->access(memReq);
 
@@ -519,7 +519,7 @@ BackEnd<Impl>::write(RequestPtr req, T &data, int store_idx)
         // at some point.
         if (result != MA_HIT && dcacheInterface->doEvents()) {
             memReq->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
+            lastDcacheStall = curTick();
 //          unscheduleTickEvent();
 //          status = DcacheMissStall;
             DPRINTF(OzoneCPU, "Dcache miss stall!\n");

@@ -69,14 +69,14 @@ MemTest::CpuPort::recvAtomic(PacketPtr pkt)
     // must be snoop upcall
     assert(pkt->isRequest());
     assert(pkt->getDest() == Packet::Broadcast);
-    return curTick;
+    return curTick();
 }
 
 void
 MemTest::CpuPort::recvFunctional(PacketPtr pkt)
 {
     //Do nothing if we see one come through
-//    if (curTick != 0)//Supress warning durring initialization
+//    if (curTick() != 0)//Supress warning durring initialization
 //        warn("Functional Writes not implemented in MemTester\n");
     //Need to find any response values that intersect and update
     return;
@@ -220,7 +220,7 @@ MemTest::completeRequest(PacketPtr pkt)
         if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
             panic("%s: read of %x (blk %x) @ cycle %d "
                   "returns %x, expected %x\n", name(),
-                  req->getPaddr(), blockAddr(req->getPaddr()), curTick,
+                  req->getPaddr(), blockAddr(req->getPaddr()), curTick(),
                   *pkt_data, *data);
         }
 
@@ -229,7 +229,7 @@ MemTest::completeRequest(PacketPtr pkt)
 
         if (numReads == (uint64_t)nextProgressMessage) {
             ccprintf(cerr, "%s: completed %d read accesses @%d\n",
-                     name(), numReads, curTick);
+                     name(), numReads, curTick());
             nextProgressMessage += progressInterval;
         }
 
@@ -272,13 +272,13 @@ void
 MemTest::tick()
 {
     if (!tickEvent.scheduled())
-        schedule(tickEvent, curTick + ticks(1));
+        schedule(tickEvent, curTick() + ticks(1));
 
     if (++noResponseCycles >= 500000) {
         if (issueDmas) {
             cerr << "DMA tester ";
         }
-        cerr << name() << ": deadlocked at cycle " << curTick << endl;
+        cerr << name() << ": deadlocked at cycle " << curTick() << endl;
         fatal("");
     }
 

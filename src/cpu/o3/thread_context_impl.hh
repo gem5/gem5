@@ -115,7 +115,7 @@ O3ThreadContext<Impl>::activate(int delay)
         return;
 
 #if FULL_SYSTEM
-    thread->lastActivate = curTick;
+    thread->lastActivate = curTick();
 #endif
 
     thread->setStatus(ThreadContext::Active);
@@ -135,8 +135,8 @@ O3ThreadContext<Impl>::suspend(int delay)
         return;
 
 #if FULL_SYSTEM
-    thread->lastActivate = curTick;
-    thread->lastSuspend = curTick;
+    thread->lastActivate = curTick();
+    thread->lastSuspend = curTick();
 #endif
 /*
 #if FULL_SYSTEM

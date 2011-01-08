@@ -408,7 +408,7 @@ class CPA : SimObject
         int smi = getSm(sysi, sm, frame);
         add(OP_BEGIN, FL_HW | f, 0, smi, getSt(sm, st));
         if (f & FL_BAD)
-            warn("BAD state encountered: at cycle %d: %s\n", curTick, st);
+            warn("BAD state encountered: at cycle %d: %s\n", curTick(), st);
     }
 
     inline void hwQ(flags f, System *sys, uint64_t frame, std::string sm, 

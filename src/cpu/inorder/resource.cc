@@ -366,7 +366,7 @@ Resource::scheduleEvent(int slot_idx, int delay)
     DPRINTF(Resource, "[tid:%i]: Scheduling event for [sn:%i] on tick %i.\n",
             reqMap[slot_idx]->inst->readTid(),
             reqMap[slot_idx]->inst->seqNum,
-            cpu->ticks(delay) + curTick);
+            cpu->ticks(delay) + curTick());
     resourceEvent[slot_idx].scheduleEvent(delay);
 }
 
@@ -504,5 +504,5 @@ ResourceEvent::scheduleEvent(int delay)
 {
     assert(!scheduled() || squashed());
     resource->cpu->reschedule(this,
-                              curTick + resource->ticks(delay), true);
+                              curTick() + resource->ticks(delay), true);
 }

@@ -210,7 +210,7 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
     if (fault == NoFault && dcacheInterface) {
         memReq->cmd = Read;
         memReq->completionEvent = NULL;
-        memReq->time = curTick;
+        memReq->time = curTick();
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -220,7 +220,7 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
             // Fix this hack for keeping funcExeInst correct with loads that
             // are executed twice.
             memReq->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
+            lastDcacheStall = curTick();
 //          unscheduleTickEvent();
             status = DcacheMissLoadStall;
             DPRINTF(IBE, "Dcache miss stall!\n");
@@ -246,7 +246,7 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         memReq->cmd = Write;
 //      memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
-        memReq->time = curTick;
+        memReq->time = curTick();
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -254,7 +254,7 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         // at some point.
         if (result != MA_HIT) {
             memReq->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
+            lastDcacheStall = curTick();
 //          unscheduleTickEvent();
             status = DcacheMissStoreStall;
             DPRINTF(IBE, "Dcache miss stall!\n");
@@ -280,7 +280,7 @@ InorderBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
 //    Fault fault = cpu->translateDataReadReq(req);
     req->cmd = Read;
     req->completionEvent = NULL;
-    req->time = curTick;
+    req->time = curTick();
     assert(!req->data);
     req->data = new uint8_t[64];
     Fault fault = cpu->read(req, data);
@@ -295,7 +295,7 @@ InorderBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         // at some point.
         if (result != MA_HIT) {
             req->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
+            lastDcacheStall = curTick();
 //          unscheduleTickEvent();
             status = DcacheMissLoadStall;
             DPRINTF(IBE, "Dcache miss load stall!\n");
@@ -320,7 +320,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
 
     req->cmd = Write;
     req->completionEvent = NULL;
-    req->time = curTick;
+    req->time = curTick();
     assert(!req->data);
     req->data = new uint8_t[64];
     memcpy(req->data, (uint8_t *)&data, req->size);
@@ -347,7 +347,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
         req->data = new uint8_t[64];
         memcpy(req->data,(uint8_t *)&data,req->size);
         req->completionEvent = NULL;
-        req->time = curTick;
+        req->time = curTick();
         MemAccessResult result = dcacheInterface->access(req);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -355,7 +355,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
         // at some point.
         if (result != MA_HIT) {
             req->completionEvent = &cacheCompletionEvent;
-            lastDcacheStall = curTick;
+            lastDcacheStall = curTick();
 //          unscheduleTickEvent();
             status = DcacheMissStoreStall;
             DPRINTF(IBE, "Dcache miss store stall!\n");

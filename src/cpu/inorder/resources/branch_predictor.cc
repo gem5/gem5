@@ -80,7 +80,7 @@ BranchPredictor::execute(int slot_num)
       case PredictBranch:
         {
             if (inst->seqNum > cpu->squashSeqNum[tid] &&
-                curTick == cpu->lastSquashCycle[tid]) {
+                curTick() == cpu->lastSquashCycle[tid]) {
                 DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, "
                         "skipping prediction \n", tid, inst->seqNum);
             } else {
@@ -125,7 +125,7 @@ BranchPredictor::execute(int slot_num)
       case UpdatePredictor:
         {
             if (inst->seqNum > cpu->squashSeqNum[tid] &&
-                curTick == cpu->lastSquashCycle[tid]) {
+                curTick() == cpu->lastSquashCycle[tid]) {
                 DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, "
                         "skipping branch predictor update \n",
                         tid, inst->seqNum);

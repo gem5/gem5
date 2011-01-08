@@ -114,7 +114,7 @@ RubyDirectedTester::hitCallback(NodeID proc, Addr addr)
             addr);
 
     generator->performCallback(proc, addr);    
-    schedule(directedStartEvent, curTick);
+    schedule(directedStartEvent, curTick());
 }
 
 void
@@ -122,7 +122,7 @@ RubyDirectedTester::wakeup()
 {
     if (m_requests_completed < m_requests_to_complete) {
         if (!generator->initiate()) {
-            schedule(directedStartEvent, curTick + 1);
+            schedule(directedStartEvent, curTick() + 1);
         }
     } else {
         exitSimLoop("Ruby DirectedTester completed");

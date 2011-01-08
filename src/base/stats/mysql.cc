@@ -613,7 +613,7 @@ MySql::output()
         configure();
 
     // store sample #
-    newdata.tick = curTick;
+    newdata.tick = curTick();
 
     MySQL::Connection &mysql = run->conn();
 

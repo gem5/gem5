@@ -45,10 +45,10 @@ list<Output *> OutputList;
 void
 dump()
 {
-    assert(lastDump <= curTick);
-    if (lastDump == curTick)
+    assert(lastDump <= curTick());
+    if (lastDump == curTick())
         return;
-    lastDump = curTick;
+    lastDump = curTick();
 
     prepare();
 

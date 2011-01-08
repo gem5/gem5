@@ -68,7 +68,7 @@ Uart8250::IntrEvent::process()
        DPRINTF(Uart, "UART InterEvent, interrupting\n");
        uart->platform->postConsoleInt();
        uart->status |= intrBit;
-       uart->lastTxInt = curTick;
+       uart->lastTxInt = curTick();
     }
     else
        DPRINTF(Uart, "UART InterEvent, not interrupting\n");
@@ -92,11 +92,11 @@ Uart8250::IntrEvent::scheduleIntr()
 {
     static const Tick interval = 225 * SimClock::Int::ns;
     DPRINTF(Uart, "Scheduling IER interrupt for %#x, at cycle %lld\n", intrBit,
-            curTick + interval);
+            curTick() + interval);
     if (!scheduled())
-        uart->schedule(this, curTick + interval);
+        uart->schedule(this, curTick() + interval);
     else
-        uart->reschedule(this, curTick + interval);
+        uart->reschedule(this, curTick() + interval);
 }
 
 
@@ -218,13 +218,13 @@ Uart8250::write(PacketPtr pkt)
                 if (UART_IER_THRI & IER)
                 {
                     DPRINTF(Uart, "IER: IER_THRI set, scheduling TX intrrupt\n");
-                    if (curTick - lastTxInt > 225 * SimClock::Int::ns) {
+                    if (curTick() - lastTxInt > 225 * SimClock::Int::ns) {
                         DPRINTF(Uart, "-- Interrupting Immediately... %d,%d\n",
-                                curTick, lastTxInt);
+                                curTick(), lastTxInt);
                         txIntrEvent.process();
                     } else {
                         DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n",
-                                curTick, lastTxInt);
+                                curTick(), lastTxInt);
                         txIntrEvent.scheduleIntr();
                     }
                 }

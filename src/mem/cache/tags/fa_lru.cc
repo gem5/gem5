@@ -220,7 +220,7 @@ FALRU::findVictim(Addr addr, PacketList &writebacks)
         blk->isTouched = true;
         if (!warmedUp && tagsInUse.value() >= warmupBound) {
             warmedUp = true;
-            warmupCycle = curTick;
+            warmupCycle = curTick();
         }
     }
     //assert(check());

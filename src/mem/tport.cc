@@ -95,7 +95,7 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
         // recvAtomic() should already have turned packet into
         // atomic response
         assert(pkt->isResponse());
-        schedSendTiming(pkt, curTick + latency);
+        schedSendTiming(pkt, curTick() + latency);
     } else {
         delete pkt;
     }
@@ -107,8 +107,8 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
 void
 SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
 {
-    assert(when > curTick);
-    assert(when < curTick + SimClock::Int::ms);
+    assert(when > curTick());
+    assert(when < curTick() + SimClock::Int::ms);
 
     // Nothing is on the list: add it and schedule an event
     if (transmitList.empty() || when < transmitList.front().tick) {
@@ -152,7 +152,7 @@ SimpleTimingPort::sendDeferredPacket()
     if (success) {
         if (!transmitList.empty() && !sendEvent->scheduled()) {
             Tick time = transmitList.front().tick;
-            schedule(sendEvent, time <= curTick ? curTick+1 : time);
+            schedule(sendEvent, time <= curTick() ? curTick()+1 : time);
         }
 
         if (transmitList.empty() && drainEvent && !sendEvent->scheduled()) {

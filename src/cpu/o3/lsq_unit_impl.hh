@@ -783,7 +783,7 @@ LSQUnit<Impl>::writebackStores()
                         "Instantly completing it.\n",
                         inst->seqNum);
                 WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
-                cpu->schedule(wb, curTick + 1);
+                cpu->schedule(wb, curTick() + 1);
                 completeStore(storeWBIdx);
                 incrStIdx(storeWBIdx);
                 continue;

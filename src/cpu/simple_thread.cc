@@ -234,7 +234,7 @@ SimpleThread::activate(int delay)
     if (status() == ThreadContext::Active)
         return;
 
-    lastActivate = curTick;
+    lastActivate = curTick();
 
 //    if (status() == ThreadContext::Unallocated) {
 //      cpu->activateWhenReady(_threadId);
@@ -253,8 +253,8 @@ SimpleThread::suspend()
     if (status() == ThreadContext::Suspended)
         return;
 
-    lastActivate = curTick;
-    lastSuspend = curTick;
+    lastActivate = curTick();
+    lastSuspend = curTick();
 /*
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts

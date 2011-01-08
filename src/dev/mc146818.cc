@@ -214,9 +214,9 @@ MC146818::serialize(const string &base, ostream &os)
     // save the timer tick and rtc clock tick values to correctly reschedule 
     // them during unserialize
     //
-    Tick rtcTimerInterruptTickOffset = event.when() - curTick;
+    Tick rtcTimerInterruptTickOffset = event.when() - curTick();
     SERIALIZE_SCALAR(rtcTimerInterruptTickOffset);
-    Tick rtcClockTickOffset = event.when() - curTick;
+    Tick rtcClockTickOffset = event.when() - curTick();
     SERIALIZE_SCALAR(rtcClockTickOffset);
 }
 
@@ -234,30 +234,30 @@ MC146818::unserialize(const string &base, Checkpoint *cp,
     //
     Tick rtcTimerInterruptTickOffset;
     UNSERIALIZE_SCALAR(rtcTimerInterruptTickOffset);
-    reschedule(event, curTick + rtcTimerInterruptTickOffset);
+    reschedule(event, curTick() + rtcTimerInterruptTickOffset);
     Tick rtcClockTickOffset;
     UNSERIALIZE_SCALAR(rtcClockTickOffset);
-    reschedule(tickEvent, curTick + rtcClockTickOffset);
+    reschedule(tickEvent, curTick() + rtcClockTickOffset);
 }
 
 MC146818::RTCEvent::RTCEvent(MC146818 * _parent, Tick i)
     : parent(_parent), interval(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
-    parent->schedule(this, curTick + interval);
+    parent->schedule(this, curTick() + interval);
 }
 
 void
 MC146818::RTCEvent::scheduleIntr()
 {
-    parent->schedule(this, curTick + interval);
+    parent->schedule(this, curTick() + interval);
 }
 
 void
 MC146818::RTCEvent::process()
 {
     DPRINTF(MC146818, "RTC Timer Interrupt\n");
-    parent->schedule(this, curTick + interval);
+    parent->schedule(this, curTick() + interval);
     parent->handleEvent();
 }
 
@@ -271,7 +271,7 @@ void
 MC146818::RTCTickEvent::process()
 {
     DPRINTF(MC146818, "RTC clock tick\n");
-    parent->schedule(this, curTick + SimClock::Int::s);
+    parent->schedule(this, curTick() + SimClock::Int::s);
     parent->tickClock();
 }
 

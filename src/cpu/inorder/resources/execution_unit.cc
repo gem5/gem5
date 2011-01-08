@@ -55,7 +55,7 @@ ExecutionUnit::regStats()
         .name(name() + ".predictedNotTakenIncorrect")
         .desc("Number of Branches Incorrectly Predicted As Not Taken).");
 
-    lastExecuteCycle = curTick;
+    lastExecuteCycle = curTick();
 
     executions
         .name(name() + ".executions")
@@ -98,8 +98,8 @@ ExecutionUnit::execute(int slot_num)
     {
       case ExecuteInst:
         {
-            if (curTick != lastExecuteCycle) {
-                lastExecuteCycle = curTick;
+            if (curTick() != lastExecuteCycle) {
+                lastExecuteCycle = curTick();
             }
 
 

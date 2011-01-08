@@ -65,7 +65,7 @@ Tick
 OzoneLWLSQ<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
 {
     panic("O3CPU model does not work with atomic mode!");
-    return curTick;
+    return curTick();
 }
 
 template <class Impl>
@@ -677,7 +677,7 @@ OzoneLWLSQ<Impl>::writebackStores()
 
                 be->addDcacheMiss(inst);
 
-                lastDcacheStall = curTick;
+                lastDcacheStall = curTick();
 
                 _status = DcacheMissStall;
 

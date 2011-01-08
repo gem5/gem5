@@ -158,7 +158,7 @@ void
 InOrderCPU::CPUEvent::scheduleEvent(int delay)
 {
     assert(!scheduled() || squashed());
-    cpu->reschedule(this, cpu->nextCycle(curTick + cpu->ticks(delay)), true);
+    cpu->reschedule(this, cpu->nextCycle(curTick() + cpu->ticks(delay)), true);
 }
 
 void
@@ -337,7 +337,7 @@ InOrderCPU::InOrderCPU(Params *params)
     dummyBufferInst = new InOrderDynInst(this, NULL, 0, 0, 0);
     dummyBufferInst->setSquashed();
     
-    lastRunningCycle = curTick;
+    lastRunningCycle = curTick();
 
     // Reset CPU to reset state.
 #if FULL_SYSTEM
@@ -528,17 +528,17 @@ InOrderCPU::tick()
     if (!tickEvent.scheduled()) {
         if (_status == SwitchedOut) {
             // increment stat
-            lastRunningCycle = curTick;
+            lastRunningCycle = curTick();
         } else if (!activityRec.active()) {
             DPRINTF(InOrderCPU, "sleeping CPU.\n");
-            lastRunningCycle = curTick;
+            lastRunningCycle = curTick();
             timesIdled++;
         } else {
-            //Tick next_tick = curTick + cycles(1);
+            //Tick next_tick = curTick() + cycles(1);
             //tickEvent.schedule(next_tick);
-            schedule(&tickEvent, nextCycle(curTick + 1));
+            schedule(&tickEvent, nextCycle(curTick() + 1));
             DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", 
-                    nextCycle(curTick + 1));
+                    nextCycle(curTick() + 1));
         }
     }
 
@@ -693,10 +693,10 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst,
                                        event_pri_offset);
 
-    Tick sked_tick = nextCycle(curTick + ticks(delay));
+    Tick sked_tick = nextCycle(curTick() + ticks(delay));
     if (delay >= 0) {
         DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i, [tid:%i].\n",
-                eventNames[c_event], curTick + delay, tid);
+                eventNames[c_event], curTick() + delay, tid);
         schedule(cpu_event, sked_tick);
     } else {
         cpu_event->process();
@@ -791,7 +791,7 @@ InOrderCPU::activateThread(ThreadID tid)
         
         activateThreadInPipeline(tid);
 
-        thread[tid]->lastActivate = curTick;            
+        thread[tid]->lastActivate = curTick();            
 
         tcBase(tid)->setStatus(ThreadContext::Active);    
 
@@ -963,7 +963,7 @@ InOrderCPU::suspendThread(ThreadID tid)
             tid);
     deactivateThread(tid);
     suspendedThreads.push_back(tid);    
-    thread[tid]->lastSuspend = curTick;    
+    thread[tid]->lastSuspend = curTick();    
 
     tcBase(tid)->setStatus(ThreadContext::Suspended);    
 }
@@ -1124,7 +1124,7 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 
     // Finalize Trace Data For Instruction
     if (inst->traceData) {
-        //inst->traceData->setCycle(curTick);
+        //inst->traceData->setCycle(curTick());
         inst->traceData->setFetchSeq(inst->seqNum);
         //inst->traceData->setCPSeq(cpu->tcBase(tid)->numInst);
         inst->traceData->dump();
@@ -1390,7 +1390,7 @@ InOrderCPU::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    Tick extra_cycles = tickToCycles((curTick - 1) - lastRunningCycle);
+    Tick extra_cycles = tickToCycles((curTick() - 1) - lastRunningCycle);
 
     idleCycles += extra_cycles;    
     for (int stage_num = 0; stage_num < NumStages; stage_num++) {
@@ -1399,7 +1399,7 @@ InOrderCPU::wakeCPU()
 
     numCycles += extra_cycles;
 
-    schedule(&tickEvent, nextCycle(curTick));
+    schedule(&tickEvent, nextCycle(curTick()));
 }
 
 #if FULL_SYSTEM

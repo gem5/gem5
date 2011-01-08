@@ -496,7 +496,7 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest)
         :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           dest(_dest), time(curTick), senderState(NULL)
+           dest(_dest), time(curTick()), senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr();
@@ -515,7 +515,7 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest, int _blkSize)
         :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           dest(_dest), time(curTick), senderState(NULL)
+           dest(_dest), time(curTick()), senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
@@ -536,7 +536,7 @@ class Packet : public FastAlloc, public Printable
         :  cmd(pkt->cmd), req(pkt->req),
            data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
            addr(pkt->addr), size(pkt->size), src(pkt->src), dest(pkt->dest),
-           time(curTick), senderState(pkt->senderState)
+           time(curTick()), senderState(pkt->senderState)
     {
         if (!clearFlags)
             flags.set(pkt->flags & COPY_FLAGS);

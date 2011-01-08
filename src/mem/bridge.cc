@@ -158,7 +158,7 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
     pkt->setNacked();
 
     //put it on the list to send
-    Tick readyTime = curTick + nackDelay;
+    Tick readyTime = curTick() + nackDelay;
     PacketBuffer *buf = new PacketBuffer(pkt, readyTime, true);
 
     // nothing on the list, add it and we're done
@@ -221,7 +221,7 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
 
 
 
-    Tick readyTime = curTick + delay;
+    Tick readyTime = curTick() + delay;
     PacketBuffer *buf = new PacketBuffer(pkt, readyTime);
 
     // If we're about to put this packet at the head of the queue, we
@@ -241,7 +241,7 @@ Bridge::BridgePort::trySend()
 
     PacketBuffer *buf = sendQueue.front();
 
-    assert(buf->ready <= curTick);
+    assert(buf->ready <= curTick());
 
     PacketPtr pkt = buf->pkt;
 
@@ -283,7 +283,7 @@ Bridge::BridgePort::trySend()
         if (!sendQueue.empty()) {
             buf = sendQueue.front();
             DPRINTF(BusBridge, "Scheduling next send\n");
-            schedule(sendEvent, std::max(buf->ready, curTick + 1));
+            schedule(sendEvent, std::max(buf->ready, curTick() + 1));
         }
     } else {
         DPRINTF(BusBridge, "  unsuccessful\n");
@@ -301,7 +301,7 @@ Bridge::BridgePort::recvRetry()
 {
     inRetry = false;
     Tick nextReady = sendQueue.front()->ready;
-    if (nextReady <= curTick)
+    if (nextReady <= curTick())
         trySend();
     else
         schedule(sendEvent, nextReady);

@@ -71,7 +71,7 @@ class MC146818 : public EventManager
 
         RTCTickEvent(MC146818 * _parent) : parent(_parent)
         {
-            parent->schedule(this, curTick + SimClock::Int::s);
+            parent->schedule(this, curTick() + SimClock::Int::s);
         }
 
         /** Event process to occur at interrupt*/

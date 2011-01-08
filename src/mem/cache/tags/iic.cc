@@ -257,8 +257,8 @@ IIC::accessBlock(Addr addr, int &lat, int context_src)
         hitDepthTotal += sets[set].depth;
         tag_ptr->status |= BlkReferenced;
         lat = set_lat;
-        if (tag_ptr->whenReady > curTick && tag_ptr->whenReady - curTick > set_lat) {
-            lat = tag_ptr->whenReady - curTick;
+        if (tag_ptr->whenReady > curTick() && tag_ptr->whenReady - curTick() > set_lat) {
+            lat = tag_ptr->whenReady - curTick();
         }
 
         tag_ptr->refCount += 1;
@@ -437,7 +437,7 @@ IIC::getFreeTag(int set, PacketList & writebacks)
     tagsInUse++;
     if (!warmedUp && tagsInUse.value() >= warmupBound) {
         warmedUp = true;
-        warmupCycle = curTick;
+        warmupCycle = curTick();
     }
 
     return tag_ptr;

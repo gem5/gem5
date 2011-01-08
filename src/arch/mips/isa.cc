@@ -528,7 +528,7 @@ ISA::scheduleCP0Update(BaseCPU *cpu, int delay)
 
         //schedule UPDATE
         CP0Event *cp0_event = new CP0Event(this, cpu, UpdateCP0);
-        cpu->schedule(cp0_event, curTick + cpu->ticks(delay));
+        cpu->schedule(cp0_event, curTick() + cpu->ticks(delay));
     }
 }
 
@@ -585,7 +585,7 @@ ISA::CP0Event::description() const
 void
 ISA::CP0Event::scheduleEvent(int delay)
 {
-    cpu->reschedule(this, curTick + cpu->ticks(delay), true);
+    cpu->reschedule(this, curTick() + cpu->ticks(delay), true);
 }
 
 void

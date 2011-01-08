@@ -434,7 +434,7 @@ class BaseCache : public MemObject
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
             blocked_causes[cause]++;
-            blockedCycle = curTick;
+            blockedCycle = curTick();
             cpuSidePort->setBlocked();
         }
         blocked |= flag;
@@ -454,7 +454,7 @@ class BaseCache : public MemObject
         blocked &= ~flag;
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
-            blocked_cycles[cause] += curTick - blockedCycle;
+            blocked_cycles[cause] += curTick() - blockedCycle;
             cpuSidePort->clearBlocked();
         }
     }

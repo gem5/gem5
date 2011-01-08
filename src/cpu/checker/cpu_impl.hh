@@ -126,7 +126,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
                 } else {
                     warn("%lli: Changed PC does not match expected PC, "
                          "changed: %#x, expected: %#x",
-                         curTick, thread->readPC(), newPC);
+                         curTick(), thread->readPC(), newPC);
                     CheckerCPU::handleError();
                 }
                 willChangePC = false;
@@ -166,7 +166,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
                 // translate this instruction; in the SMT case it's
                 // possible that its ITB entry was kicked out.
                 warn("%lli: Instruction PC %#x was not found in the ITB!",
-                     curTick, thread->readPC());
+                     curTick(), thread->readPC());
                 handleError(inst);
 
                 // go to the next instruction
@@ -315,10 +315,10 @@ Checker<DynInstPtr>::validateInst(DynInstPtr &inst)
 {
     if (inst->readPC() != thread->readPC()) {
         warn("%lli: PCs do not match! Inst: %#x, checker: %#x",
-             curTick, inst->readPC(), thread->readPC());
+             curTick(), inst->readPC(), thread->readPC());
         if (changedPC) {
             warn("%lli: Changed PCs recently, may not be an error",
-                 curTick);
+                 curTick());
         } else {
             handleError(inst);
         }
@@ -329,7 +329,7 @@ Checker<DynInstPtr>::validateInst(DynInstPtr &inst)
     if (mi != machInst) {
         warn("%lli: Binary instructions do not match! Inst: %#x, "
              "checker: %#x",
-             curTick, mi, machInst);
+             curTick(), mi, machInst);
         handleError(inst);
     }
 }
@@ -354,7 +354,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
     if (result_mismatch) {
         warn("%lli: Instruction results do not match! (Values may not "
              "actually be integers) Inst: %#x, checker: %#x",
-             curTick, inst->readIntResult(), result.integer);
+             curTick(), inst->readIntResult(), result.integer);
 
         // It's useful to verify load values from memory, but in MP
         // systems the value obtained at execute may be different than
@@ -371,7 +371,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
     if (inst->readNextPC() != thread->readNextPC()) {
         warn("%lli: Instruction next PCs do not match! Inst: %#x, "
              "checker: %#x",
-             curTick, inst->readNextPC(), thread->readNextPC());
+             curTick(), inst->readNextPC(), thread->readNextPC());
         handleError(inst);
     }
 
@@ -388,7 +388,7 @@ Checker<DynInstPtr>::validateExecution(DynInstPtr &inst)
             thread->readMiscRegNoEffect(misc_reg_idx)) {
             warn("%lli: Misc reg idx %i (side effect) does not match! "
                  "Inst: %#x, checker: %#x",
-                 curTick, misc_reg_idx,
+                 curTick(), misc_reg_idx,
                  inst->tcBase()->readMiscRegNoEffect(misc_reg_idx),
                  thread->readMiscRegNoEffect(misc_reg_idx));
             handleError(inst);
@@ -402,7 +402,7 @@ Checker<DynInstPtr>::validateState()
 {
     if (updateThisCycle) {
         warn("%lli: Instruction PC %#x results didn't match up, copying all "
-             "registers from main CPU", curTick, unverifiedInst->readPC());
+             "registers from main CPU", curTick(), unverifiedInst->readPC());
         // Heavy-weight copying of all registers
         thread->copyArchRegs(unverifiedInst->tcBase());
         // Also advance the PC.  Hopefully no PC-based events happened.

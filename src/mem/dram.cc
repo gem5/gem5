@@ -414,14 +414,14 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
         int SD_BEST_T_WRITE_READ_OBANK = (war_lat -1); /* WAR, row miss/hit, another bank */
         int SD_BEST_T_WRITE_WRITE_OBANK = 0; /* WAW, row miss/hit, another bank */
 
-    Tick time_since_last_access = curTick-time_last_access;
+    Tick time_since_last_access = curTick()-time_last_access;
     Tick time_last_miss = 0;    // used for keeping track of times between activations (page misses)
-    //int was_idle = (curTick > busy_until);
+    //int was_idle = (curTick() > busy_until);
         bool srow_flag = false;
         int timing_correction = 0;
 
-    int was_idle = (curTick > busy_until[current_bank]);
-    cycles_nCKE[0] += was_idle ? MIN(curTick-busy_until[current_bank], time_since_last_access) : 0;
+    int was_idle = (curTick() > busy_until[current_bank]);
+    cycles_nCKE[0] += was_idle ? MIN(curTick()-busy_until[current_bank], time_since_last_access) : 0;
 
     // bank is precharged
     //active_row[current_bank] == DR_NUM_ROWS
@@ -441,7 +441,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
     if(all_precharged) {
         if(was_idle) {
-                cycles_all_precharge_nCKE[0] += MIN(curTick-busy_until[current_bank], time_since_last_access);
+                cycles_all_precharge_nCKE[0] += MIN(curTick()-busy_until[current_bank], time_since_last_access);
                 cycles_all_precharge_CKE[0] += MIN(0, busy_until[current_bank]-time_last_access);
         }
         else {
@@ -449,7 +449,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
         }
     } else { // some bank is active
         if(was_idle) {
-                cycles_bank_active_nCKE[0] += MIN(curTick-busy_until[current_bank], time_since_last_access);
+                cycles_bank_active_nCKE[0] += MIN(curTick()-busy_until[current_bank], time_since_last_access);
         }
         else {
         }
@@ -462,7 +462,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
     }
 
 
-    time_last_access = curTick;
+    time_last_access = curTick();
     ////////////////////////////////////////////////////////////////////////////
 
     if ((mem_type == "SDRAM") && (mem_actpolicy == "open"))
@@ -516,7 +516,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         if (memctrlpipe_enable == true)
           {
-            overlap=(int)(busy_until[current_bank] - curTick);
+            overlap=(int)(busy_until[current_bank] - curTick());
           }
         else overlap = 0;
 
@@ -529,7 +529,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
             corrected_overlap = (int) (overlap/cpu_ratio);
           }
 
-        /*fprintf(stderr,"%10.0f %10.0f %4d %4d ",(double)busy_until, (double)curTick, overlap, corrected_overlap); debugging*/
+        /*fprintf(stderr,"%10.0f %10.0f %4d %4d ",(double)busy_until, (double)curTick(), overlap, corrected_overlap); debugging*/
 
         if (cmdIsRead == lastCmdIsRead)/*same command*/
           {
@@ -889,25 +889,25 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
           {
             if (memctrlpipe_enable == true)
               {
-              busy_until[current_bank]=curTick+lat+
+              busy_until[current_bank]=curTick()+lat+
                         timing_correction;
               }
             else
               {
-                if (busy_until[current_bank] >= curTick)
+                if (busy_until[current_bank] >= curTick())
                   {
                     busy_until[current_bank]+=(lat+
                                 timing_correction);
                         total_arb_latency += (busy_until[current_bank]
-                                - curTick - lat
+                                - curTick() - lat
                                 - timing_correction);
-                    lat=busy_until[current_bank] - curTick;
+                    lat=busy_until[current_bank] - curTick();
                   }
-                else busy_until[current_bank]=curTick+lat+
+                else busy_until[current_bank]=curTick()+lat+
                         timing_correction;
               }
           }
-        else/*the memory request will be satisfied temp cycles after curTick*/
+        else/*the memory request will be satisfied temp cycles after curTick()*/
           {
             busy_until[current_bank] +=(lat+
                         timing_correction);
@@ -1001,7 +1001,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         if (memctrlpipe_enable == true)
           {
-            overlap=(int)(busy_until[current_bank] - curTick);
+            overlap=(int)(busy_until[current_bank] - curTick());
           }
         else overlap=0;
 
@@ -1014,7 +1014,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
             corrected_overlap = (int) (overlap/cpu_ratio);
           }
 
-        /*fprintf(stderr,"%10.0f %10.0f %6d %6d %2d %2d ",(double)busy_until, (double)curTick, overlap, corrected_overlap,precharge,adjacent);debugging*/
+        /*fprintf(stderr,"%10.0f %10.0f %6d %6d %2d %2d ",(double)busy_until, (double)curTick(), overlap, corrected_overlap,precharge,adjacent);debugging*/
 
         if (cmdIsRead == lastCmdIsRead)/*same command*/
           {
@@ -2013,19 +2013,19 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
           {
             if (memctrlpipe_enable == true)
               {
-                busy_until[current_bank] =curTick+lat;
+                busy_until[current_bank] =curTick()+lat;
               }
             else
               {
-                if (busy_until[current_bank] >= curTick)
+                if (busy_until[current_bank] >= curTick())
                   {
                     busy_until[current_bank] +=lat;
-                    lat=busy_until[current_bank] - curTick;
+                    lat=busy_until[current_bank] - curTick();
                   }
-                else busy_until[current_bank] = curTick+lat;
+                else busy_until[current_bank] = curTick()+lat;
               }
           }
-        else/*the memory request will be satisfied temp cycles after curTick*/
+        else/*the memory request will be satisfied temp cycles after curTick()*/
           {
             busy_until[current_bank] +=lat;
             command_overlapping++;
@@ -2073,7 +2073,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
           }
         total_access++;
 
-        overlap=(int)(busy_until[current_bank] - curTick);
+        overlap=(int)(busy_until[current_bank] - curTick());
 
         if (current_bank == last_bank)/*same bank*/
           {
@@ -2206,9 +2206,9 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         if (overlap <= 0) /*memory interface is not busy*/
           {
-            busy_until[current_bank] = curTick+lat;
+            busy_until[current_bank] = curTick()+lat;
           }
-        else /*the memory request will be satisfied temp cycles after curTick*/
+        else /*the memory request will be satisfied temp cycles after curTick()*/
           {
             busy_until[current_bank] +=lat;
             command_overlapping++;
@@ -2223,7 +2223,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
 
 
-        /*fprintf(stderr,"%10.0f %10.0f %4d %4d \n",(double)busy_until, (double)curTick, overlap, lat);debug*/
+        /*fprintf(stderr,"%10.0f %10.0f %4d %4d \n",(double)busy_until, (double)curTick(), overlap, lat);debug*/
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
                 // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
     //  bank_access_profile[_cpu_num][current_bank]++;
@@ -2269,7 +2269,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
           }
         total_access++;
 
-        overlap=(int)(busy_until[current_bank] - curTick);
+        overlap=(int)(busy_until[current_bank] - curTick());
 
         if (cpu_ratio < 1.0)
           {
@@ -2432,16 +2432,16 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         if (overlap <= 0) /*memory interface is not busy*/
           {
-            busy_until[current_bank] = curTick+lat;
+            busy_until[current_bank] = curTick()+lat;
           }
-        else/*the memory request will be satisfied temp cycles after curTick*/
+        else/*the memory request will be satisfied temp cycles after curTick()*/
           {
             busy_until[current_bank] +=lat;
             command_overlapping++;
             lat+=overlap;
           }
 
-        /*fprintf(stderr,"%10.0f %10.0f %4d %4d \n",(double)busy_until, (double)curTick, overlap, lat);*/
+        /*fprintf(stderr,"%10.0f %10.0f %4d %4d \n",(double)busy_until, (double)curTick(), overlap, lat);*/
 
         if (cmdIsRead)
           {
@@ -2494,7 +2494,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
         total_access++;
         lat += chunks;
 
-        overlap=(int)(busy_until[current_bank] - curTick);
+        overlap=(int)(busy_until[current_bank] - curTick());
         lastCmdIsRead=cmdIsRead;
 
         if (cpu_ratio < 1.0)
@@ -2509,9 +2509,9 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         if (overlap <= 0) /*memory interface is not busy*/
           {
-            busy_until[current_bank] = curTick+lat;
+            busy_until[current_bank] = curTick()+lat;
           }
-        else/*the memory request will be satisfied temp cycles after curTick*/
+        else/*the memory request will be satisfied temp cycles after curTick()*/
           {
             busy_until[current_bank] +=lat;
             command_overlapping++;
@@ -2543,7 +2543,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
             lat = DR_T_RCD + DR_T_CWD + DR_T_PACKET; /* DR_T_RP + */
           }
         total_access++;
-        overlap=(int)(busy_until[current_bank] - curTick);
+        overlap=(int)(busy_until[current_bank] - curTick());
         lat += chunks * DR_T_PACKET; /*every 128 bit need DR_NUM_CYCLES*/
 
         if (cpu_ratio < 1.0)
@@ -2560,9 +2560,9 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         if (overlap <= 0) /*memory interface is not busy*/
           {
-            busy_until[current_bank] = curTick+lat;
+            busy_until[current_bank] = curTick()+lat;
           }
-        else/*the memory request will be satisfied temp cycles after curTick*/
+        else/*the memory request will be satisfied temp cycles after curTick()*/
           {
             busy_until[current_bank] += lat;
             command_overlapping++;

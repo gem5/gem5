@@ -62,7 +62,7 @@ RealViewCtrl::read(PacketPtr pkt)
         break;
       case Clock24:
         Tick clk;
-        clk = (Tick)(curTick / (24 * SimClock::Float::MHz));
+        clk = (Tick)(curTick() / (24 * SimClock::Float::MHz));
         pkt->set((uint32_t)(clk));
         break;
       case Flash:

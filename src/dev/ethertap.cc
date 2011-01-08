@@ -246,7 +246,7 @@ EtherTap::process(int revent)
             DPRINTF(Ethernet, "bus busy...buffer for retransmission\n");
             packetBuffer.push(packet);
             if (!txEvent.scheduled())
-                schedule(txEvent, curTick + retryTime);
+                schedule(txEvent, curTick() + retryTime);
         } else if (dump) {
             dump->dump(packet);
         }
@@ -269,7 +269,7 @@ EtherTap::retransmit()
     }
 
     if (!packetBuffer.empty() && !txEvent.scheduled())
-        schedule(txEvent, curTick + retryTime);
+        schedule(txEvent, curTick() + retryTime);
 }
 
 EtherInt*

@@ -245,7 +245,7 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         if (data != inst_data) {
             warn("%lli: Store value does not match value in memory! "
                  "Instruction: %#x, memory: %#x",
-                 curTick, inst_data, data);
+                 curTick(), inst_data, data);
             handleError();
         }
     }
@@ -327,6 +327,6 @@ void
 CheckerCPU::dumpAndExit()
 {
     warn("%lli: Checker PC:%#x, next PC:%#x",
-         curTick, thread->readPC(), thread->readNextPC());
+         curTick(), thread->readPC(), thread->readNextPC());
     panic("Checker found an error!");
 }

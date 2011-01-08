@@ -64,8 +64,8 @@ GraduationUnit::execute(int slot_num)
             // @TODO: Instructions should never really get to this point since
             // this should be handled through the request interface. Check to
             // make sure this happens and delete this code.
-            if (lastCycleGrad != curTick) {
-                lastCycleGrad = curTick;
+            if (lastCycleGrad != curTick()) {
+                lastCycleGrad = curTick();
                 numCycleGrad = 0;
             } else if (numCycleGrad > width) {
                 DPRINTF(InOrderGraduation,
@@ -91,7 +91,7 @@ GraduationUnit::execute(int slot_num)
             }
 
             if (inst->traceData) {
-                inst->traceData->setStageCycle(stage_num, curTick);
+                inst->traceData->setStageCycle(stage_num, curTick());
             }
 
             // Tell CPU that instruction is finished processing

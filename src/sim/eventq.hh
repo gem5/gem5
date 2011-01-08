@@ -136,7 +136,7 @@ class Event : public Serializable, public FastAlloc
         queue = q;
 #endif
 #ifdef EVENTQ_DEBUG
-        whenScheduled = curTick;
+        whenScheduled = curTick();
 #endif
     }
 
@@ -254,7 +254,7 @@ class Event : public Serializable, public FastAlloc
         queue = NULL;
 #endif
 #ifdef EVENTQ_DEBUG
-        whenCreated = curTick;
+        whenCreated = curTick();
         whenScheduled = 0;
 #endif
     }
@@ -405,15 +405,15 @@ class EventQueue : public Serializable
         }
     }
 
-    // default: process all events up to 'now' (curTick)
-    void serviceEvents() { serviceEvents(curTick); }
+    // default: process all events up to 'now' (curTick())
+    void serviceEvents() { serviceEvents(curTick()); }
 
     // return true if no events are queued
     bool empty() const { return head == NULL; }
 
     void dump() const;
 
-    Tick nextEventTime() { return empty() ? curTick : head->when(); }
+    Tick nextEventTime() { return empty() ? curTick() : head->when(); }
 
     bool debugVerify() const;
 
@@ -486,7 +486,7 @@ class EventManager
 inline void
 EventQueue::schedule(Event *event, Tick when)
 {
-    assert((UTick)when >= (UTick)curTick);
+    assert((UTick)when >= (UTick)curTick());
     assert(!event->scheduled());
     assert(event->initialized());
 
@@ -523,7 +523,7 @@ EventQueue::deschedule(Event *event)
 inline void
 EventQueue::reschedule(Event *event, Tick when, bool always)
 {
-    assert(when >= curTick);
+    assert(when >= curTick());
     assert(always || event->scheduled());
     assert(event->initialized());
 

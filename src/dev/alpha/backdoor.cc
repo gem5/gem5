@@ -234,7 +234,7 @@ AlphaBackdoor::write(PacketPtr pkt)
       default:
         int cpunum = (daddr - offsetof(AlphaAccess, cpuStack)) /
                      sizeof(alphaAccess->cpuStack[0]);
-        inform("Launching CPU %d @ %d", cpunum, curTick);
+        inform("Launching CPU %d @ %d", cpunum, curTick());
         assert(val > 0 && "Must not access primary cpu");
         if (cpunum >= 0 && cpunum < 64)
             alphaAccess->cpuStack[cpunum] = val;

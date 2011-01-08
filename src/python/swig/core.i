@@ -73,8 +73,7 @@ const bool flag_TRACING_ON;
 
 void setClockFrequency(Tick ticksPerSecond);
 
-%immutable curTick;
-Tick curTick;
+Tick curTick();
 
 class Checkpoint;
 

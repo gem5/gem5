@@ -93,7 +93,7 @@ Sp804::Timer::read(PacketPtr pkt, Addr daddr)
         DPRINTF(Timer, "Event schedule for %d, clock=%d, prescale=%d\n",
                 zeroEvent.when(), clock, control.timerPrescale);
         Tick time;
-        time = zeroEvent.when() - curTick;
+        time = zeroEvent.when() - curTick();
         time = time / clock / power(16, control.timerPrescale);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
         pkt->set<uint32_t>(time);
@@ -188,8 +188,8 @@ Sp804::Timer::restartCounter(uint32_t val)
         DPRINTF(Timer, "-- Event was already schedule, de-scheduling\n");
         parent->deschedule(zeroEvent);
     }
-    parent->schedule(zeroEvent, curTick + time);
-    DPRINTF(Timer, "-- Scheduling new event for: %d\n", curTick + time);
+    parent->schedule(zeroEvent, curTick() + time);
+    DPRINTF(Timer, "-- Scheduling new event for: %d\n", curTick() + time);
 }
 
 void

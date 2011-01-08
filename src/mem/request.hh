@@ -145,7 +145,7 @@ class Request : public FastAlloc
 
     /**
      * The time this request was started. Used to calculate
-     * latencies. This field is set to curTick any time paddr or vaddr
+     * latencies. This field is set to curTick() any time paddr or vaddr
      * is written.
      */
     Tick _time;
@@ -179,7 +179,7 @@ class Request : public FastAlloc
 
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
-     * just physical address, size, flags, and timestamp (to curTick).
+     * just physical address, size, flags, and timestamp (to curTick()).
      * These fields are adequate to perform a request. 
      */
     Request(Addr paddr, int size, Flags flags)
@@ -240,7 +240,7 @@ class Request : public FastAlloc
     void
     setPhys(Addr paddr, int size, Flags flags)
     {
-        setPhys(paddr, size, flags, curTick);
+        setPhys(paddr, size, flags, curTick());
     }
 
     /**
@@ -255,7 +255,7 @@ class Request : public FastAlloc
         _vaddr = vaddr;
         _size = size;
         _pc = pc;
-        _time = curTick;
+        _time = curTick();
 
         _flags.clear(~STICKY_FLAGS);
         _flags.set(flags);

@@ -66,7 +66,7 @@ struct SimTicksReset : public Callback
     void process()
     {
         statTime.set();
-        startTick = curTick;
+        startTick = curTick();
     }
 };
 
@@ -81,7 +81,7 @@ statElapsedTime()
 Tick
 statElapsedTicks()
 {
-    return curTick - startTick;
+    return curTick() - startTick;
 }
 
 SimTicksReset simTicksReset;
@@ -189,7 +189,7 @@ class StatEvent : public Event
             Stats::reset();
 
         if (repeat) {
-            Stats::schedStatEvent(dump, reset, curTick + repeat, repeat);
+            Stats::schedStatEvent(dump, reset, curTick() + repeat, repeat);
         }
     }
 };

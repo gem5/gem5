@@ -52,7 +52,7 @@ Tick
 FrontEnd<Impl>::IcachePort::recvAtomic(PacketPtr pkt)
 {
     panic("FrontEnd doesn't expect recvAtomic callback!");
-    return curTick;
+    return curTick();
 }
 
 template<class Impl>
@@ -432,7 +432,7 @@ FrontEnd<Impl>::tick()
 
 #if FULL_SYSTEM
         if (inst->isQuiesce()) {
-//            warn("%lli: Quiesce instruction encountered, halting fetch!", curTick);
+//            warn("%lli: Quiesce instruction encountered, halting fetch!", curTick());
             status = QuiescePending;
             break;
         }
@@ -894,7 +894,7 @@ FrontEnd<Impl>::getInstFromCacheline()
             instruction->staticInst->disassemble(PC));
 
     instruction->traceData =
-        Trace::getInstRecord(curTick, tc,
+        Trace::getInstRecord(curTick(), tc,
                              instruction->staticInst,
                              instruction->readPC());
 

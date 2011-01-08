@@ -394,7 +394,7 @@ X86ISA::Interrupts::readReg(ApicRegIndex reg)
                 uint64_t ticksPerCount = clock *
                     divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]);
                 // Compute how many m5 ticks are left.
-                uint64_t val = apicTimerEvent.when() - curTick;
+                uint64_t val = apicTimerEvent.when() - curTick();
                 // Turn that into a count.
                 val = (val + ticksPerCount - 1) / ticksPerCount;
                 return val;
@@ -572,13 +572,13 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             uint64_t newCount = newVal *
                 (divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]));
             // Schedule on the edge of the next tick plus the new count.
-            Tick offset = curTick % clock;
+            Tick offset = curTick() % clock;
             if (offset) {
                 reschedule(apicTimerEvent,
-                        curTick + (newCount + 1) * clock - offset, true);
+                        curTick() + (newCount + 1) * clock - offset, true);
             } else {
                 reschedule(apicTimerEvent,
-                        curTick + newCount * clock, true);
+                        curTick() + newCount * clock, true);
             }
         }
         break;

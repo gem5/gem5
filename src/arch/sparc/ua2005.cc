@@ -111,7 +111,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(tick_cmpr & ~mask(63)) && time > 0) {
             if (tickCompare->scheduled())
                 cpu->deschedule(tickCompare);
-            cpu->schedule(tickCompare, curTick + time * cpu->ticks(1));
+            cpu->schedule(tickCompare, curTick() + time * cpu->ticks(1));
         }
         panic("writing to TICK compare register %#X\n", val);
         break;
@@ -127,7 +127,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(stick_cmpr & ~mask(63)) && time > 0) {
             if (sTickCompare->scheduled())
                 cpu->deschedule(sTickCompare);
-            cpu->schedule(sTickCompare, curTick + time * cpu->ticks(1));
+            cpu->schedule(sTickCompare, curTick() + time * cpu->ticks(1));
         }
         DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
         break;
@@ -197,7 +197,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(hstick_cmpr & ~mask(63)) && time > 0) {
             if (hSTickCompare->scheduled())
                 cpu->deschedule(hSTickCompare);
-            cpu->schedule(hSTickCompare, curTick + time * cpu->ticks(1));
+            cpu->schedule(hSTickCompare, curTick() + time * cpu->ticks(1));
         }
         DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
         break;
@@ -335,7 +335,7 @@ ISA::processSTickCompare(ThreadContext *tc)
             setMiscReg(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
     } else {
-        cpu->schedule(sTickCompare, curTick + ticks * cpu->ticks(1));
+        cpu->schedule(sTickCompare, curTick() + ticks * cpu->ticks(1));
     }
 }
 
@@ -363,7 +363,7 @@ ISA::processHSTickCompare(ThreadContext *tc)
         }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else {
-        cpu->schedule(hSTickCompare, curTick + ticks * cpu->ticks(1));
+        cpu->schedule(hSTickCompare, curTick() + ticks * cpu->ticks(1));
     }
 }
 

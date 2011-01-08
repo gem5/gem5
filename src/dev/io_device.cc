@@ -121,7 +121,7 @@ DmaPort::recvTiming(PacketPtr pkt)
         else if (backoffTime < maxBackoffDelay)
             backoffTime <<= 1;
 
-        reschedule(backoffEvent, curTick + backoffTime, true);
+        reschedule(backoffEvent, curTick() + backoffTime, true);
 
         DPRINTF(DMA, "Backoff time set to %d ticks\n", backoffTime);
 
@@ -144,7 +144,7 @@ DmaPort::recvTiming(PacketPtr pkt)
         if (state->totBytes == state->numBytes) {
             if (state->completionEvent) {
                 if (state->delay)
-                    schedule(state->completionEvent, curTick + state->delay);
+                    schedule(state->completionEvent, curTick() + state->delay);
                 else
                     state->completionEvent->process();
             }
@@ -212,9 +212,9 @@ DmaPort::recvRetry()
     } while (!backoffTime &&  result && transmitList.size());
 
     if (transmitList.size() && backoffTime && !inRetry) {
-        DPRINTF(DMA, "Scheduling backoff for %d\n", curTick+backoffTime);
+        DPRINTF(DMA, "Scheduling backoff for %d\n", curTick()+backoffTime);
         if (!backoffEvent.scheduled())
-            schedule(backoffEvent, backoffTime + curTick);
+            schedule(backoffEvent, backoffTime + curTick());
     }
     DPRINTF(DMA, "TransmitList: %d, backoffTime: %d inRetry: %d es: %d\n",
             transmitList.size(), backoffTime, inRetry,
@@ -299,8 +299,8 @@ DmaPort::sendDma()
         if (transmitList.size() && backoffTime && !inRetry &&
                 !backoffEvent.scheduled()) {
             DPRINTF(DMA, "-- Scheduling backoff timer for %d\n",
-                    backoffTime+curTick);
-            schedule(backoffEvent, backoffTime + curTick);
+                    backoffTime+curTick());
+            schedule(backoffEvent, backoffTime + curTick());
         }
     } else if (state == Enums::atomic) {
         transmitList.pop_front();
@@ -322,7 +322,7 @@ DmaPort::sendDma()
         if (state->totBytes == state->numBytes) {
             if (state->completionEvent) {
                 assert(!state->completionEvent->scheduled());
-                schedule(state->completionEvent, curTick + lat + state->delay);
+                schedule(state->completionEvent, curTick() + lat + state->delay);
             }
             delete state;
             delete pkt->req;

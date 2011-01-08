@@ -124,7 +124,7 @@ BaseCache::CachePort::clearBlocked()
         mustSendRetry = false;
         SendRetryEvent *ev = new SendRetryEvent(this, true);
         // @TODO: need to find a better time (next bus cycle?)
-        schedule(ev, curTick + 1);
+        schedule(ev, curTick() + 1);
     }
 }
 

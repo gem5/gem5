@@ -89,7 +89,7 @@ class CacheBlk
     /** The current status of this block. @sa CacheBlockStatusBits */
     State status;
 
-    /** Which curTick will this block be accessable */
+    /** Which curTick() will this block be accessable */
     Tick whenReady;
 
     /**

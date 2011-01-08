@@ -55,7 +55,7 @@ Tick
 LSQ<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
 {
     panic("O3CPU model does not work with atomic mode!");
-    return curTick;
+    return curTick();
 }
 
 template <class Impl>

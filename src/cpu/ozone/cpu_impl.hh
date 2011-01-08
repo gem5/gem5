@@ -301,7 +301,7 @@ OzoneCPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
         if (tc->status() == ThreadContext::Active &&
             _status != Running) {
             _status = Running;
-            tickEvent.schedule(curTick);
+            tickEvent.schedule(curTick());
         }
     }
     // Nothing running, change status to reflect that we're no longer
@@ -525,7 +525,7 @@ OzoneCPU<Impl>::tick()
     comInstEventQueue[0]->serviceEvents(numInst);
 
     if (!tickEvent.scheduled() && _status == Running)
-        tickEvent.schedule(curTick + ticks(1));
+        tickEvent.schedule(curTick() + ticks(1));
 }
 
 template <class Impl>

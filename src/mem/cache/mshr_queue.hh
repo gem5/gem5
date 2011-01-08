@@ -199,7 +199,7 @@ class MSHRQueue
      */
     MSHR *getNextMSHR() const
     {
-        if (readyList.empty() || readyList.front()->readyTime > curTick) {
+        if (readyList.empty() || readyList.front()->readyTime > curTick()) {
             return NULL;
         }
         return readyList.front();

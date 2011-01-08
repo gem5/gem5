@@ -85,7 +85,7 @@ handleLockedWrite(XC *xc, Request *req)
             if (stCondFailures % 100000 == 0) {
                 warn("%i: context %d: %d consecutive "
                      "store conditional failures\n",
-                     curTick, xc->contextId(), stCondFailures);
+                     curTick(), xc->contextId(), stCondFailures);
             }
 
             if (!lock_flag){

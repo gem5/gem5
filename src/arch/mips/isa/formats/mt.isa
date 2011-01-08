@@ -201,7 +201,7 @@ def format MT_Control(code, *opt_flags) {{
 
 def format MT_MFTR(code, *flags) {{
         flags += ('IsNonSpeculative', )
-#        code = 'std::cerr << curTick << \": T\" << xc->tcBase()->threadId() << \": Executing MT INST: ' + name + '\" << endl;\n' + code
+#        code = 'std::cerr << curTick() << \": T\" << xc->tcBase()->threadId() << \": Executing MT INST: ' + name + '\" << endl;\n' + code
 
         code += 'if (MT_H == 1) {\n'
         code += 'data = bits(data, top_bit, bottom_bit);\n'
@@ -217,7 +217,7 @@ def format MT_MFTR(code, *flags) {{
 
 def format MT_MTTR(code, *flags) {{
         flags += ('IsNonSpeculative', )
-#        code = 'std::cerr << curTick << \": T\" << xc->tcBase()->threadId() << \": Executing MT INST: ' + name + '\" << endl;\n' + code
+#        code = 'std::cerr << curTick() << \": T\" << xc->tcBase()->threadId() << \": Executing MT INST: ' + name + '\" << endl;\n' + code
         iop = InstObjParams(name, Name, 'MTOp', code, flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)

@@ -127,7 +127,7 @@ def simulate(*args, **kwargs):
 
 # Export curTick to user script.
 def curTick():
-    return internal.core.cvar.curTick
+    return internal.core.curTick()
 
 # Python exit handlers happen in reverse order.  We want to dump stats last.
 atexit.register(internal.stats.dump)

@@ -66,7 +66,7 @@ SimLoopExitEvent::process()
     // but if you are doing this on intervals, don't forget to make another
     if (repeat) {
         assert(getFlags(IsMainQueue));
-        mainEventQueue.schedule(this, curTick + repeat);
+        mainEventQueue.schedule(this, curTick() + repeat);
     }
 }
 

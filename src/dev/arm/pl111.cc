@@ -355,7 +355,7 @@ Pl111::readFramebuffer()
         startAddr = lcdUpbase;
     }
     curAddr = 0;
-    startTime = curTick;
+    startTime = curTick();
     maxAddr = static_cast<Addr>(length*sizeof(uint32_t));
     dmaPendingNum =0 ;
 
@@ -388,9 +388,9 @@ Pl111::dmaDone()
     DPRINTF(PL111, " -- DMA pending number %d\n", dmaPendingNum);
 
     if (maxAddr == curAddr && !dmaPendingNum) {
-        if ((curTick - startTime) > maxFrameTime)
+        if ((curTick() - startTime) > maxFrameTime)
             warn("CLCD controller buffer underrun, took %d cycles when should"
-                 " have taken %d\n", curTick - startTime, maxFrameTime);
+                 " have taken %d\n", curTick() - startTime, maxFrameTime);
 
         // double buffering so the vnc server doesn't see a tear in the screen
         memcpy(frameBuffer, dmaBuffer, maxAddr);
@@ -400,7 +400,7 @@ Pl111::dmaDone()
         writeBMP(frameBuffer);
 
         DPRINTF(PL111, "-- schedule next dma read event at %d tick \n",
-                maxFrameTime + curTick);
+                maxFrameTime + curTick());
         schedule(readEvent, nextCycle(startTime + maxFrameTime));
     }
 
@@ -415,7 +415,7 @@ Pl111::dmaDone()
 Tick
 Pl111::nextCycle()
 {
-    Tick nextTick = curTick + clock - 1;
+    Tick nextTick = curTick() + clock - 1;
     nextTick -= nextTick%clock;
     return nextTick;
 }
@@ -427,7 +427,7 @@ Pl111::nextCycle(Tick beginTick)
     if (nextTick%clock!=0)
         nextTick = nextTick - (nextTick%clock) + clock;
 
-    assert(nextTick >= curTick);
+    assert(nextTick >= curTick());
     return nextTick;
 }
 

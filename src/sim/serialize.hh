@@ -250,7 +250,7 @@ class Checkpoint
 
   public:
     // Set the current directory.  This function takes care of
-    // inserting curTick if there's a '%d' in the argument, and
+    // inserting curTick() if there's a '%d' in the argument, and
     // appends a '/' if necessary.  The final name is returned.
     static std::string setDir(const std::string &base_name);
 

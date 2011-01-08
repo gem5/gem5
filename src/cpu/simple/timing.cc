@@ -85,7 +85,7 @@ Tick
 TimingSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
 {
     panic("TimingSimpleCPU doesn't expect recvAtomic callback!");
-    return curTick;
+    return curTick();
 }
 
 void
@@ -189,7 +189,7 @@ TimingSimpleCPU::switchOut()
 {
     assert(_status == Running || _status == Idle);
     _status = SwitchedOut;
-    numCycles += tickToCycles(curTick - previousTick);
+    numCycles += tickToCycles(curTick() - previousTick);
 
     // If we've been scheduled to resume but are then told to switch out,
     // we'll need to cancel it.
@@ -217,7 +217,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         _status = Idle;
     }
     assert(threadContexts.size() == 1);
-    previousTick = curTick;
+    previousTick = curTick();
 }
 
 
@@ -235,7 +235,7 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     _status = Running;
 
     // kick things off by initiating the fetch of the next instruction
-    schedule(fetchEvent, nextCycle(curTick + ticks(delay)));
+    schedule(fetchEvent, nextCycle(curTick() + ticks(delay)));
 }
 
 
@@ -266,7 +266,7 @@ TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
     if (req->isMmapedIpr()) {
         Tick delay;
         delay = TheISA::handleIprRead(thread->getTC(), pkt);
-        new IprEvent(pkt, this, nextCycle(curTick + delay));
+        new IprEvent(pkt, this, nextCycle(curTick() + delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;
     } else if (!dcachePort.sendTiming(pkt)) {
@@ -355,8 +355,8 @@ TimingSimpleCPU::translationFault(Fault fault)
 {
     // fault may be NoFault in cases where a fault is suppressed,
     // for instance prefetches.
-    numCycles += tickToCycles(curTick - previousTick);
-    previousTick = curTick;
+    numCycles += tickToCycles(curTick() - previousTick);
+    previousTick = curTick();
 
     if (traceData) {
         // Since there was a fault, we shouldn't trace this instruction.
@@ -538,7 +538,7 @@ TimingSimpleCPU::handleWritePacket()
     if (req->isMmapedIpr()) {
         Tick delay;
         delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
-        new IprEvent(dcache_pkt, this, nextCycle(curTick + delay));
+        new IprEvent(dcache_pkt, this, nextCycle(curTick() + delay));
         _status = DcacheWaitResponse;
         dcache_pkt = NULL;
     } else if (!dcachePort.sendTiming(dcache_pkt)) {
@@ -726,8 +726,8 @@ TimingSimpleCPU::fetch()
         _status = IcacheWaitResponse;
         completeIfetch(NULL);
 
-        numCycles += tickToCycles(curTick - previousTick);
-        previousTick = curTick;
+        numCycles += tickToCycles(curTick() - previousTick);
+        previousTick = curTick();
     }
 }
 
@@ -754,8 +754,8 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
         advanceInst(fault);
     }
 
-    numCycles += tickToCycles(curTick - previousTick);
-    previousTick = curTick;
+    numCycles += tickToCycles(curTick() - previousTick);
+    previousTick = curTick();
 }
 
 
@@ -787,8 +787,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     _status = Running;
 
-    numCycles += tickToCycles(curTick - previousTick);
-    previousTick = curTick;
+    numCycles += tickToCycles(curTick() - previousTick);
+    previousTick = curTick();
 
     if (getState() == SimObject::Draining) {
         if (pkt) {
@@ -862,9 +862,9 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse() && !pkt->wasNacked()) {
         // delay processing of returned data until next CPU clock edge
-        Tick next_tick = cpu->nextCycle(curTick);
+        Tick next_tick = cpu->nextCycle(curTick());
 
-        if (next_tick == curTick)
+        if (next_tick == curTick())
             cpu->completeIfetch(pkt);
         else
             tickEvent.schedule(pkt, next_tick);
@@ -906,8 +906,8 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
-    numCycles += tickToCycles(curTick - previousTick);
-    previousTick = curTick;
+    numCycles += tickToCycles(curTick() - previousTick);
+    previousTick = curTick();
 
     if (pkt->senderState) {
         SplitFragmentSenderState * send_state =
@@ -994,9 +994,9 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse() && !pkt->wasNacked()) {
         // delay processing of returned data until next CPU clock edge
-        Tick next_tick = cpu->nextCycle(curTick);
+        Tick next_tick = cpu->nextCycle(curTick());
 
-        if (next_tick == curTick) {
+        if (next_tick == curTick()) {
             cpu->completeDataAccess(pkt);
         } else {
             if (!tickEvent.scheduled()) {

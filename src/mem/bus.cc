@@ -142,10 +142,10 @@ Bus::calcPacketTiming(PacketPtr pkt)
     // a cycle boundary to take up only the following cycle. Anything
     // that happens later will have to "wait" for the end of that
     // cycle, and then start using the bus after that.
-    if (tickNextIdle < curTick) {
-        tickNextIdle = curTick;
+    if (tickNextIdle < curTick()) {
+        tickNextIdle = curTick();
         if (tickNextIdle % clock != 0)
-            tickNextIdle = curTick - (curTick % clock) + clock;
+            tickNextIdle = curTick() - (curTick() % clock) + clock;
     }
 
     Tick headerTime = tickNextIdle + headerCycles * clock;
@@ -181,7 +181,7 @@ void Bus::occupyBus(Tick until)
     reschedule(busIdle, tickNextIdle, true);
 
     DPRINTF(Bus, "The bus is now occupied from tick %d to %d\n",
-            curTick, tickNextIdle);
+            curTick(), tickNextIdle);
 }
 
 /** Function called by the port when the bus is receiving a Timing
@@ -205,7 +205,7 @@ Bus::recvTiming(PacketPtr pkt)
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
     if (!pkt->isExpressSnoop() &&
-        (tickNextIdle > curTick ||
+        (tickNextIdle > curTick() ||
          (retryList.size() && (!inRetry || src_port != retryList.front()))))
     {
         addToRetryList(src_port);
@@ -295,7 +295,7 @@ void
 Bus::recvRetry(int id)
 {
     // If there's anything waiting, and the bus isn't busy...
-    if (retryList.size() && curTick >= tickNextIdle) {
+    if (retryList.size() && curTick() >= tickNextIdle) {
         //retryingPort = retryList.front();
         inRetry = true;
         DPRINTF(Bus, "Sending a retry to %s\n", retryList.front()->getPeer()->name());
@@ -308,7 +308,7 @@ Bus::recvRetry(int id)
             inRetry = false;
 
             //Bring tickNextIdle up to the present
-            while (tickNextIdle < curTick)
+            while (tickNextIdle < curTick())
                 tickNextIdle += clock;
 
             //Burn a cycle for the missed grant.
@@ -318,7 +318,7 @@ Bus::recvRetry(int id)
         }
     }
     //If we weren't able to drain before, we might be able to now.
-    if (drainEvent && retryList.size() == 0 && curTick >= tickNextIdle) {
+    if (drainEvent && retryList.size() == 0 && curTick() >= tickNextIdle) {
         drainEvent->process();
         // Clear the drain event once we're done with it.
         drainEvent = NULL;
@@ -435,7 +435,7 @@ Bus::recvAtomic(PacketPtr pkt)
     }
 
     // why do we have this packet field and the return value both???
-    pkt->finishTime = curTick + response_latency;
+    pkt->finishTime = curTick() + response_latency;
     return response_latency;
 }
 
@@ -649,7 +649,7 @@ Bus::drain(Event * de)
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
     //contacted for a retry didn't actually retry.
-    if (retryList.size() || (curTick < tickNextIdle && busIdle.scheduled())) {
+    if (retryList.size() || (curTick() < tickNextIdle && busIdle.scheduled())) {
         drainEvent = de;
         return 1;
     }
@@ -659,8 +659,8 @@ Bus::drain(Event * de)
 void
 Bus::startup()
 {
-    if (tickNextIdle < curTick)
-        tickNextIdle = (curTick / clock) * clock + clock;
+    if (tickNextIdle < curTick())
+        tickNextIdle = (curTick() / clock) * clock + clock;
 }
 
 Bus *

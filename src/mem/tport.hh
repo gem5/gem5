@@ -100,7 +100,7 @@ class SimpleTimingPort : public Port
 
     /** Check whether we have a packet ready to go on the transmit list. */
     bool deferredPacketReady()
-    { return !transmitList.empty() && transmitList.front().tick <= curTick; }
+    { return !transmitList.empty() && transmitList.front().tick <= curTick(); }
 
     Tick deferredPacketReadyTime()
     { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
@@ -129,7 +129,7 @@ class SimpleTimingPort : public Port
 
     /** Attempt to send the packet at the head of the deferred packet
      * list.  Caller must guarantee that the deferred packet list is
-     * non-empty and that the head packet is scheduled for curTick (or
+     * non-empty and that the head packet is scheduled for curTick() (or
      * earlier).
      */
     void sendDeferredPacket();

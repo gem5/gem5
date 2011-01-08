@@ -210,13 +210,13 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
     }
 
     if (squashSeqNum[tid] <= done_seq_num &&
-        lastSquashCycle[tid] == curTick) {
+        lastSquashCycle[tid] == curTick()) {
         DPRINTF(InOrderFetchSeq, "[tid:%i]: Ignoring squash from stage %i, "
                 "since there is an outstanding squash that is older.\n",
                 tid, squash_stage);
     } else {
         squashSeqNum[tid] = done_seq_num;
-        lastSquashCycle[tid] = curTick;
+        lastSquashCycle[tid] = curTick();
 
         // If The very next instruction number is the done seq. num,
         // then we haven't seen the delay slot yet ... if it isn't

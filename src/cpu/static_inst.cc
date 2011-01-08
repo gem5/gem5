@@ -51,7 +51,7 @@ StaticInst::~StaticInst()
 void
 StaticInst::dumpDecodeCacheStats()
 {
-    cerr << "Decode hash table stats @ " << curTick << ":" << endl;
+    cerr << "Decode hash table stats @ " << curTick() << ":" << endl;
     cerr << "\tnum entries = " << decodeCache.size() << endl;
     cerr << "\tnum buckets = " << decodeCache.bucket_count() << endl;
     vector<int> hist(100, 0);

@@ -791,7 +791,7 @@ decode OPCODE default Unknown::unknown() {
                 Ra = xc->readMiscReg(IPR_CC) + (Rb & 0);
 
 #else
-                Ra = curTick;
+                Ra = curTick();
 #endif
             }}, IsUnverifiable);
 

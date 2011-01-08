@@ -76,7 +76,7 @@ __exit_message(const char *prefix, int code,
     format += "Memory Usage: %ld KBytes\n";
     format += "For more information see: http://www.m5sim.org/%s/%x\n";
 
-    args.push_back(curTick);
+    args.push_back(curTick());
     args.push_back(func);
     args.push_back(file);
     args.push_back(line);
@@ -114,7 +114,7 @@ __base_message(std::ostream &stream, const char *prefix, bool verbose,
 
     if (verbose) {
         format += " @ cycle %d\n[%s:%s, line %d]\n";
-        args.push_back(curTick);
+        args.push_back(curTick());
         args.push_back(func);
         args.push_back(file);
         args.push_back(line);

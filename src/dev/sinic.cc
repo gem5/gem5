@@ -618,7 +618,7 @@ Device::devIntrPost(uint32_t interrupts)
         interrupts &= ~Regs::Intr_TxLow;
 
     if (interrupts) {
-        Tick when = curTick;
+        Tick when = curTick();
         if ((interrupts & Regs::Intr_NoDelay) == 0)
             when += intrDelay;
         cpuIntrPost(when);
@@ -654,7 +654,7 @@ Device::devIntrChangeMask(uint32_t newmask)
             regs.IntrStatus, regs.IntrMask, regs.IntrStatus & regs.IntrMask);
 
     if (regs.IntrStatus & regs.IntrMask)
-        cpuIntrPost(curTick);
+        cpuIntrPost(curTick());
     else
         cpuIntrClear();
 }
@@ -671,8 +671,8 @@ Base::cpuIntrPost(Tick when)
      * @todo this warning should be removed and the intrTick code should
      * be fixed.
      */
-    assert(when >= curTick);
-    assert(intrTick >= curTick || intrTick == 0);
+    assert(when >= curTick());
+    assert(intrTick >= curTick() || intrTick == 0);
     if (!cpuIntrEnable) {
         DPRINTF(EthernetIntr, "interrupts not enabled.\n",
                 intrTick);
@@ -686,9 +686,9 @@ Base::cpuIntrPost(Tick when)
     }
 
     intrTick = when;
-    if (intrTick < curTick) {
+    if (intrTick < curTick()) {
         debug_break();
-        intrTick = curTick;
+        intrTick = curTick();
     }
 
     DPRINTF(EthernetIntr, "going to schedule an interrupt for intrTick=%d\n",
@@ -703,7 +703,7 @@ Base::cpuIntrPost(Tick when)
 void
 Base::cpuInterrupt()
 {
-    assert(intrTick == curTick);
+    assert(intrTick == curTick());
 
     // Whether or not there's a pending interrupt, we don't care about
     // it anymore
@@ -759,7 +759,7 @@ Device::changeConfig(uint32_t newconf)
         cpuIntrEnable = regs.Config & Regs::Config_IntEn;
         if (cpuIntrEnable) {
             if (regs.IntrStatus & regs.IntrMask)
-                cpuIntrPost(curTick);
+                cpuIntrPost(curTick());
         } else {
             cpuIntrClear();
         }
@@ -882,7 +882,7 @@ Device::rxKick()
     DPRINTF(EthernetSM, "rxKick: rxState=%s (rxFifo.size=%d)\n",
             RxStateStrings[rxState], rxFifo.size());
 
-    if (rxKickTick > curTick) {
+    if (rxKickTick > curTick()) {
         DPRINTF(EthernetSM, "rxKick: exiting, can't run till %d\n",
                 rxKickTick);
         return;
@@ -1196,7 +1196,7 @@ Device::txKick()
     DPRINTF(EthernetSM, "txKick: txState=%s (txFifo.size=%d)\n",
             TxStateStrings[txState], txFifo.size());
 
-    if (txKickTick > curTick) {
+    if (txKickTick > curTick()) {
         DPRINTF(EthernetSM, "txKick: exiting, can't run till %d\n",
                 txKickTick);
         return;
@@ -1317,7 +1317,7 @@ Device::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    reschedule(txEvent, curTick + ticks(1), true);
+    reschedule(txEvent, curTick() + ticks(1), true);
 }
 
 bool
@@ -1573,7 +1573,7 @@ Device::serialize(std::ostream &os)
      * If there's a pending transmit, store the time so we can
      * reschedule it later
      */
-    Tick transmitTick = txEvent.scheduled() ? txEvent.when() - curTick : 0;
+    Tick transmitTick = txEvent.scheduled() ? txEvent.when() - curTick() : 0;
     SERIALIZE_SCALAR(transmitTick);
 }
 
@@ -1708,7 +1708,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     Tick transmitTick;
     UNSERIALIZE_SCALAR(transmitTick);
     if (transmitTick)
-        schedule(txEvent, curTick + transmitTick);
+        schedule(txEvent, curTick() + transmitTick);
 
     pioPort->sendStatusChange(Port::RangeChange);
 

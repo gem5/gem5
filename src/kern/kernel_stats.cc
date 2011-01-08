@@ -120,8 +120,8 @@ Statistics::swpipl(int ipl)
         return;
 
     _iplGood[ipl]++;
-    _iplTicks[iplLast] += curTick - iplLastTick;
-    iplLastTick = curTick;
+    _iplTicks[iplLast] += curTick() - iplLastTick;
+    iplLastTick = curTick();
     iplLast = ipl;
 }
 

@@ -333,7 +333,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // Actual target device (typ. PhysicalMemory) will delete the
         // packet on reception, so we need to save a copy here.
         PacketPtr cp_pkt = new Packet(pkt, true);
-        targets->add(cp_pkt, curTick, _order, Target::FromSnoop,
+        targets->add(cp_pkt, curTick(), _order, Target::FromSnoop,
                      downstreamPending && targets->needsExclusive);
         ++ntargets;
 
@@ -378,7 +378,7 @@ MSHR::promoteDeferredTargets()
     deferredTargets->resetFlags();
 
     order = targets->front().order;
-    readyTime = std::max(curTick, targets->front().readyTime);
+    readyTime = std::max(curTick(), targets->front().readyTime);
 
     return true;
 }

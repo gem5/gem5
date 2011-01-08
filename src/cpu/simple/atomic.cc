@@ -267,7 +267,7 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     numCycles += tickToCycles(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
-    schedule(tickEvent, nextCycle(curTick + ticks(delay)));
+    schedule(tickEvent, nextCycle(curTick() + ticks(delay)));
     _status = Running;
 }
 
@@ -731,7 +731,7 @@ AtomicSimpleCPU::tick()
         latency = ticks(1);
 
     if (_status != Idle)
-        schedule(tickEvent, curTick + latency);
+        schedule(tickEvent, curTick() + latency);
 }
 
 

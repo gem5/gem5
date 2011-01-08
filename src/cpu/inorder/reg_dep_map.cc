@@ -181,14 +181,14 @@ RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst)
         assert(dest_reg_idx != -1);
 
         if (forward_inst->isExecuted() &&
-            forward_inst->readResultTime(dest_reg_idx) < curTick) {
+            forward_inst->readResultTime(dest_reg_idx) < curTick()) {
             return forward_inst;
         } else {
             if (!forward_inst->isExecuted()) {
                 DPRINTF(RegDepMap, "[sn:%i] Can't get value through "
                         "forwarding, [sn:%i] has not been executed yet.\n",
                         inst->seqNum, forward_inst->seqNum);
-            } else if (forward_inst->readResultTime(dest_reg_idx) >= curTick) {
+            } else if (forward_inst->readResultTime(dest_reg_idx) >= curTick()) {
                 DPRINTF(RegDepMap, "[sn:%i] Can't get value through "
                         "forwarding, [sn:%i] executed on tick:%i.\n",
                         inst->seqNum, forward_inst->seqNum,

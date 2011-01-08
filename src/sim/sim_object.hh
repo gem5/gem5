@@ -131,7 +131,7 @@ class SimObject : public EventManager, public Serializable
     /**
      * startup() is the final initialization call before simulation.
      * All state is initialized (including unserialized state, if any,
-     * such as the curTick value), so this is the appropriate place to
+     * such as the curTick() value), so this is the appropriate place to
      * schedule initial event(s) for objects that need them.
      */
     virtual void startup();

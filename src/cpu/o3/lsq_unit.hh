@@ -624,7 +624,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             // We'll say this has a 1 cycle load-store forwarding latency
             // for now.
             // @todo: Need to make this a parameter.
-            cpu->schedule(wb, curTick);
+            cpu->schedule(wb, curTick());
 
             // Don't need to do anything special for split loads.
             if (TheISA::HasUnalignedMemAcc && sreqLow) {

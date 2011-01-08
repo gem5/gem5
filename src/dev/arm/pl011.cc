@@ -187,7 +187,7 @@ Pl011::write(PacketPtr pkt)
             DPRINTF(Uart, "TX int enabled, scheduling interruptt\n");
             rawInt.txim = 1;
             if (!intEvent.scheduled())
-                schedule(intEvent, curTick + intDelay);
+                schedule(intEvent, curTick() + intDelay);
         }
 
         break;
@@ -217,7 +217,7 @@ Pl011::write(PacketPtr pkt)
             DPRINTF(Uart, "Writing to IMSC: TX int enabled, scheduling interruptt\n");
             rawInt.txim = 1;
             if (!intEvent.scheduled())
-                schedule(intEvent, curTick + intDelay);
+                schedule(intEvent, curTick() + intDelay);
         }
 
         break;
@@ -252,7 +252,7 @@ Pl011::dataAvailable()
     DPRINTF(Uart, "Data available, scheduling interrupt\n");
 
     if (!intEvent.scheduled())
-        schedule(intEvent, curTick + intDelay);
+        schedule(intEvent, curTick() + intDelay);
 }
 
 void

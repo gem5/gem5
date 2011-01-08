@@ -412,7 +412,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 //    MemDebug::cacheAccess(pkt);
 
     // we charge hitLatency for doing just about anything here
-    Tick time =  curTick + hitLatency;
+    Tick time =  curTick() + hitLatency;
 
     if (pkt->isResponse()) {
         // must be cache-to-cache response from upper to lower level
@@ -504,7 +504,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     if (satisfied) {
         if (needsResponse) {
             pkt->makeTimingResponse();
-            cpuSidePort->respond(pkt, curTick+lat);
+            cpuSidePort->respond(pkt, curTick()+lat);
         } else {
             delete pkt;
         }
@@ -532,7 +532,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
                 noTargetMSHR = mshr;
                 setBlocked(Blocked_NoTargets);
                 // need to be careful with this... if this mshr isn't
-                // ready yet (i.e. time > curTick_, we don't want to
+                // ready yet (i.e. time > curTick()_, we don't want to
                 // move it ahead of mshrs that are ready
                 // mshrQueue.moveToFront(mshr);
             }
@@ -816,7 +816,7 @@ template<class TagStore>
 void
 Cache<TagStore>::handleResponse(PacketPtr pkt)
 {
-    Tick time = curTick + hitLatency;
+    Tick time = curTick() + hitLatency;
     MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
     bool is_error = pkt->isError();
 
@@ -848,7 +848,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     MSHR::Target *initial_tgt = mshr->getTarget();
     BlkType *blk = tags->findBlock(pkt->getAddr());
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
-    Tick miss_latency = curTick - initial_tgt->recvTime;
+    Tick miss_latency = curTick() - initial_tgt->recvTime;
     PacketList writebacks;
 
     if (pkt->req->isUncacheable()) {
@@ -1159,7 +1159,7 @@ doTimingSupplyResponse(PacketPtr req_pkt, uint8_t *blk_data,
         // invalidate it.
         pkt->cmd = MemCmd::ReadRespWithInvalidate;
     }
-    memSidePort->respond(pkt, curTick + hitLatency);
+    memSidePort->respond(pkt, curTick() + hitLatency);
 }
 
 template<class TagStore>
@@ -1430,7 +1430,7 @@ Cache<TagStore>::getNextMSHR()
                 // (hwpf_mshr_misses)
                 mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
                 // Don't request bus, since we already have it
-                return allocateMissBuffer(pkt, curTick, false);
+                return allocateMissBuffer(pkt, curTick(), false);
             }
         }
     }
@@ -1461,7 +1461,7 @@ Cache<TagStore>::getTimingPacket()
         pkt = new Packet(tgt_pkt);
         pkt->cmd = MemCmd::UpgradeFailResp;
         pkt->senderState = mshr;
-        pkt->firstWordTime = pkt->finishTime = curTick;
+        pkt->firstWordTime = pkt->finishTime = curTick();
         handleResponse(pkt);
         return NULL;
     } else if (mshr->isForwardNoResponse()) {
@@ -1679,7 +1679,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
         // @TODO: need to facotr in prefetch requests here somehow
         if (nextReady != MaxTick) {
             DPRINTF(CachePort, "more packets to send @ %d\n", nextReady);
-            schedule(sendEvent, std::max(nextReady, curTick + 1));
+            schedule(sendEvent, std::max(nextReady, curTick() + 1));
         } else {
             // no more to send right now: if we're draining, we may be done
             if (drainEvent && !sendEvent->scheduled()) {

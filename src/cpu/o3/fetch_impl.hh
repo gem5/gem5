@@ -68,7 +68,7 @@ Tick
 DefaultFetch<Impl>::IcachePort::recvAtomic(PacketPtr pkt)
 {
     panic("DefaultFetch doesn't expect recvAtomic callback!");
-    return curTick;
+    return curTick();
 }
 
 template<class Impl>
@@ -625,7 +625,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid,
 
         DPRINTF(Fetch, "[tid:%i]: Doing cache access.\n", tid);
 
-        lastIcacheStall[tid] = curTick;
+        lastIcacheStall[tid] = curTick();
 
         DPRINTF(Activity, "[tid:%i]: Activity: Waiting on I-cache "
                 "response.\n", tid);
@@ -992,7 +992,7 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
 #if TRACING_ON
     if (trace) {
         instruction->traceData =
-            cpu->getTracer()->getInstRecord(curTick, cpu->tcBase(tid),
+            cpu->getTracer()->getInstRecord(curTick(), cpu->tcBase(tid),
                     instruction->staticInst, thisPC, curMacroop);
     }
 #else

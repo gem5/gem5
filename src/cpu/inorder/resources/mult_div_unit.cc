@@ -163,7 +163,7 @@ MultDivUnit::getSlot(DynInstPtr inst)
         }
     }
 
-    if (lastMDUCycle + repeat_rate > curTick) {
+    if (lastMDUCycle + repeat_rate > curTick()) {
         DPRINTF(InOrderMDU, "MDU not ready to process another inst. until %i, "
                 "denying request.\n", lastMDUCycle + repeat_rate);
         return -1;
@@ -173,7 +173,7 @@ MultDivUnit::getSlot(DynInstPtr inst)
                 rval);
 
         if (rval != -1) {            
-            lastMDUCycle = curTick;
+            lastMDUCycle = curTick();
             lastOpType = inst->opClass();
             lastInstName = inst->staticInst->getName();
         }

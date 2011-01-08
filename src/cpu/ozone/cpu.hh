@@ -277,9 +277,9 @@ class OzoneCPU : public BaseCPU
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-            tickEvent.reschedule(curTick + ticks(delay));
+            tickEvent.reschedule(curTick() + ticks(delay));
         else if (!tickEvent.scheduled())
-            tickEvent.schedule(curTick + ticks(delay));
+            tickEvent.schedule(curTick() + ticks(delay));
     }
 
     /// Unschedule tick event, regardless of its current state.

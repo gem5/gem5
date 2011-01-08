@@ -673,7 +673,7 @@ InstQueue<Impl>::scheduleReadyInsts()
                     FUCompletion *execution = new FUCompletion(issuing_inst,
                                                                idx, this);
 
-                    execution->schedule(curTick + issue_latency - 1);
+                    execution->schedule(curTick() + issue_latency - 1);
                 } else {
                     i2e_info->insts[exec_queue_slot++] = issuing_inst;
                     i2e_info->size++;

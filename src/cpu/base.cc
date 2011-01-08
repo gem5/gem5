@@ -66,7 +66,7 @@ CPUProgressEvent::CPUProgressEvent(BaseCPU *_cpu, Tick ival)
       cpu(_cpu), _repeatEvent(true)
 {
     if (_interval)
-        cpu->schedule(this, curTick + _interval);
+        cpu->schedule(this, curTick() + _interval);
 }
 
 void
@@ -82,13 +82,13 @@ CPUProgressEvent::process()
     ipc = 0.0;
 #else
     cprintf("%lli: %s progress event, total committed:%i, progress insts "
-            "committed: %lli\n", curTick, cpu->name(), temp,
+            "committed: %lli\n", curTick(), cpu->name(), temp,
             temp - lastNumInst);
 #endif
     lastNumInst = temp;
 
     if (_repeatEvent)
-        cpu->schedule(this, curTick + _interval);
+        cpu->schedule(this, curTick() + _interval);
 }
 
 const char *
@@ -110,7 +110,7 @@ BaseCPU::BaseCPU(Params *p)
       phase(p->phase)
 #endif
 {
-//    currentTick = curTick;
+//    currentTick = curTick();
 
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
@@ -231,7 +231,7 @@ BaseCPU::startup()
 {
 #if FULL_SYSTEM
     if (!params()->defer_registration && profileEvent)
-        schedule(profileEvent, curTick);
+        schedule(profileEvent, curTick());
 #endif
 
     if (params()->progress_interval) {
@@ -270,7 +270,7 @@ BaseCPU::regStats()
 Tick
 BaseCPU::nextCycle()
 {
-    Tick next_tick = curTick - phase + clock - 1;
+    Tick next_tick = curTick() - phase + clock - 1;
     next_tick -= (next_tick % clock);
     next_tick += phase;
     return next_tick;
@@ -284,7 +284,7 @@ BaseCPU::nextCycle(Tick begin_tick)
         next_tick = next_tick - (next_tick % clock) + clock;
     next_tick += phase;
 
-    assert(next_tick >= curTick);
+    assert(next_tick >= curTick());
     return next_tick;
 }
 
@@ -390,7 +390,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
         threadContexts[i]->profileClear();
 
     if (profileEvent)
-        schedule(profileEvent, curTick);
+        schedule(profileEvent, curTick());
 #endif
 
     // Connect new CPU to old CPU's memory only if new CPU isn't
@@ -424,7 +424,7 @@ BaseCPU::ProfileEvent::process()
         tc->profileSample();
     }
 
-    cpu->schedule(this, curTick + interval);
+    cpu->schedule(this, curTick() + interval);
 }
 
 void
@@ -465,7 +465,7 @@ BaseCPU::traceFunctionsInternal(Addr pc)
         }
 
         ccprintf(*functionTraceStream, " (%d)\n%d: %s",
-                 curTick - functionEntryTick, curTick, sym_str);
-        functionEntryTick = curTick;
+                 curTick() - functionEntryTick, curTick(), sym_str);
+        functionEntryTick = curTick();
     }
 }

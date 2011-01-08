@@ -37,11 +37,15 @@
 #include "base/types.hh"
 
 /// The universal simulation clock.
-extern Tick curTick;
+extern Tick _curTick;
+
+inline Tick curTick() { return _curTick; }
+inline void curTick(Tick newVal) { _curTick = newVal; }
+
 const Tick retryTime = 1000;
 
 namespace SimClock {
-/// The simulated frequency of curTick.
+/// The simulated frequency of curTick().
 extern Tick Frequency;
 
 namespace Float {

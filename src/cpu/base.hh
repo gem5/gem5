@@ -100,20 +100,20 @@ class BaseCPU : public MemObject
 //    Tick currentTick;
     inline Tick frequency() const { return SimClock::Frequency / clock; }
     inline Tick ticks(int numCycles) const { return clock * numCycles; }
-    inline Tick curCycle() const { return curTick / clock; }
+    inline Tick curCycle() const { return curTick() / clock; }
     inline Tick tickToCycles(Tick val) const { return val / clock; }
     // @todo remove me after debugging with legion done
     Tick instCount() { return instCnt; }
 
     /** The next cycle the CPU should be scheduled, given a cache
      * access or quiesce event returning on this cycle.  This function
-     * may return curTick if the CPU should run on the current cycle.
+     * may return curTick() if the CPU should run on the current cycle.
      */
     Tick nextCycle();
 
     /** The next cycle the CPU should be scheduled, given a cache
      * access or quiesce event returning on the given Tick.  This
-     * function may return curTick if the CPU should run on the
+     * function may return curTick() if the CPU should run on the
      * current cycle.
      * @param begin_tick The tick that the event is completing on.
      */

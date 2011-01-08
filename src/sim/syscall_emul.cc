@@ -59,7 +59,7 @@ SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 #endif
     DPRINTFR(SyscallVerbose,
              "%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
-             curTick, tc->getCpuPtr()->name(), name,
+             curTick(), tc->getCpuPtr()->name(), name,
              process->getSyscallArg(tc, index),
              process->getSyscallArg(tc, index),
              process->getSyscallArg(tc, index),
@@ -68,7 +68,7 @@ SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
     SyscallReturn retval = (*funcPtr)(this, callnum, process, tc);
 
     DPRINTFR(SyscallVerbose, "%d: %s: syscall %s returns %d\n",
-             curTick,tc->getCpuPtr()->name(), name, retval.value());
+             curTick(),tc->getCpuPtr()->name(), name, retval.value());
 
     if (!(flags & SyscallDesc::SuppressReturnValue))
         process->setSyscallReturn(tc, retval);

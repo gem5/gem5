@@ -400,7 +400,7 @@ void
 Globals::serialize(ostream &os)
 {
     nameOut(os);
-    SERIALIZE_SCALAR(curTick);
+    SERIALIZE_SCALAR(curTick());
 
     nameOut(os, "MainEventQueue");
     mainEventQueue.serialize(os);
@@ -410,7 +410,9 @@ void
 Globals::unserialize(Checkpoint *cp)
 {
     const string &section = name();
-    UNSERIALIZE_SCALAR(curTick);
+    Tick tick;
+    paramIn(cp, section, "curTick", tick);
+    curTick(tick);
 
     mainEventQueue.unserialize(cp, "MainEventQueue");
 }
@@ -533,10 +535,10 @@ string Checkpoint::currentDirectory;
 string
 Checkpoint::setDir(const string &name)
 {
-    // use csprintf to insert curTick into directory name if it
+    // use csprintf to insert curTick() into directory name if it
     // appears to have a format placeholder in it.
     currentDirectory = (name.find("%") != string::npos) ?
-        csprintf(name, curTick) : name;
+        csprintf(name, curTick()) : name;
     if (currentDirectory[currentDirectory.size() - 1] != '/')
         currentDirectory += "/";
     return currentDirectory;

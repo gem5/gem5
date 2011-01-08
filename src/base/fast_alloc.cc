@@ -80,7 +80,7 @@ FastAlloc::moreStructs(int bucket)
 #include <typeinfo>
 
 #include "base/cprintf.hh"
-#include "sim/core.hh"   // for curTick
+#include "sim/core.hh"   // for curTick()
 
 using namespace std;
 
@@ -104,7 +104,7 @@ FastAlloc::FastAlloc()
 {
     // mark this object in use
     inUse = true;
-    whenAllocated = curTick;
+    whenAllocated = curTick();
 
     // update count
     ++numInUse;

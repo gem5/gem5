@@ -557,7 +557,7 @@ OzoneLSQ<Impl>::writebackStores()
 //      Fault fault = cpu->translateDataReadReq(req);
         req->cmd = Write;
         req->completionEvent = NULL;
-        req->time = curTick;
+        req->time = curTick();
         assert(!req->data);
         req->data = new uint8_t[64];
         memcpy(req->data, (uint8_t *)&storeQueue[storeWBIdx].data, req->size);
@@ -615,7 +615,7 @@ OzoneLSQ<Impl>::writebackStores()
                 req->completionEvent = new
                     StoreCompletionEvent(storeWBIdx, wb, this);
 
-                lastDcacheStall = curTick;
+                lastDcacheStall = curTick();
 
                 _status = DcacheMissStall;
 
@@ -637,7 +637,7 @@ OzoneLSQ<Impl>::writebackStores()
                     typename BackEnd::LdWritebackEvent *wb =
                         new typename BackEnd::LdWritebackEvent(storeQueue[storeWBIdx].inst,
                                                                be);
-                    wb->schedule(curTick);
+                    wb->schedule(curTick());
                 }
 
                 completeStore(storeWBIdx);

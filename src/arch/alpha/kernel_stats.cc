@@ -143,9 +143,9 @@ Statistics::changeMode(cpu_mode newmode, ThreadContext *tc)
             Linux::ThreadInfo(tc).curTaskPID());
 
     _modeGood[newmode]++;
-    _modeTicks[themode] += curTick - lastModeTick;
+    _modeTicks[themode] += curTick() - lastModeTick;
 
-    lastModeTick = curTick;
+    lastModeTick = curTick();
     themode = newmode;
 }
 

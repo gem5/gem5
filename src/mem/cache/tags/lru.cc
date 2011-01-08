@@ -126,9 +126,9 @@ LRU::accessBlock(Addr addr, int &lat, int context_src)
         sets[set].moveToHead(blk);
         DPRINTF(CacheRepl, "set %x: moving blk %x to MRU\n",
                 set, regenerateBlkAddr(tag, set));
-        if (blk->whenReady > curTick
-            && blk->whenReady - curTick > hitLatency) {
-            lat = blk->whenReady - curTick;
+        if (blk->whenReady > curTick()
+            && blk->whenReady - curTick() > hitLatency) {
+            lat = blk->whenReady - curTick();
         }
         blk->refCount += 1;
     }
@@ -180,7 +180,7 @@ LRU::insertBlock(Addr addr, BlkType *blk, int context_src)
         blk->isTouched = true;
         if (!warmedUp && tagsInUse.value() >= warmupBound) {
             warmedUp = true;
-            warmupCycle = curTick;
+            warmupCycle = curTick();
         }
     }
 

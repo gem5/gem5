@@ -475,7 +475,7 @@ DefaultCommit<Impl>::generateTrapEvent(ThreadID tid)
 
     TrapEvent *trap = new TrapEvent(this, tid);
 
-    cpu->schedule(trap, curTick + trapLatency);
+    cpu->schedule(trap, curTick() + trapLatency);
     trapInFlight[tid] = true;
 }
 

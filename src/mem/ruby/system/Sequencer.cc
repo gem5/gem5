@@ -132,7 +132,7 @@ Sequencer::wakeup()
         // If there are still outstanding requests, keep checking
         schedule(deadlockCheckEvent,
                  m_deadlock_threshold * g_eventQueue_ptr->getClock() +
-                 curTick);
+                 curTick());
     }
 }
 
@@ -223,7 +223,7 @@ Sequencer::insertRequest(SequencerRequest* request)
 
     // See if we should schedule a deadlock check
     if (deadlockCheckEvent.scheduled() == false) {
-        schedule(deadlockCheckEvent, m_deadlock_threshold + curTick);
+        schedule(deadlockCheckEvent, m_deadlock_threshold + curTick());
     }
 
     Address line_addr(request->ruby_request.paddr);

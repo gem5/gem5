@@ -848,7 +848,7 @@ NSGigE::devIntrPost(uint32_t interrupts)
             interrupts, regs.isr, regs.imr);
 
     if ((regs.isr & regs.imr)) {
-        Tick when = curTick;
+        Tick when = curTick();
         if ((regs.isr & regs.imr & ISR_NODELAY) == 0)
             when += intrDelay;
         postedInterrupts++;
@@ -910,7 +910,7 @@ NSGigE::devIntrChangeMask()
             regs.isr, regs.imr, regs.isr & regs.imr);
 
     if (regs.isr & regs.imr)
-        cpuIntrPost(curTick);
+        cpuIntrPost(curTick());
     else
         cpuIntrClear();
 }
@@ -927,8 +927,8 @@ NSGigE::cpuIntrPost(Tick when)
      * @todo this warning should be removed and the intrTick code should
      * be fixed.
      */
-    assert(when >= curTick);
-    assert(intrTick >= curTick || intrTick == 0);
+    assert(when >= curTick());
+    assert(intrTick >= curTick() || intrTick == 0);
     if (when > intrTick && intrTick != 0) {
         DPRINTF(EthernetIntr, "don't need to schedule event...intrTick=%d\n",
                 intrTick);
@@ -936,9 +936,9 @@ NSGigE::cpuIntrPost(Tick when)
     }
 
     intrTick = when;
-    if (intrTick < curTick) {
+    if (intrTick < curTick()) {
         debug_break();
-        intrTick = curTick;
+        intrTick = curTick();
     }
 
     DPRINTF(EthernetIntr, "going to schedule an interrupt for intrTick=%d\n",
@@ -953,7 +953,7 @@ NSGigE::cpuIntrPost(Tick when)
 void
 NSGigE::cpuInterrupt()
 {
-    assert(intrTick == curTick);
+    assert(intrTick == curTick());
 
     // Whether or not there's a pending interrupt, we don't care about
     // it anymore
@@ -1125,7 +1125,7 @@ NSGigE::rxKick()
 
   next:
     if (clock) {
-        if (rxKickTick > curTick) {
+        if (rxKickTick > curTick()) {
             DPRINTF(EthernetSM, "receive kick exiting, can't run till %d\n",
                     rxKickTick);
 
@@ -1133,7 +1133,7 @@ NSGigE::rxKick()
         }
 
         // Go to the next state machine clock tick.
-        rxKickTick = curTick + ticks(1);
+        rxKickTick = curTick() + ticks(1);
     }
 
     switch(rxDmaState) {
@@ -1494,7 +1494,7 @@ NSGigE::transmit()
 
    if (!txFifo.empty() && !txEvent.scheduled()) {
        DPRINTF(Ethernet, "reschedule transmit\n");
-       schedule(txEvent, curTick + retryTime);
+       schedule(txEvent, curTick() + retryTime);
    }
 }
 
@@ -1573,14 +1573,14 @@ NSGigE::txKick()
 
   next:
     if (clock) {
-        if (txKickTick > curTick) {
+        if (txKickTick > curTick()) {
             DPRINTF(EthernetSM, "transmit kick exiting, can't run till %d\n",
                     txKickTick);
             goto exit;
         }
 
         // Go to the next state machine clock tick.
-        txKickTick = curTick + ticks(1);
+        txKickTick = curTick() + ticks(1);
     }
 
     switch(txDmaState) {
@@ -2001,7 +2001,7 @@ NSGigE::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    reschedule(txEvent, curTick + ticks(1), true);
+    reschedule(txEvent, curTick() + ticks(1), true);
 }
 
 bool
@@ -2259,7 +2259,7 @@ NSGigE::serialize(ostream &os)
      * If there's a pending transmit, store the time so we can
      * reschedule it later
      */
-    Tick transmitTick = txEvent.scheduled() ? txEvent.when() - curTick : 0;
+    Tick transmitTick = txEvent.scheduled() ? txEvent.when() - curTick() : 0;
     SERIALIZE_SCALAR(transmitTick);
 
     /*
@@ -2440,7 +2440,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     Tick transmitTick;
     UNSERIALIZE_SCALAR(transmitTick);
     if (transmitTick)
-        schedule(txEvent, curTick + transmitTick);
+        schedule(txEvent, curTick() + transmitTick);
 
     /*
      * unserialize receive address filter settings

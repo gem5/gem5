@@ -184,7 +184,7 @@ tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           TypedBufferArg<Tru64::tbl_sysinfo> elp(bufPtr);
 
           const int clk_hz = one_million;
-          elp->si_user = htog(curTick / (SimClock::Frequency / clk_hz));
+          elp->si_user = htog(curTick() / (SimClock::Frequency / clk_hz));
           elp->si_nice = htog(0);
           elp->si_sys = htog(0);
           elp->si_idle = htog(0);

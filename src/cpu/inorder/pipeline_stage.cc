@@ -338,7 +338,7 @@ void
 PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 {
     if (cpu->squashSeqNum[tid] < inst->seqNum &&
-        cpu->lastSquashCycle[tid] == curTick){
+        cpu->lastSquashCycle[tid] == curTick()){
         DPRINTF(Resource, "Ignoring [sn:%i] branch squash signal due to "
                 "another stage's squash signal for after [sn:%i].\n", 
                 inst->seqNum, cpu->squashSeqNum[tid]);
@@ -371,7 +371,7 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 
         // Save squash num for later stage use
         cpu->squashSeqNum[tid] = squash_seq_num;
-        cpu->lastSquashCycle[tid] = curTick;
+        cpu->lastSquashCycle[tid] = curTick();
     }
 }
 
@@ -969,7 +969,7 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     inst->popSchedEntry();
                 } else {
                     panic("%i: encountered %s fault!\n",
-                          curTick, req->fault->name());
+                          curTick(), req->fault->name());
                 }
 
                 reqs_processed++;                
@@ -1075,7 +1075,7 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
 
     if (nextStageQueueValid(inst->nextStage - 1)) {
         if (inst->seqNum > cpu->squashSeqNum[tid] &&
-            curTick == cpu->lastSquashCycle[tid]) {
+            curTick() == cpu->lastSquashCycle[tid]) {
             DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, skipping "
                     "insertion into stage %i queue.\n", tid, inst->seqNum, 
                     inst->nextStage);
@@ -1107,7 +1107,7 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
 
             // Take note of trace data for this inst & stage
             if (inst->traceData) {
-                inst->traceData->setStageCycle(stageNum, curTick);
+                inst->traceData->setStageCycle(stageNum, curTick());
             }
 
         }

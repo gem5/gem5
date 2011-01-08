@@ -50,7 +50,7 @@ MessagePort::recvAtomic(PacketPtr pkt)
 void
 MessagePort::sendMessageTiming(PacketPtr pkt, Tick latency)
 {
-    schedSendTiming(pkt, curTick + latency);
+    schedSendTiming(pkt, curTick() + latency);
 }
 
 Tick

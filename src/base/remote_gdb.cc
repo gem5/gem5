@@ -217,10 +217,10 @@ GDBListener::listen()
 
 #ifndef NDEBUG
     ccprintf(cerr, "%d: %s: listening for remote gdb #%d on port %d\n",
-             curTick, name(), gdb->number, port);
+             curTick(), name(), gdb->number, port);
 #else
     ccprintf(cerr, "%d: %s: listening for remote gdb on port %d\n",
-             curTick, name(), port);
+             curTick(), name(), port);
 #endif
 }
 

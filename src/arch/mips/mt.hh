@@ -81,7 +81,7 @@ haltThread(TC *tc)
         tc->setMiscReg(MISCREG_TC_RESTART, pc.npc());
 
         warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x",
-                curTick, tc->threadId(), tc->getCpuPtr()->name(),
+                curTick(), tc->threadId(), tc->getCpuPtr()->name(),
                 pc.pc(), pc.npc());
     }
 }
@@ -99,7 +99,7 @@ restoreThread(TC *tc)
         tc->activate(0);
 
         warn("%i: Restoring thread %i in %s @ PC %x",
-                curTick, tc->threadId(), tc->getCpuPtr()->name(), restartPC);
+                curTick(), tc->threadId(), tc->getCpuPtr()->name(), restartPC);
     }
 }
 
@@ -208,7 +208,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
             tcStatus.a = 0;
             tc->setMiscReg(MISCREG_TC_STATUS, tcStatus);
             warn("%i: Deactivating Hardware Thread Context #%i",
-                    curTick, tc->threadId());
+                    curTick(), tc->threadId());
         }
     } else if (src_reg > 0) {
         if (src_reg && !yield_mask != 0) {

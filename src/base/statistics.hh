@@ -72,7 +72,7 @@
 class Callback;
 
 /** The current simulated tick. */
-extern Tick curTick;
+extern Tick curTick();
 
 /* A namespace for all of the Statistics */
 namespace Stats {
@@ -530,8 +530,8 @@ class AvgStor
     void
     set(Counter val)
     {
-        total += current * (curTick - last);
-        last = curTick;
+        total += current * (curTick() - last);
+        last = curTick();
         current = val;
     }
 
@@ -560,8 +560,8 @@ class AvgStor
     Result
     result() const
     {
-        assert(last == curTick);
-        return (Result)(total + current) / (Result)(curTick - lastReset + 1);
+        assert(last == curTick());
+        return (Result)(total + current) / (Result)(curTick() - lastReset + 1);
     }
 
     /**
@@ -575,8 +575,8 @@ class AvgStor
     void
     prepare(Info *info)
     {
-        total += current * (curTick - last);
-        last = curTick;
+        total += current * (curTick() - last);
+        last = curTick();
     }
 
     /**
@@ -586,8 +586,8 @@ class AvgStor
     reset(Info *info)
     {
         total = 0.0;
-        last = curTick;
-        lastReset = curTick;
+        last = curTick();
+        lastReset = curTick();
     }
 
 };
@@ -1576,7 +1576,7 @@ class AvgSampleStor
         data.type = params->type;
         data.sum = sum;
         data.squares = squares;
-        data.samples = curTick;
+        data.samples = curTick();
     }
 
     /**

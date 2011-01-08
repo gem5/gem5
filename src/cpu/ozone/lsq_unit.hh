@@ -485,7 +485,7 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             req->cmd = Read;
             assert(!req->completionEvent);
             req->completionEvent = NULL;
-            req->time = curTick;
+            req->time = curTick();
             assert(!req->data);
             req->data = new uint8_t[64];
 
@@ -502,7 +502,7 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             // We'll say this has a 1 cycle load-store forwarding latency
             // for now.
             // FIXME - Need to make this a parameter.
-            wb->schedule(curTick);
+            wb->schedule(curTick());
 
             // Should keep track of stat for forwarded data
             return NoFault;
@@ -562,7 +562,7 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         // Setup MemReq pointer
         req->cmd = Read;
         req->completionEvent = NULL;
-        req->time = curTick;
+        req->time = curTick();
         assert(!req->data);
         req->data = new uint8_t[64];
 
@@ -585,7 +585,7 @@ OzoneLSQ<Impl>::read(MemReqPtr &req, T &data, int load_idx)
             DPRINTF(Activity, "Activity: ld accessing mem miss [sn:%lli]\n",
                     inst->seqNum);
 
-            lastDcacheStall = curTick;
+            lastDcacheStall = curTick();
 
             _status = DcacheMissStall;
 

@@ -309,7 +309,7 @@ void
 EventQueue::dump() const
 {
     cprintf("============================================================\n");
-    cprintf("EventQueue Dump  (cycle %d)\n", curTick);
+    cprintf("EventQueue Dump  (cycle %d)\n", curTick());
     cprintf("------------------------------------------------------------\n");
 
     if (empty())

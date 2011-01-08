@@ -159,7 +159,7 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
     //
     // The main purpose for clearing stats in the unserialize process is so
     // that the profiler can correctly set its start time to the unserialized
-    // value of curTick
+    // value of curTick()
     //
     clearStats();
 }

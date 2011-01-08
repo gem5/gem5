@@ -332,7 +332,7 @@ main(int argc, char *argv[])
     s15[9].sample(1234);
 
     s10.sample(1000000000);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s10.sample(100000);
     s10.sample(100000);
     s10.sample(100000);
@@ -407,59 +407,59 @@ main(int argc, char *argv[])
 
     s15[0].sample(1234);
     s15[1].sample(4134);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[4].sample(1213);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[3].sample(1124);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[2].sample(1243);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[7].sample(1244);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[4].sample(7234);
     s15[2].sample(9234);
     s15[3].sample(1764);
     s15[7].sample(1564);
     s15[3].sample(3234);
     s15[1].sample(2234);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[5].sample(1234);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[9].sample(4334);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[2].sample(1234);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[4].sample(4334);
     s15[6].sample(1234);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[8].sample(8734);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[1].sample(5234);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[3].sample(8234);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[7].sample(5234);
     s15[4].sample(4434);
     s15[3].sample(7234);
     s15[2].sample(1934);
     s15[1].sample(9234);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[5].sample(5634);
     s15[3].sample(1264);
     s15[7].sample(5223);
     s15[0].sample(1234);
     s15[0].sample(5434);
     s15[3].sample(8634);
-    curTick += ULL(1000000);
+    curTick() += ULL(1000000);
     s15[1].sample(1234);
 
-    s4 = curTick;
+    s4 = curTick();
 
     s8[3] = 99999;
 
     s3 = 12;
     s3++;
-    curTick += 9;
+    curTick() += 9;
 
     s1 = 9;
     s1 += 9;
@@ -534,8 +534,8 @@ main(int argc, char *argv[])
     s9.sample(10);
     s9.sample(10);
 
-    curTick += 9;
-    s4 = curTick;
+    curTick() += 9;
+    s4 = curTick();
     s6.sample(100);
     s6.sample(100);
     s6.sample(100);

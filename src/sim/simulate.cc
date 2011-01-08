@@ -47,14 +47,14 @@
 SimLoopExitEvent *
 simulate(Tick num_cycles)
 {
-    inform("Entering event queue @ %d.  Starting simulation...\n", curTick);
+    inform("Entering event queue @ %d.  Starting simulation...\n", curTick());
 
     if (num_cycles < 0)
         fatal("simulate: num_cycles must be >= 0 (was %d)\n", num_cycles);
-    else if (curTick + num_cycles < 0)  //Overflow
+    else if (curTick() + num_cycles < 0)  //Overflow
         num_cycles = MaxTick;
     else
-        num_cycles = curTick + num_cycles;
+        num_cycles = curTick() + num_cycles;
 
     Event *limit_event =
         new SimLoopExitEvent("simulate() limit reached", 0);
@@ -64,12 +64,12 @@ simulate(Tick num_cycles)
         // there should always be at least one event (the SimLoopExitEvent
         // we just scheduled) in the queue
         assert(!mainEventQueue.empty());
-        assert(curTick <= mainEventQueue.nextTick() &&
+        assert(curTick() <= mainEventQueue.nextTick() &&
                "event scheduled in the past");
 
         // forward current cycle to the time of the first event on the
         // queue
-        curTick = mainEventQueue.nextTick();
+        curTick(mainEventQueue.nextTick());
         Event *exit_event = mainEventQueue.serviceOne();
         if (exit_event != NULL) {
             // hit some kind of exit event; return to Python

@@ -111,7 +111,7 @@ PCEventQueue::dump() const
     const_iterator e = pc_map.end();
 
     for (; i != e; ++i)
-        cprintf("%d: event at %#x: %s\n", curTick, (*i)->pc(),
+        cprintf("%d: event at %#x: %s\n", curTick(), (*i)->pc(),
                 (*i)->descr());
 }
 

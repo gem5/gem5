@@ -72,7 +72,7 @@ class MSHR : public Packet::SenderState, public Printable
 
         Target(PacketPtr _pkt, Tick _readyTime, Counter _order,
                Source _source, bool _markedPending)
-            : recvTime(curTick), readyTime(_readyTime), order(_order),
+            : recvTime(curTick()), readyTime(_readyTime), order(_order),
               pkt(_pkt), source(_source), markedPending(_markedPending)
         {}
     };

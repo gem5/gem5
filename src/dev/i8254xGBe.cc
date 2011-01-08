@@ -695,11 +695,11 @@ IGbE::postInterrupt(IntTypes t, bool now)
 
     Tick itr_interval = SimClock::Int::ns * 256 * regs.itr.interval();
     DPRINTF(EthernetIntr,
-            "EINT: postInterrupt() curTick: %d itr: %d interval: %d\n",
-            curTick, regs.itr.interval(), itr_interval);
+            "EINT: postInterrupt() curTick(): %d itr: %d interval: %d\n",
+            curTick(), regs.itr.interval(), itr_interval);
 
     if (regs.itr.interval() == 0 || now ||
-        lastInterrupt + itr_interval <= curTick) {
+        lastInterrupt + itr_interval <= curTick()) {
         if (interEvent.scheduled()) {
             deschedule(interEvent);
         }
@@ -763,7 +763,7 @@ IGbE::cpuPostInt()
 
     intrPost();
 
-    lastInterrupt = curTick;
+    lastInterrupt = curTick();
 }
 
 void
@@ -801,7 +801,7 @@ IGbE::chkInterrupt()
             DPRINTF(Ethernet,
                     "Possibly scheduling interrupt because of imr write\n");
             if (!interEvent.scheduled()) {
-                Tick t = curTick + SimClock::Int::ns * 256 * regs.itr.interval();
+                Tick t = curTick() + SimClock::Int::ns * 256 * regs.itr.interval();
                 DPRINTF(Ethernet, "Scheduling for %d\n", t);
                 schedule(interEvent, t);
             }
@@ -888,7 +888,7 @@ IGbE::DescCache<T>::writeback(Addr aMask)
     wbOut = max_to_wb;
 
     assert(!wbDelayEvent.scheduled()); 
-    igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
+    igbe->schedule(wbDelayEvent, curTick() + igbe->wbDelay);
     igbe->anBegin(annSmWb, "Prepare Writeback Desc");
 }
             
@@ -898,7 +898,7 @@ IGbE::DescCache<T>::writeback1()
 {
     // If we're draining delay issuing this DMA
     if (igbe->getState() != SimObject::Running) {
-        igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
+        igbe->schedule(wbDelayEvent, curTick() + igbe->wbDelay);
         return;
     }
 
@@ -969,7 +969,7 @@ IGbE::DescCache<T>::fetchDescriptors()
     curFetching = max_to_fetch;
 
     assert(!fetchDelayEvent.scheduled());
-    igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
+    igbe->schedule(fetchDelayEvent, curTick() + igbe->fetchDelay);
     igbe->anBegin(annSmFetch, "Prepare Fetch Desc");
 }
 
@@ -979,7 +979,7 @@ IGbE::DescCache<T>::fetchDescriptors1()
 {
     // If we're draining delay issuing this DMA
     if (igbe->getState() != SimObject::Running) {
-        igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
+        igbe->schedule(fetchDelayEvent, curTick() + igbe->fetchDelay);
         return;
     }
 
@@ -1440,14 +1440,14 @@ IGbE::RxDescCache::pktComplete()
         if (igbe->regs.rdtr.delay()) {
             Tick delay = igbe->regs.rdtr.delay() * igbe->intClock();
             DPRINTF(EthernetSM, "RXS: Scheduling DTR for %d\n", delay);
-            igbe->reschedule(igbe->rdtrEvent, curTick + delay);
+            igbe->reschedule(igbe->rdtrEvent, curTick() + delay);
         }
 
         if (igbe->regs.radv.idv()) {
             Tick delay = igbe->regs.radv.idv() * igbe->intClock();
             DPRINTF(EthernetSM, "RXS: Scheduling ADV for %d\n", delay);
             if (!igbe->radvEvent.scheduled()) {
-                igbe->schedule(igbe->radvEvent, curTick + delay);
+                igbe->schedule(igbe->radvEvent, curTick() + delay);
             }
         }
 
@@ -1880,14 +1880,14 @@ IGbE::TxDescCache::pktComplete()
         if (igbe->regs.tidv.idv()) {
             Tick delay = igbe->regs.tidv.idv() * igbe->intClock();
             DPRINTF(EthernetDesc, "setting tidv\n");
-            igbe->reschedule(igbe->tidvEvent, curTick + delay, true);
+            igbe->reschedule(igbe->tidvEvent, curTick() + delay, true);
         }
 
         if (igbe->regs.tadv.idv() && igbe->regs.tidv.idv()) {
             Tick delay = igbe->regs.tadv.idv() * igbe->intClock();
             DPRINTF(EthernetDesc, "setting tadv\n");
             if (!igbe->tadvEvent.scheduled()) {
-                igbe->schedule(igbe->tadvEvent, curTick + delay);
+                igbe->schedule(igbe->tadvEvent, curTick() + delay);
             }
         }
     }
@@ -2039,7 +2039,7 @@ IGbE::restartClock()
 {
     if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) &&
         getState() == SimObject::Running)
-        schedule(tickEvent, (curTick / ticks(1)) * ticks(1) + ticks(1));
+        schedule(tickEvent, (curTick() / ticks(1)) * ticks(1) + ticks(1));
 }
 
 unsigned int
@@ -2420,7 +2420,7 @@ IGbE::tick()
 
 
     if (rxTick || txTick || txFifoTick)
-        schedule(tickEvent, curTick + ticks(1));
+        schedule(tickEvent, curTick() + ticks(1));
 }
 
 void

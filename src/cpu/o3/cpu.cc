@@ -334,7 +334,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     // Setup the ROB for whichever stages need it.
     commit.setROB(&rob);
 
-    lastRunningCycle = curTick;
+    lastRunningCycle = curTick();
 
     lastActivatedCycle = -1;
 #if 0
@@ -538,13 +538,13 @@ FullO3CPU<Impl>::tick()
             getState() == SimObject::Drained) {
             DPRINTF(O3CPU, "Switched out!\n");
             // increment stat
-            lastRunningCycle = curTick;
+            lastRunningCycle = curTick();
         } else if (!activityRec.active() || _status == Idle) {
             DPRINTF(O3CPU, "Idle!\n");
-            lastRunningCycle = curTick;
+            lastRunningCycle = curTick();
             timesIdled++;
         } else {
-            schedule(tickEvent, nextCycle(curTick + ticks(1)));
+            schedule(tickEvent, nextCycle(curTick() + ticks(1)));
             DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
     }
@@ -639,13 +639,13 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
     // Needs to set each stage to running as well.
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to activate "
-                "on cycle %d\n", tid, curTick + ticks(delay));
+                "on cycle %d\n", tid, curTick() + ticks(delay));
         scheduleActivateThreadEvent(tid, delay);
     } else {
         activateThread(tid);
     }
 
-    if (lastActivatedCycle < curTick) {
+    if (lastActivatedCycle < curTick()) {
         scheduleTickEvent(delay);
 
         // Be sure to signal that there's some activity so the CPU doesn't
@@ -653,7 +653,7 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
         activityRec.activity();
         fetch.wakeFromQuiesce();
 
-        lastActivatedCycle = curTick;
+        lastActivatedCycle = curTick();
 
         _status = Running;
     }
@@ -666,7 +666,7 @@ FullO3CPU<Impl>::deallocateContext(ThreadID tid, bool remove, int delay)
     // Schedule removal of thread data from CPU
     if (delay){
         DPRINTF(O3CPU, "[tid:%i]: Scheduling thread context to deallocate "
-                "on cycle %d\n", tid, curTick + ticks(delay));
+                "on cycle %d\n", tid, curTick() + ticks(delay));
         scheduleDeallocateContextEvent(tid, remove, delay);
         return false;
     } else {
@@ -1552,8 +1552,8 @@ FullO3CPU<Impl>::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    idleCycles += tickToCycles((curTick - 1) - lastRunningCycle);
-    numCycles += tickToCycles((curTick - 1) - lastRunningCycle);
+    idleCycles += tickToCycles((curTick() - 1) - lastRunningCycle);
+    numCycles += tickToCycles((curTick() - 1) - lastRunningCycle);
 
     schedule(tickEvent, nextCycle());
 }

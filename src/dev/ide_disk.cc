@@ -323,7 +323,7 @@ IdeDisk::doDmaTransfer()
               dmaState, devState);
 
     if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
-        schedule(dmaTransferEvent, curTick + DMA_BACKOFF_PERIOD);
+        schedule(dmaTransferEvent, curTick() + DMA_BACKOFF_PERIOD);
         return;
     } else
         ctrl->dmaRead(curPrdAddr, sizeof(PrdEntry_t), &dmaPrdReadEvent,
@@ -357,7 +357,7 @@ IdeDisk::doDmaDataRead()
     DPRINTF(IdeDisk, "doDmaRead, diskDelay: %d totalDiskDelay: %d\n",
             diskDelay, totalDiskDelay);
 
-    schedule(dmaReadWaitEvent, curTick + totalDiskDelay);
+    schedule(dmaReadWaitEvent, curTick() + totalDiskDelay);
 }
 
 void
@@ -403,7 +403,7 @@ IdeDisk::doDmaRead()
 
     }
     if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
-        schedule(dmaReadWaitEvent, curTick + DMA_BACKOFF_PERIOD);
+        schedule(dmaReadWaitEvent, curTick() + DMA_BACKOFF_PERIOD);
         return;
     } else if (!dmaReadCG->done()) {
         assert(dmaReadCG->complete() < MAX_DMA_SIZE);
@@ -465,7 +465,7 @@ IdeDisk::doDmaDataWrite()
         cmdBytesLeft -= SectorSize;
     }
 
-    schedule(dmaWriteWaitEvent, curTick + totalDiskDelay);
+    schedule(dmaWriteWaitEvent, curTick() + totalDiskDelay);
 }
 
 void
@@ -478,7 +478,7 @@ IdeDisk::doDmaWrite()
                 curPrd.getByteCount(), TheISA::PageBytes);
     }
     if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
-        schedule(dmaWriteWaitEvent, curTick + DMA_BACKOFF_PERIOD);
+        schedule(dmaWriteWaitEvent, curTick() + DMA_BACKOFF_PERIOD);
         return;
     } else if (!dmaWriteCG->done()) {
         assert(dmaWriteCG->complete() < MAX_DMA_SIZE);
@@ -553,7 +553,7 @@ IdeDisk::startDma(const uint32_t &prdTableBase)
     dmaState = Dma_Transfer;
 
     // schedule dma transfer (doDmaTransfer)
-    schedule(dmaTransferEvent, curTick + 1);
+    schedule(dmaTransferEvent, curTick() + 1);
 }
 
 void

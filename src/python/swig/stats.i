@@ -37,6 +37,7 @@
 #include "base/statistics.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/text.hh"
+#include "sim/core.hh"
 #include "sim/stat_control.hh"
 %}
 
@@ -51,7 +52,7 @@ void initMySQL(std::string host, std::string database, std::string user,
     std::string sample);
 
 void schedStatEvent(bool dump, bool reset,
-                    Tick when = curTick, Tick repeat = 0);
+                    Tick when = curTick(), Tick repeat = 0);
 
 void enable();
 void prepare();

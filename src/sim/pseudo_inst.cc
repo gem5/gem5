@@ -95,7 +95,7 @@ quiesceNs(ThreadContext *tc, uint64_t ns)
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick + SimClock::Int::ns * ns;
+    Tick resume = curTick() + SimClock::Int::ns * ns;
 
     cpu->reschedule(quiesceEvent, resume, true);
 
@@ -117,7 +117,7 @@ quiesceCycles(ThreadContext *tc, uint64_t cycles)
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick + cpu->ticks(cycles);
+    Tick resume = curTick() + cpu->ticks(cycles);
 
     cpu->reschedule(quiesceEvent, resume, true);
 
@@ -141,7 +141,7 @@ quiesceTime(ThreadContext *tc)
 uint64_t
 rpns(ThreadContext *tc)
 {
-    return curTick / SimClock::Int::ns;
+    return curTick() / SimClock::Int::ns;
 }
 
 void
@@ -156,7 +156,7 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
 void
 m5exit(ThreadContext *tc, Tick delay)
 {
-    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick when = curTick() + delay * SimClock::Int::ns;
     exitSimLoop("m5_exit instruction encountered", 0, when);
 }
 
@@ -233,7 +233,7 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick when = curTick() + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
     Stats::schedStatEvent(false, true, when, repeat);
@@ -246,7 +246,7 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick when = curTick() + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
     Stats::schedStatEvent(true, false, when, repeat);
@@ -259,7 +259,7 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
         return;
 
 
-    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick when = curTick() + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
     Stats::schedStatEvent(true, true, when, repeat);
@@ -271,7 +271,7 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     if (!tc->getCpuPtr()->params()->do_checkpoint_insts)
         return;
 
-    Tick when = curTick + delay * SimClock::Int::ns;
+    Tick when = curTick() + delay * SimClock::Int::ns;
     Tick repeat = period * SimClock::Int::ns;
 
     exitSimLoop("checkpoint", 0, when, repeat);

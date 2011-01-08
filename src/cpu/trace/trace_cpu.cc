@@ -66,13 +66,13 @@ TraceCPU::tick()
     int instReqs = 0;
     int dataReqs = 0;
 
-    while (nextReq && curTick >= nextCycle) {
+    while (nextReq && curTick() >= nextCycle) {
         assert(nextReq->thread_num < 4 && "Not enough threads");
         if (nextReq->isInstFetch() && icacheInterface) {
             if (icacheInterface->isBlocked())
                 break;
 
-            nextReq->time = curTick;
+            nextReq->time = curTick();
             if (nextReq->cmd == Squash) {
                 icacheInterface->squash(nextReq->asid);
             } else {
@@ -91,7 +91,7 @@ TraceCPU::tick()
                 break;
 
             ++dataReqs;
-            nextReq->time = curTick;
+            nextReq->time = curTick();
             if (dcacheInterface->doEvents()) {
                 nextReq->completionEvent =
                     new TraceCompleteEvent(nextReq, this);
@@ -113,7 +113,7 @@ TraceCPU::tick()
             tickEvent.schedule(mainEventQueue.nextEventTime() + ticks(1));
         }
     } else {
-        tickEvent.schedule(max(curTick + ticks(1), nextCycle));
+        tickEvent.schedule(max(curTick() + ticks(1), nextCycle));
     }
 }
 

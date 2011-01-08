@@ -363,7 +363,7 @@ template <class T1, class T2>
 void
 getElapsedTime(T1 &sec, T2 &usec)
 {
-    int elapsed_usecs = curTick / SimClock::Int::us;
+    int elapsed_usecs = curTick() / SimClock::Int::us;
     sec = elapsed_usecs / one_million;
     usec = elapsed_usecs % one_million;
 }
@@ -1190,7 +1190,7 @@ timesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     TypedBufferArg<typename OS::tms> bufp(process->getSyscallArg(tc, index));
 
     // Fill in the time structure (in clocks)
-    int64_t clocks = curTick * OS::M5_SC_CLK_TCK / SimClock::Int::s;
+    int64_t clocks = curTick() * OS::M5_SC_CLK_TCK / SimClock::Int::s;
     bufp->tms_utime = clocks;
     bufp->tms_stime = 0;
     bufp->tms_cutime = 0;

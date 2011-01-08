@@ -160,7 +160,7 @@ RubyTester::wakeup()
 
         checkForDeadlock();
 
-        schedule(checkStartEvent, curTick + m_wakeup_frequency);
+        schedule(checkStartEvent, curTick() + m_wakeup_frequency);
     } else {
         exitSimLoop("Ruby Tester completed");
     }

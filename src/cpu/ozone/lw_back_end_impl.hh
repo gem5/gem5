@@ -45,7 +45,7 @@ LWBackEnd<Impl>::generateTrapEvent(Tick latency)
 
     TrapEvent *trap = new TrapEvent(this);
 
-    trap->schedule(curTick + cpu->ticks(latency));
+    trap->schedule(curTick() + cpu->ticks(latency));
 
     thread->trapPending = true;
 }
@@ -1226,7 +1226,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
 
     // Write the done sequence number here.
     toIEW->doneSeqNum = inst->seqNum;
-    lastCommitCycle = curTick;
+    lastCommitCycle = curTick();
 
 #if FULL_SYSTEM
     int count = 0;

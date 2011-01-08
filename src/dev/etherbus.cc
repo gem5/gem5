@@ -87,7 +87,7 @@ bool
 EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
 {
     if (busy()) {
-        DPRINTF(Ethernet, "ethernet packet not sent, bus busy\n", curTick);
+        DPRINTF(Ethernet, "ethernet packet not sent, bus busy\n", curTick());
         return false;
     }
 
@@ -99,7 +99,7 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
     int delay = (int)ceil(((double)pkt->length * ticksPerByte) + 1.0);
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);
-    schedule(event, curTick + delay);
+    schedule(event, curTick() + delay);
 
     return true;
 }

@@ -63,7 +63,7 @@ Tick
 CacheUnit::CachePort::recvAtomic(PacketPtr pkt)
 {
     panic("CacheUnit::CachePort doesn't expect recvAtomic callback!");
-    return curTick;
+    return curTick();
 }
 
 void
@@ -167,7 +167,7 @@ CacheUnit::getSlot(DynInstPtr inst)
         if (new_slot == -1)
             return -1;
 
-        inst->memTime = curTick;
+        inst->memTime = curTick();
         setAddrDependency(inst);            
         return new_slot;
     } else {
@@ -343,7 +343,7 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
         break;
 
       default:
-        panic("%i: Unexpected request type (%i) to %s", curTick,
+        panic("%i: Unexpected request type (%i) to %s", curTick(),
               sched_entry->cmd, name());
     }
 
@@ -482,7 +482,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
     
     if (secondAddr > addr && !inst->split2ndAccess) {
         DPRINTF(InOrderCachePort, "%i: sn[%i] Split Read Access (1 of 2) for "
-                "(%#x, %#x).\n", curTick, inst->seqNum, addr, secondAddr);
+                "(%#x, %#x).\n", curTick(), inst->seqNum, addr, secondAddr);
         
         // Save All "Total" Split Information
         // ==============================
