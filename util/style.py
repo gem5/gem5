@@ -341,12 +341,24 @@ def check_hook(hooktype):
 def check_style(ui, repo, hooktype, **kwargs):
     check_hook(hooktype)
     args = {}
-    return do_check_style(ui, repo, **args)
+
+    try:
+        return do_check_style(ui, repo, **args)
+    except Exception, e:
+        import traceback
+        traceback.print_exc()
+        return True
 
 def check_format(ui, repo, hooktype, **kwargs):
     check_hook(hooktype)
     args = {}
-    return do_check_format(ui, repo, **args)
+
+    try:
+        return do_check_format(ui, repo, **args)
+    except Exception, e:
+        import traceback
+        traceback.print_exc()
+        return True
 
 try:
     from mercurial.i18n import _
