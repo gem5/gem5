@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include <cassert>
 #include <cmath>
 
 #include "base/stl_helpers.hh"
@@ -105,7 +106,7 @@ void
 NetworkInterface_d::addNode(vector<MessageBuffer *>& in,
                             vector<MessageBuffer *>& out)
 {
-    ASSERT(in.size() == m_virtual_networks);
+    assert(in.size() == m_virtual_networks);
     inNode_ptr = in;
     outNode_ptr = out;
     for (int j = 0; j < m_virtual_networks; j++) {

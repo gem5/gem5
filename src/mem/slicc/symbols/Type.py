@@ -508,6 +508,7 @@ std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
  * Auto generated C++ code started by $__file__:$__line__
  */
 
+#include <cassert>
 #include <iostream>
 #include <string>
 

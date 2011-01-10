@@ -29,6 +29,8 @@
 // modified (rewritten) 05/20/05 by Dan Gibson to accomimdate FASTER
 // >32 bit set sizes
 
+#include <cstdio>
+
 #include "base/misc.hh"
 #include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/System.hh"

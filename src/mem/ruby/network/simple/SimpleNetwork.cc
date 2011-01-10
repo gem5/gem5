@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
 #include <numeric>
 
 #include "base/stl_helpers.hh"
@@ -198,8 +199,8 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest,
 void
 SimpleNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
 {
-    ASSERT(id < m_nodes);
-    ASSERT(network_num < m_virtual_networks);
+    assert(id < m_nodes);
+    assert(network_num < m_virtual_networks);
 
     if (ordered) {
         m_ordered[network_num] = true;

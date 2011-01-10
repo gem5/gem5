@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/stl_helpers.hh"
@@ -158,7 +160,7 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     }
     m_msgs_this_cycle++;
 
-    //  ASSERT(m_max_size == -1 || m_size <= m_max_size + 1);
+    //  assert(m_max_size == -1 || m_size <= m_max_size + 1);
     // the plus one is a kluge because of a SLICC issue
 
     if (!m_ordering_set) {

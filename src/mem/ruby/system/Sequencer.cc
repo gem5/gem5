@@ -485,19 +485,10 @@ Sequencer::hitCallback(SequencerRequest* srequest,
                                                    g_eventQueue_ptr->getTime());
         }
 
-        if (Debug::getProtocolTrace()) {
-            if (success) {
-                g_system_ptr->getProfiler()->
-                    profileTransition("Seq", m_version,
-                                      Address(ruby_request.paddr), "", "Done", "",
-                                      csprintf("%d cycles", miss_latency));
-            } else {
-                g_system_ptr->getProfiler()->
-                    profileTransition("Seq", m_version,
-                                      Address(ruby_request.paddr), "", "SC_Failed", "",
-                                      csprintf("%d cycles", miss_latency));
-            }
-        }
+        DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %d cycles\n",
+            g_eventQueue_ptr->getTime(), m_version, "Seq",
+            success ? "Done" : "SC_Failed", "", "",
+            Address(ruby_request.paddr), miss_latency);
     }
 #if 0
     if (request.getPrefetch() == PrefetchBit_Yes) {
@@ -658,18 +649,9 @@ Sequencer::issueRequest(const RubyRequest& request)
         Address(request.pc), amtype, request.len, PrefetchBit_No,
         request.proc_id);
 
-    if (Debug::getProtocolTrace()) {
-        g_system_ptr->getProfiler()->
-            profileTransition("Seq", m_version, Address(request.paddr),
-                              "", "Begin", "",
-                              RubyRequestType_to_string(request.type));
-    }
-
-    if (g_system_ptr->getTracer()->traceEnabled()) {
-        g_system_ptr->getTracer()->
-            traceRequest(this, line_addr, Address(request.pc),
-                         request.type, g_eventQueue_ptr->getTime());
-    }
+    DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\n",
+        g_eventQueue_ptr->getTime(), m_version, "Seq", "Begin", "", "",
+        Address(request.paddr), RubyRequestType_to_string(request.type));
 
     Time latency = 0;  // initialzed to an null value
 

@@ -366,8 +366,6 @@ static void usageInstructions()
   }
 
   cerr << endl;
-  g_debug_ptr->usageInstructions();
-  cerr << endl;
 
   exit(1);
 }

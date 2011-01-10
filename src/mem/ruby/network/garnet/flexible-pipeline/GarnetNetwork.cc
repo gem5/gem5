@@ -28,6 +28,9 @@
  * Authors: Niket Agarwal
  */
 
+#include <cassert>
+
+#include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/protocol/MachineType.hh"
@@ -188,9 +191,9 @@ void
 GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered,
     int network_num)
 {
-    printf ("id = %i, m_nodes = %i \n", id, m_nodes);
-    ASSERT(id < m_nodes);
-    ASSERT(network_num < m_virtual_networks);
+    cprintf ("id = %i, m_nodes = %i \n", id, m_nodes);
+    assert(id < m_nodes);
+    assert(network_num < m_virtual_networks);
 
     if (ordered) {
         m_ordered[network_num] = true;

@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+
 #include "base/intmath.hh"
 #include "base/str.hh"
 #include "mem/ruby/filters/BulkBloomFilter.hh"
@@ -98,9 +100,9 @@ BulkBloomFilter::set(const Address& addr)
     //Address permuted_bits = permute(addr);
     //int c1 = permuted_bits.bitSelect(0, set_bits-1);
     int c1 = addr.bitSelect( block_bits+set_bits, (block_bits+2*set_bits) - 1);
-    //ASSERT(c0 < (m_filter_size/2));
-    //ASSERT(c0 + (m_filter_size/2) < m_filter_size);
-    //ASSERT(c1 < (m_filter_size/2));
+    //assert(c0 < (m_filter_size/2));
+    //assert(c0 + (m_filter_size/2) < m_filter_size);
+    //assert(c1 < (m_filter_size/2));
     // set v0 bit
     m_filter[c0 + (m_filter_size/2)] = 1;
     // set v1 bit
@@ -124,9 +126,9 @@ BulkBloomFilter::isSet(const Address& addr)
     //Address permuted_bits = permute(addr);
     //int c1 = permuted_bits.bitSelect(0, set_bits-1);
     int c1 = addr.bitSelect( block_bits+set_bits, (block_bits+2*set_bits) - 1);
-    //ASSERT(c0 < (m_filter_size/2));
-    //ASSERT(c0 + (m_filter_size/2) < m_filter_size);
-    //ASSERT(c1 < (m_filter_size/2));
+    //assert(c0 < (m_filter_size/2));
+    //assert(c0 + (m_filter_size/2) < m_filter_size);
+    //assert(c1 < (m_filter_size/2));
     // set v0 bit
     m_temp_filter[c0 + (m_filter_size/2)] = 1;
     // set v1 bit

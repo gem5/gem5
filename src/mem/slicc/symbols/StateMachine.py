@@ -338,6 +338,7 @@ static int m_num_controllers;
  * Created by slicc definition of Module "${{self.short}}"
  */
 
+#include <cassert>
 #include <sstream>
 #include <string>
 
@@ -760,6 +761,8 @@ $c_ident::${{action.ident}}(const Address& addr)
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
+#include <cassert>
+
 #include "base/misc.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
@@ -829,7 +832,10 @@ ${ident}_Controller::wakeup()
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
+#include <cassert>
+
 #include "base/misc.hh"
+#include "base/trace.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_State.hh"
@@ -863,36 +869,30 @@ ${ident}_Controller::doTransition(${ident}_Event event,
         DPRINTF(RubyGenerated, "next_state: %s\\n",
                 ${ident}_State_to_string(next_state));
         m_profiler.countTransition(state, event);
-        if (Debug::getProtocolTrace()) {
-            g_system_ptr->getProfiler()->profileTransition("${ident}",
-                    m_version, addr,
-                    ${ident}_State_to_string(state),
-                    ${ident}_Event_to_string(event),
-                    ${ident}_State_to_string(next_state),
-                    GET_TRANSITION_COMMENT());
-        }
-    CLEAR_TRANSITION_COMMENT();
-    ${ident}_setState(addr, next_state);
+        DPRINTFR(ProtocolTrace, "%7d %3s %10s%20s %6s>%-6s %s %s\\n",
+            g_eventQueue_ptr->getTime(), m_version, "${ident}",
+            ${ident}_Event_to_string(event),
+            ${ident}_State_to_string(state),
+            ${ident}_State_to_string(next_state),
+            addr, GET_TRANSITION_COMMENT());
 
+        CLEAR_TRANSITION_COMMENT();
+        ${ident}_setState(addr, next_state);
     } else if (result == TransitionResult_ResourceStall) {
-        if (Debug::getProtocolTrace()) {
-            g_system_ptr->getProfiler()->profileTransition("${ident}",
-                   m_version, addr,
-                   ${ident}_State_to_string(state),
-                   ${ident}_Event_to_string(event),
-                   ${ident}_State_to_string(next_state),
-                   "Resource Stall");
-        }
+        DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\\n",
+            g_eventQueue_ptr->getTime(), m_version, "${ident}",
+            ${ident}_Event_to_string(event),
+            ${ident}_State_to_string(state),
+            ${ident}_State_to_string(next_state),
+            addr, "Resource Stall");
     } else if (result == TransitionResult_ProtocolStall) {
         DPRINTF(RubyGenerated, "stalling\\n");
-        if (Debug::getProtocolTrace()) {
-            g_system_ptr->getProfiler()->profileTransition("${ident}",
-                   m_version, addr,
-                   ${ident}_State_to_string(state),
-                   ${ident}_Event_to_string(event),
-                   ${ident}_State_to_string(next_state),
-                   "Protocol Stall");
-        }
+        DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\\n",
+            g_eventQueue_ptr->getTime(), m_version, "${ident}",
+            ${ident}_Event_to_string(event),
+            ${ident}_State_to_string(state),
+            ${ident}_State_to_string(next_state),
+            addr, "Protocol Stall");
     }
 
     return result;
@@ -993,6 +993,7 @@ if (!%s.areNSlotsAvailable(%s))
 #ifndef __${ident}_PROFILE_DUMPER_HH__
 #define __${ident}_PROFILE_DUMPER_HH__
 
+#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -1088,6 +1089,7 @@ ${ident}_ProfileDumper::dumpStats(std::ostream& out) const
 #ifndef __${ident}_PROFILER_HH__
 #define __${ident}_PROFILER_HH__
 
+#include <cassert>
 #include <iostream>
 
 #include "mem/ruby/common/Global.hh"
@@ -1124,6 +1126,8 @@ class ${ident}_Profiler
         code('''
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
+
+#include <cassert>
 
 #include "mem/protocol/${ident}_Profiler.hh"
 

@@ -27,10 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
+#include <cassert>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/tester/Tester_Globals.hh"
 #include "mem/ruby/tester/RaceyDriver.hh"
@@ -77,7 +75,7 @@ void RaceyDriver::go() {
 
 void RaceyDriver::hitCallback(int64_t request_id)
 {
-  ASSERT(requests.find(request_id) != requests.end());
+  assert(requests.find(request_id) != requests.end());
   int proc = requests[request_id].first;
   Address address = requests[request_id].second.address;
   uint8_t * data = new uint8_t[4];

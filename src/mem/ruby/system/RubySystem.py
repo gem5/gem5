@@ -40,7 +40,6 @@ class RubySystem(SimObject):
         "default cache block size; must be a power of two");
     mem_size = Param.MemorySize("total memory size of the system");
     network = Param.RubyNetwork("")
-    debug = Param.RubyDebug("the default debug object")
     profiler = Param.RubyProfiler("");
     tracer = Param.RubyTracer("");
     stats_filename = Param.String("ruby.stats",

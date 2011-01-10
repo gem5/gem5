@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/protocol/TopologyType.hh"
@@ -224,8 +226,8 @@ void
 Topology::addLink(SwitchID src, SwitchID dest, int link_latency,
     int bw_multiplier, int link_weight)
 {
-    ASSERT(src <= m_number_of_switches+m_nodes+m_nodes);
-    ASSERT(dest <= m_number_of_switches+m_nodes+m_nodes);
+    assert(src <= m_number_of_switches+m_nodes+m_nodes);
+    assert(dest <= m_number_of_switches+m_nodes+m_nodes);
     m_links_src_vector.push_back(src);
     m_links_dest_vector.push_back(dest);
     m_links_latency_vector.push_back(link_latency);

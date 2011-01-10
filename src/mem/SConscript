@@ -60,6 +60,7 @@ TraceFlag('LLSC')
 TraceFlag('MMU')
 TraceFlag('MemoryAccess')
 
+TraceFlag('ProtocolTrace')
 TraceFlag('RubyCache')
 TraceFlag('RubyDma')
 TraceFlag('RubyGenerated')

@@ -31,7 +31,6 @@
 
 // external includes for all classes
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/ruby/common/Debug.hh"
 
 // simple type declarations
 typedef Time LogicalTime;
@@ -46,9 +45,6 @@ extern RubyEventQueue* g_eventQueue_ptr;
 
 class RubySystem;
 extern RubySystem* g_system_ptr;
-
-class Debug;
-extern Debug* g_debug_ptr;
 
 // FIXME: this is required by the contructor of Directory_Entry.hh.
 // It can't go into slicc_util.hh because it opens a can of ugly worms

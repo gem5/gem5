@@ -35,6 +35,7 @@
 #define __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
 
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <vector>
@@ -85,7 +86,7 @@ class MessageBuffer
     void setPriority(int rank) { m_priority_rank = rank; }
     void setConsumer(Consumer* consumer_ptr)
     {
-        ASSERT(m_consumer_ptr == NULL);
+        assert(m_consumer_ptr == NULL);
         m_consumer_ptr = consumer_ptr;
     }
 

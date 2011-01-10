@@ -50,10 +50,6 @@ def define_options(parser):
     parser.add_option("--use-map", action="store_true", default=False)
     parser.add_option("--map-levels", type="int", default=4)
 
-    # ruby debug cmd line options
-    parser.add_option("--ruby-debug", action="store_true", default=False)
-    parser.add_option("--ruby-debug-cycle", type="int", default=1)
-
     parser.add_option("--recycle-latency", type="int", default=10,
                       help="Recycle latency for ruby controller input buffers")
 
@@ -131,10 +127,6 @@ def create_system(options, system, piobus = None, dma_devices = []):
                       network = network,
                       profiler = ruby_profiler,
                       tracer = RubyTracer(),
-                      debug = RubyDebug(filter_string = 'none',
-                                        verbosity_string = 'none',
-                                        protocol_trace = options.ruby_debug,
-                                        start_time = options.ruby_debug_cycle),
                       mem_size = total_mem_size)
 
     ruby.cpu_ruby_ports = cpu_sequencers

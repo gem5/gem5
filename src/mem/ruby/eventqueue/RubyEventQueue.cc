@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
@@ -50,7 +52,7 @@ void
 RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
 {
     // Check to see if this is a redundant wakeup
-    ASSERT(consumer != NULL);
+    assert(consumer != NULL);
     if (!consumer->alreadyScheduled(timeAbs)) {
         // This wakeup is not redundant
         RubyEventQueueNode *thisNode = new RubyEventQueueNode(consumer, this);

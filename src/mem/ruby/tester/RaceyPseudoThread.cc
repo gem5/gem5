@@ -30,6 +30,8 @@
  * Description: see RaceyPseudoThread.h
  */
 
+#include <cassert>
+
 #include "mem/ruby/tester/RaceyPseudoThread.hh"
 #include "mem/ruby/tester/RaceyDriver.hh"
 #include "gzstream.hh"
@@ -221,7 +223,7 @@ void RaceyPseudoThread::load_sig(unsigned index) {
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), read_data, 4, 0, RubyRequestType_LD, RubyAccessMode_User));
   
-  ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
+  assert(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(sig(index));
@@ -248,7 +250,7 @@ void RaceyPseudoThread::load_m(unsigned index) {
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), read_data, 4, 0, RubyRequestType_LD, RubyAccessMode_User));
   
-  ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
+  assert(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(m(index));
@@ -279,7 +281,7 @@ void RaceyPseudoThread::store_sig(unsigned index, unsigned value) {
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), write_data, 4, 0, RubyRequestType_ST, RubyAccessMode_User));
   
-  ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
+  assert(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(sig(index));
@@ -308,7 +310,7 @@ void RaceyPseudoThread::store_m(unsigned index, unsigned value) {
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), write_data, 4, 0, RubyRequestType_ST, RubyAccessMode_User));
   
-  ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
+  assert(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(m(index));

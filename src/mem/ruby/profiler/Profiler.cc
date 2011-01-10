@@ -47,13 +47,13 @@
 #include <sys/times.h>
 
 #include <algorithm>
+#include <fstream>
 
 #include "base/stl_helpers.hh"
 #include "base/str.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
-#include "mem/ruby/common/Debug.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
@@ -62,8 +62,6 @@
 
 using namespace std;
 using m5::stl_helpers::operator<<;
-
-extern ostream* debug_cout_ptr;
 
 static double process_memory_total();
 static double process_memory_resident();
@@ -697,39 +695,6 @@ Profiler::swPrefetchLatency(Time cycles,
     }
 }
 
-void
-Profiler::profileTransition(const string& component, NodeID version,
-    Address addr, const string& state, const string& event,
-    const string& next_state, const string& note)
-{
-    const int EVENT_SPACES = 20;
-    const int ID_SPACES = 3;
-    const int TIME_SPACES = 7;
-    const int COMP_SPACES = 10;
-    const int STATE_SPACES = 6;
-
-    if (g_debug_ptr->getDebugTime() <= 0 ||
-        g_eventQueue_ptr->getTime() < g_debug_ptr->getDebugTime())
-        return;
-
-    ostream &out = *debug_cout_ptr;
-    out.flags(ios::right);
-    out << setw(TIME_SPACES) << g_eventQueue_ptr->getTime() << " ";
-    out << setw(ID_SPACES) << version << " ";
-    out << setw(COMP_SPACES) << component;
-    out << setw(EVENT_SPACES) << event << " ";
-
-    out.flags(ios::right);
-    out << setw(STATE_SPACES) << state;
-    out << ">";
-    out.flags(ios::left);
-    out << setw(STATE_SPACES) << next_state;
-
-    out << " " << addr << " " << note;
-
-    out << endl;
-}
-
 // Helper function
 static double
 process_memory_total()
@@ -764,15 +729,9 @@ Profiler::rubyWatch(int id)
 {
     uint64 tr = 0;
     Address watch_address = Address(tr);
-    const int ID_SPACES = 3;
-    const int TIME_SPACES = 7;
 
-    ostream &out = *debug_cout_ptr;
-
-    out.flags(ios::right);
-    out << setw(TIME_SPACES) << g_eventQueue_ptr->getTime() << " ";
-    out << setw(ID_SPACES) << id << " "
-        << "RUBY WATCH " << watch_address << endl;
+    DPRINTFN("%7s %3s RUBY WATCH %d\n", g_eventQueue_ptr->getTime(), id,
+        watch_address);
 
     // don't care about success or failure
     m_watch_address_set.insert(watch_address);

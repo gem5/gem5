@@ -33,6 +33,8 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
 
+#include <cassert>
+
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -134,7 +136,7 @@ getTimePlusInt(Time addend1, int addend2)
 inline Time
 getTimeMinusTime(Time t1, Time t2)
 {
-    ASSERT(t1 >= t2);
+    assert(t1 >= t2);
     return t1 - t2;
 }
 

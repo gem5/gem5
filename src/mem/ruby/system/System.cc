@@ -75,7 +75,6 @@ RubySystem::RubySystem(const Params *p)
     }
 
     m_network_ptr = p->network;
-    g_debug_ptr = p->debug;
     m_profiler_ptr = p->profiler;
     m_tracer_ptr = p->tracer;
 

@@ -33,11 +33,8 @@ Import('*')
 if not env['RUBY']:
     Return()
 
-SimObject('Debug.py')
-
 Source('Address.cc')
 Source('DataBlock.cc')
-Source('Debug.cc')
 Source('Driver.cc')
 Source('Global.cc')
 Source('Histogram.cc')

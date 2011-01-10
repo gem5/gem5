@@ -31,6 +31,7 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_FLIT_D_HH__
 #define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_FLIT_D_HH__
 
+#include <cassert>
 #include <iostream>
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
@@ -98,7 +99,7 @@ class flit_d
     greater(flit_d* n1, flit_d* n2)
     {
         if (n1->get_time() == n2->get_time()) {
-            //ASSERT(n1->flit_id != n2->flit_id);
+            //assert(n1->flit_id != n2->flit_id);
             return (n1->get_id() > n2->get_id());
         } else {
             return (n1->get_time() > n2->get_time());

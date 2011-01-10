@@ -26,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+
 #include "base/cprintf.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
@@ -44,8 +46,6 @@ const int BROADCAST_SCALING = 1;
 const int PRIORITY_SWITCH_LIMIT = 128;
 
 static int network_message_to_size(NetworkMessage* net_msg_ptr);
-
-extern ostream *debug_cout_ptr;
 
 Throttle::Throttle(int sID, NodeID node, int link_latency,
     int link_bandwidth_multiplier)
@@ -67,7 +67,7 @@ Throttle::init(NodeID node, int link_latency, int link_bandwidth_multiplier)
     m_node = node;
     m_vnets = 0;
 
-    ASSERT(link_bandwidth_multiplier > 0);
+    assert(link_bandwidth_multiplier > 0);
     m_link_bandwidth_multiplier = link_bandwidth_multiplier;
     m_link_latency = link_latency;
 

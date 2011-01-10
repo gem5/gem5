@@ -26,14 +26,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+#include <cstdio>
 #include <map>
 
+#include "base/trace.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/storebuffer/storebuffer.hh"
 
 using namespace std;
 
-#define SYSTEM_EXIT ASSERT(0)
+#define SYSTEM_EXIT assert(0)
 
 // global map of request id_s to map them back to storebuffer pointers
 map<uint64_t, StoreBuffer *> request_map;
@@ -58,7 +61,7 @@ StoreBuffer::StoreBuffer(uint32 id, uint32 block_bits, int storebuffer_size)
     sprintf(port_name, "%s%d", name, id);
     m_port = libruby_get_port(port_name, hit);
     m_hit_callback = NULL;
-    ASSERT(storebuffer_size >= 0);
+    assert(storebuffer_size >= 0);
     m_storebuffer_size = storebuffer_size;
     m_id = id;
     m_block_size = 1 << block_bits;
@@ -188,7 +191,7 @@ StoreBuffer::checkForLoadHit(RubyRequest request)
     // if any matching entry is found, determine if all the
     // requested bytes have been matched
     if (found) {
-        ASSERT(m_buffer_size > 0);
+        assert(m_buffer_size > 0);
         int unmatched_bytes = 0;
         for (int i = physical_address%64; i < len; i++) {
             unmatched_bytes = unmatched_bytes + data[i];
@@ -221,7 +224,7 @@ StoreBuffer::returnMatchedData(RubyRequest request)
     physical_address_t physical_address = request.paddr;
     int len = request.len;
 
-    ASSERT(checkForLoadHit(request) != NO_MATCH);
+    assert(checkForLoadHit(request) != NO_MATCH);
     physical_address_t lineaddr = physical_address & m_block_mask;
     bool found = false;
     deque<SBEntry>::iterator satisfying_store;
@@ -285,7 +288,7 @@ StoreBuffer::complete(uint64_t id)
         return;
     }
 
-    ASSERT(outstanding_requests.find(id) != outstanding_requests.end());
+    assert(outstanding_requests.find(id) != outstanding_requests.end());
     physical_address_t physical_address =
         outstanding_requests.find(id)->second.paddr;
     RubyRequestType type = outstanding_requests.find(id)->second.type;
@@ -306,7 +309,7 @@ StoreBuffer::complete(uint64_t id)
                 from_buffer.m_request.type == type) {
             buffer.pop_back();
             m_buffer_size--;
-            ASSERT(m_buffer_size >= 0);
+            assert(m_buffer_size >= 0);
 
             // schedule the next request
             if (m_buffer_size > 0) {

@@ -27,10 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
+#include <cassert>
 
 #include "base/misc.hh"
 #include "mem/ruby/common/Global.hh"
@@ -127,7 +124,7 @@ void DeterministicDriver::wakeup() {
 
 void DeterministicDriver::hitCallback(int64_t request_id)
 {
-  ASSERT(requests.find(request_id) != requests.end());
+  assert(requests.find(request_id) != requests.end());
   int proc = requests[request_id].first;
   Address address = requests[request_id].second;
 
@@ -177,7 +174,7 @@ bool DeterministicDriver::isAddrReady(NodeID node, vector<NodeID> addr_vector, A
 {
   int addr_number = addr.getAddress()/DATA_BLOCK_BYTES;
 
-  ASSERT ((addr_number >= 0) && (addr_number < addr_vector.size()));
+  assert((addr_number >= 0) && (addr_number < addr_vector.size()));
 
   if (((addr_vector[addr_number]+1)%m_num_procs == node) &&
       (m_loads_completed+m_stores_completed >= m_numCompletionsPerNode*node) && // is this node next
@@ -226,7 +223,7 @@ Address DeterministicDriver::getNextAddr(NodeID node, vector<NodeID> addr_vector
   Address addr;
   
   // should only be called if we know a addr is ready for the node
-  ASSERT(isAddrReady(node, addr_vector));
+  assert(isAddrReady(node, addr_vector));
 
   for (int addr_number=0; addr_number<addr_vector.size(); addr_number++) {
 

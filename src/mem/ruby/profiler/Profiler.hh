@@ -156,9 +156,6 @@ class Profiler : public SimObject, public Consumer
 
     void sequencerRequests(int num) { m_sequencer_requests.add(num); }
 
-    void profileTransition(const std::string& component, NodeID version,
-        Address addr, const std::string& state, const std::string& event,
-        const std::string& next_state, const std::string& note);
     void profileMsgDelay(int virtualNetwork, int delayCycles);
 
     void print(std::ostream& out) const;
