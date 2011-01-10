@@ -1361,9 +1361,8 @@ class DistStor
         if (val > max_val)
             max_val = val;
 
-        Counter sample = val * number;
-        sum += sample;
-        squares += sample * sample;
+        sum += val * number;
+        squares += val * val * number;
         samples += number;
     }
 
