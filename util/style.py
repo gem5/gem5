@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from file_types import lang_type
 
+tabsize = 8
 lead = re.compile(r'^([ \t]+)')
 trail = re.compile(r'([ \t]+)$')
 any_control = re.compile(r'\b(if|while|for)[ \t]*[(]')
@@ -69,7 +70,7 @@ def checkwhite(filename):
         if not checkwhite_line(line):
             yield line,num + 1
 
-def fixwhite_line(line, tabsize):
+def fixwhite_line(line):
     if lead.search(line):
         newline = ''
         for i,c in enumerate(line):
@@ -85,7 +86,7 @@ def fixwhite_line(line, tabsize):
 
     return line.rstrip() + '\n'
 
-def fixwhite(filename, tabsize, fixonly=None):
+def fixwhite(filename, fixonly=None):
     if lang_type(filename) not in whitespace_types:
         return
 
@@ -224,7 +225,7 @@ def modified_lines(old_data, new_data, max_lines):
                 break
     return modified
 
-def do_check_whitespace(ui, repo, *files, **args):
+def do_check_style(ui, repo, *files, **args):
     """check files for proper m5 style guidelines"""
     from mercurial import mdiff, util
 
@@ -234,7 +235,7 @@ def do_check_whitespace(ui, repo, *files, **args):
     def skip(name):
         return files and name in files
 
-    def prompt(name, fixonly=None):
+    def prompt(name, func, fixonly=None):
         if args.get('auto', False):
             result = 'f'
         else:
@@ -246,7 +247,7 @@ def do_check_whitespace(ui, repo, *files, **args):
         if result == 'a':
             return True
         elif result == 'f':
-            fixwhite(repo.wjoin(name), args['tabsize'], fixonly)
+            func(repo.wjoin(name), fixonly)
 
         return False
 
@@ -264,7 +265,7 @@ def do_check_whitespace(ui, repo, *files, **args):
             ok = False
 
         if not ok:
-            if prompt(fname):
+            if prompt(fname, fixwhite):
                 return True
 
     try:
@@ -337,10 +338,10 @@ def check_hook(hooktype):
         raise AttributeError, \
               "This hook is not meant for %s" % hooktype
 
-def check_whitespace(ui, repo, hooktype, **kwargs):
+def check_style(ui, repo, hooktype, **kwargs):
     check_hook(hooktype)
-    args = { 'tabsize' : 8 }
-    return do_check_whitespace(ui, repo, **args)
+    args = {}
+    return do_check_style(ui, repo, **args)
 
 def check_format(ui, repo, hooktype, **kwargs):
     check_hook(hooktype)
@@ -355,10 +356,9 @@ except ImportError:
 
 cmdtable = {
     '^m5style' :
-    ( do_check_whitespace,
-      [ ('a', 'auto', False, _("automatically fix whitespace")),
-        ('t', 'tabsize', 8, _("Number of spaces TAB indents")) ],
-      _('hg m5style [-a] [-t <tabsize>] [FILE]...')),
+    ( do_check_style,
+      [ ('a', 'auto', False, _("automatically fix whitespace")) ],
+      _('hg m5style [-a] [FILE]...')),
     '^m5format' :
     ( do_check_format,
       [ ],
@@ -393,7 +393,6 @@ if __name__ == '__main__':
 
     code = 1
     verbose = 1
-    tabsize = 8
     for opt,arg in opts:
         if opt == '-n':
             code = None

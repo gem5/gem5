@@ -177,8 +177,8 @@ or your personal .hgrc
 style = %s/util/style.py
 
 [hooks]
-pretxncommit.style = python:style.check_whitespace
-pre-qrefresh.style = python:style.check_whitespace
+pretxncommit.style = python:style.check_style
+pre-qrefresh.style = python:style.check_style
 """ % (main.root)
 
 mercurial_bin_not_found = """
