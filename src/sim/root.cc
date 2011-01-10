@@ -29,12 +29,6 @@
  *          Steve Reinhardt
  */
 
-#include <cstring>
-#include <fstream>
-#include <list>
-#include <string>
-#include <vector>
-
 #include "base/misc.hh"
 #include "params/Root.hh"
 #include "sim/sim_object.hh"
