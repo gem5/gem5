@@ -164,7 +164,7 @@ class VectorInfo : public Info
     virtual Result total() const = 0;
 };
 
-enum DistType { Deviation, Dist };
+enum DistType { Deviation, Dist, Hist };
 
 struct DistData
 {

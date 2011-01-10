@@ -134,6 +134,18 @@ main(int argc, char *argv[])
     Vector2d s16;
     Value s17;
     Value s18;
+    Histogram h01;
+    Histogram h02;
+    Histogram h03;
+    Histogram h04;
+    Histogram h05;
+    Histogram h06;
+    Histogram h07;
+    Histogram h08;
+    Histogram h09;
+    Histogram h10;
+    Histogram h11;
+    Histogram h12;
 
     Formula f1;
     Formula f2;
@@ -266,6 +278,77 @@ main(int argc, char *argv[])
         .desc("this is stat 18")
         ;
 
+    h01
+        .init(11)
+        .name("Histogram01")
+        .desc("this is histogram 1")
+        ;
+
+    h02
+        .init(10)
+        .name("Histogram02")
+        .desc("this is histogram 2")
+        ;
+
+    h03
+        .init(11)
+        .name("Histogram03")
+        .desc("this is histogram 3")
+        ;
+
+    h04
+        .init(10)
+        .name("Histogram04")
+        .desc("this is histogram 4")
+        ;
+
+    h05
+        .init(11)
+        .name("Histogram05")
+        .desc("this is histogram 5")
+        ;
+
+    h06
+        .init(10)
+        .name("Histogram06")
+        .desc("this is histogram 6")
+        ;
+
+    h07
+        .init(11)
+        .name("Histogram07")
+        .desc("this is histogram 7")
+        ;
+
+    h08
+        .init(10)
+        .name("Histogram08")
+        .desc("this is histogram 8")
+        ;
+
+    h09
+        .init(11)
+        .name("Histogram09")
+        .desc("this is histogram 9")
+        ;
+
+    h10
+        .init(10)
+        .name("Histogram10")
+        .desc("this is histogram 10")
+        ;
+
+    h11
+        .init(11)
+        .name("Histogram11")
+        .desc("this is histogram 11")
+        ;
+
+    h12
+        .init(10)
+        .name("Histogram12")
+        .desc("this is histogram 12")
+        ;
 
     f1
         .name("Formula1")
@@ -544,6 +627,35 @@ main(int argc, char *argv[])
     s6.sample(102);
 
     s12.sample(100);
+    for (int i = 0; i < 100; i++) {
+        h01.sample(i);
+        h02.sample(i);
+    }
+
+    for (int i = -100; i < 100; i++) {
+        h03.sample(i);
+        h04.sample(i);
+    }
+
+    for (int i = -100; i < 1000; i++) {
+        h05.sample(i);
+        h06.sample(i);
+    }
+
+    for (int i = 100; i >= -1000; i--) {
+        h07.sample(i);
+        h08.sample(i);
+    }
+
+    for (int i = 0; i <= 1023; i++) {
+        h09.sample(i);
+        h10.sample(i);
+    }
+
+    for (int i = -1024; i <= 1023; i++) {
+        h11.sample(i);
+        h12.sample(i);
+    }
 
     prepare();
 

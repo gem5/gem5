@@ -1435,6 +1435,146 @@ class DistStor
 };
 
 /**
+ * Templatized storage and interface for a histogram stat.
+ */
+class HistStor
+{
+  public:
+    /** The parameters for a distribution stat. */
+    struct Params : public DistParams
+    {
+        /** The number of buckets.. */
+        size_type buckets;
+
+        Params() : DistParams(Hist) {}
+    };
+
+  private:
+    /** The minimum value to track. */
+    Counter min_bucket;
+    /** The maximum value to track. */
+    Counter max_bucket;
+    /** The number of entries in each bucket. */
+    Counter bucket_size;
+
+    /** The current sum. */
+    Counter sum;
+    /** The sum of squares. */
+    Counter squares;
+    /** The number of samples. */
+    Counter samples;
+    /** Counter for each bucket. */
+    VCounter cvec;
+
+  public:
+    HistStor(Info *info)
+        : cvec(safe_cast<const Params *>(info->storageParams)->buckets)
+    {
+        reset(info);
+    }
+
+    void grow_up();
+    void grow_out();
+    void grow_convert();
+
+    /**
+     * Add a value to the distribution for the given number of times.
+     * @param val The value to add.
+     * @param number The number of times to add the value.
+     */
+    void
+    sample(Counter val, int number)
+    {
+        assert(min_bucket < max_bucket);
+        if (val < min_bucket) {
+            if (min_bucket == 0)
+                grow_convert();
+
+            while (val < min_bucket)
+                grow_out();
+        } else if (val >= max_bucket + bucket_size) {
+            if (min_bucket == 0) {
+                while (val >= max_bucket + bucket_size)
+                    grow_up();
+            } else {
+                while (val >= max_bucket + bucket_size)
+                    grow_out();
+            }
+        }
+
+        size_type index =
+            (int64_t)std::floor((val - min_bucket) / bucket_size);
+
+        assert(index >= 0 && index < size());
+        cvec[index] += number;
+
+        sum += val * number;
+        squares += val * val * number;
+        samples += number;
+    }
+
+    /**
+     * Return the number of buckets in this distribution.
+     * @return the number of buckets.
+     */
+    size_type size() const { return cvec.size(); }
+
+    /**
+     * Returns true if any calls to sample have been made.
+     * @return True if any values have been sampled.
+     */
+    bool
+    zero() const
+    {
+        return samples == Counter();
+    }
+
+    void
+    prepare(Info *info, DistData &data)
+    {
+        const Params *params = safe_cast<const Params *>(info->storageParams);
+
+        assert(params->type == Hist);
+        data.type = params->type;
+        data.min = min_bucket;
+        data.max = max_bucket + bucket_size - 1;
+        data.bucket_size = bucket_size;
+
+        data.min_val = min_bucket;
+        data.max_val = max_bucket;
+
+        int buckets = params->buckets;
+        data.cvec.resize(buckets);
+        for (off_type i = 0; i < buckets; ++i)
+            data.cvec[i] = cvec[i];
+
+        data.sum = sum;
+        data.squares = squares;
+        data.samples = samples;
+    }
+
+    /**
+     * Reset stat value to default
+     */
+    void
+    reset(Info *info)
+    {
+        const Params *params = safe_cast<const Params *>(info->storageParams);
+        min_bucket = 0;
+        max_bucket = params->buckets - 1;
+        bucket_size = 1;
+
+        size_type size = cvec.size();
+        for (off_type i = 0; i < size; ++i)
+            cvec[i] = Counter();
+
+        sum = Counter();
+        squares = Counter();
+        samples = Counter();
+    }
+};
+
+/**
  * Templatized storage and interface for a distribution that calculates mean
  * and variance.
  */
@@ -2287,6 +2427,29 @@ class Distribution : public DistBase<Distribution, DistStor>
         params->max = max;
         params->bucket_size = bkt;
         params->buckets = (size_type)ceil((max - min + 1.0) / bkt);
+        this->setParams(params);
+        this->doInit();
+        return this->self();
+    }
+};
+
+/**
+ * A simple histogram stat.
+ * @sa Stat, DistBase, HistStor
+ */
+class Histogram : public DistBase<Histogram, HistStor>
+{
+  public:
+    /**
+     * Set the parameters of this histogram. @sa HistStor::Params
+     * @param size The number of buckets in the histogram
+     * @return A reference to this histogram.
+     */
+    Histogram &
+    init(size_type size)
+    {
+        HistStor::Params *params = new HistStor::Params;
+        params->buckets = size;
         this->setParams(params);
         this->doInit();
         return this->self();

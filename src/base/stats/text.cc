@@ -377,11 +377,11 @@ DistPrint::operator()(ostream &stream) const
     size_t size = data.cvec.size();
 
     Result total = 0.0;
-    if (data.underflow != NAN)
+    if (data.type == Dist && data.underflow != NAN)
         total += data.underflow;
     for (off_type i = 0; i < size; ++i)
         total += data.cvec[i];
-    if (data.overflow != NAN)
+    if (data.type == Dist && data.overflow != NAN)
         total += data.overflow;
 
     if (total) {
@@ -389,7 +389,7 @@ DistPrint::operator()(ostream &stream) const
         print.cdf = 0.0;
     }
 
-    if (data.underflow != NAN) {
+    if (data.type == Dist && data.underflow != NAN) {
         print.name = base + "underflows";
         print.update(data.underflow, total);
         print(stream);
@@ -410,7 +410,7 @@ DistPrint::operator()(ostream &stream) const
         print(stream);
     }
 
-    if (data.overflow != NAN) {
+    if (data.type == Dist && data.overflow != NAN) {
         print.name = base + "overflows";
         print.update(data.overflow, total);
         print(stream);
@@ -419,13 +419,13 @@ DistPrint::operator()(ostream &stream) const
     print.pdf = NAN;
     print.cdf = NAN;
 
-    if (data.min_val != NAN) {
+    if (data.type == Dist && data.min_val != NAN) {
         print.name = base + "min_value";
         print.value = data.min_val;
         print(stream);
     }
 
-    if (data.max_val != NAN) {
+    if (data.type == Dist && data.max_val != NAN) {
         print.name = base + "max_value";
         print.value = data.max_val;
         print(stream);
