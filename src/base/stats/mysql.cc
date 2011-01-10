@@ -45,6 +45,7 @@
 #include "base/str.hh"
 #include "base/types.hh"
 #include "base/userinfo.hh"
+#include "sim/core.hh"
 
 using namespace std;
 
