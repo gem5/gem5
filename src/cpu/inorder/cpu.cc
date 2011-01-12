@@ -612,7 +612,7 @@ Fault
 InOrderCPU::getInterrupts()
 {
     // Check if there are any outstanding interrupts
-    return this->interrupts->getInterrupt(this->threadContexts[0]);
+    return interrupts->getInterrupt(threadContexts[0]);
 }
 
 
@@ -626,12 +626,12 @@ InOrderCPU::processInterrupts(Fault interrupt)
     // @todo: Allow other threads to handle interrupts.
 
     assert(interrupt != NoFault);
-    this->interrupts->updateIntrInfo(this->threadContexts[0]);
+    interrupts->updateIntrInfo(threadContexts[0]);
 
     DPRINTF(InOrderCPU, "Interrupt %s being handled\n", interrupt->name());
-    static StaticInstPtr dummyStatic(TheISA::NoopMachInst, 0);
-    static DynInstPtr dummyDyn = new Impl::DynInst(dummyStatic);
-    this->trap(interrupt, dummyDyn);
+
+    // Note: Context ID ok here? Impl. of FS mode needs to revisit this
+    trap(interrupt, threadContexts[0]->contextId(), dummyBufferInst);
 }
 
 
@@ -1407,13 +1407,13 @@ InOrderCPU::wakeCPU()
 void
 InOrderCPU::wakeup()
 {
-    if (this->thread[0]->status() != ThreadContext::Suspended)
+    if (thread[0]->status() != ThreadContext::Suspended)
         return;
 
-    this->wakeCPU();
+    wakeCPU();
 
     DPRINTF(Quiesce, "Suspended Processor woken\n");
-    this->threadContexts[0]->activate();
+    threadContexts[0]->activate();
 }
 #endif
 
