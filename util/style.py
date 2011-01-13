@@ -103,7 +103,7 @@ def fixwhite(filename, fixonly=None):
 
     for i,line in enumerate(lines):
         if fixonly is None or i in fixonly:
-            line = fixwhite_line(line, tabsize)
+            line = fixwhite_line(line)
 
         print >>f, line,
 
@@ -309,7 +309,7 @@ def do_check_style(ui, repo, *files, **args):
             fixonly.add(i)
 
         if fixonly:
-            if prompt(fname, fixonly):
+            if prompt(fname, fixwhite, fixonly):
                 return True
 
 def do_check_format(ui, repo, **args):
