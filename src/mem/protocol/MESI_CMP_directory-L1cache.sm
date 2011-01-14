@@ -70,6 +70,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
     M_I, desc="L1 replacing, waiting for ACK";
     E_I, desc="L1 replacing, waiting for ACK";
+    SINK_WB_ACK, desc="This is to sink WB_Acks from L2";
 
   }
 
@@ -749,9 +750,8 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     l_popRequestQueue;
   }
 
-  transition(M_I, Inv, I) {
+  transition(M_I, Inv, SINK_WB_ACK) {
     ft_sendDataToL2_fromTBE;
-    s_deallocateTBE;
     l_popRequestQueue;
   }
 
@@ -766,16 +766,14 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     l_popRequestQueue;
   }
 
-  transition(M_I, Fwd_GETX, I) {
+  transition(M_I, Fwd_GETX, SINK_WB_ACK) {
     dt_sendDataToRequestor_fromTBE;
-    s_deallocateTBE;
     l_popRequestQueue;
   }
 
-  transition(M_I, {Fwd_GETS, Fwd_GET_INSTR}, I) {
+  transition(M_I, {Fwd_GETS, Fwd_GET_INSTR}, SINK_WB_ACK) {
     dt_sendDataToRequestor_fromTBE;
     d2t_sendDataToL2_fromTBE;
-    s_deallocateTBE;
     l_popRequestQueue;
   }
 
@@ -862,6 +860,21 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   transition(SM, Ack_all, M) {
     jj_sendExclusiveUnblock;
     hh_store_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(SINK_WB_ACK, {Load, Store, Ifetch, L1_Replacement}){
+      z_recycleMandatoryQueue;
+
+  }
+
+  transition(SINK_WB_ACK, Inv){
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition(SINK_WB_ACK, WB_Ack){
     s_deallocateTBE;
     o_popIncomingResponseQueue;
   }

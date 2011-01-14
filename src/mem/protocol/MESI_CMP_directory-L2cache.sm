@@ -734,11 +734,13 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   // BASE STATE - I
 
   // Transitions from I (Idle)
-  transition({NP, IS, ISS, IM, SS, M, M_I, MT_I, MCT_I, I_I, S_I, SS_MB, M_MB, MT_IIB, MT_IB, MT_SB}, L1_PUTX) {
+  transition({NP, IS, ISS, IM, SS, M, M_I, I_I, S_I, M_MB, MT_IB, MT_SB}, L1_PUTX) {
+    t_sendWBAck;    
     jj_popL1RequestQueue;
   }
 
-  transition({NP, SS, M, MT, M_I, MT_I, MCT_I, I_I, S_I, IS, ISS, IM, SS_MB, M_MB, MT_IIB, MT_IB, MT_SB}, L1_PUTX_old) {
+  transition({NP, SS, M, MT, M_I, I_I, S_I, IS, ISS, IM, M_MB, MT_IB, MT_SB}, L1_PUTX_old) {
+    t_sendWBAck;    
     jj_popL1RequestQueue;
   }
 
@@ -968,6 +970,10 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     mmu_markExclusiveFromUnblock;
     k_popUnblockQueue;
   }
+  
+  transition(MT_IIB, {L1_PUTX, L1_PUTX_old}){
+    zz_recycleL1RequestQueue;
+  }
 
   transition(MT_IIB, Unblock, MT_IB) {
     nnu_addSharerFromUnblock;
@@ -1015,21 +1021,22 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     o_popIncomingResponseQueue;
   }
 
+  transition(MCT_I,  {L1_PUTX, L1_PUTX_old}){
+    zz_recycleL1RequestQueue; 
+  }
+  
   // L1 never changed Dirty data
   transition(MT_I, Ack_all, M_I) {
     ct_exclusiveReplacementFromTBE;
     o_popIncomingResponseQueue;
   }
 
-
-  // drop this because L1 will send data again
-  //  the reason we don't accept is that the request virtual network may be completely backed up
-  // transition(MT_I, L1_PUTX) {
-  //   jj_popL1RequestQueue;
-  //}
+  transition(MT_I, {L1_PUTX, L1_PUTX_old}){
+    zz_recycleL1RequestQueue; 
+  }
 
   // possible race between unblock and immediate replacement
-  transition(MT_MB, {L1_PUTX, L1_PUTX_old}) {
+  transition({MT_MB,SS_MB}, {L1_PUTX, L1_PUTX_old}) {
     zz_recycleL1RequestQueue;
   }
 
