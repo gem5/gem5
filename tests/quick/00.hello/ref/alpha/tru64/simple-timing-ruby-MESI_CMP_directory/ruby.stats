@@ -13,7 +13,7 @@ RubySystem config:
 Network Configuration
 ---------------------
 network: SIMPLE_NETWORK
-topology: Crossbar
+topology: 
 
 virtual_net_0: active, unordered
 virtual_net_1: active, unordered
@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Aug/05/2010 10:31:34
+Real time: Jan/13/2011 22:36:30
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 0
-Elapsed_time_in_minutes: 0
-Elapsed_time_in_hours: 0
-Elapsed_time_in_days: 0
+Elapsed_time_in_seconds: 2
+Elapsed_time_in_minutes: 0.0333333
+Elapsed_time_in_hours: 0.000555556
+Elapsed_time_in_days: 2.31481e-05
 
-Virtual_time_in_seconds: 0.26
-Virtual_time_in_minutes: 0.00433333
-Virtual_time_in_hours:   7.22222e-05
-Virtual_time_in_days:    3.00926e-06
+Virtual_time_in_seconds: 0.79
+Virtual_time_in_minutes: 0.0131667
+Virtual_time_in_hours:   0.000219444
+Virtual_time_in_days:    9.14352e-06
 
 Ruby_current_time: 103637
 Ruby_start_time: 0
 Ruby_cycles: 103637
 
-mbytes_resident: 33.5703
-mbytes_total: 33.5781
-resident_ratio: 1
+mbytes_resident: 20.9219
+mbytes_total: 156.062
+resident_ratio: 0.134111
 
 ruby_cycles_executed: [ 103638 ]
 
@@ -119,8 +119,8 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 7325
-page_faults: 2071
+page_reclaims: 6028
+page_faults: 0
 swaps: 0
 block_inputs: 0
 block_outputs: 0
@@ -197,20 +197,20 @@ links_utilized_percent_switch_3: 0.246791
   outgoing_messages_switch_3_link_2_Response_Data: 103 7416 [ 0 103 0 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_3_link_2_Response_Control: 436 3488 [ 0 436 0 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.l1_cntrl0.sequencer.icache
-  system.l1_cntrl0.sequencer.icache_total_misses: 0
-  system.l1_cntrl0.sequencer.icache_total_demand_misses: 0
-  system.l1_cntrl0.sequencer.icache_total_prefetches: 0
-  system.l1_cntrl0.sequencer.icache_total_sw_prefetches: 0
-  system.l1_cntrl0.sequencer.icache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1IcacheMemory
+  system.l1_cntrl0.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl0.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl0.sequencer.dcache
-  system.l1_cntrl0.sequencer.dcache_total_misses: 0
-  system.l1_cntrl0.sequencer.dcache_total_demand_misses: 0
-  system.l1_cntrl0.sequencer.dcache_total_prefetches: 0
-  system.l1_cntrl0.sequencer.dcache_total_sw_prefetches: 0
-  system.l1_cntrl0.sequencer.dcache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1DcacheMemory
+  system.l1_cntrl0.L1DcacheMemory_total_misses: 0
+  system.l1_cntrl0.L1DcacheMemory_total_demand_misses: 0
+  system.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
 
 
  --- L1Cache ---
@@ -317,6 +317,13 @@ E_I  Load [0 ] 0
 E_I  Ifetch [0 ] 0
 E_I  Store [0 ] 0
 E_I  L1_Replacement [0 ] 0
+
+SINK_WB_ACK  Load [0 ] 0
+SINK_WB_ACK  Ifetch [0 ] 0
+SINK_WB_ACK  Store [0 ] 0
+SINK_WB_ACK  Inv [0 ] 0
+SINK_WB_ACK  L1_Replacement [0 ] 0
+SINK_WB_ACK  WB_Ack [0 ] 0
 
 Cache Stats: system.l2_cntrl0.L2cacheMemory
   system.l2_cntrl0.L2cacheMemory_total_misses: 0
