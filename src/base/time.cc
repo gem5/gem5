@@ -28,85 +28,35 @@
  * Authors: Nathan Binkert
  */
 
-#include <cctype>
-#include <cstring>
-#include <ctime>
 #include <iostream>
-#include <string>
+#include <sstream>
 
 #include "base/time.hh"
+#include "config/use_posix_clock.hh"
 
 using namespace std;
 
-struct _timeval
+void
+Time::_set(bool monotonic)
 {
+#if USE_POSIX_CLOCK
+    ::clock_gettime(monotonic ? CLOCK_MONOTONIC : CLOCK_REALTIME, &_time);
+#else
     timeval tv;
-};
-
-double
-convert(const timeval &tv)
-{
-    return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
-}
-
-Time::Time(bool set_now)
-{
-    time = new _timeval;
-    if (set_now)
-        set();
-}
-
-Time::Time(const timeval &val)
-{
-    time = new _timeval;
-    set(val);
-}
-
-Time::Time(const Time &val)
-{
-    time = new _timeval;
-    set(val.get());
-}
-
-Time::~Time()
-{
-    delete time;
-}
-
-const timeval &
-Time::get() const
-{
-    return time->tv;
-}
-
-void
-Time::set()
-{
-    ::gettimeofday(&time->tv, NULL);
-}
-
-void
-Time::set(const timeval &tv)
-{
-    memcpy(&time->tv, &tv, sizeof(timeval));
-}
-
-double
-Time::operator()() const
-{
-    return convert(get());
+    ::gettimeofday(&tv, NULL);
+    operator=(tv);
+#endif
 }
 
 string
-Time::date(string format) const
+Time::date(const string &format) const
 {
-    const timeval &tv = get();
-    time_t sec = tv.tv_sec;
+    time_t sec = this->sec();
     char buf[256];
 
     if (format.empty()) {
 #ifdef __SUNPRO_CC
-        ctime_r(&sec, buf, 256);
+        ctime_r(&sec, buf, sizeof(buf));
 #else
         ctime_r(&sec, buf);
 #endif
@@ -119,19 +69,44 @@ Time::date(string format) const
     return buf;
 }
 
-ostream &
-operator<<(ostream &out, const Time &start)
+string
+Time::time() const
 {
-    out << start.date();
-    return out;
+    double time = double(*this);
+    double secs = fmod(time, 60.0);
+    double all_mins = floor(time / 60.0);
+    double mins = fmod(all_mins, 60.0);
+    double hours = floor(all_mins / 60.0);
+
+    stringstream str;
+
+    if (hours > 0.0) {
+        if (hours < 10.0)
+            str << '0';
+        str << hours << ':';
+    }
+
+    if (mins > 0.0) {
+        if (mins < 10.0)
+            str << '0';
+        str << mins << ':';
+    }
+
+    if (secs < 10.0 && !str.str().empty())
+        str << '0';
+    str << secs;
+
+    return str.str();
 }
 
-Time
-operator-(const Time &l, const Time &r)
+void
+sleep(const Time &time)
 {
-    timeval tv;
-    timersub(&l.get(), &r.get(), &tv);
-    return tv;
-}
+    timespec ts = time;
 
-const Time Time::start(true);
+#if USE_POSIX_CLOCK
+    clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, NULL);
+#else
+    nanosleep(&ts, NULL);
+#endif
+}

@@ -703,6 +703,13 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
     print '       Please install zlib and try again.'
     Exit(1)
 
+# Check for librt.
+have_posix_clock = conf.CheckLib(None, 'clock_nanosleep', 'time.h') or \
+    conf.CheckLib('rt', 'clock_nanosleep', 'time.h')
+
+if not have_posix_clock:
+    print "Can't find library for POSIX clocks."
+
 # Check for <fenv.h> (C99 FP environment control)
 have_fenv = conf.CheckHeader('fenv.h', '<>')
 if not have_fenv:
@@ -819,6 +826,7 @@ sticky_vars.AddVariables(
                  'Compile for SSE2 (-msse2) to get IEEE FP on x86 hosts',
                  False),
     BoolVariable('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
+    BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('USE_CHECKER', 'Use checker for detailed CPU models', False),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
@@ -828,7 +836,8 @@ sticky_vars.AddVariables(
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['FULL_SYSTEM', 'USE_FENV', 'USE_MYSQL',
                 'NO_FAST_ALLOC', 'FAST_ALLOC_DEBUG', 'FAST_ALLOC_STATS',
-                'SS_COMPATIBLE_FP', 'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE']
+                'SS_COMPATIBLE_FP', 'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE',
+                'USE_POSIX_CLOCK' ]
 
 ###################################################
 #

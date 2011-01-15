@@ -65,7 +65,7 @@ struct SimTicksReset : public Callback
 {
     void process()
     {
-        statTime.set();
+        statTime.setTimer();
         startTick = curTick();
     }
 };
@@ -73,9 +73,11 @@ struct SimTicksReset : public Callback
 double
 statElapsedTime()
 {
-    Time now(true);
+    Time now;
+    now.setTimer();
+
     Time elapsed = now - statTime;
-    return elapsed();
+    return elapsed;
 }
 
 Tick
