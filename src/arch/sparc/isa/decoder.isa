@@ -138,11 +138,9 @@ decode OP default Unknown::unknown()
         }
     }
     0x1: BranchN::call(30, {{
-            if (Pstate<3:>)
-                R15 = (PC)<31:0>;
-            else
-                R15 = PC;
-            NNPC = R15 + disp;
+            IntReg midVal;
+            R15 = midVal = (Pstate<3:> ? (PC)<31:0> : PC);
+            NNPC = midVal + disp;
     }});
     0x2: decode OP3 {
         format IntOp {
