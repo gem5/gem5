@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 115372                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 204236                       # Number of bytes of host memory used
-host_seconds                                     0.11                       # Real time elapsed on the host
-host_tick_rate                              127463354                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  10660                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 204092                       # Number of bytes of host memory used
+host_seconds                                     1.20                       # Real time elapsed on the host
+host_tick_rate                               11797749                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                       12773                       # Number of instructions simulated
 sim_seconds                                  0.000014                       # Number of seconds simulated
@@ -213,9 +213,10 @@ system.cpu.dtb.write_hits                        2080                       # DT
 system.cpu.dtb.write_misses                        54                       # DTB write misses
 system.cpu.fetch.Branches                        5341                       # Number of branches that fetch encountered
 system.cpu.fetch.CacheLines                      3993                       # Number of cache lines fetched
-system.cpu.fetch.Cycles                          9162                       # Number of cycles fetch has run and was not squashing or blocked
+system.cpu.fetch.Cycles                          5113                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu.fetch.IcacheSquashes                   611                       # Number of outstanding Icache misses that were squashed
 system.cpu.fetch.Insts                          29881                       # Number of instructions fetch has processed
+system.cpu.fetch.MiscStallCycles                   56                       # Number of cycles fetch has spent waiting on interrupts, or bad addresses, or out of MSHRs
 system.cpu.fetch.SquashCycles                    1641                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.branchRate                  0.188868                       # Number of branch fetches per cycle
 system.cpu.fetch.icacheStallCycles               3993                       # Number of cycles fetch is stalled on an Icache miss

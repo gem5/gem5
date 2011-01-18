@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov 15 2010 08:52:32
-M5 revision f440cdaf1c2d+ 7743+ default tip
-M5 started Nov 15 2010 13:43:59
+M5 compiled Jan 17 2011 16:24:53
+M5 revision f72d94f8c275 7839 default qtip tip outgoing.patch qbase
+M5 started Jan 17 2011 16:24:57
 M5 executing on zizzer
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/01.hello-2T-smt/alpha/linux/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/01.hello-2T-smt/alpha/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second

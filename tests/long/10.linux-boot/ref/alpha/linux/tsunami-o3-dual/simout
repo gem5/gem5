@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec  1 2010 12:54:21
-M5 revision 9fcc50998835+ 7780+ default qtip tip set.patch qbase
-M5 started Dec  3 2010 12:06:07
+M5 compiled Jan 17 2011 17:11:38
+M5 revision f72d94f8c275 7839 default qtip tip outgoing.patch qbase
+M5 started Jan 17 2011 17:12:29
 M5 executing on zizzer
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual -re tests/run.py build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/m5/system/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 info: Launching CPU 1 @ 118370500
-Exiting @ tick 1900831708500 because m5_exit instruction encountered
+Exiting @ tick 1900831034500 because m5_exit instruction encountered

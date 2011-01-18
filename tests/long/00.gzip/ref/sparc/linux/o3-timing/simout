@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 15 2011 04:38:18
-M5 revision 784f5d201f6e 7838 default callr15stats.patch tip qtip
-M5 started Jan 15 2011 04:38:23
-M5 executing on tater
+M5 compiled Jan 17 2011 21:17:52
+M5 revision f72d94f8c275 7839 default qtip tip outgoing.patch qbase
+M5 started Jan 17 2011 21:17:55
+M5 executing on zizzer
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -43,4 +43,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 601459117000 because target called exit()
+Exiting @ tick 601458924000 because target called exit()

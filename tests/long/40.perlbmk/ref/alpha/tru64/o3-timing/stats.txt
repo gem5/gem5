@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 221847                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 213388                       # Number of bytes of host memory used
-host_seconds                                  8217.59                       # Real time elapsed on the host
-host_tick_rate                               85165348                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 156459                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 213156                       # Number of bytes of host memory used
+host_seconds                                 11651.86                       # Real time elapsed on the host
+host_tick_rate                               60063670                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                  1823043370                       # Number of instructions simulated
 sim_seconds                                  0.699854                       # Number of seconds simulated
@@ -12,7 +12,7 @@ system.cpu.BPredUnit.BTBCorrect                     0                       # Nu
 system.cpu.BPredUnit.BTBHits                236956975                       # Number of BTB hits
 system.cpu.BPredUnit.BTBLookups             289938750                       # Number of BTB lookups
 system.cpu.BPredUnit.RASInCorrect                 831                       # Number of incorrect RAS predictions.
-system.cpu.BPredUnit.condIncorrect           28355381                       # Number of conditional branches incorrect
+system.cpu.BPredUnit.condIncorrect           28355380                       # Number of conditional branches incorrect
 system.cpu.BPredUnit.condPredicted          231810934                       # Number of conditional branches predicted
 system.cpu.BPredUnit.lookups                346110000                       # Number of BP lookups
 system.cpu.BPredUnit.usedRAS                 49326422                       # Number of times the RAS was used to get a target.
@@ -145,9 +145,10 @@ system.cpu.dtb.write_hits                   258285727                       # DT
 system.cpu.dtb.write_misses                     37879                       # DTB write misses
 system.cpu.fetch.Branches                   346110000                       # Number of branches that fetch encountered
 system.cpu.fetch.CacheLines                 346350693                       # Number of cache lines fetched
-system.cpu.fetch.Cycles                     922065710                       # Number of cycles fetch has run and was not squashing or blocked
+system.cpu.fetch.Cycles                     575714813                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu.fetch.IcacheSquashes               4322310                       # Number of outstanding Icache misses that were squashed
 system.cpu.fetch.Insts                     3016744002                       # Number of instructions fetch has processed
+system.cpu.fetch.MiscStallCycles                  204                       # Number of cycles fetch has spent waiting on interrupts, or bad addresses, or out of MSHRs
 system.cpu.fetch.SquashCycles                28792194                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.branchRate                  0.247273                       # Number of branch fetches per cycle
 system.cpu.fetch.icacheStallCycles          346350693                       # Number of cycles fetch is stalled on an Icache miss
