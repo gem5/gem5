@@ -92,7 +92,8 @@ class ArmFault : public FaultBase
         // to allow the translation function to inform
         // the memory access function not to proceed
         // for a Prefetch that misses in the TLB.
-        PrefetchTLBMiss
+        PrefetchTLBMiss = 0x1f,
+        PrefetchUncacheable = 0x20
     };
 
     struct FaultVals

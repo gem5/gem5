@@ -556,8 +556,14 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             outerAttrs: %d\n",
             te->shareable, te->innerAttrs, te->outerAttrs);
     setAttr(te->attributes);
-    if (te->nonCacheable)
+    if (te->nonCacheable) {
         req->setFlags(Request::UNCACHEABLE);
+
+        // Prevent prefetching from I/O devices.
+        if (req->isPrefetch()) {
+            return new PrefetchAbort(vaddr, ArmFault::PrefetchUncacheable);
+        }
+    }
 
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:

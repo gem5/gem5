@@ -1222,8 +1222,7 @@ DefaultIEW<Impl>::executeInsts()
         // Execute instruction.
         // Note that if the instruction faults, it will be handled
         // at the commit stage.
-        if (inst->isMemRef() &&
-            (!inst->isDataPrefetch() && !inst->isInstPrefetch())) {
+        if (inst->isMemRef()) {
             DPRINTF(IEW, "Execute: Calculating address for memory "
                     "reference.\n");
 
@@ -1232,6 +1231,9 @@ DefaultIEW<Impl>::executeInsts()
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
                 fault = ldstQueue.executeLoad(inst);
+                if (inst->isDataPrefetch() || inst->isInstPrefetch()) {
+                    fault = NoFault;
+                }
             } else if (inst->isStore()) {
                 fault = ldstQueue.executeStore(inst);
 
