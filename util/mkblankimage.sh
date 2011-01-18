@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # makeblankimage.sh
 # Make a blank M5 disk image
