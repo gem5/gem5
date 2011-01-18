@@ -520,6 +520,7 @@ DefaultCommit<Impl>::squashAll(ThreadID tid)
     toIEW->commitInfo[tid].robSquashing = true;
 
     toIEW->commitInfo[tid].branchMispredict = false;
+    toIEW->commitInfo[tid].mispredictInst = NULL;
 
     toIEW->commitInfo[tid].pc = pc[tid];
 }
@@ -814,7 +815,8 @@ DefaultCommit<Impl>::commit()
 
             toIEW->commitInfo[tid].branchMispredict =
                 fromIEW->branchMispredict[tid];
-
+            toIEW->commitInfo[tid].mispredictInst =
+                fromIEW->mispredictInst[tid];
             toIEW->commitInfo[tid].branchTaken =
                 fromIEW->branchTaken[tid];
 

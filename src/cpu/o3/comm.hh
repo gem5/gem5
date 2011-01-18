@@ -87,6 +87,7 @@ struct DefaultIEWDefaultCommit {
 
     bool squash[Impl::MaxThreads];
     bool branchMispredict[Impl::MaxThreads];
+    DynInstPtr mispredictInst[Impl::MaxThreads];
     bool branchTaken[Impl::MaxThreads];
     Addr mispredPC[Impl::MaxThreads];
     TheISA::PCState pc[Impl::MaxThreads];
@@ -107,6 +108,7 @@ struct IssueStruct {
 /** Struct that defines all backwards communication. */
 template<class Impl>
 struct TimeBufStruct {
+    typedef typename Impl::DynInstPtr DynInstPtr;
     struct decodeComm {
         bool squash;
         bool predIncorrect;
@@ -117,6 +119,7 @@ struct TimeBufStruct {
         // @todo: Might want to package this kind of branch stuff into a single
         // struct as it is used pretty frequently.
         bool branchMispredict;
+        DynInstPtr mispredictInst;
         bool branchTaken;
         Addr mispredPC;
         TheISA::PCState nextPC;
@@ -156,6 +159,7 @@ struct TimeBufStruct {
         bool robSquashing;
 
         bool branchMispredict;
+        DynInstPtr mispredictInst;
         bool branchTaken;
         Addr mispredPC;
         TheISA::PCState pc;
@@ -175,7 +179,6 @@ struct TimeBufStruct {
         InstSeqNum nonSpecSeqNum;
 
         // Hack for now to send back an uncached access to the IEW stage.
-        typedef typename Impl::DynInstPtr DynInstPtr;
         bool uncached;
         DynInstPtr uncachedLoad;
 

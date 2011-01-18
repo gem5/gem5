@@ -902,8 +902,14 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
                fromCommit->commitInfo[tid].doneSeqNum,
                tid);
 
-        // Also check if there's a mispredict that happened.
-        if (fromCommit->commitInfo[tid].branchMispredict) {
+        // If it was a branch mispredict on a control instruction, update the
+        // branch predictor with that instruction, otherwise just kill the
+        // invalid state we generated in after sequence number
+        assert(!fromCommit->commitInfo[tid].branchMispredict ||
+                fromCommit->commitInfo[tid].mispredictInst);
+
+        if (fromCommit->commitInfo[tid].branchMispredict &&
+            fromCommit->commitInfo[tid].mispredictInst->isControl()) {
             branchPred.squash(fromCommit->commitInfo[tid].doneSeqNum,
                               fromCommit->commitInfo[tid].pc,
                               fromCommit->commitInfo[tid].branchTaken,
