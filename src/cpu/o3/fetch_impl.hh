@@ -237,6 +237,11 @@ DefaultFetch<Impl>::regStats()
         .desc("Number of cycles fetch has spent squashing")
         .prereq(fetchSquashCycles);
 
+    fetchTlbCycles
+        .name(name() + ".TlbCycles")
+        .desc("Number of cycles fetch has spent waiting for tlb")
+        .prereq(fetchTlbCycles);
+
     fetchIdleCycles
         .name(name() + ".IdleCycles")
         .desc("Number of cycles fetch was idle")
@@ -548,11 +553,11 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
 
 template <class Impl>
 bool
-DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid,
-                                   Addr pc)
+DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
 {
     Fault fault = NoFault;
 
+    // @todo: not sure if these should block translation.
     //AlphaDep
     if (cacheBlocked) {
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, cache blocked\n",
@@ -575,11 +580,6 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid,
     // Align the fetch address so it's at the start of a cache block.
     Addr block_PC = icacheBlockAlignPC(vaddr);
 
-    // If we've already got the block, no need to try to fetch it again.
-    if (cacheDataValid[tid] && block_PC == cacheDataPC[tid]) {
-        return true;
-    }
-
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
@@ -589,27 +589,23 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid,
 
     memReq[tid] = mem_req;
 
-    // Translate the instruction request.
-    fault = cpu->itb->translateAtomic(mem_req, cpu->thread[tid]->getTC(),
-                                      BaseTLB::Execute);
+    // Initiate translation of the icache block
+    fetchStatus[tid] = ItlbWait;
+    FetchTranslation *trans = new FetchTranslation(this);
+    cpu->itb->translateTiming(mem_req, cpu->thread[tid]->getTC(),
+                              trans, BaseTLB::Execute);
+    return true;
+}
 
-    // In the case of faults, the fetch stage may need to stall and wait
-    // for the ITB miss to be handled.
+template <class Impl>
+void
+DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
+{
+    ThreadID tid = mem_req->threadId();
+    Addr block_PC = mem_req->getVaddr();
 
-    // If translation was successful, attempt to read the first
-    // instruction.
+    // If translation was successful, attempt to read the icache block.
     if (fault == NoFault) {
-#if 0
-        if (cpu->system->memctrl->badaddr(memReq[tid]->paddr) ||
-            memReq[tid]->isUncacheable()) {
-            DPRINTF(Fetch, "Fetch: Bad address %#x (hopefully on a "
-                    "misspeculating path)!",
-                    memReq[tid]->paddr);
-            ret_fault = TheISA::genMachineCheckFault();
-            return false;
-        }
-#endif
-
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req,
                                         MemCmd::ReadReq, Packet::Broadcast);
@@ -617,39 +613,54 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid,
 
         cacheDataPC[tid] = block_PC;
         cacheDataValid[tid] = false;
-
         DPRINTF(Fetch, "Fetch: Doing instruction read.\n");
 
         fetchedCacheLines++;
 
-        // Now do the timing access to see whether or not the instruction
-        // exists within the cache.
+        // Access the cache.
         if (!icachePort->sendTiming(data_pkt)) {
             assert(retryPkt == NULL);
             assert(retryTid == InvalidThreadID);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
+
             fetchStatus[tid] = IcacheWaitRetry;
             retryPkt = data_pkt;
             retryTid = tid;
             cacheBlocked = true;
-            return false;
+        } else {
+            DPRINTF(Fetch, "[tid:%i]: Doing Icache access.\n", tid);
+            DPRINTF(Activity, "[tid:%i]: Activity: Waiting on I-cache "
+                    "response.\n", tid);
+
+            lastIcacheStall[tid] = curTick();
+            fetchStatus[tid] = IcacheWaitResponse;
         }
-
-        DPRINTF(Fetch, "[tid:%i]: Doing cache access.\n", tid);
-
-        lastIcacheStall[tid] = curTick();
-
-        DPRINTF(Activity, "[tid:%i]: Activity: Waiting on I-cache "
-                "response.\n", tid);
-
-        fetchStatus[tid] = IcacheWaitResponse;
     } else {
+        // Translation faulted, icache request won't be sent.
         delete mem_req;
         memReq[tid] = NULL;
-    }
 
-    ret_fault = fault;
-    return true;
+        // Send the fault to commit.  This thread will not do anything
+        // until commit handles the fault.  The only other way it can
+        // wake up is if a squash comes along and changes the PC.
+        TheISA::PCState fetchPC = pc[tid];
+
+        // We will use a nop in ordier to carry the fault.
+        DynInstPtr instruction = buildInst(tid,
+                StaticInstPtr(TheISA::NoopMachInst, fetchPC.instAddr()),
+                NULL, fetchPC, fetchPC, false);
+
+        instruction->setPredTarg(fetchPC);
+        instruction->fault = fault;
+        wroteToTimeBuffer = true;
+
+        fetchStatus[tid] = TrapPending;
+
+        DPRINTF(Fetch, "[tid:%i]: Blocked, need to handle the trap.\n", tid);
+        DPRINTF(Fetch, "[tid:%i]: fault (%s) detected @ PC %s.\n",
+                tid, fault->name(), pc[tid]);
+    }
+    _status = updateFetchStatus();
 }
 
 template <class Impl>
@@ -1044,9 +1055,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // The current PC.
     TheISA::PCState thisPC = pc[tid];
 
-    // Fault code for memory access.
-    Fault fault = NoFault;
-
     Addr pcOffset = fetchOffset[tid];
     Addr fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
 
@@ -1054,22 +1062,30 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     // to running, otherwise do the cache access.  Possibly move this up
     // to tick() function.
     if (fetchStatus[tid] == IcacheAccessComplete) {
-        DPRINTF(Fetch, "[tid:%i]: Icache miss is complete.\n",tid);
+        DPRINTF(Fetch, "[tid:%i]: Icache miss is complete.\n", tid);
 
         fetchStatus[tid] = Running;
         status_change = true;
     } else if (fetchStatus[tid] == Running) {
-        DPRINTF(Fetch, "[tid:%i]: Attempting to translate and read "
-                "instruction, starting at PC %#x.\n", tid, fetchAddr);
+        // Align the fetch PC so its at the start of a cache block.
+        Addr block_PC = icacheBlockAlignPC(fetchAddr);
 
-        bool fetch_success = fetchCacheLine(fetchAddr, fault, tid,
-                                            thisPC.instAddr());
-        if (!fetch_success) {
-            if (cacheBlocked) {
+        // Unless buffer already got the block, fetch it from icache.
+        if (!cacheDataValid[tid] || block_PC != cacheDataPC[tid]) {
+            DPRINTF(Fetch, "[tid:%i]: Attempting to translate and read "
+                    "instruction, starting at PC %s.\n", tid, thisPC);
+
+            fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
+
+            if (fetchStatus[tid] == IcacheWaitResponse)
                 ++icacheStallCycles;
-            } else {
+            else if (fetchStatus[tid] == ItlbWait)
+                ++fetchTlbCycles;
+            else
                 ++fetchMiscStallCycles;
-            }
+            return;
+        } else if (checkInterrupt(thisPC.instAddr()) || isSwitchedOut()) {
+            ++fetchMiscStallCycles;
             return;
         }
     } else {
@@ -1084,145 +1100,140 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             DPRINTF(Fetch, "[tid:%i]: Fetch is squashing!\n", tid);
         } else if (fetchStatus[tid] == IcacheWaitResponse) {
             ++icacheStallCycles;
-            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting cache response!\n", tid);
+            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting cache response!\n",
+                    tid);
+        } else if (fetchStatus[tid] == ItlbWait) {
+            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting ITLB walk to "
+                    "finish! \n", tid);
+            ++fetchTlbCycles;
         }
 
-        // Status is Idle, Squashing, Blocked, or IcacheWaitResponse, so
-        // fetch should do nothing.
+        // Status is Idle, Squashing, Blocked, ItlbWait or IcacheWaitResponse
+        // so fetch should do nothing.
         return;
     }
 
     ++fetchCycles;
-
-    // If we had a stall due to an icache miss, then return.
-    if (fetchStatus[tid] == IcacheWaitResponse) {
-        ++icacheStallCycles;
-        status_change = true;
-        return;
-    }
 
     TheISA::PCState nextPC = thisPC;
 
     StaticInstPtr staticInst = NULL;
     StaticInstPtr curMacroop = macroop[tid];
 
-    if (fault == NoFault) {
+    // If the read of the first instruction was successful, then grab the
+    // instructions from the rest of the cache line and put them into the
+    // queue heading to decode.
 
-        // If the read of the first instruction was successful, then grab the
-        // instructions from the rest of the cache line and put them into the
-        // queue heading to decode.
+    DPRINTF(Fetch, "[tid:%i]: Adding instructions to queue to "
+            "decode.\n", tid);
 
-        DPRINTF(Fetch,
-                "[tid:%i]: Adding instructions to queue to decode.\n", tid);
+    // Need to keep track of whether or not a predicted branch
+    // ended this fetch block.
+    bool predictedBranch = false;
 
-        // Need to keep track of whether or not a predicted branch
-        // ended this fetch block.
-        bool predictedBranch = false;
+    TheISA::MachInst *cacheInsts =
+        reinterpret_cast<TheISA::MachInst *>(cacheData[tid]);
 
-        TheISA::MachInst *cacheInsts =
-            reinterpret_cast<TheISA::MachInst *>(cacheData[tid]);
+    const unsigned numInsts = cacheBlkSize / instSize;
+    unsigned blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
 
-        const unsigned numInsts = cacheBlkSize / instSize;
-        unsigned blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
+    // Loop through instruction memory from the cache.
+    while (blkOffset < numInsts &&
+           numInst < fetchWidth &&
+           !predictedBranch) {
 
-        // Loop through instruction memory from the cache.
-        while (blkOffset < numInsts &&
-               numInst < fetchWidth &&
-               !predictedBranch) {
-
-            // If we need to process more memory, do it now.
-            if (!curMacroop && !predecoder.extMachInstReady()) {
-                if (ISA_HAS_DELAY_SLOT && pcOffset == 0) {
-                    // Walk past any annulled delay slot instructions.
-                    Addr pcAddr = thisPC.instAddr() & BaseCPU::PCMask;
-                    while (fetchAddr != pcAddr && blkOffset < numInsts) {
-                        blkOffset++;
-                        fetchAddr += instSize;
-                    }
-                    if (blkOffset >= numInsts)
-                        break;
-                }
-                MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
-
-                predecoder.setTC(cpu->thread[tid]->getTC());
-                predecoder.moreBytes(thisPC, fetchAddr, inst);
-
-                if (predecoder.needMoreBytes()) {
+        // If we need to process more memory, do it now.
+        if (!curMacroop && !predecoder.extMachInstReady()) {
+            if (ISA_HAS_DELAY_SLOT && pcOffset == 0) {
+                // Walk past any annulled delay slot instructions.
+                Addr pcAddr = thisPC.instAddr() & BaseCPU::PCMask;
+                while (fetchAddr != pcAddr && blkOffset < numInsts) {
                     blkOffset++;
                     fetchAddr += instSize;
-                    pcOffset += instSize;
                 }
+                if (blkOffset >= numInsts)
+                    break;
             }
+            MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
 
-            // Extract as many instructions and/or microops as we can from
-            // the memory we've processed so far.
-            do {
-                if (!curMacroop) {
-                    if (predecoder.extMachInstReady()) {
-                        ExtMachInst extMachInst;
+            predecoder.setTC(cpu->thread[tid]->getTC());
+            predecoder.moreBytes(thisPC, fetchAddr, inst);
 
-                        extMachInst = predecoder.getExtMachInst(thisPC);
-                        pcOffset = 0;
-                        staticInst = StaticInstPtr(extMachInst,
-                                                   thisPC.instAddr());
+            if (predecoder.needMoreBytes()) {
+                blkOffset++;
+                fetchAddr += instSize;
+                pcOffset += instSize;
+            }
+        }
 
-                        // Increment stat of fetched instructions.
-                        ++fetchedInsts;
+        // Extract as many instructions and/or microops as we can from
+        // the memory we've processed so far.
+        do {
+            if (!curMacroop) {
+                if (predecoder.extMachInstReady()) {
+                    ExtMachInst extMachInst;
 
-                        if (staticInst->isMacroop())
-                            curMacroop = staticInst;
-                    } else {
-                        // We need more bytes for this instruction.
-                        break;
-                    }
-                }
-                if (curMacroop) {
-                    staticInst = curMacroop->fetchMicroop(thisPC.microPC());
-                    if (staticInst->isLastMicroop())
-                        curMacroop = NULL;
-                }
+                    extMachInst = predecoder.getExtMachInst(thisPC);
+                    pcOffset = 0;
+                    staticInst = StaticInstPtr(extMachInst,
+                                               thisPC.instAddr());
 
-                DynInstPtr instruction =
-                    buildInst(tid, staticInst, curMacroop,
-                              thisPC, nextPC, true);
+                    // Increment stat of fetched instructions.
+                    ++fetchedInsts;
 
-                numInst++;
-
-                nextPC = thisPC;
-
-                // If we're branching after this instruction, quite fetching
-                // from the same block then.
-                predictedBranch |= thisPC.branching();
-                predictedBranch |=
-                    lookupAndUpdateNextPC(instruction, nextPC);
-                if (predictedBranch) {
-                    DPRINTF(Fetch, "Branch detected with PC = %s\n", thisPC);
-                }
-
-                // Move to the next instruction, unless we have a branch.
-                thisPC = nextPC;
-
-                if (instruction->isQuiesce()) {
-                    DPRINTF(Fetch,
-                            "Quiesce instruction encountered, halting fetch!");
-                    fetchStatus[tid] = QuiescePending;
-                    status_change = true;
+                    if (staticInst->isMacroop())
+                        curMacroop = staticInst;
+                } else {
+                    // We need more bytes for this instruction.
                     break;
                 }
-            } while ((curMacroop || predecoder.extMachInstReady()) &&
-                     numInst < fetchWidth);
-        }
+            }
+            if (curMacroop) {
+                staticInst = curMacroop->fetchMicroop(thisPC.microPC());
+                if (staticInst->isLastMicroop())
+                    curMacroop = NULL;
+            }
 
-        if (predictedBranch) {
-            DPRINTF(Fetch, "[tid:%i]: Done fetching, predicted branch "
-                    "instruction encountered.\n", tid);
-        } else if (numInst >= fetchWidth) {
-            DPRINTF(Fetch, "[tid:%i]: Done fetching, reached fetch bandwidth "
-                    "for this cycle.\n", tid);
-        } else if (blkOffset >= cacheBlkSize) {
-            DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of cache "
-                    "block.\n", tid);
-        }
+            DynInstPtr instruction =
+                buildInst(tid, staticInst, curMacroop,
+                          thisPC, nextPC, true);
+
+            numInst++;
+
+            nextPC = thisPC;
+
+            // If we're branching after this instruction, quite fetching
+            // from the same block then.
+            predictedBranch |= thisPC.branching();
+            predictedBranch |=
+                lookupAndUpdateNextPC(instruction, nextPC);
+            if (predictedBranch) {
+                DPRINTF(Fetch, "Branch detected with PC = %s\n", thisPC);
+            }
+
+            // Move to the next instruction, unless we have a branch.
+            thisPC = nextPC;
+
+            if (instruction->isQuiesce()) {
+                DPRINTF(Fetch,
+                        "Quiesce instruction encountered, halting fetch!");
+                fetchStatus[tid] = QuiescePending;
+                status_change = true;
+                break;
+            }
+        } while ((curMacroop || predecoder.extMachInstReady()) &&
+                 numInst < fetchWidth);
+    }
+
+    if (predictedBranch) {
+        DPRINTF(Fetch, "[tid:%i]: Done fetching, predicted branch "
+                "instruction encountered.\n", tid);
+    } else if (numInst >= fetchWidth) {
+        DPRINTF(Fetch, "[tid:%i]: Done fetching, reached fetch bandwidth "
+                "for this cycle.\n", tid);
+    } else if (blkOffset >= cacheBlkSize) {
+        DPRINTF(Fetch, "[tid:%i]: Done fetching, reached the end of cache "
+                "block.\n", tid);
     }
 
     macroop[tid] = curMacroop;
@@ -1232,39 +1243,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         wroteToTimeBuffer = true;
     }
 
-    // Now that fetching is completed, update the PC to signify what the next
-    // cycle will be.
-    if (fault == NoFault) {
-        pc[tid] = nextPC;
-        DPRINTF(Fetch, "[tid:%i]: Setting PC to %s.\n", tid, nextPC);
-    } else {
-        // We shouldn't be in an icache miss and also have a fault (an ITB
-        // miss)
-        if (fetchStatus[tid] == IcacheWaitResponse) {
-            panic("Fetch should have exited prior to this!");
-        }
-
-        // Send the fault to commit.  This thread will not do anything
-        // until commit handles the fault.  The only other way it can
-        // wake up is if a squash comes along and changes the PC.  Send the
-        // fault on a dummy nop.
-        staticInst = StaticInstPtr(TheISA::NoopMachInst, thisPC.instAddr());
-
-        DynInstPtr instruction =
-            buildInst(tid, staticInst, NULL, thisPC, nextPC, false);
-
-        TheISA::advancePC(nextPC, staticInst);
-        instruction->setPredTarg(nextPC);
-        instruction->fault = fault;
-
-        DPRINTF(Fetch, "[tid:%i]: Blocked, need to handle the trap.\n",tid);
-
-        fetchStatus[tid] = TrapPending;
-        status_change = true;
-
-        DPRINTF(Fetch, "[tid:%i]: fault (%s) detected @ PC %s, sending nop "
-                       "[sn:%lli]\n", tid, fault->name(), thisPC, inst_seq);
-    }
+    pc[tid] = thisPC;
 }
 
 template<class Impl>

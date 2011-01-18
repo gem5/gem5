@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -38,6 +50,7 @@
 #include "cpu/timebuf.hh"
 #include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
+#include "cpu/translation.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
@@ -113,6 +126,25 @@ class DefaultFetch
         virtual void recvRetry();
     };
 
+    class FetchTranslation : public BaseTLB::Translation
+    {
+      protected:
+        DefaultFetch<Impl> *fetch;
+
+      public:
+        FetchTranslation(DefaultFetch<Impl> *_fetch)
+            : fetch(_fetch)
+        {}
+
+        void
+        finish(Fault fault, RequestPtr req, ThreadContext *tc,
+               BaseTLB::Mode mode)
+        {
+            assert(mode == BaseTLB::Execute);
+            fetch->finishTranslation(fault, req);
+            delete this;
+        }
+    };
 
   public:
     /** Overall fetch status. Used to determine if the CPU can
@@ -133,6 +165,7 @@ class DefaultFetch
         TrapPending,
         QuiescePending,
         SwitchOut,
+        ItlbWait,
         IcacheWaitResponse,
         IcacheWaitRetry,
         IcacheAccessComplete
@@ -242,7 +275,8 @@ class DefaultFetch
      * @param pc The actual PC of the current instruction.
      * @return Any fault that occured.
      */
-    bool fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid, Addr pc);
+    bool fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc);
+    void finishTranslation(Fault fault, RequestPtr mem_req);
 
 
     /** Check if an interrupt is pending and that we need to handle
@@ -468,6 +502,8 @@ class DefaultFetch
     Stats::Scalar fetchCycles;
     /** Stat for total number of cycles spent squashing. */
     Stats::Scalar fetchSquashCycles;
+    /** Stat for total number of cycles spent waiting for translation */
+    Stats::Scalar fetchTlbCycles;
     /** Stat for total number of cycles spent blocked due to other stages in
      * the pipeline.
      */
