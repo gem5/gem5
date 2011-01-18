@@ -97,7 +97,7 @@ namespace ArmISA
     const Addr PAddrImplMask = (ULL(1) << PABits) - 1;
 
     // return a no-op instruction... used for instruction fetch faults
-    const ExtMachInst NoopMachInst = 0x00000000;
+    const ExtMachInst NoopMachInst = 0xE320F000;
 
     const int LogVMPageSize = 12;       // 4K bytes
     const int VMPageSize = (1 << LogVMPageSize);
