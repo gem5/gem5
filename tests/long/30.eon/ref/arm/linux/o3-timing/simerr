@@ -1,0 +1,157 @@
+warn: Sockets disabled, not accepting gdb connections
+For more information see: http://www.m5sim.org/warn/d946bea6
+warn: Bad interworking branch address 0x7002.
+For more information see: http://www.m5sim.org/warn/55f199fd
+getting pixel output filename pixels_out.cook
+opening control file chair.control.cook
+opening camera file chair.camera
+opening surfaces file chair.surfaces
+reading data
+processing 8parts
+Grid measure is 6 by 3.0001 by 6
+cell dimension is 0.863065
+Creating grid for list of length 21
+Grid size = 7 by 4 by 7
+Total occupancy = 236
+reading control stream
+reading camera stream
+Writing to chair.cook.ppm
+calculating 15 by 15 image with 196 samples
+col 0. . .
+col 1. . .
+col 2. . .
+col 3. . .
+col 4. . .
+col 5. . .
+col 6. . .
+col 7. . .
+col 8. . .
+col 9. . .
+col 10. . .
+col 11. . .
+col 12. . .
+col 13. . .
+col 14. . .
+Writing to chair.cook.ppm
+0  8  14
+1  8  14
+2  8  14
+3  8  14
+4  8  14
+5  8  14
+6  8  14
+7  8  14
+8  8  14
+9  8  14
+10  8  14
+11  8  14
+12  8  14
+13  8  14
+14  8  14
+warn: Bad interworking branch address 0x7ceeeeee.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7dfefefe.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7cb6b6b6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e929292.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e9a9a9a.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e9a9a9a.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ea2a2a2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e868686.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7da6a6a6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7eaeaeae.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7deaeaea.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7dc2c2c2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7d828282.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ea6a6a6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e9e9e9e.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7de2e2e2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7cfefefe.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7d9e9e9e.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7dfefefe.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e9a9a9a.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e9a9a9a.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ddadada.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e828282.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7e8a8a8a.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ea2a2a2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7eb6b6b6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7edadada.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ebababa.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ef6f6f6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x80868686.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7faeaeae.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7faaaaaa.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7f8e8e8e.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ee2e2e2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7f868686.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fa6a6a6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7f969696.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fd2d2d2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fcecece.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ff6f6f6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7feaeaea.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fdadada.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fe6e6e6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7f8a8a8a.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7feaeaea.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fdedede.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7feeeeee.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ff2f2f2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7ff2f2f2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7feeeeee.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fd6d6d6.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7fd2d2d2.
+For more information see: http://www.m5sim.org/warn/55f199fd
+warn: Bad interworking branch address 0x7faeaeae.
+For more information see: http://www.m5sim.org/warn/55f199fd
+hack: be nice to actually delete the event here
