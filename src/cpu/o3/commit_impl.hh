@@ -141,6 +141,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
         trapSquash[tid] = false;
         tcSquash[tid] = false;
         pc[tid].set(0);
+        lastCommitedSeqNum[tid] = 0;
     }
 #if FULL_SYSTEM
     interrupt = NoFault;
@@ -498,12 +499,12 @@ DefaultCommit<Impl>::squashAll(ThreadID tid)
     // Hopefully this doesn't mess things up.  Basically I want to squash
     // all instructions of this thread.
     InstSeqNum squashed_inst = rob->isEmpty() ?
-        0 : rob->readHeadInst(tid)->seqNum - 1;
+        lastCommitedSeqNum[tid] : rob->readHeadInst(tid)->seqNum - 1;
 
     // All younger instructions will be squashed. Set the sequence
     // number as the youngest instruction in the ROB (0 in this case.
     // Hopefully nothing breaks.)
-    youngestSeqNum[tid] = 0;
+    youngestSeqNum[tid] = lastCommitedSeqNum[tid];
 
     rob->squash(squashed_inst, tid);
     changedROBNumEntries[tid] = true;
@@ -959,6 +960,9 @@ DefaultCommit<Impl>::commitInsts()
                 head_inst->updateMiscRegs();
 
                 TheISA::advancePC(pc[tid], head_inst->staticInst);
+
+                // Keep track of the last sequence number commited
+                lastCommitedSeqNum[tid] = head_inst->seqNum;
 
                 // If this is an instruction that doesn't play nicely with
                 // others squash everything and restart fetch
