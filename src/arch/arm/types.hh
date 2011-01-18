@@ -202,9 +202,10 @@ namespace ArmISA
         };
         uint8_t flags;
         uint8_t nextFlags;
-
+        uint8_t forcedItStateValue;
+        bool forcedItStateValid;
       public:
-        PCState() : flags(0), nextFlags(0)
+        PCState() : flags(0), nextFlags(0), forcedItStateValue(0), forcedItStateValid(false)
         {}
 
         void
@@ -214,7 +215,7 @@ namespace ArmISA
             npc(val + (thumb() ? 2 : 4));
         }
 
-        PCState(Addr val) : flags(0), nextFlags(0)
+        PCState(Addr val) : flags(0), nextFlags(0), forcedItStateValue(0), forcedItStateValid(false)
         { set(val); }
 
         bool
@@ -277,12 +278,40 @@ namespace ArmISA
                 nextFlags &= ~JazelleBit;
         }
 
+        uint8_t
+        forcedItState() const
+        {
+            return forcedItStateValue;
+        }
+
+        void
+        forcedItState(uint8_t value)
+        {
+            forcedItStateValue = value;
+            // Not valid unless the advance is called.
+            forcedItStateValid = false;
+        }
+
+        bool
+        forcedItStateIsValid() const
+        {
+            return forcedItStateValid;
+        }
+
         void
         advance()
         {
             Base::advance();
             npc(pc() + (thumb() ? 2 : 4));
             flags = nextFlags;
+
+            // Validate the itState
+            if (forcedItStateValue != 0 && !forcedItStateValid) {
+                forcedItStateValid = true;
+            } else {
+                forcedItStateValid = false;
+                forcedItStateValue = 0;
+            }
         }
 
         void
@@ -366,6 +395,8 @@ namespace ArmISA
             Base::serialize(os);
             SERIALIZE_SCALAR(flags);
             SERIALIZE_SCALAR(nextFlags);
+            SERIALIZE_SCALAR(forcedItStateValue);
+            SERIALIZE_SCALAR(forcedItStateValid);
         }
 
         void
@@ -374,6 +405,8 @@ namespace ArmISA
             Base::unserialize(cp, section);
             UNSERIALIZE_SCALAR(flags);
             UNSERIALIZE_SCALAR(nextFlags);
+            UNSERIALIZE_SCALAR(forcedItStateValue);
+            UNSERIALIZE_SCALAR(forcedItStateValid);
         }
     };
 

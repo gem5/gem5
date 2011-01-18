@@ -162,9 +162,17 @@ Predecoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     FPSCR fpscr = tc->readMiscReg(MISCREG_FPSCR);
     emi.fpscrLen = fpscr.len;
     emi.fpscrStride = fpscr.stride;
-    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    itstate.top6 = cpsr.it2;
-    itstate.bottom2 = cpsr.it1;
+
+    if (pc.forcedItStateIsValid()) {
+        // returns from exceptions/interrupts force the it state.
+        itstate = pc.forcedItState();
+        DPRINTF(Predecoder, "Predecoder, itstate forced = %08x.\n", pc.forcedItState());
+    } else if (predAddrValid && (pc.instAddr() != predAddr)) {
+        // Control flow changes necessitate a 0 itstate.
+        itstate.top6 = 0;
+        itstate.bottom2 = 0;
+    }
+
     outOfBytes = false;
     process();
 }

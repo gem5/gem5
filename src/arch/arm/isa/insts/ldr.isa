@@ -107,13 +107,15 @@ let {{
             SCTLR sctlr = Sctlr;
             // Use the version of NPC that gets set before NextThumb
             pNPC = cSwap<uint32_t>(Mem.ud, cpsr.e);
+            uint32_t tempSpsr = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
             uint32_t newCpsr =
-                cpsrWriteByInstr(cpsr | CondCodes,
-                                 cSwap<uint32_t>(Mem.ud >> 32, cpsr.e),
+                cpsrWriteByInstr(cpsr | CondCodes, tempSpsr,
                                  0xF, true, sctlr.nmfi);
             Cpsr = ~CondCodesMask & newCpsr;
             NextThumb = ((CPSR)newCpsr).t;
             NextJazelle = ((CPSR)newCpsr).j;
+            ForcedItState = ((((CPSR)tempSpsr).it2 << 2) & 0xFC)
+                | (((CPSR)tempSpsr).it1 & 0x3);
             CondCodes = CondCodesMask & newCpsr;
             '''
             self.codeBlobs["memacc_code"] = accCode

@@ -245,6 +245,7 @@ def operands {{
     'Thumb': pcStateReg('thumb', srtPC),
     'NextThumb': pcStateReg('nextThumb', srtMode),
     'NextJazelle': pcStateReg('nextJazelle', srtMode),
+    'ForcedItState': pcStateReg('forcedItState', srtMode),
 
     #Register operands depending on a field in the instruction encoding. These
     #should be avoided since they may not be portable across different

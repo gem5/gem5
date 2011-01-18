@@ -94,6 +94,8 @@ let {{
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
         IWNPC = cSwap(Mem.uw, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
+        ForcedItState = ((((CPSR)Spsr).it2 << 2) & 0xFC)
+                | (((CPSR)Spsr).it1 & 0x3);
     '''
     microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
                                       'MicroMemOp',

@@ -85,6 +85,8 @@ let {{
         Cpsr = ~CondCodesMask & newCpsr;
         NextThumb = ((CPSR)newCpsr).t;
         NextJazelle = ((CPSR)newCpsr).j;
+        ForcedItState = ((((CPSR)Op1).it2 << 2) & 0xFC)
+                | (((CPSR)Op1).it1 & 0x3);
         CondCodes = CondCodesMask & newCpsr;
     '''
     msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
@@ -111,6 +113,8 @@ let {{
         Cpsr = ~CondCodesMask & newCpsr;
         NextThumb = ((CPSR)newCpsr).t;
         NextJazelle = ((CPSR)newCpsr).j;
+        ForcedItState = ((((CPSR)imm).it2 << 2) & 0xFC)
+            | (((CPSR)imm).it1 & 0x3);
         CondCodes = CondCodesMask & newCpsr;
     '''
     msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",

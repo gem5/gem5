@@ -67,6 +67,8 @@ namespace ArmISA
         bool outOfBytes;
         int offset;
         ITSTATE itstate;
+        Addr predAddr;
+        bool predAddrValid;
 
       public:
         void reset()
@@ -76,6 +78,9 @@ namespace ArmISA
             emi = 0;
             emiReady = false;
             outOfBytes = true;
+            itstate = 0;
+            predAddr = 0;
+            predAddrValid = false;
         }
 
         Predecoder(ThreadContext * _tc) :
@@ -138,6 +143,8 @@ namespace ArmISA
             assert(emiReady);
             ExtMachInst thisEmi = emi;
             pc.npc(pc.pc() + getInstSize());
+            predAddrValid = true;
+            predAddr = pc.pc() + getInstSize();
             emi = 0;
             emiReady = false;
             return thisEmi;
