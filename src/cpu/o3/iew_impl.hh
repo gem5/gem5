@@ -452,20 +452,24 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, PC: %s "
             "[sn:%i].\n", tid, inst->pcState(), inst->seqNum);
 
-    toCommit->squash[tid] = true;
-    toCommit->squashedSeqNum[tid] = inst->seqNum;
-    toCommit->mispredPC[tid] = inst->instAddr();
-    toCommit->branchMispredict[tid] = true;
-    toCommit->mispredictInst[tid] = inst;
+    if (toCommit->squash[tid] == false ||
+            inst->seqNum < toCommit->squashedSeqNum[tid]) {
+        toCommit->squash[tid] = true;
+        toCommit->squashedSeqNum[tid] = inst->seqNum;
+        toCommit->mispredPC[tid] = inst->instAddr();
+        toCommit->branchMispredict[tid] = true;
+        toCommit->branchTaken[tid] = inst->pcState().branching();
 
-    toCommit->branchTaken[tid] = inst->pcState().branching();
-    TheISA::PCState pc = inst->pcState();
-    TheISA::advancePC(pc, inst->staticInst);
-    toCommit->pc[tid] = pc;
+        TheISA::PCState pc = inst->pcState();
+        TheISA::advancePC(pc, inst->staticInst);
 
-    toCommit->includeSquashInst[tid] = false;
+        toCommit->pc[tid] = pc;
+        toCommit->mispredictInst[tid] = inst;
+        toCommit->includeSquashInst[tid] = false;
 
-    wroteToTimeBuffer = true;
+        wroteToTimeBuffer = true;
+    }
+
 }
 
 template<class Impl>
@@ -475,16 +479,19 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, "
             "PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
 
-    toCommit->squash[tid] = true;
-    toCommit->squashedSeqNum[tid] = inst->seqNum;
-    TheISA::PCState pc = inst->pcState();
-    TheISA::advancePC(pc, inst->staticInst);
-    toCommit->pc[tid] = pc;
-    toCommit->branchMispredict[tid] = false;
+    if (toCommit->squash[tid] == false ||
+            inst->seqNum < toCommit->squashedSeqNum[tid]) {
+        toCommit->squash[tid] = true;
+        toCommit->squashedSeqNum[tid] = inst->seqNum;
+        TheISA::PCState pc = inst->pcState();
+        TheISA::advancePC(pc, inst->staticInst);
+        toCommit->pc[tid] = pc;
+        toCommit->branchMispredict[tid] = false;
 
-    toCommit->includeSquashInst[tid] = false;
+        toCommit->includeSquashInst[tid] = false;
 
-    wroteToTimeBuffer = true;
+        wroteToTimeBuffer = true;
+    }
 }
 
 template<class Impl>
@@ -493,18 +500,21 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Memory blocked, squashing load and younger insts, "
             "PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
+    if (toCommit->squash[tid] == false ||
+            inst->seqNum < toCommit->squashedSeqNum[tid]) {
+        toCommit->squash[tid] = true;
 
-    toCommit->squash[tid] = true;
-    toCommit->squashedSeqNum[tid] = inst->seqNum;
-    toCommit->pc[tid] = inst->pcState();
-    toCommit->branchMispredict[tid] = false;
+        toCommit->squashedSeqNum[tid] = inst->seqNum;
+        toCommit->pc[tid] = inst->pcState();
+        toCommit->branchMispredict[tid] = false;
 
-    // Must include the broadcasted SN in the squash.
-    toCommit->includeSquashInst[tid] = true;
+        // Must include the broadcasted SN in the squash.
+        toCommit->includeSquashInst[tid] = true;
 
-    ldstQueue.setLoadBlockedHandled(tid);
+        ldstQueue.setLoadBlockedHandled(tid);
 
-    wroteToTimeBuffer = true;
+        wroteToTimeBuffer = true;
+    }
 }
 
 template<class Impl>
@@ -788,7 +798,6 @@ DefaultIEW<Impl>::checkSignalsAndUpdate(ThreadID tid)
         }
 
         dispatchStatus[tid] = Squashing;
-
         fetchRedirect[tid] = false;
         return;
     }
@@ -797,7 +806,6 @@ DefaultIEW<Impl>::checkSignalsAndUpdate(ThreadID tid)
         DPRINTF(IEW, "[tid:%i]: ROB is still squashing.\n", tid);
 
         dispatchStatus[tid] = Squashing;
-
         emptyRenameInsts(tid);
         wroteToTimeBuffer = true;
         return;
@@ -1286,6 +1294,7 @@ DefaultIEW<Impl>::executeInsts()
         ThreadID tid = inst->threadNumber;
 
         if (!fetchRedirect[tid] ||
+            !toCommit->squash[tid] ||
             toCommit->squashedSeqNum[tid] > inst->seqNum) {
 
             if (inst->mispredicted()) {
@@ -1382,6 +1391,7 @@ DefaultIEW<Impl>::executeInsts()
     // iew queue.  That way the writeback event will write into the correct
     // spot in the queue.
     wbNumInst = 0;
+
 }
 
 template <class Impl>
@@ -1596,6 +1606,7 @@ DefaultIEW<Impl>::checkMisprediction(DynInstPtr &inst)
     ThreadID tid = inst->threadNumber;
 
     if (!fetchRedirect[tid] ||
+        !toCommit->squash[tid] ||
         toCommit->squashedSeqNum[tid] > inst->seqNum) {
 
         if (inst->mispredicted()) {

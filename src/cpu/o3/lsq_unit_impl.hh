@@ -90,8 +90,8 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 {
     LSQSenderState *state = dynamic_cast<LSQSenderState *>(pkt->senderState);
     DynInstPtr inst = state->inst;
-    DPRINTF(IEW, "Writeback event [sn:%lli]\n", inst->seqNum);
-    DPRINTF(Activity, "Activity: Writeback event [sn:%lli]\n", inst->seqNum);
+    DPRINTF(IEW, "Writeback event [sn:%lli].\n", inst->seqNum);
+    DPRINTF(Activity, "Activity: Writeback event [sn:%lli].\n", inst->seqNum);
 
     //iewStage->ldstQueue.removeMSHR(inst->threadNumber,inst->seqNum);
 
