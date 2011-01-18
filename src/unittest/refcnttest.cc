@@ -32,11 +32,16 @@
 #include <iostream>
 #include <list>
 
+#include "base/cprintf.hh"
 #include "base/refcnt.hh"
+#include "unittest/unittest.hh"
 
 using namespace std;
+using UnitTest::setCase;
 
 namespace {
+
+bool printNewDel = false;
 
 class TestRC;
 typedef list<TestRC *> LiveList;
@@ -67,14 +72,16 @@ class TestRC : public RefCounted
   public:
     TestRC(const char *newTag) : _tag(newTag)
     {
-        cout << "  Creating object \"" << _tag << "\"\n";
+        if (printNewDel)
+            cprintf("  Creating object \"%s\"\n", _tag);
         liveList.push_front(this);
         liveIt = liveList.begin();
     }
 
     ~TestRC()
     {
-        cout << "  Destroying object \"" << _tag << "\"\n";
+        if (printNewDel)
+            cprintf("  Destroying object \"%s\"\n", _tag);
         liveList.erase(liveIt);
     }
 
@@ -89,7 +96,7 @@ class TestRC : public RefCounted
 
 typedef RefCountingPtr<TestRC> Ptr;
 
-}
+} // anonymous namespace
 
 int
 main()
@@ -98,90 +105,90 @@ main()
     assert(liveChange() == 0);
 
     // Create an empty Ptr and verify it's data pointer is NULL.
-    cout << "NULL check.\n";
+    setCase("NULL check");
     Ptr nullCheck;
-    assert(nullCheck.get() == NULL);
+    EXPECT_EQ(nullCheck.get(), NULL);
 
-    assert(liveChange() == 0);
+    EXPECT_EQ(liveChange(), 0);
 
     // Construct a Ptr from a TestRC pointer.
-    cout << "Construction from pointer.\n";
+    setCase("construction from pointer");
     Ptr constFromPointer = new TestRC("construction from pointer");
 
-    assert(liveChange() == 1);
+    EXPECT_EQ(liveChange(), 1);
 
     // Construct a Ptr from an existing Ptr.
-    cout << "Construction from a Ptr.\n";
+    setCase("construction from a Ptr");
     Ptr constFromPtr = constFromPointer;
 
-    assert(liveChange() == 0);
+    EXPECT_EQ(liveChange(), 0);
 
     // Test a Ptr being destroyed.
-    cout << "Destroying a Ptr.\n";
+    setCase("destroying a Ptr");
     Ptr *ptrPtr = new Ptr(new TestRC("destroying a ptr"));
-    assert(liveChange() == 1);
+    EXPECT_EQ(liveChange(), 1);
     delete ptrPtr;
-    assert(liveChange() == -1);
+    EXPECT_EQ(liveChange(), -1);
 
     // Test assignment from a pointer and from a Ptr.
-    cout << "Assignment operators.\n";
+    setCase("assignment operators");
     Ptr assignmentTarget;
     TestRC *assignmentSourcePointer = new TestRC("assignment source 1");
-    assert(liveChange() == 1);
+    EXPECT_EQ(liveChange(), 1);
     assignmentTarget = assignmentSourcePointer;
-    assert(liveChange() == 0);
+    EXPECT_EQ(liveChange(), 0);
     assignmentTarget = NULL;
-    assert(liveChange() == -1);
+    EXPECT_EQ(liveChange(), -1);
     Ptr assignmentSourcePtr(new TestRC("assignment source 2"));
-    assert(liveChange() == 1);
+    EXPECT_EQ(liveChange(), 1);
     assignmentTarget = assignmentSourcePtr;
-    assert(liveChange() == 0);
+    EXPECT_EQ(liveChange(), 0);
     assignmentSourcePtr = NULL;
-    assert(liveChange() == 0);
+    EXPECT_EQ(liveChange(), 0);
     assignmentTarget = NULL;
-    assert(liveChange() == -1);
+    EXPECT_EQ(liveChange(), -1);
 
     // Test access to members of the pointed to class and dereferencing.
-    cout << "Access to members.\n";
+    setCase("access to members");
     TestRC *accessTest = new TestRC("access test");
     Ptr accessTestPtr = accessTest;
     accessTest->testVal = 1;
-    assert(accessTestPtr->testVal == 1);
-    assert((*accessTestPtr).testVal == 1);
+    EXPECT_EQ(accessTestPtr->testVal, 1);
+    EXPECT_EQ((*accessTestPtr).testVal, 1);
     accessTest->testVal = 2;
-    assert(accessTestPtr->testVal == 2);
-    assert((*accessTestPtr).testVal == 2);
+    EXPECT_EQ(accessTestPtr->testVal, 2);
+    EXPECT_EQ((*accessTestPtr).testVal, 2);
     accessTestPtr->testVal = 3;
-    assert(accessTest->testVal == 3);
+    EXPECT_EQ(accessTest->testVal, 3);
     (*accessTestPtr).testVal = 4;
-    assert(accessTest->testVal == 4);
+    EXPECT_EQ(accessTest->testVal, 4);
     accessTestPtr = NULL;
     accessTest = NULL;
-    assert(liveChange() == 0);
+    EXPECT_EQ(liveChange(), 0);
 
     // Test bool and ! operator overloads.
-    cout << "Conversion to bool and ! overload.\n";
+    setCase("conversion to bool and ! overload");
     Ptr boolTest = new TestRC("bool test");
-    assert(boolTest == true);
-    assert(!boolTest == false);
+    EXPECT_EQ(boolTest, true);
+    EXPECT_EQ(!boolTest, false);
     boolTest = NULL;
-    assert(boolTest == false);
-    assert(!boolTest == true);
-    assert(liveChange() == 0);
+    EXPECT_EQ(boolTest, false);
+    EXPECT_EQ(!boolTest, true);
+    EXPECT_EQ(liveChange(), 0);
 
     // Test the equality operators.
-    cout << "Equality operators.\n";
+    setCase("equality operators");
     TestRC *equalTestA = new TestRC("equal test a");
     Ptr equalTestAPtr = equalTestA;
     Ptr equalTestAPtr2 = equalTestA;
     TestRC *equalTestB = new TestRC("equal test b");
     Ptr equalTestBPtr = equalTestB;
-    assert(equalTestA == equalTestAPtr);
-    assert(equalTestAPtr == equalTestA);
-    assert(equalTestAPtr == equalTestAPtr2);
-    assert(equalTestA != equalTestBPtr);
-    assert(equalTestAPtr != equalTestB);
-    assert(equalTestAPtr != equalTestBPtr);
+    EXPECT_TRUE(equalTestA == equalTestAPtr);
+    EXPECT_TRUE(equalTestAPtr == equalTestA);
+    EXPECT_TRUE(equalTestAPtr == equalTestAPtr2);
+    EXPECT_TRUE(equalTestA != equalTestBPtr);
+    EXPECT_TRUE(equalTestAPtr != equalTestB);
+    EXPECT_TRUE(equalTestAPtr != equalTestBPtr);
 
-    cout << flush;
+    return UnitTest::printResults();
 }
