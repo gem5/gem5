@@ -69,6 +69,11 @@ def template MicroMemConstructor {{
                          _ura, _urb, _up, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -89,6 +94,11 @@ def template MicroNeonMemDeclare {{
         {
             memAccessFlags |= extraMemFlags;
             %(constructor)s;
+            if (!(condCode == COND_AL || condCode == COND_UC)) {
+                for (int x = 0; x < _numDestRegs; x++) {
+                    _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                }
+            }
         }
 
         %(BasicExecDeclare)s
@@ -121,6 +131,11 @@ def template MicroIntConstructor {{
                          _ura, _urb, _urc)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -158,6 +173,11 @@ def template MicroNeonMixDeclare {{
                            _dest, _op1, _step)
         {
             %(constructor)s;
+            if (!(condCode == COND_AL || condCode == COND_UC)) {
+                for (int x = 0; x < _numDestRegs; x++) {
+                    _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                }
+            }
         }
 
         %(BasicExecDeclare)s
@@ -208,6 +228,11 @@ def template MicroNeonMixLaneDeclare {{
                            _dest, _op1, _step, _lane)
         {
             %(constructor)s;
+            if (!(condCode == COND_AL || condCode == COND_UC)) {
+                for (int x = 0; x < _numDestRegs; x++) {
+                    _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+                }
+            }
         }
 
         %(BasicExecDeclare)s
@@ -236,6 +261,11 @@ def template MicroIntMovConstructor {{
                          _ura, _urb)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -264,6 +294,11 @@ def template MicroIntImmConstructor {{
                          _ura, _urb, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -286,6 +321,11 @@ def template MicroIntRegConstructor {{
                          _ura, _urb, _urc, _shiftAmt, _shiftType)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -317,6 +357,11 @@ def template MacroMemConstructor {{
                      index, up, user, writeback, load, reglist)
 {
     %(constructor)s;
+    if (!(condCode == COND_AL || condCode == COND_UC)) {
+        for (int x = 0; x < _numDestRegs; x++) {
+            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+        }
+    }
 }
 
 }};
@@ -341,6 +386,11 @@ def template VMemMultConstructor {{
                      rn, vd, regs, inc, size, align, rm)
 {
     %(constructor)s;
+    if (!(condCode == COND_AL || condCode == COND_UC)) {
+        for (int x = 0; x < _numDestRegs; x++) {
+            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+        }
+    }
 }
 }};
 
@@ -364,6 +414,11 @@ def template VMemSingleConstructor {{
                      rn, vd, regs, inc, size, align, rm, lane)
 {
     %(constructor)s;
+    if (!(condCode == COND_AL || condCode == COND_UC)) {
+        for (int x = 0; x < _numDestRegs; x++) {
+            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+        }
+    }
 }
 }};
 
@@ -390,6 +445,11 @@ def template MacroVFPMemConstructor {{
                      vd, single, up, writeback, load, offset)
 {
     %(constructor)s;
+    if (!(condCode == COND_AL || condCode == COND_UC)) {
+        for (int x = 0; x < _numDestRegs; x++) {
+            _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+        }
+    }
 }
 
 }};

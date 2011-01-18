@@ -49,7 +49,11 @@
 
 namespace ArmISA {
 
-using ArmISAInst::MaxInstSrcRegs;
+
+// For a predicated instruction, we need all the
+// destination registers to also be sources
+const int MaxInstSrcRegs = ArmISAInst::MaxInstDestRegs +
+    ArmISAInst::MaxInstSrcRegs;
 using ArmISAInst::MaxInstDestRegs;
 
 typedef uint16_t  RegIndex;

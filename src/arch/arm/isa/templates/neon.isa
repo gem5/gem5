@@ -59,6 +59,11 @@ class %(class_name)s : public %(base_class)s
                          _dest, _op1, _op2)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 
     %(BasicExecDeclare)s
@@ -80,6 +85,11 @@ class %(class_name)s : public %(base_class)s
                          _dest, _op1, _op2, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 
     %(BasicExecDeclare)s
@@ -100,6 +110,11 @@ class %(class_name)s : public %(base_class)s
                          _dest, _op1, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 
     %(BasicExecDeclare)s
@@ -118,6 +133,11 @@ class %(class_name)s : public %(base_class)s
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 
     %(BasicExecDeclare)s
@@ -138,6 +158,11 @@ class %(class_name)s : public %(base_class)s
                          _dest, _op1)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 
     %(BasicExecDeclare)s

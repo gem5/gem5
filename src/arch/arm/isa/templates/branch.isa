@@ -53,6 +53,11 @@ def template BranchImmConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -75,6 +80,11 @@ def template BranchImmCondConstructor {{
                          _imm, _condCode)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -94,6 +104,11 @@ def template BranchRegConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -116,6 +131,11 @@ def template BranchRegCondConstructor {{
                          _op1, _condCode)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -152,6 +172,11 @@ def template BranchRegRegConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, _op2)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -173,5 +198,10 @@ def template BranchImmRegConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm, _op1)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};

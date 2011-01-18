@@ -84,6 +84,11 @@ def template FpRegRegOpConstructor {{
                 _dest, _op1, mode)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -105,6 +110,11 @@ def template FpRegImmOpConstructor {{
                 _dest, _imm, mode)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -130,6 +140,11 @@ def template FpRegRegImmOpConstructor {{
                          _dest, _op1, _imm, mode)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -155,5 +170,10 @@ def template FpRegRegRegOpConstructor {{
                          _dest, _op1, _op2, mode)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};

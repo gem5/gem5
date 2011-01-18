@@ -181,6 +181,18 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         this->thread->inSyscall = in_syscall;
     }
 
+    void forwardOldRegs()
+    {
+
+        for (int idx = 0; idx < this->numDestRegs(); idx++) {
+            PhysRegIndex prev_phys_reg = this->prevDestRegIdx(idx);
+            TheISA::RegIndex original_dest_reg = this->staticInst->destRegIdx(idx);
+            if (original_dest_reg <  TheISA::FP_Base_DepTag)
+                this->setIntRegOperand(this->staticInst.get(), idx, this->cpu->readIntReg(prev_phys_reg));
+            else if (original_dest_reg < TheISA::Ctrl_Base_DepTag)
+                this->setFloatRegOperandBits(this->staticInst.get(), idx, this->cpu->readFloatRegBits(prev_phys_reg));
+        }
+    }
 #if FULL_SYSTEM
     /** Calls hardware return from error interrupt. */
     Fault hwrei();

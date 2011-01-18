@@ -54,6 +54,11 @@ def template MrsConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -75,6 +80,11 @@ def template MsrRegConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _op1, mask)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -96,6 +106,11 @@ def template MsrImmConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, imm, mask)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -115,6 +130,11 @@ def template ImmOpConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -135,6 +155,11 @@ def template RegImmOpConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -156,6 +181,11 @@ def template RegRegOpConstructor {{
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, _dest, _op1)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -182,6 +212,11 @@ def template RegRegRegImmOpConstructor {{
                          _dest, _op1, _op2, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -208,6 +243,11 @@ def template RegRegRegRegOpConstructor {{
                          _dest, _op1, _op2, _op3)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -232,6 +272,11 @@ def template RegRegRegOpConstructor {{
                          _dest, _op1, _op2)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -257,6 +302,11 @@ def template RegRegImmOpConstructor {{
                          _dest, _op1, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -283,6 +333,11 @@ def template RegRegImmImmOpConstructor {{
                          _dest, _op1, _imm1, _imm2)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -307,6 +362,11 @@ def template RegImmRegOpConstructor {{
                          _dest, _imm, _op1)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -334,6 +394,11 @@ def template RegImmRegShiftOpConstructor {{
                          _dest, _imm, _op1, _shiftAmt, _shiftType)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 

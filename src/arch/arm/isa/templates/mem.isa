@@ -913,6 +913,11 @@ def template RfeConstructor {{
                  (IntRegIndex)_base, (AddrMode)_mode, _wb)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -931,6 +936,11 @@ def template SrsConstructor {{
                  (OperatingMode)_regMode, (AddrMode)_mode, _wb)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -949,6 +959,11 @@ def template SwapConstructor {{
                  (IntRegIndex)_dest, (IntRegIndex)_op1, (IntRegIndex)_base)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
     }
 }};
 
@@ -961,6 +976,11 @@ def template LoadStoreDImmConstructor {{
                  (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -982,6 +1002,11 @@ def template StoreExDImmConstructor {{
                  (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -1001,6 +1026,11 @@ def template LoadStoreImmConstructor {{
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -1021,6 +1051,11 @@ def template StoreExImmConstructor {{
                  (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -1044,6 +1079,11 @@ def template StoreDRegConstructor {{
                  (IntRegIndex)_index)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -1066,6 +1106,11 @@ def template StoreRegConstructor {{
                  (IntRegIndex)_index)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -1089,6 +1134,11 @@ def template LoadDRegConstructor {{
                  (IntRegIndex)_index)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -1123,6 +1173,11 @@ def template LoadRegConstructor {{
                  (IntRegIndex)_index)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
@@ -1164,6 +1219,11 @@ def template LoadImmConstructor {{
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];

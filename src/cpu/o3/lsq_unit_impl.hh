@@ -458,6 +458,8 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         // realizes there is activity.
         // Mark it as executed unless it is an uncached load that
         // needs to hit the head of commit.
+        if (inst->readPredicate() == false)
+            inst->forwardOldRegs();
         DPRINTF(LSQUnit, "Load [sn:%lli] not executed from %s\n",
                 inst->seqNum,
                 (load_fault != NoFault ? "fault" : "predication"));
@@ -529,6 +531,9 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
     int load_idx = store_inst->lqIdx;
 
     Fault store_fault = store_inst->initiateAcc();
+
+    if (store_inst->readPredicate() == false)
+        store_inst->forwardOldRegs();
 
     if (storeQueue[store_idx].size == 0) {
         DPRINTF(LSQUnit,"Fault on Store PC %s, [sn:%lli], Size = 0\n",

@@ -1261,6 +1261,8 @@ DefaultIEW<Impl>::executeInsts()
             // will be replaced and we will lose it.
             if (inst->getFault() == NoFault) {
                 inst->execute();
+                if (inst->readPredicate() == false)
+                    inst->forwardOldRegs();
             }
 
             inst->setExecuted();
