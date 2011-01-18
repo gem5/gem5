@@ -150,7 +150,7 @@ class SrsOp : public MightBeMicro
     virtual
     ~SrsOp()
     {
-        delete uops;
+        delete [] uops;
     }
 
     StaticInstPtr
