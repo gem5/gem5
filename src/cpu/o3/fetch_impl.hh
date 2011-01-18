@@ -384,7 +384,7 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 {
     ThreadID tid = pkt->req->threadId();
 
-    DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n",tid);
+    DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n", tid);
 
     assert(!pkt->wasNacked());
 
@@ -1011,7 +1011,7 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
     instruction->setThreadState(cpu->thread[tid]);
 
     DPRINTF(Fetch, "[tid:%i]: Instruction PC %#x (%d) created "
-            "[sn:%lli]\n", tid, thisPC.instAddr(),
+            "[sn:%lli].\n", tid, thisPC.instAddr(),
             thisPC.microPC(), seq);
 
     DPRINTF(Fetch, "[tid:%i]: Instruction is: %s\n", tid,
@@ -1180,7 +1180,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     ExtMachInst extMachInst;
 
                     extMachInst = predecoder.getExtMachInst(thisPC);
-                    pcOffset = 0;
                     staticInst = StaticInstPtr(extMachInst,
                                                thisPC.instAddr());
 
@@ -1188,7 +1187,12 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     ++fetchedInsts;
 
                     if (staticInst->isMacroop())
+                    {
                         curMacroop = staticInst;
+                    }
+                    else {
+                        pcOffset = 0;
+                    }
                 } else {
                     // We need more bytes for this instruction.
                     break;
@@ -1196,8 +1200,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             }
             if (curMacroop) {
                 staticInst = curMacroop->fetchMicroop(thisPC.microPC());
-                if (staticInst->isLastMicroop())
+                if (staticInst->isLastMicroop()) {
                     curMacroop = NULL;
+                    pcOffset = 0;
+                }
             }
 
             DynInstPtr instruction =

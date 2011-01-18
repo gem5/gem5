@@ -74,11 +74,15 @@ Predecoder::advanceThumbCond()
 void
 Predecoder::process()
 {
+    // emi is typically ready, with some caveats below...
+    emiReady = true;
+
     if (!emi.thumb) {
         emi.instBits = data;
         emi.sevenAndFour = bits(data, 7) && bits(data, 4);
         emi.isMisc = (bits(data, 24, 23) == 0x2 &&
                       bits(data, 20) == 0);
+        consumeBytes(4);
         DPRINTF(Predecoder, "Arm inst: %#x.\n", (uint64_t)emi);
     } else {
         uint16_t word = (data >> (offset * 8));
@@ -86,7 +90,7 @@ Predecoder::process()
             // A 32 bit thumb inst is half collected.
             emi.instBits = emi.instBits | word;
             bigThumb = false;
-            offset += 2;
+            consumeBytes(2);
             DPRINTF(Predecoder, "Second half of 32 bit Thumb: %#x.\n",
                     emi.instBits);
             if (itstate.mask) {
@@ -105,7 +109,7 @@ Predecoder::process()
                     emi.instBits = (data >> 16) | (data << 16);
                     DPRINTF(Predecoder, "All of 32 bit Thumb: %#x.\n",
                             emi.instBits);
-                    offset += 4;
+                    consumeBytes(4);
                     if (itstate.mask) {
                         emi.itstate = itstate;
                         advanceThumbCond();
@@ -117,11 +121,13 @@ Predecoder::process()
                             "First half of 32 bit Thumb.\n");
                     emi.instBits = (uint32_t)word << 16;
                     bigThumb = true;
-                    offset += 2;
+                    consumeBytes(2);
+                    // emi not ready yet.
+                    emiReady = false;
                 }
             } else {
                 // A 16 bit thumb inst.
-                offset += 2;
+                consumeBytes(2);
                 emi.instBits = word;
                 // Set the condition code field artificially.
                 emi.condCode = COND_UC;
@@ -159,6 +165,7 @@ Predecoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     itstate.top6 = cpsr.it2;
     itstate.bottom2 = cpsr.it1;
+    outOfBytes = false;
     process();
 }
 

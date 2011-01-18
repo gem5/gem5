@@ -45,6 +45,8 @@
 #ifndef __ARCH_ARM_PREDECODER_HH__
 #define __ARCH_ARM_PREDECODER_HH__
 
+#include <cassert>
+
 #include "arch/arm/types.hh"
 #include "arch/arm/miscregs.hh"
 #include "base/types.hh"
@@ -61,6 +63,8 @@ namespace ArmISA
         ExtMachInst emi;
         MachInst data;
         bool bigThumb;
+        bool emiReady;
+        bool outOfBytes;
         int offset;
         ITSTATE itstate;
 
@@ -70,6 +74,8 @@ namespace ArmISA
             bigThumb = false;
             offset = 0;
             emi = 0;
+            emiReady = false;
+            outOfBytes = true;
         }
 
         Predecoder(ThreadContext * _tc) :
@@ -103,16 +109,22 @@ namespace ArmISA
             moreBytes(0, 0, machInst);
         }
 
+        inline void consumeBytes(int numBytes)
+        {
+            offset += numBytes;
+            assert(offset <= sizeof(MachInst));
+            if (offset == sizeof(MachInst))
+                outOfBytes = true;
+        }
+
         bool needMoreBytes()
         {
-            return sizeof(MachInst) > offset;
+            return outOfBytes;
         }
 
         bool extMachInstReady()
         {
-            // The only way an instruction wouldn't be ready is if this is a
-            // 32 bit ARM instruction that's not 32 bit aligned.
-            return !bigThumb;
+            return emiReady;
         }
 
         int getInstSize()
@@ -123,9 +135,11 @@ namespace ArmISA
         //This returns a constant reference to the ExtMachInst to avoid a copy
         ExtMachInst getExtMachInst(PCState &pc)
         {
+            assert(emiReady);
             ExtMachInst thisEmi = emi;
             pc.npc(pc.pc() + getInstSize());
             emi = 0;
+            emiReady = false;
             return thisEmi;
         }
     };
