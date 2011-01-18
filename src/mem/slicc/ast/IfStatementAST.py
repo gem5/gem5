@@ -55,13 +55,17 @@ class IfStatementAST(StatementAST):
         code('if ($cond_code) {')
         # Then part
         code.indent()
+        self.symtab.pushFrame()
         self.then.generate(code, return_type)
+        self.symtab.popFrame()
         code.dedent()
         # Else part
         if self.else_:
             code('} else {')
             code.indent()
+            self.symtab.pushFrame()
             self.else_.generate(code, return_type)
+            self.symtab.popFrame()
             code.dedent()
         code('}') # End scope
 

@@ -27,18 +27,22 @@
 from slicc.ast.ExprAST import ExprAST
 
 class StaticCastAST(ExprAST):
-    def __init__(self, slicc, type_ast, expr_ast):
+    def __init__(self, slicc, type_ast, type_modifier, expr_ast):
         super(StaticCastAST, self).__init__(slicc)
 
         self.type_ast = type_ast
         self.expr_ast = expr_ast
+        self.type_modifier = type_modifier
 
     def __repr__(self):
         return "[StaticCastAST: %r]" % self.expr_ast
 
     def generate(self, code):
         actual_type, ecode = self.expr_ast.inline(True)
-        code('static_cast<${{self.type_ast.type.c_ident}} &>($ecode)')
+        if self.type_modifier == "pointer":
+            code('static_cast<${{self.type_ast.type.c_ident}} *>($ecode)')
+        else:
+            code('static_cast<${{self.type_ast.type.c_ident}} &>($ecode)')
 
         if not "interface" in self.type_ast.type:
             self.expr_ast.error("static cast only premitted for those types " \

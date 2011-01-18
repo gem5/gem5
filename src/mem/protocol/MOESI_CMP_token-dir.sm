@@ -162,21 +162,24 @@ machine(Directory, "Token protocol")
   bool starving, default="false";
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
+  void set_tbe(TBE b);
+  void unset_tbe();
+
   Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
     return static_cast(Entry, directory[addr]);
   }
 
-  State getState(Address addr) {
-    if (TBEs.isPresent(addr)) {
-      return TBEs[addr].TBEState;
+  State getState(TBE tbe, Address addr) {
+    if (is_valid(tbe)) {
+      return tbe.TBEState;
     } else {
       return getDirectoryEntry(addr).DirectoryState;
     }
   }
 
-  void setState(Address addr, State state) {
-    if (TBEs.isPresent(addr)) {
-      TBEs[addr].TBEState := state;
+  void setState(TBE tbe, Address addr, State state) {
+    if (is_valid(tbe)) {
+      tbe.TBEState := state;
     }
     getDirectoryEntry(addr).DirectoryState := state;
 
@@ -223,9 +226,9 @@ machine(Directory, "Token protocol")
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.Address);
+          trigger(Event:Memory_Data, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.Address);
+          trigger(Event:Memory_Ack, in_msg.Address, TBEs[in_msg.Address]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -237,7 +240,8 @@ machine(Directory, "Token protocol")
   // Reissue Timer
   in_port(reissueTimerTable_in, Address, reissueTimerTable) {
     if (reissueTimerTable_in.isReady()) {
-      trigger(Event:Request_Timeout, reissueTimerTable.readyAddress());
+      trigger(Event:Request_Timeout, reissueTimerTable.readyAddress(),
+              TBEs[reissueTimerTable.readyAddress()]);
     }
   }
 
@@ -248,23 +252,29 @@ machine(Directory, "Token protocol")
         if (getDirectoryEntry(in_msg.Address).Tokens + in_msg.Tokens == max_tokens()) {
           if ((in_msg.Type == CoherenceResponseType:DATA_OWNER) ||
               (in_msg.Type == CoherenceResponseType:DATA_SHARED)) {
-            trigger(Event:Data_All_Tokens, in_msg.Address);
+            trigger(Event:Data_All_Tokens, in_msg.Address,
+                    TBEs[in_msg.Address]);
           } else if (in_msg.Type == CoherenceResponseType:ACK_OWNER) {
-            trigger(Event:Ack_Owner_All_Tokens, in_msg.Address);
+            trigger(Event:Ack_Owner_All_Tokens, in_msg.Address,
+                    TBEs[in_msg.Address]);
           } else if (in_msg.Type == CoherenceResponseType:ACK) {
-            trigger(Event:Ack_All_Tokens, in_msg.Address);
+            trigger(Event:Ack_All_Tokens, in_msg.Address,
+                    TBEs[in_msg.Address]);
           } else {
             DPRINTF(RubySlicc, "%s\n", in_msg.Type);
             error("Invalid message");
           }
         } else {
           if (in_msg.Type == CoherenceResponseType:DATA_OWNER) {
-            trigger(Event:Data_Owner, in_msg.Address);
+            trigger(Event:Data_Owner, in_msg.Address,
+                    TBEs[in_msg.Address]);
           } else if ((in_msg.Type == CoherenceResponseType:ACK) ||
                      (in_msg.Type == CoherenceResponseType:DATA_SHARED)) {
-            trigger(Event:Tokens, in_msg.Address);
+            trigger(Event:Tokens, in_msg.Address,
+                    TBEs[in_msg.Address]);
           } else if (in_msg.Type == CoherenceResponseType:ACK_OWNER) {
-            trigger(Event:Ack_Owner, in_msg.Address);
+            trigger(Event:Ack_Owner, in_msg.Address,
+                    TBEs[in_msg.Address]);
           } else {
             DPRINTF(RubySlicc, "%s\n", in_msg.Type);
             error("Invalid message");
@@ -295,30 +305,39 @@ machine(Directory, "Token protocol")
           if (persistentTable.isLocked(in_msg.Address)) {
             if (persistentTable.findSmallest(in_msg.Address) == machineID) {
               if (getDirectoryEntry(in_msg.Address).Tokens > 0) {
-                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Address);
+                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Address,
+                        TBEs[in_msg.Address]);
               } else {
-                trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+                trigger(Event:Own_Lock_or_Unlock, in_msg.Address,
+                        TBEs[in_msg.Address]);
               }
             } else {
-              trigger(Event:Lockdown, in_msg.Address); // locked
+              // locked
+              trigger(Event:Lockdown, in_msg.Address, TBEs[in_msg.Address]);
             }   
           } else {
-            trigger(Event:Unlockdown, in_msg.Address); // unlocked
+            // unlocked
+            trigger(Event:Unlockdown, in_msg.Address, TBEs[in_msg.Address]);
           }
         }
         else {
           if (persistentTable.findSmallest(in_msg.Address) == machineID) {
               if (getDirectoryEntry(in_msg.Address).Tokens > 0) {
-                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Address);
+                trigger(Event:Own_Lock_or_Unlock_Tokens, in_msg.Address,
+                        TBEs[in_msg.Address]);
               } else {
-                trigger(Event:Own_Lock_or_Unlock, in_msg.Address);
+                trigger(Event:Own_Lock_or_Unlock, in_msg.Address,
+                        TBEs[in_msg.Address]);
               }
           } else if (in_msg.Type == PersistentRequestType:GETX_PERSISTENT) {
-            trigger(Event:Lockdown, in_msg.Address); // locked
+            // locked
+            trigger(Event:Lockdown, in_msg.Address, TBEs[in_msg.Address]);
           } else if (in_msg.Type == PersistentRequestType:GETS_PERSISTENT) {
-            trigger(Event:Lockdown, in_msg.Address); // locked
+            // locked
+            trigger(Event:Lockdown, in_msg.Address, TBEs[in_msg.Address]);
           } else if (in_msg.Type == PersistentRequestType:DEACTIVATE_PERSISTENT) {
-            trigger(Event:Unlockdown, in_msg.Address); // unlocked
+            // unlocked
+            trigger(Event:Unlockdown, in_msg.Address, TBEs[in_msg.Address]);
           } else {
             error("Invalid message");
           }
@@ -332,9 +351,9 @@ machine(Directory, "Token protocol")
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.Address);
+          trigger(Event:GETS, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.Address);
+          trigger(Event:GETX, in_msg.Address, TBEs[in_msg.Address]);
         } else {
           error("Invalid message");
         }
@@ -346,12 +365,14 @@ machine(Directory, "Token protocol")
     if (dmaRequestQueue_in.isReady()) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
         if (in_msg.Type == DMARequestType:READ) {
-          trigger(Event:DMA_READ, in_msg.LineAddress);
+          trigger(Event:DMA_READ, in_msg.LineAddress, TBEs[in_msg.LineAddress]);
         } else if (in_msg.Type == DMARequestType:WRITE) {
           if (getDirectoryEntry(in_msg.LineAddress).Tokens == max_tokens()) {
-            trigger(Event:DMA_WRITE_All_Tokens, in_msg.LineAddress);
+            trigger(Event:DMA_WRITE_All_Tokens, in_msg.LineAddress,
+                    TBEs[in_msg.LineAddress]);
           } else {
-            trigger(Event:DMA_WRITE, in_msg.LineAddress);
+            trigger(Event:DMA_WRITE, in_msg.LineAddress,
+                    TBEs[in_msg.LineAddress]);
           }
         } else {
           error("Invalid message");
@@ -408,7 +429,7 @@ machine(Directory, "Token protocol")
       markPersistentEntries(address);
       starving := true;
 
-      TBEs[address].WentPersistent := true;
+      tbe.WentPersistent := true;
 
       // Do not schedule a wakeup, a persistent requests will always complete
     } else {
@@ -478,7 +499,7 @@ machine(Directory, "Token protocol")
       markPersistentEntries(address);
       starving := true;
 
-      TBEs[address].WentPersistent := true;
+      tbe.WentPersistent := true;
 
       // Do not schedule a wakeup, a persistent requests will always complete
     } else {
@@ -574,7 +595,7 @@ machine(Directory, "Token protocol")
       out_msg.Destination.add(persistentTable.findSmallest(address));
       assert(getDirectoryEntry(address).Tokens > 0);
       out_msg.Tokens := getDirectoryEntry(address).Tokens;
-      out_msg.DataBlk := TBEs[address].DataBlk;
+      out_msg.DataBlk := tbe.DataBlk;
       out_msg.Dirty := false;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
@@ -634,9 +655,9 @@ machine(Directory, "Token protocol")
       out_msg.Address := address;
       out_msg.Type := MemoryRequestType:MEMORY_WB;
       // first, initialize the data blk to the current version of system memory
-      out_msg.DataBlk := TBEs[address].DataBlk;
+      out_msg.DataBlk := tbe.DataBlk;
       // then add the dma write data
-      out_msg.DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+      out_msg.DataBlk.copyPartial(tbe.DmaDataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
@@ -646,7 +667,7 @@ machine(Directory, "Token protocol")
       out_msg.Address := address;
       out_msg.Type := MemoryRequestType:MEMORY_WB;
       // first, initialize the data blk to the current version of system memory
-      out_msg.DataBlk := TBEs[address].DataBlk;
+      out_msg.DataBlk := tbe.DataBlk;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
   }
@@ -654,17 +675,18 @@ machine(Directory, "Token protocol")
   action(vd_allocateDmaRequestInTBE, "vd", desc="Record Data in TBE") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       TBEs.allocate(address);
-      TBEs[address].DmaDataBlk := in_msg.DataBlk;
-      TBEs[address].PhysicalAddress := in_msg.PhysicalAddress;
-      TBEs[address].Len := in_msg.Len;
-      TBEs[address].DmaRequestor := in_msg.Requestor;
-      TBEs[address].WentPersistent := false;
+      set_tbe(TBEs[address]);
+      tbe.DmaDataBlk := in_msg.DataBlk;
+      tbe.PhysicalAddress := in_msg.PhysicalAddress;
+      tbe.Len := in_msg.Len;
+      tbe.DmaRequestor := in_msg.Requestor;
+      tbe.WentPersistent := false;
     }
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
 
-    if (TBEs[address].WentPersistent) {
+    if (tbe.WentPersistent) {
       assert(starving == true);
 
       enqueue(persistentNetwork_out, PersistentMsg, latency = "1") {
@@ -692,21 +714,22 @@ machine(Directory, "Token protocol")
     }
 
     TBEs.deallocate(address);
+    unset_tbe();
   }
 
   action(rd_recordDataInTbe, "rd", desc="Record data in TBE") {
     peek(responseNetwork_in, ResponseMsg) {
-      TBEs[address].DataBlk := in_msg.DataBlk;
+      tbe.DataBlk := in_msg.DataBlk;
     }
   }
 
   action(cd_writeCleanDataToTbe, "cd", desc="Write clean memory data to TBE") {
-    TBEs[address].DataBlk := getDirectoryEntry(address).DataBlk;
+    tbe.DataBlk := getDirectoryEntry(address).DataBlk;
   }
 
   action(dwt_writeDmaDataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    getDirectoryEntry(address).DataBlk := TBEs[address].DataBlk;
-    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+    getDirectoryEntry(address).DataBlk := tbe.DataBlk;
+    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DmaDataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
   }
 
   action(f_incrementTokens, "f", desc="Increment the number of tokens we're tracking") {
@@ -837,7 +860,7 @@ machine(Directory, "Token protocol")
       out_msg.PhysicalAddress := address;
       out_msg.LineAddress := address;
       out_msg.Type := DMAResponseType:ACK;
-      out_msg.Destination.add(TBEs[address].DmaRequestor); 
+      out_msg.Destination.add(tbe.DmaRequestor); 
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -853,7 +876,7 @@ machine(Directory, "Token protocol")
         // split it up if need be
         //
         out_msg.DataBlk := in_msg.DataBlk;
-        out_msg.Destination.add(TBEs[address].DmaRequestor);
+        out_msg.Destination.add(tbe.DmaRequestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -870,7 +893,7 @@ machine(Directory, "Token protocol")
         // split it up if need be
         //
         out_msg.DataBlk := in_msg.DataBlk;
-        out_msg.Destination.add(TBEs[address].DmaRequestor);
+        out_msg.Destination.add(tbe.DmaRequestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }

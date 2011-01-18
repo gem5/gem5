@@ -46,6 +46,7 @@ class StateMachine(Symbol):
         super(StateMachine, self).__init__(symtab, ident, location, pairs)
         self.table = None
         self.config_parameters = config_parameters
+
         for param in config_parameters:
             if param.pointer:
                 var = Var(symtab, param.name, location, param.type_ast.type,
@@ -62,6 +63,8 @@ class StateMachine(Symbol):
         self.in_ports = []
         self.functions = []
         self.objects = []
+        self.TBEType   = None
+        self.EntryType = None
 
         self.message_buffer_names = []
 
@@ -106,6 +109,21 @@ class StateMachine(Symbol):
 
     def addObject(self, obj):
         self.objects.append(obj)
+
+    def addType(self, type):
+        type_ident = '%s' % type.c_ident
+
+        if type_ident == "%s_TBE" %self.ident:
+            if self.TBEType != None:
+                self.error("Multiple Transaction Buffer types in a " \
+                           "single machine.");
+            self.TBEType = type
+
+        elif "interface" in type and "AbstractCacheEntry" == type["interface"]:
+            if self.EntryType != None:
+                self.error("Multiple AbstractCacheEntry types in a " \
+                           "single machine.");
+            self.EntryType = type
 
     # Needs to be called before accessing the table
     def buildTable(self):
@@ -264,12 +282,35 @@ private:
 int m_number_of_TBEs;
 
 TransitionResult doTransition(${ident}_Event event,
-                              ${ident}_State state,
+''')
+
+        if self.EntryType != None:
+            code('''
+                              ${{self.EntryType.c_ident}}* m_cache_entry_ptr,
+''')
+        if self.TBEType != None:
+            code('''
+                              ${{self.TBEType.c_ident}}* m_tbe_ptr,
+''')
+
+        code('''
                               const Address& addr);
 
 TransitionResult doTransitionWorker(${ident}_Event event,
                                     ${ident}_State state,
                                     ${ident}_State& next_state,
+''')
+
+        if self.TBEType != None:
+            code('''
+                                    ${{self.TBEType.c_ident}}*& m_tbe_ptr,
+''')
+        if self.EntryType != None:
+            code('''
+                                    ${{self.EntryType.c_ident}}*& m_cache_entry_ptr,
+''')
+
+        code('''
                                     const Address& addr);
 
 std::string m_name;
@@ -299,13 +340,42 @@ static int m_num_controllers;
             if proto:
                 code('$proto')
 
+        if self.EntryType != None:
+            code('''
+
+// Set and Reset for cache_entry variable
+void set_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, AbstractCacheEntry* m_new_cache_entry);
+void unset_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr);
+''')
+
+        if self.TBEType != None:
+            code('''
+
+// Set and Reset for tbe variable
+void set_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${ident}_TBE* m_new_tbe);
+void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
+''')
+
         code('''
 
 // Actions
 ''')
-        for action in self.actions.itervalues():
-            code('/** \\brief ${{action.desc}} */')
-            code('void ${{action.ident}}(const Address& addr);')
+        if self.TBEType != None and self.EntryType != None:
+            for action in self.actions.itervalues():
+                code('/** \\brief ${{action.desc}} */')
+                code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr);')
+        elif self.TBEType != None:
+            for action in self.actions.itervalues():
+                code('/** \\brief ${{action.desc}} */')
+                code('void ${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, const Address& addr);')
+        elif self.EntryType != None:
+            for action in self.actions.itervalues():
+                code('/** \\brief ${{action.desc}} */')
+                code('void ${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr);')
+        else:
+            for action in self.actions.itervalues():
+                code('/** \\brief ${{action.desc}} */')
+                code('void ${{action.ident}}(const Address& addr);')
 
         # the controller internal variables
         code('''
@@ -731,15 +801,97 @@ void $c_ident::clearStats() {
         code('''
     m_profiler.clearStats();
 }
+''')
+
+        if self.EntryType != None:
+            code('''
+
+// Set and Reset for cache_entry variable
+void
+$c_ident::set_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, AbstractCacheEntry* m_new_cache_entry)
+{
+  m_cache_entry_ptr = (${{self.EntryType.c_ident}}*)m_new_cache_entry;
+}
+
+void
+$c_ident::unset_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr)
+{
+  m_cache_entry_ptr = 0;
+}
+''')
+
+        if self.TBEType != None:
+            code('''
+
+// Set and Reset for tbe variable
+void
+$c_ident::set_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.TBEType.c_ident}}* m_new_tbe)
+{
+  m_tbe_ptr = m_new_tbe;
+}
+
+void
+$c_ident::unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr)
+{
+  m_tbe_ptr = NULL;
+}
+''')
+
+        code('''
 
 // Actions
 ''')
+        if self.TBEType != None and self.EntryType != None:
+            for action in self.actions.itervalues():
+                if "c_code" not in action:
+                 continue
 
-        for action in self.actions.itervalues():
-            if "c_code" not in action:
-                continue
+                code('''
+/** \\brief ${{action.desc}} */
+void
+$c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr)
+{
+    DPRINTF(RubyGenerated, "executing\\n");
+    ${{action["c_code"]}}
+}
 
-            code('''
+''')
+        elif self.TBEType != None:
+            for action in self.actions.itervalues():
+                if "c_code" not in action:
+                 continue
+
+                code('''
+/** \\brief ${{action.desc}} */
+void
+$c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, const Address& addr)
+{
+    DPRINTF(RubyGenerated, "executing\\n");
+    ${{action["c_code"]}}
+}
+
+''')
+        elif self.EntryType != None:
+            for action in self.actions.itervalues():
+                if "c_code" not in action:
+                 continue
+
+                code('''
+/** \\brief ${{action.desc}} */
+void
+$c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr)
+{
+    DPRINTF(RubyGenerated, "executing\\n");
+    ${{action["c_code"]}}
+}
+
+''')
+        else:
+            for action in self.actions.itervalues():
+                if "c_code" not in action:
+                 continue
+
+                code('''
 /** \\brief ${{action.desc}} */
 void
 $c_ident::${{action.ident}}(const Address& addr)
@@ -777,9 +929,6 @@ using namespace std;
 void
 ${ident}_Controller::wakeup()
 {
-    // DEBUG_EXPR(GENERATED_COMP, MedPrio, *this);
-    // DEBUG_EXPR(GENERATED_COMP, MedPrio, g_eventQueue_ptr->getTime());
-
     int counter = 0;
     while (true) {
         // Some cases will put us into an infinite loop without this limit
@@ -850,9 +999,29 @@ ${ident}_Controller::wakeup()
 
 TransitionResult
 ${ident}_Controller::doTransition(${ident}_Event event,
-                                  ${ident}_State state,
+''')
+        if self.EntryType != None:
+            code('''
+                                  ${{self.EntryType.c_ident}}* m_cache_entry_ptr,
+''')
+        if self.TBEType != None:
+            code('''
+                                  ${{self.TBEType.c_ident}}* m_tbe_ptr,
+''')
+        code('''
                                   const Address &addr)
 {
+''')
+        if self.TBEType != None and self.EntryType != None:
+            code('${ident}_State state = ${ident}_getState(m_tbe_ptr, m_cache_entry_ptr, addr);')
+        elif self.TBEType != None:
+            code('${ident}_State state = ${ident}_getState(m_tbe_ptr, addr);')
+        elif self.EntryType != None:
+            code('${ident}_State state = ${ident}_getState(m_cache_entry_ptr, addr);')
+        else:
+            code('${ident}_State state = ${ident}_getState(addr);')
+
+        code('''
     ${ident}_State next_state = state;
 
     DPRINTF(RubyGenerated, "%s, Time: %lld, state: %s, event: %s, addr: %s\\n",
@@ -863,8 +1032,17 @@ ${ident}_Controller::doTransition(${ident}_Event event,
             addr);
 
     TransitionResult result =
-        doTransitionWorker(event, state, next_state, addr);
+''')
+        if self.TBEType != None and self.EntryType != None:
+            code('doTransitionWorker(event, state, next_state, m_tbe_ptr, m_cache_entry_ptr, addr);')
+        elif self.TBEType != None:
+            code('doTransitionWorker(event, state, next_state, m_tbe_ptr, addr);')
+        elif self.EntryType != None:
+            code('doTransitionWorker(event, state, next_state, m_cache_entry_ptr, addr);')
+        else:
+            code('doTransitionWorker(event, state, next_state, addr);')
 
+        code('''
     if (result == TransitionResult_Valid) {
         DPRINTF(RubyGenerated, "next_state: %s\\n",
                 ${ident}_State_to_string(next_state));
@@ -877,7 +1055,17 @@ ${ident}_Controller::doTransition(${ident}_Event event,
             addr, GET_TRANSITION_COMMENT());
 
         CLEAR_TRANSITION_COMMENT();
-        ${ident}_setState(addr, next_state);
+''')
+        if self.TBEType != None and self.EntryType != None:
+            code('${ident}_setState(m_tbe_ptr, m_cache_entry_ptr, addr, next_state);')
+        elif self.TBEType != None:
+            code('${ident}_setState(m_tbe_ptr, addr, next_state);')
+        elif self.EntryType != None:
+            code('${ident}_setState(m_cache_entry_ptr, addr, next_state);')
+        else:
+            code('${ident}_setState(addr, next_state);')
+
+        code('''
     } else if (result == TransitionResult_ResourceStall) {
         DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\\n",
             g_eventQueue_ptr->getTime(), m_version, "${ident}",
@@ -902,6 +1090,17 @@ TransitionResult
 ${ident}_Controller::doTransitionWorker(${ident}_Event event,
                                         ${ident}_State state,
                                         ${ident}_State& next_state,
+''')
+
+        if self.TBEType != None:
+            code('''
+                                        ${{self.TBEType.c_ident}}*& m_tbe_ptr,
+''')
+        if self.EntryType != None:
+                  code('''
+                                        ${{self.EntryType.c_ident}}*& m_cache_entry_ptr,
+''')
+        code('''
                                         const Address& addr)
 {
     switch(HASH_FUN(state, event)) {
@@ -950,8 +1149,18 @@ if (!%s.areNSlotsAvailable(%s))
             if stall:
                 case('return TransitionResult_ProtocolStall;')
             else:
-                for action in actions:
-                    case('${{action.ident}}(addr);')
+                if self.TBEType != None and self.EntryType != None:
+                    for action in actions:
+                        case('${{action.ident}}(m_tbe_ptr, m_cache_entry_ptr, addr);')
+                elif self.TBEType != None:
+                    for action in actions:
+                        case('${{action.ident}}(m_tbe_ptr, addr);')
+                elif self.EntryType != None:
+                    for action in actions:
+                        case('${{action.ident}}(m_cache_entry_ptr, addr);')
+                else:
+                    for action in actions:
+                        case('${{action.ident}}(addr);')
                 case('return TransitionResult_Valid;')
 
             case = str(case)

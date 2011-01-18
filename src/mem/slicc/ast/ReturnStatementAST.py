@@ -45,7 +45,7 @@ class ReturnStatementAST(StatementAST):
             self.error("Invalid 'return' statement")
 
         # The return type must match
-        if return_type != actual_type:
+        if actual_type != "OOD" and return_type != actual_type:
             self.expr_ast.error("Return type miss-match, expected return " +
                                 "type is '%s', actual is '%s'",
                                 return_type, actual_type)

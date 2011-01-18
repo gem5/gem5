@@ -89,6 +89,7 @@ class FuncCallExprAST(ExprAST):
                        len(func.param_types), len(self.exprs))
 
         cvec = []
+        type_vec = []
         for expr,expected_type in zip(self.exprs, func.param_types):
             # Check the types of the parameter
             actual_type,param_code = expr.inline(True)
@@ -96,6 +97,7 @@ class FuncCallExprAST(ExprAST):
                 expr.error("Type mismatch: expected: %s actual: %s" % \
                            (expected_type, actual_type))
             cvec.append(param_code)
+            type_vec.append(expected_type)
 
         # OK, the semantics of "trigger" here is that, ports in the
         # machine have different priorities. We always check the first
@@ -115,8 +117,25 @@ class FuncCallExprAST(ExprAST):
             code('''
 {
     Address addr = ${{cvec[1]}};
-    TransitionResult result = doTransition(${{cvec[0]}}, ${machine}_getState(addr), addr);
+''')
+            if machine.TBEType != None and machine.EntryType != None:
+                code('''
+    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, ${{cvec[3]}}, addr);
+''')
+            elif machine.TBEType != None:
+                code('''
+    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, addr);
+''')
+            elif machine.EntryType != None:
+                code('''
+    TransitionResult result = doTransition(${{cvec[0]}}, ${{cvec[2]}}, addr);
+''')
+            else:
+                code('''
+    TransitionResult result = doTransition(${{cvec[0]}}, addr);
+''')
 
+            code('''
     if (result == TransitionResult_Valid) {
         counter++;
         continue; // Check the first port again
@@ -175,6 +194,16 @@ if (!(${{cvec[0]}})) {
         elif self.proc_name == "continueProcessing":
             code("counter++;")
             code("continue; // Check the first port again")
+
+        elif self.proc_name == "set_cache_entry":
+            code("set_cache_entry(m_cache_entry_ptr, %s);" %(cvec[0]));
+        elif self.proc_name == "unset_cache_entry":
+            code("unset_cache_entry(m_cache_entry_ptr);");
+        elif self.proc_name == "set_tbe":
+            code("set_tbe(m_tbe_ptr, %s);" %(cvec[0]));
+        elif self.proc_name == "unset_tbe":
+            code("unset_tbe(m_tbe_ptr);");
+
         else:
             # Normal function
 
@@ -184,7 +213,27 @@ if (!(${{cvec[0]}})) {
             if "external" not in func and not func.isInternalMachineFunc:
                 internal = "m_chip_ptr->"
 
-            params = ', '.join(str(c) for c in cvec)
+            params = ""
+            first_param = True
+
+            for (param_code, type) in zip(cvec, type_vec):
+                 if str(type) == "TBE" or ("interface" in type and
+                    type["interface"] == "AbstractCacheEntry"):
+
+                     if first_param:
+                         params = str(param_code).replace('*','')
+                         first_param  = False
+                     else:
+                         params += ', '
+                         params += str(param_code).replace('*','');
+                 else:
+                     if first_param:
+                         params = str(param_code)
+                         first_param  = False
+                     else:
+                         params += ', '
+                         params += str(param_code);
+
             fix = code.nofix()
             code('(${internal}${{func.c_ident}}($params))')
             code.fix(fix)

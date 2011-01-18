@@ -82,7 +82,7 @@ class CacheMemory : public SimObject
     bool cacheAvail(const Address& address) const;
 
     // find an unused entry and sets the tag appropriate for the address
-    void allocate(const Address& address, AbstractCacheEntry* new_entry);
+    AbstractCacheEntry* allocate(const Address& address, AbstractCacheEntry* new_entry);
 
     // Explicitly free up this address
     void deallocate(const Address& address);
@@ -91,12 +91,8 @@ class CacheMemory : public SimObject
     Address cacheProbe(const Address& address) const;
 
     // looks an address up in the cache
-    AbstractCacheEntry& lookup(const Address& address);
-    const AbstractCacheEntry& lookup(const Address& address) const;
-
-    // Get/Set permission of cache block
-    AccessPermission getPermission(const Address& address) const;
-    void changePermission(const Address& address, AccessPermission new_perm);
+    AbstractCacheEntry* lookup(const Address& address);
+    const AbstractCacheEntry* lookup(const Address& address) const;
 
     int getLatency() const { return m_latency; }
 
@@ -158,7 +154,6 @@ class CacheMemory : public SimObject
     // The second index is the the amount associativity.
     m5::hash_map<Address, int> m_tag_index;
     std::vector<std::vector<AbstractCacheEntry*> > m_cache;
-    std::vector<std::vector<int> > m_locked;
 
     AbstractReplacementPolicy *m_replacementPolicy_ptr;
 

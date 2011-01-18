@@ -46,11 +46,14 @@ from slicc.ast.FuncDeclAST import *
 from slicc.ast.IfStatementAST import *
 from slicc.ast.InPortDeclAST import *
 from slicc.ast.InfixOperatorExprAST import *
+from slicc.ast.IsValidPtrExprAST import *
 from slicc.ast.LiteralExprAST import *
+from slicc.ast.LocalVariableAST import *
 from slicc.ast.MachineAST import *
 from slicc.ast.MemberExprAST import *
 from slicc.ast.MethodCallExprAST import *
 from slicc.ast.NewExprAST import *
+from slicc.ast.OodAST import *
 from slicc.ast.ObjDeclAST import *
 from slicc.ast.OutPortDeclAST import *
 from slicc.ast.PairAST import *

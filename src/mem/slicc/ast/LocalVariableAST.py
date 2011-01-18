@@ -1,5 +1,5 @@
-# Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+#
+# Copyright (c) 2011 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,41 +24,31 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
-from slicc.ast.AST import AST
+from slicc.ast.StatementAST import StatementAST
 from slicc.symbols import Var
 
-class FormalParamAST(AST):
-    def __init__(self, slicc, type_ast, ident, default = None, pointer = False):
-        super(FormalParamAST, self).__init__(slicc)
+class LocalVariableAST(StatementAST):
+    def __init__(self, slicc, type_ast, ident):
+        super(LocalVariableAST, self).__init__(slicc)
         self.type_ast = type_ast
-        self.ident = ident
-        self.default = default
-        self.pointer = pointer
+        self.ident    = ident
 
     def __repr__(self):
-        return "[FormalParamAST: %s]" % self.ident
+        return "[LocalVariableAST: %r %r]" % (self.type_ast, self.ident)
 
     @property
     def name(self):
-        return self.ident
+        return self.var_name
 
-    def generate(self):
-        type = self.type_ast.type
-        param = "param_%s" % self.ident
+    def generate(self, code):
+        type = self.type_ast.type;
+        ident = "%s" % self.ident;
 
         # Add to symbol table
-        if self.pointer or str(type) == "TBE" or (
-           "interface" in type and type["interface"] == "AbstractCacheEntry"):
-
-            v = Var(self.symtab, self.ident, self.location, type,
-                    "(*%s)" % param, self.pairs)
-            self.symtab.newSymbol(v)
-            return type, "%s* %s" % (type.c_ident, param)
-
-        else:
-            v = Var(self.symtab, self.ident, self.location, type, param,
-                    self.pairs)
-            self.symtab.newSymbol(v)
-
-        return type, "%s %s" % (type.c_ident, param)
+        v = Var(self.symtab, self.ident, self.location, type, ident,
+                self.pairs)
+        self.symtab.newSymbol(v)
+        code += "%s* %s" % (type.c_ident, ident)
+        return type

@@ -117,15 +117,16 @@ external_type(DirectoryMemory) {
   void invalidateBlock(Address);
 }
 
-external_type(AbstractCacheEntry, primitive="yes");
+external_type(AbstractCacheEntry, primitive="yes") {
+  void changePermission(AccessPermission);
+}
 
 external_type(CacheMemory) {
   bool cacheAvail(Address);
   Address cacheProbe(Address);
-  void allocate(Address, AbstractCacheEntry);
+  AbstractCacheEntry allocate(Address, AbstractCacheEntry);
   void deallocate(Address);
   AbstractCacheEntry lookup(Address);
-  void changePermission(Address, AccessPermission);
   bool isTagPresent(Address);
   void profileMiss(CacheMsg);
 

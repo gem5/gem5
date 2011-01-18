@@ -36,8 +36,6 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
    int l1_response_latency = 2,
    int to_l2_latency = 1
 {
-
-
   // NODE L1 CACHE
   // From this node's L1 cache TO the network
   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
@@ -135,65 +133,63 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   int cache_state_to_int(State state);
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
+  void set_cache_entry(AbstractCacheEntry a);
+  void unset_cache_entry();
+  void set_tbe(TBE a);
+  void unset_tbe();
+
   // inclusive cache returns L1 entries only
-  Entry getL1CacheEntry(Address addr), return_by_ref="yes" {
-    if (L1DcacheMemory.isTagPresent(addr)) {
-      return static_cast(Entry, L1DcacheMemory[addr]);
-    } else {
-      return static_cast(Entry, L1IcacheMemory[addr]);
+  Entry getCacheEntry(Address addr), return_by_pointer="yes" {
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1DcacheMemory[addr]);
+    if(is_valid(L1Dcache_entry)) {
+      return L1Dcache_entry;
     }
+
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1IcacheMemory[addr]);
+    return L1Icache_entry;
   }
 
-  void changeL1Permission(Address addr, AccessPermission permission) {
-    if (L1DcacheMemory.isTagPresent(addr)) {
-      return L1DcacheMemory.changePermission(addr, permission);
-    } else if(L1IcacheMemory.isTagPresent(addr)) {
-      return L1IcacheMemory.changePermission(addr, permission);
-    } else {
-      error("cannot change permission, L1 block not present");
-    }
+  Entry getL1DCacheEntry(Address addr), return_by_pointer="yes" {
+    Entry L1Dcache_entry := static_cast(Entry, "pointer", L1DcacheMemory[addr]);
+    return L1Dcache_entry;
   }
 
-  bool isL1CacheTagPresent(Address addr) {
-    return (L1DcacheMemory.isTagPresent(addr) || L1IcacheMemory.isTagPresent(addr));
+  Entry getL1ICacheEntry(Address addr), return_by_pointer="yes" {
+    Entry L1Icache_entry := static_cast(Entry, "pointer", L1IcacheMemory[addr]);
+    return L1Icache_entry;
   }
 
-  State getState(Address addr) {
-//    if((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == true){
-//      DEBUG_EXPR(id);
-//      DEBUG_EXPR(addr);
-//    }
+  State getState(TBE tbe, Entry cache_entry, Address addr) {
     assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
 
-    if(L1_TBEs.isPresent(addr)) {
-      return L1_TBEs[addr].TBEState;
-    } else if (isL1CacheTagPresent(addr)) {
-      return getL1CacheEntry(addr).CacheState;
+    if(is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
     }
     return State:NP;
   }
 
-
-  void setState(Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
     assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
 
     // MUST CHANGE
-    if(L1_TBEs.isPresent(addr)) {
-      L1_TBEs[addr].TBEState := state;
+    if(is_valid(tbe)) {
+      tbe.TBEState := state;
     }
 
-    if (isL1CacheTagPresent(addr)) {
-      getL1CacheEntry(addr).CacheState := state;
+    if (is_valid(cache_entry)) {
+      cache_entry.CacheState := state;
 
       // Set permission
       if (state == State:I) {
-        changeL1Permission(addr, AccessPermission:Invalid);
+        cache_entry.changePermission(AccessPermission:Invalid);
       } else if (state == State:S || state == State:E) {
-        changeL1Permission(addr, AccessPermission:Read_Only);
+        cache_entry.changePermission(AccessPermission:Read_Only);
       } else if (state == State:M) {
-        changeL1Permission(addr, AccessPermission:Read_Write);
+        cache_entry.changePermission(AccessPermission:Read_Write);
       } else {
-        changeL1Permission(addr, AccessPermission:Busy);
+        cache_entry.changePermission(AccessPermission:Busy);
       }
     }
   }
@@ -210,6 +206,9 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     }
   }
 
+  int getPendingAcks(TBE tbe) {
+    return tbe.pendingAcks;
+  }
 
   out_port(requestIntraChipL1Network_out, RequestMsg, requestFromL1Cache);
   out_port(responseIntraChipL1Network_out, ResponseMsg, responseFromL1Cache);
@@ -220,27 +219,32 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     if (responseIntraChipL1Network_in.isReady()) {
       peek(responseIntraChipL1Network_in, ResponseMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
+
+        Entry cache_entry := getCacheEntry(in_msg.Address);
+        TBE tbe := L1_TBEs[in_msg.Address];
+
         if(in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
-          trigger(Event:Data_Exclusive, in_msg.Address);
+          trigger(Event:Data_Exclusive, in_msg.Address, cache_entry, tbe);
         } else if(in_msg.Type == CoherenceResponseType:DATA) {
-          if ( (getState(in_msg.Address) == State:IS || getState(in_msg.Address) == State:IS_I) &&
-                machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache ) {
+          if ((getState(tbe, cache_entry, in_msg.Address) == State:IS ||
+               getState(tbe, cache_entry, in_msg.Address) == State:IS_I) &&
+              machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache) {
 
-              trigger(Event:DataS_fromL1, in_msg.Address);
+              trigger(Event:DataS_fromL1, in_msg.Address, cache_entry, tbe);
 
-          } else if ( (L1_TBEs[in_msg.Address].pendingAcks - in_msg.AckCount) == 0 ) {
-            trigger(Event:Data_all_Acks, in_msg.Address);
+          } else if ( (getPendingAcks(tbe) - in_msg.AckCount) == 0 ) {
+            trigger(Event:Data_all_Acks, in_msg.Address, cache_entry, tbe);
           } else {
-            trigger(Event:Data, in_msg.Address);
+            trigger(Event:Data, in_msg.Address, cache_entry, tbe);
           }
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
-          if ( (L1_TBEs[in_msg.Address].pendingAcks - in_msg.AckCount) == 0 ) {
-            trigger(Event:Ack_all, in_msg.Address);
+          if ( (getPendingAcks(tbe) - in_msg.AckCount) == 0 ) {
+            trigger(Event:Ack_all, in_msg.Address, cache_entry, tbe);
           } else {
-            trigger(Event:Ack, in_msg.Address);
+            trigger(Event:Ack, in_msg.Address, cache_entry, tbe);
           }
         } else if (in_msg.Type == CoherenceResponseType:WB_ACK) {
-          trigger(Event:WB_Ack, in_msg.Address);
+          trigger(Event:WB_Ack, in_msg.Address, cache_entry, tbe);
         } else {
           error("Invalid L1 response type");
         }
@@ -253,15 +257,19 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     if(requestIntraChipL1Network_in.isReady()) {
       peek(requestIntraChipL1Network_in, RequestMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
+
+        Entry cache_entry := getCacheEntry(in_msg.Address);
+        TBE tbe := L1_TBEs[in_msg.Address];
+
         if (in_msg.Type == CoherenceRequestType:INV) {
-          trigger(Event:Inv, in_msg.Address);
+          trigger(Event:Inv, in_msg.Address, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:UPGRADE) {
           // upgrade transforms to GETX due to race
-          trigger(Event:Fwd_GETX, in_msg.Address);
+          trigger(Event:Fwd_GETX, in_msg.Address, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:Fwd_GETS, in_msg.Address);
+          trigger(Event:Fwd_GETS, in_msg.Address, cache_entry, tbe);
         } else if (in_msg.Type == CoherenceRequestType:GET_INSTR) {
-          trigger(Event:Fwd_GET_INSTR, in_msg.Address);
+          trigger(Event:Fwd_GET_INSTR, in_msg.Address, cache_entry, tbe);
         } else {
           error("Invalid forwarded request type");
         }
@@ -280,40 +288,55 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
           // ** INSTRUCTION ACCESS ***
 
           // Check to see if it is in the OTHER L1
-          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
+          Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+          if (is_valid(L1Dcache_entry)) {
             // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.LineAddress);
+            trigger(Event:L1_Replacement, in_msg.LineAddress,
+                    L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
           }
-          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
+
+          Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+          if (is_valid(L1Icache_entry)) {
             // The tag matches for the L1, so the L1 asks the L2 for it.
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                    L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
           } else {
             if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                      L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.LineAddress));
+              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.LineAddress),
+                      getL1ICacheEntry(L1IcacheMemory.cacheProbe(in_msg.LineAddress)),
+                      L1_TBEs[L1IcacheMemory.cacheProbe(in_msg.LineAddress)]);
             }
           }
         } else {
           // *** DATA ACCESS ***
-
           // Check to see if it is in the OTHER L1
-          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
+          Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+          if (is_valid(L1Icache_entry)) {
             // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.LineAddress);
+            trigger(Event:L1_Replacement, in_msg.LineAddress,
+                    L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
           }
-          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
+
+          Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+          if (is_valid(L1Dcache_entry)) {
             // The tag matches for the L1, so the L1 ask the L2 for it
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                    L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
           } else {
             if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                      L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.LineAddress));
+              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.LineAddress),
+                      getL1DCacheEntry(L1DcacheMemory.cacheProbe(in_msg.LineAddress)),
+                      L1_TBEs[L1DcacheMemory.cacheProbe(in_msg.LineAddress)]);
             }
           }
         }
@@ -395,10 +418,11 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   action(d_sendDataToRequestor, "d", desc="send data to requestor") {
     peek(requestIntraChipL1Network_in, RequestMsg) {
       enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
+        assert(is_valid(cache_entry));
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
-        out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
-        out_msg.Dirty := getL1CacheEntry(address).Dirty;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -408,10 +432,11 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   action(d2_sendDataToL2, "d2", desc="send data to the L2 cache because of M downgrade") {
     enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      assert(is_valid(cache_entry));
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
-      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
-      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Dirty := cache_entry.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
@@ -422,10 +447,11 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   action(dt_sendDataToRequestor_fromTBE, "dt", desc="send data to requestor") {
     peek(requestIntraChipL1Network_in, RequestMsg) {
       enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
+        assert(is_valid(tbe));
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
-        out_msg.DataBlk := L1_TBEs[address].DataBlk;
-        out_msg.Dirty := L1_TBEs[address].Dirty;
+        out_msg.DataBlk := tbe.DataBlk;
+        out_msg.Dirty := tbe.Dirty;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -435,10 +461,11 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   action(d2t_sendDataToL2_fromTBE, "d2t", desc="send data to the L2 cache") {
     enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      assert(is_valid(tbe));
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
-      out_msg.DataBlk := L1_TBEs[address].DataBlk;
-      out_msg.Dirty := L1_TBEs[address].Dirty;
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Dirty := tbe.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
@@ -460,10 +487,11 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   action(f_sendDataToL2, "f", desc="send data to the L2 cache") {
     enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      assert(is_valid(cache_entry));
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
-      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
-      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Dirty := cache_entry.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
@@ -473,10 +501,11 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   action(ft_sendDataToL2_fromTBE, "ft", desc="send data to the L2 cache") {
     enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
+      assert(is_valid(tbe));
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
-      out_msg.DataBlk := L1_TBEs[address].DataBlk;
-      out_msg.Dirty := L1_TBEs[address].Dirty;
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Dirty := tbe.Dirty;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
@@ -500,14 +529,15 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   action(g_issuePUTX, "g", desc="send data to the L2 cache") {
     enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_response_latency) {
+      assert(is_valid(cache_entry));
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTX;
-      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
-      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Dirty := cache_entry.Dirty;
       out_msg.Requestor:= machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
                                                   l2_select_low_bit, l2_select_num_bits));
-      if (getL1CacheEntry(address).Dirty) {
+      if (cache_entry.Dirty) {
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
       } else {
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
@@ -541,25 +571,27 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     }
   }
 
-
-
   action(h_load_hit, "h", desc="If not prefetch, notify sequencer the load completed.") {
-    DPRINTF(RubySlicc, "%s\n", getL1CacheEntry(address).DataBlk);
-    sequencer.readCallback(address, getL1CacheEntry(address).DataBlk);
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.readCallback(address, cache_entry.DataBlk);
   }
 
   action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
-    DPRINTF(RubySlicc, "%s\n", getL1CacheEntry(address).DataBlk);
-    sequencer.writeCallback(address, getL1CacheEntry(address).DataBlk);
-    getL1CacheEntry(address).Dirty := true;
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
+    sequencer.writeCallback(address, cache_entry.DataBlk);
+    cache_entry.Dirty := true;
   }
 
   action(i_allocateTBE, "i", desc="Allocate TBE (isPrefetch=0, number of invalidates=0)") {
     check_allocate(L1_TBEs);
+    assert(is_valid(cache_entry));
     L1_TBEs.allocate(address);
-    L1_TBEs[address].isPrefetch := false;
-    L1_TBEs[address].Dirty := getL1CacheEntry(address).Dirty;
-    L1_TBEs[address].DataBlk := getL1CacheEntry(address).DataBlk;
+    set_tbe(L1_TBEs[address]);
+    tbe.isPrefetch := false;
+    tbe.Dirty := cache_entry.Dirty;
+    tbe.DataBlk := cache_entry.DataBlk;
   }
 
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
@@ -576,21 +608,24 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   action(s_deallocateTBE, "s", desc="Deallocate TBE") {
     L1_TBEs.deallocate(address);
+    unset_tbe();
   }
 
   action(u_writeDataToL1Cache, "u", desc="Write data to cache") {
     peek(responseIntraChipL1Network_in, ResponseMsg) {
-      getL1CacheEntry(address).DataBlk := in_msg.DataBlk;
-      getL1CacheEntry(address).Dirty := in_msg.Dirty;
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+      cache_entry.Dirty := in_msg.Dirty;
     }
   }
 
   action(q_updateAckCount, "q", desc="Update ack count") {
     peek(responseIntraChipL1Network_in, ResponseMsg) {
-      L1_TBEs[address].pendingAcks := L1_TBEs[address].pendingAcks - in_msg.AckCount;
+      assert(is_valid(tbe));
+      tbe.pendingAcks := tbe.pendingAcks - in_msg.AckCount;
       APPEND_TRANSITION_COMMENT(in_msg.AckCount);
       APPEND_TRANSITION_COMMENT(" p: ");
-      APPEND_TRANSITION_COMMENT(L1_TBEs[address].pendingAcks);
+      APPEND_TRANSITION_COMMENT(tbe.pendingAcks);
     }
   }
 
@@ -603,17 +638,18 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     } else {
       L1IcacheMemory.deallocate(address);
     }
+    unset_cache_entry();
   }
 
   action(oo_allocateL1DCacheBlock, "\o", desc="Set L1 D-cache tag equal to tag of block B.") {
-    if (L1DcacheMemory.isTagPresent(address) == false) {
-      L1DcacheMemory.allocate(address, new Entry);
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(L1DcacheMemory.allocate(address, new Entry));
     }
   }
 
   action(pp_allocateL1ICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
-    if (L1IcacheMemory.isTagPresent(address) == false) {
-      L1IcacheMemory.allocate(address, new Entry);
+    if (is_invalid(cache_entry)) {
+      set_cache_entry(L1IcacheMemory.allocate(address, new Entry));
     }
   }
 

@@ -60,6 +60,8 @@ class Func(Symbol):
         void_type = self.symtab.find("void", Type)
         if "return_by_ref" in self and self.return_type != void_type:
             return_type += "&"
+        elif "return_by_pointer" in self and self.return_type != void_type:
+            return_type += "*"
 
         return "%s %s(%s);" % (return_type, self.c_ident,
                                ", ".join(self.param_strings))
@@ -87,6 +89,8 @@ class Func(Symbol):
         return_type = self.return_type.c_ident
         if "return_by_ref" in self and self.return_type != void_type:
             return_type += "&"
+        if "return_by_pointer" in self and self.return_type != void_type:
+            return_type += "*"
 
         if self.isInternalMachineFunc:
             klass = "%s_Controller" % self.machineStr

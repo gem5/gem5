@@ -51,6 +51,10 @@ class InPortDeclAST(DeclAST):
         symtab = self.symtab
         void_type = symtab.find("void", Type)
 
+        machine = symtab.state_machine
+        if machine is None:
+            self.error("InPort declaration not part of a machine.")
+
         code = self.slicc.codeFormatter()
         queue_type = self.var_expr.generate(code)
         if not queue_type.isInPort:
@@ -78,6 +82,11 @@ class InPortDeclAST(DeclAST):
             self.error("in_port decls require 'Address' type to be defined")
 
         param_types.append(type)
+
+        if machine.EntryType != None:
+            param_types.append(machine.EntryType)
+        if machine.TBEType != None:
+            param_types.append(machine.TBEType)
 
         # Add the trigger method - FIXME, this is a bit dirty
         pairs = { "external" : "yes" }
@@ -123,13 +132,10 @@ class InPortDeclAST(DeclAST):
             rcode.indent()
             self.statements.generate(rcode, None)
             in_port["c_code_in_port"] = str(rcode)
+
         symtab.popFrame()
 
         # Add port to state machine
-        machine = symtab.state_machine
-        if machine is None:
-            self.error("InPort declaration not part of a machine.")
-
         machine.addInPort(in_port)
 
         # Include max_rank to be used by StateMachine.py

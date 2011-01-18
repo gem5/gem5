@@ -39,6 +39,11 @@ class ActionDeclAST(DeclAST):
 
     def generate(self):
         resources = {}
+
+        machine = self.symtab.state_machine
+        if machine is None:
+            self.error("Action declaration not part of a machine.")
+
         if self.statement_list:
             # Add new local vars
             self.symtab.pushFrame()
@@ -52,6 +57,16 @@ class ActionDeclAST(DeclAST):
                       "addr", self.pairs)
             self.symtab.newSymbol(var)
 
+            if machine.TBEType != None:
+                var = Var(self.symtab, "tbe", self.location, machine.TBEType,
+                      "(*m_tbe_ptr)", self.pairs)
+                self.symtab.newSymbol(var)
+
+            if machine.EntryType != None:
+                var = Var(self.symtab, "cache_entry", self.location,
+                          machine.EntryType, "(*m_cache_entry_ptr)", self.pairs)
+                self.symtab.newSymbol(var)
+
             # Do not allows returns in actions
             code = self.slicc.codeFormatter()
             self.statement_list.generate(code, None)
@@ -60,10 +75,6 @@ class ActionDeclAST(DeclAST):
             self.statement_list.findResources(resources)
 
             self.symtab.popFrame()
-
-        machine = self.symtab.state_machine
-        if machine is None:
-            self.error("Action declaration not part of a machine.")
 
         action = Action(self.symtab, self.ident, resources, self.location,
                         self.pairs)

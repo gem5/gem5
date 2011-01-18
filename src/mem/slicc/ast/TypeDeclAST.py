@@ -50,10 +50,15 @@ class TypeDeclAST(DeclAST):
 
     def generate(self):
         ident = str(self.type_ast)
+        machine = self.symtab.state_machine
 
         # Make the new type
         new_type = Type(self.symtab, ident, self.location, self.pairs,
                         self.state_machine)
+
+        if machine:
+            machine.addType(new_type)
+
         self.symtab.newSymbol(new_type)
 
         # Add all of the fields of the type to it

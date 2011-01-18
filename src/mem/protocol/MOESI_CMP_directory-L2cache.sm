@@ -218,40 +218,30 @@ machine(L2Cache, "Token protocol")
   }
 
 
-  TBETable L2_TBEs, template_hack="<L2Cache_TBE>";
+  TBETable TBEs, template_hack="<L2Cache_TBE>";
   PerfectCacheMemory localDirectory, template_hack="<L2Cache_DirEntry>";
 
+  void set_cache_entry(AbstractCacheEntry b);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
 
-  Entry getL2CacheEntry(Address addr), return_by_ref="yes" {
-    if (L2cacheMemory.isTagPresent(addr)) {
-      return static_cast(Entry, L2cacheMemory[addr]);
-    } else {
-      return static_cast(Entry, L2cacheMemory[addr]);
-    }
-  }
-
-  void changePermission(Address addr, AccessPermission permission) {
-    if (L2cacheMemory.isTagPresent(addr)) {
-      return L2cacheMemory.changePermission(addr, permission);
-    }
-  }
-
-  bool isCacheTagPresent(Address addr) {
-    return (L2cacheMemory.isTagPresent(addr) );
+  Entry getCacheEntry(Address address), return_by_pointer="yes" {
+    return static_cast(Entry, "pointer", L2cacheMemory[address]);
   }
 
   bool isDirTagPresent(Address addr) {
     return (localDirectory.isTagPresent(addr) );
   }
 
-  bool isOnlySharer(Address addr, MachineID shar_id) {
-    if (isCacheTagPresent(addr)) {
+  bool isOnlySharer(Entry cache_entry, Address addr, MachineID shar_id) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      if (getL2CacheEntry(addr).Sharers.count() > 1) {
+      if (cache_entry.Sharers.count() > 1) {
         return false;
       }
-      else if (getL2CacheEntry(addr).Sharers.count() == 1) {
-        if (getL2CacheEntry(addr).Sharers.isElement(shar_id)) {
+      else if (cache_entry.Sharers.count() == 1) {
+        if (cache_entry.Sharers.isElement(shar_id)) {
           return true;
         }
         else {
@@ -285,27 +275,29 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void copyCacheStateToDir(Address addr) {
+  void copyCacheStateToDir(Entry cache_entry, Address addr) {
     assert(localDirectory.isTagPresent(addr) == false);
+    assert(is_valid(cache_entry));
     localDirectory.allocate(addr);
-    localDirectory[addr].DirState := getL2CacheEntry(addr).CacheState;
-    localDirectory[addr].Sharers := getL2CacheEntry(addr).Sharers;
-    localDirectory[addr].Owner := getL2CacheEntry(addr).Owner;
-    localDirectory[addr].OwnerValid := getL2CacheEntry(addr).OwnerValid;
+    localDirectory[addr].DirState := cache_entry.CacheState;
+    localDirectory[addr].Sharers := cache_entry.Sharers;
+    localDirectory[addr].Owner := cache_entry.Owner;
+    localDirectory[addr].OwnerValid := cache_entry.OwnerValid;
 
   }
 
-  void copyDirToCache(Address addr) {
-    getL2CacheEntry(addr).Sharers := localDirectory[addr].Sharers;
-    getL2CacheEntry(addr).Owner := localDirectory[addr].Owner;
-    getL2CacheEntry(addr).OwnerValid := localDirectory[addr].OwnerValid;
+  void copyDirToCache(Entry cache_entry, Address addr) {
+    assert(is_valid(cache_entry));
+    cache_entry.Sharers := localDirectory[addr].Sharers;
+    cache_entry.Owner := localDirectory[addr].Owner;
+    cache_entry.OwnerValid := localDirectory[addr].OwnerValid;
   }
 
 
-  void recordLocalSharerInDir(Address addr, MachineID shar_id) {
-    if (isCacheTagPresent(addr)) {
+  void recordLocalSharerInDir(Entry cache_entry, Address addr, MachineID shar_id) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      getL2CacheEntry(addr).Sharers.add(shar_id);
+      cache_entry.Sharers.add(shar_id);
     }
     else {
       if (localDirectory.isTagPresent(addr) == false) {
@@ -317,13 +309,13 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void recordNewLocalExclusiveInDir(Address addr, MachineID exc_id) {
+  void recordNewLocalExclusiveInDir(Entry cache_entry, Address addr, MachineID exc_id) {
 
-    if (isCacheTagPresent(addr)) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      getL2CacheEntry(addr).Sharers.clear();
-      getL2CacheEntry(addr).OwnerValid := true;
-      getL2CacheEntry(addr).Owner := exc_id;
+      cache_entry.Sharers.clear();
+      cache_entry.OwnerValid := true;
+      cache_entry.Owner := exc_id;
     }
     else {
       if (localDirectory.isTagPresent(addr) == false) {
@@ -335,12 +327,11 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-
-  void removeAllLocalSharersFromDir(Address addr) {
-    if (isCacheTagPresent(addr)) {
+  void removeAllLocalSharersFromDir(Entry cache_entry, Address addr) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      getL2CacheEntry(addr).Sharers.clear();
-      getL2CacheEntry(addr).OwnerValid := false;
+      cache_entry.Sharers.clear();
+      cache_entry.OwnerValid := false;
     }
     else {
       localDirectory[addr].Sharers.clear();
@@ -348,88 +339,84 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  void removeSharerFromDir(Address addr, MachineID sender) {
-    if (isCacheTagPresent(addr)) {
+  void removeSharerFromDir(Entry cache_entry, Address addr, MachineID sender) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      getL2CacheEntry(addr).Sharers.remove(sender);
+      cache_entry.Sharers.remove(sender);
     }
     else {
       localDirectory[addr].Sharers.remove(sender);
     }
   }
 
-  void removeOwnerFromDir(Address addr, MachineID sender) {
-    if (isCacheTagPresent(addr)) {
+  void removeOwnerFromDir(Entry cache_entry, Address addr, MachineID sender) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      getL2CacheEntry(addr).OwnerValid := false;
+      cache_entry.OwnerValid := false;
     }
     else {
       localDirectory[addr].OwnerValid := false;
     }
   }
 
-  bool isLocalSharer(Address addr, MachineID shar_id) {
-    if (isCacheTagPresent(addr)) {
+  bool isLocalSharer(Entry cache_entry, Address addr, MachineID shar_id) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return getL2CacheEntry(addr).Sharers.isElement(shar_id);
+      return cache_entry.Sharers.isElement(shar_id);
     }
     else {
       return localDirectory[addr].Sharers.isElement(shar_id);
     }
-
   }
 
-  NetDest getLocalSharers(Address addr) {
-    if (isCacheTagPresent(addr)) {
+  NetDest getLocalSharers(Entry cache_entry, Address addr) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return getL2CacheEntry(addr).Sharers;
+      return cache_entry.Sharers;
     }
     else {
       return localDirectory[addr].Sharers;
     }
-
   }
 
-  MachineID getLocalOwner(Address addr) {
-    if (isCacheTagPresent(addr)) {
+  MachineID getLocalOwner(Entry cache_entry, Address addr) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return getL2CacheEntry(addr).Owner;
+      return cache_entry.Owner;
     }
     else {
       return localDirectory[addr].Owner;
     }
-
   }
 
-
-  int countLocalSharers(Address addr) {
-    if (isCacheTagPresent(addr)) {
+  int countLocalSharers(Entry cache_entry, Address addr) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return getL2CacheEntry(addr).Sharers.count();
+      return cache_entry.Sharers.count();
     }
     else {
       return localDirectory[addr].Sharers.count();
     }
   }
 
-  bool isLocalOwnerValid(Address addr) {
-    if (isCacheTagPresent(addr)) {
+  bool isLocalOwnerValid(Entry cache_entry, Address addr) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return getL2CacheEntry(addr).OwnerValid;
+      return cache_entry.OwnerValid;
     }
     else {
       return localDirectory[addr].OwnerValid;
     }
   }
 
-  int countLocalSharersExceptRequestor(Address addr, MachineID requestor) {
-    if (isCacheTagPresent(addr)) {
+  int countLocalSharersExceptRequestor(Entry cache_entry, Address addr, MachineID requestor) {
+    if (is_valid(cache_entry)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      if (getL2CacheEntry(addr).Sharers.isElement(requestor)) {
-        return ( getL2CacheEntry(addr).Sharers.count() - 1 );
+      if (cache_entry.Sharers.isElement(requestor)) {
+        return ( cache_entry.Sharers.count() - 1 );
       }
       else {
-        return getL2CacheEntry(addr).Sharers.count();
+        return cache_entry.Sharers.count();
       }
     }
     else {
@@ -442,14 +429,12 @@ machine(L2Cache, "Token protocol")
     }
   }
 
+  State getState(TBE tbe, Entry cache_entry, Address addr) {
 
-
-  State getState(Address addr) {
-
-    if (L2_TBEs.isPresent(addr)) {
-      return L2_TBEs[addr].TBEState;
-    } else if (isCacheTagPresent(addr)) {
-      return getL2CacheEntry(addr).CacheState;
+    if (is_valid(tbe)) {
+      return tbe.TBEState;
+    } else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
     } else if (isDirTagPresent(addr)) {
       return localDirectory[addr].DirState;
     } else {
@@ -457,20 +442,15 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-  std::string getStateStr(Address addr) {
-    return L2Cache_State_to_string(getState(addr));
-  }
-
   std::string getCoherenceRequestTypeStr(CoherenceRequestType type) {
     return CoherenceRequestType_to_string(type);
   }
 
-
-  void setState(Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
     assert((localDirectory.isTagPresent(addr) && L2cacheMemory.isTagPresent(addr)) == false);
 
-    if (L2_TBEs.isPresent(addr)) {
-      L2_TBEs[addr].TBEState := state;
+    if (is_valid(tbe)) {
+      tbe.TBEState := state;
     }
 
     if (
@@ -482,7 +462,7 @@ machine(L2Cache, "Token protocol")
          (state == State:OLSX) ||
          (state == State:SLS)
        ) {
-       assert(isCacheTagPresent(addr));
+       assert(is_valid(cache_entry));
     }
     else if (
          (state == State:ILS) ||
@@ -495,53 +475,24 @@ machine(L2Cache, "Token protocol")
        // assert(isCacheTagPresent(addr) == false);
     }
 
-
-
-    if (isCacheTagPresent(addr)) {
-      if ( ((getL2CacheEntry(addr).CacheState != State:M) && (state == State:M)) ||
-           ((getL2CacheEntry(addr).CacheState != State:S) && (state == State:S)) ||
-           ((getL2CacheEntry(addr).CacheState != State:O) && (state == State:O)) ) {
-        getL2CacheEntry(addr).CacheState := state;
+    if (is_valid(cache_entry)) {
+      if ( ((cache_entry.CacheState != State:M) && (state == State:M)) ||
+           ((cache_entry.CacheState != State:S) && (state == State:S)) ||
+           ((cache_entry.CacheState != State:O) && (state == State:O)) ) {
+        cache_entry.CacheState := state;
         // disable Coherence Checker for now
         // sequencer.checkCoherence(addr);
       }
       else {
-        getL2CacheEntry(addr).CacheState := state;
+        cache_entry.CacheState := state;
       }
 
       // Set permission
-      changePermission(addr, AccessPermission:Read_Only);
+      cache_entry.changePermission(AccessPermission:Read_Only);
     }
     else if (localDirectory.isTagPresent(addr)) {
       localDirectory[addr].DirState := state;
     }
-
-  }
-
-
-  bool isBlockExclusive(Address addr) {
-    if (isCacheTagPresent(addr)) {
-      // the list of exclusive states below is likely incomplete
-      if ( (getL2CacheEntry(addr).CacheState == State:M) ||
-           (getL2CacheEntry(addr).CacheState == State:MI) ) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  bool isBlockShared(Address addr) {
-    if (isCacheTagPresent(addr)) {
-      // the list of shared states below is likely incomplete
-      if ( (getL2CacheEntry(addr).CacheState == State:S) ||
-           (getL2CacheEntry(addr).CacheState == State:O)  ||
-           (getL2CacheEntry(addr).CacheState == State:OI) ||
-           (getL2CacheEntry(addr).CacheState == State:OXW)  ) {
-        return true;
-      }
-    }
-    return false;
   }
 
   MessageBuffer triggerQueue, ordered="true";
@@ -553,7 +504,6 @@ machine(L2Cache, "Token protocol")
   out_port(triggerQueue_out, TriggerMsg, triggerQueue);
 
 
-
   // ** IN_PORTS **
 
   // Trigger Queue
@@ -561,7 +511,8 @@ machine(L2Cache, "Token protocol")
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
-          trigger(Event:All_Acks, in_msg.Address);
+          trigger(Event:All_Acks, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else {
           error("Unexpected message");
         }
@@ -576,20 +527,27 @@ machine(L2Cache, "Token protocol")
       peek(requestNetwork_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID) {
-            trigger(Event:Own_GETX, in_msg.Address);
+            trigger(Event:Own_GETX, in_msg.Address,
+                    getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
           } else {
-            trigger(Event:Fwd_GETX, in_msg.Address);
+            trigger(Event:Fwd_GETX, in_msg.Address,
+                    getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
           }
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:Fwd_GETS, in_msg.Address);
+          trigger(Event:Fwd_GETS, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if(in_msg.Type == CoherenceRequestType:DMA_READ) {
-          trigger(Event:Fwd_DMA, in_msg.Address);
+          trigger(Event:Fwd_DMA, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:INV) {
-          trigger(Event:Inv, in_msg.Address);
+          trigger(Event:Inv, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
-          trigger(Event:Writeback_Ack, in_msg.Address);
+          trigger(Event:Writeback_Ack, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
-          trigger(Event:Writeback_Nack, in_msg.Address);
+          trigger(Event:Writeback_Nack, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else {
           error("Unexpected message");
         }
@@ -602,19 +560,26 @@ machine(L2Cache, "Token protocol")
       peek(L1requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:L1_GETX, in_msg.Address);
+          trigger(Event:L1_GETX, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
-            trigger(Event:L1_GETS, in_msg.Address);
+            trigger(Event:L1_GETS, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO) {
-          trigger(Event:L1_PUTO, in_msg.Address);
+          trigger(Event:L1_PUTO, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
-          trigger(Event:L1_PUTX, in_msg.Address);
+          trigger(Event:L1_PUTX, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:PUTS) {
-          if (isOnlySharer(in_msg.Address, in_msg.Requestor)) {
-            trigger(Event:L1_PUTS_only, in_msg.Address);
+          Entry cache_entry := getCacheEntry(in_msg.Address);
+          if (isOnlySharer(cache_entry, in_msg.Address, in_msg.Requestor)) {
+            trigger(Event:L1_PUTS_only, in_msg.Address,
+                    cache_entry, TBEs[in_msg.Address]);
           }
           else {
-            trigger(Event:L1_PUTS, in_msg.Address);
+            trigger(Event:L1_PUTS, in_msg.Address,
+                    cache_entry, TBEs[in_msg.Address]);
           }
         } else {
           error("Unexpected message");
@@ -631,34 +596,48 @@ machine(L2Cache, "Token protocol")
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:ACK) {
           if (in_msg.SenderMachine == MachineType:L2Cache) {
-            trigger(Event:ExtAck, in_msg.Address);
+            trigger(Event:ExtAck, in_msg.Address,
+                    getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
           }
           else {
-            trigger(Event:IntAck, in_msg.Address);
+            trigger(Event:IntAck, in_msg.Address,
+                    getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
           }
         } else if (in_msg.Type == CoherenceResponseType:DATA) {
-          trigger(Event:Data, in_msg.Address);
+          trigger(Event:Data, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
-          trigger(Event:Data_Exclusive, in_msg.Address);
+          trigger(Event:Data_Exclusive, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
-          trigger(Event:Unblock, in_msg.Address);
+          trigger(Event:Unblock, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
-          trigger(Event:Exclusive_Unblock, in_msg.Address);
+          trigger(Event:Exclusive_Unblock, in_msg.Address,
+                  getCacheEntry(in_msg.Address), TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
-          if (L2cacheMemory.isTagPresent(in_msg.Address) == false &&
+          Entry cache_entry := getCacheEntry(in_msg.Address);
+          if (is_invalid(cache_entry) &&
                    L2cacheMemory.cacheAvail(in_msg.Address) == false) {
-            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address));
+            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address),
+                    getCacheEntry(L2cacheMemory.cacheProbe(in_msg.Address)),
+                    TBEs[L2cacheMemory.cacheProbe(in_msg.Address)]);
           }
           else {
-            trigger(Event:L1_WBDIRTYDATA, in_msg.Address);
+            trigger(Event:L1_WBDIRTYDATA, in_msg.Address,
+                    cache_entry, TBEs[in_msg.Address]);
           }
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_DATA) {
-          if (L2cacheMemory.isTagPresent(in_msg.Address) == false &&
+          Entry cache_entry := getCacheEntry(in_msg.Address);
+          if (is_invalid(cache_entry) &&
                    L2cacheMemory.cacheAvail(in_msg.Address) == false) {
-            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address));
+            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address),
+                    getCacheEntry(L2cacheMemory.cacheProbe(in_msg.Address)),
+                    TBEs[L2cacheMemory.cacheProbe(in_msg.Address)]);
           }
           else {
-            trigger(Event:L1_WBCLEANDATA, in_msg.Address);
+            trigger(Event:L1_WBCLEANDATA, in_msg.Address,
+                    cache_entry, TBEs[in_msg.Address]);
           }
         } else {
           error("Unexpected message");
@@ -731,134 +710,144 @@ machine(L2Cache, "Token protocol")
   }
 
   action(c_sendDataFromTBEToL1GETS, "c", desc="Send data from TBE to L1 requestors in TBE") {
+    assert(is_valid(tbe));
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
-      out_msg.Destination.addNetDest(L2_TBEs[address].L1_GetS_IDs);
-      out_msg.DataBlk := L2_TBEs[address].DataBlk;
-      // out_msg.Dirty := L2_TBEs[address].Dirty;
+      out_msg.Destination.addNetDest(tbe.L1_GetS_IDs);
+      out_msg.DataBlk := tbe.DataBlk;
+      // out_msg.Dirty := tbe.Dirty;
       // shared data should be clean
       out_msg.Dirty := false;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-		        address, L2_TBEs[address].DataBlk);
+            address, tbe.DataBlk);
   }
 
   action(c_sendDataFromTBEToL1GETX, "\c", desc="Send data from TBE to L1 requestors in TBE") {
+    assert(is_valid(tbe));
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
-      out_msg.Destination.add(L2_TBEs[address].L1_GetX_ID);
-      out_msg.DataBlk := L2_TBEs[address].DataBlk;
-      out_msg.Dirty := L2_TBEs[address].Dirty;
-      out_msg.Acks := L2_TBEs[address].Local_GETX_IntAcks;
+      out_msg.Destination.add(tbe.L1_GetX_ID);
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Dirty := tbe.Dirty;
+      out_msg.Acks := tbe.Local_GETX_IntAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-            address, L2_TBEs[address].DataBlk);
+            address, tbe.DataBlk);
   }
 
   action(c_sendExclusiveDataFromTBEToL1GETS, "\cc", desc="Send data from TBE to L1 requestors in TBE") {
+    assert(is_valid(tbe));
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
-      out_msg.Destination.addNetDest(L2_TBEs[address].L1_GetS_IDs);
-      out_msg.DataBlk := L2_TBEs[address].DataBlk;
-      out_msg.Dirty := L2_TBEs[address].Dirty;
+      out_msg.Destination.addNetDest(tbe.L1_GetS_IDs);
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Dirty := tbe.Dirty;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
 
   action(c_sendDataFromTBEToFwdGETX, "cc", desc="Send data from TBE to external GETX") {
+    assert(is_valid(tbe));
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
-      out_msg.Destination.add(L2_TBEs[address].Fwd_GetX_ID);
-      out_msg.DataBlk := L2_TBEs[address].DataBlk;
-      out_msg.Dirty := L2_TBEs[address].Dirty;
-      out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
+      out_msg.Destination.add(tbe.Fwd_GetX_ID);
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Dirty := tbe.Dirty;
+      out_msg.Acks := tbe.Fwd_GETX_ExtAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
 
   action(c_sendDataFromTBEToFwdGETS, "ccc", desc="Send data from TBE to external GETX") {
+    assert(is_valid(tbe));
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
-      out_msg.Destination.addNetDest(L2_TBEs[address].Fwd_GetS_IDs);
-      out_msg.DataBlk := L2_TBEs[address].DataBlk;
-      // out_msg.Dirty := L2_TBEs[address].Dirty;
+      out_msg.Destination.addNetDest(tbe.Fwd_GetS_IDs);
+      out_msg.DataBlk := tbe.DataBlk;
+      // out_msg.Dirty := tbe.Dirty;
       // shared data should be clean
       out_msg.Dirty := false;
-      out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
+      out_msg.Acks := tbe.Fwd_GETX_ExtAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-            address, L2_TBEs[address].DataBlk);
+            address, tbe.DataBlk);
   }
 
   action(c_sendExclusiveDataFromTBEToFwdGETS, "\ccc", desc="Send data from TBE to external GETX") {
+    assert(is_valid(tbe));
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
-      out_msg.Destination.addNetDest(L2_TBEs[address].Fwd_GetS_IDs);
-      out_msg.DataBlk := L2_TBEs[address].DataBlk;
-      out_msg.Dirty := L2_TBEs[address].Dirty;
-      out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
+      out_msg.Destination.addNetDest(tbe.Fwd_GetS_IDs);
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Dirty := tbe.Dirty;
+      out_msg.Acks := tbe.Fwd_GETX_ExtAcks;
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-            address, L2_TBEs[address].DataBlk);
+            address, tbe.DataBlk);
   }
 
   action(d_sendDataToL1GETS, "d", desc="Send data directly to L1 requestor") {
+    assert(is_valid(cache_entry));
     peek(L1requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
-        // out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        // out_msg.Dirty := cache_entry.Dirty;
         // shared data should be clean
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:ResponseL2hit_Data;
       }
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-            address, getL2CacheEntry(address).DataBlk);
+            address, cache_entry.DataBlk);
   }
 
   action(d_sendDataToL1GETX, "\d", desc="Send data and a token from TBE to L1 requestor") {
+    assert(is_valid(cache_entry));
     peek(L1requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+        assert(is_valid(tbe));
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
-        out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:ResponseL2hit_Data;
-        out_msg.Acks := L2_TBEs[address].Local_GETX_IntAcks;
+        out_msg.Acks := tbe.Local_GETX_IntAcks;
       }
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-            address, getL2CacheEntry(address).DataBlk);
+            address, cache_entry.DataBlk);
   }
 
   action(dd_sendDataToFwdGETX, "dd", desc="send data") {
+    assert(is_valid(cache_entry));
     peek(requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
         out_msg.Address := address;
@@ -866,44 +855,46 @@ machine(L2Cache, "Token protocol")
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
-        out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.Acks := in_msg.Acks;
       }
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-            address, getL2CacheEntry(address).DataBlk);
+            address, cache_entry.DataBlk);
   }
 
 
   action(dd_sendDataToFwdGETS, "\dd", desc="send data") {
+    assert(is_valid(cache_entry));
     peek(requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
-        // out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        // out_msg.Dirty := cache_entry.Dirty;
         // shared data should be clean
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
     DPRINTF(RubySlicc, "Address: %s, Data Block: %s\n",
-            address, getL2CacheEntry(address).DataBlk);
+            address, cache_entry.DataBlk);
   }
 
   action(dd_sendExclusiveDataToFwdGETS, "\d\d", desc="send data") {
+    assert(is_valid(cache_entry));
     peek(requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
-        out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -911,12 +902,13 @@ machine(L2Cache, "Token protocol")
 
   action(e_sendAck, "e", desc="Send ack with the tokens we've collected thus far.") {
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      assert(is_valid(tbe));
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:ACK;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
 
-      out_msg.Destination.add( L2_TBEs[address].Fwd_GetX_ID);
+      out_msg.Destination.add( tbe.Fwd_GetX_ID);
       out_msg.Acks := 0 - 1;
       out_msg.MessageSize := MessageSizeType:Response_Control;
     }
@@ -938,24 +930,26 @@ machine(L2Cache, "Token protocol")
 
   action(e_sendAckToL1RequestorFromTBE, "eee", desc="Send ack with the tokens we've collected thus far.") {
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      assert(is_valid(tbe));
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:ACK;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
-      out_msg.Destination.add(L2_TBEs[address].L1_GetX_ID);
+      out_msg.Destination.add(tbe.L1_GetX_ID);
       out_msg.Acks := 0 - 1;
       out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
 
   action(ee_sendLocalInv, "\ee", desc="Send local invalidates") {
-    L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+    assert(is_valid(tbe));
+    tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
     DPRINTF(RubySlicc, "Address: %s, Local Sharers: %s, Pending Acks: %d\n",
-            address, getLocalSharers(address),
-            L2_TBEs[address].NumIntPendingAcks);
-    if (isLocalOwnerValid(address)) {
-      L2_TBEs[address].NumIntPendingAcks := L2_TBEs[address].NumIntPendingAcks + 1;
-      DPRINTF(RubySlicc, "%s\n", getLocalOwner(address));
+            address, getLocalSharers(cache_entry, address),
+            tbe.NumIntPendingAcks);
+    if (isLocalOwnerValid(cache_entry, address)) {
+      tbe.NumIntPendingAcks := tbe.NumIntPendingAcks + 1;
+      DPRINTF(RubySlicc, "%s\n", getLocalOwner(cache_entry, address));
     }
 
     enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
@@ -963,10 +957,10 @@ machine(L2Cache, "Token protocol")
       out_msg.Type := CoherenceRequestType:INV;
       out_msg.Requestor := machineID;
       out_msg.RequestorMachine := MachineType:L2Cache;
-      out_msg.Destination.addNetDest(getLocalSharers(address));
-      if (isLocalOwnerValid(address))
+      out_msg.Destination.addNetDest(getLocalSharers(cache_entry, address));
+      if (isLocalOwnerValid(cache_entry, address))
       {
-        out_msg.Destination.add(getLocalOwner(address));
+        out_msg.Destination.add(getLocalOwner(cache_entry, address));
       }
       out_msg.MessageSize := MessageSizeType:Invalidate_Control;
     }
@@ -975,38 +969,40 @@ machine(L2Cache, "Token protocol")
   action(ee_sendLocalInvSharersOnly, "\eee", desc="Send local invalidates to sharers if they exist") {
 
     // assert(countLocalSharers(address)  > 0);
-    L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+    assert(is_valid(tbe));
+    tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
 
-    if (countLocalSharers(address) > 0) {
+    if (countLocalSharers(cache_entry, address) > 0) {
       enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := machineID;
         out_msg.RequestorMachine := MachineType:L2Cache;
-        out_msg.Destination.addNetDest(getLocalSharers(address));
+        out_msg.Destination.addNetDest(getLocalSharers(cache_entry, address));
         out_msg.MessageSize := MessageSizeType:Invalidate_Control;
       }
     }
   }
 
   action(ee_addLocalIntAck, "e\ee", desc="add a local ack to wait for") {
-    L2_TBEs[address].NumIntPendingAcks := L2_TBEs[address].NumIntPendingAcks + 1;
+    assert(is_valid(tbe));
+    tbe.NumIntPendingAcks := tbe.NumIntPendingAcks + 1;
   }
 
   action(ee_issueLocalInvExceptL1Requestor, "\eeee", desc="Send local invalidates to sharers if they exist") {
       peek(L1requestNetwork_in, RequestMsg) {
 
 //         assert(countLocalSharers(address) > 0);
-        if (countLocalSharers(address) == 0) {
-          L2_TBEs[address].NumIntPendingAcks := 0;
+        if (countLocalSharers(cache_entry, address) == 0) {
+          tbe.NumIntPendingAcks := 0;
         }
         else {
 
-          if (isLocalSharer(address, in_msg.Requestor)) {
-            L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address) - 1;
+          if (isLocalSharer(cache_entry, address, in_msg.Requestor)) {
+            tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address) - 1;
           }
           else {
-            L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+            tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
           }
 
           enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
@@ -1014,7 +1010,7 @@ machine(L2Cache, "Token protocol")
             out_msg.Type := CoherenceRequestType:INV;
             out_msg.Requestor := in_msg.Requestor;
             out_msg.RequestorMachine := MachineType:L1Cache;
-            out_msg.Destination.addNetDest(getLocalSharers(address));
+            out_msg.Destination.addNetDest(getLocalSharers(cache_entry, address));
             out_msg.Destination.remove(in_msg.Requestor);
             out_msg.MessageSize := MessageSizeType:Invalidate_Control;
           }
@@ -1023,24 +1019,25 @@ machine(L2Cache, "Token protocol")
   }
 
   action(ee_issueLocalInvExceptL1RequestorInTBE, "\eeeeee", desc="Send local invalidates to sharers if they exist") {
-    if (countLocalSharers(address) == 0) {
-      L2_TBEs[address].NumIntPendingAcks := 0;
+    assert(is_valid(tbe));
+    if (countLocalSharers(cache_entry, address) == 0) {
+      tbe.NumIntPendingAcks := 0;
     }
     else {
-      if (isLocalSharer(address, L2_TBEs[address].L1_GetX_ID)) {
-        L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address) - 1;
+      if (isLocalSharer(cache_entry, address, tbe.L1_GetX_ID)) {
+        tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address) - 1;
       }
       else {
-        L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+        tbe.NumIntPendingAcks := countLocalSharers(cache_entry, address);
       }
     }
     enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:INV;
-        out_msg.Requestor := L2_TBEs[address].L1_GetX_ID;
+        out_msg.Requestor := tbe.L1_GetX_ID;
         out_msg.RequestorMachine := MachineType:L1Cache;
-        out_msg.Destination.addNetDest(getLocalSharers(address));
-        out_msg.Destination.remove(L2_TBEs[address].L1_GetX_ID);
+        out_msg.Destination.addNetDest(getLocalSharers(cache_entry, address));
+        out_msg.Destination.remove(tbe.L1_GetX_ID);
         out_msg.MessageSize := MessageSizeType:Invalidate_Control;
     }
   }
@@ -1072,64 +1069,69 @@ machine(L2Cache, "Token protocol")
 
   action(g_recordLocalSharer, "g", desc="Record new local sharer from unblock message") {
     peek(responseNetwork_in, ResponseMsg) {
-      recordLocalSharerInDir(in_msg.Address, in_msg.Sender);
+      recordLocalSharerInDir(cache_entry, in_msg.Address, in_msg.Sender);
     }
   }
 
   action(g_recordLocalExclusive, "\g", desc="Record new local exclusive sharer from unblock message") {
     peek(responseNetwork_in, ResponseMsg) {
-      recordNewLocalExclusiveInDir(address, in_msg.Sender);
+      recordNewLocalExclusiveInDir(cache_entry, address, in_msg.Sender);
     }
   }
 
   action(gg_clearLocalSharers, "gg", desc="Clear local sharers") {
-    removeAllLocalSharersFromDir(address);
+    removeAllLocalSharersFromDir(cache_entry, address);
   }
 
   action(gg_clearSharerFromL1Response, "\gg", desc="Clear sharer from L1 response queue") {
     peek(responseNetwork_in, ResponseMsg) {
-      removeSharerFromDir(in_msg.Address, in_msg.Sender);
+      removeSharerFromDir(cache_entry, in_msg.Address, in_msg.Sender);
     }
   }
 
   action(gg_clearOwnerFromL1Response, "g\g", desc="Clear sharer from L1 response queue") {
     peek(responseNetwork_in, ResponseMsg) {
-      removeOwnerFromDir(in_msg.Address, in_msg.Sender);
+      removeOwnerFromDir(cache_entry, in_msg.Address, in_msg.Sender);
     }
   }
 
   action(h_countLocalSharersExceptRequestor, "h", desc="counts number of acks needed for L1 GETX") {
     peek(L1requestNetwork_in, RequestMsg) {
-      L2_TBEs[address].Local_GETX_IntAcks := countLocalSharersExceptRequestor(address, in_msg.Requestor);
+      assert(is_valid(tbe));
+      tbe.Local_GETX_IntAcks := countLocalSharersExceptRequestor(cache_entry, address, in_msg.Requestor);
     }
   }
 
   action(h_clearIntAcks, "\h", desc="clear IntAcks") {
-    L2_TBEs[address].Local_GETX_IntAcks := 0;
+    assert(is_valid(tbe));
+    tbe.Local_GETX_IntAcks := 0;
   }
 
   action(hh_countLocalSharersExceptL1GETXRequestorInTBE, "hh", desc="counts number of acks needed for L1 GETX") {
-    L2_TBEs[address].Local_GETX_IntAcks := countLocalSharersExceptRequestor(address, L2_TBEs[address].L1_GetX_ID);
+    assert(is_valid(tbe));
+    tbe.Local_GETX_IntAcks := countLocalSharersExceptRequestor(cache_entry, address, tbe.L1_GetX_ID);
   }
 
   action(i_copyDataToTBE, "\i", desc="Copy data from response queue to TBE") {
     peek(responseNetwork_in, ResponseMsg) {
-      L2_TBEs[address].DataBlk := in_msg.DataBlk;
-      L2_TBEs[address].Dirty := in_msg.Dirty;
+      assert(is_valid(tbe));
+      tbe.DataBlk := in_msg.DataBlk;
+      tbe.Dirty := in_msg.Dirty;
     }
   }
 
   action(i_allocateTBE, "i", desc="Allocate TBE for internal/external request(isPrefetch=0, number of invalidates=0)") {
-    check_allocate(L2_TBEs);
-    L2_TBEs.allocate(address);
-    if(isCacheTagPresent(address)) {
-      L2_TBEs[address].DataBlk := getL2CacheEntry(address).DataBlk;
-      L2_TBEs[address].Dirty := getL2CacheEntry(address).Dirty;
+    check_allocate(TBEs);
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
+    if(is_valid(cache_entry)) {
+      tbe.DataBlk := cache_entry.DataBlk;
+      tbe.Dirty := cache_entry.Dirty;
     }
-    L2_TBEs[address].NumIntPendingAcks := 0;  // default value
-    L2_TBEs[address].NumExtPendingAcks := 0;  // default value
-    L2_TBEs[address].Fwd_GetS_IDs.clear();
-    L2_TBEs[address].L1_GetS_IDs.clear();
+    tbe.NumIntPendingAcks := 0;  // default value
+    tbe.NumExtPendingAcks := 0;  // default value
+    tbe.Fwd_GetS_IDs.clear();
+    tbe.L1_GetS_IDs.clear();
   }
 
 
@@ -1141,7 +1143,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := machineID;
         out_msg.RequestorMachine := MachineType:L2Cache;
-        out_msg.Destination.add(getLocalOwner(in_msg.Address));
+        out_msg.Destination.add(getLocalOwner(cache_entry, in_msg.Address));
         out_msg.Type := in_msg.Type;
         out_msg.MessageSize := MessageSizeType:Forwarded_Control;
         out_msg.Acks := 0 - 1;
@@ -1166,13 +1168,14 @@ machine(L2Cache, "Token protocol")
 
   action(k_forwardLocalGETXToLocalOwner, "\k", desc="Forward local request to local owner") {
     enqueue( localRequestNetwork_out, RequestMsg, latency=response_latency ) {
+      assert(is_valid(tbe));
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:GETX;
-      out_msg.Requestor := L2_TBEs[address].L1_GetX_ID;
+      out_msg.Requestor := tbe.L1_GetX_ID;
       out_msg.RequestorMachine := MachineType:L1Cache;
       out_msg.Destination.add(localDirectory[address].Owner);
       out_msg.MessageSize := MessageSizeType:Forwarded_Control;
-      out_msg.Acks := 1 + L2_TBEs[address].Local_GETX_IntAcks;
+      out_msg.Acks := 1 + tbe.Local_GETX_IntAcks;
     }
   }
 
@@ -1184,7 +1187,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.RequestorMachine := MachineType:L1Cache;
-        out_msg.Destination.add(getLocalOwner(in_msg.Address));
+        out_msg.Destination.add(getLocalOwner(cache_entry, in_msg.Address));
         out_msg.MessageSize := MessageSizeType:Forwarded_Control;
         out_msg.Acks := 1;
       }
@@ -1198,7 +1201,7 @@ machine(L2Cache, "Token protocol")
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.RequestorMachine := MachineType:L1Cache;
-        out_msg.Destination.add(getLocalOwner(in_msg.Address));
+        out_msg.Destination.add(getLocalOwner(cache_entry, in_msg.Address));
         out_msg.MessageSize := MessageSizeType:Forwarded_Control;
       }
     }
@@ -1252,19 +1255,22 @@ machine(L2Cache, "Token protocol")
 
   action(m_decrementNumberOfMessagesInt, "\m", desc="Decrement the number of messages for which we're waiting") {
     peek(responseNetwork_in, ResponseMsg) {
-      L2_TBEs[address].NumIntPendingAcks := L2_TBEs[address].NumIntPendingAcks + in_msg.Acks;
+      assert(is_valid(tbe));
+      tbe.NumIntPendingAcks := tbe.NumIntPendingAcks + in_msg.Acks;
     }
   }
 
   action(m_decrementNumberOfMessagesExt, "\mmm", desc="Decrement the number of messages for which we're waiting") {
     peek(responseNetwork_in, ResponseMsg) {
-      L2_TBEs[address].NumExtPendingAcks := L2_TBEs[address].NumExtPendingAcks - in_msg.Acks;
+      assert(is_valid(tbe));
+      tbe.NumExtPendingAcks := tbe.NumExtPendingAcks - in_msg.Acks;
     }
   }
 
   action(mm_decrementNumberOfMessagesExt, "\mm", desc="Decrement the number of messages for which we're waiting") {
     peek(requestNetwork_in, RequestMsg) {
-      L2_TBEs[address].NumExtPendingAcks := L2_TBEs[address].NumExtPendingAcks - in_msg.Acks;
+      assert(is_valid(tbe));
+      tbe.NumExtPendingAcks := tbe.NumExtPendingAcks - in_msg.Acks;
     }
   }
 
@@ -1282,7 +1288,8 @@ machine(L2Cache, "Token protocol")
 
 
   action(o_checkForIntCompletion, "\o", desc="Check if we have received all the messages required for completion") {
-    if (L2_TBEs[address].NumIntPendingAcks == 0) {
+    assert(is_valid(tbe));
+    if (tbe.NumIntPendingAcks == 0) {
       enqueue(triggerQueue_out, TriggerMsg) {
         out_msg.Address := address;
         out_msg.Type := TriggerType:ALL_ACKS;
@@ -1291,7 +1298,8 @@ machine(L2Cache, "Token protocol")
   }
 
   action(o_checkForExtCompletion, "\oo", desc="Check if we have received all the messages required for completion") {
-    if (L2_TBEs[address].NumExtPendingAcks == 0) {
+    assert(is_valid(tbe));
+    if (tbe.NumExtPendingAcks == 0) {
       enqueue(triggerQueue_out, TriggerMsg) {
         out_msg.Address := address;
         out_msg.Type := TriggerType:ALL_ACKS;
@@ -1302,83 +1310,92 @@ machine(L2Cache, "Token protocol")
 
   action( qq_sendDataFromTBEToMemory, "qq", desc="Send data from TBE to directory") {
     enqueue(responseNetwork_out, ResponseMsg, latency=response_latency) {
+      assert(is_valid(tbe));
       out_msg.Address := address;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.Destination.add(map_Address_to_Directory(address));
-      out_msg.Dirty := L2_TBEs[address].Dirty;
-      if (L2_TBEs[address].Dirty) {
+      out_msg.Dirty := tbe.Dirty;
+      if (tbe.Dirty) {
         out_msg.Type := CoherenceResponseType:WRITEBACK_DIRTY_DATA;
-        out_msg.DataBlk := L2_TBEs[address].DataBlk;
+        out_msg.DataBlk := tbe.DataBlk;
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
       } else {
          out_msg.Type := CoherenceResponseType:WRITEBACK_CLEAN_ACK;
         // NOTE: in a real system this would not send data.  We send
         // data here only so we can check it at the memory
-         out_msg.DataBlk := L2_TBEs[address].DataBlk;
+         out_msg.DataBlk := tbe.DataBlk;
          out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
     }
   }
 
   action( r_setMRU, "\rrr", desc="manually set the MRU bit for cache line" ) {
-    if(isCacheTagPresent(address)) {
+    if(is_valid(cache_entry)) {
       L2cacheMemory.setMRU(address);
     }
   }
 
   action( s_recordGetXL1ID, "ss", desc="record local GETX requestor") {
     peek(L1requestNetwork_in, RequestMsg) {
-      L2_TBEs[address].L1_GetX_ID := in_msg.Requestor;
+      assert(is_valid(tbe));
+      tbe.L1_GetX_ID := in_msg.Requestor;
     }
   }
 
   action(s_deallocateTBE, "s", desc="Deallocate external TBE") {
-    L2_TBEs.deallocate(address);
+    TBEs.deallocate(address);
+    unset_tbe();
   }
 
   action( s_recordGetSL1ID, "\ss", desc="record local GETS requestor") {
     peek(L1requestNetwork_in, RequestMsg) {
-      L2_TBEs[address].L1_GetS_IDs.add(in_msg.Requestor);
+      assert(is_valid(tbe));
+      tbe.L1_GetS_IDs.add(in_msg.Requestor);
     }
   }
 
   action(t_recordFwdXID, "t", desc="record global GETX requestor") {
     peek(requestNetwork_in, RequestMsg) {
-      L2_TBEs[address].Fwd_GetX_ID := in_msg.Requestor;
-      L2_TBEs[address].Fwd_GETX_ExtAcks := in_msg.Acks;
+      assert(is_valid(tbe));
+      tbe.Fwd_GetX_ID := in_msg.Requestor;
+      tbe.Fwd_GETX_ExtAcks := in_msg.Acks;
     }
   }
 
   action(t_recordFwdSID, "\t", desc="record global GETS requestor") {
     peek(requestNetwork_in, RequestMsg) {
-      L2_TBEs[address].Fwd_GetS_IDs.clear();
-      L2_TBEs[address].Fwd_GetS_IDs.add(in_msg.Requestor);
+      assert(is_valid(tbe));
+      tbe.Fwd_GetS_IDs.clear();
+      tbe.Fwd_GetS_IDs.add(in_msg.Requestor);
     }
   }
 
 
   action(u_writeDataToCache, "u", desc="Write data to cache") {
     peek(responseNetwork_in, ResponseMsg) {
-      getL2CacheEntry(address).DataBlk := in_msg.DataBlk;
-      if ((getL2CacheEntry(address).Dirty == false) && in_msg.Dirty) {
-        getL2CacheEntry(address).Dirty := in_msg.Dirty;
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+      if ((cache_entry.Dirty == false) && in_msg.Dirty) {
+        cache_entry.Dirty := in_msg.Dirty;
       }
     }
   }
 
   action(vv_allocateL2CacheBlock, "\v", desc="Set L2 cache tag equal to tag of block B.") {
-    L2cacheMemory.allocate(address, new Entry);
+    set_cache_entry(L2cacheMemory.allocate(address, new Entry));
   }
 
   action(rr_deallocateL2CacheBlock, "\r", desc="Deallocate L2 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
     L2cacheMemory.deallocate(address);
+    unset_cache_entry();
   }
 
 
   action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
     peek(responseNetwork_in, ResponseMsg) {
-      assert(getL2CacheEntry(address).DataBlk == in_msg.DataBlk);
+      assert(is_valid(cache_entry));
+      assert(cache_entry.DataBlk == in_msg.DataBlk);
     }
   }
 
@@ -1389,24 +1406,17 @@ machine(L2Cache, "Token protocol")
     }
   }
 
-
-
   action(y_copyCacheStateToDir, "y", desc="Copy cache state to directory state") {
-
-    assert(isCacheTagPresent(address));
-    copyCacheStateToDir(address);
-
+    copyCacheStateToDir(cache_entry, address);
   }
 
   action(y_copyDirToCacheAndRemove, "/y", desc="Copy dir state to cache and remove") {
-    copyDirToCache(address);
+    copyDirToCache(cache_entry, address);
     localDirectory.deallocate(address);
   }
 
-
   action(z_stall, "z", desc="Stall") {
   }
-
 
   action(zz_recycleL1RequestQueue, "zz", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(L1requestNetwork_in, RequestMsg) {
@@ -1421,7 +1431,6 @@ machine(L2Cache, "Token protocol")
     }
     requestNetwork_in.recycle();
   }
-
 
   action(zz_recycleResponseQueue, "\z\z", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(responseNetwork_in, ResponseMsg) {
@@ -2603,4 +2612,3 @@ machine(L2Cache, "Token protocol")
     m_popRequestQueue;
   }
 }
-

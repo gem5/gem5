@@ -51,10 +51,13 @@ machine(DMA, "DMA Controller")
   TBETable TBEs, template_hack="<DMA_TBE>";
   State cur_state;
 
-  State getState(Address addr) {
+  void set_tbe(TBE b);
+  void unset_tbe();
+
+  State getState(TBE tbe, Address addr) {
     return cur_state;
   }
-  void setState(Address addr, State state) {
+  void setState(TBE tbe, Address addr, State state) {
   cur_state := state;
   }
 
@@ -83,9 +86,11 @@ machine(DMA, "DMA Controller")
     if (dmaRequestQueue_in.isReady()) {
       peek(dmaRequestQueue_in, SequencerMsg) {
         if (in_msg.Type == SequencerRequestType:LD ) {
-          trigger(Event:ReadRequest, in_msg.LineAddress);
+          trigger(Event:ReadRequest, in_msg.LineAddress,
+                  TBEs[in_msg.LineAddress]);
         } else if (in_msg.Type == SequencerRequestType:ST) {
-          trigger(Event:WriteRequest, in_msg.LineAddress);
+          trigger(Event:WriteRequest, in_msg.LineAddress,
+                  TBEs[in_msg.LineAddress]);
         } else {
           error("Invalid request type");
         }
@@ -97,12 +102,15 @@ machine(DMA, "DMA Controller")
     if (dmaResponseQueue_in.isReady()) {
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
-          trigger(Event:DMA_Ack, makeLineAddress(in_msg.Address));
+          trigger(Event:DMA_Ack, makeLineAddress(in_msg.Address),
+                  TBEs[makeLineAddress(in_msg.Address)]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE ||
-		   in_msg.Type == CoherenceResponseType:DATA) {
-          trigger(Event:Data, makeLineAddress(in_msg.Address));
+       in_msg.Type == CoherenceResponseType:DATA) {
+          trigger(Event:Data, makeLineAddress(in_msg.Address),
+                  TBEs[makeLineAddress(in_msg.Address)]);
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:Inv_Ack, makeLineAddress(in_msg.Address));
+          trigger(Event:Inv_Ack, makeLineAddress(in_msg.Address),
+                  TBEs[makeLineAddress(in_msg.Address)]);
         } else {
           error("Invalid response type");
         }
@@ -115,7 +123,7 @@ machine(DMA, "DMA Controller")
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
-          trigger(Event:All_Acks, in_msg.Address);
+          trigger(Event:All_Acks, in_msg.Address, TBEs[in_msg.Address]);
         } else {
           error("Unexpected message");
         }
@@ -156,7 +164,8 @@ machine(DMA, "DMA Controller")
   }
 
   action(o_checkForCompletion, "o", desc="Check if we have received all the messages required for completion") {
-    if (TBEs[address].NumAcks == 0) {
+    assert(is_valid(tbe));
+    if (tbe.NumAcks == 0) {
       enqueue(triggerQueue_out, TriggerMsg) {
         out_msg.Address := address;
         out_msg.Type := TriggerType:ALL_ACKS;
@@ -166,7 +175,8 @@ machine(DMA, "DMA Controller")
 
   action(u_updateAckCount, "u", desc="Update ack count") {
     peek(dmaResponseQueue_in, ResponseMsg) {
-      TBEs[address].NumAcks := TBEs[address].NumAcks - in_msg.Acks;
+      assert(is_valid(tbe));
+      tbe.NumAcks := tbe.NumAcks - in_msg.Acks;
     }
   }
 
@@ -193,20 +203,24 @@ machine(DMA, "DMA Controller")
 
   action(t_updateTBEData, "t", desc="Update TBE Data") {
     peek(dmaResponseQueue_in, ResponseMsg) {
-      TBEs[address].DataBlk := in_msg.DataBlk;
+      assert(is_valid(tbe));
+      tbe.DataBlk := in_msg.DataBlk;
     }
   }
 
   action(d_dataCallbackFromTBE, "/d", desc="data callback with data from TBE") {
-    dma_sequencer.dataCallback(TBEs[address].DataBlk);
+    assert(is_valid(tbe));
+    dma_sequencer.dataCallback(tbe.DataBlk);
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
     TBEs.allocate(address);
+    set_tbe(TBEs[address]);
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {
     TBEs.deallocate(address);
+    unset_tbe();
   }
 
   action(z_stall, "z", desc="dma is busy..stall") {

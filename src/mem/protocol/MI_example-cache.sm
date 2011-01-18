@@ -73,7 +73,15 @@ machine(L1Cache, "MI Example L1 Cache")
 
   TBETable TBEs, template_hack="<L1Cache_TBE>";
 
+  // PROTOTYPES
+  void set_cache_entry(AbstractCacheEntry a);
+  void unset_cache_entry();
+  void set_tbe(TBE b);
+  void unset_tbe();
 
+  Entry getCacheEntry(Address address), return_by_pointer="yes" {
+    return static_cast(Entry, "pointer", cacheMemory.lookup(address));
+  }
 
   // FUNCTIONS
   Event mandatory_request_type_to_event(CacheRequestType type) {
@@ -88,35 +96,31 @@ machine(L1Cache, "MI Example L1 Cache")
     }
   }
 
-  Entry getCacheEntry(Address addr), return_by_ref="yes" {
-    return static_cast(Entry, cacheMemory[addr]);
-  }
+  State getState(TBE tbe, Entry cache_entry, Address addr) {
 
-  State getState(Address addr) {
-
-    if (TBEs.isPresent(addr)) {
-      return TBEs[addr].TBEState;
+    if (is_valid(tbe)) {
+      return tbe.TBEState;
     }
-    else if (cacheMemory.isTagPresent(addr)) {
-      return getCacheEntry(addr).CacheState;
+    else if (is_valid(cache_entry)) {
+      return cache_entry.CacheState;
     }
     else {
       return State:I;
     }
   }
 
-  void setState(Address addr, State state) {
+  void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
 
-    if (TBEs.isPresent(addr)) {
-      TBEs[addr].TBEState := state;
+    if (is_valid(tbe)) {
+      tbe.TBEState := state;
     }
 
-    if (cacheMemory.isTagPresent(addr)) {
-      getCacheEntry(addr).CacheState := state;
+    if (is_valid(cache_entry)) {
+      cache_entry.CacheState := state;
       if (state == State:M) {
-        cacheMemory.changePermission(addr, AccessPermission:Read_Write);
+        cache_entry.changePermission(AccessPermission:Read_Write);
       } else {
-        cacheMemory.changePermission(addr, AccessPermission:Invalid);
+        cache_entry.changePermission(AccessPermission:Invalid);
       }
     }
   }
@@ -141,17 +145,21 @@ machine(L1Cache, "MI Example L1 Cache")
   in_port(forwardRequestNetwork_in, RequestMsg, forwardToCache) {
     if (forwardRequestNetwork_in.isReady()) {
       peek(forwardRequestNetwork_in, RequestMsg, block_on="Address") {
+
+        Entry cache_entry := getCacheEntry(in_msg.Address);
+        TBE tbe := TBEs[in_msg.Address];
+
         if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:Fwd_GETX, in_msg.Address);
+          trigger(Event:Fwd_GETX, in_msg.Address, cache_entry, tbe);
         }
         else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
-          trigger(Event:Writeback_Ack, in_msg.Address);
+          trigger(Event:Writeback_Ack, in_msg.Address, cache_entry, tbe);
         }
         else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
-          trigger(Event:Writeback_Nack, in_msg.Address);
+          trigger(Event:Writeback_Nack, in_msg.Address, cache_entry, tbe);
         }
         else if (in_msg.Type == CoherenceRequestType:INV) {
-          trigger(Event:Inv, in_msg.Address);
+          trigger(Event:Inv, in_msg.Address, cache_entry, tbe);
         }
         else {
           error("Unexpected message");
@@ -163,8 +171,12 @@ machine(L1Cache, "MI Example L1 Cache")
   in_port(responseNetwork_in, ResponseMsg, responseToCache) {
     if (responseNetwork_in.isReady()) {
       peek(responseNetwork_in, ResponseMsg, block_on="Address") {
+
+        Entry cache_entry := getCacheEntry(in_msg.Address);
+        TBE tbe := TBEs[in_msg.Address];
+
         if (in_msg.Type == CoherenceResponseType:DATA) {
-          trigger(Event:Data, in_msg.Address);
+          trigger(Event:Data, in_msg.Address, cache_entry, tbe);
         }
         else {
           error("Unexpected message");
@@ -178,14 +190,17 @@ machine(L1Cache, "MI Example L1 Cache")
     if (mandatoryQueue_in.isReady()) {
       peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
 
-
-        if (cacheMemory.isTagPresent(in_msg.LineAddress) == false &&
+        Entry cache_entry := getCacheEntry(in_msg.LineAddress);
+        if (is_invalid(cache_entry) &&
             cacheMemory.cacheAvail(in_msg.LineAddress) == false ) {
           // make room for the block
-          trigger(Event:Replacement, cacheMemory.cacheProbe(in_msg.LineAddress));
+          trigger(Event:Replacement, cacheMemory.cacheProbe(in_msg.LineAddress),
+                  getCacheEntry(cacheMemory.cacheProbe(in_msg.LineAddress)),
+                  TBEs[cacheMemory.cacheProbe(in_msg.LineAddress)]);
         }
         else {
-          trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
+          trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
+                  cache_entry, TBEs[in_msg.LineAddress]);
         }
       }
     }
@@ -205,11 +220,12 @@ machine(L1Cache, "MI Example L1 Cache")
 
   action(b_issuePUT, "b", desc="Issue a PUT request") {
     enqueue(requestNetwork_out, RequestMsg, latency=issue_latency) {
+      assert(is_valid(cache_entry));
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
-      out_msg.DataBlk := getCacheEntry(address).DataBlk;
+      out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.MessageSize := MessageSizeType:Data;
     }
   }
@@ -218,11 +234,12 @@ machine(L1Cache, "MI Example L1 Cache")
   action(e_sendData, "e", desc="Send data from cache to requestor") {
     peek(forwardRequestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
+        assert(is_valid(cache_entry));
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := getCacheEntry(address).DataBlk;
+        out_msg.DataBlk := cache_entry.DataBlk;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -231,26 +248,28 @@ machine(L1Cache, "MI Example L1 Cache")
   action(ee_sendDataFromTBE, "\e", desc="Send data from TBE to requestor") {
     peek(forwardRequestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
+        assert(is_valid(tbe));
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := TBEs[address].DataBlk;
+        out_msg.DataBlk := tbe.DataBlk;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
   }
 
-
   action(i_allocateL1CacheBlock, "i", desc="Allocate a cache block") {
-    if (cacheMemory.isTagPresent(address) == false) {
-      cacheMemory.allocate(address, new Entry);
+    if (is_valid(cache_entry)) {
+    } else {
+      set_cache_entry(cacheMemory.allocate(address, new Entry));
     }
   }
 
   action(h_deallocateL1CacheBlock, "h", desc="deallocate a cache block") {
-    if (cacheMemory.isTagPresent(address) == true) {
+    if (is_valid(cache_entry)) {
       cacheMemory.deallocate(address);
+      unset_cache_entry();
     }
   }
 
@@ -273,55 +292,64 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
-    DPRINTF(RubySlicc,"%s\n", getCacheEntry(address).DataBlk);
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
     sequencer.readCallback(address, 
                            GenericMachineType:L1Cache,
-                           getCacheEntry(address).DataBlk);
+                           cache_entry.DataBlk);
   }
 
   action(rx_load_hit, "rx", desc="External load completed.") {
     peek(responseNetwork_in, ResponseMsg) {
-      DPRINTF(RubySlicc,"%s\n", getCacheEntry(address).DataBlk);
+      assert(is_valid(cache_entry));
+      DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
       sequencer.readCallback(address, 
                              getNondirectHitMachType(in_msg.Sender),
-                             getCacheEntry(address).DataBlk);
+                             cache_entry.DataBlk);
     }
   }
 
   action(s_store_hit, "s", desc="Notify sequencer that store completed.") {
-    DPRINTF(RubySlicc,"%s\n", getCacheEntry(address).DataBlk);
+    assert(is_valid(cache_entry));
+    DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
     sequencer.writeCallback(address, 
                             GenericMachineType:L1Cache,
-                            getCacheEntry(address).DataBlk);
+                            cache_entry.DataBlk);
   }
 
   action(sx_store_hit, "sx", desc="External store completed.") {
     peek(responseNetwork_in, ResponseMsg) {
-      DPRINTF(RubySlicc,"%s\n", getCacheEntry(address).DataBlk);
+      assert(is_valid(cache_entry));
+      DPRINTF(RubySlicc,"%s\n", cache_entry.DataBlk);
       sequencer.writeCallback(address, 
                               getNondirectHitMachType(in_msg.Sender),
-                              getCacheEntry(address).DataBlk);
+                              cache_entry.DataBlk);
     }
   }
 
   action(u_writeDataToCache, "u", desc="Write data to the cache") {
     peek(responseNetwork_in, ResponseMsg) {
-      getCacheEntry(address).DataBlk := in_msg.DataBlk;
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
     }
   }
 
 
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     TBEs.allocate(address);
+    set_tbe(TBEs[address]);
   }
 
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {
     TBEs.deallocate(address);
+    unset_tbe();
   }
 
   action(x_copyDataFromCacheToTBE, "x", desc="Copy data from cache to TBE") {
-    TBEs[address].DataBlk := getCacheEntry(address).DataBlk;
+    assert(is_valid(cache_entry));
+    assert(is_valid(tbe));
+    tbe.DataBlk := cache_entry.DataBlk;
   }
 
   action(z_stall, "z", desc="stall") {

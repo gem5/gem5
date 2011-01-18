@@ -61,8 +61,7 @@ class TBETable
         return (m_number_of_TBEs - m_map.size()) >= n;
     }
 
-    ENTRY& lookup(const Address& address);
-    const ENTRY& lookup(const Address& address) const;
+    ENTRY* lookup(const Address& address);
 
     // Print cache contents
     void print(std::ostream& out) const;
@@ -117,21 +116,13 @@ TBETable<ENTRY>::deallocate(const Address& address)
 
 // looks an address up in the cache
 template<class ENTRY>
-inline ENTRY&
+inline ENTRY*
 TBETable<ENTRY>::lookup(const Address& address)
 {
-    assert(isPresent(address));
-    return m_map.find(address)->second;
+  if(m_map.find(address) != m_map.end()) return &(m_map.find(address)->second);
+  return NULL;
 }
 
-// looks an address up in the cache
-template<class ENTRY>
-inline const ENTRY&
-TBETable<ENTRY>::lookup(const Address& address) const
-{
-    assert(isPresent(address));
-    return m_map.find(address)->second;
-}
 
 template<class ENTRY>
 inline void

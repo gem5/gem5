@@ -75,13 +75,10 @@ CacheMemory::init()
         assert(false);
 
     m_cache.resize(m_cache_num_sets);
-    m_locked.resize(m_cache_num_sets);
     for (int i = 0; i < m_cache_num_sets; i++) {
         m_cache[i].resize(m_cache_assoc);
-        m_locked[i].resize(m_cache_assoc);
         for (int j = 0; j < m_cache_assoc; j++) {
             m_cache[i][j] = NULL;
-            m_locked[i][j] = -1;
         }
     }
 }
@@ -255,7 +252,7 @@ CacheMemory::cacheAvail(const Address& address) const
     return false;
 }
 
-void
+AbstractCacheEntry*
 CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
 {
     assert(address == line_address(address));
@@ -273,13 +270,13 @@ CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
             set[i]->m_Permission = AccessPermission_Invalid;
             DPRINTF(RubyCache, "Allocate clearing lock for addr: %x\n",
                     address);
-            m_locked[cacheSet][i] = -1;
+            set[i]->m_locked = -1;
             m_tag_index[address] = i;
 
             m_replacementPolicy_ptr->
                 touch(cacheSet, i, g_eventQueue_ptr->getTime());
 
-            return;
+            return entry;
         }
     }
     panic("Allocate didn't find an available entry");
@@ -296,9 +293,6 @@ CacheMemory::deallocate(const Address& address)
     if (loc != -1) {
         delete m_cache[cacheSet][loc];
         m_cache[cacheSet][loc] = NULL;
-        DPRINTF(RubyCache, "Deallocate clearing lock for addr: %x\n",
-                address);
-        m_locked[cacheSet][loc] = -1;
         m_tag_index.erase(address);
     }
 }
@@ -316,49 +310,25 @@ CacheMemory::cacheProbe(const Address& address) const
 }
 
 // looks an address up in the cache
-AbstractCacheEntry&
+AbstractCacheEntry*
 CacheMemory::lookup(const Address& address)
 {
     assert(address == line_address(address));
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
-    assert(loc != -1);
-    return *m_cache[cacheSet][loc];
+    if(loc == -1) return NULL;
+    return m_cache[cacheSet][loc];
 }
 
 // looks an address up in the cache
-const AbstractCacheEntry&
+const AbstractCacheEntry*
 CacheMemory::lookup(const Address& address) const
 {
     assert(address == line_address(address));
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
-    assert(loc != -1);
-    return *m_cache[cacheSet][loc];
-}
-
-AccessPermission
-CacheMemory::getPermission(const Address& address) const
-{
-    assert(address == line_address(address));
-    return lookup(address).m_Permission;
-}
-
-void
-CacheMemory::changePermission(const Address& address,
-                              AccessPermission new_perm)
-{
-    assert(address == line_address(address));
-    lookup(address).m_Permission = new_perm;
-    Index cacheSet = addressToCacheSet(address);
-    int loc = findTagInSet(cacheSet, address);
-    if ((new_perm == AccessPermission_Invalid) ||
-        (new_perm == AccessPermission_NotPresent) ||
-        (new_perm == AccessPermission_Stale)) {
-        DPRINTF(RubyCache, "Permission clearing lock for addr: %x\n", address);
-        m_locked[cacheSet][loc] = -1;
-    }
-    assert(getPermission(address) == new_perm);
+    if(loc == -1) return NULL;
+    return m_cache[cacheSet][loc];
 }
 
 // Sets the most recently used bit for a cache block
@@ -460,10 +430,10 @@ void
 CacheMemory::getMemoryValue(const Address& addr, char* value,
                             unsigned size_in_bytes)
 {
-    AbstractCacheEntry& entry = lookup(line_address(addr));
+    AbstractCacheEntry* entry = lookup(line_address(addr));
     unsigned startByte = addr.getAddress() - line_address(addr).getAddress();
     for (unsigned i = 0; i < size_in_bytes; ++i) {
-        value[i] = entry.getDataBlk().getByte(i + startByte);
+        value[i] = entry->getDataBlk().getByte(i + startByte);
     }
 }
 
@@ -471,11 +441,11 @@ void
 CacheMemory::setMemoryValue(const Address& addr, char* value,
                             unsigned size_in_bytes)
 {
-    AbstractCacheEntry& entry = lookup(line_address(addr));
+    AbstractCacheEntry* entry = lookup(line_address(addr));
     unsigned startByte = addr.getAddress() - line_address(addr).getAddress();
     assert(size_in_bytes > 0);
     for (unsigned i = 0; i < size_in_bytes; ++i) {
-        entry.getDataBlk().setByte(i + startByte, value[i]);
+        entry->getDataBlk().setByte(i + startByte, value[i]);
     }
 
     // entry = lookup(line_address(addr));
@@ -489,7 +459,7 @@ CacheMemory::setLocked(const Address& address, int context)
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
-    m_locked[cacheSet][loc] = context;
+    m_cache[cacheSet][loc]->m_locked = context;
 }
 
 void
@@ -500,7 +470,7 @@ CacheMemory::clearLocked(const Address& address)
     Index cacheSet = addressToCacheSet(address);
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
-    m_locked[cacheSet][loc] = -1;
+    m_cache[cacheSet][loc]->m_locked = -1;
 }
 
 bool
@@ -511,7 +481,7 @@ CacheMemory::isLocked(const Address& address, int context)
     int loc = findTagInSet(cacheSet, address);
     assert(loc != -1);
     DPRINTF(RubyCache, "Testing Lock for addr: %llx cur %d con %d\n",
-            address, m_locked[cacheSet][loc], context);
-    return m_locked[cacheSet][loc] == context;
+            address, m_cache[cacheSet][loc]->m_locked, context);
+    return m_cache[cacheSet][loc]->m_locked == context;
 }
 

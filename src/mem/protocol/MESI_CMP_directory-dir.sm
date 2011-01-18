@@ -106,14 +106,17 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   // ** OBJECTS **
 
   TBETable TBEs, template_hack="<Directory_TBE>";
+
+  void set_tbe(TBE tbe);
+  void unset_tbe();
       
   Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
     return static_cast(Entry, directory[addr]);
   }
 
-  State getState(Address addr) {
-    if (TBEs.isPresent(addr)) {
-      return TBEs[addr].TBEState;   
+  State getState(TBE tbe, Address addr) {
+    if (is_valid(tbe)) {
+      return tbe.TBEState;   
     } else if (directory.isPresent(addr)) {
       return getDirectoryEntry(addr).DirectoryState;
     } else {
@@ -122,10 +125,10 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   }  
    
 
-  void setState(Address addr, State state) {
+  void setState(TBE tbe, Address addr, State state) {
 
-    if (TBEs.isPresent(addr)) {
-      TBEs[addr].TBEState := state;
+    if (is_valid(tbe)) {
+      tbe.TBEState := state;
     }
   
     if (directory.isPresent(addr)) {
@@ -161,11 +164,13 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (isGETRequest(in_msg.Type)) {
-          trigger(Event:Fetch, in_msg.Address);
+          trigger(Event:Fetch, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
-          trigger(Event:DMA_READ, makeLineAddress(in_msg.Address));
+          trigger(Event:DMA_READ, makeLineAddress(in_msg.Address),
+                  TBEs[makeLineAddress(in_msg.Address)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
-          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Address));          
+          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Address),
+                  TBEs[makeLineAddress(in_msg.Address)]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg);
           error("Invalid message");
@@ -179,9 +184,9 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:MEMORY_DATA) {
-          trigger(Event:Data, in_msg.Address);
+          trigger(Event:Data, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:CleanReplacement, in_msg.Address);
+          trigger(Event:CleanReplacement, in_msg.Address, TBEs[in_msg.Address]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -195,9 +200,9 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.Address);
+          trigger(Event:Memory_Data, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.Address);
+          trigger(Event:Memory_Ack, in_msg.Address, TBEs[in_msg.Address]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -412,15 +417,17 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     peek(requestNetwork_in, RequestMsg) {
       TBEs.allocate(address);
-      TBEs[address].DataBlk := in_msg.DataBlk;
-      TBEs[address].PhysicalAddress := in_msg.Address;
-      TBEs[address].Len := in_msg.Len; 
+      set_tbe(TBEs[address]); 
+      tbe.DataBlk := in_msg.DataBlk;
+      tbe.PhysicalAddress := in_msg.Address;
+      tbe.Len := in_msg.Len; 
     }
   }
 
   action(dwt_writeDMADataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    //getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
-    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+    assert(is_valid(tbe));
+    //getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, tbe.Offset, tbe.Len);
+    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
 
 
   }
@@ -429,12 +436,13 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   action(qw_queueMemoryWBRequest_partialTBE, "qwt", desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
       enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
+        assert(is_valid(tbe));
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := in_msg.Sender;
         //out_msg.DataBlk := in_msg.DataBlk;
-        //out_msg.DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
-        out_msg.DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+        //out_msg.DataBlk.copyPartial(tbe.DataBlk, tbe.Offset, tbe.Len);
+        out_msg.DataBlk.copyPartial(tbe.DataBlk, addressOffset(tbe.PhysicalAddress), tbe.Len);
  
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
@@ -446,6 +454,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {
     TBEs.deallocate(address); 
+    unset_tbe();
   }
 
 

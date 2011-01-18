@@ -119,15 +119,18 @@ machine(Directory, "Directory protocol")
   // ** OBJECTS **
   TBETable TBEs, template_hack="<Directory_TBE>";
 
+  void set_tbe(TBE b);
+  void unset_tbe();
+
   Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
     return static_cast(Entry, directory[addr]);
   }
 
-  State getState(Address addr) {
+  State getState(TBE tbe, Address addr) {
     return getDirectoryEntry(addr).DirectoryState;
   }
 
-  void setState(Address addr, State state) {
+  void setState(TBE tbe, Address addr, State state) {
     if (directory.isPresent(addr)) {
 
       if (state == State:I) {
@@ -204,18 +207,24 @@ machine(Directory, "Directory protocol")
       peek(unblockNetwork_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
           if (getDirectoryEntry(in_msg.Address).WaitingUnblocks == 1) {
-            trigger(Event:Last_Unblock, in_msg.Address);
+            trigger(Event:Last_Unblock, in_msg.Address,
+                    TBEs[in_msg.Address]);
           } else {
-            trigger(Event:Unblock, in_msg.Address);
+            trigger(Event:Unblock, in_msg.Address,
+                    TBEs[in_msg.Address]);
           }
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
-          trigger(Event:Exclusive_Unblock, in_msg.Address);
+          trigger(Event:Exclusive_Unblock, in_msg.Address,
+                  TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
-          trigger(Event:Dirty_Writeback, in_msg.Address);
+          trigger(Event:Dirty_Writeback, in_msg.Address,
+                  TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_ACK) {
-          trigger(Event:Clean_Writeback, in_msg.Address);
+          trigger(Event:Clean_Writeback, in_msg.Address,
+                  TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
-          trigger(Event:Data, in_msg.Address);        
+          trigger(Event:Data, in_msg.Address,
+                  TBEs[in_msg.Address]);
         } else {
           error("Invalid message");
         }
@@ -227,19 +236,21 @@ machine(Directory, "Directory protocol")
     if (requestQueue_in.isReady()) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:GETS) {
-          trigger(Event:GETS, in_msg.Address);
+          trigger(Event:GETS, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
-          trigger(Event:GETX, in_msg.Address);
+          trigger(Event:GETX, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
-          trigger(Event:PUTX, in_msg.Address);
+          trigger(Event:PUTX, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO) {
-          trigger(Event:PUTO, in_msg.Address);
+          trigger(Event:PUTO, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO_SHARERS) {
-          trigger(Event:PUTO_SHARERS, in_msg.Address);
+          trigger(Event:PUTO_SHARERS, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
-          trigger(Event:DMA_READ, makeLineAddress(in_msg.Address));
+          trigger(Event:DMA_READ, makeLineAddress(in_msg.Address),
+                  TBEs[makeLineAddress(in_msg.Address)]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
-          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Address));
+          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Address),
+                  TBEs[makeLineAddress(in_msg.Address)]);
         } else {
           error("Invalid message");
         }
@@ -252,9 +263,9 @@ machine(Directory, "Directory protocol")
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
-          trigger(Event:Memory_Data, in_msg.Address);
+          trigger(Event:Memory_Data, in_msg.Address, TBEs[in_msg.Address]);
         } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
-          trigger(Event:Memory_Ack, in_msg.Address);
+          trigger(Event:Memory_Ack, in_msg.Address, TBEs[in_msg.Address]);
         } else {
           DPRINTF(RubySlicc, "%s\n", in_msg.Type);
           error("Invalid message");
@@ -271,6 +282,7 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.Requestor;
+        out_msg.RequestorMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -481,9 +493,9 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;
-	if (TBEs.isPresent(address)) {
-          out_msg.OriginalRequestorMachId := TBEs[address].Requestor;
-	}
+        if (is_valid(tbe)) {
+          out_msg.OriginalRequestorMachId := tbe.Requestor;
+        }
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := false;
@@ -543,8 +555,8 @@ machine(Directory, "Directory protocol")
       out_msg.Address := address;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:Directory;
-      if (TBEs.isPresent(address)) {
-        out_msg.Destination.add(TBEs[address].Requestor);
+      if (is_valid(tbe)) {
+        out_msg.Destination.add(tbe.Requestor);
       }
       out_msg.DataBlk := in_msg.DataBlk;
       out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
@@ -561,23 +573,25 @@ machine(Directory, "Directory protocol")
   }
 
   action(l_writeDMADataToMemoryFromTBE, "\ll", desc="Write data from a DMA_WRITE to memory") {
-    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, 
-					   addressOffset(TBEs[address].PhysicalAddress), 
-					   TBEs[address].Len);
+    assert(is_valid(tbe));
+    getDirectoryEntry(address).DataBlk.copyPartial(tbe.DataBlk, 
+                      addressOffset(tbe.PhysicalAddress), tbe.Len);
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
     peek (requestQueue_in, RequestMsg) {
       TBEs.allocate(address);
-      TBEs[address].PhysicalAddress := in_msg.Address;
-      TBEs[address].Len := in_msg.Len;
-      TBEs[address].DataBlk := in_msg.DataBlk;
-      TBEs[address].Requestor := in_msg.Requestor;
+      set_tbe(TBEs[address]);
+      tbe.PhysicalAddress := in_msg.Address;
+      tbe.Len := in_msg.Len;
+      tbe.DataBlk := in_msg.DataBlk;
+      tbe.Requestor := in_msg.Requestor;
     }
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {
     TBEs.deallocate(address);
+    unset_tbe();
   }
 
 

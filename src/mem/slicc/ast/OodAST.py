@@ -1,5 +1,5 @@
-# Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+#
+# Copyright (c) 2011 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,41 +24,17 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
-from slicc.ast.AST import AST
-from slicc.symbols import Var
+from slicc.ast.ExprAST import ExprAST
 
-class FormalParamAST(AST):
-    def __init__(self, slicc, type_ast, ident, default = None, pointer = False):
-        super(FormalParamAST, self).__init__(slicc)
-        self.type_ast = type_ast
-        self.ident = ident
-        self.default = default
-        self.pointer = pointer
+class OodAST(ExprAST):
+    def __init__(self, slicc):
+        super(OodAST, self).__init__(slicc)
 
     def __repr__(self):
-        return "[FormalParamAST: %s]" % self.ident
+        return "[Ood:]"
 
-    @property
-    def name(self):
-        return self.ident
-
-    def generate(self):
-        type = self.type_ast.type
-        param = "param_%s" % self.ident
-
-        # Add to symbol table
-        if self.pointer or str(type) == "TBE" or (
-           "interface" in type and type["interface"] == "AbstractCacheEntry"):
-
-            v = Var(self.symtab, self.ident, self.location, type,
-                    "(*%s)" % param, self.pairs)
-            self.symtab.newSymbol(v)
-            return type, "%s* %s" % (type.c_ident, param)
-
-        else:
-            v = Var(self.symtab, self.ident, self.location, type, param,
-                    self.pairs)
-            self.symtab.newSymbol(v)
-
-        return type, "%s %s" % (type.c_ident, param)
+    def generate(self, code):
+        code += "NULL"
+        return "OOD"

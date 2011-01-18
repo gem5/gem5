@@ -165,12 +165,15 @@ class SLICC(Grammar):
         'check_stop_slots' : 'CHECK_STOP_SLOTS',
         'static_cast' : 'STATIC_CAST',
         'if' : 'IF',
+        'is_valid' : 'IS_VALID',
+        'is_invalid' : 'IS_INVALID',
         'else' : 'ELSE',
         'return' : 'RETURN',
         'THIS' : 'THIS',
         'CHIP' : 'CHIP',
         'void' : 'VOID',
         'new' : 'NEW',
+        'OOD' : 'OOD',
     }
 
     literals = ':[]{}(),='
@@ -576,7 +579,11 @@ class SLICC(Grammar):
 
     def p_statement__static_cast(self, p):
         "aexpr : STATIC_CAST '(' type ',' expr ')'"
-        p[0] = ast.StaticCastAST(self, p[3], p[5])
+        p[0] = ast.StaticCastAST(self, p[3], "ref", p[5])
+
+    def p_statement__static_cast_ptr(self, p):
+        "aexpr : STATIC_CAST '(' type ',' STRING ',' expr ')'"
+        p[0] = ast.StaticCastAST(self, p[3], p[5], p[7])
 
     def p_statement__return(self, p):
         "statement : RETURN expr SEMI"
@@ -603,6 +610,10 @@ class SLICC(Grammar):
         "aexpr : var"
         p[0] = p[1]
 
+    def p_expr__localvar(self, p):
+        "aexpr : type ident"
+        p[0] = ast.LocalVariableAST(self, p[1], p[2])
+
     def p_expr__literal(self, p):
         "aexpr : literal"
         p[0] = p[1]
@@ -618,6 +629,10 @@ class SLICC(Grammar):
     def p_expr__new(self, p):
         "aexpr : NEW type"
         p[0] = ast.NewExprAST(self, p[2])
+
+    def p_expr__null(self, p):
+        "aexpr : OOD"
+        p[0] = ast.OodAST(self)
 
     # globally access a local chip component and call a method
     def p_expr__local_chip_method(self, p):
@@ -686,6 +701,14 @@ class SLICC(Grammar):
     def p_expr__parens(self, p):
         "aexpr : '(' expr ')'"
         p[0] = p[2]
+
+    def p_expr__is_valid_ptr(self, p):
+        "aexpr : IS_VALID '(' var ')'"
+        p[0] = ast.IsValidPtrExprAST(self, p[3], True)
+
+    def p_expr__is_invalid_ptr(self, p):
+        "aexpr : IS_INVALID '(' var ')'"
+        p[0] = ast.IsValidPtrExprAST(self, p[3], False)
 
     def p_literal__string(self, p):
         "literal : STRING"
