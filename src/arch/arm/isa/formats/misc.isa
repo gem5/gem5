@@ -100,7 +100,10 @@ let {{
           case MISCREG_NOP:
             return new NopInst(machInst);
           case NUM_MISCREGS:
-            return new Unknown(machInst);
+            return new FailUnimplemented(
+                    csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
+                    crn, opc1, crm, opc2, isRead ? "read" : "write").c_str(),
+                    machInst);
           case MISCREG_DCCISW:
             return new WarnUnimplemented(
                     isRead ? "mrc dccisw" : "mcr dcisw", machInst);

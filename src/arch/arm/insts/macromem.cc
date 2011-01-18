@@ -42,7 +42,9 @@
 
 #include "arch/arm/insts/macromem.hh"
 #include "arch/arm/decoder.hh"
+#include <sstream>
 
+using namespace std;
 using namespace ArmISAInst;
 
 namespace ArmISA
@@ -180,7 +182,8 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                 size, machInst, rMid, rn, 0, align);
         break;
       default:
-        panic("Unrecognized number of registers %d.\n", regs);
+        // Unknown number of registers
+        microOps[uopIdx++] = new Unknown(machInst);
     }
     if (wb) {
         if (rm != 15 && rm != 13) {
@@ -216,7 +219,8 @@ VldMultOp::VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
             }
             break;
           default:
-            panic("Bad number of elements to deinterleave %d.\n", elems);
+            // Bad number of elements to deinterleave
+            microOps[uopIdx++] = new Unknown(machInst);
         }
     }
     assert(uopIdx == numMicroops);
@@ -315,7 +319,8 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
                 machInst, ufp0, rn, 0, align);
         break;
       default:
-        panic("Unrecognized load size %d.\n", regs);
+        // Unrecognized load size
+        microOps[uopIdx++] = new Unknown(machInst);
     }
     if (wb) {
         if (rm != 15 && rm != 13) {
@@ -358,7 +363,8 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
             }
             break;
           default:
-            panic("Bad size %d.\n", size);
+            // Bad size
+            microOps[uopIdx++] = new Unknown(machInst);
             break;
         }
         break;
@@ -393,7 +399,8 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
             }
             break;
           default:
-            panic("Bad size %d.\n", size);
+            // Bad size
+            microOps[uopIdx++] = new Unknown(machInst);
             break;
         }
         break;
@@ -429,7 +436,8 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
             }
             break;
           default:
-            panic("Bad size %d.\n", size);
+            // Bad size
+            microOps[uopIdx++] = new Unknown(machInst);
             break;
         }
         break;
@@ -472,13 +480,15 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
                 }
                 break;
               default:
-                panic("Bad size %d.\n", size);
+                // Bad size
+                microOps[uopIdx++] = new Unknown(machInst);
                 break;
             }
         }
         break;
       default:
-        panic("Bad number of elements to unpack %d.\n", elems);
+        // Bad number of elements to unpack
+        microOps[uopIdx++] = new Unknown(machInst);
     }
     assert(uopIdx == numMicroops);
 
@@ -536,7 +546,8 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
             }
             break;
           default:
-            panic("Bad number of elements to interleave %d.\n", elems);
+            // Bad number of elements to interleave
+            microOps[uopIdx++] = new Unknown(machInst);
         }
     }
     switch (regs) {
@@ -561,7 +572,8 @@ VstMultOp::VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                 size, machInst, rMid, rn, 0, align);
         break;
       default:
-        panic("Unrecognized number of registers %d.\n", regs);
+        // Unknown number of registers
+        microOps[uopIdx++] = new Unknown(machInst);
     }
     if (wb) {
         if (rm != 15 && rm != 13) {
@@ -627,7 +639,8 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
                     machInst, ufp0, vd * 2, inc * 2, lane);
             break;
           default:
-            panic("Bad size %d.\n", size);
+            // Bad size
+            microOps[uopIdx++] = new Unknown(machInst);
             break;
         }
         break;
@@ -647,7 +660,8 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
                     machInst, ufp0, vd * 2, inc * 2, lane);
             break;
           default:
-            panic("Bad size %d.\n", size);
+            // Bad size
+            microOps[uopIdx++] = new Unknown(machInst);
             break;
         }
         break;
@@ -668,7 +682,8 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
                     machInst, ufp0, vd * 2, inc * 2, lane);
             break;
           default:
-            panic("Bad size %d.\n", size);
+            // Bad size
+            microOps[uopIdx++] = new Unknown(machInst);
             break;
         }
         break;
@@ -690,13 +705,15 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
                         machInst, ufp0, (vd + offset) * 2, inc * 2, lane);
                 break;
               default:
-                panic("Bad size %d.\n", size);
+                // Bad size
+                microOps[uopIdx++] = new Unknown(machInst);
                 break;
             }
         }
         break;
       default:
-        panic("Bad number of elements to pack %d.\n", elems);
+        // Bad number of elements to unpack
+        microOps[uopIdx++] = new Unknown(machInst);
     }
     switch (storeSize) {
       case 1:
@@ -757,7 +774,8 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
                 machInst, ufp0, rn, 0, align);
         break;
       default:
-        panic("Unrecognized store size %d.\n", regs);
+        // Bad store size
+        microOps[uopIdx++] = new Unknown(machInst);
     }
     if (wb) {
         if (rm != 15 && rm != 13) {

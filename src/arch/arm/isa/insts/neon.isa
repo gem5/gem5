@@ -871,14 +871,21 @@ let {{
         if readDest:
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
-        assert(imm >= 0 && imm < eCount);
-        for (unsigned i = 0; i < eCount; i++) {
-            Element srcElem1 = gtoh(srcReg1.elements[i]);
-            Element srcElem2 = gtoh(srcReg2.elements[imm]);
-            Element destElem;
-            %(readDest)s
-            %(op)s
-            destReg.elements[i] = htog(destElem);
+        if (imm < 0 && imm >= eCount) {
+#if FULL_SYSTEM
+            fault = new UndefinedInstruction;
+#else
+            fault = new UndefinedInstruction(false, mnemonic);
+#endif
+        } else {
+            for (unsigned i = 0; i < eCount; i++) {
+                Element srcElem1 = gtoh(srcReg1.elements[i]);
+                Element srcElem2 = gtoh(srcReg2.elements[imm]);
+                Element destElem;
+                %(readDest)s
+                %(op)s
+                destReg.elements[i] = htog(destElem);
+            }
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(rCount):
@@ -919,14 +926,21 @@ let {{
         if readDest:
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
-        assert(imm >= 0 && imm < eCount);
-        for (unsigned i = 0; i < eCount; i++) {
-            Element srcElem1 = gtoh(srcReg1.elements[i]);
-            Element srcElem2 = gtoh(srcReg2.elements[imm]);
-            BigElement destElem;
-            %(readDest)s
-            %(op)s
-            destReg.elements[i] = htog(destElem);
+        if (imm < 0 && imm >= eCount) {
+#if FULL_SYSTEM
+            fault = new UndefinedInstruction;
+#else
+            fault = new UndefinedInstruction(false, mnemonic);
+#endif
+        } else {
+            for (unsigned i = 0; i < eCount; i++) {
+                Element srcElem1 = gtoh(srcReg1.elements[i]);
+                Element srcElem2 = gtoh(srcReg2.elements[imm]);
+                BigElement destElem;
+                %(readDest)s
+                %(op)s
+                destReg.elements[i] = htog(destElem);
+            }
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(2 * rCount):
@@ -965,14 +979,21 @@ let {{
         if readDest:
             readDestCode = 'destReg = destRegs[i];'
         eWalkCode += '''
-        assert(imm >= 0 && imm < rCount);
-        for (unsigned i = 0; i < rCount; i++) {
-            FloatReg srcReg1 = srcRegs1[i];
-            FloatReg srcReg2 = srcRegs2[imm];
-            FloatReg destReg;
-            %(readDest)s
-            %(op)s
-            destRegs[i] = destReg;
+        if (imm < 0 && imm >= eCount) {
+#if FULL_SYSTEM
+            fault = new UndefinedInstruction;
+#else
+            fault = new UndefinedInstruction(false, mnemonic);
+#endif
+        } else {
+            for (unsigned i = 0; i < rCount; i++) {
+                FloatReg srcReg1 = srcRegs1[i];
+                FloatReg srcReg2 = srcRegs2[imm];
+                FloatReg destReg;
+                %(readDest)s
+                %(op)s
+                destRegs[i] = destReg;
+            }
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         for reg in range(rCount):
@@ -3277,8 +3298,14 @@ let {{
                 destReg.elements[i] = srcReg1.elements[index];
             } else {
                 index -= eCount;
-                assert(index < eCount);
-                destReg.elements[i] = srcReg2.elements[index];
+                if (index >= eCount)
+#if FULL_SYSTEM
+                    fault = new UndefinedInstruction;
+#else
+                    fault = new UndefinedInstruction(false, mnemonic);
+#endif
+                else
+                    destReg.elements[i] = srcReg2.elements[index];
             }
         }
     '''

@@ -78,9 +78,10 @@ modified_imm(uint8_t ctrlImm, uint8_t dataImm)
 }
 
 static inline uint64_t
-simd_modified_imm(bool op, uint8_t cmode, uint8_t data)
+simd_modified_imm(bool op, uint8_t cmode, uint8_t data, bool &immValid)
 {
     uint64_t bigData = data;
+    immValid = true;
     switch (cmode) {
       case 0x0:
       case 0x1:
@@ -139,9 +140,10 @@ simd_modified_imm(bool op, uint8_t cmode, uint8_t data)
             bigData |= (bigData << 32);
             break;
         }
-        // Fall through
+        // Fall through, immediate encoding is invalid.
       default:
-        panic("Illegal modified SIMD immediate parameters.\n");
+        immValid = false;
+        break;
     }
     return bigData;
 }

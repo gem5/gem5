@@ -758,7 +758,15 @@ let {{
                                       bits(machInst, 24)) << 7) |
                             (bits(machInst, 18, 16) << 4) |
                             (bits(machInst, 3, 0) << 0);
-        const uint64_t bigImm = simd_modified_imm(op, cmode, imm);
+
+        // Check for invalid immediate encodings and return an unknown op
+        // if it happens
+        bool immValid = true;
+        const uint64_t bigImm = simd_modified_imm(op, cmode, imm, immValid);
+        if (!immValid) {
+            return new Unknown(machInst);
+        }
+
         if (op) {
             if (bits(cmode, 3) == 0) {
                 if (bits(cmode, 0) == 0) {
