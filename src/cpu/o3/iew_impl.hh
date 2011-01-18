@@ -1297,7 +1297,11 @@ DefaultIEW<Impl>::executeInsts()
             !toCommit->squash[tid] ||
             toCommit->squashedSeqNum[tid] > inst->seqNum) {
 
-            if (inst->mispredicted()) {
+            // Prevent testing for misprediction on load instructions,
+            // that have not been executed.
+            bool loadNotExecuted = !inst->isExecuted() && inst->isLoad();
+
+            if (inst->mispredicted() && !loadNotExecuted) {
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
