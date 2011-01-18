@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -550,7 +562,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid,
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, switched out\n",
                 tid);
         return false;
-    } else if (interruptPending && !(pc & 0x3)) {
+    } else if (checkInterrupt(pc)) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -1250,8 +1262,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         fetchStatus[tid] = TrapPending;
         status_change = true;
 
-        DPRINTF(Fetch, "[tid:%i]: fault (%s) detected @ PC %s",
-                tid, fault->name(), thisPC);
+        DPRINTF(Fetch, "[tid:%i]: fault (%s) detected @ PC %s, sending nop "
+                       "[sn:%lli]\n", tid, fault->name(), thisPC, inst_seq);
     }
 }
 

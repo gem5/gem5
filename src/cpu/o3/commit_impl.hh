@@ -674,54 +674,67 @@ template <class Impl>
 void
 DefaultCommit<Impl>::handleInterrupt()
 {
-    if (interrupt != NoFault) {
-        // Wait until the ROB is empty and all stores have drained in
-        // order to enter the interrupt.
-        if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
-            // Squash or record that I need to squash this cycle if
-            // an interrupt needed to be handled.
-            DPRINTF(Commit, "Interrupt detected.\n");
+    // Verify that we still have an interrupt to handle
+    if (!cpu->checkInterrupts(cpu->tcBase(0))) {
+        DPRINTF(Commit, "Pending interrupt is cleared by master before "
+                "it got handled. Restart fetching from the orig path.\n");
+        toIEW->commitInfo[0].clearInterrupt = true;
+        interrupt = NoFault;
+        return;
+    }
 
-            // Clear the interrupt now that it's going to be handled
-            toIEW->commitInfo[0].clearInterrupt = true;
+    // Wait until the ROB is empty and all stores have drained in
+    // order to enter the interrupt.
+    if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
+        // Squash or record that I need to squash this cycle if
+        // an interrupt needed to be handled.
+        DPRINTF(Commit, "Interrupt detected.\n");
 
-            assert(!thread[0]->inSyscall);
-            thread[0]->inSyscall = true;
+        // Clear the interrupt now that it's going to be handled
+        toIEW->commitInfo[0].clearInterrupt = true;
 
-            // CPU will handle interrupt.
-            cpu->processInterrupts(interrupt);
+        assert(!thread[0]->inSyscall);
+        thread[0]->inSyscall = true;
 
-            thread[0]->inSyscall = false;
+        // CPU will handle interrupt.
+        cpu->processInterrupts(interrupt);
 
-            commitStatus[0] = TrapPending;
+        thread[0]->inSyscall = false;
 
-            // Generate trap squash event.
-            generateTrapEvent(0);
+        commitStatus[0] = TrapPending;
 
-            interrupt = NoFault;
-        } else {
-            DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
-        }
-    } else if (commitStatus[0] != TrapPending &&
-               cpu->checkInterrupts(cpu->tcBase(0)) &&
-               !trapSquash[0] &&
-               !tcSquash[0]) {
-        // Process interrupts if interrupts are enabled, not in PAL
-        // mode, and no other traps or external squashes are currently
-        // pending.
-        // @todo: Allow other threads to handle interrupts.
+        // Generate trap squash event.
+        generateTrapEvent(0);
 
-        // Get any interrupt that happened
-        interrupt = cpu->getInterrupts();
-
-        if (interrupt != NoFault) {
-            // Tell fetch that there is an interrupt pending.  This
-            // will make fetch wait until it sees a non PAL-mode PC,
-            // at which point it stops fetching instructions.
-            toIEW->commitInfo[0].interruptPending = true;
-        }
+        interrupt = NoFault;
+    } else {
+        DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
     }
 }
+
+template <class Impl>
+void
+DefaultCommit<Impl>::propagateInterrupt()
+{
+    if (commitStatus[0] == TrapPending || interrupt || trapSquash[0] ||
+            tcSquash[0])
+        return;
+
+    // Process interrupts if interrupts are enabled, not in PAL
+    // mode, and no other traps or external squashes are currently
+    // pending.
+    // @todo: Allow other threads to handle interrupts.
+
+    // Get any interrupt that happened
+    interrupt = cpu->getInterrupts();
+
+    // Tell fetch that there is an interrupt pending.  This
+    // will make fetch wait until it sees a non PAL-mode PC,
+    // at which point it stops fetching instructions.
+    if (interrupt != NoFault)
+        toIEW->commitInfo[0].interruptPending = true;
+}
+
 #endif // FULL_SYSTEM
 
 template <class Impl>
@@ -730,12 +743,13 @@ DefaultCommit<Impl>::commit()
 {
 
 #if FULL_SYSTEM
-    // Check for any interrupt, and start processing it.  Or if we
-    // have an outstanding interrupt and are at a point when it is
-    // valid to take an interrupt, process it.
-    if (cpu->checkInterrupts(cpu->tcBase(0))) {
+    // Check for any interrupt that we've already squashed for and start processing it.
+    if (interrupt != NoFault)
         handleInterrupt();
-    }
+
+    // Check if we have a interrupt and get read to handle it
+    if (cpu->checkInterrupts(cpu->tcBase(0)))
+        propagateInterrupt();
 #endif // FULL_SYSTEM
 
     ////////////////////////////////////

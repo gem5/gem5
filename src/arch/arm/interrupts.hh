@@ -102,7 +102,7 @@ class Interrupts : public SimObject
     void
     clear(int int_num, int index)
     {
-        DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
+        DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
 
         if (int_num < 0 || int_num >= NumInterruptTypes)
             panic("int_num out of bounds\n");
@@ -112,7 +112,6 @@ class Interrupts : public SimObject
 
         interrupts[int_num] = false;
         intStatus &= ~(ULL(1) << int_num);
-
     }
 
     void

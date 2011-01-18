@@ -244,6 +244,15 @@ class DefaultFetch
      */
     bool fetchCacheLine(Addr vaddr, Fault &ret_fault, ThreadID tid, Addr pc);
 
+
+    /** Check if an interrupt is pending and that we need to handle
+     */
+    bool
+    checkInterrupt(Addr pc)
+    {
+        return (interruptPending && (THE_ISA != ALPHA_ISA || !(pc & 0x3)));
+    }
+
     /** Squashes a specific thread and resets the PC. */
     inline void doSquash(const TheISA::PCState &newPC, ThreadID tid);
 

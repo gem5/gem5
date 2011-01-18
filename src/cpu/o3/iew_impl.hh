@@ -1255,7 +1255,13 @@ DefaultIEW<Impl>::executeInsts()
             }
 
         } else {
-            inst->execute();
+            // If the instruction has already faulted, then skip executing it.
+            // Such case can happen when it faulted during ITLB translation.
+            // If we execute the instruction (even if it's a nop) the fault
+            // will be replaced and we will lose it.
+            if (inst->getFault() == NoFault) {
+                inst->execute();
+            }
 
             inst->setExecuted();
 
