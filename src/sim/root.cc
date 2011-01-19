@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2011 Advanced Micro Devices
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,17 +28,93 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Gabe Black
  */
 
 #include "base/misc.hh"
-#include "params/Root.hh"
-#include "sim/sim_object.hh"
+#include "sim/core.hh"
+#include "sim/root.hh"
 
-// Dummy Object
-struct Root : public SimObject
+Root *Root::_root = NULL;
+
+/*
+ * This function is called periodically by an event in M5 and ensures that
+ * at least as much real time has passed between invocations as simulated time.
+ * If not, the function either sleeps, or if the difference is small enough
+ * spin waits.
+ */
+void
+Root::timeSync()
 {
-    Root(RootParams *params) : SimObject(params) {}
-};
+    Time cur_time, diff, period = timeSyncPeriod();
+
+    do {
+        cur_time.setTimer();
+        diff = cur_time - lastTime;
+        Time remainder = period - diff;
+        if (diff < period && remainder > _spinThreshold) {
+            DPRINTF(TimeSync, "Sleeping to sync with real time.\n");
+            // Sleep until the end of the period, or until a signal.
+            sleep(remainder);
+            // Refresh the current time.
+            cur_time.setTimer();
+        }
+    } while (diff < period);
+    lastTime = cur_time;
+    schedule(&syncEvent, curTick() + _periodTick);
+}
+
+void
+Root::timeSyncEnable(bool en)
+{
+    if (en == _enabled)
+        return;
+    _enabled = en;
+    if (_enabled) {
+        // Get event going.
+        Tick periods = ((curTick() + _periodTick - 1) / _periodTick);
+        Tick nextPeriod = periods * _periodTick;
+        schedule(&syncEvent, nextPeriod);
+    } else {
+        // Stop event.
+        deschedule(&syncEvent);
+    }
+}
+
+/// Configure the period for time sync events.
+void
+Root::timeSyncPeriod(Time newPeriod)
+{
+    bool en = timeSyncEnabled();
+    _period = newPeriod;
+    _periodTick = _period.nsec() * SimClock::Int::ns +
+                  _period.sec() * SimClock::Int::s;
+    timeSyncEnable(en);
+}
+
+/// Set the threshold for time remaining to spin wait.
+void
+Root::timeSyncSpinThreshold(Time newThreshold)
+{
+    bool en = timeSyncEnabled();
+    _spinThreshold = newThreshold;
+    timeSyncEnable(en);
+}
+
+Root::Root(RootParams *p) : SimObject(p), _enabled(false),
+    _periodTick(p->time_sync_period), syncEvent(this)
+{
+    uint64_t nsecs = p->time_sync_period / SimClock::Int::ns;
+    _period.set(nsecs / Time::NSEC_PER_SEC, nsecs % Time::NSEC_PER_SEC);
+    nsecs = p->time_sync_spin_threshold / SimClock::Int::ns;
+    _spinThreshold.set(nsecs / Time::NSEC_PER_SEC,
+            nsecs % Time::NSEC_PER_SEC);
+
+    assert(_root == NULL);
+    _root = this;
+    lastTime.setTimer();
+    timeSyncEnable(p->time_sync_enable);
+}
 
 Root *
 RootParams::create()

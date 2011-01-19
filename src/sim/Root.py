@@ -57,4 +57,9 @@ class Root(SimObject):
         return 'root'
 
     type = 'Root'
-    dummy = Param.Int(0, "We don't support objects without params")
+
+    # Time syncing prevents the simulation from running faster than real time.
+    time_sync_enable = Param.Bool(False, "whether time syncing is enabled")
+    time_sync_period = Param.Clock("100ms", "how often to sync with real time")
+    time_sync_spin_threshold = \
+            Param.Clock("100us", "when less than this much time is left, spin")

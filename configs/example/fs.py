@@ -65,6 +65,10 @@ config_root = os.path.dirname(config_path)
 
 parser = optparse.OptionParser()
 
+# Simulation options
+parser.add_option("--timesync", action="store_true",
+        help="Prevent simulated time from getting ahead of real time")
+
 # System options
 parser.add_option("--kernel", action="store", type="string")
 parser.add_option("--script", action="store", type="string")
@@ -186,5 +190,8 @@ elif len(bm) == 1:
 else:
     print "Error I don't know how to create more than 2 systems."
     sys.exit(1)
+
+if options.timesync:
+    root.time_sync_enable = True
 
 Simulation.run(options, root, test_sys, FutureClass)
