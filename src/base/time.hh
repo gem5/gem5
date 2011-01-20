@@ -42,6 +42,8 @@
 #include <iosfwd>
 #include <string>
 
+#include "base/types.hh"
+
 class Time
 {
   protected:
@@ -98,6 +100,18 @@ class Time
      * Set the current time
      */
     void set(time_t _sec, long _nsec) { sec(_sec); nsec(_nsec); }
+
+    /**
+     * Set the current time from a value measured in Ticks
+     * @param ticks Number of ticks to convert into a time.
+     */
+    void setTick(Tick ticks);
+
+    /**
+     * Get the current time from a value measured in Ticks
+     * @return Time value measured in Ticks.
+     */
+    Tick getTick() const;
 
     const Time &
     operator=(const Time &other)

@@ -33,6 +33,7 @@
 
 #include "base/time.hh"
 #include "config/use_posix_clock.hh"
+#include "sim/core.hh"
 
 using namespace std;
 
@@ -46,6 +47,19 @@ Time::_set(bool monotonic)
     ::gettimeofday(&tv, NULL);
     operator=(tv);
 #endif
+}
+
+void
+Time::setTick(Tick ticks)
+{
+    uint64_t nsecs = ticks / SimClock::Int::ns;
+    set(nsecs / NSEC_PER_SEC, nsecs % NSEC_PER_SEC);
+}
+
+Tick
+Time::getTick() const
+{
+    return (nsec() + sec() * NSEC_PER_SEC) * SimClock::Int::ns;
 }
 
 string
