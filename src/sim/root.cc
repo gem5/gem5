@@ -32,7 +32,6 @@
  */
 
 #include "base/misc.hh"
-#include "sim/core.hh"
 #include "sim/root.hh"
 
 Root *Root::_root = NULL;
@@ -87,8 +86,7 @@ Root::timeSyncPeriod(Time newPeriod)
 {
     bool en = timeSyncEnabled();
     _period = newPeriod;
-    _periodTick = _period.nsec() * SimClock::Int::ns +
-                  _period.sec() * SimClock::Int::s;
+    _periodTick = _period.getTick();
     timeSyncEnable(en);
 }
 
@@ -104,11 +102,8 @@ Root::timeSyncSpinThreshold(Time newThreshold)
 Root::Root(RootParams *p) : SimObject(p), _enabled(false),
     _periodTick(p->time_sync_period), syncEvent(this)
 {
-    uint64_t nsecs = p->time_sync_period / SimClock::Int::ns;
-    _period.set(nsecs / Time::NSEC_PER_SEC, nsecs % Time::NSEC_PER_SEC);
-    nsecs = p->time_sync_spin_threshold / SimClock::Int::ns;
-    _spinThreshold.set(nsecs / Time::NSEC_PER_SEC,
-            nsecs % Time::NSEC_PER_SEC);
+    _period.setTick(p->time_sync_period);
+    _spinThreshold.setTick(p->time_sync_spin_threshold);
 
     assert(_root == NULL);
     _root = this;
