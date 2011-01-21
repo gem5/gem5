@@ -400,7 +400,7 @@ void
 Globals::serialize(ostream &os)
 {
     nameOut(os);
-    SERIALIZE_SCALAR(curTick());
+    paramOut(os, "curTick", curTick());
 
     nameOut(os, "MainEventQueue");
     mainEventQueue.serialize(os);
