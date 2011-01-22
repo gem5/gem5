@@ -704,8 +704,11 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'C++','zlibVersion();'):
     Exit(1)
 
 # Check for librt.
-have_posix_clock = conf.CheckLib(None, 'clock_nanosleep', 'time.h') or \
-    conf.CheckLib('rt', 'clock_nanosleep', 'time.h')
+have_posix_clock = \
+    conf.CheckLibWithHeader(None, 'time.h', 'C',
+                            'clock_nanosleep(0,0,NULL,NULL);') or \
+    conf.CheckLibWithHeader('rt', 'time.h', 'C',
+                            'clock_nanosleep(0,0,NULL,NULL);')
 
 if not have_posix_clock:
     print "Can't find library for POSIX clocks."
