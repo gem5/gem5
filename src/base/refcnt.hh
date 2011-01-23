@@ -34,7 +34,7 @@
 class RefCounted
 {
   private:
-    int count;
+    mutable int count;
 
   private:
     // Don't allow a default copy constructor or copy operator on
@@ -84,13 +84,9 @@ class RefCountingPtr
     RefCountingPtr(const RefCountingPtr &r) { copy(r.data); }
     ~RefCountingPtr() { del(); }
 
-    T *operator->() { return data; }
-    T &operator*() { return *data; }
-    T *get() { return data; }
-
-    const T *operator->() const { return data; }
-    const T &operator*() const { return *data; }
-    const T *get() const { return data; }
+    T *operator->() const { return data; }
+    T &operator*() const { return *data; }
+    T *get() const { return data; }
 
     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
     const RefCountingPtr &operator=(const RefCountingPtr &r)
