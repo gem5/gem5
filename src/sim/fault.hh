@@ -35,4 +35,6 @@ class FaultBase;
 template <class T> class RefCountingPtr;
 typedef RefCountingPtr<FaultBase> Fault;
 
+FaultBase * const NoFault = 0;
+
 #endif // __SIM_FAULT_HH__

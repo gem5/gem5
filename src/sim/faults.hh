@@ -61,8 +61,6 @@ class FaultBase : public RefCounted
     virtual bool isAlignmentFault() const {return false;}
 };
 
-FaultBase * const NoFault = 0;
-
 class UnimpFault : public FaultBase
 {
   private:
