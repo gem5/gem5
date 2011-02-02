@@ -43,8 +43,14 @@ def config_cache(options, system):
 
     for i in xrange(options.num_cpus):
         if options.caches:
-            system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                  L1Cache(size = '64kB'))
+            if buildEnv['TARGET_ISA'] == 'x86':
+                system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
+                                                      L1Cache(size = '64kB'),
+                                                      PageTableWalkerCache(),
+                                                      PageTableWalkerCache())
+            else:
+                system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
+                                                      L1Cache(size = '64kB'))
         if options.l2cache:
             system.cpu[i].connectMemPorts(system.tol2bus)
         else:

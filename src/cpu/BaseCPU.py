@@ -166,7 +166,7 @@ class BaseCPU(MemObject):
             if p != 'physmem_port':
                 exec('self.%s = bus.port' % p)
 
-    def addPrivateSplitL1Caches(self, ic, dc):
+    def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
         assert(len(self._mem_ports) < 8)
         self.icache = ic
         self.dcache = dc
@@ -174,13 +174,19 @@ class BaseCPU(MemObject):
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
         if buildEnv['FULL_SYSTEM']:
-            if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
-                self._mem_ports += ["itb.walker.port", "dtb.walker.port"]
             if buildEnv['TARGET_ISA'] == 'x86':
+                self.itb_walker_cache = iwc
+                self.dtb_walker_cache = dwc
+                self.itb.walker.port = iwc.cpu_side
+                self.dtb.walker.port = dwc.cpu_side
+                self._mem_ports += ["itb_walker_cache.mem_side", \
+                                    "dtb_walker_cache.mem_side"]
                 self._mem_ports += ["interrupts.pio", "interrupts.int_port"]
+            elif buildEnv['TARGET_ISA'] == 'arm':
+                self._mem_ports += ["itb.walker.port", "dtb.walker.port"]
 
-    def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
-        self.addPrivateSplitL1Caches(ic, dc)
+    def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
+        self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
         self.toL2Bus = Bus()
         self.connectMemPorts(self.toL2Bus)
         self.l2cache = l2c
