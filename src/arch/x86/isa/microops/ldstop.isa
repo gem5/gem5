@@ -390,9 +390,6 @@ let {{
     defineMicroStoreOp('Stul', 'Mem = pick(Data, 2, dataSize);',
             mem_flags="Request::LOCKED")
     defineMicroStoreOp('Stfp', 'Mem = FpData.uqw;')
-    defineMicroStoreOp('Stupd', 'Mem = pick(Data, 2, dataSize);',
-            'Base = merge(Base, EA - SegBase, addressSize);',
-            'Base = merge(Base, pkt->req->getVaddr() - SegBase, addressSize);');
     defineMicroStoreOp('Cda', 'Mem = 0;', mem_flags="Request::NO_ACCESS")
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
