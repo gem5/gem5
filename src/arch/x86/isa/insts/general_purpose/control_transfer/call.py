@@ -44,7 +44,8 @@ def macroop CALL_NEAR_I
     limm t1, imm
     rdip t7
     # Check target of call
-    stupd t7, ss, [0, t0, rsp], "-env.dataSize"
+    st t7, ss, [0, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, ssz
     wrip t7, t1
 };
 
@@ -55,7 +56,8 @@ def macroop CALL_NEAR_R
 
     rdip t1
     # Check target of call
-    stupd t1, ss, [0, t0, rsp], "-env.dataSize"
+    st t1, ss, [0, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, ssz
     wripi reg, 0
 };
 
@@ -67,7 +69,8 @@ def macroop CALL_NEAR_M
     rdip t7
     ld t1, seg, sib, disp
     # Check target of call
-    stupd t7, ss, [0, t0, rsp], "-env.dataSize"
+    st t7, ss, [0, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, ssz
     wripi t1, 0
 };
 
@@ -79,7 +82,8 @@ def macroop CALL_NEAR_P
     rdip t7
     ld t1, seg, riprel, disp
     # Check target of call
-    stupd t7, ss, [0, t0, rsp], "-env.dataSize"
+    st t7, ss, [0, t0, rsp], "-env.dataSize"
+    subi rsp, rsp, ssz
     wripi t1, 0
 };
 '''

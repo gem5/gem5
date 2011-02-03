@@ -40,7 +40,8 @@ def macroop PUSHF {
     .adjust_env oszIn64Override
 
     rflags t1
-    stupd t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    st t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    subi rsp, rsp, ssz
 };
 
 def macroop POPF {
