@@ -27,6 +27,7 @@
 # Authors: Ali Saidi
 
 from SysPaths import *
+from m5.defines import buildEnv
 
 class SysConfig:
     def __init__(self, script=None, mem=None, disk=None):
@@ -49,8 +50,14 @@ class SysConfig:
     def disk(self):
         if self.diskname:
             return disk(self.diskname)
-        else:
+        elif buildEnv['TARGET_ISA'] == 'alpha':
             return env.get('LINUX_IMAGE', disk('linux-latest.img'))
+        elif buildEnv['TARGET_ISA'] == 'x86':
+            return env.get('LINUX_IMAGE', disk('x86root.img'))
+        else:
+            print "Don't know what default disk image to use for ISA %s" % \
+                buildEnv['TARGET_ISA']
+            sys.exit(1)
 
 # Benchmarks are defined as a key in a dict which is a list of SysConfigs
 # The first defined machine is the test system, the others are driving systems
