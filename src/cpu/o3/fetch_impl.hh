@@ -1186,11 +1186,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     // Increment stat of fetched instructions.
                     ++fetchedInsts;
 
-                    if (staticInst->isMacroop())
-                    {
+                    if (staticInst->isMacroop()) {
                         curMacroop = staticInst;
-                    }
-                    else {
+                    } else {
                         pcOffset = 0;
                     }
                 } else {
