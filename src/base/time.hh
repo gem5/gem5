@@ -40,9 +40,12 @@
 #include <cstring>
 #include <ctime>
 #include <iosfwd>
+#include <iostream>
 #include <string>
 
 #include "base/types.hh"
+
+class Checkpoint;
 
 class Time
 {
@@ -195,6 +198,10 @@ class Time
 
     std::string date(const std::string &format = "") const;
     std::string time() const;
+
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base, Checkpoint *cp,
+                     const std::string &section);
 };
 
 void sleep(const Time &time);

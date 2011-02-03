@@ -34,6 +34,7 @@
 #include "base/time.hh"
 #include "config/use_posix_clock.hh"
 #include "sim/core.hh"
+#include "sim/serialize.hh"
 
 using namespace std;
 
@@ -111,6 +112,25 @@ Time::time() const
     str << secs;
 
     return str.str();
+}
+
+void
+Time::serialize(const std::string &base, ostream &os)
+{
+    paramOut(os, base + ".sec", sec());
+    paramOut(os, base + ".nsec", nsec());
+}
+
+void
+Time::unserialize(const std::string &base, Checkpoint *cp,
+                  const string &section)
+{
+    time_t secs;
+    time_t nsecs;
+    paramIn(cp, section, base + ".sec", secs);
+    paramIn(cp, section, base + ".nsec", nsecs);
+    sec(secs);
+    nsec(nsecs);
 }
 
 void
