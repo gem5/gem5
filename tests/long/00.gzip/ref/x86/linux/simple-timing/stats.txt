@@ -1,11 +1,11 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1292356                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 195556                       # Number of bytes of host memory used
-host_seconds                                  1253.03                       # Real time elapsed on the host
-host_tick_rate                             1439113315                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1099985                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 227480                       # Number of bytes of host memory used
+host_seconds                                  1474.11                       # Real time elapsed on the host
+host_tick_rate                             1223290364                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                  1619366787                       # Number of instructions simulated
+sim_insts                                  1621493983                       # Number of instructions simulated
 sim_seconds                                  1.803259                       # Number of seconds simulated
 sim_ticks                                1803258587000                       # Number of ticks simulated
 system.cpu.dcache.ReadReq_accesses          419042125                       # number of ReadReq accesses(hits+misses)
@@ -200,7 +200,7 @@ system.cpu.l2cache.warmup_cycle                     0                       # Cy
 system.cpu.l2cache.writebacks                   58007                       # number of writebacks
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.numCycles                       3606517174                       # number of cpu cycles simulated
-system.cpu.num_insts                       1619366787                       # Number of instructions executed
+system.cpu.num_insts                       1621493983                       # Number of instructions executed
 system.cpu.num_refs                         607228182                       # Number of memory references
 system.cpu.workload.PROG:num_syscalls              48                       # Number of system calls
 
