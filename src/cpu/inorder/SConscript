@@ -75,6 +75,7 @@ if 'InOrderCPU' in env['CPU_MODELS']:
         Source('resources/bpred_unit.cc')
         Source('resources/branch_predictor.cc')
         Source('resources/cache_unit.cc')
+        Source('resources/fetch_unit.cc')	
         Source('resources/use_def.cc')
         Source('resources/decode_unit.cc')
         Source('resources/inst_buffer.cc')

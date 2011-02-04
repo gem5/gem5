@@ -70,10 +70,10 @@ void createFrontEndSchedule(DynInstPtr &inst)
 
     // FETCH
     F->needs(FetchSeq, FetchSeqUnit::AssignNextPC);
-    F->needs(ICache, CacheUnit::InitiateFetch);
+    F->needs(ICache, FetchUnit::InitiateFetch);
 
     // DECODE
-    D->needs(ICache, CacheUnit::CompleteFetch);
+    D->needs(ICache, FetchUnit::CompleteFetch);
     D->needs(Decode, DecodeUnit::DecodeInst);
     D->needs(BPred, BranchPredictor::PredictBranch);
     D->needs(FetchSeq, FetchSeqUnit::UpdateTargetPC);

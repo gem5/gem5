@@ -335,14 +335,6 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                 inst->readTid(), inst->seqNum, inst->getMemAddr());
         break;
 
-      case InitiateFetch:
-        pkt_cmd = MemCmd::ReadReq;
-
-        DPRINTF(InOrderCachePort,
-                "[tid:%i]: Fetch request from [sn:%i] for addr %08p\n",
-                inst->readTid(), inst->seqNum, inst->getMemAddr());
-        break;
-
       default:
         panic("%i: Unexpected request type (%i) to %s", curTick(),
               sched_entry->cmd, name());
@@ -672,38 +664,13 @@ CacheUnit::execute(int slot_num)
     DynInstPtr inst = cache_req->inst;
 #if TRACING_ON
     ThreadID tid = inst->readTid();
-    int seq_num = inst->seqNum;
     std::string acc_type = "write";
-    
 #endif
 
     cache_req->fault = NoFault;
 
     switch (cache_req->cmd)
     {
-      case InitiateFetch:
-        {
-            //@TODO: Switch to size of full cache block. Store in fetch buffer
-            int acc_size =  sizeof(TheISA::MachInst);
-
-            doTLBAccess(inst, cache_req, acc_size, 0, TheISA::TLB::Execute);
-
-            // Only Do Access if no fault from TLB
-            if (cache_req->fault == NoFault) {
-
-                DPRINTF(InOrderCachePort,
-                    "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
-                    tid, name(), cache_req->inst->getMemAddr());
-
-                cache_req->reqData = new uint8_t[acc_size];
-
-                inst->setCurResSlot(slot_num);
-
-                doCacheAccess(inst);
-            }
-
-            break;
-        }
 
       case InitiateReadData:
 #if TRACING_ON
@@ -747,39 +714,6 @@ CacheUnit::execute(int slot_num)
         assert(inst->split2ndAddr != 0);
         write(inst, &inst->split2ndData, inst->totalSize,
               inst->split2ndAddr, inst->split2ndFlags, NULL);
-        break;
-
-
-      case CompleteFetch:
-        if (cache_req->isMemAccComplete()) {
-            DPRINTF(InOrderCachePort,
-                    "[tid:%i]: Completing Fetch Access for [sn:%i]\n",
-                    tid, inst->seqNum);
-
-
-            DPRINTF(InOrderCachePort, "[tid:%i]: Instruction [sn:%i] is: %s\n",
-                    tid, seq_num,
-                    inst->staticInst->disassemble(inst->instAddr()));
-
-            removeAddrDependency(inst);
-            
-            delete cache_req->dataPkt;
-            
-            // Do not stall and switch threads for fetch... for now..
-            // TODO: We need to detect cache misses for latencies > 1
-            // cache_req->setMemStall(false);            
-            
-            cache_req->done();
-        } else {
-            DPRINTF(InOrderCachePort,
-                     "[tid:%i]: [sn:%i]: Unable to Complete Fetch Access\n",
-                    tid, inst->seqNum);
-            DPRINTF(InOrderStall,
-                    "STALL: [tid:%i]: Fetch miss from %08p\n",
-                    tid, cache_req->inst->instAddr());
-            cache_req->setCompleted(false);
-            //cache_req->setMemStall(true);            
-        }
         break;
 
       case CompleteReadData:
@@ -999,40 +933,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     ThreadID tid = cache_req->inst->readTid();
 
     if (!cache_req->isSquashed()) {
-        if (inst->resSched.top()->cmd == CompleteFetch) {
-            DPRINTF(InOrderCachePort,
-                    "[tid:%u]: [sn:%i]: Processing fetch access\n",
-                    tid, inst->seqNum);
-
-            // NOTE: This is only allowing a thread to fetch one line
-            //       at a time. Re-examine when/if prefetching
-            //       gets implemented.
-            //memcpy(fetchData[tid], cache_pkt->getPtr<uint8_t>(),
-            //     cache_pkt->getSize());
-
-            // Get the instruction from the array of the cache line.
-            // @todo: update thsi
-            ExtMachInst ext_inst;
-            StaticInstPtr staticInst = NULL;
-            TheISA::PCState instPC = inst->pcState();
-            MachInst mach_inst = 
-                TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
-                             (cache_pkt->getPtr<uint8_t>()));
-
-            predecoder.setTC(cpu->thread[tid]->getTC());
-            predecoder.moreBytes(instPC, inst->instAddr(), mach_inst);
-            ext_inst = predecoder.getExtMachInst(instPC);
-            inst->pcState(instPC);
-
-            inst->setMachInst(ext_inst);
-
-            // Set Up More TraceData info
-            if (inst->traceData) {
-                inst->traceData->setStaticInst(inst->staticInst);
-                inst->traceData->setPC(instPC);
-            }
-
-        } else if (inst->staticInst && inst->isMemRef()) {
+        if (inst->staticInst && inst->isMemRef()) {
             DPRINTF(InOrderCachePort,
                     "[tid:%u]: [sn:%i]: Processing cache access\n",
                     tid, inst->seqNum);

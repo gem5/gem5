@@ -64,15 +64,10 @@ class CacheUnit : public Resource
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
 
     enum Command {
-        InitiateFetch,
-        CompleteFetch,
         InitiateReadData,
         CompleteReadData,
         InitiateWriteData,
         CompleteWriteData,
-        Fetch,
-        ReadData,
-        WriteData,
         InitSecondSplitRead,
         InitSecondSplitWrite,
         CompleteSecondSplitRead,
@@ -125,38 +120,31 @@ class CacheUnit : public Resource
     void init();
 
     ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
-                                        int res_idx, int slot_num,
-                                        unsigned cmd);
+                                int res_idx, int slot_num,
+                                unsigned cmd);
 
     ResReqPtr findRequest(DynInstPtr inst);
     ResReqPtr findSplitRequest(DynInstPtr inst, int idx);
 
     void requestAgain(DynInstPtr inst, bool &try_request);
 
-    int getSlot(DynInstPtr inst);
+    virtual int getSlot(DynInstPtr inst);
 
-    /** Execute the function of this resource. The Default is action
-     *  is to do nothing. More specific models will derive from this
-     *  class and define their own execute function.
-     */
-    void execute(int slot_num);
+    /** Executes one of the commands from the "Command" enum */
+    virtual void execute(int slot_num);
 
-    void squash(DynInstPtr inst, int stage_num,
+    virtual void squash(DynInstPtr inst, int stage_num,
                 InstSeqNum squash_seq_num, ThreadID tid);
 
     void squashDueToMemStall(DynInstPtr inst, int stage_num,
                              InstSeqNum squash_seq_num, ThreadID tid);
 
-    /** Processes cache completion event. */
-    void processCacheCompletion(PacketPtr pkt);
+    /** After memory request is completedd in the cache, then do final
+        processing to complete the request in the CPU.
+    */
+   virtual void processCacheCompletion(PacketPtr pkt);
 
     void recvRetry();
-
-    /** Align a PC to the start of an I-cache block. */
-    Addr cacheBlockAlignPC(Addr addr)
-    {
-        return (addr & ~(cacheBlkMask));
-    }
 
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);
@@ -201,15 +189,6 @@ class CacheUnit : public Resource
     {
         return (addr & ~(cacheBlkMask));
     }
-
-    /** The mem line being fetched. */
-    uint8_t *fetchData[ThePipeline::MaxThreads];
-
-    /** @TODO: Move functionaly of fetching more than
-        one instruction to 'fetch unit'*/
-    /** The Addr of the cacheline that has been loaded. */
-    //Addr cacheBlockAddr[ThePipeline::MaxThreads];
-    //unsigned fetchOffset[ThePipeline::MaxThreads];
 
     TheISA::Predecoder predecoder;
 

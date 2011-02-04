@@ -33,6 +33,7 @@
 #define CPU_INORDER_RESOURCE_LIST_HH
 
 #include "cpu/inorder/resources/cache_unit.hh"
+#include "cpu/inorder/resources/fetch_unit.hh"
 #include "cpu/inorder/resources/execution_unit.hh"
 #include "cpu/inorder/resources/use_def.hh"
 #include "cpu/inorder/resources/inst_buffer.hh"

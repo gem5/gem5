@@ -54,7 +54,7 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
                                          stage_width * 2, 0, _cpu, params));
 
     memObjects.push_back(ICache);
-    resources.push_back(new CacheUnit("icache_port", ICache, 
+    resources.push_back(new FetchUnit("icache_port", ICache,
                                       stage_width * MaxThreads, 0, _cpu,
                                       params));
 
