@@ -84,14 +84,20 @@ BranchPredictor::execute(int slot_num)
                 DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, "
                         "skipping prediction \n", tid, inst->seqNum);
             } else {
-                TheISA::PCState predPC = inst->pcState();
-                TheISA::advancePC(predPC, inst->staticInst);
+                TheISA::PCState pred_PC = inst->pcState();
+                TheISA::advancePC(pred_PC, inst->staticInst);
+#if ISA_HAS_DELAY_SLOT
+                // By default set target to NNPC (e.g. PC + 8)
+                // so that a not-taken branch will update
+                // correctly
+                pred_PC.advance();
+#endif
 
                 if (inst->isControl()) {
                     // If not, the pred_PC be updated to pc+8
                     // If predicted, the pred_PC will be updated to new target
                     // value
-                    bool predict_taken = branchPred.predict(inst, predPC, tid);
+                    bool predict_taken = branchPred.predict(inst, pred_PC, tid);
 
                     if (predict_taken) {
                         DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch "
@@ -103,19 +109,12 @@ BranchPredictor::execute(int slot_num)
                         predictedNotTaken++;
                     }
 
-                    inst->setPredTarg(predPC);
-
                     inst->setBranchPred(predict_taken);
-
-                    DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Predicted PC is "
-                            "%s.\n", tid, seq_num, predPC);
-
-                } else {
-                    inst->setPredTarg(predPC);
-                    //DPRINTF(InOrderBPred, "[tid:%i]: Ignoring [sn:%i] "
-                    //      "because this isn't "
-                    //      "a control instruction.\n", tid, seq_num);
                 }
+
+                inst->setPredTarg(pred_PC);
+                DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Predicted PC is "
+                        "%s.\n", tid, seq_num, pred_PC);
             }
 
             bpred_req->done();

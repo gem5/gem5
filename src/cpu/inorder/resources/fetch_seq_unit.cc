@@ -68,8 +68,6 @@ FetchSeqUnit::init()
 void
 FetchSeqUnit::execute(int slot_num)
 {
-    // After this is working, change this to a reinterpret cast
-    // for performance considerations
     ResourceRequest* fs_req = reqMap[slot_num];
     DynInstPtr inst = fs_req->inst;
     ThreadID tid = inst->readTid();
@@ -77,6 +75,9 @@ FetchSeqUnit::execute(int slot_num)
     int seq_num = inst->seqNum;
 
     fs_req->fault = NoFault;
+
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Current PC is %s\n", tid,
+            pc[tid]);
 
     switch (fs_req->cmd)
     {
@@ -86,14 +87,13 @@ FetchSeqUnit::execute(int slot_num)
                 inst->pcState(pc[tid]);
                 inst->setMemAddr(pc[tid].instAddr());
 
-                pc[tid].advance(); //XXX HACK!
-                inst->setPredTarg(pc[tid]);
+                // Advance to next PC (typically PC + 4)
+                pc[tid].advance();
 
                 inst->setSeqNum(cpu->getAndIncrementInstSeq(tid));
 
                 DPRINTF(InOrderFetchSeq, "[tid:%i]: Assigning [sn:%i] to "
-                        "PC %s\n", tid, inst->seqNum,
-                        inst->pcState());
+                        "PC %s\n", tid, inst->seqNum, inst->pcState());
 
                 fs_req->done();
             } else {

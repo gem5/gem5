@@ -273,8 +273,6 @@ BPredUnit::predict(DynInstPtr &inst, TheISA::PCState &predPC, ThreadID tid)
             "...predHist.size(): %i\n",
             tid, inst->seqNum, predHist[tid].size());
 
-    inst->setBranchPred(pred_taken);
-
     return pred_taken;
 }
 
