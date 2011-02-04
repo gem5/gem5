@@ -284,7 +284,7 @@ class PipelineStage
     std::list<DynInstPtr> instsToNextStage;
 
     /** Skid buffer between previous stage and this one. */
-    std::queue<DynInstPtr> skidBuffer[ThePipeline::MaxThreads];
+    std::list<DynInstPtr> skidBuffer[ThePipeline::MaxThreads];
 
     /** Instruction used to signify that there is no *real* instruction in
      *  buffer slot */

@@ -194,8 +194,7 @@ PipelineStage::takeOverFrom()
         while (!insts[tid].empty())
             insts[tid].pop();
 
-        while (!skidBuffer[tid].empty())
-            skidBuffer[tid].pop();
+        skidBuffer[tid].clear();
     }
     wroteToTimeBuffer = false;
 }
@@ -425,7 +424,7 @@ PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
         DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
                 " PC %s.\n", tid, skidBuffer[tid].front()->seqNum,
                 skidBuffer[tid].front()->pc);
-        skidBuffer[tid].pop();
+        skidBuffer[tid].pop_front();
     }
 
 }
@@ -486,7 +485,7 @@ PipelineStage::skidInsert(ThreadID tid)
                 "skidBuffer %i\n", tid, inst->seqNum, inst->pcState(),
                 inst->threadNumber);
 
-        skidBuffer[tid].push(inst);
+        skidBuffer[tid].push_back(inst);
     }
 }
 
@@ -570,7 +569,7 @@ PipelineStage::activateThread(ThreadID tid)
                     inst->pcState(), inst->threadNumber);
 
             // Make instruction available for pipeline processing
-            skidBuffer[tid].push(inst);            
+            skidBuffer[tid].push_back(inst);
 
             // Update PC so that we start fetching after this instruction to
             // prevent "double"-execution of instructions
@@ -626,7 +625,7 @@ PipelineStage::sortInsts()
 
             DynInstPtr inst = prevStage->insts[i];
 
-            skidBuffer[tid].push(prevStage->insts[i]);
+            skidBuffer[tid].push_back(prevStage->insts[i]);
 
             prevStage->insts[i] = cpu->dummyBufferInst;
 
@@ -881,7 +880,7 @@ PipelineStage::processInsts(ThreadID tid)
     // instructions coming from fetch, depending on stage's status.
     int insts_available = skidBuffer[tid].size();
 
-    std::queue<DynInstPtr> &insts_to_stage = skidBuffer[tid];
+    std::list<DynInstPtr> &insts_to_stage = skidBuffer[tid];
 
     if (insts_available == 0) {
         DPRINTF(InOrderStage, "[tid:%u]: Nothing to do, breaking out"
@@ -908,7 +907,7 @@ PipelineStage::processInsts(ThreadID tid)
                     "squashed, skipping.\n",
                     tid, inst->seqNum, inst->pcState());
 
-            insts_to_stage.pop();
+            insts_to_stage.pop_front();
 
             --insts_available;
 
@@ -936,7 +935,7 @@ PipelineStage::processInsts(ThreadID tid)
             break;
         }
 
-        insts_to_stage.pop();
+        insts_to_stage.pop_front();
 
         --insts_available;
     }
@@ -1134,15 +1133,16 @@ PipelineStage::dumpInsts()
     cprintf("Insts in Stage %i skidbuffers\n",stageNum);
 
     for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
-        std::queue<DynInstPtr> copy_buff(skidBuffer[tid]);
+        std::list<DynInstPtr>::iterator cur_it =  skidBuffer[tid].begin();
+        std::list<DynInstPtr>::iterator end_it =  skidBuffer[tid].end();
 
-        while (!copy_buff.empty()) {
-            DynInstPtr inst = copy_buff.front();
+        while (cur_it != end_it) {
+            DynInstPtr inst = (*cur_it);
 
             cprintf("Inst. PC:%s\n[tid:%i]\n[sn:%i]\n\n",
                     inst->pcState(), inst->threadNumber, inst->seqNum);
 
-            copy_buff.pop();
+            cur_it++;
         }
     }
 
