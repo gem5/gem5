@@ -202,16 +202,17 @@ CacheUnit::setAddrDependency(DynInstPtr inst)
     addrMap[tid][req_addr] = inst->seqNum;
 
     DPRINTF(AddrDep,
-            "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
-            inst->readTid(), inst->seqNum, req_addr);
+            "[tid:%i]: [sn:%i]: Address %08p added to dependency list (size=%i)\n",
+            inst->readTid(), inst->seqNum, req_addr, addrList[tid].size());
 
-    //@NOTE: 10 is an arbitrarily "high" number here, but to be exact
+    //@NOTE: 10 is an arbitrarily "high" number, but to be exact
     //       we would need to know the # of outstanding accesses
     //       a priori. Information like fetch width, stage width,
-    //       and the branch resolution stage would be useful for the
-    //       icache_port (among other things). For the dcache, the #
-    //       of outstanding cache accesses might be sufficient.
-    assert(addrList[tid].size() < 10);    
+    //       fetch buffer, and the branch resolution stage would be
+    //       useful for the icache_port. For the dcache port, the #
+    //       of outstanding cache accesses (mshrs) would be a good
+    //       sanity check here.
+    //assert(addrList[tid].size() < 10);
 }
 
 void
@@ -658,13 +659,15 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
 void
 CacheUnit::execute(int slot_num)
 {
+    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqMap[slot_num]);
+    assert(cache_req);
+
     if (cachePortBlocked) {
         DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
+        cache_req->setCompleted(false);
         return;
     }
 
-    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqMap[slot_num]);
-    assert(cache_req);
 
     DynInstPtr inst = cache_req->inst;
 #if TRACING_ON
