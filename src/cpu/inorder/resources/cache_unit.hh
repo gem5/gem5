@@ -124,7 +124,7 @@ class CacheUnit : public Resource
                                 unsigned cmd);
 
     ResReqPtr findRequest(DynInstPtr inst);
-    ResReqPtr findSplitRequest(DynInstPtr inst, int idx);
+    ResReqPtr findRequest(DynInstPtr inst, int idx);
 
     void requestAgain(DynInstPtr inst, bool &try_request);
 

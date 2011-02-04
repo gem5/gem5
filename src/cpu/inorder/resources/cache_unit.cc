@@ -267,7 +267,7 @@ CacheUnit::findRequest(DynInstPtr inst)
 }
 
 ResReqPtr
-CacheUnit::findSplitRequest(DynInstPtr inst, int idx)
+CacheUnit::findRequest(DynInstPtr inst, int idx)
 {
     map<int, ResReqPtr>::iterator map_it = reqMap.begin();
     map<int, ResReqPtr>::iterator map_end = reqMap.end();
@@ -915,7 +915,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 
     // Cast to correct request type
     CacheRequest *cache_req = dynamic_cast<CacheReqPtr>(
-        findSplitRequest(cache_pkt->cacheReq->getInst(), cache_pkt->instIdx));
+        findRequest(cache_pkt->cacheReq->getInst(), cache_pkt->instIdx));
 
     if (!cache_req) {
         panic("[tid:%u]: [sn:%i]: Can't find slot for cache access to "
