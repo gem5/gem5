@@ -405,7 +405,7 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
     }
 }
 
-Fault
+void
 CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                        int flags, TheISA::TLB::Mode tlb_mode)
 {
@@ -416,13 +416,13 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
 
     setupMemRequest(inst, cache_req, acc_size, flags);
 
-    cache_req->fault =
+    inst->fault =
         _tlb->translateAtomic(cache_req->memReq,
                               cpu->thread[tid]->getTC(), tlb_mode);
 
-    if (cache_req->fault != NoFault) {
+    if (inst->fault != NoFault) {
         DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
-                "addr:%08p for [sn:%i].\n", tid, cache_req->fault->name(),
+                "addr:%08p for [sn:%i].\n", tid, inst->fault->name(),
                 cache_req->memReq->getVaddr(), inst->seqNum);
 
         cpu->pipelineStage[stage_num]->setResStall(cache_req, tid);
@@ -433,7 +433,7 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
 
         scheduleEvent(slot_idx, 1);
 
-        cpu->trap(cache_req->fault, tid, inst);
+        cpu->trap(inst->fault, tid, inst);
     } else {
         DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
                 "to phys. addr:%08p.\n", tid, inst->seqNum,
@@ -441,7 +441,6 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                 cache_req->memReq->getPaddr());
     }
 
-    return cache_req->fault;
 }
 
 Fault
@@ -531,7 +530,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
     
     doTLBAccess(inst, cache_req, size, flags, TheISA::TLB::Read);
 
-    if (cache_req->fault == NoFault) {
+    if (inst->fault == NoFault) {
         if (!cache_req->splitAccess) {            
             cache_req->reqData = new uint8_t[size];
             doCacheAccess(inst, NULL);
@@ -546,7 +545,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
         }        
     }
 
-    return cache_req->fault;
+    return inst->fault;
 }
 
 Fault
@@ -638,7 +637,7 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
         
     doTLBAccess(inst, cache_req, size, flags, TheISA::TLB::Write);
 
-    if (cache_req->fault == NoFault) {
+    if (inst->fault == NoFault) {
         if (!cache_req->splitAccess) {            
             // Remove this line since storeData is saved in INST?
             cache_req->reqData = new uint8_t[size];
@@ -649,7 +648,7 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
         
     }
     
-    return cache_req->fault;
+    return inst->fault;
 }
 
 
@@ -672,7 +671,7 @@ CacheUnit::execute(int slot_num)
     std::string acc_type = "write";
 #endif
 
-    cache_req->fault = NoFault;
+    inst->fault = NoFault;
 
     switch (cache_req->cmd)
     {
@@ -785,7 +784,7 @@ CacheUnit::execute(int slot_num)
 }
 
 // @TODO: Split into doCacheRead() and doCacheWrite()
-Fault
+void
 CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
                          CacheReqPtr split_req)
 {
@@ -883,7 +882,6 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
         cache_req->setCompleted(false);
     }
 
-    return fault;
 }
 
 void

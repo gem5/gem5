@@ -67,8 +67,6 @@ InstBuffer::execute(int slot_idx)
     ThreadID tid = inst->readTid();
     int stage_num = ib_req->getStageNum();
 
-    ib_req->fault = NoFault;
-
     switch (ib_req->cmd)
     {
       case ScheduleOrBypass:

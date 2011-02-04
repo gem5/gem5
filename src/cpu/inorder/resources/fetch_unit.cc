@@ -227,7 +227,8 @@ FetchUnit::execute(int slot_num)
     ThreadID tid = inst->readTid();
     Addr block_addr = cacheBlockAlign(inst->getMemAddr());
     int asid = cpu->asid[tid];
-    cache_req->fault = NoFault;
+
+    inst->fault = NoFault;
 
     switch (cache_req->cmd)
     {
@@ -275,7 +276,7 @@ FetchUnit::execute(int slot_num)
 
             doTLBAccess(inst, cache_req, cacheBlkSize, 0, TheISA::TLB::Execute);
 
-            if (cache_req->fault == NoFault) {
+            if (inst->fault == NoFault) {
                 DPRINTF(InOrderCachePort,
                         "[tid:%u]: Initiating fetch access to %s for "
                         "addr:%#x (block:%#x)\n", tid, name(),

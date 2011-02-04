@@ -84,14 +84,11 @@ ExecutionUnit::execute(int slot_num)
 {
     ResourceRequest* exec_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
-    Fault fault = reqMap[slot_num]->fault;
-    ThreadID tid = inst->readTid();
+    Fault fault = NoFault;
     int seq_num = inst->seqNum;
 
-    exec_req->fault = NoFault;
-
     DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%s] %s.\n",
-            tid, seq_num, inst->pcState(), inst->instName());
+            inst->readTid(), seq_num, inst->pcState(), inst->instName());
 
     switch (exec_req->cmd)
     {
@@ -126,7 +123,6 @@ ExecutionUnit::execute(int slot_num)
                     if (inst->mispredicted()) {
                         int stage_num = exec_req->getStageNum();
                         ThreadID tid = inst->readTid();
-
                         // If it's a branch ...
                         if (inst->isDirectCtrl()) {
                             assert(!inst->isIndirectCtrl());
@@ -247,13 +243,13 @@ ExecutionUnit::execute(int slot_num)
                             seq_num,
                             (inst->resultType(0) == InOrderDynInst::Float) ?
                             inst->readFloatResult(0) : inst->readIntResult(0));
-
-                    exec_req->done();
                 } else {
-                    warn("inst [sn:%i] had a %s fault",
-                         seq_num, fault->name());
-                    cpu->trap(fault, tid, inst);
+                    DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: had a %s "
+                            "fault.\n", inst->readTid(), seq_num, fault->name());
+                    inst->fault = fault;
                 }
+
+                exec_req->done();
             }
         }
         break;

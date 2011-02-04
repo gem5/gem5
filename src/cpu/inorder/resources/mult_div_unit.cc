@@ -204,11 +204,7 @@ MultDivUnit::execute(int slot_num)
 {
     ResourceRequest* mult_div_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
-    Fault fault = reqMap[slot_num]->fault;
  
-    //ThreadID tid = inst->readTid();
-    //int seq_num = inst->seqNum;
-
     switch (mult_div_req->cmd)
     {
       case StartMultDiv:
@@ -281,11 +277,8 @@ MultDivUnit::exeMulDiv(int slot_num)
 {
     ResourceRequest* mult_div_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
-    Fault fault = reqMap[slot_num]->fault;
-    ThreadID tid = inst->readTid();
-    int seq_num = inst->seqNum;
 
-    fault = inst->execute();
+    inst->fault = inst->execute();
 
     if (inst->opClass() == IntMultOp) {
         multiplies++;
@@ -293,15 +286,15 @@ MultDivUnit::exeMulDiv(int slot_num)
         divides++;
     }
 
-    if (fault == NoFault) {
+    if (inst->fault == NoFault) {
         inst->setExecuted();
         mult_div_req->setCompleted();
 
-        DPRINTF(Resource, "[tid:%i]: The result of execution is 0x%x.\n",
+        DPRINTF(InOrderMDU, "[tid:%i]: The result of execution is 0x%x.\n",
                 inst->readTid(), inst->readIntResult(0));
     } else {
-        warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
-        cpu->trap(fault, tid, inst);
+        DPRINTF(InOrderMDU, "[tid:%i]: [sn:%i]: had a %s "
+                "fault.\n", inst->readTid(), inst->seqNum, inst->fault->name());
     }    
 }
 

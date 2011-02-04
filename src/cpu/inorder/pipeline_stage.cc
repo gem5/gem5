@@ -944,12 +944,7 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                         "completed.\n", tid, inst->seqNum, 
                         cpu->resPool->name(res_num));
 
-                if (req->fault == NoFault) {
-                    inst->popSchedEntry();
-                } else {
-                    panic("%i: encountered %s fault!\n",
-                          curTick(), req->fault->name());
-                }
+                inst->popSchedEntry();
 
                 reqs_processed++;                
 

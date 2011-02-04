@@ -51,10 +51,7 @@ DecodeUnit::execute(int slot_num)
 {
     ResourceRequest* decode_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
-    Fault fault = reqMap[slot_num]->fault;
     ThreadID tid = inst->readTid();
-
-    decode_req->fault = NoFault;
 
     switch (decode_req->cmd)
     {

@@ -277,7 +277,6 @@ Resource::execute(int slot_idx)
     DPRINTF(Resource, "[tid:%i]: Executing %s resource.\n",
             reqMap[slot_idx]->getTid(), name());
     reqMap[slot_idx]->setCompleted(true);
-    reqMap[slot_idx]->fault = NoFault;
     reqMap[slot_idx]->done();
 }
 

@@ -161,13 +161,13 @@ class CacheUnit : public Resource
     Fault write(DynInstPtr inst, uint8_t *data, unsigned size,
                 Addr addr, unsigned flags, uint64_t *res);
 
-    Fault doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
+    void doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                       int flags,  TheISA::TLB::Mode tlb_mode);
 
     /** Read/Write on behalf of an instruction.
      *  curResSlot needs to be a valid value in instruction.
      */
-    Fault doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL,
+    void doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL,
                         CacheReqPtr split_req=NULL);
 
     uint64_t getMemData(Packet *packet);

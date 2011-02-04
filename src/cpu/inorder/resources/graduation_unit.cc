@@ -51,30 +51,22 @@ GraduationUnit::execute(int slot_num)
 {
     ResourceRequest* grad_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
-    Fault fault = reqMap[slot_num]->fault;
     ThreadID tid = inst->readTid();
     int stage_num = inst->resSched.top()->stageNum;
-
-    grad_req->fault = NoFault;
 
     switch (grad_req->cmd)
     {
       case GraduateInst:
         {
-            // @TODO: Instructions should never really get to this point since
-            // this should be handled through the request interface. Check to
-            // make sure this happens and delete this code.
-            if (lastCycleGrad != curTick()) {
-                lastCycleGrad = curTick();
-                numCycleGrad = 0;
-            } else if (numCycleGrad > width) {
-                DPRINTF(InOrderGraduation,
-                        "Graduation bandwidth reached for this cycle.\n");
-                return;
-            }
-
             // Make sure this is the last thing on the resource schedule
             assert(inst->resSched.size() == 1);
+
+             // Handle Any Faults Before Graduating Instruction
+            if (inst->fault != NoFault) {
+                cpu->trap(inst->fault, tid, inst);
+                grad_req->setCompleted(false);
+                 return;
+            }
 
             DPRINTF(InOrderGraduation,
                     "[tid:%i] Graduating instruction [sn:%i].\n",
@@ -96,9 +88,6 @@ GraduationUnit::execute(int slot_num)
 
             // Tell CPU that instruction is finished processing
             cpu->instDone(inst, tid);
-
-            //cpu->pipelineStage[stage_num]->toPrevStages->
-            //stageInfo[stage_num][tid].doneSeqNum = inst->seqNum;
 
             grad_req->done();
         }

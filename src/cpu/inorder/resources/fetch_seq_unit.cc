@@ -74,8 +74,6 @@ FetchSeqUnit::execute(int slot_num)
     int stage_num = fs_req->getStageNum();
     int seq_num = inst->seqNum;
 
-    fs_req->fault = NoFault;
-
     DPRINTF(InOrderFetchSeq, "[tid:%i]: Current PC is %s\n", tid,
             pc[tid]);
 

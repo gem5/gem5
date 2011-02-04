@@ -350,9 +350,6 @@ class ResourceRequest
     /** Not guaranteed to be set, used for debugging */
     InstSeqNum seqNum;
     
-    /** Fault Associated With This Resource Request */
-    Fault fault;
-
     /** Command For This Resource */
     unsigned cmd;
 
