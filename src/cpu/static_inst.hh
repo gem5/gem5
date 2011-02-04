@@ -43,7 +43,7 @@
 #include "base/refcnt.hh"
 #include "base/types.hh"
 #include "cpu/op_class.hh"
-#include "sim/fault.hh"
+#include "sim/fault_fwd.hh"
 
 // forward declarations
 struct AlphaSimpleImpl;

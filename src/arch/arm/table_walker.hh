@@ -49,7 +49,7 @@
 #include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
 #include "sim/eventq.hh"
-#include "sim/fault.hh"
+#include "sim/fault_fwd.hh"
 
 class DmaPort;
 class ThreadContext;

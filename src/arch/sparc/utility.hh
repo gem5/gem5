@@ -38,7 +38,7 @@
 #include "base/bitfield.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
-#include "sim/fault.hh"
+#include "sim/fault_fwd.hh"
 
 namespace SparcISA
 {

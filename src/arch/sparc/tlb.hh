@@ -37,7 +37,7 @@
 #include "config/full_system.hh"
 #include "mem/request.hh"
 #include "params/SparcTLB.hh"
-#include "sim/fault.hh"
+#include "sim/fault_fwd.hh"
 #include "sim/tlb.hh"
 
 class ThreadContext;

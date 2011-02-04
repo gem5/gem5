@@ -38,7 +38,7 @@
 #include "arch/mips/registers.hh"
 #include "arch/mips/types.hh"
 #include "sim/eventq.hh"
-#include "sim/fault.hh"
+#include "sim/fault_fwd.hh"
 
 class BaseCPU;
 class Checkpoint;

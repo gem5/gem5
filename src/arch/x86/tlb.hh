@@ -50,7 +50,7 @@
 #include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
-#include "sim/fault.hh"
+#include "sim/fault_fwd.hh"
 #include "sim/tlb.hh"
 #include "sim/sim_object.hh"
 

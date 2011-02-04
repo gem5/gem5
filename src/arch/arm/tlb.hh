@@ -52,7 +52,7 @@
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"
-#include "sim/fault.hh"
+#include "sim/fault_fwd.hh"
 #include "sim/tlb.hh"
 
 class ThreadContext;
