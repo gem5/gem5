@@ -52,19 +52,31 @@
 class FetchUnit : public CacheUnit
 {
   public:
-    typedef ThePipeline::DynInstPtr DynInstPtr;
-
-  public:
     FetchUnit(std::string res_name, int res_id, int res_width,
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
 
-    /** Actions that this resources can take on an instruction */
+    typedef ThePipeline::DynInstPtr DynInstPtr;
+    typedef TheISA::ExtMachInst ExtMachInst;
+
+    struct FetchBlock {
+        int asid;
+        Addr addr;
+        uint8_t *block;
+        short cnt;
+        bool valid;
+
+        FetchBlock(int _asid, Addr _addr)
+            : asid(_asid), addr(_addr), block(NULL), cnt(1), valid(false)
+        { }
+    };
+
+    /** Actions that this resource can take on an instruction */
     enum Command {
         InitiateFetch,
         CompleteFetch
     };
 
-  public:
+
     ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                 int res_idx, int slot_num,
                                 unsigned cmd);
@@ -74,8 +86,11 @@ class FetchUnit : public CacheUnit
     /** Executes one of the commands from the "Command" enum */
     void execute(int slot_num);
 
-    void squash(DynInstPtr inst, int stage_num,
-                InstSeqNum squash_seq_num, ThreadID tid);
+  private:
+    void squashCacheRequest(CacheReqPtr req_ptr);
+
+    void createMachInst(std::list<FetchBlock*>::iterator fetch_it,
+                        DynInstPtr inst);
 
     /** After memory request is completed, then turn the fetched data
         into an instruction.
@@ -94,14 +109,24 @@ class FetchUnit : public CacheUnit
 
     void removeAddrDependency(DynInstPtr inst);
 
-  public:
-    /** The mem line being fetched. */
-    uint8_t *fetchData[ThePipeline::MaxThreads];
+    std::list<FetchBlock*>::iterator findReplacementBlock();
+    std::list<FetchBlock*>::iterator findBlock(std::list<FetchBlock*>
+                                               &fetch_blocks, int asid,
+                                               Addr block_addr);
 
+    void markBlockUsed(std::list<FetchBlock*>::iterator block_it);
 
-    /** The Addr of the cacheline that has been loaded. */
-    //Addr cacheBlockAddr[ThePipeline::MaxThreads];
-    //unsigned fetchOffset[ThePipeline::MaxThreads];
+    int instSize;
+
+    int fetchBuffSize;
+
+    TheISA::Predecoder predecoder;
+
+    /** Valid Cache Blocks*/
+    std::list<FetchBlock*> fetchBuffer;
+
+    /** Cache lines that are pending */
+    std::list<FetchBlock*> pendingFetch;
 };
 
 #endif //__CPU_FETCH_UNIT_HH__

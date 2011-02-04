@@ -97,7 +97,7 @@ CacheUnit::CachePort::recvRetry()
 CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
         int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      cachePortBlocked(false), predecoder(NULL)
+      cachePortBlocked(false)
 {
     cachePort = new CachePort(this);
 
@@ -136,6 +136,9 @@ CacheUnit::init()
     // Currently Used to Model TLB Latency. Eventually
     // Switch to Timing TLB translations.
     resourceEvent = new CacheUnitEvent[width];
+
+    cacheBlkSize = this->cachePort->peerBlockSize();
+    cacheBlkMask = cacheBlkSize  - 1;
 
     initSlots();
 }
@@ -375,28 +378,20 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
     }
 }
 
-Fault
-CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
-                       int flags, TheISA::TLB::Mode tlb_mode)
+void
+CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
+                           int acc_size, int flags)
 {
     ThreadID tid = inst->readTid();
     Addr aligned_addr = inst->getMemAddr();
-    unsigned stage_num = cache_req->getStageNum();
-    unsigned slot_idx = cache_req->getSlot();
 
-    if (tlb_mode == TheISA::TLB::Execute) {
-        inst->fetchMemReq =
-            new Request(inst->readTid(), aligned_addr, acc_size, flags,
-                        inst->instAddr(), cpu->readCpuId(), inst->readTid());
-        cache_req->memReq = inst->fetchMemReq;
-    } else {
-        if (!cache_req->is2ndSplit()) {            
+    if (!cache_req->is2ndSplit()) {
             inst->dataMemReq =
                 new Request(cpu->asid[tid], aligned_addr, acc_size, flags,
                             inst->instAddr(), cpu->readCpuId(),
-                            inst->readTid());
+                            tid);
             cache_req->memReq = inst->dataMemReq;
-        } else {
+    } else {
             assert(inst->splitInst);
             
             inst->splitMemReq = new Request(cpu->asid[tid], 
@@ -407,9 +402,19 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                                             cpu->readCpuId(), 
                                             tid);
             cache_req->memReq = inst->splitMemReq;            
-        }
     }
-    
+}
+
+Fault
+CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
+                       int flags, TheISA::TLB::Mode tlb_mode)
+{
+    ThreadID tid = inst->readTid();
+    //Addr aligned_addr = inst->getMemAddr();
+    unsigned stage_num = cache_req->getStageNum();
+    unsigned slot_idx = cache_req->getSlot();
+
+    setupMemRequest(inst, cache_req, acc_size, flags);
 
     cache_req->fault =
         _tlb->translateAtomic(cache_req->memReq,
@@ -842,8 +847,8 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
     }
 
     DPRINTF(InOrderCachePort,
-            "[tid:%i] [sn:%i] attempting to access cache\n",
-            tid, inst->seqNum);
+            "[tid:%i] [sn:%i] attempting to access cache for addr %08p\n",
+            tid, inst->seqNum, cache_req->dataPkt->getAddr());
 
     if (do_access) {
         if (!cachePort->sendTiming(cache_req->dataPkt)) {
@@ -1086,6 +1091,24 @@ CacheUnit::squashDueToMemStall(DynInstPtr inst, int stage_num,
     squash(inst, stage_num, squash_seq_num + 1, tid);    
 }
 
+void
+CacheUnit::squashCacheRequest(CacheReqPtr req_ptr)
+{
+    DynInstPtr inst =  req_ptr->getInst();
+
+    req_ptr->setSquashed();
+    inst->setSquashed();
+    if (inst->validMemAddr()) {
+        DPRINTF(AddrDep, "Squash of [tid:%i] [sn:%i], attempting to "
+                "remove addr. %08p dependencies.\n",
+                inst->readTid(),
+                inst->seqNum,
+                inst->getMemAddr());
+
+        removeAddrDependency(inst);
+    }
+}
+
 
 void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
@@ -1115,13 +1138,11 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
                 map_it++;                
                 continue;                
             }
-            
-            req_ptr->setSquashed();
-
-            req_ptr->getInst()->setSquashed();
 
             CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(req_ptr);
             assert(cache_req);
+
+            squashCacheRequest(cache_req);
 
             int req_slot_num = req_ptr->getSlot();
 
@@ -1152,15 +1173,6 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
                         req_ptr->getInst()->splitInst);
             }
 
-            if (req_ptr->getInst()->validMemAddr()) {                    
-                DPRINTF(AddrDep, "Squash of [tid:%i] [sn:%i], attempting to "
-                        "remove addr. %08p dependencies.\n",
-                        req_ptr->getInst()->readTid(),
-                        req_ptr->getInst()->seqNum, 
-                        req_ptr->getInst()->getMemAddr());
-                
-                removeAddrDependency(req_ptr->getInst());
-            }            
         }
 
         map_it++;

@@ -139,10 +139,16 @@ class CacheUnit : public Resource
     void squashDueToMemStall(DynInstPtr inst, int stage_num,
                              InstSeqNum squash_seq_num, ThreadID tid);
 
+    virtual void squashCacheRequest(CacheReqPtr req_ptr);
+
     /** After memory request is completedd in the cache, then do final
         processing to complete the request in the CPU.
     */
-   virtual void processCacheCompletion(PacketPtr pkt);
+    virtual void processCacheCompletion(PacketPtr pkt);
+
+    /** Create request that will interface w/TLB and Memory objects */
+    virtual void setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
+                                 int acc_size, int flags);
 
     void recvRetry();
 
@@ -167,7 +173,7 @@ class CacheUnit : public Resource
     uint64_t getMemData(Packet *packet);
 
     void setAddrDependency(DynInstPtr inst);
-    void removeAddrDependency(DynInstPtr inst);
+    virtual void removeAddrDependency(DynInstPtr inst);
     
   protected:
     /** Cache interface. */
@@ -189,8 +195,6 @@ class CacheUnit : public Resource
     {
         return (addr & ~(cacheBlkMask));
     }
-
-    TheISA::Predecoder predecoder;
 
     bool tlbBlocked[ThePipeline::MaxThreads];
 
@@ -225,7 +229,7 @@ class CacheRequest : public ResourceRequest
           pktCmd(pkt_cmd), memReq(NULL), reqData(NULL), dataPkt(NULL),
           retryPkt(NULL), memAccComplete(false), memAccPending(false),
           tlbStall(false), splitAccess(false), splitAccessNum(-1),
-          split2ndAccess(false), instIdx(idx)
+          split2ndAccess(false), instIdx(idx), fetchBufferFill(false)
     { }
 
 
@@ -270,7 +274,9 @@ class CacheRequest : public ResourceRequest
     int splitAccessNum;
     bool split2ndAccess;
     int instIdx;    
-    
+
+    /** Should we expect block from cache access or fetch buffer? */
+    bool fetchBufferFill;
 };
 
 class CacheReqPacket : public Packet

@@ -37,6 +37,7 @@
 #include "arch/utility.hh"
 #include "arch/predecoder.hh"
 #include "config/the_isa.hh"
+#include "cpu/inorder/resources/cache_unit.hh"
 #include "cpu/inorder/resources/fetch_unit.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/cpu.hh"
@@ -50,9 +51,41 @@ using namespace ThePipeline;
 FetchUnit::FetchUnit(string res_name, int res_id, int res_width,
                      int res_latency, InOrderCPU *_cpu,
                      ThePipeline::Params *params)
-    : CacheUnit(res_name, res_id, res_width, res_latency, _cpu,
-                params)
+    : CacheUnit(res_name, res_id, res_width, res_latency, _cpu, params),
+      instSize(sizeof(TheISA::MachInst)), fetchBuffSize(params->fetchBuffSize),
+      predecoder(NULL)
 { }
+
+void
+FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
+                          DynInstPtr inst)
+{
+    ExtMachInst ext_inst;
+    Addr block_addr = cacheBlockAlign(inst->getMemAddr());
+    Addr fetch_addr = inst->getMemAddr();
+    unsigned fetch_offset = (fetch_addr - block_addr) / instSize;
+    ThreadID tid = inst->readTid();
+    TheISA::PCState instPC = inst->pcState();
+
+
+    DPRINTF(InOrderCachePort, "Creating instruction [sn:%i] w/fetch data @"
+            "addr:%08p block:%08p\n", inst->seqNum, fetch_addr, block_addr);
+
+    assert((*fetch_it)->valid);
+
+    TheISA::MachInst *fetchInsts =
+        reinterpret_cast<TheISA::MachInst *>((*fetch_it)->block);
+
+    MachInst mach_inst =
+        TheISA::gtoh(fetchInsts[fetch_offset]);
+
+    predecoder.setTC(cpu->thread[tid]->getTC());
+    predecoder.moreBytes(instPC, inst->instAddr(), mach_inst);
+    ext_inst = predecoder.getExtMachInst(instPC);
+
+    inst->pcState(instPC);
+    inst->setMachInst(ext_inst);
+}
 
 int
 FetchUnit::getSlot(DynInstPtr inst)
@@ -119,15 +152,64 @@ FetchUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
                            int acc_size, int flags)
 {
     ThreadID tid = inst->readTid();
-    Addr aligned_addr = inst->getMemAddr();
+    Addr aligned_addr = cacheBlockAlign(inst->getMemAddr());
 
     inst->fetchMemReq =
-            new Request(inst->readTid(), aligned_addr, acc_size, flags,
-                        inst->instAddr(), cpu->readCpuId(), inst->readTid());
+            new Request(tid, aligned_addr, acc_size, flags,
+                        inst->instAddr(), cpu->readCpuId(), tid);
 
     cache_req->memReq = inst->fetchMemReq;
 }
 
+std::list<FetchUnit::FetchBlock*>::iterator
+FetchUnit::findBlock(std::list<FetchBlock*> &fetch_blocks, int asid,
+                     Addr block_addr)
+{
+    std::list<FetchBlock*>::iterator fetch_it = fetch_blocks.begin();
+    std::list<FetchBlock*>::iterator end_it = fetch_blocks.end();
+
+    while (fetch_it != end_it) {
+        if ((*fetch_it)->asid == asid &&
+            (*fetch_it)->addr == block_addr) {
+            return fetch_it;
+        }
+
+        fetch_it++;
+    }
+
+    return fetch_it;
+}
+
+std::list<FetchUnit::FetchBlock*>::iterator
+FetchUnit::findReplacementBlock()
+{
+    std::list<FetchBlock*>::iterator fetch_it = fetchBuffer.begin();
+    std::list<FetchBlock*>::iterator end_it = fetchBuffer.end();
+
+    while (fetch_it != end_it) {
+        if ((*fetch_it)->cnt == 0) {
+            return fetch_it;
+        } else {
+            DPRINTF(InOrderCachePort, "Block %08p has %i insts pending.\n",
+                    (*fetch_it)->addr, (*fetch_it)->cnt);
+        }
+        fetch_it++;
+    }
+
+    return fetch_it;
+}
+
+void
+FetchUnit::markBlockUsed(std::list<FetchBlock*>::iterator block_it)
+{
+    // Move block from whatever location it is in fetch buffer
+    // to the back (represents most-recently-used location)
+    if (block_it != fetchBuffer.end()) {
+        FetchBlock *mru_blk = *block_it;
+        fetchBuffer.erase(block_it);
+        fetchBuffer.push_back(mru_blk);
+    }
+}
 
 void
 FetchUnit::execute(int slot_num)
@@ -142,53 +224,156 @@ FetchUnit::execute(int slot_num)
     }
 
     DynInstPtr inst = cache_req->inst;
-#if TRACING_ON
     ThreadID tid = inst->readTid();
-    int seq_num = inst->seqNum;
-    std::string acc_type = "write";
-#endif
-
+    Addr block_addr = cacheBlockAlign(inst->getMemAddr());
+    int asid = cpu->asid[tid];
     cache_req->fault = NoFault;
 
     switch (cache_req->cmd)
     {
       case InitiateFetch:
         {
+            // Check to see if we've already got this request buffered
+            // or pending to be buffered
+            bool do_fetch = true;
+            std::list<FetchBlock*>::iterator pending_it;
+            pending_it = findBlock(pendingFetch, asid, block_addr);
+            if (pending_it != pendingFetch.end()) {
+                (*pending_it)->cnt++;
+                do_fetch = false;
+
+                DPRINTF(InOrderCachePort, "%08p is a pending fetch block "
+                        "(pending:%i).\n", block_addr,
+                        (*pending_it)->cnt);
+            } else if (pendingFetch.size() < fetchBuffSize) {
+                std::list<FetchBlock*>::iterator buff_it;
+                buff_it = findBlock(fetchBuffer, asid, block_addr);
+                if (buff_it  != fetchBuffer.end()) {
+                    (*buff_it)->cnt++;
+                    do_fetch = false;
+
+                    DPRINTF(InOrderCachePort, "%08p is in fetch buffer"
+                            "(pending:%i).\n", block_addr, (*buff_it)->cnt);
+                }
+            }
+
+            if (!do_fetch) {
+                DPRINTF(InOrderCachePort, "Inst. [sn:%i] marked to be filled "
+                        "through fetch buffer.\n", inst->seqNum);
+                cache_req->fetchBufferFill = true;
+                cache_req->setCompleted(true);
+                return;
+            }
+
+            // Check to see if there is room in the fetchbuffer for this instruction.
+            // If not, block this request.
+            if (pendingFetch.size() >= fetchBuffSize) {
+                DPRINTF(InOrderCachePort, "No room available in fetch buffer.\n");
+                cache_req->setCompleted(false);
+                return;
+            }
+
             doTLBAccess(inst, cache_req, cacheBlkSize, 0, TheISA::TLB::Execute);
 
             if (cache_req->fault == NoFault) {
                 DPRINTF(InOrderCachePort,
-                    "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
-                    tid, name(), cache_req->inst->getMemAddr());
+                        "[tid:%u]: Initiating fetch access to %s for "
+                        "addr:%#x (block:%#x)\n", tid, name(),
+                        cache_req->inst->getMemAddr(), block_addr);
 
-                cache_req->reqData = new uint8_t[cacheBlksize];
+                cache_req->reqData = new uint8_t[cacheBlkSize];
 
                 inst->setCurResSlot(slot_num);
 
                 doCacheAccess(inst);
+
+                if (cache_req->isMemAccPending()) {
+                    pendingFetch.push_back(new FetchBlock(asid, block_addr));
+                }
             }
 
             break;
         }
 
       case CompleteFetch:
+        if (cache_req->fetchBufferFill) {
+            // Block request if it's depending on a previous fetch, but it hasnt made it yet
+            std::list<FetchBlock*>::iterator fetch_it = findBlock(fetchBuffer, asid, block_addr);
+            if (fetch_it == fetchBuffer.end()) {
+                DPRINTF(InOrderCachePort, "%#x not available yet\n",
+                        block_addr);
+                cache_req->setCompleted(false);
+                return;
+            }
+
+            // Make New Instruction
+            createMachInst(fetch_it, inst);
+            if (inst->traceData) {
+                inst->traceData->setStaticInst(inst->staticInst);
+                inst->traceData->setPC(inst->pcState());
+            }
+
+            // FetchBuffer Book-Keeping
+            (*fetch_it)->cnt--;
+            assert((*fetch_it)->cnt >= 0);
+            markBlockUsed(fetch_it);
+
+            cache_req->done();
+            return;
+        }
+
         if (cache_req->isMemAccComplete()) {
+            if (fetchBuffer.size() >= fetchBuffSize) {
+                // If there is no replacement block, then we'll just have
+                // to wait till that gets cleared before satisfying the fetch
+                // for this instruction
+                std::list<FetchBlock*>::iterator repl_it  =
+                    findReplacementBlock();
+                if (repl_it == fetchBuffer.end()) {
+                    DPRINTF(InOrderCachePort, "Unable to find replacement block"
+                            " and complete fetch.\n");
+                    cache_req->setCompleted(false);
+                    return;
+                }
+
+                fetchBuffer.erase(repl_it);
+            }
+
             DPRINTF(InOrderCachePort,
                     "[tid:%i]: Completing Fetch Access for [sn:%i]\n",
                     tid, inst->seqNum);
 
+            // Make New Instruction
+            std::list<FetchBlock*>::iterator fetch_it  =
+                findBlock(pendingFetch, asid, block_addr);
+
+            assert(fetch_it != pendingFetch.end());
+            assert((*fetch_it)->valid);
+
+            createMachInst(fetch_it, inst);
+            if (inst->traceData) {
+                inst->traceData->setStaticInst(inst->staticInst);
+                inst->traceData->setPC(inst->pcState());
+            }
+
+
+            // Update instructions waiting on new fetch block
+            FetchBlock *new_block = (*fetch_it);
+            new_block->cnt--;
+            assert(new_block->cnt >= 0);
+
+            // Finally, update FetchBuffer w/Pending Block into the
+            // MRU location
+            pendingFetch.erase(fetch_it);
+            fetchBuffer.push_back(new_block);
 
             DPRINTF(InOrderCachePort, "[tid:%i]: Instruction [sn:%i] is: %s\n",
-                    tid, seq_num,
+                    tid, inst->seqNum,
                     inst->staticInst->disassemble(inst->instAddr()));
 
-            removeAddrDependency(inst);
+            inst->unsetMemAddr();
 
             delete cache_req->dataPkt;
-
-            // Do not stall and switch threads for fetch... for now..
-            // TODO: We need to detect cache misses for latencies > 1
-            // cache_req->setMemStall(false);
 
             cache_req->done();
         } else {
@@ -199,7 +384,9 @@ FetchUnit::execute(int slot_num)
                     "STALL: [tid:%i]: Fetch miss from %08p\n",
                     tid, cache_req->inst->instAddr());
             cache_req->setCompleted(false);
-            //cache_req->setMemStall(true);
+            // NOTE: For SwitchOnCacheMiss ThreadModel, we *don't* switch on
+            //       fetch miss, but we could ...
+            // cache_req->setMemStall(true);
         }
         break;
 
@@ -213,7 +400,6 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
 {
     // Cast to correct packet type
     CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
-
     assert(cache_pkt);
 
     if (cache_pkt->cacheReq->isSquashed()) {
@@ -230,104 +416,108 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
         delete cache_pkt;
 
         cpu->wakeCPU();
-
         return;
     }
 
+    Addr block_addr = cacheBlockAlign(cache_pkt->cacheReq->
+                                      getInst()->getMemAddr());
+
     DPRINTF(InOrderCachePort,
-            "[tid:%u]: [sn:%i]: Waking from cache access to addr. %08p\n",
+            "[tid:%u]: [sn:%i]: Waking from fetch access to addr:%#x(phys:%#x), size:%i\n",
             cache_pkt->cacheReq->getInst()->readTid(),
             cache_pkt->cacheReq->getInst()->seqNum,
-            cache_pkt->cacheReq->getInst()->getMemAddr());
+            block_addr, cache_pkt->getAddr(), cache_pkt->getSize());
 
     // Cast to correct request type
     CacheRequest *cache_req = dynamic_cast<CacheReqPtr>(
         findRequest(cache_pkt->cacheReq->getInst(), cache_pkt->instIdx));
 
     if (!cache_req) {
-        panic("[tid:%u]: [sn:%i]: Can't find slot for cache access to "
+        panic("[tid:%u]: [sn:%i]: Can't find slot for fetch access to "
               "addr. %08p\n", cache_pkt->cacheReq->getInst()->readTid(),
               cache_pkt->cacheReq->getInst()->seqNum,
-              cache_pkt->cacheReq->getInst()->getMemAddr());
+              block_addr);
     }
-
-    assert(cache_req);
-
 
     // Get resource request info
     unsigned stage_num = cache_req->getStageNum();
     DynInstPtr inst = cache_req->inst;
     ThreadID tid = cache_req->inst->readTid();
+    short asid = cpu->asid[tid];
 
-    if (!cache_req->isSquashed()) {
-        assert(inst->resSched.top()->cmd == CompleteFetch);
+    assert(!cache_req->isSquashed());
+    assert(inst->resSched.top()->cmd == CompleteFetch);
 
-        DPRINTF(InOrderCachePort,
-                "[tid:%u]: [sn:%i]: Processing fetch access\n",
-                tid, inst->seqNum);
+    DPRINTF(InOrderCachePort,
+            "[tid:%u]: [sn:%i]: Processing fetch access for block %#x\n",
+            tid, inst->seqNum, block_addr);
 
-        // NOTE: This is only allowing a thread to fetch one line
-        //       at a time. Re-examine when/if prefetching
-        //       gets implemented.
-        // memcpy(fetchData[tid], cache_pkt->getPtr<uint8_t>(),
-        //        cache_pkt->getSize());
+    std::list<FetchBlock*>::iterator pend_it = findBlock(pendingFetch, asid,
+                                                         block_addr);
+    assert(pend_it != pendingFetch.end());
 
-        // Get the instruction from the array of the cache line.
-        // @todo: update this
-        ExtMachInst ext_inst;
-        StaticInstPtr staticInst = NULL;
-        TheISA::PCState instPC = inst->pcState();
-        MachInst mach_inst =
-            TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
-                         (cache_pkt->getPtr<uint8_t>()));
+    // Copy Data to pendingFetch queue...
+    (*pend_it)->block = new uint8_t[cacheBlkSize];
+    memcpy((*pend_it)->block, cache_pkt->getPtr<uint8_t>(), cacheBlkSize);
+    (*pend_it)->valid = true;
 
-        predecoder.setTC(cpu->thread[tid]->getTC());
-        predecoder.moreBytes(instPC, inst->instAddr(), mach_inst);
-        ext_inst = predecoder.getExtMachInst(instPC);
-        inst->pcState(instPC);
+    cache_req->setMemAccPending(false);
+    cache_req->setMemAccCompleted();
 
-        inst->setMachInst(ext_inst);
+    if (cache_req->isMemStall() &&
+        cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
+        DPRINTF(InOrderCachePort, "[tid:%u] Waking up from Cache Miss.\n",
+                tid);
 
-        // Set Up More TraceData info
-        if (inst->traceData) {
-            inst->traceData->setStaticInst(inst->staticInst);
-            inst->traceData->setPC(instPC);
-        }
+        cpu->activateContext(tid);
 
-        cache_req->setMemAccPending(false);
-        cache_req->setMemAccCompleted();
+        DPRINTF(ThreadModel, "Activating [tid:%i] after return from cache"
+                "miss.\n", tid);
+    }
 
-        if (cache_req->isMemStall() &&
-            cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
-            DPRINTF(InOrderCachePort, "[tid:%u] Waking up from Cache Miss.\n",
-                    tid);
+    // Wake up the CPU (if it went to sleep and was waiting on this
+    // completion event).
+    cpu->wakeCPU();
 
-            cpu->activateContext(tid);
-
-            DPRINTF(ThreadModel, "Activating [tid:%i] after return from cache"
-                    "miss.\n", tid);
-        }
-
-        // Wake up the CPU (if it went to sleep and was waiting on this
-        // completion event).
-        cpu->wakeCPU();
-
-        DPRINTF(Activity, "[tid:%u] Activating %s due to cache completion\n",
+    DPRINTF(Activity, "[tid:%u] Activating %s due to cache completion\n",
             tid, cpu->pipelineStage[stage_num]->name());
 
-        cpu->switchToActive(stage_num);
-    } else {
-        DPRINTF(InOrderCachePort,
-                "[tid:%u] Miss on block @ %08p completed, but squashed\n",
-                tid, cache_req->inst->instAddr());
-        cache_req->setMemAccCompleted();
-    }
+    cpu->switchToActive(stage_num);
 }
 
 void
-FetchUnit::squash(DynInstPtr inst, int stage_num,
-                  InstSeqNum squash_seq_num, ThreadID tid)
+FetchUnit::squashCacheRequest(CacheReqPtr req_ptr)
 {
-    CacheUnit::squash(inst, stage_num, squash_seq_num, tid);
+    DynInstPtr inst = req_ptr->getInst();
+    ThreadID tid = inst->readTid();
+    Addr block_addr = cacheBlockAlign(inst->getMemAddr());
+    int asid = cpu->asid[tid];
+
+    // Check Fetch Buffer (or pending fetch) for this block and
+    // update pending counts
+    std::list<FetchBlock*>::iterator buff_it = findBlock(fetchBuffer,
+                                                         asid,
+                                                         block_addr);
+    if (buff_it != fetchBuffer.end()) {
+        (*buff_it)->cnt--;
+        DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Fetch "
+                "for Buffer block %08p (cnt=%i)\n", inst->seqNum,
+                block_addr, (*buff_it)->cnt);
+    } else {
+        std::list<FetchBlock*>::iterator block_it = findBlock(pendingFetch,
+                                                              asid,
+                                                              block_addr);
+        if (block_it != pendingFetch.end()) {
+            (*block_it)->cnt--;
+            if ((*block_it)->cnt == 0) {
+                DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Fetch "
+                        "for block %08p (cnt=%i)\n", inst->seqNum,
+                        block_addr, (*block_it)->cnt);
+                pendingFetch.erase(block_it);
+            }
+        }
+    }
+
+    CacheUnit::squashCacheRequest(req_ptr);
 }
 

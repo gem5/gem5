@@ -48,6 +48,9 @@ class InOrderCPU(BaseCPU):
     dcache_port = Port("Data Port")
     _cached_ports = ['icache_port', 'dcache_port']
 
+    fetchBuffSize = Param.Unsigned(4, "Fetch Buffer Size (Number of Cache Blocks Stored)")
+    memBlockSize = Param.Unsigned(64, "Memory Block Size")
+
     predType = Param.String("tournament", "Branch predictor type ('local', 'tournament')")
     localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
     localCtrBits = Param.Unsigned(2, "Bits per counter")
@@ -68,8 +71,6 @@ class InOrderCPU(BaseCPU):
     functionTrace = Param.Bool(False, "Enable function trace")
     functionTraceStart = Param.Tick(0, "Cycle to start function trace")
     stageTracing = Param.Bool(False, "Enable tracing of each stage in CPU")
-
-    memBlockSize = Param.Unsigned(64, "Memory Block Size")
 
     multLatency = Param.Unsigned(1, "Latency for Multiply Operations")
     multRepeatRate = Param.Unsigned(1, "Repeat Rate for Multiply Operations")
