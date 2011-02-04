@@ -39,9 +39,9 @@ using namespace std;
 using namespace ThePipeline;
 
 PipelineStage::PipelineStage(Params *params, unsigned stage_num)
-    : stageNum(stage_num), stageWidth(ThePipeline::StageWidth),
+    : stageNum(stage_num), stageWidth(params->stageWidth),
       numThreads(ThePipeline::MaxThreads), _status(Inactive),
-      stageBufferMax(ThePipeline::interStageBuffSize[stage_num]),
+      stageBufferMax(params->stageWidth),
       prevStageValid(false), nextStageValid(false), idle(false)
 {
     switchedOutBuffer.resize(ThePipeline::MaxThreads);
@@ -143,7 +143,6 @@ PipelineStage::setNextStageQueue(TimeBuffer<InterStageStruct> *next_stage_ptr)
 
     // Setup wire to write information to proper place in stage queue.
     nextStage = nextStageQueue->getWire(0);
-    nextStage->size = 0;
     nextStageValid = true;
 }
 
@@ -257,7 +256,7 @@ PipelineStage::removeStalls(ThreadID tid)
 inline bool
 PipelineStage::prevStageInstsValid()
 {
-    return prevStage->size > 0;
+    return prevStage->insts.size() > 0;
 }
 
 bool
@@ -382,7 +381,8 @@ PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid)
     DPRINTF(InOrderStage, "[tid:%i]: Removing instructions from "
             "incoming stage queue.\n", tid);
 
-    for (int i=0; i < prevStage->size; i++) {
+    int insts_from_prev_stage = prevStage->insts.size();
+    for (int i=0; i < insts_from_prev_stage; i++) {
         if (prevStage->insts[i]->threadNumber == tid &&
             prevStage->insts[i]->seqNum > squash_seq_num) {
             // Change Comment to Annulling previous instruction
@@ -441,16 +441,8 @@ PipelineStage::stageBufferAvail()
         total += skidBuffer[i].size();
     }
 
-    int incoming_insts = (prevStageValid) ?
-        cpu->pipelineStage[stageNum]->prevStage->size :
-        0;
-
     int avail = stageBufferMax - total;
-
-    if (avail < 0)
-        fatal("stageNum %i:stageBufferAvail() < 0..."
-              "stBMax=%i,total=%i,incoming=%i=>%i",
-              stageNum, stageBufferMax, total, incoming_insts, avail);
+    assert(avail >= 0);
 
     return avail;
 }
@@ -462,7 +454,7 @@ PipelineStage::canSendInstToStage(unsigned stage_num)
 
     if (cpu->pipelineStage[stage_num]->prevStageValid) {
         buffer_avail = cpu->pipelineStage[stage_num]->stageBufferAvail() -
-            cpu->pipelineStage[stage_num-1]->nextStage->size >= 1;
+            cpu->pipelineStage[stage_num-1]->nextStage->insts.size() >= 1;
     }
 
     if (!buffer_avail && nextStageQueueValid(stage_num)) {
@@ -576,7 +568,9 @@ void
 PipelineStage::sortInsts()
 {
     if (prevStageValid) {
-        int insts_from_prev_stage = prevStage->size;
+        assert(prevStage->insts.size() <= stageWidth);
+
+        int insts_from_prev_stage = prevStage->insts.size();
         int insts_from_cur_stage = skidSize();
         DPRINTF(InOrderStage, "%i insts available from stage buffer %i. Stage "
                 "currently has %i insts from last cycle.\n",
@@ -591,7 +585,6 @@ PipelineStage::sortInsts()
                         "not inserting into stage buffer.\n",
                     prevStage->insts[i]->readTid(),
                     prevStage->insts[i]->seqNum);
-                prevStage->size--;
                 continue;
             }
 
@@ -619,12 +612,8 @@ PipelineStage::sortInsts()
 
             prevStage->insts[i] = cpu->dummyBufferInst;
 
-            prevStage->size--;
-
             inserted_insts++;
         }
-
-        assert(prevStage->size == 0);
     }
 }
 
@@ -728,11 +717,6 @@ PipelineStage::tick()
     wroteToTimeBuffer = false;
 
     bool status_change = false;
-
-    if (nextStageValid)
-        nextStage->size = 0;
-
-    toNextStageIndex = 0;
     
     sortInsts();
 
@@ -807,7 +791,7 @@ PipelineStage::processStage(bool &status_change)
 
     if (nextStageValid) {
         DPRINTF(InOrderStage, "%i insts now available for stage %i.\n",
-                nextStage->size, stageNum + 1);
+                nextStage->insts.size(), stageNum + 1);
     }
 
     if (instsProcessed > 0) {
@@ -1083,20 +1067,13 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
 
             DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: being placed into  "
                     "index %i of stage buffer %i queue.\n",
-                    tid, inst->seqNum, toNextStageIndex,
+                    tid, inst->seqNum,
+                    cpu->pipelineStage[prev_stage]->nextStage->insts.size(),
                     cpu->pipelineStage[prev_stage]->nextStageQueue->id());
-
-            int next_stage_idx = 
-                cpu->pipelineStage[prev_stage]->nextStage->size;
 
             // Place instructions in inter-stage communication struct for next
             // pipeline stage to read next cycle
-            cpu->pipelineStage[prev_stage]->nextStage->insts[next_stage_idx] 
-                = inst;
-
-            ++(cpu->pipelineStage[prev_stage]->nextStage->size);
-
-            ++toNextStageIndex;
+            cpu->pipelineStage[prev_stage]->nextStage->insts.push_back(inst);
 
             success = true;
 

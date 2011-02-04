@@ -52,7 +52,6 @@ namespace ThePipeline {
     // Pipeline Constants
     const unsigned NumStages = 5;
     const ThreadID MaxThreads = 8;
-    const unsigned StageWidth = 1;
     const unsigned BackEndStartStage = 2;
 
     // List of Resources The Pipeline Uses
@@ -69,19 +68,6 @@ namespace ThePipeline {
        DCache,
        Grad,
        FetchBuff2
-    };
-
-    // Expand this as necessary for your inter stage buffer sizes
-    static const unsigned interStageBuffSize[] = {
-        StageWidth, /* Stage 0 - 1 */
-        StageWidth, /* Stage 1 - 2 */
-        StageWidth, /* Stage 2 - 3 */
-        StageWidth, /* Stage 3 - 4 */
-        StageWidth, /* Stage 4 - 5 */
-        StageWidth, /* Stage 5 - 6 */
-        StageWidth, /* Stage 6 - 7 */
-        StageWidth, /* Stage 7 - 8 */
-        StageWidth  /* Stage 8 - 9 */
     };
 
     typedef InOrderCPUParams Params;

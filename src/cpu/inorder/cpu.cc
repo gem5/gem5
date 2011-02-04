@@ -174,6 +174,7 @@ InOrderCPU::InOrderCPU(Params *params)
       coreType("default"),
       _status(Idle),
       tickEvent(this),
+      stageWidth(params->stageWidth),
       timeBuffer(2 , 2),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),

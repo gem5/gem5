@@ -44,8 +44,7 @@
 /** Struct that defines the information passed from in between stages */
 /** This information mainly goes forward through the pipeline. */
 struct InterStageStruct {
-    int size;
-    ThePipeline::DynInstPtr insts[ThePipeline::StageWidth];
+    std::vector<ThePipeline::DynInstPtr> insts;
     bool squash;
     bool branchMispredict;
     bool branchTaken;
@@ -55,10 +54,10 @@ struct InterStageStruct {
     bool includeSquashInst;
 
     InterStageStruct()
-        :size(0),  squash(false),
-         branchMispredict(false), branchTaken(false),
-         mispredPC(0), nextPC(0),
-         squashedSeqNum(0), includeSquashInst(false)
+        : squash(false),
+          branchMispredict(false), branchTaken(false),
+          mispredPC(0), nextPC(0),
+          squashedSeqNum(0), includeSquashInst(false)
     { }
 
 };

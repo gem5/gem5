@@ -40,7 +40,7 @@ class InOrderCPU(BaseCPU):
     threadModel = Param.ThreadModel('SMT', "Multithreading model (SE-MODE only)")
     
     cachePorts = Param.Unsigned(2, "Cache Ports")
-    stageWidth = Param.Unsigned(1, "Stage width")
+    stageWidth = Param.Unsigned(4, "Stage width")
 
     fetchMemPort = Param.String("icache_port" , "Name of Memory Port to get instructions from")
     dataMemPort = Param.String("dcache_port" , "Name of Memory Port to get data from")

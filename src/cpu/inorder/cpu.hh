@@ -268,6 +268,9 @@ class InOrderCPU : public BaseCPU
     /** The Pipeline Stages for the CPU */
     PipelineStage *pipelineStage[ThePipeline::NumStages];
 
+    /** Width (processing bandwidth) of each stage */
+    int stageWidth;
+
     /** Program Counters */
     TheISA::PCState pc[ThePipeline::MaxThreads];
 

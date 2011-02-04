@@ -45,46 +45,48 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
     //This will help in the auto-generation of this pipeline model.
     //ThePipeline::addResources(resources, memObjects);
 
+    int stage_width = cpu->stageWidth;
+
     // Declare Resource Objects
     // name - id - bandwidth - latency - CPU - Parameters
     // --------------------------------------------------
     resources.push_back(new FetchSeqUnit("Fetch-Seq-Unit", FetchSeq, 
-                                         StageWidth * 2, 0, _cpu, params));
+                                         stage_width * 2, 0, _cpu, params));
 
     memObjects.push_back(ICache);
     resources.push_back(new CacheUnit("icache_port", ICache, 
-                                      StageWidth * MaxThreads, 0, _cpu, 
+                                      stage_width * MaxThreads, 0, _cpu,
                                       params));
 
     resources.push_back(new DecodeUnit("Decode-Unit", Decode, 
-                                       StageWidth, 0, _cpu, params));
+                                       stage_width, 0, _cpu, params));
 
     resources.push_back(new BranchPredictor("Branch-Predictor", BPred, 
-                                            StageWidth, 0, _cpu, params));
+                                            stage_width, 0, _cpu, params));
 
     resources.push_back(new InstBuffer("Fetch-Buffer-T0", FetchBuff, 4, 
                                        0, _cpu, params));
 
     resources.push_back(new UseDefUnit("RegFile-Manager", RegManager, 
-                                       StageWidth * MaxThreads, 0, _cpu, 
+                                       stage_width * MaxThreads, 0, _cpu,
                                        params));
 
     resources.push_back(new AGENUnit("AGEN-Unit", AGEN, 
-                                     StageWidth, 0, _cpu, params));
+                                     stage_width, 0, _cpu, params));
 
     resources.push_back(new ExecutionUnit("Execution-Unit", ExecUnit, 
-                                          StageWidth, 0, _cpu, params));
+                                          stage_width, 0, _cpu, params));
 
     resources.push_back(new MultDivUnit("Mult-Div-Unit", MDU, 5, 0, _cpu, 
                                         params));
 
     memObjects.push_back(DCache);
     resources.push_back(new CacheUnit("dcache_port", DCache, 
-                                      StageWidth * MaxThreads, 0, _cpu, 
+                                      stage_width * MaxThreads, 0, _cpu,
                                       params));
 
     resources.push_back(new GraduationUnit("Graduation-Unit", Grad, 
-                                           StageWidth * MaxThreads, 0, _cpu, 
+                                           stage_width * MaxThreads, 0, _cpu,
                                            params));
 
     resources.push_back(new InstBuffer("Fetch-Buffer-T1", FetchBuff2, 4, 
