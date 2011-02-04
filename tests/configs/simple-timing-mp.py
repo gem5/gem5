@@ -71,7 +71,7 @@ for cpu in cpus:
     cpu.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
                                 L1(size = '32kB', assoc = 4))
     # connect cpu level-1 caches to shared level-2 cache
-    cpu.connectMemPorts(system.toL2Bus)
+    cpu.connectAllPorts(system.toL2Bus, system.membus)
     cpu.clock = '2GHz'
 
 # connect memory to membus

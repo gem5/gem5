@@ -41,6 +41,6 @@ system = System(cpu = cpu,
                 physmem = ruby_memory,
                 membus = Bus())
 system.physmem.port = system.membus.port
-cpu.connectMemPorts(system.membus)
+cpu.connectAllPorts(system.membus)
 
 root = Root(system = system)

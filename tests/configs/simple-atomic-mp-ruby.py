@@ -41,7 +41,7 @@ system = System(cpu = cpus, physmem = ruby_memory, membus = Bus())
 
 # add L1 caches
 for cpu in cpus:
-    cpu.connectMemPorts(system.membus)
+    cpu.connectAllPorts(system.membus)
     cpu.clock = '2GHz'
 
 # connect memory to membus

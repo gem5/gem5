@@ -40,7 +40,7 @@ ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 system = System(cpu = cpus, physmem = ruby_memory, membus = Bus())
 
 for cpu in cpus:
-    cpu.connectMemPorts(system.membus)
+    cpu.connectAllPorts(system.membus)
     cpu.clock = '2GHz'
 
 # connect memory to membus

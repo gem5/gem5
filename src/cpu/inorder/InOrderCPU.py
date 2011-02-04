@@ -46,7 +46,7 @@ class InOrderCPU(BaseCPU):
     dataMemPort = Param.String("dcache_port" , "Name of Memory Port to get data from")
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
-    _mem_ports = ['icache_port', 'dcache_port']
+    _cached_ports = ['icache_port', 'dcache_port']
 
     predType = Param.String("tournament", "Branch predictor type ('local', 'tournament')")
     localPredictorSize = Param.Unsigned(2048, "Size of local predictor")

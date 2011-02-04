@@ -34,7 +34,7 @@ import FSConfig
 cpu = AtomicSimpleCPU(cpu_id=0)
 system = FSConfig.makeSparcSystem('atomic')
 system.cpu = cpu
-cpu.connectMemPorts(system.membus)
+cpu.connectAllPorts(system.membus)
 
 root = Root(system=system)
 

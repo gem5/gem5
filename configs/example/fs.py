@@ -178,7 +178,7 @@ if len(bm) == 2:
     elif buildEnv['TARGET_ISA'] == 'arm':
         drive_sys = makeLinuxArmSystem(drive_mem_mode, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
-    drive_sys.cpu.connectMemPorts(drive_sys.membus)
+    drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.fastmem:
         drive_sys.cpu.physmem_port = drive_sys.physmem.port
     if options.kernel is not None:

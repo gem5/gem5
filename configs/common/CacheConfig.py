@@ -52,8 +52,8 @@ def config_cache(options, system):
                 system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
                                                       L1Cache(size = '64kB'))
         if options.l2cache:
-            system.cpu[i].connectMemPorts(system.tol2bus)
+            system.cpu[i].connectAllPorts(system.tol2bus, system.membus)
         else:
-            system.cpu[i].connectMemPorts(system.membus)
+            system.cpu[i].connectAllPorts(system.membus)
 
     return system

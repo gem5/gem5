@@ -150,48 +150,53 @@ class BaseCPU(MemObject):
 
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
-    _mem_ports = []
+    _cached_ports = []
+    if buildEnv['TARGET_ISA'] in ['x86', 'arm'] and buildEnv['FULL_SYSTEM']:
+        _cached_ports = ["itb.walker.port", "dtb.walker.port"]
+
+    _uncached_ports = []
     if buildEnv['TARGET_ISA'] == 'x86' and buildEnv['FULL_SYSTEM']:
-        _mem_ports = ["itb.walker.port",
-                      "dtb.walker.port",
-                      "interrupts.pio",
-                      "interrupts.int_port"]
+        _uncached_ports = ["interrupts.pio", "interrupts.int_port"]
 
-    if buildEnv['TARGET_ISA'] == 'arm' and buildEnv['FULL_SYSTEM']:
-        _mem_ports = ["itb.walker.port",
-                      "dtb.walker.port"]
+    def connectCachedPorts(self, bus):
+        for p in self._cached_ports:
+            exec('self.%s = bus.port' % p)
 
-    def connectMemPorts(self, bus):
-        for p in self._mem_ports:
-            if p != 'physmem_port':
-                exec('self.%s = bus.port' % p)
+    def connectUncachedPorts(self, bus):
+        for p in self._uncached_ports:
+            exec('self.%s = bus.port' % p)
+
+    def connectAllPorts(self, cached_bus, uncached_bus = None):
+        self.connectCachedPorts(cached_bus)
+        if not uncached_bus:
+            uncached_bus = cached_bus
+        self.connectUncachedPorts(uncached_bus)
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
-        assert(len(self._mem_ports) < 8)
+        assert(len(self._cached_ports) < 7)
         self.icache = ic
         self.dcache = dc
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
-        self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
+        self._cached_ports = ['icache.mem_side', 'dcache.mem_side']
         if buildEnv['FULL_SYSTEM']:
             if buildEnv['TARGET_ISA'] == 'x86':
                 self.itb_walker_cache = iwc
                 self.dtb_walker_cache = dwc
                 self.itb.walker.port = iwc.cpu_side
                 self.dtb.walker.port = dwc.cpu_side
-                self._mem_ports += ["itb_walker_cache.mem_side", \
-                                    "dtb_walker_cache.mem_side"]
-                self._mem_ports += ["interrupts.pio", "interrupts.int_port"]
+                self._cached_ports += ["itb_walker_cache.mem_side", \
+                                       "dtb_walker_cache.mem_side"]
             elif buildEnv['TARGET_ISA'] == 'arm':
-                self._mem_ports += ["itb.walker.port", "dtb.walker.port"]
+                self._cached_ports += ["itb.walker.port", "dtb.walker.port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
         self.toL2Bus = Bus()
-        self.connectMemPorts(self.toL2Bus)
+        self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
         self.l2cache.cpu_side = self.toL2Bus.port
-        self._mem_ports = ['l2cache.mem_side']
+        self._cached_ports = ['l2cache.mem_side']
 
     if buildEnv['TARGET_ISA'] == 'mips':
         CP0_IntCtl_IPTI = Param.Unsigned(0,"No Description")

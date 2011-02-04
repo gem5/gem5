@@ -37,5 +37,5 @@ class AtomicSimpleCPU(BaseSimpleCPU):
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
     physmem_port = Port("Physical Memory Port")
-    _mem_ports = BaseSimpleCPU._mem_ports + \
-                    ['icache_port', 'dcache_port', 'physmem_port']
+    _cached_ports = BaseSimpleCPU._cached_ports + \
+                    ['icache_port', 'dcache_port']
