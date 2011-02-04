@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May  6 2010 00:07:42
-M5 revision e46d048f7e69 7074 default tip
-M5 started May  6 2010 00:07:43
+M5 compiled Feb  4 2011 03:47:02
+M5 revision afcc4492291f 7892 default qbase qtip rubystatupdate.patch tip
+M5 started Feb  4 2011 03:47:05
 M5 executing on burrito
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-timing-ruby -re tests/run.py build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-timing-ruby
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/quick/00.hello/x86/linux/simple-timing-ruby -re tests/run.py build/X86_SE/tests/opt/quick/00.hello/x86/linux/simple-timing-ruby
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
