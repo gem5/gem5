@@ -1,5 +1,3 @@
-Redirecting stdout to build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing/simout
-Redirecting stderr to build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  2 2010 21:30:55
-M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
-M5 started Nov  2 2010 22:06:02
-M5 executing on aus-bc2-b15
+M5 compiled Jan 24 2011 21:05:28
+M5 revision Unknown
+M5 started Jan 24 2011 21:53:14
+M5 executing on m55-002.pool
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 104166942500 because target called exit()
+Exiting @ tick 43686968500 because halt instruction encountered
