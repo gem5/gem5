@@ -41,7 +41,8 @@ using namespace ThePipeline;
 ExecutionUnit::ExecutionUnit(string res_name, int res_id, int res_width,
                              int res_latency, InOrderCPU *_cpu,
                              ThePipeline::Params *params)
-    : Resource(res_name, res_id, res_width, res_latency, _cpu)
+    : Resource(res_name, res_id, res_width, res_latency, _cpu),
+      lastExecuteTick(0), lastControlTick(0)
 { }
 
 void
@@ -54,8 +55,6 @@ ExecutionUnit::regStats()
     predictedNotTakenIncorrect
         .name(name() + ".predictedNotTakenIncorrect")
         .desc("Number of Branches Incorrectly Predicted As Not Taken).");
-
-    lastExecuteCycle = curTick();
 
     executions
         .name(name() + ".executions")
@@ -98,14 +97,22 @@ ExecutionUnit::execute(int slot_num)
     {
       case ExecuteInst:
         {
-            if (curTick() != lastExecuteCycle) {
-                lastExecuteCycle = curTick();
+            if (curTick() != lastExecuteTick) {
+                lastExecuteTick = curTick();
             }
 
 
             if (inst->isMemRef()) {
                 panic("%s not configured to handle memory ops.\n", resName);
             } else if (inst->isControl()) {
+                if (lastControlTick == curTick()) {
+                    DPRINTF(InOrderExecute, "Can not Execute More than One Control "
+                            "Inst Per Cycle. Blocking Request.\n");
+                    exec_req->done(false);
+                    return;
+                }
+                lastControlTick = curTick();
+
                 // Evaluate Branch
                 fault = inst->execute();
                 executions++;
