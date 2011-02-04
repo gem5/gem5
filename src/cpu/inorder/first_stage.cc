@@ -126,8 +126,10 @@ FirstStage::processStage(bool &status_change)
         if (tid >= 0) {
             DPRINTF(InOrderStage, "Processing [tid:%i]\n",tid);
             processThread(status_change, tid);
+            DPRINTF(InOrderStage, "Done Processing [tid:%i]\n",tid);
         } else {
             DPRINTF(InOrderStage, "No more threads to fetch from.\n");
+            break;
         }
     }
 
@@ -148,7 +150,7 @@ FirstStage::processInsts(ThreadID tid)
 {
     bool all_reqs_completed = true;
 
-    for (int insts_fetched = 0; 
+    for (int insts_fetched = instsProcessed;
          insts_fetched < stageWidth && canSendInstToStage(1); 
          insts_fetched++) {
 
@@ -200,8 +202,11 @@ FirstStage::processInsts(ThreadID tid)
                         "list.\n", tid, inst->seqNum);
                 insts[tid].push(inst);
             }
+            block(tid);
             break;
         } else if (!insts[tid].empty()){
+            DPRINTF(InOrderStage, "[tid:%u]: [sn:%u] Finished all "
+                    "requests for this stage.\n", tid, inst->seqNum);
             insts[tid].pop();
         }
 
@@ -210,7 +215,7 @@ FirstStage::processInsts(ThreadID tid)
 
     // Record that stage has written to the time buffer for activity
     // tracking.
-    if (toNextStageIndex) {
+    if (instsProcessed) {
         wroteToTimeBuffer = true;
     }
 }

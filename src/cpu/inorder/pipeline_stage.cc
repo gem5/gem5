@@ -281,14 +281,14 @@ PipelineStage::block(ThreadID tid)
     // signalled fetch to unblock. In that case, there is no need to tell
     // fetch to block.
     if (stageStatus[tid] != Blocked) {
-        // Set the status to Blocked.
-        stageStatus[tid] = Blocked;
-
         if (stageStatus[tid] != Unblocking) {
-            if (prevStageValid)
-                toPrevStages->stageBlock[stageNum][tid] = true;
             wroteToTimeBuffer = true;
         }
+
+        stageStatus[tid] = Blocked;
+
+        if (prevStageValid)
+            toPrevStages->stageBlock[stageNum][tid] = true;
 
         return true;
     }
@@ -304,12 +304,12 @@ PipelineStage::blockDueToBuffer(ThreadID tid)
             "next stage.\n", tid);
 
     if (stageStatus[tid] != Blocked) {
-        // Set the status to Blocked.
-        stageStatus[tid] = Blocked;
-
         if (stageStatus[tid] != Unblocking) {
             wroteToTimeBuffer = true;
         }
+
+        // Set the status to Blocked.
+        stageStatus[tid] = Blocked;
     }
 }
 
@@ -595,18 +595,26 @@ PipelineStage::sortInsts()
 {
     if (prevStageValid) {
         int insts_from_prev_stage = prevStage->size;
+        int insts_from_cur_stage = skidSize();
+        DPRINTF(InOrderStage, "%i insts available from stage buffer %i. Stage "
+                "currently has %i insts from last cycle.\n",
+                insts_from_prev_stage, prevStageQueue->id(),
+                insts_from_cur_stage);
 
-        DPRINTF(InOrderStage, "%i insts available from stage buffer %i.\n",
-                insts_from_prev_stage, prevStageQueue->id());
-
+        int inserted_insts = 0;
         for (int i = 0; i < insts_from_prev_stage; ++i) {
+            if (inserted_insts + insts_from_cur_stage == stageWidth) {
+               DPRINTF(InOrderStage, "Stage %i has accepted all insts "
+                       "possible for this tick.\n");
+                break;
+            }
 
             if (prevStage->insts[i]->isSquashed()) {
                 DPRINTF(InOrderStage, "[tid:%i]: Ignoring squashed [sn:%i], "
                         "not inserting into stage buffer.\n",
                     prevStage->insts[i]->readTid(),
                     prevStage->insts[i]->seqNum);
-
+                prevStage->size--;
                 continue;
             }
 
@@ -622,7 +630,11 @@ PipelineStage::sortInsts()
 
             prevStage->insts[i] = cpu->dummyBufferInst;
 
+            prevStage->size--;
+
+            inserted_insts++;
         }
+        assert(prevStage->size == 0);
     }
 }
 
@@ -937,7 +949,7 @@ PipelineStage::processInsts(ThreadID tid)
 
     // Record that stage has written to the time buffer for activity
     // tracking.
-    if (toNextStageIndex) {
+    if (instsProcessed) {
         wroteToTimeBuffer = true;
     }
 }
