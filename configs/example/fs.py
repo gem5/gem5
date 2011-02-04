@@ -153,7 +153,14 @@ if options.caches or options.l2cache:
         mem_size = bm[0].mem()
     else:
         mem_size = SysConfig().mem()
-    test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
+    # For x86, we need to poke a hole for interrupt messages to get back to the
+    # CPU. These use a portion of the physical address space which has a
+    # non-zero prefix in the top nibble. Normal memory accesses have a 0
+    # prefix.
+    if buildEnv['TARGET_ISA'] == 'x86':
+        test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max >> 4)]
+    else:
+        test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
     test_sys.bridge.filter_ranges_b=[AddrRange(mem_size)]
     test_sys.iocache = IOCache(addr_range=mem_size)
     test_sys.iocache.cpu_side = test_sys.iobus.port
