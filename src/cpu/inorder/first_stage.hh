@@ -68,11 +68,6 @@ class FirstStage : public PipelineStage {
      */
     void sortInsts() {}
 
-    /** There are no skidBuffers for the first stage. So
-     *  just use an empty function.
-     */
-    void skidInsert(ThreadID tid) { }
-
     /** The number of fetching threads in the CPU */
     int numFetchingThreads;
 

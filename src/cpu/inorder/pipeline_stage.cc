@@ -272,10 +272,6 @@ PipelineStage::block(ThreadID tid)
     DPRINTF(InOrderStage, "[tid:%d]: Blocking, sending block signal back to "
             "previous stages.\n", tid);
 
-    // Add the current inputs to the skid buffer so they can be
-    // reprocessed when this stage unblocks.
-    // skidInsert(tid);
-
     // If the stage status is blocked or unblocking then stage has not yet
     // signalled fetch to unblock. In that case, there is no need to tell
     // fetch to block.
@@ -412,19 +408,26 @@ PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
 
     DPRINTF(InOrderStage, "[tid:%i]: Removing instructions from incoming stage"
             " skidbuffer.\n", tid);
-    while (!skidBuffer[tid].empty()) {
-        if (skidBuffer[tid].front()->seqNum <= squash_seq_num) {
+    //@TODO: Walk Through List Using iterator and remove
+    //       all instructions over the value
+    std::list<DynInstPtr>::iterator cur_it = skidBuffer[tid].begin();
+    std::list<DynInstPtr>::iterator end_it = skidBuffer[tid].end();
+
+    while (cur_it != end_it) {
+        if ((*cur_it)->seqNum <= squash_seq_num) {
             DPRINTF(InOrderStage, "[tid:%i]: Cannot remove skidBuffer "
                     "instructions (starting w/[sn:%i]) before delay slot "
                     "[sn:%i]. %i insts left.\n", tid, 
-                    skidBuffer[tid].front()->seqNum, squash_seq_num,
+                    (*cur_it)->seqNum, squash_seq_num,
                     skidBuffer[tid].size());
-            break;
+            cur_it++;
+        } else {
+            DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
+                    " PC %s.\n", tid, (*cur_it)->seqNum, (*cur_it)->pc);
+            (*cur_it)->setSquashed();
+            cur_it = skidBuffer[tid].erase(cur_it);
         }
-        DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
-                " PC %s.\n", tid, skidBuffer[tid].front()->seqNum,
-                skidBuffer[tid].front()->pc);
-        skidBuffer[tid].pop_front();
+
     }
 
 }
@@ -442,7 +445,7 @@ PipelineStage::stageBufferAvail()
         cpu->pipelineStage[stageNum]->prevStage->size :
         0;
 
-    int avail = stageBufferMax - total -0;// incoming_insts;
+    int avail = stageBufferMax - total;
 
     if (avail < 0)
         fatal("stageNum %i:stageBufferAvail() < 0..."
@@ -458,7 +461,8 @@ PipelineStage::canSendInstToStage(unsigned stage_num)
     bool buffer_avail = false;
 
     if (cpu->pipelineStage[stage_num]->prevStageValid) {
-        buffer_avail = cpu->pipelineStage[stage_num]->stageBufferAvail() >= 1;
+        buffer_avail = cpu->pipelineStage[stage_num]->stageBufferAvail() -
+            cpu->pipelineStage[stage_num-1]->nextStage->size >= 1;
     }
 
     if (!buffer_avail && nextStageQueueValid(stage_num)) {
@@ -468,27 +472,6 @@ PipelineStage::canSendInstToStage(unsigned stage_num)
 
     return buffer_avail;
 }
-
-void
-PipelineStage::skidInsert(ThreadID tid)
-{
-    DynInstPtr inst = NULL;
-
-    while (!insts[tid].empty()) {
-        inst = insts[tid].front();
-
-        insts[tid].pop();
-
-        assert(tid == inst->threadNumber);
-
-        DPRINTF(InOrderStage,"[tid:%i]: Inserting [sn:%lli] PC:%s into stage "
-                "skidBuffer %i\n", tid, inst->seqNum, inst->pcState(),
-                inst->threadNumber);
-
-        skidBuffer[tid].push_back(inst);
-    }
-}
-
 
 int
 PipelineStage::skidSize()
@@ -601,13 +584,8 @@ PipelineStage::sortInsts()
                 insts_from_cur_stage);
 
         int inserted_insts = 0;
-        for (int i = 0; i < insts_from_prev_stage; ++i) {
-            if (inserted_insts + insts_from_cur_stage == stageWidth) {
-               DPRINTF(InOrderStage, "Stage %i has accepted all insts "
-                       "possible for this tick.\n");
-                break;
-            }
 
+        for (int i = 0; i < insts_from_prev_stage; i++) {
             if (prevStage->insts[i]->isSquashed()) {
                 DPRINTF(InOrderStage, "[tid:%i]: Ignoring squashed [sn:%i], "
                         "not inserting into stage buffer.\n",
@@ -617,15 +595,27 @@ PipelineStage::sortInsts()
                 continue;
             }
 
-            DPRINTF(InOrderStage, "[tid:%i]: Inserting [sn:%i] into stage "
-                    "buffer.\n", prevStage->insts[i]->readTid(),
-                    prevStage->insts[i]->seqNum);
-
             ThreadID tid = prevStage->insts[i]->threadNumber;
 
-            DynInstPtr inst = prevStage->insts[i];
+            if (inserted_insts + insts_from_cur_stage == stageWidth) {
+               DPRINTF(InOrderStage, "Stage %i has accepted all insts "
+                       "possible for this tick. Placing [sn:%i] in stage %i skidBuffer\n",
+                       stageNum, prevStage->insts[i]->seqNum, stageNum - 1);
+                cpu->pipelineStage[stageNum - 1]->
+                    skidBuffer[tid].push_front(prevStage->insts[i]);
 
-            skidBuffer[tid].push_back(prevStage->insts[i]);
+                int prev_stage = stageNum - 1;
+                if (cpu->pipelineStage[prev_stage]->stageStatus[tid] == Running ||
+                    cpu->pipelineStage[prev_stage]->stageStatus[tid] == Idle) {
+                    cpu->pipelineStage[prev_stage]->stageStatus[tid] = Unblocking;
+                }
+            } else {
+                DPRINTF(InOrderStage, "[tid:%i]: Inserting [sn:%i] into stage "
+                        "buffer.\n", prevStage->insts[i]->readTid(),
+                        prevStage->insts[i]->seqNum);
+
+                skidBuffer[tid].push_back(prevStage->insts[i]);
+            }
 
             prevStage->insts[i] = cpu->dummyBufferInst;
 
@@ -633,6 +623,7 @@ PipelineStage::sortInsts()
 
             inserted_insts++;
         }
+
         assert(prevStage->size == 0);
     }
 }
@@ -862,12 +853,6 @@ PipelineStage::processThread(bool &status_change, ThreadID tid)
         // the rest of unblocking.
         processInsts(tid);
 
-        if (prevStageValid && prevStageInstsValid()) {
-            // Add the current inputs to the skid buffer so they can be
-            // reprocessed when this stage unblocks.
-            skidInsert(tid);
-        }
-
         status_change = unblock(tid) || status_change;
     }
 }
@@ -893,7 +878,6 @@ PipelineStage::processInsts(ThreadID tid)
 
     while (insts_available > 0 &&
            instsProcessed < stageWidth &&
-           (!nextStageValid || canSendInstToStage(stageNum+1)) &&
            last_req_completed) {
         assert(!insts_to_stage.empty());
 

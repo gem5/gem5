@@ -69,24 +69,24 @@ FirstStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
     // insts in them.
     DPRINTF(InOrderStage, "Removing instructions from stage instruction "
             "list.\n");
-    while (!insts[tid].empty()) {
-        if (insts[tid].front()->seqNum <= squash_seq_num) {
+    while (!skidBuffer[tid].empty()) {
+        if (skidBuffer[tid].front()->seqNum <= squash_seq_num) {
             DPRINTF(InOrderStage,"[tid:%i]: Cannot remove [sn:%i] because "
                     "it's <= squashing seqNum %i.\n",
                     tid,
-                    insts[tid].front()->seqNum,
+                    skidBuffer[tid].front()->seqNum,
                     squash_seq_num);
 
             DPRINTF(InOrderStage, "[tid:%i]: Cannot remove incoming "
                     "instructions before delay slot [sn:%i]. %i insts"
                     "left.\n", tid, squash_seq_num,
-                    insts[tid].size());
+                    skidBuffer[tid].size());
             break;
         }
         DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
-                "PC %s.\n", tid, insts[tid].front()->seqNum,
-                insts[tid].front()->pc);
-        insts[tid].pop();
+                "PC %s.\n", tid, skidBuffer[tid].front()->seqNum,
+                skidBuffer[tid].front()->pc);
+        skidBuffer[tid].pop_front();
     }
 
     // Now that squash has propagated to the first stage,
@@ -118,9 +118,7 @@ FirstStage::processStage(bool &status_change)
         status_change =  checkSignalsAndUpdate(tid) || status_change;
     }
 
-    for (int insts_fetched = 0; 
-         insts_fetched < stageWidth && canSendInstToStage(1); 
-         insts_fetched++) {
+    while (instsProcessed < stageWidth)  {
         ThreadID tid = getFetchingThread(fetchPolicy);
 
         if (tid >= 0) {
@@ -151,14 +149,14 @@ FirstStage::processInsts(ThreadID tid)
     bool all_reqs_completed = true;
 
     for (int insts_fetched = instsProcessed;
-         insts_fetched < stageWidth && canSendInstToStage(1); 
+         insts_fetched < stageWidth;
          insts_fetched++) {
 
         DynInstPtr inst;
         bool new_inst = false;
 
-        if (!insts[tid].empty()) {
-            inst = insts[tid].front();
+        if (!skidBuffer[tid].empty()) {
+            inst = skidBuffer[tid].front();
         } else {
             // Get new instruction.
             new_inst = true;
@@ -195,22 +193,21 @@ FirstStage::processInsts(ThreadID tid)
         if (reqs_processed > 0)
             instsProcessed++;
 
-        if (!all_reqs_completed) {
+        if (!all_reqs_completed || !sendInstToNextStage(inst)) {
             if (new_inst) {
                 DPRINTF(InOrderStage, "[tid:%u]: [sn:%u] Did not finish all "
                         "requests for this stage. Keep in stage inst. "
                         "list.\n", tid, inst->seqNum);
-                insts[tid].push(inst);
+                skidBuffer[tid].push_back(inst);
             }
             block(tid);
             break;
-        } else if (!insts[tid].empty()){
+        } else if (!skidBuffer[tid].empty()){
             DPRINTF(InOrderStage, "[tid:%u]: [sn:%u] Finished all "
                     "requests for this stage.\n", tid, inst->seqNum);
-            insts[tid].pop();
+            skidBuffer[tid].pop_front();
         }
 
-        sendInstToNextStage(inst);
     }
 
     // Record that stage has written to the time buffer for activity
@@ -240,7 +237,8 @@ FirstStage::getFetchingThread(FetchPriority &fetch_priority)
         ThreadID tid = *activeThreads->begin();
 
         if (stageStatus[tid] == Running ||
-            stageStatus[tid] == Idle) {
+            stageStatus[tid] == Idle ||
+            stageStatus[tid] == Unblocking) {
             return tid;
         } else {
             return InvalidThreadID;
@@ -264,7 +262,8 @@ FirstStage::roundRobin()
         assert(high_pri <= numThreads);
 
         if (stageStatus[high_pri] == Running ||
-            stageStatus[high_pri] == Idle) {
+            stageStatus[high_pri] == Idle ||
+            stageStatus[high_pri] == Unblocking){
 
             fetchPriorityList->erase(pri_iter);
             fetchPriorityList->push_back(high_pri);

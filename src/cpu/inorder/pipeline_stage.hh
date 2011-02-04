@@ -184,11 +184,6 @@ class PipelineStage
     /** Send an instruction to the next stage buffer */
     bool sendInstToNextStage(DynInstPtr inst);
 
-    /** Inserts a thread's instructions into the skid buffer, to be staged
-     * once stage unblocks.
-     */
-    virtual void skidInsert(ThreadID tid);
-
     /** Total size of all skid buffers */
     int skidSize();
 
