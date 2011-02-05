@@ -1,0 +1,16 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Jan 31 2011 16:34:44
+M5 revision 1b98eea40540 7883 default qtip tip x86o3regressions.patch
+M5 started Jan 31 2011 16:34:46
+M5 executing on burrito
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/quick/00.hello/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/quick/00.hello/x86/linux/o3-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+Hello world!
+Exiting @ tick 13766000 because target called exit()
