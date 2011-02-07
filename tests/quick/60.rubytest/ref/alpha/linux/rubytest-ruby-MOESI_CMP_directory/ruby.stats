@@ -13,7 +13,7 @@ RubySystem config:
 Network Configuration
 ---------------------
 network: SIMPLE_NETWORK
-topology: Crossbar
+topology: 
 
 virtual_net_0: active, unordered
 virtual_net_1: active, unordered
@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Aug/05/2010 10:40:25
+Real time: Feb/06/2011 20:43:54
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 1
-Elapsed_time_in_minutes: 0.0166667
-Elapsed_time_in_hours: 0.000277778
-Elapsed_time_in_days: 1.15741e-05
+Elapsed_time_in_seconds: 0
+Elapsed_time_in_minutes: 0
+Elapsed_time_in_hours: 0
+Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 1.03
-Virtual_time_in_minutes: 0.0171667
-Virtual_time_in_hours:   0.000286111
-Virtual_time_in_days:    1.19213e-05
+Virtual_time_in_seconds: 0.75
+Virtual_time_in_minutes: 0.0125
+Virtual_time_in_hours:   0.000208333
+Virtual_time_in_days:    8.68056e-06
 
 Ruby_current_time: 372291
 Ruby_start_time: 0
 Ruby_cycles: 372291
 
-mbytes_resident: 31.6016
-mbytes_total: 31.6094
-resident_ratio: 1
+mbytes_resident: 33.7773
+mbytes_total: 208.145
+resident_ratio: 0.162316
 
 ruby_cycles_executed: [ 372292 ]
 
@@ -119,8 +119,8 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 7050
-page_faults: 1907
+page_reclaims: 9852
+page_faults: 0
 swaps: 0
 block_inputs: 0
 block_outputs: 0
@@ -201,20 +201,20 @@ links_utilized_percent_switch_3: 0.174693
   outgoing_messages_switch_3_link_2_Writeback_Control: 953 7624 [ 0 874 79 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_3_link_2_Unblock_Control: 880 7040 [ 0 0 880 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.l1_cntrl0.sequencer.icache
-  system.l1_cntrl0.sequencer.icache_total_misses: 0
-  system.l1_cntrl0.sequencer.icache_total_demand_misses: 0
-  system.l1_cntrl0.sequencer.icache_total_prefetches: 0
-  system.l1_cntrl0.sequencer.icache_total_sw_prefetches: 0
-  system.l1_cntrl0.sequencer.icache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1IcacheMemory
+  system.l1_cntrl0.L1IcacheMemory_total_misses: 0
+  system.l1_cntrl0.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
 
 
-Cache Stats: system.l1_cntrl0.sequencer.dcache
-  system.l1_cntrl0.sequencer.dcache_total_misses: 0
-  system.l1_cntrl0.sequencer.dcache_total_demand_misses: 0
-  system.l1_cntrl0.sequencer.dcache_total_prefetches: 0
-  system.l1_cntrl0.sequencer.dcache_total_sw_prefetches: 0
-  system.l1_cntrl0.sequencer.dcache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1DcacheMemory
+  system.l1_cntrl0.L1DcacheMemory_total_misses: 0
+  system.l1_cntrl0.L1DcacheMemory_total_demand_misses: 0
+  system.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
 
 
  --- L1Cache ---

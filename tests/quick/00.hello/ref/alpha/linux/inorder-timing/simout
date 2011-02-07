@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 24 2011 18:18:02
-M5 revision 09e8ac96522d+ 7823+ default regression_updates qtip tip
-M5 started Jan 24 2011 18:18:03
-M5 executing on zooks
+M5 compiled Feb  6 2011 20:42:22
+M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
+M5 started Feb  6 2011 20:43:08
+M5 executing on SC2B0617
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

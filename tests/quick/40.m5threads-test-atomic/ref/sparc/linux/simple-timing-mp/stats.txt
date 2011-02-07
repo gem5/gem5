@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 583465                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 215700                       # Number of bytes of host memory used
-host_seconds                                     1.12                       # Real time elapsed on the host
-host_tick_rate                              235218525                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1041704                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 213476                       # Number of bytes of host memory used
+host_seconds                                     0.62                       # Real time elapsed on the host
+host_tick_rate                              419868162                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                      650423                       # Number of instructions simulated
 sim_seconds                                  0.000262                       # Number of seconds simulated
@@ -141,8 +141,24 @@ system.cpu0.icache.writebacks                       0                       # nu
 system.cpu0.idle_fraction                           0                       # Percentage of idle cycles
 system.cpu0.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu0.numCycles                          524590                       # number of cpu cycles simulated
+system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
+system.cpu0.num_busy_cycles                    524590                       # Number of busy cycles
+system.cpu0.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+system.cpu0.num_fp_alu_accesses                     0                       # Number of float alu accesses
+system.cpu0.num_fp_insts                            0                       # number of float instructions
+system.cpu0.num_fp_register_reads                   0                       # number of times the floating registers were read
+system.cpu0.num_fp_register_writes                  0                       # number of times the floating registers were written
+system.cpu0.num_func_calls                          0                       # number of times a function call or return occured
+system.cpu0.num_idle_cycles                         0                       # Number of idle cycles
 system.cpu0.num_insts                          158353                       # Number of instructions executed
-system.cpu0.num_refs                            73905                       # Number of memory references
+system.cpu0.num_int_alu_accesses               109064                       # Number of integer alu accesses
+system.cpu0.num_int_insts                      109064                       # number of integer instructions
+system.cpu0.num_int_register_reads             315336                       # number of times the integer registers were read
+system.cpu0.num_int_register_writes            110671                       # number of times the integer registers were written
+system.cpu0.num_load_insts                      48930                       # Number of load instructions
+system.cpu0.num_mem_refs                        73905                       # number of memory refs
+system.cpu0.num_store_insts                     24975                       # Number of store instructions
 system.cpu0.workload.PROG:num_syscalls             89                       # Number of system calls
 system.cpu1.dcache.ReadReq_accesses             38632                       # number of ReadReq accesses(hits+misses)
 system.cpu1.dcache.ReadReq_avg_miss_latency 20316.666667                       # average ReadReq miss latency
@@ -279,8 +295,24 @@ system.cpu1.icache.writebacks                       0                       # nu
 system.cpu1.idle_fraction                    0.130715                       # Percentage of idle cycles
 system.cpu1.not_idle_fraction                0.869285                       # Percentage of non-idle cycles
 system.cpu1.numCycles                          513666                       # number of cpu cycles simulated
+system.cpu1.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu1.numWorkItemsStarted                     0                       # number of work items this cpu started
+system.cpu1.num_busy_cycles              446521.933500                       # Number of busy cycles
+system.cpu1.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+system.cpu1.num_fp_alu_accesses                     0                       # Number of float alu accesses
+system.cpu1.num_fp_insts                            0                       # number of float instructions
+system.cpu1.num_fp_register_reads                   0                       # number of times the floating registers were read
+system.cpu1.num_fp_register_writes                  0                       # number of times the floating registers were written
+system.cpu1.num_func_calls                          0                       # number of times a function call or return occured
+system.cpu1.num_idle_cycles              67144.066500                       # Number of idle cycles
 system.cpu1.num_insts                          168364                       # Number of instructions executed
-system.cpu1.num_refs                            46919                       # Number of memory references
+system.cpu1.num_int_alu_accesses               105930                       # Number of integer alu accesses
+system.cpu1.num_int_insts                      105930                       # number of integer instructions
+system.cpu1.num_int_register_reads             244134                       # number of times the integer registers were read
+system.cpu1.num_int_register_writes             89763                       # number of times the integer registers were written
+system.cpu1.num_load_insts                      38640                       # Number of load instructions
+system.cpu1.num_mem_refs                        46919                       # number of memory refs
+system.cpu1.num_store_insts                      8279                       # Number of store instructions
 system.cpu2.dcache.ReadReq_accesses             40867                       # number of ReadReq accesses(hits+misses)
 system.cpu2.dcache.ReadReq_avg_miss_latency 15941.935484                       # average ReadReq miss latency
 system.cpu2.dcache.ReadReq_avg_mshr_miss_latency 12941.935484                       # average ReadReq mshr miss latency
@@ -416,8 +448,24 @@ system.cpu2.icache.writebacks                       0                       # nu
 system.cpu2.idle_fraction                    0.131215                       # Percentage of idle cycles
 system.cpu2.not_idle_fraction                0.868785                       # Percentage of non-idle cycles
 system.cpu2.numCycles                          513662                       # number of cpu cycles simulated
+system.cpu2.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu2.numWorkItemsStarted                     0                       # number of work items this cpu started
+system.cpu2.num_busy_cycles              446261.914218                       # Number of busy cycles
+system.cpu2.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+system.cpu2.num_fp_alu_accesses                     0                       # Number of float alu accesses
+system.cpu2.num_fp_insts                            0                       # number of float instructions
+system.cpu2.num_fp_register_reads                   0                       # number of times the floating registers were read
+system.cpu2.num_fp_register_writes                  0                       # number of times the floating registers were written
+system.cpu2.num_func_calls                          0                       # number of times a function call or return occured
+system.cpu2.num_idle_cycles              67400.085782                       # Number of idle cycles
 system.cpu2.num_insts                          161536                       # Number of instructions executed
-system.cpu2.num_refs                            56961                       # Number of memory references
+system.cpu2.num_int_alu_accesses               110351                       # Number of integer alu accesses
+system.cpu2.num_int_insts                      110351                       # number of integer instructions
+system.cpu2.num_int_register_reads             284309                       # number of times the integer registers were read
+system.cpu2.num_int_register_writes            107647                       # number of times the integer registers were written
+system.cpu2.num_load_insts                      40875                       # Number of load instructions
+system.cpu2.num_mem_refs                        56961                       # number of memory refs
+system.cpu2.num_store_insts                     16086                       # Number of store instructions
 system.cpu3.dcache.ReadReq_accesses             40736                       # number of ReadReq accesses(hits+misses)
 system.cpu3.dcache.ReadReq_avg_miss_latency 16115.384615                       # average ReadReq miss latency
 system.cpu3.dcache.ReadReq_avg_mshr_miss_latency 13115.384615                       # average ReadReq mshr miss latency
@@ -553,8 +601,24 @@ system.cpu3.icache.writebacks                       0                       # nu
 system.cpu3.idle_fraction                    0.131691                       # Percentage of idle cycles
 system.cpu3.not_idle_fraction                0.868309                       # Percentage of non-idle cycles
 system.cpu3.numCycles                          513670                       # number of cpu cycles simulated
+system.cpu3.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+system.cpu3.numWorkItemsStarted                     0                       # number of work items this cpu started
+system.cpu3.num_busy_cycles              446024.068564                       # Number of busy cycles
+system.cpu3.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+system.cpu3.num_fp_alu_accesses                     0                       # Number of float alu accesses
+system.cpu3.num_fp_insts                            0                       # number of float instructions
+system.cpu3.num_fp_register_reads                   0                       # number of times the floating registers were read
+system.cpu3.num_fp_register_writes                  0                       # number of times the floating registers were written
+system.cpu3.num_func_calls                          0                       # number of times a function call or return occured
+system.cpu3.num_idle_cycles              67645.931436                       # Number of idle cycles
 system.cpu3.num_insts                          162170                       # Number of instructions executed
-system.cpu3.num_refs                            56264                       # Number of memory references
+system.cpu3.num_int_alu_accesses               110096                       # Number of integer alu accesses
+system.cpu3.num_int_insts                      110096                       # number of integer instructions
+system.cpu3.num_int_register_reads             281520                       # number of times the integer registers were read
+system.cpu3.num_int_register_writes            106379                       # number of times the integer registers were written
+system.cpu3.num_load_insts                      40744                       # Number of load instructions
+system.cpu3.num_mem_refs                        56264                       # number of memory refs
+system.cpu3.num_store_insts                     15520                       # Number of store instructions
 system.l2c.ReadExReq_accesses::0                   99                       # number of ReadExReq accesses(hits+misses)
 system.l2c.ReadExReq_accesses::1                   13                       # number of ReadExReq accesses(hits+misses)
 system.l2c.ReadExReq_accesses::2                   12                       # number of ReadExReq accesses(hits+misses)

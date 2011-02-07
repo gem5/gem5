@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 21 2010 11:12:15
-M5 revision a2fac757fb31+ 6860+ default qtip brad/rubycfg_orion_update tip
-M5 started Jan 21 2010 11:12:51
-M5 executing on svvint07
+M5 compiled Feb  6 2011 15:20:27
+M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
+M5 started Feb  6 2011 20:46:13
+M5 executing on SC2B0617
 command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-timing-ruby -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-timing-ruby
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

@@ -93,8 +93,24 @@ drivesys.cpu.kern.syscall::150                      1      4.55%    100.00% # nu
 drivesys.cpu.kern.syscall::total                   22                       # number of syscalls executed
 drivesys.cpu.not_idle_fraction               0.000010                       # Percentage of non-idle cycles
 drivesys.cpu.numCycles                   199571362884                       # number of cpu cycles simulated
+drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
+drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
+drivesys.cpu.num_busy_cycles             1954747.881971                       # Number of busy cycles
+drivesys.cpu.num_conditional_control_insts       161093                       # number of instructions that are conditional controls
+drivesys.cpu.num_fp_alu_accesses                 1278                       # Number of float alu accesses
+drivesys.cpu.num_fp_insts                        1278                       # number of float instructions
+drivesys.cpu.num_fp_register_reads                694                       # number of times the floating registers were read
+drivesys.cpu.num_fp_register_writes               698                       # number of times the floating registers were written
+drivesys.cpu.num_func_calls                    121650                       # number of times a function call or return occured
+drivesys.cpu.num_idle_cycles             199569408136.118042                       # Number of idle cycles
 drivesys.cpu.num_insts                        1958129                       # Number of instructions executed
-drivesys.cpu.num_refs                          625939                       # Number of memory references
+drivesys.cpu.num_int_alu_accesses             1889973                       # Number of integer alu accesses
+drivesys.cpu.num_int_insts                    1889973                       # number of integer instructions
+drivesys.cpu.num_int_register_reads           2411030                       # number of times the integer registers were read
+drivesys.cpu.num_int_register_writes          1442447                       # number of times the integer registers were written
+drivesys.cpu.num_load_insts                    394697                       # Number of load instructions
+drivesys.cpu.num_mem_refs                      625939                       # number of memory refs
+drivesys.cpu.num_store_insts                   231242                       # Number of store instructions
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -156,10 +172,10 @@ drivesys.tsunami.ethernet.txPPS                    25                       # Pa
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
 drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
-host_inst_rate                              245765975                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 512700                       # Number of bytes of host memory used
-host_seconds                                     1.11                       # Real time elapsed on the host
-host_tick_rate                           179775828937                       # Simulator tick rate (ticks/s)
+host_inst_rate                              147484777                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 480356                       # Number of bytes of host memory used
+host_seconds                                     1.85                       # Real time elapsed on the host
+host_tick_rate                           107890886853                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.200001                       # Number of seconds simulated
@@ -267,8 +283,24 @@ testsys.cpu.kern.syscall::118                       2      2.41%    100.00% # nu
 testsys.cpu.kern.syscall::total                    83                       # number of syscalls executed
 testsys.cpu.not_idle_fraction                0.000018                       # Percentage of non-idle cycles
 testsys.cpu.numCycles                    199569460393                       # number of cpu cycles simulated
+testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
+testsys.cpu.num_busy_cycles              3558262.534294                       # Number of busy cycles
+testsys.cpu.num_conditional_control_insts       361828                       # number of instructions that are conditional controls
+testsys.cpu.num_fp_alu_accesses                 17380                       # Number of float alu accesses
+testsys.cpu.num_fp_insts                        17380                       # number of float instructions
+testsys.cpu.num_fp_register_reads               11166                       # number of times the floating registers were read
+testsys.cpu.num_fp_register_writes              10823                       # number of times the floating registers were written
+testsys.cpu.num_func_calls                     107994                       # number of times a function call or return occured
+testsys.cpu.num_idle_cycles              199565902130.465698                       # Number of idle cycles
 testsys.cpu.num_insts                         3560411                       # Number of instructions executed
-testsys.cpu.num_refs                          1173234                       # Number of memory references
+testsys.cpu.num_int_alu_accesses              3348322                       # Number of integer alu accesses
+testsys.cpu.num_int_insts                     3348322                       # number of integer instructions
+testsys.cpu.num_int_register_reads            4592571                       # number of times the integer registers were read
+testsys.cpu.num_int_register_writes           2442795                       # number of times the integer registers were written
+testsys.cpu.num_load_insts                     666253                       # Number of load instructions
+testsys.cpu.num_mem_refs                      1173234                       # number of memory refs
+testsys.cpu.num_store_insts                    506981                       # Number of store instructions
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).
@@ -386,8 +418,24 @@ drivesys.cpu.kern.mode_ticks::idle                  0                       # nu
 drivesys.cpu.kern.swap_context                      0                       # number of times the context was actually changed
 drivesys.cpu.not_idle_fraction                      0                       # Percentage of non-idle cycles
 drivesys.cpu.numCycles                              0                       # number of cpu cycles simulated
+drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
+drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
+drivesys.cpu.num_busy_cycles                        0                       # Number of busy cycles
+drivesys.cpu.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+drivesys.cpu.num_fp_alu_accesses                    0                       # Number of float alu accesses
+drivesys.cpu.num_fp_insts                           0                       # number of float instructions
+drivesys.cpu.num_fp_register_reads                  0                       # number of times the floating registers were read
+drivesys.cpu.num_fp_register_writes                 0                       # number of times the floating registers were written
+drivesys.cpu.num_func_calls                         0                       # number of times a function call or return occured
+drivesys.cpu.num_idle_cycles                        0                       # Number of idle cycles
 drivesys.cpu.num_insts                              0                       # Number of instructions executed
-drivesys.cpu.num_refs                               0                       # Number of memory references
+drivesys.cpu.num_int_alu_accesses                   0                       # Number of integer alu accesses
+drivesys.cpu.num_int_insts                          0                       # number of integer instructions
+drivesys.cpu.num_int_register_reads                 0                       # number of times the integer registers were read
+drivesys.cpu.num_int_register_writes                0                       # number of times the integer registers were written
+drivesys.cpu.num_load_insts                         0                       # Number of load instructions
+drivesys.cpu.num_mem_refs                           0                       # number of memory refs
+drivesys.cpu.num_store_insts                        0                       # Number of store instructions
 drivesys.disk0.dma_read_bytes                       0                       # Number of bytes transfered via DMA reads (not PRD).
 drivesys.disk0.dma_read_full_pages                  0                       # Number of full page size DMA reads (not PRD).
 drivesys.disk0.dma_read_txs                         0                       # Number of DMA read transactions (not PRD).
@@ -431,10 +479,10 @@ drivesys.tsunami.ethernet.totalSwi                  0                       # to
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-host_inst_rate                           151538155765                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 512700                       # Number of bytes of host memory used
+host_inst_rate                           146424656133                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 480356                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-host_tick_rate                              415641460                       # Simulator tick rate (ticks/s)
+host_tick_rate                              399379065                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated
@@ -491,8 +539,24 @@ testsys.cpu.kern.mode_ticks::idle                   0                       # nu
 testsys.cpu.kern.swap_context                       0                       # number of times the context was actually changed
 testsys.cpu.not_idle_fraction                       0                       # Percentage of non-idle cycles
 testsys.cpu.numCycles                               0                       # number of cpu cycles simulated
+testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
+testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
+testsys.cpu.num_busy_cycles                         0                       # Number of busy cycles
+testsys.cpu.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+testsys.cpu.num_fp_alu_accesses                     0                       # Number of float alu accesses
+testsys.cpu.num_fp_insts                            0                       # number of float instructions
+testsys.cpu.num_fp_register_reads                   0                       # number of times the floating registers were read
+testsys.cpu.num_fp_register_writes                  0                       # number of times the floating registers were written
+testsys.cpu.num_func_calls                          0                       # number of times a function call or return occured
+testsys.cpu.num_idle_cycles                         0                       # Number of idle cycles
 testsys.cpu.num_insts                               0                       # Number of instructions executed
-testsys.cpu.num_refs                                0                       # Number of memory references
+testsys.cpu.num_int_alu_accesses                    0                       # Number of integer alu accesses
+testsys.cpu.num_int_insts                           0                       # number of integer instructions
+testsys.cpu.num_int_register_reads                  0                       # number of times the integer registers were read
+testsys.cpu.num_int_register_writes                 0                       # number of times the integer registers were written
+testsys.cpu.num_load_insts                          0                       # Number of load instructions
+testsys.cpu.num_mem_refs                            0                       # number of memory refs
+testsys.cpu.num_store_insts                         0                       # Number of store instructions
 testsys.disk0.dma_read_bytes                        0                       # Number of bytes transfered via DMA reads (not PRD).
 testsys.disk0.dma_read_full_pages                   0                       # Number of full page size DMA reads (not PRD).
 testsys.disk0.dma_read_txs                          0                       # Number of DMA read transactions (not PRD).

@@ -1,45 +1,5 @@
-warn: Sockets disabled, not accepting terminal connections
-For more information see: http://www.m5sim.org/warn/8742226b
-warn: Sockets disabled, not accepting gdb connections
-For more information see: http://www.m5sim.org/warn/d946bea6
-warn: The clidr register always reports 0 caches.
-For more information see: http://www.m5sim.org/warn/23a3c326
-warn: The csselr register isn't implemented.
-For more information see: http://www.m5sim.org/warn/c0c486b8
-warn: Need to flush all TLBs in MP
-For more information see: http://www.m5sim.org/warn/6cccf999
-warn: 	instruction 'mcr bpiall' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: The ccsidr register isn't implemented and always reads as 0.
-For more information see: http://www.m5sim.org/warn/2c4acb9c
-warn: 	instruction 'mcr dccimvac' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Need to flush all TLBs in MP
-For more information see: http://www.m5sim.org/warn/6cccf999
-warn: 	instruction 'mcr bpiall' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: 	instruction 'mcr dccmvau' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: 	instruction 'mcr icimvau' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: 	instruction 'mcr bpiall' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: 	instruction 'mcr bpiall' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
-For more information see: http://www.m5sim.org/warn/7998f2ea
-warn: 	instruction 'mcr bpiall' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Complete acc isn't called on normal stores in O3.
-For more information see: http://www.m5sim.org/warn/138d8573
-warn: 	instruction 'mcr bpiall' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Complete acc isn't called on normal stores in O3.
-For more information see: http://www.m5sim.org/warn/138d8573
-warn: Complete acc isn't called on normal stores in O3.
-For more information see: http://www.m5sim.org/warn/138d8573
-warn: Need to flush all TLBs in MP
-For more information see: http://www.m5sim.org/warn/6cccf999
-warn: 	instruction 'mcr bpiall' unimplemented
-For more information see: http://www.m5sim.org/warn/21b09adb
-hack: be nice to actually delete the event here
+fatal: Could not load kernel file /proj/aatl_perfmod_arch/m5_system_files/m5_system_2.0b3/binaries/vmlinux.arm
+ @ cycle 0
+[System:build/ARM_FS/sim/system.cc, line 118]
+Memory Usage: 210184 KBytes
+For more information see: http://www.m5sim.org/fatal/406aceb6

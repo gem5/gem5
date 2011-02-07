@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 13 2011 22:36:25
-M5 revision 81b32f1a8f29 7836 default MESI_CMP_update_ref.patch qtip tip
-M5 started Jan 13 2011 22:36:28
-M5 executing on scamorza.cs.wisc.edu
+M5 compiled Feb  6 2011 15:12:58
+M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
+M5 started Feb  6 2011 20:42:15
+M5 executing on SC2B0617
 command line: build/ALPHA_SE_MESI_CMP_directory/m5.fast -d build/ALPHA_SE_MESI_CMP_directory/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MESI_CMP_directory -re tests/run.py build/ALPHA_SE_MESI_CMP_directory/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

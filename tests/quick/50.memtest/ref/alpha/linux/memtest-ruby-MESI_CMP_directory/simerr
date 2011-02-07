@@ -1,74 +1,15 @@
-system.cpu0: completed 10000 read accesses @371396
-system.cpu2: completed 10000 read accesses @374647
-system.cpu7: completed 10000 read accesses @377314
-system.cpu1: completed 10000 read accesses @379478
-system.cpu3: completed 10000 read accesses @380787
-system.cpu5: completed 10000 read accesses @386046
-system.cpu4: completed 10000 read accesses @386470
-system.cpu6: completed 10000 read accesses @394077
-system.cpu0: completed 20000 read accesses @748308
-system.cpu2: completed 20000 read accesses @750148
-system.cpu1: completed 20000 read accesses @752701
-system.cpu3: completed 20000 read accesses @761044
-system.cpu5: completed 20000 read accesses @762156
-system.cpu4: completed 20000 read accesses @766351
-system.cpu6: completed 20000 read accesses @775961
-system.cpu7: completed 20000 read accesses @776472
-system.cpu2: completed 30000 read accesses @1125160
-system.cpu1: completed 30000 read accesses @1125369
-system.cpu0: completed 30000 read accesses @1130636
-system.cpu3: completed 30000 read accesses @1139985
-system.cpu5: completed 30000 read accesses @1141453
-system.cpu4: completed 30000 read accesses @1142264
-system.cpu6: completed 30000 read accesses @1154957
-system.cpu7: completed 30000 read accesses @1163543
-system.cpu2: completed 40000 read accesses @1501376
-system.cpu1: completed 40000 read accesses @1506717
-system.cpu0: completed 40000 read accesses @1507617
-system.cpu3: completed 40000 read accesses @1521033
-system.cpu4: completed 40000 read accesses @1523666
-system.cpu5: completed 40000 read accesses @1527373
-system.cpu6: completed 40000 read accesses @1547890
-system.cpu7: completed 40000 read accesses @1551332
-system.cpu2: completed 50000 read accesses @1879261
-system.cpu0: completed 50000 read accesses @1879360
-system.cpu1: completed 50000 read accesses @1885794
-system.cpu3: completed 50000 read accesses @1900931
-system.cpu4: completed 50000 read accesses @1902181
-system.cpu5: completed 50000 read accesses @1910820
-system.cpu6: completed 50000 read accesses @1931247
-system.cpu7: completed 50000 read accesses @1940656
-system.cpu0: completed 60000 read accesses @2246405
-system.cpu1: completed 60000 read accesses @2255112
-system.cpu2: completed 60000 read accesses @2258276
-system.cpu3: completed 60000 read accesses @2284120
-system.cpu4: completed 60000 read accesses @2284604
-system.cpu5: completed 60000 read accesses @2293116
-system.cpu6: completed 60000 read accesses @2311203
-system.cpu7: completed 60000 read accesses @2336896
-system.cpu0: completed 70000 read accesses @2626542
-system.cpu1: completed 70000 read accesses @2633209
-system.cpu2: completed 70000 read accesses @2638509
-system.cpu4: completed 70000 read accesses @2659805
-system.cpu3: completed 70000 read accesses @2663605
-system.cpu5: completed 70000 read accesses @2671213
-system.cpu6: completed 70000 read accesses @2693680
-system.cpu7: completed 70000 read accesses @2725734
-system.cpu0: completed 80000 read accesses @2999116
-system.cpu1: completed 80000 read accesses @3008858
-system.cpu2: completed 80000 read accesses @3014566
-system.cpu3: completed 80000 read accesses @3028069
-system.cpu4: completed 80000 read accesses @3040014
-system.cpu5: completed 80000 read accesses @3055346
-system.cpu6: completed 80000 read accesses @3080851
-system.cpu7: completed 80000 read accesses @3115153
-system.cpu0: completed 90000 read accesses @3374370
-system.cpu1: completed 90000 read accesses @3384044
-system.cpu2: completed 90000 read accesses @3385035
-system.cpu3: completed 90000 read accesses @3412877
-system.cpu4: completed 90000 read accesses @3422171
-system.cpu5: completed 90000 read accesses @3435207
-system.cpu6: completed 90000 read accesses @3466955
-system.cpu7: completed 90000 read accesses @3499833
-system.cpu0: completed 100000 read accesses @3750455
-hack: be nice to actually delete the event here
+system.cpu1: completed 10000 read accesses @4267815
+system.cpu0: completed 10000 read accesses @4386665
+system.cpu7: completed 10000 read accesses @4430875
+system.cpu5: completed 10000 read accesses @4607545
+system.cpu2: completed 10000 read accesses @4619185
+system.cpu6: completed 10000 read accesses @4647575
+system.cpu4: completed 10000 read accesses @4703325
+system.cpu3: completed 10000 read accesses @4708885
+panic: Possible Deadlock detected. Aborting!
+version: 3 request.paddr: 0x10c0c3 m_readRequestTable: 8 current time: 5500000 issue_time: 4999950 difference: 500050
+ @ cycle 5500000
+[wakeup:build/ALPHA_SE_MESI_CMP_directory/mem/ruby/system/Sequencer.cc, line 107]
+Memory Usage: 346324 KBytes
+For more information see: http://www.m5sim.org/panic/ee664ab2
+Program aborted at cycle 5500000

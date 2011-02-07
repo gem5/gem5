@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Jan/13/2011 22:37:51
+Real time: Dec/01/2010 10:30:07
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 83
-Elapsed_time_in_minutes: 1.38333
-Elapsed_time_in_hours: 0.0230556
-Elapsed_time_in_days: 0.000960648
+Elapsed_time_in_seconds: 46
+Elapsed_time_in_minutes: 0.766667
+Elapsed_time_in_hours: 0.0127778
+Elapsed_time_in_days: 0.000532407
 
-Virtual_time_in_seconds: 82.77
-Virtual_time_in_minutes: 1.3795
-Virtual_time_in_hours:   0.0229917
-Virtual_time_in_days:    0.000957986
+Virtual_time_in_seconds: 45.19
+Virtual_time_in_minutes: 0.753167
+Virtual_time_in_hours:   0.0125528
+Virtual_time_in_days:    0.000523032
 
 Ruby_current_time: 3750455
 Ruby_start_time: 0
 Ruby_cycles: 3750455
 
-mbytes_resident: 19.9609
-mbytes_total: 283.734
-resident_ratio: 0.0703783
+mbytes_resident: 34.6367
+mbytes_total: 335.688
+resident_ratio: 0.103205
 
 ruby_cycles_executed: [ 3750456 3750456 3750456 3750456 3750456 3750456 3750456 3750456 ]
 
@@ -116,12 +116,12 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 3 count: 1199123 average: 0.00254603 
 Resource Usage
 --------------
 page_size: 4096
-user_time: 82
+user_time: 44
 system_time: 0
-page_reclaims: 5799
+page_reclaims: 10049
 page_faults: 0
 swaps: 0
-block_inputs: 0
+block_inputs: 16
 block_outputs: 0
 
 Network Stats
@@ -423,13 +423,6 @@ E_I  Load [0 0 0 0 0 0 0 0 ] 0
 E_I  Ifetch [0 0 0 0 0 0 0 0 ] 0
 E_I  Store [0 0 0 0 0 0 0 0 ] 0
 E_I  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-
-SINK_WB_ACK  Load [0 0 0 0 0 0 0 0 ] 0
-SINK_WB_ACK  Ifetch [0 0 0 0 0 0 0 0 ] 0
-SINK_WB_ACK  Store [0 0 0 0 0 0 0 0 ] 0
-SINK_WB_ACK  Inv [0 0 0 0 0 0 0 0 ] 0
-SINK_WB_ACK  L1_Replacement [0 0 0 0 0 0 0 0 ] 0
-SINK_WB_ACK  WB_Ack [0 0 0 0 0 0 0 0 ] 0
 
 Cache Stats: system.l1_cntrl1.L1IcacheMemory
   system.l1_cntrl1.L1IcacheMemory_total_misses: 0

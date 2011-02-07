@@ -1,7 +1,9 @@
-warn: Sockets disabled, not accepting gdb connections
-For more information see: http://www.m5sim.org/warn/d946bea6
-warn: instruction 'fnstcw_Mw' unimplemented
-For more information see: http://www.m5sim.org/warn/437d5238
-warn: instruction 'fldcw_Mw' unimplemented
-For more information see: http://www.m5sim.org/warn/437d5238
-hack: be nice to actually delete the event here
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/proj/radl_extra/users/bbeckman/noc_m5/src/python/m5/main.py", line 359, in main
+    exec filecode in scope
+  File "tests/run.py", line 70, in <module>
+    execfile(joinpath(tests_root, 'configs', test_filename + '.py'))
+  File "tests/configs/o3-timing.py", line 40, in <module>
+    cpu = DerivO3CPU(cpu_id=0)
+NameError: name 'DerivO3CPU' is not defined

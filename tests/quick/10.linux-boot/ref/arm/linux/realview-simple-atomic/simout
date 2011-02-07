@@ -5,12 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct 15 2010 11:17:32
-M5 revision e459beb39dd0 7713 default ext/amba_kmi_pl050.patch qtip tip
-M5 started Oct 15 2010 11:17:48
-M5 executing on aus-bc3-b4
-command line: build/ARM_FS/m5.opt -d build/ARM_FS/tests/opt/quick/10.linux-boot/arm/linux/realview-simple-atomic -re tests/run.py build/ARM_FS/tests/opt/quick/10.linux-boot/arm/linux/realview-simple-atomic
+M5 compiled Feb  6 2011 15:34:42
+M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
+M5 started Feb  6 2011 15:35:03
+M5 executing on svnxelk05
+command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-atomic -re tests/run.py build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-atomic
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux.arm
-info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 25821310500 because m5_exit instruction encountered
+info: kernel located at: /proj/aatl_perfmod_arch/m5_system_files/m5_system_2.0b3/binaries/vmlinux.arm
