@@ -102,10 +102,10 @@ protToVirtFallThrough:
     andi t6, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
     br label("globalCSDescriptor"), flags=(CEZF,)
-    ld t8, tsl, [1, t0, t6], dataSize=8
+    ld t8, tsl, [1, t0, t6], dataSize=8, atCPL0=True
     br label("processCSDescriptor")
 globalCSDescriptor:
-    ld t8, tsg, [1, t0, t6], dataSize=8
+    ld t8, tsg, [1, t0, t6], dataSize=8, atCPL0=True
 processCSDescriptor:
     chks t2, t6, dataSize=8
 
@@ -159,10 +159,10 @@ doPopStackStuff:
     andi t7, t9, 0xF8, dataSize=8
     andi t0, t9, 0x4, flags=(EZF,), dataSize=2
     br label("globalSSDescriptor"), flags=(CEZF,)
-    ld t7, tsl, [1, t0, t7], dataSize=8
+    ld t7, tsl, [1, t0, t7], dataSize=8, atCPL0=True
     br label("processSSDescriptor")
 globalSSDescriptor:
-    ld t7, tsg, [1, t0, t7], dataSize=8
+    ld t7, tsg, [1, t0, t7], dataSize=8, atCPL0=True
 processSSDescriptor:
     chks t9, t7, dataSize=8
 
