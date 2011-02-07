@@ -55,7 +55,9 @@ def define_options(parser):
           help="allow migratory sharing for atomic only accessed blocks")
     parser.add_option("--pf-on", action="store_true",
           help="Hammer: enable Probe Filter")
-    
+    parser.add_option("--dir-on", action="store_true",
+          help="Hammer: enable Full-bit Directory")
+
 def create_system(options, system, piobus, dma_devices):
     
     if buildEnv['PROTOCOL'] != 'MOESI_hammer':
@@ -165,7 +167,8 @@ def create_system(options, system, piobus, dma_devices):
                                                     options.map_levels),
                                          probeFilter = pf,
                                          memBuffer = mem_cntrl,
-                                         probe_filter_enabled = options.pf_on)
+                                         probe_filter_enabled = options.pf_on,
+                                         full_bit_dir_enabled = options.dir_on)
 
         if options.recycle_latency:
             dir_cntrl.recycle_latency = options.recycle_latency

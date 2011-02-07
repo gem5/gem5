@@ -137,6 +137,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     bool Dirty,              desc="Is the data dirty (different than memory)?";
     int NumPendingMsgs,      desc="Number of acks/data messages that this processor is waiting for";
     bool Sharers,            desc="On a GetS, did we find any other sharers in the system";
+    bool AppliedSilentAcks, default="false", desc="for full-bit dir, does the pending msg count reflect the silent acks";
     MachineID LastResponder, desc="last machine to send a response for this request";
     MachineID CurOwner,      desc="current owner of the block, used for UnblockS responses";
     Time InitialRequestTime, default="0", desc="time the initial requests was sent from the L1Cache";
@@ -526,6 +527,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         } else {
           out_msg.Acks := 2;
         }
+        out_msg.SilentAcks := in_msg.SilentAcks;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
@@ -558,6 +560,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         } else {
           out_msg.Acks := 2;
         }
+        out_msg.SilentAcks := in_msg.SilentAcks;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
@@ -581,6 +584,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         } else {
           out_msg.Acks := 2;
         }
+        out_msg.SilentAcks := in_msg.SilentAcks;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
@@ -600,6 +604,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Dirty := cache_entry.Dirty;
         DPRINTF(RubySlicc, "%s\n", out_msg.DataBlk);
         out_msg.Acks := machineCount(MachineType:L1Cache);
+        out_msg.SilentAcks := in_msg.SilentAcks;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
@@ -615,6 +620,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.Acks := 1;
+        out_msg.SilentAcks := in_msg.SilentAcks;
         assert(in_msg.DirectedProbe == false);
         out_msg.MessageSize := MessageSizeType:Response_Control;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
@@ -631,6 +637,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.Acks := 1;
+        out_msg.SilentAcks := in_msg.SilentAcks;
         assert(in_msg.DirectedProbe == false);
         out_msg.MessageSize := MessageSizeType:Response_Control;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
@@ -779,9 +786,17 @@ machine(L1Cache, "AMD Hammer-like protocol")
     peek(responseToCache_in, ResponseMsg) {
       assert(in_msg.Acks > 0);
       assert(is_valid(tbe));
+      DPRINTF(RubySlicc, "Sender = %s\n", in_msg.Sender);
+      DPRINTF(RubySlicc, "SilentAcks = %d\n", in_msg.SilentAcks);
+      if (tbe.AppliedSilentAcks == false) {
+        tbe.NumPendingMsgs := tbe.NumPendingMsgs - in_msg.SilentAcks;
+        tbe.AppliedSilentAcks := true;
+      }
       DPRINTF(RubySlicc, "%d\n", tbe.NumPendingMsgs);
       tbe.NumPendingMsgs := tbe.NumPendingMsgs - in_msg.Acks;
       DPRINTF(RubySlicc, "%d\n", tbe.NumPendingMsgs);
+      APPEND_TRANSITION_COMMENT(tbe.NumPendingMsgs);
+      APPEND_TRANSITION_COMMENT(in_msg.Sender);
       tbe.LastResponder := in_msg.Sender;
       if (tbe.InitialRequestTime != zero_time() && in_msg.InitialRequestTime != zero_time()) {
         assert(tbe.InitialRequestTime == in_msg.InitialRequestTime);
@@ -844,6 +859,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   action(q_sendDataFromTBEToCache, "q", desc="Send data from TBE to cache") {
     peek(forwardToCache_in, RequestMsg) {
+        assert(in_msg.Requestor != machineID);
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
         assert(is_valid(tbe));
         out_msg.Address := address;
@@ -858,6 +874,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         } else {
           out_msg.Acks := 2;
         }
+        out_msg.SilentAcks := in_msg.SilentAcks;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
@@ -877,6 +894,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         out_msg.DataBlk := tbe.DataBlk;
         out_msg.Dirty := tbe.Dirty;
         out_msg.Acks := machineCount(MachineType:L1Cache);
+        out_msg.SilentAcks := in_msg.SilentAcks;
         out_msg.MessageSize := MessageSizeType:Response_Data;
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
@@ -1387,7 +1405,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     n_popResponseQueue;
   }
 
-  transition(SM, Data, ISM) {
+  transition(SM, {Data, Exclusive_Data}, ISM) {
     v_writeDataToCacheVerify;
     m_decrementNumberOfMessages; 
     o_checkForCompletion;

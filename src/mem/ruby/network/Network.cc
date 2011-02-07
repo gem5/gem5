@@ -73,6 +73,7 @@ Network::MessageSizeType_to_int(MessageSizeType size_type)
       case MessageSizeType_Response_Control:
       case MessageSizeType_Writeback_Control:
       case MessageSizeType_Broadcast_Control:
+      case MessageSizeType_Multicast_Control:
       case MessageSizeType_Forwarded_Control:
       case MessageSizeType_Invalidate_Control:
       case MessageSizeType_Unblock_Control:

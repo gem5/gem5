@@ -38,7 +38,8 @@ machine(Directory, "AMD Hammer-like protocol")
   CacheMemory * probeFilter,
   MemoryControl * memBuffer,
   int memory_controller_latency = 2,
-  bool probe_filter_enabled = false
+  bool probe_filter_enabled = false,
+  bool full_bit_dir_enabled = false
 {
 
   MessageBuffer forwardFromDir, network="To", virtual_network="3", ordered="false";
@@ -140,6 +141,7 @@ machine(Directory, "AMD Hammer-like protocol")
     State PfState,                 desc="Directory state";
     MachineID Owner,               desc="Owner node";
     DataBlock DataBlk,             desc="data for the block";
+    Set Sharers,                   desc="sharing vector for full bit directory";
   }
 
   // TBE entries for DMA requests
@@ -148,6 +150,7 @@ machine(Directory, "AMD Hammer-like protocol")
     State TBEState,        desc="Transient State";
     CoherenceResponseType ResponseType, desc="The type for the subsequent response message";
     int Acks, default="0", desc="The number of acks that the waiting response represents";
+    int SilentAcks, default="0", desc="The number of silent acks associated with this transaction";
     DataBlock DmaDataBlk,  desc="DMA Data to be written.  Partial blocks need to merged with system memory";
     DataBlock DataBlk,     desc="The current view of system memory";
     int Len,               desc="...";
@@ -173,6 +176,8 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // ** OBJECTS **
 
+  Set fwd_set;
+
   TBETable TBEs, template_hack="<Directory_TBE>";
 
   Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
@@ -191,7 +196,7 @@ machine(Directory, "AMD Hammer-like protocol")
     if (is_valid(tbe)) {
       return tbe.TBEState;
     } else {
-      if (probe_filter_enabled) {
+      if (probe_filter_enabled || full_bit_dir_enabled) {
         if (is_valid(pf_entry)) {
           assert(pf_entry.PfState == getDirectoryEntry(addr).DirectoryState);
         } else {
@@ -206,7 +211,7 @@ machine(Directory, "AMD Hammer-like protocol")
     if (is_valid(tbe)) {
       tbe.TBEState := state;
     }
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       if (is_valid(pf_entry)) {
         pf_entry.PfState := state;
       }
@@ -349,7 +354,7 @@ machine(Directory, "AMD Hammer-like protocol")
         if (in_msg.Type == CoherenceRequestType:PUT) {
           trigger(Event:PUT, in_msg.Address, pf_entry, tbe);
         } else {
-          if (probe_filter_enabled) {
+          if (probe_filter_enabled || full_bit_dir_enabled) {
             if (is_valid(pf_entry)) {
               trigger(cache_request_to_event(in_msg.Type), in_msg.Address,
                       pf_entry, tbe);
@@ -392,26 +397,44 @@ machine(Directory, "AMD Hammer-like protocol")
   // Actions
   
   action(r_setMRU, "\rr", desc="manually set the MRU bit for pf entry" ) {
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       assert(is_valid(cache_entry)); 
       probeFilter.setMRU(address);
     }
   }
 
   action(auno_assertUnblockerNotOwner, "auno", desc="assert unblocker not owner") {
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       assert(is_valid(cache_entry)); 
       peek(unblockNetwork_in, ResponseMsg) {
         assert(cache_entry.Owner != in_msg.Sender);
+        if (full_bit_dir_enabled) {
+          assert(cache_entry.Sharers.isElement(machineIDToNodeID(in_msg.Sender)) == false);
+        }
       }
     }
   }
 
   action(uo_updateOwnerIfPf, "uo", desc="update owner") {
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       assert(is_valid(cache_entry)); 
       peek(unblockNetwork_in, ResponseMsg) {
         cache_entry.Owner := in_msg.Sender;
+        if (full_bit_dir_enabled) {
+          cache_entry.Sharers.clear();
+          cache_entry.Sharers.add(machineIDToNodeID(in_msg.Sender));
+          APPEND_TRANSITION_COMMENT(cache_entry.Sharers);
+          DPRINTF(RubySlicc, "Sharers = %d\n", cache_entry.Sharers);
+        }
+      }
+    }
+  }
+
+  action(us_updateSharerIfFBD, "us", desc="update sharer if full-bit directory") {
+   if (full_bit_dir_enabled) {
+      assert(probeFilter.isTagPresent(address));
+      peek(unblockNetwork_in, ResponseMsg) {
+        cache_entry.Sharers.add(machineIDToNodeID(in_msg.Sender));
       }
     }
   }
@@ -441,7 +464,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(pfa_probeFilterAllocate, "pfa", desc="Allocate ProbeFilterEntry") {
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       peek(requestQueue_in, RequestMsg) {
         set_cache_entry(probeFilter.allocate(address, new PfEntry));
         cache_entry.Owner := in_msg.Requestor;
@@ -450,14 +473,14 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(pfd_probeFilterDeallocate, "pfd", desc="Deallocate ProbeFilterEntry") {
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       probeFilter.deallocate(address);
       unset_cache_entry();
     }
   }
 
   action(ppfd_possibleProbeFilterDeallocate, "ppfd", desc="Deallocate ProbeFilterEntry") {
-    if (probe_filter_enabled && is_valid(cache_entry)) {
+    if ((probe_filter_enabled || full_bit_dir_enabled) && is_valid(cache_entry)) {
       probeFilter.deallocate(address);
       unset_cache_entry();
     }
@@ -495,7 +518,12 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(pa_setPendingMsgsToAll, "pa", desc="set pending msgs to all") {
     assert(is_valid(tbe));
-    tbe.NumPendingMsgs := machineCount(MachineType:L1Cache);
+    if (full_bit_dir_enabled) {
+      assert(is_valid(cache_entry));
+      tbe.NumPendingMsgs := cache_entry.Sharers.count();
+    } else {
+      tbe.NumPendingMsgs := machineCount(MachineType:L1Cache);
+    }
   }
 
   action(po_setPendingMsgsToOne, "po", desc="set pending msgs to one") {
@@ -510,13 +538,34 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(sa_setAcksToOne, "sa", desc="Forwarded request, set the ack amount to one") {
     assert(is_valid(tbe));
-    tbe.Acks := 1;
-  }   
+    peek(requestQueue_in, RequestMsg) {
+      if (full_bit_dir_enabled) {
+        assert(is_valid(cache_entry));
+        //
+        // If we are using the full-bit directory and no sharers exists beyond
+        // the requestor, then we must set the ack number to all, not one
+        //
+        fwd_set := cache_entry.Sharers;
+        fwd_set.remove(machineIDToNodeID(in_msg.Requestor));
+        if (fwd_set.count() > 0) {
+          tbe.Acks := 1;
+          tbe.SilentAcks := machineCount(MachineType:L1Cache) - fwd_set.count();
+          tbe.SilentAcks := tbe.SilentAcks - 1;
+        } else {
+          tbe.Acks := machineCount(MachineType:L1Cache);
+          tbe.SilentAcks := 0;
+        }
+      } else {
+        tbe.Acks := 1;
+      }
+    }
+  } 
 
   action(saa_setAcksToAllIfPF, "saa", desc="Non-forwarded request, set the ack amount to all") {
     assert(is_valid(tbe));
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       tbe.Acks := machineCount(MachineType:L1Cache);
+      tbe.SilentAcks := 0;
     } else {
       tbe.Acks := 1;
     }
@@ -590,7 +639,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(spa_setPendingAcksToZeroIfPF, "spa", desc="if probe filter, no need to wait for acks") {
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       assert(is_valid(tbe));
       tbe.NumPendingMsgs := 0;
     }
@@ -599,7 +648,7 @@ machine(Directory, "AMD Hammer-like protocol")
   action(sc_signalCompletionIfPF, "sc", desc="indicate that we should skip waiting for cpu acks") {
     assert(is_valid(tbe));
     if (tbe.NumPendingMsgs == 0) {
-      assert(probe_filter_enabled);
+      assert(probe_filter_enabled || full_bit_dir_enabled);
       enqueue(triggerQueue_out, TriggerMsg) {
         out_msg.Address := address;
         out_msg.Type := TriggerType:ALL_ACKS_NO_SHARERS;
@@ -619,6 +668,7 @@ machine(Directory, "AMD Hammer-like protocol")
         DPRINTF(RubySlicc, "%s\n", out_msg.DataBlk);
         out_msg.Dirty := false; // By definition, the block is now clean
         out_msg.Acks := tbe.Acks;
+        out_msg.SilentAcks := tbe.SilentAcks;
         DPRINTF(RubySlicc, "%d\n", out_msg.Acks);
         assert(out_msg.Acks > 0);
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -683,7 +733,17 @@ machine(Directory, "AMD Hammer-like protocol")
   action(r_recordDataInTBE, "rt", desc="Record Data in TBE") {
     peek(requestQueue_in, RequestMsg) {
       assert(is_valid(tbe));
-      tbe.ResponseType := CoherenceResponseType:DATA;
+      if (full_bit_dir_enabled) {
+        fwd_set := cache_entry.Sharers;
+        fwd_set.remove(machineIDToNodeID(in_msg.Requestor));
+        if (fwd_set.count() > 0) {
+          tbe.ResponseType := CoherenceResponseType:DATA;
+        } else {
+          tbe.ResponseType := CoherenceResponseType:DATA_EXCLUSIVE;
+        }
+      } else {
+        tbe.ResponseType := CoherenceResponseType:DATA;
+      }
     }
   }
 
@@ -736,16 +796,37 @@ machine(Directory, "AMD Hammer-like protocol")
   action(fn_forwardRequestIfNecessary, "fn", desc="Forward requests if necessary") {
     assert(is_valid(tbe));
     if ((machineCount(MachineType:L1Cache) > 1) && (tbe.Acks <= 1)) {
-      peek(requestQueue_in, RequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
-          out_msg.Address := address;
-          out_msg.Type := in_msg.Type;
-          out_msg.Requestor := in_msg.Requestor;
-          out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
-          out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
-          out_msg.MessageSize := MessageSizeType:Broadcast_Control;
-          out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-          out_msg.ForwardRequestTime := get_time();
+      if (full_bit_dir_enabled) {
+        assert(is_valid(cache_entry));
+        peek(requestQueue_in, RequestMsg) {
+          fwd_set := cache_entry.Sharers;
+          fwd_set.remove(machineIDToNodeID(in_msg.Requestor));
+          if (fwd_set.count() > 0) {
+            enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+              out_msg.Address := address;
+              out_msg.Type := in_msg.Type;
+              out_msg.Requestor := in_msg.Requestor;
+              out_msg.Destination.setNetDest(MachineType:L1Cache, fwd_set);
+              out_msg.MessageSize := MessageSizeType:Multicast_Control;
+              out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+              out_msg.ForwardRequestTime := get_time();
+              assert(tbe.SilentAcks > 0);
+              out_msg.SilentAcks := tbe.SilentAcks;
+            }
+          }
+        }
+      } else {
+        peek(requestQueue_in, RequestMsg) {
+          enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+            out_msg.Address := address;
+            out_msg.Type := in_msg.Type;
+            out_msg.Requestor := in_msg.Requestor;
+            out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
+            out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
+            out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+            out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+            out_msg.ForwardRequestTime := get_time();
+          }
         }
       }
     }
@@ -753,12 +834,25 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(ia_invalidateAllRequest, "ia", desc="invalidate all copies") {
     if (machineCount(MachineType:L1Cache) > 1) {
-      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
-        out_msg.Address := address;
-        out_msg.Type := CoherenceRequestType:INV;
-        out_msg.Requestor := machineID;
-        out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
-        out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+      if (full_bit_dir_enabled) {
+        assert(cache_entry.Sharers.count() > 0);
+        peek(requestQueue_in, RequestMsg) {
+          enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+            out_msg.Address := address;
+            out_msg.Type := CoherenceRequestType:INV;
+            out_msg.Requestor := machineID;
+            out_msg.Destination.setNetDest(MachineType:L1Cache, cache_entry.Sharers);
+            out_msg.MessageSize := MessageSizeType:Multicast_Control;
+          }
+        }
+      } else {
+        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+          out_msg.Address := address;
+          out_msg.Type := CoherenceRequestType:INV;
+          out_msg.Requestor := machineID;
+          out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
+          out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+        }
       }
     }
   }
@@ -780,15 +874,33 @@ machine(Directory, "AMD Hammer-like protocol")
   action(fb_forwardRequestBcast, "fb", desc="Forward requests to all nodes") {
     if (machineCount(MachineType:L1Cache) > 1) {
       peek(requestQueue_in, RequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
-          out_msg.Address := address;
-          out_msg.Type := in_msg.Type;
-          out_msg.Requestor := in_msg.Requestor;
-          out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
-          out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
-          out_msg.MessageSize := MessageSizeType:Broadcast_Control;
-          out_msg.InitialRequestTime := in_msg.InitialRequestTime;
-          out_msg.ForwardRequestTime := get_time();
+        if (full_bit_dir_enabled) {
+          fwd_set := cache_entry.Sharers;
+          fwd_set.remove(machineIDToNodeID(in_msg.Requestor));
+          if (fwd_set.count() > 0) {
+            enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+                  out_msg.Address := address;
+                  out_msg.Type := in_msg.Type;
+                  out_msg.Requestor := in_msg.Requestor;
+                  out_msg.Destination.setNetDest(MachineType:L1Cache, fwd_set);
+                  out_msg.MessageSize := MessageSizeType:Multicast_Control;
+                  out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+                  out_msg.ForwardRequestTime := get_time();
+                  out_msg.SilentAcks := machineCount(MachineType:L1Cache) - fwd_set.count();
+                  out_msg.SilentAcks := out_msg.SilentAcks - 1;
+              }
+          }
+        } else {
+            enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+                out_msg.Address := address;
+                out_msg.Type := in_msg.Type;
+                out_msg.Requestor := in_msg.Requestor;
+                out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
+                out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
+                out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+                out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+                out_msg.ForwardRequestTime := get_time();
+            }
         }
       }
     }
@@ -820,7 +932,7 @@ machine(Directory, "AMD Hammer-like protocol")
 
   action(fc_forwardRequestConditionalOwner, "fc", desc="Forward request to one or more nodes") {
     assert(machineCount(MachineType:L1Cache) > 1);
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       peek(requestQueue_in, RequestMsg) {
         enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
           assert(is_valid(cache_entry)); 
@@ -979,10 +1091,36 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(ano_assertNotOwner, "ano", desc="Assert that request is not current owner") {
-    if (probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       peek(requestQueue_in, RequestMsg) {
         assert(is_valid(cache_entry)); 
         assert(cache_entry.Owner != in_msg.Requestor);
+      }
+    }
+  }
+
+  action(ans_assertNotSharer, "ans", desc="Assert that request is not a current sharer") {
+    if (full_bit_dir_enabled) {
+      peek(requestQueue_in, RequestMsg) {
+        assert(cache_entry.Sharers.isElement(machineIDToNodeID(in_msg.Requestor)) == false);
+      }
+    }
+  }
+
+  action(rs_removeSharer, "s", desc="remove current sharer") {
+    if (full_bit_dir_enabled) {
+      peek(unblockNetwork_in, ResponseMsg) {
+        assert(cache_entry.Sharers.isElement(machineIDToNodeID(in_msg.Sender)));
+        cache_entry.Sharers.remove(machineIDToNodeID(in_msg.Sender));
+      }
+    }
+  }
+
+  action(cs_clearSharers, "cs", desc="clear current sharers") {
+    if (full_bit_dir_enabled) {
+      peek(requestQueue_in, RequestMsg) {
+        cache_entry.Sharers.clear();
+        cache_entry.Sharers.add(machineIDToNodeID(in_msg.Requestor));
       }
     }
   }
@@ -1077,6 +1215,7 @@ machine(Directory, "AMD Hammer-like protocol")
     sa_setAcksToOne;
     qf_queueMemoryFetchRequest;
     fb_forwardRequestBcast;
+    cs_clearSharers;
     i_popIncomingRequestQueue;
   }
 
@@ -1139,6 +1278,7 @@ machine(Directory, "AMD Hammer-like protocol")
   transition(NX, GETX, NO_B) {
     r_setMRU;
     fb_forwardRequestBcast;
+    cs_clearSharers;
     i_popIncomingRequestQueue;
   }
 
@@ -1147,12 +1287,14 @@ machine(Directory, "AMD Hammer-like protocol")
     r_setMRU;
     ano_assertNotOwner;
     fc_forwardRequestConditionalOwner;
+    cs_clearSharers;
     i_popIncomingRequestQueue;
   }
 
   transition(S, GETX, NO_B) {
     r_setMRU;
     fb_forwardRequestBcast;
+    cs_clearSharers;
     i_popIncomingRequestQueue;
   }
 
@@ -1163,7 +1305,15 @@ machine(Directory, "AMD Hammer-like protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition({NX, NO}, GETS, NO_B) {
+  transition(NO, GETS, NO_B) {
+    r_setMRU;
+    ano_assertNotOwner;
+    ans_assertNotSharer;
+    fc_forwardRequestConditionalOwner;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(NX, GETS, NO_B) {
     r_setMRU;
     ano_assertNotOwner;
     fc_forwardRequestConditionalOwner;
@@ -1211,7 +1361,7 @@ machine(Directory, "AMD Hammer-like protocol")
     z_stallAndWaitRequest;
   }
 
-  transition({NO_B, NO_B_S, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
+  transition({NO_B_X, NO_B, NO_B_S, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
               NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, NO_B_S_W,
               NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R}, 
              {DMA_READ, DMA_WRITE}) {
@@ -1232,17 +1382,20 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // unblock responses
   transition({NO_B, NO_B_X}, UnblockS, NX) {
+    us_updateSharerIfFBD;
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
   transition({NO_B, NO_B_X}, UnblockM, NO) {
     uo_updateOwnerIfPf;
+    us_updateSharerIfFBD;
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
   transition(NO_B_S, UnblockS, NO_B_S_W) {
+    us_updateSharerIfFBD;
     fr_forwardMergeReadRequestsToOwner;
     sp_setPendingMsgsToMergedSharers;
     j_popIncomingUnblockQueue;
@@ -1256,6 +1409,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   transition(NO_B_S_W, UnblockS) {
+    us_updateSharerIfFBD;
     mu_decrementNumberOfUnblocks;
     os_checkForMergedGetSCompletion;
     j_popIncomingUnblockQueue;
@@ -1268,6 +1422,14 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   transition(O_B, UnblockS, O) {
+    us_updateSharerIfFBD;
+    k_wakeUpDependents;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(O_B, UnblockM, NO) {
+    us_updateSharerIfFBD;
+    uo_updateOwnerIfPf;
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
@@ -1505,10 +1667,12 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   transition(NO_B_W, UnblockS, NO_W) {
+    us_updateSharerIfFBD;
     j_popIncomingUnblockQueue;
   }
 
   transition(O_B_W, UnblockS, O_W) {
+    us_updateSharerIfFBD;
     j_popIncomingUnblockQueue;
   }
 
@@ -1527,12 +1691,14 @@ machine(Directory, "AMD Hammer-like protocol")
   // WB State Transistions
   transition(WB, Writeback_Dirty, WB_O_W) {
     l_writeDataToMemory;
+    rs_removeSharer;
     l_queueMemoryWBRequest;
     j_popIncomingUnblockQueue;
   }
 
   transition(WB, Writeback_Exclusive_Dirty, WB_E_W) {
     l_writeDataToMemory;
+    rs_removeSharer;
     l_queueMemoryWBRequest;
     j_popIncomingUnblockQueue;
   }
@@ -1550,18 +1716,20 @@ machine(Directory, "AMD Hammer-like protocol")
 
   transition(WB, Writeback_Clean, O) {
     ll_checkIncomingWriteback;
+    rs_removeSharer;
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
   transition(WB, Writeback_Exclusive_Clean, E) {
     ll_checkIncomingWriteback;
+    rs_removeSharer;
     pfd_probeFilterDeallocate;
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
   }
 
-  transition(WB, Unblock, NO) {
+  transition(WB, Unblock, NX) {
     auno_assertUnblockerNotOwner;
     k_wakeUpDependents;
     j_popIncomingUnblockQueue;
