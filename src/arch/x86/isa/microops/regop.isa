@@ -135,6 +135,7 @@ def template MicroRegOpConstructor {{
                 %(op_class)s)
     {
         %(constructor)s;
+        %(cond_control_flag_init)s;
     }
 }};
 
@@ -148,6 +149,7 @@ def template MicroRegOpImmConstructor {{
                 %(op_class)s)
     {
         %(constructor)s;
+        %(cond_control_flag_init)s;
     }
 }};
 
@@ -223,7 +225,7 @@ let {{
 
     class RegOpMeta(type):
         def buildCppClasses(self, name, Name, suffix, \
-                code, flag_code, cond_check, else_code):
+                code, flag_code, cond_check, else_code, cond_control_flag_init):
 
             # Globals to stick the output in
             global header_output
@@ -231,7 +233,8 @@ let {{
             global exec_output
 
             # Stick all the code together so it can be searched at once
-            allCode = "|".join((code, flag_code, cond_check, else_code))
+            allCode = "|".join((code, flag_code, cond_check, else_code, 
+                                cond_control_flag_init))
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
@@ -246,20 +249,22 @@ let {{
                         matcher.sub(src2_name, code),
                         matcher.sub(src2_name, flag_code),
                         matcher.sub(src2_name, cond_check),
-                        matcher.sub(src2_name, else_code))
+                        matcher.sub(src2_name, else_code),
+                        matcher.sub(src2_name, cond_control_flag_init))
                 imm_name = "%simm8" % match.group("prefix")
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
                         matcher.sub(imm_name, flag_code),
                         matcher.sub(imm_name, cond_check),
-                        matcher.sub(imm_name, else_code))
+                        matcher.sub(imm_name, else_code),
+                        matcher.sub(imm_name, cond_control_flag_init))
                 return
 
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
-                        code, "", "true", else_code)
+                        code, "", "true", else_code, "")
                 suffix = "Flags" + suffix
 
             # If psrc1 or psrc2 is used, we need to actually insert code to
@@ -296,7 +301,8 @@ let {{
                     {"code" : code,
                      "flag_code" : flag_code,
                      "cond_check" : cond_check,
-                     "else_code" : else_code})
+                     "else_code" : else_code,
+                     "cond_control_flag_init": cond_control_flag_init})
 
             # Generate the actual code (finally!)
             header_output += templates[0].subst(iop)
@@ -319,16 +325,18 @@ let {{
                 flag_code = cls.flag_code
                 cond_check = cls.cond_check
                 else_code = cls.else_code
+                cond_control_flag_init = cls.cond_control_flag_init
 
                 # Set up the C++ classes
-                mcls.buildCppClasses(cls, name, Name, "",
-                        code, flag_code, cond_check, else_code)
+                mcls.buildCppClasses(cls, name, Name, "", code, flag_code,
+                        cond_check, else_code, cond_control_flag_init)
 
                 # Hook into the microassembler dict
                 global microopClasses
                 microopClasses[name] = cls
 
-                allCode = "|".join((code, flag_code, cond_check, else_code))
+                allCode = "|".join((code, flag_code, cond_check, else_code,
+                                    cond_control_flag_init))
 
                 # If op2 is used anywhere, make register and immediate versions
                 # of this code.
@@ -347,6 +355,7 @@ let {{
         flag_code = ""
         cond_check = "true"
         else_code = ";"
+        cond_control_flag_init = ""
 
         def __init__(self, dest, src1, op2, flags = None, dataSize = "env.dataSize"):
             self.dest = dest
@@ -402,6 +411,7 @@ let {{
     class CondRegOp(RegOp):
         abstract = True
         cond_check = "checkCondition(ccFlagBits, ext)"
+        cond_control_flag_init = "flags[IsCondControl] = flags[IsControl];"
 
     class RdRegOp(RegOp):
         abstract = True
