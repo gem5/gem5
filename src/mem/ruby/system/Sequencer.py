@@ -39,6 +39,7 @@ class RubyPort(MemObject):
     pio_port = Port("Ruby_pio_port")
     physmem = Param.PhysicalMemory("")
     physMemPort = Port("port to physical memory")
+    using_ruby_tester = Param.Bool(False, "")
 
 class RubySequencer(RubyPort):
     type = 'RubySequencer'
@@ -49,7 +50,6 @@ class RubySequencer(RubyPort):
         "max requests (incl. prefetches) outstanding")
     deadlock_threshold = Param.Int(500000,
         "max outstanding cycles for a request before deadlock/livelock declared")
-    using_ruby_tester = Param.Bool(False, "")
 
 class DMASequencer(RubyPort):
     type = 'DMASequencer'

@@ -50,12 +50,19 @@ class RubyPort : public MemObject
     {
       private:
         RubyPort *ruby_port;
+        bool _onRetryList;
 
       public:
         M5Port(const std::string &_name, RubyPort *_port);
         bool sendTiming(PacketPtr pkt);
         void hitCallback(PacketPtr pkt);
         unsigned deviceBlockSize() const;
+        
+        bool onRetryList() 
+        { return _onRetryList; }
+        
+        void onRetryList(bool newVal)
+        { _onRetryList = newVal; }
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);
@@ -118,14 +125,32 @@ class RubyPort : public MemObject
     AbstractController* m_controller;
     MessageBuffer* m_mandatory_q_ptr;
     PioPort* pio_port;
+    bool m_usingRubyTester;
 
   private:
+    void addToRetryList(M5Port * port)
+    {
+        if (!port->onRetryList()) {
+            port->onRetryList(true);
+            retryList.push_back(port);
+            waitingOnSequencer = true;
+        }
+    }
+
     uint16_t m_port_id;
     uint64_t m_request_cnt;
 
     M5Port* physMemPort;
 
     PhysicalMemory* physmem;
+
+    //
+    // Based on similar code in the M5 bus.  Stores pointers to those ports
+    // that should be called when the Sequencer becomes available after a stall.
+    //
+    std::list<M5Port*> retryList;
+
+    bool waitingOnSequencer;
 };
 
 #endif // __MEM_RUBY_SYSTEM_RUBYPORT_HH__

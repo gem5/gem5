@@ -49,6 +49,8 @@ RubyPort::RubyPort(const Params *p)
     m_request_cnt = 0;
     pio_port = NULL;
     physMemPort = NULL;
+
+    m_usingRubyTester = p->using_ruby_tester;
 }
 
 void
@@ -108,6 +110,7 @@ RubyPort::M5Port::M5Port(const std::string &_name,
 {
     DPRINTF(Ruby, "creating port from ruby sequcner to cpu %s\n", _name);
     ruby_port = _port;
+    _onRetryList = false;
 }
 
 Tick
@@ -256,7 +259,16 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     // Otherwise, we need to delete the senderStatus we just created and return
     // false.
     if (requestStatus == RequestStatus_Issued) {
+        DPRINTF(MemoryAccess, "Request %x issued\n", pkt->getAddr());
         return true;
+    }
+
+    //
+    // Unless one is using the ruby tester, record the stalled M5 port for 
+    // later retry when the sequencer becomes free.
+    //
+    if (!ruby_port->m_usingRubyTester) {
+        ruby_port->addToRetryList(this);
     }
 
     DPRINTF(MemoryAccess,
@@ -283,6 +295,23 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
     delete senderState;
 
     port->hitCallback(pkt);
+
+    //
+    // If we had to stall the M5Ports, wake them up because the sequencer
+    // likely has free resources now.
+    //
+    if (waitingOnSequencer) {
+        for (std::list<M5Port*>::iterator i = retryList.begin();
+             i != retryList.end(); ++i) {
+            (*i)->sendRetry();
+            (*i)->onRetryList(false);
+            DPRINTF(MemoryAccess,
+                    "Sequencer may now be free.  SendRetry to port %s\n",
+                    (*i)->name());
+        }
+        retryList.clear();
+        waitingOnSequencer = false;
+    }
 }
 
 void

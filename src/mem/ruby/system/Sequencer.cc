@@ -72,7 +72,6 @@ Sequencer::Sequencer(const Params *p)
     m_dataCache_ptr = p->dcache;
     m_max_outstanding_requests = p->max_outstanding_requests;
     m_deadlock_threshold = p->deadlock_threshold;
-    m_usingRubyTester = p->using_ruby_tester;
 
     assert(m_max_outstanding_requests > 0);
     assert(m_deadlock_threshold > 0);
