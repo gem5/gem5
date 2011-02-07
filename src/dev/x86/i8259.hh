@@ -108,6 +108,9 @@ class I8259 : public BasicPioDevice, public IntDev
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);
     int getVector();
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 } // namespace X86ISA

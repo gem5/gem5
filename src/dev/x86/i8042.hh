@@ -116,6 +116,10 @@ class PS2Mouse : public PS2Device
     {}
 
     bool processData(uint8_t data);
+
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base, Checkpoint *cp,
+            const std::string &section);
 };
 
 class PS2Keyboard : public PS2Device
@@ -146,6 +150,10 @@ class PS2Keyboard : public PS2Device
 
   public:
     bool processData(uint8_t data);
+
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base, Checkpoint *cp,
+            const std::string &section);
 };
 
 class I8042 : public BasicPioDevice
@@ -252,6 +260,9 @@ class I8042 : public BasicPioDevice
     Tick read(PacketPtr pkt);
 
     Tick write(PacketPtr pkt);
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 } // namespace X86ISA

@@ -236,6 +236,35 @@ X86ISA::I82094AA::registerLocalApic(int initialId, Interrupts *localApic)
     localApics[initialId] = localApic;
 }
 
+void
+X86ISA::I82094AA::serialize(std::ostream &os)
+{
+    uint64_t* redirTableArray = (uint64_t*)redirTable;
+    SERIALIZE_SCALAR(regSel);
+    SERIALIZE_SCALAR(initialApicId);
+    SERIALIZE_SCALAR(id);
+    SERIALIZE_SCALAR(arbId);
+    SERIALIZE_SCALAR(lowestPriorityOffset);
+    SERIALIZE_ARRAY(redirTableArray, TableSize);
+    SERIALIZE_ARRAY(pinStates, TableSize);
+}
+
+void
+X86ISA::I82094AA::unserialize(Checkpoint *cp, const std::string &section)
+{
+    uint64_t redirTableArray[TableSize];
+    UNSERIALIZE_SCALAR(regSel);
+    UNSERIALIZE_SCALAR(initialApicId);
+    UNSERIALIZE_SCALAR(id);
+    UNSERIALIZE_SCALAR(arbId);
+    UNSERIALIZE_SCALAR(lowestPriorityOffset);
+    UNSERIALIZE_ARRAY(redirTableArray, TableSize);
+    UNSERIALIZE_ARRAY(pinStates, TableSize);
+    for (int i = 0; i < TableSize; i++) {
+        redirTable[i] = (RedirTableEntry)redirTableArray[i];
+    }
+}
+
 X86ISA::I82094AA *
 I82094AAParams::create()
 {

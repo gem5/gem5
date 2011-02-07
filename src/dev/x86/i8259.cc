@@ -303,6 +303,42 @@ X86ISA::I8259::getVector()
     return line | vectorOffset;
 }
 
+void
+X86ISA::I8259::serialize(std::ostream &os)
+{
+    SERIALIZE_ARRAY(pinStates, NumLines);
+    SERIALIZE_ENUM(mode);
+    SERIALIZE_SCALAR(IRR);
+    SERIALIZE_SCALAR(ISR);
+    SERIALIZE_SCALAR(IMR);
+    SERIALIZE_SCALAR(vectorOffset);
+    SERIALIZE_SCALAR(cascadeMode);
+    SERIALIZE_SCALAR(cascadeBits);
+    SERIALIZE_SCALAR(edgeTriggered);
+    SERIALIZE_SCALAR(readIRR);
+    SERIALIZE_SCALAR(expectICW4);
+    SERIALIZE_SCALAR(initControlWord);
+    SERIALIZE_SCALAR(autoEOI);
+}
+
+void
+X86ISA::I8259::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(pinStates, NumLines);
+    UNSERIALIZE_ENUM(mode);
+    UNSERIALIZE_SCALAR(IRR);
+    UNSERIALIZE_SCALAR(ISR);
+    UNSERIALIZE_SCALAR(IMR);
+    UNSERIALIZE_SCALAR(vectorOffset);
+    UNSERIALIZE_SCALAR(cascadeMode);
+    UNSERIALIZE_SCALAR(cascadeBits);
+    UNSERIALIZE_SCALAR(edgeTriggered);
+    UNSERIALIZE_SCALAR(readIRR);
+    UNSERIALIZE_SCALAR(expectICW4);
+    UNSERIALIZE_SCALAR(initControlWord);
+    UNSERIALIZE_SCALAR(autoEOI);
+}
+
 X86ISA::I8259 *
 I8259Params::create()
 {

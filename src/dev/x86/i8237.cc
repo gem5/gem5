@@ -119,10 +119,22 @@ X86ISA::I8237::write(PacketPtr pkt)
       case 0xf:
         panic("Write to i8237 write all mask register bits unimplemented.\n");
       default:
-        panic("Write to undefined i8254 register.\n");
+        panic("Write to undefined i8237 register.\n");
     }
     pkt->makeAtomicResponse();
     return latency;
+}
+
+void
+X86ISA::I8237::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(maskReg);
+}
+
+void
+X86ISA::I8237::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(maskReg);
 }
 
 X86ISA::I8237 *

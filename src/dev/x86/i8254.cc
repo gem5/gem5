@@ -76,6 +76,18 @@ X86ISA::I8254::write(PacketPtr pkt)
     return latency;
 }
 
+void
+X86ISA::I8254::serialize(std::ostream &os)
+{
+    pit.serialize("pit", os);
+}
+
+void
+X86ISA::I8254::unserialize(Checkpoint *cp, const std::string &section)
+{
+    pit.unserialize("pit", cp, section);
+}
+
 X86ISA::I8254 *
 I8254Params::create()
 {

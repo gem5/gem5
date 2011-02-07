@@ -72,6 +72,10 @@ class Speaker : public BasicPioDevice
     Tick read(PacketPtr pkt);
 
     Tick write(PacketPtr pkt);
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
 };
 
 } // namespace X86ISA

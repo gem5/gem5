@@ -72,6 +72,21 @@ X86ISA::Speaker::write(PacketPtr pkt)
     return latency;
 }
 
+void
+X86ISA::Speaker::serialize(std::ostream &os)
+{
+    uint8_t controlValData = controlVal.__data;
+    SERIALIZE_SCALAR(controlValData);
+}
+
+void
+X86ISA::Speaker::unserialize(Checkpoint *cp, const std::string &section)
+{
+    uint8_t controlValData;
+    UNSERIALIZE_SCALAR(controlValData);
+    controlVal.__data = controlValData;
+}
+
 X86ISA::Speaker *
 PcSpeakerParams::create()
 {

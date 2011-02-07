@@ -130,6 +130,9 @@ class I82094AA : public PioDevice, public IntDev
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);
     void registerLocalApic(int id, Interrupts *localApic);
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 } // namespace X86ISA

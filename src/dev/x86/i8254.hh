@@ -109,6 +109,10 @@ class I8254 : public BasicPioDevice
     {
         pit.writeControl(val);
     }
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
+
 };
 
 } // namespace X86ISA

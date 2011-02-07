@@ -247,7 +247,9 @@ Intel8254Timer::Counter::unserialize(const string &base, Checkpoint *cp,
     paramIn(cp, section, base + ".read_byte", read_byte);
     paramIn(cp, section, base + ".write_byte", write_byte);
 
-    Tick event_tick;
+    Tick event_tick = 0;
+    if (event.scheduled())
+        parent->deschedule(event);
     paramIn(cp, section, base + ".event_tick", event_tick);
     if (event_tick)
         parent->schedule(event, event_tick);
