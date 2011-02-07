@@ -47,6 +47,20 @@ class System(SimObject):
     physmem = Param.PhysicalMemory(Parent.any, "physical memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
 
+    work_item_id = Param.Int(-1, "specific work item id")
+    work_begin_cpu_id_exit = Param.Int(-1,
+        "work started on specific id, now exit simulation")
+    work_begin_ckpt_count = Param.Counter(0,
+        "create checkpoint when work items begin count value is reached")
+    work_begin_exit_count = Param.Counter(0,
+        "exit simulation when work items begin count value is reached")
+    work_end_ckpt_count = Param.Counter(0,
+        "create checkpoint when work items end count value is reached")
+    work_end_exit_count = Param.Counter(0,
+        "exit simulation when work items end count value is reached")
+    work_cpus_ckpt_count = Param.Counter(0,
+        "create checkpoint when active cpu count value is reached")
+
     if buildEnv['FULL_SYSTEM']:
         abstract = True
         boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,

@@ -54,6 +54,14 @@ parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
 parser.add_option("--maxtime", type="float")
 parser.add_option("--maxinsts", type="int")
 parser.add_option("--prog_intvl", type="int")
+parser.add_option("--work-item-id", action="store", type="int",
+                  help="the specific work id for exit & checkpointing")
+parser.add_option("--work-begin-cpu-id-exit", action="store", type="int",
+                  help="exit when work starts on the specified cpu")
+parser.add_option("--work-end-exit-count", action="store", type="int",
+                  help="exit at specified work end count")
+parser.add_option("--work-begin-exit-count", action="store", type="int",
+                  help="exit at specified work begin count")
 
 
 # Checkpointing options
@@ -69,6 +77,12 @@ parser.add_option("-r", "--checkpoint-restore", action="store", type="int",
     help="restore from checkpoint <N>")
 parser.add_option("--checkpoint-at-end", action="store_true",
                   help="take a checkpoint at end of run")
+parser.add_option("--work-begin-checkpoint-count", action="store", type="int",
+                  help="checkpoint at specified work begin count")
+parser.add_option("--work-end-checkpoint-count", action="store", type="int",
+                  help="checkpoint at specified work end count")
+parser.add_option("--work-cpus-checkpoint-count", action="store", type="int",
+                  help="checkpoint and exit when active cpu count is reached")
 
 
 # CPU Switching - default switch model goes from a checkpoint

@@ -255,6 +255,16 @@ BaseCPU::regStats()
         .desc("number of cpu cycles simulated")
         ;
 
+    numWorkItemsStarted
+        .name(name() + ".numWorkItemsStarted")
+        .desc("number of work items this cpu started")
+        ;
+
+    numWorkItemsCompleted
+        .name(name() + ".numWorkItemsCompleted")
+        .desc("number of work items this cpu completed")
+        ;
+
     int size = threadContexts.size();
     if (size > 1) {
         for (int i = 0; i < size; ++i) {

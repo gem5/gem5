@@ -328,4 +328,121 @@ switchcpu(ThreadContext *tc)
     exitSimLoop("switchcpu");
 }
 
+//
+// This function is executed when annotated work items begin.  Depending on 
+// what the user specified at the command line, the simulation may exit and/or
+// take a checkpoint when a certain work item begins.
+//
+void
+workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
+{
+    tc->getCpuPtr()->workItemBegin();
+    System *sys = tc->getSystemPtr();
+
+    DPRINTF(WorkItems, "Work Begin workid: %d, threadid %d\n", workid, 
+            threadid);
+
+    //
+    // If specified, determine if this is the specific work item the user
+    // identified
+    //
+    if (sys->params()->work_item_id == -1 || 
+        sys->params()->work_item_id == workid) {
+
+        uint64_t systemWorkBeginCount = sys->incWorkItemsBegin();
+        int cpuId = tc->getCpuPtr()->cpuId();
+
+        if (sys->params()->work_cpus_ckpt_count != 0 &&
+            sys->markWorkItem(cpuId) >= sys->params()->work_cpus_ckpt_count) {
+            //
+            // If active cpus equals checkpoint count, create checkpoint
+            //
+            Event *event = new SimLoopExitEvent("checkpoint", 0);
+            mainEventQueue.schedule(event, curTick());
+        }
+
+        if (systemWorkBeginCount == sys->params()->work_begin_ckpt_count) {
+            //
+            // Note: the string specified as the cause of the exit event must
+            // exactly equal "checkpoint" inorder to create a checkpoint
+            //
+            Event *event = new SimLoopExitEvent("checkpoint", 0);
+            mainEventQueue.schedule(event, curTick());
+        }
+
+        if (systemWorkBeginCount == sys->params()->work_begin_exit_count) {
+            //
+            // If a certain number of work items started, exit simulation
+            //
+            Event *event = new SimLoopExitEvent("work started count reach", 0);
+            mainEventQueue.schedule(event, curTick());
+        }
+
+        if (tc->getCpuPtr()->cpuId() == sys->params()->work_begin_cpu_id_exit) {
+            //
+            // If work started on the specific cpu id specified, exit simulation
+            //
+            Event *event = new SimLoopExitEvent("work started on specific cpu",
+                                                0);
+
+            mainEventQueue.schedule(event, curTick() + 1);
+        }
+    }
+}
+
+//
+// This function is executed when annotated work items end.  Depending on 
+// what the user specified at the command line, the simulation may exit and/or
+// take a checkpoint when a certain work item ends.
+//
+void
+workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
+{
+    tc->getCpuPtr()->workItemEnd();
+    System *sys = tc->getSystemPtr();
+
+    DPRINTF(WorkItems, "Work End workid: %d, threadid %d\n", workid, threadid);
+
+    //
+    // If specified, determine if this is the specific work item the user
+    // identified
+    //
+    if (sys->params()->work_item_id == -1 || 
+        sys->params()->work_item_id == workid) {
+
+        uint64_t systemWorkEndCount = sys->incWorkItemsEnd();
+        int cpuId = tc->getCpuPtr()->cpuId();
+
+        if (sys->params()->work_cpus_ckpt_count != 0 &&
+            sys->markWorkItem(cpuId) >= sys->params()->work_cpus_ckpt_count) {
+            //
+            // If active cpus equals checkpoint count, create checkpoint
+            //
+            Event *event = new SimLoopExitEvent("checkpoint", 0);
+            mainEventQueue.schedule(event, curTick());
+        }
+
+        if (sys->params()->work_end_ckpt_count != 0 &&
+            systemWorkEndCount == sys->params()->work_end_ckpt_count) {
+            //
+            // If total work items completed equals checkpoint count, create
+            // checkpoint
+            //
+            Event *event = new SimLoopExitEvent("checkpoint", 0);
+            mainEventQueue.schedule(event, curTick());
+        }
+
+        if (sys->params()->work_end_exit_count != 0 &&
+            systemWorkEndCount == sys->params()->work_end_exit_count) {
+            //
+            // If total work items completed equals exit count, exit simulation
+            //
+            Event *event = new SimLoopExitEvent("work items exit count reached",
+                                                0);
+
+            mainEventQueue.schedule(event, curTick());
+        }
+    }
+}
+
 } // namespace PseudoInst

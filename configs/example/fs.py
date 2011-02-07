@@ -131,7 +131,7 @@ elif buildEnv['TARGET_ISA'] == "mips":
 elif buildEnv['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
 elif buildEnv['TARGET_ISA'] == "x86":
-    test_sys = makeLinuxX86System(test_mem_mode, np, bm[0])
+    test_sys = makeLinuxX86System(test_mem_mode, options, bm[0])
 elif buildEnv['TARGET_ISA'] == "arm":
     test_sys = makeLinuxArmSystem(test_mem_mode, bm[0],
             bare_metal=options.bare_metal, machine_type=options.machine_type)

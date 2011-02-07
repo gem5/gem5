@@ -216,6 +216,12 @@
                         0x59: m5reserved5({{
                             warn("M5 reserved opcode 5 ignored.\n");
                         }}, IsNonSpeculative);
+                        0x5a: m5_work_begin({{
+                            PseudoInst::workbegin(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
+                        0x5b: m5_work_end({{
+                            PseudoInst::workend(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
                         default: Inst::UD2();
                     }
                 }

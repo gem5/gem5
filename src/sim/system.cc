@@ -72,7 +72,10 @@ System::System(Params *p)
       pagePtr(0),
       nextPID(0),
 #endif
-      memoryMode(p->mem_mode), _params(p),
+      memoryMode(p->mem_mode),
+      workItemsBegin(0),
+      workItemsEnd(0),
+      _params(p),
       totalNumInsts(0), 
       instEventQueue("system instruction-based event queue")
 {
@@ -144,6 +147,8 @@ System::System(Params *p)
 
     // increment the number of running systms
     numSystemsRunning++;
+
+    activeCpus.clear();
 }
 
 System::~System()
@@ -217,6 +222,8 @@ System::registerThreadContext(ThreadContext *tc, int assigned)
 
         remoteGDB[id] = rgdb;
     }
+
+    activeCpus.push_back(false);
 
     return id;
 }

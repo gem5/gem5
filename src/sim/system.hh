@@ -161,6 +161,48 @@ class System : public SimObject
 
   protected:
     Enums::MemoryMode memoryMode;
+    uint64_t workItemsBegin;
+    uint64_t workItemsEnd;
+    std::vector<bool> activeCpus;
+
+  public:
+    /**
+     * Called by pseudo_inst to track the number of work items started by this
+     * system.
+     */
+    uint64_t 
+    incWorkItemsBegin()
+    {
+        return ++workItemsBegin;
+    }
+
+    /**
+     * Called by pseudo_inst to track the number of work items completed by
+     * this system.
+     */
+    uint64_t 
+    incWorkItemsEnd()
+    {
+        return ++workItemsEnd;
+    }
+
+    /**
+     * Called by pseudo_inst to mark the cpus actively executing work items.
+     * Returns the total number of cpus that have executed work item begin or
+     * ends.
+     */
+    int 
+    markWorkItem(int index)
+    {
+        int count = 0;
+        assert(index < activeCpus.size());
+        activeCpus[index] = true;
+        for (std::vector<bool>::iterator i = activeCpus.begin(); 
+             i < activeCpus.end(); i++) {
+            if (*i) count++;
+        }
+        return count;
+    }
 
 #if FULL_SYSTEM
     /**

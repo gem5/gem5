@@ -104,6 +104,8 @@ class BaseCPU : public MemObject
     inline Tick ticks(int numCycles) const { return clock * numCycles; }
     inline Tick curCycle() const { return curTick() / clock; }
     inline Tick tickToCycles(Tick val) const { return val / clock; }
+    inline void workItemBegin() { numWorkItemsStarted++; }
+    inline void workItemEnd() { numWorkItemsCompleted++; }
     // @todo remove me after debugging with legion done
     Tick instCount() { return instCnt; }
 
@@ -317,6 +319,8 @@ class BaseCPU : public MemObject
   public:
     // Number of CPU cycles simulated
     Stats::Scalar numCycles;
+    Stats::Scalar numWorkItemsStarted;
+    Stats::Scalar numWorkItemsCompleted;
 };
 
 #endif // __CPU_BASE_HH__
