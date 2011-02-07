@@ -164,7 +164,9 @@ def create_system(options, system, piobus, dma_devices):
                                                     size = dir_size,
                                                     use_map = options.use_map,
                                                     map_levels = \
-                                                    options.map_levels),
+                                                    options.map_levels,
+                                                    numa_high_bit = \
+                                                      options.numa_high_bit),
                                          probeFilter = pf,
                                          memBuffer = mem_cntrl,
                                          probe_filter_enabled = options.pf_on,

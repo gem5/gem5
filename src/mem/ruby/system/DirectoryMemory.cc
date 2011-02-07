@@ -56,9 +56,7 @@ DirectoryMemory::init()
     m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
 
     if (m_use_map) {
-        int entry_bits = floorLog2(m_num_entries);
-        assert(entry_bits >= m_map_levels);
-        m_sparseMemory = new SparseMemory(entry_bits, m_map_levels);
+        m_sparseMemory = new SparseMemory(m_map_levels);
     } else {
         m_entries = new Directory_Entry*[m_num_entries];
         for (int i = 0; i < m_num_entries; i++)

@@ -54,7 +54,7 @@ struct CurNextInfo
 class SparseMemory
 {
   public:
-    SparseMemory(int number_of_bits, int number_of_levels);
+    SparseMemory(int number_of_levels);
     ~SparseMemory();
 
     void printConfig(std::ostream& out) { }

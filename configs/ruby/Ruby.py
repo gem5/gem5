@@ -42,7 +42,7 @@ def define_options(parser):
                       help="'fixed'|'flexible'")
 
     # ruby mapping options
-    parser.add_option("--numa-high-bit", type="int", default=None,
+    parser.add_option("--numa-high-bit", type="int", default=0,
                       help="high order address bit to use for numa mapping. " \
                            "0 = highest bit, not specified = lowest bit")
 
