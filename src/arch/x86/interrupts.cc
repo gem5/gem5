@@ -595,7 +595,8 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 
 X86ISA::Interrupts::Interrupts(Params * p) :
-    BasicPioDevice(p), IntDev(this), latency(p->pio_latency), clock(0),
+    BasicPioDevice(p), IntDev(this, p->int_latency), latency(p->pio_latency), 
+    clock(0),
     apicTimerEvent(this),
     pendingSmi(false), smiVector(0),
     pendingNmi(false), nmiVector(0),
