@@ -44,6 +44,8 @@ enum RubyRequestType {
   RubyRequestType_Store_Conditional,
   RubyRequestType_RMW_Read,
   RubyRequestType_RMW_Write,
+  RubyRequestType_Locked_RMW_Read,
+  RubyRequestType_Locked_RMW_Write,
   RubyRequestType_NUM
 };
 

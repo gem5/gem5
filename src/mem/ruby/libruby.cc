@@ -58,6 +58,10 @@ RubyRequestType_to_string(const RubyRequestType& obj)
         return "RMW_Read";
       case RubyRequestType_RMW_Write:
         return "RMW_Write";
+      case RubyRequestType_Locked_RMW_Read:
+        return "Locked_RMW_Read";
+      case RubyRequestType_Locked_RMW_Write:
+        return "Locked_RMW_Write";
       case RubyRequestType_NULL:
       default:
         assert(0);
@@ -82,6 +86,10 @@ string_to_RubyRequestType(string str)
         return RubyRequestType_RMW_Read;
     else if (str == "RMW_Write")
         return RubyRequestType_RMW_Write;
+    else if (str == "Locked_RMW_Read")
+        return RubyRequestType_Locked_RMW_Read;
+    else if (str == "Locked_RMW_Write")
+        return RubyRequestType_Locked_RMW_Write;
     else
         assert(0);
     return RubyRequestType_NULL;

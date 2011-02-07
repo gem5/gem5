@@ -26,6 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "config/the_isa.hh"
+#if THE_ISA == X86_ISA
+#include "arch/x86/insts/microldstop.hh"
+#endif // X86_ISA
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/physical.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
@@ -201,22 +205,38 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
             assert(pkt->isRead());
             type = RubyRequestType_Load_Linked;
         }
+    } else if (pkt->req->isLocked()) {
+        if (pkt->isWrite()) {
+            DPRINTF(MemoryAccess, "Issuing Locked RMW Write\n");
+            type = RubyRequestType_Locked_RMW_Write;
+        } else {
+            DPRINTF(MemoryAccess, "Issuing Locked RMW Read\n");
+            assert(pkt->isRead());
+            type = RubyRequestType_Locked_RMW_Read;
+        }
     } else {
         if (pkt->isRead()) {
             if (pkt->req->isInstFetch()) {
                 type = RubyRequestType_IFETCH;
             } else {
-                type = RubyRequestType_LD;
+#if THE_ISA == X86_ISA
+                uint32_t flags = pkt->req->getFlags();
+                bool storeCheck = flags &
+                        (TheISA::StoreCheck << TheISA::FlagShift);
+#else
+                bool storeCheck = false;
+#endif // X86_ISA
+                if (storeCheck) {
+                    type = RubyRequestType_RMW_Read;
+                } else {
+                    type = RubyRequestType_LD;
+                }
             }
         } else if (pkt->isWrite()) {
+            //
+            // Note: M5 packets do not differentiate ST from RMW_Write
+            //
             type = RubyRequestType_ST;
-        } else if (pkt->isReadWrite()) {
-            // Fix me.  This conditional will never be executed
-            // because isReadWrite() is just an OR of isRead() and
-            // isWrite().  Furthermore, just because the packet is a
-            // read/write request does not necessary mean it is a
-            // read-modify-write atomic operation.
-            type = RubyRequestType_RMW_Write;
         } else {
             panic("Unsupported ruby packet type\n");
         }

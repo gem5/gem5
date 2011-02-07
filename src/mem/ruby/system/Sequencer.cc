@@ -232,7 +232,9 @@ Sequencer::insertRequest(SequencerRequest* request)
         (request->ruby_request.type == RubyRequestType_RMW_Read) ||
         (request->ruby_request.type == RubyRequestType_RMW_Write) ||
         (request->ruby_request.type == RubyRequestType_Load_Linked) ||
-        (request->ruby_request.type == RubyRequestType_Store_Conditional)) {
+        (request->ruby_request.type == RubyRequestType_Store_Conditional) ||
+        (request->ruby_request.type == RubyRequestType_Locked_RMW_Read) ||
+        (request->ruby_request.type == RubyRequestType_Locked_RMW_Write)) {
         pair<RequestTable::iterator, bool> r =
             m_writeRequestTable.insert(RequestTable::value_type(line_addr, 0));
         bool success = r.second;
@@ -291,7 +293,9 @@ Sequencer::removeRequest(SequencerRequest* srequest)
         (ruby_request.type == RubyRequestType_RMW_Read) ||
         (ruby_request.type == RubyRequestType_RMW_Write) ||
         (ruby_request.type == RubyRequestType_Load_Linked) ||
-        (ruby_request.type == RubyRequestType_Store_Conditional)) {
+        (ruby_request.type == RubyRequestType_Store_Conditional) ||
+        (ruby_request.type == RubyRequestType_Locked_RMW_Read) ||
+        (ruby_request.type == RubyRequestType_Locked_RMW_Write)) {
         m_writeRequestTable.erase(line_addr);
     } else {
         m_readRequestTable.erase(line_addr);
@@ -379,7 +383,9 @@ Sequencer::writeCallback(const Address& address,
            (request->ruby_request.type == RubyRequestType_RMW_Read) ||
            (request->ruby_request.type == RubyRequestType_RMW_Write) ||
            (request->ruby_request.type == RubyRequestType_Load_Linked) ||
-           (request->ruby_request.type == RubyRequestType_Store_Conditional));
+           (request->ruby_request.type == RubyRequestType_Store_Conditional) ||
+           (request->ruby_request.type == RubyRequestType_Locked_RMW_Read) ||
+           (request->ruby_request.type == RubyRequestType_Locked_RMW_Write));
 
     //
     // For Alpha, properly handle LL, SC, and write requests with respect to
@@ -387,9 +393,9 @@ Sequencer::writeCallback(const Address& address,
     //
     bool success = handleLlsc(address, request);
 
-    if (request->ruby_request.type == RubyRequestType_RMW_Read) {
+    if (request->ruby_request.type == RubyRequestType_Locked_RMW_Read) {
         m_controller->blockOnQueue(address, m_mandatory_q_ptr);
-    } else if (request->ruby_request.type == RubyRequestType_RMW_Write) {
+    } else if (request->ruby_request.type == RubyRequestType_Locked_RMW_Write) {
         m_controller->unblock(address);
     }
 
@@ -430,7 +436,6 @@ Sequencer::readCallback(const Address& address,
     markRemoved();
 
     assert((request->ruby_request.type == RubyRequestType_LD) ||
-           (request->ruby_request.type == RubyRequestType_RMW_Read) ||
            (request->ruby_request.type == RubyRequestType_IFETCH));
 
     hitCallback(request, mach, data, true, 
@@ -501,8 +506,8 @@ Sequencer::hitCallback(SequencerRequest* srequest,
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
+            (type == RubyRequestType_Locked_RMW_Read) ||
             (type == RubyRequestType_Load_Linked)) {
-
             memcpy(ruby_request.data,
                    data.getData(request_address.getOffset(), ruby_request.len),
                    ruby_request.len);
@@ -612,16 +617,28 @@ Sequencer::issueRequest(const RubyRequest& request)
         ctype = CacheRequestType_LD;
         break;
       case RubyRequestType_ST:
+      case RubyRequestType_RMW_Read:
+      case RubyRequestType_RMW_Write:
+      //
+      // x86 locked instructions are translated to store cache coherence
+      // requests because these requests should always be treated as read
+      // exclusive operations and should leverage any migratory sharing
+      // optimization built into the protocol.
+      //
+      case RubyRequestType_Locked_RMW_Read:
+      case RubyRequestType_Locked_RMW_Write:
         ctype = CacheRequestType_ST;
         break;
+      //
+      // Alpha LL/SC instructions need to be handled carefully by the cache
+      // coherence protocol to ensure they follow the proper semantics.  In 
+      // particular, by identifying the operations as atomic, the protocol
+      // should understand that migratory sharing optimizations should not be
+      // performed (i.e. a load between the LL and SC should not steal away
+      // exclusive permission).
+      //
       case RubyRequestType_Load_Linked:
       case RubyRequestType_Store_Conditional:
-        ctype = CacheRequestType_ATOMIC;
-        break;
-      case RubyRequestType_RMW_Read:
-        ctype = CacheRequestType_ATOMIC;
-        break;
-      case RubyRequestType_RMW_Write:
         ctype = CacheRequestType_ATOMIC;
         break;
       default:
