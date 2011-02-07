@@ -116,7 +116,8 @@ if buildEnv['TARGET_ISA'] == "alpha":
                                      system.piobus,
                                      system.dma_devices)
 elif buildEnv['TARGET_ISA'] == "x86":
-    system = makeLinuxX86System(test_mem_mode, options, bm[0], True)
+    system = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0], True)
+    setWorkCountOptions(system, options)
     system.ruby = Ruby.create_system(options,
                                      system,
                                      system.piobus)

@@ -405,8 +405,24 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     for i in range(3, 15):
         assignISAInt(i, i)
 
-def makeLinuxX86System(mem_mode, options, mdesc = None, Ruby = False):
-    numCPUs = options.num_cpus
+def setWorkCountOptions(system, options):
+    if options.work_item_id != None:
+        system.work_item_id = options.work_item_id
+    if options.work_begin_cpu_id_exit != None:
+        system.work_begin_cpu_id_exit = options.work_begin_cpu_id_exit
+    if options.work_end_exit_count != None:
+        system.work_end_exit_count = options.work_end_exit_count
+    if options.work_end_checkpoint_count != None:
+        system.work_end_ckpt_count = options.work_end_checkpoint_count
+    if options.work_begin_exit_count != None:
+        system.work_begin_exit_count = options.work_begin_exit_count
+    if options.work_begin_checkpoint_count != None:
+        system.work_begin_ckpt_count = options.work_begin_checkpoint_count
+    if options.work_cpus_checkpoint_count != None:
+        system.work_cpus_ckpt_count = options.work_cpus_checkpoint_count
+
+
+def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
     self = LinuxX86System()
 
     # Build up the x86 system and then specialize it for Linux
@@ -415,22 +431,6 @@ def makeLinuxX86System(mem_mode, options, mdesc = None, Ruby = False):
     # We assume below that there's at least 1MB of memory. We'll require 2
     # just to avoid corner cases.
     assert(self.physmem.range.second.getValue() >= 0x200000)
-
-    # set work count options
-    if options.work_item_id != None:
-        self.work_item_id = options.work_item_id
-    if options.work_begin_cpu_id_exit != None:
-        self.work_begin_cpu_id_exit = options.work_begin_cpu_id_exit
-    if options.work_end_exit_count != None:
-        self.work_end_exit_count = options.work_end_exit_count
-    if options.work_end_checkpoint_count != None:
-        self.work_end_ckpt_count = options.work_end_checkpoint_count
-    if options.work_begin_exit_count != None:
-        self.work_begin_exit_count = options.work_begin_exit_count
-    if options.work_begin_checkpoint_count != None:
-        self.work_begin_ckpt_count = options.work_begin_checkpoint_count
-    if options.work_cpus_checkpoint_count != None:
-        self.work_cpus_ckpt_count = options.work_cpus_checkpoint_count
 
     # Mark the first megabyte of memory as reserved
     self.e820_table.entries.append(X86E820Entry(
