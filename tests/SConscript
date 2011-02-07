@@ -277,6 +277,9 @@ if env['FULL_SYSTEM']:
     if env['TARGET_ISA'] == 'arm':
         configs += ['realview-simple-atomic',
                     'realview-simple-timing']
+    if env['TARGET_ISA'] == 'x86':
+        configs += ['pc-simple-atomic',
+                    'pc-simple-timing']
 
 else:
     configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
