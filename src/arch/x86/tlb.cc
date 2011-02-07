@@ -634,14 +634,15 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             // Do paging protection checks.
             bool inUser = (m5Reg.cpl == 3 &&
                     !(flags & (CPL0FlagBit << FlagShift)));
-            if ((inUser && !entry->user) ||
-                (mode == Write && !entry->writable)) {
+            CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
+            bool badWrite = (!entry->writable && (inUser || cr0.wp));
+            if ((inUser && !entry->user) || (mode == Write && badWrite)) {
                 // The page must have been present to get into the TLB in
                 // the first place. We'll assume the reserved bits are
                 // fine even though we're not checking them.
                 return new PageFault(vaddr, true, mode, inUser, false);
             }
-            if (storeCheck && !entry->writable) {
+            if (storeCheck && badWrite) {
                 // This would fault if this were a write, so return a page
                 // fault that reflects that happening.
                 return new PageFault(vaddr, true, Write, inUser, false);
