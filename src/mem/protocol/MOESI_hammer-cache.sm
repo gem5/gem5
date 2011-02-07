@@ -265,7 +265,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     return cache_entry.AtomicAccessed;
   }
 
-  MessageBuffer triggerQueue, ordered="true";
+  MessageBuffer triggerQueue, ordered="false";
 
   // ** OUT_PORTS **
 
