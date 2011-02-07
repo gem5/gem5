@@ -45,6 +45,7 @@
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
 #include "base/types.hh"
+#include "base/fast_alloc.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "params/X86PagetableWalker.hh"
@@ -56,70 +57,8 @@ namespace X86ISA
 {
     class Walker : public MemObject
     {
-      public:
-        enum State {
-            Ready,
-            Waiting,
-            // Long mode
-            LongPML4, LongPDP, LongPD, LongPTE,
-            // PAE legacy mode
-            PAEPDP, PAEPD, PAEPTE,
-            // Non PAE legacy mode with and without PSE
-            PSEPD, PD, PTE
-        };
-
-        // Act on the current state and determine what to do next. The global
-        // read should be the packet that just came back from a read and write
-        // should be NULL. When the function returns, read is either NULL
-        // if the machine is finished, or points to a packet to initiate
-        // the next read. If any write is required to update an "accessed"
-        // bit, write will point to a packet to do the write. Otherwise it
-        // will be NULL. The return value is whatever fault was incurred
-        // during this stage of the lookup.
-        Fault doNext(PacketPtr &write);
-
-        // Kick off the state machine.
-        Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,
-                RequestPtr req, BaseTLB::Mode mode);
-        // Clean up after the state machine.
-        void
-        stop()
-        {
-            nextState = Ready;
-            delete read->req;
-            delete read;
-            read = NULL;
-        }
-
       protected:
-
-        /*
-         * State having to do with sending packets.
-         */
-        PacketPtr read;
-        std::vector<PacketPtr> writes;
-
-        // How many memory operations are in flight.
-        unsigned inflight;
-
-        bool retrying;
-
-        /*
-         * The fault, if any, that's waiting to be delivered in timing mode.
-         */
-        Fault timingFault;
-
-        /*
-         * Functions for dealing with packets.
-         */
-        bool recvTiming(PacketPtr pkt);
-        void recvRetry();
-
-        void sendPackets();
-
-        /*
-         * Port for accessing memory
-         */
+        // Port for accessing memory
         class WalkerPort : public Port
         {
           public:
@@ -146,31 +85,106 @@ namespace X86ISA
             }
         };
 
+        friend class WalkerPort;
+        WalkerPort port;
         Port *getPort(const std::string &if_name, int idx = -1);
 
-        friend class WalkerPort;
+        // State to track each walk of the page table
+        class WalkerState : public FastAlloc
+        {
+          private:
+            enum State {
+                Ready,
+                Waiting,
+                // Long mode
+                LongPML4, LongPDP, LongPD, LongPTE,
+                // PAE legacy mode
+                PAEPDP, PAEPD, PAEPTE,
+                // Non PAE legacy mode with and without PSE
+                PSEPD, PD, PTE
+            };
 
-        WalkerPort port;
+          protected:
+            Walker * walker;
+            ThreadContext *tc;
+            RequestPtr req;
+            State state;
+            State nextState;
+            int dataSize;
+            bool enableNX;
+            unsigned inflight;
+            TlbEntry entry;
+            PacketPtr read;
+            std::vector<PacketPtr> writes;
+            Fault timingFault;
+            TLB::Translation * translation;
+            BaseTLB::Mode mode;
+            bool functional;
+            bool timing;
+            bool retrying;
+            bool started;
 
+          public:
+            WalkerState(Walker * _walker, BaseTLB::Translation *_translation,
+                    RequestPtr _req, bool _isFunctional = false) :
+                        walker(_walker), req(_req), state(Ready),
+                        nextState(Ready), inflight(0),
+                        translation(_translation),
+                        functional(_isFunctional), timing(false),
+                        retrying(false), started(false)
+            {
+            }
+            void initState(ThreadContext * _tc, BaseTLB::Mode _mode,
+                           bool _isTiming = false);
+            Fault startWalk();
+            Fault startFunctional(Addr &addr, Addr &pageSize);
+            bool recvPacket(PacketPtr pkt);
+            bool isRetrying();
+            bool wasStarted();
+            bool isTiming();
+            void retry();
+            std::string name() const {return walker->name();}
+
+          private:
+            void setupWalk(Addr vaddr);
+            Fault stepWalk(PacketPtr &write);
+            void sendPackets();
+            void endWalk();
+            Fault pageFault(bool present);
+        };
+
+        friend class WalkerState;
+        // State for timing and atomic accesses (need multiple per walker in
+        // the case of multiple outstanding requests in timing mode)
+        std::list<WalkerState *> currStates;
+        // State for functional accesses (only need one of these per walker)
+        WalkerState funcState;
+
+        struct WalkerSenderState : public Packet::SenderState
+        {
+            WalkerState * senderWalk;
+            Packet::SenderState * saved;
+            WalkerSenderState(WalkerState * _senderWalk,
+                    Packet::SenderState * _saved) :
+                senderWalk(_senderWalk), saved(_saved) {}
+        };
+
+      public:
+        // Kick off the state machine.
+        Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,
+                RequestPtr req, BaseTLB::Mode mode);
+        Fault startFunctional(ThreadContext * _tc, Addr &addr,
+                Addr &pageSize, BaseTLB::Mode mode);
+
+      protected:
         // The TLB we're supposed to load.
         TLB * tlb;
         System * sys;
-        BaseTLB::Translation * translation;
 
-        /*
-         * State machine state.
-         */
-        ThreadContext * tc;
-        RequestPtr req;
-        State state;
-        State nextState;
-        int size;
-        bool enableNX;
-        BaseTLB::Mode mode;
-        bool user;
-        TlbEntry entry;
-        
-        Fault pageFault(bool present);
+        // Functions for dealing with packets.
+        bool recvTiming(PacketPtr pkt);
+        void recvRetry();
+        bool sendTiming(WalkerState * sendingState, PacketPtr pkt);
 
       public:
 
@@ -182,11 +196,8 @@ namespace X86ISA
         typedef X86PagetableWalkerParams Params;
 
         Walker(const Params *params) :
-            MemObject(params),
-            read(NULL), inflight(0), retrying(false),
-            port(name() + ".port", this),
-            tlb(NULL), sys(params->system),
-            tc(NULL), state(Ready), nextState(Ready)
+            MemObject(params), port(name() + ".port", this),
+            funcState(this, NULL, NULL, true), tlb(NULL), sys(params->system)
         {
         }
     };

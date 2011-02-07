@@ -725,6 +725,12 @@ TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     return tc->getCpuPtr()->ticks(1);
 }
 
+Walker *
+TLB::getWalker()
+{
+    return walker;
+}
+
 #endif
 
 void

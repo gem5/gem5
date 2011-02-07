@@ -89,6 +89,8 @@ namespace X86ISA
       protected:
 
         Walker * walker;
+      public:
+        Walker *getWalker();
 #endif
 
       public:
