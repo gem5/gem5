@@ -581,7 +581,13 @@ machine(Directory, "AMD Hammer-like protocol")
       // directory DMA requests must wait for acks from all LLC caches, so 
       // only decrement by 1.
       //
-      tbe.NumPendingMsgs := tbe.NumPendingMsgs - 1;
+      if ((in_msg.Type == CoherenceResponseType:DATA_SHARED) ||
+          (in_msg.Type == CoherenceResponseType:DATA) ||
+          (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE)) {
+        tbe.NumPendingMsgs := tbe.NumPendingMsgs - 1;
+      } else {
+        tbe.NumPendingMsgs := tbe.NumPendingMsgs - in_msg.Acks;
+      }
       DPRINTF(RubySlicc, "%d\n", tbe.NumPendingMsgs);
     }
   }
@@ -591,11 +597,6 @@ machine(Directory, "AMD Hammer-like protocol")
       assert(is_valid(tbe));
       assert(in_msg.Type == CoherenceResponseType:UNBLOCKS);
       DPRINTF(RubySlicc, "%d\n", tbe.NumPendingMsgs);
-      //
-      // Note that cache data responses will have an ack count of 2.  However, 
-      // directory DMA requests must wait for acks from all LLC caches, so 
-      // only decrement by 1.
-      //
       tbe.NumPendingMsgs := tbe.NumPendingMsgs - 1;
       DPRINTF(RubySlicc, "%d\n", tbe.NumPendingMsgs);
     }
