@@ -179,6 +179,14 @@ DefaultRename<Impl>::regStats()
         .desc("count of insts added to the skid buffer")
         .flags(Stats::total)
         ;
+    intRenameLookups
+        .name(name() + ".RENAME:int_rename_lookups")
+        .desc("Number of integer rename lookups")
+        .prereq(intRenameLookups);
+    fpRenameLookups
+        .name(name() + ".RENAME:fp_rename_lookups")
+        .desc("Number of floating rename lookups")
+        .prereq(fpRenameLookups);
 }
 
 template <class Impl>
@@ -1012,6 +1020,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
         }
 
         ++renameRenameLookups;
+        inst->isFloating() ? fpRenameLookups++ : intRenameLookups++;
     }
 }
 

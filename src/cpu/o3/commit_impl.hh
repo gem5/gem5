@@ -230,6 +230,27 @@ DefaultCommit<Impl>::regStats()
         .flags(total)
         ;
 
+    statComFloating
+        .init(cpu->numThreads)
+        .name(name() + ".COM:fp_insts")
+        .desc("Number of committed floating point instructions.")
+        .flags(total)
+        ;
+
+    statComInteger
+        .init(cpu->numThreads)
+        .name(name()+".COM:int_insts")
+        .desc("Number of committed integer instructions.")
+        .flags(total)
+        ;
+
+    statComFunctionCalls
+        .init(cpu->numThreads)
+        .name(name()+".COM:function_calls")
+        .desc("Number of function calls committed.")
+        .flags(total)
+        ;
+
     commitEligible
         .init(cpu->numThreads)
         .name(name() + ".COM:bw_limited")
@@ -1321,6 +1342,19 @@ DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
     if (inst->isMemBarrier()) {
         statComMembars[tid]++;
     }
+
+    // Integer Instruction
+    if (inst->isInteger())
+        statComInteger[tid]++;
+
+    // Floating Point Instruction
+    if (inst->isFloating())
+        statComFloating[tid]++;
+
+    // Function Calls
+    if (inst->isCall())
+        statComFunctionCalls[tid]++;
+
 }
 
 ////////////////////////////////////////

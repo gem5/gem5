@@ -142,9 +142,69 @@ BaseSimpleCPU::regStats()
         .desc("Number of instructions executed")
         ;
 
+    numIntAluAccesses
+        .name(name() + ".num_int_alu_accesses")
+        .desc("Number of integer alu accesses")
+        ;
+
+    numFpAluAccesses
+        .name(name() + ".num_fp_alu_accesses")
+        .desc("Number of float alu accesses")
+        ;
+
+    numCallsReturns
+        .name(name() + ".num_func_calls")
+        .desc("number of times a function call or return occured")
+        ;
+
+    numCondCtrlInsts
+        .name(name() + ".num_conditional_control_insts")
+        .desc("number of instructions that are conditional controls")
+        ;
+
+    numIntInsts
+        .name(name() + ".num_int_insts")
+        .desc("number of integer instructions")
+        ;
+
+    numFpInsts
+        .name(name() + ".num_fp_insts")
+        .desc("number of float instructions")
+        ;
+
+    numIntRegReads
+        .name(name() + ".num_int_register_reads")
+        .desc("number of times the integer registers were read")
+        ;
+
+    numIntRegWrites
+        .name(name() + ".num_int_register_writes")
+        .desc("number of times the integer registers were written")
+        ;
+
+    numFpRegReads
+        .name(name() + ".num_fp_register_reads")
+        .desc("number of times the floating registers were read")
+        ;
+
+    numFpRegWrites
+        .name(name() + ".num_fp_register_writes")
+        .desc("number of times the floating registers were written")
+        ;
+
     numMemRefs
-        .name(name() + ".num_refs")
-        .desc("Number of memory references")
+        .name(name()+".num_mem_refs")
+        .desc("number of memory refs")
+        ;
+
+    numStoreInsts
+        .name(name() + ".num_store_insts")
+        .desc("Number of store instructions")
+        ;
+
+    numLoadInsts
+        .name(name() + ".num_load_insts")
+        .desc("Number of load instructions")
         ;
 
     notIdleFraction
@@ -155,6 +215,16 @@ BaseSimpleCPU::regStats()
     idleFraction
         .name(name() + ".idle_fraction")
         .desc("Percentage of idle cycles")
+        ;
+
+    numBusyCycles
+        .name(name() + ".num_busy_cycles")
+        .desc("Number of busy cycles")
+        ;
+
+    numIdleCycles
+        .name(name()+".num_idle_cycles")
+        .desc("Number of idle cycles")
         ;
 
     icacheStallCycles
@@ -182,6 +252,8 @@ BaseSimpleCPU::regStats()
         ;
 
     idleFraction = constant(1.0) - notIdleFraction;
+    numIdleCycles = idleFraction * numCycles;
+    numBusyCycles = (notIdleFraction)*numCycles;
 }
 
 void
@@ -277,6 +349,7 @@ BaseSimpleCPU::preExecute()
 
     // check for instruction-count-based events
     comInstEventQueue[0]->serviceEvents(numInst);
+    system->instEventQueue.serviceEvents(system->totalNumInsts);
 
     // decode the instruction
     inst = gtoh(inst);
@@ -368,6 +441,39 @@ BaseSimpleCPU::postExecute()
     if (CPA::available()) {
         CPA::cpa()->swAutoBegin(tc, pc.nextInstAddr());
     }
+
+    /* Power model statistics */
+    //integer alu accesses
+    if (curStaticInst->isInteger()){
+        numIntAluAccesses++;
+        numIntInsts++;
+    }
+
+    //float alu accesses
+    if (curStaticInst->isFloating()){
+        numFpAluAccesses++;
+        numFpInsts++;
+    }
+    
+    //number of function calls/returns to get window accesses
+    if (curStaticInst->isCall() || curStaticInst->isReturn()){
+        numCallsReturns++;
+    }
+    
+    //the number of branch predictions that will be made
+    if (curStaticInst->isCondCtrl()){
+        numCondCtrlInsts++;
+    }
+    
+    //result bus acceses
+    if (curStaticInst->isLoad()){
+        numLoadInsts++;
+    }
+    
+    if (curStaticInst->isStore()){
+        numStoreInsts++;
+    }
+    /* End power model statistics */
 
     traceFunctions(instAddr);
 

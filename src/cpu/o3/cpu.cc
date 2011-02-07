@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  *
  * Authors: Kevin Lim
  *          Korey Sewell
+ *          Rick Strong
  */
 
 #include "config/full_system.hh"
@@ -480,6 +482,37 @@ FullO3CPU<Impl>::regStats()
     this->rename.regStats();
     this->iew.regStats();
     this->commit.regStats();
+    this->rob.regStats();
+
+    intRegfileReads
+        .name(name() + ".int_regfile_reads")
+        .desc("number of integer regfile reads")
+        .prereq(intRegfileReads);
+
+    intRegfileWrites
+        .name(name() + ".int_regfile_writes")
+        .desc("number of integer regfile writes")
+        .prereq(intRegfileWrites);
+
+    fpRegfileReads
+        .name(name() + ".fp_regfile_reads")
+        .desc("number of floating regfile reads")
+        .prereq(fpRegfileReads);
+
+    fpRegfileWrites
+        .name(name() + ".fp_regfile_writes")
+        .desc("number of floating regfile writes")
+        .prereq(fpRegfileWrites);
+
+    miscRegfileReads
+        .name(name() + ".misc_regfile_reads")
+        .desc("number of misc regfile reads")
+        .prereq(miscRegfileReads);
+
+    miscRegfileWrites
+        .name(name() + ".misc_regfile_writes")
+        .desc("number of misc regfile writes")
+        .prereq(miscRegfileWrites);
 }
 
 template <class Impl>
@@ -1184,6 +1217,7 @@ template <class Impl>
 TheISA::MiscReg
 FullO3CPU<Impl>::readMiscReg(int misc_reg, ThreadID tid)
 {
+    miscRegfileReads++;
     return this->isa[tid].readMiscReg(misc_reg, tcBase(tid));
 }
 
@@ -1200,6 +1234,7 @@ void
 FullO3CPU<Impl>::setMiscReg(int misc_reg,
         const TheISA::MiscReg &val, ThreadID tid)
 {
+    miscRegfileWrites++;
     this->isa[tid].setMiscReg(misc_reg, val, tcBase(tid));
 }
 
@@ -1207,6 +1242,7 @@ template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readIntReg(int reg_idx)
 {
+    intRegfileReads++;
     return regFile.readIntReg(reg_idx);
 }
 
@@ -1214,6 +1250,7 @@ template <class Impl>
 FloatReg
 FullO3CPU<Impl>::readFloatReg(int reg_idx)
 {
+    fpRegfileReads++;
     return regFile.readFloatReg(reg_idx);
 }
 
@@ -1221,6 +1258,7 @@ template <class Impl>
 FloatRegBits
 FullO3CPU<Impl>::readFloatRegBits(int reg_idx)
 {
+    fpRegfileReads++;
     return regFile.readFloatRegBits(reg_idx);
 }
 
@@ -1228,6 +1266,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setIntReg(int reg_idx, uint64_t val)
 {
+    intRegfileWrites++;
     regFile.setIntReg(reg_idx, val);
 }
 
@@ -1235,6 +1274,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setFloatReg(int reg_idx, FloatReg val)
 {
+    fpRegfileWrites++;
     regFile.setFloatReg(reg_idx, val);
 }
 
@@ -1242,6 +1282,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
+    fpRegfileWrites++;
     regFile.setFloatRegBits(reg_idx, val);
 }
 
@@ -1249,6 +1290,7 @@ template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readArchIntReg(int reg_idx, ThreadID tid)
 {
+    intRegfileReads++;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
 
     return regFile.readIntReg(phys_reg);
@@ -1258,6 +1300,7 @@ template <class Impl>
 float
 FullO3CPU<Impl>::readArchFloatReg(int reg_idx, ThreadID tid)
 {
+    fpRegfileReads++;
     int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
@@ -1268,6 +1311,7 @@ template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readArchFloatRegInt(int reg_idx, ThreadID tid)
 {
+    fpRegfileReads++;
     int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
@@ -1278,6 +1322,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchIntReg(int reg_idx, uint64_t val, ThreadID tid)
 {
+    intRegfileWrites++;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(reg_idx);
 
     regFile.setIntReg(phys_reg, val);
@@ -1287,6 +1332,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatReg(int reg_idx, float val, ThreadID tid)
 {
+    fpRegfileWrites++;
     int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
@@ -1297,6 +1343,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatRegInt(int reg_idx, uint64_t val, ThreadID tid)
 {
+    fpRegfileWrites++;
     int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
@@ -1364,9 +1411,10 @@ FullO3CPU<Impl>::instDone(ThreadID tid)
     thread[tid]->numInsts++;
     committedInsts[tid]++;
     totalCommittedInsts++;
-
+    system->totalNumInsts++;
     // Check for instruction-count-based events.
     comInstEventQueue[tid]->serviceEvents(thread[tid]->numInst);
+    system->instEventQueue.serviceEvents(system->totalNumInsts);
 }
 
 template <class Impl>

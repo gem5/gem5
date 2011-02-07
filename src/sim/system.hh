@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +29,7 @@
  * Authors: Steve Reinhardt
  *          Lisa Hsu
  *          Nathan Binkert
+ *          Rick Strong
  */
 
 #ifndef __SYSTEM_HH__
@@ -244,8 +246,12 @@ class System : public SimObject
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
+    virtual void resume();
 
   public:
+    Counter totalNumInsts;
+    EventQueue instEventQueue;
+
     ////////////////////////////////////////////
     //
     // STATIC GLOBAL SYSTEM LIST

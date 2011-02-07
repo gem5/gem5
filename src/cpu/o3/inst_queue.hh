@@ -497,6 +497,16 @@ class InstructionQueue
     Stats::Vector fuBusy;
     /** Number of times the FU was busy per instruction issued. */
     Stats::Formula fuBusyRate;
+   public:
+    Stats::Scalar intInstQueueReads;
+    Stats::Scalar intInstQueueWrites;
+    Stats::Scalar intInstQueueWakeupAccesses;
+    Stats::Scalar fpInstQueueReads;
+    Stats::Scalar fpInstQueueWrites;
+    Stats::Scalar fpInstQueueWakeupQccesses;
+
+    Stats::Scalar intAluAccesses;
+    Stats::Scalar fpAluAccesses;
 };
 
 #endif //__CPU_O3_INST_QUEUE_HH__

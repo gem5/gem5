@@ -212,6 +212,7 @@ AtomicSimpleCPU::resume()
         if (!tickEvent.scheduled())
             schedule(tickEvent, nextCycle());
     }
+    system->totalNumInsts = 0;
 }
 
 void

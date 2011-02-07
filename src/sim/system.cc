@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
+ * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +30,7 @@
  *          Lisa Hsu
  *          Nathan Binkert
  *          Ali Saidi
+ *          Rick Strong
  */
 
 #include "arch/isa_traits.hh"
@@ -70,7 +72,9 @@ System::System(Params *p)
       pagePtr(0),
       nextPID(0),
 #endif
-      memoryMode(p->mem_mode), _params(p)
+      memoryMode(p->mem_mode), _params(p),
+      totalNumInsts(0), 
+      instEventQueue("system instruction-based event queue")
 {
     // add self to global system list
     systemList.push_back(this);
@@ -275,6 +279,13 @@ System::freeMemSize()
 }
 
 #endif
+
+void
+System::resume()
+{
+    SimObject::resume();
+    totalNumInsts = 0;
+}
 
 void
 System::serialize(ostream &os)

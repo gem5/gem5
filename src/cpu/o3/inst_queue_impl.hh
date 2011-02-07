@@ -320,6 +320,47 @@ InstructionQueue<Impl>::regStats()
         // Tell mem dependence unit to reg stats as well.
         memDepUnit[tid].regStats();
     }
+
+    intInstQueueReads
+        .name(name() + ".int_inst_queue_reads")
+        .desc("Number of integer instruction queue reads")
+        .flags(total);
+
+    intInstQueueWrites
+        .name(name() + ".int_inst_queue_writes")
+        .desc("Number of integer instruction queue writes")
+        .flags(total);
+
+    intInstQueueWakeupAccesses
+        .name(name() + ".int_inst_queue_wakeup_accesses")
+        .desc("Number of integer instruction queue wakeup accesses")
+        .flags(total);
+
+    fpInstQueueReads
+        .name(name() + ".fp_inst_queue_reads")
+        .desc("Number of floating instruction queue reads")
+        .flags(total);
+
+    fpInstQueueWrites
+        .name(name() + ".fp_inst_queue_writes")
+        .desc("Number of floating instruction queue writes")
+        .flags(total);
+
+    fpInstQueueWakeupQccesses
+        .name(name() + ".fp_inst_queue_wakeup_accesses")
+        .desc("Number of floating instruction queue wakeup accesses")
+        .flags(total);
+
+    intAluAccesses
+        .name(name() + ".int_alu_accesses")
+        .desc("Number of integer alu accesses")
+        .flags(total);
+
+    fpAluAccesses
+        .name(name() + ".fp_alu_accesses")
+        .desc("Number of floating point alu accesses")
+        .flags(total);
+
 }
 
 template <class Impl>
@@ -501,6 +542,7 @@ template <class Impl>
 void
 InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
 {
+    new_inst->isFloating() ? fpInstQueueWrites++ : intInstQueueWrites++;
     // Make sure the instruction is valid
     assert(new_inst);
 
@@ -542,6 +584,7 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &new_inst)
 {
     // @todo: Clean up this code; can do it by setting inst as unable
     // to issue, then calling normal insert on the inst.
+    new_inst->isFloating() ? fpInstQueueWrites++ : intInstQueueWrites++;
 
     assert(new_inst);
 
@@ -592,6 +635,11 @@ InstructionQueue<Impl>::getInstToExecute()
     assert(!instsToExecute.empty());
     DynInstPtr inst = instsToExecute.front();
     instsToExecute.pop_front();
+    if (inst->isFloating()){
+        fpInstQueueReads++;
+    } else {
+        intInstQueueReads++;
+    }
     return inst;
 }
 
@@ -706,6 +754,8 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         DynInstPtr issuing_inst = readyInsts[op_class].top();
 
+        issuing_inst->isFloating() ? fpInstQueueReads++ : intInstQueueReads++;
+
         assert(issuing_inst->seqNum == (*order_it).oldestInst);
 
         if (issuing_inst->isSquashed()) {
@@ -731,7 +781,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         if (op_class != No_OpClass) {
             idx = fuPool->getUnit(op_class);
-
+            issuing_inst->isFloating() ? fpAluAccesses++ : intAluAccesses++;
             if (idx > -1) {
                 op_latency = fuPool->getOpLatency(op_class);
             }
@@ -867,6 +917,13 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 {
     int dependents = 0;
 
+    // The instruction queue here takes care of both floating and int ops
+    if (completed_inst->isFloating()) {
+        fpInstQueueWakeupQccesses++;
+    } else {
+        intInstQueueWakeupAccesses++;
+    }
+
     DPRINTF(IQ, "Waking dependents of completed instruction.\n");
 
     assert(!completed_inst->isSquashed());
@@ -997,6 +1054,7 @@ void
 InstructionQueue<Impl>::violation(DynInstPtr &store,
                                   DynInstPtr &faulting_load)
 {
+    intInstQueueWrites++;
     memDepUnit[store->threadNumber].violation(store, faulting_load);
 }
 
@@ -1037,6 +1095,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
            (*squash_it)->seqNum > squashedSeqNum[tid]) {
 
         DynInstPtr squashed_inst = (*squash_it);
+        squashed_inst->isFloating() ? fpInstQueueWrites++ : intInstQueueWrites++;
 
         // Only handle the instruction if it actually is in the IQ and
         // hasn't already been squashed in the IQ.

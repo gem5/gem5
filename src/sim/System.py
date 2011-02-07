@@ -1,4 +1,5 @@
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2011 Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Rick Strong
 
 from m5.SimObject import SimObject
 from m5.defines import buildEnv
@@ -44,6 +46,7 @@ class System(SimObject):
 
     physmem = Param.PhysicalMemory(Parent.any, "physical memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
+
     if buildEnv['FULL_SYSTEM']:
         abstract = True
         boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,

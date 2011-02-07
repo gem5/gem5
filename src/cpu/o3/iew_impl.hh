@@ -698,6 +698,7 @@ DefaultIEW<Impl>::updateStatus()
     // If there are no ready instructions waiting to be scheduled by the IQ,
     // and there's no stores waiting to write back, and dispatch is not
     // unblocking, then there is no internal activity for the IEW stage.
+    instQueue.intInstQueueReads++;
     if (_status == Active && !instQueue.hasReadyInsts() &&
         !ldstQueue.willWB() && !any_unblocking) {
         DPRINTF(IEW, "IEW switching to idle\n");

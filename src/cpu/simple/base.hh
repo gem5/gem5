@@ -182,7 +182,7 @@ class BaseSimpleCPU : public BaseCPU
     {
         numInst++;
         numInsts++;
-
+        system->totalNumInsts++;
         thread->funcExeInst++;
     }
 
@@ -191,8 +191,42 @@ class BaseSimpleCPU : public BaseCPU
         return numInst - startNumInst;
     }
 
+    //number of integer alu accesses
+    Stats::Scalar numIntAluAccesses;
+
+    //number of float alu accesses
+    Stats::Scalar numFpAluAccesses;
+
+    //number of function calls/returns
+    Stats::Scalar numCallsReturns;
+
+    //conditional control instructions;
+    Stats::Scalar numCondCtrlInsts;
+
+    //number of int instructions
+    Stats::Scalar numIntInsts;
+
+    //number of float instructions
+    Stats::Scalar numFpInsts;
+
+    //number of integer register file accesses
+    Stats::Scalar numIntRegReads;
+    Stats::Scalar numIntRegWrites;
+
+    //number of float register file accesses
+    Stats::Scalar numFpRegReads;
+    Stats::Scalar numFpRegWrites;
+
     // number of simulated memory references
     Stats::Scalar numMemRefs;
+    Stats::Scalar numLoadInsts;
+    Stats::Scalar numStoreInsts;
+
+    // number of idle cycles
+    Stats::Formula numIdleCycles;
+
+    // number of busy cycles
+    Stats::Formula numBusyCycles;
 
     // number of simulated loads
     Counter numLoad;
@@ -240,28 +274,33 @@ class BaseSimpleCPU : public BaseCPU
 
     uint64_t readIntRegOperand(const StaticInst *si, int idx)
     {
+        numIntRegReads++;
         return thread->readIntReg(si->srcRegIdx(idx));
     }
 
     FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
+        numFpRegReads++;
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return thread->readFloatReg(reg_idx);
     }
 
     FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
     {
+        numFpRegReads++;
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return thread->readFloatRegBits(reg_idx);
     }
 
     void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
+        numIntRegWrites++;
         thread->setIntReg(si->destRegIdx(idx), val);
     }
 
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
+        numFpRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatReg(reg_idx, val);
     }
@@ -269,6 +308,7 @@ class BaseSimpleCPU : public BaseCPU
     void setFloatRegOperandBits(const StaticInst *si, int idx,
                                 FloatRegBits val)
     {
+        numFpRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatRegBits(reg_idx, val);
     }
@@ -294,16 +334,19 @@ class BaseSimpleCPU : public BaseCPU
 
     MiscReg readMiscReg(int misc_reg)
     {
+        numIntRegReads++;
         return thread->readMiscReg(misc_reg);
     }
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
+        numIntRegWrites++;
         return thread->setMiscReg(misc_reg, val);
     }
 
     MiscReg readMiscRegOperand(const StaticInst *si, int idx)
     {
+        numIntRegReads++;
         int reg_idx = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
         return thread->readMiscReg(reg_idx);
     }
@@ -311,6 +354,7 @@ class BaseSimpleCPU : public BaseCPU
     void setMiscRegOperand(
             const StaticInst *si, int idx, const MiscReg &val)
     {
+        numIntRegWrites++;
         int reg_idx = si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
         return thread->setMiscReg(reg_idx, val);
     }

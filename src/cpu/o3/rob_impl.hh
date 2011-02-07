@@ -204,6 +204,8 @@ ROB<Impl>::insertInst(DynInstPtr &inst)
 {
     assert(inst);
 
+    robWrites++;
+
     DPRINTF(ROB, "Adding inst PC %s to the ROB.\n", inst->pcState());
 
     assert(numInstsInROB != numEntries);
@@ -237,6 +239,8 @@ template <class Impl>
 void
 ROB<Impl>::retireHead(ThreadID tid)
 {
+    robWrites++;
+
     assert(numInstsInROB > 0);
 
     // Get the head ROB instruction.
@@ -271,6 +275,7 @@ template <class Impl>
 bool
 ROB<Impl>::isHeadReady(ThreadID tid)
 {
+    robReads++;
     if (threadEntries[tid] != 0) {
         return instList[tid].front()->readyToCommit();
     }
@@ -315,6 +320,7 @@ template <class Impl>
 void
 ROB<Impl>::doSquash(ThreadID tid)
 {
+    robWrites++;
     DPRINTF(ROB, "[tid:%u]: Squashing instructions until [sn:%i].\n",
             tid, squashedSeqNum[tid]);
 
@@ -521,5 +527,19 @@ ROB<Impl>::readTailInst(ThreadID tid)
     tail_thread--;
 
     return *tail_thread;
+}
+
+template <class Impl>
+void
+ROB<Impl>::regStats()
+{
+    using namespace Stats;
+    robReads
+        .name(name() + ".rob_reads")
+        .desc("The number of ROB reads");
+
+    robWrites
+        .name(name() + ".rob_writes")
+        .desc("The number of ROB writes");
 }
 

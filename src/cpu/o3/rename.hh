@@ -470,6 +470,8 @@ class DefaultRename
     Stats::Scalar renameRenamedOperands;
     /** Stat for total number of source register rename lookups. */
     Stats::Scalar renameRenameLookups;
+    Stats::Scalar intRenameLookups;
+    Stats::Scalar fpRenameLookups;
     /** Stat for total number of committed renaming mappings. */
     Stats::Scalar renameCommittedMaps;
     /** Stat for total number of mappings that were undone due to a squash. */

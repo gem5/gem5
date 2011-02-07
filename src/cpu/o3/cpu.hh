@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  *
  * Authors: Kevin Lim
  *          Korey Sewell
+ *          Rick Strong
  */
 
 #ifndef __CPU_O3_CPU_HH__
@@ -726,6 +728,16 @@ class FullO3CPU : public BaseO3CPU
     Stats::Formula ipc;
     /** Stat for the total IPC. */
     Stats::Formula totalIpc;
+
+    //number of integer register file accesses
+    Stats::Scalar intRegfileReads;
+    Stats::Scalar intRegfileWrites;
+    //number of float register file accesses
+    Stats::Scalar fpRegfileReads;
+    Stats::Scalar fpRegfileWrites;
+    //number of misc
+    Stats::Scalar miscRegfileReads;
+    Stats::Scalar miscRegfileWrites;
 };
 
 #endif // __CPU_O3_CPU_HH__

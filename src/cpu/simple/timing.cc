@@ -130,6 +130,7 @@ TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
     drainEvent = NULL;
     previousTick = 0;
     changeState(SimObject::Running);
+    system->totalNumInsts = 0;
 }
 
 

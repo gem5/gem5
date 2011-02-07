@@ -473,6 +473,12 @@ class DefaultCommit
     Stats::Vector statComMembars;
     /** Total number of committed branches. */
     Stats::Vector statComBranches;
+    /** Total number of floating point instructions */
+    Stats::Vector statComFloating;
+    /** Total number of integer instructions */
+    Stats::Vector statComInteger;
+    /** Total number of function calls */
+    Stats::Vector statComFunctionCalls;
 
     /** Number of cycles where the commit bandwidth limit is reached. */
     Stats::Scalar commitEligibleSamples;

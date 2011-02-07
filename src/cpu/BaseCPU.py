@@ -1,4 +1,5 @@
 # Copyright (c) 2005-2008 The Regents of The University of Michigan
+# Copyright (c) 2011 Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Rick Strong
 
 import sys
 
