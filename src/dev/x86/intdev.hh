@@ -138,8 +138,6 @@ class IntDev
     virtual Tick
     recvResponse(PacketPtr pkt)
     {
-        delete pkt->req;
-        delete pkt;
         return 0;
     }
 

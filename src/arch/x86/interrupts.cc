@@ -340,8 +340,6 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
         low.deliveryStatus = 0;
         regs[APIC_INTERRUPT_COMMAND_LOW] = low;
     }
-    delete pkt->req;
-    delete pkt;
     DPRINTF(LocalApic, "ICR is now idle.\n");
     return 0;
 }

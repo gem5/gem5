@@ -37,10 +37,14 @@ X86ISA::IntDev::IntPort::sendMessage(ApicList apics,
     ApicList::iterator apicIt;
     for (apicIt = apics.begin(); apicIt != apics.end(); apicIt++) {
         PacketPtr pkt = buildIntRequest(*apicIt, message);
-        if (timing)
+        if (timing) {
             sendMessageTiming(pkt, latency);
-        else
+            // The target handles cleaning up the packet in timing mode.
+        } else {
             sendMessageAtomic(pkt);
+            delete pkt->req;
+            delete pkt;
+        }
     }
 }
 
