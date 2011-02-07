@@ -61,6 +61,7 @@ class MessageBuffer
     }
 
     void reanalyzeMessages(const Address& addr);
+    void reanalyzeAllMessages();
     void stallMessage(const Address& addr);
 
     // TRUE if head of queue timestamp <= SystemTime

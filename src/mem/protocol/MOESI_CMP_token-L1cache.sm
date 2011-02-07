@@ -433,7 +433,7 @@ machine(L1Cache, "Token protocol")
   // ** IN_PORTS **
 
   // Use Timer
-  in_port(useTimerTable_in, Address, useTimerTable) {
+  in_port(useTimerTable_in, Address, useTimerTable, rank=5) {
     if (useTimerTable_in.isReady()) {
       TBE tbe := L1_TBEs[useTimerTable.readyAddress()];
 
@@ -459,7 +459,7 @@ machine(L1Cache, "Token protocol")
   }
 
   // Reissue Timer
-  in_port(reissueTimerTable_in, Address, reissueTimerTable) {
+  in_port(reissueTimerTable_in, Address, reissueTimerTable, rank=4) {
     if (reissueTimerTable_in.isReady()) {
       trigger(Event:Request_Timeout, reissueTimerTable.readyAddress(),
               getCacheEntry(reissueTimerTable.readyAddress()),
@@ -467,10 +467,8 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-
-
   // Persistent Network
-  in_port(persistentNetwork_in, PersistentMsg, persistentToL1Cache) {
+  in_port(persistentNetwork_in, PersistentMsg, persistentToL1Cache, rank=3) {
     if (persistentNetwork_in.isReady()) {
       peek(persistentNetwork_in, PersistentMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
@@ -519,56 +517,8 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-
-  // Request Network
-  in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
-    if (requestNetwork_in.isReady()) {
-      peek(requestNetwork_in, RequestMsg, block_on="Address") {
-        assert(in_msg.Destination.isElement(machineID));
-
-        Entry cache_entry := getCacheEntry(in_msg.Address);
-        TBE tbe := L1_TBEs[in_msg.Address];
-
-        if (in_msg.Type == CoherenceRequestType:GETX) {
-          if (in_msg.isLocal) {
-            trigger(Event:Transient_Local_GETX, in_msg.Address,
-                    cache_entry, tbe);
-          }
-          else {
-            trigger(Event:Transient_GETX, in_msg.Address,
-                    cache_entry, tbe);
-          }
-        } else if (in_msg.Type == CoherenceRequestType:GETS) {
-          if (getTokens(cache_entry) == 1 || 
-              getTokens(cache_entry) == (max_tokens() / 2) + 1) {
-            if (in_msg.isLocal) {
-              trigger(Event:Transient_Local_GETS_Last_Token, in_msg.Address,
-                      cache_entry, tbe);
-            }
-            else {
-              trigger(Event:Transient_GETS_Last_Token, in_msg.Address,
-                      cache_entry, tbe);
-            }
-          }
-          else {
-            if (in_msg.isLocal) {
-              trigger(Event:Transient_Local_GETS, in_msg.Address,
-                      cache_entry, tbe);
-            }
-            else {
-              trigger(Event:Transient_GETS, in_msg.Address,
-                      cache_entry, tbe);
-            }
-          }
-        } else {
-          error("Unexpected message");
-        }
-      }
-    }
-  }
-
   // Response Network
-  in_port(responseNetwork_in, ResponseMsg, responseToL1Cache) {
+  in_port(responseNetwork_in, ResponseMsg, responseToL1Cache, rank=2) {
     if (responseNetwork_in.isReady()) {
       peek(responseNetwork_in, ResponseMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
@@ -639,8 +589,55 @@ machine(L1Cache, "Token protocol")
     }
   }
 
+  // Request Network
+  in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
+    if (requestNetwork_in.isReady()) {
+      peek(requestNetwork_in, RequestMsg, block_on="Address") {
+        assert(in_msg.Destination.isElement(machineID));
+
+        Entry cache_entry := getCacheEntry(in_msg.Address);
+        TBE tbe := L1_TBEs[in_msg.Address];
+
+        if (in_msg.Type == CoherenceRequestType:GETX) {
+          if (in_msg.isLocal) {
+            trigger(Event:Transient_Local_GETX, in_msg.Address,
+                    cache_entry, tbe);
+          }
+          else {
+            trigger(Event:Transient_GETX, in_msg.Address,
+                    cache_entry, tbe);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:GETS) {
+          if (getTokens(cache_entry) == 1 || 
+              getTokens(cache_entry) == (max_tokens() / 2) + 1) {
+            if (in_msg.isLocal) {
+              trigger(Event:Transient_Local_GETS_Last_Token, in_msg.Address,
+                      cache_entry, tbe);
+            }
+            else {
+              trigger(Event:Transient_GETS_Last_Token, in_msg.Address,
+                      cache_entry, tbe);
+            }
+          }
+          else {
+            if (in_msg.isLocal) {
+              trigger(Event:Transient_Local_GETS, in_msg.Address,
+                      cache_entry, tbe);
+            }
+            else {
+              trigger(Event:Transient_GETS, in_msg.Address,
+                      cache_entry, tbe);
+            }
+          }
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
   // Mandatory Queue
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...", rank=0) {
     if (mandatoryQueue_in.isReady()) {
       peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
@@ -1339,6 +1336,11 @@ machine(L1Cache, "Token protocol")
     tbe.IssueTime := get_time();
   }
 
+  action(ta_traceStalledAddress, "ta", desc="Trace Stalled Address") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      APPEND_TRANSITION_COMMENT(in_msg.LineAddress);
+    }
+  }
 
   action(j_unsetReissueTimer, "j", desc="Unset reissue timer.") {
     if (reissueTimerTable.isSet(address)) {
@@ -1527,8 +1529,19 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-  action(zz_recycleMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
-    mandatoryQueue_in.recycle();
+  action(zz_stallAndWaitMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      APPEND_TRANSITION_COMMENT(in_msg.LineAddress);
+    } 
+    stall_and_wait(mandatoryQueue_in, address);    
+  }
+
+  action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
+    wake_up_dependents(address);
+  }
+
+  action(ka_wakeUpAllDependents, "ka", desc="wake-up all dependents") {
+    wake_up_all_dependents();
   }
 
   //*****************************************************
@@ -1537,15 +1550,16 @@ machine(L1Cache, "Token protocol")
 
   // Transitions for Load/Store/L2_Replacement from transient states
   transition({IM, SM, OM, IS, IM_L, IS_L, I_L, S_L, SM_L, M_W, MM_W}, L1_Replacement) {
-    zz_recycleMandatoryQueue;
+    ta_traceStalledAddress;
+    zz_stallAndWaitMandatoryQueue;
   }
 
   transition({IM, SM, OM, IS, IM_L, IS_L, SM_L}, {Store, Atomic}) {
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
   }
 
   transition({IM, IS, IM_L, IS_L}, {Load, Ifetch}) {
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
   }
 
 
@@ -1615,8 +1629,10 @@ machine(L1Cache, "Token protocol")
   }
 
   transition(I, L1_Replacement) {
+    ta_traceStalledAddress;
     tr_tokenReplacement;
     gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(I, {Transient_GETX, Transient_Local_GETX}) {
@@ -1674,8 +1690,10 @@ machine(L1Cache, "Token protocol")
   }
 
   transition(S, L1_Replacement, I) {
+    ta_traceStalledAddress;
     cc_sharedReplacement; // Only needed in some cases
     gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(S, {Transient_GETX, Transient_Local_GETX}, I) {
@@ -1750,8 +1768,10 @@ machine(L1Cache, "Token protocol")
   }
 
   transition(O, L1_Replacement, I) {
+    ta_traceStalledAddress;
     c_ownedReplacement;
     gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(O, {Transient_GETX, Transient_Local_GETX}, I) {
@@ -1835,8 +1855,10 @@ machine(L1Cache, "Token protocol")
   }
 
   transition(MM, L1_Replacement, I) {
+    ta_traceStalledAddress;
     c_ownedReplacement;
     gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(MM, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_Local_GETS}, I) {
@@ -1864,11 +1886,13 @@ machine(L1Cache, "Token protocol")
   transition(MM_W, Use_TimeoutNoStarvers, MM) {
     s_deallocateTBE;
     jj_unsetUseTimer;
+    kd_wakeUpDependents;
   }
 
   transition(MM_W, Use_TimeoutNoStarvers_NoMig, M) {
     s_deallocateTBE;
     jj_unsetUseTimer;
+    kd_wakeUpDependents;
   }
 
   // Transitions from Dirty Exclusive
@@ -1898,8 +1922,10 @@ machine(L1Cache, "Token protocol")
   }
 
   transition(M, L1_Replacement, I) {
+    ta_traceStalledAddress;
     c_ownedReplacement;
     gg_deallocateL1CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(M, {Transient_GETX, Transient_Local_GETX}, I) {
@@ -1948,6 +1974,7 @@ machine(L1Cache, "Token protocol")
   transition(M_W, {Use_TimeoutNoStarvers, Use_TimeoutNoStarvers_NoMig}, M) {
     s_deallocateTBE;
     jj_unsetUseTimer;
+    kd_wakeUpDependents;
   }
 
   transition(M_W, Use_TimeoutStarverX, I_L) {
@@ -2056,6 +2083,7 @@ machine(L1Cache, "Token protocol")
     o_scheduleUseTimeout;
     j_unsetReissueTimer;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(SM, Data_Shared) {
@@ -2077,6 +2105,7 @@ machine(L1Cache, "Token protocol")
     o_scheduleUseTimeout;
     j_unsetReissueTimer;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition({IM, SM}, {Transient_GETX, Transient_Local_GETX}, IM) { // We don't have the data yet, but we might have collected some tokens.  We give them up here to avoid livelock
@@ -2106,6 +2135,7 @@ machine(L1Cache, "Token protocol")
     o_scheduleUseTimeout;
     j_unsetReissueTimer;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(OM, Data_Shared) {
@@ -2121,6 +2151,7 @@ machine(L1Cache, "Token protocol")
     o_scheduleUseTimeout;
     j_unsetReissueTimer;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(OM, Request_Timeout) {
@@ -2142,6 +2173,7 @@ machine(L1Cache, "Token protocol")
     s_deallocateTBE;
     j_unsetReissueTimer;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS, Data_Owner, O) {
@@ -2151,6 +2183,7 @@ machine(L1Cache, "Token protocol")
     s_deallocateTBE;
     j_unsetReissueTimer;
     n_popResponseQueue;
+    kd_wakeUpDependents;    
   }
 
   transition(IS, Data_All_Tokens, M_W) {
@@ -2160,6 +2193,7 @@ machine(L1Cache, "Token protocol")
     o_scheduleUseTimeout;
     j_unsetReissueTimer;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS, Request_Timeout) {
@@ -2247,6 +2281,7 @@ machine(L1Cache, "Token protocol")
     j_unsetReissueTimer;
     o_scheduleUseTimeout;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(SM_L, Data_All_Tokens, S_L) {
@@ -2288,6 +2323,7 @@ machine(L1Cache, "Token protocol")
     j_unsetReissueTimer;
     o_scheduleUseTimeout;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
 
@@ -2295,22 +2331,27 @@ machine(L1Cache, "Token protocol")
 
   transition(I_L, Own_Lock_or_Unlock, I) {
     l_popPersistentQueue;
+    kd_wakeUpDependents;
   }
 
   transition(S_L, Own_Lock_or_Unlock, S) {
     l_popPersistentQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IM_L, Own_Lock_or_Unlock, IM) {
     l_popPersistentQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS_L, Own_Lock_or_Unlock, IS) {
     l_popPersistentQueue;
+    kd_wakeUpDependents;
   }
 
   transition(SM_L, Own_Lock_or_Unlock, SM) {
     l_popPersistentQueue;
+    kd_wakeUpDependents;
   }
 }
 

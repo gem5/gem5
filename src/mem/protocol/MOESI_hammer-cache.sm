@@ -278,7 +278,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   // ** IN_PORTS **
 
   // Trigger Queue
-  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=3) {
     if (triggerQueue_in.isReady()) {
       peek(triggerQueue_in, TriggerMsg) {
 
@@ -298,10 +298,35 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
-  // Nothing from the request network
+  // Nothing from the unblock network
+
+  // Response Network
+  in_port(responseToCache_in, ResponseMsg, responseToCache, rank=2) {
+    if (responseToCache_in.isReady()) {
+      peek(responseToCache_in, ResponseMsg, block_on="Address") {
+
+        Entry cache_entry := getCacheEntry(in_msg.Address);
+        TBE tbe := TBEs[in_msg.Address];
+
+        if (in_msg.Type == CoherenceResponseType:ACK) {
+          trigger(Event:Ack, in_msg.Address, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:ACK_SHARED) {
+          trigger(Event:Shared_Ack, in_msg.Address, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:DATA) {
+          trigger(Event:Data, in_msg.Address, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:DATA_SHARED) {
+          trigger(Event:Shared_Data, in_msg.Address, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
+          trigger(Event:Exclusive_Data, in_msg.Address, cache_entry, tbe);
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
 
   // Forward Network
-  in_port(forwardToCache_in, RequestMsg, forwardToCache) {
+  in_port(forwardToCache_in, RequestMsg, forwardToCache, rank=1) {
     if (forwardToCache_in.isReady()) {
       peek(forwardToCache_in, RequestMsg, block_on="Address") {
 
@@ -339,35 +364,10 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
-  // Response Network
-  in_port(responseToCache_in, ResponseMsg, responseToCache) {
-    if (responseToCache_in.isReady()) {
-      peek(responseToCache_in, ResponseMsg, block_on="Address") {
-
-        Entry cache_entry := getCacheEntry(in_msg.Address);
-        TBE tbe := TBEs[in_msg.Address];
-
-        if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:Ack, in_msg.Address, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:ACK_SHARED) {
-          trigger(Event:Shared_Ack, in_msg.Address, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:DATA) {
-          trigger(Event:Data, in_msg.Address, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:DATA_SHARED) {
-          trigger(Event:Shared_Data, in_msg.Address, cache_entry, tbe);
-        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
-          trigger(Event:Exclusive_Data, in_msg.Address, cache_entry, tbe);
-        } else {
-          error("Unexpected message");
-        }
-      }
-    }
-  }
-
-  // Nothing from the unblock network
+  // Nothing from the request network
 
   // Mandatory Queue
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...", rank=0) {
     if (mandatoryQueue_in.isReady()) {
       peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
 
@@ -1017,8 +1017,16 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
-  action(zz_recycleMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
-    mandatoryQueue_in.recycle();
+  action(zz_stallAndWaitMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
+    stall_and_wait(mandatoryQueue_in, address);    
+  }
+
+  action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
+    wake_up_dependents(address);
+  }
+
+  action(ka_wakeUpAllDependents, "ka", desc="wake-up all dependents") {
+    wake_up_all_dependents();
   }
 
   //*****************************************************
@@ -1027,19 +1035,19 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   // Transitions for Load/Store/L2_Replacement from transient states
   transition({IM, SM, ISM, OM, IS, SS, OI, MI, II, IT, ST, OT, MT, MMT}, {Store, L2_Replacement}) {
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
   }
 
   transition({M_W, MM_W}, {L2_Replacement}) {
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
   }
 
   transition({IM, IS, OI, MI, II, IT, ST, OT, MT, MMT}, {Load, Ifetch}) {
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
   }
 
   transition({IM, SM, ISM, OM, IS, SS, MM_W, M_W, OI, MI, II, IT, ST, OT, MT, MMT}, L1_to_L2) {
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
   }
 
   transition({IT, ST, OT, MT, MMT}, {Other_GETX, NC_DMA_GETS, Other_GETS, Merged_GETS, Other_GETS_No_Mig, Invalidate}) {
@@ -1053,6 +1061,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     vv_allocateL2CacheBlock;
     hp_copyFromTBEToL2;
     s_deallocateTBE;
+    ka_wakeUpAllDependents;
   }
 
   transition(I, Trigger_L2_to_L1D, IT) {
@@ -1062,7 +1071,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1; // Not really needed for state I
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1073,7 +1082,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1084,7 +1093,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1095,7 +1104,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1106,7 +1115,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1117,7 +1126,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1128,7 +1137,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1139,7 +1148,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1150,7 +1159,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
@@ -1161,28 +1170,33 @@ machine(L1Cache, "AMD Hammer-like protocol")
     nb_copyFromTBEToL1;
     s_deallocateTBE;
     uu_profileMiss;
-    zz_recycleMandatoryQueue;
+    zz_stallAndWaitMandatoryQueue;
     ll_L2toL1Transfer;
   }
 
   transition(IT, Complete_L2_to_L1, I) {
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   transition(ST, Complete_L2_to_L1, S) {
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   transition(OT, Complete_L2_to_L1, O) {
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   transition(MT, Complete_L2_to_L1, M) {
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   transition(MMT, Complete_L2_to_L1, MM) {
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from Idle
@@ -1212,6 +1226,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   transition(I, L2_Replacement) {
     rr_deallocateL2CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(I, {Other_GETX, NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig, Invalidate}) {
@@ -1234,6 +1249,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   transition(S, L2_Replacement, I) {
     rr_deallocateL2CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(S, {Other_GETX, Invalidate}, I) {
@@ -1264,6 +1280,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     i_allocateTBE;
     d_issuePUT;
     rr_deallocateL2CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(O, {Other_GETX, Invalidate}, I) {
@@ -1296,6 +1313,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     i_allocateTBE;
     d_issuePUT;
     rr_deallocateL2CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(MM, {Other_GETX, Invalidate}, I) {
@@ -1338,6 +1356,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     i_allocateTBE;
     d_issuePUT;
     rr_deallocateL2CacheBlock;
+    ka_wakeUpAllDependents;
   }
 
   transition(M, {Other_GETX, Invalidate}, I) {
@@ -1386,6 +1405,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     o_checkForCompletion;
     sx_external_store_hit;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from SM
@@ -1424,6 +1444,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from OM
@@ -1455,6 +1476,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from IS
@@ -1484,6 +1506,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     hx_external_load_hit;
     uo_updateCurrentOwner;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS, Exclusive_Data, M_W) {
@@ -1492,6 +1515,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     o_checkForCompletion;
     hx_external_load_hit;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS, Shared_Data, SS) {
@@ -1502,6 +1526,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     hx_external_load_hit;
     uo_updateCurrentOwner;
     n_popResponseQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from SS
@@ -1549,6 +1574,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from M_W
@@ -1568,6 +1594,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     gm_sendUnblockM;
     s_deallocateTBE;
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from OI/MI
@@ -1591,12 +1618,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
     t_sendExclusiveDataFromTBEToMemory;
     s_deallocateTBE;
     l_popForwardQueue;
+    kd_wakeUpDependents;
   }
 
   transition(OI, Writeback_Ack, I) {
     qq_sendDataFromTBEToMemory;
     s_deallocateTBE;
     l_popForwardQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from II
@@ -1609,10 +1638,12 @@ machine(L1Cache, "AMD Hammer-like protocol")
     g_sendUnblock;
     s_deallocateTBE;
     l_popForwardQueue;
+    kd_wakeUpDependents;
   }
 
   transition(II, Writeback_Nack, I) {
     s_deallocateTBE;
     l_popForwardQueue;
+    kd_wakeUpDependents;
   }
 }

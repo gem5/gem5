@@ -56,6 +56,8 @@ MessageBuffer::MessageBuffer(const string &name)
     m_not_avail_count = 0;
     m_priority_rank = 0;
     m_name = name;
+
+    m_stall_msg_map.clear();
 }
 
 int
@@ -337,11 +339,43 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 
         m_prio_heap.push_back(msgNode);
         push_heap(m_prio_heap.begin(), m_prio_heap.end(),
-            greater<MessageBufferNode>());
+                  greater<MessageBufferNode>());
 
         g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, msgNode.m_time);
         m_stall_msg_map[addr].pop_front();
     }
+    m_stall_msg_map.erase(addr);
+}
+
+void
+MessageBuffer::reanalyzeAllMessages()
+{
+    DPRINTF(RubyQueue, "ReanalyzeAllMessages %s\n", m_name);
+
+    //
+    // Put all stalled messages associated with this address back on the
+    // prio heap
+    //
+    for (StallMsgMapType::iterator map_iter = m_stall_msg_map.begin();
+         map_iter != m_stall_msg_map.end();
+         ++map_iter) {
+
+        while(!(map_iter->second).empty()) {
+            m_msg_counter++;
+            MessageBufferNode msgNode(g_eventQueue_ptr->getTime() + 1, 
+                                      m_msg_counter, 
+                                      (map_iter->second).front());
+
+            m_prio_heap.push_back(msgNode);
+            push_heap(m_prio_heap.begin(), m_prio_heap.end(),
+                      greater<MessageBufferNode>());
+            
+            g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, 
+                                                    msgNode.m_time);
+            (map_iter->second).pop_front();
+        }
+    }
+    m_stall_msg_map.clear();
 }
 
 void

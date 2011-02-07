@@ -258,6 +258,7 @@ public:
     const MachineType getMachineType() const;
     void stallBuffer(MessageBuffer* buf, Address addr);
     void wakeUpBuffers(Address addr);
+    void wakeUpAllBuffers();
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
     void print(std::ostream& out) const;
     void printConfig(std::ostream& out) const;
@@ -731,6 +732,37 @@ $c_ident::wakeUpBuffers(Address addr)
     }
     delete m_waiting_buffers[addr];
     m_waiting_buffers.erase(addr);
+}
+
+void
+$c_ident::wakeUpAllBuffers()
+{
+    //
+    // Wake up all possible buffers that could be waiting on any message.
+    //
+
+    std::vector<MsgVecType*> wokeUpMsgVecs;
+    
+    for (WaitingBufType::iterator buf_iter = m_waiting_buffers.begin();
+         buf_iter != m_waiting_buffers.end();
+         ++buf_iter) {
+         for (MsgVecType::iterator vec_iter = buf_iter->second->begin();
+              vec_iter != buf_iter->second->end();
+              ++vec_iter) {
+              if (*vec_iter != NULL) {
+                  (*vec_iter)->reanalyzeAllMessages();
+              }
+         }
+         wokeUpMsgVecs.push_back(buf_iter->second);
+    }
+    
+    for (std::vector<MsgVecType*>::iterator wb_iter = wokeUpMsgVecs.begin();
+         wb_iter != wokeUpMsgVecs.end();
+         ++wb_iter) {
+         delete (*wb_iter);
+    }
+    
+    m_waiting_buffers.clear();
 }
 
 void
