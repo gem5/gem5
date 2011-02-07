@@ -370,3 +370,9 @@ RubyPort::M5Port::isPhysMemAddress(Addr addr)
     }
     return false;
 }
+
+unsigned
+RubyPort::M5Port::deviceBlockSize() const
+{
+    return (unsigned) RubySystem::getBlockSizeBytes();
+}

@@ -36,6 +36,7 @@
 #include "mem/physical.hh"
 #include "mem/protocol/RequestStatus.hh"
 #include "mem/ruby/libruby.hh"
+#include "mem/ruby/system/System.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"
 
@@ -54,6 +55,7 @@ class RubyPort : public MemObject
         M5Port(const std::string &_name, RubyPort *_port);
         bool sendTiming(PacketPtr pkt);
         void hitCallback(PacketPtr pkt);
+        unsigned deviceBlockSize() const;
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);
