@@ -101,11 +101,11 @@ def macroop JMP_FAR_I
     # Figure out the width of the offset.
     limm t3, dsz, dataSize=8
     slli t3, t3, 3, dataSize=8
-    # Get the selector into t1.
-    sll t1, t2, t3, dataSize=8
-    mov t1, t0, t1, dataSize=2
-    # And get the offset into t2
-    mov t2, t0, t2
+    # Get the offset into t1.
+    mov t1, t0, t2
+    # Get the selector into t2.
+    srl t2, t2, t3, dataSize=8
+    mov t2, t0, t2, dataSize=2
     br rom_label("jmpFarWork")
 };
 
