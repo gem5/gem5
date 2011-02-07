@@ -79,8 +79,8 @@ def macroop SYSCALL_64
     wrattr ss, t4
 
     # Set the new rip.
-    rdval t7, lstar
-    wrip t0, t7
+    rdval t7, lstar, dataSize=8
+    wrip t0, t7, dataSize=8
 
     # Mask the flags against sf_mask and leave RF turned off.
     rdval t3, sf_mask, dataSize=8
