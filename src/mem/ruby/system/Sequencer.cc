@@ -100,7 +100,7 @@ Sequencer::wakeup()
             continue;
 
         panic("Possible Deadlock detected. Aborting!\n"
-             "version: %d request.paddr: %d m_readRequestTable: %d "
+             "version: %d request.paddr: 0x%x m_readRequestTable: %d "
              "current time: %u issue_time: %d difference: %d\n", m_version,
              request->ruby_request.paddr, m_readRequestTable.size(),
              current_time, request->issue_time,
@@ -115,7 +115,7 @@ Sequencer::wakeup()
             continue;
 
         panic("Possible Deadlock detected. Aborting!\n"
-             "version: %d request.paddr: %d m_writeRequestTable: %d "
+             "version: %d request.paddr: 0x%x m_writeRequestTable: %d "
              "current time: %u issue_time: %d difference: %d\n", m_version,
              request->ruby_request.paddr, m_writeRequestTable.size(),
              current_time, request->issue_time,
