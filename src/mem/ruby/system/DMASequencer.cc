@@ -66,8 +66,8 @@ DMASequencer::makeRequest(const RubyRequest &request)
         break;
       case RubyRequestType_NULL:
       case RubyRequestType_IFETCH:
-      case RubyRequestType_Locked_Read:
-      case RubyRequestType_Locked_Write:
+      case RubyRequestType_Load_Linked:
+      case RubyRequestType_Store_Conditional:
       case RubyRequestType_RMW_Read:
       case RubyRequestType_RMW_Write:
       case RubyRequestType_NUM:

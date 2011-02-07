@@ -195,11 +195,11 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     if (pkt->isLLSC()) {
         if (pkt->isWrite()) {
             DPRINTF(MemoryAccess, "Issuing SC\n");
-            type = RubyRequestType_Locked_Write;
+            type = RubyRequestType_Store_Conditional;
         } else {
             DPRINTF(MemoryAccess, "Issuing LL\n");
             assert(pkt->isRead());
-            type = RubyRequestType_Locked_Read;
+            type = RubyRequestType_Load_Linked;
         }
     } else {
         if (pkt->isRead()) {

@@ -231,8 +231,8 @@ Sequencer::insertRequest(SequencerRequest* request)
     if ((request->ruby_request.type == RubyRequestType_ST) ||
         (request->ruby_request.type == RubyRequestType_RMW_Read) ||
         (request->ruby_request.type == RubyRequestType_RMW_Write) ||
-        (request->ruby_request.type == RubyRequestType_Locked_Read) ||
-        (request->ruby_request.type == RubyRequestType_Locked_Write)) {
+        (request->ruby_request.type == RubyRequestType_Load_Linked) ||
+        (request->ruby_request.type == RubyRequestType_Store_Conditional)) {
         pair<RequestTable::iterator, bool> r =
             m_writeRequestTable.insert(RequestTable::value_type(line_addr, 0));
         bool success = r.second;
@@ -290,8 +290,8 @@ Sequencer::removeRequest(SequencerRequest* srequest)
     if ((ruby_request.type == RubyRequestType_ST) ||
         (ruby_request.type == RubyRequestType_RMW_Read) ||
         (ruby_request.type == RubyRequestType_RMW_Write) ||
-        (ruby_request.type == RubyRequestType_Locked_Read) ||
-        (ruby_request.type == RubyRequestType_Locked_Write)) {
+        (ruby_request.type == RubyRequestType_Load_Linked) ||
+        (ruby_request.type == RubyRequestType_Store_Conditional)) {
         m_writeRequestTable.erase(line_addr);
     } else {
         m_readRequestTable.erase(line_addr);
@@ -309,7 +309,7 @@ Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
     // longer locked.
     //
     bool success = true;
-    if (request->ruby_request.type == RubyRequestType_Locked_Write) {
+    if (request->ruby_request.type == RubyRequestType_Store_Conditional) {
         if (!m_dataCache_ptr->isLocked(address, m_version)) {
             //
             // For failed SC requests, indicate the failure to the cpu by
@@ -328,7 +328,7 @@ Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
         // Independent of success, all SC operations must clear the lock
         //
         m_dataCache_ptr->clearLocked(address);
-    } else if (request->ruby_request.type == RubyRequestType_Locked_Read) {
+    } else if (request->ruby_request.type == RubyRequestType_Load_Linked) {
         //
         // Note: To fully follow Alpha LLSC semantics, should the LL clear any
         // previously locked cache lines?
@@ -378,8 +378,8 @@ Sequencer::writeCallback(const Address& address,
     assert((request->ruby_request.type == RubyRequestType_ST) ||
            (request->ruby_request.type == RubyRequestType_RMW_Read) ||
            (request->ruby_request.type == RubyRequestType_RMW_Write) ||
-           (request->ruby_request.type == RubyRequestType_Locked_Read) ||
-           (request->ruby_request.type == RubyRequestType_Locked_Write));
+           (request->ruby_request.type == RubyRequestType_Load_Linked) ||
+           (request->ruby_request.type == RubyRequestType_Store_Conditional));
 
     //
     // For Alpha, properly handle LL, SC, and write requests with respect to
@@ -501,7 +501,7 @@ Sequencer::hitCallback(SequencerRequest* srequest,
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
-            (type == RubyRequestType_Locked_Read)) {
+            (type == RubyRequestType_Load_Linked)) {
 
             memcpy(ruby_request.data,
                    data.getData(request_address.getOffset(), ruby_request.len),
@@ -614,8 +614,8 @@ Sequencer::issueRequest(const RubyRequest& request)
       case RubyRequestType_ST:
         ctype = CacheRequestType_ST;
         break;
-      case RubyRequestType_Locked_Read:
-      case RubyRequestType_Locked_Write:
+      case RubyRequestType_Load_Linked:
+      case RubyRequestType_Store_Conditional:
         ctype = CacheRequestType_ATOMIC;
         break;
       case RubyRequestType_RMW_Read:

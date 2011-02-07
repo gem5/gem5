@@ -50,10 +50,10 @@ RubyRequestType_to_string(const RubyRequestType& obj)
         return "LD";
       case RubyRequestType_ST:
         return "ST";
-      case RubyRequestType_Locked_Read:
-        return "Locked_Read";
-      case RubyRequestType_Locked_Write:
-        return "Locked_Write";
+      case RubyRequestType_Load_Linked:
+        return "Load_Linked";
+      case RubyRequestType_Store_Conditional:
+        return "Store_Conditional";
       case RubyRequestType_RMW_Read:
         return "RMW_Read";
       case RubyRequestType_RMW_Write:
@@ -75,9 +75,9 @@ string_to_RubyRequestType(string str)
     else if (str == "ST")
         return RubyRequestType_ST;
     else if (str == "Locked_Read")
-        return RubyRequestType_Locked_Read;
+        return RubyRequestType_Load_Linked;
     else if (str == "Locked_Write")
-        return RubyRequestType_Locked_Write;
+        return RubyRequestType_Store_Conditional;
     else if (str == "RMW_Read")
         return RubyRequestType_RMW_Read;
     else if (str == "RMW_Write")

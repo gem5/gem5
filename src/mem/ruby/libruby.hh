@@ -40,8 +40,8 @@ enum RubyRequestType {
   RubyRequestType_IFETCH,
   RubyRequestType_LD,
   RubyRequestType_ST,
-  RubyRequestType_Locked_Read,
-  RubyRequestType_Locked_Write,
+  RubyRequestType_Load_Linked,
+  RubyRequestType_Store_Conditional,
   RubyRequestType_RMW_Read,
   RubyRequestType_RMW_Write,
   RubyRequestType_NUM
