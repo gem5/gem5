@@ -319,16 +319,28 @@ GarnetNetwork_d::printStats(ostream& out) const
     out << "-------------" << endl;
 
     double m_total_link_power = 0.0;
+    double m_dynamic_link_power = 0.0;
+    double m_static_link_power = 0.0;
     double m_total_router_power = 0.0;
+    double m_dynamic_router_power = 0.0;
+    double m_static_router_power = 0.0;
 
     for (int i = 0; i < m_link_ptr_vector.size(); i++) {
         m_total_link_power += m_link_ptr_vector[i]->calculate_power();
+        m_dynamic_link_power += m_link_ptr_vector[i]->get_dynamic_power();
+        m_static_link_power += m_link_ptr_vector[i]->get_static_power();
     }
 
     for (int i = 0; i < m_router_ptr_vector.size(); i++) {
         m_total_router_power += m_router_ptr_vector[i]->calculate_power();
+        m_dynamic_router_power += m_router_ptr_vector[i]->get_dynamic_power();
+        m_static_router_power += m_router_ptr_vector[i]->get_static_power();
     }
+    out << "Link Dynamic Power = " << m_dynamic_link_power << " W" << endl;
+    out << "Link Static Power = " << m_static_link_power << " W" << endl;
     out << "Total Link Power = " << m_total_link_power << " W " << endl;
+    out << "Router Dynamic Power = " << m_dynamic_router_power << " W" << endl;
+    out << "Router Static Power = " << m_static_router_power << " W" << endl;
     out << "Total Router Power = " << m_total_router_power << " W " <<endl;
     out << "-------------" << endl;
     m_topology_ptr->printStats(out);

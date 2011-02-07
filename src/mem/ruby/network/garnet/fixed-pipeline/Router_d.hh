@@ -81,6 +81,9 @@ class Router_d
     double calculate_power();
     void calculate_performance_numbers();
 
+    double get_dynamic_power(){return m_power_dyn;}
+    double get_static_power(){return m_power_sta;}
+
   private:
     int m_id;
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
@@ -100,6 +103,9 @@ class Router_d
     VCallocator_d *m_vc_alloc;
     SWallocator_d *m_sw_alloc;
     Switch_d *m_switch;
+
+    double m_power_dyn;
+    double m_power_sta;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTER_D_HH__

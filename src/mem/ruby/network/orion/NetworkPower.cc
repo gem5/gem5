@@ -206,6 +206,7 @@ Router_d::calculate_power()
                  Pxbar_dyn +
                  Pclk_dyn;
 
+    m_power_dyn = Ptotal_dyn;
 
     // Static Power
     Pbuf_sta = orion_rtr_ptr->get_static_power_buf();
@@ -214,6 +215,8 @@ Router_d::calculate_power()
     Pxbar_sta = orion_rtr_ptr->get_static_power_xbar();
 
     Ptotal_sta += Pbuf_sta + Pvc_arb_sta + Psw_arb_sta + Pxbar_sta;
+
+    m_power_sta = Ptotal_sta;
 
     Ptotal = Ptotal_dyn + Ptotal_sta;
 
@@ -250,8 +253,12 @@ NetworkLink_d::calculate_power()
     double Plink_dyn = orion_link_ptr->calc_dynamic_energy(channel_width/2)*
         (m_link_utilized/ sim_cycles)*freq_Hz;
 
+    m_power_dyn = Plink_dyn;
+
     // Static Power
     double Plink_sta = orion_link_ptr->get_static_power();
+
+    m_power_sta = Plink_sta;
 
     double Ptotal = Plink_dyn + Plink_sta;
 

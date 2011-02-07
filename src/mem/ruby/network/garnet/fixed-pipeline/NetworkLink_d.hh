@@ -54,6 +54,8 @@ class NetworkLink_d : public Consumer
     int getLinkUtilization();
     std::vector<int> getVcLoad();
     int get_id(){return m_id;}
+    double get_dynamic_power(){return m_power_dyn;}
+    double get_static_power(){return m_power_sta;}
     void wakeup();
 
     double calculate_power();
@@ -73,6 +75,9 @@ class NetworkLink_d : public Consumer
     int m_link_utilized;
     std::vector<int> m_vc_load;
     int m_flit_width;
+
+    double m_power_dyn;
+    double m_power_sta;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_LINK_D_HH__
