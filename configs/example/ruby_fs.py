@@ -1,4 +1,4 @@
-# Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2009-2011 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -109,12 +109,19 @@ FutureClass = None
 
 CPUClass.clock = options.clock
 
-system = makeLinuxAlphaRubySystem(test_mem_mode, bm[0])
-
-system.ruby = Ruby.create_system(options,
-                                 system,
-                                 system.piobus,
-                                 system._dma_devices)
+if buildEnv['TARGET_ISA'] == "alpha":
+    system = makeLinuxAlphaRubySystem(test_mem_mode, bm[0])
+    system.ruby = Ruby.create_system(options,
+                                     system,
+                                     system.piobus,
+                                     system.dma_devices)
+elif buildEnv['TARGET_ISA'] == "x86":
+    system = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0], True)
+    system.ruby = Ruby.create_system(options,
+                                     system,
+                                     system.piobus)
+else:
+    fatal("incapable of building non-alpha or non-x86 full system!")
 
 system.cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)]
 
@@ -124,6 +131,11 @@ for (i, cpu) in enumerate(system.cpu):
     #
     cpu.icache_port = system.ruby.cpu_ruby_ports[i].port
     cpu.dcache_port = system.ruby.cpu_ruby_ports[i].port
+    if buildEnv['TARGET_ISA'] == "x86":
+        cpu.itb.walker.port = system.ruby.cpu_ruby_ports[i].port
+        cpu.dtb.walker.port = system.ruby.cpu_ruby_ports[i].port
+        cpu.interrupts.pio = system.piobus.port
+        cpu.interrupts.int_port = system.piobus.port
 
 root = Root(system = system)
 

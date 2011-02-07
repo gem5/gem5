@@ -10,6 +10,7 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
+# Copyright (c) 2010-2011 Advanced Micro Devices, Inc.
 # Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -286,7 +287,34 @@ def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
     return IO_address_space_base + port;
 
-def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None):
+def connectX86ClassicSystem(x86_sys):
+    x86_sys.membus = MemBus(bus_id=1)
+    x86_sys.physmem.port = x86_sys.membus.port
+
+    # North Bridge
+    x86_sys.iobus = Bus(bus_id=0)
+    x86_sys.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    x86_sys.bridge.side_a = x86_sys.iobus.port
+    x86_sys.bridge.side_b = x86_sys.membus.port
+
+    # connect the io bus
+    x86_sys.pc.attachIO(x86_sys.iobus)
+
+def connectX86RubySystem(x86_sys):
+    # North Bridge
+    x86_sys.piobus = Bus(bus_id=0)
+
+    #
+    # Pio functional accesses from devices need direct access to memory
+    # RubyPort currently does support functional accesses.  Therefore provide
+    # the piobus a direct connection to physical memory
+    #
+    x86_sys.piobus.port = x86_sys.physmem.port
+
+    x86_sys.pc.attachIO(x86_sys.piobus)
+
+
+def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False):
     if self == None:
         self = X86System()
 
@@ -298,19 +326,16 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None):
     self.mem_mode = mem_mode
 
     # Physical memory
-    self.membus = MemBus(bus_id=1)
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
-    self.physmem.port = self.membus.port
-
-    # North Bridge
-    self.iobus = Bus(bus_id=0)
-    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    self.bridge.side_a = self.iobus.port
-    self.bridge.side_b = self.membus.port
 
     # Platform
     self.pc = Pc()
-    self.pc.attachIO(self.iobus)
+
+    # Create and connect the busses required by each memory system
+    if Ruby:
+        connectX86RubySystem(self)
+    else:
+        connectX86ClassicSystem(self)
 
     self.intrctrl = IntrControl()
 
@@ -380,12 +405,11 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None):
     for i in range(3, 15):
         assignISAInt(i, i)
 
-
-def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None):
+def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
     self = LinuxX86System()
 
-    # Build up a generic x86 system and then specialize it for Linux
-    makeX86System(mem_mode, numCPUs, mdesc, self)
+    # Build up the x86 system and then specialize it for Linux
+    makeX86System(mem_mode, numCPUs, mdesc, self, Ruby)
 
     # We assume below that there's at least 1MB of memory. We'll require 2
     # just to avoid corner cases.
