@@ -325,26 +325,26 @@ TimingSimpleCPU::sendSplitData(RequestPtr req1, RequestPtr req2,
         pkt1->makeResponse();
         completeDataAccess(pkt1);
     } else if (read) {
+        SplitFragmentSenderState * send_state =
+            dynamic_cast<SplitFragmentSenderState *>(pkt1->senderState);
         if (handleReadPacket(pkt1)) {
-            SplitFragmentSenderState * send_state =
-                dynamic_cast<SplitFragmentSenderState *>(pkt1->senderState);
             send_state->clearFromParent();
+            send_state = dynamic_cast<SplitFragmentSenderState *>(
+                    pkt2->senderState);
             if (handleReadPacket(pkt2)) {
-                send_state = dynamic_cast<SplitFragmentSenderState *>(
-                        pkt1->senderState);
                 send_state->clearFromParent();
             }
         }
     } else {
         dcache_pkt = pkt1;
+        SplitFragmentSenderState * send_state =
+            dynamic_cast<SplitFragmentSenderState *>(pkt1->senderState);
         if (handleWritePacket()) {
-            SplitFragmentSenderState * send_state =
-                dynamic_cast<SplitFragmentSenderState *>(pkt1->senderState);
             send_state->clearFromParent();
             dcache_pkt = pkt2;
+            send_state = dynamic_cast<SplitFragmentSenderState *>(
+                    pkt2->senderState);
             if (handleWritePacket()) {
-                send_state = dynamic_cast<SplitFragmentSenderState *>(
-                        pkt1->senderState);
                 send_state->clearFromParent();
             }
         }
