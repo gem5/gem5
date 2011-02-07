@@ -39,7 +39,6 @@
 #include "mem/ruby/network/orion/Type.hh"
 #include "mem/ruby/network/orion/OrionConfig.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
-#include <stdio.h>
 
 class OutdrvUnit;
 class AmpUnit;

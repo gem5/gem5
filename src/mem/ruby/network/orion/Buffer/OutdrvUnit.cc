@@ -33,6 +33,7 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
+#include "base/misc.hh"
 #include "mem/ruby/network/orion/Buffer/OutdrvUnit.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/Buffer/SRAM.hh"
@@ -91,7 +92,7 @@ void OutdrvUnit::init()
             m_e_chg_data = 0;
             break;
         default:
-            printf("error\n");
+            fatal("Incorrect OUTDRIVE model.\n");
     }
 
     m_i_static = calc_i_static();

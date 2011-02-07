@@ -33,6 +33,7 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
+#include "base/misc.hh"
 #include "mem/ruby/network/orion/Buffer/WordlineUnit.hh"
 #include "mem/ruby/network/orion/Buffer/SRAM.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
@@ -118,7 +119,7 @@ void WordlineUnit::init()
             m_i_static = 0;
             break;
         default:
-            printf("error\n");
+            fatal("Incorrect Wordline model.\n");
     }
     return;
 }

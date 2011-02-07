@@ -33,6 +33,7 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
+#include "base/misc.hh"
 #include "mem/ruby/network/orion/Buffer/BitlineUnit.hh"
 #include "mem/ruby/network/orion/Buffer/SRAM.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
@@ -112,7 +113,7 @@ void BitlineUnit::init()
             //FIXME - no static power?
             break;
         default:
-            printf("error\n");
+            fatal("Error in BITLINE model.\n");
     }
     return;
 }

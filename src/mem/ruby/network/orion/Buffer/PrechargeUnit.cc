@@ -33,6 +33,7 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
+#include "base/misc.hh"
 #include "mem/ruby/network/orion/Buffer/PrechargeUnit.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/Buffer/SRAM.hh"
@@ -114,7 +115,7 @@ uint32_t PrechargeUnit::calc_num_pre_gate()
         case SINGLE_BITLINE: return 2;
         case EQU_BITLINE:    return 3;
         case SINGLE_OTHER:   return 1;
-        default: printf("error\n"); return 0;
+        default: fatal("Incorrect Precharge Unit model.\n");
     }
 }
 
@@ -125,7 +126,7 @@ uint32_t PrechargeUnit::calc_num_pre_drain()
         case SINGLE_BITLINE: return 1;
         case EQU_BITLINE:    return 2;
         case SINGLE_OTHER:   return 1;
-        default: printf("error\n"); return 0;
+        default: fatal("Incorrect Precharge Unit model.\n");
     }
 }
 
