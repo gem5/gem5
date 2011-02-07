@@ -39,19 +39,42 @@
 
 #include <string>
 
+#include "arch/x86/pagetable_walker.hh"
+#include "arch/x86/tlb.hh"
 #include "arch/x86/vtophys.hh"
+#include "base/trace.hh"
+#include "config/full_system.hh"
+#include "cpu/thread_context.hh"
+#include "sim/fault.hh"
 
 using namespace std;
 
 namespace X86ISA
 {
-    Addr vtophys(Addr vaddr)
+    Addr
+    vtophys(Addr vaddr)
     {
+#if FULL_SYSTEM
+        panic("Need access to page tables\n");
+#endif
         return vaddr;
     }
 
-    Addr vtophys(ThreadContext *tc, Addr addr)
+    Addr
+    vtophys(ThreadContext *tc, Addr vaddr)
     {
-        return addr;
+#if FULL_SYSTEM
+        Walker *walker = tc->getDTBPtr()->getWalker();
+        Addr size;
+        Addr addr = vaddr;
+        Fault fault = walker->startFunctional(tc, addr, size, BaseTLB::Read);
+        if (fault != NoFault)
+            panic("vtophys page walk returned fault\n");
+        Addr masked_addr = vaddr & (size - 1);
+        Addr paddr = addr | masked_addr;
+        DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
+        return paddr;
+#endif
+        return vaddr;
     }
 }

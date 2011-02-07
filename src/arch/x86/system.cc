@@ -39,6 +39,7 @@
 
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/bios/intelmp.hh"
+#include "arch/x86/isa_traits.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/system.hh"
 #include "arch/vtophys.hh"

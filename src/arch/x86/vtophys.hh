@@ -40,12 +40,9 @@
 #ifndef __ARCH_X86_VTOPHYS_HH__
 #define __ARCH_X86_VTOPHYS_HH__
 
-#include "arch/x86/isa_traits.hh"
-#include "arch/x86/pagetable.hh"
 #include "base/types.hh"
 
 class ThreadContext;
-class FunctionalPort;
 
 namespace X86ISA
 {

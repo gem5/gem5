@@ -48,6 +48,7 @@
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "params/X86PagetableWalker.hh"
+#include "sim/faults.hh"
 
 class ThreadContext;
 
