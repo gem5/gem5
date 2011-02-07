@@ -294,7 +294,14 @@ X86ISA::Interrupts::setCPU(BaseCPU * newCPU)
 void
 X86ISA::Interrupts::init()
 {
+    //
+    // The local apic must register its address ranges on both its pio port
+    // via the basicpiodevice(piodevice) init() function and its int port
+    // that it inherited from IntDev.  Note IntDev is not a SimObject itself.
+    //
     BasicPioDevice::init();
+    IntDev::init();
+
     Pc * pc = dynamic_cast<Pc *>(platform);
     assert(pc);
     pc->southBridge->ioApic->registerLocalApic(initialApicId, this);

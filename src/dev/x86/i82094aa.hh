@@ -98,6 +98,8 @@ class I82094AA : public PioDevice, public IntDev
 
     I82094AA(Params *p);
 
+    void init();
+
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
 

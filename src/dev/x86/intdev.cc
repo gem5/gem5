@@ -48,6 +48,15 @@ X86ISA::IntDev::IntPort::sendMessage(ApicList apics,
     }
 }
 
+void
+X86ISA::IntDev::init()
+{
+    if (!intPort) {
+        panic("Int port not connected to anything!");
+    }
+    intPort->sendStatusChange(Port::RangeChange);
+}
+
 X86ISA::IntSourcePin *
 X86IntSourcePinParams::create()
 {

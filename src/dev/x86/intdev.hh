@@ -84,14 +84,6 @@ class IntDev
         // need to be moved into a subclass.
         void sendMessage(ApicList apics,
                 TriggerIntMessage message, bool timing);
-
-        void recvStatusChange(Status status)
-        {
-            if (status == RangeChange) {
-                sendStatusChange(Port::RangeChange);
-            }
-        }
-
     };
 
     IntPort * intPort;
@@ -109,6 +101,8 @@ class IntDev
 
     virtual ~IntDev()
     {}
+
+    virtual void init();
 
     virtual void
     signalInterrupt(int line)

@@ -41,9 +41,12 @@ X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p),
     latency(p->pio_latency), pioAddr(p->pio_addr),
     extIntPic(p->external_int_pic), lowestPriorityOffset(0)
 {
-    // This assumes there's only one I/O APIC in the system
+    // This assumes there's only one I/O APIC in the system and since the apic
+    // id is stored in a 8-bit field with 0xff meaning broadcast, the id must
+    // be less than 0xff
+
+    assert(p->apic_id < 0xff);
     initialApicId = id = p->apic_id;
-    assert(id <= 0xf);
     arbId = id;
     regSel = 0;
     RedirTableEntry entry = 0;
@@ -52,6 +55,17 @@ X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p),
         redirTable[i] = entry;
         pinStates[i] = false;
     }
+}
+
+void
+X86ISA::I82094AA::init()
+{
+    // The io apic must register its address ranges on both its pio port
+    // via the piodevice init() function and its int port that it inherited
+    // from IntDev.  Note IntDev is not a SimObject itself.
+
+    PioDevice::init();
+    IntDev::init();
 }
 
 Tick
@@ -96,11 +110,11 @@ void
 X86ISA::I82094AA::writeReg(uint8_t offset, uint32_t value)
 {
     if (offset == 0x0) {
-        id = bits(value, 27, 24);
+        id = bits(value, 31, 24);
     } else if (offset == 0x1) {
         // The IOAPICVER register is read only.
     } else if (offset == 0x2) {
-        arbId = bits(value, 27, 24);
+        arbId = bits(value, 31, 24);
     } else if (offset >= 0x10 && offset <= (0x10 + TableSize * 2)) {
         int index = (offset - 0x10) / 2;
         if (offset % 2) {
