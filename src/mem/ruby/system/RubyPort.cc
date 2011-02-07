@@ -51,6 +51,7 @@ RubyPort::RubyPort(const Params *p)
     physMemPort = NULL;
 
     m_usingRubyTester = p->using_ruby_tester;
+    access_phys_mem = p->access_phys_mem;
 }
 
 void
@@ -64,7 +65,8 @@ Port *
 RubyPort::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "port") {
-        return new M5Port(csprintf("%s-port%d", name(), idx), this);
+        return new M5Port(csprintf("%s-port%d", name(), idx), this,
+                          access_phys_mem);
     }
 
     if (if_name == "pio_port") {
@@ -80,7 +82,8 @@ RubyPort::getPort(const std::string &if_name, int idx)
         // RubyPort should only have one port to physical memory
         assert (physMemPort == NULL);
 
-        physMemPort = new M5Port(csprintf("%s-physMemPort", name()), this);
+        physMemPort = new M5Port(csprintf("%s-physMemPort", name()), this,
+                                 access_phys_mem);
 
         return physMemPort;
     }
@@ -105,12 +108,13 @@ RubyPort::PioPort::PioPort(const std::string &_name,
 }
 
 RubyPort::M5Port::M5Port(const std::string &_name,
-                         RubyPort *_port)
+                         RubyPort *_port, bool _access_phys_mem)
     : SimpleTimingPort(_name, _port)
 {
     DPRINTF(Ruby, "creating port from ruby sequcner to cpu %s\n", _name);
     ruby_port = _port;
     _onRetryList = false;
+    access_phys_mem = _access_phys_mem;
 }
 
 Tick
@@ -245,7 +249,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
         }
     }
 
-    RubyRequest ruby_request(pkt->getAddr(), pkt->getPtr<uint8_t>(),
+    RubyRequest ruby_request(pkt->getAddr(), pkt->getPtr<uint8_t>(true),
                              pkt->getSize(), pc, type,
                              RubyAccessMode_Supervisor, pkt);
 
@@ -320,9 +324,10 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     bool needsResponse = pkt->needsResponse();
 
     //
-    // All responses except failed SC operations access M5 physical memory
+    // Unless specified at configuraiton, all responses except failed SC 
+    // operations access M5 physical memory.
     //
-    bool accessPhysMem = true;
+    bool accessPhysMem = access_phys_mem;
 
     if (pkt->isLLSC()) {
         if (pkt->isWrite()) {
@@ -351,13 +356,12 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
 
     if (accessPhysMem) {
         ruby_port->physMemPort->sendAtomic(pkt);
+    } else {
+        pkt->makeResponse();
     }
 
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
-        // sendAtomic() should already have turned packet into
-        // atomic response
-        assert(pkt->isResponse());
         DPRINTF(MemoryAccess, "Sending packet back over port\n");
         sendTiming(pkt);
     } else {

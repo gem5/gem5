@@ -97,8 +97,10 @@ DMASequencer::makeRequest(const RubyRequest &request)
     msg->getLen() = (offset + len) <= RubySystem::getBlockSizeBytes() ?
         len : RubySystem::getBlockSizeBytes() - offset;
 
-    if (write) {
-        msg->getDataBlk().setData(data, offset, msg->getLen());
+    if (write && (data != NULL)) {
+        if (active_request.data != NULL) {
+            msg->getDataBlk().setData(data, offset, msg->getLen());
+        }
     }
 
     assert(m_mandatory_q_ptr != NULL);
@@ -160,8 +162,10 @@ DMASequencer::dataCallback(const DataBlock & dblk)
     if (active_request.bytes_completed == 0)
         offset = active_request.start_paddr & m_data_block_mask;
     assert(active_request.write == false);
-    memcpy(&active_request.data[active_request.bytes_completed],
-           dblk.getData(offset, len), len);
+    if (active_request.data != NULL) {
+        memcpy(&active_request.data[active_request.bytes_completed],
+               dblk.getData(offset, len), len);
+    }
     issueNext();
 }
 

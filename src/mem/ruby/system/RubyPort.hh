@@ -51,9 +51,11 @@ class RubyPort : public MemObject
       private:
         RubyPort *ruby_port;
         bool _onRetryList;
+        bool access_phys_mem;
 
       public:
-        M5Port(const std::string &_name, RubyPort *_port);
+        M5Port(const std::string &_name, RubyPort *_port,
+               bool _access_phys_mem);
         bool sendTiming(PacketPtr pkt);
         void hitCallback(PacketPtr pkt);
         unsigned deviceBlockSize() const;
@@ -151,6 +153,7 @@ class RubyPort : public MemObject
     std::list<M5Port*> retryList;
 
     bool waitingOnSequencer;
+    bool access_phys_mem;
 };
 
 #endif // __MEM_RUBY_SYSTEM_RUBYPORT_HH__

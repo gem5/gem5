@@ -681,9 +681,9 @@ class Packet : public FastAlloc, public Printable
      */
     template <typename T>
     T*
-    getPtr()
+    getPtr(bool null_ok = false)
     {
-        assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
+        assert(null_ok || flags.isSet(STATIC_DATA|DYNAMIC_DATA));
         return (T*)data;
     }
 
@@ -767,7 +767,6 @@ class Packet : public FastAlloc, public Printable
         flags.set(DYNAMIC_DATA|ARRAY_DATA);
         data = new uint8_t[getSize()];
     }
-
 
     /**
      * Check a functional request against a memory value represented

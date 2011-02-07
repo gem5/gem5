@@ -40,7 +40,9 @@ class RubyPort(MemObject):
     physmem = Param.PhysicalMemory("")
     physMemPort = Port("port to physical memory")
     using_ruby_tester = Param.Bool(False, "")
-
+    access_phys_mem = Param.Bool(True,
+        "should the rubyport atomically update phys_mem")
+    
 class RubySequencer(RubyPort):
     type = 'RubySequencer'
     cxx_class = 'Sequencer'
