@@ -68,6 +68,21 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
 
+    void
+    set_vnet_type(int vc, VNET_type vnet_type)
+    {
+        int vnet = vc/getVCsPerClass();
+        m_vnet_type[vnet] = vnet_type;
+    }
+
+    VNET_type
+    get_vnet_type(int vc)
+    {
+        int vnet = vc/getVCsPerClass();
+        return m_vnet_type[vnet];
+    }
+
+
     inline void increment_injected_flits() { m_flits_injected++; }
     inline void increment_received_flits() { m_flits_received++; }
 
@@ -106,6 +121,7 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     GarnetNetwork_d(const GarnetNetwork_d& obj);
     GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);
 
+    std::vector<VNET_type > m_vnet_type;
     // int m_virtual_networks;
     // int m_nodes;
     int m_flits_received, m_flits_injected;

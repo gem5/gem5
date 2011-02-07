@@ -37,5 +37,6 @@ class BaseGarnetNetwork(RubyNetwork):
     flit_size = Param.Int(16, "flit size in bytes")
     number_of_pipe_stages = Param.Int(4, "router pipeline stages");
     vcs_per_class = Param.Int(4, "virtual channels per message class");
-    buffer_size = Param.Int(4, "buffer size in bytes");
+    buffers_per_data_vc = Param.Int(4, "buffers per data virtual channel");
+    buffers_per_ctrl_vc = Param.Int(1, "buffers per ctrl virtual channel");
     using_network_testing = Param.Bool(False, "network testing enable");

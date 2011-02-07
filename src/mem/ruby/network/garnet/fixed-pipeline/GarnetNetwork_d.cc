@@ -107,6 +107,12 @@ GarnetNetwork_d::init()
     for (int i = 0; i < m_router_ptr_vector.size(); i++) {
         m_router_ptr_vector[i]->init();
     }
+
+    m_vnet_type.resize(m_virtual_networks);
+    for (int i = 0; i < m_vnet_type.size(); i++) {
+        m_vnet_type[i] = CTRL_VNET_;
+        // DATA_VNET_ updated later based on traffic
+    }
 }
 
 GarnetNetwork_d::~GarnetNetwork_d()

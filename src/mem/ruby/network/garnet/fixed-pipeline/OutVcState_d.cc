@@ -37,5 +37,11 @@ OutVcState_d::OutVcState_d(int id, GarnetNetwork_d *network_ptr)
     m_id = id;
     m_vc_state = IDLE_;
     m_time = g_eventQueue_ptr->getTime();
-    m_credit_count = m_network_ptr->getBufferSize();
+
+    // this value is updated later for data VCs by set_credit_count()
+    m_credit_count = m_network_ptr->getBuffersPerCtrlVC();
+
+    // (num_flits > 1) is used to determine ctrl vs data vnet
+    // in NetworkInterface_d.cc
+    assert(m_credit_count == 1);
 }
