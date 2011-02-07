@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:  Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __RRARBITER_H__
+#define __RRARBITER_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "mem/ruby/network/orion/Type.hh"
+#include "mem/ruby/network/orion/Allocator/Arbiter.hh"
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+class TechParameter;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+class RRArbiter : public Arbiter
+{
+  public:
+    RRArbiter(
+      const string& ff_model_str_,
+      uint32_t req_width_,
+      double len_in_wire_,
+      const TechParameter* tech_param_ptr_
+    );
+    ~RRArbiter();
+
+  public:
+    double calc_dynamic_energy(double num_req_, bool is_max_) const;
+
+  private:
+    void init(const string& ff_model_str_);
+    double calc_req_cap();
+    double calc_pri_cap();
+    double calc_grant_cap();
+    double calc_carry_cap();
+    double calc_carry_in_cap();
+    double calc_i_static();
+
+  private:
+    double m_e_chg_carry;
+    double m_e_chg_carry_in;
+};
 
 #endif

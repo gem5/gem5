@@ -26,22 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __ORION_H__
+#define __ORION_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
-
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+#include "mem/ruby/network/orion/OrionConfig.hh"
+#include "mem/ruby/network/orion/OrionRouter.hh"
+#include "mem/ruby/network/orion/OrionLink.hh"
 
 #endif
+

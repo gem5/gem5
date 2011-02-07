@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,62 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:  Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __WORDLINEUNIT_H__
+#define __WORDLINEUNIT_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "mem/ruby/network/orion/Type.hh"
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+class SRAM;
+class TechParameter;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+class WordlineUnit
+{
+  public:
+    enum WordlineModel
+    {
+      NO_MODEL = 0,
+      RW_WORDLINE,
+      WO_WORDLINE
+    };
+
+  public:
+    WordlineUnit(
+      const string& wl_model_str_,
+      const SRAM* sram_ptr_,
+      const TechParameter* tech_param_ptr_
+    );
+    ~WordlineUnit();
+
+  public:
+    double get_e_read() const { return m_e_read; }
+    double get_e_write() const { return m_e_write; }
+    double get_i_static() const { return m_i_static; }
+
+  private:
+    void init();
+    double calc_wordline_cap(uint32_t num_mos_, double mos_width_) const;
+    double calc_i_static();
+
+  private:
+    WordlineModel m_wl_model;
+    const SRAM* m_sram_ptr;
+    const TechParameter* m_tech_param_ptr;
+
+    double m_wl_len;
+    double m_wl_wire_cap;
+
+    double m_e_read;
+    double m_e_write;
+
+    double m_i_static;
+};
 
 #endif
+

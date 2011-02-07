@@ -40,9 +40,14 @@ InputUnit_d::InputUnit_d(int id, Router_d *router)
     m_id = id;
     m_router = router;
     m_num_vcs = m_router->get_num_vcs();
+    m_vc_per_vnet = m_router->get_vc_per_vnet();
 
-    m_num_buffer_reads = 0;
-    m_num_buffer_writes = 0;
+    m_num_buffer_reads.resize(m_num_vcs/m_vc_per_vnet);
+    m_num_buffer_writes.resize(m_num_vcs/m_vc_per_vnet);
+    for (int i = 0; i < m_num_buffer_reads.size(); i++) {
+        m_num_buffer_reads[i] = 0;
+        m_num_buffer_writes[i] = 0;
+    }
 
     creditQueue = new flitBuffer_d();
     // Instantiating the virtual channels
@@ -82,11 +87,11 @@ InputUnit_d::wakeup()
         // write flit into input buffer
         m_vcs[vc]->insertFlit(t_flit);
 
-
+        int vnet = vc/m_vc_per_vnet;
         // number of writes same as reads
         // any flit that is written will be read only once
-        m_num_buffer_writes++;
-        m_num_buffer_reads++;
+        m_num_buffer_writes[vnet]++;
+        m_num_buffer_reads[vnet]++;
     }
 }
 

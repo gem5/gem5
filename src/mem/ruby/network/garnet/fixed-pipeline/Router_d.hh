@@ -37,7 +37,7 @@
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/orion/power_router_init.hh"
+#include "mem/ruby/network/orion/NetworkPower.hh"
 
 class GarnetNetwork_d;
 class NetworkLink_d;
@@ -78,10 +78,7 @@ class Router_d
     void swarb_req();
     void printConfig(std::ostream& out);
 
-    void power_router_initialize(power_router *router,
-                                 power_router_info *info);
     double calculate_power();
-    double calculate_offline_power(power_router*, power_router_info*);
     void calculate_performance_numbers();
 
   private:
@@ -90,10 +87,12 @@ class Router_d
     GarnetNetwork_d *m_network_ptr;
     int m_flit_width;
 
-    double buf_read_count, buf_write_count;
-    double crossbar_count;
-    double vc_local_arbit_count, vc_global_arbit_count;
+    std::vector<double> buf_read_count;
+    std::vector<double> buf_write_count;
+    std::vector<double> vc_local_arbit_count;
+    std::vector<double> vc_global_arbit_count;
     double sw_local_arbit_count, sw_global_arbit_count;
+    double crossbar_count;
 
     std::vector<InputUnit_d *> m_input_unit;
     std::vector<OutputUnit_d *> m_output_unit;

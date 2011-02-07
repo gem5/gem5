@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,62 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:  Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __ARBITER_H__
+#define __ARBITER_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "mem/ruby/network/orion/Type.hh"
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+class TechParameter;
+class FlipFlop;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+class Arbiter
+{
+  public:
+    enum ArbiterModel
+    {
+      NO_MODEL = 0,
+      RR_ARBITER,
+      MATRIX_ARBITER
+    };
+
+  public:
+    Arbiter(const ArbiterModel arb_model_,
+            const uint32_t req_width_,
+            const double len_in_wire_,
+            const TechParameter* tech_param_ptr_);
+    virtual ~Arbiter() = 0;
+
+  public:
+    virtual double calc_dynamic_energy(double num_req_, bool is_max_) const = 0;
+    double get_static_power() const;
+
+  protected:
+    ArbiterModel m_arb_model;
+    uint32_t m_req_width;
+    double m_len_in_wire;
+    const TechParameter* m_tech_param_ptr;
+
+    FlipFlop* m_ff_ptr;
+
+    double m_e_chg_req;
+    double m_e_chg_grant;
+
+    double m_i_static;
+
+  public:
+    static Arbiter* create_arbiter(const string& arb_model_str_,
+                                   const string& ff_model_str_,
+                                   uint32_t req_width_,
+                                   double len_in_wire_,
+                                   const TechParameter* tech_param_ptr_);
+};
 
 #endif
+

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,65 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:  Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __PRECHARGEUNIT_H__
+#define __PRECHARGEUNIT_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "mem/ruby/network/orion/Type.hh"
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+class SRAM;
+class TechParameter;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+class PrechargeUnit
+{
+  public:
+    enum PrechargeModel
+    {
+      NO_MODEL = 0,
+      SINGLE_BITLINE,
+      EQU_BITLINE,
+      SINGLE_OTHER
+    };
+
+  public:
+    PrechargeUnit(
+      const string& pre_model_str_,
+      double pre_load_,
+      const SRAM* sram_ptr_,
+      const TechParameter* tech_param_ptr_
+    );
+    ~PrechargeUnit();
+
+  public:
+    double get_e_charge_gate() const { return m_e_charge_gate; }
+    double get_e_charge_drain() const { return m_e_charge_drain; }
+    double get_i_static() const { return m_i_static; }
+
+  private:
+    void init();
+    uint32_t calc_num_pre_gate();
+    uint32_t calc_num_pre_drain();
+    double calc_pre_cap(double width_, double length_);
+
+  private:
+    PrechargeModel m_pre_model;
+    double m_pre_load;
+    const SRAM* m_sram_ptr;
+    const TechParameter* m_tech_param_ptr;
+
+    double m_pre_size;
+
+    double m_e_charge_gate;
+    double m_e_charge_drain;
+
+    double m_i_static;
+};
 
 #endif
+

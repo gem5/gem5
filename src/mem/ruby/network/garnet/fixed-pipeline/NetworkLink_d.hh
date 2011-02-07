@@ -37,7 +37,7 @@
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
-#include "mem/ruby/network/orion/power_bus.hh"
+#include "mem/ruby/network/orion/NetworkPower.hh"
 
 class GarnetNetwork_d;
 
@@ -56,7 +56,6 @@ class NetworkLink_d : public Consumer
     int get_id(){return m_id;}
     void wakeup();
 
-    double calculate_offline_power(power_bus*);
     double calculate_power();
 
     inline bool isReady()           { return linkBuffer->isReady(); }

@@ -39,8 +39,13 @@ VCallocator_d::VCallocator_d(Router_d *router)
     m_router = router;
     m_num_vcs = m_router->get_num_vcs();
     m_vc_per_vnet = m_router->get_vc_per_vnet();
-    m_local_arbiter_activity = 0;
-    m_global_arbiter_activity = 0;
+
+    m_local_arbiter_activity.resize(m_num_vcs/m_vc_per_vnet);
+    m_global_arbiter_activity.resize(m_num_vcs/m_vc_per_vnet);
+    for (int i = 0; i < m_local_arbiter_activity.size(); i++) {
+        m_local_arbiter_activity[i] = 0;
+        m_global_arbiter_activity[i] = 0;
+    }
 }
 
 void
@@ -158,7 +163,7 @@ VCallocator_d::select_outvc(int inport_iter, int invc_iter)
             outvc_offset = 0;
         int outvc = outvc_base + outvc_offset;
         if (m_output_unit[outport]->is_vc_idle(outvc)) {
-            m_local_arbiter_activity++;
+            m_local_arbiter_activity[vnet]++;
             m_outvc_req[outport][outvc][inport_iter][invc_iter] = true;
             if (!m_outvc_is_req[outport][outvc])
                 m_outvc_is_req[outport][outvc] = true;
@@ -220,7 +225,7 @@ VCallocator_d::arbitrate_outvcs()
                 }
                 int invc = invc_base + invc_offset;
                 if (m_outvc_req[outport_iter][outvc_iter][inport][invc]) {
-                    m_global_arbiter_activity++;
+                    m_global_arbiter_activity[vnet]++;
                     m_input_unit[inport]->grant_vc(invc, outvc_iter);
                     m_output_unit[outport_iter]->update_vc(
                         outvc_iter, inport, invc);

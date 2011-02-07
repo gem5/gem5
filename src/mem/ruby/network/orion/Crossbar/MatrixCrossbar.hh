@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,48 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:  Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __MATRIXCROSSBAR_H__
+#define __MATRIXCROSSBAR_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "mem/ruby/network/orion/Type.hh"
+#include "mem/ruby/network/orion/Crossbar/Crossbar.hh"
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+class TechParameter;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+class MatrixCrossbar : public Crossbar
+{
+  public:
+    MatrixCrossbar(
+      const string& conn_type_str_,
+      const string& trans_type_str_,
+      uint32_t num_in_,
+      uint32_t num_out_,
+      uint32_t data_width_,
+      uint32_t num_in_seg_,
+      uint32_t num_out_seg_,
+      double len_in_wire_,
+      double len_out_wire_,
+      const TechParameter* tech_param_ptr_
+    );
+    ~MatrixCrossbar();
+
+  public:
+    double get_dynamic_energy(bool is_max_) const;
+
+  private:
+    void init();
+    double calc_i_static();
+
+  private:
+    double m_len_in_wire;
+    double m_len_out_wire;
+};
 
 #endif

@@ -162,21 +162,23 @@ class InputUnit_d : public Consumer
     }
 
     inline double
-    get_buf_read_count()
+    get_buf_read_count(int vnet)
     {
-        return m_num_buffer_reads;
+        return m_num_buffer_reads[vnet];
     }
 
     inline double
-    get_buf_write_count()
+    get_buf_write_count(int vnet)
     {
-        return m_num_buffer_writes;
+        return m_num_buffer_writes[vnet];
     }
 
   private:
     int m_id;
     int m_num_vcs;
-    double m_num_buffer_writes, m_num_buffer_reads;
+    int m_vc_per_vnet;
+    std::vector<double> m_num_buffer_writes;
+    std::vector<double> m_num_buffer_reads;
 
     Router_d *m_router;
     NetworkLink_d *m_in_link;

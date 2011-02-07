@@ -58,15 +58,15 @@ class VCallocator_d : public Consumer
     void select_outvc(int inport_iter, int invc_iter);
 
     inline double
-    get_local_arbit_count()
+    get_local_arbit_count(int vnet)
     {
-        return m_local_arbiter_activity;
+        return m_local_arbiter_activity[vnet];
     }
 
     inline double
-    get_global_arbit_count()
+    get_global_arbit_count(int vnet)
     {
-        return m_global_arbiter_activity;
+        return m_global_arbiter_activity[vnet];
     }
 
   private:
@@ -74,7 +74,8 @@ class VCallocator_d : public Consumer
     int m_num_inports;
     int m_num_outports;
 
-    double m_local_arbiter_activity, m_global_arbiter_activity;
+    std::vector<double > m_local_arbiter_activity;
+    std::vector<double > m_global_arbiter_activity;
 
     Router_d *m_router;
 

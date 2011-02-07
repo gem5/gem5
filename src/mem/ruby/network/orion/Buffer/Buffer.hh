@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,71 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:  Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __BUFFER_H__
+#define __BUFFER_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "mem/ruby/network/orion/Type.hh"
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+class OrionConfig;
+class TechParameter;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+class SRAM;
+class Register;
+
+class Buffer
+{
+  public:
+    enum BufferModel
+    {
+      NO_MODEL = 0,
+      BUF_SRAM,
+      BUF_REG
+    };
+
+  public:
+    Buffer(
+      const string& buffer_model_str_,
+      bool is_fifo_,
+      bool is_outdrv_,
+      uint32_t num_entry_,
+      uint32_t line_width_,
+      uint32_t num_read_port_,
+      uint32_t num_write_port_,
+      const OrionConfig* orion_cfg_ptr_
+    );
+    ~Buffer();
+
+  public:
+    double get_dynamic_energy(bool is_read_, bool is_max_) const;
+    double get_static_power() const;
+
+    void print_all() const;
+
+  private:
+    void init();
+
+  private:
+    BufferModel m_buffer_model;
+    uint32_t m_num_entry;
+    uint32_t m_line_width;
+
+    bool m_is_fifo;
+    bool m_is_outdrv;
+    uint32_t m_num_read_port;
+    uint32_t m_num_write_port;
+    const OrionConfig* m_orion_cfg_ptr;
+    const TechParameter* m_tech_param_ptr;
+
+    SRAM* m_sram_ptr;
+    Register* m_reg_ptr;
+};
 
 #endif
+

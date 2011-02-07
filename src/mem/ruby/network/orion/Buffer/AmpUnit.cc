@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:   Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#include "mem/ruby/network/orion/Buffer/AmpUnit.hh"
+#include "mem/ruby/network/orion/TechParameter.hh"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+AmpUnit::AmpUnit(
+        const string& amp_model_str_,
+        const TechParameter* tech_param_ptr_
+        )
+{
+    if (amp_model_str_.compare("GENERIC_AMP") == 0)
+    {
+        m_amp_model = GENERIC_AMP;
+    }
+    else
+    {
+        m_amp_model = NO_MODEL;
+    }
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+    if (m_amp_model != NO_MODEL)
+    {
+        m_tech_param_ptr = tech_param_ptr_;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+        init();
+    }
+}
 
-#endif
+AmpUnit::~AmpUnit()
+{}
+
+void AmpUnit::init()
+{
+    double vdd = m_tech_param_ptr->get_vdd();
+    double period = m_tech_param_ptr->get_period();
+    double amp_Idsat = m_tech_param_ptr->get_amp_idsat();
+
+    m_e_access = (vdd / 8.0 * period * amp_Idsat);
+    return;
+}

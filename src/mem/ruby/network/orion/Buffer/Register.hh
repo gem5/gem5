@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2010 Massachusetts Institute of Technology
+ * Copyright (c) 2009 Princeton University, and
+ *                    Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,23 +26,48 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Chia-Hsin Owen Chen
- *          Tushar Krishna
+ * Authors:  Hangsheng Wang (Orion 1.0, Princeton)
+ *           Xinping Zhu (Orion 1.0, Princeton)
+ *           Xuning Chen (Orion 1.0, Princeton)
+ *           Bin Li (Orion 2.0, Princeton)
+ *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#ifndef POWER_TRACE_H
-#define POWER_TRACE_H
+#ifndef __REGISTER_H__
+#define __REGISTER_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "mem/ruby/network/orion/Type.hh"
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+class TechParameter;
+class FlipFlop;
 
-//int RW :
-#define READ_MODE 0
-#define WRITE_MODE 1
+class Register
+{
+  public:
+    Register(
+      uint32_t num_entry_,
+      uint32_t line_width_,
+      const TechParameter* tech_param_ptr_
+    );
+    ~Register();
+
+  public:
+    double calc_e_read() const;
+    double calc_e_write() const;
+    double calc_i_static() const;
+
+  private:
+    void init();
+
+  private:
+    uint32_t m_num_entry;
+    uint32_t m_line_width;
+    const TechParameter* m_tech_param_ptr;
+
+    FlipFlop* m_ff_ptr;
+
+    double m_avg_read;
+    double m_avg_write;
+};
 
 #endif
