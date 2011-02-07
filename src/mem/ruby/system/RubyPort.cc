@@ -226,6 +226,9 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
                              pkt->getSize(), pc, type,
                              RubyAccessMode_Supervisor, pkt);
 
+    assert(Address(ruby_request.paddr).getOffset() + ruby_request.len <=
+        RubySystem::getBlockSizeBytes());
+
     // Submit the ruby request
     RequestStatus requestStatus = ruby_port->makeRequest(ruby_request);
 
@@ -237,7 +240,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     }
 
     DPRINTF(MemoryAccess,
-            "Request for address #x did not issue because %s\n",
+            "Request for address %#x did not issue because %s\n",
             pkt->getAddr(), RequestStatus_to_string(requestStatus));
 
     SenderState* senderState = safe_cast<SenderState*>(pkt->senderState);
