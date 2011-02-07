@@ -706,6 +706,65 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
     }
 }
 
+void
+X86ISA::Interrupts::serialize(std::ostream &os)
+{
+    SERIALIZE_ARRAY(regs, NUM_APIC_REGS);
+    SERIALIZE_SCALAR(clock);
+    SERIALIZE_SCALAR(pendingSmi);
+    SERIALIZE_SCALAR(smiVector);
+    SERIALIZE_SCALAR(pendingNmi);
+    SERIALIZE_SCALAR(nmiVector);
+    SERIALIZE_SCALAR(pendingExtInt);
+    SERIALIZE_SCALAR(extIntVector);
+    SERIALIZE_SCALAR(pendingInit);
+    SERIALIZE_SCALAR(initVector);
+    SERIALIZE_SCALAR(pendingStartup);
+    SERIALIZE_SCALAR(startupVector);
+    SERIALIZE_SCALAR(startedUp);
+    SERIALIZE_SCALAR(pendingUnmaskableInt);
+    SERIALIZE_SCALAR(pendingIPIs);
+    SERIALIZE_SCALAR(IRRV);
+    SERIALIZE_SCALAR(ISRV);
+    bool apicTimerEventScheduled = apicTimerEvent.scheduled();
+    SERIALIZE_SCALAR(apicTimerEventScheduled);
+    Tick apicTimerEventTick = apicTimerEvent.when();
+    SERIALIZE_SCALAR(apicTimerEventTick);
+}
+
+void
+X86ISA::Interrupts::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(regs, NUM_APIC_REGS);
+    UNSERIALIZE_SCALAR(clock);
+    UNSERIALIZE_SCALAR(pendingSmi);
+    UNSERIALIZE_SCALAR(smiVector);
+    UNSERIALIZE_SCALAR(pendingNmi);
+    UNSERIALIZE_SCALAR(nmiVector);
+    UNSERIALIZE_SCALAR(pendingExtInt);
+    UNSERIALIZE_SCALAR(extIntVector);
+    UNSERIALIZE_SCALAR(pendingInit);
+    UNSERIALIZE_SCALAR(initVector);
+    UNSERIALIZE_SCALAR(pendingStartup);
+    UNSERIALIZE_SCALAR(startupVector);
+    UNSERIALIZE_SCALAR(startedUp);
+    UNSERIALIZE_SCALAR(pendingUnmaskableInt);
+    UNSERIALIZE_SCALAR(pendingIPIs);
+    UNSERIALIZE_SCALAR(IRRV);
+    UNSERIALIZE_SCALAR(ISRV);
+    bool apicTimerEventScheduled;
+    UNSERIALIZE_SCALAR(apicTimerEventScheduled);
+    if (apicTimerEventScheduled) {
+        Tick apicTimerEventTick;
+        UNSERIALIZE_SCALAR(apicTimerEventTick);
+        if (apicTimerEvent.scheduled()) {
+            reschedule(apicTimerEvent, apicTimerEventTick, true);
+        } else {
+            schedule(apicTimerEvent, apicTimerEventTick);
+        }
+    }
+}
+
 X86ISA::Interrupts *
 X86LocalApicParams::create()
 {

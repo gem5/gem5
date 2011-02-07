@@ -257,17 +257,8 @@ class Interrupts : public BasicPioDevice, IntDev
      * Serialization.
      */
 
-    void
-    serialize(std::ostream &os)
-    {
-        warn("Interrupts::serialize unimplemented!\n");
-    }
-
-    void
-    unserialize(Checkpoint *cp, const std::string &section)
-    {
-        warn("Interrupts::unserialize unimplemented!\n");
-    }
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     /*
      * Old functions needed for compatability but which will be phased out
