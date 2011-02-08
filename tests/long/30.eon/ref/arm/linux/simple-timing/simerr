@@ -1,12 +1,20 @@
 warn: Sockets disabled, not accepting gdb connections
 For more information see: http://www.m5sim.org/warn/d946bea6
+warn: Complete acc isn't called on normal stores in O3.
+For more information see: http://www.m5sim.org/warn/138d8573
+warn: Complete acc isn't called on normal stores in O3.
+For more information see: http://www.m5sim.org/warn/138d8573
 getting pixel output filename pixels_out.cook
 opening control file chair.control.cook
 opening camera file chair.camera
 opening surfaces file chair.surfaces
 reading data
 processing 8parts
-Grid measure is 6 by 3.0001 by 6
+Grid measure is warn: Complete acc isn't called on normal stores in O3.
+For more information see: http://www.m5sim.org/warn/138d8573
+warn: Complete acc isn't called on normal stores in O3.
+For more information see: http://www.m5sim.org/warn/138d8573
+6 by 3.0001 by 6
 cell dimension is 0.863065
 Creating grid for list of length 21
 Grid size = 7 by 4 by 7

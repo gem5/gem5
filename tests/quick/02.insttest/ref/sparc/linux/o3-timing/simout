@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 17 2011 21:17:52
-M5 revision f72d94f8c275 7839 default qtip tip outgoing.patch qbase
-M5 started Jan 17 2011 21:18:06
-M5 executing on zizzer
+M5 compiled Feb  7 2011 02:13:30
+M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
+M5 started Feb  7 2011 02:13:49
+M5 executing on burrito
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 109166                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 384348                       # Number of bytes of host memory used
-host_seconds                                   835.45                       # Real time elapsed on the host
-host_tick_rate                               67095197                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  65288                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 370872                       # Number of bytes of host memory used
+host_seconds                                  1396.92                       # Real time elapsed on the host
+host_tick_rate                               40127232                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    91202735                       # Number of instructions simulated
 sim_seconds                                  0.056055                       # Number of seconds simulated
@@ -37,6 +37,9 @@ system.cpu.commit.COM:committed_per_cycle::min_value            0               
 system.cpu.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::total    109380669                       # Number of insts commited each cycle
 system.cpu.commit.COM:count                  91202735                       # Number of instructions committed
+system.cpu.commit.COM:fp_insts                     48                       # Number of committed floating point instructions.
+system.cpu.commit.COM:function_calls                0                       # Number of function calls committed.
+system.cpu.commit.COM:int_insts              72483223                       # Number of committed integer instructions.
 system.cpu.commit.COM:loads                  22585492                       # Number of loads committed
 system.cpu.commit.COM:membars                       0                       # Number of memory barriers committed
 system.cpu.commit.COM:refs                   27330336                       # Number of memory references committed
@@ -171,6 +174,8 @@ system.cpu.fetch.rateDist::overflows                0      0.00%    100.00% # Nu
 system.cpu.fetch.rateDist::min_value                0                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::max_value                8                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::total            112077802                       # Number of instructions fetched each cycle (Total)
+system.cpu.fp_regfile_reads                        75                       # number of floating regfile reads
+system.cpu.fp_regfile_writes                       47                       # number of floating regfile writes
 system.cpu.icache.ReadReq_accesses           12683523                       # number of ReadReq accesses(hits+misses)
 system.cpu.icache.ReadReq_avg_miss_latency 36326.451613                       # average ReadReq miss latency
 system.cpu.icache.ReadReq_avg_mshr_miss_latency 34504.457652                       # average ReadReq mshr miss latency
@@ -270,6 +275,8 @@ system.cpu.iew.lsq.thread.0.squashedStores       788441                       # 
 system.cpu.iew.memOrderViolationEvents           1330                       # Number of memory order violations
 system.cpu.iew.predictedNotTakenIncorrect        76117                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.predictedTakenIncorrect        1979748                       # Number of branches that were predicted taken incorrectly
+system.cpu.int_regfile_reads                246289928                       # number of integer regfile reads
+system.cpu.int_regfile_writes                76222702                       # number of integer regfile writes
 system.cpu.ipc                               0.813516                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.813516                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0::No_OpClass            0      0.00%      0.00% # Type of FU issued
@@ -361,6 +368,14 @@ system.cpu.iq.ISSUE:issued_per_cycle::min_value            0                    
 system.cpu.iq.ISSUE:issued_per_cycle::max_value            8                       # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::total    112077802                       # Number of insts issued each cycle
 system.cpu.iq.ISSUE:rate                     0.888775                       # Inst issue rate
+system.cpu.iq.fp_alu_accesses                      74                       # Number of floating point alu accesses
+system.cpu.iq.fp_inst_queue_reads                 144                       # Number of floating instruction queue reads
+system.cpu.iq.fp_inst_queue_wakeup_accesses           66                       # Number of floating instruction queue wakeup accesses
+system.cpu.iq.fp_inst_queue_writes                 98                       # Number of floating instruction queue writes
+system.cpu.iq.int_alu_accesses              100131195                       # Number of integer alu accesses
+system.cpu.iq.int_inst_queue_reads          311849254                       # Number of integer instruction queue reads
+system.cpu.iq.int_inst_queue_wakeup_accesses     96607706                       # Number of integer instruction queue wakeup accesses
+system.cpu.iq.int_inst_queue_writes         112840034                       # Number of integer instruction queue writes
 system.cpu.iq.iqInstsAdded                  102487226                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu.iq.iqInstsIssued                  99639939                       # Number of instructions issued
 system.cpu.iq.iqNonSpecInstsAdded              553822                       # Number of non-speculative instructions added to the IQ
@@ -463,7 +478,11 @@ system.cpu.memDep0.conflictingLoads            436025                       # Nu
 system.cpu.memDep0.conflictingStores           249497                       # Number of conflicting stores.
 system.cpu.memDep0.insertedLoads             24681131                       # Number of loads inserted to the mem dependence unit.
 system.cpu.memDep0.insertedStores             5533285                       # Number of stores inserted to the mem dependence unit.
+system.cpu.misc_regfile_reads               157552604                       # number of misc regfile reads
+system.cpu.misc_regfile_writes                1603309                       # number of misc regfile writes
 system.cpu.numCycles                        112109302                       # number of cpu cycles simulated
+system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
+system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.rename.RENAME:BlockCycles           294826                       # Number of cycles rename is blocking
 system.cpu.rename.RENAME:CommittedMaps       72061910                       # Number of HB maps that are committed
 system.cpu.rename.RENAME:IQFullEvents            4906                       # Number of times rename has blocked due to IQ full
@@ -476,10 +495,14 @@ system.cpu.rename.RENAME:RunCycles           72730212                       # Nu
 system.cpu.rename.RENAME:SquashCycles         2697133                       # Number of cycles rename is squashing
 system.cpu.rename.RENAME:UnblockCycles         723330                       # Number of cycles rename is unblocking
 system.cpu.rename.RENAME:UndoneMaps          11862848                       # Number of HB maps that are undone due to squashing
+system.cpu.rename.RENAME:fp_rename_lookups          474                       # Number of floating rename lookups
+system.cpu.rename.RENAME:int_rename_lookups    277458644                       # Number of integer rename lookups
 system.cpu.rename.RENAME:serializeStallCycles      5701177                       # count of cycles rename stalled for serializing inst
 system.cpu.rename.RENAME:serializingInsts       592742                       # count of serializing insts renamed
 system.cpu.rename.RENAME:skidInsts            1065555                       # count of insts added to the skid buffer
 system.cpu.rename.RENAME:tempSerializingInsts       576556                       # count of temporary serializing insts renamed
+system.cpu.rob.rob_reads                    212048427                       # The number of ROB reads
+system.cpu.rob.rob_writes                   208775903                       # The number of ROB writes
 system.cpu.timesIdled                            1292                       # Number of times that the entire CPU went into an idle state and unscheduled itself
 system.cpu.workload.PROG:num_syscalls             442                       # Number of system calls
 

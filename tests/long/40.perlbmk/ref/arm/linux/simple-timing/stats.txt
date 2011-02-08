@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 628678                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 267092                       # Number of bytes of host memory used
-host_seconds                                  2915.13                       # Real time elapsed on the host
-host_tick_rate                              812964589                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 494422                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 242392                       # Number of bytes of host memory used
+host_seconds                                  3706.70                       # Real time elapsed on the host
+host_tick_rate                              639353926                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                  1832675505                       # Number of instructions simulated
 sim_seconds                                  2.369896                       # Number of seconds simulated
@@ -242,8 +242,24 @@ system.cpu.l2cache.warmup_cycle                     0                       # Cy
 system.cpu.l2cache.writebacks                   66099                       # number of writebacks
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.numCycles                       4739792356                       # number of cpu cycles simulated
+system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
+system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
+system.cpu.num_busy_cycles                 4739792356                       # Number of busy cycles
+system.cpu.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+system.cpu.num_fp_alu_accesses               52289415                       # Number of float alu accesses
+system.cpu.num_fp_insts                      52289415                       # number of float instructions
+system.cpu.num_fp_register_reads             60540850                       # number of times the floating registers were read
+system.cpu.num_fp_register_writes            46777010                       # number of times the floating registers were written
+system.cpu.num_func_calls                           0                       # number of times a function call or return occured
+system.cpu.num_idle_cycles                          0                       # Number of idle cycles
 system.cpu.num_insts                       1832675505                       # Number of instructions executed
-system.cpu.num_refs                         908401146                       # Number of memory references
+system.cpu.num_int_alu_accesses            1619025871                       # Number of integer alu accesses
+system.cpu.num_int_insts                   1619025871                       # number of integer instructions
+system.cpu.num_int_register_reads          5455211671                       # number of times the integer registers were read
+system.cpu.num_int_register_writes         1365288731                       # number of times the integer registers were written
+system.cpu.num_load_insts                   631405848                       # Number of load instructions
+system.cpu.num_mem_refs                     908401146                       # number of memory refs
+system.cpu.num_store_insts                  276995298                       # Number of store instructions
 system.cpu.workload.PROG:num_syscalls            1411                       # Number of system calls
 
 ---------- End Simulation Statistics   ----------

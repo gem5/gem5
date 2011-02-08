@@ -1,5 +1,3 @@
-Redirecting stdout to build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/simple-atomic/simout
-Redirecting stderr to build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/simple-atomic/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -7,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  2 2010 21:30:55
-M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
-M5 started Nov  2 2010 21:31:02
-M5 executing on aus-bc2-b15
+M5 compiled Feb  7 2011 01:47:18
+M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
+M5 started Feb  7 2011 01:47:38
+M5 executing on burrito
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/simple-atomic -re tests/run.py build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

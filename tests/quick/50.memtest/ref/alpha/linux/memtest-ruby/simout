@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 20 2010 12:21:09
-M5 revision c4b5df973361+ 7570+ default qtip tip brad/regress_updates
-M5 started Aug 20 2010 13:38:22
-M5 executing on SC2B0629
+M5 compiled Feb  7 2011 01:47:18
+M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
+M5 started Feb  7 2011 01:47:38
+M5 executing on burrito
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby -re tests/run.py build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 11059012 because maximum number of loads reached
+Exiting @ tick 57251340 because maximum number of loads reached

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  68116                       # Simulator instruction rate (inst/s)
-host_mem_usage                                1627972                       # Number of bytes of host memory used
-host_seconds                                  1296.92                       # Real time elapsed on the host
-host_tick_rate                               33685044                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  27953                       # Simulator instruction rate (inst/s)
+host_mem_usage                                1692040                       # Number of bytes of host memory used
+host_seconds                                  3160.33                       # Real time elapsed on the host
+host_tick_rate                               13823537                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    88340674                       # Number of instructions simulated
 sim_seconds                                  0.043687                       # Number of seconds simulated
@@ -272,6 +272,8 @@ system.cpu.l2cache.total_refs                  134496                       # To
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                  120516                       # number of writebacks
 system.cpu.numCycles                         87373938                       # number of cpu cycles simulated
+system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
+system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.runCycles                         61786224                       # Number of cycles cpu stages are processed.
 system.cpu.smtCommittedInsts                        0                       # Number of SMT Instructions Simulated (Per-Thread)
 system.cpu.smtCycles                                0                       # Total number of cycles that the CPU was in SMT-mode

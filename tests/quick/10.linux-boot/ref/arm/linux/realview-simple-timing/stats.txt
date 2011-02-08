@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1461109                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 340352                       # Number of bytes of host memory used
-host_seconds                                    34.61                       # Real time elapsed on the host
-host_tick_rate                             3314430509                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 433208                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 360908                       # Number of bytes of host memory used
+host_seconds                                   116.74                       # Real time elapsed on the host
+host_tick_rate                              982709659                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    50572425                       # Number of instructions simulated
 sim_seconds                                  0.114721                       # Number of seconds simulated
@@ -273,8 +273,24 @@ system.cpu.kern.inst.arm                            0                       # nu
 system.cpu.kern.inst.quiesce                        0                       # number of quiesce instructions executed
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
 system.cpu.numCycles                        229442148                       # number of cpu cycles simulated
+system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
+system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
+system.cpu.num_busy_cycles                  229442148                       # Number of busy cycles
+system.cpu.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+system.cpu.num_fp_alu_accesses                   6058                       # Number of float alu accesses
+system.cpu.num_fp_insts                          6058                       # number of float instructions
+system.cpu.num_fp_register_reads                 4226                       # number of times the floating registers were read
+system.cpu.num_fp_register_writes                1834                       # number of times the floating registers were written
+system.cpu.num_func_calls                           0                       # number of times a function call or return occured
+system.cpu.num_idle_cycles                          0                       # Number of idle cycles
 system.cpu.num_insts                         50572425                       # Number of instructions executed
-system.cpu.num_refs                          16289993                       # Number of memory references
+system.cpu.num_int_alu_accesses              41827211                       # Number of integer alu accesses
+system.cpu.num_int_insts                     41827211                       # number of integer instructions
+system.cpu.num_int_register_reads           137988684                       # number of times the integer registers were read
+system.cpu.num_int_register_writes           34313952                       # number of times the integer registers were written
+system.cpu.num_load_insts                     9208240                       # Number of load instructions
+system.cpu.num_mem_refs                      16289993                       # number of memory refs
+system.cpu.num_store_insts                    7081753                       # Number of store instructions
 system.iocache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
 system.iocache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.iocache.avg_refs                      no_value                       # Average number of references to valid blocks.

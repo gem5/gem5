@@ -8,8 +8,8 @@ hack: be nice to actually delete the event here
 
 gzip: stdout: Broken pipe
 
+gzip: 
 gzip: stdout: Broken pipe
-
-gzip: stdout: Broken pipe
+stdout: Broken pipe
 
 gzip: stdout: Broken pipe

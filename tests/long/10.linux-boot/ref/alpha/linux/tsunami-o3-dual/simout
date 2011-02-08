@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 17 2011 17:11:38
-M5 revision f72d94f8c275 7839 default qtip tip outgoing.patch qbase
-M5 started Jan 17 2011 17:12:29
-M5 executing on zizzer
+M5 compiled Feb  7 2011 01:46:17
+M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
+M5 started Feb  7 2011 01:46:32
+M5 executing on burrito
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual -re tests/run.py build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/m5/system/binaries/vmlinux

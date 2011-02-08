@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 24 2011 21:05:28
-M5 revision Unknown
-M5 started Jan 24 2011 21:53:14
-M5 executing on m55-002.pool
+M5 compiled Feb  7 2011 01:47:18
+M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
+M5 started Feb  7 2011 01:47:38
+M5 executing on burrito
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
