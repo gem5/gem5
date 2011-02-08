@@ -135,6 +135,12 @@ for (i, cpu) in enumerate(cpus):
     cpu.test = system.ruby.cpu_ruby_ports[i].port
     cpu.functional = system.funcmem.port
 
+    #
+    # Since the memtester is incredibly bursty, increase the deadlock
+    # threshold to 5 million cycles
+    #
+    system.ruby.cpu_ruby_ports[i].deadlock_threshold = 5000000
+
 for (i, dma) in enumerate(dmas):
     #
     # Tie the dma memtester ports to the correct functional port
