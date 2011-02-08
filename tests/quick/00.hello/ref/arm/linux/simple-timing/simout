@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2011 15:30:08
-M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
-M5 started Feb  6 2011 20:48:42
-M5 executing on SC2B0617
+M5 compiled Dec  7 2010 18:51:32
+M5 revision 331c8c76d885 7806 default qtip tip ext/mismatched_new_delete.patch
+M5 started Dec  7 2010 18:51:46
+M5 executing on u200439-lin.austin.arm.com
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2011 20:42:22
-M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
-M5 started Feb  6 2011 20:42:38
-M5 executing on SC2B0617
+M5 compiled Jan 27 2010 22:23:20
+M5 revision 6068d4fc30d3+ 6931+ default qtip tip brad/rubycfg_regress_udpate
+M5 started Jan 28 2010 10:15:28
+M5 executing on svvint07
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby -re tests/run.py build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

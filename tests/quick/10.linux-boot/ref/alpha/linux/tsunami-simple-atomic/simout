@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic/simout
+Redirecting stderr to build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,12 +7,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2011 15:18:06
-M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
-M5 started Feb  6 2011 20:44:51
-M5 executing on SC2B0617
+M5 compiled Nov  2 2010 23:00:12
+M5 revision 0af3760102ec+ 7713+ default qtip ext/alpha_prefetch.patch tip
+M5 started Nov  2 2010 23:09:41
+M5 executing on aus-bc2-b15
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic -re tests/run.py build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /proj/aatl_perfmod_arch/m5_system_files/m5_system_2.0b3/binaries/vmlinux
+info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 1829332258000 because m5_exit instruction encountered

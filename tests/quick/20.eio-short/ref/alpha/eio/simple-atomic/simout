@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2011 20:42:22
-M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
-M5 started Feb  6 2011 20:42:49
-M5 executing on SC2B0617
+M5 compiled Nov  9 2010 10:38:04
+M5 revision f4362ffd810f+ 7737+ default tip
+M5 started Nov  9 2010 22:11:58
+M5 executing on zizzer
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-atomic -re tests/run.py build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

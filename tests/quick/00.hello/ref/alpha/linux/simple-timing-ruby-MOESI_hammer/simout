@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_SE_MOESI_hammer/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer/simout
+Redirecting stderr to build/ALPHA_SE_MOESI_hammer/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,13 +7,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2011 15:12:45
-M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
-M5 started Feb  6 2011 20:42:21
+M5 compiled Aug  5 2010 11:09:13
+M5 revision c5f5b5533e96 7536 default qtip tip brad/regress_updates
+M5 started Aug  5 2010 11:09:30
 M5 executing on SC2B0617
 command line: build/ALPHA_SE_MOESI_hammer/m5.fast -d build/ALPHA_SE_MOESI_hammer/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 208400 because target called exit()
+Exiting @ tick 207970 because target called exit()

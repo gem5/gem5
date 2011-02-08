@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2011 15:23:54
-M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
-M5 started Feb  6 2011 20:47:21
-M5 executing on SC2B0617
+M5 compiled Feb 25 2010 03:11:27
+M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
+M5 started Feb 25 2010 03:38:01
+M5 executing on SC2B0619
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/simple-atomic -re tests/run.py build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

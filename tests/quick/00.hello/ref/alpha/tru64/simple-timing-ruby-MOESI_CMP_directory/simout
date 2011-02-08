@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  6 2011 20:43:45
-M5 revision b885adc82ab4+ 7924+ default tip qtip brad/regress_updates
-M5 started Feb  6 2011 20:43:54
-M5 executing on SC2B0617
+M5 compiled Aug  5 2010 10:34:54
+M5 revision 1cd2a169499f+ 7535+ default brad/hammer_merge_gets qtip tip
+M5 started Aug  5 2010 10:37:10
+M5 executing on svvint09
 command line: build/ALPHA_SE_MOESI_CMP_directory/m5.fast -d build/ALPHA_SE_MOESI_CMP_directory/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_directory -re tests/run.py build/ALPHA_SE_MOESI_CMP_directory/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
