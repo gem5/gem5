@@ -334,6 +334,9 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     # Create and connect the busses required by each memory system
     if Ruby:
         connectX86RubySystem(self)
+        # add the ide to the list of dma devices that later need to attach to
+        # dma controllers
+        self._dma_devices = [self.pc.south_bridge.ide]
     else:
         connectX86ClassicSystem(self)
 
