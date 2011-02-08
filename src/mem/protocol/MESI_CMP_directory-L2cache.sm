@@ -593,6 +593,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   action(s_deallocateTBE, "s", desc="Deallocate external TBE") {
     L2_TBEs.deallocate(address);
+    unset_tbe();
   }
 
   action(jj_popL1RequestQueue, "\j", desc="Pop incoming L1 request queue") {
