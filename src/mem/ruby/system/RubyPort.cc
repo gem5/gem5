@@ -342,7 +342,6 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
                 // the RubyPort itself must convert it to a response.
                 //
                 accessPhysMem = false;
-                pkt->makeAtomicResponse();
             }
         } else {
             //
