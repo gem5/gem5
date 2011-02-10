@@ -1548,6 +1548,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     gs_sendUnblockS;
     s_deallocateTBE;
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   transition(SS, All_acks_no_sharers, S) {
@@ -1555,6 +1556,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     gs_sendUnblockS;
     s_deallocateTBE;
     j_popTriggerQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from MM_W
