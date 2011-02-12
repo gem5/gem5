@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 The Regents of The University of Michigan
+ * Copyright (c) 2010-2011 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@
 
 #include <vector>
 #include <list>
+#include <cstdlib>
 
 /** ScheduleEntry class represents a single function that an instruction
     wants to do at any pipeline stage. For example, if an instruction
@@ -86,6 +87,7 @@ class ScheduleEntry {
 class ResourceSked {
   public:
     typedef std::list<ScheduleEntry*>::iterator SkedIt;
+    typedef std::vector<std::list<ScheduleEntry*> > StageList;
 
     ResourceSked();
 
@@ -102,6 +104,12 @@ class ResourceSked {
 
     /** Is the schedule empty? */
     bool empty();
+
+    /** Beginning Entry of this schedule */
+    SkedIt begin();
+
+    /** Ending Entry of this schedule */
+    SkedIt end();
 
     /** What is the next task for this instruction schedule? */
     ScheduleEntry* top();
@@ -120,14 +128,19 @@ class ResourceSked {
     /** Print what's left on the instruction schedule */
     void print();
 
+    StageList *getStages()
+    {
+        return &stages;
+    }
+
   private:
     /** Current Schedule Entry Pointer */
     SkedIt curSkedEntry;
 
-    /** The Resource Schedule: Resized to Number of Stages in
-        the constructor
+    /** The Stage-by-Stage Resource Schedule:
+        Resized to Number of Stages in the constructor
     */
-    std::vector<std::list<ScheduleEntry*> > sked;
+    StageList stages;
 
     /** Find a place to insert the instruction using  the
         schedule entries priority
@@ -139,6 +152,128 @@ class ResourceSked {
     */
     SkedIt findIterByCommand(ScheduleEntry *sked_entry, int stage_num,
                              int sked_cmd, int sked_cmd_idx = -1);
+};
+
+/** Wrapper class around the SkedIt iterator in the Resource Sked so that
+    we can use ++ operator to automatically go to the next available
+    resource schedule entry but otherwise maintain same functionality
+    as a normal iterator.
+*/
+class RSkedIt
+{
+  public:
+    RSkedIt()
+        : curStage(0), numStages(0)
+    { }
+
+
+    /** init() must be called before the use of any other member
+        in the RSkedIt class.
+    */
+    void init(ResourceSked* rsked)
+    {
+        stages = rsked->getStages();
+        numStages = stages->size();
+    }
+
+    /* Update the encapsulated "myIt" iterator, but only
+       update curStage/curStage_end if the iterator is valid.
+       The iterator could be invalid in the case where
+       someone is saving the end of a list (i.e. std::list->end())
+    */
+    RSkedIt operator=(ResourceSked::SkedIt const &rhs)
+    {
+        myIt = rhs;
+        if (myIt != (*stages)[numStages-1].end()) {
+            curStage = (*myIt)->stageNum;
+            curStage_end = (*stages)[curStage].end();
+        }
+        return *this;
+    }
+
+    /** Increment to the next entry in current stage.
+        If no more entries then find the next stage that has
+        resource schedule to complete.
+        If no more stages, then return the end() iterator from
+        the last stage to indicate we are done.
+    */
+    RSkedIt &operator++(int unused)
+    {
+        if (++myIt == curStage_end) {
+            curStage++;
+            while (curStage < numStages) {
+                if ((*stages)[curStage].empty()) {
+                    curStage++;
+                } else {
+                    myIt = (*stages)[curStage].begin();
+                    curStage_end = (*stages)[curStage].end();
+                    return *this;
+                }
+            }
+
+            myIt = (*stages)[numStages - 1].end();
+        }
+
+        return *this;
+    }
+
+    /** The "pointer" operator can be used on a RSkedIt and it
+        will use the encapsulated iterator
+    */
+    ScheduleEntry* operator->()
+    {
+        return *myIt;
+    }
+
+    /** Dereferencing a RSKedIt will access the encapsulated
+        iterator
+    */
+    ScheduleEntry* operator*()
+    {
+        return *myIt;
+    }
+
+    /** Equality for RSkedIt only compares the "myIt" iterators,
+        as the other members are just ancillary
+    */
+    bool operator==(RSkedIt const &rhs)
+    {
+        return this->myIt == rhs.myIt;
+    }
+
+    /** Inequality for RSkedIt only compares the "myIt" iterators,
+        as the other members are just ancillary
+    */
+    bool operator!=(RSkedIt const &rhs)
+    {
+        return this->myIt != rhs.myIt;
+    }
+
+    /* The == and != operator overloads should be sufficient
+       here if need otherwise direct access to the schedule
+       iterator, then this can be used */
+    ResourceSked::SkedIt getIt()
+    {
+        return myIt;
+    }
+
+  private:
+    /** Schedule Iterator that this class is encapsulating */
+    ResourceSked::SkedIt myIt;
+
+    /** Ptr to resource schedule that the 'myIt' iterator
+        belongs to
+    */
+    ResourceSked::StageList *stages;
+
+    /**  The last iterator in the current stage. */
+    ResourceSked::SkedIt curStage_end;
+
+    /** Current Stage that "myIt" refers to. */
+    int curStage;
+
+    /** Number of stages in the "*stages" object. */
+    int numStages;
 };
 
 #endif //__CPU_INORDER_RESOURCE_SKED_HH__
