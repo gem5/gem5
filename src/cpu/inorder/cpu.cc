@@ -334,9 +334,13 @@ InOrderCPU::InOrderCPU(Params *params)
 
     dummyReqInst = new InOrderDynInst(this, NULL, 0, 0, 0);
     dummyReqInst->setSquashed();
+    dummyReqInst->resetInstCount();
 
     dummyBufferInst = new InOrderDynInst(this, NULL, 0, 0, 0);
     dummyBufferInst->setSquashed();
+    dummyBufferInst->resetInstCount();
+
+    endOfSkedIt = skedCache.end();
     
     lastRunningCycle = curTick();
 
@@ -348,7 +352,6 @@ InOrderCPU::InOrderCPU(Params *params)
     reset();
 #endif
 
-    dummyBufferInst->resetInstCount();
     
     // Schedule First Tick Event, CPU will reschedule itself from here on out.
     scheduleTickEvent(0);
@@ -359,6 +362,7 @@ InOrderCPU::~InOrderCPU()
     delete resPool;
 }
 
+std::map<InOrderCPU::SkedID, ThePipeline::RSkedPtr> InOrderCPU::skedCache;
 
 void
 InOrderCPU::regStats()

@@ -77,6 +77,7 @@ namespace ThePipeline {
     // RESOURCE SCHEDULING
     //////////////////////////
     typedef ResourceSked ResSchedule;
+    typedef ResourceSked* RSkedPtr;
 
     void createFrontEndSchedule(DynInstPtr &inst);
     bool createBackEndSchedule(DynInstPtr &inst);

@@ -296,6 +296,62 @@ class InOrderCPU : public BaseCPU
     TheISA::TLB *getITBPtr();
     TheISA::TLB *getDTBPtr();
 
+    /** Accessor Type for the SkedCache */
+    typedef uint32_t SkedID;
+
+    /** Cache of Instruction Schedule using the instruction's name as a key */
+    static std::map<SkedID, ThePipeline::RSkedPtr> skedCache;
+
+    typedef std::map<SkedID, ThePipeline::RSkedPtr>::iterator SkedCacheIt;
+
+    /** Initialized to last iterator in map, signifying a invalid entry
+        on map searches
+    */
+    SkedCacheIt endOfSkedIt;
+
+    /** Add a new instruction schedule to the schedule cache */
+    void addToSkedCache(DynInstPtr inst, ThePipeline::RSkedPtr inst_sked)
+    {
+        SkedID sked_id = genSkedID(inst);
+        skedCache[sked_id] = inst_sked;
+    }
+
+
+    /** Find a instruction schedule */
+    ThePipeline::RSkedPtr lookupSked(DynInstPtr inst)
+    {
+        SkedID sked_id = genSkedID(inst);
+        SkedCacheIt lookup_it = skedCache.find(sked_id);
+
+        if (lookup_it != endOfSkedIt) {
+            return (*lookup_it).second;
+        } else {
+            return NULL;
+        }
+    }
+
+    static const uint8_t INST_OPCLASS                       = 26;
+    static const uint8_t INST_LOAD                          = 25;
+    static const uint8_t INST_STORE                         = 24;
+    static const uint8_t INST_CONTROL                       = 23;
+    static const uint8_t INST_NONSPEC                       = 22;
+    static const uint8_t INST_DEST_REGS                     = 18;
+    static const uint8_t INST_SRC_REGS                      = 14;
+
+    inline SkedID genSkedID(DynInstPtr inst)
+    {
+        SkedID id = 0;
+        id = (inst->opClass() << INST_OPCLASS) |
+            (inst->isLoad() << INST_LOAD) |
+            (inst->isStore() << INST_STORE) |
+            (inst->isControl() << INST_CONTROL) |
+            (inst->isNonSpeculative() << INST_NONSPEC) |
+            (inst->numDestRegs() << INST_DEST_REGS) |
+            (inst->numSrcRegs() << INST_SRC_REGS);
+        return id;
+    }
+
+
   public:
 
     /** Registers statistics. */
