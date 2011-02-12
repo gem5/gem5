@@ -93,14 +93,14 @@ class TableWalker : public MemObject
         {
             if (supersection())
                 panic("Super sections not implemented\n");
-            return mbits(data, 31,20);
+            return mbits(data, 31, 20);
         }
         /** Return the physcal address of the entry, bits in position*/
         Addr paddr(Addr va) const
         {
             if (supersection())
                 panic("Super sections not implemented\n");
-            return mbits(data, 31,20) | mbits(va, 20, 0);
+            return mbits(data, 31, 20) | mbits(va, 19, 0);
         }
 
 
@@ -109,7 +109,7 @@ class TableWalker : public MemObject
         {
             if (supersection())
                 panic("Super sections not implemented\n");
-            return bits(data, 31,20);
+            return bits(data, 31, 20);
         }
 
         /** Is the translation global (no asid used)? */
@@ -127,19 +127,19 @@ class TableWalker : public MemObject
         /** Three bit access protection flags */
         uint8_t ap() const
         {
-            return (bits(data, 15) << 2) | bits(data,11,10);
+            return (bits(data, 15) << 2) | bits(data, 11, 10);
         }
 
         /** Domain Client/Manager: ARM DDI 0406B: B3-31 */
         uint8_t domain() const
         {
-            return bits(data,8,5);
+            return bits(data, 8, 5);
         }
 
         /** Address of L2 descriptor if it exists */
         Addr l2Addr() const
         {
-            return mbits(data, 31,10);
+            return mbits(data, 31, 10);
         }
 
         /** Memory region attributes: ARM DDI 0406B: B3-32.
@@ -149,7 +149,7 @@ class TableWalker : public MemObject
          */
         uint8_t texcb() const
         {
-            return bits(data, 2) | bits(data,3) << 1 | bits(data, 14, 12) << 2;
+            return bits(data, 2) | bits(data, 3) << 1 | bits(data, 14, 12) << 2;
         }
 
         /** If the section is shareable. See texcb() comment. */
@@ -187,7 +187,7 @@ class TableWalker : public MemObject
         /** Is the entry invalid */
         bool invalid() const
         {
-            return bits(data, 1,0) == 0;;
+            return bits(data, 1, 0) == 0;
         }
 
         /** What is the size of the mapping? */
@@ -218,8 +218,8 @@ class TableWalker : public MemObject
         uint8_t texcb() const
         {
             return large() ?
-                (bits(data, 2) | (bits(data,3) << 1) | (bits(data, 14, 12) << 2)) :
-                (bits(data, 2) | (bits(data,3) << 1) | (bits(data, 8, 6) << 2));
+                (bits(data, 2) | (bits(data, 3) << 1) | (bits(data, 14, 12) << 2)) :
+                (bits(data, 2) | (bits(data, 3) << 1) | (bits(data, 8, 6) << 2));
         }
 
         /** Return the physical frame, bits shifted right */
