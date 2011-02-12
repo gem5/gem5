@@ -752,6 +752,7 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
     } else {
         delete req;
         // fetch fault: advance directly to next instruction (fault handler)
+        _status = Running;
         advanceInst(fault);
     }
 
@@ -805,12 +806,11 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
     if (curStaticInst && curStaticInst->isMemRef()) {
         // load or store: just send to dcache
         Fault fault = curStaticInst->initiateAcc(this, traceData);
-        if (_status != Running) {
-            // instruction will complete in dcache response callback
-            assert(_status == DcacheWaitResponse ||
-                    _status == DcacheRetry || DTBWaitResponse);
-            assert(fault == NoFault);
-        } else {
+
+        // If we're not running now the instruction will complete in a dcache
+        // response callback or the instruction faulted and has started an
+        // ifetch
+        if (_status == Running) {
             if (fault != NoFault && traceData) {
                 // If there was a fault, we shouldn't trace this instruction.
                 delete traceData;
