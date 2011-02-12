@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 01:53:13
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 01:53:26
-M5 executing on burrito
+M5 compiled Feb 11 2011 17:53:57
+M5 revision 6c65f7ee86c1 7949 default qtip tip ext/vnc_stats_updates.patch
+M5 started Feb 11 2011 17:54:00
+M5 executing on u200439-lin.austin.arm.com
 command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-timing -re tests/run.py build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-timing
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/vmlinux.arm
+info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux.arm
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 114721074000 because m5_exit instruction encountered
+Exiting @ tick 114726567000 because m5_exit instruction encountered
