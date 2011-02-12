@@ -604,6 +604,9 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
     ThreadID tid = mem_req->threadId();
     Addr block_PC = mem_req->getVaddr();
 
+    // Wake up CPU if it was idle
+    cpu->wakeCPU();
+
     // If translation was successful, attempt to read the icache block.
     if (fault == NoFault) {
         // Build packet here.
@@ -653,6 +656,9 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         instruction->setPredTarg(fetchPC);
         instruction->fault = fault;
         wroteToTimeBuffer = true;
+
+        DPRINTF(Activity, "Activity this cycle.\n");
+        cpu->activityThisCycle();
 
         fetchStatus[tid] = TrapPending;
 
