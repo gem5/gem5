@@ -51,7 +51,7 @@ InOrderDynInst::InOrderDynInst(TheISA::ExtMachInst machInst,
                                const TheISA::PCState &instPC,
                                const TheISA::PCState &_predPC,
                                InstSeqNum seq_num, InOrderCPU *cpu)
-  : staticInst(machInst, instPC.instAddr()), traceData(NULL), cpu(cpu)
+    : staticInst(machInst, instPC.instAddr()), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
@@ -108,6 +108,8 @@ InOrderDynInst::setMachInst(ExtMachInst machInst)
 void
 InOrderDynInst::initVars()
 {
+    inFrontEnd = true;
+
     fetchMemReq = NULL;
     dataMemReq = NULL;
     splitMemData = NULL;

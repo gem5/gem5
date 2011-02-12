@@ -110,9 +110,9 @@ MultDivUnit::requestAgain(DynInstPtr inst, bool &service_request)
 
     // Check to see if this instruction is requesting the same command
     // or a different one
-    if (mult_div_req->cmd != inst->resSched.top()->cmd) {
+    if (mult_div_req->cmd != inst->curSkedEntry->cmd) {
         // If different, then update command in the request
-        mult_div_req->cmd = inst->resSched.top()->cmd;
+        mult_div_req->cmd = inst->curSkedEntry->cmd;
         DPRINTF(InOrderMDU,
                 "[tid:%i]: [sn:%i]: Updating the command for this "
                 "instruction\n", inst->readTid(), inst->seqNum);
@@ -132,7 +132,7 @@ MultDivUnit::getSlot(DynInstPtr inst)
 
     // If we have this instruction's request already then return
     if (slot_num != -1 &&         
-        inst->resSched.top()->cmd == reqMap[slot_num]->cmd)
+        inst->curSkedEntry->cmd == reqMap[slot_num]->cmd)
         return slot_num;
     
     unsigned repeat_rate = 0;

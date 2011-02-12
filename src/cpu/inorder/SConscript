@@ -55,7 +55,7 @@ if 'InOrderCPU' in env['CPU_MODELS']:
         TraceFlag('ThreadModel')
         TraceFlag('RefCount')
         TraceFlag('AddrDep')
-
+	TraceFlag('SkedCache')
 
         CompoundFlag('InOrderCPUAll', [ 'InOrderStage', 'InOrderStall', 'InOrderCPU',
                'InOrderMDU', 'InOrderAGEN', 'InOrderFetchSeq', 'InOrderTLB', 'InOrderBPred',

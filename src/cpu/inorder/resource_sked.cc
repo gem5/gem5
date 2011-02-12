@@ -34,30 +34,30 @@
 
 #include <vector>
 #include <list>
-#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 using namespace ThePipeline;
 
 ResourceSked::ResourceSked()
 {
-    sked.resize(NumStages);
+    stages.resize(NumStages);
 }
 
 void
 ResourceSked::init()
 {
-    assert(!sked[0].empty());
+    assert(!stages[0].empty());
 
-    curSkedEntry = sked[0].begin();
+    curSkedEntry = stages[0].begin();
 }
 
 int
 ResourceSked::size()
 {
     int total = 0;
-    for (int i = 0; i < sked.size(); i++) {
-        total += sked[i].size();
+    for (int i = 0; i < stages.size(); i++) {
+        total += stages[i].size();
     }
 
     return total;
@@ -67,6 +67,26 @@ bool
 ResourceSked::empty()
 {
     return size() == 0;
+}
+
+
+ResourceSked::SkedIt
+ResourceSked::begin()
+{
+    int num_stages = stages.size();
+    for (int i = 0; i < num_stages; i++) {
+        if (stages[i].size() > 0)
+            return stages[i].begin();
+    }
+
+    return stages[num_stages - 1].end();
+}
+
+ResourceSked::SkedIt
+ResourceSked::end()
+{
+    int num_stages = stages.size();
+    return stages[num_stages - 1].end();
 }
 
 ScheduleEntry*
@@ -82,18 +102,18 @@ ResourceSked::pop()
 {
     int stage_num = (*curSkedEntry)->stageNum;
 
-    sked[stage_num].erase(curSkedEntry);
+    stages[stage_num].erase(curSkedEntry);
 
-    if (!sked[stage_num].empty()) {
-        curSkedEntry = sked[stage_num].begin();
+    if (!stages[stage_num].empty()) {
+        curSkedEntry = stages[stage_num].begin();
     } else {
         int next_stage = stage_num + 1;
 
         while (next_stage < NumStages) {
-            if (sked[next_stage].empty()) {
+            if (stages[next_stage].empty()) {
                 next_stage++;
             } else {
-                curSkedEntry = sked[next_stage].begin();
+                curSkedEntry = stages[next_stage].begin();
                 break;
             }
         }
@@ -108,7 +128,7 @@ ResourceSked::push(ScheduleEntry* sked_entry)
 
     SkedIt pri_iter = findIterByPriority(sked_entry, stage_num);
 
-    sked[stage_num].insert(pri_iter, sked_entry);
+    stages[stage_num].insert(pri_iter, sked_entry);
 }
 
 void
@@ -122,23 +142,23 @@ ResourceSked::pushBefore(ScheduleEntry* sked_entry, int sked_cmd,
     SkedIt pri_iter = findIterByCommand(sked_entry, stage_num,
                                         sked_cmd, sked_cmd_idx);
 
-    assert(pri_iter != sked[stage_num].end() &&
+    assert(pri_iter != stages[stage_num].end() &&
            "Could not find command to insert in front of.");
 
-    sked[stage_num].insert(pri_iter, sked_entry);
+    stages[stage_num].insert(pri_iter, sked_entry);
 }
 
 ResourceSked::SkedIt
 ResourceSked::findIterByPriority(ScheduleEntry* sked_entry, int stage_num)
 {
-    if (sked[stage_num].empty()) {
-        return sked[stage_num].end();
+    if (stages[stage_num].empty()) {
+        return stages[stage_num].end();
     }
 
     int priority = sked_entry->priority;
 
-    SkedIt sked_it = sked[stage_num].begin();
-    SkedIt sked_end = sked[stage_num].end();
+    SkedIt sked_it = stages[stage_num].begin();
+    SkedIt sked_end = stages[stage_num].end();
 
     while (sked_it != sked_end) {
         if ((*sked_it)->priority > priority)
@@ -154,12 +174,12 @@ ResourceSked::SkedIt
 ResourceSked::findIterByCommand(ScheduleEntry* sked_entry, int stage_num,
                                 int sked_cmd, int sked_cmd_idx)
 {
-    if (sked[stage_num].empty()) {
-        return sked[stage_num].end();
+    if (stages[stage_num].empty()) {
+        return stages[stage_num].end();
     }
 
-    SkedIt sked_it = sked[stage_num].begin();
-    SkedIt sked_end = sked[stage_num].end();
+    SkedIt sked_it = stages[stage_num].begin();
+    SkedIt sked_end = stages[stage_num].end();
 
     while (sked_it != sked_end) {
         if ((*sked_it)->cmd == sked_cmd &&
@@ -175,12 +195,16 @@ ResourceSked::findIterByCommand(ScheduleEntry* sked_entry, int stage_num,
 void
 ResourceSked::print()
 {
-    for (int i = 0; i < sked.size(); i++) {
-        cprintf("Stage %i\n====\n", i);
-        SkedIt sked_it = sked[i].begin();
-        SkedIt sked_end = sked[i].end();
+    for (int i = 0; i < stages.size(); i++) {
+        //ccprintf(cerr, "Stage %i\n====\n", i);
+        SkedIt sked_it = stages[i].begin();
+        SkedIt sked_end = stages[i].end();
         while (sked_it != sked_end) {
-            cprintf("\t res:%i cmd:%i idx:%i\n", (*sked_it)->resNum, (*sked_it)->cmd, (*sked_it)->idx);
+            DPRINTF(SkedCache, "\t stage:%i res:%i cmd:%i idx:%i\n",
+                    (*sked_it)->stageNum,
+                    (*sked_it)->resNum,
+                    (*sked_it)->cmd,
+                    (*sked_it)->idx);
             sked_it++;
         }
     }

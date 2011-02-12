@@ -260,7 +260,7 @@ CacheUnit::findRequest(DynInstPtr inst)
 
         if (cache_req &&
             cache_req->getInst() == inst &&
-            cache_req->instIdx == inst->resSched.top()->idx) {
+            cache_req->instIdx == inst->curSkedEntry->idx) {
             return cache_req;
         }
         map_it++;
@@ -296,7 +296,7 @@ ResReqPtr
 CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
-    ScheduleEntry* sched_entry = inst->resSched.top();
+    ScheduleEntry* sched_entry = *inst->curSkedEntry;
 
     if (!inst->validMemAddr()) {
         panic("Mem. Addr. must be set before requesting cache access\n");
@@ -346,7 +346,7 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
     return new CacheRequest(this, inst, stage_num, id, slot_num,
                             sched_entry->cmd, 0, pkt_cmd,
                             0/*flags*/, this->cpu->readCpuId(),
-                            inst->resSched.top()->idx);
+                            inst->curSkedEntry->idx);
 }
 
 void
@@ -357,17 +357,17 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
 
     // Check to see if this instruction is requesting the same command
     // or a different one
-    if (cache_req->cmd != inst->resSched.top()->cmd &&
-        cache_req->instIdx == inst->resSched.top()->idx) {
+    if (cache_req->cmd != inst->curSkedEntry->cmd &&
+        cache_req->instIdx == inst->curSkedEntry->idx) {
         // If different, then update command in the request
-        cache_req->cmd = inst->resSched.top()->cmd;
+        cache_req->cmd = inst->curSkedEntry->cmd;
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Updating the command for this "
                 "instruction\n ", inst->readTid(), inst->seqNum);
 
         service_request = true;
-    } else if (inst->resSched.top()->idx != CacheUnit::InitSecondSplitRead &&
-               inst->resSched.top()->idx != CacheUnit::InitSecondSplitWrite) {        
+    } else if (inst->curSkedEntry->idx != CacheUnit::InitSecondSplitRead &&
+               inst->curSkedEntry->idx != CacheUnit::InitSecondSplitWrite) {
         // If same command, just check to see if memory access was completed
         // but dont try to re-execute
         DPRINTF(InOrderCachePort,
@@ -487,6 +487,8 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
         inst->splitMemData = new uint8_t[size];
         
         if (!inst->splitInstSked) {
+            assert(0 && "Split Requests Not Supported for Now...");
+
             // Schedule Split Read/Complete for Instruction
             // ==============================
             int stage_num = cache_req->getStageNum();
@@ -590,6 +592,8 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
         inst->splitInst = true;        
 
         if (!inst->splitInstSked) {
+            assert(0 && "Split Requests Not Supported for Now...");
+
             // Schedule Split Read/Complete for Instruction
             // ==============================
             int stage_num = cache_req->getStageNum();

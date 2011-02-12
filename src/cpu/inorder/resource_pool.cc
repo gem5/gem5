@@ -91,6 +91,7 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
 
     resources.push_back(new InstBuffer("Fetch-Buffer-T1", FetchBuff2, 4, 
                                        0, _cpu, params));
+
 }
 
 ResourcePool::~ResourcePool()
@@ -120,6 +121,16 @@ string
 ResourcePool::name()
 {
     return cpu->name() + ".ResourcePool";
+}
+
+void
+ResourcePool::print()
+{
+    for (int i=0; i < resources.size(); i++) {
+        DPRINTF(InOrderDynInst, "Res:%i %s\n",
+                i, resources[i]->name());
+    }
+
 }
 
 

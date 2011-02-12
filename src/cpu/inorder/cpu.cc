@@ -368,7 +368,7 @@ std::map<InOrderCPU::SkedID, ThePipeline::RSkedPtr> InOrderCPU::skedCache;
 RSkedPtr
 InOrderCPU::createFrontEndSked()
 {
-    RSkedPtr res_sked = NULL;
+    RSkedPtr res_sked = new ResourceSked();
     int stage_num = 0;
     StageScheduler F(res_sked, stage_num++);
     StageScheduler D(res_sked, stage_num++);
@@ -383,6 +383,9 @@ InOrderCPU::createFrontEndSked()
     D.needs(BPred, BranchPredictor::PredictBranch);
     D.needs(FetchSeq, FetchSeqUnit::UpdateTargetPC);
 
+
+    DPRINTF(SkedCache, "Resource Sked created for instruction \"front_end\"\n");
+
     return res_sked;
 }
 
@@ -391,7 +394,11 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
 {
     RSkedPtr res_sked = lookupSked(inst);
     if (res_sked != NULL) {
+        DPRINTF(SkedCache, "Found %s in sked cache.\n",
+                inst->instName());
         return res_sked;
+    } else {
+        res_sked = new ResourceSked();
     }
 
     int stage_num = ThePipeline::BackEndStartStage;
@@ -402,7 +409,7 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
     if (!inst->staticInst) {
         warn_once("Static Instruction Object Not Set. Can't Create"
                   " Back End Schedule");
-        return false;
+        return NULL;
     }
 
     // EXECUTE
@@ -457,6 +464,14 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
     }
 
     W.needs(Grad, GraduationUnit::GraduateInst);
+
+    // Insert Front Schedule into our cache of
+    // resource schedules
+    addToSkedCache(inst, res_sked);
+
+    DPRINTF(SkedCache, "Back End Sked Created for instruction: %s (%08p)\n",
+            inst->instName(), inst->getMachInst());
+    res_sked->print();
 
     return res_sked;
 }

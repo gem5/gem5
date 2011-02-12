@@ -944,11 +944,16 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                         "completed.\n", tid, inst->seqNum, 
                         cpu->resPool->name(res_num));
 
-                inst->popSchedEntry();
-
                 reqs_processed++;                
 
                 req->stagePasses++;                
+
+                bool done_in_pipeline = inst->finishSkedEntry();
+                if (done_in_pipeline) {
+                    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] finished "
+                            "in pipeline.\n", tid, inst->seqNum);
+                    break;
+                }
             } else {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s failed."
                         "\n", tid, inst->seqNum, cpu->resPool->name(res_num));
@@ -982,7 +987,7 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     // Activate Next Ready Thread at end of cycle
                     DPRINTF(ThreadModel, "Attempting to activate next ready "
                             "thread due to cache miss.\n");
-                    cpu->activateNextReadyContext();                                                                                               
+                    cpu->activateNextReadyContext();
                 }
                 
                 // Mark request for deletion

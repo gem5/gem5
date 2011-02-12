@@ -217,7 +217,7 @@ TLBUnitEvent::process()
     // Effectively NOP the instruction but still allow it
     // to commit
     //while (!inst->resSched.empty() &&
-    //   inst->resSched.top()->stageNum != ThePipeline::NumStages - 1) {
+    //   inst->curSkedEntry->stageNum != ThePipeline::NumStages - 1) {
     //inst->resSched.pop();
     //}
 }

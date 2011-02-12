@@ -337,8 +337,9 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     ////////////////////////////////////////////////////////////
     std::string instName() { return staticInst->getName(); }
 
-
     void setMachInst(ExtMachInst inst);
+
+    ExtMachInst getMachInst() { return staticInst->machInst; }
 
     /** Sets the StaticInst. */
     void setStaticInst(StaticInstPtr &static_inst);
@@ -411,6 +412,39 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     // RESOURCE SCHEDULING
     //
     /////////////////////////////////////////////
+    typedef ThePipeline::RSkedPtr RSkedPtr;
+    bool inFrontEnd;
+
+    RSkedPtr frontSked;
+    RSkedIt frontSked_end;
+
+    RSkedPtr backSked;
+    RSkedIt backSked_end;
+
+    RSkedIt curSkedEntry;
+
+    void setFrontSked(RSkedPtr front_sked)
+    {
+        frontSked = front_sked;
+        frontSked_end.init(frontSked);
+        frontSked_end = frontSked->end();
+        //DPRINTF(InOrderDynInst, "Set FrontSked End to : %x \n" ,
+        //        frontSked_end.getIt()/*, frontSked->end()*/);
+        //assert(frontSked_end == frontSked->end());
+
+        // This initializes instruction to be able
+        // to walk the resource schedule
+        curSkedEntry.init(frontSked);
+        curSkedEntry = frontSked->begin();
+    }
+
+    void setBackSked(RSkedPtr back_sked)
+    {
+        backSked = back_sked;
+        backSked_end.init(backSked);
+        backSked_end = backSked->end();
+    }
+
 
     void setNextStage(int stage_num) { nextStage = stage_num; }
     int getNextStage() { return nextStage; }
@@ -426,53 +460,51 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
 
     /** Print Resource Schedule */
-    /** @NOTE: DEBUG ONLY */
-    void printSched()
+    void printSked()
     {
-        ThePipeline::ResSchedule tempSched;
-        std::cerr << "\tInst. Res. Schedule: ";
-        while (!resSched.empty()) {
-            std::cerr << '\t' << resSched.top()->stageNum << "-"
-                 << resSched.top()->resNum << ", ";
-
-            tempSched.push(resSched.top());
-            resSched.pop();
+        if (frontSked != NULL) {
+            frontSked->print();
         }
 
-        std::cerr << std::endl;
-        resSched = tempSched;
+        if (backSked != NULL) {
+            backSked->print();
+        }
     }
 
     /** Return Next Resource Stage To Be Used */
     int nextResStage()
     {
-        if (resSched.empty())
-            return -1;
-        else
-            return resSched.top()->stageNum;
+        assert((inFrontEnd && curSkedEntry != frontSked_end) ||
+               (!inFrontEnd && curSkedEntry != backSked_end));
+
+        return curSkedEntry->stageNum;
     }
 
 
     /** Return Next Resource To Be Used */
     int nextResource()
     {
-        if (resSched.empty())
-            return -1;
-        else
-            return resSched.top()->resNum;
+        assert((inFrontEnd && curSkedEntry != frontSked_end) ||
+               (!inFrontEnd && curSkedEntry != backSked_end));
+
+        return curSkedEntry->resNum;
     }
 
-    /** Remove & Deallocate a schedule entry */
-    void popSchedEntry()
+    /** Finish using a schedule entry, increment to next entry */
+    bool finishSkedEntry()
     {
-        if (!resSched.empty()) {
-            ScheduleEntry* sked = resSched.top();
-            resSched.pop();
-            if (sked != 0) {
-                delete sked;
-                
-            }            
+        curSkedEntry++;
+
+        if (inFrontEnd && curSkedEntry == frontSked_end) {
+            assert(backSked != NULL);
+            curSkedEntry.init(backSked);
+            curSkedEntry = backSked->begin();
+            inFrontEnd = false;
+        } else if (!inFrontEnd && curSkedEntry == backSked_end) {
+            return true;
         }
+
+        return false;
     }
 
     /** Release a Resource Request (Currently Unused) */
