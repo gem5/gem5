@@ -309,6 +309,8 @@ class InOrderCPU : public BaseCPU
     */
     SkedCacheIt endOfSkedIt;
 
+    ThePipeline::RSkedPtr frontEndSked;
+
     /** Add a new instruction schedule to the schedule cache */
     void addToSkedCache(DynInstPtr inst, ThePipeline::RSkedPtr inst_sked)
     {
@@ -351,6 +353,33 @@ class InOrderCPU : public BaseCPU
         return id;
     }
 
+    ThePipeline::RSkedPtr createFrontEndSked();
+    ThePipeline::RSkedPtr createBackEndSked(DynInstPtr inst);
+
+    class StageScheduler {
+      private:
+        ThePipeline::RSkedPtr rsked;
+        int stageNum;
+        int nextTaskPriority;
+
+      public:
+        StageScheduler(ThePipeline::RSkedPtr _rsked, int stage_num)
+            : rsked(_rsked), stageNum(stage_num),
+              nextTaskPriority(0)
+        { }
+
+        void needs(int unit, int request) {
+            rsked->push(new ScheduleEntry(
+                            stageNum, nextTaskPriority++, unit, request
+                            ));
+        }
+
+        void needs(int unit, int request, int param) {
+            rsked->push(new ScheduleEntry(
+                            stageNum, nextTaskPriority++, unit, request, param
+                            ));
+        }
+    };
 
   public:
 
