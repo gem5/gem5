@@ -125,7 +125,6 @@ InOrderDynInst::initVars()
     readyRegs = 0;
 
     nextStage = 0;
-    nextInstStageNum = 0;
 
     for(int i = 0; i < MaxInstDestRegs; i++)
         instResult[i].val.integer = 0;
@@ -208,8 +207,6 @@ InOrderDynInst::~InOrderDynInst()
 
     --instcount;
 
-    deleteStages();
-
     DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction destroyed"
             " (active insts: %i)\n", threadNumber, seqNum, instcount);
 }
@@ -282,29 +279,6 @@ InOrderDynInst::completeAcc(Packet *pkt)
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 
     return this->fault;
-}
-
-InstStage *InOrderDynInst::addStage()
-{
-    this->currentInstStage = new InstStage(this, nextInstStageNum++);
-    instStageList.push_back( this->currentInstStage );
-    return this->currentInstStage;
-}
-
-InstStage *InOrderDynInst::addStage(int stage_num)
-{
-    nextInstStageNum = stage_num;
-    return InOrderDynInst::addStage();
-}
-
-void InOrderDynInst::deleteStages() {
-    std::list<InstStage*>::iterator list_it = instStageList.begin();
-    std::list<InstStage*>::iterator list_end = instStageList.end();
-
-    while(list_it != list_end) {
-        delete *list_it;
-        list_it++;
-    }
 }
 
 Fault

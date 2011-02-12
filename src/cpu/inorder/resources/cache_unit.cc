@@ -492,11 +492,15 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
             // Schedule Split Read/Complete for Instruction
             // ==============================
             int stage_num = cache_req->getStageNum();
-        
-            int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+            RSkedPtr inst_sked = (stage_num >= ThePipeline::BackEndStartStage) ?
+                inst->backSked : inst->frontSked;
+
+            // this is just an arbitrarily high priority to ensure that this
+            // gets pushed to the back of the list
+            int stage_pri = 20;
         
             int isplit_cmd = CacheUnit::InitSecondSplitRead;
-            inst->resSched.push(new
+            inst_sked->push(new
                                 ScheduleEntry(stage_num,
                                               stage_pri,
                                               cpu->resPool->getResIdx(DCache),
@@ -504,7 +508,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
                                               1));
 
             int csplit_cmd = CacheUnit::CompleteSecondSplitRead;
-            inst->resSched.push(new
+            inst_sked->push(new
                                 ScheduleEntry(stage_num + 1,
                                               1/*stage_pri*/,
                                               cpu->resPool->getResIdx(DCache),
@@ -597,24 +601,28 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
             // Schedule Split Read/Complete for Instruction
             // ==============================
             int stage_num = cache_req->getStageNum();
+            RSkedPtr inst_sked = (stage_num >= ThePipeline::BackEndStartStage) ?
+                inst->backSked : inst->frontSked;
         
-            int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+            // this is just an arbitrarily high priority to ensure that this
+            // gets pushed to the back of the list
+            int stage_pri = 20;
         
             int isplit_cmd = CacheUnit::InitSecondSplitWrite;
-            inst->resSched.push(new
-                                ScheduleEntry(stage_num,
-                                              stage_pri,
-                                              cpu->resPool->getResIdx(DCache),
-                                              isplit_cmd,
-                                              1));
+            inst_sked->push(new
+                            ScheduleEntry(stage_num,
+                                          stage_pri,
+                                          cpu->resPool->getResIdx(DCache),
+                                          isplit_cmd,
+                                          1));
 
             int csplit_cmd = CacheUnit::CompleteSecondSplitWrite;
-            inst->resSched.push(new
-                                ScheduleEntry(stage_num + 1,
-                                              1/*stage_pri*/,
-                                              cpu->resPool->getResIdx(DCache),
-                                              csplit_cmd,
-                                              1));
+            inst_sked->push(new
+                            ScheduleEntry(stage_num + 1,
+                                          1/*stage_pri*/,
+                                          cpu->resPool->getResIdx(DCache),
+                                          csplit_cmd,
+                                          1));
             inst->splitInstSked = true;
         } else {
             DPRINTF(InOrderCachePort, "[tid:%i] sn:%i] Retrying Split Read "

@@ -1415,14 +1415,6 @@ InOrderCPU::cleanUpRemovedInsts()
         DynInstPtr inst = *removeList.front();
         ThreadID tid = inst->threadNumber;
 
-        // Make Sure Resource Schedule Is Emptied Out
-        ThePipeline::ResSchedule *inst_sched = &inst->resSched;
-        while (!inst_sched->empty()) {
-            ScheduleEntry* sch_entry = inst_sched->top();
-            inst_sched->pop();
-            delete sch_entry;
-        }
-
         // Remove From Register Dependency Map, If Necessary
         archRegDepMap[(*removeList.front())->threadNumber].
             remove((*removeList.front()));
@@ -1430,8 +1422,8 @@ InOrderCPU::cleanUpRemovedInsts()
 
         // Clear if Non-Speculative
         if (inst->staticInst &&
-              inst->seqNum == nonSpecSeqNum[tid] &&
-                nonSpecInstActive[tid] == true) {
+            inst->seqNum == nonSpecSeqNum[tid] &&
+            nonSpecInstActive[tid] == true) {
             nonSpecInstActive[tid] = false;
         }
 

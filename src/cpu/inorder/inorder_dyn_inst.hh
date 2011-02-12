@@ -210,9 +210,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /**  Data used for a store for operation. */
     uint64_t storeData;
 
-    /** The resource schedule for this inst */
-    ThePipeline::ResSchedule resSched;
-
     /** List of active resource requests for this instruction */
     std::list<ResourceRequest*> reqList;
 
@@ -303,11 +300,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     PhysRegIndex _prevDestRegIdx[MaxInstDestRegs];
 
     int nextStage;
-
-    /* vars to keep track of InstStage's - used for resource sched defn */
-    int nextInstStageNum;
-    ThePipeline::InstStage *currentInstStage;
-    std::list<ThePipeline::InstStage*> instStageList;
 
   private:
     /** Function to initialize variables in the constructors. */
@@ -445,19 +437,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         backSked_end = backSked->end();
     }
 
-
     void setNextStage(int stage_num) { nextStage = stage_num; }
     int getNextStage() { return nextStage; }
-
-    ThePipeline::InstStage *addStage();
-    ThePipeline::InstStage *addStage(int stage);
-    ThePipeline::InstStage *currentStage() { return currentInstStage; }
-    void deleteStages();
-
-    /** Add A Entry To Reource Schedule */
-    void addToSched(ScheduleEntry* sched_entry)
-    { resSched.push(sched_entry); }
-
 
     /** Print Resource Schedule */
     void printSked()

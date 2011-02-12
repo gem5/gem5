@@ -78,23 +78,6 @@ namespace ThePipeline {
     //////////////////////////
     typedef ResourceSked ResSchedule;
     typedef ResourceSked* RSkedPtr;
-
-    void createFrontEndSchedule(DynInstPtr &inst);
-    bool createBackEndSchedule(DynInstPtr &inst);
-    int getNextPriority(DynInstPtr &inst, int stage_num);
-
-    class InstStage {
-      private:
-        int nextTaskPriority;
-        int stageNum;
-        ResSchedule *instSched;
-
-      public:
-        InstStage(DynInstPtr inst, int stage_num);
-
-        void needs(int unit, int request);
-        void needs(int unit, int request, int param);
-    };
 };
 
 
