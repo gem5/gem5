@@ -69,6 +69,7 @@ if env['FULL_SYSTEM']:
     Source('pcidev.cc')
     Source('pktfifo.cc')
     Source('platform.cc')
+    Source('ps2.cc')
     Source('simple_disk.cc')
     Source('sinic.cc')
     Source('terminal.cc')

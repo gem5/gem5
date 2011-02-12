@@ -35,9 +35,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: William Wang
+ *          Ali Saidi
  */
 
+#include "base/bitmap.hh"
+#include "base/output.hh"
 #include "base/trace.hh"
+#include "base/vnc/vncserver.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/gic.hh"
 #include "dev/arm/pl111.hh"
@@ -50,20 +54,27 @@ using namespace AmbaDev;
 Pl111::Pl111(const Params *p)
     : AmbaDmaDevice(p), lcdTiming0(0), lcdTiming1(0), lcdTiming2(0),
       lcdTiming3(0), lcdUpbase(0), lcdLpbase(0), lcdControl(0), lcdImsc(0),
-      lcdRis(0), lcdMis(0), lcdIcr(0), lcdUpcurr(0), lcdLpcurr(0),
+      lcdRis(0), lcdMis(0),
       clcdCrsrCtrl(0), clcdCrsrConfig(0), clcdCrsrPalette0(0),
       clcdCrsrPalette1(0), clcdCrsrXY(0), clcdCrsrClip(0), clcdCrsrImsc(0),
       clcdCrsrIcr(0), clcdCrsrRis(0), clcdCrsrMis(0), clock(p->clock),
-      height(0), width(0), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
+      vncserver(p->vnc), bmp(NULL), width(LcdMaxWidth), height(LcdMaxHeight),
+      bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
       waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
       dmaDoneEvent(maxOutstandingDma, this), intEvent(this)
 {
     pioSize = 0xFFFF;
 
+    pic = simout.create("framebuffer.bmp", true);
+
+    dmaBuffer = new uint8_t[LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t)];
+
     memset(lcdPalette, 0, sizeof(lcdPalette));
     memset(cursorImage, 0, sizeof(cursorImage));
     memset(dmaBuffer, 0, sizeof(dmaBuffer));
-    memset(frameBuffer, 0, sizeof(frameBuffer));
+
+    if (vncserver)
+        vncserver->setFramebufferAddr(dmaBuffer);
 }
 
 // read registers and frame buffer
@@ -75,111 +86,105 @@ Pl111::read(PacketPtr pkt)
 
     uint32_t data = 0;
 
-    if ((pkt->getAddr()& 0xffff0000) == pioAddr) {
+    assert(pkt->getAddr() >= pioAddr &&
+           pkt->getAddr() < pioAddr + pioSize);
 
-        assert(pkt->getAddr() >= pioAddr &&
-               pkt->getAddr() < pioAddr + pioSize);
+    Addr daddr = pkt->getAddr() - pioAddr;
+    pkt->allocate();
 
-        Addr daddr = pkt->getAddr()&0xFFFF;
-        pkt->allocate();
+    DPRINTF(PL111, " read register %#x size=%d\n", daddr, pkt->getSize());
 
-        DPRINTF(PL111, " read register %#x size=%d\n", daddr, pkt->getSize());
-
-        switch (daddr) {
-          case LcdTiming0:
-            data = lcdTiming0;
+    switch (daddr) {
+      case LcdTiming0:
+        data = lcdTiming0;
+        break;
+      case LcdTiming1:
+        data = lcdTiming1;
+        break;
+      case LcdTiming2:
+        data = lcdTiming2;
+        break;
+      case LcdTiming3:
+        data = lcdTiming3;
+        break;
+      case LcdUpBase:
+        data = lcdUpbase;
+        break;
+      case LcdLpBase:
+        data = lcdLpbase;
+        break;
+      case LcdControl:
+        data = lcdControl;
+        break;
+      case LcdImsc:
+        data = lcdImsc;
+        break;
+      case LcdRis:
+        data = lcdRis;
+        break;
+      case LcdMis:
+        data = lcdMis;
+        break;
+      case LcdIcr:
+        panic("LCD register at offset %#x is Write-Only\n", daddr);
+        break;
+      case LcdUpCurr:
+        data = curAddr;
+        break;
+      case LcdLpCurr:
+        data = curAddr;
+        break;
+      case ClcdCrsrCtrl:
+        data = clcdCrsrCtrl;
+        break;
+      case ClcdCrsrConfig:
+        data = clcdCrsrConfig;
+        break;
+      case ClcdCrsrPalette0:
+        data = clcdCrsrPalette0;
+        break;
+      case ClcdCrsrPalette1:
+        data = clcdCrsrPalette1;
+        break;
+      case ClcdCrsrXY:
+        data = clcdCrsrXY;
+        break;
+      case ClcdCrsrClip:
+        data = clcdCrsrClip;
+        break;
+      case ClcdCrsrImsc:
+        data = clcdCrsrImsc;
+        break;
+      case ClcdCrsrIcr:
+        panic("CLCD register at offset %#x is Write-Only\n", daddr);
+        break;
+      case ClcdCrsrRis:
+        data = clcdCrsrRis;
+        break;
+      case ClcdCrsrMis:
+        data = clcdCrsrMis;
+        break;
+      default:
+        if (AmbaDev::readId(pkt, AMBA_ID, pioAddr)) {
+            // Hack for variable size accesses
+            data = pkt->get<uint32_t>();
             break;
-          case LcdTiming1:
-            data = lcdTiming1;
+        } else if (daddr >= CrsrImage && daddr <= 0xBFC) {
+            // CURSOR IMAGE
+            int index;
+            index = (daddr - CrsrImage) >> 2;
+            data= cursorImage[index];
             break;
-          case LcdTiming2:
-            data = lcdTiming2;
+        } else if (daddr >= LcdPalette && daddr <= 0x3FC) {
+            // LCD Palette
+            int index;
+            index = (daddr - LcdPalette) >> 2;
+            data = lcdPalette[index];
             break;
-          case LcdTiming3:
-            data = lcdTiming3;
-            break;
-          case LcdUpBase:
-            data = lcdUpbase;
-            break;
-          case LcdLpBase:
-            data = lcdLpbase;
-            break;
-          case LcdControl:
-            data = lcdControl;
-            break;
-          case LcdImsc:
-            warn("LCD interrupt set/clear function not supported\n");
-            data = lcdImsc;
-            break;
-          case LcdRis:
-            warn("LCD Raw interrupt status function not supported\n");
-            data = lcdRis;
-            break;
-          case LcdMis:
-            warn("LCD Masked interrupt status function not supported\n");
-            data = lcdMis;
-            break;
-          case LcdIcr:
-            panic("LCD register at offset %#x is Write-Only\n", daddr);
-            break;
-          case LcdUpCurr:
-            data = lcdUpcurr;
-            break;
-          case LcdLpCurr:
-            data = lcdLpcurr;
-            break;
-          case ClcdCrsrCtrl:
-            data = clcdCrsrCtrl;
-            break;
-          case ClcdCrsrConfig:
-            data = clcdCrsrConfig;
-            break;
-          case ClcdCrsrPalette0:
-            data = clcdCrsrPalette0;
-            break;
-          case ClcdCrsrPalette1:
-            data = clcdCrsrPalette1;
-            break;
-          case ClcdCrsrXY:
-            data = clcdCrsrXY;
-            break;
-          case ClcdCrsrClip:
-            data = clcdCrsrClip;
-            break;
-          case ClcdCrsrImsc:
-            data = clcdCrsrImsc;
-            break;
-          case ClcdCrsrIcr:
-            panic("CLCD register at offset %#x is Write-Only\n", daddr);
-            break;
-          case ClcdCrsrRis:
-            data = clcdCrsrRis;
-            break;
-          case ClcdCrsrMis:
-            data = clcdCrsrMis;
-            break;
-          default:
-            if (AmbaDev::readId(pkt, AMBA_ID, pioAddr)) {
-                // Hack for variable size accesses
-                data = pkt->get<uint32_t>();
-                break;
-            } else if (daddr >= CrsrImage && daddr <= 0xBFC) {
-                // CURSOR IMAGE
-                int index;
-                index = (daddr - CrsrImage) >> 2;
-                data= cursorImage[index];
-                break;
-            } else if (daddr >= LcdPalette && daddr <= 0x3FC) {
-                // LCD Palette
-                int index;
-                index = (daddr - LcdPalette) >> 2;
-                data = lcdPalette[index];
-                break;
-            } else {
-                panic("Tried to read CLCD register at offset %#x that \
+        } else {
+            panic("Tried to read CLCD register at offset %#x that \
                        doesn't exist\n", daddr);
-                break;
-            }
+            break;
         }
     }
 
@@ -226,119 +231,133 @@ Pl111::write(PacketPtr pkt)
         break;
     }
 
-    if ((pkt->getAddr()& 0xffff0000) == pioAddr) {
+    assert(pkt->getAddr() >= pioAddr &&
+           pkt->getAddr() < pioAddr + pioSize);
 
-        assert(pkt->getAddr() >= pioAddr &&
-               pkt->getAddr() < pioAddr + pioSize);
+    Addr daddr = pkt->getAddr() - pioAddr;
 
-        Addr daddr = pkt->getAddr() - pioAddr;
+    DPRINTF(PL111, " write register %#x value %#x size=%d\n", daddr,
+            pkt->get<uint8_t>(), pkt->getSize());
 
-        DPRINTF(PL111, " write register %#x value %#x size=%d\n", daddr,
-                pkt->get<uint8_t>(), pkt->getSize());
+    switch (daddr) {
+      case LcdTiming0:
+        lcdTiming0 = data;
+        // width = 16 * (PPL+1)
+        width = (lcdTiming0.ppl + 1) << 4;
+        break;
+      case LcdTiming1:
+        lcdTiming1 = data;
+        // height = LPP + 1
+        height = (lcdTiming1.lpp) + 1;
+        break;
+      case LcdTiming2:
+        lcdTiming2 = data;
+        break;
+      case LcdTiming3:
+        lcdTiming3 = data;
+        break;
+      case LcdUpBase:
+        lcdUpbase = data;
+        DPRINTF(PL111, "####### Upper panel base set to: %#x #######\n", lcdUpbase);
+        break;
+      case LcdLpBase:
+        warn("LCD dual screen mode not supported\n");
+        lcdLpbase = data;
+        DPRINTF(PL111, "###### Lower panel base set to: %#x #######\n", lcdLpbase);
+        break;
+      case LcdControl:
+        int old_lcdpwr;
+        old_lcdpwr = lcdControl.lcdpwr;
+        lcdControl = data;
 
-        switch (daddr) {
-          case LcdTiming0:
-            lcdTiming0 = data;
-            // width = 16 * (PPL+1)
-            width = (lcdTiming0.ppl + 1) << 4;
+        DPRINTF(PL111, "LCD power is:%d\n", lcdControl.lcdpwr);
+
+        // LCD power enable
+        if (lcdControl.lcdpwr && !old_lcdpwr) {
+            updateVideoParams();
+            DPRINTF(PL111, " lcd size: height %d width %d\n", height, width);
+            waterMark = lcdControl.watermark ? 8 : 4;
+            startDma();
+        }
+        break;
+      case LcdImsc:
+        lcdImsc = data;
+        if (lcdImsc.vcomp)
+            panic("Interrupting on vcomp not supported\n");
+
+        lcdMis = lcdImsc & lcdRis;
+
+        if (!lcdMis)
+            gic->clearInt(intNum);
+
+         break;
+      case LcdRis:
+        panic("LCD register at offset %#x is Read-Only\n", daddr);
+        break;
+      case LcdMis:
+        panic("LCD register at offset %#x is Read-Only\n", daddr);
+        break;
+      case LcdIcr:
+        lcdRis = lcdRis & ~data;
+        lcdMis = lcdImsc & lcdRis;
+
+        if (!lcdMis)
+            gic->clearInt(intNum);
+
+        break;
+      case LcdUpCurr:
+        panic("LCD register at offset %#x is Read-Only\n", daddr);
+        break;
+      case LcdLpCurr:
+        panic("LCD register at offset %#x is Read-Only\n", daddr);
+        break;
+      case ClcdCrsrCtrl:
+        clcdCrsrCtrl = data;
+        break;
+      case ClcdCrsrConfig:
+        clcdCrsrConfig = data;
+        break;
+      case ClcdCrsrPalette0:
+        clcdCrsrPalette0 = data;
+        break;
+      case ClcdCrsrPalette1:
+        clcdCrsrPalette1 = data;
+        break;
+      case ClcdCrsrXY:
+        clcdCrsrXY = data;
+        break;
+      case ClcdCrsrClip:
+        clcdCrsrClip = data;
+        break;
+      case ClcdCrsrImsc:
+        clcdCrsrImsc = data;
+        break;
+      case ClcdCrsrIcr:
+        clcdCrsrIcr = data;
+        break;
+      case ClcdCrsrRis:
+        panic("CLCD register at offset %#x is Read-Only\n", daddr);
+        break;
+      case ClcdCrsrMis:
+        panic("CLCD register at offset %#x is Read-Only\n", daddr);
+        break;
+      default:
+        if (daddr >= CrsrImage && daddr <= 0xBFC) {
+            // CURSOR IMAGE
+            int index;
+            index = (daddr - CrsrImage) >> 2;
+            cursorImage[index] = data;
             break;
-          case LcdTiming1:
-            lcdTiming1 = data;
-            // height = LPP + 1
-            height  = (lcdTiming1.lpp) + 1;
+        } else if (daddr >= LcdPalette && daddr <= 0x3FC) {
+            // LCD Palette
+            int index;
+            index = (daddr - LcdPalette) >> 2;
+            lcdPalette[index] = data;
             break;
-          case LcdTiming2:
-            lcdTiming2 = data;
-            break;
-          case LcdTiming3:
-            lcdTiming3 = data;
-            break;
-          case LcdUpBase:
-            lcdUpbase  = data;
-            break;
-          case LcdLpBase:
-            warn("LCD dual screen mode not supported\n");
-            lcdLpbase  = data;
-            break;
-          case LcdControl:
-            int old_lcdpwr;
-            old_lcdpwr = lcdControl.lcdpwr;
-            lcdControl = data;
-            // LCD power enable
-            if (lcdControl.lcdpwr&&!old_lcdpwr) {
-                DPRINTF(PL111, " lcd size: height %d width %d\n", height, width);
-                waterMark = lcdControl.watermark ? 8 : 4;
-                readFramebuffer();
-            }
-            break;
-          case LcdImsc:
-            warn("LCD interrupt mask set/clear not supported\n");
-            lcdImsc    = data;
-            break;
-          case LcdRis:
-            warn("LCD register at offset %#x is Read-Only\n", daddr);
-            break;
-          case LcdMis:
-            warn("LCD register at offset %#x is Read-Only\n", daddr);
-            break;
-          case LcdIcr:
-            warn("LCD interrupt clear not supported\n");
-            lcdIcr     = data;
-            break;
-          case LcdUpCurr:
-            warn("LCD register at offset %#x is Read-Only\n", daddr);
-            break;
-          case LcdLpCurr:
-            warn("LCD register at offset %#x is Read-Only\n", daddr);
-            break;
-          case ClcdCrsrCtrl:
-            clcdCrsrCtrl = data;
-            break;
-          case ClcdCrsrConfig:
-            clcdCrsrConfig = data;
-            break;
-          case ClcdCrsrPalette0:
-            clcdCrsrPalette0 = data;
-            break;
-          case ClcdCrsrPalette1:
-            clcdCrsrPalette1 = data;
-            break;
-          case ClcdCrsrXY:
-            clcdCrsrXY = data;
-            break;
-          case ClcdCrsrClip:
-            clcdCrsrClip = data;
-            break;
-          case ClcdCrsrImsc:
-            clcdCrsrImsc = data;
-            break;
-          case ClcdCrsrIcr:
-            clcdCrsrIcr = data;
-            break;
-          case ClcdCrsrRis:
-            warn("CLCD register at offset %#x is Read-Only\n", daddr);
-            break;
-          case ClcdCrsrMis:
-            warn("CLCD register at offset %#x is Read-Only\n", daddr);
-            break;
-          default:
-            if (daddr >= CrsrImage && daddr <= 0xBFC) {
-                // CURSOR IMAGE
-                int index;
-                index = (daddr - CrsrImage) >> 2;
-                cursorImage[index] = data;
-                break;
-            } else if (daddr >= LcdPalette && daddr <= 0x3FC) {
-                // LCD Palette
-                int index;
-                index = (daddr - LcdPalette) >> 2;
-                lcdPalette[index] = data;
-                break;
-            } else {
-                panic("Tried to write PL111 register at offset %#x that \
+        } else {
+            panic("Tried to write PL111 register at offset %#x that \
                        doesn't exist\n", daddr);
-                break;
-            }
+            break;
         }
     }
 
@@ -347,17 +366,75 @@ Pl111::write(PacketPtr pkt)
 }
 
 void
+Pl111::updateVideoParams()
+{
+        if (lcdControl.lcdbpp == bpp24) {
+            bytesPerPixel = 4;
+        } else if (lcdControl.lcdbpp == bpp16m565) {
+            bytesPerPixel = 2;
+        }
+
+        if (vncserver) {
+            if (lcdControl.lcdbpp == bpp24 && lcdControl.bgr)
+                vncserver->setFrameBufferParams(VideoConvert::bgr8888, width,
+                       height);
+            else if (lcdControl.lcdbpp == bpp24 && !lcdControl.bgr)
+                vncserver->setFrameBufferParams(VideoConvert::rgb8888, width,
+                       height);
+            else if (lcdControl.lcdbpp == bpp16m565 && lcdControl.bgr)
+                vncserver->setFrameBufferParams(VideoConvert::bgr565, width,
+                       height);
+            else if (lcdControl.lcdbpp == bpp16m565 && !lcdControl.bgr)
+                vncserver->setFrameBufferParams(VideoConvert::rgb565, width,
+                       height);
+            else
+                panic("Unimplemented video mode\n");
+        }
+
+        if (bmp)
+            delete bmp;
+
+        if (lcdControl.lcdbpp == bpp24 && lcdControl.bgr)
+            bmp = new Bitmap(VideoConvert::bgr8888, width, height, dmaBuffer);
+        else if (lcdControl.lcdbpp == bpp24 && !lcdControl.bgr)
+            bmp = new Bitmap(VideoConvert::rgb8888, width, height, dmaBuffer);
+        else if (lcdControl.lcdbpp == bpp16m565 && lcdControl.bgr)
+            bmp = new Bitmap(VideoConvert::bgr565, width, height, dmaBuffer);
+        else if (lcdControl.lcdbpp == bpp16m565 && !lcdControl.bgr)
+            bmp = new Bitmap(VideoConvert::rgb565, width, height, dmaBuffer);
+        else
+            panic("Unimplemented video mode\n");
+}
+
+void
+Pl111::startDma()
+{
+    if (dmaPendingNum != 0 || readEvent.scheduled())
+        return;
+    readFramebuffer();
+}
+
+void
 Pl111::readFramebuffer()
 {
     // initialization for dma read from frame buffer to dma buffer
-    uint32_t length  = height*width;
-    if (startAddr != lcdUpbase) {
+    uint32_t length = height * width;
+    if (startAddr != lcdUpbase)
         startAddr = lcdUpbase;
-    }
+
+    // Updating base address, interrupt if we're supposed to
+    lcdRis.baseaddr = 1;
+    if (!intEvent.scheduled())
+        schedule(intEvent, nextCycle());
+
     curAddr = 0;
     startTime = curTick();
-    maxAddr = static_cast<Addr>(length*sizeof(uint32_t));
-    dmaPendingNum =0 ;
+
+    maxAddr = static_cast<Addr>(length * bytesPerPixel);
+
+    DPRINTF(PL111, " lcd frame buffer size of %d bytes \n", maxAddr);
+
+    dmaPendingNum = 0;
 
     fillFifo();
 }
@@ -369,11 +446,16 @@ Pl111::fillFifo()
         // concurrent dma reads need different dma done events
         // due to assertion in scheduling state
         ++dmaPendingNum;
-        DPRINTF(PL111, " ++ DMA pending number %d read addr %#x\n",
-                dmaPendingNum, curAddr);
+
         assert(!dmaDoneEvent[dmaPendingNum-1].scheduled());
-        dmaRead(curAddr + startAddr, dmaSize, &dmaDoneEvent[dmaPendingNum-1],
-                curAddr + dmaBuffer);
+
+        // We use a uncachable request here because the requests from the CPU
+        // will be uncacheable as well. If we have uncacheable and cacheable
+        // requests in the memory system for the same address it won't be
+        // pleased
+        dmaPort->dmaAction(MemCmd::ReadReq, curAddr + startAddr, dmaSize,
+                &dmaDoneEvent[dmaPendingNum-1], curAddr + dmaBuffer, 0,
+                Request::UNCACHEABLE);
         curAddr += dmaSize;
     }
 }
@@ -381,27 +463,34 @@ Pl111::fillFifo()
 void
 Pl111::dmaDone()
 {
-    Tick maxFrameTime = lcdTiming2.cpl*height*clock;
+    Tick maxFrameTime = lcdTiming2.cpl * height * clock;
 
     --dmaPendingNum;
 
-    DPRINTF(PL111, " -- DMA pending number %d\n", dmaPendingNum);
-
     if (maxAddr == curAddr && !dmaPendingNum) {
-        if ((curTick() - startTime) > maxFrameTime)
+        if ((curTick() - startTime) > maxFrameTime) {
             warn("CLCD controller buffer underrun, took %d cycles when should"
                  " have taken %d\n", curTick() - startTime, maxFrameTime);
+            lcdRis.underflow = 1;
+            if (!intEvent.scheduled())
+                schedule(intEvent, nextCycle());
+        }
 
-        // double buffering so the vnc server doesn't see a tear in the screen
-        memcpy(frameBuffer, dmaBuffer, maxAddr);
         assert(!readEvent.scheduled());
+        if (vncserver)
+            vncserver->setDirty();
 
         DPRINTF(PL111, "-- write out frame buffer into bmp\n");
-        writeBMP(frameBuffer);
+
+        assert(bmp);
+        pic->seekp(0);
+        bmp->write(pic);
 
         DPRINTF(PL111, "-- schedule next dma read event at %d tick \n",
                 maxFrameTime + curTick());
-        schedule(readEvent, nextCycle(startTime + maxFrameTime));
+
+        if (lcdControl.lcden)
+            schedule(readEvent, nextCycle(startTime + maxFrameTime));
     }
 
     if (dmaPendingNum > (maxOutstandingDma - waterMark))
@@ -409,8 +498,8 @@ Pl111::dmaDone()
 
     if (!fillFifoEvent.scheduled())
         schedule(fillFifoEvent, nextCycle());
-
 }
+
 
 Tick
 Pl111::nextCycle()
@@ -429,33 +518,6 @@ Pl111::nextCycle(Tick beginTick)
 
     assert(nextTick >= curTick());
     return nextTick;
-}
-
-// write out the frame buffer into a bitmap file
-void
-Pl111::writeBMP(uint32_t* frameBuffer)
-{
-    fstream pic;
-
-    // write out bmp head
-    std::string filename = "./m5out/frameBuffer.bmp";
-    pic.open(filename.c_str(), ios::out|ios::binary);
-    Bitmap bm(pic, height, width);
-
-    DPRINTF(PL111, "-- write out data into bmp\n");
-
-    // write out frame buffer data
-    for (int i = height -1; i >= 0; --i) {
-        for (int j = 0; j< width; ++j) {
-            uint32_t pixel = frameBuffer[i*width + j];
-            pic.write(reinterpret_cast<char*>(&pixel),
-                      sizeof(uint32_t));
-            DPRINTF(PL111, " write pixel data  %#x at addr %#x\n",
-                    pixel, i*width + j);
-        }
-    }
-
-    pic.close();
 }
 
 void
@@ -490,9 +552,6 @@ Pl111::serialize(std::ostream &os)
     uint8_t lcdMis_serial = lcdMis;
     SERIALIZE_SCALAR(lcdMis_serial);
 
-    uint8_t lcdIcr_serial = lcdIcr;
-    SERIALIZE_SCALAR(lcdIcr_serial);
-
     SERIALIZE_ARRAY(lcdPalette, LcdPaletteSize);
     SERIALIZE_ARRAY(cursorImage, CrsrImageSize);
 
@@ -518,9 +577,9 @@ Pl111::serialize(std::ostream &os)
     SERIALIZE_SCALAR(clock);
     SERIALIZE_SCALAR(height);
     SERIALIZE_SCALAR(width);
+    SERIALIZE_SCALAR(bytesPerPixel);
 
-    SERIALIZE_ARRAY(dmaBuffer, height*width);
-    SERIALIZE_ARRAY(frameBuffer, height*width);
+    SERIALIZE_ARRAY(dmaBuffer, height * width);
     SERIALIZE_SCALAR(startTime);
     SERIALIZE_SCALAR(startAddr);
     SERIALIZE_SCALAR(maxAddr);
@@ -569,10 +628,6 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(lcdMis_serial);
     lcdMis = lcdMis_serial;
 
-    uint8_t lcdIcr_serial;
-    UNSERIALIZE_SCALAR(lcdIcr_serial);
-    lcdIcr = lcdIcr_serial;
-
     UNSERIALIZE_ARRAY(lcdPalette, LcdPaletteSize);
     UNSERIALIZE_ARRAY(cursorImage, CrsrImageSize);
 
@@ -602,25 +657,29 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(clock);
     UNSERIALIZE_SCALAR(height);
     UNSERIALIZE_SCALAR(width);
+    UNSERIALIZE_SCALAR(bytesPerPixel);
 
-    UNSERIALIZE_ARRAY(dmaBuffer, height*width);
-    UNSERIALIZE_ARRAY(frameBuffer, height*width);
+    UNSERIALIZE_ARRAY(dmaBuffer, height * width);
     UNSERIALIZE_SCALAR(startTime);
     UNSERIALIZE_SCALAR(startAddr);
     UNSERIALIZE_SCALAR(maxAddr);
     UNSERIALIZE_SCALAR(curAddr);
     UNSERIALIZE_SCALAR(waterMark);
     UNSERIALIZE_SCALAR(dmaPendingNum);
+
+    updateVideoParams();
+    if (vncserver)
+        vncserver->setDirty();
 }
 
 void
 Pl111::generateInterrupt()
 {
     DPRINTF(PL111, "Generate Interrupt: lcdImsc=0x%x lcdRis=0x%x lcdMis=0x%x\n",
-            lcdImsc, lcdRis, lcdMis);
+            (uint32_t)lcdImsc, (uint32_t)lcdRis, (uint32_t)lcdMis);
     lcdMis = lcdImsc & lcdRis;
 
-    if (lcdMis.ffufie || lcdMis.nbupie || lcdMis.vtcpie || lcdMis.ahmeie) {
+    if (lcdMis.underflow || lcdMis.baseaddr || lcdMis.vcomp || lcdMis.ahbmaster) {
         gic->sendInt(intNum);
         DPRINTF(PL111, " -- Generated\n");
     }
@@ -639,15 +698,4 @@ Pl111Params::create()
     return new Pl111(this);
 }
 
-// bitmap class ctor
-Bitmap::Bitmap(std::fstream& bmp, uint16_t h, uint16_t w)
-{
-    Magic  magic  = {{'B','M'}};
-    Header header = {sizeof(Color)*w*h , 0, 0, 54};
-    Info   info   = {sizeof(Info), w, h, 1, sizeof(Color)*8, 0,
-                     ( sizeof(Color) *(w*h) ), 1, 1, 0, 0};
 
-    bmp.write(reinterpret_cast<char*>(&magic),  sizeof(magic));
-    bmp.write(reinterpret_cast<char*>(&header), sizeof(header));
-    bmp.write(reinterpret_cast<char*>(&info),   sizeof(info));
-}

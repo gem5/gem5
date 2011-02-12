@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -40,74 +37,58 @@
  * Authors: Ali Saidi
  */
 
+#ifndef __DEV_PS2_HH__
+#define __DEV_PS2_HH__
 
-/** @file
- * This is a base class for AMBA devices that have to respond to Device and
- * Implementer ID calls.
+#include <stdint.h>
+
+#include "base/bitunion.hh"
+
+/** @file misc functions and constants required to interface with or emulate ps2
+ * devices
  */
 
-#ifndef __DEV_ARM_AMBA_DEVICE_HH__
-#define __DEV_ARM_AMBA_DEVICE_HH__
-
-#include "base/range.hh"
-#include "dev/io_device.hh"
-#include "dev/arm/gic.hh"
-#include "mem/packet.hh"
-#include "mem/packet_access.hh"
-#include "params/AmbaDevice.hh"
-#include "params/AmbaIntDevice.hh"
-#include "params/AmbaDmaDevice.hh"
-
-namespace AmbaDev {
-
-const int AMBA_PER_ID0 = 0xFE0;
-const int AMBA_PER_ID1 = 0xFE4;
-const int AMBA_PER_ID2 = 0xFE8;
-const int AMBA_PER_ID3 = 0xFEC;
-const int AMBA_CEL_ID0 = 0xFF0;
-const int AMBA_CEL_ID1 = 0xFF4;
-const int AMBA_CEL_ID2 = 0xFF8;
-const int AMBA_CEL_ID3 = 0xFFC;
-
-bool readId(PacketPtr pkt, uint64_t amba_id, Addr pio_addr);
-}
-
-class AmbaDevice : public BasicPioDevice
-{
-  protected:
-    uint64_t ambaId;
-
-  public:
-    typedef AmbaDeviceParams Params;
-    AmbaDevice(const Params *p);
+namespace Ps2 {
+enum {
+    Ps2Reset        = 0xff,
+    SelfTestPass    = 0xAA,
+    SetStatusLed    = 0xed,
+    SetResolution   = 0xe8,
+    StatusRequest   = 0xe9,
+    SetScaling1_2   = 0xe7,
+    SetScaling1_1   = 0xe6,
+    ReadId          = 0xf2,
+    TpReadId        = 0xe1,
+    Ack             = 0xfa,
+    SetRate         = 0xf3,
+    Enable          = 0xf4,
+    Disable         = 0xf6,
+    KeyboardId      = 0xab,
+    TouchKitId      = 0x0a,
+    MouseId         = 0x00,
 };
 
-class AmbaIntDevice : public AmbaDevice
-{
-  protected:
-    int intNum;
-    Gic *gic;
-    Tick intDelay;
+/** A bitfield that represents the first byte of a mouse movement packet
+ */
+BitUnion8(Ps2MouseMovement)
+    Bitfield<0> leftButton;
+    Bitfield<1> rightButton;
+    Bitfield<2> middleButton;
+    Bitfield<3> one;
+    Bitfield<4> xSign;
+    Bitfield<5> ySign;
+    Bitfield<6> xOverflow;
+    Bitfield<7> yOverflow;
+EndBitUnion(Ps2MouseMovement)
 
-  public:
-    typedef AmbaIntDeviceParams Params;
-    AmbaIntDevice(const Params *p);
-};
+/** Convert an x11 key symbol into a set of ps2 charecters.
+ * @param key x11 key symbol
+ * @param down if the key is being pressed or released
+ * @param cur_shift if device has already sent a shift
+ * @param keys list of keys command to send to emulate the x11 key symbol
+ */
+void keySymToPs2(uint32_t key, bool down, bool &cur_shift,
+        std::list<uint8_t> &keys);
 
-class AmbaDmaDevice : public DmaDevice
-{
-  protected:
-    uint64_t ambaId;
-    Addr     pioAddr;
-    Addr     pioSize;
-    Tick     pioDelay;
-    int      intNum;
-    Gic      *gic;
-
-  public:
-    typedef AmbaDmaDeviceParams Params;
-    AmbaDmaDevice(const Params *p);
-};
-
-
-#endif //__DEV_ARM_AMBA_DEVICE_HH__
+} /* namespace Ps2 */
+#endif // __DEV_PS2_HH__
