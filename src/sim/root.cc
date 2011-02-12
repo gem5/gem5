@@ -108,7 +108,18 @@ Root::Root(RootParams *p) : SimObject(p), _enabled(false),
     assert(_root == NULL);
     _root = this;
     lastTime.setTimer();
-    timeSyncEnable(p->time_sync_enable);
+}
+
+void
+Root::initState()
+{
+    timeSyncEnable(params()->time_sync_enable);
+}
+
+void
+Root::loadState(Checkpoint *cp)
+{
+    timeSyncEnable(params()->time_sync_enable);
 }
 
 Root *
