@@ -178,11 +178,11 @@ Sp804::Timer::restartCounter(uint32_t val)
     if (!control.timerEnable)
         return;
 
-    Tick time = clock << power(16, control.timerPrescale);
+    Tick time = clock * power(16, control.timerPrescale);
     if (control.timerSize)
-        time *= bits(val,15,0);
-    else
         time *= val;
+    else
+        time *= bits(val,15,0);
 
     if (zeroEvent.scheduled()) {
         DPRINTF(Timer, "-- Event was already schedule, de-scheduling\n");
