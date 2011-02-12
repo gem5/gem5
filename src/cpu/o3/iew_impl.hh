@@ -1241,11 +1241,32 @@ DefaultIEW<Impl>::executeInsts()
                 // Loads will mark themselves as executed, and their writeback
                 // event adds the instruction to the queue to commit
                 fault = ldstQueue.executeLoad(inst);
+
+                if (inst->isTranslationDelayed() &&
+                    fault == NoFault) {
+                    // A hw page table walk is currently going on; the
+                    // instruction must be deferred.
+                    DPRINTF(IEW, "Execute: Delayed translation, deferring "
+                            "load.\n");
+                    instQueue.deferMemInst(inst);
+                    continue;
+                }
+
                 if (inst->isDataPrefetch() || inst->isInstPrefetch()) {
                     fault = NoFault;
                 }
             } else if (inst->isStore()) {
                 fault = ldstQueue.executeStore(inst);
+
+                if (inst->isTranslationDelayed() &&
+                    fault == NoFault) {
+                    // A hw page table walk is currently going on; the
+                    // instruction must be deferred.
+                    DPRINTF(IEW, "Execute: Delayed translation, deferring "
+                            "store.\n");
+                    instQueue.deferMemInst(inst);
+                    continue;
+                }
 
                 // If the store had a fault then it may not have a mem req
                 if (fault != NoFault || inst->readPredicate() == false ||

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -180,6 +192,11 @@ class InstructionQueue
      */
     DynInstPtr getInstToExecute();
 
+    /** Returns a memory instruction that was referred due to a delayed DTB
+     *  translation if it is now ready to execute.
+     */
+    DynInstPtr getDeferredMemInstToExecute();
+
     /**
      * Records the instruction as the producer of a register without
      * adding it to the rest of the IQ.
@@ -222,6 +239,12 @@ class InstructionQueue
 
     /** Completes a memory operation. */
     void completeMemInst(DynInstPtr &completed_inst);
+
+    /**
+     * Defers a memory instruction when its DTB translation incurs a hw
+     * page table walk.
+     */
+    void deferMemInst(DynInstPtr &deferred_inst);
 
     /** Indicates an ordering violation between a store and a load. */
     void violation(DynInstPtr &store, DynInstPtr &faulting_load);
@@ -283,6 +306,11 @@ class InstructionQueue
 
     /** List of instructions that are ready to be executed. */
     std::list<DynInstPtr> instsToExecute;
+
+    /** List of instructions waiting for their DTB translation to
+     *  complete (hw page table walk in progress).
+     */
+    std::list<DynInstPtr> deferredMemInsts;
 
     /**
      * Struct for comparing entries to be added to the priority queue.
