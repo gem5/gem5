@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 10 2011 20:38:27
-M5 revision 944f6c89dbb7 7941 default qtip regwidthdecstats.patch tip
-M5 started Feb 10 2011 20:38:30
+M5 compiled Feb 10 2011 23:58:37
+M5 revision a36c6a370231 7943 default qtip resforflagsstats.patch tip
+M5 started Feb 10 2011 23:58:40
 M5 executing on burrito
 command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second

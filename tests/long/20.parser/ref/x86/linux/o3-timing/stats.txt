@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 136830                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 244640                       # Number of bytes of host memory used
-host_seconds                                 11174.38                       # Real time elapsed on the host
-host_tick_rate                               62508267                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 139548                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 244652                       # Number of bytes of host memory used
+host_seconds                                 10956.69                       # Real time elapsed on the host
+host_tick_rate                               63750196                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                  1528988756                       # Number of instructions simulated
 sim_seconds                                  0.698491                       # Number of seconds simulated
@@ -217,9 +217,9 @@ system.cpu.iew.EXEC:rate                     1.173655                       # In
 system.cpu.iew.EXEC:refs                    571924541                       # number of memory reference insts executed
 system.cpu.iew.EXEC:stores                  156120222                       # Number of stores executed
 system.cpu.iew.EXEC:swp                             0                       # number of swp insts executed
-system.cpu.iew.WB:consumers                1636048139                       # num instructions consuming a value
+system.cpu.iew.WB:consumers                1557537154                       # num instructions consuming a value
 system.cpu.iew.WB:count                    1628444279                       # cumulative count of insts written-back
-system.cpu.iew.WB:fanout                     0.722963                       # average fanout of values written-back
+system.cpu.iew.WB:fanout                     0.759406                       # average fanout of values written-back
 system.cpu.iew.WB:penalized                         0                       # number of instrctions required to write to 'other' IQ
 system.cpu.iew.WB:penalized_rate                    0                       # fraction of instructions written-back that wrote to 'other' IQ
 system.cpu.iew.WB:producers                1182802327                       # num instructions producing a value
@@ -253,7 +253,7 @@ system.cpu.iew.lsq.thread.0.squashedStores     21387316                       # 
 system.cpu.iew.memOrderViolationEvents         154646                       # Number of memory order violations
 system.cpu.iew.predictedNotTakenIncorrect       515713                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.predictedTakenIncorrect       18238103                       # Number of branches that were predicted taken incorrectly
-system.cpu.int_regfile_reads               3040879637                       # number of integer regfile reads
+system.cpu.int_regfile_reads               2891828761                       # number of integer regfile reads
 system.cpu.int_regfile_writes              1524435086                       # number of integer regfile writes
 system.cpu.ipc                               1.094494                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         1.094494                       # IPC: Total IPC of All Threads
@@ -360,7 +360,7 @@ system.cpu.iq.iqNonSpecInstsAdded                 570                       # Nu
 system.cpu.iq.iqSquashedInstsExamined       250539717                       # Number of squashed instructions iterated over during squash; mainly for profiling
 system.cpu.iq.iqSquashedInstsIssued             30635                       # Number of squashed instructions issued
 system.cpu.iq.iqSquashedNonSpecRemoved             17                       # Number of squashed non-spec instructions that were removed
-system.cpu.iq.iqSquashedOperandsExamined    457117092                       # Number of squashed operands that are examined and possibly removed from graph
+system.cpu.iq.iqSquashedOperandsExamined    443519402                       # Number of squashed operands that are examined and possibly removed from graph
 system.cpu.l2cache.ReadExReq_accesses          789066                       # number of ReadExReq accesses(hits+misses)
 system.cpu.l2cache.ReadExReq_avg_miss_latency 34257.778038                       # average ReadExReq miss latency
 system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency 31001.587520                       # average ReadExReq mshr miss latency
@@ -454,7 +454,7 @@ system.cpu.rename.RENAME:IQFullEvents         5884693                       # Nu
 system.cpu.rename.RENAME:IdleCycles         361176398                       # Number of cycles rename is idle
 system.cpu.rename.RENAME:LSQFullEvents        2156935                       # Number of times rename has blocked due to LSQ full
 system.cpu.rename.RENAME:ROBFullEvents             61                       # Number of times rename has blocked due to ROB full
-system.cpu.rename.RENAME:RenameLookups     4527342452                       # Number of register rename lookups that rename has made
+system.cpu.rename.RENAME:RenameLookups     4360508954                       # Number of register rename lookups that rename has made
 system.cpu.rename.RENAME:RenamedInsts      1840516856                       # Number of instructions processed by rename
 system.cpu.rename.RENAME:RenamedOperands   1743217369                       # Number of destination operands rename has renamed
 system.cpu.rename.RENAME:RunCycles          971079353                       # Number of cycles rename is running
@@ -462,7 +462,7 @@ system.cpu.rename.RENAME:SquashCycles        39316255                       # Nu
 system.cpu.rename.RENAME:UnblockCycles       11053475                       # Number of cycles rename is unblocking
 system.cpu.rename.RENAME:UndoneMaps         315918342                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.RENAME:fp_rename_lookups          168                       # Number of floating rename lookups
-system.cpu.rename.RENAME:int_rename_lookups   4527342284                       # Number of integer rename lookups
+system.cpu.rename.RENAME:int_rename_lookups   4360508786                       # Number of integer rename lookups
 system.cpu.rename.RENAME:serializeStallCycles         6080                       # count of cycles rename stalled for serializing inst
 system.cpu.rename.RENAME:serializingInsts          557                       # count of serializing insts renamed
 system.cpu.rename.RENAME:skidInsts           18505861                       # count of insts added to the skid buffer
