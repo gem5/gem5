@@ -142,6 +142,9 @@ class MessageBuffer
     void printStats(std::ostream& out);
     void clearStats() { m_not_avail_count = 0; m_msg_counter = 0; }
 
+    void setIncomingLink(int link_id) { m_input_link_id = link_id; }
+    void setVnet(int net) { m_vnet_id = net; }
+
   private:
     //added by SS
     int m_recycle_latency;
@@ -184,6 +187,9 @@ class MessageBuffer
     bool m_ordering_set;
     bool m_randomization;
     Time m_last_arrival_time;
+
+    int m_input_link_id;
+    int m_vnet_id;
 };
 
 inline std::ostream&

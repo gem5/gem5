@@ -67,6 +67,7 @@ class Consumer
 
     virtual void wakeup() = 0;
     virtual void print(std::ostream& out) const = 0;
+    virtual void storeEventInfo(int info) {}
 
     const Time&
     getLastScheduledWakeup() const

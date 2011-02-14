@@ -69,6 +69,7 @@ class PerfectSwitch : public Consumer
     int getOutLinks() const { return m_out.size(); }
 
     void wakeup();
+    void storeEventInfo(int info);
 
     void printStats(std::ostream& out) const;
     void clearStats();
@@ -92,6 +93,7 @@ class PerfectSwitch : public Consumer
     int m_round_robin_start;
     int m_wakeups_wo_switch;
     SimpleNetwork* m_network_ptr;
+    std::vector<int> m_pending_message_count;
 };
 
 inline std::ostream&

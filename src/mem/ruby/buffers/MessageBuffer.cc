@@ -58,6 +58,8 @@ MessageBuffer::MessageBuffer(const string &name)
     m_name = name;
 
     m_stall_msg_map.clear();
+    m_input_link_id = 0;
+    m_vnet_id = 0;
 }
 
 int
@@ -228,6 +230,7 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     // Schedule the wakeup
     if (m_consumer_ptr != NULL) {
         g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, arrival_time);
+        m_consumer_ptr->storeEventInfo(m_vnet_id);
     } else {
         panic("No consumer: %s name: %s\n", *this, m_name);
     }
