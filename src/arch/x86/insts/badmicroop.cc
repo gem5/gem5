@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2011 Advanced Micro Devices
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -37,71 +37,19 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_INSTS_MACROOP_HH__
-#define __ARCH_X86_INSTS_MACROOP_HH__
-
-#include "arch/x86/emulenv.hh"
 #include "arch/x86/insts/badmicroop.hh"
-#include "arch/x86/types.hh"
-#include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/isa_traits.hh"
+#include "arch/x86/decoder.hh"
 
 namespace X86ISA
 {
-// Base class for combinationally generated macroops
-class MacroopBase : public X86StaticInst
-{
-  protected:
-    const char *macrocodeBlock;
 
-    const uint32_t numMicroops;
-    X86ISA::EmulEnv env;
+// This microop needs to be allocated on the heap even though it could
+// theoretically be statically allocated. The reference counted pointer would
+// try to delete the static memory when it was destructed.
+const StaticInstPtr badMicroop =
+    new X86ISAInst::MicroPanic(NoopMachInst, "BAD",
+        StaticInst::IsMicroop | StaticInst::IsLastMicroop,
+        "Invalid microop!", 0);
 
-    //Constructor.
-    MacroopBase(const char *mnem, ExtMachInst _machInst,
-            uint32_t _numMicroops, X86ISA::EmulEnv _env) :
-                X86StaticInst(mnem, _machInst, No_OpClass),
-                numMicroops(_numMicroops), env(_env)
-    {
-        assert(numMicroops);
-        microops = new StaticInstPtr[numMicroops];
-        flags[IsMacroop] = true;
-    }
-
-    ~MacroopBase()
-    {
-        delete [] microops;
-    }
-
-    StaticInstPtr * microops;
-
-    StaticInstPtr
-    fetchMicroop(MicroPC microPC) const
-    {
-        if (microPC >= numMicroops)
-            return badMicroop;
-        else
-            return microops[microPC];
-    }
-
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        return mnemonic;
-    }
-
-  public:
-    ExtMachInst
-    getExtMachInst()
-    {
-        return machInst;
-    }
-
-    X86ISA::EmulEnv
-    getEmulEnv()
-    {
-        return env;
-    }
-};
-}
-
-#endif //__ARCH_X86_INSTS_MACROOP_HH__
+} // namespace X86ISA
