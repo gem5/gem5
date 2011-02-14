@@ -222,7 +222,55 @@ namespace X86ISA
         return true;
     }
 
-    typedef GenericISA::UPCState<MachInst> PCState;
+    class PCState : public GenericISA::UPCState<MachInst>
+    {
+      protected:
+        typedef GenericISA::UPCState<MachInst> Base;
+
+        uint8_t _size;
+
+      public:
+        void
+        set(Addr val)
+        {
+            Base::set(val);
+            _size = 0;
+        }
+
+        PCState() {}
+        PCState(Addr val) { set(val); }
+
+        uint8_t size() const { return _size; }
+        void size(uint8_t newSize) { _size = newSize; }
+
+        void
+        advance()
+        {
+            Base::advance();
+            _size = 0;
+        }
+
+        void
+        uEnd()
+        {
+            Base::uEnd();
+            _size = 0;
+        }
+
+        void
+        serialize(std::ostream &os)
+        {
+            Base::serialize(os);
+            SERIALIZE_SCALAR(_size);
+        }
+
+        void
+        unserialize(Checkpoint *cp, const std::string &section)
+        {
+            Base::unserialize(cp, section);
+            UNSERIALIZE_SCALAR(_size);
+        }
+    };
 
     struct CoreSpecific {
         int core_type;

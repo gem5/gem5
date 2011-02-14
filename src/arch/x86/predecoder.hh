@@ -225,7 +225,11 @@ namespace X86ISA
         {
             assert(emiIsReady);
             emiIsReady = false;
-            nextPC.npc(nextPC.pc() + getInstSize());
+            if (!nextPC.size()) {
+                Addr size = getInstSize();
+                nextPC.size(size);
+                nextPC.npc(nextPC.pc() + size);
+            }
             return emi;
         }
     };
