@@ -243,6 +243,12 @@ namespace X86ISA
         uint8_t size() const { return _size; }
         void size(uint8_t newSize) { _size = newSize; }
 
+        bool
+        branching() const
+        {
+            return this->npc() != this->pc() + size();
+        }
+
         void
         advance()
         {
