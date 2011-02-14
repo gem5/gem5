@@ -51,6 +51,8 @@ def template MicroRegOpExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
+            IntReg result M5_VAR_USED;
+
             if(%(cond_check)s)
             {
                 %(code)s;
@@ -78,6 +80,8 @@ def template MicroRegOpImmExecute {{
 
             %(op_decl)s;
             %(op_rd)s;
+
+            IntReg result M5_VAR_USED;
 
             if(%(cond_check)s)
             {
@@ -434,7 +438,7 @@ let {{
         flag_code = '''
             //Don't have genFlags handle the OF or CF bits
             uint64_t mask = CFBit | ECFBit | OFBit;
-            ccFlagBits = genFlags(ccFlagBits, ext & ~mask, DestReg, psrc1, op2);
+            ccFlagBits = genFlags(ccFlagBits, ext & ~mask, result, psrc1, op2);
             //If a logic microop wants to set these, it wants to set them to 0.
             ccFlagBits &= ~(CFBit & ext);
             ccFlagBits &= ~(ECFBit & ext);
@@ -444,12 +448,12 @@ let {{
     class FlagRegOp(RegOp):
         abstract = True
         flag_code = \
-            "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, op2);"
+            "ccFlagBits = genFlags(ccFlagBits, ext, result, psrc1, op2);"
 
     class SubRegOp(RegOp):
         abstract = True
         flag_code = \
-            "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, ~op2, true);"
+            "ccFlagBits = genFlags(ccFlagBits, ext, result, psrc1, ~op2, true);"
 
     class CondRegOp(RegOp):
         abstract = True
@@ -471,44 +475,44 @@ let {{
                     src1, src2, flags, dataSize)
 
     class Add(FlagRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 + op2, dataSize);'
-        big_code = 'DestReg = (psrc1 + op2) & mask(dataSize * 8);'
+        code = 'DestReg = merge(DestReg, result = (psrc1 + op2), dataSize);'
+        big_code = 'DestReg = result = (psrc1 + op2) & mask(dataSize * 8);'
 
     class Or(LogicRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 | op2, dataSize);'
-        big_code = 'DestReg = (psrc1 | op2) & mask(dataSize * 8);'
+        code = 'DestReg = merge(DestReg, result = (psrc1 | op2), dataSize);'
+        big_code = 'DestReg = result = (psrc1 | op2) & mask(dataSize * 8);'
 
     class Adc(FlagRegOp):
         code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, psrc1 + op2 + flags.cf, dataSize);
+            DestReg = merge(DestReg, result = (psrc1 + op2 + flags.cf), dataSize);
             '''
         big_code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = (psrc1 + op2 + flags.cf) & mask(dataSize * 8);
+            DestReg = result = (psrc1 + op2 + flags.cf) & mask(dataSize * 8);
             '''
 
     class Sbb(SubRegOp):
         code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, psrc1 - op2 - flags.cf, dataSize);
+            DestReg = merge(DestReg, result = (psrc1 - op2 - flags.cf), dataSize);
             '''
         big_code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = (psrc1 - op2 - flags.cf) & mask(dataSize * 8);
+            DestReg = result = (psrc1 - op2 - flags.cf) & mask(dataSize * 8);
             '''
 
     class And(LogicRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 & op2, dataSize)'
-        big_code = 'DestReg = (psrc1 & op2) & mask(dataSize * 8)'
+        code = 'DestReg = merge(DestReg, result = (psrc1 & op2), dataSize)'
+        big_code = 'DestReg = result = (psrc1 & op2) & mask(dataSize * 8)'
 
     class Sub(SubRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 - op2, dataSize)'
-        big_code = 'DestReg = (psrc1 - op2) & mask(dataSize * 8)'
+        code = 'DestReg = merge(DestReg, result = (psrc1 - op2), dataSize)'
+        big_code = 'DestReg = result = (psrc1 - op2) & mask(dataSize * 8)'
 
     class Xor(LogicRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 ^ op2, dataSize)'
-        big_code = 'DestReg = (psrc1 ^ op2) & mask(dataSize * 8)'
+        code = 'DestReg = merge(DestReg, result = (psrc1 ^ op2), dataSize)'
+        big_code = 'DestReg = result = (psrc1 ^ op2) & mask(dataSize * 8)'
 
     class Mul1s(WrRegOp):
         code = '''

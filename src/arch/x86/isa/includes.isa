@@ -114,6 +114,7 @@ output exec {{
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bigint.hh"
+#include "base/compiler.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"

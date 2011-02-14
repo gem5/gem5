@@ -50,9 +50,6 @@ namespace X86ISA
             bool subtract) const
     {
         DPRINTF(X86, "flagMask = %#x\n", flagMask);
-        if (_destRegIdx[0] & IntFoldBit) {
-            _dest >>= 8;
-        }
         uint64_t flags = oldFlags & ~flagMask;
         if(flagMask & (ECFBit | CFBit))
         {
