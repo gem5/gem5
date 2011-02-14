@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 02:32:07
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 02:32:24
+M5 compiled Feb  7 2011 20:06:49
+M5 revision 698a266e9195 7937 default qtip regwidthdecstats.patch tip
+M5 started Feb  7 2011 20:06:52
 M5 executing on burrito
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/10.mcf/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/10.mcf/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
@@ -28,4 +28,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 170680631000 because target called exit()
+Exiting @ tick 137353348000 because target called exit()

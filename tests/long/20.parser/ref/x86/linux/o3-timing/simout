@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 02:32:07
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 02:32:13
+M5 compiled Feb 10 2011 20:38:27
+M5 revision 944f6c89dbb7 7941 default qtip regwidthdecstats.patch tip
+M5 started Feb 10 2011 20:38:30
 M5 executing on burrito
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -26,9 +26,9 @@ Processing sentences in batch mode
 
 Echoing of input sentence turned on.
 * as had expected the party to be a success , it was a success 
+info: Increasing stack size by one page.
 * do you know where John 's 
 * he said that , finding that it was impossible to get work as a waiter , he would work as a janitor 
-info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 * how fast the program is it 
 * I am wondering whether to invite to the party 
@@ -74,4 +74,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 817002039000 because target called exit()
+Exiting @ tick 698491025500 because target called exit()
