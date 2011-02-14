@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  8 2011 00:58:32
-M5 revision 705a4d351a43 7939 default qtip resforflagsstats.patch tip
-M5 started Feb  8 2011 00:58:34
+M5 compiled Feb 12 2011 02:22:23
+M5 revision 5e76f9de6972 7961 default qtip tip x86branchdetectstats.patch
+M5 started Feb 12 2011 02:22:27
 M5 executing on burrito
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/70.twolf/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/long/70.twolf/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -27,4 +27,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 114045138500 because target called exit()
+122 123 124 Exiting @ tick 108875474000 because target called exit()
