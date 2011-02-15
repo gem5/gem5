@@ -98,7 +98,7 @@ def template MicroDebugExecute {{
 }};
 
 def template MicroDebugConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             std::string _message, uint8_t _cc) :
         %(base_class)s(machInst, "%(func)s", instMnem,
