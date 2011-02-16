@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -397,6 +409,7 @@ InstructionQueue<Impl>::resetState()
     }
     nonSpecInsts.clear();
     listOrder.clear();
+    deferredMemInsts.clear();
 }
 
 template <class Impl>
@@ -733,6 +746,15 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
     IssueStruct *i2e_info = issueToExecuteQueue->access(0);
 
+    DynInstPtr deferred_mem_inst;
+    int total_deferred_mem_issued = 0;
+    while (total_deferred_mem_issued < totalWidth &&
+           (deferred_mem_inst = getDeferredMemInstToExecute()) != 0) {
+        issueToExecuteQueue->access(0)->size++;
+        instsToExecute.push_back(deferred_mem_inst);
+        total_deferred_mem_issued++;
+    }
+
     // Have iterator to head of the list
     // While I haven't exceeded bandwidth or reached the end of the list,
     // Try to get a FU that can do what this op needs.
@@ -745,7 +767,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     ListOrderIt order_end_it = listOrder.end();
     int total_issued = 0;
 
-    while (total_issued < totalWidth &&
+    while (total_issued < (totalWidth - total_deferred_mem_issued) &&
            iewStage->canIssue() &&
            order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
@@ -858,7 +880,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     iqInstsIssued+= total_issued;
 
     // If we issued any instructions, tell the CPU we had activity.
-    if (total_issued) {
+    if (total_issued || total_deferred_mem_issued) {
         cpu->activityThisCycle();
     } else {
         DPRINTF(IQ, "Not able to schedule any instructions.\n");
@@ -1021,6 +1043,11 @@ void
 InstructionQueue<Impl>::rescheduleMemInst(DynInstPtr &resched_inst)
 {
     DPRINTF(IQ, "Rescheduling mem inst [sn:%lli]\n", resched_inst->seqNum);
+
+    // Reset DTB translation state
+    resched_inst->translationStarted = false;
+    resched_inst->translationCompleted = false;
+
     resched_inst->clearCanIssue();
     memDepUnit[resched_inst->threadNumber].reschedule(resched_inst);
 }
@@ -1047,6 +1074,28 @@ InstructionQueue<Impl>::completeMemInst(DynInstPtr &completed_inst)
 
     memDepUnit[tid].completed(completed_inst);
     count[tid]--;
+}
+
+template <class Impl>
+void
+InstructionQueue<Impl>::deferMemInst(DynInstPtr &deferred_inst)
+{
+    deferredMemInsts.push_back(deferred_inst);
+}
+
+template <class Impl>
+typename Impl::DynInstPtr
+InstructionQueue<Impl>::getDeferredMemInstToExecute()
+{
+    for (ListIt it = deferredMemInsts.begin(); it != deferredMemInsts.end();
+         ++it) {
+        if ((*it)->translationCompleted) {
+            DynInstPtr ret = *it;
+            deferredMemInsts.erase(it);
+            return ret;
+        }
+    }
+    return NULL;
 }
 
 template <class Impl>

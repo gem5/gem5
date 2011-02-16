@@ -47,10 +47,18 @@
 #include "mem/packet_access.hh"
 
 const uint64_t AmbaVendor = ULL(0xb105f00d00000000);
+
 AmbaDevice::AmbaDevice(const Params *p)
     : BasicPioDevice(p), ambaId(AmbaVendor | p->amba_id)
 {
 }
+
+AmbaIntDevice::AmbaIntDevice(const Params *p)
+    : AmbaDevice(p), intNum(p->int_num), gic(p->gic), intDelay(p->int_delay)
+{
+}
+
+
 
 AmbaDmaDevice::AmbaDmaDevice(const Params *p)
     : DmaDevice(p), ambaId(AmbaVendor | p->amba_id),

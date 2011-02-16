@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 20 2010 12:10:28
-M5 revision c4b5df973361+ 7570+ default qtip tip brad/regress_updates
-M5 started Aug 20 2010 12:10:38
-M5 executing on SC2B0629
+M5 compiled Feb  8 2011 17:41:34
+M5 revision 685719afafe6+ 7938+ default tip brad/increase_ruby_mem_test_threshold qtip
+M5 started Feb  8 2011 17:41:42
+M5 executing on SC2B0617
 command line: build/ALPHA_SE_MOESI_CMP_directory/m5.fast -d build/ALPHA_SE_MOESI_CMP_directory/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_directory -re tests/run.py build/ALPHA_SE_MOESI_CMP_directory/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 3377485 because maximum number of loads reached
+Exiting @ tick 38939096 because maximum number of loads reached

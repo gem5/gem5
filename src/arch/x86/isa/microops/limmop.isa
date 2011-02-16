@@ -114,8 +114,16 @@ let {{
             self.dataSize = dataSize
 
         def getAllocator(self, microFlags):
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
-                    %(flags)s, %(dest)s, %(imm)s, %(dataSize)s)''' % {
+            allocString = '''
+                (%(dataSize)s >= 4) ?
+                    (StaticInstPtr)(new %(class_name)sBig(machInst,
+                        macrocodeBlock, %(flags)s, %(dest)s, %(imm)s,
+                        %(dataSize)s)) :
+                    (StaticInstPtr)(new %(class_name)s(machInst,
+                        macrocodeBlock, %(flags)s, %(dest)s, %(imm)s,
+                        %(dataSize)s))
+            '''
+            allocator = allocString % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,
                 "flags" : self.microFlagsText(microFlags),
@@ -152,12 +160,15 @@ let {{
 
 let {{
     # Build up the all register version of this micro op
-    iop = InstObjParams("limm", "Limm", 'X86MicroopBase',
-            {"code" : "DestReg = merge(DestReg, imm, dataSize);"})
-    header_output += MicroLimmOpDeclare.subst(iop)
-    decoder_output += MicroLimmOpConstructor.subst(iop)
-    decoder_output += MicroLimmOpDisassembly.subst(iop)
-    exec_output += MicroLimmOpExecute.subst(iop)
+    iops = [InstObjParams("limm", "Limm", 'X86MicroopBase',
+            {"code" : "DestReg = merge(DestReg, imm, dataSize);"}),
+            InstObjParams("limm", "LimmBig", 'X86MicroopBase',
+            {"code" : "DestReg = imm & mask(dataSize * 8);"})]
+    for iop in iops:
+        header_output += MicroLimmOpDeclare.subst(iop)
+        decoder_output += MicroLimmOpConstructor.subst(iop)
+        decoder_output += MicroLimmOpDisassembly.subst(iop)
+        exec_output += MicroLimmOpExecute.subst(iop)
 
     iop = InstObjParams("lfpimm", "Lfpimm", 'X86MicroopBase',
             {"code" : "FpDestReg.uqw = imm"})

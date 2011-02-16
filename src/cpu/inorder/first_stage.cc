@@ -181,7 +181,7 @@ FirstStage::processInsts(ThreadID tid)
             inst->setInstListIt(cpu->addInst(inst));
 
             // Create Front-End Resource Schedule For Instruction
-            ThePipeline::createFrontEndSchedule(inst);
+            inst->setFrontSked(cpu->frontEndSked);
         }
 
         int reqs_processed = 0;            

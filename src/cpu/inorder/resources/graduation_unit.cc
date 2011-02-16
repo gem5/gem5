@@ -52,14 +52,15 @@ GraduationUnit::execute(int slot_num)
     ResourceRequest* grad_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
     ThreadID tid = inst->readTid();
-    int stage_num = inst->resSched.top()->stageNum;
+    int stage_num = inst->curSkedEntry->stageNum;
 
     switch (grad_req->cmd)
     {
       case GraduateInst:
         {
             // Make sure this is the last thing on the resource schedule
-            assert(inst->resSched.size() == 1);
+            // @todo: replace this check
+            // assert(inst->resSched.size() == 1);
 
              // Handle Any Faults Before Graduating Instruction
             if (inst->fault != NoFault) {

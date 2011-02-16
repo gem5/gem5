@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * Copyright (c) 2009 The University of Edinburgh
  * All rights reserved.
@@ -149,6 +161,29 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** Finish a DTB address translation. */
     void finishTranslation(WholeTranslationState *state);
+
+    /** True if the DTB address translation has started. */
+    bool translationStarted;
+
+    /** True if the DTB address translation has completed. */
+    bool translationCompleted;
+
+    /**
+     * Returns true if the DTB address translation is being delayed due to a hw
+     * page table walk.
+     */
+    bool isTranslationDelayed() const
+    {
+        return (translationStarted && !translationCompleted);
+    }
+
+    /**
+     * Saved memory requests (needed when the DTB address translation is
+     * delayed due to a hw page table walk).
+     */
+    RequestPtr savedReq;
+    RequestPtr savedSreqLow;
+    RequestPtr savedSreqHigh;
 
     /** @todo: Consider making this private. */
   public:
@@ -835,33 +870,42 @@ BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
                              unsigned size, unsigned flags)
 {
     reqMade = true;
-    Request *req = new Request(asid, addr, size, flags, this->pc.instAddr(),
-                               thread->contextId(), threadNumber);
-
+    Request *req = NULL;
     Request *sreqLow = NULL;
     Request *sreqHigh = NULL;
 
-    // Only split the request if the ISA supports unaligned accesses.
-    if (TheISA::HasUnalignedMemAcc) {
-        splitRequest(req, sreqLow, sreqHigh);
-    }
-    initiateTranslation(req, sreqLow, sreqHigh, NULL, BaseTLB::Read);
-
-    if (fault == NoFault) {
-        effAddr = req->getVaddr();
-        effAddrValid = true;
-        fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
+    if (reqMade && translationStarted) {
+        req = savedReq;
+        sreqLow = savedSreqLow;
+        sreqHigh = savedSreqHigh;
     } else {
-        // Commit will have to clean up whatever happened.  Set this
-        // instruction as executed.
-        this->setExecuted();
+        req = new Request(asid, addr, size, flags, this->pc.instAddr(),
+                          thread->contextId(), threadNumber);
+
+        // Only split the request if the ISA supports unaligned accesses.
+        if (TheISA::HasUnalignedMemAcc) {
+            splitRequest(req, sreqLow, sreqHigh);
+        }
+        initiateTranslation(req, sreqLow, sreqHigh, NULL, BaseTLB::Read);
     }
 
-    if (fault != NoFault) {
-        // Return a fixed value to keep simulation deterministic even
-        // along misspeculated paths.
-        if (data)
-            bzero(data, size);
+    if (translationCompleted) {
+        if (fault == NoFault) {
+            effAddr = req->getVaddr();
+            effAddrValid = true;
+            fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
+        } else {
+            // Commit will have to clean up whatever happened.  Set this
+            // instruction as executed.
+            this->setExecuted();
+        }
+
+        if (fault != NoFault) {
+            // Return a fixed value to keep simulation deterministic even
+            // along misspeculated paths.
+            if (data)
+                bzero(data, size);
+        }
     }
 
     if (traceData) {
@@ -897,19 +941,26 @@ BaseDynInst<Impl>::writeBytes(uint8_t *data, unsigned size,
     }
 
     reqMade = true;
-    Request *req = new Request(asid, addr, size, flags, this->pc.instAddr(),
-                               thread->contextId(), threadNumber);
-
+    Request *req = NULL;
     Request *sreqLow = NULL;
     Request *sreqHigh = NULL;
 
-    // Only split the request if the ISA supports unaligned accesses.
-    if (TheISA::HasUnalignedMemAcc) {
-        splitRequest(req, sreqLow, sreqHigh);
-    }
-    initiateTranslation(req, sreqLow, sreqHigh, res, BaseTLB::Write);
+    if (reqMade && translationStarted) {
+        req = savedReq;
+        sreqLow = savedSreqLow;
+        sreqHigh = savedSreqHigh;
+    } else {
+        req = new Request(asid, addr, size, flags, this->pc.instAddr(),
+                          thread->contextId(), threadNumber);
 
-    if (fault == NoFault) {
+        // Only split the request if the ISA supports unaligned accesses.
+        if (TheISA::HasUnalignedMemAcc) {
+            splitRequest(req, sreqLow, sreqHigh);
+        }
+        initiateTranslation(req, sreqLow, sreqHigh, res, BaseTLB::Write);
+    }
+
+    if (fault == NoFault && translationCompleted) {
         effAddr = req->getVaddr();
         effAddrValid = true;
         fault = cpu->write(req, sreqLow, sreqHigh, data, sqIdx);
@@ -953,6 +1004,8 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
                                        RequestPtr sreqHigh, uint64_t *res,
                                        BaseTLB::Mode mode)
 {
+    translationStarted = true;
+
     if (!TheISA::HasUnalignedMemAcc || sreqLow == NULL) {
         WholeTranslationState *state =
             new WholeTranslationState(req, NULL, res, mode);
@@ -961,6 +1014,12 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
         DataTranslation<BaseDynInst<Impl> > *trans =
             new DataTranslation<BaseDynInst<Impl> >(this, state);
         cpu->dtb->translateTiming(req, thread->getTC(), trans, mode);
+        if (!translationCompleted) {
+            // Save memory requests.
+            savedReq = state->mainReq;
+            savedSreqLow = state->sreqLow;
+            savedSreqHigh = state->sreqHigh;
+        }
     } else {
         WholeTranslationState *state =
             new WholeTranslationState(req, sreqLow, sreqHigh, NULL, res, mode);
@@ -973,6 +1032,12 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
 
         cpu->dtb->translateTiming(sreqLow, thread->getTC(), stransLow, mode);
         cpu->dtb->translateTiming(sreqHigh, thread->getTC(), stransHigh, mode);
+        if (!translationCompleted) {
+            // Save memory requests.
+            savedReq = state->mainReq;
+            savedSreqLow = state->sreqLow;
+            savedSreqHigh = state->sreqHigh;
+        }
     }
 }
 
@@ -998,6 +1063,8 @@ BaseDynInst<Impl>::finishTranslation(WholeTranslationState *state)
         state->deleteReqs();
     }
     delete state;
+
+    translationCompleted = true;
 }
 
 #endif // __CPU_BASE_DYN_INST_HH__

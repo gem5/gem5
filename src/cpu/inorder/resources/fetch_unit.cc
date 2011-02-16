@@ -118,7 +118,7 @@ ResReqPtr
 FetchUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
-    ScheduleEntry* sched_entry = inst->resSched.top();
+    ScheduleEntry* sched_entry = *inst->curSkedEntry;
 
     if (!inst->validMemAddr()) {
         panic("Mem. Addr. must be set before requesting cache access\n");
@@ -144,7 +144,7 @@ FetchUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
     return new CacheRequest(this, inst, stage_num, id, slot_num,
                             sched_entry->cmd, 0, pkt_cmd,
                             0/*flags*/, this->cpu->readCpuId(),
-                            inst->resSched.top()->idx);
+                            inst->curSkedEntry->idx);
 }
 
 void
@@ -447,7 +447,7 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
     short asid = cpu->asid[tid];
 
     assert(!cache_req->isSquashed());
-    assert(inst->resSched.top()->cmd == CompleteFetch);
+    assert(inst->curSkedEntry->cmd == CompleteFetch);
 
     DPRINTF(InOrderCachePort,
             "[tid:%u]: [sn:%i]: Processing fetch access for block %#x\n",

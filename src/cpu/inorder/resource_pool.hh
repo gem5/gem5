@@ -130,6 +130,8 @@ class ResourcePool {
 
     void init();
 
+    void print();
+
     /** Register Statistics in All Resources */
     void regStats();
 

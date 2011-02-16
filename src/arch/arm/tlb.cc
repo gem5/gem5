@@ -696,6 +696,8 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 #endif
     if (!delay)
         translation->finish(fault, req, tc, mode);
+    else
+        translation->markDelayed();
     return fault;
 }
 

@@ -1,34 +1,34 @@
 
 ---------- Begin Simulation Statistics ----------
-host_mem_usage                                 341980                       # Number of bytes of host memory used
-host_seconds                                    25.58                       # Real time elapsed on the host
-host_tick_rate                                 100993                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 346136                       # Number of bytes of host memory used
+host_seconds                                   306.11                       # Real time elapsed on the host
+host_tick_rate                                 127726                       # Simulator tick rate (ticks/s)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-sim_seconds                                  0.002583                       # Number of seconds simulated
-sim_ticks                                     2583072                       # Number of ticks simulated
+sim_seconds                                  0.039099                       # Number of seconds simulated
+sim_ticks                                    39098820                       # Number of ticks simulated
 system.cpu0.num_copies                              0                       # number of copy accesses completed
 system.cpu0.num_reads                          100000                       # number of read accesses completed
-system.cpu0.num_writes                          53663                       # number of write accesses completed
+system.cpu0.num_writes                          53574                       # number of write accesses completed
 system.cpu1.num_copies                              0                       # number of copy accesses completed
-system.cpu1.num_reads                           98827                       # number of read accesses completed
-system.cpu1.num_writes                          53487                       # number of write accesses completed
+system.cpu1.num_reads                           99631                       # number of read accesses completed
+system.cpu1.num_writes                          53502                       # number of write accesses completed
 system.cpu2.num_copies                              0                       # number of copy accesses completed
-system.cpu2.num_reads                           96775                       # number of read accesses completed
-system.cpu2.num_writes                          51846                       # number of write accesses completed
+system.cpu2.num_reads                           99061                       # number of read accesses completed
+system.cpu2.num_writes                          53455                       # number of write accesses completed
 system.cpu3.num_copies                              0                       # number of copy accesses completed
-system.cpu3.num_reads                           97235                       # number of read accesses completed
-system.cpu3.num_writes                          52295                       # number of write accesses completed
+system.cpu3.num_reads                           98999                       # number of read accesses completed
+system.cpu3.num_writes                          53370                       # number of write accesses completed
 system.cpu4.num_copies                              0                       # number of copy accesses completed
-system.cpu4.num_reads                           97597                       # number of read accesses completed
-system.cpu4.num_writes                          52429                       # number of write accesses completed
+system.cpu4.num_reads                           99076                       # number of read accesses completed
+system.cpu4.num_writes                          53347                       # number of write accesses completed
 system.cpu5.num_copies                              0                       # number of copy accesses completed
-system.cpu5.num_reads                           97329                       # number of read accesses completed
-system.cpu5.num_writes                          52105                       # number of write accesses completed
+system.cpu5.num_reads                           99631                       # number of read accesses completed
+system.cpu5.num_writes                          53316                       # number of write accesses completed
 system.cpu6.num_copies                              0                       # number of copy accesses completed
-system.cpu6.num_reads                           96958                       # number of read accesses completed
-system.cpu6.num_writes                          52281                       # number of write accesses completed
+system.cpu6.num_reads                           99060                       # number of read accesses completed
+system.cpu6.num_writes                          53733                       # number of write accesses completed
 system.cpu7.num_copies                              0                       # number of copy accesses completed
-system.cpu7.num_reads                           97500                       # number of read accesses completed
-system.cpu7.num_writes                          52109                       # number of write accesses completed
+system.cpu7.num_reads                           99033                       # number of read accesses completed
+system.cpu7.num_writes                          53376                       # number of write accesses completed
 
 ---------- End Simulation Statistics   ----------

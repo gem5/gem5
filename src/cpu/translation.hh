@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2009 The University of Edinburgh
  * All rights reserved.
@@ -53,6 +65,7 @@ class WholeTranslationState
     Fault faults[2];
 
   public:
+    bool delay;
     bool isSplit;
     RequestPtr mainReq;
     RequestPtr sreqLow;
@@ -67,8 +80,8 @@ class WholeTranslationState
      */
     WholeTranslationState(RequestPtr _req, uint8_t *_data, uint64_t *_res,
                           BaseTLB::Mode _mode)
-        : outstanding(1), isSplit(false), mainReq(_req), sreqLow(NULL),
-          sreqHigh(NULL), data(_data), res(_res), mode(_mode)
+        : outstanding(1), delay(false), isSplit(false), mainReq(_req),
+          sreqLow(NULL), sreqHigh(NULL), data(_data), res(_res), mode(_mode)
     {
         faults[0] = faults[1] = NoFault;
         assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
@@ -82,8 +95,9 @@ class WholeTranslationState
     WholeTranslationState(RequestPtr _req, RequestPtr _sreqLow,
                           RequestPtr _sreqHigh, uint8_t *_data, uint64_t *_res,
                           BaseTLB::Mode _mode)
-        : outstanding(2), isSplit(true), mainReq(_req), sreqLow(_sreqLow),
-          sreqHigh(_sreqHigh), data(_data), res(_res), mode(_mode)
+        : outstanding(2), delay(false), isSplit(true), mainReq(_req),
+          sreqLow(_sreqLow), sreqHigh(_sreqHigh), data(_data), res(_res),
+          mode(_mode)
     {
         faults[0] = faults[1] = NoFault;
         assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
@@ -218,6 +232,16 @@ class DataTranslation : public BaseTLB::Translation
                     int _index)
         : xc(_xc), state(_state), index(_index)
     {
+    }
+
+    /**
+     * Signal the translation state that the translation has been delayed due
+     * to a hw page table walk.  Split requests are transparently handled.
+     */
+    void
+    markDelayed()
+    {
+        state->delay = true;
     }
 
     /**

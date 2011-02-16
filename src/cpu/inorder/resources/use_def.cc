@@ -93,7 +93,7 @@ UseDefUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
     return new UseDefRequest(this, inst, stage_num, id, slot_num, cmd,
-                             inst->resSched.top()->idx);
+                             inst->curSkedEntry->idx);
 }
 
 
@@ -110,8 +110,8 @@ UseDefUnit::findRequest(DynInstPtr inst)
 
         if (ud_req &&
             ud_req->getInst() == inst &&
-            ud_req->cmd == inst->resSched.top()->cmd &&
-            ud_req->useDefIdx == inst->resSched.top()->idx) {
+            ud_req->cmd == inst->curSkedEntry->cmd &&
+            ud_req->useDefIdx == inst->curSkedEntry->idx) {
             return ud_req;
         }
         map_it++;

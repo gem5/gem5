@@ -184,8 +184,8 @@ Resource::request(DynInstPtr inst)
 
         if (slot_num != -1) {
             // Get Stage # from Schedule Entry
-            stage_num = inst->resSched.top()->stageNum;
-            unsigned cmd = inst->resSched.top()->cmd;
+            stage_num = inst->curSkedEntry->stageNum;
+            unsigned cmd = inst->curSkedEntry->cmd;
 
             // Generate Resource Request
             inst_req = getRequest(inst, stage_num, id, slot_num, cmd);

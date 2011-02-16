@@ -1,4 +1,4 @@
-This is release 2.0_beta6 of the M5 simulator.
+This is the M5 simulator.
 
 For detailed information about building the simulator and getting
 started please refer to http://www.m5sim.org.
@@ -9,13 +9,16 @@ http://www.m5sim.org/wiki/index.php/Running_M5
 
 Short version:
 
-1. If you don't have SCons version 0.96.91 or newer, get it from
+1. If you don't have SCons version 0.98.1 or newer, get it from
 http://wwww.scons.org.
 
-2. If you don't have SWIG version 1.3.28 or newer, get it from
+2. If you don't have SWIG version 1.3.31 or newer, get it from
 http://wwww.swig.org.
 
-3. In this directory, type 'scons build/ALPHA_SE/tests/debug/quick'.  This
+3. Make sure you also have gcc version 3.4.6 or newer, Python 2.4 or newer
+(the dev version with header files), zlib, and the m4 preprocessor.
+
+4. In this directory, type 'scons build/ALPHA_SE/tests/debug/quick'.  This
 will build the debug version of the m5 binary (m5.debug) for the Alpha
 syscall emulation target, and run the quick regression tests on it.
 
@@ -25,18 +28,21 @@ WHAT'S INCLUDED (AND NOT)
 -------------------------
 
 The basic source release includes these subdirectories:
- - m5: 
-   - src: source code of the m5 simulator
-   - tests: regression tests
+ - m5:
+   - configs: simulation configuration scripts
    - ext: less-common external packages needed to build m5
+   - src: source code of the m5 simulator
+   - system: source for some optional system software for simulated systems
+   - tests: regression tests
+   - util: useful utility programs and files
 
-To run full-system simulations, you will need compiled console,
-PALcode, and kernel binaries and one or more disk images.  These files
-are collected in a separate archive, m5_system.tar.bz2.  This file
-can he downloaded separately.
+To run full-system simulations, you will need compiled system firmware
+(console and PALcode for Alpha), kernel binaries and one or more disk images. 
+These files for Alpha are collected in a separate archive, m5_system.tar.bz2.
+This file can he downloaded separately.
 
-M5 supports Linux 2.4/2.6, FreeBSD, and the proprietary Compaq/HP
-Tru64 version of Unix. We are able to distribute Linux and FreeBSD
-bootdisks, but we are unable to distribute bootable disk images of
+Depending on the ISA used, M5 may support Linux 2.4/2.6, FreeBSD, and the
+proprietary Compaq/HP Tru64 version of Unix. We are able to distribute Linux
+and FreeBSD bootdisks, but we are unable to distribute bootable disk images of
 Tru64 Unix. If you have a Tru64 license and are interested in
 obtaining disk images, contact us at m5-users@m5sim.org

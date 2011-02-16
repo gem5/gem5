@@ -61,8 +61,6 @@ add_option('-C', "--copyright", action="store_true", default=False,
     help="Show full copyright information")
 add_option('-R', "--readme", action="store_true", default=False,
     help="Show the readme")
-add_option('-N', "--release-notes", action="store_true", default=False,
-    help="Show the release notes")
 
 # Options for configuring the base simulator
 add_option('-d', "--outdir", metavar="DIR", default="m5out",
@@ -205,13 +203,6 @@ def main():
         print 'Readme:'
         print
         print info.README
-        print
-
-    if options.release_notes:
-        done = True
-        print 'Release Notes:'
-        print
-        print info.RELEASE_NOTES
         print
 
     if options.trace_help:

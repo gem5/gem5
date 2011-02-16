@@ -35,6 +35,7 @@ if env['CP_ANNOTATE']:
     Source('cp_annotate.cc')
 Source('atomicio.cc')
 Source('bigint.cc')
+Source('bitmap.cc')
 Source('callback.cc')
 Source('circlebuf.cc')
 Source('cprintf.cc')

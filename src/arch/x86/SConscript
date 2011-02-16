@@ -46,6 +46,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('cpuid.cc')
     Source('emulenv.cc')
     Source('faults.cc')
+    Source('insts/badmicroop.cc')
     Source('insts/microfpop.cc')
     Source('insts/microldstop.cc')
     Source('insts/micromediaop.cc')

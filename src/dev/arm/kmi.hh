@@ -48,13 +48,16 @@
 #ifndef __DEV_ARM_PL050_HH__
 #define __DEV_ARM_PL050_HH__
 
+#include <list>
+
 #include "base/range.hh"
-#include "dev/io_device.hh"
+#include "base/vnc/vncserver.hh"
+#include "dev/arm/amba_device.hh"
 #include "params/Pl050.hh"
 
 class Gic;
 
-class Pl050 : public AmbaDevice
+class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
 {
   protected:
     static const int kmiCr       = 0x000;
@@ -63,40 +66,83 @@ class Pl050 : public AmbaDevice
     static const int kmiClkDiv   = 0x00C;
     static const int kmiISR      = 0x010;
 
-    // control register
-    uint8_t control;
+    BitUnion8(ControlReg)
+        Bitfield<0> force_clock_low;
+        Bitfield<1> force_data_low;
+        Bitfield<2> enable;
+        Bitfield<3> txint_enable;
+        Bitfield<4> rxint_enable;
+        Bitfield<5> type;
+    EndBitUnion(ControlReg)
 
-    // status register
-    uint8_t status;
+    /** control register
+     */
+    ControlReg control;
 
-    // received data (read) or data to be transmitted (write)
-    uint8_t kmidata;
+    /** KMI status register */
+    BitUnion8(StatusReg)
+        Bitfield<0> data_in;
+        Bitfield<1> clk_in;
+        Bitfield<2> rxparity;
+        Bitfield<3> rxbusy;
+        Bitfield<4> rxfull;
+        Bitfield<5> txbusy;
+        Bitfield<6> txempty;
+    EndBitUnion(StatusReg)
 
-    // clock divisor register
+    StatusReg status;
+
+    /** clock divisor register
+     * This register is just kept around to satisfy reads after driver does
+     * writes. The divsor does nothing, as we're not actually signaling ps2
+     * serial commands to anything.
+     */
     uint8_t clkdiv;
 
-    BitUnion8(IntReg)
-    Bitfield<0> txintr;
-    Bitfield<1> rxintr;
-    EndBitUnion(IntReg)
+    BitUnion8(InterruptReg)
+        Bitfield<0> rx;
+        Bitfield<1> tx;
+    EndBitUnion(InterruptReg)
 
-    /** interrupt mask register. */
-    IntReg intreg;
+    /** interrupt status register. */
+    InterruptReg interrupts;
 
-    /** Interrupt number to generate */
-    int intNum;
+    /** raw interrupt register (unmasked) */
+    InterruptReg rawInterrupts;
 
-    /** Gic to use for interrupting */
-    Gic *gic;
+    /** If the controller should ignore the next data byte and acknowledge it.
+     * The driver is attempting to setup some feature we don't care about
+     */
+    int ackNext;
 
-    /** Delay before interrupting */
-    Tick intDelay;
+    /** is the shift key currently down */
+    bool shiftDown;
+
+    /** The vnc server we're connected to (if any) */
+    VncServer *vnc;
+
+    /** If the linux driver has initialized the device yet and thus can we send
+     * mouse data */
+    bool driverInitialized;
+
+    /** Update the status of the interrupt registers and schedule an interrupt
+     * if required */
+    void updateIntStatus();
 
     /** Function to generate interrupt */
     void generateInterrupt();
 
     /** Wrapper to create an event out of the thing */
     EventWrapper<Pl050, &Pl050::generateInterrupt> intEvent;
+
+    /** Receive queue. This list contains all the pending commands that
+     * need to be sent to the driver
+     */
+    std::list<uint8_t> rxQueue;
+
+    /** Handle a command sent to the kmi and respond appropriately
+     */
+    void processCommand(uint8_t byte);
 
   public:
     typedef Pl050Params Params;
@@ -111,12 +157,11 @@ class Pl050 : public AmbaDevice
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
 
-    /**
-     * Return if we have an interrupt pending
-     * @return interrupt status
-     * @todo fix me when implementation improves
-     */
-    virtual bool intStatus() { return false; }
+    virtual void mouseAt(uint16_t x, uint16_t y, uint8_t buttons);
+    virtual void keyPress(uint32_t key, bool down);
+
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif
+#endif // __DEV_ARM_PL050_HH__

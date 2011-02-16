@@ -57,13 +57,16 @@ DecodeUnit::execute(int slot_num)
     {
       case DecodeInst:
         {
-            bool done_sked = ThePipeline::createBackEndSchedule(inst);
+            inst->setBackSked(cpu->createBackEndSked(inst));
 
-            if (done_sked) {
+            if (inst->backSked != NULL) {
                 DPRINTF(InOrderDecode,
                     "[tid:%i]: Setting Destination Register(s) for [sn:%i].\n",
                     tid, inst->seqNum);
                 regDepMap[tid]->insert(inst);
+
+                //inst->printSked();
+
                 decode_req->done();
             } else {
                 DPRINTF(Resource,

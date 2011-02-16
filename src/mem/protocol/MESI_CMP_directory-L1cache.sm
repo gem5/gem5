@@ -287,20 +287,21 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
         if (in_msg.Type == CacheRequestType:IFETCH) {
           // ** INSTRUCTION ACCESS ***
 
-          // Check to see if it is in the OTHER L1
-          Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
-          if (is_valid(L1Dcache_entry)) {
-            // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.LineAddress,
-                    L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
-          }
-
           Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
           if (is_valid(L1Icache_entry)) {
             // The tag matches for the L1, so the L1 asks the L2 for it.
             trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
                     L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
           } else {
+
+            // Check to see if it is in the OTHER L1
+            Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Dcache_entry)) {
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement, in_msg.LineAddress,
+                      L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
+            }
+
             if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
@@ -313,21 +314,23 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
             }
           }
         } else {
-          // *** DATA ACCESS ***
-          // Check to see if it is in the OTHER L1
-          Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
-          if (is_valid(L1Icache_entry)) {
-            // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.LineAddress,
-                    L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
-          }
 
+          // *** DATA ACCESS ***
           Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
           if (is_valid(L1Dcache_entry)) {
             // The tag matches for the L1, so the L1 ask the L2 for it
             trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,
                     L1Dcache_entry, L1_TBEs[in_msg.LineAddress]);
           } else {
+
+            // Check to see if it is in the OTHER L1
+            Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Icache_entry)) {
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement, in_msg.LineAddress,
+                      L1Icache_entry, L1_TBEs[in_msg.LineAddress]);
+            }
+
             if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
               trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress,

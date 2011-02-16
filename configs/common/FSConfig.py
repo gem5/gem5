@@ -238,6 +238,7 @@ def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
 
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
+    self.vncserver = VncServer()
     self.kernel = binary('vmlinux.arm')
     self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0 lpj=19988480' + \
                         ' norandmaps slram=slram0,0x8000000,+0x8000000' +      \
@@ -334,6 +335,9 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     # Create and connect the busses required by each memory system
     if Ruby:
         connectX86RubySystem(self)
+        # add the ide to the list of dma devices that later need to attach to
+        # dma controllers
+        self._dma_devices = [self.pc.south_bridge.ide]
     else:
         connectX86ClassicSystem(self)
 

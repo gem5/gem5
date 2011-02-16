@@ -96,6 +96,12 @@ for (i, ruby_port) in enumerate(system.ruby.cpu_ruby_ports):
      #
      cpus[i].test = ruby_port.port
      cpus[i].functional = system.funcmem.port
+     
+     #
+     # Since the memtester is incredibly bursty, increase the deadlock
+     # threshold to 1 million cycles
+     #
+     ruby_port.deadlock_threshold = 1000000
 
 # -----------------------
 # run simulation

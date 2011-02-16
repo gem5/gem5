@@ -445,11 +445,15 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
     Fault load_fault = NoFault;
 
     DPRINTF(LSQUnit, "Executing load PC %s, [sn:%lli]\n",
-            inst->pcState(),inst->seqNum);
+            inst->pcState(), inst->seqNum);
 
     assert(!inst->isSquashed());
 
     load_fault = inst->initiateAcc();
+
+    if (inst->isTranslationDelayed() &&
+        load_fault == NoFault)
+        return load_fault;
 
     // If the instruction faulted or predicated false, then we need to send it
     // along to commit without the instruction completing.
@@ -531,6 +535,10 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
     int load_idx = store_inst->lqIdx;
 
     Fault store_fault = store_inst->initiateAcc();
+
+    if (store_inst->isTranslationDelayed() &&
+        store_fault == NoFault)
+        return store_fault;
 
     if (store_inst->readPredicate() == false)
         store_inst->forwardOldRegs();

@@ -55,6 +55,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AmbaDevice.hh"
+#include "params/AmbaIntDevice.hh"
 #include "params/AmbaDmaDevice.hh"
 
 namespace AmbaDev {
@@ -79,6 +80,18 @@ class AmbaDevice : public BasicPioDevice
   public:
     typedef AmbaDeviceParams Params;
     AmbaDevice(const Params *p);
+};
+
+class AmbaIntDevice : public AmbaDevice
+{
+  protected:
+    int intNum;
+    Gic *gic;
+    Tick intDelay;
+
+  public:
+    typedef AmbaIntDeviceParams Params;
+    AmbaIntDevice(const Params *p);
 };
 
 class AmbaDmaDevice : public DmaDevice

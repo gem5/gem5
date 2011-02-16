@@ -52,6 +52,14 @@ class AmbaDevice(BasicPioDevice):
     abstract = True
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 
+class AmbaIntDevice(AmbaDevice):
+    type = 'AmbaIntDevice'
+    abstract = True
+    gic = Param.Gic(Parent.any, "Gic to use for interrupting")
+    int_num = Param.UInt32("Interrupt number that connects to GIC")
+    int_delay = Param.Latency("100ns",
+            "Time between action and interrupt generation by device")
+
 class AmbaDmaDevice(DmaDevice):
     type = 'AmbaDmaDevice'
     abstract = True
@@ -94,16 +102,17 @@ class Sp804(AmbaDevice):
     clock1 = Param.Clock('1MHz', "Clock speed of the input")
     amba_id = 0x00141804
 
-class Pl050(AmbaDevice):
+class Pl050(AmbaIntDevice):
     type = 'Pl050'
-    gic = Param.Gic(Parent.any, "Gic to use for interrupting")
-    int_num = Param.UInt32("Interrupt number that connects to GIC")
-    int_delay = Param.Latency("100ns", "Time between action and interrupt generation by UART")
+    vnc = Param.VncServer(Parent.any, "Vnc server for remote frame buffer display")
+    is_mouse = Param.Bool(False, "Is this interface a mouse, if not a keyboard")
+    int_delay = '1us'
     amba_id = 0x00141050
 
 class Pl111(AmbaDmaDevice):
     type = 'Pl111'
     clock = Param.Clock('24MHz', "Clock speed of the input")
+    vnc   = Param.VncServer(Parent.any, "Vnc server for remote frame buffer display")
     amba_id = 0x00141111
 
 class RealView(Platform):
@@ -121,7 +130,7 @@ class RealViewPBX(RealView):
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
     clcd = Pl111(pio_addr=0x10020000, int_num=55)
     kmi0   = Pl050(pio_addr=0x10006000, int_num=52)
-    kmi1   = Pl050(pio_addr=0x10007000, int_num=53)
+    kmi1   = Pl050(pio_addr=0x10007000, int_num=53, is_mouse=True)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff)
     flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x4000000)
@@ -140,7 +149,7 @@ class RealViewPBX(RealView):
     aaci_fake     = AmbaFake(pio_addr=0x10004000)
     mmc_fake      = AmbaFake(pio_addr=0x10005000)
     rtc_fake      = AmbaFake(pio_addr=0x10017000, amba_id=0x41031)
-
+    cf0_fake      = IsaFake(pio_addr=0x18000000, pio_size=0xfff)
 
 
     # Attach I/O devices that are on chip
@@ -175,6 +184,7 @@ class RealViewPBX(RealView):
        self.mmc_fake.pio      = bus.port
        self.rtc_fake.pio      = bus.port
        self.flash_fake.pio    = bus.port
+       self.cf0_fake.pio      = bus.port
 
 # Reference for memory map and interrupt number
 # RealView Emulation Baseboard User Guide (ARM DUI 0143B)
@@ -187,7 +197,7 @@ class RealViewEB(RealView):
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
     clcd   = Pl111(pio_addr=0x10020000, int_num=23)
     kmi0   = Pl050(pio_addr=0x10006000, int_num=20)
-    kmi1   = Pl050(pio_addr=0x10007000, int_num=21)
+    kmi1   = Pl050(pio_addr=0x10007000, int_num=21, is_mouse=True)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff, warn_access="1")
     dmac_fake     = AmbaFake(pio_addr=0x10030000)

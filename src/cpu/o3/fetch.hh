@@ -137,6 +137,10 @@ class DefaultFetch
         {}
 
         void
+        markDelayed()
+        {}
+
+        void
         finish(Fault fault, RequestPtr req, ThreadContext *tc,
                BaseTLB::Mode mode)
         {
