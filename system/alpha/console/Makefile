@@ -27,6 +27,9 @@
 # Authors: Nathan L. Binkert
 #          Ali G. Saidi
 
+# Point to the M5 diretory so we can get some headers
+M5?=../../..
+
 ### If we are not compiling on an alpha, we must use cross tools ###    
 ifneq ($(shell uname -m), alpha)
 CROSS_COMPILE?=alpha-unknown-linux-gnu-
@@ -36,17 +39,12 @@ AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 
 DBMENTRY= fffffc0000010000
-CFLAGS=-I . -I ../h -I$(M5)/src/dev -I$(M5)/util/m5/ -fno-builtin -Wa,-m21164
+CFLAGS=-I . -I ../h -I$(M5)/src/dev/alpha -I$(M5)/util/m5/ -fno-builtin -Wa,-m21164
 OBJS=dbmentry.o printf.o paljtokern.o paljtoslave.o console.o m5op.o
-
-### Make sure that the M5 variable is set ###
-ifndef M5
-$(error The M5 variable must be set)
-endif
 
 all: console
 
-m5op.o: $(M5)/util/m5/m5op.S
+m5op.o: $(M5)/util/m5/m5op_alpha.S
 	$(CC) $(CFLAGS) -nostdinc -o $@ -c $<
 
 %.o: %.S
