@@ -51,7 +51,7 @@ class ResourceSked;
 namespace ThePipeline {
     // Pipeline Constants
     const unsigned NumStages = 5;
-    const ThreadID MaxThreads = 8;
+    const ThreadID MaxThreads = 1;
     const unsigned BackEndStartStage = 2;
 
     // List of Resources The Pipeline Uses
