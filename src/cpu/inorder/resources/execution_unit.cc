@@ -101,8 +101,17 @@ ExecutionUnit::execute(int slot_num)
     {
       case ExecuteInst:
         {
-            DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%s] %s.\n",
-                    inst->readTid(), seq_num, inst->pcState(), inst->instName());
+            if (inst->isNop()) {
+                DPRINTF(InOrderExecute, "[tid:%i] [sn:%i] [PC:%s] Ignoring execution"
+                        "of %s.\n", inst->readTid(), seq_num, inst->pcState(),
+                        inst->instName());
+                inst->setExecuted();
+                exec_req->done();
+                return;
+            } else {
+                DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%s] %s.\n",
+                        inst->readTid(), seq_num, inst->pcState(), inst->instName());
+            }
 
             if (cur_tick != lastExecuteTick) {
                 lastExecuteTick = cur_tick;
