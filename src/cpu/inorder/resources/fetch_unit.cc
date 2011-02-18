@@ -56,6 +56,31 @@ FetchUnit::FetchUnit(string res_name, int res_id, int res_width,
       predecoder(NULL)
 { }
 
+FetchUnit::~FetchUnit()
+{
+    std::list<FetchBlock*>::iterator fetch_it = fetchBuffer.begin();
+    std::list<FetchBlock*>::iterator end_it = fetchBuffer.end();
+    while (fetch_it != end_it) {
+        delete (*fetch_it)->block;
+        delete *fetch_it;
+        fetch_it++;
+    }
+    fetchBuffer.clear();
+
+
+    std::list<FetchBlock*>::iterator pend_it = pendingFetch.begin();
+    std::list<FetchBlock*>::iterator pend_end = pendingFetch.end();
+    while (pend_it != pend_end) {
+        if ((*pend_it)->block) {
+            delete (*pend_it)->block;
+        }
+
+        delete *pend_it;
+        pend_it++;
+    }
+    pendingFetch.clear();
+}
+
 void
 FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
                           DynInstPtr inst)
@@ -328,6 +353,8 @@ FetchUnit::execute(int slot_num)
                     return;
                 }
 
+                delete [] (*repl_it)->block;
+                delete *repl_it;
                 fetchBuffer.erase(repl_it);
             }
 
@@ -506,6 +533,10 @@ FetchUnit::squashCacheRequest(CacheReqPtr req_ptr)
                 DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Fetch "
                         "for block %08p (cnt=%i)\n", inst->seqNum,
                         block_addr, (*block_it)->cnt);
+                if ((*block_it)->block) {
+                    delete [] (*block_it)->block;
+                }
+                delete *block_it;
                 pendingFetch.erase(block_it);
             }
         }

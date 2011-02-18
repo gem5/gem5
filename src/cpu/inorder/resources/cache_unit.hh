@@ -249,6 +249,10 @@ class CacheRequest : public ResourceRequest
 
     void clearRequest()
     {
+        if (reqData && !splitAccess) {
+            delete [] reqData;
+        }
+
         memReq = NULL;
         reqData = NULL;
         dataPkt = NULL;

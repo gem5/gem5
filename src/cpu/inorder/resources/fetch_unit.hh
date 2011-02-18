@@ -55,6 +55,8 @@ class FetchUnit : public CacheUnit
     FetchUnit(std::string res_name, int res_id, int res_width,
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
 
+    virtual ~FetchUnit();
+
     typedef ThePipeline::DynInstPtr DynInstPtr;
     typedef TheISA::ExtMachInst ExtMachInst;
 

@@ -648,8 +648,6 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
 
     if (inst->fault == NoFault) {
         if (!cache_req->splitAccess) {            
-            // Remove this line since storeData is saved in INST?
-            cache_req->reqData = new uint8_t[size];
             doCacheAccess(inst, write_res);
         } else {            
             doCacheAccess(inst, write_res, cache_req);            
