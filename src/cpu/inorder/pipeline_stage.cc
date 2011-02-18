@@ -44,10 +44,15 @@ PipelineStage::PipelineStage(Params *params, unsigned stage_num)
       stageBufferMax(params->stageWidth),
       prevStageValid(false), nextStageValid(false), idle(false)
 {
-    switchedOutBuffer.resize(ThePipeline::MaxThreads);
-    switchedOutValid.resize(ThePipeline::MaxThreads);
-    
     init(params);
+}
+
+PipelineStage::~PipelineStage()
+{
+   for(ThreadID tid = 0; tid < numThreads; tid++) {
+       skidBuffer[tid].clear();
+       stalls[tid].resources.clear();
+   }
 }
 
 void
@@ -65,6 +70,12 @@ PipelineStage::init(Params *params)
             lastStallingStage[tid] = BackEndStartStage - 1;
         else
             lastStallingStage[tid] = NumStages - 1;
+    }
+
+    if ((InOrderCPU::ThreadModel) params->threadModel ==
+        InOrderCPU::SwitchOnCacheMiss) {
+        switchedOutBuffer.resize(ThePipeline::MaxThreads);
+        switchedOutValid.resize(ThePipeline::MaxThreads);
     }
 }
 
@@ -189,9 +200,6 @@ PipelineStage::takeOverFrom()
         }
 
         stalls[tid].resources.clear();
-
-        while (!insts[tid].empty())
-            insts[tid].pop();
 
         skidBuffer[tid].clear();
     }

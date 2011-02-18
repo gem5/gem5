@@ -356,6 +356,17 @@ InOrderCPU::InOrderCPU(Params *params)
 InOrderCPU::~InOrderCPU()
 {
     delete resPool;
+
+    std::map<SkedID, ThePipeline::RSkedPtr>::iterator sked_it =
+        skedCache.begin();
+    std::map<SkedID, ThePipeline::RSkedPtr>::iterator sked_end =
+        skedCache.end();
+
+    while (sked_it != sked_end) {
+        delete (*sked_it).second;
+        sked_it++;
+    }
+    skedCache.clear();
 }
 
 std::map<InOrderCPU::SkedID, ThePipeline::RSkedPtr> InOrderCPU::skedCache;
@@ -460,7 +471,7 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
 
     W.needs(Grad, GraduationUnit::GraduateInst);
 
-    // Insert Front Schedule into our cache of
+    // Insert Back Schedule into our cache of
     // resource schedules
     addToSkedCache(inst, res_sked);
 

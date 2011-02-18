@@ -315,6 +315,7 @@ class InOrderCPU : public BaseCPU
     void addToSkedCache(DynInstPtr inst, ThePipeline::RSkedPtr inst_sked)
     {
         SkedID sked_id = genSkedID(inst);
+        assert(skedCache.find(sked_id) == skedCache.end());
         skedCache[sked_id] = inst_sked;
     }
 

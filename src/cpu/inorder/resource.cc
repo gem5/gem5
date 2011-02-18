@@ -53,7 +53,11 @@ Resource::~Resource()
         delete [] resourceEvent;
     }
 
-    delete deniedReq;    
+    delete deniedReq;
+
+    for (int i = 0; i < width; i++) {
+        delete reqs[i];
+    }
 }
 
 
@@ -386,6 +390,7 @@ ResourceRequest::~ResourceRequest()
         DPRINTF(ResReqCount, "Res. Req %i deleted. resReqCount=%i.\n", reqID, 
                 res->cpu->resReqCount);
 #endif
+        inst = NULL;
 }
 
 void

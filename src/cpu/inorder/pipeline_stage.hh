@@ -91,10 +91,7 @@ class PipelineStage
   public:
     PipelineStage(Params *params, unsigned stage_num);
 
-    /** MUST use init() function if this constructor is used. */
-    PipelineStage() { }
-
-    virtual ~PipelineStage() { }
+    virtual ~PipelineStage();
 
     /** PipelineStage initialization. */
     void init(Params *params);
@@ -267,16 +264,6 @@ class PipelineStage
      *  NOTE: "Processed" means completed at least 1 instruction request 
      */
     unsigned instsProcessed;    
-
-    /** Queue of all instructions coming from previous stage on this cycle. */
-    std::queue<DynInstPtr> insts[ThePipeline::MaxThreads];
-
-    /** Queue of instructions that are finished processing and ready to go 
-     *  next stage. This is used to prevent from processing an instrution more 
-     *  than once on any stage. NOTE: It is up to the PROGRAMMER must manage 
-     *  this as a queue
-     */
-    std::list<DynInstPtr> instsToNextStage;
 
     /** Skid buffer between previous stage and this one. */
     std::list<DynInstPtr> skidBuffer[ThePipeline::MaxThreads];
