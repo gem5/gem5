@@ -57,9 +57,7 @@ class GraduationUnit : public Resource {
     void execute(int slot_num);
 
   protected:
-    Tick lastCycleGrad;
-    int numCycleGrad;
-
+    Tick lastNonSpecTick;
     bool *nonSpecInstActive[ThePipeline::MaxThreads];
 
     InstSeqNum *nonSpecSeqNum[ThePipeline::MaxThreads];

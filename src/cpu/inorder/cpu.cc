@@ -465,11 +465,11 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
         W.needs(ExecUnit, ExecutionUnit::ExecuteInst);
     }
 
+    W.needs(Grad, GraduationUnit::GraduateInst);
+
     for (int idx=0; idx < inst->numDestRegs(); idx++) {
         W.needs(RegManager, UseDefUnit::WriteDestReg, idx);
     }
-
-    W.needs(Grad, GraduationUnit::GraduateInst);
 
     // Insert Back Schedule into our cache of
     // resource schedules

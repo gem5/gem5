@@ -37,8 +37,7 @@ GraduationUnit::GraduationUnit(std::string res_name, int res_id, int res_width,
                                int res_latency, InOrderCPU *_cpu,
                                ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      lastCycleGrad(0), numCycleGrad(0)
-      
+      lastNonSpecTick(0)
 {
     for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         nonSpecInstActive[tid] = &cpu->nonSpecInstActive[tid];
@@ -58,15 +57,18 @@ GraduationUnit::execute(int slot_num)
     {
       case GraduateInst:
         {
-            // Make sure this is the last thing on the resource schedule
-            // @todo: replace this check
-            // assert(inst->resSched.size() == 1);
+            if (lastNonSpecTick == curTick()) {
+                DPRINTF(InOrderGraduation, "Unable to graduate [sn:%i]. "
+                        "Only 1 nonspec inst. per cycle can graduate.\n");
+                grad_req->done(false);
+                return;
+            }
 
-             // Handle Any Faults Before Graduating Instruction
+            // Handle Any Faults Before Graduating Instruction
             if (inst->fault != NoFault) {
                 cpu->trap(inst->fault, tid, inst);
                 grad_req->setCompleted(false);
-                 return;
+                return;
             }
 
             DPRINTF(InOrderGraduation,
@@ -81,6 +83,7 @@ GraduationUnit::execute(int slot_num)
                 DPRINTF(InOrderGraduation,
                         "[tid:%i] Non-speculative inst [sn:%i] graduated\n",
                         tid, inst->seqNum);
+                lastNonSpecTick = curTick();
             }
 
             if (inst->traceData) {
