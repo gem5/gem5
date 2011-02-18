@@ -749,7 +749,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     DynInstPtr deferred_mem_inst;
     int total_deferred_mem_issued = 0;
     while (total_deferred_mem_issued < totalWidth &&
-           (deferred_mem_inst = getDeferredMemInstToExecute()) != NULL) {
+           (deferred_mem_inst = getDeferredMemInstToExecute()) != 0) {
         issueToExecuteQueue->access(0)->size++;
         instsToExecute.push_back(deferred_mem_inst);
         total_deferred_mem_issued++;

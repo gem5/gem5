@@ -647,20 +647,21 @@ machine(L1Cache, "Token protocol")
         if (in_msg.Type == CacheRequestType:IFETCH) {
           // ** INSTRUCTION ACCESS ***
 
-          // Check to see if it is in the OTHER L1
-          Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
-          if (is_valid(L1Dcache_entry)) {
-            // The block is in the wrong L1, try to write it to the L2
-              trigger(Event:L1_Replacement, in_msg.LineAddress,
-                      L1Dcache_entry, tbe);
-          }
-
           Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
           if (is_valid(L1Icache_entry)) {
             // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Icache_entry, tbe);
           } else {
+
+            // Check to see if it is in the OTHER L1
+            Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Dcache_entry)) {
+              // The block is in the wrong L1, try to write it to the L2
+                trigger(Event:L1_Replacement, in_msg.LineAddress,
+                        L1Dcache_entry, tbe);
+            }
+
             if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
               trigger(mandatory_request_type_to_event(in_msg.Type),
@@ -676,21 +677,21 @@ machine(L1Cache, "Token protocol")
         } else {
           // *** DATA ACCESS ***
 
-            // Check to see if it is in the OTHER L1
-          Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
-
-          if (is_valid(L1Icache_entry)) {
-            // The block is in the wrong L1, try to write it to the L2
-            trigger(Event:L1_Replacement, in_msg.LineAddress,
-                    L1Icache_entry, tbe);
-          }
-
           Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
           if (is_valid(L1Dcache_entry)) {
             // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Dcache_entry, tbe);
           } else {
+
+            // Check to see if it is in the OTHER L1
+            Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Icache_entry)) {
+              // The block is in the wrong L1, try to write it to the L2
+              trigger(Event:L1_Replacement, in_msg.LineAddress,
+                      L1Icache_entry, tbe);
+            }
+
             if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
               trigger(mandatory_request_type_to_event(in_msg.Type),

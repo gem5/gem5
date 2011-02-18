@@ -1070,6 +1070,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     Addr pcOffset = fetchOffset[tid];
     Addr fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
 
+    bool inRom = isRomMicroPC(thisPC.microPC());
+
     // If returning from the delay of a cache miss, then update the status
     // to running, otherwise do the cache access.  Possibly move this up
     // to tick() function.
@@ -1083,7 +1085,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         Addr block_PC = icacheBlockAlignPC(fetchAddr);
 
         // Unless buffer already got the block, fetch it from icache.
-        if (!cacheDataValid[tid] || block_PC != cacheDataPC[tid]) {
+        if (!(cacheDataValid[tid] && block_PC == cacheDataPC[tid]) && !inRom) {
             DPRINTF(Fetch, "[tid:%i]: Attempting to translate and read "
                     "instruction, starting at PC %s.\n", tid, thisPC);
 
@@ -1155,7 +1157,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
            !predictedBranch) {
 
         // If we need to process more memory, do it now.
-        if (!curMacroop && !predecoder.extMachInstReady()) {
+        if (!(curMacroop || inRom) && !predecoder.extMachInstReady()) {
             if (ISA_HAS_DELAY_SLOT && pcOffset == 0) {
                 // Walk past any annulled delay slot instructions.
                 Addr pcAddr = thisPC.instAddr() & BaseCPU::PCMask;
@@ -1181,7 +1183,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // Extract as many instructions and/or microops as we can from
         // the memory we've processed so far.
         do {
-            if (!curMacroop) {
+            if (!(curMacroop || inRom)) {
                 if (predecoder.extMachInstReady()) {
                     ExtMachInst extMachInst;
 
@@ -1202,8 +1204,13 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     break;
                 }
             }
-            if (curMacroop) {
-                staticInst = curMacroop->fetchMicroop(thisPC.microPC());
+            if (curMacroop || inRom) {
+                if (inRom) {
+                    staticInst = cpu->microcodeRom.fetchMicroop(
+                            thisPC.microPC(), curMacroop);
+                } else {
+                    staticInst = curMacroop->fetchMicroop(thisPC.microPC());
+                }
                 if (staticInst->isLastMicroop()) {
                     curMacroop = NULL;
                     pcOffset = 0;

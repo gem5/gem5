@@ -32,6 +32,7 @@
 #define __ARCH_X86_MICROCODE_ROM_HH__
 
 #include "arch/x86/emulenv.hh"
+#include "arch/x86/insts/badmicroop.hh"
 #include "cpu/static_inst.hh"
 
 namespace X86ISAInst
@@ -60,8 +61,10 @@ namespace X86ISAInst
         fetchMicroop(MicroPC microPC, StaticInstPtr curMacroop)
         {
             microPC = normalMicroPC(microPC);
-            assert(microPC < numMicroops);
-            return genFuncs[microPC](curMacroop);
+            if (microPC >= numMicroops)
+                return X86ISA::badMicroop;
+            else
+                return genFuncs[microPC](curMacroop);
         }
     };
 }

@@ -45,16 +45,29 @@ output header {{
     class MicroDebugBase : public X86ISA::X86MicroopBase
     {
       protected:
+        typedef GenericISA::M5DebugFault::DebugFunc DebugFunc;
+        DebugFunc func;
         std::string message;
         uint8_t cc;
 
       public:
-        MicroDebugBase(ExtMachInst _machInst, const char * mnem,
+        MicroDebugBase(ExtMachInst machInst, const char * mnem,
                 const char * instMnem, uint64_t setFlags,
-                std::string _message, uint8_t _cc);
+                DebugFunc _func, std::string _message, uint8_t _cc) :
+            X86MicroopBase(machInst, mnem, instMnem, setFlags, No_OpClass),
+                    func(_func), message(_message), cc(_cc)
+        {}
 
-        std::string generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const;
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+
+            printMnemonic(response, instMnem, mnemonic);
+            response << "\"" << message << "\"";
+
+            return response.str();
+        }
     };
 }};
 
@@ -70,50 +83,28 @@ def template MicroDebugDeclare {{
 }};
 
 def template MicroDebugExecute {{
-        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+        Fault
+        %(class_name)s::execute(%(CPU_exec_context)s *xc,
                 Trace::InstRecord *traceData) const
         {
             %(op_decl)s
             %(op_rd)s
             if (%(cond_test)s) {
-                %(func)s("%s\n", message);
+                return new GenericISA::M5DebugFault(func, message);
+            } else {
+                return NoFault;
             }
-            return NoFault;
         }
 }};
 
-output decoder {{
-    inline MicroDebugBase::MicroDebugBase(
-            ExtMachInst machInst, const char * mnem, const char * instMnem,
-            uint64_t setFlags, std::string _message, uint8_t _cc) :
-        X86MicroopBase(machInst, mnem, instMnem,
-                setFlags, No_OpClass),
-                message(_message), cc(_cc)
-    {
-    }
-}};
-
 def template MicroDebugConstructor {{
-    inline %(class_name)s::%(class_name)s(
+    %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem, uint64_t setFlags,
             std::string _message, uint8_t _cc) :
         %(base_class)s(machInst, "%(func)s", instMnem,
-                setFlags, _message, _cc)
+                setFlags, %(func_num)s, _message, _cc)
     {
         %(constructor)s;
-    }
-}};
-
-output decoder {{
-    std::string MicroDebugBase::generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
-    {
-        std::stringstream response;
-
-        printMnemonic(response, instMnem, mnemonic);
-        response << "\"" << message << "\"";
-
-        return response.str();
     }
 }};
 
@@ -142,13 +133,14 @@ let {{
     header_output = ""
     decoder_output = ""
 
-    def buildDebugMicro(func):
+    def buildDebugMicro(func, func_num):
         global exec_output, header_output, decoder_output
 
         iop = InstObjParams(func, "Micro%sFlags" % func.capitalize(),
                 "MicroDebugBase",
                 {"code": "",
                  "func": func,
+                 "func_num": "GenericISA::M5DebugFault::%s" % func_num,
                  "cond_test": "checkCondition(ccFlagBits, cc)"})
         exec_output += MicroDebugExecute.subst(iop)
         header_output += MicroDebugDeclare.subst(iop)
@@ -158,6 +150,7 @@ let {{
                 "MicroDebugBase",
                 {"code": "",
                  "func": func,
+                 "func_num": "GenericISA::M5DebugFault::%s" % func_num,
                  "cond_test": "true"})
         exec_output += MicroDebugExecute.subst(iop)
         header_output += MicroDebugDeclare.subst(iop)
@@ -169,8 +162,8 @@ let {{
         global microopClasses
         microopClasses[func] = MicroDebugChild
 
-    buildDebugMicro("panic")
-    buildDebugMicro("fatal")
-    buildDebugMicro("warn")
-    buildDebugMicro("warn_once")
+    buildDebugMicro("panic", "PanicFunc")
+    buildDebugMicro("fatal", "FatalFunc")
+    buildDebugMicro("warn", "WarnFunc")
+    buildDebugMicro("warn_once", "WarnOnceFunc")
 }};
