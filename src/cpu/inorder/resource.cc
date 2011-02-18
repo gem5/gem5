@@ -407,7 +407,7 @@ int ResourceRequest::maxReqCount = 0;
 ResourceRequest::ResourceRequest(Resource *_res, DynInstPtr _inst, 
                                  int stage_num, int res_idx, int slot_num, 
                                  unsigned _cmd)
-    : res(_res), inst(_inst), cmd(_cmd),  stageNum(stage_num),
+    : res(_res), inst(_inst), cmd(_cmd),  valid(false), stageNum(stage_num),
       resIdx(res_idx), slotNum(slot_num), completed(false),
       squashed(false), processing(false), memStall(false)
 {

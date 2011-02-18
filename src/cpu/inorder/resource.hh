@@ -299,6 +299,8 @@ class ResourceRequest
 
     static int maxReqCount;
     
+    friend class Resource;
+
   public:
     ResourceRequest(Resource *_res, DynInstPtr _inst, int stage_num,
                     int res_idx, int slot_num, unsigned _cmd);
@@ -321,7 +323,6 @@ class ResourceRequest
     /////////////////////////////////////////////
     /** Get Resource Index */
     int getResIdx() { return resIdx; }
-
        
     /** Get Slot Number */
     int getSlot() { return slotNum; }
@@ -378,6 +379,7 @@ class ResourceRequest
 
   protected:
     /** Resource Identification */
+    bool valid;
     ThreadID tid;
     int stageNum;
     int resIdx;
