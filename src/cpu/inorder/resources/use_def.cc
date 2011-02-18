@@ -92,7 +92,11 @@ void
 UseDefUnit::init()
 {
     // Set Up Resource Events to Appropriate Resource BandWidth
-    resourceEvent = new ResourceEvent[width];
+    if (latency > 0) {
+        resourceEvent = new ResourceEvent[width];
+    } else {
+        resourceEvent = NULL;
+    }
 
     for (int i = 0; i < width; i++) {
         reqs[i] = new UseDefRequest(this);

@@ -49,7 +49,10 @@ Resource::Resource(string res_name, int res_id, int res_width,
 
 Resource::~Resource()
 {
-    delete [] resourceEvent;
+    if (resourceEvent) {
+        delete [] resourceEvent;
+    }
+
     delete deniedReq;    
 }
 
@@ -57,8 +60,14 @@ Resource::~Resource()
 void
 Resource::init()
 {
-    // Set Up Resource Events to Appropriate Resource BandWidth
-    resourceEvent = new ResourceEvent[width];
+    // If the resource has a zero-cycle (no latency)
+    // function, then no reason to have events
+    // that will process them for the right tick
+    if (latency > 0) {
+        resourceEvent = new ResourceEvent[width];
+    } else {
+        resourceEvent = NULL;
+    }
 
     for (int i = 0; i < width; i++) {
         reqs[i] = new ResourceRequest(this);
@@ -73,7 +82,10 @@ Resource::initSlots()
     // Add available slot numbers for resource
     for (int slot_idx = 0; slot_idx < width; slot_idx++) {
         availSlots.push_back(slot_idx);
-        resourceEvent[slot_idx].init(this, slot_idx);
+
+        if (resourceEvent) {
+            resourceEvent[slot_idx].init(this, slot_idx);
+        }
     }
 }
 
