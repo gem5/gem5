@@ -76,6 +76,7 @@ class ExecutionUnit : public Resource {
     Stats::Scalar executions;
     Tick lastExecuteTick;
     Tick lastControlTick;
+    Tick serializeTick;
 };
 
 

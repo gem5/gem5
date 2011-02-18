@@ -42,7 +42,7 @@ ExecutionUnit::ExecutionUnit(string res_name, int res_id, int res_width,
                              int res_latency, InOrderCPU *_cpu,
                              ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      lastExecuteTick(0), lastControlTick(0)
+      lastExecuteTick(0), lastControlTick(0), serializeTick(0)
 { }
 
 void
@@ -86,23 +86,39 @@ ExecutionUnit::execute(int slot_num)
     DynInstPtr inst = reqs[slot_num]->inst;
     Fault fault = NoFault;
     int seq_num = inst->seqNum;
+    Tick cur_tick = curTick();
 
-    DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%s] %s.\n",
-            inst->readTid(), seq_num, inst->pcState(), inst->instName());
+    if (cur_tick == serializeTick) {
+        DPRINTF(InOrderExecute, "Can not execute [tid:%i][sn:%i][PC:%s] %s. "
+                "All instructions are being serialized this cycle\n",
+                inst->readTid(), seq_num, inst->pcState(), inst->instName());
+        exec_req->done(false);
+        return;
+    }
+
 
     switch (exec_req->cmd)
     {
       case ExecuteInst:
         {
-            if (curTick() != lastExecuteTick) {
-                lastExecuteTick = curTick();
+            DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%s] %s.\n",
+                    inst->readTid(), seq_num, inst->pcState(), inst->instName());
+
+            if (cur_tick != lastExecuteTick) {
+                lastExecuteTick = cur_tick;
             }
 
+            assert(!inst->isMemRef());
 
-            if (inst->isMemRef()) {
-                panic("%s not configured to handle memory ops.\n", resName);
-            } else if (inst->isControl()) {
-                if (lastControlTick == curTick()) {
+            if (inst->isSerializeAfter()) {
+                serializeTick = cur_tick;
+                DPRINTF(InOrderExecute, "Serializing execution after [tid:%i] "
+                        "[sn:%i] [PC:%s] %s.\n", inst->readTid(), seq_num,
+                        inst->pcState(), inst->instName());
+            }
+
+            if (inst->isControl()) {
+                if (lastControlTick == cur_tick) {
                     DPRINTF(InOrderExecute, "Can not Execute More than One Control "
                             "Inst Per Cycle. Blocking Request.\n");
                     exec_req->done(false);
