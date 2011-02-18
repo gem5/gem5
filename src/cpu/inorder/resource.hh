@@ -247,7 +247,7 @@ class Resource {
 class ResourceEvent : public Event
 {
   public:
-    /** Pointer to the CPU. */
+    /** Pointer to the Resource this is an event for */
     Resource *resource;
 
 
@@ -305,6 +305,8 @@ class ResourceRequest
     ResourceRequest(Resource *_res);
     
     virtual ~ResourceRequest();
+
+    std::string name();
     
     int reqID;
 
@@ -330,7 +332,6 @@ class ResourceRequest
        
     /** Get Slot Number */
     int getSlot() { return slotNum; }
-    int getComplSlot() { return complSlotNum; }
     bool hasSlot()  { return slotNum >= 0; }     
 
     /** Get Stage Number */
@@ -393,7 +394,6 @@ class ResourceRequest
     int stageNum;
     int resIdx;
     int slotNum;
-    int complSlotNum;
     
     /** Resource Request Status */
     bool completed;

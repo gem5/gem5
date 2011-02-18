@@ -31,6 +31,8 @@
 
 #include <vector>
 #include <list>
+
+#include "base/str.hh"
 #include "cpu/inorder/resource.hh"
 #include "cpu/inorder/cpu.hh"
 using namespace std;
@@ -376,7 +378,7 @@ int ResourceRequest::maxReqCount = 0;
 
 ResourceRequest::ResourceRequest(Resource *_res)
     : res(_res), inst(NULL), stagePasses(0), valid(false), doneInResource(false),
-      complSlotNum(-1), completed(false), squashed(false), processing(false),
+      completed(false), squashed(false), processing(false),
       memStall(false)
 {
 }
@@ -389,6 +391,12 @@ ResourceRequest::~ResourceRequest()
                 res->cpu->resReqCount);
 #endif
         inst = NULL;
+}
+
+std::string
+ResourceRequest::name()
+{
+    return res->name() + "."  + to_string(slotNum);
 }
 
 void
@@ -433,11 +441,6 @@ ResourceRequest::done(bool completed)
 
     setCompleted(completed);
 
-    // Used for debugging purposes
-    if (completed) {
-        complSlotNum = slotNum;
-    }
-
     doneInResource = true;
 }
 
@@ -466,7 +469,8 @@ ResourceEvent::process()
 const char *
 ResourceEvent::description()
 {
-    string desc = resource->name() + " event";
+    string desc = resource->name() + "-event:slot[" + to_string(slotIdx)
+        + "]";
 
     return desc.c_str();
 }
