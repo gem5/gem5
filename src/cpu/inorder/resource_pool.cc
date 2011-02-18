@@ -55,7 +55,7 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
 
     memObjects.push_back(ICache);
     resources.push_back(new FetchUnit("icache_port", ICache,
-                                      stage_width * MaxThreads, 0, _cpu,
+                                      stage_width * 2 + MaxThreads, 0, _cpu,
                                       params));
 
     resources.push_back(new DecodeUnit("Decode-Unit", Decode, 
@@ -68,7 +68,7 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
                                        0, _cpu, params));
 
     resources.push_back(new UseDefUnit("RegFile-Manager", RegManager, 
-                                       stage_width * MaxThreads, 0, _cpu,
+                                       stage_width * 3, 0, _cpu,
                                        params));
 
     resources.push_back(new AGENUnit("AGEN-Unit", AGEN, 
@@ -77,16 +77,16 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
     resources.push_back(new ExecutionUnit("Execution-Unit", ExecUnit, 
                                           stage_width, 0, _cpu, params));
 
-    resources.push_back(new MultDivUnit("Mult-Div-Unit", MDU, 5, 0, _cpu, 
-                                        params));
+    resources.push_back(new MultDivUnit("Mult-Div-Unit", MDU,
+                                        stage_width * 2, 0, _cpu, params));
 
     memObjects.push_back(DCache);
     resources.push_back(new CacheUnit("dcache_port", DCache, 
-                                      stage_width * MaxThreads, 0, _cpu,
+                                      stage_width * 2 + MaxThreads, 0, _cpu,
                                       params));
 
     resources.push_back(new GraduationUnit("Graduation-Unit", Grad, 
-                                           stage_width * MaxThreads, 0, _cpu,
+                                           stage_width, 0, _cpu,
                                            params));
 
     resources.push_back(new InstBuffer("Fetch-Buffer-T1", FetchBuff2, 4, 
