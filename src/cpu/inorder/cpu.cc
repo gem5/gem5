@@ -636,8 +636,7 @@ InOrderCPU::tick()
     }
     activityRec.advance();
    
-    // Any squashed requests, events, or insts then remove them now
-    cleanUpRemovedReqs();
+    // Any squashed events, or insts then remove them now
     cleanUpRemovedEvents();
     cleanUpRemovedInsts();
 
@@ -1433,28 +1432,6 @@ InOrderCPU::cleanUpRemovedInsts()
     }
 
     removeInstsThisCycle = false;
-}
-
-void
-InOrderCPU::cleanUpRemovedReqs()
-{
-    while (!reqRemoveList.empty()) {
-        ResourceRequest *res_req = reqRemoveList.front();
-
-        DPRINTF(RefCount, "[tid:%i] [sn:%lli]: Removing Request "
-                "[stage_num:%i] [res:%s] [slot:%i] [completed:%i].\n",
-                res_req->inst->threadNumber,
-                res_req->inst->seqNum,
-                res_req->getStageNum(),
-                res_req->res->name(),
-                (res_req->isCompleted()) ?
-                res_req->getComplSlot() : res_req->getSlot(),
-                res_req->isCompleted());
-
-        reqRemoveList.pop();
-
-        delete res_req;
-    }
 }
 
 void

@@ -322,9 +322,6 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
             if (resourceEvent[req_slot_num].scheduled())
                 unscheduleEvent(req_slot_num);
 
-            // Mark request for later removal
-            cpu->reqRemoveList.push(req_ptr);
-
             // Mark slot for removal from resource
             slot_remove_list.push_back(req_ptr->getSlot());
         }
@@ -456,14 +453,6 @@ ResourceRequest::done(bool completed)
     // Used for debugging purposes
     if (completed) {
         complSlotNum = slotNum;
-    
-        // Would like to start a convention such as all requests deleted in
-        // resources/pipeline
-        // but a little more complex then it seems...
-        // For now, all COMPLETED requests deleted in resource..
-        //          all FAILED requests deleted in pipeline stage
-        //          *all SQUASHED requests deleted in resource
-        res->cpu->reqRemoveList.push(res->reqMap[slotNum]);
     }
     
     // Free Slot So Another Instruction Can Use This Resource

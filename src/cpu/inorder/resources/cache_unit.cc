@@ -1171,9 +1171,6 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
             }
 
             if (!cache_req->tlbStall && !cache_req->isMemAccPending()) {
-                // Mark request for later removal
-                cpu->reqRemoveList.push(req_ptr);
-
                 // Mark slot for removal from resource
                 slot_remove_list.push_back(req_ptr->getSlot());
             } else {

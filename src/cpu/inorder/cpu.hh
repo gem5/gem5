@@ -593,10 +593,7 @@ class InOrderCPU : public BaseCPU
     /** Cleans up all instructions on the instruction remove list. */
     void cleanUpRemovedInsts();
 
-    /** Cleans up all instructions on the request remove list. */
-    void cleanUpRemovedReqs();
-
-    /** Cleans up all instructions on the CPU event remove list. */
+    /** Cleans up all events on the CPU event remove list. */
     void cleanUpRemovedEvents();
 
     /** Debug function to print all instructions on the list. */
@@ -625,11 +622,6 @@ class InOrderCPU : public BaseCPU
      *  cycle.
      */
     std::queue<ListIt> removeList;
-
-    /** List of all the resource requests that will be removed at the end 
-     *  of this cycle.
-     */
-    std::queue<ResourceRequest*> reqRemoveList;
 
     /** List of all the cpu event requests that will be removed at the end of
      *  the current cycle.

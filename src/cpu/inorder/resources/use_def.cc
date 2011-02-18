@@ -445,9 +445,6 @@ UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                 unscheduleEvent(req_slot_num);
             }
             
-            // Mark request for later removal
-            cpu->reqRemoveList.push(req_ptr);
-
             // Mark slot for removal from resource
             slot_remove_list.push_back(req_ptr->getSlot());
         }

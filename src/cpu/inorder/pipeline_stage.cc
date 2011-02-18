@@ -990,20 +990,6 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     cpu->activateNextReadyContext();
                 }
                 
-                // Mark request for deletion
-                // if it isnt currently being used by a resource
-                if (!req->hasSlot()) {                   
-                    DPRINTF(InOrderStage, "[sn:%i] Deleting Request, has no "
-                            "slot in resource.\n", inst->seqNum);
-                    
-                    cpu->reqRemoveList.push(req);
-                } else {
-                    DPRINTF(InOrderStage, "[sn:%i] Ignoring Request Deletion, "
-                            "in resource [slot:%i].\n", inst->seqNum,
-                            req->getSlot());
-                }
-                
-                
                 break;
             }
 
