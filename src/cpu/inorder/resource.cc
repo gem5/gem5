@@ -325,10 +325,8 @@ Resource::ticks(int num_cycles)
 void
 Resource::scheduleExecution(int slot_num)
 {
-    int res_latency = getLatency(slot_num);
-
-    if (res_latency >= 1) {
-        scheduleEvent(slot_num, res_latency);
+    if (latency >= 1) {
+        scheduleEvent(slot_num, latency);
     } else {
         execute(slot_num);
     }
