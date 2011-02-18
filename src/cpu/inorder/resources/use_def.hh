@@ -56,6 +56,8 @@ class UseDefUnit : public Resource {
     UseDefUnit(std::string res_name, int res_id, int res_width,
                int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
 
+    void init();
+
     ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                         int res_idx, int slot_num,
                                         unsigned cmd);

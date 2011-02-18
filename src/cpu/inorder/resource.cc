@@ -40,6 +40,8 @@ Resource::Resource(string res_name, int res_id, int res_width,
     : resName(res_name), id(res_id),
       width(res_width), latency(res_latency), cpu(_cpu)
 {
+    reqs.resize(width);
+
     // Use to deny a instruction a resource.
     deniedReq = new ResourceRequest(this, NULL, 0, 0, 0, 0);
 }
@@ -56,6 +58,10 @@ Resource::init()
 {
     // Set Up Resource Events to Appropriate Resource BandWidth
     resourceEvent = new ResourceEvent[width];
+
+    for (int i = 0; i < width; i++) {
+        reqs[i] = new ResourceRequest(this, NULL, 0, 0, 0, 0);
+    }
 
     initSlots();
 }

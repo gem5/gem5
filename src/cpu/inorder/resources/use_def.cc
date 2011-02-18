@@ -88,6 +88,19 @@ UseDefUnit::regStats()
     Resource::regStats();
 }
 
+void
+UseDefUnit::init()
+{
+    // Set Up Resource Events to Appropriate Resource BandWidth
+    resourceEvent = new ResourceEvent[width];
+
+    for (int i = 0; i < width; i++) {
+        reqs[i] = new UseDefRequest(this, NULL, 0, 0, 0, 0, 0);
+    }
+
+    initSlots();
+}
+
 ResReqPtr
 UseDefUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)

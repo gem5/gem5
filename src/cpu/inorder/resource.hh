@@ -224,6 +224,8 @@ class Resource {
     /** Mapping of slot-numbers to the resource-request pointers */
     std::map<int, ResReqPtr> reqMap;
 
+    std::vector<ResReqPtr> reqs;
+
     /** A list of all the available execution slots for this resource.
      *  This correlates with the actual resource event idx.
      */

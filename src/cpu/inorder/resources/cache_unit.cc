@@ -133,6 +133,11 @@ CacheUnit::getPort(const string &if_name, int idx)
 void
 CacheUnit::init()
 {
+    for (int i = 0; i < width; i++) {
+        reqs[i] = new CacheRequest(this, NULL, 0, 0, 0, 0, 0,
+                                   MemCmd::Command(0), 0, 0, 0);
+    }
+
     // Currently Used to Model TLB Latency. Eventually
     // Switch to Timing TLB translations.
     resourceEvent = new CacheUnitEvent[width];
