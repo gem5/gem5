@@ -49,8 +49,8 @@ GraduationUnit::GraduationUnit(std::string res_name, int res_id, int res_width,
 void
 GraduationUnit::execute(int slot_num)
 {
-    ResourceRequest* grad_req = reqMap[slot_num];
-    DynInstPtr inst = reqMap[slot_num]->inst;
+    ResourceRequest* grad_req = reqs[slot_num];
+    DynInstPtr inst = reqs[slot_num]->inst;
     ThreadID tid = inst->readTid();
     int stage_num = inst->curSkedEntry->stageNum;
 

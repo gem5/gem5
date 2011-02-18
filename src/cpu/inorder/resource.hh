@@ -221,9 +221,9 @@ class Resource {
     const int latency;
 
   public:
-    /** Mapping of slot-numbers to the resource-request pointers */
-    std::map<int, ResReqPtr> reqMap;
-
+    /** List of all Requests the Resource is Servicing. Each request
+        represents part of the resource's bandwidth
+    */
     std::vector<ResReqPtr> reqs;
 
     /** A list of all the available execution slots for this resource.
@@ -302,19 +302,21 @@ class ResourceRequest
     friend class Resource;
 
   public:
-    ResourceRequest(Resource *_res, DynInstPtr _inst, int stage_num,
-                    int res_idx, int slot_num, unsigned _cmd);
+    ResourceRequest(Resource *_res);
     
     virtual ~ResourceRequest();
     
     int reqID;
 
+    virtual void setRequest(DynInstPtr _inst, int stage_num,
+                    int res_idx, int slot_num, unsigned _cmd);
+
+    virtual void clearRequest();
+
     /** Acknowledge that this is a request is done and remove
      *  from resource.
      */
     void done(bool completed = true);
-
-    short stagePasses;
     
     /////////////////////////////////////////////
     //
@@ -356,6 +358,10 @@ class ResourceRequest
     /** Command For This Resource */
     unsigned cmd;
 
+    short stagePasses;
+
+    bool valid;
+
     ////////////////////////////////////////
     //
     // GET RESOURCE REQUEST STATUS FROM VARIABLES
@@ -379,7 +385,6 @@ class ResourceRequest
 
   protected:
     /** Resource Identification */
-    bool valid;
     ThreadID tid;
     int stageNum;
     int resIdx;

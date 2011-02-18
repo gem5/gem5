@@ -99,9 +99,15 @@ class TLBUnitRequest : public ResourceRequest {
     typedef ThePipeline::DynInstPtr DynInstPtr;
 
   public:
-    TLBUnitRequest(TLBUnit *res, DynInstPtr inst, int stage_num, int res_idx, int slot_num,
-                   unsigned _cmd)
-        : ResourceRequest(res, inst, stage_num, res_idx, slot_num, _cmd)
+    TLBUnitRequest(TLBUnit *res)
+        : ResourceRequest(res), memReq(NULL)
+    {
+    }
+
+    RequestPtr memReq;
+
+    void setRequest(DynInstPtr inst, int stage_num, int res_idx, int slot_num,
+                    unsigned _cmd)
     {
         Addr aligned_addr;
         int req_size;
@@ -131,9 +137,10 @@ class TLBUnitRequest : public ResourceRequest {
                                            inst->readTid());
             memReq = inst->dataMemReq;
         }
+
+        ResourceRequest::setRequest(inst, stage_num, res_idx, slot_num, _cmd);
     }
 
-    RequestPtr memReq;
 };
 
 

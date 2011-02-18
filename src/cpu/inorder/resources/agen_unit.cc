@@ -50,8 +50,8 @@ AGENUnit::regStats()
 void
 AGENUnit::execute(int slot_num)
 {
-    ResourceRequest* agen_req = reqMap[slot_num];
-    DynInstPtr inst = reqMap[slot_num]->inst;
+    ResourceRequest* agen_req = reqs[slot_num];
+    DynInstPtr inst = reqs[slot_num]->inst;
 #if TRACING_ON
     ThreadID tid = inst->readTid();
 #endif

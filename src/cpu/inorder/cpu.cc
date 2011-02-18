@@ -324,12 +324,7 @@ InOrderCPU::InOrderCPU(Params *params)
                                             tid, 
                                             asid[tid]);
 
-        dummyReq[tid] = new ResourceRequest(resPool->getResource(0), 
-                                            dummyInst[tid], 
-                                            0, 
-                                            0, 
-                                            0, 
-                                            0);        
+        dummyReq[tid] = new ResourceRequest(resPool->getResource(0));
     }
 
     dummyReqInst = new InOrderDynInst(this, NULL, 0, 0, 0);

@@ -119,32 +119,23 @@ FetchUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
     ScheduleEntry* sched_entry = *inst->curSkedEntry;
+    CacheRequest* cache_req = dynamic_cast<CacheRequest*>(reqs[slot_num]);
 
     if (!inst->validMemAddr()) {
         panic("Mem. Addr. must be set before requesting cache access\n");
     }
 
-    MemCmd::Command pkt_cmd;
+    assert(sched_entry->cmd == InitiateFetch);
 
-    switch (sched_entry->cmd)
-    {
-      case InitiateFetch:
-        pkt_cmd = MemCmd::ReadReq;
+    DPRINTF(InOrderCachePort,
+            "[tid:%i]: Fetch request from [sn:%i] for addr %08p\n",
+            inst->readTid(), inst->seqNum, inst->getMemAddr());
 
-        DPRINTF(InOrderCachePort,
-                "[tid:%i]: Fetch request from [sn:%i] for addr %08p\n",
-                inst->readTid(), inst->seqNum, inst->getMemAddr());
-        break;
+    cache_req->setRequest(inst, stage_num, id, slot_num,
+                          sched_entry->cmd, MemCmd::ReadReq,
+                          inst->curSkedEntry->idx);
 
-      default:
-        panic("%i: Unexpected request type (%i) to %s", curTick(),
-              sched_entry->cmd, name());
-    }
-
-    return new CacheRequest(this, inst, stage_num, id, slot_num,
-                            sched_entry->cmd, 0, pkt_cmd,
-                            0/*flags*/, this->cpu->readCpuId(),
-                            inst->curSkedEntry->idx);
+    return cache_req;
 }
 
 void
@@ -214,7 +205,7 @@ FetchUnit::markBlockUsed(std::list<FetchBlock*>::iterator block_it)
 void
 FetchUnit::execute(int slot_num)
 {
-    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqMap[slot_num]);
+    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqs[slot_num]);
     assert(cache_req);
 
     if (cachePortBlocked) {

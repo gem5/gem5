@@ -95,7 +95,7 @@ UseDefUnit::init()
     resourceEvent = new ResourceEvent[width];
 
     for (int i = 0; i < width; i++) {
-        reqs[i] = new UseDefRequest(this, NULL, 0, 0, 0, 0, 0);
+        reqs[i] = new UseDefRequest(this);
     }
 
     initSlots();
@@ -105,29 +105,27 @@ ResReqPtr
 UseDefUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
-    return new UseDefRequest(this, inst, stage_num, id, slot_num, cmd,
-                             inst->curSkedEntry->idx);
+    UseDefRequest *ud_req = dynamic_cast<UseDefRequest*>(reqs[slot_num]);
+    ud_req->setRequest(inst, stage_num, id, slot_num, cmd,
+                       inst->curSkedEntry->idx);
+    return ud_req;
 }
 
 
 ResReqPtr
 UseDefUnit::findRequest(DynInstPtr inst)
 {
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-    while (map_it != map_end) {
-        UseDefRequest* ud_req = 
-            dynamic_cast<UseDefRequest*>((*map_it).second);
+    for (int i = 0; i < width; i++) {
+        UseDefRequest* ud_req =
+            dynamic_cast<UseDefRequest*>(reqs[i]);
         assert(ud_req);
 
-        if (ud_req &&
+        if (ud_req->valid &&
             ud_req->getInst() == inst &&
             ud_req->cmd == inst->curSkedEntry->cmd &&
             ud_req->useDefIdx == inst->curSkedEntry->idx) {
             return ud_req;
         }
-        map_it++;
     }
 
     return NULL;
@@ -138,7 +136,7 @@ UseDefUnit::execute(int slot_idx)
 {
     // After this is working, change this to a reinterpret cast
     // for performance considerations
-    UseDefRequest* ud_req = dynamic_cast<UseDefRequest*>(reqMap[slot_idx]);
+    UseDefRequest* ud_req = dynamic_cast<UseDefRequest*>(reqs[slot_idx]);
     assert(ud_req);
 
     DynInstPtr inst = ud_req->inst;
@@ -421,15 +419,10 @@ UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
     DPRINTF(InOrderUseDef, "[tid:%i]: Updating Due To Squash After [sn:%i].\n",
             tid, squash_seq_num);
 
-    std::vector<int> slot_remove_list;
+    for (int i = 0; i < width; i++) {
+        ResReqPtr req_ptr = reqs[i];
 
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-    while (map_it != map_end) {
-        ResReqPtr req_ptr = (*map_it).second;
-
-        if (req_ptr &&
+        if (req_ptr->valid &&
             req_ptr->getInst()->readTid() == tid &&
             req_ptr->getInst()->seqNum > squash_seq_num) {
 
@@ -444,17 +437,9 @@ UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                 
                 unscheduleEvent(req_slot_num);
             }
-            
-            // Mark slot for removal from resource
-            slot_remove_list.push_back(req_ptr->getSlot());
+
+            freeSlot(req_slot_num);
         }
-
-        map_it++;
-    }
-
-    // Now Delete Slot Entry from Req. Map
-    for (int i = 0; i < slot_remove_list.size(); i++) {
-        freeSlot(slot_remove_list[i]);
     }
 
     if (outReadSeqNum[tid] >= squash_seq_num) {

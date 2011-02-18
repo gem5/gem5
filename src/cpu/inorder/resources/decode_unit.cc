@@ -49,8 +49,8 @@ DecodeUnit::DecodeUnit(std::string res_name, int res_id, int res_width,
 void
 DecodeUnit::execute(int slot_num)
 {
-    ResourceRequest* decode_req = reqMap[slot_num];
-    DynInstPtr inst = reqMap[slot_num]->inst;
+    ResourceRequest* decode_req = reqs[slot_num];
+    DynInstPtr inst = reqs[slot_num]->inst;
     ThreadID tid = inst->readTid();
 
     switch (decode_req->cmd)

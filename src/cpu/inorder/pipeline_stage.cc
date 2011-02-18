@@ -938,6 +938,7 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     "\n", tid, inst->seqNum, cpu->resPool->name(res_num));
 
             ResReqPtr req = cpu->resPool->request(res_num, inst);
+            assert(req->valid);
 
             if (req->isCompleted()) {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s "

@@ -219,25 +219,50 @@ class CacheUnitEvent : public ResourceEvent {
     void process();
 };
 
+//@todo: Move into CacheUnit Class for private access to "valid" field
 class CacheRequest : public ResourceRequest
 {
   public:
-    CacheRequest(CacheUnit *cres, DynInstPtr inst, int stage_num, int res_idx,
-                 int slot_num, unsigned cmd, int req_size,
-                 MemCmd::Command pkt_cmd, unsigned flags, int cpu_id, int idx)
-        : ResourceRequest(cres, inst, stage_num, res_idx, slot_num, cmd),
-          pktCmd(pkt_cmd), memReq(NULL), reqData(NULL), dataPkt(NULL),
-          retryPkt(NULL), memAccComplete(false), memAccPending(false),
-          tlbStall(false), splitAccess(false), splitAccessNum(-1),
-          split2ndAccess(false), instIdx(idx), fetchBufferFill(false)
+    CacheRequest(CacheUnit *cres)
+        :  ResourceRequest(cres), memReq(NULL), reqData(NULL),
+           dataPkt(NULL), retryPkt(NULL), memAccComplete(false),
+           memAccPending(false), tlbStall(false), splitAccess(false),
+           splitAccessNum(-1), split2ndAccess(false),
+           fetchBufferFill(false)
     { }
-
 
     virtual ~CacheRequest()
     {
         if (reqData && !splitAccess) {
             delete [] reqData;
         }
+    }
+
+    void setRequest(DynInstPtr _inst, int stage_num, int res_idx, int slot_num,
+                    unsigned _cmd, MemCmd::Command pkt_cmd, int idx)
+    {
+        pktCmd = pkt_cmd;
+        instIdx = idx;
+
+        ResourceRequest::setRequest(_inst, stage_num, res_idx, slot_num, _cmd);
+    }
+
+    void clearRequest()
+    {
+        memReq = NULL;
+        reqData = NULL;
+        dataPkt = NULL;
+        retryPkt = NULL;
+        memAccComplete = false;
+        memAccPending = false;
+        tlbStall = false;
+        splitAccess = false;
+        splitAccessNum = -1;
+        split2ndAccess = false;
+        instIdx = 0;
+        fetchBufferFill = false;
+
+        ResourceRequest::clearRequest();
     }
 
     virtual PacketDataPtr getData()

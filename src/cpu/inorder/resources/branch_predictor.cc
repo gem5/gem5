@@ -66,7 +66,7 @@ BranchPredictor::execute(int slot_num)
 {
     // After this is working, change this to a reinterpret cast
     // for performance considerations
-    ResourceRequest* bpred_req = reqMap[slot_num];
+    ResourceRequest* bpred_req = reqs[slot_num];
     DynInstPtr inst = bpred_req->inst;
     ThreadID tid = inst->readTid();
     int seq_num = inst->seqNum;

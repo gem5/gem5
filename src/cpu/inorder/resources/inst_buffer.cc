@@ -62,7 +62,7 @@ InstBuffer::regStats()
 void
 InstBuffer::execute(int slot_idx)
 {
-    ResReqPtr ib_req = reqMap[slot_idx];
+    ResReqPtr ib_req = reqs[slot_idx];
     DynInstPtr inst = ib_req->inst;
     ThreadID tid = inst->readTid();
     int stage_num = ib_req->getStageNum();

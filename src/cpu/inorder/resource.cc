@@ -43,7 +43,7 @@ Resource::Resource(string res_name, int res_id, int res_width,
     reqs.resize(width);
 
     // Use to deny a instruction a resource.
-    deniedReq = new ResourceRequest(this, NULL, 0, 0, 0, 0);
+    deniedReq = new ResourceRequest(this);
 }
 
 Resource::~Resource()
@@ -60,7 +60,7 @@ Resource::init()
     resourceEvent = new ResourceEvent[width];
 
     for (int i = 0; i < width; i++) {
-        reqs[i] = new ResourceRequest(this, NULL, 0, 0, 0, 0);
+        reqs[i] = new ResourceRequest(this);
     }
 
     initSlots();
@@ -100,39 +100,28 @@ Resource::freeSlot(int slot_idx)
     // Put slot number on this resource's free list
     availSlots.push_back(slot_idx);
 
-    // Erase Request Pointer From Request Map
-    std::map<int, ResReqPtr>::iterator req_it = reqMap.find(slot_idx);
-
-    assert(req_it != reqMap.end());
-    reqMap.erase(req_it);
-
+    // Invalidate Request & Reset it's flags
+    reqs[slot_idx]->clearRequest();
 }
 
-// TODO: More efficiently search for instruction's slot within
-// resource.
 int
 Resource::findSlot(DynInstPtr inst)
 {
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
     int slot_num = -1;
 
-    while (map_it != map_end) {
-        if ((*map_it).second->getInst()->seqNum ==
-            inst->seqNum) {
-            slot_num = (*map_it).second->getSlot();
+    for (int i = 0; i < width; i++) {
+        if (reqs[i]->valid &&
+            reqs[i]->getInst()->seqNum == inst->seqNum) {
+            slot_num = reqs[i]->getSlot();
         }
-        map_it++;
     }
-
     return slot_num;
 }
 
 int
 Resource::getSlot(DynInstPtr inst)
 {
-    int slot_num;
+    int slot_num = -1;
 
     if (slotsAvail() != 0) {
         slot_num = availSlots[0];
@@ -142,24 +131,6 @@ Resource::getSlot(DynInstPtr inst)
         assert(slot_num == *vect_it);
 
         availSlots.erase(vect_it);
-    } else {
-        DPRINTF(Resource, "[tid:%i]: No slots in resource "
-                "available to service [sn:%i].\n", inst->readTid(),
-                inst->seqNum);
-        slot_num = -1;
-
-        map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-        map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-        while (map_it != map_end) {
-            if ((*map_it).second) {
-                DPRINTF(Resource, "Currently Serving request from: "
-                        "[tid:%i] [sn:%i].\n",
-                        (*map_it).second->getInst()->readTid(),
-                        (*map_it).second->getInst()->seqNum);
-            }
-            map_it++;
-        }
     }
 
     return slot_num;
@@ -206,7 +177,7 @@ Resource::request(DynInstPtr inst)
                         inst->readTid());
             }
 
-            reqMap[slot_num] = inst_req;
+            reqs[slot_num] = inst_req;
 
             try_request = true;
         }
@@ -242,32 +213,21 @@ ResReqPtr
 Resource::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
-    return new ResourceRequest(this, inst, stage_num, id, slot_num,
-                               cmd);
+    reqs[slot_num]->setRequest(inst, stage_num, id, slot_num, cmd);
+    return reqs[slot_num];
 }
 
 ResReqPtr
 Resource::findRequest(DynInstPtr inst)
 {
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-    bool found = false;
-    ResReqPtr req = NULL;
-    
-    while (map_it != map_end) {
-        if ((*map_it).second &&
-            (*map_it).second->getInst() == inst) {            
-            req = (*map_it).second;
-            //return (*map_it).second;
-            assert(found == false);
-            found = true;            
+    for (int i = 0; i < width; i++) {
+        if (reqs[i]->valid &&
+            reqs[i]->getInst() == inst) {
+            return reqs[i];
         }
-        map_it++;
     }
 
-    return req;    
-    //return NULL;
+    return NULL;
 }
 
 void
@@ -281,9 +241,9 @@ void
 Resource::execute(int slot_idx)
 {
     DPRINTF(Resource, "[tid:%i]: Executing %s resource.\n",
-            reqMap[slot_idx]->getTid(), name());
-    reqMap[slot_idx]->setCompleted(true);
-    reqMap[slot_idx]->done();
+            reqs[slot_idx]->getTid(), name());
+    reqs[slot_idx]->setCompleted(true);
+    reqs[slot_idx]->done();
 }
 
 void
@@ -299,15 +259,10 @@ void
 Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                  ThreadID tid)
 {
-    std::vector<int> slot_remove_list;
+    for (int i = 0; i < width; i++) {
+        ResReqPtr req_ptr = reqs[i];
 
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-    while (map_it != map_end) {
-        ResReqPtr req_ptr = (*map_it).second;
-
-        if (req_ptr &&
+        if (req_ptr->valid &&
             req_ptr->getInst()->readTid() == tid &&
             req_ptr->getInst()->seqNum > squash_seq_num) {
 
@@ -322,16 +277,8 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
             if (resourceEvent[req_slot_num].scheduled())
                 unscheduleEvent(req_slot_num);
 
-            // Mark slot for removal from resource
-            slot_remove_list.push_back(req_ptr->getSlot());
+            freeSlot(req_slot_num);
         }
-
-        map_it++;
-    }
-
-    // Now Delete Slot Entry from Req. Map
-    for (int i = 0; i < slot_remove_list.size(); i++) {
-        freeSlot(slot_remove_list[i]);
     }
 }
 
@@ -366,8 +313,8 @@ void
 Resource::scheduleEvent(int slot_idx, int delay)
 {
     DPRINTF(Resource, "[tid:%i]: Scheduling event for [sn:%i] on tick %i.\n",
-            reqMap[slot_idx]->inst->readTid(),
-            reqMap[slot_idx]->inst->seqNum,
+            reqs[slot_idx]->inst->readTid(),
+            reqs[slot_idx]->inst->seqNum,
             cpu->ticks(delay) + curTick());
     resourceEvent[slot_idx].scheduleEvent(delay);
 }
@@ -404,32 +351,10 @@ int ResourceRequest::resReqID = 0;
 
 int ResourceRequest::maxReqCount = 0;
 
-ResourceRequest::ResourceRequest(Resource *_res, DynInstPtr _inst, 
-                                 int stage_num, int res_idx, int slot_num, 
-                                 unsigned _cmd)
-    : res(_res), inst(_inst), cmd(_cmd),  valid(false), stageNum(stage_num),
-      resIdx(res_idx), slotNum(slot_num), completed(false),
-      squashed(false), processing(false), memStall(false)
+ResourceRequest::ResourceRequest(Resource *_res)
+    : res(_res), inst(NULL), stagePasses(0), valid(false), complSlotNum(-1),
+      completed(false), squashed(false), processing(false), memStall(false)
 {
-#ifdef DEBUG
-        reqID = resReqID++;
-        res->cpu->resReqCount++;
-        DPRINTF(ResReqCount, "Res. Req %i created. resReqCount=%i.\n", reqID, 
-                res->cpu->resReqCount);
-
-        if (res->cpu->resReqCount > 100) {
-            fatal("Too many undeleted resource requests. Memory leak?\n");
-        }
-
-        if (res->cpu->resReqCount > maxReqCount) {            
-            maxReqCount = res->cpu->resReqCount;
-        }
-        
-#endif
-
-        stagePasses = 0;
-        complSlotNum = -1;
-        
 }
 
 ResourceRequest::~ResourceRequest()
@@ -439,6 +364,26 @@ ResourceRequest::~ResourceRequest()
         DPRINTF(ResReqCount, "Res. Req %i deleted. resReqCount=%i.\n", reqID, 
                 res->cpu->resReqCount);
 #endif
+}
+
+void
+ResourceRequest::setRequest(DynInstPtr _inst, int stage_num,
+                            int res_idx, int slot_num, unsigned _cmd)
+{
+    valid = true;
+    inst = _inst;
+    stageNum = stage_num;
+    resIdx = res_idx;
+    slotNum = slot_num;
+    cmd = _cmd;
+}
+
+void
+ResourceRequest::clearRequest()
+{
+    valid = false;
+    inst = NULL;
+    stagePasses = 0;
 }
 
 void

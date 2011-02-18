@@ -82,8 +82,8 @@ ExecutionUnit::regStats()
 void
 ExecutionUnit::execute(int slot_num)
 {
-    ResourceRequest* exec_req = reqMap[slot_num];
-    DynInstPtr inst = reqMap[slot_num]->inst;
+    ResourceRequest* exec_req = reqs[slot_num];
+    DynInstPtr inst = reqs[slot_num]->inst;
     Fault fault = NoFault;
     int seq_num = inst->seqNum;
 
