@@ -208,9 +208,9 @@ FetchUnit::execute(int slot_num)
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqs[slot_num]);
     assert(cache_req);
 
-    if (cachePortBlocked) {
+    if (cachePortBlocked && cache_req->cmd == InitiateFetch) {
         DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
-        cache_req->setCompleted(false);
+        cache_req->done(false);
         return;
     }
 
@@ -261,7 +261,7 @@ FetchUnit::execute(int slot_num)
             // If not, block this request.
             if (pendingFetch.size() >= fetchBuffSize) {
                 DPRINTF(InOrderCachePort, "No room available in fetch buffer.\n");
-                cache_req->setCompleted(false);
+                cache_req->done();
                 return;
             }
 
@@ -405,6 +405,7 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
                 cache_pkt->cacheReq->seqNum);
 
         cache_pkt->cacheReq->done();
+        cache_pkt->cacheReq->freeSlot();
         delete cache_pkt;
 
         cpu->wakeCPU();

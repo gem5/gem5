@@ -318,6 +318,8 @@ class ResourceRequest
      */
     void done(bool completed = true);
     
+    void freeSlot();
+
     /////////////////////////////////////////////
     //
     // GET RESOURCE REQUEST IDENTIFICATION / INFO
@@ -361,6 +363,8 @@ class ResourceRequest
     short stagePasses;
 
     bool valid;
+
+    bool doneInResource;
 
     ////////////////////////////////////////
     //

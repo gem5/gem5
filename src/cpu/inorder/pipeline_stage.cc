@@ -940,7 +940,9 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
             ResReqPtr req = cpu->resPool->request(res_num, inst);
             assert(req->valid);
 
-            if (req->isCompleted()) {
+            bool req_completed = req->isCompleted();
+            bool done_in_pipeline = false;
+            if (req_completed) {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s "
                         "completed.\n", tid, inst->seqNum, 
                         cpu->resPool->name(res_num));
@@ -949,11 +951,10 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
 
                 req->stagePasses++;                
 
-                bool done_in_pipeline = inst->finishSkedEntry();
+                done_in_pipeline = inst->finishSkedEntry();
                 if (done_in_pipeline) {
                     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] finished "
                             "in pipeline.\n", tid, inst->seqNum);
-                    break;
                 }
             } else {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s failed."
@@ -990,7 +991,18 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                             "thread due to cache miss.\n");
                     cpu->activateNextReadyContext();
                 }
-                
+            }
+
+            // If this request is no longer needs to take up bandwidth in the
+            // resource, go ahead and free that bandwidth up
+            if (req->doneInResource) {
+                req->freeSlot();
+            }
+
+            // No longer need to process this instruction if the last
+            // request it had wasn't completed or if there is nothing
+            // else for it to do in the pipeline
+            if (done_in_pipeline || !req_completed) {
                 break;
             }
 

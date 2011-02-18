@@ -44,6 +44,7 @@ Resource::Resource(string res_name, int res_id, int res_width,
 
     // Use to deny a instruction a resource.
     deniedReq = new ResourceRequest(this);
+    deniedReq->valid = true;
 }
 
 Resource::~Resource()
@@ -97,6 +98,9 @@ Resource::slotsInUse()
 void
 Resource::freeSlot(int slot_idx)
 {
+    DPRINTF(Resource, "Deallocating [slot:%i].\n",
+            slot_idx);
+
     // Put slot number on this resource's free list
     availSlots.push_back(slot_idx);
 
@@ -160,6 +164,9 @@ Resource::request(DynInstPtr inst)
         slot_num = getSlot(inst);
 
         if (slot_num != -1) {
+            DPRINTF(Resource, "Allocating [slot:%i] for [tid:%i]: [sn:%i]\n",
+                    slot_num, inst->readTid(), inst->seqNum);
+
             // Get Stage # from Schedule Entry
             stage_num = inst->curSkedEntry->stageNum;
             unsigned cmd = inst->curSkedEntry->cmd;
@@ -177,10 +184,12 @@ Resource::request(DynInstPtr inst)
                         inst->readTid());
             }
 
-            reqs[slot_num] = inst_req;
-
             try_request = true;
+        } else {
+            DPRINTF(Resource, "No slot available for [tid:%i]: [sn:%i]\n",
+                    inst->readTid(), inst->seqNum);
         }
+
     }
 
     if (try_request) {
@@ -352,8 +361,9 @@ int ResourceRequest::resReqID = 0;
 int ResourceRequest::maxReqCount = 0;
 
 ResourceRequest::ResourceRequest(Resource *_res)
-    : res(_res), inst(NULL), stagePasses(0), valid(false), complSlotNum(-1),
-      completed(false), squashed(false), processing(false), memStall(false)
+    : res(_res), inst(NULL), stagePasses(0), valid(false), doneInResource(false),
+      complSlotNum(-1), completed(false), squashed(false), processing(false),
+      memStall(false)
 {
 }
 
@@ -384,6 +394,19 @@ ResourceRequest::clearRequest()
     valid = false;
     inst = NULL;
     stagePasses = 0;
+    completed = false;
+    doneInResource = false;
+    squashed = false;
+    memStall = false;
+}
+
+void
+ResourceRequest::freeSlot()
+{
+    assert(res);
+
+    // Free Slot So Another Instruction Can Use This Resource
+    res->freeSlot(slotNum);
 }
 
 void
@@ -399,13 +422,8 @@ ResourceRequest::done(bool completed)
     if (completed) {
         complSlotNum = slotNum;
     }
-    
-    // Free Slot So Another Instruction Can Use This Resource
-    res->freeSlot(slotNum);
 
-    // change slot # to -1, since we check slotNum to see if request is
-    // still valid
-    slotNum = -1;
+    doneInResource = true;
 }
 
 ResourceEvent::ResourceEvent()

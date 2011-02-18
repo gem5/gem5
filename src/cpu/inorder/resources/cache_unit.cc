@@ -667,12 +667,15 @@ CacheUnit::execute(int slot_num)
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqs[slot_num]);
     assert(cache_req);
 
-    if (cachePortBlocked) {
+    if (cachePortBlocked &&
+        (cache_req->cmd == InitiateReadData ||
+         cache_req->cmd == InitiateWriteData ||
+         cache_req->cmd == InitSecondSplitRead ||
+         cache_req->cmd == InitSecondSplitWrite)) {
         DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
-        cache_req->setCompleted(false);
+        cache_req->done(false);
         return;
     }
-
 
     DynInstPtr inst = cache_req->inst;
 #if TRACING_ON
@@ -690,7 +693,12 @@ CacheUnit::execute(int slot_num)
         acc_type = "read";
 #endif        
       case InitiateWriteData:
-            
+        if (cachePortBlocked) {
+            DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
+            cache_req->done(false);
+            return;
+        }
+
         DPRINTF(InOrderCachePort,
                 "[tid:%u]: [sn:%i] Initiating data %s access to %s for "
                 "addr. %08p\n", tid, inst->seqNum, acc_type, name(),
@@ -864,7 +872,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
                     "[tid:%i] [sn:%i] cannot access cache, because port "
                     "is blocked. now waiting to retry request\n", tid, 
                     inst->seqNum);
-            cache_req->setCompleted(false);
+            cache_req->done(false);
             cachePortBlocked = true;
         } else {
             DPRINTF(InOrderCachePort,
@@ -888,7 +896,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
         // Make cache request again since access due to
         // inability to access
         DPRINTF(InOrderStall, "STALL: \n");
-        cache_req->setCompleted(false);
+        cache_req->done(false);
     }
 
 }
@@ -911,7 +919,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 cache_pkt->cacheReq->getTid(),
                 cache_pkt->cacheReq->seqNum);
 
-        cache_pkt->cacheReq->done();
+        cache_pkt->cacheReq->freeSlot();
         delete cache_pkt;
 
         cpu->wakeCPU();
@@ -1075,8 +1083,10 @@ CacheUnitEvent::process()
     req_ptr->tlbStall = false;
 
     if (req_ptr->isSquashed()) {
-        req_ptr->done();
+        req_ptr->freeSlot();
     }
+
+    tlb_res->cpu->wakeCPU();
 }
 
 void

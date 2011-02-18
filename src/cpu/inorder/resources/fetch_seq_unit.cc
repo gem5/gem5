@@ -100,7 +100,7 @@ FetchSeqUnit::execute(int slot_num)
                 fs_req->done();
             } else {
                 DPRINTF(InOrderStall, "STALL: [tid:%i]: NPC not valid\n", tid);
-                fs_req->setCompleted(false);
+                fs_req->done(false);
             }
         }
         break;
