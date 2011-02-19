@@ -44,7 +44,6 @@ machine(L1Cache, "Directory protocol")
   // From this node's L1 cache TO the network
   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
   MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false";
-  MessageBuffer foo, network="To", virtual_network="1", ordered="false";
   // a local L1 -> this L2 bank
   MessageBuffer responseFromL1Cache, network="To", virtual_network="2", ordered="false";
 //  MessageBuffer writebackFromL1Cache, network="To", virtual_network="3", ordered="false";
@@ -53,7 +52,6 @@ machine(L1Cache, "Directory protocol")
   // To this node's L1 cache FROM the network
   // a L2 bank -> this L1
   MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false";
-  MessageBuffer goo, network="From", virtual_network="1", ordered="false";
   // a L2 bank -> this L1
   MessageBuffer responseToL1Cache, network="From", virtual_network="2", ordered="false";
 
@@ -229,7 +227,6 @@ machine(L1Cache, "Directory protocol")
   out_port(requestNetwork_out, RequestMsg, requestFromL1Cache);
   out_port(responseNetwork_out, ResponseMsg, responseFromL1Cache);
   out_port(triggerQueue_out, TriggerMsg, triggerQueue);
-  out_port(foo_out, ResponseMsg, foo);
 
   // ** IN_PORTS **
 
@@ -239,15 +236,6 @@ machine(L1Cache, "Directory protocol")
         trigger(Event:Use_Timeout, useTimerTable.readyAddress(),
                 getCacheEntry(useTimerTable.readyAddress()),
                 TBEs[useTimerTable.readyAddress()]);
-    }
-  }
-
-
-  in_port(goo_in, RequestMsg, goo) {
-    if (goo_in.isReady()) {
-      peek(goo_in, RequestMsg) {
-        assert(false);
-      }
     }
   }
 
