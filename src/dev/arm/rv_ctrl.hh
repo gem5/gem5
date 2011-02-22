@@ -40,6 +40,7 @@
 #ifndef __DEV_ARM_RV_HH__
 #define __DEV_ARM_RV_HH__
 
+#include "base/bitunion.hh"
 #include "base/range.hh"
 #include "dev/io_device.hh"
 #include "params/RealViewCtrl.hh"
@@ -86,6 +87,14 @@ class RealViewCtrl : public BasicPioDevice
         TestOsc4   = 0xD0
     };
 
+    // system lock value
+    BitUnion32(SysLockReg)
+        Bitfield<15,0> lockVal;
+        Bitfield<16> locked;
+    EndBitUnion(SysLockReg)
+
+    SysLockReg sysLock;
+
   public:
     typedef RealViewCtrlParams Params;
     const Params *
@@ -120,4 +129,3 @@ class RealViewCtrl : public BasicPioDevice
 
 
 #endif // __DEV_ARM_RV_HH__
-

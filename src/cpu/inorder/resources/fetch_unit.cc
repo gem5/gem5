@@ -56,6 +56,31 @@ FetchUnit::FetchUnit(string res_name, int res_id, int res_width,
       predecoder(NULL)
 { }
 
+FetchUnit::~FetchUnit()
+{
+    std::list<FetchBlock*>::iterator fetch_it = fetchBuffer.begin();
+    std::list<FetchBlock*>::iterator end_it = fetchBuffer.end();
+    while (fetch_it != end_it) {
+        delete (*fetch_it)->block;
+        delete *fetch_it;
+        fetch_it++;
+    }
+    fetchBuffer.clear();
+
+
+    std::list<FetchBlock*>::iterator pend_it = pendingFetch.begin();
+    std::list<FetchBlock*>::iterator pend_end = pendingFetch.end();
+    while (pend_it != pend_end) {
+        if ((*pend_it)->block) {
+            delete (*pend_it)->block;
+        }
+
+        delete *pend_it;
+        pend_it++;
+    }
+    pendingFetch.clear();
+}
+
 void
 FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
                           DynInstPtr inst)
@@ -118,33 +143,24 @@ ResReqPtr
 FetchUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
-    ScheduleEntry* sched_entry = inst->resSched.top();
+    ScheduleEntry* sched_entry = *inst->curSkedEntry;
+    CacheRequest* cache_req = dynamic_cast<CacheRequest*>(reqs[slot_num]);
 
     if (!inst->validMemAddr()) {
         panic("Mem. Addr. must be set before requesting cache access\n");
     }
 
-    MemCmd::Command pkt_cmd;
+    assert(sched_entry->cmd == InitiateFetch);
 
-    switch (sched_entry->cmd)
-    {
-      case InitiateFetch:
-        pkt_cmd = MemCmd::ReadReq;
+    DPRINTF(InOrderCachePort,
+            "[tid:%i]: Fetch request from [sn:%i] for addr %08p\n",
+            inst->readTid(), inst->seqNum, inst->getMemAddr());
 
-        DPRINTF(InOrderCachePort,
-                "[tid:%i]: Fetch request from [sn:%i] for addr %08p\n",
-                inst->readTid(), inst->seqNum, inst->getMemAddr());
-        break;
+    cache_req->setRequest(inst, stage_num, id, slot_num,
+                          sched_entry->cmd, MemCmd::ReadReq,
+                          inst->curSkedEntry->idx);
 
-      default:
-        panic("%i: Unexpected request type (%i) to %s", curTick(),
-              sched_entry->cmd, name());
-    }
-
-    return new CacheRequest(this, inst, stage_num, id, slot_num,
-                            sched_entry->cmd, 0, pkt_cmd,
-                            0/*flags*/, this->cpu->readCpuId(),
-                            inst->resSched.top()->idx);
+    return cache_req;
 }
 
 void
@@ -214,12 +230,12 @@ FetchUnit::markBlockUsed(std::list<FetchBlock*>::iterator block_it)
 void
 FetchUnit::execute(int slot_num)
 {
-    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqMap[slot_num]);
+    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqs[slot_num]);
     assert(cache_req);
 
-    if (cachePortBlocked) {
+    if (cachePortBlocked && cache_req->cmd == InitiateFetch) {
         DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
-        cache_req->setCompleted(false);
+        cache_req->done(false);
         return;
     }
 
@@ -270,7 +286,7 @@ FetchUnit::execute(int slot_num)
             // If not, block this request.
             if (pendingFetch.size() >= fetchBuffSize) {
                 DPRINTF(InOrderCachePort, "No room available in fetch buffer.\n");
-                cache_req->setCompleted(false);
+                cache_req->done();
                 return;
             }
 
@@ -337,6 +353,8 @@ FetchUnit::execute(int slot_num)
                     return;
                 }
 
+                delete [] (*repl_it)->block;
+                delete *repl_it;
                 fetchBuffer.erase(repl_it);
             }
 
@@ -414,6 +432,7 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
                 cache_pkt->cacheReq->seqNum);
 
         cache_pkt->cacheReq->done();
+        cache_pkt->cacheReq->freeSlot();
         delete cache_pkt;
 
         cpu->wakeCPU();
@@ -447,7 +466,7 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
     short asid = cpu->asid[tid];
 
     assert(!cache_req->isSquashed());
-    assert(inst->resSched.top()->cmd == CompleteFetch);
+    assert(inst->curSkedEntry->cmd == CompleteFetch);
 
     DPRINTF(InOrderCachePort,
             "[tid:%u]: [sn:%i]: Processing fetch access for block %#x\n",
@@ -514,6 +533,10 @@ FetchUnit::squashCacheRequest(CacheReqPtr req_ptr)
                 DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Fetch "
                         "for block %08p (cnt=%i)\n", inst->seqNum,
                         block_addr, (*block_it)->cnt);
+                if ((*block_it)->block) {
+                    delete [] (*block_it)->block;
+                }
+                delete *block_it;
                 pendingFetch.erase(block_it);
             }
         }

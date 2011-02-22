@@ -57,6 +57,8 @@ class Message : public RefCounted
 
     virtual Message* clone() const = 0;
     virtual void print(std::ostream& out) const = 0;
+    virtual void setIncomingLink(int) {}
+    virtual void setVnet(int) {}
 
     void setDelayedCycles(const int& cycles) { m_DelayedCycles = cycles; }
     const int& getDelayedCycles() const {return m_DelayedCycles;}

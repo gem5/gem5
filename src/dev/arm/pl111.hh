@@ -35,6 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: William Wang
+ *          Ali Saidi
  */
 
 
@@ -55,6 +56,8 @@
 using namespace std;
 
 class Gic;
+class VncServer;
+class Bitmap;
 
 class Pl111: public AmbaDmaDevice
 {
@@ -96,58 +99,69 @@ class Pl111: public AmbaDmaDevice
     static const int dmaSize            = 8;    // 64 bits
     static const int maxOutstandingDma  = 16;   // 16 deep FIFO of 64 bits
 
+    enum LcdMode {
+        bpp1 = 0,
+        bpp2,
+        bpp4,
+        bpp8,
+        bpp16,
+        bpp24,
+        bpp16m565,
+        bpp12
+    };
+
     BitUnion8(InterruptReg)
-    Bitfield<1> ffufie;
-    Bitfield<2> nbupie;
-    Bitfield<3> vtcpie;
-    Bitfield<4> ahmeie;
+        Bitfield<1> underflow;
+        Bitfield<2> baseaddr;
+        Bitfield<3> vcomp;
+        Bitfield<4> ahbmaster;
     EndBitUnion(InterruptReg)
 
     BitUnion32(TimingReg0)
-    Bitfield<7,2> ppl;
-    Bitfield<15,8> hsw;
-    Bitfield<23,16> hfp;
-    Bitfield<31,24> hbp;
+        Bitfield<7,2> ppl;
+        Bitfield<15,8> hsw;
+        Bitfield<23,16> hfp;
+        Bitfield<31,24> hbp;
     EndBitUnion(TimingReg0)
 
     BitUnion32(TimingReg1)
-    Bitfield<9,0> lpp;
-    Bitfield<15,10> vsw;
-    Bitfield<23,16> vfp;
-    Bitfield<31,24> vbp;
+        Bitfield<9,0> lpp;
+        Bitfield<15,10> vsw;
+        Bitfield<23,16> vfp;
+        Bitfield<31,24> vbp;
     EndBitUnion(TimingReg1)
 
     BitUnion32(TimingReg2)
-    Bitfield<4,0> pcdlo;
-    Bitfield<5> clksel;
-    Bitfield<10,6> acb;
-    Bitfield<11> avs;
-    Bitfield<12> ihs;
-    Bitfield<13> ipc;
-    Bitfield<14> ioe;
-    Bitfield<25,16> cpl;
-    Bitfield<26> bcd;
-    Bitfield<31,27> pcdhi;
+        Bitfield<4,0> pcdlo;
+        Bitfield<5> clksel;
+        Bitfield<10,6> acb;
+        Bitfield<11> avs;
+        Bitfield<12> ihs;
+        Bitfield<13> ipc;
+        Bitfield<14> ioe;
+        Bitfield<25,16> cpl;
+        Bitfield<26> bcd;
+        Bitfield<31,27> pcdhi;
     EndBitUnion(TimingReg2)
 
     BitUnion32(TimingReg3)
-    Bitfield<6,0> led;
-    Bitfield<16> lee;
+        Bitfield<6,0> led;
+        Bitfield<16> lee;
     EndBitUnion(TimingReg3)
 
     BitUnion32(ControlReg)
-    Bitfield<0> lcden;
-    Bitfield<3,1> lcdbpp;
-    Bitfield<4> lcdbw;
-    Bitfield<5> lcdtft;
-    Bitfield<6> lcdmono8;
-    Bitfield<7> lcddual;
-    Bitfield<8> bgr;
-    Bitfield<9> bebo;
-    Bitfield<10> bepo;
-    Bitfield<11> lcdpwr;
-    Bitfield<13,12> lcdvcomp;
-    Bitfield<16> watermark;
+        Bitfield<0> lcden;
+        Bitfield<3,1> lcdbpp;
+        Bitfield<4> lcdbw;
+        Bitfield<5> lcdtft;
+        Bitfield<6> lcdmono8;
+        Bitfield<7> lcddual;
+        Bitfield<8> bgr;
+        Bitfield<9> bebo;
+        Bitfield<10> bepo;
+        Bitfield<11> lcdpwr;
+        Bitfield<13,12> lcdvcomp;
+        Bitfield<16> watermark;
     EndBitUnion(ControlReg)
 
     /** Horizontal axis panel control register */
@@ -179,15 +193,6 @@ class Pl111: public AmbaDmaDevice
 
     /** Masked interrupt status register */
     InterruptReg lcdMis;
-
-    /** Interrupt clear register */
-    InterruptReg lcdIcr;
-
-    /** Upper panel current address value register - ro */
-    int lcdUpcurr;
-
-    /** Lower panel current address value register - ro */
-    int lcdLpcurr;
 
     /** 256x16-bit color palette registers
      * 256 palette entries organized as 128 locations of two entries per word */
@@ -228,17 +233,26 @@ class Pl111: public AmbaDmaDevice
     /** Clock speed */
     Tick clock;
 
-    /** Frame buffer height - lines per panel */
-    uint16_t height;
+    /** VNC server */
+    VncServer *vncserver;
+
+    /** Helper to write out bitmaps */
+    Bitmap *bmp;
+
+    /** Picture of what the current frame buffer looks like */
+    std::ostream *pic;
 
     /** Frame buffer width - pixels per line */
     uint16_t width;
 
-    /** CLCDC supports up to 1024x768 */
-    uint8_t dmaBuffer[LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t)];
+    /** Frame buffer height - lines per panel */
+    uint16_t height;
 
-    /** Double buffering */
-    uint32_t frameBuffer[LcdMaxWidth * LcdMaxHeight];
+    /** Bytes per pixel */
+    uint8_t bytesPerPixel;
+
+    /** CLCDC supports up to 1024x768 */
+    uint8_t *dmaBuffer;
 
     /** Start time for frame buffer dma read */
     Tick startTime;
@@ -258,11 +272,11 @@ class Pl111: public AmbaDmaDevice
     /** Number of pending dma reads */
     int dmaPendingNum;
 
+    /** Send updated parameters to the vnc server */
+    void updateVideoParams();
+
     /** DMA framebuffer read */
     void readFramebuffer();
-
-    /** Write framebuffer to a bmp file */
-    void writeBMP(uint32_t*);
 
     /** Generate dma framebuffer read event */
     void generateReadEvent();
@@ -272,6 +286,9 @@ class Pl111: public AmbaDmaDevice
 
     /** fillFIFO event */
     void fillFifo();
+
+    /** start the dmas off after power is enabled */
+    void startDma();
 
     /** DMA done event */
     void dmaDone();
@@ -289,7 +306,7 @@ class Pl111: public AmbaDmaDevice
     /** DMA done event */
     vector<EventWrapper<Pl111, &Pl111::dmaDone> > dmaDoneEvent;
 
-    /** Wrapper to create an event out of the thing */
+    /** Wrapper to create an event out of the interrupt */
     EventWrapper<Pl111, &Pl111::generateInterrupt> intEvent;
 
   public:
@@ -312,57 +329,6 @@ class Pl111: public AmbaDmaDevice
      * @param range_list range list to populate with ranges
      */
     void addressRanges(AddrRangeList &range_list);
-
-    /**
-     * Return if we have an interrupt pending
-     * @return interrupt status
-     * @todo fix me when implementation improves
-     */
-    virtual bool intStatus() { return false; }
-};
-
-// write frame buffer into a bitmap picture
-class  Bitmap
-{
-  public:
-    Bitmap(std::fstream& bmp, uint16_t h, uint16_t w);
-
-  private:
-    struct Magic
-    {
-        unsigned char magic_number[2];
-    } magic;
-
-    struct Header
-    {
-        uint32_t size;
-        uint16_t reserved1;
-        uint16_t reserved2;
-        uint32_t offset;
-    } header;
-
-    struct Info
-    {
-        uint32_t Size;
-        uint32_t Width;
-        uint32_t Height;
-        uint16_t Planes;
-        uint16_t BitCount;
-        uint32_t Compression;
-        uint32_t SizeImage;
-        uint32_t XPelsPerMeter;
-        uint32_t YPelsPerMeter;
-        uint32_t ClrUsed;
-        uint32_t ClrImportant;
-    } info;
-
-    struct Color
-    {
-        unsigned char b;
-        unsigned char g;
-        unsigned char r;
-        unsigned char a;
-    } color;
 };
 
 #endif

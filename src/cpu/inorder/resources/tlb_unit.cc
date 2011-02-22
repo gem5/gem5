@@ -72,6 +72,10 @@ TLBUnit::init()
 {
     resourceEvent = new TLBUnitEvent[width];
 
+    for (int i = 0; i < width; i++) {
+        reqs[i] = new TLBUnitRequest(this);
+    }
+
     initSlots();
 }
 
@@ -90,8 +94,9 @@ TLBUnit::getRequest(DynInstPtr _inst, int stage_num,
                             int res_idx, int slot_num,
                             unsigned cmd)
 {
-    return new TLBUnitRequest(this, _inst, stage_num, res_idx, slot_num,
-                          cmd);
+    TLBUnitRequest *tlb_req = dynamic_cast<TLBUnitRequest*>(reqs[slot_num]);
+    tlb_req->setRequest(inst, stage_num, id, slot_num, cmd);
+    return ud_req;
 }
 
 void
@@ -99,7 +104,7 @@ TLBUnit::execute(int slot_idx)
 {
     // After this is working, change this to a reinterpret cast
     // for performance considerations
-    TLBUnitRequest* tlb_req = dynamic_cast<TLBUnitRequest*>(reqMap[slot_idx]);
+    TLBUnitRequest* tlb_req = dynamic_cast<TLBUnitRequest*>(reqs[slot_idx]);
     assert(tlb_req != 0x0);
 
     DynInstPtr inst = tlb_req->inst;
@@ -200,8 +205,8 @@ TLBUnitEvent::TLBUnitEvent()
 void
 TLBUnitEvent::process()
 {
-    DynInstPtr inst = resource->reqMap[slotIdx]->inst;
-    int stage_num = resource->reqMap[slotIdx]->getStageNum();
+    DynInstPtr inst = resource->reqs[slotIdx]->inst;
+    int stage_num = resource->reqs[slotIdx]->getStageNum();
     ThreadID tid = inst->threadNumber;
 
     DPRINTF(InOrderTLB, "Waking up from TLB Miss caused by [sn:%i].\n",
@@ -212,31 +217,18 @@ TLBUnitEvent::process()
 
     tlb_res->tlbBlocked[tid] = false;
 
-    tlb_res->cpu->pipelineStage[stage_num]->unsetResStall(tlb_res->reqMap[slotIdx], tid);
-
-    // Effectively NOP the instruction but still allow it
-    // to commit
-    //while (!inst->resSched.empty() &&
-    //   inst->resSched.top()->stageNum != ThePipeline::NumStages - 1) {
-    //inst->resSched.pop();
-    //}
+    tlb_res->cpu->pipelineStage[stage_num]->
+        unsetResStall(tlb_res->reqs[slotIdx], tid);
 }
 
 void
 TLBUnit::squash(DynInstPtr inst, int stage_num,
                    InstSeqNum squash_seq_num, ThreadID tid)
 {
-     //@TODO: Figure out a way to consolidate common parts
-     //       of this squash code
-     std::vector<int> slot_remove_list;
+    for (int i = 0; i < width; i++) {
+        ResReqPtr req_ptr = reqs[i];
 
-     map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-     map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-     while (map_it != map_end) {
-         ResReqPtr req_ptr = (*map_it).second;
-
-         if (req_ptr &&
+         if (req_ptr->valid &&
              req_ptr->getInst()->readTid() == tid &&
              req_ptr->getInst()->seqNum > squash_seq_num) {
 
@@ -250,26 +242,16 @@ TLBUnit::squash(DynInstPtr inst, int stage_num,
 
              tlbBlocked[tid] = false;
 
-             int stall_stage = reqMap[req_slot_num]->getStageNum();
+             int stall_stage = reqs[req_slot_num]->getStageNum();
 
-             cpu->pipelineStage[stall_stage]->unsetResStall(reqMap[req_slot_num], tid);
+             cpu->pipelineStage[stall_stage]->
+                 unsetResStall(reqs[req_slot_num], tid);
 
              if (resourceEvent[req_slot_num].scheduled())
                  unscheduleEvent(req_slot_num);
 
-             // Mark request for later removal
-             cpu->reqRemoveList.push(req_ptr);
-
-             // Mark slot for removal from resource
-             slot_remove_list.push_back(req_ptr->getSlot());
+             freeSlot(req_slot_num);
          }
-
-         map_it++;
-     }
-
-     // Now Delete Slot Entry from Req. Map
-     for (int i = 0; i < slot_remove_list.size(); i++) {
-         freeSlot(slot_remove_list[i]);
      }
 }
 

@@ -62,7 +62,7 @@ InstBuffer::regStats()
 void
 InstBuffer::execute(int slot_idx)
 {
-    ResReqPtr ib_req = reqMap[slot_idx];
+    ResReqPtr ib_req = reqs[slot_idx];
     DynInstPtr inst = ib_req->inst;
     ThreadID tid = inst->readTid();
     int stage_num = ib_req->getStageNum();
@@ -99,19 +99,22 @@ InstBuffer::execute(int slot_idx)
                         inst->seqNum, next_stage);
 
                 // Add to schedule: Insert into buffer in next stage
-                int stage_pri = ThePipeline::getNextPriority(inst,
-                                                             next_stage);
+                int stage_pri = 20;
+                RSkedPtr insert_sked = (stage_num >= ThePipeline::BackEndStartStage) ?
+                    inst->backSked : inst->frontSked;
 
-                inst->resSched.push(new ScheduleEntry(next_stage,
+                insert_sked->push(new ScheduleEntry(next_stage,
                                                       stage_pri,
                                                       id,
                                                       InstBuffer::InsertInst));
 
                 // Add to schedule: Remove from buffer in next next (bypass)
                 // stage
-                stage_pri = ThePipeline::getNextPriority(inst, bypass_stage);
+                stage_pri = 20;
+                RSkedPtr bypass_sked = (stage_num >= ThePipeline::BackEndStartStage) ?
+                    inst->backSked : inst->frontSked;
 
-                inst->resSched.push(new ScheduleEntry(bypass_stage,
+               bypass_sked->push(new ScheduleEntry(bypass_stage,
                                                       stage_pri,
                                                       id,
                                                       InstBuffer::RemoveInst));

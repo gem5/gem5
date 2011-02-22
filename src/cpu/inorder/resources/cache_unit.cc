@@ -133,6 +133,10 @@ CacheUnit::getPort(const string &if_name, int idx)
 void
 CacheUnit::init()
 {
+    for (int i = 0; i < width; i++) {
+        reqs[i] = new CacheRequest(this);
+    }
+
     // Currently Used to Model TLB Latency. Eventually
     // Switch to Timing TLB translations.
     resourceEvent = new CacheUnitEvent[width];
@@ -250,20 +254,16 @@ CacheUnit::removeAddrDependency(DynInstPtr inst)
 ResReqPtr
 CacheUnit::findRequest(DynInstPtr inst)
 {
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-    while (map_it != map_end) {
+    for (int i = 0; i < width; i++) {
         CacheRequest* cache_req =
-            dynamic_cast<CacheRequest*>((*map_it).second);
+            dynamic_cast<CacheRequest*>(reqs[i]);
         assert(cache_req);
 
-        if (cache_req &&
+        if (cache_req->valid &&
             cache_req->getInst() == inst &&
-            cache_req->instIdx == inst->resSched.top()->idx) {
+            cache_req->instIdx == inst->curSkedEntry->idx) {
             return cache_req;
         }
-        map_it++;
     }
 
     return NULL;
@@ -272,20 +272,16 @@ CacheUnit::findRequest(DynInstPtr inst)
 ResReqPtr
 CacheUnit::findRequest(DynInstPtr inst, int idx)
 {
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-    while (map_it != map_end) {
+    for (int i = 0; i < width; i++) {
         CacheRequest* cache_req =
-            dynamic_cast<CacheRequest*>((*map_it).second);
+            dynamic_cast<CacheRequest*>(reqs[i]);
         assert(cache_req);
 
-        if (cache_req &&
+        if (cache_req->valid &&
             cache_req->getInst() == inst &&
             cache_req->instIdx == idx) {
             return cache_req;
         }
-        map_it++;
     }
 
     return NULL;
@@ -296,7 +292,8 @@ ResReqPtr
 CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                      int slot_num, unsigned cmd)
 {
-    ScheduleEntry* sched_entry = inst->resSched.top();
+    ScheduleEntry* sched_entry = *inst->curSkedEntry;
+    CacheRequest* cache_req = dynamic_cast<CacheRequest*>(reqs[slot_num]);
 
     if (!inst->validMemAddr()) {
         panic("Mem. Addr. must be set before requesting cache access\n");
@@ -343,10 +340,10 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
               sched_entry->cmd, name());
     }
 
-    return new CacheRequest(this, inst, stage_num, id, slot_num,
-                            sched_entry->cmd, 0, pkt_cmd,
-                            0/*flags*/, this->cpu->readCpuId(),
-                            inst->resSched.top()->idx);
+    cache_req->setRequest(inst, stage_num, id, slot_num,
+                          sched_entry->cmd, pkt_cmd,
+                          inst->curSkedEntry->idx);
+    return cache_req;
 }
 
 void
@@ -357,17 +354,17 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
 
     // Check to see if this instruction is requesting the same command
     // or a different one
-    if (cache_req->cmd != inst->resSched.top()->cmd &&
-        cache_req->instIdx == inst->resSched.top()->idx) {
+    if (cache_req->cmd != inst->curSkedEntry->cmd &&
+        cache_req->instIdx == inst->curSkedEntry->idx) {
         // If different, then update command in the request
-        cache_req->cmd = inst->resSched.top()->cmd;
+        cache_req->cmd = inst->curSkedEntry->cmd;
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Updating the command for this "
                 "instruction\n ", inst->readTid(), inst->seqNum);
 
         service_request = true;
-    } else if (inst->resSched.top()->idx != CacheUnit::InitSecondSplitRead &&
-               inst->resSched.top()->idx != CacheUnit::InitSecondSplitWrite) {        
+    } else if (inst->curSkedEntry->idx != CacheUnit::InitSecondSplitRead &&
+               inst->curSkedEntry->idx != CacheUnit::InitSecondSplitWrite) {
         // If same command, just check to see if memory access was completed
         // but dont try to re-execute
         DPRINTF(InOrderCachePort,
@@ -487,14 +484,20 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
         inst->splitMemData = new uint8_t[size];
         
         if (!inst->splitInstSked) {
+            assert(0 && "Split Requests Not Supported for Now...");
+
             // Schedule Split Read/Complete for Instruction
             // ==============================
             int stage_num = cache_req->getStageNum();
-        
-            int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+            RSkedPtr inst_sked = (stage_num >= ThePipeline::BackEndStartStage) ?
+                inst->backSked : inst->frontSked;
+
+            // this is just an arbitrarily high priority to ensure that this
+            // gets pushed to the back of the list
+            int stage_pri = 20;
         
             int isplit_cmd = CacheUnit::InitSecondSplitRead;
-            inst->resSched.push(new
+            inst_sked->push(new
                                 ScheduleEntry(stage_num,
                                               stage_pri,
                                               cpu->resPool->getResIdx(DCache),
@@ -502,7 +505,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
                                               1));
 
             int csplit_cmd = CacheUnit::CompleteSecondSplitRead;
-            inst->resSched.push(new
+            inst_sked->push(new
                                 ScheduleEntry(stage_num + 1,
                                               1/*stage_pri*/,
                                               cpu->resPool->getResIdx(DCache),
@@ -590,27 +593,33 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
         inst->splitInst = true;        
 
         if (!inst->splitInstSked) {
+            assert(0 && "Split Requests Not Supported for Now...");
+
             // Schedule Split Read/Complete for Instruction
             // ==============================
             int stage_num = cache_req->getStageNum();
+            RSkedPtr inst_sked = (stage_num >= ThePipeline::BackEndStartStage) ?
+                inst->backSked : inst->frontSked;
         
-            int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+            // this is just an arbitrarily high priority to ensure that this
+            // gets pushed to the back of the list
+            int stage_pri = 20;
         
             int isplit_cmd = CacheUnit::InitSecondSplitWrite;
-            inst->resSched.push(new
-                                ScheduleEntry(stage_num,
-                                              stage_pri,
-                                              cpu->resPool->getResIdx(DCache),
-                                              isplit_cmd,
-                                              1));
+            inst_sked->push(new
+                            ScheduleEntry(stage_num,
+                                          stage_pri,
+                                          cpu->resPool->getResIdx(DCache),
+                                          isplit_cmd,
+                                          1));
 
             int csplit_cmd = CacheUnit::CompleteSecondSplitWrite;
-            inst->resSched.push(new
-                                ScheduleEntry(stage_num + 1,
-                                              1/*stage_pri*/,
-                                              cpu->resPool->getResIdx(DCache),
-                                              csplit_cmd,
-                                              1));
+            inst_sked->push(new
+                            ScheduleEntry(stage_num + 1,
+                                          1/*stage_pri*/,
+                                          cpu->resPool->getResIdx(DCache),
+                                          csplit_cmd,
+                                          1));
             inst->splitInstSked = true;
         } else {
             DPRINTF(InOrderCachePort, "[tid:%i] sn:%i] Retrying Split Read "
@@ -639,8 +648,6 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
 
     if (inst->fault == NoFault) {
         if (!cache_req->splitAccess) {            
-            // Remove this line since storeData is saved in INST?
-            cache_req->reqData = new uint8_t[size];
             doCacheAccess(inst, write_res);
         } else {            
             doCacheAccess(inst, write_res, cache_req);            
@@ -655,15 +662,18 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
 void
 CacheUnit::execute(int slot_num)
 {
-    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqMap[slot_num]);
+    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(reqs[slot_num]);
     assert(cache_req);
 
-    if (cachePortBlocked) {
+    if (cachePortBlocked &&
+        (cache_req->cmd == InitiateReadData ||
+         cache_req->cmd == InitiateWriteData ||
+         cache_req->cmd == InitSecondSplitRead ||
+         cache_req->cmd == InitSecondSplitWrite)) {
         DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
-        cache_req->setCompleted(false);
+        cache_req->done(false);
         return;
     }
-
 
     DynInstPtr inst = cache_req->inst;
 #if TRACING_ON
@@ -681,7 +691,12 @@ CacheUnit::execute(int slot_num)
         acc_type = "read";
 #endif        
       case InitiateWriteData:
-            
+        if (cachePortBlocked) {
+            DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
+            cache_req->done(false);
+            return;
+        }
+
         DPRINTF(InOrderCachePort,
                 "[tid:%u]: [sn:%i] Initiating data %s access to %s for "
                 "addr. %08p\n", tid, inst->seqNum, acc_type, name(),
@@ -796,7 +811,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
     CacheReqPtr cache_req;
     
     if (split_req == NULL) {        
-        cache_req = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
+        cache_req = dynamic_cast<CacheReqPtr>(reqs[inst->getCurResSlot()]);
     } else{
         cache_req = split_req;
     }        
@@ -855,7 +870,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
                     "[tid:%i] [sn:%i] cannot access cache, because port "
                     "is blocked. now waiting to retry request\n", tid, 
                     inst->seqNum);
-            cache_req->setCompleted(false);
+            cache_req->done(false);
             cachePortBlocked = true;
         } else {
             DPRINTF(InOrderCachePort,
@@ -879,7 +894,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
         // Make cache request again since access due to
         // inability to access
         DPRINTF(InOrderStall, "STALL: \n");
-        cache_req->setCompleted(false);
+        cache_req->done(false);
     }
 
 }
@@ -902,7 +917,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 cache_pkt->cacheReq->getTid(),
                 cache_pkt->cacheReq->seqNum);
 
-        cache_pkt->cacheReq->done();
+        cache_pkt->cacheReq->freeSlot();
         delete cache_pkt;
 
         cpu->wakeCPU();
@@ -1047,10 +1062,10 @@ CacheUnitEvent::CacheUnitEvent()
 void
 CacheUnitEvent::process()
 {
-    DynInstPtr inst = resource->reqMap[slotIdx]->inst;
-    int stage_num = resource->reqMap[slotIdx]->getStageNum();
+    DynInstPtr inst = resource->reqs[slotIdx]->inst;
+    int stage_num = resource->reqs[slotIdx]->getStageNum();
     ThreadID tid = inst->threadNumber;
-    CacheReqPtr req_ptr = dynamic_cast<CacheReqPtr>(resource->reqMap[slotIdx]);
+    CacheReqPtr req_ptr = dynamic_cast<CacheReqPtr>(resource->reqs[slotIdx]);
 
     DPRINTF(InOrderTLB, "Waking up from TLB Miss caused by [sn:%i].\n",
             inst->seqNum);
@@ -1061,13 +1076,15 @@ CacheUnitEvent::process()
     tlb_res->tlbBlocked[tid] = false;
 
     tlb_res->cpu->pipelineStage[stage_num]->
-        unsetResStall(tlb_res->reqMap[slotIdx], tid);
+        unsetResStall(tlb_res->reqs[slotIdx], tid);
 
     req_ptr->tlbStall = false;
 
     if (req_ptr->isSquashed()) {
-        req_ptr->done();
+        req_ptr->freeSlot();
     }
+
+    tlb_res->cpu->wakeCPU();
 }
 
 void
@@ -1112,15 +1129,10 @@ void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
                   InstSeqNum squash_seq_num, ThreadID tid)
 {
-    vector<int> slot_remove_list;
+    for (int i = 0; i < width; i++) {
+        ResReqPtr req_ptr = reqs[i];
 
-    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    map<int, ResReqPtr>::iterator map_end = reqMap.end();
-
-    while (map_it != map_end) {
-        ResReqPtr req_ptr = (*map_it).second;
-
-        if (req_ptr &&
+        if (req_ptr->valid &&
             req_ptr->getInst()->readTid() == tid &&
             req_ptr->getInst()->seqNum > squash_seq_num) {
 
@@ -1133,7 +1145,6 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
                         "squashed, ignoring squash process.\n",
                         req_ptr->getInst()->readTid(),
                         req_ptr->getInst()->seqNum);
-                map_it++;                
                 continue;                
             }
 
@@ -1147,18 +1158,14 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
             if (cache_req->tlbStall) {
                 tlbBlocked[tid] = false;
 
-                int stall_stage = reqMap[req_slot_num]->getStageNum();
+                int stall_stage = reqs[req_slot_num]->getStageNum();
 
                 cpu->pipelineStage[stall_stage]->
-                    unsetResStall(reqMap[req_slot_num], tid);
+                    unsetResStall(reqs[req_slot_num], tid);
             }
 
             if (!cache_req->tlbStall && !cache_req->isMemAccPending()) {
-                // Mark request for later removal
-                cpu->reqRemoveList.push(req_ptr);
-
-                // Mark slot for removal from resource
-                slot_remove_list.push_back(req_ptr->getSlot());
+                freeSlot(req_slot_num);
             } else {
                 DPRINTF(InOrderCachePort,
                         "[tid:%i] Request from [sn:%i] squashed, but still "
@@ -1170,14 +1177,8 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
                         req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum,
                         req_ptr->getInst()->splitInst);
             }
-
         }
-
-        map_it++;
     }
 
-    // Now Delete Slot Entry from Req. Map
-    for (int i = 0; i < slot_remove_list.size(); i++)
-        freeSlot(slot_remove_list[i]);
 }
 

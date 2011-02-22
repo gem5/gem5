@@ -55,7 +55,7 @@ if 'InOrderCPU' in env['CPU_MODELS']:
         TraceFlag('ThreadModel')
         TraceFlag('RefCount')
         TraceFlag('AddrDep')
-
+	TraceFlag('SkedCache')
 
         CompoundFlag('InOrderCPUAll', [ 'InOrderStage', 'InOrderStall', 'InOrderCPU',
                'InOrderMDU', 'InOrderAGEN', 'InOrderFetchSeq', 'InOrderTLB', 'InOrderBPred',
@@ -63,7 +63,6 @@ if 'InOrderCPU' in env['CPU_MODELS']:
                'InOrderGraduation', 'InOrderCachePort', 'RegDepMap', 'Resource',
                'ThreadModel', 'AddrDep'])
 
-        Source('pipeline_traits.cc')        
         Source('inorder_dyn_inst.cc')
         Source('inorder_cpu_builder.cc')
         Source('inorder_trace.cc')

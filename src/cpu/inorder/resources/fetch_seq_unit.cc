@@ -62,13 +62,17 @@ FetchSeqUnit::init()
 {
     resourceEvent = new FetchSeqEvent[width];
 
+    for (int i = 0; i < width; i++) {
+        reqs[i] = new ResourceRequest(this);
+    }
+
     initSlots();
 }
 
 void
 FetchSeqUnit::execute(int slot_num)
 {
-    ResourceRequest* fs_req = reqMap[slot_num];
+    ResourceRequest* fs_req = reqs[slot_num];
     DynInstPtr inst = fs_req->inst;
     ThreadID tid = inst->readTid();
     int stage_num = fs_req->getStageNum();
@@ -96,7 +100,7 @@ FetchSeqUnit::execute(int slot_num)
                 fs_req->done();
             } else {
                 DPRINTF(InOrderStall, "STALL: [tid:%i]: NPC not valid\n", tid);
-                fs_req->setCompleted(false);
+                fs_req->done(false);
             }
         }
         break;

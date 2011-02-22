@@ -367,21 +367,7 @@ decode OPCODE_HI default Unknown::unknown() {
             }});
             0x1: addiu({{ Rt.sw = Rs.sw + imm; }});
             0x2: slti({{ Rt.sw = (Rs.sw < imm) ? 1 : 0 }});
-
-            //Edited to include MIPS AVP Pass/Fail instructions and
-            //default to the sltiu instruction
-            0x3: decode RS_RT_INTIMM {
-                0xabc1: BasicOp::fail({{
-                    exitSimLoop("AVP/SRVP Test Failed");
-                }});
-                0xabc2: BasicOp::pass({{
-                    exitSimLoop("AVP/SRVP Test Passed");
-                }});
-                default: sltiu({{
-                    Rt.uw = (Rs.uw < (uint32_t)sextImm) ? 1 : 0;
-                }});
-            }
-
+            0x3: sltiu({{ Rt.uw = (Rs.uw < (uint32_t)sextImm) ? 1 : 0;}});
             0x4: andi({{ Rt.sw = Rs.sw & zextImm; }});
             0x5: ori({{ Rt.sw = Rs.sw | zextImm; }});
             0x6: xori({{ Rt.sw = Rs.sw ^ zextImm; }});

@@ -51,6 +51,8 @@ def template MicroRegOpExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
+            IntReg result M5_VAR_USED;
+
             if(%(cond_check)s)
             {
                 %(code)s;
@@ -78,6 +80,8 @@ def template MicroRegOpImmExecute {{
 
             %(op_decl)s;
             %(op_rd)s;
+
+            IntReg result M5_VAR_USED;
 
             if(%(cond_check)s)
             {
@@ -224,8 +228,8 @@ let {{
             MicroRegOpExecute)
 
     class RegOpMeta(type):
-        def buildCppClasses(self, name, Name, suffix, \
-                code, flag_code, cond_check, else_code, cond_control_flag_init):
+        def buildCppClasses(self, name, Name, suffix, code, big_code, \
+                flag_code, cond_check, else_code, cond_control_flag_init):
 
             # Globals to stick the output in
             global header_output
@@ -235,11 +239,13 @@ let {{
             # Stick all the code together so it can be searched at once
             allCode = "|".join((code, flag_code, cond_check, else_code, 
                                 cond_control_flag_init))
+            allBigCode = "|".join((big_code, flag_code, cond_check, else_code,
+                                   cond_control_flag_init))
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
             matcher = re.compile("(?<!\\w)(?P<prefix>s?)op2(?P<typeQual>\\.\\w+)?")
-            match = matcher.search(allCode)
+            match = matcher.search(allCode + allBigCode)
             if match:
                 typeQual = ""
                 if match.group("typeQual"):
@@ -247,6 +253,7 @@ let {{
                 src2_name = "%spsrc2%s" % (match.group("prefix"), typeQual)
                 self.buildCppClasses(name, Name, suffix,
                         matcher.sub(src2_name, code),
+                        matcher.sub(src2_name, big_code),
                         matcher.sub(src2_name, flag_code),
                         matcher.sub(src2_name, cond_check),
                         matcher.sub(src2_name, else_code),
@@ -254,6 +261,7 @@ let {{
                 imm_name = "%simm8" % match.group("prefix")
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
+                        matcher.sub(imm_name, big_code),
                         matcher.sub(imm_name, flag_code),
                         matcher.sub(imm_name, cond_check),
                         matcher.sub(imm_name, else_code),
@@ -264,27 +272,32 @@ let {{
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
                 self.buildCppClasses(name, Name, suffix,
-                        code, "", "true", else_code, "")
+                        code, big_code, "", "true", else_code, "")
                 suffix = "Flags" + suffix
 
             # If psrc1 or psrc2 is used, we need to actually insert code to
             # compute it.
-            matcher = re.compile("(?<!\w)psrc1(?!\w)")
-            if matcher.search(allCode):
-                code = "uint64_t psrc1 = pick(SrcReg1, 0, dataSize);" + code
-            matcher = re.compile("(?<!\w)psrc2(?!\w)")
-            if matcher.search(allCode):
-                code = "uint64_t psrc2 = pick(SrcReg2, 1, dataSize);" + code
-            # Also make available versions which do sign extension
-            matcher = re.compile("(?<!\w)spsrc1(?!\w)")
-            if matcher.search(allCode):
-                code = "int64_t spsrc1 = signedPick(SrcReg1, 0, dataSize);" + code
-            matcher = re.compile("(?<!\w)spsrc2(?!\w)")
-            if matcher.search(allCode):
-                code = "int64_t spsrc2 = signedPick(SrcReg2, 1, dataSize);" + code
-            matcher = re.compile("(?<!\w)simm8(?!\w)")
-            if matcher.search(allCode):
-                code = "int8_t simm8 = imm8;" + code
+            for (big, all) in ((False, allCode), (True, allBigCode)):
+                prefix = ""
+                for (rex, decl) in (
+                        ("(?<!\w)psrc1(?!\w)",
+                         "uint64_t psrc1 = pick(SrcReg1, 0, dataSize);"),
+                        ("(?<!\w)psrc2(?!\w)",
+                         "uint64_t psrc2 = pick(SrcReg2, 1, dataSize);"),
+                        ("(?<!\w)spsrc1(?!\w)",
+                         "int64_t spsrc1 = signedPick(SrcReg1, 0, dataSize);"),
+                        ("(?<!\w)spsrc2(?!\w)",
+                         "int64_t spsrc2 = signedPick(SrcReg2, 1, dataSize);"),
+                        ("(?<!\w)simm8(?!\w)",
+                         "int8_t simm8 = imm8;")):
+                    matcher = re.compile(rex)
+                    if matcher.search(all):
+                        prefix += decl + "\n"
+                if big:
+                    if big_code != "":
+                        big_code = prefix + big_code
+                else:
+                    code = prefix + code
 
             base = "X86ISA::RegOp"
 
@@ -297,17 +310,26 @@ let {{
                 templates = immTemplates
 
             # Get everything ready for the substitution
-            iop = InstObjParams(name, Name + suffix, base,
+            iops = [InstObjParams(name, Name + suffix, base,
                     {"code" : code,
                      "flag_code" : flag_code,
                      "cond_check" : cond_check,
                      "else_code" : else_code,
-                     "cond_control_flag_init": cond_control_flag_init})
+                     "cond_control_flag_init" : cond_control_flag_init})]
+            if big_code != "":
+                iops += [InstObjParams(name, Name + suffix + "Big", base,
+                         {"code" : big_code,
+                          "flag_code" : flag_code,
+                          "cond_check" : cond_check,
+                          "else_code" : else_code,
+                          "cond_control_flag_init" :
+                              cond_control_flag_init})]
 
             # Generate the actual code (finally!)
-            header_output += templates[0].subst(iop)
-            decoder_output += templates[1].subst(iop)
-            exec_output += templates[2].subst(iop)
+            for iop in iops:
+                header_output += templates[0].subst(iop)
+                decoder_output += templates[1].subst(iop)
+                exec_output += templates[2].subst(iop)
 
 
         def __new__(mcls, Name, bases, dict):
@@ -322,14 +344,16 @@ let {{
                 cls.className = Name
                 cls.base_mnemonic = name
                 code = cls.code
+                big_code = cls.big_code
                 flag_code = cls.flag_code
                 cond_check = cls.cond_check
                 else_code = cls.else_code
                 cond_control_flag_init = cls.cond_control_flag_init
 
                 # Set up the C++ classes
-                mcls.buildCppClasses(cls, name, Name, "", code, flag_code,
-                        cond_check, else_code, cond_control_flag_init)
+                mcls.buildCppClasses(cls, name, Name, "", code, big_code,
+                        flag_code, cond_check, else_code,
+                        cond_control_flag_init)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -352,6 +376,7 @@ let {{
         abstract = True
 
         # Default template parameter values
+        big_code = ""
         flag_code = ""
         cond_check = "true"
         else_code = ";"
@@ -372,26 +397,48 @@ let {{
                 self.className += "Flags"
 
         def getAllocator(self, microFlags):
-            className = self.className
-            if self.mnemonic == self.base_mnemonic + 'i':
-                className += "Imm"
-            allocator = '''new %(class_name)s(machInst, macrocodeBlock,
-                    %(flags)s, %(src1)s, %(op2)s, %(dest)s,
-                    %(dataSize)s, %(ext)s)''' % {
-                "class_name" : className,
-                "flags" : self.microFlagsText(microFlags),
-                "src1" : self.src1, "op2" : self.op2,
-                "dest" : self.dest,
-                "dataSize" : self.dataSize,
-                "ext" : self.ext}
-            return allocator
+            if self.big_code != "":
+                className = self.className
+                if self.mnemonic == self.base_mnemonic + 'i':
+                    className += "Imm"
+                allocString = '''
+                    (%(dataSize)s >= 4) ?
+                        (StaticInstPtr)(new %(class_name)sBig(machInst,
+                            macrocodeBlock, %(flags)s, %(src1)s, %(op2)s,
+                            %(dest)s, %(dataSize)s, %(ext)s)) :
+                        (StaticInstPtr)(new %(class_name)s(machInst,
+                            macrocodeBlock, %(flags)s, %(src1)s, %(op2)s,
+                            %(dest)s, %(dataSize)s, %(ext)s))
+                    '''
+                allocator = allocString % {
+                    "class_name" : className,
+                    "flags" : self.microFlagsText(microFlags),
+                    "src1" : self.src1, "op2" : self.op2,
+                    "dest" : self.dest,
+                    "dataSize" : self.dataSize,
+                    "ext" : self.ext}
+                return allocator
+            else:
+                className = self.className
+                if self.mnemonic == self.base_mnemonic + 'i':
+                    className += "Imm"
+                allocator = '''new %(class_name)s(machInst, macrocodeBlock,
+                        %(flags)s, %(src1)s, %(op2)s, %(dest)s,
+                        %(dataSize)s, %(ext)s)''' % {
+                    "class_name" : className,
+                    "flags" : self.microFlagsText(microFlags),
+                    "src1" : self.src1, "op2" : self.op2,
+                    "dest" : self.dest,
+                    "dataSize" : self.dataSize,
+                    "ext" : self.ext}
+                return allocator
 
     class LogicRegOp(RegOp):
         abstract = True
         flag_code = '''
             //Don't have genFlags handle the OF or CF bits
             uint64_t mask = CFBit | ECFBit | OFBit;
-            ccFlagBits = genFlags(ccFlagBits, ext & ~mask, DestReg, psrc1, op2);
+            ccFlagBits = genFlags(ccFlagBits, ext & ~mask, result, psrc1, op2);
             //If a logic microop wants to set these, it wants to set them to 0.
             ccFlagBits &= ~(CFBit & ext);
             ccFlagBits &= ~(ECFBit & ext);
@@ -401,12 +448,12 @@ let {{
     class FlagRegOp(RegOp):
         abstract = True
         flag_code = \
-            "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, op2);"
+            "ccFlagBits = genFlags(ccFlagBits, ext, result, psrc1, op2);"
 
     class SubRegOp(RegOp):
         abstract = True
         flag_code = \
-            "ccFlagBits = genFlags(ccFlagBits, ext, DestReg, psrc1, ~op2, true);"
+            "ccFlagBits = genFlags(ccFlagBits, ext, result, psrc1, ~op2, true);"
 
     class CondRegOp(RegOp):
         abstract = True
@@ -428,31 +475,44 @@ let {{
                     src1, src2, flags, dataSize)
 
     class Add(FlagRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 + op2, dataSize);'
+        code = 'DestReg = merge(DestReg, result = (psrc1 + op2), dataSize);'
+        big_code = 'DestReg = result = (psrc1 + op2) & mask(dataSize * 8);'
 
     class Or(LogicRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 | op2, dataSize);'
+        code = 'DestReg = merge(DestReg, result = (psrc1 | op2), dataSize);'
+        big_code = 'DestReg = result = (psrc1 | op2) & mask(dataSize * 8);'
 
     class Adc(FlagRegOp):
         code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, psrc1 + op2 + flags.cf, dataSize);
+            DestReg = merge(DestReg, result = (psrc1 + op2 + flags.cf), dataSize);
+            '''
+        big_code = '''
+            CCFlagBits flags = ccFlagBits;
+            DestReg = result = (psrc1 + op2 + flags.cf) & mask(dataSize * 8);
             '''
 
     class Sbb(SubRegOp):
         code = '''
             CCFlagBits flags = ccFlagBits;
-            DestReg = merge(DestReg, psrc1 - op2 - flags.cf, dataSize);
+            DestReg = merge(DestReg, result = (psrc1 - op2 - flags.cf), dataSize);
+            '''
+        big_code = '''
+            CCFlagBits flags = ccFlagBits;
+            DestReg = result = (psrc1 - op2 - flags.cf) & mask(dataSize * 8);
             '''
 
     class And(LogicRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 & op2, dataSize)'
+        code = 'DestReg = merge(DestReg, result = (psrc1 & op2), dataSize)'
+        big_code = 'DestReg = result = (psrc1 & op2) & mask(dataSize * 8)'
 
     class Sub(SubRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 - op2, dataSize)'
+        code = 'DestReg = merge(DestReg, result = (psrc1 - op2), dataSize)'
+        big_code = 'DestReg = result = (psrc1 - op2) & mask(dataSize * 8)'
 
     class Xor(LogicRegOp):
-        code = 'DestReg = merge(DestReg, psrc1 ^ op2, dataSize)'
+        code = 'DestReg = merge(DestReg, result = (psrc1 ^ op2), dataSize)'
+        big_code = 'DestReg = result = (psrc1 ^ op2) & mask(dataSize * 8)'
 
     class Mul1s(WrRegOp):
         code = '''
@@ -505,6 +565,7 @@ let {{
 
     class Mulel(RdRegOp):
         code = 'DestReg = merge(SrcReg1, ProdLow, dataSize);'
+        big_code = 'DestReg = ProdLow & mask(dataSize * 8);'
 
     class Muleh(RdRegOp):
         def __init__(self, dest, src1=None, flags=None, dataSize="env.dataSize"):
@@ -513,6 +574,7 @@ let {{
             super(RdRegOp, self).__init__(dest, src1, \
                     "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = 'DestReg = merge(SrcReg1, ProdHi, dataSize);'
+        big_code = 'DestReg = ProdHi & mask(dataSize * 8);'
 
     # One or two bit divide
     class Div1(WrRegOp):
@@ -540,7 +602,7 @@ let {{
 
     # Step divide
     class Div2(RegOp):
-        code = '''
+        divCode = '''
             uint64_t dividend = Remainder;
             uint64_t divisor = Divisor;
             uint64_t quotient = Quotient;
@@ -587,11 +649,13 @@ let {{
                 }
             }
             //Keep track of how many bits there are still to pull in.
-            DestReg = merge(DestReg, remaining, dataSize);
+            %s
             //Record the final results
             Remainder = remainder;
             Quotient = quotient;
         '''
+        code = divCode % "DestReg = merge(DestReg, remaining, dataSize);"
+        big_code = divCode % "DestReg = remaining & mask(dataSize * 8);"
         flag_code = '''
             if (remaining == 0)
                 ccFlagBits = ccFlagBits | (ext & EZFBit);
@@ -601,9 +665,11 @@ let {{
 
     class Divq(RdRegOp):
         code = 'DestReg = merge(SrcReg1, Quotient, dataSize);'
+        big_code = 'DestReg = Quotient & mask(dataSize * 8);'
 
     class Divr(RdRegOp):
         code = 'DestReg = merge(SrcReg1, Remainder, dataSize);'
+        big_code = 'DestReg = Remainder & mask(dataSize * 8);'
 
     class Mov(CondRegOp):
         code = 'DestReg = merge(SrcReg1, op2, dataSize)'
@@ -615,6 +681,10 @@ let {{
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             DestReg = merge(DestReg, psrc1 << shiftAmt, dataSize);
+            '''
+        big_code = '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
+            DestReg = (psrc1 << shiftAmt) & mask(dataSize * 8);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -641,13 +711,18 @@ let {{
         '''
 
     class Srl(RegOp):
+        # Because what happens to the bits shift -in- on a right shift
+        # is not defined in the C/C++ standard, we have to mask them out
+        # to be sure they're zero.
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            // Because what happens to the bits shift -in- on a right shift
-            // is not defined in the C/C++ standard, we have to mask them out
-            // to be sure they're zero.
             uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
             DestReg = merge(DestReg, (psrc1 >> shiftAmt) & logicalMask, dataSize);
+            '''
+        big_code = '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
+            uint64_t logicalMask = mask(dataSize * 8 - shiftAmt);
+            DestReg = (psrc1 >> shiftAmt) & logicalMask;
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -671,14 +746,20 @@ let {{
         '''
 
     class Sra(RegOp):
+        # Because what happens to the bits shift -in- on a right shift
+        # is not defined in the C/C++ standard, we have to sign extend
+        # them manually to be sure.
         code = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            // Because what happens to the bits shift -in- on a right shift
-            // is not defined in the C/C++ standard, we have to sign extend
-            // them manually to be sure.
             uint64_t arithMask = (shiftAmt == 0) ? 0 :
                 -bits(psrc1, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
             DestReg = merge(DestReg, (psrc1 >> shiftAmt) | arithMask, dataSize);
+            '''
+        big_code = '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
+            uint64_t arithMask = (shiftAmt == 0) ? 0 :
+                -bits(psrc1, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
+            DestReg = ((psrc1 >> shiftAmt) | arithMask) & mask(dataSize * 8);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -704,13 +785,11 @@ let {{
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t realShiftAmt = shiftAmt % (dataSize * 8);
-            if(realShiftAmt)
-            {
+            if (realShiftAmt) {
                 uint64_t top = psrc1 << (dataSize * 8 - realShiftAmt);
                 uint64_t bottom = bits(psrc1, dataSize * 8, realShiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
-            }
-            else
+            } else
                 DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
@@ -739,16 +818,14 @@ let {{
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t realShiftAmt = shiftAmt % (dataSize * 8 + 1);
-            if(realShiftAmt)
-            {
+            if (realShiftAmt) {
                 CCFlagBits flags = ccFlagBits;
                 uint64_t top = flags.cf << (dataSize * 8 - realShiftAmt);
                 if (realShiftAmt > 1)
                     top |= psrc1 << (dataSize * 8 - realShiftAmt + 1);
                 uint64_t bottom = bits(psrc1, dataSize * 8 - 1, realShiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
-            }
-            else
+            } else
                 DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
@@ -780,14 +857,12 @@ let {{
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t realShiftAmt = shiftAmt % (dataSize * 8);
-            if(realShiftAmt)
-            {
+            if (realShiftAmt) {
                 uint64_t top = psrc1 << realShiftAmt;
                 uint64_t bottom =
                     bits(psrc1, dataSize * 8 - 1, dataSize * 8 - realShiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
-            }
-            else
+            } else
                 DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
@@ -816,8 +891,7 @@ let {{
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t realShiftAmt = shiftAmt % (dataSize * 8 + 1);
-            if(realShiftAmt)
-            {
+            if (realShiftAmt) {
                 CCFlagBits flags = ccFlagBits;
                 uint64_t top = psrc1 << realShiftAmt;
                 uint64_t bottom = flags.cf << (realShiftAmt - 1);
@@ -826,8 +900,7 @@ let {{
                         bits(psrc1, dataSize * 8 - 1,
                                    dataSize * 8 - realShiftAmt + 1);
                 DestReg = merge(DestReg, top | bottom, dataSize);
-            }
-            else
+            } else
                 DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
@@ -853,10 +926,10 @@ let {{
         '''
 
     class Sld(RegOp):
-        code = '''
+        sldCode = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t dataBits = dataSize * 8;
-            uint8_t realShiftAmt = shiftAmt % (2 * dataBits);
+            uint8_t realShiftAmt = shiftAmt %% (2 * dataBits);
             uint64_t result;
             if (realShiftAmt == 0) {
                 result = psrc1;
@@ -867,8 +940,10 @@ let {{
                 result = (DoubleBits << (realShiftAmt - dataBits)) |
                          (psrc1 >> (2 * dataBits - realShiftAmt));
             }
-            DestReg = merge(DestReg, result, dataSize);
+            %s
             '''
+        code = sldCode % "DestReg = merge(DestReg, result, dataSize);"
+        big_code = sldCode % "DestReg = result & mask(dataSize * 8);"
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
             if (shiftAmt) {
@@ -899,10 +974,10 @@ let {{
         '''
 
     class Srd(RegOp):
-        code = '''
+        srdCode = '''
             uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
             uint8_t dataBits = dataSize * 8;
-            uint8_t realShiftAmt = shiftAmt % (2 * dataBits);
+            uint8_t realShiftAmt = shiftAmt %% (2 * dataBits);
             uint64_t result;
             if (realShiftAmt == 0) {
                 result = psrc1;
@@ -919,8 +994,10 @@ let {{
                           logicalMask) |
                          (psrc1 << (2 * dataBits - realShiftAmt));
             }
-            DestReg = merge(DestReg, result, dataSize);
+            %s
             '''
+        code = srdCode % "DestReg = merge(DestReg, result, dataSize);"
+        big_code = srdCode % "DestReg = result & mask(dataSize * 8);"
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
             if (shiftAmt) {
@@ -986,6 +1063,12 @@ let {{
             ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
                                        (ccFlagBits & ~EZFBit);
             '''
+        big_code = '''
+            int flag = bits(ccFlagBits, imm8);
+            DestReg = flag & mask(dataSize * 8);
+            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
+                                       (ccFlagBits & ~EZFBit);
+            '''
         def __init__(self, dest, imm, flags=None, \
                 dataSize="env.dataSize"):
             super(Ruflag, self).__init__(dest, \
@@ -997,6 +1080,14 @@ let {{
             MiscReg flags = (nccFlagBits | ccFlagBits) & flagMask;
             int flag = bits(flags, imm8);
             DestReg = merge(DestReg, flag, dataSize);
+            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
+                                       (ccFlagBits & ~EZFBit);
+            '''
+        big_code = '''
+            MiscReg flagMask = 0x3F7FDD5;
+            MiscReg flags = (nccFlagBits | ccFlagBits) & flagMask;
+            int flag = bits(flags, imm8);
+            DestReg = flag & mask(dataSize * 8);
             ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
                                        (ccFlagBits & ~EZFBit);
             '''
@@ -1015,6 +1106,15 @@ let {{
             val = sign_bit ? (val | ~maskVal) : (val & maskVal);
             DestReg = merge(DestReg, val, dataSize);
             '''
+        big_code = '''
+            IntReg val = psrc1;
+            // Mask the bit position so that it wraps.
+            int bitPos = op2 & (dataSize * 8 - 1);
+            int sign_bit = bits(val, bitPos, bitPos);
+            uint64_t maskVal = mask(bitPos+1);
+            val = sign_bit ? (val | ~maskVal) : (val & maskVal);
+            DestReg = val & mask(dataSize * 8);
+            '''
         flag_code = '''
             if (!sign_bit)
                 ccFlagBits = ccFlagBits &
@@ -1026,12 +1126,13 @@ let {{
 
     class Zext(RegOp):
         code = 'DestReg = merge(DestReg, bits(psrc1, op2, 0), dataSize);'
+        big_code = 'DestReg = bits(psrc1, op2, 0) & mask(dataSize * 8);'
 
     class Rddr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rddr, self).__init__(dest, \
                     src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
-        code = '''
+        rdrCode = '''
             CR4 cr4 = CR4Op;
             DR7 dr7 = DR7Op;
             if ((cr4.de == 1 && (src1 == 4 || src1 == 5)) || src1 >= 8) {
@@ -1039,9 +1140,11 @@ let {{
             } else if (dr7.gd) {
                 fault = new DebugException();
             } else {
-                DestReg = merge(DestReg, DebugSrc1, dataSize);
+                %s
             }
         '''
+        code = rdrCode % "DestReg = merge(DestReg, DebugSrc1, dataSize);"
+        big_code = rdrCode % "DestReg = DebugSrc1 & mask(dataSize * 8);"
 
     class Wrdr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
@@ -1066,13 +1169,15 @@ let {{
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rdcr, self).__init__(dest, \
                     src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
-        code = '''
+        rdcrCode = '''
             if (src1 == 1 || (src1 > 4 && src1 < 8) || (src1 > 8)) {
                 fault = new InvalidOpcode();
             } else {
-                DestReg = merge(DestReg, ControlSrc1, dataSize);
+                %s
             }
         '''
+        code = rdcrCode % "DestReg = merge(DestReg, ControlSrc1, dataSize);"
+        big_code = rdcrCode % "DestReg = ControlSrc1 & mask(dataSize * 8);"
 
     class Wrcr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
@@ -1154,24 +1259,20 @@ let {{
         '''
 
     class Rdbase(SegOp):
-        code = '''
-            DestReg = merge(DestReg, SegBaseSrc1, dataSize);
-        '''
+        code = 'DestReg = merge(DestReg, SegBaseSrc1, dataSize);'
+        big_code = 'DestReg = SegBaseSrc1 & mask(dataSize * 8);'
 
     class Rdlimit(SegOp):
-        code = '''
-            DestReg = merge(DestReg, SegLimitSrc1, dataSize);
-        '''
+        code = 'DestReg = merge(DestReg, SegLimitSrc1, dataSize);'
+        big_code = 'DestReg = SegLimitSrc1 & mask(dataSize * 8);'
 
     class RdAttr(SegOp):
-        code = '''
-            DestReg = merge(DestReg, SegAttrSrc1, dataSize);
-        '''
+        code = 'DestReg = merge(DestReg, SegAttrSrc1, dataSize);'
+        big_code = 'DestReg = SegAttrSrc1 & mask(dataSize * 8);'
 
     class Rdsel(SegOp):
-        code = '''
-            DestReg = merge(DestReg, SegSelSrc1, dataSize);
-        '''
+        code = 'DestReg = merge(DestReg, SegSelSrc1, dataSize);'
+        big_code = 'DestReg = SegSelSrc1 & mask(dataSize * 8);'
 
     class Rdval(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):

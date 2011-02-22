@@ -238,6 +238,7 @@ def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
 
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
+    self.vncserver = VncServer()
     self.kernel = binary('vmlinux.arm')
     self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0 lpj=19988480' + \
                         ' norandmaps slram=slram0,0x8000000,+0x8000000' +      \

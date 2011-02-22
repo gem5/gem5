@@ -108,6 +108,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
         {}
 
         void
+        markDelayed()
+        {
+            assert(cpu->_status == Running);
+            cpu->_status = ITBWaitResponse;
+        }
+
+        void
         finish(Fault fault, RequestPtr req, ThreadContext *tc,
                BaseTLB::Mode mode)
         {

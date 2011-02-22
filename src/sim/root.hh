@@ -95,7 +95,22 @@ class Root : public SimObject
     /// Set the threshold for time remaining to spin wait.
     void timeSyncSpinThreshold(Time newThreshold);
 
-    Root(RootParams *p);
+    typedef RootParams Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    Root(Params *p);
+
+    /** Schedule the timesync event at loadState() so that curTick is correct
+     */
+    void loadState(Checkpoint *cp);
+
+    /** Schedule the timesync event at initState() when not unserializing
+     */
+    void initState();
 };
 
 #endif // __SIM_ROOT_HH__

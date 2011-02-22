@@ -48,7 +48,7 @@ class RegDepMap
   public:
     RegDepMap(int size = TheISA::TotalNumRegs);
 
-    ~RegDepMap() { }
+    ~RegDepMap();
 
     std::string name();
 

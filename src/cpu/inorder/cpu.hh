@@ -296,6 +296,92 @@ class InOrderCPU : public BaseCPU
     TheISA::TLB *getITBPtr();
     TheISA::TLB *getDTBPtr();
 
+    /** Accessor Type for the SkedCache */
+    typedef uint32_t SkedID;
+
+    /** Cache of Instruction Schedule using the instruction's name as a key */
+    static std::map<SkedID, ThePipeline::RSkedPtr> skedCache;
+
+    typedef std::map<SkedID, ThePipeline::RSkedPtr>::iterator SkedCacheIt;
+
+    /** Initialized to last iterator in map, signifying a invalid entry
+        on map searches
+    */
+    SkedCacheIt endOfSkedIt;
+
+    ThePipeline::RSkedPtr frontEndSked;
+
+    /** Add a new instruction schedule to the schedule cache */
+    void addToSkedCache(DynInstPtr inst, ThePipeline::RSkedPtr inst_sked)
+    {
+        SkedID sked_id = genSkedID(inst);
+        assert(skedCache.find(sked_id) == skedCache.end());
+        skedCache[sked_id] = inst_sked;
+    }
+
+
+    /** Find a instruction schedule */
+    ThePipeline::RSkedPtr lookupSked(DynInstPtr inst)
+    {
+        SkedID sked_id = genSkedID(inst);
+        SkedCacheIt lookup_it = skedCache.find(sked_id);
+
+        if (lookup_it != endOfSkedIt) {
+            return (*lookup_it).second;
+        } else {
+            return NULL;
+        }
+    }
+
+    static const uint8_t INST_OPCLASS                       = 26;
+    static const uint8_t INST_LOAD                          = 25;
+    static const uint8_t INST_STORE                         = 24;
+    static const uint8_t INST_CONTROL                       = 23;
+    static const uint8_t INST_NONSPEC                       = 22;
+    static const uint8_t INST_DEST_REGS                     = 18;
+    static const uint8_t INST_SRC_REGS                      = 14;
+
+    inline SkedID genSkedID(DynInstPtr inst)
+    {
+        SkedID id = 0;
+        id = (inst->opClass() << INST_OPCLASS) |
+            (inst->isLoad() << INST_LOAD) |
+            (inst->isStore() << INST_STORE) |
+            (inst->isControl() << INST_CONTROL) |
+            (inst->isNonSpeculative() << INST_NONSPEC) |
+            (inst->numDestRegs() << INST_DEST_REGS) |
+            (inst->numSrcRegs() << INST_SRC_REGS);
+        return id;
+    }
+
+    ThePipeline::RSkedPtr createFrontEndSked();
+    ThePipeline::RSkedPtr createBackEndSked(DynInstPtr inst);
+
+    class StageScheduler {
+      private:
+        ThePipeline::RSkedPtr rsked;
+        int stageNum;
+        int nextTaskPriority;
+
+      public:
+        StageScheduler(ThePipeline::RSkedPtr _rsked, int stage_num)
+            : rsked(_rsked), stageNum(stage_num),
+              nextTaskPriority(0)
+        { }
+
+        void needs(int unit, int request) {
+            rsked->push(new ScheduleEntry(
+                            stageNum, nextTaskPriority++, unit, request
+                            ));
+        }
+
+        void needs(int unit, int request, int param) {
+            rsked->push(new ScheduleEntry(
+                            stageNum, nextTaskPriority++, unit, request, param
+                            ));
+        }
+    };
+
   public:
 
     /** Registers statistics. */
@@ -508,10 +594,7 @@ class InOrderCPU : public BaseCPU
     /** Cleans up all instructions on the instruction remove list. */
     void cleanUpRemovedInsts();
 
-    /** Cleans up all instructions on the request remove list. */
-    void cleanUpRemovedReqs();
-
-    /** Cleans up all instructions on the CPU event remove list. */
+    /** Cleans up all events on the CPU event remove list. */
     void cleanUpRemovedEvents();
 
     /** Debug function to print all instructions on the list. */
@@ -540,11 +623,6 @@ class InOrderCPU : public BaseCPU
      *  cycle.
      */
     std::queue<ListIt> removeList;
-
-    /** List of all the resource requests that will be removed at the end 
-     *  of this cycle.
-     */
-    std::queue<ResourceRequest*> reqRemoveList;
 
     /** List of all the cpu event requests that will be removed at the end of
      *  the current cycle.

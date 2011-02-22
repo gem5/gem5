@@ -76,6 +76,10 @@ MultDivUnit::init()
     // Set Up Resource Events to Appropriate Resource BandWidth
     resourceEvent = new MDUEvent[width];
 
+    for (int i = 0; i < width; i++) {
+        reqs[i] = new ResourceRequest(this);
+    }
+
     initSlots();
 }
 
@@ -92,7 +96,7 @@ void
 MultDivUnit::freeSlot(int slot_idx)
 {
     DPRINTF(InOrderMDU, "Freeing slot for inst:%i\n | slots-free:%i | "
-            "slots-used:%i\n", reqMap[slot_idx]->getInst()->seqNum,
+            "slots-used:%i\n", reqs[slot_idx]->getInst()->seqNum,
             slotsAvail(), slotsInUse());
     
     Resource::freeSlot(slot_idx);    
@@ -110,9 +114,9 @@ MultDivUnit::requestAgain(DynInstPtr inst, bool &service_request)
 
     // Check to see if this instruction is requesting the same command
     // or a different one
-    if (mult_div_req->cmd != inst->resSched.top()->cmd) {
+    if (mult_div_req->cmd != inst->curSkedEntry->cmd) {
         // If different, then update command in the request
-        mult_div_req->cmd = inst->resSched.top()->cmd;
+        mult_div_req->cmd = inst->curSkedEntry->cmd;
         DPRINTF(InOrderMDU,
                 "[tid:%i]: [sn:%i]: Updating the command for this "
                 "instruction\n", inst->readTid(), inst->seqNum);
@@ -132,7 +136,7 @@ MultDivUnit::getSlot(DynInstPtr inst)
 
     // If we have this instruction's request already then return
     if (slot_num != -1 &&         
-        inst->resSched.top()->cmd == reqMap[slot_num]->cmd)
+        inst->curSkedEntry->cmd == reqs[slot_num]->cmd)
         return slot_num;
     
     unsigned repeat_rate = 0;
@@ -202,8 +206,8 @@ MultDivUnit::getDivOpSize(DynInstPtr inst)
 void 
 MultDivUnit::execute(int slot_num)
 {
-    ResourceRequest* mult_div_req = reqMap[slot_num];
-    DynInstPtr inst = reqMap[slot_num]->inst;
+    ResourceRequest* mult_div_req = reqs[slot_num];
+    DynInstPtr inst = reqs[slot_num]->inst;
  
     switch (mult_div_req->cmd)
     {
@@ -275,8 +279,8 @@ MultDivUnit::execute(int slot_num)
 void 
 MultDivUnit::exeMulDiv(int slot_num)
 {
-    ResourceRequest* mult_div_req = reqMap[slot_num];
-    DynInstPtr inst = reqMap[slot_num]->inst;
+    ResourceRequest* mult_div_req = reqs[slot_num];
+    DynInstPtr inst = reqs[slot_num]->inst;
 
     inst->fault = inst->execute();
 
@@ -310,7 +314,7 @@ MDUEvent::process()
 
     mdu_res->exeMulDiv(slotIdx);
 
-    ResourceRequest* mult_div_req = resource->reqMap[slotIdx];
+    ResourceRequest* mult_div_req = resource->reqs[slotIdx];
 
     mult_div_req->done();    
 }

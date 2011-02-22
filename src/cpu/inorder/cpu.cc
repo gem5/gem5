@@ -324,19 +324,19 @@ InOrderCPU::InOrderCPU(Params *params)
                                             tid, 
                                             asid[tid]);
 
-        dummyReq[tid] = new ResourceRequest(resPool->getResource(0), 
-                                            dummyInst[tid], 
-                                            0, 
-                                            0, 
-                                            0, 
-                                            0);        
+        dummyReq[tid] = new ResourceRequest(resPool->getResource(0));
     }
 
     dummyReqInst = new InOrderDynInst(this, NULL, 0, 0, 0);
     dummyReqInst->setSquashed();
+    dummyReqInst->resetInstCount();
 
     dummyBufferInst = new InOrderDynInst(this, NULL, 0, 0, 0);
     dummyBufferInst->setSquashed();
+    dummyBufferInst->resetInstCount();
+
+    endOfSkedIt = skedCache.end();
+    frontEndSked = createFrontEndSked();
     
     lastRunningCycle = curTick();
 
@@ -348,7 +348,6 @@ InOrderCPU::InOrderCPU(Params *params)
     reset();
 #endif
 
-    dummyBufferInst->resetInstCount();
     
     // Schedule First Tick Event, CPU will reschedule itself from here on out.
     scheduleTickEvent(0);
@@ -357,8 +356,131 @@ InOrderCPU::InOrderCPU(Params *params)
 InOrderCPU::~InOrderCPU()
 {
     delete resPool;
+
+    std::map<SkedID, ThePipeline::RSkedPtr>::iterator sked_it =
+        skedCache.begin();
+    std::map<SkedID, ThePipeline::RSkedPtr>::iterator sked_end =
+        skedCache.end();
+
+    while (sked_it != sked_end) {
+        delete (*sked_it).second;
+        sked_it++;
+    }
+    skedCache.clear();
 }
 
+std::map<InOrderCPU::SkedID, ThePipeline::RSkedPtr> InOrderCPU::skedCache;
+
+RSkedPtr
+InOrderCPU::createFrontEndSked()
+{
+    RSkedPtr res_sked = new ResourceSked();
+    int stage_num = 0;
+    StageScheduler F(res_sked, stage_num++);
+    StageScheduler D(res_sked, stage_num++);
+
+    // FETCH
+    F.needs(FetchSeq, FetchSeqUnit::AssignNextPC);
+    F.needs(ICache, FetchUnit::InitiateFetch);
+
+    // DECODE
+    D.needs(ICache, FetchUnit::CompleteFetch);
+    D.needs(Decode, DecodeUnit::DecodeInst);
+    D.needs(BPred, BranchPredictor::PredictBranch);
+    D.needs(FetchSeq, FetchSeqUnit::UpdateTargetPC);
+
+
+    DPRINTF(SkedCache, "Resource Sked created for instruction \"front_end\"\n");
+
+    return res_sked;
+}
+
+RSkedPtr
+InOrderCPU::createBackEndSked(DynInstPtr inst)
+{
+    RSkedPtr res_sked = lookupSked(inst);
+    if (res_sked != NULL) {
+        DPRINTF(SkedCache, "Found %s in sked cache.\n",
+                inst->instName());
+        return res_sked;
+    } else {
+        res_sked = new ResourceSked();
+    }
+
+    int stage_num = ThePipeline::BackEndStartStage;
+    StageScheduler X(res_sked, stage_num++);
+    StageScheduler M(res_sked, stage_num++);
+    StageScheduler W(res_sked, stage_num++);
+
+    if (!inst->staticInst) {
+        warn_once("Static Instruction Object Not Set. Can't Create"
+                  " Back End Schedule");
+        return NULL;
+    }
+
+    // EXECUTE
+    for (int idx=0; idx < inst->numSrcRegs(); idx++) {
+        if (!idx || !inst->isStore()) {
+            X.needs(RegManager, UseDefUnit::ReadSrcReg, idx);
+        }
+    }
+
+    if ( inst->isNonSpeculative() ) {
+        // skip execution of non speculative insts until later
+    } else if ( inst->isMemRef() ) {
+        if ( inst->isLoad() ) {
+            X.needs(AGEN, AGENUnit::GenerateAddr);
+        }
+    } else if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
+        X.needs(MDU, MultDivUnit::StartMultDiv);
+    } else {
+        X.needs(ExecUnit, ExecutionUnit::ExecuteInst);
+    }
+
+    if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
+        X.needs(MDU, MultDivUnit::EndMultDiv);
+    }
+
+    // MEMORY
+    if ( inst->isLoad() ) {
+        M.needs(DCache, CacheUnit::InitiateReadData);
+    } else if ( inst->isStore() ) {
+        if ( inst->numSrcRegs() >= 2 ) {
+            M.needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+        }
+        M.needs(AGEN, AGENUnit::GenerateAddr);
+        M.needs(DCache, CacheUnit::InitiateWriteData);
+    }
+
+
+    // WRITEBACK
+    if ( inst->isLoad() ) {
+        W.needs(DCache, CacheUnit::CompleteReadData);
+    } else if ( inst->isStore() ) {
+        W.needs(DCache, CacheUnit::CompleteWriteData);
+    }
+
+    if ( inst->isNonSpeculative() ) {
+        if ( inst->isMemRef() ) fatal("Non-Speculative Memory Instruction");
+        W.needs(ExecUnit, ExecutionUnit::ExecuteInst);
+    }
+
+    W.needs(Grad, GraduationUnit::GraduateInst);
+
+    for (int idx=0; idx < inst->numDestRegs(); idx++) {
+        W.needs(RegManager, UseDefUnit::WriteDestReg, idx);
+    }
+
+    // Insert Back Schedule into our cache of
+    // resource schedules
+    addToSkedCache(inst, res_sked);
+
+    DPRINTF(SkedCache, "Back End Sked Created for instruction: %s (%08p)\n",
+            inst->instName(), inst->getMachInst());
+    res_sked->print();
+
+    return res_sked;
+}
 
 void
 InOrderCPU::regStats()
@@ -520,8 +642,7 @@ InOrderCPU::tick()
     }
     activityRec.advance();
    
-    // Any squashed requests, events, or insts then remove them now
-    cleanUpRemovedReqs();
+    // Any squashed events, or insts then remove them now
     cleanUpRemovedEvents();
     cleanUpRemovedInsts();
 
@@ -1299,14 +1420,6 @@ InOrderCPU::cleanUpRemovedInsts()
         DynInstPtr inst = *removeList.front();
         ThreadID tid = inst->threadNumber;
 
-        // Make Sure Resource Schedule Is Emptied Out
-        ThePipeline::ResSchedule *inst_sched = &inst->resSched;
-        while (!inst_sched->empty()) {
-            ScheduleEntry* sch_entry = inst_sched->top();
-            inst_sched->pop();
-            delete sch_entry;
-        }
-
         // Remove From Register Dependency Map, If Necessary
         archRegDepMap[(*removeList.front())->threadNumber].
             remove((*removeList.front()));
@@ -1314,8 +1427,8 @@ InOrderCPU::cleanUpRemovedInsts()
 
         // Clear if Non-Speculative
         if (inst->staticInst &&
-              inst->seqNum == nonSpecSeqNum[tid] &&
-                nonSpecInstActive[tid] == true) {
+            inst->seqNum == nonSpecSeqNum[tid] &&
+            nonSpecInstActive[tid] == true) {
             nonSpecInstActive[tid] = false;
         }
 
@@ -1325,28 +1438,6 @@ InOrderCPU::cleanUpRemovedInsts()
     }
 
     removeInstsThisCycle = false;
-}
-
-void
-InOrderCPU::cleanUpRemovedReqs()
-{
-    while (!reqRemoveList.empty()) {
-        ResourceRequest *res_req = reqRemoveList.front();
-
-        DPRINTF(RefCount, "[tid:%i] [sn:%lli]: Removing Request "
-                "[stage_num:%i] [res:%s] [slot:%i] [completed:%i].\n",
-                res_req->inst->threadNumber,
-                res_req->inst->seqNum,
-                res_req->getStageNum(),
-                res_req->res->name(),
-                (res_req->isCompleted()) ?
-                res_req->getComplSlot() : res_req->getSlot(),
-                res_req->isCompleted());
-
-        reqRemoveList.pop();
-
-        delete res_req;
-    }
 }
 
 void

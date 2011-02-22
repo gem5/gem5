@@ -49,21 +49,24 @@ DecodeUnit::DecodeUnit(std::string res_name, int res_id, int res_width,
 void
 DecodeUnit::execute(int slot_num)
 {
-    ResourceRequest* decode_req = reqMap[slot_num];
-    DynInstPtr inst = reqMap[slot_num]->inst;
+    ResourceRequest* decode_req = reqs[slot_num];
+    DynInstPtr inst = reqs[slot_num]->inst;
     ThreadID tid = inst->readTid();
 
     switch (decode_req->cmd)
     {
       case DecodeInst:
         {
-            bool done_sked = ThePipeline::createBackEndSchedule(inst);
+            inst->setBackSked(cpu->createBackEndSked(inst));
 
-            if (done_sked) {
+            if (inst->backSked != NULL) {
                 DPRINTF(InOrderDecode,
                     "[tid:%i]: Setting Destination Register(s) for [sn:%i].\n",
                     tid, inst->seqNum);
                 regDepMap[tid]->insert(inst);
+
+                //inst->printSked();
+
                 decode_req->done();
             } else {
                 DPRINTF(Resource,

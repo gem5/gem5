@@ -377,26 +377,26 @@ machine(L1Cache, "AMD Hammer-like protocol")
         if (in_msg.Type == CacheRequestType:IFETCH) {
           // ** INSTRUCTION ACCESS ***
 
-          // Check to see if it is in the OTHER L1
-          Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
-          if (is_valid(L1Dcache_entry)) {
-            // The block is in the wrong L1, try to write it to the L2
-            if (L2cacheMemory.cacheAvail(in_msg.LineAddress)) {
-              trigger(Event:L1_to_L2, in_msg.LineAddress, L1Dcache_entry, tbe);
-            } else {
-              trigger(Event:L2_Replacement,
-                      L2cacheMemory.cacheProbe(in_msg.LineAddress),
-                      getL2CacheEntry(L2cacheMemory.cacheProbe(in_msg.LineAddress)),
-                      TBEs[L2cacheMemory.cacheProbe(in_msg.LineAddress)]);
-            }
-          }
-
           Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
           if (is_valid(L1Icache_entry)) {
             // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Icache_entry, tbe);
           } else {
+            // Check to see if it is in the OTHER L1
+            Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Dcache_entry)) {
+              // The block is in the wrong L1, try to write it to the L2
+              if (L2cacheMemory.cacheAvail(in_msg.LineAddress)) {
+                trigger(Event:L1_to_L2, in_msg.LineAddress, L1Dcache_entry, tbe);
+              } else {
+                trigger(Event:L2_Replacement,
+                        L2cacheMemory.cacheProbe(in_msg.LineAddress),
+                        getL2CacheEntry(L2cacheMemory.cacheProbe(in_msg.LineAddress)),
+                        TBEs[L2cacheMemory.cacheProbe(in_msg.LineAddress)]);
+              }
+            }
+
             if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
 
@@ -430,26 +430,27 @@ machine(L1Cache, "AMD Hammer-like protocol")
         } else {
           // *** DATA ACCESS ***
 
-          // Check to see if it is in the OTHER L1
-          Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
-          if (is_valid(L1Icache_entry)) {
-            // The block is in the wrong L1, try to write it to the L2
-            if (L2cacheMemory.cacheAvail(in_msg.LineAddress)) {
-              trigger(Event:L1_to_L2, in_msg.LineAddress, L1Icache_entry, tbe);
-            } else {
-              trigger(Event:L2_Replacement,
-                      L2cacheMemory.cacheProbe(in_msg.LineAddress),
-                      getL2CacheEntry(L2cacheMemory.cacheProbe(in_msg.LineAddress)),
-                      TBEs[L2cacheMemory.cacheProbe(in_msg.LineAddress)]);
-            }
-          }
-
           Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
           if (is_valid(L1Dcache_entry)) {
             // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
             trigger(mandatory_request_type_to_event(in_msg.Type),
                     in_msg.LineAddress, L1Dcache_entry, tbe);
           } else {
+
+            // Check to see if it is in the OTHER L1
+            Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+            if (is_valid(L1Icache_entry)) {
+              // The block is in the wrong L1, try to write it to the L2
+              if (L2cacheMemory.cacheAvail(in_msg.LineAddress)) {
+                trigger(Event:L1_to_L2, in_msg.LineAddress, L1Icache_entry, tbe);
+              } else {
+                trigger(Event:L2_Replacement,
+                        L2cacheMemory.cacheProbe(in_msg.LineAddress),
+                        getL2CacheEntry(L2cacheMemory.cacheProbe(in_msg.LineAddress)),
+                        TBEs[L2cacheMemory.cacheProbe(in_msg.LineAddress)]);
+              }
+            }
+
             if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
               Entry L2cache_entry := getL2CacheEntry(in_msg.LineAddress);

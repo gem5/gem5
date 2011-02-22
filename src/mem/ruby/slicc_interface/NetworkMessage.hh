@@ -82,9 +82,16 @@ class NetworkMessage : public Message
 
     virtual void print(std::ostream& out) const = 0;
 
+    int getIncomingLink() const { return incoming_link; }
+    void setIncomingLink(int link) { incoming_link = link; }
+    int getVnet() const { return vnet; }
+    void setVnet(int net) { vnet = net; }
+
   private:
     NetDest m_internal_dest;
     bool m_internal_dest_valid;
+    int incoming_link;
+    int vnet;
 };
 
 inline std::ostream&

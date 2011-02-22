@@ -208,19 +208,20 @@ TableWalker::processWalk()
         return f;
     }
 
+    Request::Flags flag = 0;
+    if (currState->sctlr.c == 0) {
+        flag = Request::UNCACHEABLE;
+    }
+
     if (currState->timing) {
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
                 &doL1DescEvent, (uint8_t*)&currState->l1Desc.data,
-                currState->tc->getCpuPtr()->ticks(1));
+                currState->tc->getCpuPtr()->ticks(1), flag);
         DPRINTF(TLBVerbose, "Adding to walker fifo: queue size before adding: %d\n",
                 stateQueueL1.size());
         stateQueueL1.push_back(currState);
         currState = NULL;
     } else {
-        Request::Flags flag = 0;
-        if (currState->sctlr.c == 0){
-           flag = Request::UNCACHEABLE;
-        }
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
                 NULL, (uint8_t*)&currState->l1Desc.data,
                 currState->tc->getCpuPtr()->ticks(1), flag);
@@ -472,7 +473,7 @@ TableWalker::doL1Descriptor()
     switch (currState->l1Desc.type()) {
       case L1Descriptor::Ignore:
       case L1Descriptor::Reserved:
-        if (!currState->delayed) {
+        if (!currState->timing) {
             currState->tc = NULL;
             currState->req = NULL;
         }
@@ -577,7 +578,7 @@ TableWalker::doL2Descriptor()
 
     if (currState->l2Desc.invalid()) {
         DPRINTF(TLB, "L2 descriptor invalid, causing fault\n");
-        if (!currState->delayed) {
+        if (!currState->timing) {
             currState->tc = NULL;
             currState->req = NULL;
         }
@@ -622,7 +623,7 @@ TableWalker::doL2Descriptor()
     memAttrs(currState->tc, te, currState->sctlr, currState->l2Desc.texcb(),
              currState->l2Desc.shareable());
 
-    if (!currState->delayed) {
+    if (!currState->timing) {
         currState->tc = NULL;
         currState->req = NULL;
     }

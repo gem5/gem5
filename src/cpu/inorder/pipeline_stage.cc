@@ -44,10 +44,15 @@ PipelineStage::PipelineStage(Params *params, unsigned stage_num)
       stageBufferMax(params->stageWidth),
       prevStageValid(false), nextStageValid(false), idle(false)
 {
-    switchedOutBuffer.resize(ThePipeline::MaxThreads);
-    switchedOutValid.resize(ThePipeline::MaxThreads);
-    
     init(params);
+}
+
+PipelineStage::~PipelineStage()
+{
+   for(ThreadID tid = 0; tid < numThreads; tid++) {
+       skidBuffer[tid].clear();
+       stalls[tid].resources.clear();
+   }
 }
 
 void
@@ -65,6 +70,12 @@ PipelineStage::init(Params *params)
             lastStallingStage[tid] = BackEndStartStage - 1;
         else
             lastStallingStage[tid] = NumStages - 1;
+    }
+
+    if ((InOrderCPU::ThreadModel) params->threadModel ==
+        InOrderCPU::SwitchOnCacheMiss) {
+        switchedOutBuffer.resize(ThePipeline::MaxThreads);
+        switchedOutValid.resize(ThePipeline::MaxThreads);
     }
 }
 
@@ -189,9 +200,6 @@ PipelineStage::takeOverFrom()
         }
 
         stalls[tid].resources.clear();
-
-        while (!insts[tid].empty())
-            insts[tid].pop();
 
         skidBuffer[tid].clear();
     }
@@ -938,17 +946,24 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     "\n", tid, inst->seqNum, cpu->resPool->name(res_num));
 
             ResReqPtr req = cpu->resPool->request(res_num, inst);
+            assert(req->valid);
 
-            if (req->isCompleted()) {
+            bool req_completed = req->isCompleted();
+            bool done_in_pipeline = false;
+            if (req_completed) {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s "
                         "completed.\n", tid, inst->seqNum, 
                         cpu->resPool->name(res_num));
 
-                inst->popSchedEntry();
-
                 reqs_processed++;                
 
                 req->stagePasses++;                
+
+                done_in_pipeline = inst->finishSkedEntry();
+                if (done_in_pipeline) {
+                    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] finished "
+                            "in pipeline.\n", tid, inst->seqNum);
+                }
             } else {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s failed."
                         "\n", tid, inst->seqNum, cpu->resPool->name(res_num));
@@ -982,23 +997,20 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     // Activate Next Ready Thread at end of cycle
                     DPRINTF(ThreadModel, "Attempting to activate next ready "
                             "thread due to cache miss.\n");
-                    cpu->activateNextReadyContext();                                                                                               
+                    cpu->activateNextReadyContext();
                 }
-                
-                // Mark request for deletion
-                // if it isnt currently being used by a resource
-                if (!req->hasSlot()) {                   
-                    DPRINTF(InOrderStage, "[sn:%i] Deleting Request, has no "
-                            "slot in resource.\n", inst->seqNum);
-                    
-                    cpu->reqRemoveList.push(req);
-                } else {
-                    DPRINTF(InOrderStage, "[sn:%i] Ignoring Request Deletion, "
-                            "in resource [slot:%i].\n", inst->seqNum,
-                            req->getSlot());
-                }
-                
-                
+            }
+
+            // If this request is no longer needs to take up bandwidth in the
+            // resource, go ahead and free that bandwidth up
+            if (req->doneInResource) {
+                req->freeSlot();
+            }
+
+            // No longer need to process this instruction if the last
+            // request it had wasn't completed or if there is nothing
+            // else for it to do in the pipeline
+            if (done_in_pipeline || !req_completed) {
                 break;
             }
 

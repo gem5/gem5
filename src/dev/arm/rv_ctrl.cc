@@ -68,6 +68,27 @@ RealViewCtrl::read(PacketPtr pkt)
       case Flash:
         pkt->set<uint32_t>(0);
         break;
+      case Clcd:
+        pkt->set<uint32_t>(0x00001F00);
+        break;
+      case Osc0:
+        pkt->set<uint32_t>(0x00012C5C);
+        break;
+      case Osc1:
+        pkt->set<uint32_t>(0x00002CC0);
+        break;
+      case Osc2:
+        pkt->set<uint32_t>(0x00002C75);
+        break;
+      case Osc3:
+        pkt->set<uint32_t>(0x00020211);
+        break;
+      case Osc4:
+        pkt->set<uint32_t>(0x00002C75);
+        break;
+      case Lock:
+        pkt->set<uint32_t>(sysLock);
+        break;
       default:
         panic("Tried to read RealView I/O at offset %#x that doesn't exist\n", daddr);
         break;
@@ -85,6 +106,15 @@ RealViewCtrl::write(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - pioAddr;
     switch (daddr) {
       case Flash:
+      case Clcd:
+      case Osc0:
+      case Osc1:
+      case Osc2:
+      case Osc3:
+      case Osc4:
+        break;
+      case Lock:
+        sysLock.lockVal = pkt->get<uint16_t>();
         break;
       default:
         panic("Tried to write RVIO at offset %#x that doesn't exist\n", daddr);

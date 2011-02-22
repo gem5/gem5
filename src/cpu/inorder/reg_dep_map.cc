@@ -45,6 +45,14 @@ RegDepMap::RegDepMap(int size)
     regMap.resize(size);
 }
 
+RegDepMap::~RegDepMap()
+{
+    for (int i = 0; i < regMap.size(); i++) {
+        regMap[i].clear();
+    }
+    regMap.clear();
+}
+
 string
 RegDepMap::name()
 {

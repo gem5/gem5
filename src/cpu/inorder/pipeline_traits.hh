@@ -51,7 +51,7 @@ class ResourceSked;
 namespace ThePipeline {
     // Pipeline Constants
     const unsigned NumStages = 5;
-    const ThreadID MaxThreads = 8;
+    const ThreadID MaxThreads = 1;
     const unsigned BackEndStartStage = 2;
 
     // List of Resources The Pipeline Uses
@@ -77,23 +77,7 @@ namespace ThePipeline {
     // RESOURCE SCHEDULING
     //////////////////////////
     typedef ResourceSked ResSchedule;
-
-    void createFrontEndSchedule(DynInstPtr &inst);
-    bool createBackEndSchedule(DynInstPtr &inst);
-    int getNextPriority(DynInstPtr &inst, int stage_num);
-
-    class InstStage {
-      private:
-        int nextTaskPriority;
-        int stageNum;
-        ResSchedule *instSched;
-
-      public:
-        InstStage(DynInstPtr inst, int stage_num);
-
-        void needs(int unit, int request);
-        void needs(int unit, int request, int param);
-    };
+    typedef ResourceSked* RSkedPtr;
 };
 
 

@@ -5,16 +5,16 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 02:32:07
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 02:32:13
+M5 compiled Feb 12 2011 02:22:23
+M5 revision 5e76f9de6972 7961 default qtip tip x86branchdetectstats.patch
+M5 started Feb 12 2011 02:22:27
 M5 executing on burrito
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
- Reading the dictionary files: *****************************info: Increasing stack size by one page.
-********************
+ Reading the dictionary files: ***********************info: Increasing stack size by one page.
+**************************
  58924 words stored in 3784810 bytes
 
 
@@ -74,4 +74,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 817002039000 because target called exit()
+Exiting @ tick 610952992000 because target called exit()

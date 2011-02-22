@@ -41,6 +41,7 @@
 #define __ARCH_X86_INSTS_MACROOP_HH__
 
 #include "arch/x86/emulenv.hh"
+#include "arch/x86/insts/badmicroop.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/insts/static_inst.hh"
 
@@ -76,8 +77,10 @@ class MacroopBase : public X86StaticInst
     StaticInstPtr
     fetchMicroop(MicroPC microPC) const
     {
-        assert(microPC < numMicroops);
-        return microops[microPC];
+        if (microPC >= numMicroops)
+            return badMicroop;
+        else
+            return microops[microPC];
     }
 
     std::string

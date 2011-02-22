@@ -1,3 +1,5 @@
+warn: Sockets disabled, not accepting vnc client connections
+For more information see: http://www.m5sim.org/warn/af6a84f6
 warn: Sockets disabled, not accepting terminal connections
 For more information see: http://www.m5sim.org/warn/8742226b
 warn: Sockets disabled, not accepting gdb connections

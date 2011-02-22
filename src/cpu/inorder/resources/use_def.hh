@@ -56,6 +56,8 @@ class UseDefUnit : public Resource {
     UseDefUnit(std::string res_name, int res_id, int res_width,
                int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
 
+    void init();
+
     ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                         int res_idx, int slot_num,
                                         unsigned cmd);
@@ -96,14 +98,20 @@ class UseDefUnit : public Resource {
         typedef ThePipeline::DynInstPtr DynInstPtr;
 
       public:
-        UseDefRequest(UseDefUnit *res, DynInstPtr inst, int stage_num, 
-                      int res_idx, int slot_num, unsigned cmd, 
-                      int use_def_idx)
-            : ResourceRequest(res, inst, stage_num, res_idx, slot_num, cmd),
-              useDefIdx(use_def_idx)
+        UseDefRequest(UseDefUnit *res)
+            : ResourceRequest(res)
         { }
 
         int useDefIdx;
+
+        void setRequest(DynInstPtr _inst, int stage_num, int res_idx,
+                        int slot_num, unsigned _cmd, int idx)
+        {
+            useDefIdx = idx;
+
+            ResourceRequest::setRequest(_inst, stage_num, res_idx, slot_num,
+                                        _cmd);
+        }
     };
 
   protected:

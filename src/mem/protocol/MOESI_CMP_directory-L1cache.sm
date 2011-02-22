@@ -44,7 +44,6 @@ machine(L1Cache, "Directory protocol")
   // From this node's L1 cache TO the network
   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
   MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false";
-  MessageBuffer foo, network="To", virtual_network="1", ordered="false";
   // a local L1 -> this L2 bank
   MessageBuffer responseFromL1Cache, network="To", virtual_network="2", ordered="false";
 //  MessageBuffer writebackFromL1Cache, network="To", virtual_network="3", ordered="false";
@@ -53,7 +52,6 @@ machine(L1Cache, "Directory protocol")
   // To this node's L1 cache FROM the network
   // a L2 bank -> this L1
   MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false";
-  MessageBuffer goo, network="From", virtual_network="1", ordered="false";
   // a L2 bank -> this L1
   MessageBuffer responseToL1Cache, network="From", virtual_network="2", ordered="false";
 
@@ -229,7 +227,6 @@ machine(L1Cache, "Directory protocol")
   out_port(requestNetwork_out, RequestMsg, requestFromL1Cache);
   out_port(responseNetwork_out, ResponseMsg, responseFromL1Cache);
   out_port(triggerQueue_out, TriggerMsg, triggerQueue);
-  out_port(foo_out, ResponseMsg, foo);
 
   // ** IN_PORTS **
 
@@ -239,15 +236,6 @@ machine(L1Cache, "Directory protocol")
         trigger(Event:Use_Timeout, useTimerTable.readyAddress(),
                 getCacheEntry(useTimerTable.readyAddress()),
                 TBEs[useTimerTable.readyAddress()]);
-    }
-  }
-
-
-  in_port(goo_in, RequestMsg, goo) {
-    if (goo_in.isReady()) {
-      peek(goo_in, RequestMsg) {
-        assert(false);
-      }
     }
   }
 
@@ -338,14 +326,6 @@ machine(L1Cache, "Directory protocol")
         if (in_msg.Type == CacheRequestType:IFETCH) {
           // ** INSTRUCTION ACCESS ***
 
-          Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
-          // Check to see if it is in the OTHER L1
-          if (is_valid(L1Dcache_entry)) {
-            // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.LineAddress, L1Dcache_entry,
-                    TBEs[in_msg.LineAddress]);
-          }
-
           Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
           if (is_valid(L1Icache_entry)) {
             // The tag matches for the L1, so the L1 asks the L2 for it.
@@ -353,6 +333,14 @@ machine(L1Cache, "Directory protocol")
                     in_msg.LineAddress, L1Icache_entry,
                     TBEs[in_msg.LineAddress]);
           } else {
+
+            Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
+            // Check to see if it is in the OTHER L1
+            if (is_valid(L1Dcache_entry)) {
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement, in_msg.LineAddress, L1Dcache_entry,
+                      TBEs[in_msg.LineAddress]);
+            }
             if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
               trigger(mandatory_request_type_to_event(in_msg.Type),
@@ -369,14 +357,6 @@ machine(L1Cache, "Directory protocol")
         } else {
           // *** DATA ACCESS ***
 
-          Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
-          // Check to see if it is in the OTHER L1
-          if (is_valid(L1Icache_entry)) {
-            // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.LineAddress,
-                    L1Icache_entry, TBEs[in_msg.LineAddress]);
-          }
-
           Entry L1Dcache_entry := getL1DCacheEntry(in_msg.LineAddress);
           if (is_valid(L1Dcache_entry)) {
             // The tag matches for the L1, so the L1 ask the L2 for it
@@ -384,6 +364,14 @@ machine(L1Cache, "Directory protocol")
                     in_msg.LineAddress, L1Dcache_entry,
                     TBEs[in_msg.LineAddress]);
           } else {
+
+            Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
+            // Check to see if it is in the OTHER L1
+            if (is_valid(L1Icache_entry)) {
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement, in_msg.LineAddress,
+                      L1Icache_entry, TBEs[in_msg.LineAddress]);
+            }
             if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
               trigger(mandatory_request_type_to_event(in_msg.Type),
@@ -411,6 +399,7 @@ machine(L1Cache, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:L1Cache;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
               l2_select_low_bit, l2_select_num_bits));
         out_msg.MessageSize := MessageSizeType:Request_Control;
@@ -455,6 +444,7 @@ machine(L1Cache, "Directory protocol")
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTO;
       out_msg.Requestor := machineID;
+      out_msg.RequestorMachine := MachineType:L1Cache;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
             l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
@@ -467,6 +457,7 @@ machine(L1Cache, "Directory protocol")
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTS;
       out_msg.Requestor := machineID;
+      out_msg.RequestorMachine := MachineType:L1Cache;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
             l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
@@ -481,6 +472,7 @@ machine(L1Cache, "Directory protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
+          out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
                 l2_select_low_bit, l2_select_num_bits));
           out_msg.DataBlk := cache_entry.DataBlk;
@@ -496,6 +488,7 @@ machine(L1Cache, "Directory protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
+          out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.DataBlk := cache_entry.DataBlk;
           // out_msg.Dirty := cache_entry.Dirty;
@@ -514,6 +507,7 @@ machine(L1Cache, "Directory protocol")
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L1Cache;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
             l2_select_low_bit, l2_select_num_bits));
       out_msg.DataBlk := cache_entry.DataBlk;
@@ -592,6 +586,7 @@ machine(L1Cache, "Directory protocol")
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L1Cache;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
             l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
@@ -690,6 +685,7 @@ machine(L1Cache, "Directory protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
+          out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.DataBlk := tbe.DataBlk;
           // out_msg.Dirty := tbe.Dirty;
@@ -703,6 +699,7 @@ machine(L1Cache, "Directory protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
+          out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
                 l2_select_low_bit, l2_select_num_bits));
           out_msg.DataBlk := tbe.DataBlk;
@@ -723,6 +720,7 @@ machine(L1Cache, "Directory protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
+          out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.DataBlk := tbe.DataBlk;
           out_msg.Dirty := tbe.Dirty;
@@ -735,6 +733,7 @@ machine(L1Cache, "Directory protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
+          out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
                 l2_select_low_bit, l2_select_num_bits));
           out_msg.DataBlk := tbe.DataBlk;

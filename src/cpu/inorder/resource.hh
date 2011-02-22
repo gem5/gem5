@@ -221,8 +221,10 @@ class Resource {
     const int latency;
 
   public:
-    /** Mapping of slot-numbers to the resource-request pointers */
-    std::map<int, ResReqPtr> reqMap;
+    /** List of all Requests the Resource is Servicing. Each request
+        represents part of the resource's bandwidth
+    */
+    std::vector<ResReqPtr> reqs;
 
     /** A list of all the available execution slots for this resource.
      *  This correlates with the actual resource event idx.
@@ -245,7 +247,7 @@ class Resource {
 class ResourceEvent : public Event
 {
   public:
-    /** Pointer to the CPU. */
+    /** Pointer to the Resource this is an event for */
     Resource *resource;
 
 
@@ -297,21 +299,29 @@ class ResourceRequest
 
     static int maxReqCount;
     
+    friend class Resource;
+
   public:
-    ResourceRequest(Resource *_res, DynInstPtr _inst, int stage_num,
-                    int res_idx, int slot_num, unsigned _cmd);
+    ResourceRequest(Resource *_res);
     
     virtual ~ResourceRequest();
+
+    std::string name();
     
     int reqID;
+
+    virtual void setRequest(DynInstPtr _inst, int stage_num,
+                    int res_idx, int slot_num, unsigned _cmd);
+
+    virtual void clearRequest();
 
     /** Acknowledge that this is a request is done and remove
      *  from resource.
      */
     void done(bool completed = true);
-
-    short stagePasses;
     
+    void freeSlot();
+
     /////////////////////////////////////////////
     //
     // GET RESOURCE REQUEST IDENTIFICATION / INFO
@@ -319,11 +329,9 @@ class ResourceRequest
     /////////////////////////////////////////////
     /** Get Resource Index */
     int getResIdx() { return resIdx; }
-
        
     /** Get Slot Number */
     int getSlot() { return slotNum; }
-    int getComplSlot() { return complSlotNum; }
     bool hasSlot()  { return slotNum >= 0; }     
 
     /** Get Stage Number */
@@ -353,6 +361,12 @@ class ResourceRequest
     /** Command For This Resource */
     unsigned cmd;
 
+    short stagePasses;
+
+    bool valid;
+
+    bool doneInResource;
+
     ////////////////////////////////////////
     //
     // GET RESOURCE REQUEST STATUS FROM VARIABLES
@@ -380,7 +394,6 @@ class ResourceRequest
     int stageNum;
     int resIdx;
     int slotNum;
-    int complSlotNum;
     
     /** Resource Request Status */
     bool completed;

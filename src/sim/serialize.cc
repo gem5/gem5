@@ -201,6 +201,23 @@ arrayParamOut(ostream &os, const string &name, const vector<T> &param)
     os << "\n";
 }
 
+template <class T>
+void
+arrayParamOut(ostream &os, const string &name, const list<T> &param)
+{
+    typename list<T>::const_iterator it = param.begin();
+
+    os << name << "=";
+    if (param.size() > 0)
+        showParam(os, *it);
+    it++;
+    while (it != param.end()) {
+        os << " ";
+        showParam(os, *it);
+        it++;
+    }
+    os << "\n";
+}
 
 template <class T>
 void
@@ -326,6 +343,37 @@ arrayParamIn(Checkpoint *cp, const string &section,
     }
 }
 
+template <class T>
+void
+arrayParamIn(Checkpoint *cp, const string &section,
+             const string &name, list<T> &param)
+{
+    string str;
+    if (!cp->find(section, name, str)) {
+        fatal("Can't unserialize '%s:%s'\n", section, name);
+    }
+    param.clear();
+
+    vector<string> tokens;
+    tokenize(tokens, str, ' ');
+
+    for (vector<string>::size_type i = 0; i < tokens.size(); i++) {
+        T scalar_value = 0;
+        if (!parseParam(tokens[i], scalar_value)) {
+            string err("could not parse \"");
+
+            err += str;
+            err += "\"";
+
+            fatal(err);
+        }
+
+        // assign parsed value to vector
+        param.push_back(scalar_value);
+    }
+}
+
+
 void
 objParamIn(Checkpoint *cp, const string &section,
            const string &name, SimObject * &param)
@@ -356,7 +404,13 @@ arrayParamOut(ostream &os, const string &name,                          \
               const vector<type> &param);                               \
 template void                                                           \
 arrayParamIn(Checkpoint *cp, const string &section,                     \
-             const string &name, vector<type> &param);
+             const string &name, vector<type> &param);                  \
+template void                                                           \
+arrayParamOut(ostream &os, const string &name,                          \
+              const list<type> &param);                                 \
+template void                                                           \
+arrayParamIn(Checkpoint *cp, const string &section,                     \
+             const string &name, list<type> &param);
 
 INSTANTIATE_PARAM_TEMPLATES(char)
 INSTANTIATE_PARAM_TEMPLATES(signed char)

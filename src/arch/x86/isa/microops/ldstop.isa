@@ -301,6 +301,46 @@ let {{
                 "dataSize" : self.dataSize, "addressSize" : self.addressSize,
                 "memFlags" : self.memFlags}
             return allocator
+
+    class BigLdStOp(X86Microop):
+        def __init__(self, data, segment, addr, disp,
+                dataSize, addressSize, baseFlags, atCPL0, prefetch):
+            self.data = data
+            [self.scale, self.index, self.base] = addr
+            self.disp = disp
+            self.segment = segment
+            self.dataSize = dataSize
+            self.addressSize = addressSize
+            self.memFlags = baseFlags
+            if atCPL0:
+                self.memFlags += " | (CPL0FlagBit << FlagShift)"
+            if prefetch:
+                self.memFlags += " | Request::PREFETCH"
+            self.memFlags += " | (machInst.legacy.addr ? " + \
+                             "(AddrSizeFlagBit << FlagShift) : 0)"
+
+        def getAllocator(self, microFlags):
+            allocString = '''
+                (%(dataSize)s >= 4) ?
+                    (StaticInstPtr)(new %(class_name)sBig(machInst,
+                        macrocodeBlock, %(flags)s, %(scale)s, %(index)s,
+                        %(base)s, %(disp)s, %(segment)s, %(data)s,
+                        %(dataSize)s, %(addressSize)s, %(memFlags)s)) :
+                    (StaticInstPtr)(new %(class_name)s(machInst,
+                        macrocodeBlock, %(flags)s, %(scale)s, %(index)s,
+                        %(base)s, %(disp)s, %(segment)s, %(data)s,
+                        %(dataSize)s, %(addressSize)s, %(memFlags)s))
+            '''
+            allocator = allocString % {
+                "class_name" : self.className,
+                "flags" : self.microFlagsText(microFlags),
+                "scale" : self.scale, "index" : self.index,
+                "base" : self.base,
+                "disp" : self.disp,
+                "segment" : self.segment, "data" : self.data,
+                "dataSize" : self.dataSize, "addressSize" : self.addressSize,
+                "memFlags" : self.memFlags}
+            return allocator
 }};
 
 let {{
@@ -315,7 +355,8 @@ let {{
     EA = bits(SegBase + scale * Index + Base + disp, addressSize * 8 - 1, 0);
     '''
 
-    def defineMicroLoadOp(mnemonic, code, mem_flags="0"):
+    def defineMicroLoadOp(mnemonic, code, bigCode='',
+                          mem_flags="0", big=True):
         global header_output
         global decoder_output
         global exec_output
@@ -324,16 +365,22 @@ let {{
         name = mnemonic.lower()
 
         # Build up the all register version of this micro op
-        iop = InstObjParams(name, Name, 'X86ISA::LdStOp',
-                {"code": code,
-                 "ea_code": calculateEA})
-        header_output += MicroLdStOpDeclare.subst(iop)
-        decoder_output += MicroLdStOpConstructor.subst(iop)
-        exec_output += MicroLoadExecute.subst(iop)
-        exec_output += MicroLoadInitiateAcc.subst(iop)
-        exec_output += MicroLoadCompleteAcc.subst(iop)
+        iops = [InstObjParams(name, Name, 'X86ISA::LdStOp',
+                {"code": code, "ea_code": calculateEA})]
+        if big:
+            iops += [InstObjParams(name, Name + "Big", 'X86ISA::LdStOp',
+                     {"code": bigCode, "ea_code": calculateEA})]
+        for iop in iops:
+            header_output += MicroLdStOpDeclare.subst(iop)
+            decoder_output += MicroLdStOpConstructor.subst(iop)
+            exec_output += MicroLoadExecute.subst(iop)
+            exec_output += MicroLoadInitiateAcc.subst(iop)
+            exec_output += MicroLoadCompleteAcc.subst(iop)
 
-        class LoadOp(LdStOp):
+        base = LdStOp
+        if big:
+            base = BigLdStOp
+        class LoadOp(base):
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
                     addressSize="env.addressSize",
@@ -346,12 +393,15 @@ let {{
 
         microopClasses[name] = LoadOp
 
-    defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);')
+    defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);',
+                            'Data = Mem & mask(dataSize * 8);')
     defineMicroLoadOp('Ldst', 'Data = merge(Data, Mem, dataSize);',
-            '(StoreCheck << FlagShift)')
+                              'Data = Mem & mask(dataSize * 8);',
+                      '(StoreCheck << FlagShift)')
     defineMicroLoadOp('Ldstl', 'Data = merge(Data, Mem, dataSize);',
-            '(StoreCheck << FlagShift) | Request::LOCKED')
-    defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;')
+                               'Data = Mem & mask(dataSize * 8);',
+                      '(StoreCheck << FlagShift) | Request::LOCKED')
+    defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;', big = False)
 
     def defineMicroStoreOp(mnemonic, code, \
             postCode="", completeCode="", mem_flags="0"):
