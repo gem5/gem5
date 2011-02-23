@@ -141,12 +141,12 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
     if (!currState->timing)
         return processWalk();
 
-    if (pending) {
+    if (pending || pendingQueue.size()) {
         pendingQueue.push_back(currState);
         currState = NULL;
     } else {
         pending = true;
-        processWalk();
+        return processWalk();
     }
 
     return NoFault;
@@ -194,10 +194,8 @@ TableWalker::processWalk()
     f = tlb->walkTrickBoxCheck(l1desc_addr, currState->vaddr, sizeof(uint32_t),
             currState->isFetch, currState->isWrite, 0, true);
     if (f) {
+        DPRINTF(TLB, "Trickbox check caused fault on %#x\n", currState->vaddr);
         if (currState->timing) {
-            currState->transState->finish(f, currState->req,
-                                          currState->tc, currState->mode);
-
             pending = false;
             nextWalk(currState->tc);
             currState = NULL;

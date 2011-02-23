@@ -1142,6 +1142,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
         commitStatus[tid] = TrapPending;
 
+        DPRINTF(Commit, "Committing instruction with fault [sn:%lli]\n",
+            head_inst->seqNum);
         if (head_inst->traceData) {
             if (DTRACE(ExecFaulting)) {
                 head_inst->traceData->setFetchSeq(head_inst->seqNum);
