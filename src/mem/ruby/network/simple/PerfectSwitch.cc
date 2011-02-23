@@ -131,8 +131,6 @@ PerfectSwitch::~PerfectSwitch()
 void
 PerfectSwitch::wakeup()
 {
-    DPRINTF(RubyNetwork, "m_switch_id: %d\n",m_switch_id);
-
     MsgPtr msg_ptr;
 
     // Give the highest numbered link priority most of the time
@@ -255,7 +253,7 @@ PerfectSwitch::wakeup()
                         int outgoing = output_links[i];
                         if (!m_out[outgoing][vnet]->areNSlotsAvailable(1))
                             enough = false;
-                        DPRINTF(RubyNetwork, "Checking if node is blocked\n"
+                        DPRINTF(RubyNetwork, "Checking if node is blocked ..."
                                 "outgoing: %d, vnet: %d, enough: %d\n",
                                 outgoing, vnet, enough);
                     }
@@ -264,8 +262,8 @@ PerfectSwitch::wakeup()
                     if (!enough) {
                         g_eventQueue_ptr->scheduleEvent(this, 1);
                         DPRINTF(RubyNetwork, "Can't deliver message since a node "
-                                "is blocked\n"
-                                "Message: %s\n", (*net_msg_ptr));
+                                "is blocked\n");
+                        DPRINTF(RubyNetwork, "Message: %s\n", (*net_msg_ptr));
                         break; // go to next incoming port
                     }
 
@@ -302,9 +300,9 @@ PerfectSwitch::wakeup()
                             output_link_destinations[i];
 
                         // Enqeue msg
-                        DPRINTF(RubyNetwork, "Switch: %d enqueuing net msg from "
+                        DPRINTF(RubyNetwork, "%d enqueuing net msg from "
                                 "inport[%d][%d] to outport [%d][%d] time: %lld.\n",
-                                m_switch_id, incoming, vnet, outgoing, vnet,
+                                incoming, vnet, outgoing, vnet,
                                 g_eventQueue_ptr->getTime());
 
                         m_out[outgoing][vnet]->enqueue(msg_ptr);

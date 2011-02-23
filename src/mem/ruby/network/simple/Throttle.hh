@@ -40,6 +40,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
@@ -56,6 +57,9 @@ class Throttle : public Consumer
         int link_bandwidth_multiplier);
     Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier);
     ~Throttle() {}
+
+    std::string name()
+    { return csprintf("Throttle-%i", m_sID); }
 
     void addLinks(const std::vector<MessageBuffer*>& in_vec,
         const std::vector<MessageBuffer*>& out_vec);

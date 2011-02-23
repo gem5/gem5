@@ -250,8 +250,7 @@ Throttle::getUtilization() const
 void
 Throttle::print(ostream& out) const
 {
-    out << "[Throttle: " << m_sID << " " << m_node
-        << " bw: " << getLinkBandwidth() << "]";
+    ccprintf(out,  "[%i bw: %i]", m_node, getLinkBandwidth());
 }
 
 int

@@ -125,8 +125,8 @@ MessageBuffer::getMsgPtrCopy() const
 const Message*
 MessageBuffer::peekAtHeadOfQueue() const
 {
-    DPRINTF(RubyQueue, "Peeking at head of queue %s time: %lld\n",
-            m_name, g_eventQueue_ptr->getTime());
+    DPRINTF(RubyQueue, "Peeking at head of queue time: %lld\n",
+            g_eventQueue_ptr->getTime());
     assert(isReady());
 
     const Message* msg_ptr = m_prio_heap.front().m_msgptr.get();
@@ -151,9 +151,6 @@ random_time()
 void
 MessageBuffer::enqueue(MsgPtr message, Time delta)
 {
-    DPRINTF(RubyQueue, "Enqueue %s time: %lld, message: %s.\n",
-            m_name, g_eventQueue_ptr->getTime(), (*(message.get())));
-
     m_msg_counter++;
     m_size++;
 
@@ -222,10 +219,9 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
 
-    DPRINTF(RubyQueue, "Enqueue %s with arrival_time %lld cur_time: %lld, "
-            "message: %s.\n",
-            m_name, arrival_time, g_eventQueue_ptr->getTime(),
-            (*(message.get())));
+    DPRINTF(RubyQueue, "Enqueue with arrival_time %lld (cur_time: %lld).\n",
+            arrival_time, g_eventQueue_ptr->getTime());
+    DPRINTF(RubyQueue, "Enqueue Message: %s.\n", (*(message.get())));
 
     // Schedule the wakeup
     if (m_consumer_ptr != NULL) {
@@ -253,7 +249,7 @@ MessageBuffer::dequeue_getDelayCycles(MsgPtr& message)
 void
 MessageBuffer::dequeue(MsgPtr& message)
 {
-    DPRINTF(RubyQueue, "Dequeue from %s\n", m_name);
+    DPRINTF(RubyQueue, "Dequeueing\n");
     message = m_prio_heap.front().m_msgptr;
 
     pop();
@@ -280,7 +276,7 @@ MessageBuffer::dequeue_getDelayCycles()
 void
 MessageBuffer::pop()
 {
-    DPRINTF(RubyQueue, "Pop from %s\n", m_name);
+    DPRINTF(RubyQueue, "Popping\n");
     assert(isReady());
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
@@ -311,7 +307,7 @@ MessageBuffer::clear()
 void
 MessageBuffer::recycle()
 {
-    DPRINTF(RubyQueue, "Recycling %s\n", m_name);
+    DPRINTF(RubyQueue, "Recycling.\n");
     assert(isReady());
     MessageBufferNode node = m_prio_heap.front();
     pop_heap(m_prio_heap.begin(), m_prio_heap.end(),
@@ -327,7 +323,7 @@ MessageBuffer::recycle()
 void
 MessageBuffer::reanalyzeMessages(const Address& addr)
 {
-    DPRINTF(RubyQueue, "ReanalyzeMessages %s\n", m_name);
+    DPRINTF(RubyQueue, "ReanalyzeMessages\n");
     assert(m_stall_msg_map.count(addr) > 0);
 
     //
@@ -353,7 +349,7 @@ MessageBuffer::reanalyzeMessages(const Address& addr)
 void
 MessageBuffer::reanalyzeAllMessages()
 {
-    DPRINTF(RubyQueue, "ReanalyzeAllMessages %s\n", m_name);
+    DPRINTF(RubyQueue, "ReanalyzeAllMessages %s\n");
 
     //
     // Put all stalled messages associated with this address back on the
@@ -384,7 +380,7 @@ MessageBuffer::reanalyzeAllMessages()
 void
 MessageBuffer::stallMessage(const Address& addr)
 {
-    DPRINTF(RubyQueue, "Stalling %s\n", m_name);
+    DPRINTF(RubyQueue, "Stalling %s\n");
     assert(isReady());
     assert(addr.getOffset() == 0);
     MsgPtr message = m_prio_heap.front().m_msgptr;
@@ -421,14 +417,14 @@ MessageBuffer::setAndReturnDelayCycles(MsgPtr msg_ptr)
 void
 MessageBuffer::print(ostream& out) const
 {
-    out << "[MessageBuffer: ";
+    ccprintf(out, "[MessageBuffer: ");
     if (m_consumer_ptr != NULL) {
-        out << " consumer-yes ";
+        ccprintf(out, " consumer-yes ");
     }
 
     vector<MessageBufferNode> copy(m_prio_heap);
     sort_heap(copy.begin(), copy.end(), greater<MessageBufferNode>());
-    out << copy << "] " << m_name << endl;
+    ccprintf(out, "%s] %s", copy, m_name);
 }
 
 void

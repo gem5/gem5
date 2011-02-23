@@ -38,6 +38,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
@@ -58,6 +59,9 @@ class PerfectSwitch : public Consumer
   public:
     PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr);
     ~PerfectSwitch();
+
+    std::string name()
+    { return csprintf("PerfectSwitch-%i", m_switch_id); }
 
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,

@@ -54,9 +54,7 @@ class NetDest
     NetDest& operator=(const Set& obj);
 
     ~NetDest()
-    {
-        DPRINTF(RubyMemory, "NetDest Destructor\n");
-    }
+    { }
 
     void add(MachineID newElement);
     void addNetDest(const NetDest& netDest);
