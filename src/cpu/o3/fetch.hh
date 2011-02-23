@@ -522,6 +522,10 @@ class DefaultFetch
      * due to a squash.
      */
     Stats::Scalar fetchIcacheSquashes;
+    /** Total number of outstanding tlb accesses that were dropped
+     * due to a squash.
+     */
+    Stats::Scalar fetchTlbSquashes;
     /** Distribution of number of instructions fetched each cycle. */
     Stats::Distribution fetchNisnDist;
     /** Rate of how often fetch was idle. */

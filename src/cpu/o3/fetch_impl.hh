@@ -268,6 +268,11 @@ DefaultFetch<Impl>::regStats()
         .desc("Number of outstanding Icache misses that were squashed")
         .prereq(fetchIcacheSquashes);
 
+    fetchTlbSquashes
+        .name(name() + ".ItlbSquashes")
+        .desc("Number of outstanding ITLB misses that were squashed")
+        .prereq(fetchTlbSquashes);
+
     fetchNisnDist
         .init(/* base value */ 0,
               /* last value */ fetchWidth,
@@ -580,6 +585,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     // Align the fetch address so it's at the start of a cache block.
     Addr block_PC = icacheBlockAlignPC(vaddr);
 
+    DPRINTF(Fetch, "[tid:%i] Fetching cache line %#x for addr %#x\n",
+            tid, block_PC, vaddr);
+
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
@@ -606,6 +614,16 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
 
     // Wake up CPU if it was idle
     cpu->wakeCPU();
+
+    if (fetchStatus[tid] != ItlbWait || mem_req != memReq[tid] ||
+        mem_req->getVaddr() != memReq[tid]->getVaddr() || isSwitchedOut()) {
+        DPRINTF(Fetch, "[tid:%i] Ignoring itlb completed after squash\n",
+                tid);
+        ++fetchTlbSquashes;
+        delete mem_req;
+        return;
+    }
+
 
     // If translation was successful, attempt to read the icache block.
     if (fault == NoFault) {
@@ -639,6 +657,8 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
             fetchStatus[tid] = IcacheWaitResponse;
         }
     } else {
+        DPRINTF(Fetch, "[tid:%i] Got back req with addr %#x but expected %#x\n",
+                mem_req->getVaddr(), memReq[tid]->getVaddr());
         // Translation faulted, icache request won't be sent.
         delete mem_req;
         memReq[tid] = NULL;
@@ -648,6 +668,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         // wake up is if a squash comes along and changes the PC.
         TheISA::PCState fetchPC = pc[tid];
 
+        DPRINTF(Fetch, "[tid:%i]: Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
         DynInstPtr instruction = buildInst(tid,
                 StaticInstPtr(TheISA::NoopMachInst, fetchPC.instAddr()),
@@ -684,6 +705,10 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC, ThreadID tid)
     // Clear the icache miss if it's outstanding.
     if (fetchStatus[tid] == IcacheWaitResponse) {
         DPRINTF(Fetch, "[tid:%i]: Squashing outstanding Icache miss.\n",
+                tid);
+        memReq[tid] = NULL;
+    } else if (fetchStatus[tid] == ItlbWait) {
+        DPRINTF(Fetch, "[tid:%i]: Squashing outstanding ITLB miss.\n",
                 tid);
         memReq[tid] = NULL;
     }
@@ -1120,7 +1145,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             DPRINTF(Fetch, "[tid:%i]: Fetch is waiting ITLB walk to "
                     "finish! \n", tid);
             ++fetchTlbCycles;
+        } else if (fetchStatus[tid] == TrapPending) {
+            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting for a pending trap\n",
+                    tid);
         }
+
 
         // Status is Idle, Squashing, Blocked, ItlbWait or IcacheWaitResponse
         // so fetch should do nothing.
