@@ -586,6 +586,29 @@ Pl111::serialize(std::ostream &os)
     SERIALIZE_SCALAR(curAddr);
     SERIALIZE_SCALAR(waterMark);
     SERIALIZE_SCALAR(dmaPendingNum);
+
+    Tick int_event_time = 0;
+    Tick read_event_time = 0;
+    Tick fill_fifo_event_time = 0;
+
+    if (readEvent.scheduled())
+        read_event_time = readEvent.when();
+    if (fillFifoEvent.scheduled())
+        fill_fifo_event_time = fillFifoEvent.when();
+    if (intEvent.scheduled())
+        int_event_time = intEvent.when();
+
+    SERIALIZE_SCALAR(read_event_time);
+    SERIALIZE_SCALAR(fill_fifo_event_time);
+    SERIALIZE_SCALAR(int_event_time);
+
+    vector<Tick> dma_done_event_tick;
+    dma_done_event_tick.resize(maxOutstandingDma);
+    for (int x = 0; x < maxOutstandingDma; x++) {
+        dma_done_event_tick[x] = dmaDoneEvent[x].scheduled() ?
+            dmaDoneEvent[x].when() : 0;
+    }
+    arrayParamOut(os, "dma_done_event_tick", dma_done_event_tick);
 }
 
 void
@@ -666,6 +689,29 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(curAddr);
     UNSERIALIZE_SCALAR(waterMark);
     UNSERIALIZE_SCALAR(dmaPendingNum);
+
+    Tick int_event_time = 0;
+    Tick read_event_time = 0;
+    Tick fill_fifo_event_time = 0;
+
+    UNSERIALIZE_SCALAR(read_event_time);
+    UNSERIALIZE_SCALAR(fill_fifo_event_time);
+    UNSERIALIZE_SCALAR(int_event_time);
+
+    if (int_event_time)
+        schedule(intEvent, int_event_time);
+    if (read_event_time)
+        schedule(readEvent, read_event_time);
+    if (fill_fifo_event_time)
+        schedule(fillFifoEvent, fill_fifo_event_time);
+
+    vector<Tick> dma_done_event_tick;
+    dma_done_event_tick.resize(maxOutstandingDma);
+    arrayParamIn(cp, section, "dma_done_event_tick", dma_done_event_tick);
+    for (int x = 0; x < maxOutstandingDma; x++) {
+        if (dma_done_event_tick[x])
+            schedule(dmaDoneEvent[x], dma_done_event_tick[x]);
+    }
 
     updateVideoParams();
     if (vncserver)
