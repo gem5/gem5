@@ -1,11 +1,11 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                2481190                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 374936                       # Number of bytes of host memory used
-host_seconds                                    20.74                       # Real time elapsed on the host
-host_tick_rate                             1257294139                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1506664                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 378044                       # Number of bytes of host memory used
+host_seconds                                    34.14                       # Real time elapsed on the host
+host_tick_rate                              763738517                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                    51454118                       # Number of instructions simulated
+sim_insts                                    51436382                       # Number of instructions simulated
 sim_seconds                                  0.026074                       # Number of seconds simulated
 sim_ticks                                 26073617500                       # Number of ticks simulated
 system.cpu.dcache.LoadLockedReq_accesses::0       100454                       # number of LoadLockedReq accesses(hits+misses)
@@ -235,7 +235,7 @@ system.cpu.num_fp_register_reads                 4227                       # nu
 system.cpu.num_fp_register_writes                1834                       # number of times the floating registers were written
 system.cpu.num_func_calls                           0                       # number of times a function call or return occured
 system.cpu.num_idle_cycles                          0                       # Number of idle cycles
-system.cpu.num_insts                         51454118                       # Number of instructions executed
+system.cpu.num_insts                         51436382                       # Number of instructions executed
 system.cpu.num_int_alu_accesses              41848094                       # Number of integer alu accesses
 system.cpu.num_int_insts                     41848094                       # number of integer instructions
 system.cpu.num_int_register_reads           129780130                       # number of times the integer registers were read

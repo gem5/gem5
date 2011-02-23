@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 01:56:16
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 02:00:50
-M5 executing on burrito
-command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/40.perlbmk/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/long/40.perlbmk/arm/linux/o3-timing
+M5 compiled Feb 21 2011 14:34:16
+M5 revision b06fecbc6572 7972 default qtip tip ext/print_mem_more.patch
+M5 started Feb 21 2011 15:06:31
+M5 executing on u200439-lin.austin.arm.com
+command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
@@ -1390,4 +1390,4 @@ info: Increasing stack size by one page.
 2000: 760651391
 1000: 4031656975
 0: 2206428413
-Exiting @ tick 1106986290500 because target called exit()
+Exiting @ tick 1106986295500 because target called exit()

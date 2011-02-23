@@ -2,6 +2,4 @@ warn: Sockets disabled, not accepting gdb connections
 For more information see: http://www.m5sim.org/warn/d946bea6
 warn: fcntl64(3, 2) passed through to host
 For more information see: http://www.m5sim.org/warn/a55e2c46
-warn: Bad interworking branch address 0x66.
-For more information see: http://www.m5sim.org/warn/55f199fd
 hack: be nice to actually delete the event here

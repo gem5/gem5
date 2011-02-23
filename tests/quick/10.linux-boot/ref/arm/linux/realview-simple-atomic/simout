@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 11 2011 17:53:57
-M5 revision 6c65f7ee86c1 7949 default qtip tip ext/vnc_stats_updates.patch
-M5 started Feb 11 2011 17:54:00
+M5 compiled Feb 21 2011 14:33:02
+M5 revision b06fecbc6572 7972 default qtip tip ext/print_mem_more.patch
+M5 started Feb 21 2011 14:33:10
 M5 executing on u200439-lin.austin.arm.com
-command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-atomic -re tests/run.py build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-atomic
+command line: build/ARM_FS/m5.opt -d build/ARM_FS/tests/opt/quick/10.linux-boot/arm/linux/realview-simple-atomic -re tests/run.py build/ARM_FS/tests/opt/quick/10.linux-boot/arm/linux/realview-simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux.arm
 info: Entering event queue @ 0.  Starting simulation...
