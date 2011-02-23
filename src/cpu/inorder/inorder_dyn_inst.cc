@@ -47,48 +47,44 @@ using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
 
-InOrderDynInst::InOrderDynInst(TheISA::ExtMachInst machInst,
-                               const TheISA::PCState &instPC,
-                               const TheISA::PCState &_predPC,
-                               InstSeqNum seq_num, InOrderCPU *cpu)
-    : staticInst(machInst, instPC.instAddr()), traceData(NULL), cpu(cpu)
-{
-    seqNum = seq_num;
-
-    pc = instPC;
-    predPC = _predPC;
-
-    initVars();
-}
-
 InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
                                InOrderThreadState *state,
                                InstSeqNum seq_num,
                                ThreadID tid,
                                unsigned _asid)
-    : traceData(NULL), cpu(cpu)
+  : seqNum(seq_num), bdelaySeqNum(0), threadNumber(tid), asid(_asid),
+    virtProcNumber(0), staticInst(NULL), traceData(NULL), cpu(cpu),
+    thread(state), fault(NoFault), memData(NULL), loadData(0),
+    storeData(0), effAddr(0), physEffAddr(0), memReqFlags(0),
+    readyRegs(0), pc(0), predPC(0), memAddr(0), nextStage(0),
+    memTime(0), splitMemData(NULL), splitMemReq(NULL), totalSize(0),
+    split2ndSize(0), split2ndAddr(0), split2ndAccess(false),
+    split2ndDataPtr(NULL), split2ndFlags(0), splitInst(false),
+    splitFinishCnt(0), split2ndStoreDataPtr(NULL), splitInstSked(false),
+    inFrontEnd(true), frontSked(NULL), backSked(NULL),
+    squashingStage(0), predictTaken(false), procDelaySlotOnMispred(false),
+    fetchMemReq(NULL), dataMemReq(NULL), instEffAddr(0), eaCalcDone(false),
+    lqIdx(0), sqIdx(0), instListIt(NULL)
 {
-    seqNum = seq_num;
-    thread = state;
-    threadNumber = tid;
-    asid = _asid;
-    initVars();
-}
+    for(int i = 0; i < MaxInstSrcRegs; i++) {
+        instSrc[i].integer = 0;
+        instSrc[i].dbl = 0;
+        _readySrcRegIdx[i] = false;
+        _srcRegIdx[i] = 0;
+    }
 
-InOrderDynInst::InOrderDynInst(StaticInstPtr &_staticInst)
-    : seqNum(0), staticInst(_staticInst), traceData(NULL)
-{
-    initVars();
-}
+    for(int j = 0; j < MaxInstDestRegs; j++) {
+      _destRegIdx[j] = 0;
+      _prevDestRegIdx[j] = 0;
+    }
 
-InOrderDynInst::InOrderDynInst()
-    : seqNum(0), traceData(NULL), cpu(cpu)
-{
-    initVars();
+    ++instcount;
+    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created."
+            " (active insts: %i)\n", threadNumber, seqNum, instcount);
+
 }
 
 int InOrderDynInst::instcount = 0;
-
 
 void
 InOrderDynInst::setMachInst(ExtMachInst machInst)
@@ -133,7 +129,6 @@ InOrderDynInst::initVars()
 
     memAddrReady = false;
     eaCalcDone = false;
-    memOpDone = false;
 
     predictTaken = false;
     procDelaySlotOnMispred = false;
@@ -164,16 +159,10 @@ InOrderDynInst::initVars()
     }
 
     // Update Instruction Count for this instruction
-    ++instcount;
     if (instcount > 100) {
         fatal("Number of Active Instructions in CPU is too high. "
                 "(Not Dereferencing Ptrs. Correctly?)\n");
     }
-
-
-
-    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created."
-            " (active insts: %i)\n", threadNumber, seqNum, instcount);
 }
 
 void

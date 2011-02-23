@@ -107,31 +107,12 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
   public:
     /** BaseDynInst constructor given a binary instruction.
-     *  @param inst The binary instruction.
-     *  @param PC The PC of the instruction.
-     *  @param predPC The predicted next PC.
-     *  @param seq_num The sequence number of the instruction.
-     *  @param cpu Pointer to the instruction's CPU.
-     */
-    InOrderDynInst(ExtMachInst inst, const TheISA::PCState &PC,
-                   const TheISA::PCState &predPC, InstSeqNum seq_num,
-                   InOrderCPU *cpu);
-
-    /** BaseDynInst constructor given a binary instruction.
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      *  NOTE: Must set Binary Instrution through Member Function
      */
     InOrderDynInst(InOrderCPU *cpu, InOrderThreadState *state,
                    InstSeqNum seq_num, ThreadID tid, unsigned asid = 0);
-
-    /** BaseDynInst constructor given a StaticInst pointer.
-     *  @param _staticInst The StaticInst for this BaseDynInst.
-     */
-    InOrderDynInst(StaticInstPtr &_staticInst);
-
-    /** Skeleton Constructor. */
-    InOrderDynInst();
 
     /** InOrderDynInst destructor. */
     ~InOrderDynInst();
@@ -219,12 +200,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** The effective physical address. */
     Addr physEffAddr;
 
-    /** Effective virtual address for a copy source. */
-    Addr copySrcEffAddr;
-
-    /** Effective physical address for a copy source. */
-    Addr copySrcPhysEffAddr;
-
     /** The memory request flags (from translation). */
     unsigned memReqFlags;
 
@@ -253,8 +228,11 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         Tick tick;
 
         InstResult()
-            : type(None), tick(0)
-        {}
+          : type(None), tick(0)
+        {
+          val.integer = 0;
+          val.dbl = 0;
+        }
     };
 
     /** The source of the instruction; assumes for now that there's only one
@@ -273,10 +251,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Predicted next PC. */
     TheISA::PCState predPC;
 
-    /** Address to fetch from */
-    Addr fetchAddr;
-
     /** Address to get/write data from/to */
+    /* Fetching address when inst. starts, Data address for load/store after fetch*/
     Addr memAddr;
 
     /** Whether or not the source register is ready.
@@ -477,13 +453,19 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         curSkedEntry++;
 
         if (inFrontEnd && curSkedEntry == frontSked_end) {
-            assert(backSked != NULL);
+          DPRINTF(InOrderDynInst, "[sn:%i] Switching to "
+                  "back end schedule.\n", seqNum);
+          assert(backSked != NULL);
             curSkedEntry.init(backSked);
             curSkedEntry = backSked->begin();
             inFrontEnd = false;
         } else if (!inFrontEnd && curSkedEntry == backSked_end) {
             return true;
         }
+
+        DPRINTF(InOrderDynInst, "[sn:%i] Next Stage: %i "
+                "Next Resource: %i.\n", seqNum, curSkedEntry->stageNum,
+                curSkedEntry->resNum);
 
         return false;
     }
@@ -995,10 +977,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      *  @todo: Consider if this is necessary or not.
      */
     bool eaCalcDone;
-
-  public:
-    /** Whether or not the memory operation is done. */
-    bool memOpDone;
 
   public:
     /** Load queue index. */
