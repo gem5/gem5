@@ -40,6 +40,7 @@
 
 #include "arch/arm/isa.hh"
 #include "sim/faults.hh"
+#include "sim/stat_control.hh"
 
 namespace ArmISA
 {
@@ -393,6 +394,18 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             warn("Not doing anything for write of miscreg ACTLR\n");
             break;
           case MISCREG_PMCR:
+            {
+              // Performance counters not implemented.  Instead, interpret
+              //   a reset command to this register to reset the simulator
+              //   statistics.
+              // PMCR_E | PMCR_P | PMCR_C
+              const int ResetAndEnableCounters = 0x7;
+              if (newVal == ResetAndEnableCounters) {
+                  inform("Resetting all simobject stats\n");
+                  Stats::schedStatEvent(false, true);
+                  break;
+              }
+            }
           case MISCREG_PMCCNTR:
           case MISCREG_PMSELR:
             warn("Not doing anything for write to miscreg %s\n",
