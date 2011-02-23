@@ -477,7 +477,8 @@ let {{
     exec_output += BasicExecute.subst(bkptIop)
 
     nopIop = InstObjParams("nop", "NopInst", "PredOp", \
-            { "code" : "", "predicate_test" : predicateTest })
+            { "code" : "", "predicate_test" : predicateTest },
+            ['IsNop'])
     header_output += BasicDeclare.subst(nopIop)
     decoder_output += BasicConstructor.subst(nopIop)
     exec_output += PredOpExecute.subst(nopIop)
