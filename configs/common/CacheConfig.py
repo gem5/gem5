@@ -35,7 +35,7 @@ from Caches import *
 
 def config_cache(options, system):
     if options.l2cache:
-        system.l2 = L2Cache(size='2MB')
+        system.l2 = L2Cache(size = options.l2_size, assoc = options.l2_assoc)
         system.tol2bus = Bus()
         system.l2.cpu_side = system.tol2bus.port
         system.l2.mem_side = system.membus.port
@@ -43,14 +43,14 @@ def config_cache(options, system):
 
     for i in xrange(options.num_cpus):
         if options.caches:
+            icache = L1Cache(size = options.l1i_size, assoc = options.l1i_assoc)
+            dcache = L1Cache(size = options.l1d_size, assoc = options.l1d_assoc)
             if buildEnv['TARGET_ISA'] == 'x86':
-                system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                      L1Cache(size = '64kB'),
+                system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
                                                       PageTableWalkerCache(),
                                                       PageTableWalkerCache())
             else:
-                system.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                      L1Cache(size = '64kB'))
+                system.cpu[i].addPrivateSplitL1Caches(icache, dcache)
         if options.l2cache:
             system.cpu[i].connectAllPorts(system.tol2bus, system.membus)
         else:
