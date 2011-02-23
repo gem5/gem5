@@ -350,10 +350,9 @@ namespace ArmISA
             if (thumbEE) {
                 if (bits(newPC, 0)) {
                     newPC = newPC & ~mask(1);
-                } else {
-                    panic("Bad thumbEE interworking branch address %#x.\n",
-                            newPC);
-                }
+                }  // else we have a bad interworking address; do not call
+                   // panic() since the instruction could be executed
+                   // speculatively
             } else {
                 if (bits(newPC, 0)) {
                     nextThumb(true);
