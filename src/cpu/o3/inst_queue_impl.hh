@@ -880,7 +880,10 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     iqInstsIssued+= total_issued;
 
     // If we issued any instructions, tell the CPU we had activity.
-    if (total_issued || total_deferred_mem_issued) {
+    // @todo If the way deferred memory instructions are handeled due to
+    // translation changes then the deferredMemInsts condition should be removed
+    // from the code below.
+    if (total_issued || total_deferred_mem_issued || deferredMemInsts.size()) {
         cpu->activityThisCycle();
     } else {
         DPRINTF(IQ, "Not able to schedule any instructions.\n");
