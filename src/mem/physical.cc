@@ -244,6 +244,7 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
           default:                                                      \
             DPRINTF(MemoryAccess, "%s of size %i on address 0x%x\n",    \
                     A, pkt->getSize(), pkt->getAddr());                 \
+            DDUMP(MemoryAccess, pkt->getPtr<uint8_t>(), pkt->getSize());\
         }                                                               \
     } while (0)
 
