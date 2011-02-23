@@ -225,7 +225,7 @@ class CacheRequest : public ResourceRequest
   public:
     CacheRequest(CacheUnit *cres)
         :  ResourceRequest(cres), memReq(NULL), reqData(NULL),
-           dataPkt(NULL), retryPkt(NULL), memAccComplete(false),
+           dataPkt(NULL), memAccComplete(false),
            memAccPending(false), tlbStall(false), splitAccess(false),
            splitAccessNum(-1), split2ndAccess(false),
            fetchBufferFill(false)
@@ -233,9 +233,8 @@ class CacheRequest : public ResourceRequest
 
     virtual ~CacheRequest()
     {
-        if (reqData && !splitAccess) {
+        if (reqData && !splitAccess)
             delete [] reqData;
-        }
     }
 
     void setRequest(DynInstPtr _inst, int stage_num, int res_idx, int slot_num,
@@ -249,14 +248,12 @@ class CacheRequest : public ResourceRequest
 
     void clearRequest()
     {
-        if (reqData && !splitAccess) {
+        if (reqData && !splitAccess)
             delete [] reqData;
-        }
 
         memReq = NULL;
         reqData = NULL;
         dataPkt = NULL;
-        retryPkt = NULL;
         memAccComplete = false;
         memAccPending = false;
         tlbStall = false;
@@ -292,8 +289,7 @@ class CacheRequest : public ResourceRequest
     MemCmd::Command pktCmd;
     RequestPtr memReq;
     PacketDataPtr reqData;
-    PacketPtr dataPkt;
-    PacketPtr retryPkt;
+    CacheReqPacket *dataPkt;
 
     bool memAccComplete;
     bool memAccPending;

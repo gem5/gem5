@@ -383,14 +383,17 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
     Addr aligned_addr = inst->getMemAddr();
 
     if (!cache_req->is2ndSplit()) {
+        if (inst->dataMemReq == NULL) {
             inst->dataMemReq =
                 new Request(cpu->asid[tid], aligned_addr, acc_size, flags,
                             inst->instAddr(), cpu->readCpuId(),
                             tid);
             cache_req->memReq = inst->dataMemReq;
+        }
     } else {
-            assert(inst->splitInst);
-            
+        assert(inst->splitInst);
+
+        if (inst->splitMemReq ==  NULL) {
             inst->splitMemReq = new Request(cpu->asid[tid], 
                                             inst->split2ndAddr,
                                             acc_size, 
@@ -398,7 +401,9 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
                                             inst->instAddr(),
                                             cpu->readCpuId(), 
                                             tid);
-            cache_req->memReq = inst->splitMemReq;            
+        }
+
+        cache_req->memReq = inst->splitMemReq;
     }
 }
 
@@ -870,6 +875,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
                     "[tid:%i] [sn:%i] cannot access cache, because port "
                     "is blocked. now waiting to retry request\n", tid, 
                     inst->seqNum);
+            delete cache_req->dataPkt;
             cache_req->done(false);
             cachePortBlocked = true;
         } else {
@@ -891,6 +897,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
 
         processCacheCompletion(cache_req->dataPkt);
     } else {
+        delete cache_req->dataPkt;
         // Make cache request again since access due to
         // inability to access
         DPRINTF(InOrderStall, "STALL: \n");
@@ -950,96 +957,90 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     DynInstPtr inst = cache_req->inst;
     ThreadID tid = cache_req->inst->readTid();
 
-    if (!cache_req->isSquashed()) {
-        if (inst->staticInst && inst->isMemRef()) {
-            DPRINTF(InOrderCachePort,
-                    "[tid:%u]: [sn:%i]: Processing cache access\n",
-                    tid, inst->seqNum);
-            PacketPtr dataPkt = NULL;
-            
-            if (inst->splitInst) {
-                inst->splitFinishCnt++;
-                
-                if (inst->splitFinishCnt == 2) {
-                    cache_req->memReq->setVirt(0/*inst->tid*/, 
-                                               inst->getMemAddr(),
-                                               inst->totalSize,
-                                               0,
-                                               0);
-                    
-                    Packet split_pkt(cache_req->memReq, cache_req->pktCmd,
-                                     Packet::Broadcast);                    
+    assert(!cache_req->isSquashed());
+    assert(inst->staticInst && inst->isMemRef());
 
 
-                    if (inst->isLoad()) {                        
-                        split_pkt.dataStatic(inst->splitMemData);
-                    } else  {                            
-                        split_pkt.dataStatic(&inst->storeData);                        
-                    }
-                    
-                    dataPkt = &split_pkt;
-                }                
-            } else {
-                dataPkt = pkt;
-            }
-            inst->completeAcc(dataPkt);
-            
+    DPRINTF(InOrderCachePort,
+            "[tid:%u]: [sn:%i]: Processing cache access\n",
+            tid, inst->seqNum);
+    PacketPtr dataPkt = NULL;
+
+    if (inst->splitInst) {
+        inst->splitFinishCnt++;
+
+        if (inst->splitFinishCnt == 2) {
+            cache_req->memReq->setVirt(0/*inst->tid*/,
+                                       inst->getMemAddr(),
+                                       inst->totalSize,
+                                       0,
+                                       0);
+
+            Packet split_pkt(cache_req->memReq, cache_req->pktCmd,
+                             Packet::Broadcast);
+
+
             if (inst->isLoad()) {
-                assert(cache_pkt->isRead());
-
-                if (cache_pkt->req->isLLSC()) {
-                    DPRINTF(InOrderCachePort,
-                            "[tid:%u]: Handling Load-Linked for [sn:%u]\n",
-                            tid, inst->seqNum);
-                    TheISA::handleLockedRead(cpu, cache_pkt->req);
-                }
-
-                DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: Bytes loaded were: %s\n",
-                        tid, inst->seqNum,
-                        printMemData(dataPkt->getPtr<uint8_t>(),
-                            dataPkt->getSize()));
-            } else if(inst->isStore()) {
-                assert(cache_pkt->isWrite());
-
-                DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: Bytes stored were: %s\n",
-                        tid, inst->seqNum,
-                        printMemData(dataPkt->getPtr<uint8_t>(),
-                            dataPkt->getSize()));
+                split_pkt.dataStatic(inst->splitMemData);
+            } else  {
+                split_pkt.dataStatic(&inst->storeData);
             }
 
-            delete cache_pkt;
+            dataPkt = &split_pkt;
+        }
+    } else {
+        dataPkt = pkt;
+    }
+    inst->completeAcc(dataPkt);
+
+    if (inst->isLoad()) {
+        assert(cache_pkt->isRead());
+
+        if (cache_pkt->req->isLLSC()) {
+            DPRINTF(InOrderCachePort,
+                    "[tid:%u]: Handling Load-Linked for [sn:%u]\n",
+                    tid, inst->seqNum);
+            TheISA::handleLockedRead(cpu, cache_pkt->req);
         }
 
-        cache_req->setMemAccPending(false);
-        cache_req->setMemAccCompleted();
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: [sn:%i]: Bytes loaded were: %s\n",
+                tid, inst->seqNum,
+                printMemData(dataPkt->getPtr<uint8_t>(),
+                             dataPkt->getSize()));
+    } else if(inst->isStore()) {
+        assert(cache_pkt->isWrite());
 
-        if (cache_req->isMemStall() && 
-            cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {    
-            DPRINTF(InOrderCachePort, "[tid:%u] Waking up from Cache Miss.\n",
-                    tid);
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: [sn:%i]: Bytes stored were: %s\n",
+                tid, inst->seqNum,
+                printMemData(dataPkt->getPtr<uint8_t>(),
+                             dataPkt->getSize()));
+    }
+
+    delete cache_pkt;
+    cache_req->setMemAccPending(false);
+    cache_req->setMemAccCompleted();
+
+    if (cache_req->isMemStall() &&
+        cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
+        DPRINTF(InOrderCachePort, "[tid:%u] Waking up from Cache Miss.\n",
+                tid);
             
-            cpu->activateContext(tid);            
+        cpu->activateContext(tid);
             
-            DPRINTF(ThreadModel, "Activating [tid:%i] after return from cache"
-                    "miss.\n", tid);            
-        }
+        DPRINTF(ThreadModel, "Activating [tid:%i] after return from cache"
+                "miss.\n", tid);
+    }
         
-        // Wake up the CPU (if it went to sleep and was waiting on this
-        // completion event).
-        cpu->wakeCPU();
+    // Wake up the CPU (if it went to sleep and was waiting on this
+    // completion event).
+    cpu->wakeCPU();
 
-        DPRINTF(Activity, "[tid:%u] Activating %s due to cache completion\n",
+    DPRINTF(Activity, "[tid:%u] Activating %s due to cache completion\n",
             tid, cpu->pipelineStage[stage_num]->name());
 
-        cpu->switchToActive(stage_num);
-    } else {
-        DPRINTF(InOrderCachePort,
-                "[tid:%u] Miss on block @ %08p completed, but squashed\n",
-                tid, cache_req->inst->instAddr());
-        cache_req->setMemAccCompleted();
-    }
+    cpu->switchToActive(stage_num);
 }
 
 void

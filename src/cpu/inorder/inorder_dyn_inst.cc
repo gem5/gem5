@@ -195,14 +195,17 @@ InOrderDynInst::~InOrderDynInst()
         dataMemReq = NULL;
     }
 
-    if (traceData) {
-        delete traceData;
+    if (splitMemReq != 0x0) {
+        delete dataMemReq;
+        dataMemReq = NULL;
     }
 
-    if (splitMemData) {
+    if (traceData)
+        delete traceData;
+
+    if (splitMemData)
         delete [] splitMemData;
-    }
-    
+
     fault = NoFault;
 
     --instcount;

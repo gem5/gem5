@@ -170,9 +170,11 @@ FetchUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
     ThreadID tid = inst->readTid();
     Addr aligned_addr = cacheBlockAlign(inst->getMemAddr());
 
-    inst->fetchMemReq =
+    if (inst->fetchMemReq == NULL)
+        inst->fetchMemReq =
             new Request(tid, aligned_addr, acc_size, flags,
                         inst->instAddr(), cpu->readCpuId(), tid);
+
 
     cache_req->memReq = inst->fetchMemReq;
 }
