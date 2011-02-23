@@ -85,7 +85,7 @@ ExecutionUnit::execute(int slot_num)
     ResourceRequest* exec_req = reqs[slot_num];
     DynInstPtr inst = reqs[slot_num]->inst;
     Fault fault = NoFault;
-    int seq_num = inst->seqNum;
+    InstSeqNum seq_num = inst->seqNum;
     Tick cur_tick = curTick();
 
     if (cur_tick == serializeTick) {

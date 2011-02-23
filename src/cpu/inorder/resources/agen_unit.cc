@@ -55,7 +55,7 @@ AGENUnit::execute(int slot_num)
 #if TRACING_ON
     ThreadID tid = inst->readTid();
 #endif
-    int seq_num = inst->seqNum;
+    InstSeqNum seq_num = inst->seqNum;
 
     switch (agen_req->cmd)
     {

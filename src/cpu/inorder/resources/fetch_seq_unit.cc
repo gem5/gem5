@@ -76,7 +76,7 @@ FetchSeqUnit::execute(int slot_num)
     DynInstPtr inst = fs_req->inst;
     ThreadID tid = inst->readTid();
     int stage_num = fs_req->getStageNum();
-    int seq_num = inst->seqNum;
+    InstSeqNum seq_num = inst->seqNum;
 
     DPRINTF(InOrderFetchSeq, "[tid:%i]: Current PC is %s\n", tid,
             pc[tid]);

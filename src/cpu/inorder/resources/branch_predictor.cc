@@ -69,7 +69,7 @@ BranchPredictor::execute(int slot_num)
     ResourceRequest* bpred_req = reqs[slot_num];
     DynInstPtr inst = bpred_req->inst;
     ThreadID tid = inst->readTid();
-    int seq_num = inst->seqNum;
+    InstSeqNum seq_num = inst->seqNum;
 
     switch (bpred_req->cmd)
     {

@@ -145,7 +145,7 @@ UseDefUnit::execute(int slot_idx)
 
     DynInstPtr inst = ud_req->inst;
     ThreadID tid = inst->readTid();
-    int seq_num = inst->seqNum;
+    InstSeqNum seq_num = inst->seqNum;
     int ud_idx = ud_req->useDefIdx;
 
     // If there is a non-speculative instruction

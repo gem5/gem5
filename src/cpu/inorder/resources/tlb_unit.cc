@@ -109,7 +109,7 @@ TLBUnit::execute(int slot_idx)
 
     DynInstPtr inst = tlb_req->inst;
     ThreadID tid = inst->readTid();
-    int seq_num = inst->seqNum;
+    InstSeqNum seq_num = inst->seqNum;
     int stage_num = tlb_req->getStageNum();
 
     tlb_req->fault = NoFault;
