@@ -143,6 +143,9 @@ let {{
           case MISCREG_BPIALL:
             return new WarnUnimplemented(
                     isRead ? "mrc bpiall" : "mcr bpiall", machInst);
+          case MISCREG_L2LATENCY:
+            return new WarnUnimplemented(
+                    isRead ? "mrc l2latency" : "mcr l2latency", machInst);
 
             // Write only.
           case MISCREG_TLBIALLIS:

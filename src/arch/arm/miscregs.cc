@@ -381,6 +381,8 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_PMINTENCLR;
                 }
             }
+        } else if (opc1 == 1) {
+            return MISCREG_L2LATENCY;
         }
         //Reserved for Branch Predictor, Cache and TCM operations
         break;

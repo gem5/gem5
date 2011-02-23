@@ -191,6 +191,7 @@ namespace ArmISA
         MISCREG_MVBAR,
         MISCREG_ISR,
         MISCREG_FCEIDR,
+        MISCREG_L2LATENCY,
 
 
         MISCREG_CP15_END,
