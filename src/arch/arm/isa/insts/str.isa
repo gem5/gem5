@@ -47,7 +47,8 @@ let {{
         execBase = 'Store'
 
         def __init__(self, mnem, post, add, writeback, size=4,
-                     sign=False, user=False, flavor="normal"):
+                     sign=False, user=False, flavor="normal",
+                     instFlags = []):
             super(StoreInst, self).__init__()
 
             self.name = mnem
@@ -58,7 +59,7 @@ let {{
             self.sign = sign
             self.user = user
             self.flavor = flavor
-
+            self.instFlags = instFlags
             if self.add:
                 self.op = " +"
             else:
@@ -76,7 +77,7 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                                           self.memFlags, [], base, wbDecl)
+                                           self.memFlags, self.instFlags, base, wbDecl)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -221,6 +222,7 @@ let {{
         decConstBase = 'StoreExImm'
         basePrefix = 'MemoryExImm'
         nameFunc = staticmethod(storeImmClassName)
+        instFlags = ['IsStoreConditional']
 
         def __init__(self, *args, **kargs):
             super(StoreImmEx, self).__init__(*args, **kargs)
@@ -300,6 +302,7 @@ let {{
         decConstBase = 'StoreExDImm'
         basePrefix = 'MemoryExDImm'
         nameFunc = staticmethod(storeDoubleImmClassName)
+        instFlags = ['IsStoreConditional']
 
         def __init__(self, *args, **kargs):
             super(StoreDoubleImmEx, self).__init__(*args, **kargs)

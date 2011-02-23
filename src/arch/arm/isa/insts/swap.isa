@@ -46,7 +46,7 @@ let {{
         decConstBase = 'Swap'
 
         def __init__(self, name, Name, eaCode,
-                     preAccCode, postAccCode, memFlags):
+                     preAccCode, postAccCode, memFlags, instFlags = []):
             super(SwapInst, self).__init__()
             self.name = name
             self.Name = Name
@@ -54,6 +54,7 @@ let {{
             self.preAccCode = preAccCode
             self.postAccCode = postAccCode
             self.memFlags = memFlags
+            self.instFlags = instFlags
 
         def emit(self):
             global header_output, decoder_output, exec_output
@@ -61,12 +62,10 @@ let {{
                           "preacc_code": self.preAccCode,
                           "postacc_code": self.postAccCode }
             codeBlobs["predicate_test"] = pickPredicate(codeBlobs)
-
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                                           self.memFlags,
-                                           ['IsStoreConditional'],
+                                           self.memFlags, self.instFlags,
                                            base = 'Swap')
             header_output += newHeader
             decoder_output += newDecoder
@@ -77,12 +76,14 @@ let {{
              'Dest = cSwap((uint32_t)memData, ((CPSR)Cpsr).e);',
              ['Request::MEM_SWAP',
               'ArmISA::TLB::AlignWord',
-              'ArmISA::TLB::MustBeOne']).emit()
+              'ArmISA::TLB::MustBeOne'],
+              ['IsStoreConditional']).emit()
 
     SwapInst('swpb', 'Swpb', 'EA = Base;',
              'Mem.ub = cSwap(Op1.ub, ((CPSR)Cpsr).e);',
              'Dest.ub = cSwap((uint8_t)memData, ((CPSR)Cpsr).e);',
              ['Request::MEM_SWAP',
               'ArmISA::TLB::AlignByte',
-              'ArmISA::TLB::MustBeOne']).emit()
+              'ArmISA::TLB::MustBeOne'],
+              ['IsStoreConditional']).emit()
 }};
