@@ -220,6 +220,7 @@ FlushPipe::invoke(ThreadContext *tc, StaticInstPtr inst) {
     // start refetching from the next instruction.
     PCState pc = tc->pcState();
     assert(inst);
+    pc.forcedItState(inst->machInst.newItstate);
     inst->advancePC(pc);
     tc->pcState(pc);
 }
