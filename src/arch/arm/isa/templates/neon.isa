@@ -225,6 +225,8 @@ def template NeonEqualRegExecute {{
             {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {
@@ -275,6 +277,8 @@ def template NeonUnequalRegExecute {{
             {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0) {

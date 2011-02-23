@@ -234,6 +234,8 @@ def template NeonLoadExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0 &&
@@ -313,6 +315,8 @@ def template NeonStoreExecute {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0 &&
@@ -459,6 +463,8 @@ def template NeonStoreInitiateAcc {{
                 fault = xc->writeBytes(memUnion.bytes, %(size)d, EA,
                                        memAccessFlags, NULL);
             }
+        } else {
+            xc->setPredicate(false);
         }
 
         if (fault == NoFault && machInst.itstateMask != 0 &&
@@ -515,9 +521,12 @@ def template NeonLoadInitiateAcc {{
             if (fault == NoFault) {
                 fault = xc->readBytes(EA, NULL, %(size)d, memAccessFlags);
             }
-        } else if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+        } else {
+            xc->setPredicate(false);
+            if (fault == NoFault && machInst.itstateMask != 0 &&
+                   (!isMicroop() || isLastMicroop())) {
+                xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
+            }
         }
 
         return fault;
