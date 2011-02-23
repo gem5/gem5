@@ -1253,7 +1253,7 @@ DefaultIEW<Impl>::executeInsts()
                 }
 
                 if (inst->isDataPrefetch() || inst->isInstPrefetch()) {
-                    fault = NoFault;
+                    inst->fault = NoFault;
                 }
             } else if (inst->isStore()) {
                 fault = ldstQueue.executeStore(inst);
