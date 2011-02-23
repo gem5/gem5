@@ -361,7 +361,6 @@ namespace ArmISA
                 } else if (!bits(newPC, 1)) {
                     nextThumb(false);
                 } else {
-                    warn("Bad interworking branch address %#x.\n", newPC);
                     // This state is UNPREDICTABLE in the ARM architecture
                     // The easy thing to do is just mask off the bit and
                     // stay in the current mode, so we'll do that.
