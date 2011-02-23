@@ -883,7 +883,7 @@ $c_ident::unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr)
 void
 $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr)
 {
-    DPRINTF(RubyGenerated, "executing\\n");
+    DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     ${{action["c_code"]}}
 }
 
@@ -898,7 +898,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.Entry
 void
 $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, const Address& addr)
 {
-    DPRINTF(RubyGenerated, "executing\\n");
+    DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     ${{action["c_code"]}}
 }
 
@@ -913,7 +913,7 @@ $c_ident::${{action.ident}}(${{self.TBEType.c_ident}}*& m_tbe_ptr, const Address
 void
 $c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, const Address& addr)
 {
-    DPRINTF(RubyGenerated, "executing\\n");
+    DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     ${{action["c_code"]}}
 }
 
@@ -928,7 +928,7 @@ $c_ident::${{action.ident}}(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, con
 void
 $c_ident::${{action.ident}}(const Address& addr)
 {
-    DPRINTF(RubyGenerated, "executing\\n");
+    DPRINTF(RubyGenerated, "executing ${{action.ident}}\\n");
     ${{action["c_code"]}}
 }
 
