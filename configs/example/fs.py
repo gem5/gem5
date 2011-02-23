@@ -134,8 +134,9 @@ elif buildEnv['TARGET_ISA'] == "x86":
     test_sys = makeLinuxX86System(test_mem_mode, options.num_cpus, bm[0])
     setWorkCountOptions(test_sys, options)
 elif buildEnv['TARGET_ISA'] == "arm":
-    test_sys = makeLinuxArmSystem(test_mem_mode, bm[0],
-            bare_metal=options.bare_metal, machine_type=options.machine_type)
+    test_sys = makeArmSystem(test_mem_mode,
+            options.machine_type, bm[0],
+            bare_metal=options.bare_metal)
 else:
     fatal("incapable of building non-alpha or non-sparc full system!")
 
@@ -184,7 +185,8 @@ if len(bm) == 2:
     elif buildEnv['TARGET_ISA'] == 'x86':
         drive_sys = makeX86System(drive_mem_mode, np, bm[1])
     elif buildEnv['TARGET_ISA'] == 'arm':
-        drive_sys = makeLinuxArmSystem(drive_mem_mode, bm[1])
+        drive_sys = makeArmSystem(drive_mem_mode,
+                machine_options.machine_type, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.fastmem:

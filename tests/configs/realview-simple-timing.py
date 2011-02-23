@@ -69,7 +69,7 @@ class IOCache(BaseCache):
 #cpu
 cpu = TimingSimpleCPU(cpu_id=0)
 #the system
-system = FSConfig.makeLinuxArmSystem('timing', None, False, "RealView_PBX")
+system = FSConfig.makeArmSystem('timing', "RealView_PBX", None, False)
 
 system.cpu = cpu
 #create the l1/l2 bus

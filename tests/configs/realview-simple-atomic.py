@@ -68,7 +68,7 @@ class IOCache(BaseCache):
 #cpu
 cpu = AtomicSimpleCPU(cpu_id=0)
 #the system
-system = FSConfig.makeLinuxArmSystem('atomic', None, False, "RealView_PBX")
+system = FSConfig.makeArmSystem('atomic', "RealView_PBX", None, False)
 system.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
 system.bridge.filter_ranges_b=[AddrRange(0, size='128MB')]
 system.iocache = IOCache()

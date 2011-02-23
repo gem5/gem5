@@ -184,8 +184,9 @@ def makeSparcSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
-        machine_type = None):
+def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
+    assert machine_type
+
     if bare_metal:
         self = ArmSystem()
     else:
@@ -228,10 +229,15 @@ def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
         print "Unknown Machine Type"
         sys.exit(1)
 
-    if not bare_metal and machine_type:
-        self.machine_type = machine_type
-    elif bare_metal:
+    if bare_metal:
+        # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
+    else:
+        self.machine_type = machine_type
+        self.kernel = binary('vmlinux.arm')
+        self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0' +          \
+                ' lpj=19988480 norandmaps slram=slram0,0x8000000,+0x8000000' + \
+                ' mtdparts=slram0:- rw loglevel=8 root=/dev/mtdblock0'
 
     self.realview.attachOnChipIO(self.membus)
     self.realview.attachIO(self.iobus)
@@ -239,10 +245,6 @@ def makeLinuxArmSystem(mem_mode, mdesc = None, bare_metal=False,
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()
-    self.kernel = binary('vmlinux.arm')
-    self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0 lpj=19988480' + \
-                        ' norandmaps slram=slram0,0x8000000,+0x8000000' +      \
-                        ' mtdparts=slram0:- rw loglevel=8 root=/dev/mtdblock0'
 
     return self
 
