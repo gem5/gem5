@@ -41,7 +41,6 @@
 #include <set>
 
 #include "sim/sim_object.hh"
-#include "arch/isa_traits.hh"
 #include "params/Platform.hh"
 
 class PciConfigAll;

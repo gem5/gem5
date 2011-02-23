@@ -36,7 +36,6 @@
 #define __DEV_SIMPLE_DISK_HH__
 
 #include "sim/sim_object.hh"
-#include "arch/isa_traits.hh"
 #include "params/SimpleDisk.hh"
 
 class DiskImage;

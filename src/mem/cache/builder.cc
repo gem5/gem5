@@ -64,7 +64,6 @@
 
 
 using namespace std;
-using namespace TheISA;
 
 #define BUILD_CACHE(TAGS, tags)                         \
     do {                                                \

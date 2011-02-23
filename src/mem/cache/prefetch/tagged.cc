@@ -33,7 +33,6 @@
  * Describes a tagged prefetcher based on template policies.
  */
 
-#include "arch/isa_traits.hh"
 #include "mem/cache/prefetch/tagged.hh"
 
 TaggedPrefetcher::TaggedPrefetcher(const BaseCacheParams *p)

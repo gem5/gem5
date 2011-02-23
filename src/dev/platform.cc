@@ -35,7 +35,6 @@
 #include "sim/sim_exit.hh"
 
 using namespace std;
-using namespace TheISA;
 
 Platform::Platform(const Params *p)
     : SimObject(p), intrctrl(p->intrctrl)

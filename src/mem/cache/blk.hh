@@ -39,7 +39,6 @@
 
 #include "base/printable.hh"
 #include "sim/core.hh"          // for Tick
-#include "arch/isa_traits.hh"   // for Addr
 #include "mem/packet.hh"
 #include "mem/request.hh"
 

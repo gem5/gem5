@@ -53,6 +53,7 @@
 #include <iostream>
 #include <string>
 
+#include "arch/isa_traits.hh"
 #include "arch/registers.hh"
 #include "base/intmath.hh"
 #include "base/misc.hh"

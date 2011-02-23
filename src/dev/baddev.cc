@@ -45,7 +45,6 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
 
 BadDevice::BadDevice(Params *p)
     : BasicPioDevice(p), devname(p->devicename)
