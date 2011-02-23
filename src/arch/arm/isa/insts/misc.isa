@@ -696,19 +696,23 @@ let {{
     exec_output += ClrexCompleteAcc.subst(clrexIop)
 
     isbCode = '''
+        fault = new FlushPipe;
     '''
     isbIop = InstObjParams("isb", "Isb", "PredOp",
                              {"code": isbCode,
-                               "predicate_test": predicateTest}, ['IsSerializing'])
+                               "predicate_test": predicateTest},
+                                ['IsSerializeAfter'])
     header_output += BasicDeclare.subst(isbIop)
     decoder_output += BasicConstructor.subst(isbIop)
     exec_output += PredOpExecute.subst(isbIop)
 
     dsbCode = '''
+        fault = new FlushPipe;
     '''
     dsbIop = InstObjParams("dsb", "Dsb", "PredOp",
                              {"code": dsbCode,
-                               "predicate_test": predicateTest},['IsMemBarrier'])
+                               "predicate_test": predicateTest},
+                              ['IsMemBarrier', 'IsSerializeAfter'])
     header_output += BasicDeclare.subst(dsbIop)
     decoder_output += BasicConstructor.subst(dsbIop)
     exec_output += PredOpExecute.subst(dsbIop)
@@ -717,7 +721,8 @@ let {{
     '''
     dmbIop = InstObjParams("dmb", "Dmb", "PredOp",
                              {"code": dmbCode,
-                               "predicate_test": predicateTest},['IsMemBarrier'])
+                               "predicate_test": predicateTest},
+                               ['IsMemBarrier'])
     header_output += BasicDeclare.subst(dmbIop)
     decoder_output += BasicConstructor.subst(dmbIop)
     exec_output += PredOpExecute.subst(dmbIop)

@@ -120,14 +120,11 @@ let {{
             return new WarnUnimplemented(
                     isRead ? "mrc dccmvau" : "mcr dccmvau", machInst);
           case MISCREG_CP15ISB:
-            return new WarnUnimplemented(
-                    isRead ? "mrc cp15isb" : "mcr cp15isb", machInst);
+            return new Isb(machInst);
           case MISCREG_CP15DSB:
-            return new WarnUnimplemented(
-                    isRead ? "mrc cp15dsb" : "mcr cp15dsb", machInst);
+            return new Dsb(machInst);
           case MISCREG_CP15DMB:
-            return new WarnUnimplemented(
-                    isRead ? "mrc cp15dmb" : "mcr cp15dmb", machInst);
+            return new Dmb(machInst);
           case MISCREG_ICIALLUIS:
             return new WarnUnimplemented(
                     isRead ? "mrc icialluis" : "mcr icialluis", machInst);
