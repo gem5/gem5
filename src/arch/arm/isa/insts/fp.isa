@@ -209,7 +209,8 @@ let {{
                                  { "code": vmsrFpscrCode,
                                    "predicate_test": predicateTest,
                                    "op_class": "SimdFloatMiscOp" },
-                                 ["IsSerializeAfter","IsNonSpeculative"])
+                                 ["IsSerializeAfter","IsNonSpeculative",
+                                  "IsSquashAfter"])
     header_output += FpRegRegOpDeclare.subst(vmsrFpscrIop);
     decoder_output += FpRegRegOpConstructor.subst(vmsrFpscrIop);
     exec_output += PredOpExecute.subst(vmsrFpscrIop);
