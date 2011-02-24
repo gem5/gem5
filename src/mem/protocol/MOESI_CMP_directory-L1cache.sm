@@ -58,25 +58,25 @@ machine(L1Cache, "Directory protocol")
 
 
   // STATES
-  enumeration(State, desc="Cache states", default="L1Cache_State_I") {
+  state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states
-    I, desc="Idle";
-    S, desc="Shared";
-    O, desc="Owned";
-    M, desc="Modified (dirty)";
-    M_W, desc="Modified (dirty)";
-    MM, desc="Modified (dirty and locally modified)";
-    MM_W, desc="Modified (dirty and locally modified)";
+    I, AccessPermission:Invalid, desc="Idle";
+    S, AccessPermission:Read_Only, desc="Shared";
+    O, AccessPermission:Read_Only, desc="Owned";
+    M, AccessPermission:Read_Only, desc="Modified (dirty)";
+    M_W, AccessPermission:Read_Only, desc="Modified (dirty)";
+    MM, AccessPermission:Read_Write, desc="Modified (dirty and locally modified)";
+    MM_W, AccessPermission:Read_Write, desc="Modified (dirty and locally modified)";
 
     // Transient States
-    IM, "IM", desc="Issued GetX";
-    SM, "SM", desc="Issued GetX, we still have an old copy of the line";
-    OM, "SM", desc="Issued GetX, received data";
-    IS, "IS", desc="Issued GetS";
-    SI, "OI", desc="Issued PutS, waiting for ack";
-    OI, "OI", desc="Issued PutO, waiting for ack";
-    MI, "MI", desc="Issued PutX, waiting for ack";
-    II, "II", desc="Issued PutX/O, saw Fwd_GETS or Fwd_GETX, waiting for ack";
+    IM, AccessPermission:Busy, "IM", desc="Issued GetX";
+    SM, AccessPermission:Read_Only, "SM", desc="Issued GetX, we still have an old copy of the line";
+    OM, AccessPermission:Read_Only, "SM", desc="Issued GetX, received data";
+    IS, AccessPermission:Busy, "IS", desc="Issued GetS";
+    SI, AccessPermission:Busy, "OI", desc="Issued PutS, waiting for ack";
+    OI, AccessPermission:Busy, "OI", desc="Issued PutO, waiting for ack";
+    MI, AccessPermission:Busy, "MI", desc="Issued PutX, waiting for ack";
+    II, AccessPermission:Busy, "II", desc="Issued PutX/O, saw Fwd_GETS or Fwd_GETX, waiting for ack";
   }
 
   // EVENTS
@@ -190,20 +190,6 @@ machine(L1Cache, "Directory protocol")
       }
       else {
         cache_entry.CacheState := state;
-      }
-
-      // Set permission
-      if (state == State:MM || state == State:MM_W) {
-        cache_entry.changePermission(AccessPermission:Read_Write);
-      } else if ((state == State:S) ||
-                 (state == State:O) ||
-                 (state == State:M) ||
-                 (state == State:M_W) ||
-                 (state == State:SM) ||
-                 (state == State:OM)) {
-        cache_entry.changePermission(AccessPermission:Read_Only);
-      } else {
-        cache_entry.changePermission(AccessPermission:Invalid);
       }
     }
   }

@@ -63,29 +63,29 @@ machine(L1Cache, "Token protocol")
   MessageBuffer requestToL1Cache, network="From", virtual_network="1", ordered="false";
 
   // STATES
-  enumeration(State, desc="Cache states", default="L1Cache_State_I") {
+  state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states
-    NP,   "NP",   desc="Not Present";
-    I,    "I",    desc="Idle";
-    S,    "S",    desc="Shared";
-    O,    "O",    desc="Owned";
-    M,    "M",    desc="Modified (dirty)";
-    MM,   "MM",   desc="Modified (dirty and locally modified)";
-    M_W,  "M^W",  desc="Modified (dirty), waiting";
-    MM_W, "MM^W", desc="Modified (dirty and locally modified), waiting";
+    NP, AccessPermission:Invalid, "NP", desc="Not Present";
+    I, AccessPermission:Invalid, "I", desc="Idle";
+    S, AccessPermission:Read_Only, "S", desc="Shared";
+    O, AccessPermission:Read_Only, "O", desc="Owned";
+    M, AccessPermission:Read_Only, "M", desc="Modified (dirty)";
+    MM, AccessPermission:Read_Write, "MM", desc="Modified (dirty and locally modified)";
+    M_W, AccessPermission:Read_Only, "M^W", desc="Modified (dirty), waiting";
+    MM_W, AccessPermission:Read_Write, "MM^W", desc="Modified (dirty and locally modified), waiting";
 
     // Transient States
-    IM, "IM", desc="Issued GetX";
-    SM, "SM", desc="Issued GetX, we still have an old copy of the line";
-    OM, "OM", desc="Issued GetX, received data";
-    IS, "IS", desc="Issued GetS";
+    IM, AccessPermission:Busy, "IM", desc="Issued GetX";
+    SM, AccessPermission:Read_Only, "SM", desc="Issued GetX, we still have an old copy of the line";
+    OM, AccessPermission:Read_Only, "OM", desc="Issued GetX, received data";
+    IS, AccessPermission:Busy, "IS", desc="Issued GetS";
 
     // Locked states
-    I_L,  "I^L",   desc="Invalid, Locked";
-    S_L,  "S^L",   desc="Shared, Locked";
-    IM_L, "IM^L",  desc="Invalid, Locked, trying to go to Modified";
-    SM_L, "SM^L",  desc="Shared, Locked, trying to go to Modified";
-    IS_L, "IS^L",  desc="Invalid, Locked, trying to go to Shared";
+    I_L, AccessPermission:Busy, "I^L", desc="Invalid, Locked";
+    S_L, AccessPermission:Busy, "S^L", desc="Shared, Locked";
+    IM_L, AccessPermission:Busy, "IM^L", desc="Invalid, Locked, trying to go to Modified";
+    SM_L, AccessPermission:Busy, "SM^L", desc="Shared, Locked, trying to go to Modified";
+    IS_L, AccessPermission:Busy, "IS^L", desc="Invalid, Locked, trying to go to Shared";
   }
 
   // EVENTS
@@ -336,23 +336,6 @@ machine(L1Cache, "Token protocol")
       }
 
       cache_entry.CacheState := state;
-
-      // Set permission
-      if (state == State:MM ||
-          state == State:MM_W) {
-        cache_entry.changePermission(AccessPermission:Read_Write);
-      } else if ((state == State:S) ||
-                 (state == State:O) ||
-                 (state == State:M) ||
-                 (state == State:M_W) ||
-                 (state == State:SM) ||
-                 (state == State:S_L) ||
-                 (state == State:SM_L) ||
-                 (state == State:OM)) {
-        cache_entry.changePermission(AccessPermission:Read_Only);
-      } else {
-        cache_entry.changePermission(AccessPermission:Invalid);
-      }
     }
   }
 

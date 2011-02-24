@@ -52,23 +52,23 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   MessageBuffer responseToL1Cache, network="From", virtual_network="1", ordered="false";
 
   // STATES
-  enumeration(State, desc="Cache states", default="L1Cache_State_I") {
+  state_declaration(State, desc="Cache states", default="L1Cache_State_I") {
     // Base states
-    NP, desc="Not present in either cache";
-    I, desc="a L1 cache entry Idle";
-    S, desc="a L1 cache entry Shared";
-    E, desc="a L1 cache entry Exclusive";
-    M, desc="a L1 cache entry Modified", format="!b";
+    NP, AccessPermission:Invalid, desc="Not present in either cache";
+    I, AccessPermission:Invalid, desc="a L1 cache entry Idle";
+    S, AccessPermission:Read_Only, desc="a L1 cache entry Shared";
+    E, AccessPermission:Read_Only, desc="a L1 cache entry Exclusive";
+    M, AccessPermission:Read_Write, desc="a L1 cache entry Modified", format="!b";
 
     // Transient States
-    IS, desc="L1 idle, issued GETS, have not seen response yet";
-    IM, desc="L1 idle, issued GETX, have not seen response yet";
-    SM, desc="L1 idle, issued GETX, have not seen response yet";
-    IS_I, desc="L1 idle, issued GETS, saw Inv before data because directory doesn't block on GETS hit";
+    IS, AccessPermission:Busy, desc="L1 idle, issued GETS, have not seen response yet";
+    IM, AccessPermission:Busy, desc="L1 idle, issued GETX, have not seen response yet";
+    SM, AccessPermission:Read_Only, desc="L1 idle, issued GETX, have not seen response yet";
+    IS_I, AccessPermission:Busy, desc="L1 idle, issued GETS, saw Inv before data because directory doesn't block on GETS hit";
 
-    M_I, desc="L1 replacing, waiting for ACK";
-    E_I, desc="L1 replacing, waiting for ACK";
-    SINK_WB_ACK, desc="This is to sink WB_Acks from L2";
+    M_I, AccessPermission:Busy, desc="L1 replacing, waiting for ACK";
+    E_I, AccessPermission:Busy, desc="L1 replacing, waiting for ACK";
+    SINK_WB_ACK, AccessPermission:Busy, desc="This is to sink WB_Acks from L2";
 
   }
 
@@ -180,17 +180,6 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
     if (is_valid(cache_entry)) {
       cache_entry.CacheState := state;
-
-      // Set permission
-      if (state == State:I) {
-        cache_entry.changePermission(AccessPermission:Invalid);
-      } else if (state == State:S || state == State:E) {
-        cache_entry.changePermission(AccessPermission:Read_Only);
-      } else if (state == State:M) {
-        cache_entry.changePermission(AccessPermission:Read_Write);
-      } else {
-        cache_entry.changePermission(AccessPermission:Busy);
-      }
     }
   }
 

@@ -49,19 +49,19 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false";
 
   // STATES
-  enumeration(State, desc="Directory states", default="Directory_State_I") {
+  state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states
-    I, desc="Owner";
-    ID, desc="Intermediate state for DMA_READ when in I";
-    ID_W, desc="Intermediate state for DMA_WRITE when in I";    
+    I, AccessPermission:Read_Write, desc="dir is the owner and memory is up-to-date, all other copies are Invalid";
+    ID, AccessPermission:Busy, desc="Intermediate state for DMA_READ when in I";
+    ID_W, AccessPermission:Busy, desc="Intermediate state for DMA_WRITE when in I";    
 
-    M, desc="Modified";
-    IM, desc="Intermediate State I>M";
-    MI, desc="Intermediate State M>I";
-    M_DRD, desc="Intermediate State when there is a dma read";
-    M_DRDI, desc="Intermediate State when there is a dma read";
-    M_DWR, desc="Intermediate State when there is a dma write";
-    M_DWRI, desc="Intermediate State when there is a dma write";
+    M, AccessPermission:Invalid, desc="memory copy may be stale, i.e. other modified copies may exist";
+    IM, AccessPermission:Busy, desc="Intermediate State I>M";
+    MI, AccessPermission:Busy, desc="Intermediate State M>I";
+    M_DRD, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
+    M_DRDI, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
+    M_DWR, AccessPermission:Busy, desc="Intermediate State when there is a dma write";
+    M_DWRI, AccessPermission:Busy, desc="Intermediate State when there is a dma write";
   }
 
   // Events

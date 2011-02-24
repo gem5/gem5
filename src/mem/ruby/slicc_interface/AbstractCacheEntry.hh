@@ -48,15 +48,12 @@ class AbstractCacheEntry : public AbstractEntry
     AbstractCacheEntry();
     virtual ~AbstractCacheEntry() = 0;
 
-    // Get/Set permission of cache entry
-    AccessPermission getPermission() const;
+    // Get/Set permission of the entry
     void changePermission(AccessPermission new_perm);
 
     Address m_Address; // Address of this block, required by CacheMemory
     Time m_LastRef; // Last time this block was referenced, required
                     // by CacheMemory
-    AccessPermission m_Permission; // Access permission for this
-                                   // block, required by CacheMemory
     int m_locked; // Holds info whether the address is locked,
                   // required for implementing LL/SC
 };

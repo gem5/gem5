@@ -51,80 +51,80 @@ machine(L2Cache, "Token protocol")
 //  MessageBuffer L1WritebackToL2Cache, network="From", virtual_network="3", ordered="false";
 
   // STATES
-  enumeration(State, desc="L2 Cache states", default="L2Cache_State_I") {
+  state_declaration(State, desc="L2 Cache states", default="L2Cache_State_I") {
 
     // Stable states
-    NP, desc="Not Present";
-    I, desc="Invalid";
-    ILS, desc="Idle/NP, but local sharers exist";
-    ILX, desc="Idle/NP, but local exclusive exists";
-    ILO, desc="Idle/NP, but local owner exists";
-    ILOX, desc="Idle/NP, but local owner exists and chip is exclusive";
-    ILOS, desc="Idle/NP, but local owner exists and local sharers as well";
-    ILOSX, desc="Idle/NP, but local owner exists, local sharers exist, chip is exclusive ";
-    S, desc="Shared, no local sharers";
-    O, desc="Owned, no local sharers";
-    OLS, desc="Owned with local sharers";
-    OLSX, desc="Owned with local sharers, chip is exclusive";
-    SLS, desc="Shared with local sharers";
-    M, desc="Modified";
+    NP, AccessPermission:Invalid, desc="Not Present";
+    I, AccessPermission:Invalid, desc="Invalid";
+    ILS, AccessPermission:Busy, desc="Idle/NP, but local sharers exist";
+    ILX, AccessPermission:Busy, desc="Idle/NP, but local exclusive exists";
+    ILO, AccessPermission:Busy, desc="Idle/NP, but local owner exists";
+    ILOX, AccessPermission:Busy, desc="Idle/NP, but local owner exists and chip is exclusive";
+    ILOS, AccessPermission:Busy, desc="Idle/NP, but local owner exists and local sharers as well";
+    ILOSX, AccessPermission:Busy, desc="Idle/NP, but local owner exists, local sharers exist, chip is exclusive ";
+    S, AccessPermission:Read_Only, desc="Shared, no local sharers";
+    O, AccessPermission:Read_Only, desc="Owned, no local sharers";
+    OLS, AccessPermission:Read_Only, desc="Owned with local sharers";
+    OLSX, AccessPermission:Read_Only, desc="Owned with local sharers, chip is exclusive";
+    SLS, AccessPermission:Read_Only, desc="Shared with local sharers";
+    M, AccessPermission:Read_Write, desc="Modified";
 
     // Transient States
 
-    IFGX, desc="Blocked, forwarded global GETX to local owner/exclusive.  No other on-chip invs needed";
-    IFGS, desc="Blocked, forwarded global GETS to local owner";
-    ISFGS, desc="Blocked, forwarded global GETS to local owner, local sharers exist";
+    IFGX, AccessPermission:Busy, desc="Blocked, forwarded global GETX to local owner/exclusive.  No other on-chip invs needed";
+    IFGS, AccessPermission:Busy, desc="Blocked, forwarded global GETS to local owner";
+    ISFGS, AccessPermission:Busy, desc="Blocked, forwarded global GETS to local owner, local sharers exist";
     // UNUSED
-    IFGXX, desc="Blocked, forwarded global GETX to local owner but may need acks from other sharers";
-    OFGX, desc="Blocked, forwarded global GETX to owner and got data but may need acks";
+    IFGXX, AccessPermission:Busy, desc="Blocked, forwarded global GETX to local owner but may need acks from other sharers";
+    OFGX, AccessPermission:Busy, desc="Blocked, forwarded global GETX to owner and got data but may need acks";
 
-    OLSF, desc="Blocked, got Fwd_GETX with local sharers, waiting for local inv acks";
+    OLSF, AccessPermission:Busy, desc="Blocked, got Fwd_GETX with local sharers, waiting for local inv acks";
 
     // writebacks
-    ILOW, desc="local WB request, was ILO";
-    ILOXW, desc="local WB request, was ILOX";
-    ILOSW, desc="local WB request, was ILOS";
-    ILOSXW, desc="local WB request, was ILOSX";
-    SLSW, desc="local WB request, was SLS";
-    OLSW, desc="local WB request, was OLS";
-    ILSW, desc="local WB request, was ILS";
-    IW, desc="local WB request from only sharer, was ILS";
-    OW, desc="local WB request from only sharer, was OLS";
-    SW, desc="local WB request from only sharer, was SLS";
-    OXW, desc="local WB request from only sharer, was OLSX";
-    OLSXW, desc="local WB request from sharer, was OLSX";
-    ILXW, desc="local WB request, was ILX";
+    ILOW, AccessPermission:Busy, desc="local WB request, was ILO";
+    ILOXW, AccessPermission:Busy, desc="local WB request, was ILOX";
+    ILOSW, AccessPermission:Busy, desc="local WB request, was ILOS";
+    ILOSXW, AccessPermission:Busy, desc="local WB request, was ILOSX";
+    SLSW, AccessPermission:Busy, desc="local WB request, was SLS";
+    OLSW, AccessPermission:Busy, desc="local WB request, was OLS";
+    ILSW, AccessPermission:Busy, desc="local WB request, was ILS";
+    IW, AccessPermission:Busy, desc="local WB request from only sharer, was ILS";
+    OW, AccessPermission:Busy, desc="local WB request from only sharer, was OLS";
+    SW, AccessPermission:Busy, desc="local WB request from only sharer, was SLS";
+    OXW, AccessPermission:Busy, desc="local WB request from only sharer, was OLSX";
+    OLSXW, AccessPermission:Busy, desc="local WB request from sharer, was OLSX";
+    ILXW, AccessPermission:Busy, desc="local WB request, was ILX";
 
-    IFLS, desc="Blocked, forwarded local GETS to _some_ local sharer";
-    IFLO, desc="Blocked, forwarded local GETS to local owner";
-    IFLOX, desc="Blocked, forwarded local GETS to local owner but chip is exclusive";
-    IFLOXX, desc="Blocked, forwarded local GETX to local owner/exclusive, chip is exclusive";
-    IFLOSX, desc="Blocked, forwarded local GETS to local owner w/ other sharers, chip is exclusive";
-    IFLXO, desc="Blocked, forwarded local GETX to local owner with other sharers, chip is exclusive";
+    IFLS, AccessPermission:Busy, desc="Blocked, forwarded local GETS to _some_ local sharer";
+    IFLO, AccessPermission:Busy, desc="Blocked, forwarded local GETS to local owner";
+    IFLOX, AccessPermission:Busy, desc="Blocked, forwarded local GETS to local owner but chip is exclusive";
+    IFLOXX, AccessPermission:Busy, desc="Blocked, forwarded local GETX to local owner/exclusive, chip is exclusive";
+    IFLOSX, AccessPermission:Busy, desc="Blocked, forwarded local GETS to local owner w/ other sharers, chip is exclusive";
+    IFLXO, AccessPermission:Busy, desc="Blocked, forwarded local GETX to local owner with other sharers, chip is exclusive";
 
-    IGS, desc="Semi-blocked, issued local GETS to directory";
-    IGM, desc="Blocked, issued local GETX to directory. Need global acks and data";
-    IGMLS, desc="Blocked, issued local GETX to directory but may need to INV local sharers";
-    IGMO, desc="Blocked, have data for local GETX but need all acks";
-    IGMIO, desc="Blocked, issued local GETX, local owner with possible local sharer, may need to INV";
-    OGMIO, desc="Blocked, issued local GETX, was owner, may need to INV";
-    IGMIOF, desc="Blocked, issued local GETX, local owner, waiting for global acks, got Fwd_GETX";
-    IGMIOFS, desc="Blocked, issued local GETX, local owner, waiting for global acks, got Fwd_GETS";
-    OGMIOF, desc="Blocked, issued local GETX, was owner, waiting for global acks, got Fwd_GETX";
+    IGS, AccessPermission:Busy, desc="Semi-blocked, issued local GETS to directory";
+    IGM, AccessPermission:Busy, desc="Blocked, issued local GETX to directory. Need global acks and data";
+    IGMLS, AccessPermission:Busy, desc="Blocked, issued local GETX to directory but may need to INV local sharers";
+    IGMO, AccessPermission:Busy, desc="Blocked, have data for local GETX but need all acks";
+    IGMIO, AccessPermission:Busy, desc="Blocked, issued local GETX, local owner with possible local sharer, may need to INV";
+    OGMIO, AccessPermission:Busy, desc="Blocked, issued local GETX, was owner, may need to INV";
+    IGMIOF, AccessPermission:Busy, desc="Blocked, issued local GETX, local owner, waiting for global acks, got Fwd_GETX";
+    IGMIOFS, AccessPermission:Busy, desc="Blocked, issued local GETX, local owner, waiting for global acks, got Fwd_GETS";
+    OGMIOF, AccessPermission:Busy, desc="Blocked, issued local GETX, was owner, waiting for global acks, got Fwd_GETX";
 
-    II, desc="Blocked, handling invalidations";
-    MM, desc="Blocked, was M satisfying local GETX";
-    SS, desc="Blocked, was S satisfying local GETS";
-    OO, desc="Blocked, was O satisfying local GETS";
-    OLSS, desc="Blocked, satisfying local GETS";
-    OLSXS, desc="Blocked, satisfying local GETS";
-    SLSS, desc="Blocked, satisfying local GETS";
+    II, AccessPermission:Busy, desc="Blocked, handling invalidations";
+    MM, AccessPermission:Busy, desc="Blocked, was M satisfying local GETX";
+    SS, AccessPermission:Busy, desc="Blocked, was S satisfying local GETS";
+    OO, AccessPermission:Busy, desc="Blocked, was O satisfying local GETS";
+    OLSS, AccessPermission:Busy, desc="Blocked, satisfying local GETS";
+    OLSXS, AccessPermission:Busy, desc="Blocked, satisfying local GETS";
+    SLSS, AccessPermission:Busy, desc="Blocked, satisfying local GETS";
 
-    OI, desc="Blocked, doing writeback, was O";
-    MI, desc="Blocked, doing writeback, was M";
-    MII, desc="Blocked, doing writeback, was M, got Fwd_GETX";
-    OLSI, desc="Blocked, doing writeback, was OLS";
-    ILSI, desc="Blocked, doing writeback, was OLS got Fwd_GETX";
+    OI, AccessPermission:Busy, desc="Blocked, doing writeback, was O";
+    MI, AccessPermission:Busy, desc="Blocked, doing writeback, was M";
+    MII, AccessPermission:Busy, desc="Blocked, doing writeback, was M, got Fwd_GETX";
+    OLSI, AccessPermission:Busy, desc="Blocked, doing writeback, was OLS";
+    ILSI, AccessPermission:Busy, desc="Blocked, doing writeback, was OLS got Fwd_GETX";
   }
 
   // EVENTS
@@ -486,9 +486,6 @@ machine(L2Cache, "Token protocol")
       else {
         cache_entry.CacheState := state;
       }
-
-      // Set permission
-      cache_entry.changePermission(AccessPermission:Read_Only);
     }
     else if (localDirectory.isTagPresent(addr)) {
       localDirectory[addr].DirState := state;

@@ -51,33 +51,33 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 //  MessageBuffer unblockToL2Cache, network="From", virtual_network="4", ordered="false";  // a local L1 || Memory -> this L2 bank
 
   // STATES
-  enumeration(State, desc="L2 Cache states", default="L2Cache_State_NP") {
+  state_declaration(State, desc="L2 Cache states", default="L2Cache_State_NP") {
     // Base states
-    NP, desc="Not present in either cache";
-    SS, desc="L2 cache entry Shared, also present in one or more L1s";
-    M, desc="L2 cache entry Modified, not present in any L1s", format="!b";
-    MT, desc="L2 cache entry Modified in a local L1, assume L2 copy stale", format="!b";
+    NP, AccessPermission:Invalid, desc="Not present in either cache";
+    SS, AccessPermission:Read_Only, desc="L2 cache entry Shared, also present in one or more L1s";
+    M, AccessPermission:Read_Write, desc="L2 cache entry Modified, not present in any L1s", format="!b";
+    MT, AccessPermission:Invalid, desc="L2 cache entry Modified in a local L1, assume L2 copy stale", format="!b";
 
     // L2 replacement
-    M_I, desc="L2 cache replacing, have all acks, sent dirty data to memory, waiting for ACK from memory";
-    MT_I, desc="L2 cache replacing, getting data from exclusive";
-    MCT_I, desc="L2 cache replacing, clean in L2, getting data or ack from exclusive";
-    I_I, desc="L2 replacing clean data, need to inv sharers and then drop data";
-    S_I, desc="L2 replacing dirty data, collecting acks from L1s";
+    M_I, AccessPermission:Busy, desc="L2 cache replacing, have all acks, sent dirty data to memory, waiting for ACK from memory";
+    MT_I, AccessPermission:Busy, desc="L2 cache replacing, getting data from exclusive";
+    MCT_I, AccessPermission:Busy, desc="L2 cache replacing, clean in L2, getting data or ack from exclusive";
+    I_I, AccessPermission:Busy, desc="L2 replacing clean data, need to inv sharers and then drop data";
+    S_I, AccessPermission:Busy, desc="L2 replacing dirty data, collecting acks from L1s";
 
     // Transient States for fetching data from memory
-    ISS, desc="L2 idle, got single L1_GETS, issued memory fetch, have not seen response yet";
-    IS, desc="L2 idle, got L1_GET_INSTR or multiple L1_GETS, issued memory fetch, have not seen response yet";
-    IM, desc="L2 idle, got L1_GETX, issued memory fetch, have not seen response(s) yet";
+    ISS, AccessPermission:Busy, desc="L2 idle, got single L1_GETS, issued memory fetch, have not seen response yet";
+    IS, AccessPermission:Busy, desc="L2 idle, got L1_GET_INSTR or multiple L1_GETS, issued memory fetch, have not seen response yet";
+    IM, AccessPermission:Busy, desc="L2 idle, got L1_GETX, issued memory fetch, have not seen response(s) yet";
 
     // Blocking states
-    SS_MB, desc="Blocked for L1_GETX from SS";
-    MT_MB, desc="Blocked for L1_GETX from MT";
-    M_MB, desc="Blocked for L1_GETX from M";
+    SS_MB, AccessPermission:Busy, desc="Blocked for L1_GETX from SS";
+    MT_MB, AccessPermission:Busy, desc="Blocked for L1_GETX from MT";
+    M_MB, AccessPermission:Busy, desc="Blocked for L1_GETX from M";
 
-    MT_IIB, desc="Blocked for L1_GETS from MT, waiting for unblock and data";
-    MT_IB, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
-    MT_SB, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
+    MT_IIB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, waiting for unblock and data";
+    MT_IB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
+    MT_SB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
  
   }
 
@@ -212,17 +212,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
     if (is_valid(cache_entry)) {
       cache_entry.CacheState := state;
-
-      // Set permission
-      if (state == State:SS ) {
-        cache_entry.changePermission(AccessPermission:Read_Only);
-      } else if (state == State:M) {
-        cache_entry.changePermission(AccessPermission:Read_Write);
-      } else if (state == State:MT) {
-        cache_entry.changePermission(AccessPermission:Invalid);
-      } else {
-        cache_entry.changePermission(AccessPermission:Busy);
-      }
     }
   }
 

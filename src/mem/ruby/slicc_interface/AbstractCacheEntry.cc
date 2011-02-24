@@ -30,8 +30,8 @@
 
 AbstractCacheEntry::AbstractCacheEntry()
 {
-    m_Address.setAddress(0);
     m_Permission = AccessPermission_NotPresent;
+    m_Address.setAddress(0);
     m_locked = -1;
 }
 
@@ -39,16 +39,10 @@ AbstractCacheEntry::~AbstractCacheEntry()
 {
 }
 
-AccessPermission
-AbstractCacheEntry::getPermission() const
-{
-    return m_Permission;
-}
-
 void
 AbstractCacheEntry::changePermission(AccessPermission new_perm)
 {
-    m_Permission = new_perm;
+    AbstractEntry::changePermission(new_perm);
     if ((new_perm == AccessPermission_Invalid) ||
         (new_perm == AccessPermission_NotPresent)) {
         m_locked = -1;

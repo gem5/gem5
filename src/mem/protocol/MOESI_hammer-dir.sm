@@ -57,37 +57,37 @@ machine(Directory, "AMD Hammer-like protocol")
   MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true";
 
   // STATES
-  enumeration(State, desc="Directory states", default="Directory_State_E") {
+  state_declaration(State, desc="Directory states", default="Directory_State_E") {
     // Base states
-    NX,             desc="Not Owner, probe filter entry exists, block in O at Owner";
-    NO,             desc="Not Owner, probe filter entry exists, block in E/M at Owner";
-    S,              desc="Data clean, probe filter entry exists pointing to the current owner";
-    O,              desc="Data clean, probe filter entry exists";
-    E,              desc="Exclusive Owner, no probe filter entry";
+    NX, AccessPermission:Invalid, desc="Not Owner, probe filter entry exists, block in O at Owner";
+    NO, AccessPermission:Invalid, desc="Not Owner, probe filter entry exists, block in E/M at Owner";
+    S, AccessPermission:Read_Only, desc="Data clean, probe filter entry exists pointing to the current owner";
+    O, AccessPermission:Read_Only, desc="Data clean, probe filter entry exists";
+    E, AccessPermission:Read_Write, desc="Exclusive Owner, no probe filter entry";
 
-    O_R,            desc="Was data Owner, replacing probe filter entry";
-    S_R,            desc="Was Not Owner or Sharer, replacing probe filter entry";
-    NO_R,           desc="Was Not Owner or Sharer, replacing probe filter entry";
+    O_R, AccessPermission:Read_Only, desc="Was data Owner, replacing probe filter entry";
+    S_R, AccessPermission:Read_Only, desc="Was Not Owner or Sharer, replacing probe filter entry";
+    NO_R, AccessPermission:Invalid, desc="Was Not Owner or Sharer, replacing probe filter entry";
 
-    NO_B,  "NO^B",  desc="Not Owner, Blocked";
-    NO_B_X,  "NO^B",  desc="Not Owner, Blocked, next queued request GETX";
-    NO_B_S,  "NO^B",  desc="Not Owner, Blocked, next queued request GETS";
-    NO_B_S_W,  "NO^B",  desc="Not Owner, Blocked, forwarded merged GETS, waiting for responses";
-    O_B,   "O^B",   desc="Owner, Blocked";
-    NO_B_W,         desc="Not Owner, Blocked, waiting for Dram";
-    O_B_W,          desc="Owner, Blocked, waiting for Dram";
-    NO_W,           desc="Not Owner, waiting for Dram";
-    O_W,            desc="Owner, waiting for Dram";
-    NO_DW_B_W,      desc="Not Owner, Dma Write waiting for Dram and cache responses";
-    NO_DR_B_W,      desc="Not Owner, Dma Read waiting for Dram and cache responses";
-    NO_DR_B_D,      desc="Not Owner, Dma Read waiting for cache responses including dirty data";
-    NO_DR_B,        desc="Not Owner, Dma Read waiting for cache responses";
-    NO_DW_W,        desc="Not Owner, Dma Write waiting for Dram";
-    O_DR_B_W,       desc="Owner, Dma Read waiting for Dram and cache responses";
-    O_DR_B,         desc="Owner, Dma Read waiting for cache responses";
-    WB,             desc="Blocked on a writeback";
-    WB_O_W,         desc="Blocked on memory write, will go to O";
-    WB_E_W,         desc="Blocked on memory write, will go to E";
+    NO_B, AccessPermission:Invalid, "NO^B", desc="Not Owner, Blocked";
+    NO_B_X, AccessPermission:Invalid, "NO^B", desc="Not Owner, Blocked, next queued request GETX";
+    NO_B_S, AccessPermission:Invalid, "NO^B", desc="Not Owner, Blocked, next queued request GETS";
+    NO_B_S_W, AccessPermission:Invalid, "NO^B", desc="Not Owner, Blocked, forwarded merged GETS, waiting for responses";
+    O_B, AccessPermission:Invalid, "O^B", desc="Owner, Blocked";
+    NO_B_W, AccessPermission:Invalid, desc="Not Owner, Blocked, waiting for Dram";
+    O_B_W, AccessPermission:Invalid, desc="Owner, Blocked, waiting for Dram";
+    NO_W, AccessPermission:Invalid, desc="Not Owner, waiting for Dram";
+    O_W, AccessPermission:Invalid, desc="Owner, waiting for Dram";
+    NO_DW_B_W, AccessPermission:Invalid, desc="Not Owner, Dma Write waiting for Dram and cache responses";
+    NO_DR_B_W, AccessPermission:Invalid, desc="Not Owner, Dma Read waiting for Dram and cache responses";
+    NO_DR_B_D, AccessPermission:Invalid, desc="Not Owner, Dma Read waiting for cache responses including dirty data";
+    NO_DR_B, AccessPermission:Invalid, desc="Not Owner, Dma Read waiting for cache responses";
+    NO_DW_W, AccessPermission:Invalid, desc="Not Owner, Dma Write waiting for Dram";
+    O_DR_B_W, AccessPermission:Invalid, desc="Owner, Dma Read waiting for Dram and cache responses";
+    O_DR_B, AccessPermission:Invalid, desc="Owner, Dma Read waiting for cache responses";
+    WB, AccessPermission:Invalid, desc="Blocked on a writeback";
+    WB_O_W, AccessPermission:Invalid, desc="Blocked on memory write, will go to O";
+    WB_E_W, AccessPermission:Invalid, desc="Blocked on memory write, will go to E";
   }
 
   // Events

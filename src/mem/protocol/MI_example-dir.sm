@@ -13,21 +13,21 @@ machine(Directory, "Directory protocol")
   MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true";
 
   // STATES
-  enumeration(State, desc="Directory states", default="Directory_State_I") {
+  state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states
-    I, desc="Invalid";
-    M, desc="Modified";
+    I, AccessPermission:Read_Write, desc="Invalid";
+    M, AccessPermission:Invalid, desc="Modified";
 
-    M_DRD, desc="Blocked on an invalidation for a DMA read";
-    M_DWR, desc="Blocked on an invalidation for a DMA write";
+    M_DRD, AccessPermission:Busy, desc="Blocked on an invalidation for a DMA read";
+    M_DWR, AccessPermission:Busy, desc="Blocked on an invalidation for a DMA write";
 
-    M_DWRI, desc="Intermediate state M_DWR-->I"; 
-    M_DRDI, desc="Intermediate state M_DRD-->I";
+    M_DWRI, AccessPermission:Busy, desc="Intermediate state M_DWR-->I"; 
+    M_DRDI, AccessPermission:Busy, desc="Intermediate state M_DRD-->I";
 
-    IM, desc="Intermediate state I-->M";
-    MI, desc="Intermediate state M-->I";
-    ID, desc="Intermediate state for DMA_READ when in I";
-    ID_W, desc="Intermediate state for DMA_WRITE when in I";
+    IM, AccessPermission:Busy, desc="Intermediate state I-->M";
+    MI, AccessPermission:Busy, desc="Intermediate state M-->I";
+    ID, AccessPermission:Busy, desc="Intermediate state for DMA_READ when in I";
+    ID_W, AccessPermission:Busy, desc="Intermediate state for DMA_WRITE when in I";
   }
 
   // Events

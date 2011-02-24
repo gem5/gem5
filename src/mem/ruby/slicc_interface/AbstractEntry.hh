@@ -43,11 +43,18 @@ class AbstractEntry
     AbstractEntry();
     virtual ~AbstractEntry() = 0;
 
+    // Get/Set permission of the entry
+    AccessPermission getPermission() const;
+    void changePermission(AccessPermission new_perm);
+
     // The methods below are those called by ruby runtime, add when it
     // is absolutely necessary and should all be virtual function.
     virtual DataBlock& getDataBlk() = 0;
 
     virtual void print(std::ostream& out) const = 0;
+
+    AccessPermission m_Permission; // Access permission for this
+                                   // block, required by CacheMemory
 };
 
 inline std::ostream&

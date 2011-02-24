@@ -117,9 +117,7 @@ external_type(DirectoryMemory) {
   void invalidateBlock(Address);
 }
 
-external_type(AbstractCacheEntry, primitive="yes") {
-  void changePermission(AccessPermission);
-}
+external_type(AbstractCacheEntry, primitive="yes");
 
 external_type(CacheMemory) {
   bool cacheAvail(Address);

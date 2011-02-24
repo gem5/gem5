@@ -14,15 +14,15 @@ machine(L1Cache, "MI Example L1 Cache")
   MessageBuffer responseToCache, network="From", virtual_network="4", ordered="true";
 
   // STATES
-  enumeration(State, desc="Cache states") {
-    I, desc="Not Present/Invalid";
-    II, desc="Not Present/Invalid, issued PUT";
-    M,  desc="Modified";
-    MI,  desc="Modified, issued PUT";
-    MII, desc="Modified, issued PUTX, received nack";
+  state_declaration(State, desc="Cache states") {
+    I, AccessPermission:Invalid, desc="Not Present/Invalid";
+    II, AccessPermission:Busy, desc="Not Present/Invalid, issued PUT";
+    M, AccessPermission:Read_Write, desc="Modified";
+    MI, AccessPermission:Busy, desc="Modified, issued PUT";
+    MII, AccessPermission:Busy, desc="Modified, issued PUTX, received nack";
 
-    IS,  desc="Issued request for LOAD/IFETCH";
-    IM,  desc="Issued request for STORE/ATOMIC";
+    IS, AccessPermission:Busy, desc="Issued request for LOAD/IFETCH";
+    IM, AccessPermission:Busy, desc="Issued request for STORE/ATOMIC";
   }
 
   // EVENTS
@@ -117,11 +117,6 @@ machine(L1Cache, "MI Example L1 Cache")
 
     if (is_valid(cache_entry)) {
       cache_entry.CacheState := state;
-      if (state == State:M) {
-        cache_entry.changePermission(AccessPermission:Read_Write);
-      } else {
-        cache_entry.changePermission(AccessPermission:Invalid);
-      }
     }
   }
 

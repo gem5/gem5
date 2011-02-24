@@ -156,6 +156,7 @@ class SLICC(Grammar):
         'structure' : 'STRUCT',
         'external_type' : 'EXTERN_TYPE',
         'enumeration' : 'ENUM',
+        'state_declaration' : 'STATE_DECL',
         'peek' : 'PEEK',
         'stall_and_wait' : 'STALL_AND_WAIT',
         'wake_up_dependents' : 'WAKE_UP_DEPENDENTS',
@@ -329,6 +330,12 @@ class SLICC(Grammar):
         p[4]["enumeration"] = "yes"
         p[0] = ast.EnumDeclAST(self, p[3], p[4], p[7])
 
+    def p_decl__state_decl(self, p):
+        "decl : STATE_DECL '(' type pairs ')' '{' type_states   '}'"
+        p[4]["enumeration"] = "yes"
+        p[4]["state_decl"] = "yes"
+        p[0] = ast.StateDeclAST(self, p[3], p[4], p[7])
+
     def p_decl__object(self, p):
         "decl : type ident pairs SEMI"
         p[0] = ast.ObjDeclAST(self, p[1], p[2], p[3])
@@ -386,6 +393,19 @@ class SLICC(Grammar):
     def p_type_enum(self, p):
         "type_enum : ident pairs SEMI"
         p[0] = ast.TypeFieldEnumAST(self, p[1], p[2])
+
+    # States
+    def p_type_states__list(self, p):
+        "type_states : type_state type_states"
+        p[0] = [ p[1] ] + p[2]
+
+    def p_type_states__empty(self, p):
+        "type_states : empty"
+        p[0] = []
+
+    def p_type_state(self, p):
+        "type_state : ident ',' enumeration pairs SEMI"
+        p[0] = ast.TypeFieldStateAST(self, p[1], p[3], p[4])
 
     # Type
     def p_types__multiple(self, p):

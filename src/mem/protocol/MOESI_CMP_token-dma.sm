@@ -35,10 +35,10 @@ machine(DMA, "DMA Controller")
   MessageBuffer responseFromDir, network="From", virtual_network="5", ordered="true", no_vector="true";
   MessageBuffer reqToDirectory, network="To", virtual_network="0", ordered="false", no_vector="true";
 
-  enumeration(State, desc="DMA states", default="DMA_State_READY") {
-    READY, desc="Ready to accept a new request";
-    BUSY_RD,  desc="Busy: currently processing a request";
-    BUSY_WR,  desc="Busy: currently processing a request";
+  state_declaration(State, desc="DMA states", default="DMA_State_READY") {
+    READY, AccessPermission:Invalid, desc="Ready to accept a new request";
+    BUSY_RD, AccessPermission:Busy, desc="Busy: currently processing a request";
+    BUSY_WR, AccessPermission:Busy, desc="Busy: currently processing a request";
   }
 
   enumeration(Event, desc="DMA events") {

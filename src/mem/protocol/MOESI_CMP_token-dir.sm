@@ -52,30 +52,30 @@ machine(Directory, "Token protocol")
   MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true";
 
   // STATES
-  enumeration(State, desc="Directory states", default="Directory_State_O") {
+  state_declaration(State, desc="Directory states", default="Directory_State_O") {
     // Base states
-    O, desc="Owner";
-    NO, desc="Not Owner";
-    L, desc="Locked";
+    O, AccessPermission:Read_Only, desc="Owner, memory has valid data, but not necessarily all the tokens";
+    NO, AccessPermission:Invalid, desc="Not Owner";
+    L, AccessPermission:Busy, desc="Locked";
 
     // Memory wait states - can block all messages including persistent requests
-    O_W, desc="transitioning to Owner, waiting for memory write";
-    L_O_W, desc="transitioning to Locked, waiting for memory read, could eventually return to O";
-    L_NO_W, desc="transitioning to Locked, waiting for memory read, eventually return to NO";
-    DR_L_W, desc="transitioning to Locked underneath a DMA read, waiting for memory data";
-    DW_L_W, desc="transitioning to Locked underneath a DMA write, waiting for memory ack";
-    NO_W, desc="transitioning to Not Owner, waiting for memory read";
-    O_DW_W, desc="transitioning to Owner, waiting for memory before DMA ack";
-    O_DR_W, desc="transitioning to Owner, waiting for memory before DMA data";
+    O_W, AccessPermission:Busy, desc="transitioning to Owner, waiting for memory write";
+    L_O_W, AccessPermission:Busy, desc="transitioning to Locked, waiting for memory read, could eventually return to O";
+    L_NO_W, AccessPermission:Busy, desc="transitioning to Locked, waiting for memory read, eventually return to NO";
+    DR_L_W, AccessPermission:Busy, desc="transitioning to Locked underneath a DMA read, waiting for memory data";
+    DW_L_W, AccessPermission:Busy, desc="transitioning to Locked underneath a DMA write, waiting for memory ack";
+    NO_W, AccessPermission:Busy, desc="transitioning to Not Owner, waiting for memory read";
+    O_DW_W, AccessPermission:Busy, desc="transitioning to Owner, waiting for memory before DMA ack";
+    O_DR_W, AccessPermission:Busy, desc="transitioning to Owner, waiting for memory before DMA data";
 
     // DMA request transient states - must respond to persistent requests
-    O_DW, desc="issued GETX for DMA write, waiting for all tokens";
-    NO_DW, desc="issued GETX for DMA write, waiting for all tokens";
-    NO_DR, desc="issued GETS for DMA read, waiting for data";
+    O_DW, AccessPermission:Busy, desc="issued GETX for DMA write, waiting for all tokens";
+    NO_DW, AccessPermission:Busy, desc="issued GETX for DMA write, waiting for all tokens";
+    NO_DR, AccessPermission:Busy, desc="issued GETS for DMA read, waiting for data";
 
     // DMA request in progress - competing with a CPU persistent request
-    DW_L, desc="issued GETX for DMA write, CPU persistent request must complete first";
-    DR_L, desc="issued GETS for DMA read, CPU persistent request must complete first";
+    DW_L, AccessPermission:Busy, desc="issued GETX for DMA write, CPU persistent request must complete first";
+    DR_L, AccessPermission:Busy, desc="issued GETS for DMA read, CPU persistent request must complete first";
 
   }
 

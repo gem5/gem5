@@ -1,5 +1,4 @@
-# Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2011 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,19 +27,22 @@
 from slicc.ast.TypeFieldAST import TypeFieldAST
 from slicc.symbols import Event, State
 
-class TypeFieldEnumAST(TypeFieldAST):
-    def __init__(self, slicc, field_id, pairs_ast):
-        super(TypeFieldEnumAST, self).__init__(slicc, pairs_ast)
+class TypeFieldStateAST(TypeFieldAST):
+    def __init__(self, slicc, field_id, perm_ast, pairs_ast):
+        super(TypeFieldStateAST, self).__init__(slicc, pairs_ast)
 
         self.field_id = field_id
+        self.perm_ast = perm_ast
+        if not (perm_ast.type_ast.ident == "AccessPermission"):
+            self.error("AccessPermission enum value must be specified")
         self.pairs_ast = pairs_ast
 
     def __repr__(self):
-        return "[TypeFieldEnum: %r]" % self.field_id
+        return "[TypeFieldState: %r]" % self.field_id
 
     def generate(self, type):
-        if str(type) == "State":
-            self.error("States must in a State Declaration, not a normal enum.")
+        if not str(type) == "State":
+            self.error("State Declaration must be of type State.")
         
         # Add enumeration
         if not type.enumAdd(self.field_id, self.pairs_ast.pairs):
@@ -49,8 +51,11 @@ class TypeFieldEnumAST(TypeFieldAST):
         # Fill machine info
         machine = self.symtab.state_machine
 
-        if str(type) == "Event":
-            if not machine:
-                self.error("Event declaration not part of a machine.")
-            e = Event(self.symtab, self.field_id, self.location, self.pairs)
-            machine.addEvent(e)
+        if not machine:
+            self.error("State declaration not part of a machine.")
+        s = State(self.symtab, self.field_id, self.location, self.pairs)
+        machine.addState(s)
+
+        type.statePermPairAdd(s, self.perm_ast.value)
+
+

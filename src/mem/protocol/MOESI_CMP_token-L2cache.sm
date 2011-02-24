@@ -62,17 +62,17 @@ machine(L2Cache, "Token protocol")
   MessageBuffer L1RequestToL2Cache, network="From", virtual_network="1", ordered="false";  
 
   // STATES
-  enumeration(State, desc="L2 Cache states", default="L2Cache_State_I") {
+  state_declaration(State, desc="L2 Cache states", default="L2Cache_State_I") {
     // Base states
-    NP, desc="Not Present";
-    I, desc="Idle";
-    S, desc="Shared, not present in any local L1s";
-    O, desc="Owned, not present in any L1s";
-    M, desc="Modified, not present in any L1s";
+    NP, AccessPermission:Invalid, desc="Not Present";
+    I, AccessPermission:Invalid, desc="Idle";
+    S, AccessPermission:Read_Only, desc="Shared, not present in any local L1s";
+    O, AccessPermission:Read_Only, desc="Owned, not present in any L1s";
+    M, AccessPermission:Read_Write, desc="Modified, not present in any L1s";
 
     // Locked states
-    I_L,  "I^L",   desc="Invalid, Locked";
-    S_L,  "S^L",   desc="Shared, Locked";
+    I_L, AccessPermission:Busy, "I^L", desc="Invalid, Locked";
+    S_L, AccessPermission:Busy, "S^L", desc="Shared, Locked";
   }
 
   // EVENTS
@@ -208,17 +208,6 @@ machine(L2Cache, "Token protocol")
       }
 
       cache_entry.CacheState := state;
-
-      // Set permission
-      if (state == State:I) {
-        cache_entry.changePermission(AccessPermission:Invalid);
-      } else if (state == State:S || state == State:O ) {
-        cache_entry.changePermission(AccessPermission:Read_Only);
-      } else if (state == State:M ) {
-        cache_entry.changePermission(AccessPermission:Read_Write);
-      } else {
-        cache_entry.changePermission(AccessPermission:Invalid);
-      }
     }
   }
 

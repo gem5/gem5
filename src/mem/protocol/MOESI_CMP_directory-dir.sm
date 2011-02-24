@@ -48,28 +48,28 @@ machine(Directory, "Directory protocol")
 
 
   // STATES
-  enumeration(State, desc="Directory states", default="Directory_State_I") {
+  state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states
-    I, desc="Invalid";
-    S, desc="Shared";
-    O, desc="Owner";
-    M, desc="Modified";
+    I, AccessPermission:Invalid, desc="Invalid";
+    S, AccessPermission:Read_Only, desc="Shared";
+    O, AccessPermission:Read_Only, desc="Owner";
+    M, AccessPermission:Read_Write, desc="Modified";
 
-    IS, desc="Blocked, was in idle";
-    SS, desc="Blocked, was in shared";
-    OO, desc="Blocked, was in owned";
-    MO, desc="Blocked, going to owner or maybe modified";
-    MM, desc="Blocked, going to modified";
-    MM_DMA, desc="Blocked, going to I";
+    IS, AccessPermission:Busy, desc="Blocked, was in idle";
+    SS, AccessPermission:Read_Only, desc="Blocked, was in shared";
+    OO, AccessPermission:Read_Only, desc="Blocked, was in owned";
+    MO, AccessPermission:Read_Only, desc="Blocked, going to owner or maybe modified";
+    MM, AccessPermission:Read_Only, desc="Blocked, going to modified";
+    MM_DMA, AccessPermission:Busy, desc="Blocked, going to I";
 
-    MI, desc="Blocked on a writeback";
-    MIS, desc="Blocked on a writeback, but don't remove from sharers when received";
-    OS, desc="Blocked on a writeback";
-    OSS, desc="Blocked on a writeback, but don't remove from sharers when received";
+    MI, AccessPermission:Busy, desc="Blocked on a writeback";
+    MIS, AccessPermission:Busy, desc="Blocked on a writeback, but don't remove from sharers when received";
+    OS, AccessPermission:Busy, desc="Blocked on a writeback";
+    OSS, AccessPermission:Busy, desc="Blocked on a writeback, but don't remove from sharers when received";
 
-    XI_M, desc="In a stable state, going to I, waiting for the memory controller";
-    XI_U, desc="In a stable state, going to I, waiting for an unblock";
-    OI_D, desc="In O, going to I, waiting for data";
+    XI_M, AccessPermission:Busy, desc="In a stable state, going to I, waiting for the memory controller";
+    XI_U, AccessPermission:Busy, desc="In a stable state, going to I, waiting for an unblock";
+    OI_D, AccessPermission:Busy, desc="In O, going to I, waiting for data";
   }
 
   // Events

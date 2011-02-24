@@ -30,8 +30,21 @@
 
 AbstractEntry::AbstractEntry()
 {
+    m_Permission = AccessPermission_NotPresent;
 }
 
 AbstractEntry::~AbstractEntry()
 {
+}
+
+AccessPermission
+AbstractEntry::getPermission() const
+{
+    return m_Permission;
+}
+
+void
+AbstractEntry::changePermission(AccessPermission new_perm)
+{
+    m_Permission = new_perm;
 }

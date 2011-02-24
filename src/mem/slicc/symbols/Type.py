@@ -100,6 +100,9 @@ class Type(Symbol):
 
         self.isMachineType = (ident == "MachineType")
 
+        self.isStateDecl = ("state_decl" in self)
+        self.statePermPairs = []
+
         self.data_members = orderdict()
 
         # Methods
@@ -157,6 +160,9 @@ class Type(Symbol):
 
     def methodIdAbstract(self, name, param_type_vec):
         return '_'.join([name] + [ pt.abstract_ident for pt in param_type_vec ])
+
+    def statePermPairAdd(self, state_name, perm_name):
+        self.statePermPairs.append([state_name, perm_name])
 
     def methodAdd(self, name, return_type, param_type_vec):
         ident = self.methodId(name, param_type_vec)
@@ -446,6 +452,11 @@ ${{self.c_ident}}::print(ostream& out) const
 #include <string>
 
 #include "mem/ruby/common/Global.hh"
+''')
+        if self.isStateDecl:
+            code('#include "mem/protocol/AccessPermission.hh"')
+
+        code('''
 
 // Class definition
 /** \\enum ${{self.c_ident}}
@@ -491,6 +502,14 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
             for enum in self.enums.itervalues():
                 code('#define MACHINETYPE_${{enum.ident}} 1')
 
+        if self.isStateDecl:
+            code('''
+
+// Code to convert the current state to an access permission
+AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj);
+
+''')
+
         # Trailer
         code('''
 std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
@@ -516,6 +535,27 @@ std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 #include "mem/protocol/${{self.c_ident}}.hh"
 
 using namespace std;
+
+''')
+
+        if self.isStateDecl:
+            code('''
+// Code to convert the current state to an access permission
+AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
+{
+    switch(obj) {
+''')
+            # For each case
+            code.indent()
+            for statePerm in self.statePermPairs:
+                code('  case ${{self.c_ident}}_${{statePerm[0]}}:')
+                code('    return AccessPermission_${{statePerm[1]}};')
+            code.dedent()
+            code ('''
+      default:
+        panic("Unknown state access permission converstion for ${{self.c_ident}}");
+    }
+}
 
 ''')
 
