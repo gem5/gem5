@@ -26,7 +26,8 @@
 #
 # Authors: Ali Saidi
 
-from SysPaths import *
+from SysPaths import script, disk, binary
+from os import environ as env
 from m5.defines import buildEnv
 
 class SysConfig:
