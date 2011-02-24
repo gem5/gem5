@@ -1,8 +1,0 @@
-# protocol briefly described in
-# doc/MSI_MOSI_CMP_directory_2level-protocol-description.txt
-
-MSI_MOSI_CMP_directory-msg.sm
-MSI_MOSI_CMP_directory-L1cache.sm
-MSI_MOSI_CMP_directory-L2cache.sm
-MSI_MOSI_CMP_directory-dir.sm
-standard_CMP-protocol.sm
