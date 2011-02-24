@@ -149,7 +149,7 @@ inline void
 PerfectCacheMemory<ENTRY>::allocate(const Address& address)
 {
     PerfectCacheLineState<ENTRY> line_state;
-    line_state.m_permission = AccessPermission_Busy;
+    line_state.m_permission = AccessPermission_Invalid;
     line_state.m_entry = ENTRY();
     m_map[line_address(address)] = line_state;
 }

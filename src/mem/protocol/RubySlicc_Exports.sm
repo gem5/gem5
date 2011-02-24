@@ -47,14 +47,20 @@ external_type(DataBlock, desc="..."){
 // Declarations of external types that are common to all protocols
 
 // AccessPermission
+// The following five states define the access permission of all memory blocks.
+// These permissions have multiple uses.  They coordinate locking and 
+// synchronization primitives, as well as enable functional accesses.
+// One should not need to add any additional permission values and it is very
+// risky to do so.
 enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent") {
-  Busy,       desc="No Read or Write";
-  Read_Only,  desc="Read Only";
-  Read_Write, desc="Read/Write";
-  Invalid,    desc="Invalid";
-  NotPresent, desc="NotPresent";
-  ReadUpgradingToWrite, desc="Read only, but trying to get Read/Write";
-  Stale,      desc="local L1 has a modified copy, assume L2 copy is stale data";
+  // Valid data
+  Read_Only,  desc="block is Read Only (modulo functional writes)";
+  Read_Write, desc="block is Read/Write";
+
+  // Invalid data
+  Invalid,    desc="block is in an Invalid base state";
+  NotPresent, desc="block is NotPresent";
+  Busy,       desc="block is in a transient state, currently invalid";
 }
 
 // TesterStatus

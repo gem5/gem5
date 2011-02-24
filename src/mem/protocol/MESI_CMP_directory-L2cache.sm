@@ -219,7 +219,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       } else if (state == State:M) {
         cache_entry.changePermission(AccessPermission:Read_Write);
       } else if (state == State:MT) {
-        cache_entry.changePermission(AccessPermission:Stale);
+        cache_entry.changePermission(AccessPermission:Invalid);
       } else {
         cache_entry.changePermission(AccessPermission:Busy);
       }
