@@ -390,10 +390,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
               if (L2cacheMemory.cacheAvail(in_msg.LineAddress)) {
                 trigger(Event:L1_to_L2, in_msg.LineAddress, L1Dcache_entry, tbe);
               } else {
+                Address l2_victim_addr := L2cacheMemory.cacheProbe(in_msg.LineAddress);
                 trigger(Event:L2_Replacement,
-                        L2cacheMemory.cacheProbe(in_msg.LineAddress),
-                        getL2CacheEntry(L2cacheMemory.cacheProbe(in_msg.LineAddress)),
-                        TBEs[L2cacheMemory.cacheProbe(in_msg.LineAddress)]);
+                        l2_victim_addr, 
+                        getL2CacheEntry(l2_victim_addr),
+                        TBEs[l2_victim_addr]);
               }
             }
 
@@ -412,18 +413,20 @@ machine(L1Cache, "AMD Hammer-like protocol")
               }
             } else {
               // No room in the L1, so we need to make room
-              if (L2cacheMemory.cacheAvail(L1IcacheMemory.cacheProbe(in_msg.LineAddress))) {
+              Address l1i_victim_addr := L1IcacheMemory.cacheProbe(in_msg.LineAddress);
+              if (L2cacheMemory.cacheAvail(l1i_victim_addr)) {
                 // The L2 has room, so we move the line from the L1 to the L2
                 trigger(Event:L1_to_L2,
-                        L1IcacheMemory.cacheProbe(in_msg.LineAddress),
-                        getL1ICacheEntry(L1IcacheMemory.cacheProbe(in_msg.LineAddress)),
-                        TBEs[L1IcacheMemory.cacheProbe(in_msg.LineAddress)]);
+                        l1i_victim_addr,
+                        getL1ICacheEntry(l1i_victim_addr),
+                        TBEs[l1i_victim_addr]);
               } else {
+                Address l2_victim_addr := L2cacheMemory.cacheProbe(l1i_victim_addr);
                 // The L2 does not have room, so we replace a line from the L2
                 trigger(Event:L2_Replacement,
-                        L2cacheMemory.cacheProbe(L1IcacheMemory.cacheProbe(in_msg.LineAddress)),
-                        getL2CacheEntry(L2cacheMemory.cacheProbe(L1IcacheMemory.cacheProbe(in_msg.LineAddress))),
-                        TBEs[L2cacheMemory.cacheProbe(L1IcacheMemory.cacheProbe(in_msg.LineAddress))]);
+                        l2_victim_addr,
+                        getL2CacheEntry(l2_victim_addr),
+                        TBEs[l2_victim_addr]);
               }
             }
           }
@@ -444,10 +447,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
               if (L2cacheMemory.cacheAvail(in_msg.LineAddress)) {
                 trigger(Event:L1_to_L2, in_msg.LineAddress, L1Icache_entry, tbe);
               } else {
+                Address l2_victim_addr := L2cacheMemory.cacheProbe(in_msg.LineAddress);
                 trigger(Event:L2_Replacement,
-                        L2cacheMemory.cacheProbe(in_msg.LineAddress),
-                        getL2CacheEntry(L2cacheMemory.cacheProbe(in_msg.LineAddress)),
-                        TBEs[L2cacheMemory.cacheProbe(in_msg.LineAddress)]);
+                        l2_victim_addr,
+                        getL2CacheEntry(l2_victim_addr),
+                        TBEs[l2_victim_addr]);
               }
             }
 
@@ -465,18 +469,20 @@ machine(L1Cache, "AMD Hammer-like protocol")
               }
             } else {
               // No room in the L1, so we need to make room
-              if (L2cacheMemory.cacheAvail(L1DcacheMemory.cacheProbe(in_msg.LineAddress))) {
+              Address l1d_victim_addr := L1DcacheMemory.cacheProbe(in_msg.LineAddress);
+              if (L2cacheMemory.cacheAvail(l1d_victim_addr)) {
                 // The L2 has room, so we move the line from the L1 to the L2
                 trigger(Event:L1_to_L2,
-                        L1DcacheMemory.cacheProbe(in_msg.LineAddress),
-                        getL1DCacheEntry(L1DcacheMemory.cacheProbe(in_msg.LineAddress)),
-                        TBEs[L1DcacheMemory.cacheProbe(in_msg.LineAddress)]);
+                        l1d_victim_addr,
+                        getL1DCacheEntry(l1d_victim_addr),
+                        TBEs[l1d_victim_addr]);
               } else {
+                Address l2_victim_addr := L2cacheMemory.cacheProbe(l1d_victim_addr);
                 // The L2 does not have room, so we replace a line from the L2
                 trigger(Event:L2_Replacement,
-                        L2cacheMemory.cacheProbe(L1DcacheMemory.cacheProbe(in_msg.LineAddress)),
-                        getL2CacheEntry(L2cacheMemory.cacheProbe(L1DcacheMemory.cacheProbe(in_msg.LineAddress))),
-                        TBEs[L2cacheMemory.cacheProbe(L1DcacheMemory.cacheProbe(in_msg.LineAddress))]);
+                        l2_victim_addr,
+                        getL2CacheEntry(l2_victim_addr),
+                        TBEs[l2_victim_addr]);
               }
             }
           }

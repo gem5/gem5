@@ -30,10 +30,11 @@ from slicc.ast.StatementAST import StatementAST
 from slicc.symbols import Var
 
 class LocalVariableAST(StatementAST):
-    def __init__(self, slicc, type_ast, ident):
+    def __init__(self, slicc, type_ast, ident, pointer = False):
         super(LocalVariableAST, self).__init__(slicc)
         self.type_ast = type_ast
         self.ident    = ident
+        self.pointer = pointer
 
     def __repr__(self):
         return "[LocalVariableAST: %r %r]" % (self.type_ast, self.ident)
@@ -50,5 +51,9 @@ class LocalVariableAST(StatementAST):
         v = Var(self.symtab, self.ident, self.location, type, ident,
                 self.pairs)
         self.symtab.newSymbol(v)
-        code += "%s* %s" % (type.c_ident, ident)
+        if self.pointer or str(type) == "TBE" or (
+           "interface" in type and type["interface"] == "AbstractCacheEntry"):
+            code += "%s* %s" % (type.c_ident, ident)
+        else:
+            code += "%s %s" % (type.c_ident, ident)
         return type
