@@ -37,7 +37,6 @@
 #include "cpu/testers/rubytest/CheckTable.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
-#include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/system/RubyPort.hh"

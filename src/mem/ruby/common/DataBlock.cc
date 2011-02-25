@@ -27,6 +27,62 @@
  */
 
 #include "mem/ruby/common/DataBlock.hh"
+#include "mem/ruby/system/System.hh"
+
+DataBlock::DataBlock(const DataBlock &cp)
+{
+    m_data = new uint8[RubySystem::getBlockSizeBytes()];
+    memcpy(m_data, cp.m_data, RubySystem::getBlockSizeBytes());
+    m_alloc = true;
+}
+
+void
+DataBlock::alloc()
+{
+    m_data = new uint8[RubySystem::getBlockSizeBytes()];
+    m_alloc = true;
+    clear();
+}
+
+void
+DataBlock::clear()
+{
+    memset(m_data, 0, RubySystem::getBlockSizeBytes());
+}
+
+bool
+DataBlock::equal(const DataBlock& obj) const
+{
+    return !memcmp(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
+}
+
+void
+DataBlock::print(std::ostream& out) const
+{
+    using namespace std;
+
+    int size = RubySystem::getBlockSizeBytes();
+    out << "[ ";
+    for (int i = 0; i < size; i++) {
+        out << setw(2) << setfill('0') << hex << "0x" << (int)m_data[i] << " ";
+        out << setfill(' ');
+    }
+    out << dec << "]" << flush;
+}
+
+const uint8*
+DataBlock::getData(int offset, int len) const
+{
+    assert(offset + len <= RubySystem::getBlockSizeBytes());
+    return &m_data[offset];
+}
+
+void
+DataBlock::setData(uint8* data, int offset, int len)
+{
+    assert(offset + len <= RubySystem::getBlockSizeBytes());
+    memcpy(&m_data[offset], data, len);
+}
 
 DataBlock &
 DataBlock::operator=(const DataBlock & obj)

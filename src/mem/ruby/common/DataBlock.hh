@@ -33,7 +33,6 @@
 #include <iostream>
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
 
 class DataBlock
 {
@@ -43,12 +42,7 @@ class DataBlock
         alloc();
     }
 
-    DataBlock(const DataBlock &cp)
-    {
-        m_data = new uint8[RubySystem::getBlockSizeBytes()];
-        memcpy(m_data, cp.m_data, RubySystem::getBlockSizeBytes());
-        m_alloc = true;
-    }
+    DataBlock(const DataBlock &cp);
 
     ~DataBlock()
     {
@@ -85,64 +79,16 @@ DataBlock::assign(uint8* data)
     m_alloc = false;
 }
 
-inline void
-DataBlock::alloc()
-{
-    m_data = new uint8[RubySystem::getBlockSizeBytes()];
-    m_alloc = true;
-    clear();
-}
-
-inline void
-DataBlock::clear()
-{
-    memset(m_data, 0, RubySystem::getBlockSizeBytes());
-}
-
-inline bool
-DataBlock::equal(const DataBlock& obj) const
-{
-    return !memcmp(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
-}
-
-inline void
-DataBlock::print(std::ostream& out) const
-{
-    using namespace std;
-
-    int size = RubySystem::getBlockSizeBytes();
-    out << "[ ";
-    for (int i = 0; i < size; i++) {
-        out << setw(2) << setfill('0') << hex << "0x" << (int)m_data[i] << " ";
-        out << setfill(' ');
-    }
-    out << dec << "]" << flush;
-}
-
 inline uint8
 DataBlock::getByte(int whichByte) const
 {
     return m_data[whichByte];
 }
 
-inline const uint8*
-DataBlock::getData(int offset, int len) const
-{
-    assert(offset + len <= RubySystem::getBlockSizeBytes());
-    return &m_data[offset];
-}
-
 inline void
 DataBlock::setByte(int whichByte, uint8 data)
 {
     m_data[whichByte] = data;
-}
-
-inline void
-DataBlock::setData(uint8* data, int offset, int len)
-{
-    assert(offset + len <= RubySystem::getBlockSizeBytes());
-    memcpy(&m_data[offset], data, len);
 }
 
 inline void
