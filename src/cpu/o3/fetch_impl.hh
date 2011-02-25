@@ -1404,19 +1404,22 @@ template<class Impl>
 ThreadID
 DefaultFetch<Impl>::iqCount()
 {
-    std::priority_queue<ThreadID> PQ;
+    std::priority_queue<unsigned> PQ;
+    std::map<unsigned, ThreadID> threadMap;
 
     list<ThreadID>::iterator threads = activeThreads->begin();
     list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
+        unsigned iqCount = fromIEW->iewInfo[tid].iqCount;
 
-        PQ.push(fromIEW->iewInfo[tid].iqCount);
+        PQ.push(iqCount);
+        threadMap[iqCount] = tid;
     }
 
     while (!PQ.empty()) {
-        ThreadID high_pri = PQ.top();
+        ThreadID high_pri = threadMap[PQ.top()];
 
         if (fetchStatus[high_pri] == Running ||
             fetchStatus[high_pri] == IcacheAccessComplete ||
@@ -1434,19 +1437,22 @@ template<class Impl>
 ThreadID
 DefaultFetch<Impl>::lsqCount()
 {
-    std::priority_queue<ThreadID> PQ;
+    std::priority_queue<unsigned> PQ;
+    std::map<unsigned, ThreadID> threadMap;
 
     list<ThreadID>::iterator threads = activeThreads->begin();
     list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
         ThreadID tid = *threads++;
+        unsigned ldstqCount = fromIEW->iewInfo[tid].ldstqCount;
 
-        PQ.push(fromIEW->iewInfo[tid].ldstqCount);
+        PQ.push(ldstqCount);
+        threadMap[ldstqCount] = tid;
     }
 
     while (!PQ.empty()) {
-        ThreadID high_pri = PQ.top();
+        ThreadID high_pri = threadMap[PQ.top()];
 
         if (fetchStatus[high_pri] == Running ||
             fetchStatus[high_pri] == IcacheAccessComplete ||
