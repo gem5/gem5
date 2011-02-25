@@ -29,13 +29,13 @@
 #ifndef __MEM_RUBY_COMMON_ADDRESS_HH__
 #define __MEM_RUBY_COMMON_ADDRESS_HH__
 
+#include <cassert>
 #include <iomanip>
 
 #include "base/hashmap.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/MachineID.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/system/System.hh"
 
 const int ADDRESS_WIDTH = 64; // address width in bytes
 
@@ -67,31 +67,10 @@ class Address
     physical_address_t maskHighOrderBits(int number) const;
     physical_address_t shiftLowOrderBits(int number) const;
 
-    physical_address_t
-    getLineAddress() const
-    {
-        return bitSelect(RubySystem::getBlockSizeBits(), ADDRESS_WIDTH);
-    }
-
-    physical_address_t
-    getOffset() const
-    {
-        return bitSelect(0, RubySystem::getBlockSizeBits() - 1);
-    }
-
-    void
-    makeLineAddress()
-    {
-        m_address = maskLowOrderBits(RubySystem::getBlockSizeBits());
-    }
-
-    // returns the next stride address based on line address
-    void
-    makeNextStrideAddress(int stride)
-    {
-        m_address = maskLowOrderBits(RubySystem::getBlockSizeBits())
-            + RubySystem::getBlockSizeBytes()*stride;
-    }
+    physical_address_t getLineAddress() const;
+    physical_address_t getOffset() const;
+    void makeLineAddress();
+    void makeNextStrideAddress(int stride);
 
     int getBankSetNum() const;
     int getBankSetDist() const;
@@ -222,49 +201,6 @@ inline physical_address_t
 Address::shiftLowOrderBits(int number) const
 {
     return (m_address >> number);
-}
-
-inline integer_t
-Address::memoryModuleIndex() const
-{
-    integer_t index =
-        bitSelect(RubySystem::getBlockSizeBits() +
-                  RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
-    assert (index >= 0);
-    return index;
-
-    // Index indexHighPortion =
-    //     address.bitSelect(MEMORY_SIZE_BITS - 1,
-    //                       PAGE_SIZE_BITS + NUMBER_OF_MEMORY_MODULE_BITS);
-    // Index indexLowPortion =
-    //     address.bitSelect(DATA_BLOCK_BITS, PAGE_SIZE_BITS - 1);
-    //
-    // Index index = indexLowPortion |
-    //     (indexHighPortion << (PAGE_SIZE_BITS - DATA_BLOCK_BITS));
-
-    /*
-      Round-robin mapping of addresses, at page size granularity
-
-ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
-  |                    |                       |               |
- \ /                  \ /                     \ /             \ /       0
-  -----------------------------------------------------------------------
-  |       unused        |xxxxxxxxxxxxxxx|       |xxxxxxxxxxxxxxx|       |
-  |                     |xxxxxxxxxxxxxxx|       |xxxxxxxxxxxxxxx|       |
-  -----------------------------------------------------------------------
-                        indexHighPortion         indexLowPortion
-                                        <------->
-                               NUMBER_OF_MEMORY_MODULE_BITS
-    */
-}
-
-inline void
-Address::print(std::ostream& out) const
-{
-    using namespace std;
-    out << "[" << hex << "0x" << m_address << "," << " line 0x"
-        << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]"
-        << flush;
 }
 
 class Address;

@@ -27,6 +27,76 @@
  */
 
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/System.hh"
+
+physical_address_t
+Address::getLineAddress() const
+{
+    return bitSelect(RubySystem::getBlockSizeBits(), ADDRESS_WIDTH);
+}
+
+physical_address_t
+Address::getOffset() const
+{
+    return bitSelect(0, RubySystem::getBlockSizeBits() - 1);
+}
+
+void
+Address::makeLineAddress()
+{
+    m_address = maskLowOrderBits(RubySystem::getBlockSizeBits());
+}
+
+// returns the next stride address based on line address
+void
+Address::makeNextStrideAddress(int stride)
+{
+    m_address = maskLowOrderBits(RubySystem::getBlockSizeBits())
+        + RubySystem::getBlockSizeBytes()*stride;
+}
+
+integer_t
+Address::memoryModuleIndex() const
+{
+    integer_t index =
+        bitSelect(RubySystem::getBlockSizeBits() +
+                  RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
+    assert (index >= 0);
+    return index;
+
+    // Index indexHighPortion =
+    //     address.bitSelect(MEMORY_SIZE_BITS - 1,
+    //                       PAGE_SIZE_BITS + NUMBER_OF_MEMORY_MODULE_BITS);
+    // Index indexLowPortion =
+    //     address.bitSelect(DATA_BLOCK_BITS, PAGE_SIZE_BITS - 1);
+    //
+    // Index index = indexLowPortion |
+    //     (indexHighPortion << (PAGE_SIZE_BITS - DATA_BLOCK_BITS));
+
+    /*
+      Round-robin mapping of addresses, at page size granularity
+
+ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
+  |                    |                       |               |
+ \ /                  \ /                     \ /             \ /       0
+  -----------------------------------------------------------------------
+  |       unused        |xxxxxxxxxxxxxxx|       |xxxxxxxxxxxxxxx|       |
+  |                     |xxxxxxxxxxxxxxx|       |xxxxxxxxxxxxxxx|       |
+  -----------------------------------------------------------------------
+                        indexHighPortion         indexLowPortion
+                                        <------->
+                               NUMBER_OF_MEMORY_MODULE_BITS
+    */
+}
+
+void
+Address::print(std::ostream& out) const
+{
+    using namespace std;
+    out << "[" << hex << "0x" << m_address << "," << " line 0x"
+        << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]"
+        << flush;
+}
 
 void
 Address::output(std::ostream& out) const

@@ -31,6 +31,7 @@
 #include "base/intmath.hh"
 #include "base/str.hh"
 #include "mem/ruby/filters/BulkBloomFilter.hh"
+#include "mem/ruby/system/System.hh"
 
 using namespace std;
 
