@@ -35,7 +35,7 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
-#include "mem/ruby/libruby.hh"
+#include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/recorder/Tracer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"

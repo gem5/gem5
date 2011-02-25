@@ -43,8 +43,6 @@ if env['TARGET_ISA'] == 'no':
 if not env['RUBY']:
     Return()
 
-Source('libruby.cc')
-
 def do_embed_text(target, source, env):
     """convert a text file into a file that can be embedded in C
     using an #include statement, that defines a \"const char *\" pointing
@@ -95,6 +93,7 @@ MakeInclude('slicc_interface/AbstractCacheEntry.hh')
 MakeInclude('slicc_interface/AbstractProtocol.hh')
 MakeInclude('slicc_interface/Message.hh')
 MakeInclude('slicc_interface/NetworkMessage.hh')
+MakeInclude('slicc_interface/RubyRequest.hh')
 
 # External types
 MakeInclude('buffers/MessageBuffer.hh')

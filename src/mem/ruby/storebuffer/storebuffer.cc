@@ -59,7 +59,6 @@ StoreBuffer::StoreBuffer(uint32 id, uint32 block_bits, int storebuffer_size)
     char name [] = "Sequencer_";
     char port_name [13];
     sprintf(port_name, "%s%d", name, id);
-    m_port = libruby_get_port(port_name, hit);
     m_hit_callback = NULL;
     assert(storebuffer_size >= 0);
     m_storebuffer_size = storebuffer_size;
@@ -67,13 +66,9 @@ StoreBuffer::StoreBuffer(uint32 id, uint32 block_bits, int storebuffer_size)
     m_block_size = 1 << block_bits;
     m_block_mask = ~(m_block_size - 1);
     m_buffer_size = 0;
-    m_use_storebuffer = false;
     m_storebuffer_full = false;
     m_storebuffer_flushing = false;
     m_stalled_issue = true;
-    if (m_storebuffer_size > 0){
-        m_use_storebuffer = true;
-    }
 }
 
 StoreBuffer::~StoreBuffer()
@@ -91,19 +86,6 @@ StoreBuffer::registerHitCallback(void (*hit_callback)(int64_t request_id))
 void
 StoreBuffer::addToStoreBuffer(RubyRequest request)
 {
-    if (!m_use_storebuffer) {
-        // make request to libruby
-        uint64_t id = libruby_issue_request(m_port, request);
-        if (request_map.find(id) != request_map.end()) {
-            panic("Request ID: %d is already in the map\n", id);
-        } else {
-            request_map.insert(make_pair(id, this));
-            outstanding_requests.insert(make_pair(id, request));
-        }
-        return;
-    }
-
-
     buffer.push_front(SBEntry(request, NULL));
 
     m_buffer_size++;
@@ -128,28 +110,12 @@ StoreBuffer::addToStoreBuffer(RubyRequest request)
 int64_t
 StoreBuffer::handleLoad(RubyRequest request)
 {
-    if (!m_use_storebuffer) {
-        // make a request to ruby
-        return libruby_issue_request(m_port, request);
-    }
-
     load_match match = checkForLoadHit(request);
     if (match == FULL_MATCH) {
         // fill data
         returnMatchedData(request);
         iseq++;
         return -2;
-    } else if (match == NO_MATCH) {
-        // make request to libruby and return the id
-        uint64_t id = libruby_issue_request(m_port, request);
-        if (request_map.find(id) != request_map.end()) {
-            panic("Request ID: %d is already in the map\n", id);
-        } else {
-            request_map.insert(make_pair(id, this));
-            outstanding_requests.insert(make_pair(id, request));
-        }
-        iseq++;
-        return id;
     } else { // partial match
         return -3;
     }
@@ -159,12 +125,6 @@ StoreBuffer::handleLoad(RubyRequest request)
 load_match
 StoreBuffer::checkForLoadHit(RubyRequest request)
 {
-    if (!m_use_storebuffer) {
-        // this function should never be called if we are not using a
-        // store buffer
-        panic("checkForLoadHit called while write buffer is not in use\n");
-    }
-
     physical_address_t physical_address = request.paddr;
     int len = request.len;
 
@@ -270,14 +230,6 @@ StoreBuffer::flushStoreBuffer()
 void
 StoreBuffer::issueNextStore()
 {
-    SBEntry request = buffer.back();
-    uint64_t id = libruby_issue_request(m_port, request.m_request);
-    if (request_map.find(id) != request_map.end()) {
-        assert(0);
-    } else {
-        request_map.insert(make_pair(id, this));
-        outstanding_requests.insert(make_pair(id, request.m_request));
-    }
 }
 
 void

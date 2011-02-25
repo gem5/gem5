@@ -38,7 +38,6 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/libruby_internal.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/Sequencer.hh"
 

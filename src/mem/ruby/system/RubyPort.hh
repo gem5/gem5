@@ -35,7 +35,7 @@
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "mem/protocol/RequestStatus.hh"
-#include "mem/ruby/libruby.hh"
+#include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"

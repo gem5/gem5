@@ -33,7 +33,7 @@
 #include <map>
 
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/ruby/libruby.hh"
+#include "mem/ruby/slicc_interface/RubyRequest.hh"
 
 /**
  *  Status for write buffer accesses. The Write buffer can hit in

@@ -62,7 +62,6 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/common/Set.hh"
-#include "mem/ruby/libruby.hh"
 #include "mem/ruby/system/MachineID.hh"
 #include "mem/ruby/system/MemoryControl.hh"
 #include "mem/ruby/system/NodeID.hh"
