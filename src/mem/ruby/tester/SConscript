@@ -34,7 +34,6 @@ if not env['RUBY']:
     Return()
 
 #Source('SpecifiedGenerator.cc')
-#Source('getopt.cc')
 #Source('main.cc')
 #Source('test_framework.cc')
 #Source('RaceyDriver.cc')

@@ -37,7 +37,6 @@ using namespace std;
 #include "base/misc.hh"
 #include "mem/ruby/tester/test_framework.hh"
 #include "mem/protocol/protocol_name.hh"
-#include "getopt.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
 #include "mem/ruby/tester/RaceyDriver.hh"
 #include "mem/ruby/common/Driver.hh"
