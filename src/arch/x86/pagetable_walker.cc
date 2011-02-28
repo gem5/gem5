@@ -508,7 +508,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         flags.set(Request::UNCACHEABLE, uncacheable);
         RequestPtr request =
             new Request(nextRead, oldRead->getSize(), flags);
-        read = new Packet(request, MemCmd::ReadExReq, Packet::Broadcast);
+        read = new Packet(request, MemCmd::ReadReq, Packet::Broadcast);
         read->allocate();
         // If we need to write, adjust the read packet to write the modified
         // value back to memory.
@@ -578,7 +578,7 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     if (cr3.pcd)
         flags.set(Request::UNCACHEABLE);
     RequestPtr request = new Request(topAddr, dataSize, flags);
-    read = new Packet(request, MemCmd::ReadExReq, Packet::Broadcast);
+    read = new Packet(request, MemCmd::ReadReq, Packet::Broadcast);
     read->allocate();
 }
 
