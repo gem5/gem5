@@ -518,6 +518,8 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
                 req->setPaddr(PhysAddrPrefixPciConfig |
                         mbits(configAddress, 30, 2) |
                         (IOPort & mask(2)));
+            } else {
+                req->setPaddr(PhysAddrPrefixIO | IOPort);
             }
         } else {
             req->setFlags(Request::UNCACHEABLE);
