@@ -31,7 +31,8 @@
 Import('*')
 
 sticky_vars.AddVariables(
-    BoolVariable('NO_VECTOR_BOUNDS_CHECKS', "Don't do bounds checks", True),
+    BoolVariable('NO_VECTOR_BOUNDS_CHECKS', "Don't do bounds checks in Ruby",
+                 True),
     ('GEMS_ROOT', "Add debugging stuff to Ruby", Dir('..').srcnode().abspath),
     )
 
