@@ -338,20 +338,23 @@ global_nonsticky_vars.AddVariables(
     ('update_ref', 'Update test reference outputs', False)
     )
 
+# Update main environment with values from ARGUMENTS & global_sticky_vars_file
+global_sticky_vars.Update(main)
+global_nonsticky_vars.Update(main)
+global_help_texts = {
+    "global_sticky" : global_sticky_vars.GenerateHelpText(main),
+    "global_nonsticky" : global_nonsticky_vars.GenerateHelpText(main)
+}
 
 # base help text
 help_text = '''
 Usage: scons [scons options] [build options] [target(s)]
 
 Global sticky options:
-'''
-
-# Update main environment with values from ARGUMENTS & global_sticky_vars_file
-global_sticky_vars.Update(main)
-global_nonsticky_vars.Update(main)
-
-help_text += global_sticky_vars.GenerateHelpText(main)
-help_text += global_nonsticky_vars.GenerateHelpText(main)
+%(global_sticky)s
+Global nonsticky options:
+%(global_nonsticky)s
+''' % global_help_texts
 
 # Save sticky variable settings back to current variables file
 global_sticky_vars.Save(global_sticky_vars_file, main)
