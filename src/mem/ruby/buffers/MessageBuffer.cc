@@ -380,7 +380,7 @@ MessageBuffer::reanalyzeAllMessages()
 void
 MessageBuffer::stallMessage(const Address& addr)
 {
-    DPRINTF(RubyQueue, "Stalling %s\n");
+    DPRINTF(RubyQueue, "Stalling due to %s\n", addr);
     assert(isReady());
     assert(addr.getOffset() == 0);
     MsgPtr message = m_prio_heap.front().m_msgptr;
