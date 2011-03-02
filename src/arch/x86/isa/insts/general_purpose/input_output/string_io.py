@@ -45,7 +45,8 @@ def macroop INS_M_R {
 
     zexti t2, reg, 15, dataSize=8
 
-    ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
+    ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
+        nonSpec=True
     st t6, es, [1, t0, rdi]
 
     add rdi, rdi, t3, dataSize=asz
@@ -63,7 +64,8 @@ def macroop INS_E_M_R {
     zexti t2, reg, 15, dataSize=8
 
 topOfLoop:
-    ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
+    ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
+        nonSpec=True
     st t6, es, [1, t0, rdi]
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
@@ -83,7 +85,8 @@ def macroop OUTS_R_M {
     zexti t2, reg, 15, dataSize=8
 
     ld t6, ds, [1, t0, rsi]
-    st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
+    st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
+        nonSpec=True
 
     add rsi, rsi, t3, dataSize=asz
 };
@@ -101,7 +104,8 @@ def macroop OUTS_E_R_M {
 
 topOfLoop:
     ld t6, ds, [1, t0, rsi]
-    st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
+    st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
+        nonSpec=True
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rsi, rsi, t3, dataSize=asz

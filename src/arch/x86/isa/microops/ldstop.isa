@@ -272,7 +272,7 @@ def template MicroLdStOpConstructor {{
 let {{
     class LdStOp(X86Microop):
         def __init__(self, data, segment, addr, disp,
-                dataSize, addressSize, baseFlags, atCPL0, prefetch):
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec):
             self.data = data
             [self.scale, self.index, self.base] = addr
             self.disp = disp
@@ -285,7 +285,9 @@ let {{
             self.instFlags = ""
             if prefetch:
                 self.memFlags += " | Request::PREFETCH"
-                self.instFlags += " | StaticInst::IsDataPrefetch"
+                self.instFlags += " | (1ULL << StaticInst::IsDataPrefetch)"
+            if nonSpec:
+                self.instFlags += " | (1ULL << StaticInst::IsNonSpeculative)"
             self.memFlags += " | (machInst.legacy.addr ? " + \
                              "(AddrSizeFlagBit << FlagShift) : 0)"
 
@@ -306,7 +308,7 @@ let {{
 
     class BigLdStOp(X86Microop):
         def __init__(self, data, segment, addr, disp,
-                dataSize, addressSize, baseFlags, atCPL0, prefetch):
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec):
             self.data = data
             [self.scale, self.index, self.base] = addr
             self.disp = disp
@@ -316,8 +318,12 @@ let {{
             self.memFlags = baseFlags
             if atCPL0:
                 self.memFlags += " | (CPL0FlagBit << FlagShift)"
+            self.instFlags = ""
             if prefetch:
                 self.memFlags += " | Request::PREFETCH"
+                self.instFlags += " | (1ULL << StaticInst::IsDataPrefetch)"
+            if nonSpec:
+                self.instFlags += " | (1ULL << StaticInst::IsNonSpeculative)"
             self.memFlags += " | (machInst.legacy.addr ? " + \
                              "(AddrSizeFlagBit << FlagShift) : 0)"
 
@@ -335,7 +341,7 @@ let {{
             '''
             allocator = allocString % {
                 "class_name" : self.className,
-                "flags" : self.microFlagsText(microFlags),
+                "flags" : self.microFlagsText(microFlags) + self.instFlags,
                 "scale" : self.scale, "index" : self.index,
                 "base" : self.base,
                 "disp" : self.disp,
@@ -386,10 +392,10 @@ let {{
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
                     addressSize="env.addressSize",
-                    atCPL0=False, prefetch=False):
+                    atCPL0=False, prefetch=False, nonSpec=False):
                 super(LoadOp, self).__init__(data, segment, addr,
                         disp, dataSize, addressSize, mem_flags,
-                        atCPL0, prefetch)
+                        atCPL0, prefetch, nonSpec)
                 self.className = Name
                 self.mnemonic = name
 
@@ -430,9 +436,10 @@ let {{
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
                     addressSize="env.addressSize",
-                    atCPL0=False):
-                super(StoreOp, self).__init__(data, segment, addr,
-                        disp, dataSize, addressSize, mem_flags, atCPL0, False)
+                    atCPL0=False, nonSpec=False):
+                super(StoreOp, self).__init__(data, segment, addr, disp,
+                        dataSize, addressSize, mem_flags, atCPL0, False,
+                        nonSpec)
                 self.className = Name
                 self.mnemonic = name
 
@@ -456,8 +463,8 @@ let {{
     class LeaOp(LdStOp):
         def __init__(self, data, segment, addr, disp = 0,
                 dataSize="env.dataSize", addressSize="env.addressSize"):
-            super(LeaOp, self).__init__(data, segment,
-                    addr, disp, dataSize, addressSize, "0", False, False)
+            super(LeaOp, self).__init__(data, segment, addr, disp,
+                    dataSize, addressSize, "0", False, False, False)
             self.className = "Lea"
             self.mnemonic = "lea"
 
@@ -476,7 +483,8 @@ let {{
                 dataSize="env.dataSize",
                 addressSize="env.addressSize"):
             super(TiaOp, self).__init__("InstRegIndex(NUM_INTREGS)", segment,
-                    addr, disp, dataSize, addressSize, "0", False, False)
+                    addr, disp, dataSize, addressSize, "0", False, False,
+                    False)
             self.className = "Tia"
             self.mnemonic = "tia"
 
@@ -488,7 +496,7 @@ let {{
                 addressSize="env.addressSize", atCPL0=False):
             super(CdaOp, self).__init__("InstRegIndex(NUM_INTREGS)", segment,
                     addr, disp, dataSize, addressSize, "Request::NO_ACCESS",
-                    atCPL0, False)
+                    atCPL0, False, False)
             self.className = "Cda"
             self.mnemonic = "cda"
 
