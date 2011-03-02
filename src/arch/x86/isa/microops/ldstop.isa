@@ -282,8 +282,10 @@ let {{
             self.memFlags = baseFlags
             if atCPL0:
                 self.memFlags += " | (CPL0FlagBit << FlagShift)"
+            self.instFlags = ""
             if prefetch:
                 self.memFlags += " | Request::PREFETCH"
+                self.instFlags += " | StaticInst::IsDataPrefetch"
             self.memFlags += " | (machInst.legacy.addr ? " + \
                              "(AddrSizeFlagBit << FlagShift) : 0)"
 
@@ -293,7 +295,7 @@ let {{
                     %(disp)s, %(segment)s, %(data)s,
                     %(dataSize)s, %(addressSize)s, %(memFlags)s)''' % {
                 "class_name" : self.className,
-                "flags" : self.microFlagsText(microFlags),
+                "flags" : self.microFlagsText(microFlags) + self.instFlags,
                 "scale" : self.scale, "index" : self.index,
                 "base" : self.base,
                 "disp" : self.disp,
