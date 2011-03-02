@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Stephen Hines
  */
 
-#ifndef __ARCH_SPARC_MMAPED_IPR_HH__
-#define __ARCH_SPARC_MMAPED_IPR_HH__
+#ifndef __ARCH_ARM_MMAPPED_IPR_HH__
+#define __ARCH_ARM_MMAPPED_IPR_HH__
 
 /**
  * @file
@@ -37,36 +39,26 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "config/full_system.hh"
-#include "cpu/thread_context.hh"
+#include "base/misc.hh"
 #include "mem/packet.hh"
-#include "arch/sparc/tlb.hh"
 
+class ThreadContext;
 
-namespace SparcISA
+namespace ArmISA
 {
-
 inline Tick
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
-#if FULL_SYSTEM
-    return xc->getDTBPtr()->doMmuRegRead(xc, pkt);
-#else
-    panic("Shouldn't have a memory mapped register in SE\n");
-#endif
+    panic("No implementation for handleIprRead in ARM\n");
 }
 
 inline Tick
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
-#if FULL_SYSTEM
-    return xc->getDTBPtr()->doMmuRegWrite(xc, pkt);
-#else
-    panic("Shouldn't have a memory mapped register in SE\n");
-#endif
+    panic("No implementation for handleIprWrite in ARM\n");
 }
 
 
-} // namespace SparcISA
+} // namespace ArmISA
 
 #endif

@@ -28,8 +28,8 @@
  * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_ALPHA_MMAPED_IPR_HH__
-#define __ARCH_ALPHA_MMAPED_IPR_HH__
+#ifndef __ARCH_SPARC_MMAPPED_IPR_HH__
+#define __ARCH_SPARC_MMAPPED_IPR_HH__
 
 /**
  * @file
@@ -37,27 +37,36 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "base/types.hh"
+#include "config/full_system.hh"
+#include "cpu/thread_context.hh"
 #include "mem/packet.hh"
+#include "arch/sparc/tlb.hh"
 
-class ThreadContext;
 
-namespace AlphaISA {
+namespace SparcISA
+{
 
 inline Tick
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
-    panic("No handleIprRead implementation in Alpha\n");
+#if FULL_SYSTEM
+    return xc->getDTBPtr()->doMmuRegRead(xc, pkt);
+#else
+    panic("Shouldn't have a memory mapped register in SE\n");
+#endif
 }
-
 
 inline Tick
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
-    panic("No handleIprWrite implementation in Alpha\n");
+#if FULL_SYSTEM
+    return xc->getDTBPtr()->doMmuRegWrite(xc, pkt);
+#else
+    panic("Shouldn't have a memory mapped register in SE\n");
+#endif
 }
 
 
-} // namespace AlphaISA
+} // namespace SparcISA
 
-#endif // __ARCH_ALPHA_MMAPED_IPR_HH__
+#endif

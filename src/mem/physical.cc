@@ -548,7 +548,7 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
         fatal("Insufficient memory to allocate compression state for %s\n",
                 filename);
 
-    // unmap file that was mmaped in the constructor
+    // unmap file that was mmapped in the constructor
     // This is done here to make sure that gzip and open don't muck with our
     // nice large space of memory before we reallocate it
     munmap((char*)pmemAddr, size());

@@ -41,7 +41,7 @@
  */
 
 #include "arch/locked_mem.hh"
-#include "arch/mmaped_ipr.hh"
+#include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/bigint.hh"
 #include "config/the_isa.hh"
@@ -264,7 +264,7 @@ bool
 TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
 {
     RequestPtr req = pkt->req;
-    if (req->isMmapedIpr()) {
+    if (req->isMmappedIpr()) {
         Tick delay;
         delay = TheISA::handleIprRead(thread->getTC(), pkt);
         new IprEvent(pkt, this, nextCycle(curTick() + delay));
@@ -401,7 +401,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 {
     pkt1 = pkt2 = NULL;
 
-    assert(!req1->isMmapedIpr() && !req2->isMmapedIpr());
+    assert(!req1->isMmappedIpr() && !req2->isMmappedIpr());
 
     if (req->getFlags().isSet(Request::NO_ACCESS)) {
         buildPacket(pkt1, req, read);
@@ -536,7 +536,7 @@ bool
 TimingSimpleCPU::handleWritePacket()
 {
     RequestPtr req = dcache_pkt->req;
-    if (req->isMmapedIpr()) {
+    if (req->isMmappedIpr()) {
         Tick delay;
         delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
         new IprEvent(dcache_pkt, this, nextCycle(curTick() + delay));

@@ -179,7 +179,7 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
         panic("CPUID memory space not yet implemented!\n");
     } else if (prefix == IntAddrPrefixMSR) {
         vaddr = vaddr >> 3;
-        req->setFlags(Request::MMAPED_IPR);
+        req->setFlags(Request::MMAPPED_IPR);
         Addr regNum = 0;
         switch (vaddr & ~IntAddrPrefixMask) {
           case 0x10:
@@ -508,7 +508,7 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
         // space.
         assert(!(IOPort & ~0xFFFF));
         if (IOPort == 0xCF8 && req->getSize() == 4) {
-            req->setFlags(Request::MMAPED_IPR);
+            req->setFlags(Request::MMAPPED_IPR);
             req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(MiscReg));
         } else if ((IOPort & ~mask(2)) == 0xCFC) {
             req->setFlags(Request::UNCACHEABLE);

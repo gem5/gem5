@@ -29,7 +29,7 @@
  */
 
 #include "arch/locked_mem.hh"
-#include "arch/mmaped_ipr.hh"
+#include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/bigint.hh"
 #include "config/the_isa.hh"
@@ -334,7 +334,7 @@ AtomicSimpleCPU::readBytes(Addr addr, uint8_t * data,
                     Packet::Broadcast);
             pkt.dataStatic(data);
 
-            if (req->isMmapedIpr())
+            if (req->isMmappedIpr())
                 dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
             else {
                 if (hasPhysMemPort && pkt.getAddr() == physMemAddr)
@@ -501,7 +501,7 @@ AtomicSimpleCPU::writeBytes(uint8_t *data, unsigned size,
                 Packet pkt = Packet(req, cmd, Packet::Broadcast);
                 pkt.dataStatic(data);
 
-                if (req->isMmapedIpr()) {
+                if (req->isMmappedIpr()) {
                     dcache_latency +=
                         TheISA::handleIprWrite(thread->getTC(), &pkt);
                 } else {

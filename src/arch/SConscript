@@ -50,7 +50,7 @@ isa_switch_hdrs = Split('''
         kernel_stats.hh
         locked_mem.hh
         microcode_rom.hh
-        mmaped_ipr.hh
+        mmapped_ipr.hh
         mt.hh
         process.hh
         predecoder.hh

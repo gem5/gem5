@@ -70,7 +70,7 @@ class Request : public FastAlloc
     /** The request is to an uncacheable address. */
     static const FlagsType UNCACHEABLE                 = 0x00001000;
     /** This request is to a memory mapped register. */
-    static const FlagsType MMAPED_IPR                  = 0x00002000;
+    static const FlagsType MMAPPED_IPR                  = 0x00002000;
     /** This request is a clear exclusive. */
     static const FlagsType CLEAR_LL                    = 0x00004000;
 
@@ -453,7 +453,7 @@ class Request : public FastAlloc
     bool isLocked() const { return _flags.isSet(LOCKED); }
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
-    bool isMmapedIpr() const { return _flags.isSet(MMAPED_IPR); }
+    bool isMmappedIpr() const { return _flags.isSet(MMAPPED_IPR); }
     bool isClearLL() const { return _flags.isSet(CLEAR_LL); }
 };
 

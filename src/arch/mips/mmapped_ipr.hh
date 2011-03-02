@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,11 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
- *          Stephen Hines
  */
 
-#ifndef __ARCH_ARM_MMAPED_IPR_HH__
-#define __ARCH_ARM_MMAPED_IPR_HH__
+#ifndef __ARCH_MIPS_MMAPPED_IPR_HH__
+#define __ARCH_MIPS_MMAPPED_IPR_HH__
 
 /**
  * @file
@@ -44,21 +42,21 @@
 
 class ThreadContext;
 
-namespace ArmISA
+namespace MipsISA
 {
+
 inline Tick
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
-    panic("No implementation for handleIprRead in ARM\n");
+    panic("No implementation for handleIprRead in MIPS\n");
 }
 
 inline Tick
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
-    panic("No implementation for handleIprWrite in ARM\n");
+    panic("No implementation for handleIprWrite in MIPS\n");
 }
 
-
-} // namespace ArmISA
+} // namespace MipsISA
 
 #endif

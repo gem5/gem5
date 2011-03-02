@@ -28,8 +28,8 @@
  * Authors: Ali Saidi
  */
 
-#ifndef __ARCH_MIPS_MMAPED_IPR_HH__
-#define __ARCH_MIPS_MMAPED_IPR_HH__
+#ifndef __ARCH_ALPHA_MMAPPED_IPR_HH__
+#define __ARCH_ALPHA_MMAPPED_IPR_HH__
 
 /**
  * @file
@@ -37,26 +37,27 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
-#include "base/misc.hh"
+#include "base/types.hh"
 #include "mem/packet.hh"
 
 class ThreadContext;
 
-namespace MipsISA
-{
+namespace AlphaISA {
 
 inline Tick
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
-    panic("No implementation for handleIprRead in MIPS\n");
+    panic("No handleIprRead implementation in Alpha\n");
 }
+
 
 inline Tick
 handleIprWrite(ThreadContext *xc, Packet *pkt)
 {
-    panic("No implementation for handleIprWrite in MIPS\n");
+    panic("No handleIprWrite implementation in Alpha\n");
 }
 
-} // namespace MipsISA
 
-#endif
+} // namespace AlphaISA
+
+#endif // __ARCH_ALPHA_MMAPPED_IPR_HH__

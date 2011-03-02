@@ -37,8 +37,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_MMAPEDIPR_HH__
-#define __ARCH_X86_MMAPEDIPR_HH__
+#ifndef __ARCH_X86_MMAPPEDIPR_HH__
+#define __ARCH_X86_MMAPPEDIPR_HH__
 
 /**
  * @file
@@ -89,4 +89,4 @@ namespace X86ISA
     }
 };
 
-#endif // __ARCH_X86_MMAPEDIPR_HH__
+#endif // __ARCH_X86_MMAPPEDIPR_HH__

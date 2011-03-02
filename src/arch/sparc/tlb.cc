@@ -816,7 +816,7 @@ handleSparcErrorRegAccess:
 regAccessOk:
 handleMmuRegAccess:
     DPRINTF(TLB, "TLB: DTB Translating MM IPR access\n");
-    req->setFlags(Request::MMAPED_IPR);
+    req->setFlags(Request::MMAPPED_IPR);
     req->setPaddr(req->getVaddr());
     return NoFault;
 };

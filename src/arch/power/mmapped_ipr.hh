@@ -32,8 +32,8 @@
  *          Timothy M. Jones
  */
 
-#ifndef __ARCH_POWER_MMAPED_IPR_HH__
-#define __ARCH_POWER_MMAPED_IPR_HH__
+#ifndef __ARCH_POWER_MMAPPED_IPR_HH__
+#define __ARCH_POWER_MMAPPED_IPR_HH__
 
 /**
  * @file
@@ -63,4 +63,4 @@ handleIprWrite(ThreadContext *xc, Packet *pkt)
 
 } // namespace PowerISA
 
-#endif // __ARCH_POWER_MMAPED_IPR_HH__
+#endif // __ARCH_POWER_MMAPPED_IPR_HH__
