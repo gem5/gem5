@@ -291,7 +291,9 @@ format WarnUnimpl {
         //0x7: esc7();
         0x7: decode MODRM_REG {
             0x0: decode MODRM_MOD {
-                0x3: Inst::UD2();
+                // The ffreep instruction isn't entirely real. It should work
+                // the same as ffree but then also pop the register stack.
+                0x3: ffreep();
                 default: fild();
             }
             0x1: decode MODRM_MOD {
