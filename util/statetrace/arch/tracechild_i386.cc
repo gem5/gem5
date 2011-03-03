@@ -38,83 +38,86 @@
 using namespace std;
 
 char * I386TraceChild::regNames[numregs] = {
-                //GPRs
-                "eax", "ebx", "ecx", "edx",
-                //Index registers
-                "esi", "edi",
-                //Base pointer and stack pointer
-                "ebp", "esp",
-                //Segmentation registers
-                "cs", "ds", "es", "fs", "gs", "ss",
-                //PC
-                "eip"};
+    //GPRs
+    "eax", "ebx", "ecx", "edx",
+    //Index registers
+    "esi", "edi",
+    //Base pointer and stack pointer
+    "ebp", "esp",
+    //Segmentation registers
+    "cs", "ds", "es", "fs", "gs", "ss",
+    //PC
+    "eip"};
 
-int64_t I386TraceChild::getRegs(user_regs_struct & myregs, int num)
+int64_t
+I386TraceChild::getRegs(user_regs_struct & myregs, int num)
 {
-        assert(num < numregs && num >= 0);
-        switch(num)
-        {
-                //GPRs
-                case EAX: return myregs.eax;
-                case EBX: return myregs.ebx;
-                case ECX: return myregs.ecx;
-                case EDX: return myregs.edx;
-                //Index registers
-                case ESI: return myregs.esi;
-                case EDI: return myregs.edi;
-                //Base pointer and stack pointer
-                case EBP: return myregs.ebp;
-                case ESP: return myregs.esp;
-                //Segmentation registers
-                case CS: return myregs.cs;
-                case DS: return myregs.ds;
-                case ES: return myregs.es;
-                case FS: return myregs.fs;
-                case GS: return myregs.gs;
-                case SS: return myregs.ss;
-                //PC
-                case EIP: return myregs.eip;
-                default:
-                        assert(0);
-                        return 0;
-        }
+    assert(num < numregs && num >= 0);
+    switch (num) {
+      //GPRs
+      case EAX: return myregs.eax;
+      case EBX: return myregs.ebx;
+      case ECX: return myregs.ecx;
+      case EDX: return myregs.edx;
+      //Index registers
+      case ESI: return myregs.esi;
+      case EDI: return myregs.edi;
+      //Base pointer and stack pointer
+      case EBP: return myregs.ebp;
+      case ESP: return myregs.esp;
+      //Segmentation registers
+      case CS: return myregs.cs;
+      case DS: return myregs.ds;
+      case ES: return myregs.es;
+      case FS: return myregs.fs;
+      case GS: return myregs.gs;
+      case SS: return myregs.ss;
+      //PC
+      case EIP: return myregs.eip;
+      default:
+        assert(0);
+        return 0;
+    }
 }
 
-bool I386TraceChild::update(int pid)
+bool
+I386TraceChild::update(int pid)
 {
-        oldregs = regs;
-        if(ptrace(PTRACE_GETREGS, pid, 0, &regs) != 0)
-                return false;
-        for(unsigned int x = 0; x < numregs; x++)
-        {
-                regDiffSinceUpdate[x] =
-                        (getRegVal(x) != getOldRegVal(x));
-        }
+    oldregs = regs;
+    if (ptrace(PTRACE_GETREGS, pid, 0, &regs) != 0)
+        return false;
+    for (unsigned int x = 0; x < numregs; x++) {
+        regDiffSinceUpdate[x] = (getRegVal(x) != getOldRegVal(x));
+    }
 }
 
 I386TraceChild::I386TraceChild()
 {
-        for(unsigned int x = 0; x < numregs; x++)
-                regDiffSinceUpdate[x] = false;
+    for (unsigned int x = 0; x < numregs; x++)
+        regDiffSinceUpdate[x] = false;
 }
 
-int64_t I386TraceChild::getRegVal(int num)
+int64_t
+I386TraceChild::getRegVal(int num)
 {
-        return getRegs(regs, num);
+    return getRegs(regs, num);
 }
 
-int64_t I386TraceChild::getOldRegVal(int num)
+int64_t
+I386TraceChild::getOldRegVal(int num)
 {
-        return getRegs(oldregs, num);
+    return getRegs(oldregs, num);
 }
 
-char * I386TraceChild::printReg(int num)
+char *
+I386TraceChild::printReg(int num)
 {
-        sprintf(printBuffer, "0x%08X", getRegVal(num));
-        return printBuffer;
+    sprintf(printBuffer, "0x%08X", getRegVal(num));
+    return printBuffer;
 }
 
-TraceChild * genTraceChild()
+TraceChild *
+genTraceChild()
 {
-        return new I386TraceChild;
+    return new I386TraceChild;
 }

@@ -41,65 +41,69 @@
 
 class I386TraceChild : public TraceChild
 {
-public:
-        enum RegNum
-        {
-                //GPRs
-                EAX, EBX, ECX, EDX,
-                //Index registers
-                ESI, EDI,
-                //Base pointer and stack pointer
-                EBP, ESP,
-                //Segmentation registers
-                CS, DS, ES, FS, GS, SS,
-                //PC
-                EIP,
-                numregs
-        };
-private:
-        char printBuffer [256];
-        static char * regNames[numregs];
-        int64_t getRegs(user_regs_struct & myregs, int num);
-        user_regs_struct regs;
-        user_regs_struct oldregs;
-        bool regDiffSinceUpdate[numregs];
+  public:
+    enum RegNum
+    {
+        //GPRs
+        EAX, EBX, ECX, EDX,
+        //Index registers
+        ESI, EDI,
+        //Base pointer and stack pointer
+        EBP, ESP,
+        //Segmentation registers
+        CS, DS, ES, FS, GS, SS,
+        //PC
+        EIP,
+        numregs
+    };
+  private:
+    char printBuffer [256];
+    static char * regNames[numregs];
+    int64_t getRegs(user_regs_struct & myregs, int num);
+    user_regs_struct regs;
+    user_regs_struct oldregs;
+    bool regDiffSinceUpdate[numregs];
 
-protected:
-        bool update(int pid);
+  protected:
+    bool update(int pid);
 
-public:
+  public:
 
-        I386TraceChild();
+    I386TraceChild();
 
-        int getNumRegs()
-        {
-                return numregs;
-        }
+    int
+    getNumRegs()
+    {
+        return numregs;
+    }
 
-        bool diffSinceUpdate(int num)
-        {
-                assert(num < numregs && num >= 0);
-                return regDiffSinceUpdate[num];
-        }
+    bool
+    diffSinceUpdate(int num)
+    {
+        assert(num < numregs && num >= 0);
+        return regDiffSinceUpdate[num];
+    }
 
-        std::string getRegName(int num)
-        {
-                assert(num < numregs && num >= 0);
-                return regNames[num];
-        }
+    std::string
+    getRegName(int num)
+    {
+        assert(num < numregs && num >= 0);
+        return regNames[num];
+    }
 
-        int64_t getRegVal(int num);
-        int64_t getOldRegVal(int num);
-        uint64_t getPC() {return getRegVal(EIP);}
-        uint64_t getSP() {return getRegVal(ESP);}
-        std::ostream & outputStartState(std::ostream & output)
-        {
-            output << "Printing i386 initial state not yet implemented"
-                << std::endl;
-            return output;
-        }
+    int64_t getRegVal(int num);
+    int64_t getOldRegVal(int num);
+    uint64_t getPC() {return getRegVal(EIP);}
+    uint64_t getSP() {return getRegVal(ESP);}
+    std::ostream &
+    outputStartState(std::ostream & output)
+    {
+        output << "Printing i386 initial state not yet implemented"
+               << std::endl;
+        return output;
+    }
 
-        char * printReg(int num);
+    char * printReg(int num);
 };
 
 #endif

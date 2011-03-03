@@ -79,12 +79,14 @@ class RegPrinter : public PrinterObject
         PrinterObject(newChild), intRegNum(num)
     {;}
 
-    void regNum(int num)
+    void
+    regNum(int num)
     {
         intRegNum = num;
     }
 
-    int regNum()
+    int
+    regNum()
     {
         return intRegNum;
     }
@@ -94,14 +96,14 @@ class RegPrinter : public PrinterObject
     std::ostream & writeOut(std::ostream & os);
 };
 
-static inline std::ostream & operator << (std::ostream & os,
-        PrinterObject & printer)
+static inline std::ostream &
+operator << (std::ostream & os, PrinterObject & printer)
 {
     return printer.writeOut(os);
 }
 
-static inline std::ostream & operator << (std::ostream & os,
-        PrinterPointer & printer)
+static inline std::ostream &
+operator << (std::ostream & os, PrinterPointer & printer)
 {
     return printer->writeOut(os);
 }

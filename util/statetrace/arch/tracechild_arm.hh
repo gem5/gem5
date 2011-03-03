@@ -84,18 +84,21 @@ class ARMTraceChild : public TraceChild
     ARMTraceChild();
     bool sendState(int socket);
 
-    int getNumRegs()
+    int
+    getNumRegs()
     {
         return numregs;
     }
 
-    bool diffSinceUpdate(int num)
+    bool
+    diffSinceUpdate(int num)
     {
         assert(num < numregs && num >= 0);
         return regDiffSinceUpdate[num];
     }
 
-    std::string getRegName(int num)
+    std::string
+    getRegName(int num)
     {
         assert(num < numregs && num >= 0);
         return regNames[num];
@@ -106,14 +109,16 @@ class ARMTraceChild : public TraceChild
 
     bool step();
 
-    uint64_t getPC()
+    uint64_t
+    getPC()
     {
-            return getRegVal(PC);
+        return getRegVal(PC);
     }
 
-    uint64_t getSP()
+    uint64_t
+    getSP()
     {
-            return getRegVal(SP);
+        return getRegVal(SP);
     }
 
     char * printReg(int num);

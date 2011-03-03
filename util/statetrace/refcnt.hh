@@ -55,18 +55,21 @@ class RefCountingPtr
   protected:
     T *data;
 
-    void copy(T *d)
+    void
+    copy(T *d)
     {
         data = d;
         if (data)
             data->incref();
     }
-    void del()
+    void
+    del()
     {
         if (data)
             data->decref();
     }
-    void set(T *d)
+    void
+    set(T *d)
     {
         if (data == d)
             return;

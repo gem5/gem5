@@ -42,12 +42,13 @@ int findEndOfNestingPrinter(string, int);
 PrinterType findSub(string, int &, int &);
 
 //This is pretty easy. Just find the closing parenthesis.
-int findEndOfRegPrinter(string config, int startPos)
+int
+findEndOfRegPrinter(string config, int startPos)
 {
     int pos = config.find(")", startPos);
-    if(pos == string::npos)
-    {
-        cerr << "Couldn't find the closing parenthesis for a reg printer" << endl;
+    if (pos == string::npos) {
+        cerr << "Couldn't find the closing " <<
+            "parenthesis for a reg printer" << endl;
         return 0;
     }
     return pos;
@@ -55,32 +56,31 @@ int findEndOfRegPrinter(string config, int startPos)
 
 //This is a little harder. We need to make sure we don't
 //grab an ending parenthesis that belongs to the nesting printer.
-int findEndOfNestingPrinter(string config, int startPos)
+int
+findEndOfNestingPrinter(string config, int startPos)
 {
     int length = config.length();
     int pos = startPos;
     int endPos = length;
     int parenPos = config.find(")", pos);
     //If we didn't find an ending parenthesis at all, we're in trouble
-    if(parenPos == string::npos)
-    {
-        cerr << "Couldn't find the closing parenthesis for a nesting printer on the first try" << endl;
+    if (parenPos == string::npos) {
+        cerr << "Couldn't find the closing " <<
+            "parenthesis for a nesting printer on the first try" << endl;
         return 0;
     }
     //Keep pulling out embedded stuff until we can't any more
     //we need to make sure we aren't skipping over the parenthesis
     //that ends -this- printer.
     PrinterType type = findSub(config, pos, endPos);
-    if(type == PRINTER_ERROR)
+    if (type == PRINTER_ERROR)
         return 0;
-    while(type != PRINTER_NONE && endPos >= parenPos)
-    {
+    while (type != PRINTER_NONE && endPos >= parenPos) {
         //Find the next closest ending parenthesis since we passed
         //up the last one
         parenPos = config.find(")", endPos + 1);
         //If we didn't find one, we're in trouble
-        if(parenPos == string::npos)
-        {
+        if (parenPos == string::npos) {
             cerr << "Couldn't find the closing parenthesis for a nested printer on later tries" << endl;
             return 0;
         }
@@ -90,7 +90,7 @@ int findEndOfNestingPrinter(string config, int startPos)
         //Reset endPos so we search to the end of config
         endPos = length;
         type = findSub(config, pos, endPos);
-        if(type == PRINTER_ERROR)
+        if (type == PRINTER_ERROR)
             return 0;
     }
     //We ran out of embedded items, and we didn't pass up our last
@@ -103,7 +103,8 @@ int findEndOfNestingPrinter(string config, int startPos)
 //startPos and endPos are set to the beginning and end of the sub printer
 //On entry, the search starts at index startPos and ends at either index
 //endPos or a closing parenthesis, whichever comes first
-PrinterType findSub(string config, int & startPos, int & endPos)
+PrinterType
+findSub(string config, int & startPos, int & endPos)
 {
     int length = config.length();
     //Figure out where the different types of sub printers may start
@@ -111,28 +112,26 @@ PrinterType findSub(string config, int & startPos, int & endPos)
     int nestingPos = config.find("~(", startPos);
     //If a type of printer wasn't found, say it was found too far away.
     //This simplifies things later
-    if(regPos == string::npos)
+    if (regPos == string::npos)
         regPos = endPos;
-    if(nestingPos == string::npos)
+    if (nestingPos == string::npos)
         nestingPos = endPos;
     //If we find a closing paren, that marks the
     //end of the region we're searching.
     int closingPos = config.find(")", startPos);
-    if(closingPos != string::npos &&
+    if (closingPos != string::npos &&
             closingPos < regPos &&
             closingPos < nestingPos)
         return PRINTER_NONE;
     //If we didn't find anything close enough, say so.
-    if(regPos >= endPos && nestingPos >= endPos)
+    if (regPos >= endPos && nestingPos >= endPos)
         return PRINTER_NONE;
     //At this point, we know that one of the options starts legally
     //We need to find which one is first and return that
-    if(regPos < nestingPos)
-    {
+    if (regPos < nestingPos) {
         int regEnd = findEndOfRegPrinter(config, regPos + 2);
         //If we couldn't find the end...
-        if(!regEnd)
-        {
+        if (!regEnd) {
             cerr << "Couldn't find the end of the reg printer" << endl;
             return PRINTER_ERROR;
         }
@@ -140,13 +139,10 @@ PrinterType findSub(string config, int & startPos, int & endPos)
         startPos = regPos;
         endPos = regEnd;
         return PRINTER_REG;
-    }
-    else
-    {
+    } else {
         int nestingEnd = findEndOfNestingPrinter(config, nestingPos + 2);
         //If we couldn't find the end...
-        if(!nestingEnd)
-        {
+        if (!nestingEnd) {
             cerr << "Couldn't find the end of the nesting printer" << endl;
             return PRINTER_ERROR;
         }
@@ -159,7 +155,8 @@ PrinterType findSub(string config, int & startPos, int & endPos)
 }
 
 //Set up a nesting printer. This printer can contain sub printers
-bool NestingPrinter::configure(string config)
+bool
+NestingPrinter::configure(string config)
 {
     //Clear out any old stuff
     constStrings.clear();
@@ -170,14 +167,13 @@ bool NestingPrinter::configure(string config)
     int lastEndPos = -1;
     //Try to find a sub printer
     PrinterType type = findSub(config, startPos, endPos);
-    if(type == PRINTER_ERROR)
-    {
+    if (type == PRINTER_ERROR) {
         cerr << "Problem finding first sub printer" << endl;
         return false;
     }
-    while(type != PRINTER_NONE)
-    {
-        string prefix = config.substr(lastEndPos + 1, startPos - lastEndPos - 1);
+    while (type != PRINTER_NONE) {
+        string prefix = config.substr(lastEndPos + 1,
+                                      startPos - lastEndPos - 1);
         lastEndPos = endPos;
         constStrings.push_back(prefix);
         string subConfig, subString;
@@ -185,15 +181,13 @@ bool NestingPrinter::configure(string config)
         //Set up the register printer
         RegPrinter * regPrinter = new RegPrinter(child);
         NestingPrinter * nestingPrinter = new NestingPrinter(child);
-        switch(type)
-        {
+        switch (type) {
             //If we found a plain register printer
           case PRINTER_REG:
             numPrinters++;
             //Get the register name
             subConfig = config.substr(startPos + 2, endPos - startPos - 2);
-            if(!regPrinter->configure(subConfig))
-            {
+            if (!regPrinter->configure(subConfig)) {
                 delete regPrinter;
                 cerr << "Error configuring reg printer" << endl;
                 return false;
@@ -207,26 +201,23 @@ bool NestingPrinter::configure(string config)
             subConfig = config.substr(startPos + 2, endPos - startPos - 2);
             lastCommaPos = string::npos;
             commaPos = subConfig.find(",");
-            if(commaPos == string::npos)
+            if (commaPos == string::npos)
                 return false;
             childSwitchVar = child->getRegNum(subConfig.substr(0, commaPos));
-            if(childSwitchVar == -1)
-            {
+            if (childSwitchVar == -1) {
                 cerr << "Couldn't configure switching variable!" << endl;
                 return false;
             }
             //Eat up remaining arguments
-            while(commaPos != string::npos)
-            {
+            while (commaPos != string::npos) {
                 lastCommaPos = commaPos;
                 commaPos = subConfig.find(",", commaPos + 1);
             }
-            if(lastCommaPos != string::npos)
-            {
-                subConfig = subConfig.substr(lastCommaPos + 1, subConfig.length() - lastCommaPos - 1);
+            if (lastCommaPos != string::npos) {
+                subConfig = subConfig.substr(lastCommaPos + 1,
+                        subConfig.length() - lastCommaPos - 1);
             }
-            if(!nestingPrinter->configure(subConfig))
-            {
+            if (!nestingPrinter->configure(subConfig)) {
                 delete nestingPrinter;
                 cerr << "Error configuring nesting printer" << endl;
                 return false;
@@ -242,8 +233,7 @@ bool NestingPrinter::configure(string config)
         startPos = endPos + 1;
         endPos = length;
         type = findSub(config, startPos, endPos);
-        if(type == PRINTER_ERROR)
-        {
+        if (type == PRINTER_ERROR) {
             cerr << "Unable to find subprinters on later tries" << endl;
             return false;
         }
@@ -254,12 +244,12 @@ bool NestingPrinter::configure(string config)
     return true;
 }
 
-bool RegPrinter::configure(string config)
+bool
+RegPrinter::configure(string config)
 {
     //Figure out what our register number is based on the name we're given
     int num = child->getRegNum(config);
-    if(num == -1)
-    {
+    if (num == -1) {
         cerr << "Couldn't find register " << config << endl;
         return false;
     }
@@ -267,13 +257,12 @@ bool RegPrinter::configure(string config)
     return true;
 }
 
-ostream & NestingPrinter::writeOut(ostream & os)
+ostream &
+NestingPrinter::writeOut(ostream & os)
 {
-    if(switchVar == -1 || child->diffSinceUpdate(switchVar))
-    {
+    if (switchVar == -1 || child->diffSinceUpdate(switchVar)) {
         int x;
-        for(x = 0; x < numPrinters; x++)
-        {
+        for (x = 0; x < numPrinters; x++) {
             os << constStrings[x];
             os << printers[x];
         }
@@ -282,7 +271,8 @@ ostream & NestingPrinter::writeOut(ostream & os)
     return os;
 }
 
-ostream & RegPrinter::writeOut(ostream & os)
+ostream &
+RegPrinter::writeOut(ostream & os)
 {
     os << child->printReg(intRegNum);
     return os;

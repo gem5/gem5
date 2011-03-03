@@ -108,18 +108,21 @@ class AMD64TraceChild : public TraceChild
 
     bool sendState(int socket);
 
-    int getNumRegs()
+    int
+    getNumRegs()
     {
         return numregs;
     }
 
-    bool diffSinceUpdate(int num)
+    bool
+    diffSinceUpdate(int num)
     {
         assert(num < numregs && num >= 0);
         return regDiffSinceUpdate[num];
     }
 
-    std::string getRegName(int num)
+    std::string
+    getRegName(int num)
     {
         assert(num < numregs && num >= 0);
         return regNames[num];

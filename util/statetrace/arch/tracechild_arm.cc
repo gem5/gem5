@@ -68,7 +68,8 @@ ARMTraceChild::ARMTraceChild()
     }
 }
 
-bool ARMTraceChild::sendState(int socket)
+bool
+ARMTraceChild::sendState(int socket)
 {
     uint32_t regVal = 0;
     uint32_t message[numregs + 1];
@@ -98,43 +99,48 @@ bool ARMTraceChild::sendState(int socket)
     return true;
 }
 
-uint32_t ARMTraceChild::getRegs(user_regs &myregs, int num)
+uint32_t
+ARMTraceChild::getRegs(user_regs &myregs, int num)
 {
     assert(num < numregs && num >= 0);
     return myregs.uregs[num];
 }
 
-bool ARMTraceChild::update(int pid)
+bool
+ARMTraceChild::update(int pid)
 {
     oldregs = regs;
-    if(ptrace(PTRACE_GETREGS, pid, 0, &regs) != 0)
-    {
+    if (ptrace(PTRACE_GETREGS, pid, 0, &regs) != 0) {
         cerr << "update: " << strerror(errno) << endl;
         return false;
     }
 
-    for(unsigned int x = 0; x < numregs; x++)
+    for (unsigned int x = 0; x < numregs; x++)
         regDiffSinceUpdate[x] = (getRegVal(x) != getOldRegVal(x));
     return true;
 }
 
-int64_t ARMTraceChild::getRegVal(int num)
+int64_t
+ARMTraceChild::getRegVal(int num)
 {
-        return getRegs(regs, num);
+    return getRegs(regs, num);
 }
 
-int64_t ARMTraceChild::getOldRegVal(int num)
+int64_t
+ARMTraceChild::getOldRegVal(int num)
 {
-        return getRegs(oldregs,  num);
+    return getRegs(oldregs,  num);
 }
 
-char * ARMTraceChild::printReg(int num)
+char *
+ARMTraceChild::printReg(int num)
 {
-        sprintf(printBuffer, "0x%08X", (uint32_t)getRegVal(num));
-        return printBuffer;
+    sprintf(printBuffer, "0x%08X", (uint32_t)getRegVal(num));
+    return printBuffer;
 }
 
-ostream & ARMTraceChild::outputStartState(ostream & os)
+ostream &
+ARMTraceChild::outputStartState(ostream & os)
 {
     uint32_t sp = getSP();
     uint32_t pc = getPC();
@@ -154,8 +160,7 @@ ostream & ARMTraceChild::outputStartState(ostream & os)
     //Output argv pointers
     int argCount = 0;
     int32_t cargv;
-    do
-    {
+    do {
         cargv = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sprintf(obuf, "0x%08x: argv[%d] = 0x%08x\n",
                 sp, argCount++, cargv);
@@ -169,8 +174,7 @@ ostream & ARMTraceChild::outputStartState(ostream & os)
     //Output the envp pointers
     int envCount = 0;
     uint32_t cenvp;
-    do
-    {
+    do {
         cenvp = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sprintf(obuf, "0x%08x: envp[%d] = 0x%08x\n",
                 sp, envCount++, cenvp);
@@ -178,8 +182,7 @@ ostream & ARMTraceChild::outputStartState(ostream & os)
         sp += 4;
     } while(cenvp);
     uint32_t auxType, auxVal;
-    do
-    {
+    do {
         auxType = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         sp += 4;
         auxVal = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
@@ -193,16 +196,13 @@ ostream & ARMTraceChild::outputStartState(ostream & os)
     uint32_t buf;
     uint32_t currentStart = sp;
     bool clearedInitialPadding = false;
-    do
-    {
+    do {
         buf = ptrace(PTRACE_PEEKDATA, pid, sp, 0);
         char * cbuf = (char *)&buf;
-        for(int x = 0; x < sizeof(uint32_t); x++)
-        {
-            if(cbuf[x])
+        for (int x = 0; x < sizeof(uint32_t); x++) {
+            if (cbuf[x])
                 current += cbuf[x];
-            else
-            {
+            else {
                 sprintf(obuf, "0x%08x: \"%s\"\n",
                         currentStart, current.c_str());
                 os << obuf;
@@ -216,7 +216,8 @@ ostream & ARMTraceChild::outputStartState(ostream & os)
     return os;
 }
 
-bool ARMTraceChild::step()
+bool
+ARMTraceChild::step()
 {
     const uint32_t bkpt_inst = 0xe7f001f0;
 
@@ -258,7 +259,8 @@ bool ARMTraceChild::step()
 }
 
 
-TraceChild * genTraceChild()
+TraceChild *
+genTraceChild()
 {
     return new ARMTraceChild;
 }
