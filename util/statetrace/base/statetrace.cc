@@ -28,6 +28,8 @@
  * Authors: Gabe Black
  */
 
+#include "base/arch_check.h"
+
 #include <cstring>
 #include <errno.h>
 #include <fstream>

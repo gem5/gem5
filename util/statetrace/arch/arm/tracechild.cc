@@ -47,7 +47,7 @@
 #include <cstring>
 #include <cstdio>
 
-#include "tracechild_arm.hh"
+#include "arch/arm/tracechild.hh"
 
 using namespace std;
 

@@ -33,7 +33,7 @@
 #include <sys/ptrace.h>
 #include <stdint.h>
 
-#include "tracechild_sparc.hh"
+#include "arch/sparc/tracechild.hh"
 
 using namespace std;
 

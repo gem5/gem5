@@ -26,42 +26,14 @@
 #
 # Authors: Gabe Black
 
-Help('''
-To build a version of statetrace suitable to run on a particular ISA, use a
-target of the form build/<arch>/statetrace. For example, to build statetrace
-for ARM binaries, run:
-
-scons build/arm/statetrace
-
-You may need a cross compiler in order to build statetrace successfully. To
-specify an alternative compiler, set the CXX scons argument on the command
-line. The CXX environment variable is NOT considered when selecting the 
-compiler. To override the compiler for a particular target ISA, set the
-<arch>CXX scons argument. For example, to build both the AMD64 version and
-the ARM version at the same time using the system compiler for the AMD64
-version and a cross compiler for arm, your command line would look like the
-following:
-
-scons ARMCXX=arm-cross-g++ build/amd64/statetrace build/arm/statetrace
-
-After a successful build, the statetrace binary(binaries) will be located in
-the build/<arch>/ directories you specified on the command line.
-''')
-
-
-arches = 'amd64', 'arm', 'i386', 'sparc'
-
 import os
 
-main = Environment()
-main.SetOption('duplicate', 'soft-copy')
-main['CXXFLAGS'] = "-O3 -ggdb $_CPPINCFLAGS"
+Import('env', 'arch')
 
-main['CXX'] = ARGUMENTS.get('CXX', main['CXX'])
+env.Append(CPPPATH=Dir('.'))
 
-for arch in arches:
-    env = main.Clone()
-    env['CXX'] = ARGUMENTS.get(arch.upper() + 'CXX', env['CXX'])
-    env.Append(CPPFLAGS = '-D__STATETRACE_%s__' % arch.upper())
-    Export('env', 'arch')
-    env.SConscript('SConscript', variant_dir = os.path.join('build', arch))
+sources = [os.path.join('base', 'statetrace.cc'),
+           os.path.join('base', 'tracechild.cc'),
+           os.path.join('arch', arch, 'tracechild.cc')]
+objects = [env.Object(source) for source in sources]
+env.Program('statetrace', objects)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2006-2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,58 +28,35 @@
  * Authors: Gabe Black
  */
 
-#ifndef REGSTATE_I386_HH
-#define REGSTATE_I386_HH
+#ifndef TRACECHILD_HH
+#define TRACECHILD_HH
 
-#include <linux/user.h>
-#include <sys/types.h>
-#include <sys/ptrace.h>
-#include <cassert>
-#include <string>
+#include "base/regstate.hh"
 
-#include "tracechild.hh"
-
-class I386TraceChild : public TraceChild
+class TraceChild : public RegState
 {
-  public:
-    enum RegNum
-    {
-        //GPRs
-        EAX, EBX, ECX, EDX,
-        //Index registers
-        ESI, EDI,
-        //Base pointer and stack pointer
-        EBP, ESP,
-        //Segmentation registers
-        CS, DS, ES, FS, GS, SS,
-        //PC
-        EIP,
-        numregs
-    };
-  private:
-    int64_t getRegs(user_regs_struct & myregs, int num);
-    user_regs_struct regs;
-    user_regs_struct oldregs;
-    bool regDiffSinceUpdate[numregs];
-
   protected:
-    bool update(int pid);
-
+    int pid;
+    uint64_t instructions;
+    bool tracing;
   public:
-
-    I386TraceChild();
-
-    int64_t getRegVal(int num);
-    int64_t getOldRegVal(int num);
-    uint64_t getPC() {return getRegVal(EIP);}
-    uint64_t getSP() {return getRegVal(ESP);}
-    std::ostream &
-    outputStartState(std::ostream & output)
+    TraceChild() : tracing(false), instructions(0)
+    {;}
+    virtual bool sendState(int socket) = 0;
+    virtual bool startTracing(const char * pathToFile, char * const argv[]);
+    virtual bool stopTracing();
+    virtual bool step();
+    virtual std::ostream & outputStartState(std::ostream & os) = 0;
+    bool
+    isTracing()
     {
-        output << "Printing i386 initial state not yet implemented"
-               << std::endl;
-        return output;
+        return tracing;
     }
+  protected:
+    bool ptraceSingleStep();
+    bool doWait();
 };
+
+TraceChild * genTraceChild();
 
 #endif

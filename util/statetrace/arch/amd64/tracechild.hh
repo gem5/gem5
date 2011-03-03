@@ -37,7 +37,7 @@
 #include <cassert>
 #include <string>
 
-#include "tracechild.hh"
+#include "base/tracechild.hh"
 
 class AMD64TraceChild : public TraceChild
 {

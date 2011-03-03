@@ -33,7 +33,7 @@
 #include <sys/ptrace.h>
 #include <stdint.h>
 
-#include "tracechild_i386.hh"
+#include "arch/i386/tracechild.hh"
 
 using namespace std;
 

@@ -35,7 +35,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "tracechild_amd64.hh"
+#include "arch/amd64/tracechild.hh"
 
 using namespace std;
 
