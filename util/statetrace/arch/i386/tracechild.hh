@@ -31,7 +31,7 @@
 #ifndef REGSTATE_I386_HH
 #define REGSTATE_I386_HH
 
-#include <linux/user.h>
+#include <sys/user.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
 #include <cassert>

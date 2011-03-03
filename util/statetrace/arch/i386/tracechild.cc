@@ -54,12 +54,12 @@ I386TraceChild::getRegs(user_regs_struct & myregs, int num)
       case EBP: return myregs.ebp;
       case ESP: return myregs.esp;
       //Segmentation registers
-      case CS: return myregs.cs;
-      case DS: return myregs.ds;
-      case ES: return myregs.es;
-      case FS: return myregs.fs;
-      case GS: return myregs.gs;
-      case SS: return myregs.ss;
+      case CS: return myregs.xcs;
+      case DS: return myregs.xds;
+      case ES: return myregs.xes;
+      case FS: return myregs.xfs;
+      case GS: return myregs.xgs;
+      case SS: return myregs.xss;
       //PC
       case EIP: return myregs.eip;
       default:
