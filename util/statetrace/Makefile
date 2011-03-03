@@ -40,16 +40,14 @@ endef
 
 all: statetrace
 
-printer.o: printer.cc printer.hh tracechild.hh refcnt.hh regstate.hh
-	$(build-obj)
-statetrace.o: statetrace.cc printer.hh tracechild.hh refcnt.hh regstate.hh
+statetrace.o: statetrace.cc tracechild.hh regstate.hh
 	$(build-obj)
 tracechild.o: tracechild.cc tracechild.hh regstate.hh
 	$(build-obj)
-tracechild_arch.o: statetrace.cc printer.hh tracechild.hh refcnt.hh regstate.hh arch/tracechild_arm.hh arch/tracechild_arm.cc arch/tracechild_i386.hh arch/tracechild_i386.cc arch/tracechild_amd64.cc arch/tracechild_amd64.hh arch/tracechild_sparc.cc arch/tracechild_sparc.hh
+tracechild_arch.o: statetrace.cc tracechild.hh regstate.hh arch/tracechild_arm.hh arch/tracechild_arm.cc arch/tracechild_i386.hh arch/tracechild_i386.cc arch/tracechild_amd64.cc arch/tracechild_amd64.hh arch/tracechild_sparc.cc arch/tracechild_sparc.hh
 	$(build-obj)
 
-statetrace: printer.o statetrace.o tracechild.o tracechild_arch.o
+statetrace: statetrace.o tracechild.o tracechild_arch.o
 	$(final-link)
 
 clean:

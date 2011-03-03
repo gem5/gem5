@@ -42,7 +42,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "printer.hh"
 #include "tracechild.hh"
 
 using namespace std;
