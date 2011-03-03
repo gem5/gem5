@@ -49,7 +49,7 @@ the build/<arch>/ directories you specified on the command line.
 ''')
 
 
-arches = 'amd64', 'arm', 'i386', 'sparc'
+arches = 'amd64', 'arm', 'i686', 'sparc'
 
 import os
 

@@ -28,58 +28,77 @@
  * Authors: Gabe Black
  */
 
-#ifndef REGSTATE_I386_HH
-#define REGSTATE_I386_HH
-
-#include <sys/user.h>
-#include <sys/types.h>
+#include <iostream>
+#include <errno.h>
 #include <sys/ptrace.h>
-#include <cassert>
-#include <string>
+#include <stdint.h>
 
-#include "base/tracechild.hh"
+#include "arch/i686/tracechild.hh"
 
-class I386TraceChild : public TraceChild
+using namespace std;
+
+int64_t
+I686TraceChild::getRegs(user_regs_struct & myregs, int num)
 {
-  public:
-    enum RegNum
-    {
-        //GPRs
-        EAX, EBX, ECX, EDX,
-        //Index registers
-        ESI, EDI,
-        //Base pointer and stack pointer
-        EBP, ESP,
-        //Segmentation registers
-        CS, DS, ES, FS, GS, SS,
-        //PC
-        EIP,
-        numregs
-    };
-  private:
-    int64_t getRegs(user_regs_struct & myregs, int num);
-    user_regs_struct regs;
-    user_regs_struct oldregs;
-    bool regDiffSinceUpdate[numregs];
-
-  protected:
-    bool update(int pid);
-
-  public:
-
-    I386TraceChild();
-
-    int64_t getRegVal(int num);
-    int64_t getOldRegVal(int num);
-    uint64_t getPC() {return getRegVal(EIP);}
-    uint64_t getSP() {return getRegVal(ESP);}
-    std::ostream &
-    outputStartState(std::ostream & output)
-    {
-        output << "Printing i386 initial state not yet implemented"
-               << std::endl;
-        return output;
+    assert(num < numregs && num >= 0);
+    switch (num) {
+      //GPRs
+      case EAX: return myregs.eax;
+      case EBX: return myregs.ebx;
+      case ECX: return myregs.ecx;
+      case EDX: return myregs.edx;
+      //Index registers
+      case ESI: return myregs.esi;
+      case EDI: return myregs.edi;
+      //Base pointer and stack pointer
+      case EBP: return myregs.ebp;
+      case ESP: return myregs.esp;
+      //Segmentation registers
+      case CS: return myregs.xcs;
+      case DS: return myregs.xds;
+      case ES: return myregs.xes;
+      case FS: return myregs.xfs;
+      case GS: return myregs.xgs;
+      case SS: return myregs.xss;
+      //PC
+      case EIP: return myregs.eip;
+      default:
+        assert(0);
+        return 0;
     }
-};
+}
 
-#endif
+bool
+I686TraceChild::update(int pid)
+{
+    oldregs = regs;
+    if (ptrace(PTRACE_GETREGS, pid, 0, &regs) != 0)
+        return false;
+    for (unsigned int x = 0; x < numregs; x++) {
+        regDiffSinceUpdate[x] = (getRegVal(x) != getOldRegVal(x));
+    }
+}
+
+I686TraceChild::I686TraceChild()
+{
+    for (unsigned int x = 0; x < numregs; x++)
+        regDiffSinceUpdate[x] = false;
+}
+
+int64_t
+I686TraceChild::getRegVal(int num)
+{
+    return getRegs(regs, num);
+}
+
+int64_t
+I686TraceChild::getOldRegVal(int num)
+{
+    return getRegs(oldregs, num);
+}
+
+TraceChild *
+genTraceChild()
+{
+    return new I686TraceChild;
+}

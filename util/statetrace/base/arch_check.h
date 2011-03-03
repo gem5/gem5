@@ -44,10 +44,10 @@
     #if !defined __hppa__
         #error "Hppa toolchain required."
     #endif
-#elif defined __STATETRACE_I386__
+#elif defined __STATETRACE_I686__
     #if !(defined __i386__ || defined __i486__ || \
             defined __i586__ || defined __i686__)
-        #error "I386 toolchain required."
+        #error "I686 toolchain required."
     #endif
 #elif defined __STATETRACE_IA64__
     #if !defined __ia64__
