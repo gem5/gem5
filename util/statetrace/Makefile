@@ -26,7 +26,7 @@
 #
 # Authors: Gabe Black
 
-CXX      := g++
+CXX      ?= g++
 INCLUDES := -I ./ -I ./arch
 CXXFLAGS := -O3 -ggdb
 
