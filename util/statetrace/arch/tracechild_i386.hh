@@ -57,8 +57,6 @@ class I386TraceChild : public TraceChild
         numregs
     };
   private:
-    char printBuffer [256];
-    static char * regNames[numregs];
     int64_t getRegs(user_regs_struct & myregs, int num);
     user_regs_struct regs;
     user_regs_struct oldregs;
@@ -71,26 +69,6 @@ class I386TraceChild : public TraceChild
 
     I386TraceChild();
 
-    int
-    getNumRegs()
-    {
-        return numregs;
-    }
-
-    bool
-    diffSinceUpdate(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regDiffSinceUpdate[num];
-    }
-
-    std::string
-    getRegName(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regNames[num];
-    }
-
     int64_t getRegVal(int num);
     int64_t getOldRegVal(int num);
     uint64_t getPC() {return getRegVal(EIP);}
@@ -102,8 +80,6 @@ class I386TraceChild : public TraceChild
                << std::endl;
         return output;
     }
-
-    char * printReg(int num);
 };
 
 #endif

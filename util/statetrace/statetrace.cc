@@ -53,7 +53,6 @@ printUsage(const char * execName)
     cout << "options:" << endl;
     cout << "         -h          print this help" << endl;
     cout << "         --host      remote m5 host to connect to" << endl;
-    cout << "         -r          print register names" << endl;
     cout << "         -i          print initial stack state" << endl;
     cout << "         -nt         don't print an instruction trace" << endl;
 }
@@ -87,12 +86,6 @@ main(int argc, char * argv[], char * envp[])
                 return 1;
             }
             host = argv[x];
-        } else if (!strcmp(argv[x], "-r")) {
-            cout << "Legal register names:" << endl;
-            int numRegs = child->getNumRegs();
-            for (unsigned int x = 0; x < numRegs; x++)
-                cout << "\t" << child->getRegName(x) << endl;
-            return 0;
         } else if (!strcmp(argv[x], "-i")) {
             printInitial = true;
         } else if (!strcmp(argv[x], "-nt")) {

@@ -37,23 +37,6 @@
 
 using namespace std;
 
-string SparcTraceChild::regNames[numregs] = {
-    //Global registers
-    "g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7",
-    //Output registers
-    "o0", "o1", "o2", "o3", "o4", "o5", "o6", "o7",
-    //Local registers
-    "l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7",
-    //Input registers
-    "i0", "i1", "i2", "i3", "i4", "i5", "i6", "i7",
-    //Floating point
-    "f0", "f2", "f4", "f6", "f8", "f10", "f12", "f14",
-    "f16", "f18", "f20", "f22", "f24", "f26", "f28", "f30",
-    "f32", "f34", "f36", "f38", "f40", "f42", "f44", "f46",
-    "f48", "f50", "f52", "f54", "f56", "f58", "f60", "f62",
-    //Miscelaneous
-    "fsr", "fprs", "pc", "npc", "y", "cwp", "pstate", "asi", "ccr"};
-
 bool
 SparcTraceChild::sendState(int socket)
 {
@@ -383,13 +366,6 @@ int64_t
 SparcTraceChild::getOldRegVal(int num)
 {
     return getRegs(oldregs, oldfpregs, oldLocals, oldInputs, num);
-}
-
-char *
-SparcTraceChild::printReg(int num)
-{
-    sprintf(printBuffer, "0x%016llx", getRegVal(num));
-    return printBuffer;
 }
 
 ostream &

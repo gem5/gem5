@@ -39,44 +39,6 @@
 
 using namespace std;
 
-const char * AMD64TraceChild::regNames[numregs] = {
-    //GPRs
-    "rax", "rbx", "rcx", "rdx",
-    //Index registers
-    "rsi", "rdi",
-    //Base pointer and stack pointer
-    "rbp", "rsp",
-    //New 64 bit mode registers
-    "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
-    //Segmentation registers
-    "cs", "ds", "es", "fs", "gs", "ss", "fs_base", "gs_base",
-    //PC
-    "rip",
-    //Flags
-    "eflags",
-    //MMX
-    "mmx0_0", "mmx0_1", "mmx1_0", "mmx1_1",
-    "mmx2_0", "mmx2_1", "mmx3_0", "mmx3_1",
-    "mmx4_0", "mmx4_1", "mmx5_0", "mmx5_1",
-    "mmx6_0", "mmx6_1", "mmx7_0", "mmx7_1",
-    //XMM
-    "xmm0_0",  "xmm0_1",  "xmm0_2",  "xmm0_3",
-    "xmm1_0",  "xmm1_1",  "xmm1_2",  "xmm1_3",
-    "xmm2_0",  "xmm2_1",  "xmm2_2",  "xmm2_3",
-    "xmm3_0",  "xmm3_1",  "xmm3_2",  "xmm3_3",
-    "xmm4_0",  "xmm4_1",  "xmm4_2",  "xmm4_3",
-    "xmm5_0",  "xmm5_1",  "xmm5_2",  "xmm5_3",
-    "xmm6_0",  "xmm6_1",  "xmm6_2",  "xmm6_3",
-    "xmm7_0",  "xmm7_1",  "xmm7_2",  "xmm7_3",
-    "xmm8_0",  "xmm8_1",  "xmm8_2",  "xmm8_3",
-    "xmm9_0",  "xmm9_1",  "xmm9_2",  "xmm9_3",
-    "xmm10_0", "xmm10_1", "xmm10_2", "xmm10_3",
-    "xmm11_0", "xmm11_1", "xmm11_2", "xmm11_3",
-    "xmm12_0", "xmm12_1", "xmm12_2", "xmm12_3",
-    "xmm13_0", "xmm13_1", "xmm13_2", "xmm13_3",
-    "xmm14_0", "xmm14_1", "xmm14_2", "xmm14_3",
-    "xmm15_0", "xmm15_1", "xmm15_2", "xmm15_3"};
-
 bool
 AMD64TraceChild::sendState(int socket)
 {
@@ -276,13 +238,6 @@ int64_t
 AMD64TraceChild::getOldRegVal(int num)
 {
     return getRegs(oldregs, oldfpregs, num);
-}
-
-char *
-AMD64TraceChild::printReg(int num)
-{
-    sprintf(printBuffer, "0x%016lX", getRegVal(num));
-    return printBuffer;
 }
 
 ostream &

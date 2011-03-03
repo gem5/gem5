@@ -37,18 +37,6 @@
 
 using namespace std;
 
-char * I386TraceChild::regNames[numregs] = {
-    //GPRs
-    "eax", "ebx", "ecx", "edx",
-    //Index registers
-    "esi", "edi",
-    //Base pointer and stack pointer
-    "ebp", "esp",
-    //Segmentation registers
-    "cs", "ds", "es", "fs", "gs", "ss",
-    //PC
-    "eip"};
-
 int64_t
 I386TraceChild::getRegs(user_regs_struct & myregs, int num)
 {
@@ -107,13 +95,6 @@ int64_t
 I386TraceChild::getOldRegVal(int num)
 {
     return getRegs(oldregs, num);
-}
-
-char *
-I386TraceChild::printReg(int num)
-{
-    sprintf(printBuffer, "0x%08X", getRegVal(num));
-    return printBuffer;
 }
 
 TraceChild *

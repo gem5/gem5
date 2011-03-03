@@ -69,8 +69,6 @@ class ARMTraceChild : public TraceChild
         numregs
     };
   private:
-    char printBuffer[256];
-    static const char *regNames[numregs];
     uint32_t getRegs(user_regs& myregs, int num);
     user_regs regs;
     user_regs oldregs;
@@ -83,26 +81,6 @@ class ARMTraceChild : public TraceChild
   public:
     ARMTraceChild();
     bool sendState(int socket);
-
-    int
-    getNumRegs()
-    {
-        return numregs;
-    }
-
-    bool
-    diffSinceUpdate(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regDiffSinceUpdate[num];
-    }
-
-    std::string
-    getRegName(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regNames[num];
-    }
 
     int64_t getRegVal(int num);
     int64_t getOldRegVal(int num);
@@ -120,8 +98,6 @@ class ARMTraceChild : public TraceChild
     {
         return getRegVal(SP);
     }
-
-    char * printReg(int num);
 
     std::ostream & outputStartState(std::ostream & os);
 

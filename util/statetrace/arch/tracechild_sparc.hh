@@ -66,8 +66,6 @@ class SparcTraceChild : public TraceChild
         numregs
     };
   private:
-    char printBuffer[256];
-    static std::string regNames[numregs];
     regs theregs;
     regs oldregs;
     fpu thefpregs;
@@ -92,26 +90,6 @@ class SparcTraceChild : public TraceChild
 
     bool sendState(int socket);
 
-    int
-    getNumRegs()
-    {
-        return numregs;
-    }
-
-    bool
-    diffSinceUpdate(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regDiffSinceUpdate[num];
-    }
-
-    std::string
-    getRegName(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regNames[num];
-    }
-
     int64_t getRegVal(int num);
 
     int64_t getOldRegVal(int num);
@@ -129,8 +107,6 @@ class SparcTraceChild : public TraceChild
     {
         return getRegVal(O6);
     }
-
-    char * printReg(int num);
 
     std::ostream & outputStartState(std::ostream & os);
 };

@@ -51,12 +51,6 @@
 
 using namespace std;
 
-const char* ARMTraceChild::regNames[numregs] = {
-    "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
-    "r8", "r9", "r10", "fp", "r12", "sp", "lr", "pc",
-    "cpsr" };
-
-
 ARMTraceChild::ARMTraceChild()
 {
     foundMvn = false;
@@ -130,13 +124,6 @@ int64_t
 ARMTraceChild::getOldRegVal(int num)
 {
     return getRegs(oldregs,  num);
-}
-
-char *
-ARMTraceChild::printReg(int num)
-{
-    sprintf(printBuffer, "0x%08X", (uint32_t)getRegVal(num));
-    return printBuffer;
 }
 
 ostream &

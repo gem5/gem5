@@ -87,8 +87,6 @@ class AMD64TraceChild : public TraceChild
         numregs
     };
   private:
-    char printBuffer [256];
-    static const char * regNames[numregs];
     int64_t getRegs(user_regs_struct & myregs,
             user_fpregs_struct &myfpregs,int num);
     user_regs_struct regs;
@@ -108,33 +106,11 @@ class AMD64TraceChild : public TraceChild
 
     bool sendState(int socket);
 
-    int
-    getNumRegs()
-    {
-        return numregs;
-    }
-
-    bool
-    diffSinceUpdate(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regDiffSinceUpdate[num];
-    }
-
-    std::string
-    getRegName(int num)
-    {
-        assert(num < numregs && num >= 0);
-        return regNames[num];
-    }
-
     int64_t getRegVal(int num);
     int64_t getOldRegVal(int num);
     uint64_t getPC() {return getRegVal(RIP);}
     uint64_t getSP() {return getRegVal(RSP);}
     std::ostream & outputStartState(std::ostream & output);
-
-    char * printReg(int num);
 
     bool step();
 };

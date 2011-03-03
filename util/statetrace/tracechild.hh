@@ -46,14 +46,7 @@ class TraceChild : public RegState
     virtual bool startTracing(const char * pathToFile, char * const argv[]);
     virtual bool stopTracing();
     virtual bool step();
-    virtual uint64_t getPC() = 0;
-    virtual uint64_t getSP() = 0;
     virtual std::ostream & outputStartState(std::ostream & os) = 0;
-    int
-    getPid()
-    {
-        return pid;
-    }
     bool
     isTracing()
     {
