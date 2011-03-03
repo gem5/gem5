@@ -73,6 +73,7 @@ class I686TraceChild : public TraceChild
     int64_t getOldRegVal(int num);
     uint64_t getPC() {return getRegVal(EIP);}
     uint64_t getSP() {return getRegVal(ESP);}
+    bool sendState(int socket);
     std::ostream &
     outputStartState(std::ostream & output)
     {

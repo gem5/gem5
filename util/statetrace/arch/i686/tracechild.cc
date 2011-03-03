@@ -97,6 +97,12 @@ I686TraceChild::getOldRegVal(int num)
     return getRegs(oldregs, num);
 }
 
+bool
+I686TraceChild::sendState(int socket)
+{
+    return false;
+}
+
 TraceChild *
 genTraceChild()
 {
