@@ -56,7 +56,7 @@ printUsage(const char * execName)
     cout << "         -h          print this help" << endl;
     cout << "         --host      remote m5 host to connect to" << endl;
     cout << "         -i          print initial stack state" << endl;
-    cout << "         -nt         don't print an instruction trace" << endl;
+    cout << "         -nt         don't trace execution" << endl;
 }
 
 int
