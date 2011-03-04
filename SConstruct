@@ -239,7 +239,7 @@ if hgdir.exists():
     # 2) Ensure that the style hook is in place.
     try:
         ui = None
-        if GetOption('ignore_style'):
+        if not GetOption('ignore_style'):
             from mercurial import ui
             ui = ui.ui()
     except ImportError:
