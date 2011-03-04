@@ -50,7 +50,7 @@ all_protocols = [
     'MOESI_hammer',
     ]
 
-opt = EnumVariable('PROTOCOL', 'Coherence Protocol for Ruby', 'MI_example',
+opt = EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'MI_example',
                    all_protocols)
 
 sticky_vars.AddVariables(opt)

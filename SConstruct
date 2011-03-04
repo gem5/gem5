@@ -361,7 +361,7 @@ global_vars.AddVariables(
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),
-    ('EXTRAS', 'Add Extra directories to the compilation', '',
+    ('EXTRAS', 'Add extra directories to the compilation', '',
      PathListAllExist, PathListMakeAbsolute),
     )
 
