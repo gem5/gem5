@@ -178,7 +178,7 @@ printAction = env.Action(print_test, strfunction = None)
 # - long-winded message about ignored sources
 ignore_msg = '''
 Note: The following file(s) will not be copied.  New non-standard
-      output files must be copied manually once before update_ref will
+      output files must be copied manually once before --update-ref will
       recognize them as outputs.  Otherwise they are assumed to be
       inputs and are ignored.
 '''
@@ -251,7 +251,7 @@ def test_builder(env, ref_dir):
                 testAction)
 
     # phony target to echo status
-    if env['update_ref']:
+    if GetOption('update_ref'):
         p = env.Command(tgt('_update'),
                         [ref_stats, new_stats, status_file],
                         updateAction)

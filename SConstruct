@@ -121,10 +121,43 @@ sys.path[1:1] = extra_python_paths
 
 from m5.util import compareVersions, readCommand
 
-AddOption('--colors', dest='use_colors', action='store_true')
-AddOption('--no-colors', dest='use_colors', action='store_false')
-use_colors = GetOption('use_colors')
+help_texts = {
+    "options" : "",
+    "global_vars" : "",
+    "local_vars" : ""
+}
 
+Export("help_texts")
+
+def AddM5Option(*args, **kwargs):
+    col_width = 30
+
+    help = "  " + ", ".join(args)
+    if "help" in kwargs:
+        length = len(help)
+        if length >= col_width:
+            help += "\n" + " " * col_width
+        else:
+            help += " " * (col_width - length)
+        help += kwargs["help"]
+    help_texts["options"] += help + "\n"
+
+    AddOption(*args, **kwargs)
+
+AddM5Option('--colors', dest='use_colors', action='store_true',
+            help="Add color to abbreviated scons output")
+AddM5Option('--no-colors', dest='use_colors', action='store_false',
+            help="Don't add color to abbreviated scons output")
+AddM5Option('--default', dest='default', type='string', action='store',
+            help='Override which build_opts file to use for defaults')
+AddM5Option('--ignore-style', dest='ignore_style', action='store_true',
+            help='Disable style checking hooks')
+AddM5Option('--update-ref', dest='update_ref', action='store_true',
+            help='Update test reference outputs')
+AddM5Option('--verbose', dest='verbose', action='store_true',
+            help='Print full tool command lines')
+
+use_colors = GetOption('use_colors')
 if use_colors:
     from m5.util.terminal import termcap
 elif use_colors is None:
@@ -206,7 +239,7 @@ if hgdir.exists():
     # 2) Ensure that the style hook is in place.
     try:
         ui = None
-        if ARGUMENTS.get('IGNORE_STYLE') != 'True':
+        if GetOption('ignore_style'):
             from mercurial import ui
             ui = ui.ui()
     except ImportError:
@@ -318,12 +351,11 @@ def PathListAllExist(key, val, env):
         if not isdir(path):
             raise SCons.Errors.UserError("Path does not exist: '%s'" % path)
 
-global_sticky_vars_file = joinpath(build_root, 'variables.global')
+global_vars_file = joinpath(build_root, 'variables.global')
 
-global_sticky_vars = Variables(global_sticky_vars_file, args=ARGUMENTS)
-global_nonsticky_vars = Variables(args=ARGUMENTS)
+global_vars = Variables(global_vars_file, args=ARGUMENTS)
 
-global_sticky_vars.AddVariables(
+global_vars.AddVariables(
     ('CC', 'C compiler', environ.get('CC', main['CC'])),
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('BATCH', 'Use batch pool for build and tests', False),
@@ -333,31 +365,12 @@ global_sticky_vars.AddVariables(
      PathListAllExist, PathListMakeAbsolute),
     )
 
-global_nonsticky_vars.AddVariables(
-    ('VERBOSE', 'Print full tool command lines', False),
-    ('update_ref', 'Update test reference outputs', False)
-    )
-
-# Update main environment with values from ARGUMENTS & global_sticky_vars_file
-global_sticky_vars.Update(main)
-global_nonsticky_vars.Update(main)
-global_help_texts = {
-    "global_sticky" : global_sticky_vars.GenerateHelpText(main),
-    "global_nonsticky" : global_nonsticky_vars.GenerateHelpText(main)
-}
-
-# base help text
-help_text = '''
-Usage: scons [scons options] [build options] [target(s)]
-
-Global sticky options:
-%(global_sticky)s
-Global nonsticky options:
-%(global_nonsticky)s
-''' % global_help_texts
+# Update main environment with values from ARGUMENTS & global_vars_file
+global_vars.Update(main)
+help_texts["global_vars"] += global_vars.GenerateHelpText(main)
 
 # Save sticky variable settings back to current variables file
-global_sticky_vars.Save(global_sticky_vars_file, main)
+global_vars.Save(global_vars_file, main)
 
 # Parse EXTRAS variable to build list of all directories where we're
 # look for sources etc.  This list is exported as base_dir_list.
@@ -455,7 +468,7 @@ class Transform(object):
 Export('Transform')
 
 
-if main['VERBOSE']:
+if GetOption('verbose'):
     def MakeAction(action, string, *args, **kwargs):
         return Action(action, *args, **kwargs)
 else:
@@ -965,8 +978,10 @@ for variant_path in variant_paths:
         # Get default build variables from source tree.  Variables are
         # normally determined by name of $VARIANT_DIR, but can be
         # overriden by 'default=' arg on command line.
-        default_vars_file = joinpath('build_opts',
-                                     ARGUMENTS.get('default', variant_dir))
+        default = GetOption('default')
+        if not default:
+            default = variant_dir
+        default_vars_file = joinpath('build_opts', default)
         if isfile(default_vars_file):
             sticky_vars.files.append(default_vars_file)
             print "Variables file %s not found,\n  using defaults in %s" \
@@ -979,7 +994,8 @@ for variant_path in variant_paths:
     # Apply current variable settings to env
     sticky_vars.Update(env)
 
-    help_text += "\nSticky variables for %s:\n" % variant_dir \
+    help_texts["local_vars"] += \
+        "Build variables for %s:\n" % variant_dir \
                  + sticky_vars.GenerateHelpText(env)
 
     # Process variable settings.
@@ -1024,4 +1040,15 @@ for variant_path in variant_paths:
                    variant_dir = joinpath(variant_path, 'tests', e.Label),
                    exports = { 'env' : e }, duplicate = False)
 
-Help(help_text)
+# base help text
+Help('''
+Usage: scons [scons options] [build variables] [target(s)]
+
+Extra scons options:
+%(options)s
+
+Global build variables:
+%(global_vars)s
+
+%(local_vars)s
+''' % help_texts)
