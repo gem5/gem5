@@ -103,7 +103,7 @@ class ThreadInfo
     int32_t
     curTaskPID(Addr thread_info = 0)
     {
-        Addr offset;
+        int32_t offset;
         if (!get_data("task_struct_pid", offset))
             return -1;
 
@@ -116,7 +116,7 @@ class ThreadInfo
     int64_t
     curTaskStart(Addr thread_info = 0)
     {
-        Addr offset;
+        int32_t offset;
         if (!get_data("task_struct_start_time", offset))
             return -1;
 
