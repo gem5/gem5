@@ -227,16 +227,8 @@ If you are actually a M5 developer, please fix this and
 run the style hook. It is important.
 """
 
-hg_info = "Unknown"
 if hgdir.exists():
-    # 1) Grab repository revision if we know it.
-    cmd = "hg id -n -i -t -b"
-    try:
-        hg_info = readCommand(cmd, cwd=main.root.abspath).strip()
-    except OSError:
-        print mercurial_bin_not_found
-
-    # 2) Ensure that the style hook is in place.
+    # Ensure that the style hook is in place.
     try:
         ui = None
         if not GetOption('ignore_style'):
@@ -254,8 +246,6 @@ if hgdir.exists():
             sys.exit(1)
 else:
     print ".hg directory not found"
-
-main['HG_INFO'] = hg_info
 
 ###################################################
 #

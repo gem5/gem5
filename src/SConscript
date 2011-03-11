@@ -410,7 +410,7 @@ depends = [ PySource.modules[dep].snode for dep in module_depends ]
 # Generate Python file containing a dict specifying the current
 # buildEnv flags.
 def makeDefinesPyFile(target, source, env):
-    build_env, hg_info = [ x.get_contents() for x in source ]
+    build_env = source[0].get_contents()
 
     code = code_formatter()
     code("""
@@ -418,7 +418,6 @@ import m5.internal
 import m5.util
 
 buildEnv = m5.util.SmartDict($build_env)
-hgRev = '$hg_info'
 
 compileDate = m5.internal.core.compileDate
 _globals = globals()
@@ -430,7 +429,7 @@ del _globals
 """)
     code.write(target[0].abspath)
 
-defines_info = [ Value(build_env), Value(env['HG_INFO']) ]
+defines_info = Value(build_env)
 # Generate a file with all of the compile options in it
 env.Command('python/m5/defines.py', defines_info,
             MakeAction(makeDefinesPyFile, Transform("DEFINES", 0)))

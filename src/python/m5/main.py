@@ -177,7 +177,6 @@ def main():
         print 'Build information:'
         print
         print 'compiled %s' % defines.compileDate;
-        print "revision %s" % defines.hgRev
         print 'build options:'
         keys = defines.buildEnv.keys()
         keys.sort()
@@ -245,7 +244,6 @@ def main():
         print
 
         print "M5 compiled %s" % defines.compileDate;
-        print "M5 revision %s" % defines.hgRev
 
         print "M5 started %s" % datetime.datetime.now().strftime("%b %e %Y %X")
         print "M5 executing on %s" % socket.gethostname()
