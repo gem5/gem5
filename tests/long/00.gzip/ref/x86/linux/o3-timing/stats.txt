@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 123498                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 236748                       # Number of bytes of host memory used
-host_seconds                                 13129.74                       # Real time elapsed on the host
-host_tick_rate                               58357436                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 213906                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 226116                       # Number of bytes of host memory used
+host_seconds                                  7580.41                       # Real time elapsed on the host
+host_tick_rate                              101078599                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                  1621493982                       # Number of instructions simulated
 sim_seconds                                  0.766218                       # Number of seconds simulated
@@ -217,18 +217,18 @@ system.cpu.iew.EXEC:rate                     1.203312                       # In
 system.cpu.iew.EXEC:refs                    636104355                       # number of memory reference insts executed
 system.cpu.iew.EXEC:stores                  191312994                       # Number of stores executed
 system.cpu.iew.EXEC:swp                             0                       # number of swp insts executed
-system.cpu.iew.WB:consumers                2089450315                       # num instructions consuming a value
+system.cpu.iew.WB:consumers                2089450314                       # num instructions consuming a value
 system.cpu.iew.WB:count                    1839101566                       # cumulative count of insts written-back
 system.cpu.iew.WB:fanout                     0.684612                       # average fanout of values written-back
 system.cpu.iew.WB:penalized                         0                       # number of instrctions required to write to 'other' IQ
 system.cpu.iew.WB:penalized_rate                    0                       # fraction of instructions written-back that wrote to 'other' IQ
-system.cpu.iew.WB:producers                1430463261                       # num instructions producing a value
+system.cpu.iew.WB:producers                1430463260                       # num instructions producing a value
 system.cpu.iew.WB:rate                       1.200117                       # insts written-back per cycle
 system.cpu.iew.WB:sent                     1842290775                       # cumulative count of insts sent to commit
 system.cpu.iew.branchMispredicts              8145736                       # Number of branch mispredicts detected at execute
 system.cpu.iew.iewBlockCycles                 1415270                       # Number of cycles IEW is blocking
 system.cpu.iew.iewDispLoadInsts             617903270                       # Number of dispatched load instructions
-system.cpu.iew.iewDispNonSpecInsts                 78                       # Number of dispatched non-speculative instructions
+system.cpu.iew.iewDispNonSpecInsts                 79                       # Number of dispatched non-speculative instructions
 system.cpu.iew.iewDispSquashedInsts            633937                       # Number of squashed instructions skipped by dispatch
 system.cpu.iew.iewDispStoreInsts            251132554                       # Number of dispatched store instructions
 system.cpu.iew.iewDispatchedInsts          2351086206                       # Number of instructions dispatched to IQ
@@ -354,13 +354,13 @@ system.cpu.iq.int_alu_accesses             1833275779                       # Nu
 system.cpu.iq.int_inst_queue_reads         5248603279                       # Number of integer instruction queue reads
 system.cpu.iq.int_inst_queue_wakeup_accesses   1839101554                       # Number of integer instruction queue wakeup accesses
 system.cpu.iq.int_inst_queue_writes        3087460502                       # Number of integer instruction queue writes
-system.cpu.iq.iqInstsAdded                 2351086128                       # Number of instructions added to the IQ (excludes non-spec)
+system.cpu.iq.iqInstsAdded                 2351086127                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu.iq.iqInstsIssued                1855967255                       # Number of instructions issued
-system.cpu.iq.iqNonSpecInstsAdded                  78                       # Number of non-speculative instructions added to the IQ
+system.cpu.iq.iqNonSpecInstsAdded                  79                       # Number of non-speculative instructions added to the IQ
 system.cpu.iq.iqSquashedInstsExamined       729454588                       # Number of squashed instructions iterated over during squash; mainly for profiling
 system.cpu.iq.iqSquashedInstsIssued             86926                       # Number of squashed instructions issued
-system.cpu.iq.iqSquashedNonSpecRemoved             28                       # Number of squashed non-spec instructions that were removed
-system.cpu.iq.iqSquashedOperandsExamined   1543114171                       # Number of squashed operands that are examined and possibly removed from graph
+system.cpu.iq.iqSquashedNonSpecRemoved             29                       # Number of squashed non-spec instructions that were removed
+system.cpu.iq.iqSquashedOperandsExamined   1543114167                       # Number of squashed operands that are examined and possibly removed from graph
 system.cpu.l2cache.ReadExReq_accesses          250094                       # number of ReadExReq accesses(hits+misses)
 system.cpu.l2cache.ReadExReq_avg_miss_latency 34363.888228                       # average ReadExReq miss latency
 system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency 31092.455043                       # average ReadExReq mshr miss latency
@@ -430,7 +430,7 @@ system.cpu.l2cache.tagsinuse             18035.663781                       # Cy
 system.cpu.l2cache.total_refs                  455174                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                   58542                       # number of writebacks
-system.cpu.memDep0.conflictingLoads         537232404                       # Number of conflicting loads.
+system.cpu.memDep0.conflictingLoads         537232403                       # Number of conflicting loads.
 system.cpu.memDep0.conflictingStores        219207458                       # Number of conflicting stores.
 system.cpu.memDep0.insertedLoads            617903270                       # Number of loads inserted to the mem dependence unit.
 system.cpu.memDep0.insertedStores           251132554                       # Number of stores inserted to the mem dependence unit.
