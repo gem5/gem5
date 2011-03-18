@@ -822,8 +822,8 @@ sticky_vars.AddVariables(
                  sorted(n for n,m in CpuModel.dict.iteritems() if m.default),
                  sorted(CpuModel.list)),
     BoolVariable('NO_FAST_ALLOC', 'Disable fast object allocator', False),
-    BoolVariable('FAST_ALLOC_DEBUG', 'Enable fast object allocator debugging',
-                 False),
+    BoolVariable('FORCE_FAST_ALLOC',
+                 'Enable fast object allocator, even for m5.debug', False),
     BoolVariable('FAST_ALLOC_STATS', 'Enable fast object allocator statistics',
                  False),
     BoolVariable('EFENCE', 'Link with Electric Fence malloc debugger',
@@ -844,7 +844,7 @@ sticky_vars.AddVariables(
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['FULL_SYSTEM', 'USE_FENV', 'USE_MYSQL',
-                'NO_FAST_ALLOC', 'FAST_ALLOC_DEBUG', 'FAST_ALLOC_STATS',
+                'NO_FAST_ALLOC', 'FORCE_FAST_ALLOC', 'FAST_ALLOC_STATS',
                 'SS_COMPATIBLE_FP', 'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE',
                 'USE_POSIX_CLOCK' ]
 

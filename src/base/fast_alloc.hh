@@ -63,20 +63,24 @@
 // hierarchy.
 
 #include "config/no_fast_alloc.hh"
-#include "config/fast_alloc_debug.hh"
+#include "config/force_fast_alloc.hh"
 #include "config/fast_alloc_stats.hh"
 
-#if NO_FAST_ALLOC
+// By default, we want to enable FastAlloc in any build other than
+// m5.debug.  (FastAlloc's reuse policies can mask allocation bugs, so
+// we typically want it disabled when debugging.)  Set
+// FORCE_FAST_ALLOC to enable even when debugging, and set
+// NO_FAST_ALLOC to disable even in non-debug builds.
+#define USE_FAST_ALLOC \
+    (FORCE_FAST_ALLOC || (!defined(DEBUG) && !NO_FAST_ALLOC))
+
+#if !USE_FAST_ALLOC
 
 class FastAlloc
 {
 };
 
 #else
-
-#if FAST_ALLOC_DEBUG
-#include "base/types.hh"
-#endif
 
 class FastAlloc
 {
@@ -87,13 +91,7 @@ class FastAlloc
     void *operator new(size_t);
     void operator delete(void *, size_t);
 
-#if FAST_ALLOC_DEBUG
-    FastAlloc();
-    FastAlloc(FastAlloc *, FastAlloc *);   // for inUseHead, see below
-    virtual ~FastAlloc();
-#else
     virtual ~FastAlloc() {}
-#endif
 
   private:
 
@@ -124,25 +122,6 @@ class FastAlloc
     static unsigned newCount[Num_Buckets];
     static unsigned deleteCount[Num_Buckets];
     static unsigned allocCount[Num_Buckets];
-#endif
-
-#if FAST_ALLOC_DEBUG
-    // per-object debugging fields
-    bool inUse;                 // in-use flag
-    FastAlloc *inUsePrev;       // ptrs to build list of in-use objects
-    FastAlloc *inUseNext;
-    Tick whenAllocated;
-
-    // static (global) debugging vars
-    static int numInUse;        // count in-use objects
-    static FastAlloc inUseHead; // dummy head for list of in-use objects
-
-  public:
-    // functions to dump debugging info (see fast_alloc.cc for C
-    // versions that might be more agreeable to call from gdb)
-    static void dump_summary();
-    static void dump_oldest(int n);
-    static void dump_oldest_of_type(int n, const char *type_name);
 #endif
 };
 
@@ -206,6 +185,6 @@ FastAlloc::operator delete(void *p, size_t sz)
     deallocate(p, sz);
 }
 
-#endif // NO_FAST_ALLOC
+#endif // USE_FAST_ALLOC
 
 #endif // __BASE_FAST_ALLOC_HH__
