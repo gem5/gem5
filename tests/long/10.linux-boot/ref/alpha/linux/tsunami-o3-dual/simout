@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 01:46:17
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 01:46:32
-M5 executing on burrito
+M5 compiled Mar 15 2011 18:10:57
+M5 revision ee89694ad8dc 8081 default ext/mem_block_transfer_O3_regressions.patch tip qtip
+M5 started Mar 15 2011 18:10:59
+M5 executing on u200439-lin.austin.arm.com
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual -re tests/run.py build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3-dual
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/vmlinux
+info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 info: Launching CPU 1 @ 118370500
-Exiting @ tick 1900831034500 because m5_exit instruction encountered
+Exiting @ tick 1900831106500 because m5_exit instruction encountered
