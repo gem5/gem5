@@ -66,7 +66,7 @@ let {{
                              ["IsNonSpeculative", "IsQuiesce"])
     header_output += BasicDeclare.subst(quiesceIop)
     decoder_output += BasicConstructor.subst(quiesceIop)
-    exec_output += PredOpExecute.subst(quiesceIop)
+    exec_output += QuiescePredOpExecute.subst(quiesceIop)
 
     quiesceNsCode = '''
 #if FULL_SYSTEM
@@ -80,7 +80,7 @@ let {{
                              ["IsNonSpeculative", "IsQuiesce"])
     header_output += BasicDeclare.subst(quiesceNsIop)
     decoder_output += BasicConstructor.subst(quiesceNsIop)
-    exec_output += PredOpExecute.subst(quiesceNsIop)
+    exec_output += QuiescePredOpExecute.subst(quiesceNsIop)
 
     quiesceCyclesCode = '''
 #if FULL_SYSTEM
@@ -94,7 +94,7 @@ let {{
                              ["IsNonSpeculative", "IsQuiesce", "IsUnverifiable"])
     header_output += BasicDeclare.subst(quiesceCyclesIop)
     decoder_output += BasicConstructor.subst(quiesceCyclesIop)
-    exec_output += PredOpExecute.subst(quiesceCyclesIop)
+    exec_output += QuiescePredOpExecute.subst(quiesceCyclesIop)
 
     quiesceTimeCode = '''
 #if FULL_SYSTEM
