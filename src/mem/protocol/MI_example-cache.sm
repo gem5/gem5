@@ -61,7 +61,7 @@ machine(L1Cache, "MI Example L1 Cache")
     DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

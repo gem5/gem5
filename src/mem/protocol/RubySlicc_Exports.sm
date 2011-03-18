@@ -39,7 +39,7 @@ external_type(std::string, primitive="yes");
 external_type(uint64, primitive="yes");
 external_type(Time, primitive="yes", default="0");
 external_type(Address);
-external_type(DataBlock, desc="..."){
+structure(DataBlock, external = "yes", desc="..."){
   void clear();
   void copyPartial(DataBlock, int, int);
 }

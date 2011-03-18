@@ -40,7 +40,7 @@ external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
 
 external_type(OutPort, primitive="yes");
 
-external_type(InPort, primitive="yes") {
+structure(InPort, external = "yes", primitive="yes") {
   bool isReady();
   void dequeue();
   int dequeue_getDelayCycles();
@@ -53,7 +53,7 @@ external_type(MachineID);
 
 MessageBuffer getMandatoryQueue(int core_id);
 
-external_type(Set, non_obj="yes") {
+structure (Set, external = "yes", non_obj="yes") {
   void setSize(int);
   void add(NodeID);
   void addSet(Set);
@@ -70,7 +70,7 @@ external_type(Set, non_obj="yes") {
   NodeID smallestElement();
 }
 
-external_type(NetDest, non_obj="yes") {
+structure (NetDest, external = "yes", non_obj="yes") {
   void setSize(int);
   void setSize(int, int);
   void add(NodeID);
@@ -98,7 +98,7 @@ external_type(NetDest, non_obj="yes") {
   MachineID smallestElement(MachineType);
 }
 
-external_type(Sequencer) {
+structure (Sequencer, external = "yes") {
   void readCallback(Address, DataBlock);
   void readCallback(Address, GenericMachineType, DataBlock);
   void readCallback(Address, GenericMachineType, DataBlock, Time, Time, Time);
@@ -111,7 +111,7 @@ external_type(Sequencer) {
 
 external_type(AbstractEntry, primitive="yes");
 
-external_type(DirectoryMemory) {
+structure (DirectoryMemory, external = "yes") {
   AbstractEntry lookup(Address);
   bool isPresent(Address);
   void invalidateBlock(Address);
@@ -119,7 +119,7 @@ external_type(DirectoryMemory) {
 
 external_type(AbstractCacheEntry, primitive="yes");
 
-external_type(CacheMemory) {
+structure (CacheMemory, external = "yes") {
   bool cacheAvail(Address);
   Address cacheProbe(Address);
   AbstractCacheEntry allocate(Address, AbstractCacheEntry);
@@ -135,16 +135,16 @@ external_type(CacheMemory) {
   void setMRU(Address);
 }
 
-external_type(MemoryControl, inport="yes", outport="yes") {
+structure (MemoryControl, inport="yes", outport="yes", external = "yes") {
 
 }
 
-external_type(DMASequencer) {
+structure (DMASequencer, external = "yes") {
   void ackCallback();
   void dataCallback(DataBlock);
 }
 
-external_type(TimerTable, inport="yes") {
+structure (TimerTable, inport="yes", external = "yes") {
   bool isReady();
   Address readyAddress();
   void set(Address, int);
@@ -152,8 +152,7 @@ external_type(TimerTable, inport="yes") {
   bool isSet(Address);
 }
 
-external_type(GenericBloomFilter) {
-
+structure (GenericBloomFilter, external = "yes") {
   void clear(int);
   void increment(Address, int);
   void decrement(Address, int);
@@ -163,7 +162,3 @@ external_type(GenericBloomFilter) {
   bool isSet(Address, int);
   int getCount(Address, int);
 }
-
-
-
-

@@ -309,11 +309,6 @@ class SLICC(Grammar):
         p[4]["external"] = "yes"
         p[0] = ast.TypeDeclAST(self, p[3], p[4], [])
 
-    def p_decl__extern1(self, p):
-        "decl : EXTERN_TYPE '(' type pairs ')' '{' type_methods '}'"
-        p[4]["external"] = "yes"
-        p[0] = ast.TypeDeclAST(self, p[3], p[4], p[7])
-
     def p_decl__global(self, p):
         "decl : GLOBAL '(' type pairs ')' '{' type_members '}'"
         p[4]["global"] = "yes"
@@ -357,27 +352,18 @@ class SLICC(Grammar):
         "type_members : empty"
         p[0] = []
 
+    def p_type_method__0(self, p):
+        "type_member : type_or_void ident '(' types ')' pairs SEMI"
+        p[0] = ast.TypeFieldMethodAST(self, p[1], p[2], p[4], p[6])
+
     def p_type_member__1(self, p):
-        "type_member : type ident pairs SEMI"
+        "type_member : type_or_void ident pairs SEMI"
         p[0] = ast.TypeFieldMemberAST(self, p[1], p[2], p[3], None)
 
     def p_type_member__2(self, p):
-        "type_member : type ident ASSIGN expr SEMI"
+        "type_member : type_or_void ident ASSIGN expr SEMI"
         p[0] = ast.TypeFieldMemberAST(self, p[1], p[2],
                                       ast.PairListAST(self), p[4])
-
-    # Methods
-    def p_type_methods__list(self, p):
-        "type_methods : type_method type_methods"
-        p[0] = [ p[1] ] + p[2]
-
-    def p_type_methods(self, p):
-        "type_methods : empty"
-        p[0] = []
-
-    def p_type_method(self, p):
-        "type_method : type_or_void ident '(' types ')' pairs SEMI"
-        p[0] = ast.TypeFieldMethodAST(self, p[1], p[2], p[4], p[6])
 
     # Enum fields
     def p_type_enums__list(self, p):

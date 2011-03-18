@@ -109,7 +109,7 @@ machine(Directory, "Directory protocol")
     MachineID Requestor, desc="original requestor";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external = "yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

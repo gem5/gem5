@@ -127,14 +127,14 @@ machine(L2Cache, "Token protocol")
     bool exclusive, default="false", desc="if local exclusive is likely";
   }
 
-  external_type(PerfectCacheMemory) {
+  structure(PerfectCacheMemory, external="yes") {
     void allocate(Address);
     void deallocate(Address);
     DirEntry lookup(Address);
     bool isTagPresent(Address);
   }
 
-  external_type(PersistentTable) {
+  structure(PersistentTable, external="yes") {
     void persistentRequestLock(Address, MachineID, AccessType);
     void persistentRequestUnlock(Address, MachineID);
     MachineID findSmallest(Address);

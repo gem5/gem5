@@ -145,7 +145,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     Time FirstResponseTime, default="0", desc="the time the first response was received";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

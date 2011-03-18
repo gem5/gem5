@@ -127,7 +127,7 @@ machine(L1Cache, "Directory protocol")
     int NumPendingMsgs, default="0",     desc="Number of acks/data messages that this processor is waiting for";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external ="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

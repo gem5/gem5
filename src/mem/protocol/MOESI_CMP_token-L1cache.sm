@@ -153,14 +153,14 @@ machine(L1Cache, "Token protocol")
     PrefetchBit Prefetch,         desc="Is this a prefetch request";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);
     bool isPresent(Address);
   }
 
-  external_type(PersistentTable) {
+  structure(PersistentTable, external="yes") {
     void persistentRequestLock(Address, MachineID, AccessType);
     void persistentRequestUnlock(Address, MachineID);
     bool okToIssueStarving(Address, MachineID);

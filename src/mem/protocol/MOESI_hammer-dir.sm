@@ -162,7 +162,7 @@ machine(Directory, "AMD Hammer-like protocol")
     bool Owned, default="false", desc="Indicates whether a cache has indicated it is currently a sharer";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

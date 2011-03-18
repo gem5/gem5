@@ -95,7 +95,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     int Len,               desc="...";
   }
     
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);  
     void allocate(Address); 
     void deallocate(Address);

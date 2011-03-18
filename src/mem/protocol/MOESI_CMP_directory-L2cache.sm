@@ -203,14 +203,14 @@ machine(L2Cache, "Token protocol")
     MachineID Fwd_GetX_ID,          desc="ID of the L1 cache to forward the block to once we get a response";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external = "yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);
     bool isPresent(Address);
   }
 
-  external_type(PerfectCacheMemory) {
+  structure(PerfectCacheMemory, external = "yes") {
     void allocate(Address);
     void deallocate(Address);
     DirEntry lookup(Address);

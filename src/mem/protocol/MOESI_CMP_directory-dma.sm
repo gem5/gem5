@@ -34,12 +34,12 @@ machine(DMA, "DMA Controller")
     DataBlock DataBlk, desc="Data";
   }
 
-  external_type(DMASequencer) {
+  structure(DMASequencer, external = "yes") {
     void ackCallback();
     void dataCallback(DataBlock);
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external = "yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

@@ -122,7 +122,7 @@ machine(Directory, "Token protocol")
     Set Sharers,                   desc="Probable sharers of the line.  More accurately, the set of processors who need to see a GetX";
   }
 
-  external_type(PersistentTable) {
+  structure(PersistentTable, external="yes") {
     void persistentRequestLock(Address, MachineID, AccessType);
     void persistentRequestUnlock(Address, MachineID);
     bool okToIssueStarving(Address, MachineID);
@@ -145,7 +145,7 @@ machine(Directory, "Token protocol")
     bool WentPersistent,   desc="Did the DMA request require a persistent request";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

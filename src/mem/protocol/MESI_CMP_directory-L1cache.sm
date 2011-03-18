@@ -119,7 +119,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     int pendingAcks, default="0", desc="number of pending acks";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

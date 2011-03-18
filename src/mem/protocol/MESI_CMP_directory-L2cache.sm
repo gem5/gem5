@@ -145,7 +145,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     int pendingAcks,            desc="number of pending acks for invalidates during writeback";
   }
 
-  external_type(TBETable) {
+  structure(TBETable, external="yes") {
     TBE lookup(Address);
     void allocate(Address);
     void deallocate(Address);

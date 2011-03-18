@@ -48,7 +48,7 @@ machine(DMA, "DMA Controller")
     Ack,          desc="DMA write to memory completed";
   }
 
-  external_type(DMASequencer) {
+  structure(DMASequencer, external="yes") {
     void ackCallback();
     void dataCallback(DataBlock);
   }
