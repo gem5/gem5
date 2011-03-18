@@ -276,7 +276,8 @@ if env['FULL_SYSTEM']:
                     't1000-simple-timing']
     if env['TARGET_ISA'] == 'arm':
         configs += ['realview-simple-atomic',
-                    'realview-simple-timing']
+                    'realview-simple-timing',
+                    'realview-o3']
     if env['TARGET_ISA'] == 'x86':
         configs += ['pc-simple-atomic',
                     'pc-simple-timing']
