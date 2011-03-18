@@ -51,7 +51,7 @@ let {{
     microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
                                    'MicroMemOp',
                                    {'memacc_code': microLdrUopCode,
-                                    'ea_code': 'EA = Rb + (up ? imm : -imm);',
+                                    'ea_code': 'EA = URb + (up ? imm : -imm);',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
@@ -60,7 +60,7 @@ let {{
                                       'MicroMemOp',
                                       {'memacc_code': microLdrFpUopCode,
                                        'ea_code': vfpEnabledCheckCode +
-                                           'EA = Rb + (up ? imm : -imm);',
+                                           'EA = URb + (up ? imm : -imm);',
                                        'predicate_test': predicateTest},
                                       ['IsMicroop'])
 
@@ -69,7 +69,7 @@ let {{
                                       'MicroMemOp',
                                       {'memacc_code': microLdrFpUopCode,
                                        'ea_code': vfpEnabledCheckCode + '''
-                                        EA = Rb + (up ? imm : -imm) +
+                                        EA = URb + (up ? imm : -imm) +
                                              (((CPSR)Cpsr).e ? 4 : 0);
                                         ''',
                                        'predicate_test': predicateTest},
@@ -80,7 +80,7 @@ let {{
                                       'MicroMemOp',
                                       {'memacc_code': microLdrFpUopCode,
                                        'ea_code': vfpEnabledCheckCode + '''
-                                        EA = Rb + (up ? imm : -imm) -
+                                        EA = URb + (up ? imm : -imm) -
                                              (((CPSR)Cpsr).e ? 4 : 0);
                                         ''',
                                        'predicate_test': predicateTest},
@@ -101,16 +101,16 @@ let {{
                                       'MicroMemOp',
                                       {'memacc_code': microLdrRetUopCode,
                                        'ea_code':
-                                          'EA = Rb + (up ? imm : -imm);',
+                                          'EA = URb + (up ? imm : -imm);',
                                        'predicate_test': condPredicateTest},
                                       ['IsMicroop','IsNonSpeculative','IsSerializeAfter'])
 
-    microStrUopCode = "Mem = cSwap(Ra.uw, ((CPSR)Cpsr).e);"
+    microStrUopCode = "Mem = cSwap(URa.uw, ((CPSR)Cpsr).e);"
     microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
                                    'MicroMemOp',
                                    {'memacc_code': microStrUopCode,
                                     'postacc_code': "",
-                                    'ea_code': 'EA = Rb + (up ? imm : -imm);',
+                                    'ea_code': 'EA = URb + (up ? imm : -imm);',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
@@ -120,7 +120,7 @@ let {{
                                      {'memacc_code': microStrFpUopCode,
                                       'postacc_code': "",
                                       'ea_code': vfpEnabledCheckCode +
-                                           'EA = Rb + (up ? imm : -imm);',
+                                           'EA = URb + (up ? imm : -imm);',
                                       'predicate_test': predicateTest},
                                      ['IsMicroop'])
 
@@ -130,7 +130,7 @@ let {{
                                        {'memacc_code': microStrFpUopCode,
                                         'postacc_code': "",
                                         'ea_code': vfpEnabledCheckCode + '''
-                                         EA = Rb + (up ? imm : -imm) +
+                                         EA = URb + (up ? imm : -imm) +
                                               (((CPSR)Cpsr).e ? 4 : 0);
                                          ''',
                                         'predicate_test': predicateTest},
@@ -142,7 +142,7 @@ let {{
                                        {'memacc_code': microStrFpUopCode,
                                         'postacc_code': "",
                                         'ea_code': vfpEnabledCheckCode + '''
-                                         EA = Rb + (up ? imm : -imm) -
+                                         EA = URb + (up ? imm : -imm) -
                                               (((CPSR)Cpsr).e ? 4 : 0);
                                          ''',
                                         'predicate_test': predicateTest},
@@ -170,7 +170,7 @@ let {{
 let {{
     exec_output = header_output = ''
 
-    eaCode = 'EA = Ra + imm;'
+    eaCode = 'EA = URa + imm;'
 
     for size in (1, 2, 3, 4, 6, 8, 12, 16):
         # Set up the memory access.
@@ -572,14 +572,14 @@ let {{
 let {{
     microAddiUopIop = InstObjParams('addi_uop', 'MicroAddiUop',
                                     'MicroIntImmOp',
-                                    {'code': 'Ra = Rb + imm;',
+                                    {'code': 'URa = URb + imm;',
                                      'predicate_test': predicateTest},
                                     ['IsMicroop'])
 
     microAddUopIop = InstObjParams('add_uop', 'MicroAddUop',
                                    'MicroIntRegOp',
                                    {'code':
-                                    '''Ra = Rb + shift_rm_imm(Rc, shiftAmt,
+                                    '''URa = URb + shift_rm_imm(URc, shiftAmt,
                                                               shiftType,
                                                               CondCodes<29:>);
                                     ''',
@@ -588,14 +588,14 @@ let {{
 
     microSubiUopIop = InstObjParams('subi_uop', 'MicroSubiUop',
                                     'MicroIntImmOp',
-                                    {'code': 'Ra = Rb - imm;',
+                                    {'code': 'URa = URb - imm;',
                                      'predicate_test': predicateTest},
                                     ['IsMicroop'])
 
     microSubUopIop = InstObjParams('sub_uop', 'MicroSubUop',
                                    'MicroIntRegOp',
                                    {'code':
-                                    '''Ra = Rb - shift_rm_imm(Rc, shiftAmt,
+                                    '''URa = URb - shift_rm_imm(URc, shiftAmt,
                                                               shiftType,
                                                               CondCodes<29:>);
                                     ''',
@@ -604,7 +604,7 @@ let {{
 
     microUopRegMovIop = InstObjParams('uopReg_uop', 'MicroUopRegMov',
                                    'MicroIntMov',
-                                   {'code': 'IWRa = Rb;',
+                                   {'code': 'IWRa = URb;',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 

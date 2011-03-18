@@ -228,11 +228,11 @@ def operands {{
     'SevMailbox': cntrlRegNC('MISCREG_SEV_MAILBOX'),
 
     #Register fields for microops
-    'Ra' : intReg('ura'),
+    'URa' : intReg('ura'),
     'IWRa' : intRegIWPC('ura'),
     'Fa' : floatReg('ura'),
-    'Rb' : intReg('urb'),
-    'Rc' : intReg('urc'),
+    'URb' : intReg('urb'),
+    'URc' : intReg('urc'),
 
     #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), srtNormal),
