@@ -187,6 +187,8 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
 /// trace flag is enabled.  Return success to the target program.
 SyscallReturn ignoreFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
+SyscallReturn ignoreWarnOnceFunc(SyscallDesc *desc, int num,
+                         LiveProcess *p, ThreadContext *tc);
 
 /// Target exit() handler: terminate current context.
 SyscallReturn exitFunc(SyscallDesc *desc, int num,
