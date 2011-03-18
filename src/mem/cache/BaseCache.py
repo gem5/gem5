@@ -48,6 +48,7 @@ class BaseCache(MemObject):
     size = Param.MemorySize("capacity in bytes")
     forward_snoops = Param.Bool(True,
         "forward snoops from mem side to cpu side")
+    is_top_level = Param.Bool(False, "Is this cache at the top level (e.g. L1)")
     subblock_size = Param.Int(0,
         "Size of subblock in IIC used for compression")
     tgts_per_mshr = Param.Int("max number of accesses per MSHR")

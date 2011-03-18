@@ -38,6 +38,7 @@ class L1(BaseCache):
     block_size = 64
     mshrs = 12
     tgts_per_mshr = 8
+    is_top_level = True
 
 # ----------------------
 # Base L2 Cache

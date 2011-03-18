@@ -37,8 +37,12 @@ class MyCache(BaseCache):
     mshrs = 10
     tgts_per_mshr = 5
 
+class MyL1Cache(MyCache):
+    is_top_level = True
+
 cpu = InOrderCPU(cpu_id=0)
-cpu.addTwoLevelCacheHierarchy(MyCache(size = '128kB'), MyCache(size = '256kB'),
+cpu.addTwoLevelCacheHierarchy(MyL1Cache(size = '128kB'),
+                              MyL1Cache(size = '256kB'),
                               MyCache(size = '2MB', latency='10ns'))
 
 cpu.clock = '2GHz'

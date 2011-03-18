@@ -112,6 +112,9 @@ DefaultFetch<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {
     DPRINTF(Fetch, "Received timing\n");
     if (pkt->isResponse()) {
+        // We shouldn't ever get a block in ownership state
+        assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+
         fetch->processCacheCompletion(pkt);
     }
     //else Snooped a coherence request, just return

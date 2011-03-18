@@ -216,7 +216,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                 
                 if (blk->isDirty()) {
                     // special considerations if we're owner:
-                    if (!deferred_response) {
+                    if (!deferred_response && !isTopLevel) {
                         // if we are responding immediately and can
                         // signal that we're transferring ownership
                         // along with exclusivity, do so

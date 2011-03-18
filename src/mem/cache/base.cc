@@ -58,6 +58,7 @@ BaseCache::BaseCache(const Params *p)
       hitLatency(p->latency),
       numTarget(p->tgts_per_mshr),
       forwardSnoops(p->forward_snoops),
+      isTopLevel(p->is_top_level),
       blocked(0),
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
