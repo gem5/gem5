@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 21 2011 14:34:16
-M5 revision b06fecbc6572 7972 default qtip tip ext/print_mem_more.patch
-M5 started Feb 21 2011 15:43:32
+M5 compiled Feb 22 2011 10:22:27
+M5 revision c70e4f3301ed 7980 default ext/rfe_stats_updates.patch qtip tip
+M5 started Feb 22 2011 10:22:49
 M5 executing on u200439-lin.austin.arm.com
-command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/long/20.parser/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/long/20.parser/arm/linux/o3-timing
+command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/20.parser/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/long/20.parser/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -72,4 +72,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 365986074500 because target called exit()
+Exiting @ tick 365986112500 because target called exit()

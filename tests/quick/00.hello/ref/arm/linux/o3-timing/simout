@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 23 2011 14:37:21
-M5 revision bc7f8168ee84 7973 default ext/update_regressions.patch qtip tip
-M5 started Feb 23 2011 14:37:24
+M5 compiled Feb 22 2011 10:22:27
+M5 revision c70e4f3301ed 7980 default ext/rfe_stats_updates.patch qtip tip
+M5 started Feb 22 2011 11:23:21
 M5 executing on u200439-lin.austin.arm.com
-command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/quick/00.hello/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/quick/00.hello/arm/linux/o3-timing
+command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/quick/00.hello/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/quick/00.hello/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  84615                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 256696                       # Number of bytes of host memory used
-host_seconds                                  7097.77                       # Real time elapsed on the host
-host_tick_rate                               30571310                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 123576                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 255024                       # Number of bytes of host memory used
+host_seconds                                  4860.01                       # Real time elapsed on the host
+host_tick_rate                               44647688                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   600581343                       # Number of instructions simulated
 sim_seconds                                  0.216988                       # Number of seconds simulated
@@ -119,9 +119,9 @@ system.cpu.dcache.tagsinuse               4094.932523                       # Cy
 system.cpu.dcache.total_refs                208054728                       # Total number of references to valid blocks.
 system.cpu.dcache.warmup_cycle               90723000                       # Cycle when the warmup percentage was hit.
 system.cpu.dcache.writebacks                   394050                       # number of writebacks
-system.cpu.decode.DECODE:BlockedCycles       84141897                       # Number of cycles decode is blocked
-system.cpu.decode.DECODE:DecodedInsts       763381678                       # Number of instructions handled by decode
-system.cpu.decode.DECODE:IdleCycles         172755507                       # Number of cycles decode is idle
+system.cpu.decode.DECODE:BlockedCycles       84141899                       # Number of cycles decode is blocked
+system.cpu.decode.DECODE:DecodedInsts       763381679                       # Number of instructions handled by decode
+system.cpu.decode.DECODE:IdleCycles         172755505                       # Number of cycles decode is idle
 system.cpu.decode.DECODE:RunCycles          145178933                       # Number of cycles decode is running
 system.cpu.decode.DECODE:SquashCycles        17467706                       # Number of cycles decode is squashing
 system.cpu.decode.DECODE:UnblockCycles       13550939                       # Number of cycles decode is unblocking
@@ -165,8 +165,8 @@ system.cpu.fetch.rateDist::0                271374463     62.66%     62.66% # Nu
 system.cpu.fetch.rateDist::1                 26620223      6.15%     68.81% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::2                 18536414      4.28%     73.09% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::3                 23464508      5.42%     78.50% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::4                 11465886      2.65%     81.15% # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::5                 12676535      2.93%     84.08% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::4                 11465885      2.65%     81.15% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::5                 12676536      2.93%     84.08% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::6                  5122176      1.18%     85.26% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::7                  7816549      1.80%     87.07% # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::8                 56018228     12.93%    100.00% # Number of instructions fetched each cycle (Total)
@@ -492,22 +492,22 @@ system.cpu.numWorkItemsStarted                      0                       # nu
 system.cpu.rename.RENAME:BlockCycles         12394449                       # Number of cycles rename is blocking
 system.cpu.rename.RENAME:CommittedMaps      469246940                       # Number of HB maps that are committed
 system.cpu.rename.RENAME:IQFullEvents        63310870                       # Number of times rename has blocked due to IQ full
-system.cpu.rename.RENAME:IdleCycles         190431449                       # Number of cycles rename is idle
+system.cpu.rename.RENAME:IdleCycles         190431447                       # Number of cycles rename is idle
 system.cpu.rename.RENAME:LSQFullEvents        3181742                       # Number of times rename has blocked due to LSQ full
 system.cpu.rename.RENAME:ROBFullEvents              1                       # Number of times rename has blocked due to ROB full
-system.cpu.rename.RENAME:RenameLookups     2146129409                       # Number of register rename lookups that rename has made
+system.cpu.rename.RENAME:RenameLookups     2146129408                       # Number of register rename lookups that rename has made
 system.cpu.rename.RENAME:RenamedInsts       749361548                       # Number of instructions processed by rename
-system.cpu.rename.RENAME:RenamedOperands    579635255                       # Number of destination operands rename has renamed
+system.cpu.rename.RENAME:RenamedOperands    579635256                       # Number of destination operands rename has renamed
 system.cpu.rename.RENAME:RunCycles          140764920                       # Number of cycles rename is running
 system.cpu.rename.RENAME:SquashCycles        17467706                       # Number of cycles rename is squashing
 system.cpu.rename.RENAME:UnblockCycles       71980154                       # Number of cycles rename is unblocking
-system.cpu.rename.RENAME:UndoneMaps         110388312                       # Number of HB maps that are undone due to squashing
+system.cpu.rename.RENAME:UndoneMaps         110388313                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.RENAME:fp_rename_lookups           96                       # Number of floating rename lookups
-system.cpu.rename.RENAME:int_rename_lookups   2146129313                       # Number of integer rename lookups
-system.cpu.rename.RENAME:serializeStallCycles        56304                       # count of cycles rename stalled for serializing inst
+system.cpu.rename.RENAME:int_rename_lookups   2146129312                       # Number of integer rename lookups
+system.cpu.rename.RENAME:serializeStallCycles        56306                       # count of cycles rename stalled for serializing inst
 system.cpu.rename.RENAME:serializingInsts         3959                       # count of serializing insts renamed
 system.cpu.rename.RENAME:skidInsts          128598458                       # count of insts added to the skid buffer
-system.cpu.rename.RENAME:tempSerializingInsts         3953                       # count of temporary serializing insts renamed
+system.cpu.rename.RENAME:tempSerializingInsts         3954                       # count of temporary serializing insts renamed
 system.cpu.rob.rob_reads                   1130320351                       # The number of ROB reads
 system.cpu.rob.rob_writes                  1461345715                       # The number of ROB writes
 system.cpu.timesIdled                           36569                       # Number of times that the entire CPU went into an idle state and unscheduled itself
