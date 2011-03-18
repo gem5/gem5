@@ -86,24 +86,27 @@ let {{
                                        'predicate_test': predicateTest},
                                       ['IsMicroop'])
 
-    microLdrRetUopCode = '''
+    microRetUopCode = '''
         CPSR cpsr = Cpsr;
         SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
             cpsrWriteByInstr(cpsr | CondCodes, Spsr, 0xF, true, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodes = CondCodesMask & newCpsr;
-        IWNPC = cSwap(Mem.uw, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
+        IWNPC = cSwap(%s, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
         ForcedItState = ((((CPSR)Spsr).it2 << 2) & 0xFC)
                 | (((CPSR)Spsr).it1 & 0x3);
     '''
+
     microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
                                       'MicroMemOp',
-                                      {'memacc_code': microLdrRetUopCode,
+                                      {'memacc_code':
+                                          microRetUopCode % 'Mem.uw',
                                        'ea_code':
                                           'EA = URb + (up ? imm : -imm);',
                                        'predicate_test': condPredicateTest},
-                                      ['IsMicroop','IsNonSpeculative','IsSerializeAfter'])
+                                      ['IsMicroop','IsNonSpeculative',
+                                       'IsSerializeAfter'])
 
     microStrUopCode = "Mem = cSwap(URa.uw, ((CPSR)Cpsr).e);"
     microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
@@ -608,6 +611,13 @@ let {{
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
+    microUopRegMovRetIop = InstObjParams('movret_uop', 'MicroUopRegMovRet',
+                                      'MicroIntMov',
+                                     {'code': microRetUopCode % 'URb',
+                                      'predicate_test': predicateTest},
+                                     ['IsMicroop', 'IsNonSpeculative',
+                                      'IsSerializeAfter'])
+
     setPCCPSRDecl = '''
                     CPSR cpsrOrCondCodes = URc;
                     SCTLR sctlr = Sctlr;
@@ -634,6 +644,7 @@ let {{
                     MicroIntRegDeclare.subst(microAddUopIop) + \
                     MicroIntRegDeclare.subst(microSubUopIop) + \
                     MicroIntMovDeclare.subst(microUopRegMovIop) + \
+                    MicroIntMovDeclare.subst(microUopRegMovRetIop) + \
                     MicroSetPCCPSRDeclare.subst(microUopSetPCCPSRIop)
 
     decoder_output = MicroIntImmConstructor.subst(microAddiUopIop) + \
@@ -641,6 +652,7 @@ let {{
                      MicroIntRegConstructor.subst(microAddUopIop) + \
                      MicroIntRegConstructor.subst(microSubUopIop) + \
                      MicroIntMovConstructor.subst(microUopRegMovIop) + \
+                     MicroIntMovConstructor.subst(microUopRegMovRetIop) + \
                      MicroSetPCCPSRConstructor.subst(microUopSetPCCPSRIop)
 
     exec_output = PredOpExecute.subst(microAddiUopIop) + \
@@ -648,6 +660,7 @@ let {{
                   PredOpExecute.subst(microAddUopIop) + \
                   PredOpExecute.subst(microSubUopIop) + \
                   PredOpExecute.subst(microUopRegMovIop) + \
+                  PredOpExecute.subst(microUopRegMovRetIop) + \
                   PredOpExecute.subst(microUopSetPCCPSRIop)
 
 }};
