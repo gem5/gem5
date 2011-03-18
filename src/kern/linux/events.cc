@@ -44,11 +44,13 @@
 #include <sstream>
 
 #include "base/trace.hh"
+#include "arch/utility.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
 #include "sim/arguments.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/system.hh"
 
 namespace Linux {
@@ -65,5 +67,28 @@ DebugPrintkEvent::process(ThreadContext *tc)
     }
     SkipFuncEvent::process(tc);
 }
+
+void
+UDelayEvent::process(ThreadContext *tc)
+{
+    int arg_num  = 0;
+
+    // Get the time in native size
+    uint64_t time = TheISA::getArgument(tc, arg_num,  (uint16_t)-1, false);
+
+    // convert parameter to ns
+    if (argDivToNs)
+        time /= argDivToNs;
+
+    time *= argMultToNs;
+
+    // Convert ns to ticks
+    time *= SimClock::Int::ns;
+
+    SkipFuncEvent::process(tc);
+
+    PseudoInst::quiesceNs(tc, time);
+}
+
 
 } // namespace linux

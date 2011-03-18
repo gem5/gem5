@@ -74,6 +74,19 @@ class LinuxArmSystem : public ArmSystem
     /** Event to halt the simulator if the kernel calls panic()  */
     BreakPCEvent *kernelPanicEvent;
 #endif
+    /**
+     * PC based event to skip udelay(<time>) calls and quiesce the
+     * processor for the appropriate amount of time. This is not functionally
+     * required but does speed up simulation.
+     */
+    Linux::UDelayEvent *uDelaySkipEvent;
+
+    /** Another PC based skip event for const_udelay(). Similar to the udelay
+     * skip, but this function precomputes the first multiply that is done
+     * in the generic case since the parameter is known at compile time.
+     * Thus we need to do some division to get back to us.
+     */
+    Linux::UDelayEvent *constUDelaySkipEvent;
 };
 
 #endif // __ARCH_ARM_LINUX_SYSTEM_HH__
