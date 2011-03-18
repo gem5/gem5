@@ -159,7 +159,6 @@ class SLICC(Grammar):
         'state_declaration' : 'STATE_DECL',
         'peek' : 'PEEK',
         'stall_and_wait' : 'STALL_AND_WAIT',
-        'wake_up_dependents' : 'WAKE_UP_DEPENDENTS',
         'enqueue' : 'ENQUEUE',
         'copy_head' : 'COPY_HEAD',
         'check_allocate' : 'CHECK_ALLOCATE',
@@ -576,10 +575,6 @@ class SLICC(Grammar):
     def p_statement__stall_and_wait(self, p):
         "statement : STALL_AND_WAIT '(' var ',' var ')' SEMI"
         p[0] = ast.StallAndWaitStatementAST(self, p[3], p[5])
-
-    def p_statement__wake_up_dependents(self, p):
-        "statement : WAKE_UP_DEPENDENTS '(' var ')' SEMI"
-        p[0] = ast.WakeUpDependentsStatementAST(self, p[3])
 
     def p_statement__peek(self, p):
         "statement : PEEK '(' var ',' type pairs ')' statements"

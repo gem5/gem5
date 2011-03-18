@@ -173,6 +173,7 @@ machine(Directory, "AMD Hammer-like protocol")
   void unset_cache_entry();
   void set_tbe(TBE a);
   void unset_tbe();
+  void wakeUpBuffers(Address a);
 
   // ** OBJECTS **
 
@@ -1013,7 +1014,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(k_wakeUpDependents, "k", desc="wake-up dependents") {
-    wake_up_dependents(address);
+    wakeUpBuffers(address);
   }
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {

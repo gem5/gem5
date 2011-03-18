@@ -721,19 +721,21 @@ $c_ident::stallBuffer(MessageBuffer* buf, Address addr)
 void
 $c_ident::wakeUpBuffers(Address addr)
 {
-    //
-    // Wake up all possible lower rank (i.e. lower priority) buffers that could
-    // be waiting on this message.
-    // 
-    for (int in_port_rank = m_cur_in_port_rank - 1;
-         in_port_rank >= 0;
-         in_port_rank--) {
-        if ((*(m_waiting_buffers[addr]))[in_port_rank] != NULL) {
-            (*(m_waiting_buffers[addr]))[in_port_rank]->reanalyzeMessages(addr);
+    if (m_waiting_buffers.count(addr) > 0) {
+        //
+        // Wake up all possible lower rank (i.e. lower priority) buffers that could
+        // be waiting on this message.
+        //
+        for (int in_port_rank = m_cur_in_port_rank - 1;
+             in_port_rank >= 0;
+             in_port_rank--) {
+            if ((*(m_waiting_buffers[addr]))[in_port_rank] != NULL) {
+                (*(m_waiting_buffers[addr]))[in_port_rank]->reanalyzeMessages(addr);
+            }
         }
+        delete m_waiting_buffers[addr];
+        m_waiting_buffers.erase(addr);
     }
-    delete m_waiting_buffers[addr];
-    m_waiting_buffers.erase(addr);
 }
 
 void

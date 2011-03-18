@@ -159,6 +159,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   void set_tbe(TBE b);
   void unset_tbe();
   void wakeUpAllBuffers();
+  void wakeUpBuffers(Address a);
 
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
     Entry L2cache_entry := static_cast(Entry, "pointer", L2cacheMemory.lookup(address));
@@ -1013,7 +1014,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
-    wake_up_dependents(address);
+    wakeUpBuffers(address);
   }
 
   action(ka_wakeUpAllDependents, "ka", desc="wake-up all dependents") {
