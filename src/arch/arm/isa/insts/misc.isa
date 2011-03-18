@@ -491,10 +491,13 @@ let {{
 
     wfeCode = '''
 #if FULL_SYSTEM
-    if (SevMailbox)
+    if (SevMailbox) {
         SevMailbox = 0;
-    else
+        PseudoInst::quiesceSkip(xc->tcBase());
+    }
+    else {
         PseudoInst::quiesce(xc->tcBase());
+    }
 #endif
     '''
     wfeIop = InstObjParams("wfe", "WfeInst", "PredOp", \
@@ -502,7 +505,7 @@ let {{
             ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(wfeIop)
     decoder_output += BasicConstructor.subst(wfeIop)
-    exec_output += PredOpExecute.subst(wfeIop)
+    exec_output += QuiescePredOpExecute.subst(wfeIop)
 
     wfiCode = '''
 #if FULL_SYSTEM
@@ -511,22 +514,25 @@ let {{
     '''
     wfiIop = InstObjParams("wfi", "WfiInst", "PredOp", \
             { "code" : wfiCode, "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsQuiesce"])
+            ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(wfiIop)
     decoder_output += BasicConstructor.subst(wfiIop)
-    exec_output += PredOpExecute.subst(wfiIop)
+    exec_output += QuiescePredOpExecute.subst(wfiIop)
 
     sevCode = '''
     // Need a way for O3 to not scoreboard these accesses as pipe flushes.
+    SevMailbox = 1;
     System *sys = xc->tcBase()->getSystemPtr();
     for (int x = 0; x < sys->numContexts(); x++) {
         ThreadContext *oc = sys->getThreadContext(x);
-        oc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
+        if (oc != xc->tcBase()) {
+            oc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
+        }
     }
     '''
     sevIop = InstObjParams("sev", "SevInst", "PredOp", \
             { "code" : sevCode, "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
+            ["IsNonSpeculative", "IsSquashAfter"])
     header_output += BasicDeclare.subst(sevIop)
     decoder_output += BasicConstructor.subst(sevIop)
     exec_output += PredOpExecute.subst(sevIop)

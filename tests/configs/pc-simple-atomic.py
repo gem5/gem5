@@ -43,6 +43,7 @@ class L1(BaseCache):
     block_size = 64
     mshrs = 4
     tgts_per_mshr = 8
+    is_top_level = True
 
 # ----------------------
 # Base L2 Cache
@@ -65,6 +66,7 @@ class PageTableWalkerCache(BaseCache):
     mshrs = 10
     size = '1kB'
     tgts_per_mshr = 12
+    is_top_level = True
 
 # ---------------------
 # I/O Cache
@@ -78,6 +80,7 @@ class IOCache(BaseCache):
     tgts_per_mshr = 12
     addr_range = AddrRange(0, size=mem_size)
     forward_snoops = False
+    is_top_level = True
 
 #cpu
 cpu = AtomicSimpleCPU(cpu_id=0)

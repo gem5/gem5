@@ -641,6 +641,9 @@ AtomicSimpleCPU::tick()
             checkForInterrupts();
 
         checkPcEventQueue();
+        // We must have just got suspended by a PC event
+        if (_status == Idle)
+            return;
 
         Fault fault = NoFault;
 

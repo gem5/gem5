@@ -456,8 +456,6 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
             inst->seqNum < toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;
         toCommit->squashedSeqNum[tid] = inst->seqNum;
-        toCommit->mispredPC[tid] = inst->instAddr();
-        toCommit->branchMispredict[tid] = true;
         toCommit->branchTaken[tid] = inst->pcState().branching();
 
         TheISA::PCState pc = inst->pcState();
@@ -486,7 +484,7 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
         TheISA::PCState pc = inst->pcState();
         TheISA::advancePC(pc, inst->staticInst);
         toCommit->pc[tid] = pc;
-        toCommit->branchMispredict[tid] = false;
+        toCommit->mispredictInst[tid] = NULL;
 
         toCommit->includeSquashInst[tid] = false;
 
@@ -506,7 +504,7 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid)
 
         toCommit->squashedSeqNum[tid] = inst->seqNum;
         toCommit->pc[tid] = inst->pcState();
-        toCommit->branchMispredict[tid] = false;
+        toCommit->mispredictInst[tid] = NULL;
 
         // Must include the broadcasted SN in the squash.
         toCommit->includeSquashInst[tid] = true;

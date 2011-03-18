@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -32,11 +44,13 @@
 #include <sstream>
 
 #include "base/trace.hh"
+#include "arch/utility.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"
 #include "sim/arguments.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/system.hh"
 
 namespace Linux {
@@ -53,5 +67,28 @@ DebugPrintkEvent::process(ThreadContext *tc)
     }
     SkipFuncEvent::process(tc);
 }
+
+void
+UDelayEvent::process(ThreadContext *tc)
+{
+    int arg_num  = 0;
+
+    // Get the time in native size
+    uint64_t time = TheISA::getArgument(tc, arg_num,  (uint16_t)-1, false);
+
+    // convert parameter to ns
+    if (argDivToNs)
+        time /= argDivToNs;
+
+    time *= argMultToNs;
+
+    // Convert ns to ticks
+    time *= SimClock::Int::ns;
+
+    SkipFuncEvent::process(tc);
+
+    PseudoInst::quiesceNs(tc, time);
+}
+
 
 } // namespace linux

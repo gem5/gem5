@@ -541,8 +541,8 @@ DefaultCommit<Impl>::squashAll(ThreadID tid)
     // the ROB is in the process of squashing.
     toIEW->commitInfo[tid].robSquashing = true;
 
-    toIEW->commitInfo[tid].branchMispredict = false;
     toIEW->commitInfo[tid].mispredictInst = NULL;
+    toIEW->commitInfo[tid].squashInst = NULL;
 
     toIEW->commitInfo[tid].pc = pc[tid];
 }
@@ -584,7 +584,8 @@ DefaultCommit<Impl>::squashFromTC(ThreadID tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashAfter(ThreadID tid, uint64_t squash_after_seq_num)
+DefaultCommit<Impl>::squashAfter(ThreadID tid, DynInstPtr &head_inst,
+        uint64_t squash_after_seq_num)
 {
     youngestSeqNum[tid] = squash_after_seq_num;
 
@@ -594,6 +595,7 @@ DefaultCommit<Impl>::squashAfter(ThreadID tid, uint64_t squash_after_seq_num)
     // Send back the sequence number of the squashed instruction.
     toIEW->commitInfo[tid].doneSeqNum = squash_after_seq_num;
 
+    toIEW->commitInfo[tid].squashInst = head_inst;
     // Send back the squash signal to tell stages that they should squash.
     toIEW->commitInfo[tid].squash = true;
 
@@ -601,7 +603,7 @@ DefaultCommit<Impl>::squashAfter(ThreadID tid, uint64_t squash_after_seq_num)
     // the ROB is in the process of squashing.
     toIEW->commitInfo[tid].robSquashing = true;
 
-    toIEW->commitInfo[tid].branchMispredict = false;
+    toIEW->commitInfo[tid].mispredictInst = NULL;
 
     toIEW->commitInfo[tid].pc = pc[tid];
     DPRINTF(Commit, "Executing squash after for [tid:%i] inst [sn:%lli]\n",
@@ -801,10 +803,17 @@ DefaultCommit<Impl>::commit()
             commitStatus[tid] != TrapPending &&
             fromIEW->squashedSeqNum[tid] <= youngestSeqNum[tid]) {
 
-            DPRINTF(Commit, "[tid:%i]: Squashing due to PC %#x [sn:%i]\n",
+            if (fromIEW->mispredictInst[tid]) {
+                DPRINTF(Commit,
+                    "[tid:%i]: Squashing due to branch mispred PC:%#x [sn:%i]\n",
                     tid,
-                    fromIEW->mispredPC[tid],
+                    fromIEW->mispredictInst[tid]->instAddr(),
                     fromIEW->squashedSeqNum[tid]);
+            } else {
+                DPRINTF(Commit,
+                    "[tid:%i]: Squashing due to order violation [sn:%i]\n",
+                    tid, fromIEW->squashedSeqNum[tid]);
+            }
 
             DPRINTF(Commit, "[tid:%i]: Redirecting to PC %#x\n",
                     tid,
@@ -835,18 +844,15 @@ DefaultCommit<Impl>::commit()
             // the ROB is in the process of squashing.
             toIEW->commitInfo[tid].robSquashing = true;
 
-            toIEW->commitInfo[tid].branchMispredict =
-                fromIEW->branchMispredict[tid];
             toIEW->commitInfo[tid].mispredictInst =
                 fromIEW->mispredictInst[tid];
             toIEW->commitInfo[tid].branchTaken =
                 fromIEW->branchTaken[tid];
+            toIEW->commitInfo[tid].squashInst = NULL;
 
             toIEW->commitInfo[tid].pc = fromIEW->pc[tid];
 
-            toIEW->commitInfo[tid].mispredPC = fromIEW->mispredPC[tid];
-
-            if (toIEW->commitInfo[tid].branchMispredict) {
+            if (toIEW->commitInfo[tid].mispredictInst) {
                 ++branchMispredicts;
             }
         }
@@ -988,7 +994,7 @@ DefaultCommit<Impl>::commitInsts()
                 // If this is an instruction that doesn't play nicely with
                 // others squash everything and restart fetch
                 if (head_inst->isSquashAfter())
-                    squashAfter(tid, head_inst->seqNum);
+                    squashAfter(tid, head_inst, head_inst->seqNum);
 
                 int count = 0;
                 Addr oldpc;

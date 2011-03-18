@@ -45,6 +45,7 @@ extern bool doQuiesce;
 #if FULL_SYSTEM
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
+void quiesceSkip(ThreadContext *tc);
 void quiesceNs(ThreadContext *tc, uint64_t ns);
 void quiesceCycles(ThreadContext *tc, uint64_t cycles);
 uint64_t quiesceTime(ThreadContext *tc);

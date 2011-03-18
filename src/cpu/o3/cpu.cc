@@ -808,8 +808,9 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
     }
 
     // Squash Throughout Pipeline
-    InstSeqNum squash_seq_num = commit.rob->readHeadInst(tid)->seqNum;
-    fetch.squash(0, squash_seq_num, tid);
+    DynInstPtr inst = commit.rob->readHeadInst(tid);
+    InstSeqNum squash_seq_num = inst->seqNum;
+    fetch.squash(0, squash_seq_num, inst, tid);
     decode.squash(tid);
     rename.squash(squash_seq_num, tid);
     iew.squash(tid);

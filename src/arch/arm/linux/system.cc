@@ -47,9 +47,11 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
+#include "kern/linux/events.hh"
 #include "mem/physical.hh"
 
 using namespace ArmISA;
+using namespace Linux;
 
 LinuxArmSystem::LinuxArmSystem(Params *p)
     : ArmSystem(p)
@@ -96,6 +98,24 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     if (!kernelPanicEvent)
         panic("could not find kernel symbol \'panic\'");
 #endif
+
+    // With ARM udelay() is #defined to __udelay
+    Addr addr = 0;
+    if (kernelSymtab->findAddress("__udelay", addr)) {
+        uDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__udelay",
+                fixFuncEventAddr(addr), 1000, 0);
+    } else {
+        panic("couldn't find kernel symbol \'udelay\'");
+    }
+
+    // constant arguments to udelay() have some precomputation done ahead of
+    // time. Constant comes from code.
+    if (kernelSymtab->findAddress("__const_udelay", addr)) {
+        constUDelaySkipEvent = new UDelayEvent(&pcEventQueue, "__const_udelay",
+                fixFuncEventAddr(addr), 1000, 107374);
+    } else {
+        panic("couldn't find kernel symbol \'udelay\'");
+    }
 }
 
 void
@@ -115,6 +135,10 @@ LinuxArmSystem::initState()
 
 LinuxArmSystem::~LinuxArmSystem()
 {
+    if (uDelaySkipEvent)
+        delete uDelaySkipEvent;
+    if (constUDelaySkipEvent)
+        delete constUDelaySkipEvent;
 }
 
 LinuxArmSystem *

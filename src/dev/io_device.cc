@@ -139,6 +139,9 @@ DmaPort::recvTiming(PacketPtr pkt)
         assert(pendingCount >= 0);
         assert(state);
 
+        // We shouldn't ever get a block in ownership state
+        assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+
         state->numBytes += pkt->req->getSize();
         assert(state->totBytes >= state->numBytes);
         if (state->totBytes == state->numBytes) {

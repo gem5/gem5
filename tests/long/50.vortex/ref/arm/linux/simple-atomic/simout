@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 01:56:16
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 01:56:25
-M5 executing on burrito
+M5 compiled Mar 11 2011 20:10:09
+M5 revision 4decc284606a 8095 default qtip tip ext/update_add_stats.patch
+M5 started Mar 11 2011 20:12:03
+M5 executing on u200439-lin.austin.arm.com
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/50.vortex/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/long/50.vortex/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 53034982000 because target called exit()
+Exiting @ tick 53932162000 because target called exit()

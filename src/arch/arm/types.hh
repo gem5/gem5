@@ -203,6 +203,7 @@ namespace ArmISA
         uint8_t flags;
         uint8_t nextFlags;
         uint8_t forcedItStateValue;
+        uint8_t _size;
         bool forcedItStateValid;
       public:
         PCState() : flags(0), nextFlags(0), forcedItStateValue(0), forcedItStateValid(false)
@@ -247,6 +248,16 @@ namespace ArmISA
             else
                 nextFlags &= ~ThumbBit;
         }
+
+        void size(uint8_t s) { _size = s; }
+        uint8_t size() const { return _size; }
+
+        bool
+        branching() const
+        {
+            return ((this->pc() + this->size()) != this->npc());
+        }
+
 
         bool
         jazelle() const
@@ -392,6 +403,7 @@ namespace ArmISA
         {
             Base::serialize(os);
             SERIALIZE_SCALAR(flags);
+            SERIALIZE_SCALAR(_size);
             SERIALIZE_SCALAR(nextFlags);
             SERIALIZE_SCALAR(forcedItStateValue);
             SERIALIZE_SCALAR(forcedItStateValid);
@@ -402,6 +414,7 @@ namespace ArmISA
         {
             Base::unserialize(cp, section);
             UNSERIALIZE_SCALAR(flags);
+            UNSERIALIZE_SCALAR(_size);
             UNSERIALIZE_SCALAR(nextFlags);
             UNSERIALIZE_SCALAR(forcedItStateValue);
             UNSERIALIZE_SCALAR(forcedItStateValid);

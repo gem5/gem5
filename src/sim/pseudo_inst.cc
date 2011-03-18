@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2010 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -79,6 +91,28 @@ quiesce(ThreadContext *tc)
         return;
 
     DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
+
+    tc->suspend();
+    if (tc->getKernelStats())
+        tc->getKernelStats()->quiesce();
+}
+
+void
+quiesceSkip(ThreadContext *tc)
+{
+    BaseCPU *cpu = tc->getCpuPtr();
+
+    if (!cpu->params()->do_quiesce)
+        return;
+
+    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
+
+    Tick resume = curTick() + 1;
+
+    cpu->reschedule(quiesceEvent, resume, true);
+
+    DPRINTF(Quiesce, "%s: quiesceSkip() until %d\n",
+            cpu->name(), resume);
 
     tc->suspend();
     if (tc->getKernelStats())

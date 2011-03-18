@@ -222,7 +222,6 @@ let {{
         decConstBase = 'StoreExImm'
         basePrefix = 'MemoryExImm'
         nameFunc = staticmethod(storeImmClassName)
-        instFlags = ['IsStoreConditional']
 
         def __init__(self, *args, **kargs):
             super(StoreImmEx, self).__init__(*args, **kargs)
@@ -302,7 +301,6 @@ let {{
         decConstBase = 'StoreExDImm'
         basePrefix = 'MemoryExDImm'
         nameFunc = staticmethod(storeDoubleImmClassName)
-        instFlags = ['IsStoreConditional']
 
         def __init__(self, *args, **kargs):
             super(StoreDoubleImmEx, self).__init__(*args, **kargs)
@@ -370,10 +368,14 @@ let {{
 
     buildDoubleStores("strd")
 
-    StoreImmEx("strex", False, True, False, size=4, flavor="exclusive").emit()
-    StoreImmEx("strexh", False, True, False, size=2, flavor="exclusive").emit()
-    StoreImmEx("strexb", False, True, False, size=1, flavor="exclusive").emit()
-    StoreDoubleImmEx("strexd", False, True, False, flavor="exclusive").emit()
+    StoreImmEx("strex", False, True, False, size=4, flavor="exclusive",
+               instFlags = ['IsStoreConditional']).emit()
+    StoreImmEx("strexh", False, True, False, size=2, flavor="exclusive",
+               instFlags = ['IsStoreConditional']).emit()
+    StoreImmEx("strexb", False, True, False, size=1, flavor="exclusive",
+               instFlags = ['IsStoreConditional']).emit()
+    StoreDoubleImmEx("strexd", False, True, False, flavor="exclusive",
+               instFlags = ['IsStoreConditional']).emit()
 
     StoreImm("vstr", False, True, False, size=4, flavor="fp").emit()
     StoreImm("vstr", False, False, False, size=4, flavor="fp").emit()

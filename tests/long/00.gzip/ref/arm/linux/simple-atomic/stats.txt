@@ -1,13 +1,13 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1026292                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 229344                       # Number of bytes of host memory used
-host_seconds                                   585.20                       # Real time elapsed on the host
-host_tick_rate                              513165203                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1838558                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 246240                       # Number of bytes of host memory used
+host_seconds                                   327.63                       # Real time elapsed on the host
+host_tick_rate                              919312999                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                   600581394                       # Number of instructions simulated
-sim_seconds                                  0.300302                       # Number of seconds simulated
-sim_ticks                                300302141500                       # Number of ticks simulated
+sim_insts                                   602359851                       # Number of instructions simulated
+sim_seconds                                  0.301191                       # Number of seconds simulated
+sim_ticks                                301191370000                       # Number of ticks simulated
 system.cpu.dtb.accesses                             0                       # DTB accesses
 system.cpu.dtb.align_faults                         0                       # Number of TLB faults due to alignment restrictions
 system.cpu.dtb.domain_faults                        0                       # Number of TLB faults due to domain restrictions
@@ -52,24 +52,24 @@ system.cpu.itb.write_accesses                       0                       # DT
 system.cpu.itb.write_hits                           0                       # DTB write hits
 system.cpu.itb.write_misses                         0                       # DTB write misses
 system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
-system.cpu.numCycles                        600604284                       # number of cpu cycles simulated
+system.cpu.numCycles                        602382741                       # number of cpu cycles simulated
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
-system.cpu.num_busy_cycles                  600604284                       # Number of busy cycles
-system.cpu.num_conditional_control_insts            0                       # number of instructions that are conditional controls
+system.cpu.num_busy_cycles                  602382741                       # Number of busy cycles
+system.cpu.num_conditional_control_insts     67016068                       # number of instructions that are conditional controls
 system.cpu.num_fp_alu_accesses                     16                       # Number of float alu accesses
 system.cpu.num_fp_insts                            16                       # number of float instructions
 system.cpu.num_fp_register_reads                   16                       # number of times the floating registers were read
 system.cpu.num_fp_register_writes                   0                       # number of times the floating registers were written
-system.cpu.num_func_calls                           0                       # number of times a function call or return occured
+system.cpu.num_func_calls                     1993596                       # number of times a function call or return occured
 system.cpu.num_idle_cycles                          0                       # Number of idle cycles
-system.cpu.num_insts                        600581394                       # Number of instructions executed
-system.cpu.num_int_alu_accesses             531746837                       # Number of integer alu accesses
-system.cpu.num_int_insts                    531746837                       # number of integer instructions
-system.cpu.num_int_register_reads          1690709529                       # number of times the integer registers were read
-system.cpu.num_int_register_writes          456307392                       # number of times the integer registers were written
-system.cpu.num_load_insts                   148953025                       # Number of load instructions
-system.cpu.num_mem_refs                     219174038                       # number of memory refs
+system.cpu.num_insts                        602359851                       # Number of instructions executed
+system.cpu.num_int_alu_accesses             533522639                       # Number of integer alu accesses
+system.cpu.num_int_insts                    533522639                       # number of integer instructions
+system.cpu.num_int_register_reads          1694262461                       # number of times the integer registers were read
+system.cpu.num_int_register_writes          458085654                       # number of times the integer registers were written
+system.cpu.num_load_insts                   148952594                       # Number of load instructions
+system.cpu.num_mem_refs                     219173607                       # number of memory refs
 system.cpu.num_store_insts                   70221013                       # Number of store instructions
 system.cpu.workload.PROG:num_syscalls              48                       # Number of system calls
 

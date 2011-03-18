@@ -5,13 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 01:56:16
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 01:56:24
-M5 executing on burrito
+M5 compiled Mar 11 2011 20:10:09
+M5 revision 4decc284606a 8095 default qtip tip ext/update_add_stats.patch
+M5 started Mar 11 2011 21:02:08
+M5 executing on u200439-lin.austin.arm.com
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/70.twolf/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/long/70.twolf/arm/linux/simple-timing
-Couldn't unlink  build/ARM_SE/tests/fast/long/70.twolf/arm/linux/simple-timing/smred.sav
-Couldn't unlink  build/ARM_SE/tests/fast/long/70.twolf/arm/linux/simple-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -28,4 +26,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 232027671000 because target called exit()
+122 123 124 Exiting @ tick 232077154000 because target called exit()

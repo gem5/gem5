@@ -194,6 +194,11 @@ class BaseCache : public MemObject
     /** Do we forward snoops from mem side port through to cpu side port? */
     bool forwardSnoops;
 
+    /** Is this cache a toplevel cache (e.g. L1, I/O cache). If so we should
+     * never try to forward ownership and similar optimizations to the cpu
+     * side */
+    bool isTopLevel;
+
     /**
      * Bit vector of the blocking reasons for the access path.
      * @sa #BlockedCause

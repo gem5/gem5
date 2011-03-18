@@ -44,6 +44,33 @@ class DebugPrintkEvent : public SkipFuncEvent
     virtual void process(ThreadContext *xc);
 };
 
+/** A class to skip udelay() and related calls in the kernel.
+ * This class has two additional parameters that take the argument to udelay and
+ * manipulated it to come up with ns and eventually ticks to quiesce for.
+ * See descriptions of argDivToNs and argMultToNs below.
+ */
+class UDelayEvent : public SkipFuncEvent
+{
+  private:
+    /** value to divide arg by to create ns. This is present beacues the linux
+     * kernel code sometime precomputes the first multiply that is done in
+     * udelay() if the parameter is a constant. We need to undo it so here is
+     * how. */
+    uint64_t argDivToNs;
+
+    /** value to multiple arg by to create ns. Nominally, this is 1000 to
+     * convert us to ns, but since linux can do some preprocessing of constant
+     * values something else might be required. */
+    uint64_t argMultToNs;
+
+  public:
+    UDelayEvent(PCEventQueue *q, const std::string &desc, Addr addr,
+            uint64_t mult, uint64_t div)
+        : SkipFuncEvent(q, desc, addr), argDivToNs(div), argMultToNs(mult) {}
+    virtual void process(ThreadContext *xc);
+};
+
+
 }
 
 #endif

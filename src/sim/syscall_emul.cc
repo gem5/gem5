@@ -98,6 +98,18 @@ ignoreFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 
 SyscallReturn
+ignoreWarnOnceFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+           ThreadContext *tc)
+{
+    int index = 0;
+    warn_once("ignoring syscall %s(%d, %d, ...)", desc->name,
+         process->getSyscallArg(tc, index), process->getSyscallArg(tc, index));
+
+    return 0;
+}
+
+
+SyscallReturn
 exitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
          ThreadContext *tc)
 {
@@ -802,6 +814,8 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
             for (int y = 8; y < 32; y++)
                 ctc->setIntReg(y, tc->readIntReg(y));
+        #elif THE_ISA == ARM_ISA
+            TheISA::copyRegs(tc, ctc);
         #else
             fatal("sys_clone is not implemented for this ISA\n");
         #endif

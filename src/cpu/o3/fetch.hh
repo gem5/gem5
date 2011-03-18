@@ -312,8 +312,8 @@ class DefaultFetch
      * remove any instructions that are not in the ROB. The source of this
      * squash should be the commit stage.
      */
-    void squash(const TheISA::PCState &newPC,
-                const InstSeqNum &seq_num, ThreadID tid);
+    void squash(const TheISA::PCState &newPC, const InstSeqNum &seq_num,
+                DynInstPtr &squashInst, ThreadID tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.

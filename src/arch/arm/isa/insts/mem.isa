@@ -48,7 +48,7 @@ let {{
             self.constructTemplate = eval(self.decConstBase + 'Constructor')
 
         def fillTemplates(self, name, Name, codeBlobs, memFlags, instFlags,
-                          base = 'Memory', wbDecl = None):
+                          base = 'Memory', wbDecl = None, pcDecl = None):
             # Make sure flags are in lists (convert to lists if not).
             memFlags = makeList(memFlags)
             instFlags = makeList(instFlags)
@@ -65,12 +65,26 @@ let {{
             macroName = Name
             instFlagsCopy = list(instFlags)
             codeBlobsCopy = dict(codeBlobs)
-            if wbDecl is not None:
+
+            use_uops = 0
+            if wbDecl is not None or pcDecl is not None:
                 instFlagsCopy.append('IsMicroop')
                 Name = Name + 'Acc'
+                use_uops = 1
+
+            use_wb = 0
+            use_pc = 0
+            if wbDecl is not None:
+                use_wb = 1
+            if pcDecl is not None:
+                use_pc = 1
+
             codeBlobsCopy['acc_name'] = Name
             codeBlobsCopy['wb_decl'] = wbDecl
+            codeBlobsCopy['pc_decl'] = pcDecl
             codeBlobsCopy['use_uops'] = 0
+            codeBlobsCopy['use_wb'] = 0
+            codeBlobsCopy['use_pc'] = 0
 
             iop = InstObjParams(name, Name, base,
                                 codeBlobsCopy, instFlagsCopy)
@@ -81,11 +95,14 @@ let {{
                           self.initiateAccTemplate.subst(iop) + \
                           self.completeAccTemplate.subst(iop)
 
-            if wbDecl is not None:
+            if wbDecl is not None or pcDecl is not None:
                 iop = InstObjParams(name, macroName, base,
                                     { "wb_decl" : wbDecl,
+                                      "pc_decl" : pcDecl,
                                       "acc_name" : Name,
-                                      "use_uops" : 1 },
+                                      "use_uops" : use_uops,
+                                      "use_pc" : use_pc,
+                                      "use_wb" : use_wb },
                                     ['IsMacroop'])
                 header_output += self.declareTemplate.subst(iop)
                 decoder_output += self.constructTemplate.subst(iop)

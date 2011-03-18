@@ -197,7 +197,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 117 */ SyscallDesc("ipc", unimplementedFunc),
     /* 118 */ SyscallDesc("fsync", unimplementedFunc),
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
-    /* 120 */ SyscallDesc("clone", unimplementedFunc),
+    /* 120 */ SyscallDesc("clone", cloneFunc),
     /* 121 */ SyscallDesc("setdomainname", unimplementedFunc),
     /* 122 */ SyscallDesc("uname", unameFunc),
     /* 123 */ SyscallDesc("unused#123", unimplementedFunc),
@@ -239,7 +239,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 159 */ SyscallDesc("sched_get_priority_max", unimplementedFunc),
     /* 160 */ SyscallDesc("sched_get_priority_min", unimplementedFunc),
     /* 161 */ SyscallDesc("sched_rr_get_interval", unimplementedFunc),
-    /* 162 */ SyscallDesc("nanosleep", unimplementedFunc),
+    /* 162 */ SyscallDesc("nanosleep", ignoreWarnOnceFunc),
     /* 163 */ SyscallDesc("mremap", mremapFunc<ArmLinux>), // ARM-specific
     /* 164 */ SyscallDesc("setresuid", unimplementedFunc),
     /* 165 */ SyscallDesc("getresuid", unimplementedFunc),
@@ -251,8 +251,8 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 171 */ SyscallDesc("getresgid", unimplementedFunc),
     /* 172 */ SyscallDesc("prctl", unimplementedFunc),
     /* 173 */ SyscallDesc("rt_sigreturn", unimplementedFunc),
-    /* 174 */ SyscallDesc("rt_sigaction", ignoreFunc),
-    /* 175 */ SyscallDesc("rt_sigprocmask", unimplementedFunc),
+    /* 174 */ SyscallDesc("rt_sigaction", ignoreWarnOnceFunc),
+    /* 175 */ SyscallDesc("rt_sigprocmask", ignoreWarnOnceFunc),
     /* 176 */ SyscallDesc("rt_sigpending", unimplementedFunc),
     /* 177 */ SyscallDesc("rt_sigtimedwait", unimplementedFunc),
     /* 178 */ SyscallDesc("rt_sigqueueinfo", ignoreFunc),
@@ -317,7 +317,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 237 */ SyscallDesc("fremovexattr", unimplementedFunc),
     /* 238 */ SyscallDesc("tkill", unimplementedFunc),
     /* 239 */ SyscallDesc("sendfile64", unimplementedFunc),
-    /* 240 */ SyscallDesc("futex", unimplementedFunc),
+    /* 240 */ SyscallDesc("futex", ignoreWarnOnceFunc),
     /* 241 */ SyscallDesc("sched_setaffinity", unimplementedFunc),
     /* 242 */ SyscallDesc("sched_getaffinity", unimplementedFunc),
     /* 243 */ SyscallDesc("io_setup", unimplementedFunc),
@@ -456,6 +456,7 @@ setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     tc->getMemPort()->writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
                                 (uint8_t *)&tlsPtr, sizeof(tlsPtr));
+    tc->setMiscReg(MISCREG_TPIDRURO,tlsPtr);
     return 0;
 }
 
@@ -508,7 +509,7 @@ ArmLinuxProcess::startup()
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
     uint8_t swiNeg1[] = {
-        0xff, 0xff, 0xff, 0xef  //swi -1
+        0xff, 0xff, 0xff, 0xef  // swi -1
     };
 
     // Fill this page with swi -1 so we'll no if we land in it somewhere.
@@ -521,7 +522,8 @@ ArmLinuxProcess::startup()
     // @todo Add a barrrier in this code
     uint8_t memory_barrier[] =
     {
-        0x0e, 0xf0, 0xa0, 0xe1  //usr_ret lr
+        0x5f, 0xf0, 0x7f, 0xf5, // dmb
+        0x0e, 0xf0, 0xa0, 0xe1  // return
     };
     tc->getMemPort()->writeBlob(commPage + 0x0fa0, memory_barrier,
                                 sizeof(memory_barrier));
@@ -531,18 +533,22 @@ ArmLinuxProcess::startup()
     // @todo replace this with ldrex/strex and dmb
     uint8_t cmpxchg[] =
     {
-        0x00, 0x30, 0x92, 0xe5, //ldr r3, [r2]
-        0x00, 0x30, 0x53, 0xe0, //subs r3, r3, r0
-        0x00, 0x10, 0x82, 0x05, //streq r1, [r2]
-        0x03, 0x00, 0xa0, 0xe1, //mov r0, r3
-        0x0e, 0xf0, 0xa0, 0xe1  //usr_ret lr
+        0x9f, 0x3f, 0x92, 0xe1,  // ldrex    r3, [r2]
+        0x00, 0x30, 0x53, 0xe0,  // subs     r3, r3, r0
+        0x91, 0x3f, 0x82, 0x01,  // strexeq  r3, r1, [r2]
+        0x01, 0x00, 0x33, 0x03,  // teqeq    r3, #1
+        0xfa, 0xff, 0xff, 0x0a,  // beq 1b
+        0x00, 0x00, 0x73, 0xe2,  // rsbs r0, r3, #0
+        0x5f, 0xf0, 0x7f, 0xf5,  // dmb
+        0x0e, 0xf0, 0xa0, 0xe1   // return
     };
     tc->getMemPort()->writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
 
     uint8_t get_tls[] =
     {
-        0x08, 0x00, 0x9f, 0xe5, //ldr r0, [pc, #(16 - 8)]
-        0x0e, 0xf0, 0xa0, 0xe1  //usr_ret lr
+                                // read user read-only thread id register
+        0x70, 0x0f, 0x1d, 0xee, // mrc p15, 0, r0, c13, c0, 3
+        0x0e, 0xf0, 0xa0, 0xe1  // return
     };
     tc->getMemPort()->writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
 }

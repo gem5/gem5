@@ -143,6 +143,16 @@ ISA::clear()
 
     miscRegs[MISCREG_CPACR] = 0;
     miscRegs[MISCREG_FPSID] = 0x410430A0;
+
+    // See section B4.1.84 of ARM ARM
+    // All values are latest for ARMv7-A profile
+    miscRegs[MISCREG_ID_ISAR0] = 0x01101111;
+    miscRegs[MISCREG_ID_ISAR1] = 0x02112111;
+    miscRegs[MISCREG_ID_ISAR2] = 0x21232141;
+    miscRegs[MISCREG_ID_ISAR3] = 0x01112131;
+    miscRegs[MISCREG_ID_ISAR4] = 0x10010142;
+    miscRegs[MISCREG_ID_ISAR5] = 0x00000000;
+
     //XXX We need to initialize the rest of the state.
 }
 

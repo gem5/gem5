@@ -201,13 +201,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     self.membus = MemBus(bus_id=1)
     self.membus.badaddr_responder.warn_access = "warn"
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()), zero = True)
-    self.diskmem = PhysicalMemory(range = AddrRange(Addr('128MB'), size = '128MB'),
-                                  file = disk('ael-arm.ext2'))
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
-    self.physmem.port = self.membus.port
-    self.diskmem.port = self.membus.port
 
     self.mem_mode = mem_mode
 
@@ -232,13 +227,19 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
+        self.physmem = PhysicalMemory(range = AddrRange(Addr('256MB')), zero = True)
     else:
+        self.physmem = PhysicalMemory(range = AddrRange(Addr('128MB')), zero = True)
+        self.diskmem = PhysicalMemory(range = AddrRange(Addr('128MB'), size = '128MB'),
+                                  file = disk('ael-arm.ext2'))
+        self.diskmem.port = self.membus.port
         self.machine_type = machine_type
         self.kernel = binary('vmlinux.arm')
         self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0' +          \
                 ' lpj=19988480 norandmaps slram=slram0,0x8000000,+0x8000000' + \
                 ' mtdparts=slram0:- rw loglevel=8 root=/dev/mtdblock0'
 
+    self.physmem.port = self.membus.port
     self.realview.attachOnChipIO(self.membus)
     self.realview.attachIO(self.iobus)
 

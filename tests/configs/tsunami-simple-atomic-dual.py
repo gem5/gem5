@@ -40,6 +40,7 @@ class L1(BaseCache):
     block_size = 64
     mshrs = 4
     tgts_per_mshr = 8
+    is_top_level = True
 
 # ----------------------
 # Base L2 Cache
@@ -64,6 +65,7 @@ class IOCache(BaseCache):
     tgts_per_mshr = 12
     addr_range=AddrRange(0, size='8GB')
     forward_snoops = False
+    is_top_level = True
 
 #cpu
 cpus = [ AtomicSimpleCPU(cpu_id=i) for i in xrange(2) ]

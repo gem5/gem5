@@ -112,6 +112,9 @@ DefaultFetch<Impl>::IcachePort::recvTiming(PacketPtr pkt)
 {
     DPRINTF(Fetch, "Received timing\n");
     if (pkt->isResponse()) {
+        // We shouldn't ever get a block in ownership state
+        assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+
         fetch->processCacheCompletion(pkt);
     }
     //else Snooped a coherence request, just return
@@ -812,11 +815,14 @@ DefaultFetch<Impl>::updateFetchStatus()
 template <class Impl>
 void
 DefaultFetch<Impl>::squash(const TheISA::PCState &newPC,
-                           const InstSeqNum &seq_num, ThreadID tid)
+                           const InstSeqNum &seq_num, DynInstPtr &squashInst,
+                           ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%u]: Squash from commit.\n", tid);
 
     doSquash(newPC, tid);
+    if (squashInst)
+        predecoder.reset(squashInst->staticInst->machInst);
 
     // Tell the CPU to remove any instructions that are not in the ROB.
     cpu->removeInstsNotInROB(tid);
@@ -931,15 +937,12 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
         // In any case, squash.
         squash(fromCommit->commitInfo[tid].pc,
                fromCommit->commitInfo[tid].doneSeqNum,
-               tid);
+               fromCommit->commitInfo[tid].squashInst, tid);
 
         // If it was a branch mispredict on a control instruction, update the
         // branch predictor with that instruction, otherwise just kill the
         // invalid state we generated in after sequence number
-        assert(!fromCommit->commitInfo[tid].branchMispredict ||
-                fromCommit->commitInfo[tid].mispredictInst);
-
-        if (fromCommit->commitInfo[tid].branchMispredict &&
+        if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
             branchPred.squash(fromCommit->commitInfo[tid].doneSeqNum,
                               fromCommit->commitInfo[tid].pc,

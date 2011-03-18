@@ -714,6 +714,10 @@ TimingSimpleCPU::fetch()
 
     checkPcEventQueue();
 
+    // We must have just got suspended by a PC event
+    if (_status == Idle)
+        return;
+
     TheISA::PCState pcState = thread->pcState();
     bool needToFetch = !isRomMicroPC(pcState.microPC()) && !curMacroStaticInst;
 

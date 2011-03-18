@@ -68,10 +68,17 @@ class Predecoder
     }
 
     void process() {}
+
     void
     reset()
     {
         emiIsReady = false;
+    }
+
+    void
+    reset(const ExtMachInst &old_emi)
+    {
+        reset();
     }
 
     // Use this to give data to the predecoder. This should be used

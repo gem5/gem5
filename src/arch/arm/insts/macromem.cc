@@ -58,8 +58,13 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
 {
     uint32_t regs = reglist;
     uint32_t ones = number_of_ones(reglist);
-    // Remember that writeback adds a uop
-    numMicroops = ones + (writeback ? 1 : 0) + 1;
+    // Remember that writeback adds a uop or two and the temp register adds one
+    numMicroops = ones + (writeback ? (load ? 2 : 1) : 0) + 1;
+
+    // It's technically legal to do a lot of nothing
+    if (!ones)
+        numMicroops = 1;
+
     microOps = new StaticInstPtr[numMicroops];
     uint32_t addr = 0;
 
@@ -70,28 +75,13 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
         addr += 4;
 
     StaticInstPtr *uop = microOps;
-    StaticInstPtr wbUop;
-    if (writeback) {
-        if (up) {
-            wbUop = new MicroAddiUop(machInst, rn, rn, ones * 4);
-        } else {
-            wbUop = new MicroSubiUop(machInst, rn, rn, ones * 4);
-        }
-    }
 
     // Add 0 to Rn and stick it in ureg0.
     // This is equivalent to a move.
     *uop = new MicroAddiUop(machInst, INTREG_UREG0, rn, 0);
 
-    // Write back at the start for loads. This covers the ldm exception return
-    // case where the base needs to be written in the old mode. Stores may need
-    // the original value of the base, but they don't change mode and can
-    // write back at the end like before.
-    if (load && writeback) {
-        *++uop = wbUop;
-    }
-
     unsigned reg = 0;
+    unsigned regIdx = 0;
     bool force_user = user & !bits(reglist, 15);
     bool exception_ret = user & bits(reglist, 15);
 
@@ -101,19 +91,28 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
             reg++;
         replaceBits(regs, reg, 0);
 
-        unsigned regIdx = reg;
+        regIdx = reg;
         if (force_user) {
             regIdx = intRegInMode(MODE_USER, regIdx);
         }
 
         if (load) {
-            if (reg == INTREG_PC && exception_ret) {
-                // This must be the exception return form of ldm.
-                *++uop = new MicroLdrRetUop(machInst, regIdx,
-                                           INTREG_UREG0, up, addr);
+            if (writeback && i == ones - 1) {
+                // If it's a writeback and this is the last register
+                // do the load into a temporary register which we'll move
+                // into the final one later
+                *++uop = new MicroLdrUop(machInst, INTREG_UREG1, INTREG_UREG0,
+                        up, addr);
             } else {
-                *++uop = new MicroLdrUop(machInst, regIdx,
-                                        INTREG_UREG0, up, addr);
+                // Otherwise just do it normally
+                if (reg == INTREG_PC && exception_ret) {
+                    // This must be the exception return form of ldm.
+                    *++uop = new MicroLdrRetUop(machInst, regIdx,
+                                               INTREG_UREG0, up, addr);
+                } else {
+                    *++uop = new MicroLdrUop(machInst, regIdx,
+                                            INTREG_UREG0, up, addr);
+                }
             }
         } else {
             *++uop = new MicroStrUop(machInst, regIdx, INTREG_UREG0, up, addr);
@@ -125,8 +124,32 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
             addr -= 4;
     }
 
-    if (!load && writeback) {
-        *++uop = wbUop;
+    if (writeback && ones) {
+        // put the register update after we're done all loading
+        if (up)
+            *++uop = new MicroAddiUop(machInst, rn, rn, ones * 4);
+        else
+            *++uop = new MicroSubiUop(machInst, rn, rn, ones * 4);
+
+        // If this was a load move the last temporary value into place
+        // this way we can't take an exception after we update the base
+        // register.
+        if (load && reg == INTREG_PC && exception_ret) {
+            *++uop = new MicroUopRegMovRet(machInst, 0, INTREG_UREG1);
+            warn("creating instruction with exception return at curTick:%d\n",
+                    curTick());
+        } else if (load) {
+            *++uop = new MicroUopRegMov(machInst, regIdx, INTREG_UREG1);
+            if (reg == INTREG_PC) {
+                (*uop)->setFlag(StaticInstBase::IsControl);
+                (*uop)->setFlag(StaticInstBase::IsCondControl);
+                (*uop)->setFlag(StaticInstBase::IsIndirectControl);
+                // This is created as a RAS POP
+                if (rn == INTREG_SP)
+                    (*uop)->setFlag(StaticInstBase::IsReturn);
+
+            }
+        }
     }
 
     (*uop)->setLastMicroop();
@@ -892,6 +915,15 @@ MicroIntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     printReg(ss, urb);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
+    return ss.str();
+}
+
+std::string
+MicroSetPCCPSR::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    ss << "[PC,CPSR]";
     return ss.str();
 }
 
