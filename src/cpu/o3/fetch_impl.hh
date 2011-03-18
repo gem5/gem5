@@ -934,15 +934,12 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
         // In any case, squash.
         squash(fromCommit->commitInfo[tid].pc,
                fromCommit->commitInfo[tid].doneSeqNum,
-               tid);
+               fromCommit->commitInfo[tid].squashInst, tid);
 
         // If it was a branch mispredict on a control instruction, update the
         // branch predictor with that instruction, otherwise just kill the
         // invalid state we generated in after sequence number
-        assert(!fromCommit->commitInfo[tid].branchMispredict ||
-                fromCommit->commitInfo[tid].mispredictInst);
-
-        if (fromCommit->commitInfo[tid].branchMispredict &&
+        if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
             branchPred.squash(fromCommit->commitInfo[tid].doneSeqNum,
                               fromCommit->commitInfo[tid].pc,

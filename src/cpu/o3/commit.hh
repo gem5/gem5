@@ -262,7 +262,8 @@ class DefaultCommit
      * instructions instead of the current instruction and doesn't
      * clean up various status bits about traps/tc writes pending.
      */
-    void squashAfter(ThreadID tid, uint64_t squash_after_seq_num);
+    void squashAfter(ThreadID tid, DynInstPtr &head_inst,
+            uint64_t squash_after_seq_num);
 
 #if FULL_SYSTEM
     /** Handles processing an interrupt. */

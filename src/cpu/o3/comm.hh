@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -123,7 +135,6 @@ struct TimeBufStruct {
         bool branchTaken;
         Addr mispredPC;
         TheISA::PCState nextPC;
-
         unsigned branchCount;
     };
 
@@ -151,29 +162,45 @@ struct TimeBufStruct {
     iewComm iewInfo[Impl::MaxThreads];
 
     struct commitComm {
-        bool usedROB;
-        unsigned freeROBEntries;
-        bool emptyROB;
 
+        /////////////// For Decode, IEW, Rename, Fetch ///////////
         bool squash;
         bool robSquashing;
 
-        bool branchMispredict;
-        DynInstPtr mispredictInst;
-        bool branchTaken;
-        Addr mispredPC;
-        TheISA::PCState pc;
-
+        ////////// For Fetch & IEW /////////////
         // Represents the instruction that has either been retired or
         // squashed.  Similar to having a single bus that broadcasts the
         // retired or squashed sequence number.
         InstSeqNum doneSeqNum;
 
-        //Just in case we want to do a commit/squash on a cycle
-        //(necessary for multiple ROBs?)
-        bool commitInsts;
-        InstSeqNum squashSeqNum;
+        ////////////// For Rename /////////////////
+        // Rename should re-read number of free rob entries
+        bool usedROB;
+        // Notify Rename that the ROB is empty
+        bool emptyROB;
+        // Tell Rename how many free entries it has in the ROB
+        unsigned freeROBEntries;
 
+
+        ///////////// For Fetch //////////////////
+        // Provide fetch the instruction that mispredicted, if this
+        // pointer is not-null a misprediction occured
+        DynInstPtr mispredictInst;
+        // Was the branch taken or not
+        bool branchTaken;
+        // The pc of the next instruction to execute. This is the next
+        // instruction for a branch mispredict, but the same instruction for
+        // order violation and the like
+        TheISA::PCState pc;
+
+        // Instruction that caused the a non-mispredict squash
+        DynInstPtr squashInst;
+        // If an interrupt is pending and fetch should stall
+        bool interruptPending;
+        // If the interrupt ended up being cleared before being handled
+        bool clearInterrupt;
+
+        //////////// For IEW //////////////////
         // Communication specifically to the IQ to tell the IQ that it can
         // schedule a non-speculative instruction.
         InstSeqNum nonSpecSeqNum;
@@ -182,8 +209,6 @@ struct TimeBufStruct {
         bool uncached;
         DynInstPtr uncachedLoad;
 
-        bool interruptPending;
-        bool clearInterrupt;
     };
 
     commitComm commitInfo[Impl::MaxThreads];
