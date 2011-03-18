@@ -128,17 +128,17 @@ namespace ArmISA
                 outOfBytes = true;
         }
 
-        bool needMoreBytes()
+        bool needMoreBytes() const
         {
             return outOfBytes;
         }
 
-        bool extMachInstReady()
+        bool extMachInstReady() const
         {
             return emiReady;
         }
 
-        int getInstSize()
+        int getInstSize() const
         {
             return (!emi.thumb || emi.bigThumb) ? 4 : 2;
         }
@@ -151,6 +151,7 @@ namespace ArmISA
             pc.npc(pc.pc() + getInstSize());
             predAddrValid = true;
             predAddr = pc.pc() + getInstSize();
+            pc.size(getInstSize());
             emi = 0;
             emiReady = false;
             return thisEmi;

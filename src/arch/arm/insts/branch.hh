@@ -57,6 +57,7 @@ class BranchImm : public PredOp
               int32_t _imm) :
         PredOp(mnem, _machInst, __opClass), imm(_imm)
     {}
+
 };
 
 // Conditionally Branch to a target computed with an immediate
