@@ -109,6 +109,41 @@ def template MicroNeonMemDeclare {{
 
 ////////////////////////////////////////////////////////////////////
 //
+// PC   = Integer(ura)
+// CPSR = Integer(urb)
+//
+
+def template MicroSetPCCPSRDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst,
+                       IntRegIndex _ura,
+                       IntRegIndex _urb,
+                       IntRegIndex _urc);
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MicroSetPCCPSRConstructor {{
+    %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                   IntRegIndex _ura,
+                                   IntRegIndex _urb,
+                                   IntRegIndex _urc)
+          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                           _ura, _urb, _urc)
+    {
+        %(constructor)s;
+        if (!(condCode == COND_AL || condCode == COND_UC)) {
+            for (int x = 0; x < _numDestRegs; x++) {
+                _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
+            }
+        }
+    }
+}};
+
+////////////////////////////////////////////////////////////////////
+//
 // Integer = Integer op Integer microops
 //
 

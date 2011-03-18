@@ -67,7 +67,7 @@ let {{
             self.memFlags = ["ArmISA::TLB::MustBeOne"]
             self.codeBlobs = {"postacc_code" : ""}
 
-        def emitHelper(self, base = 'Memory', wbDecl = None, instFlags = []):
+        def emitHelper(self, base = 'Memory', wbDecl = None, instFlags = [], pcDecl = None):
 
             global header_output, decoder_output, exec_output
 
@@ -76,7 +76,8 @@ let {{
             (newHeader,
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
-                                           self.memFlags, instFlags, base, wbDecl)
+                                           self.memFlags, instFlags, base,
+                                           wbDecl, pcDecl)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -104,26 +105,18 @@ let {{
                 wbDiff = 8
             accCode = '''
             CPSR cpsr = Cpsr;
-            SCTLR sctlr = Sctlr;
-            // Use the version of NPC that gets set before NextThumb
-            pNPC = cSwap<uint32_t>(Mem.ud, cpsr.e);
-            uint32_t tempSpsr = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
-            uint32_t newCpsr =
-                cpsrWriteByInstr(cpsr | CondCodes, tempSpsr,
-                                 0xF, true, sctlr.nmfi);
-            Cpsr = ~CondCodesMask & newCpsr;
-            NextThumb = ((CPSR)newCpsr).t;
-            NextJazelle = ((CPSR)newCpsr).j;
-            ForcedItState = ((((CPSR)tempSpsr).it2 << 2) & 0xFC)
-                | (((CPSR)tempSpsr).it1 & 0x3);
-            CondCodes = CondCodesMask & newCpsr;
+            URc = cpsr | CondCodes;
+            URa = cSwap<uint32_t>(Mem.ud, cpsr.e);
+            URb = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
             '''
             self.codeBlobs["memacc_code"] = accCode
 
             wbDecl = None
+            pcDecl = "MicroUopSetPCCPSR(machInst, INTREG_UREG0, INTREG_UREG1, INTREG_UREG2);"
+
             if self.writeback:
                 wbDecl = "MicroAddiUop(machInst, base, base, %d);" % wbDiff
-            self.emitHelper('RfeOp', wbDecl, ["IsSerializeAfter", "IsNonSpeculative"])
+            self.emitHelper('RfeOp', wbDecl, ["IsSerializeAfter", "IsNonSpeculative"], pcDecl)
 
     class LoadImmInst(LoadInst):
         def __init__(self, *args, **kargs):

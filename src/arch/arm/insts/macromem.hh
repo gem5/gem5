@@ -134,6 +134,27 @@ class MicroNeonMixLaneOp : public MicroNeonMixOp
     {
     }
 };
+
+/**
+ * Microops of the form
+ * PC   = IntRegA
+ * CPSR = IntRegB
+ */
+class MicroSetPCCPSR : public MicroOp
+{
+    protected:
+    IntRegIndex ura, urb, urc;
+
+    MicroSetPCCPSR(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+                   IntRegIndex _ura, IntRegIndex _urb, IntRegIndex _urc)
+        : MicroOp(mnem, machInst, __opClass),
+          ura(_ura), urb(_urb), urc(_urc)
+    {
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
 /**
  * Microops of the form IntRegA = IntRegB
  */

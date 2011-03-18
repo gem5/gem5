@@ -896,6 +896,15 @@ MicroIntImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 }
 
 std::string
+MicroSetPCCPSR::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    ss << "[PC,CPSR]";
+    return ss.str();
+}
+
+std::string
 MicroIntMov::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;

@@ -917,9 +917,9 @@ def template CompleteAccDeclare {{
 
 def template RfeConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
-            uint32_t _base, int _mode, bool _wb)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                 (IntRegIndex)_base, (AddrMode)_mode, _wb)
+                                          uint32_t _base, int _mode, bool _wb)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         (IntRegIndex)_base, (AddrMode)_mode, _wb)
     {
         %(constructor)s;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
@@ -928,12 +928,18 @@ def template RfeConstructor {{
             }
         }
 #if %(use_uops)d
-        assert(numMicroops >= 2);
-        uops = new StaticInstPtr[numMicroops];
-        uops[0] = new %(acc_name)s(machInst, _base, _mode, _wb);
-        uops[0]->setDelayedCommit();
-        uops[1] = new %(wb_decl)s;
-        uops[1]->setLastMicroop();
+        uops = new StaticInstPtr[1 + %(use_wb)d + %(use_pc)d];
+        int uopIdx = 0;
+        uops[uopIdx] = new %(acc_name)s(machInst, _base, _mode, _wb);
+        uops[uopIdx]->setDelayedCommit();
+#if %(use_wb)d
+        uops[++uopIdx] = new %(wb_decl)s;
+        uops[uopIdx]->setDelayedCommit();
+#endif
+#if %(use_pc)d
+        uops[++uopIdx] = new %(pc_decl)s;
+#endif
+        uops[uopIdx]->setLastMicroop();
 #endif
     }
 }};

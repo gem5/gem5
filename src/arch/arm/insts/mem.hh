@@ -97,14 +97,18 @@ class RfeOp : public MightBeMicro
     IntRegIndex base;
     AddrMode mode;
     bool wb;
-    static const unsigned numMicroops = 2;
+    IntRegIndex ura, urb, urc;
+    static const unsigned numMicroops = 3;
 
     StaticInstPtr *uops;
 
     RfeOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
           IntRegIndex _base, AddrMode _mode, bool _wb)
         : MightBeMicro(mnem, _machInst, __opClass),
-          base(_base), mode(_mode), wb(_wb), uops(NULL)
+          base(_base), mode(_mode), wb(_wb),
+          ura(INTREG_UREG0), urb(INTREG_UREG1),
+          urc(INTREG_UREG2),
+          uops(NULL)
     {}
 
     virtual
