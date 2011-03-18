@@ -143,7 +143,7 @@ let {{
                                                  bits(machInst, 22) << 4);
         const uint32_t type = bits(machInst, 11, 8);
         uint32_t size = 0;
-        uint32_t align = 0;
+        uint32_t align = TLB::MustBeOne;
         unsigned inc = 1;
         unsigned regs = 1;
         unsigned lane = 0;
