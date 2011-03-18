@@ -182,4 +182,10 @@ addressOffset(Address addr)
     return addr.getOffset();
 }
 
+inline int
+mod(int val, int mod)
+{
+    return val % mod;
+}
+
 #endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__

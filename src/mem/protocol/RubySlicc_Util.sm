@@ -55,4 +55,4 @@ bool distributedPersistentEnabled();
 Address setOffset(Address addr, int offset);
 Address makeLineAddress(Address addr);
 int addressOffset(Address addr);
-
+int mod(int val, int mod);
