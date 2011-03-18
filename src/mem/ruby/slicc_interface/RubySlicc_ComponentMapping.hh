@@ -125,7 +125,7 @@ machineIDToMachineType(MachineID machID)
 inline NodeID
 L1CacheMachIDToProcessorNum(MachineID machID)
 {
-    assert(machID.type == MachineType_L1Cache);
+    assert(machID.type == MACHINETYPE_L1CACHE_ENUM);
     return machID.num;
 }
 
