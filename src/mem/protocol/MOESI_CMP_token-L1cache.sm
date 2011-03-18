@@ -176,6 +176,7 @@ machine(L1Cache, "Token protocol")
   void unset_cache_entry();
   void set_tbe(TBE b);
   void unset_tbe();
+  void wakeUpAllBuffers();
 
   TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
 
@@ -1525,7 +1526,7 @@ machine(L1Cache, "Token protocol")
   }
 
   action(ka_wakeUpAllDependents, "ka", desc="wake-up all dependents") {
-    wake_up_all_dependents();
+    wakeUpAllBuffers();
   }
 
   //*****************************************************

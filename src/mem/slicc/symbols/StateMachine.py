@@ -745,26 +745,28 @@ $c_ident::wakeUpAllBuffers()
 
     std::vector<MsgVecType*> wokeUpMsgVecs;
     
-    for (WaitingBufType::iterator buf_iter = m_waiting_buffers.begin();
-         buf_iter != m_waiting_buffers.end();
-         ++buf_iter) {
-         for (MsgVecType::iterator vec_iter = buf_iter->second->begin();
-              vec_iter != buf_iter->second->end();
-              ++vec_iter) {
-              if (*vec_iter != NULL) {
-                  (*vec_iter)->reanalyzeAllMessages();
-              }
-         }
-         wokeUpMsgVecs.push_back(buf_iter->second);
+    if(m_waiting_buffers.size() > 0) {
+        for (WaitingBufType::iterator buf_iter = m_waiting_buffers.begin();
+             buf_iter != m_waiting_buffers.end();
+             ++buf_iter) {
+             for (MsgVecType::iterator vec_iter = buf_iter->second->begin();
+                  vec_iter != buf_iter->second->end();
+                  ++vec_iter) {
+                  if (*vec_iter != NULL) {
+                      (*vec_iter)->reanalyzeAllMessages();
+                  }
+             }
+             wokeUpMsgVecs.push_back(buf_iter->second);
+        }
+
+        for (std::vector<MsgVecType*>::iterator wb_iter = wokeUpMsgVecs.begin();
+             wb_iter != wokeUpMsgVecs.end();
+             ++wb_iter) {
+             delete (*wb_iter);
+        }
+
+        m_waiting_buffers.clear();
     }
-    
-    for (std::vector<MsgVecType*>::iterator wb_iter = wokeUpMsgVecs.begin();
-         wb_iter != wokeUpMsgVecs.end();
-         ++wb_iter) {
-         delete (*wb_iter);
-    }
-    
-    m_waiting_buffers.clear();
 }
 
 void
