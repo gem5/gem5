@@ -35,6 +35,7 @@
 #include "python/swig/pyobject.hh"
 
 #include "base/misc.hh"
+#include "base/random.hh"
 #include "base/socket.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
@@ -54,6 +55,13 @@ const bool flag_NDEBUG = false;
 const bool flag_TRACING_ON = TRACING_ON;
 
 inline void disableAllListeners() { ListenSocket::disableAll(); }
+
+inline void
+seedRandom(uint64_t seed)
+{
+    random_mt.init(seed);
+}
+
 %}
 
 %include <stdint.i>
@@ -64,6 +72,7 @@ inline void disableAllListeners() { ListenSocket::disableAll(); }
 void setOutputDir(const std::string &dir);
 void doExitCleanup();
 void disableAllListeners();
+void seedRandom(uint64_t seed);
 
 %immutable compileDate;
 char *compileDate;
