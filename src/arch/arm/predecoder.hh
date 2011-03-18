@@ -83,6 +83,12 @@ namespace ArmISA
             predAddrValid = false;
         }
 
+        void reset(const ExtMachInst &old_emi)
+        {
+            reset();
+            itstate = old_emi.newItstate;
+        }
+
         Predecoder(ThreadContext * _tc) :
             tc(_tc), data(0)
         {

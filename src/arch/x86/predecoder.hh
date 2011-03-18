@@ -174,6 +174,12 @@ namespace X86ISA
             state = ResetState;
         }
 
+        void
+        reset(const ExtMachInst &old_emi)
+        {
+            reset();
+        }
+
         ThreadContext * getTC()
         {
             return tc;
