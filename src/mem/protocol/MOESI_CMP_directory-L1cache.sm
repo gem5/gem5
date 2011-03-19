@@ -663,10 +663,27 @@ machine(L1Cache, "Directory protocol")
   }
 
 
+  action(ub_dmaUnblockL2Cache, "ub", desc="Send dma ack to l2 cache") {
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DMA_ACK;
+        out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L1Cache;
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+                l2_select_low_bit, l2_select_num_bits));
+        out_msg.Dirty := false;
+        out_msg.Acks := 1;
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+    }
+  }
+
   action(q_sendDataFromTBEToCache, "q", desc="Send data from TBE to cache") {
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(tbe));
-      if (in_msg.RequestorMachine == MachineType:L1Cache) {
+      if (in_msg.RequestorMachine == MachineType:L1Cache || 
+          in_msg.RequestorMachine == MachineType:DMA) {
         enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
@@ -895,8 +912,14 @@ machine(L1Cache, "Directory protocol")
     l_popForwardQueue;
   }
 
-  transition(S, {Fwd_GETS, Fwd_DMA}) {
+  transition(S, Fwd_GETS) {
     e_sendData;
+    l_popForwardQueue;
+  }
+
+  transition(S, Fwd_DMA) {
+    e_sendData;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 
@@ -924,8 +947,14 @@ machine(L1Cache, "Directory protocol")
     l_popForwardQueue;
   }
 
-  transition(O, {Fwd_GETS, Fwd_DMA}) {
+  transition(O, Fwd_GETS) {
     e_sendData;
+    l_popForwardQueue;
+  }
+
+  transition(O, Fwd_DMA) {
+    e_sendData;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 
@@ -957,8 +986,8 @@ machine(L1Cache, "Directory protocol")
   }
 
   transition(MM, Fwd_DMA, MM) {
-    //ee_sendDataExclusive;
     e_sendData;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 
@@ -995,8 +1024,9 @@ machine(L1Cache, "Directory protocol")
     l_popForwardQueue;
   }
 
-  transition(M, Fwd_DMA, M) {
+  transition(M, Fwd_DMA) {
     e_sendData;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 
@@ -1039,8 +1069,14 @@ machine(L1Cache, "Directory protocol")
     n_popResponseQueue;
   }
 
-  transition(SM, {Fwd_DMA, Fwd_GETS}) {
+  transition(SM, Fwd_GETS) {
     e_sendData;
+    l_popForwardQueue;
+  }
+
+  transition(SM, Fwd_DMA) {
+    e_sendData;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 
@@ -1058,8 +1094,14 @@ machine(L1Cache, "Directory protocol")
     l_popForwardQueue;
   }
 
-  transition(OM, {Fwd_DMA, Fwd_GETS}, OM) {
+  transition(OM, Fwd_GETS) {
     e_sendData;
+    l_popForwardQueue;
+  }
+
+  transition(OM, Fwd_DMA) {
+    e_sendData;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 
@@ -1119,8 +1161,9 @@ machine(L1Cache, "Directory protocol")
     l_popForwardQueue;
   }
 
-  transition(MI, Fwd_DMA, MI) {
+  transition(MI, Fwd_DMA) {
     q_sendDataFromTBEToCache;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 
@@ -1129,8 +1172,14 @@ machine(L1Cache, "Directory protocol")
     l_popForwardQueue;
   }
 
-  transition({SI, OI}, {Fwd_DMA, Fwd_GETS}) {
+  transition({SI, OI}, Fwd_GETS) {
     q_sendDataFromTBEToCache;
+    l_popForwardQueue;
+  }
+
+  transition({SI, OI}, Fwd_DMA) {
+    q_sendDataFromTBEToCache;
+    ub_dmaUnblockL2Cache;
     l_popForwardQueue;
   }
 

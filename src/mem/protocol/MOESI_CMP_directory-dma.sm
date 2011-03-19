@@ -140,6 +140,7 @@ machine(DMA, "DMA Controller")
         out_msg.Len := in_msg.Len;
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:DMA;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
     }
@@ -154,6 +155,7 @@ machine(DMA, "DMA Controller")
           out_msg.Len := in_msg.Len;
           out_msg.Destination.add(map_Address_to_Directory(address));
           out_msg.Requestor := machineID;
+          out_msg.RequestorMachine := MachineType:DMA;
           out_msg.MessageSize := MessageSizeType:Writeback_Control;
         }
       }
@@ -185,6 +187,8 @@ machine(DMA, "DMA Controller")
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:DMA;
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }

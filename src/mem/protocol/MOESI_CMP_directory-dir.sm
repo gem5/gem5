@@ -70,6 +70,9 @@ machine(Directory, "Directory protocol")
     XI_M, AccessPermission:Busy, desc="In a stable state, going to I, waiting for the memory controller";
     XI_U, AccessPermission:Busy, desc="In a stable state, going to I, waiting for an unblock";
     OI_D, AccessPermission:Busy, desc="In O, going to I, waiting for data";
+
+    OD, AccessPermission:Busy, desc="In O, waiting for dma ack from L2";
+    MD, AccessPermission:Busy, desc="In M, waiting for dma ack from L2";
   }
 
   // Events
@@ -88,6 +91,7 @@ machine(Directory, "Directory protocol")
     Memory_Ack,    desc="Writeback Ack from memory arrives";
     DMA_READ,      desc="DMA Read";
     DMA_WRITE,     desc="DMA Write";
+    DMA_ACK,       desc="DMA Ack";
     Data,          desc="Data to directory";
   }
 
@@ -225,6 +229,9 @@ machine(Directory, "Directory protocol")
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data, in_msg.Address,
                   TBEs[in_msg.Address]);
+        } else if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
+          trigger(Event:DMA_ACK, in_msg.Address,
+                  TBEs[in_msg.Address]);
         } else {
           error("Invalid message");
         }
@@ -295,6 +302,7 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := in_msg.Requestor;
+        out_msg.RequestorMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -365,6 +373,7 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
+        out_msg.RequestorMachine := machineIDToMachineType(in_msg.Requestor);
         out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Owner);
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();
         if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
@@ -381,6 +390,7 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := machineIDToMachineType(in_msg.Requestor);
         out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Owner);
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();
         if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
@@ -399,6 +409,7 @@ machine(Directory, "Directory protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:INV;
           out_msg.Requestor := in_msg.Requestor;
+          out_msg.RequestorMachine := machineIDToMachineType(in_msg.Requestor);
           // out_msg.Destination := getDirectoryEntry(in_msg.Address).Sharers;
           out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Sharers);
           out_msg.Destination.remove(in_msg.Requestor);
@@ -632,7 +643,7 @@ machine(Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition(S, DMA_READ, S) {
+  transition(S, DMA_READ) {
     //qf_queueMemoryFetchRequest;
     p_fwdDataToDMA;
     //g_sendInvalidations;  // the DMA will collect the invalidations then send an Unblock Exclusive
@@ -674,10 +685,14 @@ machine(Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition(O, DMA_READ, O) {
+  transition(O, DMA_READ, OD) {
     f_forwardRequest;     // this will cause the data to go to DMA directly
     //g_sendInvalidations;  // this will cause acks to be sent to the DMA
     i_popIncomingRequestQueue;
+  }
+
+  transition(OD, DMA_ACK, O) {
+    j_popIncomingUnblockQueue;
   }
 
   transition({O,M}, DMA_WRITE, OI_D) {
@@ -708,9 +723,13 @@ machine(Directory, "Directory protocol")
   }
 
   // no exclusive unblock will show up to the directory
-  transition(M, DMA_READ, M) {
+  transition(M, DMA_READ, MD) {
     f_forwardRequest;     // this will cause the data to go to DMA directly
     i_popIncomingRequestQueue;
+  }
+
+  transition(MD, DMA_ACK, M) {
+    j_popIncomingUnblockQueue;
   }
 
   transition(M, GETS, MO) {
@@ -745,7 +764,7 @@ machine(Directory, "Directory protocol")
   }
 
 
-  transition({MM, MO, MI, MIS, OS, OSS, XI_M, XI_U, OI_D}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE}) {
+  transition({MM, MO, MI, MIS, OS, OSS, XI_M, XI_U, OI_D, OD, MD}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE}) {
     zz_recycleRequest;
   }
 
