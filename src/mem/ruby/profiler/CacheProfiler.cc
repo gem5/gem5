@@ -33,7 +33,7 @@
 using namespace std;
 
 CacheProfiler::CacheProfiler(const string& description)
-    : m_cacheRequestType(int(CacheRequestType_NUM)), m_genericRequestType(int(GenericRequestType_NUM))
+    : m_cacheRequestType(int(RubyRequestType_NUM)), m_genericRequestType(int(GenericRequestType_NUM))
 {
     m_description = description;
 
@@ -59,7 +59,7 @@ CacheProfiler::printStats(ostream& out) const
 
     int requests = 0;
 
-    for (int i = 0; i < int(CacheRequestType_NUM); i++) {
+    for (int i = 0; i < int(RubyRequestType_NUM); i++) {
         requests += m_cacheRequestType[i];
     }
 
@@ -70,10 +70,10 @@ CacheProfiler::printStats(ostream& out) const
     assert(m_misses == requests);
 
     if (requests > 0) {
-        for (int i = 0; i < int(CacheRequestType_NUM); i++) {
+        for (int i = 0; i < int(RubyRequestType_NUM); i++) {
             if (m_cacheRequestType[i] > 0) {
                 out << description << "_request_type_"
-                    << CacheRequestType_to_string(CacheRequestType(i))
+                    << RubyRequestType_to_string(RubyRequestType(i))
                     << ":   "
                     << 100.0 * (double)m_cacheRequestType[i] /
                     (double)requests
@@ -111,7 +111,7 @@ CacheProfiler::printStats(ostream& out) const
 void
 CacheProfiler::clearStats()
 {
-    for (int i = 0; i < int(CacheRequestType_NUM); i++) {
+    for (int i = 0; i < int(RubyRequestType_NUM); i++) {
         m_cacheRequestType[i] = 0;
     }
     for (int i = 0; i < int(GenericRequestType_NUM); i++) {
@@ -128,7 +128,7 @@ CacheProfiler::clearStats()
 }
 
 void
-CacheProfiler::addCacheStatSample(CacheRequestType requestType,
+CacheProfiler::addCacheStatSample(RubyRequestType requestType,
                                   RubyAccessMode accessType,
                                   PrefetchBit pfBit)
 {

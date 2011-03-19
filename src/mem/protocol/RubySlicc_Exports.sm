@@ -103,16 +103,22 @@ enumeration(TransitionResult, desc="...") {
   ProtocolStall, desc="Protocol specified stall";
 }
 
-// CacheRequestType
-enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
-  LD,          desc="Load";
-  ST,          desc="Store";
-  ATOMIC,      desc="Atomic Load/Store";
-  IFETCH,      desc="Instruction fetch";
-  IO,          desc="I/O";
-  REPLACEMENT, desc="Replacement";
-  COMMIT,      desc="Commit version";
-  NULL,        desc="Invalid request type";
+// RubyRequestType
+enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
+  LD,                desc="Load";
+  ST,                desc="Store";
+  ATOMIC,            desc="Atomic Load/Store";
+  IFETCH,            desc="Instruction fetch";
+  IO,                desc="I/O";
+  REPLACEMENT,       desc="Replacement";
+  Load_Linked,       desc="";
+  Store_Conditional, desc="";
+  RMW_Read,          desc="";
+  RMW_Write,         desc="";
+  Locked_RMW_Read,   desc="";
+  Locked_RMW_Write,  desc="";
+  COMMIT,            desc="Commit version";
+  NULL,              desc="Invalid request type";
 }
 
 enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {
@@ -211,7 +217,7 @@ enumeration(PrefetchBit, default="PrefetchBit_No", desc="...") {
 structure(CacheMsg, desc="...", interface="Message") {
   Address LineAddress,       desc="Line address for this request";
   Address PhysicalAddress,   desc="Physical address for this request";
-  CacheRequestType Type,     desc="Type of request (LD, ST, etc)";
+  RubyRequestType Type,      desc="Type of request (LD, ST, etc)";
   Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   RubyAccessMode AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";

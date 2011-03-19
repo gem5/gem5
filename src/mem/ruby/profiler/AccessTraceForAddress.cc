@@ -58,17 +58,17 @@ AccessTraceForAddress::print(std::ostream& out) const
 }
 
 void
-AccessTraceForAddress::update(CacheRequestType type,
+AccessTraceForAddress::update(RubyRequestType type,
                               RubyAccessMode access_mode, NodeID cpu,
                               bool sharing_miss)
 {
     m_touched_by.add(cpu);
     m_total++;
-    if(type == CacheRequestType_ATOMIC) {
+    if(type == RubyRequestType_ATOMIC) {
         m_atomics++;
-    } else if(type == CacheRequestType_LD){
+    } else if(type == RubyRequestType_LD){
         m_loads++;
-    } else if (type == CacheRequestType_ST){
+    } else if (type == RubyRequestType_ST){
         m_stores++;
     } else {
         //  ERROR_MSG("Trying to add invalid access to trace");

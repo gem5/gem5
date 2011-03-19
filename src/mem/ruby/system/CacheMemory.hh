@@ -36,7 +36,7 @@
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/protocol/CacheMsg.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
@@ -66,11 +66,11 @@ class CacheMemory : public SimObject
     void printConfig(std::ostream& out);
 
     // perform a cache access and see if we hit or not.  Return true on a hit.
-    bool tryCacheAccess(const Address& address, CacheRequestType type,
+    bool tryCacheAccess(const Address& address, RubyRequestType type,
                         DataBlock*& data_ptr);
 
     // similar to above, but doesn't require full access check
-    bool testCacheAccess(const Address& address, CacheRequestType type,
+    bool testCacheAccess(const Address& address, RubyRequestType type,
                          DataBlock*& data_ptr);
 
     // tests to see if an address is present in the cache

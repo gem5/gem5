@@ -55,7 +55,7 @@ class AddressProfiler
     void clearStats();
 
     void addTraceSample(Address data_addr, Address pc_addr,
-                        CacheRequestType type, RubyAccessMode access_mode,
+                        RubyRequestType type, RubyAccessMode access_mode,
                         NodeID id, bool sharing_miss);
     void profileRetry(const Address& data_addr, AccessType type, int count);
     void profileGetX(const Address& datablock, const Address& PC,

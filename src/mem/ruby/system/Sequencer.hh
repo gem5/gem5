@@ -33,7 +33,7 @@
 
 #include "base/hashmap.hh"
 #include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/ruby/common/Address.hh"
@@ -112,7 +112,7 @@ class Sequencer : public RubyPort, public Consumer
     void removeRequest(SequencerRequest* request);
 
   private:
-    bool tryCacheAccess(const Address& addr, CacheRequestType type,
+    bool tryCacheAccess(const Address& addr, RubyRequestType type,
                         const Address& pc, RubyAccessMode access_mode,
                         int size, DataBlock*& data_ptr);
     void issueRequest(const RubyRequest& request);

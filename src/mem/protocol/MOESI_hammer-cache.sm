@@ -214,15 +214,15 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
-  Event mandatory_request_type_to_event(CacheRequestType type) {
-    if (type == CacheRequestType:LD) {
+  Event mandatory_request_type_to_event(RubyRequestType type) {
+    if (type == RubyRequestType:LD) {
       return Event:Load;
-    } else if (type == CacheRequestType:IFETCH) {
+    } else if (type == RubyRequestType:IFETCH) {
       return Event:Ifetch;
-    } else if ((type == CacheRequestType:ST) || (type == CacheRequestType:ATOMIC)) {
+    } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)) {
       return Event:Store;
     } else {
-      error("Invalid CacheRequestType");
+      error("Invalid RubyRequestType");
     }
   }
 
@@ -359,7 +359,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
         TBE tbe := TBEs[in_msg.LineAddress];
 
-        if (in_msg.Type == CacheRequestType:IFETCH) {
+        if (in_msg.Type == RubyRequestType:IFETCH) {
           // ** INSTRUCTION ACCESS ***
 
           Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
@@ -700,7 +700,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
                               cache_entry.DataBlk);
 
       cache_entry.Dirty := true;
-      if (in_msg.Type == CacheRequestType:ATOMIC) {
+      if (in_msg.Type == RubyRequestType:ATOMIC) {
         cache_entry.AtomicAccessed := true;
       }
     }

@@ -64,15 +64,7 @@ DMASequencer::makeRequest(const RubyRequest &request)
       case RubyRequestType_ST:
         write = true;
         break;
-      case RubyRequestType_NULL:
-      case RubyRequestType_IFETCH:
-      case RubyRequestType_Load_Linked:
-      case RubyRequestType_Store_Conditional:
-      case RubyRequestType_RMW_Read:
-      case RubyRequestType_RMW_Write:
-      case RubyRequestType_Locked_RMW_Read:
-      case RubyRequestType_Locked_RMW_Write:
-      case RubyRequestType_NUM:
+      default:
         panic("DMASequencer::makeRequest does not support RubyRequestType");
         return RequestStatus_NULL;
     }

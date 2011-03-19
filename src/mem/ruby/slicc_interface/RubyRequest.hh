@@ -33,25 +33,12 @@
 
 #include "mem/packet.hh"
 #include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/Message.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/ruby/common/Address.hh"
 
 typedef void* RubyPortHandle;
-enum RubyRequestType {
-  RubyRequestType_NULL,
-  RubyRequestType_IFETCH,
-  RubyRequestType_LD,
-  RubyRequestType_ST,
-  RubyRequestType_Load_Linked,
-  RubyRequestType_Store_Conditional,
-  RubyRequestType_RMW_Read,
-  RubyRequestType_RMW_Write,
-  RubyRequestType_Locked_RMW_Read,
-  RubyRequestType_Locked_RMW_Write,
-  RubyRequestType_NUM
-};
 
 class RubyRequest
 {
@@ -87,9 +74,6 @@ class RubyRequest
     void print(std::ostream& out) const;
 };
 
-std::string RubyRequestType_to_string(const RubyRequestType& obj);
-RubyRequestType string_to_RubyRequestType(std::string);
-std::ostream& operator<<(std::ostream& out, const RubyRequestType& obj);
 std::ostream& operator<<(std::ostream& out, const RubyRequest& obj);
 
 #endif

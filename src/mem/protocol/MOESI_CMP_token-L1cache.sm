@@ -341,31 +341,31 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-  Event mandatory_request_type_to_event(CacheRequestType type) {
-    if (type == CacheRequestType:LD) {
+  Event mandatory_request_type_to_event(RubyRequestType type) {
+    if (type == RubyRequestType:LD) {
       return Event:Load;
-    } else if (type == CacheRequestType:IFETCH) {
+    } else if (type == RubyRequestType:IFETCH) {
       return Event:Ifetch;
-    } else if (type == CacheRequestType:ST) {
+    } else if (type == RubyRequestType:ST) {
       return Event:Store;
-    } else if (type == CacheRequestType:ATOMIC) {
+    } else if (type == RubyRequestType:ATOMIC) {
       if (no_mig_atomic) {
         return Event:Atomic;
       } else {
         return Event:Store;
       }
     } else {
-      error("Invalid CacheRequestType");
+      error("Invalid RubyRequestType");
     }
   }
 
-  AccessType cache_request_type_to_access_type(CacheRequestType type) {
-    if ((type == CacheRequestType:LD) || (type == CacheRequestType:IFETCH)) {
+  AccessType cache_request_type_to_access_type(RubyRequestType type) {
+    if ((type == RubyRequestType:LD) || (type == RubyRequestType:IFETCH)) {
       return AccessType:Read;
-    } else if ((type == CacheRequestType:ST) || (type == CacheRequestType:ATOMIC)) {
+    } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)) {
       return AccessType:Write;
     } else {
-      error("Invalid CacheRequestType");
+      error("Invalid RubyRequestType");
     }
   }
 
@@ -629,7 +629,7 @@ machine(L1Cache, "Token protocol")
 
         TBE tbe := L1_TBEs[in_msg.LineAddress];
 
-        if (in_msg.Type == CacheRequestType:IFETCH) {
+        if (in_msg.Type == RubyRequestType:IFETCH) {
           // ** INSTRUCTION ACCESS ***
 
           Entry L1Icache_entry := getL1ICacheEntry(in_msg.LineAddress);
@@ -1313,7 +1313,7 @@ machine(L1Cache, "Token protocol")
     peek(mandatoryQueue_in, CacheMsg) {
       tbe.PC := in_msg.ProgramCounter;
       tbe.AccessType := cache_request_type_to_access_type(in_msg.Type);
-      if (in_msg.Type == CacheRequestType:ATOMIC) {
+      if (in_msg.Type == RubyRequestType:ATOMIC) {
         tbe.IsAtomic := true;
       }
       tbe.Prefetch := in_msg.Prefetch;

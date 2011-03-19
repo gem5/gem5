@@ -257,7 +257,7 @@ AddressProfiler::profileGetX(const Address& datablock, const Address& PC,
     m_getx_sharing_histogram.add(num_indirections);
     bool indirection_miss = (num_indirections > 0);
 
-    addTraceSample(datablock, PC, CacheRequestType_ST, RubyAccessMode(0),
+    addTraceSample(datablock, PC, RubyRequestType_ST, RubyAccessMode(0),
                    requestor, indirection_miss);
 }
 
@@ -274,13 +274,13 @@ AddressProfiler::profileGetS(const Address& datablock, const Address& PC,
     m_gets_sharing_histogram.add(num_indirections);
     bool indirection_miss = (num_indirections > 0);
 
-    addTraceSample(datablock, PC, CacheRequestType_LD, RubyAccessMode(0),
+    addTraceSample(datablock, PC, RubyRequestType_LD, RubyAccessMode(0),
                    requestor, indirection_miss);
 }
 
 void
 AddressProfiler::addTraceSample(Address data_addr, Address pc_addr,
-                                CacheRequestType type,
+                                RubyRequestType type,
                                 RubyAccessMode access_mode, NodeID id,
                                 bool sharing_miss)
 {

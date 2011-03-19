@@ -159,7 +159,7 @@ CacheMemory::findTagInSetIgnorePermissions(Index cacheSet,
 }
 
 bool
-CacheMemory::tryCacheAccess(const Address& address, CacheRequestType type,
+CacheMemory::tryCacheAccess(const Address& address, RubyRequestType type,
                             DataBlock*& data_ptr)
 {
     assert(address == line_address(address));
@@ -177,7 +177,7 @@ CacheMemory::tryCacheAccess(const Address& address, CacheRequestType type,
             return true;
         }
         if ((entry->m_Permission == AccessPermission_Read_Only) &&
-            (type == CacheRequestType_LD || type == CacheRequestType_IFETCH)) {
+            (type == RubyRequestType_LD || type == RubyRequestType_IFETCH)) {
             return true;
         }
         // The line must not be accessible
@@ -187,7 +187,7 @@ CacheMemory::tryCacheAccess(const Address& address, CacheRequestType type,
 }
 
 bool
-CacheMemory::testCacheAccess(const Address& address, CacheRequestType type,
+CacheMemory::testCacheAccess(const Address& address, RubyRequestType type,
                              DataBlock*& data_ptr)
 {
     assert(address == line_address(address));
@@ -367,18 +367,18 @@ CacheMemory::recordCacheContents(CacheRecorder& tr) const
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
             AccessPermission perm = m_cache[i][j]->m_Permission;
-            CacheRequestType request_type = CacheRequestType_NULL;
+            RubyRequestType request_type = RubyRequestType_NULL;
             if (perm == AccessPermission_Read_Only) {
                 if (m_is_instruction_only_cache) {
-                    request_type = CacheRequestType_IFETCH;
+                    request_type = RubyRequestType_IFETCH;
                 } else {
-                    request_type = CacheRequestType_LD;
+                    request_type = RubyRequestType_LD;
                 }
             } else if (perm == AccessPermission_Read_Write) {
-                request_type = CacheRequestType_ST;
+                request_type = RubyRequestType_ST;
             }
 
-            if (request_type != CacheRequestType_NULL) {
+            if (request_type != RubyRequestType_NULL) {
 #if 0
                 tr.addRecord(m_chip_ptr->getID(), m_cache[i][j].m_Address,
                              Address(0), request_type,

@@ -38,7 +38,7 @@
 #include <string>
 #include <vector>
 
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/recorder/TraceRecord.hh"

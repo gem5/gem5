@@ -320,7 +320,7 @@ Profiler::printStats(ostream& out, bool short_stats)
         out << "prefetch_latency: " << m_allSWPrefetchLatencyHistogram << endl;
         for (int i = 0; i < m_SWPrefetchLatencyHistograms.size(); i++) {
             if (m_SWPrefetchLatencyHistograms[i].size() > 0) {
-                out << "prefetch_latency_" << CacheRequestType(i) << ": "
+                out << "prefetch_latency_" << RubyRequestType(i) << ": "
                     << m_SWPrefetchLatencyHistograms[i] << endl;
             }
         }
@@ -500,7 +500,7 @@ Profiler::clearStats()
     m_dirFirstResponseToCompleteHistogram.clear(200);
     m_dirIncompleteTimes = 0;
 
-    m_SWPrefetchLatencyHistograms.resize(CacheRequestType_NUM);
+    m_SWPrefetchLatencyHistograms.resize(RubyRequestType_NUM);
     for (int i = 0; i < m_SWPrefetchLatencyHistograms.size(); i++) {
         m_SWPrefetchLatencyHistograms[i].clear(200);
     }
@@ -537,7 +537,7 @@ Profiler::clearStats()
 void
 Profiler::addAddressTraceSample(const CacheMsg& msg, NodeID id)
 {
-    if (msg.getType() != CacheRequestType_IFETCH) {
+    if (msg.getType() != RubyRequestType_IFETCH) {
         // Note: The following line should be commented out if you
         // want to use the special profiling that is part of the GS320
         // protocol
@@ -683,7 +683,7 @@ Profiler::missLatencyDir(Time issuedTime,
 // non-zero cycle prefetch request
 void
 Profiler::swPrefetchLatency(Time cycles, 
-                            CacheRequestType type,
+                            RubyRequestType type,
                             const GenericMachineType respondingMach)
 {
     m_allSWPrefetchLatencyHistogram.add(cycles);

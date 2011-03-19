@@ -53,7 +53,7 @@
 #include "base/hashmap.hh"
 #include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/AccessType.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/PrefetchBit.hh"
@@ -150,7 +150,7 @@ class Profiler : public SimObject, public Consumer
                         Time completionTime);
     
     void swPrefetchLatency(Time t, 
-                           CacheRequestType type,
+                           RubyRequestType type,
                            const GenericMachineType respondingMach);
 
     void sequencerRequests(int num) { m_sequencer_requests.add(num); }

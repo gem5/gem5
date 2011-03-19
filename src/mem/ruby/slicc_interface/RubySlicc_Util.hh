@@ -37,7 +37,7 @@
 
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/CacheMsg.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/Directory_State.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/L1Cache_State.hh"

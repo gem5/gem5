@@ -604,16 +604,16 @@ Sequencer::makeRequest(const RubyRequest &request)
 void
 Sequencer::issueRequest(const RubyRequest& request)
 {
-    // TODO: get rid of CacheMsg, CacheRequestType, and
+    // TODO: get rid of CacheMsg, RubyRequestType, and
     // AccessModeTYpe, & have SLICC use RubyRequest and subtypes
     // natively
-    CacheRequestType ctype;
+    RubyRequestType ctype;
     switch(request.type) {
       case RubyRequestType_IFETCH:
-        ctype = CacheRequestType_IFETCH;
+        ctype = RubyRequestType_IFETCH;
         break;
       case RubyRequestType_LD:
-        ctype = CacheRequestType_LD;
+        ctype = RubyRequestType_LD;
         break;
       case RubyRequestType_ST:
       case RubyRequestType_RMW_Read:
@@ -626,7 +626,7 @@ Sequencer::issueRequest(const RubyRequest& request)
       //
       case RubyRequestType_Locked_RMW_Read:
       case RubyRequestType_Locked_RMW_Write:
-        ctype = CacheRequestType_ST;
+        ctype = RubyRequestType_ST;
         break;
       //
       // Alpha LL/SC instructions need to be handled carefully by the cache
@@ -638,7 +638,7 @@ Sequencer::issueRequest(const RubyRequest& request)
       //
       case RubyRequestType_Load_Linked:
       case RubyRequestType_Store_Conditional:
-        ctype = CacheRequestType_ATOMIC;
+        ctype = RubyRequestType_ATOMIC;
         break;
       default:
         assert(0);
@@ -685,12 +685,12 @@ Sequencer::issueRequest(const RubyRequest& request)
 
 #if 0
 bool
-Sequencer::tryCacheAccess(const Address& addr, CacheRequestType type,
+Sequencer::tryCacheAccess(const Address& addr, RubyRequestType type,
                           RubyAccessMode access_mode,
                           int size, DataBlock*& data_ptr)
 {
     CacheMemory *cache =
-        (type == CacheRequestType_IFETCH) ? m_instCache_ptr : m_dataCache_ptr;
+        (type == RubyRequestType_IFETCH) ? m_instCache_ptr : m_dataCache_ptr;
 
     return cache->tryCacheAccess(line_address(addr), type, data_ptr);
 }

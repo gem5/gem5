@@ -34,7 +34,7 @@
 #include <vector>
 
 #include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/ruby/common/Global.hh"
@@ -50,7 +50,7 @@ class CacheProfiler
     void printStats(std::ostream& out) const;
     void clearStats();
 
-    void addCacheStatSample(CacheRequestType requestType, 
+    void addCacheStatSample(RubyRequestType requestType,
                             RubyAccessMode type,
                             PrefetchBit pfBit);
 
