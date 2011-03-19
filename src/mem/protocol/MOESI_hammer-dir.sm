@@ -186,7 +186,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   PfEntry getProbeFilterEntry(Address addr), return_by_pointer="yes" {
-    if(probe_filter_enabled) {
+    if (probe_filter_enabled || full_bit_dir_enabled) {
       PfEntry pfEntry := static_cast(PfEntry, "pointer", probeFilter.lookup(addr));
       return pfEntry;
     }
@@ -200,8 +200,6 @@ machine(Directory, "AMD Hammer-like protocol")
       if (probe_filter_enabled || full_bit_dir_enabled) {
         if (is_valid(pf_entry)) {
           assert(pf_entry.PfState == getDirectoryEntry(addr).DirectoryState);
-        } else {
-          assert(getDirectoryEntry(addr).DirectoryState == State:E);
         }
       }
       return getDirectoryEntry(addr).DirectoryState;
@@ -218,6 +216,9 @@ machine(Directory, "AMD Hammer-like protocol")
       }
       if (state == State:NX || state == State:NO || state == State:S || state == State:O) {
         assert(is_valid(pf_entry));
+      }
+      if (state == State:E) {
+        assert(is_valid(pf_entry) == false);
       }
     }
     if (state == State:E || state == State:NX || state == State:NO || state == State:S || 
@@ -469,6 +470,7 @@ machine(Directory, "AMD Hammer-like protocol")
       peek(requestQueue_in, RequestMsg) {
         set_cache_entry(probeFilter.allocate(address, new PfEntry));
         cache_entry.Owner := in_msg.Requestor;
+        cache_entry.Sharers.setSize(machineCount(MachineType:L1Cache));
       }
     }
   }
