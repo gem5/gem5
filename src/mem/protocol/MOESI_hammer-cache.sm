@@ -560,7 +560,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
-  action(ee_sendDataShared, "\e", desc="Send data from cache to requestor, keep a shared copy") {
+  action(ee_sendDataShared, "\e", desc="Send data from cache to requestor, remaining the owner") {
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
         assert(is_valid(cache_entry));
@@ -584,7 +584,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
   
-  action(em_sendDataSharedMultiple, "em", desc="Send data from cache to all requestors") {
+  action(em_sendDataSharedMultiple, "em", desc="Send data from cache to all requestors, still the owner") {
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
         assert(is_valid(cache_entry));
@@ -874,12 +874,37 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
-  action(qm_sendDataFromTBEToCache, "qm", desc="Send data from TBE to cache, multiple sharers") {
+  action(sq_sendSharedDataFromTBEToCache, "sq", desc="Send shared data from TBE to cache, still the owner") {
+    peek(forwardToCache_in, RequestMsg) {
+        assert(in_msg.Requestor != machineID);
+      enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
+        assert(is_valid(tbe));
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA_SHARED;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        DPRINTF(RubySlicc, "%s\n", out_msg.Destination);
+        out_msg.DataBlk := tbe.DataBlk;
+        out_msg.Dirty := tbe.Dirty;
+        if (in_msg.DirectedProbe) {
+          out_msg.Acks := machineCount(MachineType:L1Cache);
+        } else {
+          out_msg.Acks := 2;
+        }
+        out_msg.SilentAcks := in_msg.SilentAcks;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+        out_msg.ForwardRequestTime := in_msg.ForwardRequestTime;
+      }
+    }
+  }
+
+  action(qm_sendDataFromTBEToCache, "qm", desc="Send data from TBE to cache, multiple sharers, still the owner") {
     peek(forwardToCache_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
         assert(is_valid(tbe));
         out_msg.Address := address;
-        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
         out_msg.Destination := in_msg.MergedRequestors;
         DPRINTF(RubySlicc, "%s\n", out_msg.Destination);
@@ -1599,7 +1624,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition({OI, MI}, {NC_DMA_GETS, Other_GETS, Other_GETS_No_Mig}, OI) {
-    q_sendDataFromTBEToCache;
+    sq_sendSharedDataFromTBEToCache;
     l_popForwardQueue;
   }
 

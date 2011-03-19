@@ -1500,14 +1500,14 @@ machine(Directory, "AMD Hammer-like protocol")
 
   transition(O_DR_B, Shared_Ack) {
     m_decrementNumberOfMessages;
-    so_setOwnerBit;
+    r_setSharerBit;
     o_checkForCompletion;
     n_popResponseQueue;
   }
 
   transition(O_DR_B_W, Shared_Ack) {
     m_decrementNumberOfMessages;
-    so_setOwnerBit;
+    r_setSharerBit;
     n_popResponseQueue;
   }
 
