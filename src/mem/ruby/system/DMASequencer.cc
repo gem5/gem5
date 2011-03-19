@@ -150,7 +150,10 @@ DMASequencer::issueNext()
     assert(m_mandatory_q_ptr != NULL);
     m_mandatory_q_ptr->enqueue(msg);
     active_request.bytes_issued += msg->getLen();
-    DPRINTF(RubyDma, "Next DMA segment issued to the DMA cntrl\n");
+    DPRINTF(RubyDma, 
+            "DMA request bytes issued %d, bytes completed %d, total len %d\n",
+            active_request.bytes_issued, active_request.bytes_completed,
+            active_request.len);
 }
 
 void
