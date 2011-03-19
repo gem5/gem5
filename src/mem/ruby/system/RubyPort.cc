@@ -103,7 +103,7 @@ RubyPort::PioPort::PioPort(const std::string &_name,
                            RubyPort *_port)
     : SimpleTimingPort(_name, _port)
 {
-    DPRINTF(Ruby, "creating port to ruby sequencer to cpu %s\n", _name);
+    DPRINTF(RubyPort, "creating port to ruby sequencer to cpu %s\n", _name);
     ruby_port = _port;
 }
 
@@ -111,7 +111,7 @@ RubyPort::M5Port::M5Port(const std::string &_name,
                          RubyPort *_port, bool _access_phys_mem)
     : SimpleTimingPort(_name, _port)
 {
-    DPRINTF(Ruby, "creating port from ruby sequcner to cpu %s\n", _name);
+    DPRINTF(RubyPort, "creating port from ruby sequcner to cpu %s\n", _name);
     ruby_port = _port;
     _onRetryList = false;
     access_phys_mem = _access_phys_mem;
@@ -137,7 +137,7 @@ RubyPort::PioPort::recvTiming(PacketPtr pkt)
 {
     // In FS mode, ruby memory will receive pio responses from devices
     // and it must forward these responses back to the particular CPU.
-    DPRINTF(MemoryAccess,  "Pio response for address %#x\n", pkt->getAddr());
+    DPRINTF(RubyPort,  "Pio response for address %#x\n", pkt->getAddr());
 
     assert(pkt->isResponse());
 
@@ -159,7 +159,7 @@ RubyPort::PioPort::recvTiming(PacketPtr pkt)
 bool
 RubyPort::M5Port::recvTiming(PacketPtr pkt)
 {
-    DPRINTF(MemoryAccess,
+    DPRINTF(RubyPort,
             "Timing access caught for address %#x\n", pkt->getAddr());
 
     //dsm: based on SimpleTimingPort::recvTiming(pkt);
@@ -186,7 +186,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     // pio port.
     if (!isPhysMemAddress(pkt->getAddr())) {
         assert(ruby_port->pio_port != NULL);
-        DPRINTF(MemoryAccess,
+        DPRINTF(RubyPort,
                 "Request for address 0x%#x is assumed to be a pio request\n",
                 pkt->getAddr());
 
@@ -205,19 +205,19 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
 
     if (pkt->isLLSC()) {
         if (pkt->isWrite()) {
-            DPRINTF(MemoryAccess, "Issuing SC\n");
+            DPRINTF(RubyPort, "Issuing SC\n");
             type = RubyRequestType_Store_Conditional;
         } else {
-            DPRINTF(MemoryAccess, "Issuing LL\n");
+            DPRINTF(RubyPort, "Issuing LL\n");
             assert(pkt->isRead());
             type = RubyRequestType_Load_Linked;
         }
     } else if (pkt->req->isLocked()) {
         if (pkt->isWrite()) {
-            DPRINTF(MemoryAccess, "Issuing Locked RMW Write\n");
+            DPRINTF(RubyPort, "Issuing Locked RMW Write\n");
             type = RubyRequestType_Locked_RMW_Write;
         } else {
-            DPRINTF(MemoryAccess, "Issuing Locked RMW Read\n");
+            DPRINTF(RubyPort, "Issuing Locked RMW Read\n");
             assert(pkt->isRead());
             type = RubyRequestType_Locked_RMW_Read;
         }
@@ -263,7 +263,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     // Otherwise, we need to delete the senderStatus we just created and return
     // false.
     if (requestStatus == RequestStatus_Issued) {
-        DPRINTF(MemoryAccess, "Request %x issued\n", pkt->getAddr());
+        DPRINTF(RubyPort, "Request %#x issued\n", pkt->getAddr());
         return true;
     }
 
@@ -275,7 +275,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
         ruby_port->addToRetryList(this);
     }
 
-    DPRINTF(MemoryAccess,
+    DPRINTF(RubyPort,
             "Request for address %#x did not issue because %s\n",
             pkt->getAddr(), RequestStatus_to_string(requestStatus));
 
@@ -351,7 +351,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
             pkt->convertLlToRead();
         }
     }
-    DPRINTF(MemoryAccess, "Hit callback needs response %d\n", needsResponse);
+    DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
     if (accessPhysMem) {
         ruby_port->physMemPort->sendAtomic(pkt);
@@ -361,12 +361,12 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
 
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
-        DPRINTF(MemoryAccess, "Sending packet back over port\n");
+        DPRINTF(RubyPort, "Sending packet back over port\n");
         sendTiming(pkt);
     } else {
         delete pkt;
     }
-    DPRINTF(MemoryAccess, "Hit callback done!\n");
+    DPRINTF(RubyPort, "Hit callback done!\n");
 }
 
 bool
@@ -395,7 +395,7 @@ RubyPort::M5Port::isPhysMemAddress(Addr addr)
          iter != physMemAddrList.end();
          iter++) {
         if (addr >= iter->start && addr <= iter->end) {
-            DPRINTF(MemoryAccess, "Request found in %#llx - %#llx range\n",
+            DPRINTF(RubyPort, "Request found in %#llx - %#llx range\n",
                     iter->start, iter->end);
             return true;
         }

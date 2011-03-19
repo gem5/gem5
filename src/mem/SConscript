@@ -66,12 +66,12 @@ TraceFlag('RubyDma')
 TraceFlag('RubyGenerated')
 TraceFlag('RubyMemory')
 TraceFlag('RubyNetwork')
-TraceFlag('RubyQueue')
 TraceFlag('RubyPort')
+TraceFlag('RubyQueue')
 TraceFlag('RubySlicc')
 TraceFlag('RubyStorebuffer')
 TraceFlag('RubyTester')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubyStorebuffer', 'RubyCache', 
-    'RubyMemory', 'RubyDma'])
+    'RubyMemory', 'RubyDma', 'RubyPort'])
