@@ -44,7 +44,7 @@ Check::Check(const Address& address, const Address& pc,
     pickInitiatingNode();
     changeAddress(address);
     m_pc = pc;
-    m_access_mode = AccessModeType(random() % AccessModeType_NUM);
+    m_access_mode = RubyAccessMode(random() % RubyAccessMode_NUM);
     m_store_count = 0;
 }
 

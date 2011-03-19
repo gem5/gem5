@@ -51,7 +51,7 @@
 #include <vector>
 
 #include "base/hashmap.hh"
-#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/GenericMachineType.hh"

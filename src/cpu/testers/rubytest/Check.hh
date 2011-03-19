@@ -33,7 +33,7 @@
 #include <iostream>
 
 #include "cpu/testers/rubytest/RubyTester.hh"
-#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/TesterStatus.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -73,7 +73,7 @@ class Check
     NodeID m_initiatingNode;
     Address m_address;
     Address m_pc;
-    AccessModeType m_access_mode;
+    RubyAccessMode m_access_mode;
     int m_num_cpu_sequencers;
     RubyTester* m_tester_ptr;
 };

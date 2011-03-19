@@ -32,7 +32,7 @@
 #include <iostream>
 
 #include "base/hashmap.hh"
-#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/PrefetchBit.hh"
@@ -113,7 +113,7 @@ class Sequencer : public RubyPort, public Consumer
 
   private:
     bool tryCacheAccess(const Address& addr, CacheRequestType type,
-                        const Address& pc, AccessModeType access_mode,
+                        const Address& pc, RubyAccessMode access_mode,
                         int size, DataBlock*& data_ptr);
     void issueRequest(const RubyRequest& request);
 

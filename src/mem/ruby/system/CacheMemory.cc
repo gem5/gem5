@@ -353,7 +353,7 @@ CacheMemory::profileMiss(const CacheMsg& msg)
 
 void
 CacheMemory::profileGenericRequest(GenericRequestType requestType,
-                                   AccessModeType accessType,
+                                   RubyAccessMode accessType,
                                    PrefetchBit pfBit)
 {
     m_profiler_ptr->addGenericStatSample(requestType, 

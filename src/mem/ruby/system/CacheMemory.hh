@@ -110,7 +110,7 @@ class CacheMemory : public SimObject
     void profileMiss(const CacheMsg & msg);
 
     void profileGenericRequest(GenericRequestType requestType,
-                               AccessModeType accessType,
+                               RubyAccessMode accessType,
                                PrefetchBit pfBit);
 
     void getMemoryValue(const Address& addr, char* value,

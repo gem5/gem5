@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -50,7 +50,7 @@ class AccessTraceForAddress
     ~AccessTraceForAddress();
 
     void setAddress(const Address& addr) { m_addr = addr; }
-    void update(CacheRequestType type, AccessModeType access_mode, NodeID cpu,
+    void update(CacheRequestType type, RubyAccessMode access_mode, NodeID cpu,
                 bool sharing_miss);
     int getTotal() const;
     int getSharing() const { return m_sharing; }

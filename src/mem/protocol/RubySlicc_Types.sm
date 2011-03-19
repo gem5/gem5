@@ -129,7 +129,7 @@ structure (CacheMemory, external = "yes") {
   void profileMiss(CacheMsg);
 
   void profileGenericRequest(GenericRequestType,
-                             AccessModeType,
+                             RubyAccessMode,
                              PrefetchBit);
 
   void setMRU(Address);

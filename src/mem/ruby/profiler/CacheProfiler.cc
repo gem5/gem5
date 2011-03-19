@@ -94,10 +94,10 @@ CacheProfiler::printStats(ostream& out) const
 
         out << endl;
 
-        for (int i = 0; i < AccessModeType_NUM; i++){
+        for (int i = 0; i < RubyAccessMode_NUM; i++){
             if (m_accessModeTypeHistogram[i] > 0) {
                 out << description << "_access_mode_type_"
-                    << (AccessModeType) i << ":   "
+                    << (RubyAccessMode) i << ":   "
                     << m_accessModeTypeHistogram[i] << "    "
                     << 100.0 * m_accessModeTypeHistogram[i] / requests
                     << "%" << endl;
@@ -122,14 +122,14 @@ CacheProfiler::clearStats()
     m_prefetches = 0;
     m_sw_prefetches = 0;
     m_hw_prefetches = 0;
-    for (int i = 0; i < AccessModeType_NUM; i++) {
+    for (int i = 0; i < RubyAccessMode_NUM; i++) {
         m_accessModeTypeHistogram[i] = 0;
     }
 }
 
 void
 CacheProfiler::addCacheStatSample(CacheRequestType requestType,
-                                  AccessModeType accessType, 
+                                  RubyAccessMode accessType,
                                   PrefetchBit pfBit)
 {
     m_cacheRequestType[requestType]++;
@@ -138,7 +138,7 @@ CacheProfiler::addCacheStatSample(CacheRequestType requestType,
 
 void
 CacheProfiler::addGenericStatSample(GenericRequestType requestType,
-                                    AccessModeType accessType, 
+                                    RubyAccessMode accessType,
                                     PrefetchBit pfBit)
 {
     m_genericRequestType[requestType]++;
@@ -146,7 +146,7 @@ CacheProfiler::addGenericStatSample(GenericRequestType requestType,
 }
 
 void
-CacheProfiler::addStatSample(AccessModeType accessType, 
+CacheProfiler::addStatSample(RubyAccessMode accessType,
                              PrefetchBit pfBit)
 {
     m_misses++;

@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/PrefetchBit.hh"
@@ -51,11 +51,11 @@ class CacheProfiler
     void clearStats();
 
     void addCacheStatSample(CacheRequestType requestType, 
-                            AccessModeType type,
+                            RubyAccessMode type,
                             PrefetchBit pfBit);
 
     void addGenericStatSample(GenericRequestType requestType, 
-                              AccessModeType type,
+                              RubyAccessMode type,
                               PrefetchBit pfBit);
 
     void print(std::ostream& out) const;
@@ -64,7 +64,7 @@ class CacheProfiler
     // Private copy constructor and assignment operator
     CacheProfiler(const CacheProfiler& obj);
     CacheProfiler& operator=(const CacheProfiler& obj);
-    void addStatSample(AccessModeType type, PrefetchBit pfBit);
+    void addStatSample(RubyAccessMode type, PrefetchBit pfBit);
 
     std::string m_description;
     int64 m_misses;
@@ -72,7 +72,7 @@ class CacheProfiler
     int64 m_prefetches;
     int64 m_sw_prefetches;
     int64 m_hw_prefetches;
-    int64 m_accessModeTypeHistogram[AccessModeType_NUM];
+    int64 m_accessModeTypeHistogram[RubyAccessMode_NUM];
 
     std::vector<int> m_cacheRequestType;
     std::vector<int> m_genericRequestType;

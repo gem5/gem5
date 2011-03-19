@@ -644,16 +644,16 @@ Sequencer::issueRequest(const RubyRequest& request)
         assert(0);
     }
 
-    AccessModeType amtype;
+    RubyAccessMode amtype;
     switch(request.access_mode){
       case RubyAccessMode_User:
-        amtype = AccessModeType_UserMode;
+        amtype = RubyAccessMode_User;
         break;
       case RubyAccessMode_Supervisor:
-        amtype = AccessModeType_SupervisorMode;
+        amtype = RubyAccessMode_Supervisor;
         break;
       case RubyAccessMode_Device:
-        amtype = AccessModeType_UserMode;
+        amtype = RubyAccessMode_User;
         break;
       default:
         assert(0);
@@ -686,7 +686,7 @@ Sequencer::issueRequest(const RubyRequest& request)
 #if 0
 bool
 Sequencer::tryCacheAccess(const Address& addr, CacheRequestType type,
-                          AccessModeType access_mode,
+                          RubyAccessMode access_mode,
                           int size, DataBlock*& data_ptr)
 {
     CacheMemory *cache =

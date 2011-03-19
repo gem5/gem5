@@ -193,10 +193,11 @@ enumeration(AccessType, desc="...") {
   Write, desc="Writing to cache";
 }
 
-// AccessModeType
-enumeration(AccessModeType, default="AccessModeType_UserMode", desc="...") {
-  SupervisorMode, desc="Supervisor mode";
-  UserMode,       desc="User mode";
+// RubyAccessMode
+enumeration(RubyAccessMode, default="RubyAccessMode_User", desc="...") {
+  Supervisor, desc="Supervisor mode";
+  User,       desc="User mode";
+  Device, desc="Device mode";
 }
 
 enumeration(PrefetchBit, default="PrefetchBit_No", desc="...") {
@@ -212,7 +213,7 @@ structure(CacheMsg, desc="...", interface="Message") {
   Address PhysicalAddress,   desc="Physical address for this request";
   CacheRequestType Type,     desc="Type of request (LD, ST, etc)";
   Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
-  AccessModeType AccessMode, desc="user/supervisor access type";
+  RubyAccessMode AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
 }
@@ -223,7 +224,7 @@ structure(SequencerMsg, desc="...", interface="Message") {
   Address PhysicalAddress,   desc="Physical address for this request";
   SequencerRequestType Type,     desc="Type of request (LD, ST, etc)";
   Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
-  AccessModeType AccessMode, desc="user/supervisor access type";
+  RubyAccessMode AccessMode, desc="user/supervisor access type";
   DataBlock DataBlk,         desc="Data";
   int Len,                   desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";

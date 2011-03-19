@@ -32,7 +32,7 @@
 #include <ostream>
 
 #include "mem/packet.hh"
-#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/Message.hh"
 #include "mem/protocol/PrefetchBit.hh"
@@ -51,12 +51,6 @@ enum RubyRequestType {
   RubyRequestType_Locked_RMW_Read,
   RubyRequestType_Locked_RMW_Write,
   RubyRequestType_NUM
-};
-
-enum RubyAccessMode {
-  RubyAccessMode_User,
-  RubyAccessMode_Supervisor,
-  RubyAccessMode_Device
 };
 
 class RubyRequest
