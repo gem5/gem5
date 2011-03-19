@@ -1232,8 +1232,8 @@ if (!%s.areNSlotsAvailable(%s))
         code('''
       default:
         fatal("Invalid transition\\n"
-              "version: %d time: %d addr: %s event: %s state: %s\\n",
-              m_version, g_eventQueue_ptr->getTime(), addr, event, state);
+              "%s time: %d addr: %s event: %s state: %s\\n",
+              name(), g_eventQueue_ptr->getTime(), addr, event, state);
     }
     return TransitionResult_Valid;
 }
