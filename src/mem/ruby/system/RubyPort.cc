@@ -305,16 +305,26 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
     // likely has free resources now.
     //
     if (waitingOnSequencer) {
-        for (std::list<M5Port*>::iterator i = retryList.begin();
-             i != retryList.end(); ++i) {
-            (*i)->sendRetry();
-            (*i)->onRetryList(false);
-            DPRINTF(MemoryAccess,
-                    "Sequencer may now be free.  SendRetry to port %s\n",
-                    (*i)->name());
-        }
+        //
+        // Record the current list of ports to retry on a temporary list before
+        // calling sendRetry on those ports.  sendRetry will cause an 
+        // immediate retry, which may result in the ports being put back on the
+        // list. Therefore we want to clear the retryList before calling
+        // sendRetry.
+        //
+        std::list<M5Port*> curRetryList(retryList);
+
         retryList.clear();
         waitingOnSequencer = false;
+        
+        for (std::list<M5Port*>::iterator i = curRetryList.begin();
+             i != curRetryList.end(); ++i) {
+            DPRINTF(RubyPort,
+                    "Sequencer may now be free.  SendRetry to port %s\n",
+                    (*i)->name());
+            (*i)->onRetryList(false);
+            (*i)->sendRetry();
+        }
     }
 }
 

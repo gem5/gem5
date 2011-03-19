@@ -116,9 +116,13 @@ DMASequencer::issueNext()
     assert(m_is_busy == true);
     active_request.bytes_completed = active_request.bytes_issued;
     if (active_request.len == active_request.bytes_completed) {
-        DPRINTF(RubyDma, "DMA request completed\n"); 
-        ruby_hit_callback(active_request.pkt);
+        //
+        // Must unset the busy flag before calling back the dma port because
+        // the callback may cause a previously nacked request to be reissued
+        //
+        DPRINTF(RubyDma, "DMA request completed\n");
         m_is_busy = false;
+        ruby_hit_callback(active_request.pkt);
         return;
     }
 
