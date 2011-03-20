@@ -74,5 +74,3 @@ from slicc.ast.TypeFieldMemberAST import *
 from slicc.ast.TypeFieldMethodAST import *
 from slicc.ast.TypeFieldStateAST import *
 from slicc.ast.VarExprAST import *
-from slicc.ast.WakeUpAllDependentsStatementAST import *
-from slicc.ast.WakeUpDependentsStatementAST import *
