@@ -1,4 +1,5 @@
 # Copyright (c) 2009 The Regents of The University of Michigan
+# Copyright (c) 2011 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -84,22 +85,30 @@ def aggregate(options, args):
                     merged.set(newsec, "M5_pid", i)
 
                 items = config.items(sec)
-                for item in items:
-                    if item[0] == "ppn":
-                        if config.getint(sec, "tag") != 0:
-                            merged.set(newsec, item[0], int(item[1]) + page_ptr)
-                            continue
-                    elif item[0] == "asn":
-                        tmp = re.compile("(.*).Entry(\d+)").search(sec).groups()
-                        if config.has_option(tmp[0], "nlu"):
-                            size = config.getint(tmp[0], "nlu")
-                            if int(tmp[1]) < size:
+                if options.alpha:
+                    for item in items:
+                        if item[0] == "ppn":
+                            if config.getint(sec, "tag") != 0:
+                                merged.set(newsec, item[0], int(item[1]) + page_ptr)
+                                continue
+                        elif item[0] == "asn":
+                            tmp = re.compile("(.*).Entry(\d+)").search(sec).groups()
+                            if config.has_option(tmp[0], "nlu"):
+                                size = config.getint(tmp[0], "nlu")
+                                if int(tmp[1]) < size:
+                                    merged.set(newsec, item[0], i)
+                                    continue
+                            else:
                                 merged.set(newsec, item[0], i)
                                 continue
-                        else:
-                            merged.set(newsec, item[0], i)
+                        merged.set(newsec, item[0], item[1])
+                else:a #x86
+                    for item in items:
+                        if item[0] == "paddr":
+                            merged.set(newsec, item[0], int(item[1]) + (page_ptr << 12))
                             continue
-                    merged.set(newsec, item[0], item[1])
+                        merged.set(newsec, item[0], item[1])
+
             elif sec == "system":
                 pass
             elif sec == "Globals":
@@ -117,17 +126,20 @@ def aggregate(options, args):
                         elif item[0] == "numevents":
                             merged.optionxform(str("numEvents"))
 
-        page_ptr = page_ptr + int(config.get("system", "page_ptr"))
+        page_ptr = page_ptr + int(config.get("system", "pagePtr"))
 
         ### memory stuff
         f = open(cpts[i] + "/system.physmem.physmem", "rb")
         gf = gzip.GzipFile(fileobj=f, mode="rb")
-        pages = int(config.get("system", "page_ptr"))
+        pages = int(config.get("system", "pagePtr"))
         print "pages to be read: ", pages
 
         x = 0
         while x < pages:
-            bytesRead = gf.read(1 << 13)
+            if options.alpha:
+                bytesRead = gf.read(1 << 13)
+            else: #x86
+                bytesRead = gf.read(1 << 12)
             merged_mem.write(bytesRead)
             x += 1
 
@@ -135,22 +147,15 @@ def aggregate(options, args):
         f.close()
 
     merged.add_section("system")
-    merged.set("system", "page_ptr", page_ptr)
+    merged.set("system", "pagePtr", page_ptr)
+    merged.set("system", "nextPID", len(args))
+
     print "WARNING: "
-    print "Make sure the simulation using this checkpoint has at least "
-    if page_ptr > (1<<20):
-        print "8G ",
-    elif page_ptr > (1<<19):
-        print "4G ",
-    elif page_ptr > (1<<18):
-        print "2G ",
-    elif page_ptr > (1<<17):
-        print "1G ",
-    elif page_ptr > (1<<16):
-        print "512KB ",
-    else:
-        print "this is a small sim, you're probably fine",
-    print "of memory."
+    print "Make sure the simulation using this checkpoint has at least ",
+    if options.alpha:
+        print page_ptr, "x 8K of memory"
+    else:  # assume x86
+        print page_ptr, "x 4K of memory"
 
     merged.add_section("Globals")
     merged.set("Globals", "curTick", max_curtick)
@@ -166,6 +171,10 @@ if __name__ == "__main__":
 
     parser = optparse.OptionParser()
     parser.add_option("--prefix", type="string", default="agg")
+    # If not alpha, then assume x86.  Any other ISAs would need
+    # extra stuff in this script to appropriately parse their page tables
+    # and understand page sizes.
+    parser.add_option("--alpha", action="store_true")
 
     (options, args) = parser.parse_args()
 
