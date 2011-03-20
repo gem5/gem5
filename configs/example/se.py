@@ -44,6 +44,9 @@ if buildEnv['FULL_SYSTEM']:
     fatal("This script requires syscall emulation mode (*_SE).")
 
 addToPath('../common')
+addToPath('../ruby')
+
+import Ruby
 
 import Simulation
 import CacheConfig
@@ -67,10 +70,15 @@ parser.add_option("-o", "--options", default="",
 parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
 parser.add_option("--output", default="", help="Redirect stdout to a file.")
 parser.add_option("--errout", default="", help="Redirect stderr to a file.")
+parser.add_option("--ruby", action="store_true")
 
 execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
+
+if options.ruby:
+    Ruby.define_options(parser)
+    (options, args) = parser.parse_args()
 
 if args:
     print "Error: script doesn't take any positional arguments"
@@ -145,7 +153,18 @@ if options.detailed or options.inorder:
             smt_idx += 1
     numThreads = len(workloads)
     
-(CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
+if options.ruby:
+    if options.detailed:
+        print >> sys.stderr, "Ruby only works with TimingSimpleCPU!!"
+        sys.exit(1)
+    elif not options.timing:
+        print >> sys.stderr, "****WARN:  using Timing CPU since it's needed by Ruby"
+
+    class CPUClass(TimingSimpleCPU): pass
+    test_mem_mode = 'timing'
+    FutureClass = None
+else:
+    (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
 CPUClass.clock = '2GHz'
 CPUClass.numThreads = numThreads;
@@ -156,12 +175,20 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = PhysicalMemory(range=AddrRange("512MB")),
                 membus = Bus(), mem_mode = test_mem_mode)
 
-system.physmem.port = system.membus.port
-
-CacheConfig.config_cache(options, system)
+if options.ruby:
+    options.use_map = True
+    system.ruby = Ruby.create_system(options, system)
+    assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
+else:
+    system.physmem.port = system.membus.port
+    CacheConfig.config_cache(options, system)
 
 for i in xrange(np):
     system.cpu[i].workload = multiprocesses[i]
+
+    if options.ruby:
+        system.cpu[i].icache_port = system.ruby.cpu_ruby_ports[i].port
+        system.cpu[i].dcache_port = system.ruby.cpu_ruby_ports[i].port
 
     if options.fastmem:
         system.cpu[0].physmem_port = system.physmem.port
