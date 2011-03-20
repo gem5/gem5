@@ -87,13 +87,13 @@ if options.bench:
 
     for app in apps:
         try:
-            if buildEnv['TARGET_ISA'] != 'alpha':
-                print >>sys.stderr, "Simpoints code only works for Alpha ISA at this time"
-                sys.exit(1)
-            exec("workload = %s('alpha', 'tru64', 'ref')" % app)
+            if buildEnv['TARGET_ISA'] == 'alpha':
+                exec("workload = %s('alpha', 'tru64', 'ref')" % app)
+            else:
+                exec("workload = %s(buildEnv['TARGET_ISA'], 'linux', 'ref')" % app)
             multiprocesses.append(workload.makeLiveProcess())
         except:
-            print >>sys.stderr, "Unable to find workload for %s" % app
+            print >>sys.stderr, "Unable to find workload for %s: %s" % (buildEnv['TARGET_ISA'], app)
             sys.exit(1)
 else:
     process = LiveProcess()
