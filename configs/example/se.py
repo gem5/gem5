@@ -76,20 +76,30 @@ if args:
     print "Error: script doesn't take any positional arguments"
     sys.exit(1)
 
+multiprocesses = []
+apps = []
+
 if options.bench:
-    try:
-        if buildEnv['TARGET_ISA'] != 'alpha':
-            print >>sys.stderr, "Simpoints code only works for Alpha ISA at this time"
-            sys.exit(1)
-        exec("workload = %s('alpha', 'tru64', 'ref')" % options.bench)
-        process = workload.makeLiveProcess()
-    except:
-        print >>sys.stderr, "Unable to find workload for %s" % options.bench
+    apps = options.bench.split("-")
+    if len(apps) != options.num_cpus:
+        print "number of benchmarks not equal to set num_cpus!"
         sys.exit(1)
+
+    for app in apps:
+        try:
+            if buildEnv['TARGET_ISA'] != 'alpha':
+                print >>sys.stderr, "Simpoints code only works for Alpha ISA at this time"
+                sys.exit(1)
+            exec("workload = %s('alpha', 'tru64', 'ref')" % app)
+            multiprocesses.append(workload.makeLiveProcess())
+        except:
+            print >>sys.stderr, "Unable to find workload for %s" % app
+            sys.exit(1)
 else:
     process = LiveProcess()
     process.executable = options.cmd
     process.cmd = [options.cmd] + options.options.split()
+    multiprocesses.append(process)
 
 
 if options.input != "":
@@ -151,7 +161,7 @@ system.physmem.port = system.membus.port
 CacheConfig.config_cache(options, system)
 
 for i in xrange(np):
-    system.cpu[i].workload = process
+    system.cpu[i].workload = multiprocesses[i]
 
     if options.fastmem:
         system.cpu[0].physmem_port = system.physmem.port
