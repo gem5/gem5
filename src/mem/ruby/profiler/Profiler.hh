@@ -68,7 +68,7 @@
 #include "params/RubyProfiler.hh"
 #include "sim/sim_object.hh"
 
-class CacheMsg;
+class RubyRequest;
 class AddressProfiler;
 
 class Profiler : public SimObject, public Consumer
@@ -93,7 +93,7 @@ class Profiler : public SimObject, public Consumer
     AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }
     AddressProfiler* getInstructionProfiler() { return m_inst_profiler_ptr; }
 
-    void addAddressTraceSample(const CacheMsg& msg, NodeID id);
+    void addAddressTraceSample(const RubyRequest& msg, NodeID id);
 
     void profileRequest(const std::string& requestStr);
     void profileSharing(const Address& addr, AccessType type,

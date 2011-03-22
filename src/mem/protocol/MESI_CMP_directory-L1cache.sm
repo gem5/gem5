@@ -267,9 +267,9 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   }
 
   // Mandatory Queue betweens Node's CPU and it's L1 caches
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
@@ -338,7 +338,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   // ACTIONS
   action(a_issueGETS, "a", desc="Issue GETS") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETS;
@@ -355,7 +355,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   }
 
   action(ai_issueGETINSTR, "ai", desc="Issue GETINSTR") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GET_INSTR;
@@ -373,7 +373,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
 
   action(b_issueGETX, "b", desc="Issue GETX") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETX;
@@ -391,7 +391,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   }
 
   action(c_issueUPGRADE, "c", desc="Issue GETX") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestIntraChipL1Network_out, RequestMsg, latency= l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:UPGRADE;

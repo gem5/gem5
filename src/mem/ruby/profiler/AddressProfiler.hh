@@ -33,7 +33,7 @@
 
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessType.hh"
-#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"

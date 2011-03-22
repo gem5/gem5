@@ -344,7 +344,7 @@ CacheMemory::setMRU(const Address& address)
 }
 
 void
-CacheMemory::profileMiss(const CacheMsg& msg)
+CacheMemory::profileMiss(const RubyRequest& msg)
 {
     m_profiler_ptr->addCacheStatSample(msg.getType(), 
                                        msg.getAccessMode(),

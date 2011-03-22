@@ -214,17 +214,6 @@ enumeration(PrefetchBit, default="PrefetchBit_No", desc="...") {
 }
 
 // CacheMsg
-structure(CacheMsg, desc="...", interface="Message") {
-  Address LineAddress,       desc="Line address for this request";
-  Address PhysicalAddress,   desc="Physical address for this request";
-  RubyRequestType Type,      desc="Type of request (LD, ST, etc)";
-  Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
-  RubyAccessMode AccessMode, desc="user/supervisor access type";
-  int Size,                  desc="size in bytes of access";
-  PrefetchBit Prefetch,      desc="Is this a prefetch request";
-}
-
-// CacheMsg
 structure(SequencerMsg, desc="...", interface="Message") {
   Address LineAddress,       desc="Line address for this request";
   Address PhysicalAddress,   desc="Physical address for this request";

@@ -303,9 +303,9 @@ machine(L1Cache, "Directory protocol")
 
   // Nothing from the unblock network
   // Mandatory Queue betweens Node's CPU and it's L1 caches
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
@@ -380,7 +380,7 @@ machine(L1Cache, "Directory protocol")
   // ACTIONS
 
   action(a_issueGETS, "a", desc="Issue GETS") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestNetwork_out, RequestMsg, latency= request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETS;
@@ -396,7 +396,7 @@ machine(L1Cache, "Directory protocol")
   }
 
   action(b_issueGETX, "b", desc="Issue GETX") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETX;
@@ -820,7 +820,7 @@ machine(L1Cache, "Directory protocol")
 
 
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       //      profile_miss(in_msg);
     }
   }

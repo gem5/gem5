@@ -40,40 +40,102 @@
 
 typedef void* RubyPortHandle;
 
-class RubyRequest
+class RubyRequest : public Message
 {
   public:
-    uint64_t paddr;
+    Address m_PhysicalAddress;
+    Address m_LineAddress;
+    RubyRequestType m_Type;
+    Address m_ProgramCounter;
+    RubyAccessMode m_AccessMode;
+    int m_Size;
+    PrefetchBit m_Prefetch;
     uint8_t* data;
-    int len;
-    uint64_t pc;
-    RubyRequestType type;
-    RubyAccessMode access_mode;
     PacketPtr pkt;
     unsigned proc_id;
 
     RubyRequest() {}
-    RubyRequest(uint64_t _paddr,
-                uint8_t* _data,
-                int _len,
-                uint64_t _pc,
-                RubyRequestType _type,
-                RubyAccessMode _access_mode,
-                PacketPtr _pkt,
-                unsigned _proc_id = 100)
-        : paddr(_paddr),
+    RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc,
+                RubyRequestType _type, RubyAccessMode _access_mode,
+                PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
+                 unsigned _proc_id = 100)
+        : m_PhysicalAddress(_paddr),
+          m_Type(_type),
+          m_ProgramCounter(_pc),
+          m_AccessMode(_access_mode),
+          m_Size(_len),
+          m_Prefetch(_pb),
           data(_data),
-          len(_len),
-          pc(_pc),
-          type(_type),
-          access_mode(_access_mode),
           pkt(_pkt),
           proc_id(_proc_id)
-    {}
+    {
+      m_LineAddress = m_PhysicalAddress;
+      m_LineAddress.makeLineAddress();
+    }
+
+    static RubyRequest*
+    create()
+    {
+        return new RubyRequest();
+    }
+
+    RubyRequest*
+    clone() const
+    {
+        return new RubyRequest(*this);
+    }
+
+    const Address&
+    getLineAddress() const
+    {
+        return m_LineAddress;
+    }
+
+    const Address&
+    getPhysicalAddress() const
+    {
+        return m_PhysicalAddress;
+    }
+
+    const RubyRequestType&
+    getType() const
+    {
+        return m_Type;
+    }
+
+    const Address&
+    getProgramCounter() const
+    {
+        return m_ProgramCounter;
+    }
+
+    const RubyAccessMode&
+    getAccessMode() const
+    {
+      return m_AccessMode;
+    }
+
+    const int&
+    getSize() const
+    {
+      return m_Size;
+    }
+
+    const PrefetchBit&
+    getPrefetch() const
+    {
+      return m_Prefetch;
+    }
 
     void print(std::ostream& out) const;
 };
 
-std::ostream& operator<<(std::ostream& out, const RubyRequest& obj);
+inline std::ostream&
+operator<<(std::ostream& out, const RubyRequest& obj)
+{
+  obj.print(out);
+  out << std::flush;
+  return out;
+}
 
 #endif

@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/recorder/TraceRecord.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"

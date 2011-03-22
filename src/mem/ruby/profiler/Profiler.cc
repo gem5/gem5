@@ -51,7 +51,7 @@
 
 #include "base/stl_helpers.hh"
 #include "base/str.hh"
-#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/RubyRequest.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/network/Network.hh"
@@ -535,7 +535,7 @@ Profiler::clearStats()
 }
 
 void
-Profiler::addAddressTraceSample(const CacheMsg& msg, NodeID id)
+Profiler::addAddressTraceSample(const RubyRequest& msg, NodeID id)
 {
     if (msg.getType() != RubyRequestType_IFETCH) {
         // Note: The following line should be commented out if you

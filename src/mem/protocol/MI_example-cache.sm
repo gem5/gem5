@@ -181,9 +181,9 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
     // Mandatory Queue
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         Entry cache_entry := getCacheEntry(in_msg.LineAddress);
         if (is_invalid(cache_entry) &&
@@ -281,7 +281,7 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   action(p_profileMiss, "p", desc="Profile cache miss") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       cacheMemory.profileMiss(in_msg);
     }
   }

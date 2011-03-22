@@ -622,9 +622,9 @@ machine(L1Cache, "Token protocol")
   }
 
   // Mandatory Queue
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...", rank=0) {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank=0) {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
         TBE tbe := L1_TBEs[in_msg.LineAddress];
@@ -1310,7 +1310,7 @@ machine(L1Cache, "Token protocol")
     L1_TBEs.allocate(address);
     set_tbe(L1_TBEs[address]);
     tbe.IssueCount := 0;
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       tbe.PC := in_msg.ProgramCounter;
       tbe.AccessType := cache_request_type_to_access_type(in_msg.Type);
       if (in_msg.Type == RubyRequestType:ATOMIC) {
@@ -1323,7 +1323,7 @@ machine(L1Cache, "Token protocol")
   }
 
   action(ta_traceStalledAddress, "ta", desc="Trace Stalled Address") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       APPEND_TRANSITION_COMMENT(in_msg.LineAddress);
     }
   }
@@ -1499,7 +1499,7 @@ machine(L1Cache, "Token protocol")
   }
 
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       if (L1DcacheMemory.isTagPresent(address)) {
         L1DcacheMemory.profileMiss(in_msg);
       } else {
@@ -1516,7 +1516,7 @@ machine(L1Cache, "Token protocol")
   }
 
   action(zz_stallAndWaitMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       APPEND_TRANSITION_COMMENT(in_msg.LineAddress);
     } 
     stall_and_wait(mandatoryQueue_in, address);    

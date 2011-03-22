@@ -253,7 +253,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
                              pkt->getSize(), pc, type,
                              RubyAccessMode_Supervisor, pkt);
 
-    assert(Address(ruby_request.paddr).getOffset() + ruby_request.len <=
+    assert(ruby_request.m_PhysicalAddress.getOffset() + ruby_request.m_Size <=
         RubySystem::getBlockSizeBytes());
 
     // Submit the ruby request

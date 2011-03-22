@@ -35,7 +35,7 @@
 
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessPermission.hh"
-#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/RubyRequest.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/MachineType.hh"
@@ -107,7 +107,7 @@ class CacheMemory : public SimObject
     // Set this address to most recently used
     void setMRU(const Address& address);
 
-    void profileMiss(const CacheMsg & msg);
+    void profileMiss(const RubyRequest & msg);
 
     void profileGenericRequest(GenericRequestType requestType,
                                RubyAccessMode accessType,

@@ -29,7 +29,7 @@
 #include <vector>
 
 #include "base/stl_helpers.hh"
-#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"

@@ -132,9 +132,9 @@ machine(L1Cache, "Network_test L1 Cache")
   out_port(responseNetwork_out, RequestMsg, responseFromCache);
 
   // Mandatory Queue
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg) {
+      peek(mandatoryQueue_in, RubyRequest) {
         trigger(mandatory_request_type_to_event(in_msg.Type),
                 in_msg.LineAddress,
                 getCacheEntry(in_msg.LineAddress),

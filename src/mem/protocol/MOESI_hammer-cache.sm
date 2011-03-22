@@ -352,9 +352,9 @@ machine(L1Cache, "AMD Hammer-like protocol")
   // Nothing from the request network
 
   // Mandatory Queue
-  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...", rank=0) {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank=0) {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
+      peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
         TBE tbe := TBEs[in_msg.LineAddress];
@@ -695,7 +695,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
     assert(is_valid(cache_entry));
     DPRINTF(RubySlicc, "%s\n", cache_entry.DataBlk);
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       sequencer.writeCallback(address, testAndClearLocalHit(cache_entry),
                               cache_entry.DataBlk);
 
@@ -1022,7 +1022,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
-    peek(mandatoryQueue_in, CacheMsg) {
+    peek(mandatoryQueue_in, RubyRequest) {
       if (L1IcacheMemory.isTagPresent(address)) {
         L1IcacheMemory.profileMiss(in_msg);
       } else if (L1DcacheMemory.isTagPresent(address)) {

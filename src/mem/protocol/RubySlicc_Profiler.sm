@@ -34,10 +34,10 @@ void profileCacheCLBsize(int size, int numStaleI);
 void profileMemoryCLBsize(int size, int numStaleI);
 
 // used by 2level exclusive cache protocols
-void profile_miss(CacheMsg msg);
+void profile_miss(RubyRequest msg);
 
 // used by non-fast path protocols
-void profile_L1Cache_miss(CacheMsg msg, NodeID l1cacheID);
+void profile_L1Cache_miss(RubyRequest msg, NodeID l1cacheID);
 
 // used by CMP protocols
 void profile_request(std::string L1CacheStateStr, std::string L2CacheStateStr,

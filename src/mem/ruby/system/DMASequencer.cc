@@ -53,11 +53,11 @@ DMASequencer::makeRequest(const RubyRequest &request)
         return RequestStatus_BufferFull;
     }
 
-    uint64_t paddr = request.paddr;
+    uint64_t paddr = request.m_PhysicalAddress.getAddress();
     uint8_t* data = request.data;
-    int len = request.len;
+    int len = request.m_Size;
     bool write = false;
-    switch(request.type) {
+    switch(request.m_Type) {
       case RubyRequestType_LD:
         write = false;
         break;
