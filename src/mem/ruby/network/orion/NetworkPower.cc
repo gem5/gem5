@@ -55,9 +55,10 @@ Router_d::calculate_power()
     std::vector<double > buf_write_count_active;
 
     for (int i =0; i < m_virtual_networks; i++) {
-        if (vc_local_arbit_count[i] > 0) {
+
+        active_vclass_ary[i] = (get_net_ptr())->validVirtualNetwork(i);
+        if (active_vclass_ary[i]) {
             num_active_vclass++;
-            active_vclass_ary[i] = true;
             vc_local_arbit_count_active.push_back(vc_local_arbit_count[i]);
             vc_global_arbit_count_active.push_back(vc_global_arbit_count[i]);
             buf_read_count_active.push_back(buf_read_count[i]);
@@ -66,7 +67,7 @@ Router_d::calculate_power()
         else {
             // Inactive vclass
             assert(vc_global_arbit_count[i] == 0);
-            active_vclass_ary[i] = false;
+            assert(vc_local_arbit_count[i] == 0);
         }
     }
 

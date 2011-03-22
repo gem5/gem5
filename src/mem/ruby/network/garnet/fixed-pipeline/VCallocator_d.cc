@@ -177,6 +177,10 @@ VCallocator_d::arbitrate_invcs()
 {
     for (int inport_iter = 0; inport_iter < m_num_inports; inport_iter++) {
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
+            if (!((m_router->get_net_ptr())->validVirtualNetwork(
+                get_vnet(invc_iter))))
+                continue;
+
             if (m_input_unit[inport_iter]->need_stage(
                 invc_iter, VC_AB_, VA_)) {
                 if (!is_invc_candidate(inport_iter, invc_iter))
@@ -240,13 +244,10 @@ VCallocator_d::arbitrate_outvcs()
 int
 VCallocator_d::get_vnet(int invc)
 {
-    for (int i = 0; i < RubySystem::getNetwork()->getNumberOfVirtualNetworks();
-            i++) {
-        if (invc >= (i*m_vc_per_vnet) && invc < ((i+1)*m_vc_per_vnet)) {
-            return i;
-        }
-    }
-    fatal("Could not determine vc");
+    int vnet = invc/m_vc_per_vnet;
+    assert(vnet < m_router->get_num_vnets());
+
+    return vnet;
 }
 
 void

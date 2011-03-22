@@ -300,6 +300,9 @@ GarnetNetwork_d::printStats(ostream& out) const
     out << "-------------" << endl;
 
     for (int i = 0; i < m_vcs_per_class*m_virtual_networks; i++) {
+        if (!m_in_use[i/m_vcs_per_class])
+            continue;
+
         average_vc_load[i] = (double(average_vc_load[i]) /
             (double(g_eventQueue_ptr->getTime()) - m_ruby_start));
         out << "Average VC Load [" << i << "] = " << average_vc_load[i]

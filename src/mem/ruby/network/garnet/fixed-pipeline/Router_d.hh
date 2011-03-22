@@ -62,6 +62,7 @@ class Router_d
                     int link_weight, CreditLink_d *credit_link);
 
     int get_num_vcs()       { return m_num_vcs; }
+    int get_num_vnets()     { return m_virtual_networks; }
     int get_vc_per_vnet()   { return m_vc_per_vnet; }
     int get_num_inports()   { return m_input_unit.size(); }
     int get_num_outports()  { return m_output_unit.size(); }

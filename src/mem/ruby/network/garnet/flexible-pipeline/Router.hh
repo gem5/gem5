@@ -62,6 +62,7 @@ class Router : public FlexibleConsumer
     void grant_vc(int out_port, int vc, Time grant_time);
     void release_vc(int out_port, int vc, Time release_time);
     void vc_arbitrate();
+    int get_vnet(int vc);
 
     void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
