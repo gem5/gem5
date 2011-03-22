@@ -30,7 +30,6 @@
 
 #include <cassert>
 
-#include "base/cprintf.hh"
 #include "base/stl_helpers.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/protocol/MachineType.hh"
@@ -50,6 +49,10 @@ GarnetNetwork::GarnetNetwork(const Params *p)
     : BaseGarnetNetwork(p)
 {
     m_ruby_start = 0;
+    m_flits_received = 0;
+    m_flits_injected = 0;
+    m_network_latency = 0.0;
+    m_queueing_latency = 0.0;
 
     // Allocate to and from queues
 
@@ -191,7 +194,6 @@ void
 GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered,
     int network_num)
 {
-    cprintf ("id = %i, m_nodes = %i \n", id, m_nodes);
     assert(id < m_nodes);
     assert(network_num < m_virtual_networks);
 
@@ -264,6 +266,18 @@ GarnetNetwork::printStats(ostream& out) const
                " flits/cycle" << endl;
     }
     out << "-------------" << endl;
+
+    out << "Total flits injected = " << m_flits_injected << endl;
+    out << "Total flits received = " << m_flits_received << endl;
+    out << "Average network latency = "
+        << ((double) m_network_latency/ (double) m_flits_received)<< endl;
+    out << "Average queueing (at source NI) latency = "
+        << ((double) m_queueing_latency/ (double) m_flits_received)<< endl;
+    out << "Average latency = "
+        << ((double)  (m_queueing_latency + m_network_latency) /
+            (double) m_flits_received)<< endl;
+    out << "-------------" << endl;
+
     m_topology_ptr->printStats(out);
 }
 

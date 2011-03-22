@@ -52,6 +52,8 @@ class flit
     void set_vc(int vc);
     MsgPtr& get_msg_ptr();
     flit_type get_type();
+    void set_delay(int delay);
+    int get_delay();
     void print(std::ostream& out) const;
 
     static bool
@@ -72,7 +74,7 @@ class flit
     Time m_enqueue_time, m_time;
     flit_type m_type;
     MsgPtr m_msg_ptr;
-
+    int src_delay;
 };
 
 inline std::ostream&

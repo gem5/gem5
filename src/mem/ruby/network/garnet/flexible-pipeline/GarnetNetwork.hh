@@ -65,6 +65,21 @@ class GarnetNetwork : public BaseGarnetNetwork
     void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
 
+    inline void increment_injected_flits() { m_flits_injected++; }
+    inline void increment_received_flits() { m_flits_received++; }
+
+    inline void
+    increment_network_latency(Time latency)
+    {
+        m_network_latency += latency;
+    }
+
+    inline void
+    increment_queueing_latency(Time latency)
+    {
+        m_queueing_latency += latency;
+    }
+
     bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }
     bool validVirtualNetwork(int vnet) { return m_in_use[vnet]; }
 
@@ -92,6 +107,8 @@ class GarnetNetwork : public BaseGarnetNetwork
 
     // int m_virtual_networks;
     // int m_nodes;
+    int m_flits_received, m_flits_injected;
+    double m_network_latency, m_queueing_latency;
 
     std::vector<bool> m_in_use;
     std::vector<bool> m_ordered;

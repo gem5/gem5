@@ -99,8 +99,11 @@ Router::addOutPort(NetworkLink *out_link, const NetDest& routing_table_entry,
 
     vector<flitBuffer *> intermediateQueues;
     for (int i = 0; i < m_num_vcs; i++) {
-        intermediateQueues.push_back(new flitBuffer(
-            m_net_ptr->getBufferSize()));
+        int buffer_size = m_net_ptr->getBufferSize();
+        if (buffer_size > 0) // finite size
+            intermediateQueues.push_back(new flitBuffer(buffer_size));
+        else // infinite size
+            intermediateQueues.push_back(new flitBuffer());
     }
     m_router_buffers.push_back(intermediateQueues);
 

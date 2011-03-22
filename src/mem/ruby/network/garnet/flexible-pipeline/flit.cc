@@ -113,6 +113,18 @@ flit::get_type()
 }
 
 void
+flit::set_delay(int delay)
+{
+    src_delay = delay;
+}
+
+int
+flit::get_delay()
+{
+    return src_delay;
+}
+
+void
 flit::print(std::ostream& out) const
 {
     out << "[flit:: ";
