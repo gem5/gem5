@@ -241,12 +241,9 @@ NetworkInterface_d::wakeup()
         bool free_signal = false;
         if (t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_) {
             free_signal = true;
-            // When we are doing network only testing, the messages do not
-            // have to be buffered into the protocol buffers
-            if (!m_net_ptr->isNetworkTesting()) {
-                outNode_ptr[t_flit->get_vnet()]->
-                    enqueue(t_flit->get_msg_ptr(), 1);
-            }
+
+            outNode_ptr[t_flit->get_vnet()]->enqueue(
+                t_flit->get_msg_ptr(), 1);
         }
         // Simply send a credit back since we are not buffering
         // this flit in the NI

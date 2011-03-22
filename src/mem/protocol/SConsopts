@@ -48,6 +48,7 @@ all_protocols = [
     'MOSI_SMP_directory_1level',
     'MSI_MOSI_CMP_directory',
     'MOESI_hammer',
+    'Network_test',
     ]
 
 opt = EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'MI_example',

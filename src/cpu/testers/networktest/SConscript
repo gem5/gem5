@@ -1,3 +1,5 @@
+# -*- mode:python -*-
+
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -24,35 +26,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Brad Beckmann
+# Authors: Tushar Krishna
 
-from m5.params import *
-from m5.proxy import *
-from MemObject import MemObject
+Import('*')
 
-class RubyPort(MemObject):
-    type = 'RubyPort'
-    abstract = True
-    port = VectorPort("M5 port")
-    version = Param.Int(0, "")
-    pio_port = Port("Ruby_pio_port")
-    physmem = Param.PhysicalMemory("")
-    physMemPort = Port("port to physical memory")
-    using_ruby_tester = Param.Bool(False, "")
-    using_network_tester = Param.Bool(False, "")
-    access_phys_mem = Param.Bool(True,
-        "should the rubyport atomically update phys_mem")
-    
-class RubySequencer(RubyPort):
-    type = 'RubySequencer'
-    cxx_class = 'Sequencer'
-    icache = Param.RubyCache("")
-    dcache = Param.RubyCache("")
-    max_outstanding_requests = Param.Int(16,
-        "max requests (incl. prefetches) outstanding")
-    deadlock_threshold = Param.Int(500000,
-        "max outstanding cycles for a request before deadlock/livelock declared")
+SimObject('NetworkTest.py')
 
-class DMASequencer(RubyPort):
-    type = 'DMASequencer'
+Source('networktest.cc', Werror=False)
+
+TraceFlag('NetworkTest')

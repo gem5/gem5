@@ -77,6 +77,8 @@ Sequencer::Sequencer(const Params *p)
     assert(m_deadlock_threshold > 0);
     assert(m_instCache_ptr != NULL);
     assert(m_dataCache_ptr != NULL);
+
+    m_usingNetworkTester = p->using_network_tester;
 }
 
 Sequencer::~Sequencer()
@@ -390,7 +392,11 @@ Sequencer::writeCallback(const Address& address,
     // For Alpha, properly handle LL, SC, and write requests with respect to
     // locked cache blocks.
     //
-    bool success = handleLlsc(address, request);
+    // Not valid for Network_test protocl
+    //
+    bool success = true;
+    if(!m_usingNetworkTester)
+        success = handleLlsc(address, request);
 
     if (request->ruby_request.type == RubyRequestType_Locked_RMW_Read) {
         m_controller->blockOnQueue(address, m_mandatory_q_ptr);

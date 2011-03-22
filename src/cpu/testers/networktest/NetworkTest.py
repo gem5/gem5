@@ -24,35 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Brad Beckmann
+# Authors: Tushar Krishna
 
-from m5.params import *
-from m5.proxy import *
 from MemObject import MemObject
+from m5.params import *
 
-class RubyPort(MemObject):
-    type = 'RubyPort'
-    abstract = True
-    port = VectorPort("M5 port")
-    version = Param.Int(0, "")
-    pio_port = Port("Ruby_pio_port")
-    physmem = Param.PhysicalMemory("")
-    physMemPort = Port("port to physical memory")
-    using_ruby_tester = Param.Bool(False, "")
-    using_network_tester = Param.Bool(False, "")
-    access_phys_mem = Param.Bool(True,
-        "should the rubyport atomically update phys_mem")
-    
-class RubySequencer(RubyPort):
-    type = 'RubySequencer'
-    cxx_class = 'Sequencer'
-    icache = Param.RubyCache("")
-    dcache = Param.RubyCache("")
-    max_outstanding_requests = Param.Int(16,
-        "max requests (incl. prefetches) outstanding")
-    deadlock_threshold = Param.Int(500000,
-        "max outstanding cycles for a request before deadlock/livelock declared")
-
-class DMASequencer(RubyPort):
-    type = 'DMASequencer'
+class NetworkTest(MemObject):
+    type = 'NetworkTest'
+    block_offset = Param.Int(6, "block offset in bits")
+    num_memories = Param.Int(1, "Num Memories")
+    memory_size = Param.Int(65536, "memory size")
+    fixed_pkts = Param.Bool(False, "Send fixed number of packets")
+    max_packets = Param.Counter(0, "Number of packets to send when in fixed_pkts mode")
+    traffic_type = Param.Counter(0, "Traffic type: uniform random, tornado, bit complement")
+    inj_rate = Param.Float(0.1, "Packet injection rate")
+    precision = Param.Int(3, "Number of digits of precision after decimal point")
+    test = Port("Port to the memory system to test")

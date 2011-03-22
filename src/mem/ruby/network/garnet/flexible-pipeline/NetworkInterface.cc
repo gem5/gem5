@@ -262,12 +262,8 @@ NetworkInterface::wakeup()
             DPRINTF(RubyNetwork, "m_id: %d, Message delivered at time: %lld\n",
                     m_id, g_eventQueue_ptr->getTime());
 
-            // When we are doing network only testing, the messages do not
-            // have to be buffered into the message buffers of the protocol
-            if (!m_net_ptr->isNetworkTesting()) {
-                outNode_ptr[t_flit->get_vnet()]->enqueue(
-                    t_flit->get_msg_ptr(), 1);
-            }
+            outNode_ptr[t_flit->get_vnet()]->enqueue(
+                t_flit->get_msg_ptr(), 1);
 
             // signal the upstream router that this vc can be freed now
             inNetLink->release_vc_link(t_flit->get_vc(),

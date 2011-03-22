@@ -39,4 +39,3 @@ class BaseGarnetNetwork(RubyNetwork):
     vcs_per_class = Param.Int(4, "virtual channels per message class");
     buffers_per_data_vc = Param.Int(4, "buffers per data virtual channel");
     buffers_per_ctrl_vc = Param.Int(1, "buffers per ctrl virtual channel");
-    using_network_testing = Param.Bool(False, "network testing enable");

@@ -36,6 +36,7 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__
 
+#include "math.h"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/Network.hh"
 #include "params/BaseGarnetNetwork.hh"
@@ -47,7 +48,6 @@ class BaseGarnetNetwork : public Network
     BaseGarnetNetwork(const Params *p);
 
     void init();
-    bool isNetworkTesting() {return m_using_network_testing; }
     int getFlitSize() {return m_flit_size; }
     int getNumPipeStages() {return m_number_of_pipe_stages; }
     int getVCsPerClass() {return m_vcs_per_class; }
@@ -60,7 +60,6 @@ class BaseGarnetNetwork : public Network
     int m_vcs_per_class;
     int m_buffers_per_data_vc;
     int m_buffers_per_ctrl_vc;
-    bool m_using_network_testing;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__

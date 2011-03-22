@@ -307,15 +307,15 @@ GarnetNetwork_d::printStats(ostream& out) const
     }
     out << "-------------" << endl;
 
-    //      out << "Total flits injected = " << m_flits_injected << endl;
-    //      out << "Total flits received = " << m_flits_received << endl;
+    out << "Total flits injected = " << m_flits_injected << endl;
+    out << "Total flits received = " << m_flits_received << endl;
     out << "Average network latency = "
         << ((double) m_network_latency/ (double) m_flits_received)<< endl;
-    // out << "Average queueing latency = "
-    //    << ((double) m_queueing_latency/ (double) m_flits_received)<< endl;
-    // out << "Average latency = "
-    //    << ((double)  (m_queueing_latency + m_network_latency) /
-    //        (double) m_flits_received)<< endl;
+    out << "Average queueing (at source NI) latency = "
+        << ((double) m_queueing_latency/ (double) m_flits_received)<< endl;
+    out << "Average latency = "
+        << ((double)  (m_queueing_latency + m_network_latency) /
+            (double) m_flits_received)<< endl;
     out << "-------------" << endl;
 
     double m_total_link_power = 0.0;

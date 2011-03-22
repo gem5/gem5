@@ -38,7 +38,6 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
     m_vcs_per_class = p->vcs_per_class;
     m_buffers_per_data_vc = p->buffers_per_data_vc;
     m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
-    m_using_network_testing = p->using_network_testing;
 }
 
 void
