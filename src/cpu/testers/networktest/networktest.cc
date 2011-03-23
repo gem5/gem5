@@ -165,7 +165,7 @@ NetworkTest::completeRequest(PacketPtr pkt)
 
     assert(pkt->isResponse());
     noResponseCycles = 0;
-    delete pkt->req;
+    delete req;
     delete pkt;
 }
 
@@ -191,8 +191,8 @@ NetworkTest::tick()
     // - generate a random number between 0 and 10^precision
     // - send pkt if this number is < injRate*(10^precision)
     bool send_this_cycle;
-    int injRange = pow(10, precision);
-    unsigned trySending = random() % injRange;
+    double injRange = pow((double) 10, (double) precision);
+    unsigned trySending = random() % (int) injRange;
     if (trySending < injRate*injRange)
         send_this_cycle = true;
     else
