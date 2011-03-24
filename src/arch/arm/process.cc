@@ -94,26 +94,6 @@ ArmLiveProcess::startup()
 }
 
 void
-ArmLiveProcess::copyStringArray32(std::vector<std::string> &strings,
-        Addr array_ptr, Addr data_ptr,
-        TranslatingPort* memPort)
-{
-    Addr data_ptr_swap;
-    for (int i = 0; i < strings.size(); ++i) {
-        data_ptr_swap = htog(data_ptr);
-        memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
-                sizeof(uint32_t));
-        memPort->writeString(data_ptr, strings[i].c_str());
-        array_ptr += sizeof(uint32_t);
-        data_ptr += strings[i].size() + 1;
-    }
-    // add NULL terminator
-    data_ptr = 0;
-
-    memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(uint32_t));
-}
-
-void
 ArmLiveProcess::argsInit(int intSize, int pageSize)
 {
     typedef AuxVector<uint32_t> auxv_t;

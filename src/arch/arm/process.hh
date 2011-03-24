@@ -49,10 +49,6 @@ class ArmLiveProcess : public LiveProcess
 
     void startup();
 
-    void copyStringArray32(std::vector<std::string> &strings,
-            Addr array_ptr, Addr data_ptr,
-            TranslatingPort* memPort);
-
   public:
     void argsInit(int intSize, int pageSize);
 
