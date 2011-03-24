@@ -181,6 +181,12 @@ class Template(object):
                       operands.concatSomeAttrStrings(is_src, 'op_src_decl')
             myDict['op_dest_decl'] = \
                       operands.concatSomeAttrStrings(is_dest, 'op_dest_decl')
+            if operands.readPC:
+                myDict['op_src_decl'] += \
+                    'TheISA::PCState __parserAutoPCState;\n'
+            if operands.setPC:
+                myDict['op_dest_decl'] += \
+                    'TheISA::PCState __parserAutoPCState;\n'
 
             myDict['op_rd'] = operands.concatAttrStrings('op_rd')
             if operands.readPC:
