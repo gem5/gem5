@@ -228,7 +228,7 @@ namespace ArmISA
         "scr", "sder", "par",
         "v2pcwpr", "v2pcwpw", "v2pcwur", "v2pcwuw",
         "v2powpr", "v2powpw", "v2powur", "v2powuw",
-        "id_mmfr0","actlr", "pmcr", "pmcntr",
+        "id_mmfr0", "actlr", "pmcr", "pmccntr",
         "pmcntenset", "pmcntenclr", "pmovsr",
         "pmswinc", "pmselr", "pmceid0",
         "pmceid1", "pmc_other", "pmxevcntr",
@@ -242,7 +242,7 @@ namespace ArmISA
         "dcimvac", "dcisw", "mccsw",
         "dccmvau",
         "nsacr",
-        "vbar", "mvbar", "isr", "fceidr",
+        "vbar", "mvbar", "isr", "fceidr", "l2latency",
         "nop", "raz"
     };
 
