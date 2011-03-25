@@ -60,6 +60,7 @@ def create_system(options, system, piobus, dma_devices):
     # Must create the individual controllers before the network to ensure the
     # controller constructors are called before the network constructor
     #
+    block_size_bits = int(math.log(options.cacheline_size, 2))
     
     for i in xrange(options.num_cpus):
         #
@@ -68,7 +69,8 @@ def create_system(options, system, piobus, dma_devices):
         # config parameters.
         #
         cache = Cache(size = options.l1d_size,
-                      assoc = options.l1d_assoc)
+                      assoc = options.l1d_assoc,
+                      start_index_bit = block_size_bits)
 
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.

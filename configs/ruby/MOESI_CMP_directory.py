@@ -68,15 +68,19 @@ def create_system(options, system, piobus, dma_devices):
     # Must create the individual controllers before the network to ensure the
     # controller constructors are called before the network constructor
     #
+    l2_bits = int(math.log(options.num_l2caches, 2))
+    block_size_bits = int(math.log(options.cacheline_size, 2))
     
     for i in xrange(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
         #
         l1i_cache = L1Cache(size = options.l1i_size,
-                            assoc = options.l1i_assoc)
+                            assoc = options.l1i_assoc,
+                            start_index_bit = block_size_bits)
         l1d_cache = L1Cache(size = options.l1d_size,
-                            assoc = options.l1d_assoc)
+                            assoc = options.l1d_assoc,
+                            start_index_bit = block_size_bits)
 
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
@@ -91,9 +95,7 @@ def create_system(options, system, piobus, dma_devices):
                                       sequencer = cpu_seq,
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
-                                      l2_select_num_bits = \
-                                      math.log(options.num_l2caches,
-                                               2))
+                                      l2_select_num_bits = l2_bits)
 
         exec("system.l1_cntrl%d = l1_cntrl" % i)
         #
@@ -102,12 +104,15 @@ def create_system(options, system, piobus, dma_devices):
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
 
+    l2_index_start = block_size_bits + l2_bits
+
     for i in xrange(options.num_l2caches):
         #
         # First create the Ruby objects associated with this cpu
         #
         l2_cache = L2Cache(size = options.l2_size,
-                           assoc = options.l2_assoc)
+                           assoc = options.l2_assoc,
+                           start_index_bit = l2_index_start)
 
         l2_cntrl = L2Cache_Controller(version = i,
                                       L2cacheMemory = l2_cache)
