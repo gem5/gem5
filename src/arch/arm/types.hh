@@ -497,10 +497,6 @@ namespace ArmISA
         }
     }
 
-    struct CoreSpecific {
-        // Empty for now on the ARM
-    };
-
 } // namespace ArmISA
 
 namespace __hash_namespace {

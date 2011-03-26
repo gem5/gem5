@@ -77,13 +77,28 @@ enum RoundMode{
 };
 
 struct CoreSpecific {
-      /* Note: It looks like it will be better to allow simulator users
-         to specify the values of individual variables instead of requiring
-         users to define the values of entire registers
-         Especially since a lot of these variables can be created from other
-         user parameters  (cache descriptions)
-                                               -jpp
-      */
+    CoreSpecific()
+        : CP0_IntCtl_IPTI(0), CP0_IntCtl_IPPCI(0), CP0_SrsCtl_HSS(0),
+          CP0_PRId_CompanyOptions(0), CP0_PRId_CompanyID(0),
+          CP0_PRId_ProcessorID(0), CP0_PRId_Revision(0),
+          CP0_EBase_CPUNum(0), CP0_Config_BE(0), CP0_Config_AT(0),
+          CP0_Config_AR(0), CP0_Config_MT(0), CP0_Config_VI(0),
+          CP0_Config1_M(0), CP0_Config1_MMU(0), CP0_Config1_IS(0),
+          CP0_Config1_IL(0), CP0_Config1_IA(0), CP0_Config1_DS(0),
+          CP0_Config1_DL(0), CP0_Config1_DA(0), CP0_Config1_C2(false),
+          CP0_Config1_MD(false), CP0_Config1_PC(false), CP0_Config1_WR(false),
+          CP0_Config1_CA(false), CP0_Config1_EP(false), CP0_Config1_FP(false),
+          CP0_Config2_M(false), CP0_Config2_TU(0), CP0_Config2_TS(0),
+          CP0_Config2_TL(0), CP0_Config2_TA(0), CP0_Config2_SU(0),
+          CP0_Config2_SS(0), CP0_Config2_SL(0), CP0_Config2_SA(0),
+          CP0_Config3_M(false), CP0_Config3_DSPP(false), CP0_Config3_LPA(false),
+          CP0_Config3_VEIC(false), CP0_Config3_VInt(false),
+          CP0_Config3_SP(false), CP0_Config3_MT(false), CP0_Config3_SM(false),
+          CP0_Config3_TL(false), CP0_WatchHi_M(false), CP0_PerfCtr_M(false),
+          CP0_PerfCtr_W(false), CP0_PRId(0), CP0_Config(0), CP0_Config1(0),
+          CP0_Config2(0), CP0_Config3(0)
+    { }
+
       // MIPS CP0 State - First individual variables
       // Page numbers refer to revision 2.50 (July 2005) of the MIPS32 ARM,
       // Volume III (PRA)
@@ -149,5 +164,4 @@ struct CoreSpecific {
 };
 
 } // namespace MipsISA
-
 #endif

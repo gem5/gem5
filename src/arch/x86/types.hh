@@ -278,9 +278,6 @@ namespace X86ISA
         }
     };
 
-    struct CoreSpecific {
-        int core_type;
-    };
 };
 
 namespace __hash_namespace {

@@ -395,9 +395,6 @@ class InOrderCPU : public BaseCPU
     /** Initialize the CPU */
     void init();
 
-    /** Reset State in the CPU */
-    void reset();
-
     /** Get a Memory Port */
     Port* getPort(const std::string &if_name, int idx = 0);
 

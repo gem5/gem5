@@ -54,6 +54,10 @@ namespace MipsISA
         typedef ISA CP0;
 
       protected:
+        // Number of threads and vpes an individual ISA state can handle
+        uint8_t numThreads;
+        uint8_t numVpes;
+
         enum BankType {
             perProcessor,
             perThreadContext,
@@ -65,16 +69,11 @@ namespace MipsISA
         std::vector<BankType> bankType;
 
       public:
-        ISA();
+        ISA(uint8_t num_threads = 1, uint8_t num_vpes = 1);
 
-        void init();
+        void clear();
 
-        void clear(unsigned tid_or_vpn = 0);
-
-        void reset(std::string core_name, ThreadID num_threads,
-                   unsigned num_vpes, BaseCPU *cpu);
-
-        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes);
+        void configCP();
 
         unsigned getVPENum(ThreadID tid);
 

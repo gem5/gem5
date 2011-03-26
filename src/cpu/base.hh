@@ -239,8 +239,6 @@ class BaseCPU : public MemObject
      */
     ThreadID numThreads;
 
-    TheISA::CoreSpecific coreParams; //ISA-Specific Params That Set Up State in Core
-
     /**
      * Vector of per-thread instruction-based event queues.  Used for
      * scheduling events based on number of instructions committed by

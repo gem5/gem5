@@ -45,11 +45,6 @@ typedef GenericISA::DelaySlotUPCState<MachInst> PCState;
 
 typedef Twin64_t LargestRead;
 
-struct CoreSpecific
-{
-    int core_type;
-};
-
 }
 
 #endif

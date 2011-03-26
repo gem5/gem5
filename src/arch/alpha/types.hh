@@ -51,11 +51,6 @@ enum annotes
     ITOUCH_ANNOTE = 0xffffffff,
 };
 
-struct CoreSpecific
-{
-    int core_type;
-};
-
 } // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_TYPES_HH__

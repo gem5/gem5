@@ -90,14 +90,6 @@ namespace AlphaISA
         void unserialize(EventManager *em, Checkpoint *cp,
                 const std::string &section);
 
-        void reset(std::string core_name, ThreadID num_threads,
-                   unsigned num_vpes, BaseCPU *_cpu)
-        { }
-
-
-        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
-        { }
-
         int
         flattenIntIndex(int reg)
         {

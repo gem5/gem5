@@ -86,14 +86,11 @@ ISA::miscRegNames[NumMiscRegs] =
     "LLFlag"
 };
 
-ISA::ISA()
+ISA::ISA(uint8_t num_threads, uint8_t num_vpes)
 {
-    init();
-}
+    numThreads = num_threads;
+    numVpes = num_vpes;
 
-void
-ISA::init()
-{
     miscRegFile.resize(NumMiscRegs);
     bankType.resize(NumMiscRegs);
 
@@ -107,21 +104,7 @@ ISA::init()
     for (int i = 0; i < NumMiscRegs; i++) {
         miscRegFile_WriteMask[i].push_back(0);
     }
-    clear(0);
-}
 
-void
-ISA::clear(unsigned tid_or_vpn)
-{
-    for(int i = 0; i < NumMiscRegs; i++) {
-        miscRegFile[i][tid_or_vpn] = 0;
-        miscRegFile_WriteMask[i][tid_or_vpn] = (long unsigned int)(-1);
-    }
-}
-
-void
-ISA::expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
-{
     // Initialize all Per-VPE regs
     uint32_t per_vpe_regs[] = { MISCREG_VPE_CONTROL,
                                 MISCREG_VPE_CONF0, MISCREG_VPE_CONF1,
@@ -134,8 +117,8 @@ ISA::expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
                               };
     uint32_t num_vpe_regs = sizeof(per_vpe_regs) / 4;
     for (int i = 0; i < num_vpe_regs; i++) {
-        if (num_vpes > 1) {
-            miscRegFile[per_vpe_regs[i]].resize(num_vpes);
+        if (numVpes > 1) {
+            miscRegFile[per_vpe_regs[i]].resize(numVpes);
         }
         bankType[per_vpe_regs[i]] = perVirtProcessor;
     }
@@ -151,28 +134,34 @@ ISA::expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
     uint32_t num_tc_regs = sizeof(per_tc_regs) /  4;
 
     for (int i = 0; i < num_tc_regs; i++) {
-        miscRegFile[per_tc_regs[i]].resize(num_threads);
+        miscRegFile[per_tc_regs[i]].resize(numThreads);
         bankType[per_tc_regs[i]] = perThreadContext;
     }
 
-
-    if (num_vpes > 1) {
-        for (int i=1; i < num_vpes; i++) {
-            clear(i);
-        }
-    }
-
+    clear();
 }
 
-//@TODO: Use MIPS STYLE CONSTANTS (e.g. TCHALT_H instead of TCH_H)
 void
-ISA::reset(std::string core_name, ThreadID num_threads,
-                   unsigned num_vpes, BaseCPU *cpu)
+ISA::clear()
+{
+    for(int i = 0; i < NumMiscRegs; i++) {
+        for (int j = 0; j < miscRegFile[i].size(); j++)
+            miscRegFile[i][j] = 0;
+
+        for (int k = 0; k < miscRegFile_WriteMask[i].size(); k++)
+            miscRegFile_WriteMask[i][k] = (long unsigned int)(-1);
+    }
+}
+
+
+void
+ISA::configCP()
 {
     DPRINTF(MipsPRA, "Resetting CP0 State with %i TCs and %i VPEs\n",
-            num_threads, num_vpes);
+            numThreads, numVpes);
 
-    MipsISA::CoreSpecific &cp = cpu->coreParams;
+    CoreSpecific cp;
+    panic("CP state must be set before the following code is used");
 
     // Do Default CP0 initialization HERE
 
@@ -350,8 +339,8 @@ ISA::reset(std::string core_name, ThreadID num_threads,
     // MVPConf0
     MVPConf0Reg mvpConf0 = readMiscRegNoEffect(MISCREG_MVP_CONF0);
     mvpConf0.tca = 1;
-    mvpConf0.pvpe = num_vpes - 1;
-    mvpConf0.ptc = num_threads - 1;
+    mvpConf0.pvpe = numVpes - 1;
+    mvpConf0.ptc = numThreads - 1;
     setMiscRegNoEffect(MISCREG_MVP_CONF0, mvpConf0);
 
     // VPEConf0
@@ -360,7 +349,7 @@ ISA::reset(std::string core_name, ThreadID num_threads,
     setMiscRegNoEffect(MISCREG_VPE_CONF0, vpeConf0);
 
     // TCBind
-    for (ThreadID tid = 0; tid < num_threads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         TCBindReg tcBind = readMiscRegNoEffect(MISCREG_TC_BIND, tid);
         tcBind.curTC = tid;
         setMiscRegNoEffect(MISCREG_TC_BIND, tcBind, tid);
@@ -377,7 +366,7 @@ ISA::reset(std::string core_name, ThreadID num_threads,
     setMiscRegNoEffect(MISCREG_TC_STATUS, tcStatus);
 
     // Set Dynamically Allocatable bit to 1 for all other threads
-    for (ThreadID tid = 1; tid < num_threads; tid++) {
+    for (ThreadID tid = 1; tid < numThreads; tid++) {
         tcStatus = readMiscRegNoEffect(MISCREG_TC_STATUS, tid);
         tcStatus.da = 1;
         setMiscRegNoEffect(MISCREG_TC_STATUS, tcStatus, tid);

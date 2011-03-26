@@ -315,8 +315,6 @@ InOrderCPU::InOrderCPU(Params *params)
         memset(floatRegs.i[tid], 0, sizeof(floatRegs.i[tid]));
         isa[tid].clear();
 
-        isa[tid].expandForMultithreading(numThreads, 1/*numVirtProcs*/);
-
         // Define dummy instructions and resource requests to be used.
         dummyInst[tid] = new InOrderDynInst(this, 
                                             thread[tid], 
@@ -344,8 +342,6 @@ InOrderCPU::InOrderCPU(Params *params)
 #if FULL_SYSTEM
     Fault resetFault = new ResetFault();
     resetFault->invoke(tcBase());
-#else
-    reset();
 #endif
 
     
@@ -694,15 +690,6 @@ InOrderCPU::init()
 
     // Call Initializiation Routine for Resource Pool
     resPool->init();
-}
-
-void
-InOrderCPU::reset()
-{
-    for (int i = 0; i < numThreads; i++) {
-        isa[i].reset(coreType, numThreads,
-                     1/*numVirtProcs*/, dynamic_cast<BaseCPU*>(this));
-    }
 }
 
 Port*
