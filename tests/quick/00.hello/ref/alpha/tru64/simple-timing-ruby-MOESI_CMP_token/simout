@@ -5,13 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  8 2011 17:50:56
-M5 revision 685719afafe6+ 7938+ default tip brad/increase_ruby_mem_test_threshold qtip
-M5 started Feb  8 2011 17:51:05
-M5 executing on SC2B0617
+M5 compiled Mar 26 2011 14:06:20
+M5 started Mar 26 2011 22:00:43
+M5 executing on phenom
 command line: build/ALPHA_SE_MOESI_CMP_token/m5.fast -d build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_token
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 92099 because target called exit()
+Exiting @ tick 84059 because target called exit()
