@@ -58,6 +58,7 @@ class Check
     void print(std::ostream& out) const;
 
   private:
+    void initiateFlush();
     void initiatePrefetch();
     void initiateAction();
     void initiateCheck();

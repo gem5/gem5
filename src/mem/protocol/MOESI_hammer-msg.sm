@@ -37,6 +37,9 @@ enumeration(CoherenceRequestType, desc="...") {
   PUT,       desc="Put Ownership";
   WB_ACK,    desc="Writeback ack";
   WB_NACK,   desc="Writeback neg. ack";
+  PUTF,      desc="PUT on a Flush";
+  GETF,      desc="Issue exclusive for Flushing";
+  BLOCK_ACK, desc="Dir Block ack";
   INV,       desc="Invalidate";
 }
 

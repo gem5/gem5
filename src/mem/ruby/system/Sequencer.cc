@@ -234,7 +234,8 @@ Sequencer::insertRequest(SequencerRequest* request)
         (request->ruby_request.m_Type == RubyRequestType_Load_Linked) ||
         (request->ruby_request.m_Type == RubyRequestType_Store_Conditional) ||
         (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Read) ||
-        (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Write)) {
+        (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Write) ||
+        (request->ruby_request.m_Type == RubyRequestType_FLUSH)) {
         pair<RequestTable::iterator, bool> r =
             m_writeRequestTable.insert(RequestTable::value_type(line_addr, 0));
         bool success = r.second;
@@ -338,7 +339,7 @@ Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
         // previously locked cache lines?
         //
         m_dataCache_ptr->setLocked(address, m_version);
-    } else if (m_dataCache_ptr->isLocked(address, m_version)) {
+    } else if ((m_dataCache_ptr->isTagPresent(address)) && (m_dataCache_ptr->isLocked(address, m_version))) {
         //
         // Normal writes should clear the locked address
         //
@@ -385,7 +386,9 @@ Sequencer::writeCallback(const Address& address,
            (request->ruby_request.m_Type == RubyRequestType_Load_Linked) ||
            (request->ruby_request.m_Type == RubyRequestType_Store_Conditional) ||
            (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Read) ||
-           (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Write));
+           (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Write) ||
+           (request->ruby_request.m_Type == RubyRequestType_FLUSH));
+
 
     //
     // For Alpha, properly handle LL, SC, and write requests with respect to
@@ -618,6 +621,9 @@ Sequencer::issueRequest(const RubyRequest& request)
         break;
       case RubyRequestType_LD:
         ctype = RubyRequestType_LD;
+        break;
+      case RubyRequestType_FLUSH:
+        ctype = RubyRequestType_FLUSH;
         break;
       case RubyRequestType_ST:
       case RubyRequestType_RMW_Read:

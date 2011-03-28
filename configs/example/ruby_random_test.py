@@ -82,7 +82,14 @@ if args:
 #
 # Create the ruby random tester
 #
-tester = RubyTester(checks_to_complete = options.checks,
+
+# Check the protocol
+check_flush = False
+if buildEnv['PROTOCOL'] == 'MOESI_hammer':
+    check_flush = True
+
+tester = RubyTester(check_flush = check_flush,
+                    checks_to_complete = options.checks,
                     wakeup_frequency = options.wakeup_freq)
 
 #

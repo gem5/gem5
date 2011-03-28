@@ -40,7 +40,8 @@ RubyTester::RubyTester(const Params *p)
   : MemObject(p), checkStartEvent(this),
     m_checks_to_complete(p->checks_to_complete),
     m_deadlock_threshold(p->deadlock_threshold),
-    m_wakeup_frequency(p->wakeup_frequency)
+    m_wakeup_frequency(p->wakeup_frequency),
+    m_check_flush(p->check_flush)
 {
     m_checks_completed = 0;
 

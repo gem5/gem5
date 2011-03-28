@@ -59,6 +59,10 @@ Check::initiate()
         initiatePrefetch(); // Prefetch from random processor
     }
 
+    if (m_tester_ptr->getCheckFlush() && (random() & 0xff) == 0) {
+        initiateFlush(); // issue a Flush request from random processor
+    }
+
     if (m_status == TesterStatus_Idle) {
         initiateAction();
     } else if (m_status == TesterStatus_Ready) {
@@ -120,6 +124,37 @@ Check::initiatePrefetch()
 
         DPRINTF(RubyTest,
                 "prefetch initiation failed because Port was busy.\n");
+    }
+}
+
+void
+Check::initiateFlush()
+{
+
+    DPRINTF(RubyTest, "initiating Flush\n");
+
+    int index = random() % m_num_cpu_sequencers;
+    RubyTester::CpuPort* port =
+        safe_cast<RubyTester::CpuPort*>(m_tester_ptr->getCpuPort(index));
+
+    Request::Flags flags;
+
+    Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags, curTick(),
+                               m_pc.getAddress());
+
+    Packet::Command cmd;
+
+    cmd = MemCmd::FlushReq;
+
+    PacketPtr pkt = new Packet(req, cmd, port->idx);
+
+    // push the subblock onto the sender state.  The sequencer will
+    // update the subblock on the return
+    pkt->senderState =
+        new SenderState(m_address, req->getSize(), pkt->senderState);
+
+    if (port->sendTiming(pkt)) {
+        DPRINTF(RubyTest, "initiating Flush - successful\n");
     }
 }
 

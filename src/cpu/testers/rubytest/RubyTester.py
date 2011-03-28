@@ -36,3 +36,4 @@ class RubyTester(MemObject):
     checks_to_complete = Param.Int(100, "checks to complete")
     deadlock_threshold = Param.Int(50000, "how often to check for deadlock")
     wakeup_frequency = Param.Int(10, "number of cycles between wakeups")
+    check_flush = Param.Bool(False, "check cache flushing")

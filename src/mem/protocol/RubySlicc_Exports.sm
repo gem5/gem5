@@ -119,6 +119,7 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   Locked_RMW_Write,  desc="";
   COMMIT,            desc="Commit version";
   NULL,              desc="Invalid request type";
+  FLUSH,             desc="Flush request type";
 }
 
 enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {

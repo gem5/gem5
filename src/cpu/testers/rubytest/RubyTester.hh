@@ -99,6 +99,7 @@ class RubyTester : public MemObject
     void printConfig(std::ostream& out) const {}
 
     void print(std::ostream& out) const;
+    bool getCheckFlush() { return m_check_flush; }
 
   protected:
     class CheckStartEvent : public Event
@@ -134,6 +135,7 @@ class RubyTester : public MemObject
     int m_deadlock_threshold;
     int m_num_cpu_sequencers;
     int m_wakeup_frequency;
+    bool m_check_flush;
 };
 
 inline std::ostream&

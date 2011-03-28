@@ -88,6 +88,9 @@ machine(Directory, "AMD Hammer-like protocol")
     WB, AccessPermission:Invalid, desc="Blocked on a writeback";
     WB_O_W, AccessPermission:Invalid, desc="Blocked on memory write, will go to O";
     WB_E_W, AccessPermission:Invalid, desc="Blocked on memory write, will go to E";
+
+    NO_F,  AccessPermission:Invalid, desc="Blocked on a flush";
+    NO_F_W, AccessPermission:Invalid, desc="Not Owner, Blocked, waiting for Dram";
   }
 
   // Events
@@ -126,6 +129,8 @@ machine(Directory, "AMD Hammer-like protocol")
     All_acks_and_owner_data,     desc="Received shared data and message acks";
     All_acks_and_data_no_sharers, desc="Received all acks and no other processor has a shared copy";
     All_Unblocks, desc="Received all unblocks for a merged gets request";
+    GETF,  desc="A GETF arrives";
+    PUTF,  desc="A PUTF arrives";
   }
 
   // TYPES
@@ -233,6 +238,8 @@ machine(Directory, "AMD Hammer-like protocol")
       return Event:GETS;
     } else if (type == CoherenceRequestType:GETX) {
       return Event:GETX;
+    } else if (type == CoherenceRequestType:GETF) {
+      return Event:GETF;
     } else {
       error("Invalid CoherenceRequestType");
     }
@@ -355,6 +362,8 @@ machine(Directory, "AMD Hammer-like protocol")
         TBE tbe := TBEs[in_msg.Address];
         if (in_msg.Type == CoherenceRequestType:PUT) {
           trigger(Event:PUT, in_msg.Address, pf_entry, tbe);
+        } else if (in_msg.Type == CoherenceRequestType:PUTF) {
+          trigger(Event:PUTF, in_msg.Address, pf_entry, tbe);
         } else {
           if (probe_filter_enabled || full_bit_dir_enabled) {
             if (is_valid(pf_entry)) {
@@ -449,6 +458,20 @@ machine(Directory, "AMD Hammer-like protocol")
         out_msg.Requestor := in_msg.Requestor;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(oc_sendBlockAck, "oc", desc="Send block ack to the owner") {
+    peek(requestQueue_in, RequestMsg) {
+      if ((probe_filter_enabled || full_bit_dir_enabled) && (in_msg.Requestor == cache_entry.Owner)) {
+        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+          out_msg.Address := address;
+          out_msg.Type := CoherenceRequestType:BLOCK_ACK;
+          out_msg.Requestor := in_msg.Requestor;
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        }
       }
     }
   }
@@ -966,6 +989,42 @@ machine(Directory, "AMD Hammer-like protocol")
     }
   }
 
+  action(nofc_forwardRequestConditionalOwner, "nofc", desc="Forward request to one or more nodes if the requestor is not the owner") {
+    assert(machineCount(MachineType:L1Cache) > 1);
+
+     if (probe_filter_enabled || full_bit_dir_enabled) {
+       peek(requestQueue_in, RequestMsg) {
+        if (in_msg.Requestor != cache_entry.Owner) {
+          enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+            assert(is_valid(cache_entry));
+            out_msg.Address := address;
+            out_msg.Type := in_msg.Type;
+            out_msg.Requestor := in_msg.Requestor;
+            out_msg.Destination.add(cache_entry.Owner);
+            out_msg.MessageSize := MessageSizeType:Request_Control;
+            out_msg.DirectedProbe := true;
+            out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+            out_msg.ForwardRequestTime := get_time();
+          }
+        }
+       }
+     } else {
+      peek(requestQueue_in, RequestMsg) {
+        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+          out_msg.Address := address;
+          out_msg.Type := in_msg.Type;
+          out_msg.Requestor := in_msg.Requestor;
+          out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
+          out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
+          out_msg.MessageSize := MessageSizeType:Broadcast_Control;
+          out_msg.InitialRequestTime := in_msg.InitialRequestTime;
+          out_msg.ForwardRequestTime := get_time();
+        }
+      }
+     }
+
+  }
+
   action(f_forwardWriteFromDma, "fw", desc="Forward requests") {
     assert(is_valid(tbe));
     if (tbe.NumPendingMsgs > 0) {
@@ -1185,6 +1244,16 @@ machine(Directory, "AMD Hammer-like protocol")
     i_popIncomingRequestQueue;
   }
 
+  transition(E, GETF, NO_F_W) {
+    pfa_probeFilterAllocate;
+    v_allocateTBE;
+    rx_recordExclusiveInTBE;
+    saa_setAcksToAllIfPF;
+    qf_queueMemoryFetchRequest;
+    fn_forwardRequestIfNecessary;
+    i_popIncomingRequestQueue;
+  }
+
   transition(E, GETS, NO_B_W) {
     pfa_probeFilterAllocate;
     v_allocateTBE;
@@ -1213,6 +1282,17 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // Transitions out of O state
   transition(O, GETX, NO_B_W) {
+    r_setMRU;
+    v_allocateTBE;
+    r_recordDataInTBE;
+    sa_setAcksToOne;
+    qf_queueMemoryFetchRequest;
+    fb_forwardRequestBcast;
+    cs_clearSharers;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(O, GETF, NO_F_W) {
     r_setMRU;
     v_allocateTBE;
     r_recordDataInTBE;
@@ -1286,6 +1366,13 @@ machine(Directory, "AMD Hammer-like protocol")
     i_popIncomingRequestQueue;
   }
 
+  transition(NX, GETF, NO_F) {
+    r_setMRU;
+    fb_forwardRequestBcast;
+    cs_clearSharers;
+    i_popIncomingRequestQueue;
+  }
+
   // Transitions out of NO state
   transition(NO, GETX, NO_B) {
     r_setMRU;
@@ -1295,7 +1382,23 @@ machine(Directory, "AMD Hammer-like protocol")
     i_popIncomingRequestQueue;
   }
 
+  transition(NO, GETF, NO_F) {
+    r_setMRU;
+    //ano_assertNotOwner;
+    nofc_forwardRequestConditionalOwner; //forward request if the requester is not the owner
+    cs_clearSharers;
+    oc_sendBlockAck; // send ack if the owner
+    i_popIncomingRequestQueue;
+  }
+
   transition(S, GETX, NO_B) {
+    r_setMRU;
+    fb_forwardRequestBcast;
+    cs_clearSharers;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(S, GETF, NO_F) {
     r_setMRU;
     fb_forwardRequestBcast;
     cs_clearSharers;
@@ -1348,12 +1451,16 @@ machine(Directory, "AMD Hammer-like protocol")
   // Blocked transient states
   transition({NO_B_X, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
               NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, NO_B_S_W,
-              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R}, 
-             {GETS, GETX, PUT, Pf_Replacement}) {
+              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R, NO_F_W}, 
+             {GETS, GETX, GETF, PUT, Pf_Replacement}) {
     z_stallAndWaitRequest;
   }
 
-  transition(NO_B, GETX, NO_B_X) {
+  transition(NO_F, {GETS, GETX, GETF, PUT, Pf_Replacement}){
+    z_stallAndWaitRequest;
+  }
+
+  transition(NO_B, {GETX, GETF}, NO_B_X) {
     z_stallAndWaitRequest;
   }
 
@@ -1361,13 +1468,13 @@ machine(Directory, "AMD Hammer-like protocol")
     z_stallAndWaitRequest;
   }
 
-  transition(NO_B_S, {GETX, PUT, Pf_Replacement}) {
+  transition(NO_B_S, {GETX, GETF, PUT, Pf_Replacement}) {
     z_stallAndWaitRequest;
   }
 
   transition({NO_B_X, NO_B, NO_B_S, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
               NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, NO_B_S_W,
-              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R}, 
+              NO_W, O_W, WB, WB_E_W, WB_O_W, O_R, S_R, NO_R, NO_F_W}, 
              {DMA_READ, DMA_WRITE}) {
     zd_stallAndWaitDMARequest;
   }
@@ -1439,6 +1546,12 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   transition(NO_B_W, Memory_Data, NO_B) {
+    d_sendData;
+    w_deallocateTBE;
+    l_popMemQueue;
+  }
+
+  transition(NO_F_W, Memory_Data, NO_F) {
     d_sendData;
     w_deallocateTBE;
     l_popMemQueue;
@@ -1736,6 +1849,18 @@ machine(Directory, "AMD Hammer-like protocol")
   transition(WB, Unblock, NX) {
     auno_assertUnblockerNotOwner;
     k_wakeUpDependents;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_F, PUTF, WB) {
+    a_sendWriteBackAck;
+    i_popIncomingRequestQueue;
+  }
+
+  //possible race between GETF and UnblockM -- not sure needed any more?
+  transition(NO_F, UnblockM) {
+    us_updateSharerIfFBD;
+    uo_updateOwnerIfPf;
     j_popIncomingUnblockQueue;
   }
 }

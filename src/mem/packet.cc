@@ -148,7 +148,9 @@ MemCmd::commandInfo[] =
     /* BadAddressError   -- memory address invalid */
     { SET2(IsResponse, IsError), InvalidCmd, "BadAddressError" },
     /* PrintReq */
-    { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" }
+    { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" },
+    /* Flush Request */
+    { SET3(IsRequest, IsFlush, NeedsExclusive), InvalidCmd, "FlushReq" }
 };
 
 bool

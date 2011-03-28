@@ -244,6 +244,8 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
             // Note: M5 packets do not differentiate ST from RMW_Write
             //
             type = RubyRequestType_ST;
+        } else if (pkt->isFlush()) {
+            type = RubyRequestType_FLUSH;
         } else {
             panic("Unsupported ruby packet type\n");
         }
@@ -335,7 +337,7 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
 
     //
     // Unless specified at configuraiton, all responses except failed SC 
-    // operations access M5 physical memory.
+    // and Flush operations access M5 physical memory.
     //
     bool accessPhysMem = access_phys_mem;
 
@@ -361,11 +363,19 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
             pkt->convertLlToRead();
         }
     }
+
+    //
+    // Flush requests don't access physical memory
+    //
+    if (pkt->isFlush()) {
+        accessPhysMem = false;
+    }
+
     DPRINTF(RubyPort, "Hit callback needs response %d\n", needsResponse);
 
     if (accessPhysMem) {
         ruby_port->physMemPort->sendAtomic(pkt);
-    } else {
+    } else if (needsResponse) {
         pkt->makeResponse();
     }
 

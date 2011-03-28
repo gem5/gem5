@@ -105,6 +105,7 @@ class MemCmd
         BadAddressError,   // memory address invalid
         // Fake simulator-only commands
         PrintReq,       // Print state matching address
+        FlushReq,      //request for a cache flush
         NUM_MEM_CMDS
     };
 
@@ -129,6 +130,7 @@ class MemCmd
         HasData,        //!< There is an associated payload
         IsError,        //!< Error response
         IsPrint,        //!< Print state matching address (for debugging)
+        IsFlush,        //!< Flush the address from caches
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -175,6 +177,7 @@ class MemCmd
     bool isLLSC() const         { return testCmdAttrib(IsLlsc); }
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
+    bool isFlush() const        { return testCmdAttrib(IsFlush); }
 
     const Command
     responseCommand() const
@@ -411,6 +414,7 @@ class Packet : public FastAlloc, public Printable
     bool isLLSC() const         { return cmd.isLLSC(); }
     bool isError() const        { return cmd.isError(); }
     bool isPrint() const        { return cmd.isPrint(); }
+    bool isFlush() const        { return cmd.isFlush(); }
 
     // Snoop flags
     void assertMemInhibit()     { flags.set(MEM_INHIBIT); }
