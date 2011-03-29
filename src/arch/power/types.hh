@@ -87,6 +87,7 @@ typedef GenericISA::SimplePCState<MachInst> PCState;
 // typedef int RegContextParam;
 // typedef int RegContextVal;
 
+} // PowerISA namespace
 
 namespace __hash_namespace {
 
