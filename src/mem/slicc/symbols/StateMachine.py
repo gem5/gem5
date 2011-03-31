@@ -605,7 +605,7 @@ $vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet);
                 # Set randomization
                 if "random" in var:
                     # A buffer
-                    code('$vid->setRandomization(${{var["random"]}})')
+                    code('$vid->setRandomization(${{var["random"]}});')
 
                 # Set Priority
                 if "rank" in var:
