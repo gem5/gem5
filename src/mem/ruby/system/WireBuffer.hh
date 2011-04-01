@@ -54,7 +54,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 class Consumer;
-class Message;  // I added this and removed Message.hh
+class Message; 
 
 class WireBuffer : public SimObject
 {
@@ -88,7 +88,6 @@ class WireBuffer : public SimObject
     void clearStats() const;
     void printStats(std::ostream& out) const;
 
-//    int m_dummy;
     uint64_t m_msg_counter;
 
   private:

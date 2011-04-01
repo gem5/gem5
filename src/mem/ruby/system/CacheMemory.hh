@@ -83,6 +83,10 @@ class CacheMemory : public SimObject
 
     // find an unused entry and sets the tag appropriate for the address
     AbstractCacheEntry* allocate(const Address& address, AbstractCacheEntry* new_entry);
+    void allocateVoid(const Address& address, AbstractCacheEntry* new_entry)
+    {
+        allocate(address, new_entry);
+    }
 
     // Explicitly free up this address
     void deallocate(const Address& address);
