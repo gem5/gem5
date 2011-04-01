@@ -43,11 +43,10 @@ class IsValidPtrExprAST(ExprAST):
         fix = code.nofix()
         code("(")
         var_type, var_code = self.variable.inline(True);
-        var_code_str = str(var_code).replace('*','')
         if self.flag:
-            code("${var_code_str} != NULL)")
+            code("${var_code} != NULL)")
         else:
-            code("${var_code_str} == NULL)")
+            code("${var_code} == NULL)")
         code.fix(fix)
         type = self.symtab.find("bool", Type)
         return type

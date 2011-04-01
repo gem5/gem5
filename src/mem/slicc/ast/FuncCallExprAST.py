@@ -217,22 +217,12 @@ if (!(${{cvec[0]}})) {
             first_param = True
 
             for (param_code, type) in zip(cvec, type_vec):
-                 if str(type) == "TBE" or ("interface" in type and
-                    type["interface"] == "AbstractCacheEntry"):
-
-                     if first_param:
-                         params = str(param_code).replace('*','')
-                         first_param  = False
-                     else:
-                         params += ', '
-                         params += str(param_code).replace('*','');
-                 else:
-                     if first_param:
-                         params = str(param_code)
-                         first_param  = False
-                     else:
-                         params += ', '
-                         params += str(param_code);
+                if first_param:
+                    params = str(param_code)
+                    first_param  = False
+                else:
+                    params += ', '
+                    params += str(param_code);
 
             fix = code.nofix()
             code('(${internal}${{func.c_ident}}($params))')

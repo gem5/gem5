@@ -48,17 +48,12 @@ class FormalParamAST(AST):
         param = "param_%s" % self.ident
 
         # Add to symbol table
+        v = Var(self.symtab, self.ident, self.location, type, param,
+                self.pairs)
+        self.symtab.newSymbol(v)
         if self.pointer or str(type) == "TBE" or (
            "interface" in type and type["interface"] == "AbstractCacheEntry"):
 
-            v = Var(self.symtab, self.ident, self.location, type,
-                    "(*%s)" % param, self.pairs)
-            self.symtab.newSymbol(v)
             return type, "%s* %s" % (type.c_ident, param)
-
         else:
-            v = Var(self.symtab, self.ident, self.location, type, param,
-                    self.pairs)
-            self.symtab.newSymbol(v)
-
-        return type, "%s %s" % (type.c_ident, param)
+            return type, "%s %s" % (type.c_ident, param)

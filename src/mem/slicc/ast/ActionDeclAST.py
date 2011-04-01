@@ -59,12 +59,12 @@ class ActionDeclAST(DeclAST):
 
             if machine.TBEType != None:
                 var = Var(self.symtab, "tbe", self.location, machine.TBEType,
-                      "(*m_tbe_ptr)", self.pairs)
+                      "m_tbe_ptr", self.pairs)
                 self.symtab.newSymbol(var)
 
             if machine.EntryType != None:
                 var = Var(self.symtab, "cache_entry", self.location,
-                          machine.EntryType, "(*m_cache_entry_ptr)", self.pairs)
+                          machine.EntryType, "m_cache_entry_ptr", self.pairs)
                 self.symtab.newSymbol(var)
 
             # Do not allows returns in actions

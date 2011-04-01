@@ -40,7 +40,12 @@ class MemberExprAST(ExprAST):
     def generate(self, code):
         return_type, gcode = self.expr_ast.inline(True)
         fix = code.nofix()
-        code("($gcode).m_${{self.field}}")
+
+        if str(return_type) == "TBE" or ("interface" in return_type and return_type["interface"] == "AbstractCacheEntry"):
+            code("(*$gcode).m_${{self.field}}")
+        else:
+            code("($gcode).m_${{self.field}}")
+
         code.fix(fix)
 
         # Verify that this is a valid field name for this type
