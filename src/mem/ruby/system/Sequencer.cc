@@ -671,11 +671,13 @@ Sequencer::issueRequest(const RubyRequest& request)
 
     Address line_addr(request.m_PhysicalAddress);
     line_addr.makeLineAddress();
+    int proc_id = request.pkt->req->hasContextId() ?
+        request.pkt->req->contextId() : -1;
     RubyRequest *msg = new RubyRequest(request.m_PhysicalAddress.getAddress(),
                                        request.data, request.m_Size,
                                        request.m_ProgramCounter.getAddress(),
                                        ctype, amtype, request.pkt,
-                                       PrefetchBit_No, request.proc_id);
+                                       PrefetchBit_No, proc_id);
 
     DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\n",
         g_eventQueue_ptr->getTime(), m_version, "Seq", "Begin", "", "",

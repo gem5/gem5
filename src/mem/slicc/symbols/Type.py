@@ -261,9 +261,6 @@ $klass ${{self.c_ident}}$parent
             for dm in self.data_members.values():
                 code('m_${{dm.ident}} = other.m_${{dm.ident}};')
 
-            if self.isMessage:
-                code('proc_id = other.proc_id;')
-
             code.dedent()
             code('}')
 
@@ -272,9 +269,6 @@ $klass ${{self.c_ident}}$parent
             params = [ 'const %s& local_%s' % (dm.type.c_ident, dm.ident) \
                        for dm in self.data_members.itervalues() ]
 
-            if self.isMessage:
-                params.append('const unsigned local_proc_id')
-            
             params = ', '.join(params)
             code('${{self.c_ident}}($params)')
 
@@ -289,9 +283,6 @@ $klass ${{self.c_ident}}$parent
                 if "nextLineCallHack" in dm:
                     code('m_${{dm.ident}}${{dm["nextLineCallHack"]}};')
 
-            if self.isMessage:
-                code('proc_id = local_proc_id;')
-            
             code.dedent()
             code('}')
 
@@ -376,9 +367,6 @@ set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}})
                     code('/** ${{dm["desc"]}} */')
 
                 code('$const${{dm.type.c_ident}} m_${{dm.ident}}$init;')
-
-        if self.isMessage:
-            code('unsigned proc_id;')
 
         code.dedent()
         code('};')
