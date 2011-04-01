@@ -146,6 +146,10 @@ structure (CacheMemory, external = "yes") {
   void setMRU(Address);
 }
 
+structure (WireBuffer, inport="yes", outport="yes", external = "yes") {
+
+}
+
 structure (MemoryControl, inport="yes", outport="yes", external = "yes") {
 
 }
