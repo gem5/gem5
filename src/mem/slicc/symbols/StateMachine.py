@@ -30,6 +30,7 @@ from m5.util import orderdict
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
 import slicc.generate.html as html
+import re
 
 python_class_map = {"int": "Int",
                     "std::string": "String",
@@ -473,10 +474,13 @@ $c_ident::$c_ident(const Params *p)
         # params include a sequencer.  This information will be used later for
         # contecting the sequencer back to the L1 cache controller.
         #
-        contains_sequencer = False
+        contains_dma_sequencer = False
+        sequencers = []
         for param in self.config_parameters:
-            if param.name == "sequencer" or param.name == "dma_sequencer":
-                contains_sequencer = True
+            if param.name == "dma_sequencer":
+                contains_dma_sequencer = True
+            elif re.compile("sequencer").search(param.name):
+                sequencers.append(param.name)
             if param.pointer:
                 code('m_${{param.name}}_ptr = p->${{param.name}};')
             else:
@@ -487,19 +491,20 @@ $c_ident::$c_ident(const Params *p)
         # includes passing the sequencer a pointer to the controller.
         #
         if self.ident == "L1Cache":
-            if not contains_sequencer:
+            if not sequencers:
                 self.error("The L1Cache controller must include the sequencer " \
                            "configuration parameter")
 
-            code('''
-m_sequencer_ptr->setController(this);
-''')
+            for seq in sequencers:
+                code('''
+m_${{seq}}_ptr->setController(this);
+    ''')
         #
         # For the DMA controller, pass the sequencer a pointer to the
         # controller.
         #
         if self.ident == "DMA":
-            if not contains_sequencer:
+            if not contains_dma_sequencer:
                 self.error("The DMA controller must include the sequencer " \
                            "configuration parameter")
 
