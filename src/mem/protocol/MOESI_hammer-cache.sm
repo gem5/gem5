@@ -1532,8 +1532,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
   
-  transition(MM, NC_DMA_GETS) {
-    c_sendExclusiveData;
+  transition(MM, NC_DMA_GETS, O) {
+    ee_sendDataShared;
     l_popForwardQueue;
   }
   
@@ -1575,7 +1575,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(M, NC_DMA_GETS) {
+  transition(M, NC_DMA_GETS, O) {
     ee_sendDataShared;
     l_popForwardQueue;
   }
@@ -1933,8 +1933,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
     l_popForwardQueue;
   }
 
-  transition(MM_F, NC_DMA_GETS) {
-    ct_sendExclusiveDataFromTBE;
+  transition(MM_F, NC_DMA_GETS, OM_F) {
+    sq_sendSharedDataFromTBEToCache;
     l_popForwardQueue;
   }
 
