@@ -104,6 +104,7 @@ Check::initiatePrefetch()
     // Prefetches are assumed to be 0 sized
     Request *req = new Request(m_address.getAddress(), 0, flags, curTick(),
                                m_pc.getAddress());
+    req->setThreadContext(index, 0);
 
     PacketPtr pkt = new Packet(req, cmd, port->idx);
 
@@ -177,6 +178,7 @@ Check::initiateAction()
     Request *req = new Request(writeAddr.getAddress(), 1, flags, curTick(),
                                m_pc.getAddress());
 
+    req->setThreadContext(index, 0);
     Packet::Command cmd;
 
     // 1 out of 8 chance, issue an atomic rather than a write
@@ -242,6 +244,7 @@ Check::initiateCheck()
     Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags,
                                curTick(), m_pc.getAddress());
 
+    req->setThreadContext(index, 0);
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq, port->idx);
     uint8_t* dataArray = new uint8_t[CHECK_SIZE];
     pkt->dataDynamicArray(dataArray);
