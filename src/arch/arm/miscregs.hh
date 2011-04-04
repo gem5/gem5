@@ -171,6 +171,8 @@ namespace ArmISA
         MISCREG_ID_ISAR4,
         MISCREG_ID_ISAR5,
         MISCREG_CPSR_MODE,
+        MISCREG_LOCKFLAG,
+        MISCREG_LOCKADDR,
         MISCREG_CP15_UNIMP_START,
         MISCREG_TCMTR = MISCREG_CP15_UNIMP_START,
         MISCREG_ID_PFR1,
@@ -234,7 +236,7 @@ namespace ArmISA
         "pmceid1", "pmc_other", "pmxevcntr",
         "pmuserenr", "pmintenset", "pmintenclr",
         "id_isar0", "id_isar1", "id_isar2", "id_isar3", "id_isar4", "id_isar5",
-        "cpsr_mode",
+        "cpsr_mode", "lockflag", "lockaddr",
          // Unimplemented below
         "tcmtr",
         "id_pfr1", "id_dfr0", "id_afr0",

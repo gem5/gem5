@@ -227,6 +227,7 @@ def operands {{
     'Fpexc': cntrlRegNC('MISCREG_FPEXC'),
     'Sctlr': cntrlRegNC('MISCREG_SCTLR'),
     'SevMailbox': cntrlRegNC('MISCREG_SEV_MAILBOX'),
+    'LLSCLock': cntrlRegNC('MISCREG_LOCKFLAG'),
 
     #Register fields for microops
     'URa' : intReg('ura'),
