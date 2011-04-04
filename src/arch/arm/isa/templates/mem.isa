@@ -455,14 +455,18 @@ def template NeonLoadInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(op_src_decl)s;
+        %(op_decl)s;
+        %(mem_decl)s;
         %(op_rd)s;
         %(ea_code)s;
+
+        MemUnion memUnion;
+        uint8_t *dataPtr = memUnion.bytes;
 
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->readBytes(EA, NULL, %(size)d, memAccessFlags);
+                fault = xc->readBytes(EA, dataPtr, %(size)d, memAccessFlags);
             }
         } else {
             xc->setPredicate(false);
