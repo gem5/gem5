@@ -124,8 +124,21 @@ void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     int i;
+
+    int saved_mode = ((CPSR)src->readMiscReg(MISCREG_CPSR)).mode;
+
+    // Make sure we're in user mode, so we can easily see all the registers
+    // in the copy loop
+    src->setMiscReg(MISCREG_CPSR_MODE, MODE_USER);
+    dest->setMiscReg(MISCREG_CPSR_MODE, MODE_USER);
+
     for(i = 0; i < TheISA::NumIntRegs; i++)
         dest->setIntReg(i, src->readIntReg(i));
+
+    // Restore us back to the old mode
+    src->setMiscReg(MISCREG_CPSR_MODE, saved_mode);
+    dest->setMiscReg(MISCREG_CPSR_MODE, saved_mode);
+
     for(i = 0; i < TheISA::NumFloatRegs; i++)
         dest->setFloatReg(i, src->readFloatReg(i));
     for(i = 0; i < TheISA::NumMiscRegs; i++)

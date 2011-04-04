@@ -231,36 +231,11 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 {
-    // This function will mess things up unless the ROB is empty and
-    // there are no instructions in the pipeline.
-    ThreadID tid = thread->threadId();
-    PhysRegIndex renamed_reg;
+    // Prevent squashing
+    thread->inSyscall = true;
+    TheISA::copyRegs(tc, this);
+    thread->inSyscall = false;
 
-    // First loop through the integer registers.
-    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
-        renamed_reg = cpu->renameMap[tid].lookup(i);
-
-        DPRINTF(O3CPU, "Copying over register %i, had data %lli, "
-                "now has data %lli.\n",
-                renamed_reg, cpu->readIntReg(renamed_reg),
-                tc->readIntReg(i));
-
-        cpu->setIntReg(renamed_reg, tc->readIntReg(i));
-    }
-
-    // Then loop through the floating point registers.
-    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-        renamed_reg = cpu->renameMap[tid].lookup(i + TheISA::FP_Base_DepTag);
-        cpu->setFloatRegBits(renamed_reg,
-                             tc->readFloatRegBits(i));
-    }
-
-    // Copy the misc regs.
-    TheISA::copyMiscRegs(tc, this);
-
-    // Then finally set the PC, the next PC, the nextNPC, the micropc, and the
-    // next micropc.
-    cpu->pcState(tc->pcState(), tid);
 #if !FULL_SYSTEM
     this->thread->funcExeInst = tc->readFuncExeInst();
 #endif
