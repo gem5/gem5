@@ -39,8 +39,19 @@
 
 let {{
     header_output = ""
-    decoder_output = ""
-    exec_output = ""
+    decoder_output = '''
+    uint64_t join32to64(uint32_t r1, uint32_t r0)
+    {
+        uint64_t r = r1;
+        r <<= 32;
+        r |= r0;
+        return r;
+    }
+    '''
+    exec_output = '''
+    uint64_t join32to64(uint32_t r1, uint32_t r0);
+    '''
+
 
     armCode = '''
 #if FULL_SYSTEM
@@ -57,7 +68,7 @@ let {{
 
     quiesceCode = '''
 #if FULL_SYSTEM
-    PseudoInst::quiesceNs(xc->tcBase(), R0);
+    PseudoInst::quiesce(xc->tcBase());
 #endif
     '''
     quiesceIop = InstObjParams("quiesce", "Quiesce", "PredOp",
@@ -70,7 +81,7 @@ let {{
 
     quiesceNsCode = '''
 #if FULL_SYSTEM
-    PseudoInst::quiesceNs(xc->tcBase(), R0);
+    PseudoInst::quiesceNs(xc->tcBase(), join32to64(R1, R0));
 #endif
     '''
 
@@ -84,7 +95,7 @@ let {{
 
     quiesceCyclesCode = '''
 #if FULL_SYSTEM
-    PseudoInst::quiesceCycles(xc->tcBase(), R0);
+    PseudoInst::quiesceCycles(xc->tcBase(), join32to64(R1, R0));
 #endif
     '''
 
@@ -98,7 +109,9 @@ let {{
 
     quiesceTimeCode = '''
 #if FULL_SYSTEM
-    R0 = PseudoInst::quiesceTime(xc->tcBase());
+    uint64_t qt_val = PseudoInst::quiesceTime(xc->tcBase());
+    R0 = bits(qt_val, 31, 0);
+    R1 = bits(qt_val, 63, 32);
 #endif
     '''
 
@@ -110,18 +123,28 @@ let {{
     decoder_output += BasicConstructor.subst(quiesceTimeIop)
     exec_output += PredOpExecute.subst(quiesceTimeIop)
 
+    rpnsCode = '''
+    uint64_t rpns_val = PseudoInst::rpns(xc->tcBase());
+    R0 = bits(rpns_val, 31, 0);
+    R1 = bits(rpns_val, 63, 32);
+    '''
+
     rpnsIop = InstObjParams("rpns", "Rpns", "PredOp",
-                           { "code": "R0 = PseudoInst::rpns(xc->tcBase());",
+                           { "code": rpnsCode,
                              "predicate_test": predicateTest },
                              ["IsNonSpeculative", "IsUnverifiable"])
     header_output += BasicDeclare.subst(rpnsIop)
     decoder_output += BasicConstructor.subst(rpnsIop)
     exec_output += PredOpExecute.subst(rpnsIop)
 
+    wakeCpuCode = '''
+    PseudoInst::wakeCPU(xc->tcBase(), join32to64(R1,R0));
+    '''
+
     wakeCPUIop = InstObjParams("wakeCPU", "WakeCPU", "PredOp",
-                           { "code": "PseudoInst::wakeCPU(xc->tcBase(), R0);",
-                             "predicate_test": predicateTest },
-                             ["IsNonSpeculative", "IsUnverifiable"])
+                   { "code": wakeCpuCode,
+                     "predicate_test": predicateTest },
+                     ["IsNonSpeculative", "IsUnverifiable"])
     header_output += BasicDeclare.subst(wakeCPUIop)
     decoder_output += BasicConstructor.subst(wakeCPUIop)
     exec_output += PredOpExecute.subst(wakeCPUIop)
@@ -153,10 +176,13 @@ let {{
     decoder_output += BasicConstructor.subst(deprecated_exitIop)
     exec_output += PredOpExecute.subst(deprecated_exitIop)
 
+    m5exit_code = '''
+        PseudoInst::m5exit(xc->tcBase(), join32to64(R1, R0));
+    '''
     m5exitIop = InstObjParams("m5exit", "M5exit", "PredOp",
-                           { "code": "PseudoInst::m5exit(xc->tcBase(), R0)",
-                             "predicate_test": predicateTest },
-                             ["No_OpClass", "IsNonSpeculative"])
+                                   { "code": m5exit_code,
+                                     "predicate_test": predicateTest },
+                                     ["No_OpClass", "IsNonSpeculative"])
     header_output += BasicDeclare.subst(m5exitIop)
     decoder_output += BasicConstructor.subst(m5exitIop)
     exec_output += PredOpExecute.subst(m5exitIop)
@@ -188,32 +214,45 @@ let {{
     decoder_output += BasicConstructor.subst(initparamIop)
     exec_output += PredOpExecute.subst(initparamIop)
 
+    resetstats_code = '''
+    PseudoInst::resetstats(xc->tcBase(), join32to64(R1, R0), join32to64(R3, R2));
+    '''
+
     resetstatsIop = InstObjParams("resetstats", "Resetstats", "PredOp",
-                           { "code": "PseudoInst::resetstats(xc->tcBase(), R0, R1);",
+                           { "code": resetstats_code,
                              "predicate_test": predicateTest },
                              ["IsNonSpeculative"])
     header_output += BasicDeclare.subst(resetstatsIop)
     decoder_output += BasicConstructor.subst(resetstatsIop)
     exec_output += PredOpExecute.subst(resetstatsIop)
 
+    dumpstats_code = '''
+    PseudoInst::dumpstats(xc->tcBase(), join32to64(R1, R0), join32to64(R3, R2));
+    '''
     dumpstatsIop = InstObjParams("dumpstats", "Dumpstats", "PredOp",
-                           { "code": "PseudoInst::dumpstats(xc->tcBase(), R0, R1);",
+                           { "code": dumpstats_code,
                              "predicate_test": predicateTest },
                              ["IsNonSpeculative"])
     header_output += BasicDeclare.subst(dumpstatsIop)
     decoder_output += BasicConstructor.subst(dumpstatsIop)
     exec_output += PredOpExecute.subst(dumpstatsIop)
 
+    dumpresetstats_code = '''
+    PseudoInst::dumpresetstats(xc->tcBase(), join32to64(R1, R0), join32to64(R3, R2));
+    '''
     dumpresetstatsIop = InstObjParams("dumpresetstats", "Dumpresetstats", "PredOp",
-                           { "code": "PseudoInst::dumpresetstats(xc->tcBase(), R0, R1);",
+                           { "code": dumpresetstats_code,
                              "predicate_test": predicateTest },
                              ["IsNonSpeculative"])
     header_output += BasicDeclare.subst(dumpresetstatsIop)
     decoder_output += BasicConstructor.subst(dumpresetstatsIop)
     exec_output += PredOpExecute.subst(dumpresetstatsIop)
 
+    m5checkpoint_code = '''
+    PseudoInst::m5checkpoint(xc->tcBase(), join32to64(R1, R0), join32to64(R3, R2));
+    '''
     m5checkpointIop = InstObjParams("m5checkpoint", "M5checkpoint", "PredOp",
-                           { "code": "PseudoInst::m5checkpoint(xc->tcBase(), R0, R1);",
+                           { "code": m5checkpoint_code,
                              "predicate_test": predicateTest },
                              ["IsNonSpeculative"])
     header_output += BasicDeclare.subst(m5checkpointIop)
@@ -222,7 +261,9 @@ let {{
 
     m5readfileCode = '''
 #if FULL_SYSTEM
-    R0 = PseudoInst::readfile(xc->tcBase(), R0, R1, R2);
+    int n = 4;
+    uint64_t offset = getArgument(xc->tcBase(), n, sizeof(uint64_t), false);
+    R0 = PseudoInst::readfile(xc->tcBase(), R0, join32to64(R3,R2), offset);
 #endif
     '''
     m5readfileIop = InstObjParams("m5readfile", "M5readfile", "PredOp",
@@ -251,7 +292,7 @@ let {{
 
     m5addsymbolCode = '''
 #if FULL_SYSTEM
-    PseudoInst::addsymbol(xc->tcBase(), R0, R1);
+    PseudoInst::addsymbol(xc->tcBase(), join32to64(R1, R0), R2);
 #endif
     '''
     m5addsymbolIop = InstObjParams("m5addsymbol", "M5addsymbol", "PredOp",

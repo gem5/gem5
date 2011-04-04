@@ -149,9 +149,11 @@ def operands {{
     'SpMode': intRegNPC('intRegInMode((OperatingMode)regMode, INTREG_SP)'),
     'LR': intRegNPC('INTREG_LR'),
     'R7': intRegNPC('7'),
+    # First four arguments are passed in registers
     'R0': intRegNPC('0'),
-    'R1': intRegNPC('0'),
-    'R2': intRegNPC('1'),
+    'R1': intRegNPC('1'),
+    'R2': intRegNPC('2'),
+    'R3': intRegNPC('3'),
 
     #Pseudo integer condition code registers
     'CondCodes': intRegCC('INTREG_CONDCODES'),
