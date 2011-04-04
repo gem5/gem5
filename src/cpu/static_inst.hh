@@ -117,7 +117,6 @@ class StaticInstBase : public RefCounted
         IsIndexed,      ///< Accesses memory with an indexed address computation
         IsInstPrefetch, ///< Instruction-cache prefetch.
         IsDataPrefetch, ///< Data-cache prefetch.
-        IsCopy,         ///< Fast Cache block copy
 
         IsControl,              ///< Control transfer instruction.
         IsDirectControl,        ///< PC relative control transfer.
@@ -228,7 +227,6 @@ class StaticInstBase : public RefCounted
     bool isDataPrefetch() const { return flags[IsDataPrefetch]; }
     bool isPrefetch()     const { return isInstPrefetch() ||
                                          isDataPrefetch(); }
-    bool isCopy()         const { return flags[IsCopy];}
 
     bool isInteger()      const { return flags[IsInteger]; }
     bool isFloating()     const { return flags[IsFloating]; }

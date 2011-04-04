@@ -252,12 +252,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** The effective physical address. */
     Addr physEffAddr;
 
-    /** Effective virtual address for a copy source. */
-    Addr copySrcEffAddr;
-
-    /** Effective physical address for a copy source. */
-    Addr copySrcPhysEffAddr;
-
     /** The memory request flags (from translation). */
     unsigned memReqFlags;
 
@@ -499,7 +493,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     { return staticInst->isStoreConditional(); }
     bool isInstPrefetch() const { return staticInst->isInstPrefetch(); }
     bool isDataPrefetch() const { return staticInst->isDataPrefetch(); }
-    bool isCopy()         const { return staticInst->isCopy(); }
     bool isInteger()      const { return staticInst->isInteger(); }
     bool isFloating()     const { return staticInst->isFloating(); }
     bool isControl()      const { return staticInst->isControl(); }

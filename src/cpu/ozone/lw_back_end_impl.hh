@@ -1205,9 +1205,6 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         inst->traceData = NULL;
     }
 
-    if (inst->isCopy())
-        panic("Should not commit any copy instructions!");
-
     inst->clearDependents();
 
     frontEnd->addFreeRegs(freed_regs);

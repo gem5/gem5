@@ -1199,9 +1199,6 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
                                  head_inst->renamedDestRegIdx(i));
     }
 
-    if (head_inst->isCopy())
-        panic("Should not commit any copy instructions!");
-
     // Finally clear the head ROB entry.
     rob->retireHead(tid);
 

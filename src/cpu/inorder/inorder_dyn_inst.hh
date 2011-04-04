@@ -350,7 +350,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     { return staticInst->isStoreConditional(); }
     bool isInstPrefetch() const { return staticInst->isInstPrefetch(); }
     bool isDataPrefetch() const { return staticInst->isDataPrefetch(); }
-    bool isCopy()         const { return staticInst->isCopy(); }
     bool isInteger()      const { return staticInst->isInteger(); }
     bool isFloating()     const { return staticInst->isFloating(); }
     bool isControl()      const { return staticInst->isControl(); }

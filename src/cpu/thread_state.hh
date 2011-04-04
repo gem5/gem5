@@ -200,18 +200,6 @@ struct ThreadState {
 #endif
 
   public:
-    /**
-     * Temporary storage to pass the source address from copy_load to
-     * copy_store.
-     * @todo Remove this temporary when we have a better way to do it.
-     */
-    Addr copySrcAddr;
-    /**
-     * Temp storage for the physical source address of a copy.
-     * @todo Remove this temporary when we have a better way to do it.
-     */
-    Addr copySrcPhysAddr;
-
     /*
      * number of executed instructions, for matching with syscall trace
      * points in EIO files.
