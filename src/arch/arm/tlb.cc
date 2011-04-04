@@ -446,8 +446,10 @@ Fault
 TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         Translation *translation, bool &delay, bool timing)
 {
-    if (!miscRegValid)
+    if (!miscRegValid) {
         updateMiscReg(tc);
+        DPRINTF(TLBVerbose, "TLB variables changed!\n");
+    }
 
     Addr vaddr = req->getVaddr();
     uint32_t flags = req->getFlags();
@@ -456,7 +458,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     bool is_write = (mode == Write);
     bool is_priv = isPriv && !(flags & UserMode);
 
-    DPRINTF(TLBVerbose, "CPSR is user:%d UserMode:%d\n",
+    DPRINTF(TLBVerbose, "CPSR is priv:%d UserMode:%d\n",
             isPriv, flags & UserMode);
     // If this is a clrex instruction, provide a PA of 0 with no fault
     // This will force the monitor to set the tracked address to 0

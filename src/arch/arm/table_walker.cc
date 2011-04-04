@@ -114,8 +114,16 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
 
         currState = new WalkerState();
         currState->tableWalker = this;
-    }
-    else if (_timing) {
+    } else if (_timing) {
+        // This is a translation that was completed and then faulted again
+        // because some underlying parameters that affect the translation
+        // changed out from under us (e.g. asid). It will either be a
+        // misprediction, in which case nothing will happen or we'll use
+        // this fault to re-execute the faulting instruction which should clean
+        // up everything.
+        if (currState->vaddr == _req->getVaddr()) {
+            return new ReExec;
+        }
         panic("currState should always be empty in timing mode!\n");
     }
 

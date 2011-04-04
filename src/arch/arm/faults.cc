@@ -74,6 +74,9 @@ template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals =
 template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals =
     {"Pipe Flush", 0x00, MODE_SVC, 0, 0, true, true}; // some dummy values
 
+template<> ArmFault::FaultVals ArmFaultVals<ReExec>::vals =
+    {"ReExec Flush", 0x00, MODE_SVC, 0, 0, true, true}; // some dummy values
+
 Addr 
 ArmFault::getVector(ThreadContext *tc)
 {
@@ -222,6 +225,17 @@ FlushPipe::invoke(ThreadContext *tc, StaticInstPtr inst) {
     assert(inst);
     pc.forcedItState(inst->machInst.newItstate);
     inst->advancePC(pc);
+    tc->pcState(pc);
+}
+
+void
+ReExec::invoke(ThreadContext *tc, StaticInstPtr inst) {
+    DPRINTF(Faults, "Invoking ReExec Fault\n");
+
+    // Set the PC to then the faulting instruction.
+    // Net effect is simply squashing all instructions including this
+    // instruction and refetching/rexecuting current instruction
+    PCState pc = tc->pcState();
     tc->pcState(pc);
 }
 
