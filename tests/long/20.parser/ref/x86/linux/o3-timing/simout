@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 16 2011 11:44:34
-M5 started Mar 16 2011 11:44:36
+M5 compiled Mar 18 2011 20:12:06
+M5 started Mar 18 2011 20:27:45
 M5 executing on zizzer
-command line: build/X86_SE/tests/fast/build/X86_SE/m5.fast -d build/X86_SE/tests/fast/build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -73,4 +73,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 610952992000 because target called exit()
+Exiting @ tick 584102039000 because target called exit()

@@ -5,13 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar  1 2011 23:14:11
-M5 revision 42f62a19a71d 8104 default qbase qtip tip x86seo3stats.patch
-M5 started Mar  1 2011 23:14:13
-M5 executing on burrito
-command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/quick/00.hello/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/quick/00.hello/x86/linux/o3-timing
+M5 compiled Mar 18 2011 20:12:06
+M5 started Mar 18 2011 20:30:23
+M5 executing on zizzer
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/quick/00.hello/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/quick/00.hello/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 11421500 because target called exit()
+Exiting @ tick 11371000 because target called exit()

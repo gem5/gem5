@@ -5,10 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 11 2011 20:10:09
-M5 revision 4decc284606a 8095 default qtip tip ext/update_add_stats.patch
-M5 started Mar 11 2011 20:28:39
-M5 executing on u200439-lin.austin.arm.com
+M5 compiled Mar 18 2011 20:12:03
+M5 started Mar 18 2011 20:55:41
+M5 executing on zizzer
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/70.twolf/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/long/70.twolf/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -26,4 +25,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 129013619500 because target called exit()
+122 123 124 Exiting @ tick 124689161500 because target called exit()

@@ -5,10 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 01:47:18
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 01:47:50
-M5 executing on burrito
+M5 compiled Mar 17 2011 21:44:37
+M5 started Mar 17 2011 22:44:08
+M5 executing on zizzer
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -44,4 +43,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 162779779500 because target called exit()
+Exiting @ tick 162342217500 because target called exit()

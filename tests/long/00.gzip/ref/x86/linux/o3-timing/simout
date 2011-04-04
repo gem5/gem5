@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 16 2011 15:39:14
-M5 started Mar 16 2011 15:39:15
-M5 executing on burrito
+M5 compiled Mar 18 2011 20:12:06
+M5 started Mar 18 2011 20:12:27
+M5 executing on zizzer
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/00.gzip/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/00.gzip/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -1066,4 +1066,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 766217705000 because target called exit()
+Exiting @ tick 751079230500 because target called exit()
