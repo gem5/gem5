@@ -43,6 +43,7 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr, DmaDevice
+from Ide import *
 from Platform import Platform
 from Terminal import Terminal
 from Uart import Uart
@@ -131,6 +132,12 @@ class RealViewPBX(RealView):
     clcd = Pl111(pio_addr=0x10020000, int_num=55)
     kmi0   = Pl050(pio_addr=0x10006000, int_num=52)
     kmi1   = Pl050(pio_addr=0x10007000, int_num=53, is_mouse=True)
+    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=0,
+                            io_shift = 1, ctrl_offset = 2, Command = 0x1,
+                            BAR0 = 0x18000000, BAR0Size = '16B',
+                            BAR1 = 0x18000100, BAR1Size = '1B',
+                            BAR0LegacyIO = True, BAR1LegacyIO = True)
+
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff)
     flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x4000000)
@@ -149,7 +156,6 @@ class RealViewPBX(RealView):
     aaci_fake     = AmbaFake(pio_addr=0x10004000)
     mmc_fake      = AmbaFake(pio_addr=0x10005000)
     rtc_fake      = AmbaFake(pio_addr=0x10017000, amba_id=0x41031)
-    cf0_fake      = IsaFake(pio_addr=0x18000000, pio_size=0xfff)
 
 
     # Attach I/O devices that are on chip
@@ -168,6 +174,7 @@ class RealViewPBX(RealView):
        self.clcd.pio          = bus.port
        self.kmi0.pio          = bus.port
        self.kmi1.pio          = bus.port
+       self.cf_ctrl.pio       = bus.port
        self.dmac_fake.pio     = bus.port
        self.uart1_fake.pio    = bus.port
        self.uart2_fake.pio    = bus.port
@@ -184,7 +191,6 @@ class RealViewPBX(RealView):
        self.mmc_fake.pio      = bus.port
        self.rtc_fake.pio      = bus.port
        self.flash_fake.pio    = bus.port
-       self.cf0_fake.pio      = bus.port
 
 # Reference for memory map and interrupt number
 # RealView Emulation Baseboard User Guide (ARM DUI 0143B)

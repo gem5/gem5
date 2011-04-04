@@ -206,16 +206,6 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
 
     self.mem_mode = mem_mode
 
-    #self.cf0 = CowIdeDisk(driveID='master')
-    #self.cf0.childImage(mdesc.disk())
-    #self.cf_ctrl = IdeController(disks=[self.cf0],
-    #                             pci_func = 0, pci_dev = 0, pci_bus = 0,
-    #                             io_shift = 1, ctrl_offset = 2, Command = 0x1,
-    #                             BAR0 = 0x18000000, BAR0Size = '16B',
-    #                             BAR1 = 0x18000100, BAR1Size = '1B',
-    #                             BAR0LegacyIO = True, BAR1LegacyIO = True,)
-    #self.cf_ctrl.pio = self.iobus.port
-
     if machine_type == "RealView_PBX":
         self.realview = RealViewPBX()
     elif machine_type == "RealView_EB":
@@ -224,20 +214,39 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         print "Unknown Machine Type"
         sys.exit(1)
 
+    use_cf = False
+    if mdesc.disk()[-4:] == ".img":
+        use_cf = True
+        self.cf0 = CowIdeDisk(driveID='master')
+        self.cf0.childImage(mdesc.disk())
+        self.realview.cf_ctrl.disks = [self.cf0]
+
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
-        self.physmem = PhysicalMemory(range = AddrRange(Addr('256MB')), zero = True)
+        self.physmem = PhysicalMemory(range = AddrRange(Addr('256MB')),
+                                      zero = True)
     else:
-        self.physmem = PhysicalMemory(range = AddrRange(Addr('128MB')), zero = True)
-        self.diskmem = PhysicalMemory(range = AddrRange(Addr('128MB'), size = '128MB'),
-                                  file = disk('ael-arm.ext2'))
-        self.diskmem.port = self.membus.port
-        self.machine_type = machine_type
         self.kernel = binary('vmlinux.arm')
-        self.boot_osflags = 'earlyprintk mem=128MB console=ttyAMA0' +          \
-                ' lpj=19988480 norandmaps slram=slram0,0x8000000,+0x8000000' + \
-                ' mtdparts=slram0:- rw loglevel=8 root=/dev/mtdblock0'
+        self.machine_type = machine_type
+        boot_flags = 'earlyprintk console=ttyAMA0 lpj=19988480 norandmaps ' + \
+                     'rw loglevel=8 '
+        if use_cf:
+            self.physmem = PhysicalMemory(range = AddrRange(Addr('256MB')),
+                                          zero = True)
+            boot_flags += "mem=256MB root=/dev/sda1 "
+        else:
+            self.physmem = PhysicalMemory(range = AddrRange(Addr('128MB')),
+                                          zero = True)
+            self.diskmem = PhysicalMemory(range = AddrRange(Addr('128MB'),
+                                          size = '128MB'),
+                                          file = disk(mdesc.disk()))
+            self.diskmem.port = self.membus.port
+            boot_flags +=  "mem=128MB slram=slram0,0x8000000,+0x8000000 " + \
+                            "mtdparts=slram0:- root=/dev/mtdblock0 "
+        if mdesc.disk().count('android'):
+            boot_flags += "init=/init "
+        self.boot_osflags = boot_flags
 
     self.physmem.port = self.membus.port
     self.realview.attachOnChipIO(self.membus)
