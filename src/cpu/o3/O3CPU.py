@@ -118,6 +118,9 @@ class DerivO3CPU(BaseCPU):
 
     LQEntries = Param.Unsigned(32, "Number of load queue entries")
     SQEntries = Param.Unsigned(32, "Number of store queue entries")
+    LSQDepCheckShift = Param.Unsigned(4, "Number of places to shift addr before check")
+    LSQCheckLoads = Param.Bool(True,
+        "Should dependency violations be checked for loads & stores or just stores")
     LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
     SSITSize = Param.Unsigned(1024, "Store set ID table size")
 

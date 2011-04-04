@@ -243,6 +243,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** The effective virtual address (lds & stores only). */
     Addr effAddr;
 
+    /** The size of the request */
+    Addr effSize;
+
     /** Is the effective virtual address valid. */
     bool effAddrValid;
 
@@ -892,6 +895,7 @@ BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
     if (translationCompleted) {
         if (fault == NoFault) {
             effAddr = req->getVaddr();
+            effSize = size;
             effAddrValid = true;
             fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
         } else {
@@ -962,6 +966,7 @@ BaseDynInst<Impl>::writeBytes(uint8_t *data, unsigned size,
 
     if (fault == NoFault && translationCompleted) {
         effAddr = req->getVaddr();
+        effSize = size;
         effAddrValid = true;
         fault = cpu->write(req, sreqLow, sreqHigh, data, sqIdx);
     }

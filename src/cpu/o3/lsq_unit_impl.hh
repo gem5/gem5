@@ -162,6 +162,9 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
     loadQueue.resize(LQEntries);
     storeQueue.resize(SQEntries);
 
+    depCheckShift = params->LSQDepCheckShift;
+    checkLoads = params->LSQCheckLoads;
+
     loadHead = loadTail = 0;
 
     storeHead = storeWBIdx = storeTail = 0;
@@ -438,6 +441,55 @@ LSQUnit<Impl>::numLoadsReady()
 
 template <class Impl>
 Fault
+LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
+{
+    Addr inst_eff_addr1 = inst->effAddr >> depCheckShift;
+    Addr inst_eff_addr2 = (inst->effAddr + inst->effSize - 1) >> depCheckShift;
+
+    /** @todo in theory you only need to check an instruction that has executed
+     * however, there isn't a good way in the pipeline at the moment to check
+     * all instructions that will execute before the store writes back. Thus,
+     * like the implementation that came before it, we're overly conservative.
+     */
+    while (load_idx != loadTail) {
+        DynInstPtr ld_inst = loadQueue[load_idx];
+        if (!ld_inst->effAddrValid || ld_inst->uncacheable()) {
+            incrLdIdx(load_idx);
+            continue;
+        }
+
+        Addr ld_eff_addr1 = ld_inst->effAddr >> depCheckShift;
+        Addr ld_eff_addr2 =
+            (ld_inst->effAddr + ld_inst->effSize - 1) >> depCheckShift;
+
+        if ((inst_eff_addr2 > ld_eff_addr1 && inst_eff_addr1 < ld_eff_addr2) ||
+               inst_eff_addr1 == ld_eff_addr1) {
+            // A load/store incorrectly passed this load/store.
+            // Check if we already have a violator, or if it's newer
+            // squash and refetch.
+            if (memDepViolator && ld_inst->seqNum > memDepViolator->seqNum)
+                break;
+
+            DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] and [sn:%lli]"
+                    " at address %#x\n", inst->seqNum, ld_inst->seqNum,
+                    ld_eff_addr1);
+            memDepViolator = ld_inst;
+
+            ++lsqMemOrderViolation;
+
+            return TheISA::genMachineCheckFault();
+        }
+
+        incrLdIdx(load_idx);
+    }
+    return NoFault;
+}
+
+
+
+
+template <class Impl>
+Fault
 LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
 {
     using namespace TheISA;
@@ -477,39 +529,9 @@ LSQUnit<Impl>::executeLoad(DynInstPtr &inst)
         assert(inst->effAddrValid);
         int load_idx = inst->lqIdx;
         incrLdIdx(load_idx);
-        while (load_idx != loadTail) {
-            // Really only need to check loads that have actually executed
 
-            // @todo: For now this is extra conservative, detecting a
-            // violation if the addresses match assuming all accesses
-            // are quad word accesses.
-
-            // @todo: Fix this, magic number being used here
-
-            // @todo: Uncachable load is not executed until it reaches
-            // the head of the ROB. Once this if checks only the executed
-            // loads(as noted above), this check can be removed
-            if (loadQueue[load_idx]->effAddrValid &&
-                ((loadQueue[load_idx]->effAddr >> 8)
-                 == (inst->effAddr >> 8)) &&
-                !loadQueue[load_idx]->uncacheable()) {
-                // A load incorrectly passed this load.  Squash and refetch.
-                // For now return a fault to show that it was unsuccessful.
-                DynInstPtr violator = loadQueue[load_idx];
-                if (!memDepViolator ||
-                    (violator->seqNum < memDepViolator->seqNum)) {
-                    memDepViolator = violator;
-                } else {
-                    break;
-                }
-
-                ++lsqMemOrderViolation;
-
-                return genMachineCheckFault();
-            }
-
-            incrLdIdx(load_idx);
-        }
+        if (checkLoads)
+            return checkViolations(load_idx, inst);
     }
 
     return load_fault;
@@ -564,44 +586,8 @@ LSQUnit<Impl>::executeStore(DynInstPtr &store_inst)
         ++storesToWB;
     }
 
-    assert(store_inst->effAddrValid);
-    while (load_idx != loadTail) {
-        // Really only need to check loads that have actually executed
-        // It's safe to check all loads because effAddr is set to
-        // InvalAddr when the dyn inst is created.
+    return checkViolations(load_idx, store_inst);
 
-        // @todo: For now this is extra conservative, detecting a
-        // violation if the addresses match assuming all accesses
-        // are quad word accesses.
-
-        // @todo: Fix this, magic number being used here
-
-        // @todo: Uncachable load is not executed until it reaches
-        // the head of the ROB. Once this if checks only the executed
-        // loads(as noted above), this check can be removed
-        if (loadQueue[load_idx]->effAddrValid &&
-            ((loadQueue[load_idx]->effAddr >> 8)
-             == (store_inst->effAddr >> 8)) &&
-            !loadQueue[load_idx]->uncacheable()) {
-            // A load incorrectly passed this store.  Squash and refetch.
-            // For now return a fault to show that it was unsuccessful.
-            DynInstPtr violator = loadQueue[load_idx];
-            if (!memDepViolator ||
-                (violator->seqNum < memDepViolator->seqNum)) {
-                memDepViolator = violator;
-            } else {
-                break;
-            }
-
-            ++lsqMemOrderViolation;
-
-            return genMachineCheckFault();
-        }
-
-        incrLdIdx(load_idx);
-    }
-
-    return store_fault;
 }
 
 template <class Impl>

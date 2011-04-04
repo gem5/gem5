@@ -111,6 +111,12 @@ class LSQUnit {
     /** Inserts a store instruction. */
     void insertStore(DynInstPtr &store_inst);
 
+    /** Check for ordering violations in the LSQ
+     * @param load_idx index to start checking at
+     * @param inst the instruction to check
+     */
+    Fault checkViolations(int load_idx, DynInstPtr &inst);
+
     /** Executes a load instruction. */
     Fault executeLoad(DynInstPtr &inst);
 
@@ -365,6 +371,14 @@ class LSQUnit {
      *  @todo: Consider having var that records the true number of SQ entries.
      */
     unsigned SQEntries;
+
+    /** The number of places to shift addresses in the LSQ before checking
+     * for dependency violations
+     */
+    unsigned depCheckShift;
+
+    /** Should loads be checked for dependency issues */
+    bool checkLoads;
 
     /** The number of load instructions in the LQ. */
     int loads;
