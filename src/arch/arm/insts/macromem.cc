@@ -136,8 +136,6 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
         // register.
         if (load && reg == INTREG_PC && exception_ret) {
             *++uop = new MicroUopRegMovRet(machInst, 0, INTREG_UREG1);
-            warn("creating instruction with exception return at curTick:%d\n",
-                    curTick());
         } else if (load) {
             *++uop = new MicroUopRegMov(machInst, regIdx, INTREG_UREG1);
             if (reg == INTREG_PC) {
