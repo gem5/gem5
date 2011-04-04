@@ -82,9 +82,6 @@ UDelayEvent::process(ThreadContext *tc)
 
     time *= argMultToNs;
 
-    // Convert ns to ticks
-    time *= SimClock::Int::ns;
-
     SkipFuncEvent::process(tc);
 
     PseudoInst::quiesceNs(tc, time);
