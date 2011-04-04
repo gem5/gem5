@@ -229,10 +229,6 @@ def template NeonEqualRegExecute {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};
@@ -279,10 +275,6 @@ def template NeonUnequalRegExecute {{
             }
         } else {
             xc->setPredicate(false);
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;

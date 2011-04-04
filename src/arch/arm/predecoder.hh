@@ -66,9 +66,8 @@ namespace ArmISA
         bool emiReady;
         bool outOfBytes;
         int offset;
-        ITSTATE itstate;
-        Addr predAddr;
-        bool predAddrValid;
+        bool foundIt;
+        ITSTATE itBits;
 
       public:
         void reset()
@@ -78,15 +77,7 @@ namespace ArmISA
             emi = 0;
             emiReady = false;
             outOfBytes = true;
-            itstate = 0;
-            predAddr = 0;
-            predAddrValid = false;
-        }
-
-        void reset(const ExtMachInst &old_emi)
-        {
-            reset();
-            itstate = old_emi.newItstate;
+            foundIt = false;
         }
 
         Predecoder(ThreadContext * _tc) :
@@ -106,7 +97,6 @@ namespace ArmISA
             tc = _tc;
         }
 
-        void advanceThumbCond();
         void process();
 
         //Use this to give data to the predecoder. This should be used
@@ -149,11 +139,13 @@ namespace ArmISA
             assert(emiReady);
             ExtMachInst thisEmi = emi;
             pc.npc(pc.pc() + getInstSize());
-            predAddrValid = true;
-            predAddr = pc.pc() + getInstSize();
+            if (foundIt)
+                pc.nextItstate(itBits);
+            thisEmi.itstate = pc.itstate();
             pc.size(getInstSize());
             emi = 0;
             emiReady = false;
+            foundIt = false;
             return thisEmi;
         }
     };

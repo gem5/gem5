@@ -108,7 +108,9 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     CPSR saved_cpsr = tc->readMiscReg(MISCREG_CPSR) | 
                       tc->readIntReg(INTREG_CONDCODES);
     Addr curPc M5_VAR_USED = tc->pcState().pc();
- 
+    ITSTATE it = tc->pcState().itstate();
+    saved_cpsr.it2 = it.top6;
+    saved_cpsr.it1 = it.bottom2;
 
     cpsr.mode = nextMode();
     cpsr.it1 = cpsr.it2 = 0;
@@ -159,7 +161,7 @@ Reset::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     tc->getCpuPtr()->clearInterrupts();
     tc->clearArchRegs();
-    ArmFault::invoke(tc);
+    ArmFault::invoke(tc, inst);
 }
 
 #else
@@ -203,7 +205,7 @@ template<class T>
 void
 AbortFault<T>::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    ArmFaultVals<T>::invoke(tc);
+    ArmFaultVals<T>::invoke(tc, inst);
     FSR fsr = 0;
     fsr.fsLow = bits(status, 3, 0);
     fsr.fsHigh = bits(status, 4);
@@ -223,7 +225,6 @@ FlushPipe::invoke(ThreadContext *tc, StaticInstPtr inst) {
     // start refetching from the next instruction.
     PCState pc = tc->pcState();
     assert(inst);
-    pc.forcedItState(inst->machInst.newItstate);
     inst->advancePC(pc);
     tc->pcState(pc);
 }

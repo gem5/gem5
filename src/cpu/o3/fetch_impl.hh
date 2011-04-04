@@ -821,8 +821,6 @@ DefaultFetch<Impl>::squash(const TheISA::PCState &newPC,
     DPRINTF(Fetch, "[tid:%u]: Squash from commit.\n", tid);
 
     doSquash(newPC, tid);
-    if (squashInst)
-        predecoder.reset(squashInst->staticInst->machInst);
 
     // Tell the CPU to remove any instructions that are not in the ROB.
     cpu->removeInstsNotInROB(tid);

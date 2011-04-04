@@ -51,27 +51,6 @@ namespace ArmISA
 {
 
 void
-Predecoder::advanceThumbCond()
-{
-    uint8_t condMask = itstate.mask;
-    uint8_t thumbCond = itstate.cond;
-    DPRINTF(Predecoder, "Advancing ITSTATE from %#x, %#x.\n",
-            thumbCond, condMask);
-    condMask = condMask << 1;
-    uint8_t newBit = bits(condMask, 4);
-    condMask &= mask(4);
-    if (condMask == 0) {
-        thumbCond = 0;
-    } else {
-        replaceBits(thumbCond, 0, newBit);
-    }
-    DPRINTF(Predecoder, "Advancing ITSTATE to %#x, %#x.\n",
-            thumbCond, condMask);
-    itstate.mask = condMask;
-    itstate.cond = thumbCond;
-}
-
-void
 Predecoder::process()
 {
     // emi is typically ready, with some caveats below...
@@ -93,11 +72,6 @@ Predecoder::process()
             consumeBytes(2);
             DPRINTF(Predecoder, "Second half of 32 bit Thumb: %#x.\n",
                     emi.instBits);
-            if (itstate.mask) {
-                emi.itstate = itstate;
-                advanceThumbCond();
-                emi.newItstate = itstate;
-            }
         } else {
             uint16_t highBits = word & 0xF800;
             if (highBits == 0xE800 || highBits == 0xF000 ||
@@ -110,11 +84,6 @@ Predecoder::process()
                     DPRINTF(Predecoder, "All of 32 bit Thumb: %#x.\n",
                             emi.instBits);
                     consumeBytes(4);
-                    if (itstate.mask) {
-                        emi.itstate = itstate;
-                        advanceThumbCond();
-                        emi.newItstate = itstate;
-                    }
                 } else {
                     // We only have the first half word.
                     DPRINTF(Predecoder,
@@ -135,16 +104,11 @@ Predecoder::process()
                         emi.instBits);
                 if (bits(word, 15, 8) == 0xbf &&
                         bits(word, 3, 0) != 0x0) {
-                    emi.itstate = itstate;
-                    itstate = bits(word, 7, 0);
-                    emi.newItstate = itstate;
+                    foundIt = true;
+                    itBits = bits(word, 7, 0);
                     DPRINTF(Predecoder,
                             "IT detected, cond = %#x, mask = %#x\n",
-                            itstate.cond, itstate.mask);
-                } else if (itstate.mask) {
-                    emi.itstate = itstate;
-                    advanceThumbCond();
-                    emi.newItstate = itstate;
+                            itBits.cond, itBits.mask);
                 }
             }
         }
@@ -162,16 +126,6 @@ Predecoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
     FPSCR fpscr = tc->readMiscReg(MISCREG_FPSCR);
     emi.fpscrLen = fpscr.len;
     emi.fpscrStride = fpscr.stride;
-
-    if (pc.forcedItStateIsValid()) {
-        // returns from exceptions/interrupts force the it state.
-        itstate = pc.forcedItState();
-        DPRINTF(Predecoder, "Predecoder, itstate forced = %08x.\n", pc.forcedItState());
-    } else if (predAddrValid && (pc.instAddr() != predAddr)) {
-        // Control flow changes necessitate a 0 itstate.
-        itstate.top6 = 0;
-        itstate.bottom2 = 0;
-    }
 
     outOfBytes = false;
     process();

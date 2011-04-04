@@ -217,7 +217,6 @@ def operands {{
 
     #Fixed index control regs
     'Cpsr': cntrlReg('MISCREG_CPSR', srtCpsr),
-    'Itstate': cntrlRegNC('MISCREG_ITSTATE', type = 'ub'),
     'Spsr': cntrlRegNC('MISCREG_SPSR'),
     'Fpsr': cntrlRegNC('MISCREG_FPSR'),
     'Fpsid': cntrlRegNC('MISCREG_FPSID'),
@@ -247,7 +246,8 @@ def operands {{
     'Thumb': pcStateReg('thumb', srtPC),
     'NextThumb': pcStateReg('nextThumb', srtMode),
     'NextJazelle': pcStateReg('nextJazelle', srtMode),
-    'ForcedItState': pcStateReg('forcedItState', srtMode),
+    'NextItState': pcStateReg('nextItstate', srtMode),
+    'Itstate': pcStateReg('itstate', srtMode),
 
     #Register operands depending on a field in the instruction encoding. These
     #should be avoided since they may not be portable across different

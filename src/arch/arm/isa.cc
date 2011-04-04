@@ -266,18 +266,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
               miscRegName[misc_reg], val);
     } else {
         switch (misc_reg) {
-          case MISCREG_ITSTATE:
-            {
-                ITSTATE itstate = newVal;
-                CPSR cpsr = miscRegs[MISCREG_CPSR];
-                cpsr.it1 = itstate.bottom2;
-                cpsr.it2 = itstate.top6;
-                miscRegs[MISCREG_CPSR] = cpsr;
-                DPRINTF(MiscRegs,
-                        "Updating ITSTATE -> %#x in CPSR -> %#x.\n",
-                        (uint8_t)itstate, (uint32_t)cpsr);
-            }
-            break;
           case MISCREG_CPACR:
             {
                 CPACR newCpacr = 0;

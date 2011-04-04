@@ -102,11 +102,6 @@ def template SwapExecute {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};
@@ -135,11 +130,6 @@ def template SwapInitiateAcc {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};
@@ -164,10 +154,6 @@ def template SwapCompleteAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -197,11 +183,6 @@ def template LoadExecute {{
             }
         } else {
             xc->setPredicate(false);
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -238,11 +219,6 @@ def template NeonLoadExecute {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};
@@ -274,11 +250,6 @@ def template StoreExecute {{
             }
         } else {
             xc->setPredicate(false);
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -317,11 +288,6 @@ def template NeonStoreExecute {{
             }
         } else {
             xc->setPredicate(false);
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -363,11 +329,6 @@ def template StoreExExecute {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};
@@ -395,10 +356,6 @@ def template StoreExInitiateAcc {{
             }
         } else {
             xc->setPredicate(false);
-        }
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -428,11 +385,6 @@ def template StoreInitiateAcc {{
             }
         } else {
             xc->setPredicate(false);
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -467,11 +419,6 @@ def template NeonStoreInitiateAcc {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0 &&
-                (!isMicroop() || isLastMicroop())) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};
@@ -494,10 +441,6 @@ def template LoadInitiateAcc {{
             }
         } else {
             xc->setPredicate(false);
-            if (fault == NoFault && machInst.itstateMask != 0 &&
-                    (!isMicroop() || isLastMicroop())) {
-                xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-            }
         }
 
         return fault;
@@ -523,10 +466,6 @@ def template NeonLoadInitiateAcc {{
             }
         } else {
             xc->setPredicate(false);
-            if (fault == NoFault && machInst.itstateMask != 0 &&
-                   (!isMicroop() || isLastMicroop())) {
-                xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-            }
         }
 
         return fault;
@@ -555,10 +494,6 @@ def template LoadCompleteAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;
@@ -591,10 +526,6 @@ def template NeonLoadCompleteAcc {{
             }
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};
@@ -604,10 +535,6 @@ def template StoreCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        if (machInst.itstateMask != 0) {
-            warn_once("Complete acc isn't called on normal stores in O3.");
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
         return NoFault;
     }
 }};
@@ -618,10 +545,6 @@ def template NeonStoreCompleteAcc {{
             PacketPtr pkt, %(CPU_exec_context)s *xc,
             Trace::InstRecord *traceData) const
     {
-        if (machInst.itstateMask != 0) {
-            warn_once("Complete acc isn't called on normal stores in O3.");
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
         return NoFault;
     }
 }};
@@ -644,10 +567,6 @@ def template StoreExCompleteAcc {{
             if (fault == NoFault) {
                 %(op_wb)s;
             }
-        }
-
-        if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
         }
 
         return fault;

@@ -67,7 +67,6 @@ namespace ArmISA
 
     enum MiscRegIndex {
         MISCREG_CPSR = 0,
-        MISCREG_ITSTATE,
         MISCREG_SPSR,
         MISCREG_SPSR_FIQ,
         MISCREG_SPSR_IRQ,
@@ -207,7 +206,7 @@ namespace ArmISA
                                unsigned crm, unsigned opc2);
 
     const char * const miscRegName[NUM_MISCREGS] = {
-        "cpsr", "itstate", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
+        "cpsr", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc",
         "spsr_mon", "spsr_und", "spsr_abt",
         "fpsr", "fpsid", "fpscr", "fpscr_qc", "fpscr_exc", "fpexc",
         "mvfr0", "mvfr1",
@@ -263,20 +262,6 @@ namespace ArmISA
         Bitfield<5> t;
         Bitfield<4, 0> mode;
     EndBitUnion(CPSR)
-
-    BitUnion8(ITSTATE)
-        /* Note that the split (cond, mask) below is not as in ARM ARM.
-         * But it is more convenient for simulation. The condition
-         * is always the concatenation of the top 3 bits and the next bit,
-         * which applies when one of the bottom 4 bits is set.
-         * Refer to predecoder.cc for the use case.
-         */
-        Bitfield<7, 4> cond;
-        Bitfield<3, 0> mask;
-        // Bitfields for moving to/from CPSR
-        Bitfield<7, 2> top6;
-        Bitfield<1, 0> bottom2;
-    EndBitUnion(ITSTATE)
 
     // This mask selects bits of the CPSR that actually go in the CondCodes
     // integer register to allow renaming.

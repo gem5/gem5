@@ -76,12 +76,6 @@ class Predecoder
         emiIsReady = false;
     }
 
-    void
-    reset(const ExtMachInst &old_emi)
-    {
-        reset();
-    }
-
     // Use this to give data to the predecoder. This should be used
     // when there is control flow.
     void

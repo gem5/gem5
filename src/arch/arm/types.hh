@@ -53,8 +53,22 @@ namespace ArmISA
 {
     typedef uint32_t MachInst;
 
+    BitUnion8(ITSTATE)
+        /* Note that the split (cond, mask) below is not as in ARM ARM.
+         * But it is more convenient for simulation. The condition
+         * is always the concatenation of the top 3 bits and the next bit,
+         * which applies when one of the bottom 4 bits is set.
+         * Refer to predecoder.cc for the use case.
+         */
+        Bitfield<7, 4> cond;
+        Bitfield<3, 0> mask;
+        // Bitfields for moving to/from CPSR
+        Bitfield<7, 2> top6;
+        Bitfield<1, 0> bottom2;
+    EndBitUnion(ITSTATE)
+
+
     BitUnion64(ExtMachInst)
-        Bitfield<63, 56> newItstate;
         // ITSTATE bits
         Bitfield<55, 48> itstate;
         Bitfield<55, 52> itstateCond;
@@ -202,11 +216,11 @@ namespace ArmISA
         };
         uint8_t flags;
         uint8_t nextFlags;
-        uint8_t forcedItStateValue;
+        uint8_t _itstate;
+        uint8_t _nextItstate;
         uint8_t _size;
-        bool forcedItStateValid;
       public:
-        PCState() : flags(0), nextFlags(0), forcedItStateValue(0), forcedItStateValid(false)
+        PCState() : flags(0), nextFlags(0), _itstate(0), _nextItstate(0)
         {}
 
         void
@@ -216,7 +230,7 @@ namespace ArmISA
             npc(val + (thumb() ? 2 : 4));
         }
 
-        PCState(Addr val) : flags(0), nextFlags(0), forcedItStateValue(0), forcedItStateValid(false)
+        PCState(Addr val) : flags(0), nextFlags(0), _itstate(0), _nextItstate(0)
         { set(val); }
 
         bool
@@ -290,23 +304,27 @@ namespace ArmISA
         }
 
         uint8_t
-        forcedItState() const
+        itstate() const
         {
-            return forcedItStateValue;
+            return _itstate;
         }
 
         void
-        forcedItState(uint8_t value)
+        itstate(uint8_t value)
         {
-            forcedItStateValue = value;
-            // Not valid unless the advance is called.
-            forcedItStateValid = false;
+            _itstate = value;
         }
 
-        bool
-        forcedItStateIsValid() const
+        uint8_t
+        nextItstate() const
         {
-            return forcedItStateValid;
+            return _nextItstate;
+        }
+
+        void
+        nextItstate(uint8_t value)
+        {
+            _nextItstate = value;
         }
 
         void
@@ -316,12 +334,27 @@ namespace ArmISA
             npc(pc() + (thumb() ? 2 : 4));
             flags = nextFlags;
 
-            // Validate the itState
-            if (forcedItStateValue != 0 && !forcedItStateValid) {
-                forcedItStateValid = true;
-            } else {
-                forcedItStateValid = false;
-                forcedItStateValue = 0;
+            if (_nextItstate) {
+                _itstate = _nextItstate;
+                _nextItstate = 0;
+            } else if (_itstate) {
+                ITSTATE it = _itstate;
+                uint8_t cond_mask = it.mask;
+                uint8_t thumb_cond = it.cond;
+                DPRINTF(Predecoder, "Advancing ITSTATE from %#x,%#x.\n",
+                        thumb_cond, cond_mask);
+                cond_mask <<= 1;
+                uint8_t new_bit = bits(cond_mask, 4);
+                cond_mask &= mask(4);
+                if (cond_mask == 0)
+                    thumb_cond = 0;
+                else
+                    replaceBits(thumb_cond, 0, new_bit);
+                DPRINTF(Predecoder, "Advancing ITSTATE to %#x,%#x.\n",
+                        thumb_cond, cond_mask);
+                it.mask = cond_mask;
+                it.cond = thumb_cond;
+                _itstate = it;
             }
         }
 
@@ -395,7 +428,8 @@ namespace ArmISA
         operator == (const PCState &opc) const
         {
             return Base::operator == (opc) &&
-                flags == opc.flags && nextFlags == opc.nextFlags;
+                flags == opc.flags && nextFlags == opc.nextFlags &&
+                _itstate == opc._itstate && _nextItstate == opc._nextItstate;
         }
 
         void
@@ -405,8 +439,8 @@ namespace ArmISA
             SERIALIZE_SCALAR(flags);
             SERIALIZE_SCALAR(_size);
             SERIALIZE_SCALAR(nextFlags);
-            SERIALIZE_SCALAR(forcedItStateValue);
-            SERIALIZE_SCALAR(forcedItStateValid);
+            SERIALIZE_SCALAR(_itstate);
+            SERIALIZE_SCALAR(_nextItstate);
         }
 
         void
@@ -416,8 +450,8 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(flags);
             UNSERIALIZE_SCALAR(_size);
             UNSERIALIZE_SCALAR(nextFlags);
-            UNSERIALIZE_SCALAR(forcedItStateValue);
-            UNSERIALIZE_SCALAR(forcedItStateValid);
+            UNSERIALIZE_SCALAR(_itstate);
+            UNSERIALIZE_SCALAR(_nextItstate);
         }
     };
 

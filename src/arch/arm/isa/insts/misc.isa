@@ -83,10 +83,6 @@ let {{
         uint32_t newCpsr =
             cpsrWriteByInstr(Cpsr | CondCodes, Op1, byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
-        NextThumb = ((CPSR)newCpsr).t;
-        NextJazelle = ((CPSR)newCpsr).j;
-        ForcedItState = ((((CPSR)Op1).it2 << 2) & 0xFC)
-                | (((CPSR)Op1).it1 & 0x3);
         CondCodes = CondCodesMask & newCpsr;
     '''
     msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
@@ -111,10 +107,6 @@ let {{
         uint32_t newCpsr =
             cpsrWriteByInstr(Cpsr | CondCodes, imm, byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
-        NextThumb = ((CPSR)newCpsr).t;
-        NextJazelle = ((CPSR)newCpsr).j;
-        ForcedItState = ((((CPSR)imm).it2 << 2) & 0xFC)
-            | (((CPSR)imm).it1 & 0x3);
         CondCodes = CondCodesMask & newCpsr;
     '''
     msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
@@ -538,7 +530,7 @@ let {{
     exec_output += PredOpExecute.subst(sevIop)
 
     itIop = InstObjParams("it", "ItInst", "PredOp", \
-            { "code" : "Itstate = machInst.newItstate;",
+            { "code" : ";",
               "predicate_test" : predicateTest },
             ["IsNonSpeculative", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(itIop)

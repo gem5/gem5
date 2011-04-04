@@ -241,10 +241,6 @@ def template MicroNeonMixExecute {{
             xc->setPredicate(false);
         }
 
-        if (fault == NoFault && machInst.itstateMask != 0) {
-            xc->setMiscReg(MISCREG_ITSTATE, machInst.newItstate);
-        }
-
         return fault;
     }
 }};

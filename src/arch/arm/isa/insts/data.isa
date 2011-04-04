@@ -245,7 +245,7 @@ let {{
             CondCodes = CondCodesMask & newCpsr;
             NextThumb = ((CPSR)newCpsr).t;
             NextJazelle = ((CPSR)newCpsr).j;
-            ForcedItState = ((((CPSR)newCpsr).it2 << 2) & 0xFC)
+            NextItState = ((((CPSR)newCpsr).it2 << 2) & 0xFC)
                 | (((CPSR)newCpsr).it1 & 0x3);
             '''
             buildImmDataInst(mnem + 's', code, flagType,
