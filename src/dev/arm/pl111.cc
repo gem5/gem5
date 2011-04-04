@@ -713,9 +713,11 @@ Pl111::unserialize(Checkpoint *cp, const std::string &section)
             schedule(dmaDoneEvent[x], dma_done_event_tick[x]);
     }
 
-    updateVideoParams();
-    if (vncserver)
-        vncserver->setDirty();
+    if (lcdControl.lcdpwr) {
+        updateVideoParams();
+        if (vncserver)
+            vncserver->setDirty();
+    }
 }
 
 void
