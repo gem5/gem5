@@ -268,19 +268,22 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         switch (misc_reg) {
           case MISCREG_CPACR:
             {
-                CPACR newCpacr = 0;
-                CPACR valCpacr = val;
-                newCpacr.cp10 = valCpacr.cp10;
-                newCpacr.cp11 = valCpacr.cp11;
-                //XXX d32dis isn't implemented. The manual says whether or not
-                //it works is implementation defined.
-                newCpacr.asedis = valCpacr.asedis;
-                newVal = newCpacr;
+
+                const uint32_t ones = (uint32_t)(-1);
+                CPACR cpacrMask = 0;
+                // Only cp10, cp11, and ase are implemented, nothing else should
+                // be writable
+                cpacrMask.cp10 = ones;
+                cpacrMask.cp11 = ones;
+                cpacrMask.asedis = ones;
+                newVal &= cpacrMask;
+                DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n",
+                        miscRegName[misc_reg], newVal);
             }
             break;
           case MISCREG_CSSELR:
             warn_once("The csselr register isn't implemented.\n");
-            break;
+            return;
           case MISCREG_FPSCR:
             {
                 const uint32_t ones = (uint32_t)(-1);
@@ -320,6 +323,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             break;
           case MISCREG_FPEXC:
             {
+                // vfpv3 architecture, section B.6.1 of DDI04068
+                // bit 29 - valid only if fpexc[31] is 0
                 const uint32_t fpexcMask = 0x60000000;
                 newVal = (newVal & fpexcMask) |
                          (miscRegs[MISCREG_FPEXC] & ~fpexcMask);

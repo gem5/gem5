@@ -146,7 +146,12 @@ vfpEnabled(CPACR cpacr, CPSR cpsr)
 static inline bool
 vfpEnabled(CPACR cpacr, CPSR cpsr, FPEXC fpexc)
 {
-    return fpexc.en && vfpEnabled(cpacr, cpsr);
+    if ((cpacr.cp11 == 0x3) ||
+        ((cpacr.cp11 == 0x1) && inPrivilegedMode(cpsr)))
+        return fpexc.en && vfpEnabled(cpacr, cpsr);
+    else
+        return fpexc.en && vfpEnabled(cpacr, cpsr) &&
+            (cpacr.cp11 == cpacr.cp10);
 }
 
 static inline bool

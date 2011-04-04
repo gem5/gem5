@@ -349,8 +349,8 @@ let {{
                                  ''')
     buildMult4Inst    ("smull", '''resTemp = (int64_t)Reg2.sw *
                                              (int64_t)Reg3.sw;
-                                   Reg0 = (int32_t)resTemp;
                                    Reg1 = (int32_t)(resTemp >> 32);
+                                   Reg0 = (int32_t)resTemp;
                                 ''', "llbit")
     buildMult3InstUnCc("smulwb", '''Reg0 = resTemp =
                                         (Reg1.sw *
@@ -374,16 +374,16 @@ let {{
                                  ''')
     buildMult4InstUnCc("umaal", '''resTemp = Reg2.ud * Reg3.ud +
                                              Reg0.ud + Reg1.ud;
-                                   Reg0.ud = (uint32_t)resTemp;
                                    Reg1.ud = (uint32_t)(resTemp >> 32);
+                                   Reg0.ud = (uint32_t)resTemp;
                                 ''')
     buildMult4Inst    ("umlal", '''resTemp = Reg2.ud * Reg3.ud + Reg0.ud +
                                              (Reg1.ud << 32);
-                                   Reg0.ud = (uint32_t)resTemp;
                                    Reg1.ud = (uint32_t)(resTemp >> 32);
+                                   Reg0.ud = (uint32_t)resTemp;
                                 ''', "llbit")
     buildMult4Inst    ("umull", '''resTemp = Reg2.ud * Reg3.ud;
-                                   Reg0 = (uint32_t)resTemp;
                                    Reg1 = (uint32_t)(resTemp >> 32);
+                                   Reg0 = (uint32_t)resTemp;
                                 ''', "llbit")
 }};

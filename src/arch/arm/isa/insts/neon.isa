@@ -1761,8 +1761,8 @@ let {{
             }
         }
     '''
-    threeEqualRegInst("vshl", "VshlD", "SimdAluOp", allTypes, 2, vshlCode)
-    threeEqualRegInst("vshl", "VshlQ", "SimdAluOp", allTypes, 4, vshlCode)
+    threeEqualRegInst("vshl", "VshlD", "SimdShiftOp", allTypes, 2, vshlCode)
+    threeEqualRegInst("vshl", "VshlQ", "SimdShiftOp", allTypes, 4, vshlCode)
 
     vrshlCode = '''
         int16_t shiftAmt = (int8_t)srcElem2;
@@ -3204,8 +3204,8 @@ let {{
             substDict = { "targs" : type,
                           "class_name" : Name }
             exec_output += NeonExecDeclare.subst(substDict)
-    vdupGprInst("vdup", "NVdupDGpr", "SimdAluOp", smallUnsignedTypes, 2)
-    vdupGprInst("vdup", "NVdupQGpr", "SimdAluOp", smallUnsignedTypes, 4)
+    vdupGprInst("vdup", "NVdupDGpr", "SimdMiscOp", smallUnsignedTypes, 2)
+    vdupGprInst("vdup", "NVdupQGpr", "SimdMiscOp", smallUnsignedTypes, 4)
 
     vmovCode = 'destElem = imm;'
     oneRegImmInst("vmov", "NVmoviD", "SimdMiscOp", ("uint64_t",), 2, vmovCode)
@@ -3309,8 +3309,8 @@ let {{
             }
         }
     '''
-    buildVext("vext", "NVextD", "SimdAluOp", ("uint8_t",), 2, vextCode)
-    buildVext("vext", "NVextQ", "SimdAluOp", ("uint8_t",), 4, vextCode)
+    buildVext("vext", "NVextD", "SimdMiscOp", ("uint8_t",), 2, vextCode)
+    buildVext("vext", "NVextQ", "SimdMiscOp", ("uint8_t",), 4, vextCode)
 
     def buildVtbxl(name, Name, opClass, length, isVtbl):
         global header_output, decoder_output, exec_output
@@ -3366,13 +3366,13 @@ let {{
         decoder_output += RegRegRegOpConstructor.subst(iop)
         exec_output += PredOpExecute.subst(iop)
 
-    buildVtbxl("vtbl", "NVtbl1", "SimdAluOp", 1, "true")
-    buildVtbxl("vtbl", "NVtbl2", "SimdAluOp", 2, "true")
-    buildVtbxl("vtbl", "NVtbl3", "SimdAluOp", 3, "true")
-    buildVtbxl("vtbl", "NVtbl4", "SimdAluOp", 4, "true")
+    buildVtbxl("vtbl", "NVtbl1", "SimdMiscOp", 1, "true")
+    buildVtbxl("vtbl", "NVtbl2", "SimdMiscOp", 2, "true")
+    buildVtbxl("vtbl", "NVtbl3", "SimdMiscOp", 3, "true")
+    buildVtbxl("vtbl", "NVtbl4", "SimdMiscOp", 4, "true")
 
-    buildVtbxl("vtbx", "NVtbx1", "SimdAluOp", 1, "false")
-    buildVtbxl("vtbx", "NVtbx2", "SimdAluOp", 2, "false")
-    buildVtbxl("vtbx", "NVtbx3", "SimdAluOp", 3, "false")
-    buildVtbxl("vtbx", "NVtbx4", "SimdAluOp", 4, "false")
+    buildVtbxl("vtbx", "NVtbx1", "SimdMiscOp", 1, "false")
+    buildVtbxl("vtbx", "NVtbx2", "SimdMiscOp", 2, "false")
+    buildVtbxl("vtbx", "NVtbx3", "SimdMiscOp", 3, "false")
+    buildVtbxl("vtbx", "NVtbx4", "SimdMiscOp", 4, "false")
 }};

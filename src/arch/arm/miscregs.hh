@@ -310,6 +310,7 @@ namespace ArmISA
         Bitfield<23, 22> cp11;
         Bitfield<25, 24> cp12;
         Bitfield<27, 26> cp13;
+        Bitfield<29, 28> rsvd;
         Bitfield<30> d32dis;
         Bitfield<31> asedis;
     EndBitUnion(CPACR)
