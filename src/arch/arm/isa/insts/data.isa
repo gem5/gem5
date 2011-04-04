@@ -143,7 +143,8 @@ let {{
             subst(immIopCc)
 
     def buildRegDataInst(mnem, code, flagType = "logic", suffix = "Reg", \
-                         buildCc = True, buildNonCc = True, instFlags = []):
+                         buildCc = True, buildNonCc = True, isRasPop = "0", \
+                         isBranch = "0", instFlags = []):
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
@@ -161,13 +162,15 @@ let {{
             }
         regCode = secondOpRe.sub(regOp2, code)
         regIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataRegOp",
-                               {"code" : regCode,
+                               {"code" : regCode, "is_ras_pop" : isRasPop,
+                                "is_branch" : isBranch,
                                 "predicate_test": predicateTest}, instFlags)
         regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
                                  "DataRegOp",
                                  {"code" : regCode + regCcCode,
-                                  "predicate_test": condPredicateTest},
-                                  instFlags)
+                                  "predicate_test": condPredicateTest,
+                                  "is_ras_pop" : isRasPop,
+                                  "is_branch" : isBranch}, instFlags)
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -222,7 +225,7 @@ let {{
 
     def buildDataInst(mnem, code, flagType = "logic", \
                       aiw = True, regRegAiw = True,
-                      subsPcLr = True):
+                      subsPcLr = True, isRasPop = "0", isBranch = "0"):
         regRegCode = instCode = code
         if aiw:
             instCode = "AIW" + instCode
@@ -230,7 +233,8 @@ let {{
                 regRegCode = "AIW" + regRegCode
 
         buildImmDataInst(mnem, instCode, flagType)
-        buildRegDataInst(mnem, instCode, flagType)
+        buildRegDataInst(mnem, instCode, flagType,
+                         isRasPop = isRasPop, isBranch = isBranch)
         buildRegRegDataInst(mnem, regRegCode, flagType)
         if subsPcLr:
             code += '''
@@ -269,7 +273,8 @@ let {{
     buildDataInst("cmn", "resTemp = Op1 + secondOp;", "add", aiw = False)
     buildDataInst("orr", "Dest = resTemp = Op1 | secondOp;")
     buildDataInst("orn", "Dest = resTemp = Op1 | ~secondOp;", aiw = False)
-    buildDataInst("mov", "Dest = resTemp = secondOp;", regRegAiw = False)
+    buildDataInst("mov", "Dest = resTemp = secondOp;", regRegAiw = False,
+                  isRasPop = "op1 == INTREG_LR", isBranch = "dest == INTREG_PC")
     buildDataInst("bic", "Dest = resTemp = Op1 & ~secondOp;")
     buildDataInst("mvn", "Dest = resTemp = ~secondOp;")
     buildDataInst("movt",

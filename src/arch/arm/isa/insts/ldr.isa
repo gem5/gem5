@@ -58,6 +58,7 @@ let {{
             self.sign = sign
             self.user = user
             self.flavor = flavor
+            self.rasPop = False
 
             if self.add:
                 self.op = " +"
@@ -77,7 +78,7 @@ let {{
              newDecoder,
              newExec) = self.fillTemplates(self.name, self.Name, codeBlobs,
                                            self.memFlags, instFlags, base,
-                                           wbDecl, pcDecl)
+                                           wbDecl, pcDecl, self.rasPop)
 
             header_output += newHeader
             decoder_output += newDecoder
@@ -127,6 +128,10 @@ let {{
                 self.wbDecl = "MicroAddiUop(machInst, base, base, imm);"
             else:
                 self.wbDecl = "MicroSubiUop(machInst, base, base, imm);"
+
+            if self.add and self.post and self.writeback and not self.sign and \
+               not self.user and self.size == 4:
+                self.rasPop = True
 
     class LoadRegInst(LoadInst):
         def __init__(self, *args, **kargs):

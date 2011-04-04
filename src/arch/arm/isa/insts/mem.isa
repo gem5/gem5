@@ -48,7 +48,8 @@ let {{
             self.constructTemplate = eval(self.decConstBase + 'Constructor')
 
         def fillTemplates(self, name, Name, codeBlobs, memFlags, instFlags,
-                          base = 'Memory', wbDecl = None, pcDecl = None):
+                          base = 'Memory', wbDecl = None, pcDecl = None,
+                          rasPop = False):
             # Make sure flags are in lists (convert to lists if not).
             memFlags = makeList(memFlags)
             instFlags = makeList(instFlags)
@@ -85,6 +86,10 @@ let {{
             codeBlobsCopy['use_uops'] = 0
             codeBlobsCopy['use_wb'] = 0
             codeBlobsCopy['use_pc'] = 0
+            is_ras_pop = "0"
+            if rasPop:
+                is_ras_pop = "1"
+            codeBlobsCopy['is_ras_pop'] = is_ras_pop
 
             iop = InstObjParams(name, Name, base,
                                 codeBlobsCopy, instFlagsCopy)
@@ -102,7 +107,8 @@ let {{
                                       "acc_name" : Name,
                                       "use_uops" : use_uops,
                                       "use_pc" : use_pc,
-                                      "use_wb" : use_wb },
+                                      "use_wb" : use_wb,
+                                      "is_ras_pop" : is_ras_pop },
                                     ['IsMacroop'])
                 header_output += self.declareTemplate.subst(iop)
                 decoder_output += self.constructTemplate.subst(iop)

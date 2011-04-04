@@ -120,6 +120,8 @@ def template BranchRegConstructor {{
         } else {
             flags[IsUncondControl] = true;
         }
+        if (%(is_ras_pop)s)
+            flags[IsReturn] = true;
     }
 }};
 
@@ -150,6 +152,8 @@ def template BranchRegCondConstructor {{
         } else {
             flags[IsUncondControl] = true;
         }
+        if (%(is_ras_pop)s)
+            flags[IsReturn] = true;
     }
 }};
 

@@ -1188,7 +1188,9 @@ def template LoadRegConstructor {{
                  (IntRegIndex)_index)
     {
         %(constructor)s;
+        bool conditional = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
+            conditional = true;
             for (int x = 0; x < _numDestRegs; x++) {
                 _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
             }
@@ -1204,6 +1206,12 @@ def template LoadRegConstructor {{
             uops[1] = new %(wb_decl)s;
             uops[1]->setDelayedCommit();
             uops[2] = new MicroUopRegMov(machInst, INTREG_PC, INTREG_UREG0);
+            uops[2]->setFlag(StaticInst::IsControl);
+            uops[2]->setFlag(StaticInst::IsIndirectControl);
+            if (conditional)
+                uops[2]->setFlag(StaticInst::IsCondControl);
+            else
+                uops[2]->setFlag(StaticInst::IsUncondControl);
             uops[2]->setLastMicroop();
         } else if(_dest == _index) {
             IntRegIndex wbIndexReg = INTREG_UREG0;
@@ -1234,7 +1242,9 @@ def template LoadImmConstructor {{
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
+        bool conditional = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
+            conditional = true;
             for (int x = 0; x < _numDestRegs; x++) {
                 _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
             }
@@ -1249,6 +1259,14 @@ def template LoadImmConstructor {{
             uops[1] = new %(wb_decl)s;
             uops[1]->setDelayedCommit();
             uops[2] = new MicroUopRegMov(machInst, INTREG_PC, INTREG_UREG0);
+            uops[2]->setFlag(StaticInst::IsControl);
+            uops[2]->setFlag(StaticInst::IsIndirectControl);
+            if (conditional)
+                uops[2]->setFlag(StaticInst::IsCondControl);
+            else
+                uops[2]->setFlag(StaticInst::IsUncondControl);
+            if (_base == INTREG_SP && _add && _imm == 4 && %(is_ras_pop)s)
+                uops[2]->setFlag(StaticInst::IsReturn);
             uops[2]->setLastMicroop();
         } else {
             uops[0] = new %(acc_name)s(machInst, _dest, _base, _add, _imm);

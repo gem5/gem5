@@ -107,6 +107,19 @@ def template DataRegConstructor {{
                 _srcRegIdx[_numSrcRegs++] = _destRegIdx[x];
             }
         }
+
+        if (%(is_branch)s){
+            flags[IsControl] = true;
+            flags[IsIndirectControl] = true;
+            if (condCode == COND_AL || condCode == COND_UC)
+                flags[IsCondControl] = true;
+            else
+                flags[IsUncondControl] = true;
+        }
+
+        if (%(is_ras_pop)s) {
+            flags[IsReturn] = true;
+        }
     }
 }};
 

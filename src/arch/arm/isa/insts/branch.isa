@@ -81,6 +81,7 @@ let {{
 
     for (mnem, imm, link) in blxList:
         Name = mnem.capitalize()
+        isRasPop = 0
         if imm:
             Name += "Imm"
             # Since we're switching ISAs, the target ISA will be the opposite
@@ -123,7 +124,7 @@ let {{
             instFlags += ["IsCall"]
         else:
             linkStr = ""
-            instFlags += ["IsReturn"]
+            isRasPop = "op1 == INTREG_LR"
 
         if imm and link: #blx with imm
             branchStr = '''
@@ -141,7 +142,8 @@ let {{
                           "branch": branchStr}
         blxIop = InstObjParams(mnem, Name, base,
                                {"code": code, "brTgtCode" : br_tgt_code,
-                                "predicate_test": predicateTest}, instFlags)
+                                "predicate_test": predicateTest,
+                                "is_ras_pop" : isRasPop }, instFlags)
         header_output += declare.subst(blxIop)
         decoder_output += constructor.subst(blxIop)
         exec_output += PredOpExecute.subst(blxIop)
