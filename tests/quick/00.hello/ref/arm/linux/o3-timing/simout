@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 18 2011 20:12:03
-M5 started Mar 18 2011 21:02:41
-M5 executing on zizzer
-command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/quick/00.hello/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/quick/00.hello/arm/linux/o3-timing
+M5 compiled Mar 30 2011 17:47:57
+M5 started Mar 30 2011 19:31:16
+M5 executing on u200439-lin.austin.arm.com
+command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/quick/00.hello/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/quick/00.hello/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 10827000 because target called exit()
+Exiting @ tick 10803500 because target called exit()

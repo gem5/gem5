@@ -1,0 +1,258 @@
+ CREATE  Db Header and Db Primal  ... 
+  NEW DB [ 3] Created.
+
+VORTEX INPUT PARAMETERS::
+ 	MESSAGE       FileName:	 smred.msg            
+	OUTPUT        FileName:	 smred.out            
+	DISK CACHE    FileName:	 NULL                 
+	PART DB       FileName:	 parts.db             
+	DRAW DB       FileName:	 draw.db              
+	PERSON DB     FileName:	 emp.db               
+	PERSONS Data  FileName:	 ./input/persons.250  
+	PARTS         Count   :	 100     
+	OUTER         Loops   :	 1       
+	INNER         Loops   :	 1       
+	LOOKUP        Parts   :	 25      
+	DELETE        Parts   :	 10      
+	STUFF         Parts   :	 10      
+	DEPTH         Traverse:	 5       
+	% DECREASE    Parts   :	 0       
+	% INCREASE    LookUps :	 0       
+	% INCREASE    Deletes :	 0       
+	% INCREASE    Stuffs  :	 0       
+	FREEZE_PACKETS        :	 1       
+	ALLOC_CHUNKS          :	 10000   
+	EXTEND_CHUNKS         :	 5000    
+	DELETE Draw objects   :	 True                 
+	DELETE Part objects   :	 False                
+	QUE_BUG               :	 1000
+	VOID_BOUNDARY         :	 67108864
+	VOID_RESERVE          :	 1048576
+
+	COMMIT_DBS            :	 False
+
+
+
+ BMT TEST :: files...
+      EdbName           := PartLib
+      EdbFileName       := parts.db
+      DrwName           := DrawLib
+      DrwFileName       := draw.db
+      EmpName           := PersonLib
+      EmpFileName       := emp.db
+
+      Swap to DiskCache := False
+      Freeze the cache  := True
+
+
+ BMT TEST :: parms...
+      DeBug modulo      := 1000    
+      Create Parts count:= 100     
+      Outer Loops       := 1       
+      Inner Loops       := 1       
+      Look Ups          := 25      
+      Delete Parts      := 10      
+      Stuff Parts       := 10      
+      Traverse Limit    := 5       
+      Delete Draws      := True
+      Delete Parts      := False
+      Delete ALL Parts  := after every <mod  0>Outer Loop
+
+ INITIALIZE LIBRARY ::
+
+ INITIALIZE SCHEMA ::
+  Primal_CreateDb Accessed !!!
+ CREATE  Db Header and Db Primal  ... 
+  NEW DB [ 4] Created.
+   PartLibCreate:: Db[  4]; VpartsDir=   1
+
+ Part Count=       1
+
+ Initialize the Class maps
+ LIST HEADS  loaded ... DbListHead_Class = 207
+                        DbListNode_Class = 206
+
+...NOTE... ShellLoadCode:: Class[ 228] will NOT be Activated.
+
+
+...NOTE... ShellLoadCode:: Class[ 229] will NOT be Activated.
+
+  Primal_CreateDb Accessed !!!
+ CREATE  Db Header and Db Primal  ... 
+  NEW DB [ 5] Created.
+   DrawLibCreate:: Db[  5]; VpartsDir=   1
+
+ Initialize the Class maps of this schema.
+  Primal_CreateDb Accessed !!!
+ CREATE  Db Header and Db Primal  ... 
+  NEW DB [ 6] Created.
+
+ ***NOTE***  Persons Library Extended!
+
+ Create <131072> Persons.
+ ItNum      0. Person[  6:       5]. Name= Riddell         , Robert V.       ;
+
+ LAST Person Read::
+ ItNum    250. Person[  6:     503]. Name= Gonzales        , Warren X.       ;
+
+ BUILD <Query0>   for <Part2>  class::
+
+  if (link[1].length >=    5) ::
+
+ Build Query2 for <Address>   class::
+
+  if (State == CA || State == T*)
+
+ Build Query1 for <Person>    class::
+
+  if (LastName  >= H* && LastName <= P* && Query0(Residence)) ::
+
+ BUILD <Query3> for <DrawObj>    class::
+
+  if (Id  >= 3000 
+  &&  (Id >= 3000 && Id <= 3001)
+  &&  Id >= 3002)
+
+ BUILD <Query4> for <NamedDrawObj>   class::
+
+  if (Nam ==       Pre*
+  || (Nam ==   ??Mid???  || == Pre??Mid??   || ==     ??Post
+       || ==  Pre??Post  || == ??Mid???Post   || == Pre??Mid???Post)
+  && Id <= 7)
+      SEED          :=    1008; Swap     = False; RgnEntries =   135
+
+ OUTER LOOP [  1] :  NewParts = 100 LookUps = 25 StuffParts = 10.
+
+ Create 100 New Parts
+ Create Part      1. Token[  4:       2].
+
+  <   100> Parts Created. CurrentId=   100
+
+ Connect each instantiated Part TO 3 unique Parts
+ Connect Part      1. Token[  4:       2]
+   Connect  Part     25. Token[  4:      26] FromList=    26.
+   Connect  Part     12. Token[  4:      13] FromList=    13.
+   Connect  Part     59. Token[  4:      60] FromList=    60.
+
+ SET  <DrawObjs>    entries::
+      1. [  5:       5]  := <1       >; @[:     6]
+   Iteration count =   100
+
+ SET  <NamedDrawObjs>  entries::
+      1. [  5:      39]  := <14      >;
+   Iteration count =    12
+
+ SET  <LibRectangles>  entries::
+      1. [  5:      23]  := <8       >; @[:    24]
+   Iteration count =    12
+
+ LIST <DbRectangles>   entries::
+       1. [   5:    23]
+   Iteration count =    12
+
+ SET  <PersonNames  >  entries::
+   Iteration count =   250
+
+ COMMIT All Image copies:: Release=<True>; Max Parts= 100
+ <   100> Part            images'  Committed.
+                 <     0> are Named.
+ <    50> Point           images'  Committed.
+ <    81> Person          images'  Committed.
+
+ COMMIT Parts(*      100)
+
+ Commit TestObj_Class        in <Primal> DB.
+ ItNum      0. Token[  0:       0]. TestObj        Committed.
+ <     0> TestObj         images'  Committed.
+
+ Commit CartesianPoint_Class in <Primal> DB.
+ ItNum      0. Token[  0:       0]. CartesianPoint Committed.
+ <     0> CartesianPoint  images'  Committed.
+
+ BEGIN  Inner Loop Sequence::.
+
+ INNER LOOP [   1:   1] :
+
+ LOOK UP     25 Random Parts and Export each Part.
+
+ LookUp for     26 parts; Asserts =     8
+       <Part2    >  Asserts =     2; NULL Asserts =     3.
+       <DrawObj  >  Asserts =     0; NULL Asserts =     5.
+       <NamedObj >  Asserts =     0; NULL Asserts =     0.
+       <Person   >  Asserts =     0; NULL Asserts =     5.
+       <TestObj  >  Asserts =    60; NULL Asserts =     0.
+
+ DELETE      10 Random Parts.
+
+   PartDelete    :: Token[  4:      91].
+   PartDisconnect:: Token[  4:      91] id:=     90 for each link.
+   DisConnect  link    [   0]:=     50; PartToken[    51:    51].
+   DisConnect  link    [   1]:=     17; PartToken[    18:    18].
+   DisConnect  link    [   2]:=     72; PartToken[    73:    73].
+   DeleteFromList:: Vchunk[ 4:      91]. (*   1)
+   DisConnect  FromList[   0]:=    56;  Token[    57:    57].
+   Vlists[  89] :=   100;
+
+ Delete for     11 parts;
+
+ Traverse Count=     0
+
+ TRAVERSE PartId[     6] and all Connections to  5 Levels
+ SEED In Traverse Part [  4:      65] @ Level =  4.
+
+ Traverse Count=   357
+       Traverse    Asserts =     5. True Tests =     1
+ <     5> DrawObj         objects  DELETED.
+                 <     2> are Named.
+ <     2> Point           objects  DELETED.
+
+ CREATE 10 Additional Parts
+
+ Create 10 New Parts
+ Create Part    101. Token[  4:     102].
+
+  <    10> Parts Created. CurrentId=   110
+
+ Connect each instantiated Part TO 3 unique Parts
+
+ COMMIT All Image copies:: Release=<True>; Max Parts= 110
+ <    81> Part            images'  Committed.
+                 <     0> are Named.
+ <    38> Point           images'  Committed.
+ <    31> Person          images'  Committed.
+
+ COMMIT Parts(*      100)
+
+ Commit TestObj_Class        in <Primal> DB.
+ ItNum      0. Token[  3:       4]. TestObj        Committed.
+ <    15> TestObj         images'  Committed.
+
+ Commit CartesianPoint_Class in <Primal> DB.
+ ItNum      0. Token[  3:       3]. CartesianPoint Committed.
+ <    16> CartesianPoint  images'  Committed.
+
+ DELETE All TestObj objects;
+
+ Delete TestObj_Class        in <Primal> DB.
+ ItNum      0. Token[  3:       4]. TestObj        Deleted.
+ <    15> TestObj         objects  Deleted.
+
+ Commit CartesianPoint_Class in <Primal> DB.
+ ItNum      0. Token[  3:       3]. CartesianPoint Deleted.
+ <    16> CartesianPoint  objects  Deleted.
+
+ DELETE TestObj and Point objects... 
+
+ END INNER LOOP [   1:   1].
+
+ DELETE All TestObj objects;
+
+ Delete TestObj_Class        in <Primal> DB.
+ <     0> TestObj         objects  Deleted.
+
+ Commit CartesianPoint_Class in <Primal> DB.
+ <     0> CartesianPoint  objects  Deleted.
+
+ DELETE TestObj and Point objects... 
+   STATUS= -201
+V O R T E x 0 1!V O R T E x 0 1!V O R T E x 0 1!V O R T E x 0 1!V O R T E x 0 1!

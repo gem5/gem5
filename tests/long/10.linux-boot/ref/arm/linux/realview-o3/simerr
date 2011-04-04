@@ -26,6 +26,8 @@ warn: 	instruction 'mcr icimvau' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
+warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors
+For more information see: http://www.m5sim.org/warn/7998f2ea
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
 warn: Returning thumbEE disabled for now since we don't support CP14config registers and jumping to ThumbEE vectors

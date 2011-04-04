@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1902387                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 375352                       # Number of bytes of host memory used
-host_seconds                                    27.39                       # Real time elapsed on the host
-host_tick_rate                              964164912                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2149518                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 377184                       # Number of bytes of host memory used
+host_seconds                                    24.24                       # Real time elapsed on the host
+host_tick_rate                             1089414447                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    52098748                       # Number of instructions simulated
 sim_seconds                                  0.026405                       # Number of seconds simulated
@@ -228,20 +228,20 @@ system.cpu.numCycles                         52809606                       # nu
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.num_busy_cycles                   52809606                       # Number of busy cycles
-system.cpu.num_conditional_control_insts      6951306                       # number of instructions that are conditional controls
+system.cpu.num_conditional_control_insts      7028794                       # number of instructions that are conditional controls
 system.cpu.num_fp_alu_accesses                   6058                       # Number of float alu accesses
 system.cpu.num_fp_insts                          6058                       # number of float instructions
 system.cpu.num_fp_register_reads                 4226                       # number of times the floating registers were read
 system.cpu.num_fp_register_writes                1834                       # number of times the floating registers were written
-system.cpu.num_func_calls                     1111841                       # number of times a function call or return occured
+system.cpu.num_func_calls                     1109315                       # number of times a function call or return occured
 system.cpu.num_idle_cycles                          0                       # Number of idle cycles
 system.cpu.num_insts                         52098748                       # Number of instructions executed
 system.cpu.num_int_alu_accesses              42510432                       # Number of integer alu accesses
 system.cpu.num_int_insts                     42510432                       # number of integer instructions
-system.cpu.num_int_register_reads           131106249                       # number of times the integer registers were read
-system.cpu.num_int_register_writes           34920214                       # number of times the integer registers were written
-system.cpu.num_load_insts                     9214448                       # Number of load instructions
-system.cpu.num_mem_refs                      16301436                       # number of memory refs
+system.cpu.num_int_register_reads           131106250                       # number of times the integer registers were read
+system.cpu.num_int_register_writes           34554090                       # number of times the integer registers were written
+system.cpu.num_load_insts                     9208607                       # Number of load instructions
+system.cpu.num_mem_refs                      16295595                       # number of memory refs
 system.cpu.num_store_insts                    7086988                       # Number of store instructions
 system.iocache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
 system.iocache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked

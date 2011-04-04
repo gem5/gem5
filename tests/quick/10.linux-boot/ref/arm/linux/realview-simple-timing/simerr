@@ -32,14 +32,8 @@ warn: Returning thumbEE disabled for now since we don't support CP14config regis
 For more information see: http://www.m5sim.org/warn/7998f2ea
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Complete acc isn't called on normal stores in O3.
-For more information see: http://www.m5sim.org/warn/138d8573
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Complete acc isn't called on normal stores in O3.
-For more information see: http://www.m5sim.org/warn/138d8573
-warn: Complete acc isn't called on normal stores in O3.
-For more information see: http://www.m5sim.org/warn/138d8573
 warn: Need to flush all TLBs in MP
 For more information see: http://www.m5sim.org/warn/6cccf999
 warn: 	instruction 'mcr bpiall' unimplemented

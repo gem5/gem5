@@ -5,11 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 11 2011 20:10:09
-M5 revision 4decc284606a 8095 default qtip tip ext/update_add_stats.patch
-M5 started Mar 11 2011 20:10:25
+M5 compiled Mar 30 2011 17:47:57
+M5 started Mar 30 2011 18:18:27
 M5 executing on u200439-lin.austin.arm.com
-command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/40.perlbmk/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/fast/long/40.perlbmk/arm/linux/simple-timing
+command line: build/ARM_SE/m5.opt -d build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
