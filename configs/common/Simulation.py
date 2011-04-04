@@ -123,6 +123,11 @@ def run(options, root, testsys, cpu_class):
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
 
     if options.standard_switch:
+        if not options.caches:
+            # O3 CPU must have a cache to work.
+            print "O3 CPU must be used with caches"
+            sys.exit(1)
+
         switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i))
                        for i in xrange(np)]
         switch_cpus_1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i))
@@ -161,15 +166,10 @@ def run(options, root, testsys, cpu_class):
             if options.max_inst:
                 switch_cpus_1[i].max_insts_any_thread = options.max_inst
 
-            if not options.caches:
-                # O3 CPU must have a cache to work.
-                print "O3 CPU must be used with caches"
-                sys.exit(1)
-
-            testsys.switch_cpus = switch_cpus
-            testsys.switch_cpus_1 = switch_cpus_1
-            switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
-            switch_cpu_list1 = [(switch_cpus[i], switch_cpus_1[i]) for i in xrange(np)]
+        testsys.switch_cpus = switch_cpus
+        testsys.switch_cpus_1 = switch_cpus_1
+        switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
+        switch_cpu_list1 = [(switch_cpus[i], switch_cpus_1[i]) for i in xrange(np)]
 
     # set the checkpoint in the cpu before m5.instantiate is called
     if options.take_checkpoints != None and \
