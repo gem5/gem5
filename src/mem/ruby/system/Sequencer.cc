@@ -229,6 +229,7 @@ Sequencer::insertRequest(SequencerRequest* request)
     Address line_addr(request->ruby_request.m_PhysicalAddress);
     line_addr.makeLineAddress();
     if ((request->ruby_request.m_Type == RubyRequestType_ST) ||
+        (request->ruby_request.m_Type == RubyRequestType_ATOMIC) ||
         (request->ruby_request.m_Type == RubyRequestType_RMW_Read) ||
         (request->ruby_request.m_Type == RubyRequestType_RMW_Write) ||
         (request->ruby_request.m_Type == RubyRequestType_Load_Linked) ||
@@ -381,6 +382,7 @@ Sequencer::writeCallback(const Address& address,
     markRemoved();
 
     assert((request->ruby_request.m_Type == RubyRequestType_ST) ||
+           (request->ruby_request.m_Type == RubyRequestType_ATOMIC) ||
            (request->ruby_request.m_Type == RubyRequestType_RMW_Read) ||
            (request->ruby_request.m_Type == RubyRequestType_RMW_Write) ||
            (request->ruby_request.m_Type == RubyRequestType_Load_Linked) ||
@@ -648,6 +650,7 @@ Sequencer::issueRequest(const RubyRequest& request)
       //
       case RubyRequestType_Load_Linked:
       case RubyRequestType_Store_Conditional:
+      case RubyRequestType_ATOMIC:
         ctype = RubyRequestType_ATOMIC;
         break;
       default:
@@ -671,8 +674,10 @@ Sequencer::issueRequest(const RubyRequest& request)
 
     Address line_addr(request.m_PhysicalAddress);
     line_addr.makeLineAddress();
-    int proc_id = request.pkt->req->hasContextId() ?
-        request.pkt->req->contextId() : -1;
+    int proc_id = -1;
+    if (request.pkt != NULL && request.pkt->req->hasContextId()) {
+        proc_id = request.pkt->req->contextId();
+    }
     RubyRequest *msg = new RubyRequest(request.m_PhysicalAddress.getAddress(),
                                        request.data, request.m_Size,
                                        request.m_ProgramCounter.getAddress(),
