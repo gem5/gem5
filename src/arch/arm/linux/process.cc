@@ -518,8 +518,6 @@ ArmLinuxProcess::startup()
                                     swiNeg1, sizeof(swiNeg1));
     }
 
-    // We don't have barriers, so just return.
-    // @todo Add a barrrier in this code
     uint8_t memory_barrier[] =
     {
         0x5f, 0xf0, 0x7f, 0xf5, // dmb
@@ -528,9 +526,6 @@ ArmLinuxProcess::startup()
     tc->getMemPort()->writeBlob(commPage + 0x0fa0, memory_barrier,
                                 sizeof(memory_barrier));
 
-    // This -should- be atomic, but I don't think all the support that we'd
-    // need is implemented. There should also be memory barriers around it.
-    // @todo replace this with ldrex/strex and dmb
     uint8_t cmpxchg[] =
     {
         0x9f, 0x3f, 0x92, 0xe1,  // ldrex    r3, [r2]
