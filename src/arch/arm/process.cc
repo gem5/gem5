@@ -75,9 +75,9 @@ ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile,
 }
 
 void
-ArmLiveProcess::startup()
+ArmLiveProcess::initState()
 {
-    LiveProcess::startup();
+    LiveProcess::initState();
     argsInit(MachineBytes, VMPageSize);
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);

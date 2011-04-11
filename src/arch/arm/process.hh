@@ -47,7 +47,7 @@ class ArmLiveProcess : public LiveProcess
     ArmLiveProcess(LiveProcessParams * params, ObjectFile *objFile,
                    ObjectFile::Arch _arch);
 
-    void startup();
+    void initState();
 
   public:
     void argsInit(int intSize, int pageSize);

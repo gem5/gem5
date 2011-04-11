@@ -502,9 +502,9 @@ ArmLinuxProcess::getDesc(int callnum)
 }
 
 void
-ArmLinuxProcess::startup()
+ArmLinuxProcess::initState()
 {
-    ArmLiveProcess::startup();
+    ArmLiveProcess::initState();
     pTable->allocate(commPage, PageBytes);
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 

@@ -43,7 +43,7 @@ class ArmLinuxProcess : public ArmLiveProcess
 
     virtual SyscallDesc* getDesc(int callnum);
 
-    void startup();
+    void initState();
 
     ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
