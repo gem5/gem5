@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  53498                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 259788                       # Number of bytes of host memory used
-host_seconds                                  3526.69                       # Real time elapsed on the host
-host_tick_rate                               35668914                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 145657                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 262540                       # Number of bytes of host memory used
+host_seconds                                  1295.30                       # Real time elapsed on the host
+host_tick_rate                               97115047                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   188669132                       # Number of instructions simulated
 sim_seconds                                  0.125793                       # Number of seconds simulated
@@ -288,7 +288,7 @@ system.cpu.iew.memOrderViolationEvents         222499                       # Nu
 system.cpu.iew.predictedNotTakenIncorrect      2295597                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.predictedTakenIncorrect        8864678                       # Number of branches that were predicted taken incorrectly
 system.cpu.int_regfile_reads                542109498                       # number of integer regfile reads
-system.cpu.int_regfile_writes               231159220                       # number of integer regfile writes
+system.cpu.int_regfile_writes               231159216                       # number of integer regfile writes
 system.cpu.ipc                               0.749918                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.749918                       # IPC: Total IPC of All Threads
 system.cpu.iq.ISSUE:FU_type_0::No_OpClass            0      0.00%      0.00% # Type of FU issued
@@ -490,8 +490,8 @@ system.cpu.memDep0.conflictingLoads           5314098                       # Nu
 system.cpu.memDep0.conflictingStores          4016301                       # Number of conflicting stores.
 system.cpu.memDep0.insertedLoads             50338304                       # Number of loads inserted to the mem dependence unit.
 system.cpu.memDep0.insertedStores            18109550                       # Number of stores inserted to the mem dependence unit.
-system.cpu.misc_regfile_reads               524567380                       # number of misc regfile reads
-system.cpu.misc_regfile_writes                 825086                       # number of misc regfile writes
+system.cpu.misc_regfile_reads               524567378                       # number of misc regfile reads
+system.cpu.misc_regfile_writes                 825084                       # number of misc regfile writes
 system.cpu.numCycles                        251586407                       # number of cpu cycles simulated
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
