@@ -128,6 +128,16 @@ if options_file:
 
 arguments = options.parse_args()
 
+def interact(scope):
+    banner = "M5 Interactive Console"
+    sys.argv = []
+    try:
+        from IPython.Shell import IPShellEmbed
+        ipshell = IPShellEmbed(banner=banner,user_ns=scope)
+        ipshell()
+    except ImportError:
+        code.InteractiveConsole(scope).interact(banner)
+
 def main():
     import core
     import debug
@@ -349,13 +359,7 @@ def main():
 
     # once the script is done
     if options.interactive:
-        banner = "M5 Interactive Console"
-        try:
-            from IPython.Shell import IPShellEmbed
-            ipshell = IPShellEmbed(banner=banner,user_ns=scope)
-            ipshell()
-        except ImportError:
-            code.InteractiveConsole(scope).interact(banner)
+        interact(scope)
 
 if __name__ == '__main__':
     from pprint import pprint
