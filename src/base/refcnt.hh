@@ -97,27 +97,27 @@ class RefCountingPtr
 };
 
 template<class T>
-bool operator==(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
+inline bool operator==(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
 { return l.get() == r.get(); }
 
 template<class T>
-bool operator==(const RefCountingPtr<T> &l, const T *r)
+inline bool operator==(const RefCountingPtr<T> &l, const T *r)
 { return l.get() == r; }
 
 template<class T>
-bool operator==(const T *l, const RefCountingPtr<T> &r)
+inline bool operator==(const T *l, const RefCountingPtr<T> &r)
 { return l == r.get(); }
 
 template<class T>
-bool operator!=(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
+inline bool operator!=(const RefCountingPtr<T> &l, const RefCountingPtr<T> &r)
 { return l.get() != r.get(); }
 
 template<class T>
-bool operator!=(const RefCountingPtr<T> &l, const T *r)
+inline bool operator!=(const RefCountingPtr<T> &l, const T *r)
 { return l.get() != r; }
 
 template<class T>
-bool operator!=(const T *l, const RefCountingPtr<T> &r)
+inline bool operator!=(const T *l, const RefCountingPtr<T> &r)
 { return l != r.get(); }
 
 #endif // __BASE_REFCNT_HH__
