@@ -70,7 +70,7 @@ def lang_type(filename, firstline=None, openok=True):
     # now try to detect language based on file prefix
     for start,lang in lang_prefixes:
         if basename.startswith(start):
-            return start
+            return lang
 
     # if a first line was not provided but the file is ok to open,
     # grab the first line of the file.
