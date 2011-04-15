@@ -45,6 +45,38 @@ good_control = re.compile(r'\b(if|while|for) [(]')
 whitespace_types = set(('C', 'C++', 'swig', 'python', 'asm', 'isa', 'scons'))
 format_types = set(('C', 'C++'))
 
+class UserInterface(object):
+    def __init__(self, verbose=False, auto=False):
+        self.auto = auto
+        self.verbose = verbose
+
+    def prompt(self, prompt, results, default):
+        if self.auto:
+            return self.auto
+
+        while True:
+            result = self.do_prompt(prompt, results, default)
+            if result in results:
+                return result
+
+class MercurialUI(UserInterface):
+    def __init__(self, ui, *args, **kwargs):
+        super(MercurialUI, self).__init__(*args, **kwargs)
+        self.ui = ui
+
+    def do_prompt(self, prompt, results, default):
+        return self.ui.prompt(prompt, default=default)
+
+    def write(self, string):
+        self.ui.write(string)
+
+class StdioUI(UserInterface):
+    def do_prompt(self, prompt, results, default):
+        return raw_input(prompt) or default
+
+    def write(self, string):
+        sys.stdout.write(string)
+
 def checkwhite_line(line):
     match = lead.search(line)
     if match and match.group(1).find('\t') != -1:
@@ -225,9 +257,14 @@ def modified_lines(old_data, new_data, max_lines):
                 break
     return modified
 
-def do_check_style(ui, repo, *files, **args):
+def do_check_style(hgui, repo, *files, **args):
     """check files for proper m5 style guidelines"""
     from mercurial import mdiff, util
+
+    auto = args.get('auto', False)
+    if auto:
+        auto = 'f'
+    ui = MercurialUI(hgui, hgui.verbose, auto)
 
     if files:
         files = frozenset(files)
@@ -236,14 +273,7 @@ def do_check_style(ui, repo, *files, **args):
         return files and name in files
 
     def prompt(name, func, fixonly=None):
-        if args.get('auto', False):
-            result = 'f'
-        else:
-            while True:
-                result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", default='a')
-                if result in 'aif':
-                    break
-
+        result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", 'aif', 'a')
         if result == 'a':
             return True
         elif result == 'f':
@@ -312,7 +342,9 @@ def do_check_style(ui, repo, *files, **args):
             if prompt(fname, fixwhite, fixonly):
                 return True
 
-def do_check_format(ui, repo, **args):
+def do_check_format(hgui, repo, **args):
+    ui = MercurialUI(hgui, hgui.verbose, auto)
+
     modified, added, removed, deleted, unknown, ignore, clean = repo.status()
 
     verbose = 0
@@ -323,13 +355,9 @@ def do_check_format(ui, repo, **args):
     if stats:
         stats.dump()
         result = ui.prompt("invalid formatting\n(i)gnore or (a)bort?",
-                           "^[ia]$", "a")
-        if result.startswith('i'):
-            pass
-        elif result.startswith('a'):
+                           'ai', 'a')
+        if result == 'a':
             return True
-        else:
-            raise util.Abort(_("Invalid response: '%s'") % result)
 
     return False
 
