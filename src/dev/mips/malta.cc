@@ -39,10 +39,10 @@
 
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
-#include "dev/mips/malta_cchip.hh"
-#include "dev/mips/malta_pchip.hh"
-#include "dev/mips/malta_io.hh"
 #include "dev/mips/malta.hh"
+#include "dev/mips/malta_cchip.hh"
+#include "dev/mips/malta_io.hh"
+#include "dev/mips/malta_pchip.hh"
 #include "dev/terminal.hh"
 #include "params/Malta.hh"
 #include "sim/system.hh"

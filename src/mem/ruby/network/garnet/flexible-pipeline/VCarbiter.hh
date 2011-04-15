@@ -33,8 +33,8 @@
 
 #include <iostream>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class Router;
 

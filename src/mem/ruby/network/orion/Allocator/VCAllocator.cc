@@ -33,15 +33,15 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
 #include <cassert>
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
 
-#include "mem/ruby/network/orion/Allocator/VCAllocator.hh"
-#include "mem/ruby/network/orion/OrionConfig.hh"
 #include "mem/ruby/network/orion/Allocator/Arbiter.hh"
+#include "mem/ruby/network/orion/Allocator/VCAllocator.hh"
 #include "mem/ruby/network/orion/Buffer/Buffer.hh"
+#include "mem/ruby/network/orion/OrionConfig.hh"
 
 using namespace std;
 

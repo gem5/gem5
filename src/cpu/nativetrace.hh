@@ -31,8 +31,9 @@
 #ifndef __CPU_NATIVETRACE_HH__
 #define __CPU_NATIVETRACE_HH__
 
-#include <errno.h>
 #include <unistd.h>
+
+#include <cerrno>
 
 #include "base/socket.hh"
 #include "base/trace.hh"

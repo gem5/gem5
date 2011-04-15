@@ -37,9 +37,9 @@
 #include <vector>
 
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/timebuf.hh"
 
 class FUPool;
 class MemInterface;

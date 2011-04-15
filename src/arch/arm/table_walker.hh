@@ -46,7 +46,6 @@
 #include "arch/arm/tlb.hh"
 #include "mem/mem_object.hh"
 #include "mem/request.hh"
-#include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
 #include "sim/eventq.hh"
 #include "sim/fault_fwd.hh"

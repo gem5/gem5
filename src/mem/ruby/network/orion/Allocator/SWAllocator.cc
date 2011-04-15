@@ -33,13 +33,13 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
-#include "mem/ruby/network/orion/Allocator/SWAllocator.hh"
-#include "mem/ruby/network/orion/OrionConfig.hh"
 #include "mem/ruby/network/orion/Allocator/Arbiter.hh"
+#include "mem/ruby/network/orion/Allocator/SWAllocator.hh"
 #include "mem/ruby/network/orion/Crossbar/Crossbar.hh"
+#include "mem/ruby/network/orion/OrionConfig.hh"
 
 using namespace std;
 

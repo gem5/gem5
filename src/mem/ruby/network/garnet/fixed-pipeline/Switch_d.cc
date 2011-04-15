@@ -29,9 +29,9 @@
  */
 
 #include "base/stl_helpers.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Switch_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Switch_d.hh"
 
 using m5::stl_helpers::deletePointers;
 

@@ -29,11 +29,11 @@
  */
 
 #include "base/stl_helpers.hh"
-#include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
-#include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/InVcState.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/OutVcState.hh"
+#include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/VCarbiter.hh"
+#include "mem/ruby/slicc_interface/NetworkMessage.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;

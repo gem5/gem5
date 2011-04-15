@@ -38,8 +38,8 @@
 #include "base/trace.hh"
 #include "dev/sparc/mm_disk.hh"
 #include "dev/platform.hh"
-#include "mem/port.hh"
 #include "mem/packet_access.hh"
+#include "mem/port.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
 

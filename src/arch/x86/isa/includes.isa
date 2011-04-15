@@ -50,17 +50,17 @@ let {{
 
 output header {{
 #include <cstring>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 #include "arch/generic/debugfaults.hh"
-#include "arch/x86/emulenv.hh"
 #include "arch/x86/insts/macroop.hh"
 #include "arch/x86/insts/microfpop.hh"
 #include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/insts/micromediaop.hh"
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/emulenv.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/registers.hh"
 #include "arch/x86/types.hh"
@@ -73,14 +73,14 @@ using X86ISA::InstRegIndex;
 }};
 
 output decoder {{
-#include "arch/x86/faults.hh"
-#include "arch/x86/microcode_rom.hh"
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
+#include "arch/x86/faults.hh"
+#include "arch/x86/microcode_rom.hh"
 #include "arch/x86/tlb.hh"
-#include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
@@ -106,23 +106,23 @@ output exec {{
 #include "sim/pseudo_inst.hh"
 #endif
 
+#include <cmath>
 #include <limits>
 
-#include <cmath>
+#include "arch/x86/regs/misc.hh"
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
-#include "arch/x86/regs/misc.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bigint.hh"
 #include "base/compiler.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
-#include "sim/sim_exit.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 #include "sim/pseudo_inst.hh"
+#include "sim/sim_exit.hh"
 
 using namespace X86ISA;
 using namespace std;

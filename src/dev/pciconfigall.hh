@@ -37,11 +37,10 @@
 #ifndef __PCICONFIGALL_HH__
 #define __PCICONFIGALL_HH__
 
-#include "dev/pcireg.h"
 #include "base/range.hh"
 #include "dev/io_device.hh"
+#include "dev/pcireg.h"
 #include "params/PciConfigAll.hh"
-
 
 /**
  * PCI Config Space

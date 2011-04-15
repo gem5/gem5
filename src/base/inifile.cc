@@ -31,8 +31,8 @@
 
 #include <fstream>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "base/inifile.hh"
 #include "base/str.hh"

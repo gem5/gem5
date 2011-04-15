@@ -32,8 +32,8 @@
 #ifndef __MIPS_LINUX_PROCESS_HH__
 #define __MIPS_LINUX_PROCESS_HH__
 
-#include "arch/mips/process.hh"
 #include "arch/mips/linux/linux.hh"
+#include "arch/mips/process.hh"
 #include "sim/eventq.hh"
 
 /// A process with emulated Mips/Linux syscalls.

@@ -29,8 +29,8 @@
  */
 
 #include "cpu/o3/isa_specific.hh"
-#include "cpu/o3/store_set.hh"
 #include "cpu/o3/mem_dep_unit_impl.hh"
+#include "cpu/o3/store_set.hh"
 
 // Force instantation of memory dependency unit using store sets and
 // O3CPUImpl.

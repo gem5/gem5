@@ -32,8 +32,8 @@
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 class GenericBloomFilter

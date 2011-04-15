@@ -35,8 +35,8 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class flitBuffer_d
 {

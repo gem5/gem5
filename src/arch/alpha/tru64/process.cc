@@ -29,9 +29,9 @@
  *          Ali Saidi
  */
 
+#include "arch/alpha/tru64/process.hh"
 #include "arch/alpha/tru64/tru64.hh"
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/tru64/process.hh"
 #include "cpu/thread_context.hh"
 #include "kern/tru64/tru64.hh"
 #include "sim/byteswap.hh"

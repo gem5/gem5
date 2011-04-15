@@ -31,9 +31,9 @@
 #ifndef __BASE_RANGE_MAP_HH__
 #define __BASE_RANGE_MAP_HH__
 
-#include "base/range.hh"
-
 #include <map>
+
+#include "base/range.hh"
 
 template <class T,class V>
 class range_map

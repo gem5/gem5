@@ -40,17 +40,17 @@
  * up boot time.
  */
 
-#include "arch/vtophys.hh"
-#include "arch/alpha/idle_event.hh"
 #include "arch/alpha/linux/system.hh"
 #include "arch/alpha/linux/threadinfo.hh"
+#include "arch/alpha/idle_event.hh"
 #include "arch/alpha/system.hh"
+#include "arch/vtophys.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 #include "dev/platform.hh"
-#include "kern/linux/printk.hh"
 #include "kern/linux/events.hh"
+#include "kern/linux/printk.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "sim/arguments.hh"

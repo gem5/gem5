@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/common/NetDest.hh"
 #include "mem/protocol/Protocol.hh"
+#include "mem/ruby/common/NetDest.hh"
 
 NetDest::NetDest()
 {

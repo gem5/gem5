@@ -39,7 +39,6 @@
 #include "arch/isa_traits.hh"
 #include "cpu/inorder/params.hh"
 
-
 class InOrderDynInst;
 
 /* This Namespace contains constants, typedefs, functions and

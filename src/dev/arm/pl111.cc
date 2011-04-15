@@ -38,10 +38,10 @@
  *          Ali Saidi
  */
 
+#include "base/vnc/vncserver.hh"
 #include "base/bitmap.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
-#include "base/vnc/vncserver.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/gic.hh"
 #include "dev/arm/pl111.hh"

@@ -30,15 +30,15 @@
  *          Ali Saidi
  */
 
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <cstdio>
 #include <string>
 
-#include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "base/intmath.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
@@ -46,8 +46,8 @@
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/translating_port.hh"
-#include "params/Process.hh"
 #include "params/LiveProcess.hh"
+#include "params/Process.hh"
 #include "sim/debug.hh"
 #include "sim/process.hh"
 #include "sim/process_impl.hh"

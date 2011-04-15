@@ -30,8 +30,8 @@
 #define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_INCLUDES_HH__
 
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Profiler_interface.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_INCLUDES_HH__
 

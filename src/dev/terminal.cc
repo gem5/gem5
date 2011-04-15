@@ -35,13 +35,13 @@
 
 #include <sys/ioctl.h>
 #include <sys/termios.h>
-#include <errno.h>
 #include <poll.h>
 #include <unistd.h>
 
 #include <cctype>
-#include <iostream>
+#include <cerrno>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 

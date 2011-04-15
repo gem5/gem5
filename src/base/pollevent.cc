@@ -35,8 +35,9 @@
 #endif
 
 #include <fcntl.h>
-#include <signal.h>
 #include <unistd.h>
+
+#include <csignal>
 
 #include "base/misc.hh"
 #include "base/pollevent.hh"

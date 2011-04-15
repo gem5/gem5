@@ -33,8 +33,8 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 #include "mem/ruby/network/orion/Crossbar/MultreeCrossbar.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"

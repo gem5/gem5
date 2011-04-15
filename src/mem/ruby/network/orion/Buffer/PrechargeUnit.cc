@@ -35,8 +35,8 @@
 
 #include "base/misc.hh"
 #include "mem/ruby/network/orion/Buffer/PrechargeUnit.hh"
-#include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/Buffer/SRAM.hh"
+#include "mem/ruby/network/orion/TechParameter.hh"
 
 PrechargeUnit::PrechargeUnit(
         const string& pre_model_str_,

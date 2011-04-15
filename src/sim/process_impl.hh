@@ -47,7 +47,6 @@
 #include "mem/translating_port.hh"
 #include "sim/byteswap.hh"
 
-
 //This needs to be templated for cases where 32 bit pointers are needed.
 template<class AddrType>
 void

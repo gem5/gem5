@@ -29,17 +29,17 @@
  *
  */
 
-#include <vector>
 #include <list>
+#include <vector>
 
 #include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
-#include "arch/utility.hh"
 #include "arch/predecoder.hh"
+#include "arch/utility.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/cache_unit.hh"
-#include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resource_pool.hh"
 #include "mem/request.hh"
 

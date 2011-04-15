@@ -36,7 +36,6 @@
 
 #include "arch/isa_traits.hh"
 #include "base/statistics.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resource.hh"
@@ -44,6 +43,7 @@
 #include "cpu/pred/btb.hh"
 #include "cpu/pred/ras.hh"
 #include "cpu/pred/tournament.hh"
+#include "cpu/inst_seq.hh"
 #include "params/InOrderCPU.hh"
 
 /**

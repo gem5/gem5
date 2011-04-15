@@ -33,7 +33,6 @@
 
 #include "arch/arm/process.hh"
 
-
 /// A process with emulated Arm/Linux syscalls.
 class ArmLinuxProcess : public ArmLiveProcess
 {

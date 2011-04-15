@@ -49,11 +49,11 @@
 #include <vector>
 
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "base/types.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
+#include "cpu/timebuf.hh"
 #include "sim/eventq.hh"
 
 class DerivO3CPUParams;

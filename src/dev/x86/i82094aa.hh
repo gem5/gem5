@@ -31,13 +31,13 @@
 #ifndef __DEV_X86_I82094AA_HH__
 #define __DEV_X86_I82094AA_HH__
 
+#include <map>
+
 #include "base/bitunion.hh"
 #include "base/range_map.hh"
-#include "dev/io_device.hh"
 #include "dev/x86/intdev.hh"
+#include "dev/io_device.hh"
 #include "params/I82094AA.hh"
-
-#include <map>
 
 namespace X86ISA
 {

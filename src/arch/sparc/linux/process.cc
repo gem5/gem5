@@ -30,14 +30,12 @@
  *          Ali Saidi
  */
 
-#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/linux/process.hh"
+#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
-
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
-
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
 

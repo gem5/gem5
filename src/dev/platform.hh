@@ -40,8 +40,8 @@
 #include <bitset>
 #include <set>
 
-#include "sim/sim_object.hh"
 #include "params/Platform.hh"
+#include "sim/sim_object.hh"
 
 class PciConfigAll;
 class IntrControl;

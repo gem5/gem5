@@ -34,9 +34,9 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/orion/NetworkPower.hh"
 
 class GarnetNetwork_d;

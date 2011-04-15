@@ -32,12 +32,11 @@
 %module(package="m5.internal") core
 
 %{
-#include "python/swig/pyobject.hh"
-
 #include "base/misc.hh"
 #include "base/random.hh"
 #include "base/socket.hh"
 #include "base/types.hh"
+#include "python/swig/pyobject.hh"
 #include "sim/core.hh"
 
 extern const char *compileDate;
@@ -64,8 +63,8 @@ seedRandom(uint64_t seed)
 
 %}
 
-%include <stdint.i>
 %include <std_string.i>
+%include <stdint.i>
 
 %include "base/types.hh"
 

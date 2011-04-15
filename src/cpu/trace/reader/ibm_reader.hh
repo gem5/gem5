@@ -36,7 +36,8 @@
 #ifndef __IBM_READER_HH__
 #define __IBM_READER_HH__
 
-#include <stdio.h>
+#include <cstdio>
+
 #include "cpu/trace/reader/mem_trace_reader.hh"
 #include "mem/mem_req.hh"
 

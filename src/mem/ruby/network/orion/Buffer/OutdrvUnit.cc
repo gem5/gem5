@@ -35,8 +35,8 @@
 
 #include "base/misc.hh"
 #include "mem/ruby/network/orion/Buffer/OutdrvUnit.hh"
-#include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/Buffer/SRAM.hh"
+#include "mem/ruby/network/orion/TechParameter.hh"
 
 OutdrvUnit::OutdrvUnit(
         const string& outdrv_model_str_,

@@ -29,8 +29,8 @@
  */
 
 #include <assert.h>
-#include <stdlib.h>
 #include <fenv.h>
+#include <stdlib.h>
 
 void m5_fesetround(int rm);
 int m5_fegetround();

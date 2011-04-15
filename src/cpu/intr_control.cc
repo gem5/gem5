@@ -34,8 +34,8 @@
 
 #include "base/trace.hh"
 #include "cpu/base.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
+#include "cpu/thread_context.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;

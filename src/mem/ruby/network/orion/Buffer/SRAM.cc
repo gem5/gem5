@@ -33,18 +33,18 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
-#include <cmath>
 #include <cassert>
+#include <cmath>
+#include <iostream>
 
-#include "mem/ruby/network/orion/Buffer/SRAM.hh"
-#include "mem/ruby/network/orion/Buffer/OutdrvUnit.hh"
 #include "mem/ruby/network/orion/Buffer/AmpUnit.hh"
 #include "mem/ruby/network/orion/Buffer/BitlineUnit.hh"
-#include "mem/ruby/network/orion/Buffer/MemUnit.hh"
-#include "mem/ruby/network/orion/Buffer/PrechargeUnit.hh"
-#include "mem/ruby/network/orion/Buffer/WordlineUnit.hh"
 #include "mem/ruby/network/orion/Buffer/DecoderUnit.hh"
+#include "mem/ruby/network/orion/Buffer/MemUnit.hh"
+#include "mem/ruby/network/orion/Buffer/OutdrvUnit.hh"
+#include "mem/ruby/network/orion/Buffer/PrechargeUnit.hh"
+#include "mem/ruby/network/orion/Buffer/SRAM.hh"
+#include "mem/ruby/network/orion/Buffer/WordlineUnit.hh"
 
 using namespace std;
 

@@ -37,10 +37,11 @@
  * Declaration of SimpleTimingPort.
  */
 
-#include "mem/port.hh"
-#include "sim/eventq.hh"
 #include <list>
 #include <string>
+
+#include "mem/port.hh"
+#include "sim/eventq.hh"
 
 /**
  * A simple port for interfacing objects that basically have only

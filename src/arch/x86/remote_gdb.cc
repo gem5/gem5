@@ -38,12 +38,12 @@
  */
 
 #include <sys/signal.h>
-
-#include <string>
 #include <unistd.h>
 
-#include "arch/vtophys.hh"
+#include <string>
+
 #include "arch/x86/remote_gdb.hh"
+#include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"

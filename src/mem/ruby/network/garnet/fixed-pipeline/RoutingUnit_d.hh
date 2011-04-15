@@ -31,10 +31,10 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTING_UNIT_D_HH__
 #define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTING_UNIT_D_HH__
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class InputUnit_d;
 class Router_d;

@@ -33,15 +33,14 @@
 #define __MEM_RUBY_SYSTEM_WIREBUFFER_HH__
 
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "mem/ruby/buffers/MessageBufferNode.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "params/RubyWireBuffer.hh"
 #include "sim/sim_object.hh"
-
 
 //////////////////////////////////////////////////////////////////////////////
 // This object was written to literally mimic a Wire in Ruby, in the sense

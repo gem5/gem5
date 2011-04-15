@@ -28,8 +28,9 @@
  * Authors: Gabe Black
  */
 
-#include "arch/sparc/linux/linux.hh"
 #include <fcntl.h>
+
+#include "arch/sparc/linux/linux.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable SparcLinux::openFlagTable[] = {

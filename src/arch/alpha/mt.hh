@@ -38,12 +38,12 @@
  * ISA-specific helper functions for multithreaded execution.
  */
 
+#include <iostream>
+
 #include "arch/isa_traits.hh"
 #include "base/bitfield.hh"
-#include "base/trace.hh"
 #include "base/misc.hh"
-
-#include <iostream>
+#include "base/trace.hh"
 using namespace std;
 
 namespace AlphaISA

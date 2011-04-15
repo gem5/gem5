@@ -37,13 +37,12 @@
 #include <iostream>
 #include <string>
 
-#include "gzstream.hh"
-
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "params/RubyTracer.hh"
 #include "sim/sim_object.hh"
+#include "gzstream.hh"
 
 class Address;
 class TraceRecord;

@@ -39,11 +39,11 @@
 #include <list>
 #include <vector>
 
-#include "mem/cache/blk.hh"
-#include "mem/cache/tags/iic_repl/repl.hh"
-#include "mem/packet.hh"
 #include "base/statistics.hh"
+#include "mem/cache/tags/iic_repl/repl.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/cache/blk.hh"
+#include "mem/packet.hh"
 
 class BaseCache; // Forward declaration
 

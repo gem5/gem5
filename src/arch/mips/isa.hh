@@ -31,8 +31,8 @@
 #ifndef __ARCH_MIPS_ISA_HH__
 #define __ARCH_MIPS_ISA_HH__
 
-#include <string>
 #include <queue>
+#include <string>
 #include <vector>
 
 #include "arch/mips/registers.hh"

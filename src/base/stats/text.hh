@@ -34,8 +34,8 @@
 #include <iosfwd>
 #include <string>
 
-#include "base/output.hh"
 #include "base/stats/output.hh"
+#include "base/output.hh"
 
 namespace Stats {
 

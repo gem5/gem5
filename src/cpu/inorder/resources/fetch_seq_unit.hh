@@ -32,15 +32,15 @@
 #ifndef __CPU_INORDER_FETCH_SEQ_UNIT_HH__
 #define __CPU_INORDER_FETCH_SEQ_UNIT_HH__
 
-#include <vector>
 #include <list>
 #include <string>
+#include <vector>
 
 #include "config/the_isa.hh"
-#include "cpu/inorder/resource.hh"
+#include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
-#include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/resource.hh"
 
 class FetchSeqUnit : public Resource {
   public:

@@ -33,14 +33,14 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 #include "mem/ruby/network/orion/Buffer/Buffer.hh"
-#include "mem/ruby/network/orion/TechParameter.hh"
-#include "mem/ruby/network/orion/OrionConfig.hh"
-#include "mem/ruby/network/orion/Buffer/SRAM.hh"
 #include "mem/ruby/network/orion/Buffer/Register.hh"
+#include "mem/ruby/network/orion/Buffer/SRAM.hh"
+#include "mem/ruby/network/orion/OrionConfig.hh"
+#include "mem/ruby/network/orion/TechParameter.hh"
 
 using namespace std;
 

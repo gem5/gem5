@@ -32,15 +32,15 @@
 #ifndef __CPU_INORDER_TLB_UNIT_HH__
 #define __CPU_INORDER_TLB_UNIT_HH__
 
-#include <vector>
 #include <list>
 #include <string>
+#include <vector>
 
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/inst_buffer.hh"
+#include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
-#include "cpu/inorder/cpu.hh"
 
 class TLBUnit : public Resource
 {

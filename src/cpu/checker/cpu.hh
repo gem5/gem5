@@ -32,16 +32,16 @@
 #define __CPU_CHECKER_CPU_HH__
 
 #include <list>
-#include <queue>
 #include <map>
+#include <queue>
 
 #include "arch/types.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/base_dyn_inst.hh"
-#include "cpu/simple_thread.hh"
 #include "cpu/pc_event.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "sim/eventq.hh"
 

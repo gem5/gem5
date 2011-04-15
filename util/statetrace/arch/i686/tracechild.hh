@@ -31,9 +31,10 @@
 #ifndef REGSTATE_I686_HH
 #define REGSTATE_I686_HH
 
-#include <sys/user.h>
-#include <sys/types.h>
 #include <sys/ptrace.h>
+#include <sys/types.h>
+#include <sys/user.h>
+
 #include <cassert>
 #include <string>
 

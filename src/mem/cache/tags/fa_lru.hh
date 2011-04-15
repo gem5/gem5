@@ -39,8 +39,8 @@
 #include <list>
 
 #include "base/hashmap.hh"
-#include "mem/cache/blk.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/cache/blk.hh"
 #include "mem/packet.hh"
 
 /**

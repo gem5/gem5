@@ -28,18 +28,18 @@
  * Authors: Tushar Krishna
  */
 
+#include <cmath>
 #include <iomanip>
 #include <set>
 #include <string>
 #include <vector>
-#include <cmath>
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "cpu/testers/networktest/networktest.hh"
 #include "mem/mem_object.hh"
-#include "mem/port.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
 #include "mem/request.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"

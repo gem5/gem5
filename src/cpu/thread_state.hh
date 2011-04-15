@@ -33,9 +33,9 @@
 
 #include "arch/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
-#include "cpu/base.hh"
 
 #if !FULL_SYSTEM
 #include "mem/mem_object.hh"

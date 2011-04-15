@@ -32,10 +32,10 @@
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
+#include "mem/ruby/network/Network.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;

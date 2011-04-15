@@ -41,9 +41,8 @@
 #include "dev/ide_ctrl.hh"
 #include "dev/ide_wdcreg.h"
 #include "dev/io_device.hh"
-#include "sim/eventq.hh"
 #include "params/IdeDisk.hh"
-
+#include "sim/eventq.hh"
 
 class ChunkGenerator;
 

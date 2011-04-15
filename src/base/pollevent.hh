@@ -31,8 +31,10 @@
 #ifndef __POLLEVENT_H__
 #define __POLLEVENT_H__
 
-#include <vector>
 #include <poll.h>
+
+#include <vector>
+
 #include "sim/core.hh"
 
 class Checkpoint;

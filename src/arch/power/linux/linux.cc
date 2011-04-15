@@ -29,9 +29,9 @@
  * Authors: Timothy M. Jones
  */
 
-#include "arch/power/linux/linux.hh"
-
 #include <fcntl.h>
+
+#include "arch/power/linux/linux.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable PowerLinux::openFlagTable[] = {

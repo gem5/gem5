@@ -37,8 +37,8 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/linux/process.hh"
 #include "arch/x86/linux/linux.hh"
+#include "arch/x86/linux/process.hh"
 #include "arch/x86/regs/misc.hh"
 #include "kern/linux/linux.hh"
 #include "sim/syscall_emul.hh"

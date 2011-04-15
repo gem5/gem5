@@ -37,8 +37,8 @@
 #include <list>
 #include <string>
 
-#include "base/varargs.hh"
 #include "base/cprintf_formats.hh"
+#include "base/varargs.hh"
 
 namespace cp {
 

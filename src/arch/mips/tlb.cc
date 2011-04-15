@@ -34,18 +34,18 @@
 #include <string>
 #include <vector>
 
-#include "arch/mips/pra_constants.hh"
-#include "arch/mips/pagetable.hh"
-#include "arch/mips/tlb.hh"
 #include "arch/mips/faults.hh"
+#include "arch/mips/pagetable.hh"
+#include "arch/mips/pra_constants.hh"
+#include "arch/mips/tlb.hh"
 #include "arch/mips/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "sim/process.hh"
 #include "mem/page_table.hh"
 #include "params/MipsTLB.hh"
+#include "sim/process.hh"
 
 using namespace std;
 using namespace MipsISA;

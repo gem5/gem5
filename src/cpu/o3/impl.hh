@@ -35,7 +35,6 @@
 #include "config/the_isa.hh"
 #include "cpu/o3/cpu_policy.hh"
 
-
 // Forward declarations.
 template <class Impl>
 class BaseO3DynInst;

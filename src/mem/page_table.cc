@@ -34,9 +34,9 @@
  * @file
  * Definitions of page table.
  */
-#include <string>
-#include <map>
 #include <fstream>
+#include <map>
+#include <string>
 
 #include "base/bitfield.hh"
 #include "base/intmath.hh"

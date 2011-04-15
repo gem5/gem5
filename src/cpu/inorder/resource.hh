@@ -32,14 +32,14 @@
 #ifndef __CPU_INORDER_RESOURCE_HH__
 #define __CPU_INORDER_RESOURCE_HH__
 
-#include <vector>
 #include <list>
 #include <string>
+#include <vector>
 
 #include "base/types.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/inst_seq.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 

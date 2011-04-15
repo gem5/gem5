@@ -26,17 +26,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include <arpa/telnet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/termios.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <sys/un.h>
-
-#include <netinet/in.h>
-#include <arpa/telnet.h>
-
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
 #include <stdarg.h>
@@ -44,7 +43,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 ssize_t atomicio(ssize_t (*)(), int, void *, size_t);
 void    readwrite(int);

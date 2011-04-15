@@ -34,9 +34,9 @@
 //
 
 output header {{
-#include <sstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/types.hh"
@@ -45,20 +45,19 @@ output header {{
 }};
 
 output decoder {{
-#include "arch/mips/isa_traits.hh"
-#include "base/cprintf.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"
+#include <math.h>
+
+#include "arch/mips/dsp.hh"
+#include "arch/mips/dt_constants.hh"
 #include "arch/mips/faults.hh"
 #include "arch/mips/isa_traits.hh"
-#include "arch/mips/pra_constants.hh"
-#include "arch/mips/dt_constants.hh"
 #include "arch/mips/mt_constants.hh"
+#include "arch/mips/pra_constants.hh"
 #include "arch/mips/utility.hh"
-#include "arch/mips/dsp.hh"
+#include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
+#include "cpu/thread_context.hh"
 #include "mem/packet.hh"
-
-#include <math.h>
 #if defined(linux)
 #include <fenv.h>
 #endif
@@ -67,29 +66,27 @@ using namespace MipsISA;
 }};
 
 output exec {{
+#include <math.h>
+
+#include "arch/mips/dsp.hh"
+#include "arch/mips/dt_constants.hh"
 #include "arch/mips/faults.hh"
 #include "arch/mips/isa_traits.hh"
-#include "arch/mips/utility.hh"
-#include "arch/mips/dsp.hh"
 #include "arch/mips/mt.hh"
-#include "arch/mips/pra_constants.hh"
-#include "arch/mips/dt_constants.hh"
 #include "arch/mips/mt_constants.hh"
-
-#include <math.h>
+#include "arch/mips/pra_constants.hh"
+#include "arch/mips/utility.hh"
 #if defined(linux)
 #include <fenv.h>
 #endif
 
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
-
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-
-#include "sim/sim_exit.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 
 using namespace MipsISA;
 }};

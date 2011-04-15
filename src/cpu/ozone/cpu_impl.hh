@@ -29,28 +29,27 @@
  *          Nathan Binkert
  */
 
-#include "config/full_system.hh"
-#include "config/use_checker.hh"
-
 #include "arch/isa_traits.hh" // For MachInst
 #include "base/trace.hh"
+#include "config/full_system.hh"
 #include "config/the_isa.hh"
-#include "cpu/base.hh"
-#include "cpu/simple_thread.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/exetrace.hh"
+#include "config/use_checker.hh"
 #include "cpu/ozone/cpu.hh"
+#include "cpu/base.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/quiesce_event.hh"
+#include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
 #if FULL_SYSTEM
-#include "arch/faults.hh"
 #include "arch/alpha/osfpal.hh"
+#include "arch/faults.hh"
+#include "arch/kernel_stats.hh"
 #include "arch/tlb.hh"
 #include "arch/types.hh"
-#include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
 #include "cpu/profile.hh"

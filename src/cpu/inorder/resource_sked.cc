@@ -29,12 +29,12 @@
  *
  */
 
-#include "cpu/inorder/resource_sked.hh"
-#include "cpu/inorder/pipeline_traits.hh"
-
-#include <vector>
-#include <list>
 #include <cstdio>
+#include <list>
+#include <vector>
+
+#include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/inorder/resource_sked.hh"
 
 using namespace std;
 using namespace ThePipeline;

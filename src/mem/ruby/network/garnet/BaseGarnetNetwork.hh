@@ -36,10 +36,10 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__
 #define __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__
 
-#include "math.h"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/Network.hh"
 #include "params/BaseGarnetNetwork.hh"
+#include "math.h"
 
 class BaseGarnetNetwork : public Network 
 {

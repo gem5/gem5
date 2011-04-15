@@ -32,17 +32,17 @@
 #ifndef CPU_INORDER_RESOURCE_LIST_HH
 #define CPU_INORDER_RESOURCE_LIST_HH
 
-#include "cpu/inorder/resources/cache_unit.hh"
-#include "cpu/inorder/resources/fetch_unit.hh"
-#include "cpu/inorder/resources/execution_unit.hh"
-#include "cpu/inorder/resources/use_def.hh"
-#include "cpu/inorder/resources/inst_buffer.hh"
-#include "cpu/inorder/resources/decode_unit.hh"
-#include "cpu/inorder/resources/graduation_unit.hh"
-#include "cpu/inorder/resources/tlb_unit.hh"
-#include "cpu/inorder/resources/fetch_seq_unit.hh"
-#include "cpu/inorder/resources/branch_predictor.hh"
 #include "cpu/inorder/resources/agen_unit.hh"
+#include "cpu/inorder/resources/branch_predictor.hh"
+#include "cpu/inorder/resources/cache_unit.hh"
+#include "cpu/inorder/resources/decode_unit.hh"
+#include "cpu/inorder/resources/execution_unit.hh"
+#include "cpu/inorder/resources/fetch_seq_unit.hh"
+#include "cpu/inorder/resources/fetch_unit.hh"
+#include "cpu/inorder/resources/graduation_unit.hh"
+#include "cpu/inorder/resources/inst_buffer.hh"
 #include "cpu/inorder/resources/mult_div_unit.hh"
+#include "cpu/inorder/resources/tlb_unit.hh"
+#include "cpu/inorder/resources/use_def.hh"
 
 #endif

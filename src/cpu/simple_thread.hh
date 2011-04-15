@@ -66,8 +66,8 @@ namespace TheISA {
 
 #else // !FULL_SYSTEM
 
-#include "sim/process.hh"
 #include "mem/page_table.hh"
+#include "sim/process.hh"
 class TranslatingPort;
 
 #endif // FULL_SYSTEM

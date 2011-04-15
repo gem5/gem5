@@ -32,16 +32,16 @@
 #ifndef __CPU_INORDER_USE_DEF_UNIT_HH__
 #define __CPU_INORDER_USE_DEF_UNIT_HH__
 
-#include <vector>
 #include <list>
 #include <string>
+#include <vector>
 
-#include "cpu/func_unit.hh"
 #include "cpu/inorder/first_stage.hh"
-#include "cpu/inorder/resource.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/reg_dep_map.hh"
+#include "cpu/inorder/resource.hh"
+#include "cpu/func_unit.hh"
 
 class UseDefUnit : public Resource {
   public:

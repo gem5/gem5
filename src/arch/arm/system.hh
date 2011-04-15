@@ -46,10 +46,10 @@
 #include <string>
 #include <vector>
 
+#include "kern/linux/events.hh"
 #include "params/ArmSystem.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
-#include "kern/linux/events.hh"
 
 class ArmSystem : public System
 {

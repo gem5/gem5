@@ -32,8 +32,8 @@
 #include "sim/system.hh"
 %}
 
-%import "python/swig/sim_object.i"
 %import "enums/MemoryMode.hh"
+%import "python/swig/sim_object.i"
 
 class System : public SimObject
 {

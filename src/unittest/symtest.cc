@@ -30,8 +30,8 @@
 
 #include <iostream>
 
-#include "base/str.hh"
 #include "base/loader/symtab.hh"
+#include "base/str.hh"
 
 using namespace std;
 

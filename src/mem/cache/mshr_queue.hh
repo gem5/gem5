@@ -37,8 +37,8 @@
 
 #include <vector>
 
-#include "mem/packet.hh"
 #include "mem/cache/mshr.hh"
+#include "mem/packet.hh"
 
 /**
  * A Class for maintaining a list of pending and allocated memory requests.

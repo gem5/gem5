@@ -29,8 +29,9 @@
  */
 
 #include <sys/types.h>
-#include <signal.h>
 #include <unistd.h>
+
+#include <csignal>
 
 #include "base/cprintf.hh"
 

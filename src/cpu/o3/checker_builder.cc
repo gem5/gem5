@@ -31,9 +31,9 @@
 #include <string>
 
 #include "cpu/checker/cpu_impl.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/o3/alpha/dyn_inst.hh"
 #include "cpu/o3/alpha/impl.hh"
+#include "cpu/inst_seq.hh"
 #include "params/O3Checker.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"

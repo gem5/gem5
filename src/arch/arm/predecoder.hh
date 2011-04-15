@@ -47,8 +47,8 @@
 
 #include <cassert>
 
-#include "arch/arm/types.hh"
 #include "arch/arm/miscregs.hh"
+#include "arch/arm/types.hh"
 #include "base/types.hh"
 
 class ThreadContext;

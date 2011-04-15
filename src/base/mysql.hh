@@ -33,12 +33,13 @@
 
 #define TO_BE_INCLUDED_LATER 0
 
+#include <mysql.h>
+#include <mysql_version.h>
+
 #include <cassert>
 #include <iosfwd>
-#include <mysql_version.h>
-#include <mysql.h>
-#include <string>
 #include <sstream>
+#include <string>
 
 namespace MySQL {
 

@@ -31,9 +31,10 @@
 #ifndef __ELF_OBJECT_HH__
 #define __ELF_OBJECT_HH__
 
-#include "base/loader/object_file.hh"
 #include <set>
 #include <vector>
+
+#include "base/loader/object_file.hh"
 
 class ElfObject : public ObjectFile
 {

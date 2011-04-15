@@ -41,16 +41,16 @@
 //
 
 output header {{
-#include <sstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/types.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/static_inst.hh"
-#include "mem/request.hh"  // some constructors use MemReq flags
 #include "mem/packet.hh"
+#include "mem/request.hh"  // some constructors use MemReq flags
 }};
 
 output decoder {{
@@ -58,9 +58,9 @@ output decoder {{
 
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/regredir.hh"
+#include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
 #include "base/fenv.hh"
-#include "base/loader/symtab.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
@@ -71,16 +71,16 @@ using namespace AlphaISA;
 output exec {{
 #include <math.h>
 
+#include "arch/alpha/registers.hh"
 #include "arch/alpha/regredir.hh"
 #include "base/cp_annotate.hh"
-#include "sim/pseudo_inst.hh"
-#include "arch/alpha/registers.hh"
 #include "base/fenv.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 
 using namespace AlphaISA;

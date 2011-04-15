@@ -30,10 +30,10 @@
  */
 
 #include "base/str.hh"
-#include "cpu/inorder/first_stage.hh"
 #include "cpu/inorder/resources/resource_list.hh"
-#include "cpu/inorder/resource_pool.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/first_stage.hh"
+#include "cpu/inorder/resource_pool.hh"
 #include "params/InOrderTrace.hh"
 
 using namespace std;

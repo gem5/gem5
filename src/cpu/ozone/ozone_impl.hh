@@ -32,12 +32,12 @@
 #define __CPU_OZONE_OZONE_IMPL_HH__
 
 #include "cpu/o3/bpred_unit.hh"
+#include "cpu/ozone/dyn_inst.hh"
 #include "cpu/ozone/front_end.hh"
 #include "cpu/ozone/inst_queue.hh"
-#include "cpu/ozone/lw_lsq.hh"
 #include "cpu/ozone/lw_back_end.hh"
+#include "cpu/ozone/lw_lsq.hh"
 #include "cpu/ozone/null_predictor.hh"
-#include "cpu/ozone/dyn_inst.hh"
 #include "cpu/ozone/simple_params.hh"
 
 template <class Impl>

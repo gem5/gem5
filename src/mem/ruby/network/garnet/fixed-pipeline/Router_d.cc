@@ -29,16 +29,16 @@
  */
 
 #include "base/stl_helpers.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/RoutingUnit_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/VCallocator_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/SWallocator_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Switch_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/VCallocator_d.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;

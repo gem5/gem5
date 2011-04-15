@@ -31,8 +31,9 @@
 #ifndef __ARCH_SPARC_TLB_MAP_HH__
 #define __ARCH_SPARC_TLB_MAP_HH__
 
-#include "arch/sparc/pagetable.hh"
 #include <map>
+
+#include "arch/sparc/pagetable.hh"
 
 namespace SparcISA
 {

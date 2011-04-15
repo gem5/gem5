@@ -28,10 +28,11 @@
  * Authors: Nathan Binkert
  */
 
+#include <zlib.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
-#include <zlib.h>
 
 #include "base/cprintf.hh"
 #include "base/hostinfo.hh"

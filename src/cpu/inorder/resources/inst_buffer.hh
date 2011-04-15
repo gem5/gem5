@@ -32,14 +32,14 @@
 #ifndef __CPU_INORDER_INST_BUFF_UNIT_HH__
 #define __CPU_INORDER_INST_BUFF_UNIT_HH__
 
-#include <vector>
 #include <list>
 #include <string>
+#include <vector>
 
-#include "cpu/inorder/resource.hh"
+#include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
-#include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/resource.hh"
 
 class InstBuffer : public Resource {
   public:

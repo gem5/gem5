@@ -37,16 +37,15 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/system.hh"
 #include "arch/x86/regs/int.hh"
+#include "arch/x86/isa_traits.hh"
 #include "arch/vtophys.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "params/LinuxX86System.hh"
 #include "sim/byteswap.hh"
-
 
 using namespace LittleEndianGuest;
 using namespace X86ISA;

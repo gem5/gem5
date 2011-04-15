@@ -45,11 +45,11 @@
 #include <sys/fcntl.h>  // for O_BINARY
 #endif
 #include <sys/stat.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/uio.h>
 #include <sys/time.h>
+#include <sys/uio.h>
+#include <fcntl.h>
 
+#include <cerrno>
 #include <string>
 
 #include "base/chunk_generator.hh"
@@ -60,11 +60,11 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "mem/translating_port.hh"
 #include "mem/page_table.hh"
+#include "mem/translating_port.hh"
 #include "sim/byteswap.hh"
-#include "sim/system.hh"
 #include "sim/process.hh"
+#include "sim/system.hh"
 
 ///
 /// System call descriptor.

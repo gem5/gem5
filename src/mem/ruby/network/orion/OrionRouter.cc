@@ -35,13 +35,13 @@
 
 #include <cassert>
 
-#include "OrionRouter.hh"
-#include "mem/ruby/network/orion/OrionConfig.hh"
+#include "mem/ruby/network/orion/Allocator/SWAllocator.hh"
+#include "mem/ruby/network/orion/Allocator/VCAllocator.hh"
 #include "mem/ruby/network/orion/Buffer/Buffer.hh"
 #include "mem/ruby/network/orion/Crossbar/Crossbar.hh"
-#include "mem/ruby/network/orion/Allocator/VCAllocator.hh"
-#include "mem/ruby/network/orion/Allocator/SWAllocator.hh"
 #include "mem/ruby/network/orion/Clock.hh"
+#include "mem/ruby/network/orion/OrionConfig.hh"
+#include "OrionRouter.hh"
 
 OrionRouter::OrionRouter(
     uint32_t num_in_port_,

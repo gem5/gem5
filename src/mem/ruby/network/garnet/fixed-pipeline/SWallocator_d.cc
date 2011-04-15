@@ -28,11 +28,11 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/fixed-pipeline/SWallocator_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/SWallocator_d.hh"
 
 SWallocator_d::SWallocator_d(Router_d *router)
 {

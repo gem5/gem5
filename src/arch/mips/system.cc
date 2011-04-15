@@ -33,14 +33,13 @@
 
 #include "arch/mips/system.hh"
 #include "arch/vtophys.hh"
-#include "base/loader/object_file.hh"
 #include "base/loader/hex_file.hh"
+#include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "mem/physical.hh"
 #include "params/MipsSystem.hh"
 #include "sim/byteswap.hh"
-
 
 using namespace LittleEndianGuest;
 

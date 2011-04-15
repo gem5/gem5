@@ -34,15 +34,15 @@
 //
 
 output header {{
-#include <sstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 
 #include "arch/power/insts/branch.hh"
-#include "arch/power/insts/mem.hh"
-#include "arch/power/insts/integer.hh"
-#include "arch/power/insts/floating.hh"
 #include "arch/power/insts/condition.hh"
+#include "arch/power/insts/floating.hh"
+#include "arch/power/insts/integer.hh"
+#include "arch/power/insts/mem.hh"
 #include "arch/power/insts/misc.hh"
 #include "arch/power/insts/static_inst.hh"
 #include "arch/power/isa_traits.hh"
@@ -61,8 +61,8 @@ output decoder {{
 #include "arch/power/faults.hh"
 #include "arch/power/isa_traits.hh"
 #include "arch/power/utility.hh"
-#include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
 #include "cpu/thread_context.hh"
 
 using namespace PowerISA;
@@ -70,11 +70,11 @@ using std::isnan;
 }};
 
 output exec {{
+#include <cmath>
+
 #include "arch/power/faults.hh"
 #include "arch/power/isa_traits.hh"
 #include "arch/power/utility.hh"
-
-#include <cmath>
 #if defined(linux)
 #include <fenv.h>
 #endif

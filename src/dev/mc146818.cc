@@ -31,8 +31,8 @@
  */
 
 #include <sys/time.h>
-#include <time.h>
 
+#include <ctime>
 #include <string>
 
 #include "base/bitfield.hh"

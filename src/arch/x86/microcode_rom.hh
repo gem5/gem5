@@ -31,8 +31,8 @@
 #ifndef __ARCH_X86_MICROCODE_ROM_HH__
 #define __ARCH_X86_MICROCODE_ROM_HH__
 
-#include "arch/x86/emulenv.hh"
 #include "arch/x86/insts/badmicroop.hh"
+#include "arch/x86/emulenv.hh"
 #include "cpu/static_inst.hh"
 
 namespace X86ISAInst

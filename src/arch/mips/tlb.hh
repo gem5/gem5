@@ -38,15 +38,15 @@
 #include <map>
 
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/pagetable.hh"
 #include "arch/mips/utility.hh"
 #include "arch/mips/vtophys.hh"
-#include "arch/mips/pagetable.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/MipsTLB.hh"
 #include "sim/fault_fwd.hh"
-#include "sim/tlb.hh"
 #include "sim/sim_object.hh"
+#include "sim/tlb.hh"
 
 class ThreadContext;
 

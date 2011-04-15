@@ -117,10 +117,10 @@
  */
 
 #include <sys/signal.h>
+#include <unistd.h>
 
 #include <cstdio>
 #include <string>
-#include <unistd.h>
 
 #include "config/full_system.hh"
 
@@ -134,8 +134,8 @@
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #include "sim/system.hh"

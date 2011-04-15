@@ -37,7 +37,6 @@
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/utility.hh"
 
-
 class ThreadContext;
 class FunctionalPort;
 

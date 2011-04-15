@@ -33,11 +33,11 @@
 
 #include "base/refcnt.hh"
 #include "config/the_isa.hh"
-#include "cpu/base_dyn_inst.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/base_dyn_inst.hh"
 #include "cpu/simple_thread.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 

@@ -28,8 +28,8 @@
  * Authors: Ali Saidi
  */
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 #include "base/range_map.hh"
 #include "base/types.hh"

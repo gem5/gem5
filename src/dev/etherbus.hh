@@ -35,12 +35,11 @@
 #ifndef __ETHERBUS_H__
 #define __ETHERBUS_H__
 
-#include "sim/eventq.hh"
-#include "dev/etherpkt.hh"
 #include "dev/etherobject.hh"
+#include "dev/etherpkt.hh"
 #include "params/EtherBus.hh"
+#include "sim/eventq.hh"
 #include "sim/sim_object.hh"
-#include "params/EtherBus.hh"
 
 class EtherDump;
 class EtherInt;

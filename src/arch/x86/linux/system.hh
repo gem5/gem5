@@ -43,9 +43,9 @@
 #include <string>
 #include <vector>
 
-#include "params/LinuxX86System.hh"
 #include "arch/x86/bios/e820.hh"
 #include "arch/x86/system.hh"
+#include "params/LinuxX86System.hh"
 
 class LinuxX86System : public X86System
 {

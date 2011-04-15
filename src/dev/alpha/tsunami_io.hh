@@ -40,8 +40,8 @@
 #include "base/range.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/intel_8254_timer.hh"
-#include "dev/mc146818.hh"
 #include "dev/io_device.hh"
+#include "dev/mc146818.hh"
 #include "params/TsunamiIO.hh"
 #include "sim/eventq.hh"
 

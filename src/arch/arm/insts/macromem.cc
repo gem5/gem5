@@ -40,9 +40,10 @@
  * Authors: Stephen Hines
  */
 
+#include <sstream>
+
 #include "arch/arm/insts/macromem.hh"
 #include "arch/arm/decoder.hh"
-#include <sstream>
 
 using namespace std;
 using namespace ArmISAInst;

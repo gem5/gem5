@@ -34,8 +34,8 @@
  */
 
 #include "mem/ruby/network/orion/Clock.hh"
-#include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/OrionConfig.hh"
+#include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/Wire.hh"
 
 Clock::Clock(

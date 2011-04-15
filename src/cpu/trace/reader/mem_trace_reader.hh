@@ -35,8 +35,8 @@
 #ifndef __MEM_TRACE_READER_HH__
 #define __MEM_TRACE_READER_HH__
 
-#include "sim/sim_object.hh"
 #include "mem/mem_req.hh" // For MemReqPtr
+#include "sim/sim_object.hh"
 
 /**
  * Pure virtual base class for memory trace readers.

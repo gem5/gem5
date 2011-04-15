@@ -31,8 +31,8 @@
 #ifndef __ARCH_MIPS_DSP_HH__
 #define __ARCH_MIPS_DSP_HH__
 
-#include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/types.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"

@@ -29,9 +29,9 @@
  */
 
 #include "cpu/ozone/dyn_inst.hh"
+#include "cpu/ozone/inst_queue_impl.hh"
 #include "cpu/ozone/ozone_impl.hh"
 #include "cpu/ozone/simple_impl.hh"
-#include "cpu/ozone/inst_queue_impl.hh"
 
 // Force instantiation of InstructionQueue.
 template class InstQueue<SimpleImpl>;

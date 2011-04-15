@@ -38,8 +38,8 @@
 #ifndef __REPL_HH__
 #define __REPL_HH__
 
-#include <string>
 #include <list>
+#include <string>
 
 #include "base/types.hh"
 #include "cpu/smt.hh"

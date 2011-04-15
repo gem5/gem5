@@ -34,9 +34,9 @@
 #include <map>
 
 #include "arch/sparc/types.hh"
+#include "base/pollevent.hh"
 #include "base/remote_gdb.hh"
 #include "cpu/pc_event.hh"
-#include "base/pollevent.hh"
 
 class System;
 class ThreadContext;

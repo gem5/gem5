@@ -28,9 +28,9 @@
  * Authors: Korey Sewell
  */
 
-#include "arch/mips/linux/linux.hh"
-
 #include <fcntl.h>
+
+#include "arch/mips/linux/linux.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable MipsLinux::openFlagTable[] = {

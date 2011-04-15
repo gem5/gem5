@@ -39,9 +39,9 @@
 #ifndef __MEM_PACKET_HH__
 #define __MEM_PACKET_HH__
 
+#include <bitset>
 #include <cassert>
 #include <list>
-#include <bitset>
 
 #include "base/cast.hh"
 #include "base/compiler.hh"

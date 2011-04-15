@@ -37,15 +37,15 @@
 
 #include <cstring>
 
-#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/faults.hh"
+#include "arch/sparc/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
 #include "dev/sparc/iob.hh"
 #include "dev/platform.hh"
-#include "mem/port.hh"
 #include "mem/packet_access.hh"
+#include "mem/port.hh"
 #include "sim/faults.hh"
 #include "sim/system.hh"
 

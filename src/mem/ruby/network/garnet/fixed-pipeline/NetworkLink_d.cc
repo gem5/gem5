@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 
 NetworkLink_d::NetworkLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr)
 {

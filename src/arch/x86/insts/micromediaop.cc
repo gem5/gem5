@@ -28,9 +28,10 @@
  * Authors: Gabe Black
  */
 
+#include <string>
+
 #include "arch/x86/insts/micromediaop.hh"
 #include "arch/x86/regs/misc.hh"
-#include <string>
 
 namespace X86ISA
 {

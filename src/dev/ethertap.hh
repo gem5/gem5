@@ -39,8 +39,8 @@
 #include <string>
 
 #include "base/pollevent.hh"
-#include "dev/etherobject.hh"
 #include "dev/etherint.hh"
+#include "dev/etherobject.hh"
 #include "dev/etherpkt.hh"
 #include "params/EtherTap.hh"
 #include "sim/eventq.hh"

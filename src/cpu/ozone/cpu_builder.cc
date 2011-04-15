@@ -31,10 +31,10 @@
 #include <string>
 
 #include "cpu/checker/cpu.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/ozone/cpu.hh"
 #include "cpu/ozone/ozone_impl.hh"
 #include "cpu/ozone/simple_params.hh"
+#include "cpu/inst_seq.hh"
 #include "params/DerivOzoneCPU.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"

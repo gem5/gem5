@@ -32,11 +32,11 @@
 #include <iostream>
 #include <string>
 
+#include "base/stats/mysql.hh"
+#include "base/stats/text.hh"
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
-#include "base/stats/text.hh"
-#include "base/stats/mysql.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
 #include "sim/stat_control.hh"

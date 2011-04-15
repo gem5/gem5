@@ -31,11 +31,11 @@
 
 #include "arch/isa_traits.hh"
 #include "base/misc.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
+#include "cpu/thread_context.hh"
+#include "mem/page_table.hh"
 #include "sim/faults.hh"
 #include "sim/process.hh"
-#include "mem/page_table.hh"
 
 #if !FULL_SYSTEM
 void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)

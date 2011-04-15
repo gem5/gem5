@@ -36,8 +36,8 @@
 #ifndef __MULTREECROSSBAR_H__
 #define __MULTREECROSSBAR_H__
 
-#include "mem/ruby/network/orion/Type.hh"
 #include "mem/ruby/network/orion/Crossbar/Crossbar.hh"
+#include "mem/ruby/network/orion/Type.hh"
 
 class TechParameter;
 

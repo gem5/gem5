@@ -47,13 +47,13 @@
 
 #include <iostream>
 
+#include "base/vnc/convert.hh"
 #include "base/circlebuf.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
-#include "base/vnc/convert.hh"
 #include "cpu/intr_control.hh"
-#include "sim/sim_object.hh"
 #include "params/VncServer.hh"
+#include "sim/sim_object.hh"
 
 /**
  * A device that expects to receive input from the vnc server should derrive

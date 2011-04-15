@@ -38,10 +38,9 @@
 #ifndef __MEM_VPORT_HH__
 #define __MEM_VPORT_HH__
 
-#include "mem/port_impl.hh"
-#include "config/full_system.hh"
 #include "arch/vtophys.hh"
-
+#include "config/full_system.hh"
+#include "mem/port_impl.hh"
 
 /** A class that translates a virtual address to a physical address and then
  * calls the above read/write functions. If a thread context is provided the

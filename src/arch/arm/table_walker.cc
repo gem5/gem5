@@ -40,9 +40,9 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
-#include "dev/io_device.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "dev/io_device.hh"
 #include "sim/system.hh"
 
 using namespace ArmISA;

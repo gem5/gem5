@@ -33,7 +33,6 @@
 
 #include "cpu/simple/base.hh"
 #include "cpu/translation.hh"
-
 #include "params/TimingSimpleCPU.hh"
 
 class TimingSimpleCPU : public BaseSimpleCPU

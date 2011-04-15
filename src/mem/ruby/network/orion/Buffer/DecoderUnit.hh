@@ -36,8 +36,8 @@
 #ifndef __DECODERUNIT_H__
 #define __DECODERUNIT_H__
 
-#include "mem/ruby/network/orion/Type.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
+#include "mem/ruby/network/orion/Type.hh"
 
 class DecoderUnit
 {

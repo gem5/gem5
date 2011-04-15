@@ -29,7 +29,7 @@
  *          Steve Reinhardt
  */
 
-#include <ctype.h>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <list>

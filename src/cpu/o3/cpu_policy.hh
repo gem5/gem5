@@ -32,23 +32,21 @@
 #define __CPU_O3_CPU_POLICY_HH__
 
 #include "cpu/o3/bpred_unit.hh"
+#include "cpu/o3/comm.hh"
+#include "cpu/o3/commit.hh"
+#include "cpu/o3/decode.hh"
+#include "cpu/o3/fetch.hh"
 #include "cpu/o3/free_list.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/regfile.hh"
+#include "cpu/o3/rename.hh"
 #include "cpu/o3/rename_map.hh"
 #include "cpu/o3/rob.hh"
 #include "cpu/o3/store_set.hh"
-
-#include "cpu/o3/commit.hh"
-#include "cpu/o3/decode.hh"
-#include "cpu/o3/fetch.hh"
-#include "cpu/o3/iew.hh"
-#include "cpu/o3/rename.hh"
-
-#include "cpu/o3/comm.hh"
 
 /**
  * Struct that defines the key classes to be used by the CPU.  All

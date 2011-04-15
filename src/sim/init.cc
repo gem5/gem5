@@ -30,13 +30,14 @@
  */
 
 #include <Python.h>
-#include <marshal.h>
-#include <signal.h>
 
-#include <list>
-#include <iostream>
-#include <string>
+#include <marshal.h>
 #include <zlib.h>
+
+#include <csignal>
+#include <iostream>
+#include <list>
+#include <string>
 
 #include "base/cprintf.hh"
 #include "base/misc.hh"

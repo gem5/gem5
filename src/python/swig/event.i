@@ -70,15 +70,15 @@
 %ignore EventQueue::schedule;
 %ignore EventQueue::deschedule;
 
+%include <std_string.i>
+%include <stdint.i>
+
 %import "base/fast_alloc.hh"
 %import "sim/serialize.hh"
 
-%include <stdint.i>
-%include <std_string.i>
-
 %include "base/types.hh"
-%include "sim/eventq.hh"
 %include "python/swig/pyevent.hh"
+%include "sim/eventq.hh"
 
 struct CountedDrainEvent : public Event
 {

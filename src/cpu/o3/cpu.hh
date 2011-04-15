@@ -42,21 +42,20 @@
 
 #include "arch/types.hh"
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
-#include "cpu/activity.hh"
-#include "cpu/base.hh"
-#include "cpu/simple_thread.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/cpu_policy.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
+#include "cpu/activity.hh"
+#include "cpu/base.hh"
+#include "cpu/simple_thread.hh"
+#include "cpu/timebuf.hh"
 //#include "cpu/o3/thread_context.hh"
-#include "sim/process.hh"
-
 #include "params/DerivO3CPU.hh"
+#include "sim/process.hh"
 
 template <class>
 class Checker;

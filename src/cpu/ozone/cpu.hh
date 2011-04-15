@@ -34,16 +34,16 @@
 #include <set>
 
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
-#include "cpu/base.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"
 #include "cpu/ozone/thread_state.hh"
+#include "cpu/base.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
+#include "cpu/timebuf.hh"
 #include "mem/page_table.hh"
 #include "sim/eventq.hh"
 

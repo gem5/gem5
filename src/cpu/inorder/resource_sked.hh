@@ -32,9 +32,9 @@
 #ifndef __CPU_INORDER_RESOURCE_SKED_HH__
 #define __CPU_INORDER_RESOURCE_SKED_HH__
 
-#include <vector>
-#include <list>
 #include <cstdlib>
+#include <list>
+#include <vector>
 
 /** ScheduleEntry class represents a single function that an instruction
     wants to do at any pipeline stage. For example, if an instruction

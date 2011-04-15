@@ -34,8 +34,8 @@
  */
 
 #include "base/misc.hh"
-#include "mem/ruby/network/orion/Buffer/WordlineUnit.hh"
 #include "mem/ruby/network/orion/Buffer/SRAM.hh"
+#include "mem/ruby/network/orion/Buffer/WordlineUnit.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
 
 WordlineUnit::WordlineUnit(

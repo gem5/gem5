@@ -34,7 +34,6 @@
 #include "dev/io_device.hh"
 #include "sim/system.hh"
 
-
 PioPort::PioPort(PioDevice *dev, System *s, std::string pname)
     : SimpleTimingPort(dev->name() + pname, dev), device(dev)
 { }

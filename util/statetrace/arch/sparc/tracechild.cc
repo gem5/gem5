@@ -28,10 +28,11 @@
  * Authors: Gabe Black
  */
 
-#include <iostream>
-#include <errno.h>
 #include <sys/ptrace.h>
 #include <stdint.h>
+
+#include <cerrno>
+#include <iostream>
 
 #include "arch/sparc/tracechild.hh"
 

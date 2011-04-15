@@ -31,10 +31,10 @@
 #ifndef __DEV_X86_I8259_HH__
 #define __DEV_X86_I8259_HH__
 
-#include "dev/io_device.hh"
 #include "dev/x86/intdev.hh"
-#include "params/I8259.hh"
+#include "dev/io_device.hh"
 #include "enums/X86I8259CascadeMode.hh"
+#include "params/I8259.hh"
 
 namespace X86ISA
 {

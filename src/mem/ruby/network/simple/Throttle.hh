@@ -39,8 +39,8 @@
 #define __MEM_RUBY_NETWORK_SIMPLE_THROTTLE_HH__
 
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"

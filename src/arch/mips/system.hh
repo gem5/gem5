@@ -37,13 +37,13 @@
 #include <string>
 #include <vector>
 
-#include "sim/system.hh"
-#include "base/loader/symtab.hh"
 #include "base/loader/hex_file.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/pc_event.hh"
 #include "kern/system_events.hh"
 #include "params/MipsSystem.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
 class MipsSystem : public System
 {

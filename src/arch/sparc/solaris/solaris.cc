@@ -28,9 +28,9 @@
  * Authors: Ali Saidi
  */
 
-#include "arch/sparc/solaris/solaris.hh"
-
 #include <fcntl.h>
+
+#include "arch/sparc/solaris/solaris.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable SparcSolaris::openFlagTable[] = {

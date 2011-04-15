@@ -28,12 +28,13 @@
  * Authors: Gabe Black
  */
 
-#include <iostream>
-#include <iomanip>
-#include <errno.h>
 #include <sys/ptrace.h>
 #include <stdint.h>
-#include <string.h>
+
+#include <cerrno>
+#include <cstring>
+#include <iomanip>
+#include <iostream>
 
 #include "arch/amd64/tracechild.hh"
 

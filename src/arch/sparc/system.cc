@@ -37,7 +37,6 @@
 #include "params/SparcSystem.hh"
 #include "sim/byteswap.hh"
 
-
 using namespace BigEndianGuest;
 
 SparcSystem::SparcSystem(Params *p)

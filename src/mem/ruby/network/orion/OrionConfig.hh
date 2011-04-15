@@ -32,8 +32,8 @@
 #define __ORIONCONFIG_H__
 
 #include <iostream>
-#include <sstream>
 #include <map>
+#include <sstream>
 
 #include "mem/ruby/network/orion/Type.hh"
 

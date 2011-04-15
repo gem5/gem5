@@ -32,10 +32,10 @@
 #include <iomanip>
 
 #include "config/the_isa.hh"
-#include "cpu/exetrace.hh"
 #include "cpu/inorder/inorder_trace.hh"
-#include "cpu/static_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "params/InOrderTrace.hh"
 

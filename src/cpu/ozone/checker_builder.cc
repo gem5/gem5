@@ -31,9 +31,9 @@
 #include <string>
 
 #include "cpu/checker/cpu_impl.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/ozone/dyn_inst.hh"
 #include "cpu/ozone/ozone_impl.hh"
+#include "cpu/inst_seq.hh"
 #include "params/OzoneChecker.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"

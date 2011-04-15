@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
 
 OutVcState_d::OutVcState_d(int id, GarnetNetwork_d *network_ptr)
 {

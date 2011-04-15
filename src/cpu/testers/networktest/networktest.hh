@@ -33,15 +33,15 @@
 
 #include <set>
 
-#include "base/statistics.hh"
 #include "base/fast_alloc.hh"
+#include "base/statistics.hh"
+#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/NetworkTest.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
-#include "mem/mem_object.hh"
-#include "mem/port.hh"
 
 class Packet;
 class NetworkTest : public MemObject

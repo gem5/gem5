@@ -31,12 +31,12 @@
 
 #include <string>
 
-#include "cpu/base.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/static_inst.hh"
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/base.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/static_inst.hh"
 #include "params/InOrderCPU.hh"
 
 InOrderCPU *

@@ -28,9 +28,9 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/fixed-pipeline/RoutingUnit_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/RoutingUnit_d.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 
 RoutingUnit_d::RoutingUnit_d(Router_d *router)

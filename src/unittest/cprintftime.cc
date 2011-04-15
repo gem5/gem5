@@ -30,8 +30,8 @@
 
 #include <iostream>
 #include <list>
-#include <string>
 #include <sstream>
+#include <string>
 
 #include "base/cprintf.hh"
 

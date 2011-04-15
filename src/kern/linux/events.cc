@@ -43,8 +43,8 @@
 
 #include <sstream>
 
-#include "base/trace.hh"
 #include "arch/utility.hh"
+#include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"

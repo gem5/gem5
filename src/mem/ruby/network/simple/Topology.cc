@@ -32,8 +32,8 @@
 #include "mem/protocol/Protocol.hh"
 #include "mem/protocol/TopologyType.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/simple/Topology.hh"
+#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/System.hh"
 

@@ -38,7 +38,6 @@
 
 #include "arch/isa_traits.hh"
 #include "cpu/base.hh"
-
 #include "params/InOrderCPU.hh"
 
 class InOrderDynInst;

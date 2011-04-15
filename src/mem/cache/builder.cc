@@ -38,9 +38,9 @@
 
 #include "config/the_isa.hh"
 #include "enums/Prefetch.hh"
-#include "mem/config/cache.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/cache.hh"
+#include "mem/config/cache.hh"
 #include "mem/bus.hh"
 #include "params/BaseCache.hh"
 
@@ -59,9 +59,8 @@
 
 //Prefetcher Headers
 #include "mem/cache/prefetch/ghb.hh"
-#include "mem/cache/prefetch/tagged.hh"
 #include "mem/cache/prefetch/stride.hh"
-
+#include "mem/cache/prefetch/tagged.hh"
 
 using namespace std;
 

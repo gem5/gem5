@@ -31,13 +31,13 @@
 #ifndef __ARCH_SPARC_ISA_HH__
 #define __ARCH_SPARC_ISA_HH__
 
+#include <ostream>
+#include <string>
+
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
 #include "config/full_system.hh"
 #include "cpu/cpuevent.hh"
-
-#include <string>
-#include <ostream>
 
 class Checkpoint;
 class EventManager;

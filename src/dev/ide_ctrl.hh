@@ -38,9 +38,9 @@
 #define __IDE_CTRL_HH__
 
 #include "base/bitunion.hh"
+#include "dev/io_device.hh"
 #include "dev/pcidev.hh"
 #include "dev/pcireg.h"
-#include "dev/io_device.hh"
 #include "params/IdeController.hh"
 
 class IdeDisk;

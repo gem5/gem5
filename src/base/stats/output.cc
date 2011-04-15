@@ -30,8 +30,8 @@
 
 #include <list>
 
-#include "base/statistics.hh"
 #include "base/stats/output.hh"
+#include "base/statistics.hh"
 #include "base/types.hh"
 #include "sim/eventq.hh"
 

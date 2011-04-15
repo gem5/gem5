@@ -34,11 +34,11 @@
 #include <deque>
 
 #include "arch/utility.hh"
-#include "cpu/timebuf.hh"
 #include "config/the_isa.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/rename_table.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/timebuf.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"

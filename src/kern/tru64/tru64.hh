@@ -42,23 +42,24 @@ class Tru64 {};
 
 #else //!FULL_SYSTEM
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #if defined(__OpenBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
-#include <sys/param.h>
 #include <sys/mount.h>
+#include <sys/param.h>
 #else
 #include <sys/statfs.h>
 #endif
 
 #include <dirent.h>
-#include <errno.h>
 #include <fcntl.h>
-#include <string.h>     // for memset()
 #include <unistd.h>
 
-#include "config/the_isa.hh"
+#include <cerrno>
+#include <cstring>     // for memset()
+
 #include "arch/alpha/registers.hh"
+#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "sim/core.hh"
 #include "sim/syscall_emul.hh"

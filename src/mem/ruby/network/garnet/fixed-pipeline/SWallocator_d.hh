@@ -34,8 +34,8 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class Router_d;
 class InputUnit_d;

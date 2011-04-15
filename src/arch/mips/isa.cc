@@ -29,8 +29,8 @@
  */
 
 #include "arch/mips/isa.hh"
-#include "arch/mips/mt_constants.hh"
 #include "arch/mips/mt.hh"
+#include "arch/mips/mt_constants.hh"
 #include "arch/mips/pra_constants.hh"
 #include "base/bitfield.hh"
 #include "cpu/base.hh"

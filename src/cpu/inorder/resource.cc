@@ -29,12 +29,12 @@
  *
  */
 
-#include <vector>
 #include <list>
+#include <vector>
 
 #include "base/str.hh"
-#include "cpu/inorder/resource.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/resource.hh"
 using namespace std;
 
 Resource::Resource(string res_name, int res_id, int res_width,

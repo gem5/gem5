@@ -36,9 +36,9 @@
 #ifndef __CACHESET_HH__
 #define __CACHESET_HH__
 
-#include "mem/cache/blk.hh" // base class
-#include <assert.h>
+#include <cassert>
 
+#include "mem/cache/blk.hh" // base class
 
 /**
  * An associative set of cache blocks.

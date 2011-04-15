@@ -33,12 +33,12 @@
 #define __INTR_CONTROL_HH__
 
 #include <vector>
+
 #include "base/misc.hh"
 #include "cpu/base.hh"
 #include "params/IntrControl.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
-
 
 class IntrControl : public SimObject
 {

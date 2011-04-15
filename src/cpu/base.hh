@@ -41,9 +41,9 @@
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
+#include "mem/mem_object.hh"
 #include "sim/eventq.hh"
 #include "sim/insttracer.hh"
-#include "mem/mem_object.hh"
 
 #if FULL_SYSTEM
 #include "arch/interrupts.hh"

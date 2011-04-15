@@ -40,9 +40,9 @@
 #ifndef __X86_LINUX_PROCESS_HH__
 #define __X86_LINUX_PROCESS_HH__
 
-#include "sim/process.hh"
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/process.hh"
+#include "sim/process.hh"
 
 namespace X86ISA {
 

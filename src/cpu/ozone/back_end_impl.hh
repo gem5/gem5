@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#include "encumbered/cpu/full/op_class.hh"
 #include "cpu/ozone/back_end.hh"
+#include "encumbered/cpu/full/op_class.hh"
 
 template <class Impl>
 BackEnd<Impl>::InstQueue::InstQueue(Params *params)

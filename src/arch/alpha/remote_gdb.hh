@@ -33,12 +33,12 @@
 
 #include <map>
 
-#include "arch/alpha/types.hh"
 #include "arch/alpha/kgdb.h"
-#include "base/remote_gdb.hh"
-#include "cpu/pc_event.hh"
+#include "arch/alpha/types.hh"
 #include "base/pollevent.hh"
+#include "base/remote_gdb.hh"
 #include "base/socket.hh"
+#include "cpu/pc_event.hh"
 
 class System;
 class ThreadContext;

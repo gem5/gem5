@@ -50,13 +50,13 @@
 #define __DEV_ARM_AMBA_DEVICE_HH__
 
 #include "base/range.hh"
-#include "dev/io_device.hh"
 #include "dev/arm/gic.hh"
+#include "dev/io_device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AmbaDevice.hh"
-#include "params/AmbaIntDevice.hh"
 #include "params/AmbaDmaDevice.hh"
+#include "params/AmbaIntDevice.hh"
 
 namespace AmbaDev {
 

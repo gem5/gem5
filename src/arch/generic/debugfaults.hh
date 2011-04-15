@@ -40,10 +40,10 @@
 #ifndef __ARCH_GENERIC_DEBUGFAULTS_HH__
 #define __ARCH_GENERIC_DEBUGFAULTS_HH__
 
+#include <string>
+
 #include "base/misc.hh"
 #include "sim/faults.hh"
-
-#include <string>
 
 namespace GenericISA
 {

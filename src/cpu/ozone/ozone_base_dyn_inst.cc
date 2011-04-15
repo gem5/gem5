@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/base_dyn_inst_impl.hh"
 #include "cpu/ozone/ozone_impl.hh"
+#include "cpu/base_dyn_inst_impl.hh"
 
 // Explicit instantiation
 template class BaseDynInst<OzoneImpl>;

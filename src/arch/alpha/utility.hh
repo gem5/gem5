@@ -32,9 +32,9 @@
 #ifndef __ARCH_ALPHA_UTILITY_HH__
 #define __ARCH_ALPHA_UTILITY_HH__
 
-#include "arch/alpha/types.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/registers.hh"
+#include "arch/alpha/types.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "cpu/static_inst.hh"

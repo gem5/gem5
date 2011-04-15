@@ -32,18 +32,17 @@
 #define __DEV_X86_INTDEV_HH__
 
 #include <cassert>
+#include <list>
 #include <string>
 
-#include "arch/x86/x86_traits.hh"
 #include "arch/x86/intmessage.hh"
+#include "arch/x86/x86_traits.hh"
 #include "mem/mem_object.hh"
 #include "mem/mport.hh"
-#include "sim/sim_object.hh"
-#include "params/X86IntSourcePin.hh"
-#include "params/X86IntSinkPin.hh"
 #include "params/X86IntLine.hh"
-
-#include <list>
+#include "params/X86IntSinkPin.hh"
+#include "params/X86IntSourcePin.hh"
+#include "sim/sim_object.hh"
 
 namespace X86ISA {
 

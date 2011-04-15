@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/fetch_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 
 template class DefaultFetch<O3CPUImpl>;

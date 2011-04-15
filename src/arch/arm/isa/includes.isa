@@ -46,8 +46,8 @@
 //
 
 output header {{
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
 #include "arch/arm/insts/branch.hh"
 #include "arch/arm/insts/macromem.hh"
@@ -67,21 +67,21 @@ output decoder {{
 #include "arch/arm/intregs.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
-#include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
 #include "cpu/thread_context.hh"
 
 using namespace ArmISA;
 }};
 
 output exec {{
+#include <cmath>
+
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 #include "base/condcodes.hh"
 #include "sim/pseudo_inst.hh"
-
-#include <cmath>
 #if defined(linux)
 #include <fenv.h>
 #endif

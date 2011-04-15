@@ -36,7 +36,6 @@
 #include <sys/param.h>
 #endif
 #include <netinet/in.h>
-
 #include <unistd.h>
 
 #include <deque>

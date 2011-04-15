@@ -33,9 +33,9 @@
 #include <list>
 #include <string>
 
-#include "base/cprintf.hh"
 #include "base/loader/hex_file.hh"
 #include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
 #include "mem/translating_port.hh"
 
 using namespace std;

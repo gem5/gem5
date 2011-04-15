@@ -31,8 +31,8 @@
 #ifndef __BASE_STATS_INFO_HH__
 #define __BASE_STATS_INFO_HH__
 
-#include "base/flags.hh"
 #include "base/stats/types.hh"
+#include "base/flags.hh"
 
 namespace Stats {
 

@@ -40,10 +40,10 @@
 #ifndef __ARCH_X86_INSTS_MACROOP_HH__
 #define __ARCH_X86_INSTS_MACROOP_HH__
 
-#include "arch/x86/emulenv.hh"
 #include "arch/x86/insts/badmicroop.hh"
-#include "arch/x86/types.hh"
 #include "arch/x86/insts/static_inst.hh"
+#include "arch/x86/emulenv.hh"
+#include "arch/x86/types.hh"
 
 namespace X86ISA
 {

@@ -38,15 +38,15 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "mem/ruby/buffers/MessageBufferNode.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/ruby/common/Address.hh"
 
 class MessageBuffer
 {

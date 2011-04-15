@@ -31,15 +31,15 @@
 #define __CPU_DIRECTEDTEST_RUBYDIRECTEDTESTER_HH__
 
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "mem/mem_object.hh"
-#include "mem/packet.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/system/RubyPort.hh"
+#include "mem/mem_object.hh"
+#include "mem/packet.hh"
 #include "params/RubyDirectedTester.hh"
 
 class DirectedGenerator;

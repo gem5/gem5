@@ -33,8 +33,8 @@
 
 #include <iostream>
 
-#include "base/types.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 
 namespace GenericISA

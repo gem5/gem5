@@ -47,7 +47,6 @@
 #include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
 #include "config/full_system.hh"
-
 #include "sim/serialize.hh"
 
 namespace ArmISA {

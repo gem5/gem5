@@ -28,12 +28,14 @@
  * Authors: Gabe Black
  */
 
-#include "tracechild.hh"
-#include <cstring>
-#include <errno.h>
-#include <iostream>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
+
+#include <cerrno>
+#include <cstring>
+#include <iostream>
+
+#include "tracechild.hh"
 
 using namespace std;
 

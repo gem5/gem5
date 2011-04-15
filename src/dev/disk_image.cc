@@ -34,9 +34,9 @@
 
 #include <sys/types.h>
 #include <sys/uio.h>
-#include <errno.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -45,8 +45,8 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "dev/disk_image.hh"
-#include "sim/sim_exit.hh"
 #include "sim/byteswap.hh"
+#include "sim/sim_exit.hh"
 
 using namespace std;
 

@@ -44,12 +44,12 @@
 #ifndef __CPU_O3_FETCH_HH__
 #define __CPU_O3_FETCH_HH__
 
-#include "arch/utility.hh"
 #include "arch/predecoder.hh"
+#include "arch/utility.hh"
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "config/the_isa.hh"
 #include "cpu/pc_event.hh"
+#include "cpu/timebuf.hh"
 #include "cpu/translation.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"

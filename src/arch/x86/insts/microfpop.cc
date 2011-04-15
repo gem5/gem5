@@ -37,9 +37,10 @@
  * Authors: Gabe Black
  */
 
+#include <string>
+
 #include "arch/x86/insts/microfpop.hh"
 #include "arch/x86/regs/misc.hh"
-#include <string>
 
 namespace X86ISA
 {

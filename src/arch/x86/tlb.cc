@@ -39,19 +39,17 @@
 
 #include <cstring>
 
-#include "config/full_system.hh"
-
-#include "arch/x86/faults.hh"
 #include "arch/x86/insts/microldstop.hh"
-#include "arch/x86/pagetable.hh"
 #include "arch/x86/regs/misc.hh"
+#include "arch/x86/faults.hh"
+#include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 

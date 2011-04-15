@@ -40,8 +40,9 @@
  * Authors: Ali Saidi
  */
 
-#include "arch/arm/system.hh"
 #include <iostream>
+
+#include "arch/arm/system.hh"
 
 using namespace std;
 using namespace Linux;

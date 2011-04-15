@@ -28,10 +28,10 @@
  * Authors: Kevin Lim
  */
 
-#include "sim/faults.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/ozone/dyn_inst.hh"
+#include "sim/faults.hh"
 
 #if FULL_SYSTEM
 #include "kern/kernel_stats.hh"

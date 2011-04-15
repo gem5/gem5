@@ -28,7 +28,6 @@
  * Authors: Korey Sewell
  */
 
-#include "cpu/base.hh"
-
-#include "cpu/o3/impl.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/impl.hh"
+#include "cpu/base.hh"

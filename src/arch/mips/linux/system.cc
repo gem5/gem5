@@ -39,17 +39,17 @@
  * up boot time.
  */
 
-#include "arch/vtophys.hh"
-#include "arch/mips/idle_event.hh"
 #include "arch/mips/linux/system.hh"
 #include "arch/mips/linux/threadinfo.hh"
+#include "arch/mips/idle_event.hh"
 #include "arch/mips/system.hh"
+#include "arch/vtophys.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 #include "dev/platform.hh"
-#include "kern/linux/printk.hh"
 #include "kern/linux/events.hh"
+#include "kern/linux/printk.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "sim/arguments.hh"

@@ -26,18 +26,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/str.hh"
 #include "base/misc.hh"
+#include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
-#include "mem/protocol/Protocol.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
-#include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/recorder/Tracer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"

@@ -31,8 +31,8 @@
 #ifndef __CPU_THREAD_CONTEXT_HH__
 #define __CPU_THREAD_CONTEXT_HH__
 
-#include <string>
 #include <iostream>
+#include <string>
 
 #include "arch/registers.hh"
 #include "arch/types.hh"

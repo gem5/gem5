@@ -36,9 +36,10 @@
 #define __ETHERDUMP_H__
 
 #include <fstream>
+
 #include "dev/etherpkt.hh"
-#include "sim/sim_object.hh"
 #include "params/EtherDump.hh"
+#include "sim/sim_object.hh"
 
 /*
  * Simple object for creating a simple pcap style packet trace

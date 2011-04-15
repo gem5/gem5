@@ -37,11 +37,10 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "arch/sparc/tlb.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
-#include "arch/sparc/tlb.hh"
-
 
 namespace SparcISA
 {

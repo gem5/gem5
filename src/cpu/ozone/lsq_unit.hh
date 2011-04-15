@@ -31,15 +31,15 @@
 #ifndef __CPU_OZONE_LSQ_UNIT_HH__
 #define __CPU_OZONE_LSQ_UNIT_HH__
 
+#include <algorithm>
 #include <map>
 #include <queue>
-#include <algorithm>
 
 #include "arch/faults.hh"
 #include "arch/types.hh"
+#include "base/hashmap.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
-#include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"
 #include "mem/mem_interface.hh"
 //#include "mem/page_table.hh"

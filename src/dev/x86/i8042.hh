@@ -31,11 +31,11 @@
 #ifndef __DEV_X86_I8042_HH__
 #define __DEV_X86_I8042_HH__
 
-#include "dev/io_device.hh"
-#include "dev/x86/intdev.hh"
-#include "params/I8042.hh"
-
 #include <queue>
+
+#include "dev/x86/intdev.hh"
+#include "dev/io_device.hh"
+#include "params/I8042.hh"
 
 namespace X86ISA
 {

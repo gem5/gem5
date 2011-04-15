@@ -31,13 +31,13 @@
 #ifndef __ARCH_X86_ISA_HH__
 #define __ARCH_X86_ISA_HH__
 
-#include "arch/x86/registers.hh"
+#include <iostream>
+#include <string>
+
 #include "arch/x86/regs/float.hh"
 #include "arch/x86/regs/misc.hh"
+#include "arch/x86/registers.hh"
 #include "base/types.hh"
-
-#include <string>
-#include <iostream>
 
 class Checkpoint;
 class EventManager;

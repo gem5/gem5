@@ -45,9 +45,9 @@
 #define __CPU_O3_COMMIT_HH__
 
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/timebuf.hh"
 
 class DerivO3CPUParams;
 

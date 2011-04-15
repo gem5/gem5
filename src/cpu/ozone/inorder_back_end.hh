@@ -33,14 +33,14 @@
 
 #include <list>
 
-#include "sim/faults.hh"
-#include "cpu/timebuf.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"
 #include "cpu/ozone/thread_state.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/thread_context.hh"
+#include "cpu/timebuf.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
+#include "sim/faults.hh"
 
 template <class Impl>
 class InorderBackEnd

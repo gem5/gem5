@@ -32,8 +32,8 @@
 #ifndef __ARCH_ALPHA_TYPES_HH__
 #define __ARCH_ALPHA_TYPES_HH__
 
-#include "base/types.hh"
 #include "arch/generic/types.hh"
+#include "base/types.hh"
 
 namespace AlphaISA {
 

@@ -44,12 +44,13 @@
 #ifndef TRACECHILD_ARM_HH
 #define TRACECHILD_ARM_HH
 
+#include <sys/ptrace.h>
+#include <sys/user.h>
+
 #include <cassert>
 #include <string>
-#include <sys/user.h>
-#include <sys/ptrace.h>
-#include "base/tracechild.hh"
 
+#include "base/tracechild.hh"
 
 class ARMTraceChild : public TraceChild
 {

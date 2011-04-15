@@ -222,15 +222,14 @@ class $py_ident(RubyController):
 #include <sstream>
 #include <string>
 
-#include "params/$c_ident.hh"
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/protocol/${ident}_ProfileDumper.hh"
+#include "mem/protocol/${ident}_Profiler.hh"
 #include "mem/protocol/TransitionResult.hh"
 #include "mem/protocol/Types.hh"
-#include "mem/protocol/${ident}_Profiler.hh"
-#include "mem/protocol/${ident}_ProfileDumper.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "params/$c_ident.hh"
 ''')
 
         seen_types = set()
@@ -419,8 +418,8 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 
 #include "base/cprintf.hh"
 #include "mem/protocol/${ident}_Controller.hh"
-#include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/${ident}_Event.hh"
+#include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
@@ -969,12 +968,12 @@ $c_ident::${{action.ident}}(const Address& addr)
 #include <cassert>
 
 #include "base/misc.hh"
+#include "mem/protocol/${ident}_Controller.hh"
+#include "mem/protocol/${ident}_Event.hh"
+#include "mem/protocol/${ident}_State.hh"
+#include "mem/protocol/Types.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
-#include "mem/protocol/${ident}_Controller.hh"
-#include "mem/protocol/${ident}_State.hh"
-#include "mem/protocol/${ident}_Event.hh"
-#include "mem/protocol/Types.hh"
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
@@ -1038,11 +1037,11 @@ ${ident}_Controller::wakeup()
 
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/protocol/${ident}_Controller.hh"
-#include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/${ident}_Event.hh"
+#include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/Types.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/System.hh"
 
 #define HASH_FUN(state, event)  ((int(state)*${ident}_Event_NUM)+int(event))
@@ -1261,8 +1260,8 @@ if (!%s.areNSlotsAvailable(%s))
 #include <iostream>
 #include <vector>
 
-#include "${ident}_Profiler.hh"
 #include "${ident}_Event.hh"
+#include "${ident}_Profiler.hh"
 
 typedef std::vector<${ident}_Profiler *> ${ident}_profilers;
 
@@ -1356,9 +1355,9 @@ ${ident}_ProfileDumper::dumpStats(std::ostream& out) const
 #include <cassert>
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/${ident}_Event.hh"
+#include "mem/protocol/${ident}_State.hh"
+#include "mem/ruby/common/Global.hh"
 
 class ${ident}_Profiler
 {

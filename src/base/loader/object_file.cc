@@ -29,24 +29,22 @@
  *          Steve Reinhardt
  */
 
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <cstdio>
 #include <list>
 #include <string>
 
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-
-#include "base/cprintf.hh"
-#include "base/loader/object_file.hh"
-#include "base/loader/symtab.hh"
-
-#include "base/loader/ecoff_object.hh"
 #include "base/loader/aout_object.hh"
+#include "base/loader/ecoff_object.hh"
 #include "base/loader/elf_object.hh"
+#include "base/loader/object_file.hh"
 #include "base/loader/raw_object.hh"
-
+#include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
 #include "mem/translating_port.hh"
 
 using namespace std;

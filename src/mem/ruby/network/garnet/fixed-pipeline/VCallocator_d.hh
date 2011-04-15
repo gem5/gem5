@@ -32,11 +32,11 @@
 #define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_VC_ALLOCATOR_D_HH__
 
 #include <iostream>
-#include <vector>
 #include <utility>
+#include <vector>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class Router_d;
 class InputUnit_d;

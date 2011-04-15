@@ -54,10 +54,10 @@
 #include "base/misc.hh"
 #include "base/range.hh"
 #include "base/types.hh"
+#include "mem/cache/prefetch/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/cache.hh"
 #include "mem/cache/mshr.hh"
-#include "mem/cache/prefetch/base.hh"
 #include "sim/sim_exit.hh"
 
 template<class TagStore>

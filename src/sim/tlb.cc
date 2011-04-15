@@ -30,8 +30,8 @@
 
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
-#include "sim/process.hh"
 #include "sim/faults.hh"
+#include "sim/process.hh"
 #include "sim/tlb.hh"
 
 Fault

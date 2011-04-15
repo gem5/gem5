@@ -28,8 +28,8 @@
  * Authors: Nathan Binkert
  */
 
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
 #include <list>
 #include <map>
 #include <string>

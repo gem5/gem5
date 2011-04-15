@@ -35,8 +35,8 @@
 #ifndef __MALTA_PCHIP_HH__
 #define __MALTA_PCHIP_HH__
 
-#include "dev/mips/malta.hh"
 #include "base/range.hh"
+#include "dev/mips/malta.hh"
 #include "dev/io_device.hh"
 #include "params/MaltaPChip.hh"
 

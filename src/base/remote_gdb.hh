@@ -31,13 +31,14 @@
 #ifndef __REMOTE_GDB_HH__
 #define __REMOTE_GDB_HH__
 
-#include <map>
 #include <sys/signal.h>
 
+#include <map>
+
 #include "arch/types.hh"
-#include "cpu/pc_event.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
+#include "cpu/pc_event.hh"
 
 class System;
 class ThreadContext;

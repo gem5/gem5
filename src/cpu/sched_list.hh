@@ -32,9 +32,9 @@
 #define SCHED_LIST_HH
 
 #include <list>
+
 #include "base/intmath.hh"
 #include "base/misc.hh"
-
 
 //  Any types you use this class for must be covered here...
 namespace {

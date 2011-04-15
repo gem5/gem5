@@ -38,8 +38,8 @@
  */
 
 #include "arch/x86/insts/badmicroop.hh"
-#include "arch/x86/isa_traits.hh"
 #include "arch/x86/decoder.hh"
+#include "arch/x86/isa_traits.hh"
 
 namespace X86ISA
 {

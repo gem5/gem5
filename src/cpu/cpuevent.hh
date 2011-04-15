@@ -32,6 +32,7 @@
 #define __CPU_CPUEVENT_HH__
 
 #include <vector>
+
 #include "sim/eventq.hh"
 
 class ThreadContext;

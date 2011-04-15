@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/decode_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 
 template class DefaultDecode<O3CPUImpl>;

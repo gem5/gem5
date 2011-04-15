@@ -37,9 +37,9 @@
 #ifndef __MEM_BRIDGE_HH__
 #define __MEM_BRIDGE_HH__
 
-#include <string>
 #include <list>
 #include <queue>
+#include <string>
 
 #include "base/fast_alloc.hh"
 #include "base/types.hh"

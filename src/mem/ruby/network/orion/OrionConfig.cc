@@ -31,8 +31,8 @@
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/network/orion/OrionConfig.hh"
 #include "mem/ruby/network/orion/ConfigFile.hh"
+#include "mem/ruby/network/orion/OrionConfig.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
 
 using namespace std;

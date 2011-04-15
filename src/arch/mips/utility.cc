@@ -32,12 +32,12 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/utility.hh"
-#include "config/full_system.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/static_inst.hh"
-#include "sim/serialize.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"
+#include "config/full_system.hh"
+#include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
+#include "sim/serialize.hh"
 
 #if FULL_SYSTEM
 #include "arch/mips/registers.hh"

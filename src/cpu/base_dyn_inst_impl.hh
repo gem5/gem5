@@ -42,8 +42,8 @@
 
 #include <iostream>
 #include <set>
-#include <string>
 #include <sstream>
+#include <string>
 
 #include "base/cprintf.hh"
 #include "base/trace.hh"

@@ -30,9 +30,9 @@
 
 #include <algorithm>
 
+#include "arch/isa_traits.hh"
 #include "arch/types.hh"
 #include "arch/utility.hh"
-#include "arch/isa_traits.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
 #include "config/the_isa.hh"

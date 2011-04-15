@@ -36,8 +36,8 @@
 #include <vector>
 
 #include "cpu/op_class.hh"
-#include "params/OpDesc.hh"
 #include "params/FUDesc.hh"
+#include "params/OpDesc.hh"
 #include "sim/sim_object.hh"
 
 ////////////////////////////////////////////////////////////////////////////

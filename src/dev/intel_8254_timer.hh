@@ -33,8 +33,8 @@
 #ifndef __DEV_8254_HH__
 #define __DEV_8254_HH__
 
-#include <string>
 #include <iostream>
+#include <string>
 
 #include "base/bitunion.hh"
 #include "base/types.hh"

@@ -33,8 +33,8 @@
 
 #include <utility>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class VirtualChannel_d
 {

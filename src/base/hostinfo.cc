@@ -28,12 +28,12 @@
  * Authors: Nathan Binkert
  */
 
-#include <ctype.h>
-#include <errno.h>
-#include <math.h>
 #include <unistd.h>
 
-#include <stdio.h>
+#include <cctype>
+#include <cerrno>
+#include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>

@@ -33,12 +33,12 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 #include "mem/ruby/network/orion/Allocator/RRArbiter.hh"
-#include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/FlipFlop.hh"
+#include "mem/ruby/network/orion/TechParameter.hh"
 
 using namespace std;
 

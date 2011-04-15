@@ -30,6 +30,7 @@
  */
 
 #include <iostream>
+
 #include "cpu/static_inst.hh"
 #include "sim/core.hh"
 

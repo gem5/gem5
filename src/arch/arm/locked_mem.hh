@@ -43,7 +43,6 @@
 #include "arch/arm/miscregs.hh"
 #include "mem/request.hh"
 
-
 namespace ArmISA
 {
 template <class XC>

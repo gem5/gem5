@@ -32,8 +32,8 @@
 #define __ORION_H__
 
 #include "mem/ruby/network/orion/OrionConfig.hh"
-#include "mem/ruby/network/orion/OrionRouter.hh"
 #include "mem/ruby/network/orion/OrionLink.hh"
+#include "mem/ruby/network/orion/OrionRouter.hh"
 
 #endif
 

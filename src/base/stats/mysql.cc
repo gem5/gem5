@@ -35,13 +35,13 @@
 #include <string>
 #include <vector>
 
-#include "base/misc.hh"
-#include "base/mysql.hh"
-#include "base/statistics.hh"
 #include "base/stats/info.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/mysql_run.hh"
 #include "base/stats/types.hh"
+#include "base/misc.hh"
+#include "base/mysql.hh"
+#include "base/statistics.hh"
 #include "base/str.hh"
 #include "base/types.hh"
 #include "base/userinfo.hh"

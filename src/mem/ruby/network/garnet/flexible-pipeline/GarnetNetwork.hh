@@ -34,8 +34,8 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/Network.hh"
 #include "params/GarnetNetwork.hh"
 

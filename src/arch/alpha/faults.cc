@@ -32,13 +32,13 @@
 #include "arch/alpha/ev5.hh"
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/tlb.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/base.hh"
 #include "base/trace.hh"
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 
 #if !FULL_SYSTEM
-#include "sim/process.hh"
 #include "mem/page_table.hh"
+#include "sim/process.hh"
 #endif
 
 namespace AlphaISA {

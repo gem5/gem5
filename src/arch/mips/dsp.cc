@@ -28,13 +28,13 @@
  * Authors: Brett Miller
  */
 
-#include "arch/mips/isa_traits.hh"
 #include "arch/mips/dsp.hh"
+#include "arch/mips/isa_traits.hh"
+#include "base/bitfield.hh"
+#include "base/misc.hh"
 #include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "sim/serialize.hh"
-#include "base/bitfield.hh"
-#include "base/misc.hh"
 
 using namespace MipsISA;
 using namespace std;

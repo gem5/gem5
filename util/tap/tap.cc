@@ -32,25 +32,21 @@ extern "C" {
 #include <pcap.h>
 }
 
-#include <dnet.h>
-
 #include <arpa/inet.h>
-
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-
-#include <errno.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <dnet.h>
 #include <fcntl.h>
 #include <libgen.h>
 #include <netdb.h>
 #include <poll.h>
-#include <signal.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <csignal>
 #include <list>
 #include <string>
 

@@ -35,8 +35,8 @@
 #ifndef __DEV_SIMPLE_DISK_HH__
 #define __DEV_SIMPLE_DISK_HH__
 
-#include "sim/sim_object.hh"
 #include "params/SimpleDisk.hh"
+#include "sim/sim_object.hh"
 
 class DiskImage;
 class System;

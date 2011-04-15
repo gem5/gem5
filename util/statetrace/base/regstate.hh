@@ -31,8 +31,9 @@
 #ifndef REGSTATE_H
 #define REGSTATE_H
 
-#include <string>
 #include <stdint.h>
+
+#include <string>
 
 class RegState
 {

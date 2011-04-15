@@ -39,14 +39,14 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
-#include "cpu/thread_context.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
+#include "cpu/thread_context.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "sim/byteswap.hh"
-#include "sim/system.hh"
 #include "sim/debug.hh"
+#include "sim/system.hh"
 
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"

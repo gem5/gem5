@@ -32,15 +32,15 @@
 #ifndef __CPU_INORDER_MULT_DIV_UNIT_HH__
 #define __CPU_INORDER_MULT_DIV_UNIT_HH__
 
-#include <vector>
 #include <list>
 #include <string>
+#include <vector>
 
+#include "cpu/inorder/first_stage.hh"
+#include "cpu/inorder/inorder_dyn_inst.hh"
+#include "cpu/inorder/resource.hh"
 #include "cpu/func_unit.hh"
 #include "cpu/op_class.hh"
-#include "cpu/inorder/first_stage.hh"
-#include "cpu/inorder/resource.hh"
-#include "cpu/inorder/inorder_dyn_inst.hh"
 
 class MDUEvent;
 

@@ -31,13 +31,13 @@
 #ifndef __BASE__CP_ANNOTATE_HH__
 #define __BASE__CP_ANNOTATE_HH__
 
-#include <string>
 #include <list>
-#include <vector>
 #include <map>
+#include <string>
+#include <vector>
 
-#include "base/hashmap.hh"
 #include "base/loader/symtab.hh"
+#include "base/hashmap.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/cp_annotate.hh"

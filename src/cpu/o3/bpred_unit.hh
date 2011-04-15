@@ -35,11 +35,11 @@
 
 #include "base/statistics.hh"
 #include "base/types.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/pred/2bit_local.hh"
 #include "cpu/pred/btb.hh"
 #include "cpu/pred/ras.hh"
 #include "cpu/pred/tournament.hh"
+#include "cpu/inst_seq.hh"
 
 class DerivO3CPUParams;
 

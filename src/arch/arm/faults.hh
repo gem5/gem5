@@ -47,9 +47,9 @@
 
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
+#include "base/misc.hh"
 #include "config/full_system.hh"
 #include "sim/faults.hh"
-#include "base/misc.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 

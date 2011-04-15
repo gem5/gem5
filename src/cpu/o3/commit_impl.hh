@@ -45,15 +45,15 @@
 #include <string>
 
 #include "arch/utility.hh"
-#include "base/cp_annotate.hh"
 #include "base/loader/symtab.hh"
-#include "cpu/timebuf.hh"
+#include "base/cp_annotate.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
-#include "cpu/exetrace.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/timebuf.hh"
 #include "params/DerivO3CPU.hh"
 
 #if USE_CHECKER

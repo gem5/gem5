@@ -28,7 +28,7 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/commit_impl.hh"
+#include "cpu/o3/isa_specific.hh"
 
 template class DefaultCommit<O3CPUImpl>;

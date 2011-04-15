@@ -40,8 +40,8 @@
 #include "base/range.hh"
 #include "dev/io_device.hh"
 // #include "dev/alpha/tsunami.hh"
-#include "params/IsaFake.hh"
 #include "mem/packet.hh"
+#include "params/IsaFake.hh"
 
 /**
  * IsaFake is a device that returns, BadAddr, 1 or 0 on all reads and

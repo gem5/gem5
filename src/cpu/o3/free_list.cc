@@ -29,7 +29,6 @@
  */
 
 #include "base/trace.hh"
-
 #include "cpu/o3/free_list.hh"
 
 SimpleFreeList::SimpleFreeList(ThreadID activeThreads,

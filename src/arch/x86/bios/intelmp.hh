@@ -44,13 +44,12 @@
 #include <vector>
 
 #include "base/bitfield.hh"
-#include "sim/sim_object.hh"
-
 #include "enums/X86IntelMPAddressType.hh"
 #include "enums/X86IntelMPInterruptType.hh"
 #include "enums/X86IntelMPPolarity.hh"
 #include "enums/X86IntelMPRangeList.hh"
 #include "enums/X86IntelMPTriggerMode.hh"
+#include "sim/sim_object.hh"
 
 class FunctionalPort;
 

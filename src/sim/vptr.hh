@@ -31,8 +31,8 @@
 #ifndef __ARCH_ALPHA_VPTR_HH__
 #define __ARCH_ALPHA_VPTR_HH__
 
-#include "arch/vtophys.hh"
 #include "arch/isa_traits.hh"
+#include "arch/vtophys.hh"
 #include "mem/vport.hh"
 
 class ThreadContext;

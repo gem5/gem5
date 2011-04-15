@@ -32,11 +32,10 @@
 #ifndef __STR_HH__
 #define __STR_HH__
 
+#include <cctype>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <ctype.h>
 
 template<class> class Hash;
 template<>

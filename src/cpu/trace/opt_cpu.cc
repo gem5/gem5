@@ -36,8 +36,8 @@
 
 #include <algorithm> // For heap functions.
 
-#include "cpu/trace/opt_cpu.hh"
 #include "cpu/trace/reader/mem_trace_reader.hh"
+#include "cpu/trace/opt_cpu.hh"
 #include "params/OptCPU.hh"
 #include "sim/sim_events.hh"
 

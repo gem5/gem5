@@ -38,8 +38,9 @@
 #define __BASE_TAGS_HH__
 
 #include <string>
-#include "base/statistics.hh"
+
 #include "base/callback.hh"
+#include "base/statistics.hh"
 
 class BaseCache;
 

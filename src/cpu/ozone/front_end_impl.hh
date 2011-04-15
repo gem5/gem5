@@ -28,18 +28,18 @@
  * Authors: Kevin Lim
  */
 
-#include "sim/faults.hh"
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/exetrace.hh"
 #include "cpu/ozone/front_end.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/thread_context.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "sim/faults.hh"
 
 #if USE_CHECKER
 #include "cpu/checker/cpu.hh"

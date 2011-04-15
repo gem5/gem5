@@ -36,7 +36,8 @@
 #ifndef __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
 #define __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
 
-#include <limits.h>
+#include <climits>
+
 #include "mem/cache/prefetch/base.hh"
 
 class StridePrefetcher : public BasePrefetcher

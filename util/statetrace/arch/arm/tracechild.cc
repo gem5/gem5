@@ -41,11 +41,12 @@
  *          Gabe Black
  */
 
-#include <iostream>
-#include <errno.h>
 #include <stdint.h>
-#include <cstring>
+
+#include <cerrno>
 #include <cstdio>
+#include <cstring>
+#include <iostream>
 
 #include "arch/arm/tracechild.hh"
 

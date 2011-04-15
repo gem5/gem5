@@ -29,9 +29,9 @@
  *
  */
 
-#include "cpu/inorder/pipeline_traits.hh"
-#include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/resources/resource_list.hh"
+#include "cpu/inorder/inorder_dyn_inst.hh"
+#include "cpu/inorder/pipeline_traits.hh"
 
 using namespace std;
 

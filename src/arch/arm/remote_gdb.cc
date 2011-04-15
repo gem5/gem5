@@ -139,22 +139,22 @@
 #include "arch/arm/vtophys.hh"
 #endif
 
-#include "arch/arm/utility.hh"
-#include "arch/arm/remote_gdb.hh"
+#include "arch/arm/pagetable.hh"
 #include "arch/arm/registers.hh"
+#include "arch/arm/remote_gdb.hh"
+#include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
+#include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
-#include "cpu/static_inst.hh"
+#include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "sim/system.hh"
-#include "arch/arm/pagetable.hh"
-#include "mem/page_table.hh"
 
 using namespace std;
 using namespace ArmISA;

@@ -37,8 +37,9 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/linux/linux.hh"
 #include <fcntl.h>
+
+#include "arch/x86/linux/linux.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable X86Linux64::openFlagTable[] = {

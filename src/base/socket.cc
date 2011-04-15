@@ -28,18 +28,17 @@
  * Authors: Nathan Binkert
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-
-#include <errno.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include "base/types.hh"
+#include <cerrno>
+
 #include "base/misc.hh"
 #include "base/socket.hh"
+#include "base/types.hh"
 
 using namespace std;
 

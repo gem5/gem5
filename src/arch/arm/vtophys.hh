@@ -37,7 +37,6 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
 
-
 class ThreadContext;
 class FunctionalPort;
 

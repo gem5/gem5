@@ -42,8 +42,8 @@
 
 #include <cassert>
 
-#include "arch/x86/types.hh"
 #include "arch/x86/regs/misc.hh"
+#include "arch/x86/types.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"

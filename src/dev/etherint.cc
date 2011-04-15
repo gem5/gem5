@@ -28,8 +28,8 @@
  * Authors: Nathan Binkert
  */
 
-#include "dev/etherint.hh"
 #include "base/misc.hh"
+#include "dev/etherint.hh"
 #include "sim/sim_object.hh"
 
 void

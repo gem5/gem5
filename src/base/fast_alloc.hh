@@ -62,9 +62,9 @@
 // collapse the destructor call chain back up the inheritance
 // hierarchy.
 
-#include "config/no_fast_alloc.hh"
-#include "config/force_fast_alloc.hh"
 #include "config/fast_alloc_stats.hh"
+#include "config/force_fast_alloc.hh"
+#include "config/no_fast_alloc.hh"
 
 // By default, we want to enable FastAlloc in any build other than
 // m5.debug.  (FastAlloc's reuse policies can mask allocation bugs, so

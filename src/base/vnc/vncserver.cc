@@ -42,19 +42,19 @@
  * Implementiation of a VNC server
  */
 
-#include <cstdio>
-
 #include <sys/ioctl.h>
 #include <sys/termios.h>
-#include <errno.h>
 #include <poll.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstdio>
+
+#include "base/vnc/vncserver.hh"
 #include "base/atomicio.hh"
 #include "base/misc.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "base/vnc/vncserver.hh"
 #include "sim/byteswap.hh"
 
 using namespace std;

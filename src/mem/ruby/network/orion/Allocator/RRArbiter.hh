@@ -36,8 +36,8 @@
 #ifndef __RRARBITER_H__
 #define __RRARBITER_H__
 
-#include "mem/ruby/network/orion/Type.hh"
 #include "mem/ruby/network/orion/Allocator/Arbiter.hh"
+#include "mem/ruby/network/orion/Type.hh"
 
 class TechParameter;
 

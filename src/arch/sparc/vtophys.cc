@@ -30,10 +30,10 @@
 
 #include <string>
 
-#include "arch/sparc/vtophys.hh"
 #include "arch/sparc/tlb.hh"
-#include "base/compiler.hh"
+#include "arch/sparc/vtophys.hh"
 #include "base/chunk_generator.hh"
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/vport.hh"

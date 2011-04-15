@@ -41,8 +41,8 @@
 
 #if FULL_SYSTEM
 #include "dev/etherdevice.hh"
-#include "dev/etherobject.hh"
 #include "dev/etherint.hh"
+#include "dev/etherobject.hh"
 #endif
 
 using namespace std;

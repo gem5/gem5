@@ -36,11 +36,11 @@
 #include <vector>
 
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
-#include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/comm.hh"
-#include "params/InOrderCPU.hh"
+#include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/timebuf.hh"
+#include "params/InOrderCPU.hh"
 
 class InOrderCPU;
 

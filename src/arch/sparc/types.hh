@@ -31,9 +31,9 @@
 #ifndef __ARCH_SPARC_TYPES_HH__
 #define __ARCH_SPARC_TYPES_HH__
 
+#include "arch/generic/types.hh"
 #include "base/bigint.hh"
 #include "base/types.hh"
-#include "arch/generic/types.hh"
 
 namespace SparcISA
 {

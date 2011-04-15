@@ -117,19 +117,19 @@
  */
 
 #include <sys/signal.h>
-
-#include <string>
 #include <unistd.h>
 
-#include "arch/vtophys.hh"
+#include <string>
+
 #include "arch/sparc/remote_gdb.hh"
+#include "arch/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"

@@ -127,15 +127,15 @@
 #endif
 
 #include "arch/alpha/kgdb.h"
-#include "arch/alpha/utility.hh"
 #include "arch/alpha/regredir.hh"
 #include "arch/alpha/remote_gdb.hh"
+#include "arch/alpha/utility.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "sim/system.hh"

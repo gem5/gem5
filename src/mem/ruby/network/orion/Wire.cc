@@ -33,13 +33,13 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 
 #include "base/misc.hh"
-#include "mem/ruby/network/orion/Wire.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
+#include "mem/ruby/network/orion/Wire.hh"
 
 using namespace std;
 

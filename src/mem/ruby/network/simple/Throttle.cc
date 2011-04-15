@@ -31,8 +31,8 @@
 #include "base/cprintf.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
+#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/system/System.hh"
 

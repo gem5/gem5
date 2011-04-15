@@ -36,13 +36,13 @@
 #include <set>
 #include <string>
 
-#include "sim/faults.hh"
-#include "cpu/timebuf.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/ozone/rename_table.hh"
 #include "cpu/ozone/thread_state.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/timebuf.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
+#include "sim/faults.hh"
 
 template <class>
 class Checker;

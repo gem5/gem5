@@ -34,8 +34,8 @@
 #include <list>
 
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "config/the_isa.hh"
+#include "cpu/timebuf.hh"
 
 class DerivO3CPUParams;
 

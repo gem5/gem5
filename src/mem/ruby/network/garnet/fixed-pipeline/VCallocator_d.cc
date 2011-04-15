@@ -28,11 +28,11 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/fixed-pipeline/VCallocator_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/VCallocator_d.hh"
 
 VCallocator_d::VCallocator_d(Router_d *router)
 {

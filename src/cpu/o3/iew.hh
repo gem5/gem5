@@ -46,11 +46,11 @@
 #include <queue>
 
 #include "base/statistics.hh"
-#include "cpu/timebuf.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
-#include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/lsq.hh"
+#include "cpu/o3/scoreboard.hh"
+#include "cpu/timebuf.hh"
 
 class DerivO3CPUParams;
 class FUPool;

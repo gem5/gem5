@@ -40,10 +40,10 @@
  * Authors: Nathan Binkert
  */
 
-#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <fstream>
 #include <string>
 
@@ -52,8 +52,8 @@
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
+#include "cpu/thread_context.hh"
 #include "params/BaseCPU.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"

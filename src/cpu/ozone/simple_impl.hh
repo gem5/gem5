@@ -33,10 +33,10 @@
 
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/cpu.hh"
+#include "cpu/ozone/dyn_inst.hh"
 #include "cpu/ozone/front_end.hh"
 #include "cpu/ozone/inorder_back_end.hh"
 #include "cpu/ozone/null_predictor.hh"
-#include "cpu/ozone/dyn_inst.hh"
 #include "cpu/ozone/simple_params.hh"
 
 //template <class Impl>

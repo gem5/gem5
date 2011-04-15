@@ -40,8 +40,8 @@
 
 #include <cassert>
 
-#include "base/misc.hh"
 #include "base/vnc/convert.hh"
+#include "base/misc.hh"
 
 /** @file
  * This file provides conversion functions for a variety of video modes

@@ -32,14 +32,13 @@
 #include <cassert>
 #include <string>
 
-#include "gelf.h"
-
-#include "base/bitfield.hh"
 #include "base/loader/elf_object.hh"
 #include "base/loader/symtab.hh"
+#include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "sim/byteswap.hh"
+#include "gelf.h"
 
 using namespace std;
 

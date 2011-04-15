@@ -40,7 +40,7 @@
  * Authors: Gabe Black
  */
 
-#include <assert.h>
+#include <cassert>
 
 #ifndef __ARCH_ARM_INTREGS_HH__
 #define __ARCH_ARM_INTREGS_HH__

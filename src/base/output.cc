@@ -28,12 +28,12 @@
  * Authors: Nathan Binkert
  */
 
-#include <errno.h>
-#include <limits.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <cerrno>
+#include <climits>
+#include <cstdlib>
 #include <fstream>
 
 #include <gzstream.hh>

@@ -32,8 +32,8 @@
 #ifndef __ARCH_SPARC_ISA_TRAITS_HH__
 #define __ARCH_SPARC_ISA_TRAITS_HH__
 
-#include "arch/sparc/types.hh"
 #include "arch/sparc/sparc_traits.hh"
+#include "arch/sparc/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
 

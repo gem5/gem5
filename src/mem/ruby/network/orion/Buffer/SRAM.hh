@@ -36,9 +36,9 @@
 #ifndef __SRAM_H__
 #define __SRAM_H__
 
-#include "mem/ruby/network/orion/Type.hh"
 #include "mem/ruby/network/orion/OrionConfig.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"
+#include "mem/ruby/network/orion/Type.hh"
 
 class OutdrvUnit;
 class AmpUnit;

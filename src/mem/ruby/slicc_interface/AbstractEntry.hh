@@ -31,9 +31,9 @@
 
 #include <iostream>
 
+#include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/protocol/AccessPermission.hh"
 
 class DataBlock;
 

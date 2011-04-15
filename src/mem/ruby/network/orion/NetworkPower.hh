@@ -32,12 +32,12 @@
 #ifndef POWER_TRACE_H
 #define POWER_TRACE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 
 //int RW :

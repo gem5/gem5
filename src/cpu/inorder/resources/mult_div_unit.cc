@@ -29,11 +29,12 @@
  *
  */
 
-#include <vector>
 #include <list>
+#include <vector>
+
 #include "cpu/inorder/resources/mult_div_unit.hh"
-#include "cpu/inorder/resource_pool.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/resource_pool.hh"
 #include "cpu/op_class.hh"
 
 using namespace std;

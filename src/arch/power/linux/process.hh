@@ -35,7 +35,6 @@
 
 #include "arch/power/process.hh"
 
-
 /// A process with emulated PPC/Linux syscalls.
 class PowerLinuxProcess : public PowerLiveProcess
 {

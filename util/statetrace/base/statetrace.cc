@@ -28,22 +28,22 @@
  * Authors: Gabe Black
  */
 
-#include "base/arch_check.h"
-
-#include <cstring>
-#include <errno.h>
-#include <fstream>
-#include <iostream>
-#include <netdb.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <string>
 #include <sys/ptrace.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <netdb.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <string>
+
+#include "base/arch_check.h"
 #include "tracechild.hh"
 
 using namespace std;

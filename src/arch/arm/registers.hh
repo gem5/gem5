@@ -43,8 +43,8 @@
 #ifndef __ARCH_ARM_REGISTERS_HH__
 #define __ARCH_ARM_REGISTERS_HH__
 
-#include "arch/arm/max_inst_regs.hh"
 #include "arch/arm/intregs.hh"
+#include "arch/arm/max_inst_regs.hh"
 #include "arch/arm/miscregs.hh"
 
 namespace ArmISA {

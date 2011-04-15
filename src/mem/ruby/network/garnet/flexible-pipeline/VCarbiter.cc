@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/flexible-pipeline/VCarbiter.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
+#include "mem/ruby/network/garnet/flexible-pipeline/VCarbiter.hh"
 
 VCarbiter::VCarbiter(Router *router)
 {

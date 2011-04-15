@@ -30,8 +30,8 @@
  */
 
 #include "arch/isa_traits.hh"
-#include "cpu/inst_seq.hh"
 #include "cpu/ooo_cpu/ea_list.hh"
+#include "cpu/inst_seq.hh"
 
 void
 EAList::addAddr(const InstSeqNum &new_sn, const Addr &new_ea)

@@ -32,12 +32,13 @@
 #define TRACECHILD_SPARC_HH
 
 #include <asm-sparc64/reg.h>
-#include <cassert>
-#include <ostream>
-#include <stdint.h>
-#include <string>
 #include <sys/ptrace.h>
 #include <sys/types.h>
+#include <stdint.h>
+
+#include <cassert>
+#include <ostream>
+#include <string>
 
 #include "base/tracechild.hh"
 

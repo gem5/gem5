@@ -41,8 +41,8 @@
  */
 
 #include "base/trace.hh"
-#include "dev/arm/amba_fake.hh"
 #include "dev/arm/amba_device.hh"
+#include "dev/arm/amba_fake.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 

@@ -50,7 +50,7 @@
 #include <algorithm>
 #include <cassert>
 #ifdef __SUNPRO_CC
-#include <math.h>
+#include <cmath>
 #endif
 #include <cmath>
 #include <functional>
@@ -59,13 +59,13 @@
 #include <string>
 #include <vector>
 
+#include "base/stats/info.hh"
+#include "base/stats/types.hh"
+#include "base/stats/visit.hh"
 #include "base/cast.hh"
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
 #include "base/refcnt.hh"
-#include "base/stats/info.hh"
-#include "base/stats/types.hh"
-#include "base/stats/visit.hh"
 #include "base/str.hh"
 #include "base/types.hh"
 

@@ -30,8 +30,8 @@
 
 #include <string>
 
-#include "cpu/timebuf.hh"
 #include "cpu/activity.hh"
+#include "cpu/timebuf.hh"
 
 using namespace std;
 

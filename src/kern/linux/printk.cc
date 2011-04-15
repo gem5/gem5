@@ -30,11 +30,12 @@
  */
 
 #include <sys/types.h>
+
 #include <algorithm>
 
-#include "sim/arguments.hh"
 #include "base/trace.hh"
 #include "kern/linux/printk.hh"
+#include "sim/arguments.hh"
 
 using namespace std;
 

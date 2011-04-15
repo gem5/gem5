@@ -38,10 +38,10 @@
 #include <fstream>
 
 #include "base/hashmap.hh"
-#include "sim/sim_object.hh"
-#include "params/DiskImage.hh"
 #include "params/CowDiskImage.hh"
+#include "params/DiskImage.hh"
 #include "params/RawDiskImage.hh"
+#include "sim/sim_object.hh"
 
 #define SectorSize (512)
 

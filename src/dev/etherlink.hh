@@ -40,7 +40,6 @@
 #include "dev/etherobject.hh"
 #include "dev/etherpkt.hh"
 #include "params/EtherLink.hh"
-#include "params/EtherLink.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 

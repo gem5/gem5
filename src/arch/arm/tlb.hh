@@ -46,9 +46,9 @@
 #include <map>
 
 #include "arch/arm/isa_traits.hh"
+#include "arch/arm/pagetable.hh"
 #include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
-#include "arch/arm/pagetable.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
 #include "params/ArmTLB.hh"

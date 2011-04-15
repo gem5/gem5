@@ -29,11 +29,11 @@
  *
  */
 
-#include "cpu/inorder/resource_pool.hh"
-#include "cpu/inorder/resources/resource_list.hh"
-
-#include <vector>
 #include <list>
+#include <vector>
+
+#include "cpu/inorder/resources/resource_list.hh"
+#include "cpu/inorder/resource_pool.hh"
 
 using namespace std;
 using namespace ThePipeline;

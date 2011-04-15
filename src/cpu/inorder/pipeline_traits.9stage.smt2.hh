@@ -33,13 +33,12 @@
 #define __CPU_INORDER_PIPELINE_IMPL_HH__
 
 #include <list>
+#include <map>
 #include <queue>
 #include <vector>
-#include <map>
 
 #include "arch/isa_traits.hh"
 #include "cpu/inorder/params.hh"
-
 
 class InOrderDynInst;
 

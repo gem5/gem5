@@ -45,9 +45,9 @@
 #include "dev/etherlink.hh"
 #include "dev/etherpkt.hh"
 #include "params/EtherLink.hh"
+#include "sim/core.hh"
 #include "sim/serialize.hh"
 #include "sim/system.hh"
-#include "sim/core.hh"
 
 using namespace std;
 

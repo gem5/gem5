@@ -39,7 +39,6 @@
 
 #include "mem/request.hh"
 
-
 namespace SparcISA
 {
 template <class XC>

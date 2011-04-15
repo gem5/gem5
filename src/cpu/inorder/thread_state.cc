@@ -30,9 +30,9 @@
  */
 
 #include "arch/isa_traits.hh"
-#include "cpu/exetrace.hh"
-#include "cpu/inorder/thread_state.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/thread_state.hh"
+#include "cpu/exetrace.hh"
 
 using namespace TheISA;
 

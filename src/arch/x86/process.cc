@@ -41,13 +41,13 @@
  *          Ali Saidi
  */
 
-#include "arch/x86/isa_traits.hh"
-#include "arch/x86/process.hh"
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/regs/segment.hh"
+#include "arch/x86/isa_traits.hh"
+#include "arch/x86/process.hh"
 #include "arch/x86/types.hh"
-#include "base/loader/object_file.hh"
 #include "base/loader/elf_object.hh"
+#include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

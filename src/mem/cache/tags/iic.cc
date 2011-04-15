@@ -40,8 +40,8 @@
 
 #include "base/intmath.hh"
 #include "base/trace.hh"
-#include "mem/cache/base.hh"
 #include "mem/cache/tags/iic.hh"
+#include "mem/cache/base.hh"
 #include "sim/core.hh"
 
 using namespace std;

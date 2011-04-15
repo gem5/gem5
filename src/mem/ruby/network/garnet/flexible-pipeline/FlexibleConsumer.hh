@@ -32,8 +32,8 @@
 #define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_FLEXIBLE_CONSUMER_HH__
 
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class FlexibleConsumer : public Consumer
 {

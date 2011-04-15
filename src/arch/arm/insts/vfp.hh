@@ -40,10 +40,12 @@
 #ifndef __ARCH_ARM_INSTS_VFP_HH__
 #define __ARCH_ARM_INSTS_VFP_HH__
 
+#include <fenv.h>
+
+#include <cmath>
+
 #include "arch/arm/insts/misc.hh"
 #include "arch/arm/miscregs.hh"
-#include <fenv.h>
-#include <cmath>
 
 namespace ArmISA
 {

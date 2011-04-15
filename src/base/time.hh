@@ -33,7 +33,6 @@
 #define __BASE_TIME_HH__
 
 #include <sys/time.h>
-
 #include <inttypes.h>
 
 #include <cmath>

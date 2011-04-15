@@ -36,8 +36,9 @@
  * between a single level of the memory heirarchy (ie L1->L2).
  */
 
-#include <iostream>
 #include <cstring>
+#include <iostream>
+
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"

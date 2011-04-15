@@ -31,8 +31,8 @@
 #include <list>
 #include <string>
 
-#include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"

@@ -40,12 +40,12 @@
 #ifndef __ARCH_X86_FAULTS_HH__
 #define __ARCH_X86_FAULTS_HH__
 
+#include <string>
+
 #include "base/bitunion.hh"
 #include "base/misc.hh"
 #include "sim/faults.hh"
 #include "sim/tlb.hh"
-
-#include <string>
 
 namespace X86ISA
 {

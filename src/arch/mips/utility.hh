@@ -33,9 +33,8 @@
 
 #ifndef __ARCH_MIPS_UTILITY_HH__
 #define __ARCH_MIPS_UTILITY_HH__
-#include "config/full_system.hh"
-#include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
+#include "arch/mips/types.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"

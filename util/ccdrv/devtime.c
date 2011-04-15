@@ -28,20 +28,20 @@
  * Authors: Ali Saidi
  */
 
-#include <linux/module.h>
-#include <linux/config.h>
-#include <linux/moduleparam.h>
-#include <linux/init.h>
-#include <linux/fs.h>
-#include <asm/uaccess.h>
-#include <linux/kernel.h>
 #include <asm/io.h>
 #include <asm/page.h>
+#include <asm/uaccess.h>
+#include <linux/config.h>
+#include <linux/fs.h>
+#include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/moduleparam.h>
 #include <linux/netdevice.h>
 
 #ifdef __i386__
-#include <asm/processor.h>
 #include <asm/msr.h>
+#include <asm/processor.h>
 #endif
 
 #define DRIVER_AUTHOR "Ali Saidi"

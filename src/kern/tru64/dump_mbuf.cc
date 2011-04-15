@@ -29,12 +29,13 @@
  */
 
 #include <sys/types.h>
+
 #include <algorithm>
 
 #include "arch/isa_traits.hh"
 #include "arch/vtophys.hh"
-#include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"

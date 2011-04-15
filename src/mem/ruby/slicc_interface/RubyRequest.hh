@@ -31,12 +31,12 @@
 
 #include <ostream>
 
-#include "mem/packet.hh"
-#include "mem/protocol/RubyAccessMode.hh"
-#include "mem/protocol/RubyRequestType.hh"
 #include "mem/protocol/Message.hh"
 #include "mem/protocol/PrefetchBit.hh"
+#include "mem/protocol/RubyAccessMode.hh"
+#include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/packet.hh"
 
 typedef void* RubyPortHandle;
 

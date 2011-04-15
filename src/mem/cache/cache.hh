@@ -40,11 +40,9 @@
 #define __CACHE_HH__
 
 #include "base/misc.hh" // fatal, panic, and warn
-
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/mshr.hh"
-
 #include "sim/eventq.hh"
 
 //Forward decleration

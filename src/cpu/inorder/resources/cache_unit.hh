@@ -32,9 +32,9 @@
 #ifndef __CPU_INORDER_CACHE_UNIT_HH__
 #define __CPU_INORDER_CACHE_UNIT_HH__
 
-#include <vector>
 #include <list>
 #include <string>
+#include <vector>
 
 #include "arch/predecoder.hh"
 #include "arch/tlb.hh"

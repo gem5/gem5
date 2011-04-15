@@ -36,12 +36,11 @@
 #ifndef __ITX_READER_HH__
 #define __ITX_READER_HH__
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 
 #include "cpu/trace/reader/mem_trace_reader.hh"
 #include "mem/mem_req.hh"
-
 
 /**
  * A memory trace reader for the Intel ITX memory trace format.

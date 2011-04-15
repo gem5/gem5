@@ -34,13 +34,13 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
+#include "mem/ruby/network/garnet/NetworkHeader.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 class NetworkMessage;
 class MessageBuffer;

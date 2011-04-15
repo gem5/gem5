@@ -38,11 +38,10 @@
  */
 
 #include <list>
-#include "x11keysym/keysym.h"
 
 #include "base/misc.hh"
 #include "dev/ps2.hh"
-
+#include "x11keysym/keysym.h"
 
 namespace Ps2 {
 

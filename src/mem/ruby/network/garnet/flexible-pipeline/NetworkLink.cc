@@ -28,8 +28,8 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
+#include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 
 NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
 {

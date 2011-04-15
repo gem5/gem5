@@ -33,13 +33,13 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
-#include <string>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
+#include <string>
 
-#include "mem/ruby/network/orion/TechParameter.hh"
 #include "mem/ruby/network/orion/OrionConfig.hh"
+#include "mem/ruby/network/orion/TechParameter.hh"
 
 using namespace std;
 

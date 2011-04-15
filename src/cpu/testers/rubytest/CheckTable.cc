@@ -30,7 +30,6 @@
 #include "base/intmath.hh"
 #include "cpu/testers/rubytest/Check.hh"
 #include "cpu/testers/rubytest/CheckTable.hh"
-#include "cpu/testers/rubytest/CheckTable.hh"
 
 CheckTable::CheckTable(int _num_cpu_sequencers, RubyTester* _tester)
     : m_num_cpu_sequencers(_num_cpu_sequencers), m_tester_ptr(_tester)

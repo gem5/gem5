@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/ozone/ozone_impl.hh"
 #include "cpu/ozone/lsq_unit_impl.hh"
+#include "cpu/ozone/ozone_impl.hh"
 
 // Force the instantiation of LDSTQ for all the implementations we care about.
 template class OzoneLSQ<OzoneImpl>;

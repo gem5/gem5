@@ -39,9 +39,9 @@
 
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "dev/mips/malta.hh"
 #include "dev/mips/malta_pchip.hh"
 #include "dev/mips/maltareg.h"
-#include "dev/mips/malta.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"

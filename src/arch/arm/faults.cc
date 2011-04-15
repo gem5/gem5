@@ -43,9 +43,9 @@
  */
 
 #include "arch/arm/faults.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/base.hh"
 #include "base/trace.hh"
+#include "cpu/base.hh"
+#include "cpu/thread_context.hh"
 
 namespace ArmISA
 {

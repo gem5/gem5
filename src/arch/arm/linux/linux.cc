@@ -29,9 +29,9 @@
  * Authors: Stephen Hines
  */
 
-#include "arch/arm/linux/linux.hh"
-
 #include <fcntl.h>
+
+#include "arch/arm/linux/linux.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable ArmLinux::openFlagTable[] = {

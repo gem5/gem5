@@ -36,8 +36,8 @@
 
 #include <algorithm> // For min
 
-#include "cpu/trace/trace_cpu.hh"
 #include "cpu/trace/reader/mem_trace_reader.hh"
+#include "cpu/trace/trace_cpu.hh"
 #include "mem/base_mem.hh" // For PARAM constructor
 #include "mem/mem_interface.hh"
 #include "params/TraceCPU.hh"

@@ -37,9 +37,9 @@
 #ifndef __MEM_BUS_HH__
 #define __MEM_BUS_HH__
 
-#include <string>
-#include <set>
 #include <list>
+#include <set>
+#include <string>
 
 #include "base/hashmap.hh"
 #include "base/range.hh"

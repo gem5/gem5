@@ -38,9 +38,9 @@
 #include <list>
 
 #include "base/printable.hh"
-#include "sim/core.hh"          // for Tick
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "sim/core.hh"          // for Tick
 
 /**
  * Cache block status bit assignments

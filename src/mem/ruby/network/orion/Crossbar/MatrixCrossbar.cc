@@ -33,8 +33,8 @@
  *           Kambiz Samadi (Orion 2.0, UC San Diego)
  */
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 #include "mem/ruby/network/orion/Crossbar/MatrixCrossbar.hh"
 #include "mem/ruby/network/orion/TechParameter.hh"

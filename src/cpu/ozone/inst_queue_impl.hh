@@ -38,9 +38,8 @@
 
 #include <vector>
 
-#include "sim/core.hh"
-
 #include "cpu/ozone/inst_queue.hh"
+#include "sim/core.hh"
 #if 0
 template <class Impl>
 InstQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,

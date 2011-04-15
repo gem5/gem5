@@ -32,23 +32,23 @@
  */
 
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
 
 #include "arch/tlb.hh"
-#include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
+#include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/cpuevent.hh"
-#include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
+#include "cpu/thread_context.hh"
 #include "params/BaseCPU.hh"
-#include "sim/sim_exit.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
 // Hack

@@ -34,14 +34,15 @@
 %include <std_string.i>
 
 %{
-#include "base/statistics.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/text.hh"
+#include "base/statistics.hh"
 #include "sim/core.hh"
 #include "sim/stat_control.hh"
 %}
 
 %import "base/stats/types.hh"
+
 %include "base/stats/info.hh"
 
 namespace Stats {

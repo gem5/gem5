@@ -41,18 +41,18 @@
 #define __ARCH_X86_TLB_HH__
 
 #include <list>
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "arch/x86/pagetable.hh"
 #include "arch/x86/regs/segment.hh"
+#include "arch/x86/pagetable.hh"
 #include "config/full_system.hh"
 #include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
 #include "sim/fault_fwd.hh"
-#include "sim/tlb.hh"
 #include "sim/sim_object.hh"
+#include "sim/tlb.hh"
 
 class ThreadContext;
 class Packet;

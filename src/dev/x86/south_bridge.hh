@@ -31,8 +31,8 @@
 #ifndef __DEV_X86_SOUTH_BRIDGE_HH__
 #define __DEV_X86_SOUTH_BRIDGE_HH__
 
-#include "sim/sim_object.hh"
 #include "params/SouthBridge.hh"
+#include "sim/sim_object.hh"
 
 namespace X86ISA
 {

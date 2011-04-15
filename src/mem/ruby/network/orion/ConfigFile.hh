@@ -42,11 +42,11 @@
 #ifndef CONFIGFILE_H
 #define CONFIGFILE_H
 
-#include <string>
-#include <map>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <map>
 #include <sstream>
+#include <string>
 
 using std::string;
 

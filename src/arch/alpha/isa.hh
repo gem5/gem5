@@ -31,10 +31,9 @@
 #ifndef __ARCH_ALPHA_ISA_HH__
 #define __ARCH_ALPHA_ISA_HH__
 
-#include <string.h>
-
-#include <string>
+#include <cstring>
 #include <iostream>
+#include <string>
 
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/types.hh"
