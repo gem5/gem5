@@ -46,6 +46,7 @@
 #include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Predecoder.hh"
 
 namespace ArmISA
 {

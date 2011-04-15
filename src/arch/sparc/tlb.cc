@@ -38,6 +38,8 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/IPR.hh"
+#include "debug/TLB.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 #include "sim/system.hh"

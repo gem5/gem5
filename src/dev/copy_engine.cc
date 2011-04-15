@@ -36,6 +36,7 @@
 
 #include "base/cp_annotate.hh"
 #include "base/trace.hh"
+#include "debug/DMACopyEngine.hh"
 #include "dev/copy_engine.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

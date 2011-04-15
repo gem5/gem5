@@ -44,6 +44,7 @@
 
 #include "base/inet.hh"
 #include "base/trace.hh"
+#include "debug/EthernetAll.hh"
 #include "dev/i8254xGBe.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

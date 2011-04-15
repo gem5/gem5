@@ -37,6 +37,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/ExecEnable.hh"
 #include "params/InOrderTrace.hh"
 
 using namespace std;
@@ -64,7 +65,7 @@ InOrderTraceRecord *
 InOrderTrace::getInstRecord(unsigned num_stages, bool stage_tracing,
         ThreadContext *tc)
 {
-    if (!IsOn(ExecEnable))
+    if (!Debug::ExecEnable)
         return NULL;
 
     if (!Trace::enabled)

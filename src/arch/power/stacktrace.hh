@@ -37,6 +37,7 @@
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "debug/Stack.hh"
 
 class ThreadContext;
 class StackTrace;

@@ -48,6 +48,8 @@
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/rename.hh"
+#include "debug/Activity.hh"
+#include "debug/Rename.hh"
 #include "params/DerivO3CPU.hh"
 
 using namespace std;

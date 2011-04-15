@@ -28,6 +28,7 @@
  * Authors: Ali Saidi
  */
 
+#include "debug/Bus.hh"
 #include "mem/tport.hh"
 
 using namespace std;

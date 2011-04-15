@@ -45,12 +45,14 @@
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
+
 #if !FULL_SYSTEM
 #include "arch/x86/isa_traits.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #else
 #include "arch/x86/tlb.hh"
+#include "debug/Faults.hh"
 #endif
 
 namespace X86ISA

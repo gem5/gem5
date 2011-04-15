@@ -33,6 +33,7 @@
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/nativetrace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/ExecRegDelta.hh"
 #include "params/X86NativeTrace.hh"
 #include "sim/byteswap.hh"
 

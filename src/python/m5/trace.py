@@ -27,26 +27,12 @@
 # Authors: Nathan Binkert
 
 import internal
-import traceflags as flags
 import util
 
-from internal.trace import clear, output, set, ignore
+from internal.trace import output, ignore
 
 def disable():
     internal.trace.cvar.enabled = False
 
 def enable():
     internal.trace.cvar.enabled = True
-
-def help():
-    print "Base Flags:"
-    for flag in flags.basic:
-        print "    %s: %s" % (flag, flags.descriptions[flag])
-    print
-    print "Compound Flags:"
-    for flag in flags.compound:
-        if flag == 'All':
-            continue
-        print "    %s: %s" % (flag, flags.descriptions[flag])
-        util.printList(flags.compoundMap[flag], indent=8)
-        print

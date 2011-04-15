@@ -42,6 +42,7 @@
 #include "base/intmath.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "debug/MMU.hh"
 #include "mem/page_table.hh"
 #include "sim/faults.hh"
 #include "sim/process.hh"

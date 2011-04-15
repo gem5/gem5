@@ -34,6 +34,7 @@
  */
 
 #include "base/trace.hh"
+#include "debug/PciConfigAll.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcireg.h"
 #include "dev/platform.hh"

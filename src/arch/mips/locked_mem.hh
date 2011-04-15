@@ -40,6 +40,7 @@
 #include "arch/registers.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "debug/LLSC.hh"
 #include "mem/request.hh"
 
 namespace MipsISA

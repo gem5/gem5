@@ -37,6 +37,8 @@
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Flow.hh"
+#include "debug/Interrupt.hh"
 #include "params/AlphaInterrupts.hh"
 #include "sim/sim_object.hh"
 

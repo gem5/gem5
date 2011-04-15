@@ -32,6 +32,7 @@
 
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/mem_dep_unit.hh"
+#include "debug/MemDepUnit.hh"
 #include "params/DerivO3CPU.hh"
 
 template <class MemDepPred, class Impl>

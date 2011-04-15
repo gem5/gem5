@@ -60,6 +60,7 @@
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/SyscallVerbose.hh"
 #include "mem/page_table.hh"
 #include "mem/translating_port.hh"
 #include "sim/byteswap.hh"

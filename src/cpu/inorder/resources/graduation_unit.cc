@@ -30,6 +30,7 @@
  */
 
 #include "cpu/inorder/resources/graduation_unit.hh"
+#include "debug/InOrderGraduation.hh"
 
 using namespace ThePipeline;
 

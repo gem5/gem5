@@ -173,6 +173,10 @@ TraceFlag('IntrControl')
 TraceFlag('PCEvent')
 TraceFlag('Quiesce')
 
+CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
+    'ExecFaulting', 'ExecFetchSeq', 'ExecOpClass', 'ExecRegDelta',
+    'ExecResult', 'ExecSpeculative', 'ExecSymbol', 'ExecThread',
+    'ExecTicks', 'ExecMicro', 'ExecMacro' ])
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
     'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecFaulting' ])
 CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',

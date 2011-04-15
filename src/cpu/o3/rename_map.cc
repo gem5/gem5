@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "cpu/o3/rename_map.hh"
+#include "debug/Rename.hh"
 
 using namespace std;
 

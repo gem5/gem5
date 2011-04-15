@@ -48,6 +48,7 @@
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Stack.hh"
 #include "mem/page_table.hh"
 #include "mem/translating_port.hh"
 #include "sim/byteswap.hh"

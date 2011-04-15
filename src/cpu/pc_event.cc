@@ -40,6 +40,7 @@
 #include "cpu/base.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/thread_context.hh"
+#include "debug/PCEvent.hh"
 #include "sim/core.hh"
 #include "sim/system.hh"
 

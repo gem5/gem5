@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "base/trace.hh"
-#include "base/traceflags.hh"
 #include "cpu/o3/comm.hh"
 
 /**

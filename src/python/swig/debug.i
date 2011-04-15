@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2010 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,11 +32,62 @@
 %module(package="m5.internal") debug
 
 %{
+#include <cassert>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "base/debug.hh"
 #include "base/types.hh"
 #include "sim/debug.hh"
+
+using namespace std;
+
+typedef map<string, Debug::Flag *> FlagsMap;
+typedef vector<Debug::Flag *> FlagsVec;
+
+namespace Debug {
+extern int allFlagsVersion;
+FlagsMap &allFlags();
+}
+
+inline int
+getAllFlagsVersion()
+{
+    return Debug::allFlagsVersion;
+}
+
+inline FlagsVec
+getAllFlags()
+{
+    FlagsMap &flagsMap = Debug::allFlags();
+
+    FlagsVec flags(flagsMap.size());
+
+    int index = 0;
+    FlagsMap::iterator i = flagsMap.begin();
+    FlagsMap::iterator end = flagsMap.end();
+    for (; i != end; ++i) {
+        assert(index < flags.size());
+        flags[index++] = i->second;
+    }
+
+    return flags;
+}
+
 %}
 
+%ignore Debug::SimpleFlag::operator!;
+
+%include <std_string.i>
+%include <std_vector.i>
 %include <stdint.i>
 
+%include "base/debug.hh"
 %include "base/types.hh"
 %include "sim/debug.hh"
+
+%template(AllFlags) std::vector<Debug::Flag *>;
+
+int getAllFlagsVersion();
+std::vector<Debug::Flag *> getAllFlags();

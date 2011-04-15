@@ -417,6 +417,8 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include <string>
 
 #include "base/cprintf.hh"
+#include "debug/RubyGenerated.hh"
+#include "debug/RubySlicc.hh"
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
@@ -968,6 +970,7 @@ $c_ident::${{action.ident}}(const Address& addr)
 #include <cassert>
 
 #include "base/misc.hh"
+#include "debug/RubySlicc.hh"
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
@@ -1037,6 +1040,8 @@ ${ident}_Controller::wakeup()
 
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "debug/ProtocolTrace.hh"
+#include "debug/RubyGenerated.hh"
 #include "mem/protocol/${ident}_Controller.hh"
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"

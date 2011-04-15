@@ -37,6 +37,7 @@
 #include <iostream>
 #include <vector>
 
+#include "debug/RubyMemory.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Set.hh"

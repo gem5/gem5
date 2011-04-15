@@ -31,6 +31,7 @@
 #include "base/intmath.hh"
 #include "base/trace.hh"
 #include "cpu/pred/btb.hh"
+#include "debug/Fetch.hh"
 
 DefaultBTB::DefaultBTB(unsigned _numEntries,
                        unsigned _tagBits,

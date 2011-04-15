@@ -29,6 +29,7 @@
  */
 
 #include "base/stl_helpers.hh"
+#include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/InVcState.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/OutVcState.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"

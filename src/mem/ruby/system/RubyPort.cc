@@ -31,6 +31,8 @@
 #include "arch/x86/insts/microldstop.hh"
 #endif // X86_ISA
 #include "cpu/testers/rubytest/RubyTester.hh"
+#include "debug/MemoryAccess.hh"
+#include "debug/Ruby.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "mem/physical.hh"

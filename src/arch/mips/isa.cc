@@ -35,6 +35,7 @@
 #include "base/bitfield.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/MipsPRA.hh"
 
 namespace MipsISA
 {

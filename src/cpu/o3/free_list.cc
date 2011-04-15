@@ -30,6 +30,7 @@
 
 #include "base/trace.hh"
 #include "cpu/o3/free_list.hh"
+#include "debug/FreeList.hh"
 
 SimpleFreeList::SimpleFreeList(ThreadID activeThreads,
                                unsigned _numLogicalIntRegs,

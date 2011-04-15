@@ -50,6 +50,8 @@
 #include "base/output.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
+#include "debug/Terminal.hh"
+#include "debug/TerminalVerbose.hh"
 #include "dev/platform.hh"
 #include "dev/terminal.hh"
 #include "dev/uart.hh"

@@ -41,6 +41,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/ExecAll.hh"
 #include "enums/OpClass.hh"
 
 using namespace std;
@@ -59,22 +60,21 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 {
     ostream &outs = Trace::output();
 
-    if (IsOn(ExecTicks))
+    if (Debug::ExecTicks)
         dumpTicks(outs);
 
     outs << thread->getCpuPtr()->name() << " ";
 
-    if (IsOn(ExecSpeculative))
+    if (Debug::ExecSpeculative)
         outs << (misspeculating ? "-" : "+") << " ";
 
-    if (IsOn(ExecThread))
+    if (Debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";
 
     std::string sym_str;
     Addr sym_addr;
     Addr cur_pc = pc.instAddr();
-    if (debugSymbolTable
-        && IsOn(ExecSymbol)
+    if (debugSymbolTable && Debug::ExecSymbol
 #if FULL_SYSTEM
         && !inUserMode(thread)
 #endif
@@ -104,25 +104,25 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
     if (ran) {
         outs << " : ";
 
-        if (IsOn(ExecOpClass)) {
+        if (Debug::ExecOpClass) {
             outs << Enums::OpClassStrings[inst->opClass()] << " : ";
         }
 
-        if (IsOn(ExecResult) && predicate == false) {
+        if (Debug::ExecResult && predicate == false) {
             outs << "Predicated False";
         }
 
-        if (IsOn(ExecResult) && data_status != DataInvalid) {
+        if (Debug::ExecResult && data_status != DataInvalid) {
             ccprintf(outs, " D=%#018x", data.as_int);
         }
 
-        if (IsOn(ExecEffAddr) && addr_valid)
+        if (Debug::ExecEffAddr && addr_valid)
             outs << " A=0x" << hex << addr;
 
-        if (IsOn(ExecFetchSeq) && fetch_seq_valid)
+        if (Debug::ExecFetchSeq && fetch_seq_valid)
             outs << "  FetchSeq=" << dec << fetch_seq;
 
-        if (IsOn(ExecCPSeq) && cp_seq_valid)
+        if (Debug::ExecCPSeq && cp_seq_valid)
             outs << "  CPSeq=" << dec << cp_seq;
     }
 
@@ -143,14 +143,14 @@ Trace::ExeTracerRecord::dump()
      * finishes. Macroops then behave like regular instructions and don't
      * complete/print when they fault.
      */
-    if (IsOn(ExecMacro) && staticInst->isMicroop() &&
-            ((IsOn(ExecMicro) &&
-             macroStaticInst && staticInst->isFirstMicroop()) ||
-            (!IsOn(ExecMicro) &&
+    if (Debug::ExecMacro && staticInst->isMicroop() &&
+        ((Debug::ExecMicro &&
+            macroStaticInst && staticInst->isFirstMicroop()) ||
+            (!Debug::ExecMicro &&
              macroStaticInst && staticInst->isLastMicroop()))) {
         traceInst(macroStaticInst, false);
     }
-    if (IsOn(ExecMicro) || !staticInst->isMicroop()) {
+    if (Debug::ExecMicro || !staticInst->isMicroop()) {
         traceInst(staticInst, true);
     }
 }

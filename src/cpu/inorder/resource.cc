@@ -35,6 +35,10 @@
 #include "base/str.hh"
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/resource.hh"
+#include "debug/RefCount.hh"
+#include "debug/ResReqCount.hh"
+#include "debug/Resource.hh"
+
 using namespace std;
 
 Resource::Resource(string res_name, int res_id, int res_width,

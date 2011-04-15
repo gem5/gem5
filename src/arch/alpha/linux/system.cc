@@ -48,6 +48,7 @@
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Thread.hh"
 #include "dev/platform.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"

@@ -42,6 +42,11 @@
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resource_pool.hh"
+#include "debug/Activity.hh"
+#include "debug/InOrderCachePort.hh"
+#include "debug/InOrderStall.hh"
+#include "debug/RefCount.hh"
+#include "debug/ThreadModel.hh"
 #include "mem/request.hh"
 
 using namespace std;

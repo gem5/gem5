@@ -39,6 +39,7 @@
 
 #include "base/range_ops.hh"
 #include "base/trace.hh"
+#include "debug/BusBridge.hh"
 #include "mem/bridge.hh"
 #include "params/Bridge.hh"
 

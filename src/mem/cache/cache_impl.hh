@@ -54,6 +54,8 @@
 #include "base/misc.hh"
 #include "base/range.hh"
 #include "base/types.hh"
+#include "debug/Cache.hh"
+#include "debug/CachePort.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/cache.hh"

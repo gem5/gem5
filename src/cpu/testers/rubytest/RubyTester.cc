@@ -30,6 +30,7 @@
 #include "base/misc.hh"
 #include "cpu/testers/rubytest/Check.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
+#include "debug/RubyTest.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"

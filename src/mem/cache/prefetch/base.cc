@@ -38,6 +38,7 @@
 #include "arch/isa_traits.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "debug/HWPrefetch.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/base.hh"
 #include "mem/request.hh"

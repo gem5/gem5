@@ -35,6 +35,8 @@
 #include "config/the_isa.hh"
 #include "cpu/simple/atomic.hh"
 #include "cpu/exetrace.hh"
+#include "debug/ExecFaulting.hh"
+#include "debug/SimpleCPU.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/AtomicSimpleCPU.hh"

@@ -42,6 +42,8 @@
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "debug/FloatRegs.hh"
+#include "debug/IntRegs.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/eventq.hh"

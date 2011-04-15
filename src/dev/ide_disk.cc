@@ -43,6 +43,7 @@
 #include "base/cprintf.hh" // csprintf
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "debug/IdeDisk.hh"
 #include "dev/disk_image.hh"
 #include "dev/ide_ctrl.hh"
 #include "dev/ide_disk.hh"

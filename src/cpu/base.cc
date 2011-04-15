@@ -45,6 +45,7 @@
 #include "cpu/cpuevent.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
+#include "debug/SyscallVerbose.hh"
 #include "params/BaseCPU.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"

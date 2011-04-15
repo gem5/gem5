@@ -36,6 +36,7 @@
 #include "base/compiler.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/VtoPhys.hh"
 #include "mem/vport.hh"
 
 using namespace std;

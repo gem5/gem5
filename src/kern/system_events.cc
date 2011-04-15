@@ -34,6 +34,7 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
+#include "debug/PCEvent.hh"
 #include "kern/system_events.hh"
 
 using namespace TheISA;

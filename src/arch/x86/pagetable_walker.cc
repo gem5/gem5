@@ -44,6 +44,7 @@
 #include "base/bitfield.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/PageTableWalker.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 #include "sim/system.hh"

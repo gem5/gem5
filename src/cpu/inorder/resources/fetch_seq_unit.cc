@@ -32,6 +32,8 @@
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/fetch_seq_unit.hh"
 #include "cpu/inorder/resource_pool.hh"
+#include "debug/InOrderFetchSeq.hh"
+#include "debug/InOrderStall.hh"
 
 using namespace std;
 using namespace TheISA;

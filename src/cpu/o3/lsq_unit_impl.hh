@@ -47,6 +47,9 @@
 #include "config/use_checker.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
+#include "debug/Activity.hh"
+#include "debug/IEW.hh"
+#include "debug/LSQUnit.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 

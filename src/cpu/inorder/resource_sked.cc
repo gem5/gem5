@@ -35,6 +35,7 @@
 
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resource_sked.hh"
+#include "debug/SkedCache.hh"
 
 using namespace std;
 using namespace ThePipeline;

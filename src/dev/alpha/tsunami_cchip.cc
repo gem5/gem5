@@ -42,6 +42,8 @@
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "cpu/thread_context.hh"
+#include "debug/IPI.hh"
+#include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunamireg.h"

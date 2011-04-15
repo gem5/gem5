@@ -50,6 +50,8 @@
 #include "config/the_isa.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/exetrace.hh"
+#include "debug/DynInst.hh"
+#include "debug/IQ.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
 

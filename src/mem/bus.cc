@@ -38,6 +38,9 @@
 
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "debug/Bus.hh"
+#include "debug/BusAddrRanges.hh"
+#include "debug/MMU.hh"
 #include "mem/bus.hh"
 
 Bus::Bus(const BusParams *p)

@@ -36,6 +36,8 @@
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/resource_pool.hh"
 #include "cpu/op_class.hh"
+#include "debug/InOrderMDU.hh"
+#include "debug/Resource.hh"
 
 using namespace std;
 using namespace ThePipeline;

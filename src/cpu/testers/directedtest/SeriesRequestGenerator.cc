@@ -30,6 +30,7 @@
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
 #include "cpu/testers/directedtest/SeriesRequestGenerator.hh"
+#include "debug/DirectedTest.hh"
 
 SeriesRequestGenerator::SeriesRequestGenerator(const Params *p)
     : DirectedGenerator(p)

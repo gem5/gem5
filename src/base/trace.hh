@@ -33,23 +33,22 @@
 #define __BASE_TRACE_HH__
 
 #include <string>
-#include <vector>
 
 #include "base/cprintf.hh"
+#include "base/debug.hh"
 #include "base/match.hh"
-#include "base/traceflags.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
 
 namespace Trace {
 
+using Debug::SimpleFlag;
+using Debug::CompoundFlag;
+
 std::ostream &output();
 void setOutput(const std::string &filename);
 
 extern bool enabled;
-typedef std::vector<bool> FlagVec;
-extern FlagVec flags;
-inline bool IsOn(int t) { return flags[t]; }
 bool changeFlag(const char *str, bool value);
 void dumpStatus();
 
@@ -85,25 +84,28 @@ inline const std::string &name() { return Trace::DefaultName; }
 
 #if TRACING_ON
 
-#define DTRACE(x) (Trace::IsOn(Trace::x) && Trace::enabled)
+#define DTRACE(x) ((Debug::x) && Trace::enabled)
 
 #define DDUMP(x, data, count) do {                              \
+    using namespace Debug;                                      \
     if (DTRACE(x))                                              \
         Trace::dump(curTick(), name(), data, count);              \
 } while (0)
 
 #define DPRINTF(x, ...) do {                                    \
+    using namespace Debug;                                      \
     if (DTRACE(x))                                              \
         Trace::dprintf(curTick(), name(), __VA_ARGS__);           \
 } while (0)
 
-#define DPRINTFS(x,s, ...) do {                                    \
+#define DPRINTFS(x, s, ...) do {                                \
+    using namespace Debug;                                      \
     if (DTRACE(x))                                              \
-        Trace::dprintf(curTick(), s->name(), __VA_ARGS__);           \
+        Trace::dprintf(curTick(), s->name(), __VA_ARGS__);      \
 } while (0)
 
-
 #define DPRINTFR(x, ...) do {                                   \
+    using namespace Debug;                                      \
     if (DTRACE(x))                                              \
         Trace::dprintf((Tick)-1, std::string(), __VA_ARGS__);   \
 } while (0)

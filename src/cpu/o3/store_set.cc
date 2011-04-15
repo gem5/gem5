@@ -32,6 +32,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/o3/store_set.hh"
+#include "debug/StoreSet.hh"
 
 StoreSet::StoreSet(int _SSIT_size, int _LFST_size)
     : SSITSize(_SSIT_size), LFSTSize(_LFST_size)

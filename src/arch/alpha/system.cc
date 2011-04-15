@@ -37,6 +37,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
+#include "debug/Loader.hh"
 #include "mem/physical.hh"
 #include "mem/vport.hh"
 #include "params/AlphaSystem.hh"

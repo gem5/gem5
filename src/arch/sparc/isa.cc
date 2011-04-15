@@ -35,6 +35,8 @@
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/MiscRegs.hh"
+#include "debug/Timer.hh"
 
 namespace SparcISA
 {

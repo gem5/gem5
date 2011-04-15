@@ -29,3 +29,65 @@
 import internal
 
 from internal.debug import schedBreakCycle, setRemoteGDBPort
+
+def help():
+    print "Base Flags:"
+    for flag in flags.basic:
+        print "    %s: %s" % (flag, flags.descriptions[flag])
+    print
+    print "Compound Flags:"
+    for flag in flags.compound:
+        if flag == 'All':
+            continue
+        print "    %s: %s" % (flag, flags.descriptions[flag])
+        util.printList(flags.compoundMap[flag], indent=8)
+        print
+
+class AllFlags(object):
+    def __init__(self):
+        self._version = -1
+        self._dict = {}
+
+    def _update(self):
+        current_version = internal.debug.getAllFlagsVersion()
+        if self._version == current_version:
+            return
+
+        self._dict.clear()
+        for flag in internal.debug.getAllFlags():
+            self._dict[flag.name()] = flag
+        self._version = current_version
+
+    def __contains__(self, item):
+        self._update()
+        return item in self._dict
+
+    def __getitem__(self, item):
+        self._update()
+        return self._dict[item]
+
+    def keys(self):
+        self._update()
+        return self._dict.keys()
+
+    def values(self):
+        self._update()
+        return self._dict.values()
+
+    def items(self):
+        self._update()
+        return self._dict.items()
+
+    def iterkeys(self):
+        self._update()
+        return self._dict.iterkeys()
+
+    def itervalues(self):
+        self._update()
+        return self._dict.itervalues()
+
+    def iteritems(self):
+        self._update()
+        return self._dict.iteritems()
+
+flags = AllFlags()

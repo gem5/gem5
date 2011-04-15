@@ -33,6 +33,7 @@
 #include "base/misc.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Fault.hh"
 #include "mem/page_table.hh"
 #include "sim/faults.hh"
 #include "sim/process.hh"

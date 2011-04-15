@@ -38,6 +38,8 @@
 #include <vector>
 
 #include "base/trace.hh"
+#include "debug/Ethernet.hh"
+#include "debug/EthernetData.hh"
 #include "dev/etherbus.hh"
 #include "dev/etherdump.hh"
 #include "dev/etherint.hh"

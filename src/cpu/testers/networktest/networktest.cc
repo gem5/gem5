@@ -37,6 +37,7 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "cpu/testers/networktest/networktest.hh"
+#include "debug/NetworkTest.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"

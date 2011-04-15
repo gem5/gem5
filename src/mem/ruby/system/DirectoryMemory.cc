@@ -27,6 +27,7 @@
  */
 
 #include "base/intmath.hh"
+#include "debug/RubyCache.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/system/System.hh"

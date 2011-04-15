@@ -61,6 +61,8 @@
 #include "base/types.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
+#include "debug/LLSC.hh"
+#include "debug/MemoryAccess.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
 #include "sim/eventq.hh"

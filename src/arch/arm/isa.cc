@@ -39,6 +39,8 @@
  */
 
 #include "arch/arm/isa.hh"
+#include "debug/Arm.hh"
+#include "debug/MiscRegs.hh"
 #include "sim/faults.hh"
 #include "sim/stat_control.hh"
 

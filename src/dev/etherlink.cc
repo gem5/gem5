@@ -40,6 +40,8 @@
 
 #include "base/random.hh"
 #include "base/trace.hh"
+#include "debug/Ethernet.hh"
+#include "debug/EthernetData.hh"
 #include "dev/etherdump.hh"
 #include "dev/etherint.hh"
 #include "dev/etherlink.hh"

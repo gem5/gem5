@@ -28,6 +28,7 @@
 
 #include <cassert>
 
+#include "debug/RubyNetwork.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/protocol/TopologyType.hh"

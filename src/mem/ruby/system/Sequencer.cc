@@ -29,6 +29,8 @@
 #include "base/misc.hh"
 #include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
+#include "debug/MemoryAccess.hh"
+#include "debug/ProtocolTrace.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Global.hh"

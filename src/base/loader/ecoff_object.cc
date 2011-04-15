@@ -35,6 +35,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/Loader.hh"
 
 // Only alpha will be able to load ecoff files for now.
 // base/types.hh and ecoff_machdep.h must be before the other .h files

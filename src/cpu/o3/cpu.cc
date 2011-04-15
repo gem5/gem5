@@ -40,6 +40,9 @@
 #include "cpu/activity.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Activity.hh"
+#include "debug/O3CPU.hh"
+#include "debug/Quiesce.hh"
 #include "enums/MemoryMode.hh"
 #include "sim/core.hh"
 #include "sim/stat_control.hh"
@@ -57,6 +60,7 @@
 
 #if THE_ISA == ALPHA_ISA
 #include "arch/alpha/osfpal.hh"
+#include "debug/Activity.hh"
 #endif
 
 class BaseCPUParams;

@@ -32,9 +32,7 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
-#include <list>
 #include <string>
-#include <vector>
 
 #include "base/misc.hh"
 #include "base/output.hh"
@@ -45,8 +43,8 @@
 using namespace std;
 
 namespace Trace {
+
 const string DefaultName("global");
-FlagVec flags(NumFlags, false);
 bool enabled = false;
 
 //
@@ -149,63 +147,4 @@ dump(Tick when, const std::string &name, const void *d, int len)
     }
 }
 
-bool
-changeFlag(const char *s, bool value)
-{
-    using namespace Trace;
-    std::string str(s);
-
-    for (int i = 0; i < numFlagStrings; ++i) {
-        if (str != flagStrings[i])
-            continue;
-
-        if (i < NumFlags) {
-            flags[i] = value;
-        } else {
-            i -= NumFlags;
-
-            const Flags *flagVec = compoundFlags[i];
-            for (int j = 0; flagVec[j] != -1; ++j) {
-                if (flagVec[j] < NumFlags)
-                    flags[flagVec[j]] = value;
-            }
-        }
-
-        return true;
-    }
-
-    // the flag was not found.
-    return false;
-}
-
-void
-dumpStatus()
-{
-    using namespace Trace;
-    for (int i = 0; i < numFlagStrings; ++i) {
-        if (flags[i])
-            cprintf("%s\n", flagStrings[i]);
-    }
-}
-
 } // namespace Trace
-
-
-// add a set of functions that can easily be invoked from gdb
-void
-setTraceFlag(const char *string)
-{
-    Trace::changeFlag(string, true);
-}
-
-void
-clearTraceFlag(const char *string)
-{
-    Trace::changeFlag(string, false);
-}
-
-void
-dumpTraceStatus()
-{
-    Trace::dumpStatus();
-}

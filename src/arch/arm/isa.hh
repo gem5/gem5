@@ -46,6 +46,7 @@
 #include "arch/arm/registers.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
+#include "debug/Checkpoint.hh"
 
 class ThreadContext;
 class Checkpoint;

@@ -42,6 +42,7 @@
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/regs/misc.hh"
 #include "base/condcodes.hh"
+#include "debug/X86.hh"
 
 namespace X86ISA
 {

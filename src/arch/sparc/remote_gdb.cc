@@ -130,6 +130,7 @@
 #include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/GDBRead.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"

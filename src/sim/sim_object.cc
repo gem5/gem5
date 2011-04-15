@@ -38,6 +38,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/Config.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 

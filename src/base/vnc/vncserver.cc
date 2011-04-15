@@ -55,6 +55,7 @@
 #include "base/misc.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
+#include "debug/VNC.hh"
 #include "sim/byteswap.hh"
 
 using namespace std;

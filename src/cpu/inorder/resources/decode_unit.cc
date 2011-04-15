@@ -31,6 +31,9 @@
 
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/decode_unit.hh"
+#include "debug/InOrderDecode.hh"
+#include "debug/InOrderStall.hh"
+#include "debug/Resource.hh"
 
 using namespace TheISA;
 using namespace ThePipeline;

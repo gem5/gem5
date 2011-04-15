@@ -37,6 +37,8 @@
 #include "cpu/inorder/resources/inst_buffer.hh"
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/pipeline_traits.hh"
+#include "debug/InOrderInstBuffer.hh"
+#include "debug/Resource.hh"
 
 using namespace std;
 using namespace TheISA;

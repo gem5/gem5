@@ -38,6 +38,7 @@
 #include "base/refcnt.hh"
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
+#include "debug/MemDepUnit.hh"
 
 struct SNHash {
     size_t operator() (const InstSeqNum &seq_num) const {

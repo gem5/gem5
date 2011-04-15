@@ -74,6 +74,7 @@ output exec {{
 #include "base/bigint.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
+#include "debug/Sparc.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/sim_exit.hh"

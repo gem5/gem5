@@ -46,6 +46,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Faults.hh"
 
 namespace ArmISA
 {

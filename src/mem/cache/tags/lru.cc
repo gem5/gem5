@@ -36,6 +36,7 @@
 #include <string>
 
 #include "base/intmath.hh"
+#include "debug/CacheRepl.hh"
 #include "mem/cache/tags/cacheset.hh"
 #include "mem/cache/tags/lru.hh"
 #include "mem/cache/base.hh"

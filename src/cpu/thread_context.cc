@@ -32,6 +32,7 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Context.hh"
 
 void
 ThreadContext::compare(ThreadContext *one, ThreadContext *two)

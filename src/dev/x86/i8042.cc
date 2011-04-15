@@ -29,6 +29,7 @@
  */
 
 #include "base/bitunion.hh"
+#include "debug/I8042.hh"
 #include "dev/x86/i8042.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

@@ -34,9 +34,9 @@
 #include "arch/types.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"
-#include "base/traceflags.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/bpred_unit.hh"
+#include "debug/Fetch.hh"
 #include "params/DerivO3CPU.hh"
 
 template<class Impl>

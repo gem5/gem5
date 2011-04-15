@@ -35,6 +35,7 @@
  */
 
 #include "base/trace.hh"
+#include "debug/HWPrefetch.hh"
 #include "mem/cache/prefetch/ghb.hh"
 
 void

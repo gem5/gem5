@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2010 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,9 +32,83 @@
 #ifndef __BASE_DEBUG_HH__
 #define __BASE_DEBUG_HH__
 
+#include <string>
+#include <vector>
+
 namespace Debug {
 
 void breakpoint();
+
+class Flag
+{
+  protected:
+    const char *_name;
+    const char *_desc;
+
+  public:
+    Flag(const char *name, const char *desc);
+    virtual ~Flag();
+
+    std::string name() const { return _name; }
+    std::string desc() const { return _desc; }
+
+    virtual void enable() = 0;
+    virtual void disable() = 0;
+};
+
+class SimpleFlag : public Flag
+{
+  protected:
+    bool _status;
+
+  public:
+    SimpleFlag(const char *name, const char *desc)
+        : Flag(name, desc)
+    { }
+
+    bool status() const { return _status; }
+    operator bool() const { return _status; }
+    bool operator!() const { return !_status; }
+
+    void enable() { _status = true; }
+    void disable() { _status = false; }
+};
+
+class CompoundFlag : public SimpleFlag
+{
+  protected:
+    std::vector<Flag *> flags;
+
+  public:
+    CompoundFlag(const char *name, const char *desc,
+        Flag &f00 = *(Flag *)0, Flag &f01 = *(Flag *)0,
+        Flag &f02 = *(Flag *)0, Flag &f03 = *(Flag *)0,
+        Flag &f04 = *(Flag *)0, Flag &f05 = *(Flag *)0,
+        Flag &f06 = *(Flag *)0, Flag &f07 = *(Flag *)0,
+        Flag &f08 = *(Flag *)0, Flag &f09 = *(Flag *)0,
+        Flag &f10 = *(Flag *)0, Flag &f11 = *(Flag *)0,
+        Flag &f12 = *(Flag *)0, Flag &f13 = *(Flag *)0,
+        Flag &f14 = *(Flag *)0, Flag &f15 = *(Flag *)0,
+        Flag &f16 = *(Flag *)0, Flag &f17 = *(Flag *)0,
+        Flag &f18 = *(Flag *)0, Flag &f19 = *(Flag *)0)
+        : SimpleFlag(name, desc)
+    {
+        addFlag(f00); addFlag(f01); addFlag(f02); addFlag(f03); addFlag(f04);
+        addFlag(f05); addFlag(f06); addFlag(f07); addFlag(f08); addFlag(f09);
+        addFlag(f10); addFlag(f11); addFlag(f12); addFlag(f13); addFlag(f14);
+        addFlag(f15); addFlag(f16); addFlag(f17); addFlag(f18); addFlag(f19);
+    }
+
+    void
+    addFlag(Flag &f)
+    {
+        if (&f != NULL)
+            flags.push_back(&f);
+    }
+
+    void enable();
+    void disable();
+};
 
 } // namespace Debug
 

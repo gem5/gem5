@@ -51,6 +51,9 @@
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/timebuf.hh"
+#include "debug/Activity.hh"
+#include "debug/Decode.hh"
+#include "debug/IEW.hh"
 #include "params/DerivO3CPU.hh"
 
 using namespace std;

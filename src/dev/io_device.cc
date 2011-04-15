@@ -31,6 +31,8 @@
 
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
+#include "debug/BusAddrRanges.hh"
+#include "debug/DMA.hh"
 #include "dev/io_device.hh"
 #include "sim/system.hh"
 

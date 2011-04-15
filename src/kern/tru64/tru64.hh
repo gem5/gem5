@@ -61,6 +61,7 @@ class Tru64 {};
 #include "arch/alpha/registers.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
+#include "debug/SyscallVerbose.hh"
 #include "sim/core.hh"
 #include "sim/syscall_emul.hh"
 

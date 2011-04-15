@@ -38,6 +38,7 @@
 
 #include "base/bitunion.hh"
 #include "base/types.hh"
+#include "debug/Intel8254Timer.hh"
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
 

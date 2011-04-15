@@ -27,6 +27,7 @@
  */
 
 #include "base/intmath.hh"
+#include "debug/RubyCache.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 
 using namespace std;

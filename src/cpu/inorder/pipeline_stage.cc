@@ -34,6 +34,11 @@
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/pipeline_stage.hh"
 #include "cpu/inorder/resource_pool.hh"
+#include "debug/Activity.hh"
+#include "debug/InOrderStage.hh"
+#include "debug/InOrderStall.hh"
+#include "debug/Resource.hh"
+#include "debug/ThreadModel.hh"
 
 using namespace std;
 using namespace ThePipeline;

@@ -41,18 +41,6 @@ output(const char *filename)
 }
 
 inline void
-set(const char *flag)
-{
-    Trace::changeFlag(flag, true);
-}
-
-inline void
-clear(const char *flag)
-{
-    Trace::changeFlag(flag, false);
-}
-
-inline void
 ignore(const char *expr)
 {
     Trace::ignore.setExpression(expr);
@@ -61,10 +49,6 @@ ignore(const char *expr)
 using Trace::enabled;
 %}
 
-%inline %{
 extern void output(const char *string);
-extern void set(const char *string);
-extern void clear(const char *string);
 extern void ignore(const char *expr);
 extern bool enabled;
-%}

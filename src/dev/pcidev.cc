@@ -43,6 +43,7 @@
 #include "base/misc.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
+#include "debug/PCIDEV.hh"
 #include "dev/alpha/tsunamireg.h"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"

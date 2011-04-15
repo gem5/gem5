@@ -34,6 +34,7 @@
 #include "base/loader/exec_aout.h"
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
+#include "debug/Loader.hh"
 
 using namespace std;
 

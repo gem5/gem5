@@ -44,6 +44,8 @@
 #include "base/callback.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "debug/DiskImageRead.hh"
+#include "debug/DiskImageWrite.hh"
 #include "dev/disk_image.hh"
 #include "sim/byteswap.hh"
 #include "sim/sim_exit.hh"

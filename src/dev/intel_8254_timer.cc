@@ -31,6 +31,7 @@
  */
 
 #include "base/misc.hh"
+#include "debug/Intel8254Timer.hh"
 #include "dev/intel_8254_timer.hh"
 
 using namespace std;

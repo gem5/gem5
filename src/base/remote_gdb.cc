@@ -136,11 +136,13 @@
 #include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/GDBAll.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #include "sim/system.hh"
 
 using namespace std;
+using namespace Debug;
 using namespace TheISA;
 
 #ifndef NDEBUG

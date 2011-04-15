@@ -31,6 +31,7 @@
 #include "base/socket.hh"
 #include "cpu/nativetrace.hh"
 #include "cpu/static_inst.hh"
+#include "debug/GDBMisc.hh"
 #include "params/NativeTrace.hh"
 
 using namespace std;

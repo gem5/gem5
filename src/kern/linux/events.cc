@@ -46,6 +46,7 @@
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/DebugPrintf.hh"
 #include "kern/linux/events.hh"
 #include "kern/linux/printk.hh"
 #include "kern/system_events.hh"

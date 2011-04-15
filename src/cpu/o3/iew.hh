@@ -52,6 +52,7 @@
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/timebuf.hh"
+#include "debug/IEW.hh"
 
 class DerivO3CPUParams;
 class FUPool;

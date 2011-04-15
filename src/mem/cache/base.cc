@@ -35,6 +35,7 @@
 
 #include "cpu/base.hh"
 #include "cpu/smt.hh"
+#include "debug/Cache.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/mshr.hh"
 

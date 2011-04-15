@@ -54,6 +54,10 @@
 #include "cpu/o3/thread_state.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/timebuf.hh"
+#include "debug/Activity.hh"
+#include "debug/Commit.hh"
+#include "debug/CommitRate.hh"
+#include "debug/ExecFaulting.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
 

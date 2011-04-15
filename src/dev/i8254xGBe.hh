@@ -40,6 +40,8 @@
 
 #include "base/cp_annotate.hh"
 #include "base/inet.hh"
+#include "debug/EthernetDesc.hh"
+#include "debug/EthernetIntr.hh"
 #include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"

@@ -34,6 +34,7 @@
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/first_stage.hh"
 #include "cpu/inorder/resource_pool.hh"
+#include "debug/InOrderStage.hh"
 #include "params/InOrderTrace.hh"
 
 using namespace std;

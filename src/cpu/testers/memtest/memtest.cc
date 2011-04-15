@@ -39,6 +39,7 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "cpu/testers/memtest/memtest.hh"
+#include "debug/MemTest.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"

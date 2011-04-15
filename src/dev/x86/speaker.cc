@@ -30,6 +30,7 @@
 
 #include "base/bitunion.hh"
 #include "base/trace.hh"
+#include "debug/PcSpeaker.hh"
 #include "dev/x86/i8254.hh"
 #include "dev/x86/speaker.hh"
 #include "mem/packet.hh"

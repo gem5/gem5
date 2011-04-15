@@ -50,6 +50,7 @@
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/TLB.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 

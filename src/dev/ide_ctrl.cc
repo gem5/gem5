@@ -34,6 +34,7 @@
 
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
+#include "debug/IdeCtrl.hh"
 #include "dev/ide_ctrl.hh"
 #include "dev/ide_disk.hh"
 #include "mem/packet.hh"

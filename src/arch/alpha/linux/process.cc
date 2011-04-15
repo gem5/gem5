@@ -34,6 +34,7 @@
 #include "arch/alpha/isa_traits.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/SyscallVerbose.hh"
 #include "kern/linux/linux.hh"
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"

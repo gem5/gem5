@@ -40,6 +40,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/smt.hh"
+#include "debug/Config.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 

@@ -42,6 +42,7 @@
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "debug/X86.hh"
 
 namespace X86ISA
 {

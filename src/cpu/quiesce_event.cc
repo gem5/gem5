@@ -31,6 +31,7 @@
 #include "cpu/base.hh"
 #include "cpu/quiesce_event.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Quiesce.hh"
 
 EndQuiesceEvent::EndQuiesceEvent(ThreadContext *_tc)
     : tc(_tc)

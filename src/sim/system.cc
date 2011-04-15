@@ -42,6 +42,7 @@
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Loader.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "sim/byteswap.hh"

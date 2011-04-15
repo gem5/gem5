@@ -37,9 +37,9 @@
 #include "arch/registers.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "base/traceflags.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
+#include "debug/FreeList.hh"
 
 /**
  * FreeList class that simply holds the list of free integer and floating

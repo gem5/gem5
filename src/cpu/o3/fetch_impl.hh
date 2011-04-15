@@ -52,6 +52,8 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/exetrace.hh"
+#include "debug/Activity.hh"
+#include "debug/Fetch.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "params/DerivO3CPU.hh"

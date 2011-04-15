@@ -32,6 +32,7 @@
  */
 
 #include "base/misc.hh"
+#include "debug/TimeSync.hh"
 #include "sim/root.hh"
 
 Root *Root::_root = NULL;

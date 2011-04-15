@@ -33,6 +33,7 @@
 #include "config/the_isa.hh"
 #include "cpu/inorder/thread_context.hh"
 #include "cpu/exetrace.hh"
+#include "debug/InOrderCPU.hh"
 
 using namespace TheISA;
 

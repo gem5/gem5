@@ -42,6 +42,7 @@
 
 #include "base/misc.hh"
 #include "base/types.hh"
+#include "debug/Cache.hh"
 #include "mem/cache/cache.hh"
 #include "mem/cache/mshr.hh"
 #include "sim/core.hh"

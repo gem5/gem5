@@ -38,6 +38,7 @@
 #include "base/bitfield.hh"
 #include "base/time.hh"
 #include "base/trace.hh"
+#include "debug/MC146818.hh"
 #include "dev/mc146818.hh"
 #include "dev/rtcreg.h"
 

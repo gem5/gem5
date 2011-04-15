@@ -41,6 +41,7 @@
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
 #include "cpu/base.hh"
+#include "debug/LocalApic.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/pc.hh"
 #include "dev/x86/south_bridge.hh"

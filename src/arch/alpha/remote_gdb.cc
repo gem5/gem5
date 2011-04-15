@@ -136,6 +136,8 @@
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/GDBAcc.hh"
+#include "debug/GDBMisc.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "sim/system.hh"

@@ -39,6 +39,7 @@
 
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_pchip.hh"
 #include "dev/alpha/tsunamireg.h"

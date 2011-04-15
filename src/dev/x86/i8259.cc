@@ -29,6 +29,7 @@
  */
 
 #include "base/bitfield.hh"
+#include "debug/I8259.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8259.hh"
 #include "mem/packet.hh"

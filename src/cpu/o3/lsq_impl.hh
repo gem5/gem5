@@ -33,6 +33,9 @@
 #include <string>
 
 #include "cpu/o3/lsq.hh"
+#include "debug/Fetch.hh"
+#include "debug/LSQ.hh"
+#include "debug/Writeback.hh"
 #include "params/DerivO3CPU.hh"
 
 using namespace std;

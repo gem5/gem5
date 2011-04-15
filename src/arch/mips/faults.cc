@@ -36,6 +36,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/MipsPRA.hh"
 
 #if !FULL_SYSTEM
 #include "mem/page_table.hh"

@@ -28,6 +28,7 @@
  */
 
 #include "cpu/testers/rubytest/Check.hh"
+#include "debug/RubyTest.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"

@@ -32,6 +32,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/pred/2bit_local.hh"
+#include "debug/Fetch.hh"
 
 LocalBP::LocalBP(unsigned _localPredictorSize,
                  unsigned _localCtrBits,

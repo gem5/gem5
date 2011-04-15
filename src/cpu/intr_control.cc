@@ -36,6 +36,7 @@
 #include "cpu/base.hh"
 #include "cpu/intr_control.hh"
 #include "cpu/thread_context.hh"
+#include "debug/IntrControl.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;

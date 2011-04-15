@@ -35,6 +35,7 @@
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Loader.hh"
 #include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 #include "sim/process_impl.hh"

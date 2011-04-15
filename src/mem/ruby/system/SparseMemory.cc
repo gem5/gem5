@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "debug/RubyCache.hh"
 #include "mem/ruby/system/SparseMemory.hh"
 #include "mem/ruby/system/System.hh"
 

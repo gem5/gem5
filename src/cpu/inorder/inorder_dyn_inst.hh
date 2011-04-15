@@ -57,6 +57,7 @@
 #include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "debug/InOrderDynInst.hh"
 #include "mem/packet.hh"
 #include "sim/system.hh"
 

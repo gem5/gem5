@@ -41,6 +41,7 @@
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/exetrace.hh"
+#include "debug/InOrderDynInst.hh"
 #include "mem/request.hh"
 
 using namespace std;

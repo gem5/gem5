@@ -39,6 +39,7 @@
 #include "base/str.hh"        // for to_number
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "debug/Uart.hh"
 #include "dev/platform.hh"
 #include "dev/terminal.hh"
 #include "dev/uart8250.hh"

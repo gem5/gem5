@@ -35,6 +35,8 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
+#include "debug/ExecEnable.hh"
+#include "debug/ExecSpeculative.hh"
 #include "params/IntelTrace.hh"
 #include "sim/insttracer.hh"
 
@@ -68,13 +70,13 @@ class IntelTrace : public InstTracer
             const StaticInstPtr staticInst, TheISA::PCState pc,
             const StaticInstPtr macroStaticInst = NULL)
     {
-        if (!IsOn(ExecEnable))
+        if (!Debug::ExecEnable)
             return NULL;
 
         if (!Trace::enabled)
             return NULL;
 
-        if (!IsOn(ExecSpeculative) && tc->misspeculating())
+        if (!Debug::ExecSpeculative && tc->misspeculating())
             return NULL;
 
         return new IntelTraceRecord(when, tc,

@@ -37,6 +37,7 @@
 #include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "debug/Loader.hh"
 #include "sim/byteswap.hh"
 #include "gelf.h"
 

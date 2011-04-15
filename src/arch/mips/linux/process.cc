@@ -35,6 +35,7 @@
 #include "arch/mips/isa_traits.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/SyscallVerbose.hh"
 #include "kern/linux/linux.hh"
 #include "sim/eventq.hh"
 #include "sim/process.hh"

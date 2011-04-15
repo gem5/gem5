@@ -32,6 +32,7 @@
 
 #include "cpu/activity.hh"
 #include "cpu/timebuf.hh"
+#include "debug/Activity.hh"
 
 using namespace std;
 

@@ -43,6 +43,7 @@
 #include "base/time.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "debug/Tsunami.hh"
 #include "dev/alpha/tsunami.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami_io.hh"

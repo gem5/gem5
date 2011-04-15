@@ -32,6 +32,7 @@
 
 #include "base/mysql.hh"
 #include "base/trace.hh"
+#include "debug/SQL.hh"
 
 using namespace std;
 

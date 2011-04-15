@@ -98,15 +98,15 @@ add_option("--dump-config", metavar="FILE", default="config.ini",
 set_group("Debugging Options")
 add_option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
     help="Cycle to create a breakpoint")
+add_option("--debug-help", action='store_true',
+    help="Print help on debug flags")
+add_option("--debug-flags", metavar="FLAG[,FLAG]", action='append', split=',',
+    help="Sets the flags for debugging (-FLAG disables a flag)")
 add_option("--remote-gdb-port", type='int', default=7000,
     help="Remote gdb base port (set to 0 to disable listening)")
 
 # Tracing options
 set_group("Trace Options")
-add_option("--trace-help", action='store_true',
-    help="Print help on trace flags")
-add_option("--trace-flags", metavar="FLAG[,FLAG]", action='append', split=',',
-    help="Sets the flags for tracing (-FLAG disables a flag)")
 add_option("--trace-start", metavar="TIME", type='int',
     help="Start tracing at TIME (must be in ticks)")
 add_option("--trace-file", metavar="FILE", default="cout",
@@ -214,10 +214,10 @@ def main():
         print info.README
         print
 
-    if options.trace_help:
+    if options.debug_help:
         done = True
         check_tracing()
-        trace.help()
+        debug.help()
 
     if options.list_sim_objects:
         import SimObject
@@ -284,30 +284,25 @@ def main():
     for when in options.debug_break:
         debug.schedBreakCycle(int(when))
 
-    if options.trace_flags:
+    if options.debug_flags:
         check_tracing()
 
         on_flags = []
         off_flags = []
-        for flag in options.trace_flags:
+        for flag in options.debug_flags:
             off = False
             if flag.startswith('-'):
                 flag = flag[1:]
                 off = True
-            if flag not in trace.flags.all and flag != "All":
-                print >>sys.stderr, "invalid trace flag '%s'" % flag
+
+            if flag not in debug.flags:
+                print >>sys.stderr, "invalid debug flag '%s'" % flag
                 sys.exit(1)
 
             if off:
-                off_flags.append(flag)
+                debug.flags[flag].disable()
             else:
-                on_flags.append(flag)
-
-        for flag in on_flags:
-            trace.set(flag)
-
-        for flag in off_flags:
-            trace.clear(flag)
+                debug.flags[flag].enable()
 
     if options.trace_start:
         check_tracing()

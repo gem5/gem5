@@ -46,6 +46,8 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Power.hh"
+#include "debug/TLB.hh"
 #include "mem/page_table.hh"
 #include "params/PowerTLB.hh"
 #include "sim/process.hh"

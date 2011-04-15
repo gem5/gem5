@@ -44,6 +44,7 @@
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/nativetrace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/ExecRegDelta.hh"
 #include "params/ArmNativeTrace.hh"
 #include "sim/byteswap.hh"
 

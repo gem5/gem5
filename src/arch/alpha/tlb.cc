@@ -40,6 +40,7 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/TLB.hh"
 
 using namespace std;
 

@@ -48,6 +48,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "debug/Predecoder.hh"
 
 class ThreadContext;
 

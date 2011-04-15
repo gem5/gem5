@@ -151,6 +151,8 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "debug/GDBAcc.hh"
+#include "debug/GDBMisc.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"

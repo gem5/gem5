@@ -44,6 +44,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/AlphaBackdoor.hh"
 #include "dev/alpha/backdoor.hh"
 #include "dev/platform.hh"
 #include "dev/simple_disk.hh"

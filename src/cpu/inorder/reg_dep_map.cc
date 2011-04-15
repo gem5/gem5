@@ -35,6 +35,7 @@
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/reg_dep_map.hh"
+#include "debug/RegDepMap.hh"
 
 using namespace std;
 using namespace TheISA;

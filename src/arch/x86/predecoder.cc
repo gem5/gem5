@@ -43,6 +43,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Predecoder.hh"
 
 namespace X86ISA
 {

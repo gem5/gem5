@@ -34,6 +34,8 @@
 #include "config/the_isa.hh"
 #include "cpu/o3/decode.hh"
 #include "cpu/inst_seq.hh"
+#include "debug/Activity.hh"
+#include "debug/Decode.hh"
 #include "params/DerivO3CPU.hh"
 
 using namespace std;

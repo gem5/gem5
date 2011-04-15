@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "debug/RubyDma.hh"
 #include "mem/protocol/SequencerMsg.hh"
 #include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"

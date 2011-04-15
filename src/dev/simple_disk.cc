@@ -42,6 +42,8 @@
 
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "debug/SimpleDisk.hh"
+#include "debug/SimpleDiskData.hh"
 #include "dev/disk_image.hh"
 #include "dev/simple_disk.hh"
 #include "mem/port.hh"

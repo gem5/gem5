@@ -33,9 +33,10 @@
 
 #include "arch/utility.hh"
 #include "base/trace.hh"
-#include "base/traceflags.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/bpred_unit.hh"
+#include "debug/InOrderBPred.hh"
+#include "debug/Resource.hh"
 
 using namespace std;
 using namespace ThePipeline;

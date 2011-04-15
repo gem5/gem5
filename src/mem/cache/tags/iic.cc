@@ -40,6 +40,9 @@
 
 #include "base/intmath.hh"
 #include "base/trace.hh"
+#include "debug/Cache.hh"
+#include "debug/IIC.hh"
+#include "debug/IICMore.hh"
 #include "mem/cache/tags/iic.hh"
 #include "mem/cache/base.hh"
 #include "sim/core.hh"

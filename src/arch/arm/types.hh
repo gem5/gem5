@@ -48,6 +48,7 @@
 #include "base/hashmap.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
+#include "debug/Predecoder.hh"
 
 namespace ArmISA
 {

@@ -28,6 +28,7 @@
  * Authors: Gabe Black
  */
 
+#include "debug/I8254.hh"
 #include "dev/x86/i8254.hh"
 #include "dev/x86/intdev.hh"
 #include "mem/packet.hh"

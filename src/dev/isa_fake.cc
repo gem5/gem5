@@ -33,6 +33,7 @@
  */
 
 #include "base/trace.hh"
+#include "debug/IsaFake.hh"
 #include "dev/isa_fake.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"

@@ -31,6 +31,7 @@
 
 #include "config/the_isa.hh"
 #include "cpu/o3/scoreboard.hh"
+#include "debug/Scoreboard.hh"
 
 Scoreboard::Scoreboard(unsigned activeThreads,
                        unsigned _numLogicalIntRegs,

@@ -30,6 +30,7 @@
 #include "cpu/testers/directedtest/DirectedGenerator.hh"
 #include "cpu/testers/directedtest/InvalidateGenerator.hh"
 #include "cpu/testers/directedtest/RubyDirectedTester.hh"
+#include "debug/DirectedTest.hh"
 
 InvalidateGenerator::InvalidateGenerator(const Params *p)
     : DirectedGenerator(p)
