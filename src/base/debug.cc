@@ -35,12 +35,16 @@
 
 #include "base/cprintf.hh"
 
+namespace Debug {
+
 void
-debug_break()
+breakpoint()
 {
 #ifndef NDEBUG
     kill(getpid(), SIGTRAP);
 #else
-    cprintf("debug_break suppressed, compiled with NDEBUG\n");
+    cprintf("Debug::breakpoint suppressed, compiled with NDEBUG\n");
 #endif
 }
+
+} // namespace Debug

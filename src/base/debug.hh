@@ -31,6 +31,10 @@
 #ifndef __BASE_DEBUG_HH__
 #define __BASE_DEBUG_HH__
 
-void debug_break();
+namespace Debug {
+
+void breakpoint();
+
+} // namespace Debug
 
 #endif // __BASE_DEBUG_HH__

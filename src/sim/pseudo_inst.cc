@@ -353,7 +353,7 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 void
 debugbreak(ThreadContext *tc)
 {
-    debug_break();
+    Debug::breakpoint();
 }
 
 void

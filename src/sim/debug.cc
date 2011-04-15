@@ -67,14 +67,14 @@ DebugBreakEvent::DebugBreakEvent()
 void
 DebugBreakEvent::process()
 {
-    debug_break();
+    Debug::breakpoint();
 }
 
 
 const char *
 DebugBreakEvent::description() const
 {
-    return "debug break";
+    return "debug breakpoint";
 }
 
 //

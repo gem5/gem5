@@ -132,7 +132,7 @@ BreakPCEvent::process(ThreadContext *tc)
 {
     StringWrap name(tc->getCpuPtr()->name() + ".break_event");
     DPRINTFN("break event %s triggered\n", descr());
-    debug_break();
+    Debug::breakpoint();
     if (remove)
         delete this;
 }

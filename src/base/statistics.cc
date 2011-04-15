@@ -130,7 +130,7 @@ Info::Info()
 {
     id = id_count++;
     if (debug_break_id >= 0 and debug_break_id == id)
-        debug_break();
+        Debug::breakpoint();
 }
 
 Info::~Info()
