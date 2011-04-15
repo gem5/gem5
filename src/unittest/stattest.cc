@@ -32,14 +32,19 @@
 #include <iostream>
 #include <string>
 
-#include "base/stats/mysql.hh"
-#include "base/stats/text.hh"
 #include "base/cprintf.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
 #include "sim/stat_control.hh"
+
+// override the default main() code for this unittest
+const char *m5MainCommands[] = {
+    "import m5.stattestmain",
+    "m5.stattestmain.main()",
+    0 // sentinel is required
+};
 
 using namespace std;
 using namespace Stats;
@@ -55,67 +60,8 @@ class TestClass {
     double operator()() { return 9.7; }
 };
 
-const char *progname = "";
-
-void
-usage()
+struct StatTest
 {
-    panic("incorrect usage.\n"
-          "usage:\n"
-          "\t%s [-t [-c] [-d]]\n", progname);
-}
-
-int
-main(int argc, char *argv[])
-{
-    bool descriptions = false;
-    bool text = false;
-
-#if USE_MYSQL
-    string mysql_name;
-    string mysql_db;
-    string mysql_host;
-    string mysql_user = "binkertn";
-    string mysql_passwd;
-#endif
-
-    char c;
-    progname = argv[0];
-    while ((c = getopt(argc, argv, "cD:dh:P:p:s:tu:")) != -1) {
-        switch (c) {
-          case 'd':
-            descriptions = true;
-            break;
-          case 't':
-            text = true;
-            break;
-#if USE_MYSQL
-          case 'D':
-            mysql_db = optarg;
-            break;
-          case 'h':
-            mysql_host = optarg;
-            break;
-          case 'P':
-            mysql_passwd = optarg;
-            break;
-          case 's':
-            mysql_name = optarg;
-            break;
-          case 'u':
-            mysql_user = optarg;
-            break;
-#endif
-          default:
-            usage();
-        }
-    }
-
-    if (!text && descriptions)
-        usage();
-
-    initSimStats();
-
     Scalar s1;
     Scalar s2;
     Average s3;
@@ -153,6 +99,26 @@ main(int argc, char *argv[])
     Formula f4;
     Formula f5;
 
+    void run();
+    void init();
+};
+
+StatTest __stattest;
+void
+stattest_init()
+{
+    __stattest.init();
+}
+
+void
+stattest_run()
+{
+    __stattest.run();
+}
+
+void
+StatTest::init()
+{
     cprintf("sizeof(Scalar) = %d\n", sizeof(Scalar));
     cprintf("sizeof(Vector) = %d\n", sizeof(Vector));
     cprintf("sizeof(Distribution) = %d\n", sizeof(Distribution));
@@ -386,10 +352,11 @@ main(int argc, char *argv[])
     f4 += constant(10.0);
     f4 += s5[3];
     f5 = constant(1);
+}
 
-    enable();
-    reset();
-
+void
+StatTest::run()
+{
     s16[1][0] = 1;
     s16[0][1] = 3;
     s16[0][0] = 2;
@@ -656,23 +623,4 @@ main(int argc, char *argv[])
         h11.sample(i);
         h12.sample(i);
     }
-
-    prepare();
-
-    if (text) {
-        Text out(cout);
-        out.descriptions = descriptions;
-        out();
-    }
-
-#if USE_MYSQL
-    if (!mysql_name.empty()) {
-        MySql out;
-        out.connect(mysql_host, mysql_db, mysql_user, mysql_passwd, "test",
-                    mysql_name, "test");
-        out();
-    }
-#endif
-
-    return 0;
 }

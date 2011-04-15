@@ -233,15 +233,26 @@ class SwigSource(SourceFile):
         self.cc_source = Source(cc_file, swig=True, parent=self)
         self.py_source = PySource(package, py_file, parent=self)
 
-unit_tests = []
-def UnitTest(target, sources):
-    '''Create a unit test, specify the target name and a source or
-    list of sources'''
-    if not isinstance(sources, (list, tuple)):
-        sources = [ sources ]
+class UnitTest(object):
+    '''Create a UnitTest'''
 
-    sources = [ Source(src, skip_lib=True) for src in sources ]
-    unit_tests.append((target, sources))
+    all = []
+    def __init__(self, target, *sources):
+        '''Specify the target name and any sources.  Sources that are
+        not SourceFiles are evalued with Source().  All files are
+        guarded with a guard of the same name as the UnitTest
+        target.'''
+
+        srcs = []
+        for src in sources:
+            if not isinstance(src, SourceFile):
+                src = Source(src, skip_lib=True)
+            src.guards[target] = True
+            srcs.append(src)
+
+        self.sources = srcs
+        self.target = target
+        UnitTest.all.append(self)
 
 # Children should have access
 Export('Source')
@@ -673,10 +684,11 @@ for swig in SwigSource.all:
     env.Command([swig.cc_source.tnode, swig.py_source.tnode], swig.tnode,
                 MakeAction('$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
                 '-o ${TARGETS[0]} $SOURCES', Transform("SWIG")))
-    init_file = 'python/swig/init_%s.cc' % swig.module
+    cc_file = str(swig.tnode)
+    init_file = '%s/init_%s.cc' % (dirname(cc_file), basename(cc_file))
     env.Command(init_file, Value(swig.module),
                 MakeAction(makeEmbeddedSwigInit, Transform("EMBED SW")))
-    Source(init_file)
+    Source(init_file, **swig.guards)
 
 #
 # Handle debug flags
@@ -904,12 +916,15 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     static_lib = new_env.StaticLibrary(libname, static_objs)
     shared_lib = new_env.SharedLibrary(libname, shared_objs)
 
-    for target, sources in unit_tests:
-        objs = [ make_obj(s, static=True) for s in sources ]
-        new_env.Program("unittest/%s.%s" % (target, label), objs + static_objs)
-
     # Now link a stub with main() and the static library.
     main_objs = [ make_obj(s, True) for s in Source.get(main=True) ]
+
+    for test in UnitTest.all:
+        flags = { test.target : True }
+        test_sources = Source.get(**flags)
+        test_objs = [ make_obj(s, static=True) for s in test_sources ]
+        testname = "unittest/%s.%s" % (test.target, label)
+        new_env.Program(testname, main_objs + test_objs + static_objs)
 
     progname = exename
     if strip:
