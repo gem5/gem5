@@ -40,6 +40,7 @@ from multidict import multidict
 from orderdict import orderdict
 from smartdict import SmartDict
 from sorteddict import SortedDict
+from region import neg_inf, pos_inf, Region, Regions
 
 # define this here so we can use it right away if necessary
 def errorURL(prefix, s):
