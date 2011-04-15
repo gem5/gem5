@@ -36,7 +36,6 @@ import sys
 import internal
 import core
 import stats
-from main import options
 import SimObject
 import ticks
 import objects
@@ -48,6 +47,8 @@ MaxTick = 2**63 - 1
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(ckpt_dir=None):
+    from main import options
+
     root = objects.Root.getInstance()
 
     if not root:

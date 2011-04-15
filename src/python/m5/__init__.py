@@ -49,5 +49,5 @@ if internal:
     import util
 
     from event import *
-    from main import options, main
+    from main import main
     from simulate import *

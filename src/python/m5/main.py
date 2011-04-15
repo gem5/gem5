@@ -32,10 +32,6 @@ import os
 import socket
 import sys
 
-from util import attrdict, fatal
-import config
-from options import OptionParser
-
 __all__ = [ 'options', 'arguments', 'main' ]
 
 usage="%prog [m5 options] script.py [script options]"
@@ -46,87 +42,96 @@ The Regents of The University of Michigan
 All Rights Reserved
 '''
 
-options = OptionParser(usage=usage, version=version,
-                       description=brief_copyright)
-add_option = options.add_option
-set_group = options.set_group
-usage = options.usage
+def parse_options():
+    import config
+    from options import OptionParser
 
-# Help options
-add_option('-A', "--authors", action="store_true", default=False,
-    help="Show author information")
-add_option('-B', "--build-info", action="store_true", default=False,
-    help="Show build information")
-add_option('-C', "--copyright", action="store_true", default=False,
-    help="Show full copyright information")
-add_option('-R', "--readme", action="store_true", default=False,
-    help="Show the readme")
+    options = OptionParser(usage=usage, version=version,
+                           description=brief_copyright)
+    option = options.add_option
+    group = options.set_group
 
-# Options for configuring the base simulator
-add_option('-d', "--outdir", metavar="DIR", default="m5out",
-    help="Set the output directory to DIR [Default: %default]")
-add_option('-r', "--redirect-stdout", action="store_true", default=False,
-           help="Redirect stdout (& stderr, without -e) to file")
-add_option('-e', "--redirect-stderr", action="store_true", default=False,
-           help="Redirect stderr to file")
-add_option("--stdout-file", metavar="FILE", default="simout",
-           help="Filename for -r redirection [Default: %default]")
-add_option("--stderr-file", metavar="FILE", default="simerr",
-           help="Filename for -e redirection [Default: %default]")
-add_option('-i', "--interactive", action="store_true", default=False,
-    help="Invoke the interactive interpreter after running the script")
-add_option("--pdb", action="store_true", default=False,
-    help="Invoke the python debugger before running the script")
-add_option('-p', "--path", metavar="PATH[:PATH]", action='append', split=':',
-    help="Prepend PATH to the system path when invoking the script")
-add_option('-q', "--quiet", action="count", default=0,
-    help="Reduce verbosity")
-add_option('-v', "--verbose", action="count", default=0,
-    help="Increase verbosity")
+    # Help options
+    option('-A', "--authors", action="store_true", default=False,
+        help="Show author information")
+    option('-B', "--build-info", action="store_true", default=False,
+        help="Show build information")
+    option('-C', "--copyright", action="store_true", default=False,
+        help="Show full copyright information")
+    option('-R', "--readme", action="store_true", default=False,
+        help="Show the readme")
 
-# Statistics options
-set_group("Statistics Options")
-add_option("--stats-file", metavar="FILE", default="stats.txt",
-    help="Sets the output file for statistics [Default: %default]")
+    # Options for configuring the base simulator
+    option('-d', "--outdir", metavar="DIR", default="m5out",
+        help="Set the output directory to DIR [Default: %default]")
+    option('-r', "--redirect-stdout", action="store_true", default=False,
+        help="Redirect stdout (& stderr, without -e) to file")
+    option('-e', "--redirect-stderr", action="store_true", default=False,
+        help="Redirect stderr to file")
+    option("--stdout-file", metavar="FILE", default="simout",
+        help="Filename for -r redirection [Default: %default]")
+    option("--stderr-file", metavar="FILE", default="simerr",
+        help="Filename for -e redirection [Default: %default]")
+    option('-i', "--interactive", action="store_true", default=False,
+        help="Invoke the interactive interpreter after running the script")
+    option("--pdb", action="store_true", default=False,
+        help="Invoke the python debugger before running the script")
+    option('-p', "--path", metavar="PATH[:PATH]", action='append', split=':',
+        help="Prepend PATH to the system path when invoking the script")
+    option('-q', "--quiet", action="count", default=0,
+        help="Reduce verbosity")
+    option('-v', "--verbose", action="count", default=0,
+        help="Increase verbosity")
 
-# Configuration Options
-set_group("Configuration Options")
-add_option("--dump-config", metavar="FILE", default="config.ini",
-    help="Dump configuration output file [Default: %default]")
+    # Statistics options
+    group("Statistics Options")
+    option("--stats-file", metavar="FILE", default="stats.txt",
+        help="Sets the output file for statistics [Default: %default]")
 
-# Debugging options
-set_group("Debugging Options")
-add_option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
-    help="Cycle to create a breakpoint")
-add_option("--debug-help", action='store_true',
-    help="Print help on debug flags")
-add_option("--debug-flags", metavar="FLAG[,FLAG]", action='append', split=',',
-    help="Sets the flags for debugging (-FLAG disables a flag)")
-add_option("--remote-gdb-port", type='int', default=7000,
-    help="Remote gdb base port (set to 0 to disable listening)")
+    # Configuration Options
+    group("Configuration Options")
+    option("--dump-config", metavar="FILE", default="config.ini",
+        help="Dump configuration output file [Default: %default]")
 
-# Tracing options
-set_group("Trace Options")
-add_option("--trace-start", metavar="TIME", type='int',
-    help="Start tracing at TIME (must be in ticks)")
-add_option("--trace-file", metavar="FILE", default="cout",
-    help="Sets the output file for tracing [Default: %default]")
-add_option("--trace-ignore", metavar="EXPR", action='append', split=':',
-    help="Ignore EXPR sim objects")
+    # Debugging options
+    group("Debugging Options")
+    option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
+        help="Cycle to create a breakpoint")
+    option("--debug-help", action='store_true',
+        help="Print help on trace flags")
+    option("--debug-flags", metavar="FLAG[,FLAG]", action='append', split=',',
+        help="Sets the flags for tracing (-FLAG disables a flag)")
+    option("--remote-gdb-port", type='int', default=7000,
+        help="Remote gdb base port (set to 0 to disable listening)")
 
-# Help options
-set_group("Help Options")
-add_option("--list-sim-objects", action='store_true', default=False,
-    help="List all built-in SimObjects, their parameters and default values")
+    # Tracing options
+    group("Trace Options")
+    option("--trace-help", action='store_true',
+        help="Print help on trace flags")
+    option("--trace-flags", metavar="FLAG[,FLAG]", action='append', split=',',
+        help="Sets the flags for tracing (-FLAG disables a flag)")
+    option("--trace-start", metavar="TIME", type='int',
+        help="Start tracing at TIME (must be in ticks)")
+    option("--trace-file", metavar="FILE", default="cout",
+        help="Sets the output file for tracing [Default: %default]")
+    option("--trace-ignore", metavar="EXPR", action='append', split=':',
+        help="Ignore EXPR sim objects")
 
-# load the options.py config file to allow people to set their own
-# default options
-options_file = config.get('options.py')
-if options_file:
-    scope = { 'options' : options }
-    execfile(options_file, scope)
+    # Help options
+    group("Help Options")
+    option("--list-sim-objects", action='store_true', default=False,
+        help="List all built-in SimObjects, their params and default values")
 
-arguments = options.parse_args()
+    # load the options.py config file to allow people to set their own
+    # default options
+    options_file = config.get('options.py')
+    if options_file:
+        scope = { 'options' : options }
+        execfile(options_file, scope)
+
+    arguments = options.parse_args()
+
+    return options,arguments
 
 def interact(scope):
     banner = "M5 Interactive Console"
@@ -138,7 +143,7 @@ def interact(scope):
     except ImportError:
         code.InteractiveConsole(scope).interact(banner)
 
-def main():
+def main(*args):
     import core
     import debug
     import defines
@@ -146,6 +151,16 @@ def main():
     import info
     import stats
     import trace
+
+    from util import fatal
+
+    global options
+    if len(args) == 0:
+        options, arguments = parse_options()
+    elif len(args) == 2:
+        options, arguments = args
+    else:
+        raise TypeError, "main() takes 0 or 2 arguments (%d given)" % len(args)
 
     def check_tracing():
         if defines.TRACING_ON:
@@ -358,6 +373,8 @@ def main():
 
 if __name__ == '__main__':
     from pprint import pprint
+
+    options, arguments = parse_options()
 
     print 'opts:'
     pprint(options, indent=4)

@@ -222,6 +222,16 @@ initM5Python()
 }
 
 /*
+ * Make the commands array weak so that they can be overridden (used
+ * by unit tests to specify a different python main function.
+ */
+const char * __attribute__((weak)) m5MainCommands[] = {
+    "import m5",
+    "m5.main()",
+    0 // sentinel is required
+};
+
+/*
  * Start up the M5 simulator.  This mostly vectors into the python
  * main function.
  */
@@ -238,20 +248,20 @@ m5Main(int argc, char **argv)
 
     // import the main m5 module
     PyObject *result;
-    result = PyRun_String("import m5", Py_file_input, dict, dict);
-    if (!result) {
-        PyErr_Print();
-        return 1;
-    }
-    Py_DECREF(result);
+    const char **command = m5MainCommands;
 
-    // Start m5
-    result = PyRun_String("m5.main()", Py_file_input, dict, dict);
-    if (!result) {
-        PyErr_Print();
-        return 1;
+    // evaluate each command in the m5MainCommands array (basically a
+    // bunch of python statements.
+    while (*command) {
+        result = PyRun_String(*command, Py_file_input, dict, dict);
+        if (!result) {
+            PyErr_Print();
+            return 1;
+        }
+        Py_DECREF(result);
+
+        command++;
     }
-    Py_DECREF(result);
 
     return 0;
 }
