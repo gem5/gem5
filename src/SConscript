@@ -56,41 +56,91 @@ from m5.util import code_formatter
 ########################################################################
 # Code for adding source files of various types
 #
+# When specifying a source file of some type, a set of guards can be
+# specified for that file.  When get() is used to find the files, if
+# get specifies a set of filters, only files that match those filters
+# will be accepted (unspecified filters on files are assumed to be
+# false).  Current filters are:
+#     main -- specifies the m5 main() function
+#     skip_lib -- do not put this file into the m5 library
+#     <unittest> -- unit tests use filters based on the unit test name
+#
+# A parent can now be specified for a source file and default filter
+# values will be retrieved recursively from parents (children override
+# parents).
+#
 class SourceMeta(type):
+    '''Meta class for source files that keeps track of all files of a
+    particular type and has a get function for finding all functions
+    of a certain type that match a set of guards'''
     def __init__(cls, name, bases, dict):
         super(SourceMeta, cls).__init__(name, bases, dict)
         cls.all = []
         
-    def get(cls, **kwargs):
+    def get(cls, **guards):
+        '''Find all files that match the specified guards.  If a source
+        file does not specify a flag, the default is False'''
         for src in cls.all:
-            for attr,value in kwargs.iteritems():
-                if getattr(src, attr) != value:
+            for flag,value in guards.iteritems():
+                # if the flag is found and has a different value, skip
+                # this file
+                if src.all_guards.get(flag, False) != value:
                     break
             else:
                 yield src
 
 class SourceFile(object):
+    '''Base object that encapsulates the notion of a source file.
+    This includes, the source node, target node, various manipulations
+    of those.  A source file also specifies a set of guards which
+    describing which builds the source file applies to.  A parent can
+    also be specified to get default guards from'''
     __metaclass__ = SourceMeta
-    def __init__(self, source):
+    def __init__(self, source, parent=None, **guards):
+        self.guards = guards
+        self.parent = parent
+
         tnode = source
         if not isinstance(source, SCons.Node.FS.File):
             tnode = File(source)
 
         self.tnode = tnode
         self.snode = tnode.srcnode()
-        self.filename = str(tnode)
-        self.dirname = dirname(self.filename)
-        self.basename = basename(self.filename)
-        index = self.basename.rfind('.')
-        if index <= 0:
-            # dot files aren't extensions
-            self.extname = self.basename, None
-        else:
-            self.extname = self.basename[:index], self.basename[index+1:]
 
         for base in type(self).__mro__:
             if issubclass(base, SourceFile):
                 base.all.append(self)
+
+    @property
+    def filename(self):
+        return str(self.tnode)
+
+    @property
+    def dirname(self):
+        return dirname(self.filename)
+
+    @property
+    def basename(self):
+        return basename(self.filename)
+
+    @property
+    def extname(self):
+        index = self.basename.rfind('.')
+        if index <= 0:
+            # dot files aren't extensions
+            return self.basename, None
+
+        return self.basename[:index], self.basename[index+1:]
+
+    @property
+    def all_guards(self):
+        '''find all guards for this object getting default values
+        recursively from its parents'''
+        guards = {}
+        if self.parent:
+            guards.update(self.parent.guards)
+        guards.update(self.guards)
+        return guards
 
     def __lt__(self, other): return self.filename < other.filename
     def __le__(self, other): return self.filename <= other.filename
@@ -101,14 +151,12 @@ class SourceFile(object):
         
 class Source(SourceFile):
     '''Add a c/c++ source file to the build'''
-    def __init__(self, source, Werror=True, swig=False, bin_only=False,
-                 skip_lib=False):
-        super(Source, self).__init__(source)
+    def __init__(self, source, Werror=True, swig=False, **guards):
+        '''specify the source file, and any guards'''
+        super(Source, self).__init__(source, **guards)
 
         self.Werror = Werror
         self.swig = swig
-        self.bin_only = bin_only
-        self.skip_lib = bin_only or skip_lib
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
@@ -117,8 +165,9 @@ class PySource(SourceFile):
     tnodes = {}
     symnames = {}
     
-    def __init__(self, package, source):
-        super(PySource, self).__init__(source)
+    def __init__(self, package, source, **guards):
+        '''specify the python package, the source file, and any guards'''
+        super(PySource, self).__init__(source, **guards)
 
         modname,ext = self.extname
         assert ext == 'py'
@@ -158,8 +207,10 @@ class SimObject(PySource):
     fixed = False
     modnames = []
 
-    def __init__(self, source):
-        super(SimObject, self).__init__('m5.objects', source)
+    def __init__(self, source, **guards):
+        '''Specify the source file and any guards (automatically in
+        the m5.objects package)'''
+        super(SimObject, self).__init__('m5.objects', source, **guards)
         if self.fixed:
             raise AttributeError, "Too late to call SimObject now."
 
@@ -168,8 +219,9 @@ class SimObject(PySource):
 class SwigSource(SourceFile):
     '''Add a swig file to build'''
 
-    def __init__(self, package, source):
-        super(SwigSource, self).__init__(source)
+    def __init__(self, package, source, **guards):
+        '''Specify the python package, the source file, and any guards'''
+        super(SwigSource, self).__init__(source, **guards)
 
         modname,ext = self.extname
         assert ext == 'i'
@@ -178,11 +230,13 @@ class SwigSource(SourceFile):
         cc_file = joinpath(self.dirname, modname + '_wrap.cc')
         py_file = joinpath(self.dirname, modname + '.py')
 
-        self.cc_source = Source(cc_file, swig=True)
-        self.py_source = PySource(package, py_file)
+        self.cc_source = Source(cc_file, swig=True, parent=self)
+        self.py_source = PySource(package, py_file, parent=self)
 
 unit_tests = []
 def UnitTest(target, sources):
+    '''Create a unit test, specify the target name and a source or
+    list of sources'''
     if not isinstance(sources, (list, tuple)):
         sources = [ sources ]
 
@@ -835,8 +889,9 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
         return obj
 
-    static_objs = [ make_obj(s, True) for s in Source.get(skip_lib=False)]
-    shared_objs = [ make_obj(s, False) for s in Source.get(skip_lib=False)]
+    sources = Source.get(main=False, skip_lib=False)
+    static_objs = [ make_obj(s, True) for s in sources ]
+    shared_objs = [ make_obj(s, False) for s in sources ]
 
     static_date = make_obj(date_source, static=True, extra_deps=static_objs)
     static_objs.append(static_date)
@@ -854,12 +909,13 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         new_env.Program("unittest/%s.%s" % (target, label), objs + static_objs)
 
     # Now link a stub with main() and the static library.
-    bin_objs = [make_obj(s, True) for s in Source.get(bin_only=True) ]
+    main_objs = [ make_obj(s, True) for s in Source.get(main=True) ]
+
     progname = exename
     if strip:
         progname += '.unstripped'
 
-    targets = new_env.Program(progname, bin_objs + static_objs)
+    targets = new_env.Program(progname, main_objs + static_objs)
 
     if strip:
         if sys.platform == 'sunos5':
