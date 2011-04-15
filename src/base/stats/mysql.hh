@@ -31,6 +31,8 @@
 #ifndef __BASE_STATS_MYSQL_HH__
 #define __BASE_STATS_MYSQL_HH__
 
+#include <cstdio>
+#include <list>
 #include <map>
 #include <string>
 
@@ -40,7 +42,8 @@
 namespace MySQL { class Connection; }
 namespace Stats {
 
-class DistInfo;
+class DistData;
+class DistParams;
 class MySqlRun;
 
 struct SetupStat
@@ -70,9 +73,9 @@ class InsertData
 {
   private:
     char *query;
-    size_type size;
+    std::size_t size;
     bool first;
-    static const size_type maxsize = 1024*1024;
+    static const std::size_t maxsize = 1024*1024;
 
   public:
     MySqlRun *run;

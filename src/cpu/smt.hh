@@ -36,6 +36,8 @@
 #ifndef __SMT_HH__
 #define __SMT_HH__
 
+#include "base/types.hh"
+
 #ifndef SMT_MAX_THREADS
 /** The number of TPUs in any processor. */
 #define SMT_MAX_THREADS 4

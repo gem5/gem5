@@ -33,12 +33,12 @@
 #endif
 
 #if defined(__sun)
-#include <cmath>
+#include <math.h>
 #endif
 
 #include <cassert>
 #ifdef __SUNPRO_CC
-#include <cmath>
+#include <math.h>
 #endif
 #include <cmath>
 #include <fstream>

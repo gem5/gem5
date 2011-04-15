@@ -71,14 +71,13 @@ using std::isnan;
 
 output exec {{
 #include <cmath>
-
-#include "arch/power/faults.hh"
-#include "arch/power/isa_traits.hh"
-#include "arch/power/utility.hh"
 #if defined(linux)
 #include <fenv.h>
 #endif
 
+#include "arch/power/faults.hh"
+#include "arch/power/isa_traits.hh"
+#include "arch/power/utility.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"

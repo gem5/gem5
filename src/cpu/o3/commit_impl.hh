@@ -55,6 +55,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/timebuf.hh"
 #include "params/DerivO3CPU.hh"
+#include "sim/faults.hh"
 
 #if USE_CHECKER
 #include "cpu/checker/cpu.hh"

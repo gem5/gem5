@@ -50,7 +50,7 @@
 #include <algorithm>
 #include <cassert>
 #ifdef __SUNPRO_CC
-#include <cmath>
+#include <math.h>
 #endif
 #include <cmath>
 #include <functional>

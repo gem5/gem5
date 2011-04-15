@@ -28,8 +28,12 @@
  * Authors: Kevin Lim
  */
 
+#include "arch/types.hh"
+#include "base/trace.hh"
+#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/decode.hh"
+#include "cpu/inst_seq.hh"
 #include "params/DerivO3CPU.hh"
 
 using namespace std;

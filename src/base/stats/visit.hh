@@ -37,7 +37,6 @@ class Info;
 class ScalarInfo;
 class VectorInfo;
 class DistInfo;
-class DistInfo;
 class VectorDistInfo;
 class Vector2dInfo;
 class FormulaInfo;

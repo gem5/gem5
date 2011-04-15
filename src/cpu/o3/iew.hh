@@ -44,6 +44,7 @@
 #define __CPU_O3_IEW_HH__
 
 #include <queue>
+#include <set>
 
 #include "base/statistics.hh"
 #include "config/full_system.hh"
