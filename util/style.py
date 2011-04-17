@@ -45,7 +45,7 @@ from m5.util import neg_inf, pos_inf, Region, Regions
 import sort_includes
 from file_types import lang_type
 
-all_regions = Region(neg_inf, pos_inf)
+all_regions = Regions(Region(neg_inf, pos_inf))
 
 tabsize = 8
 lead = re.compile(r'^([ \t]+)')
@@ -113,10 +113,6 @@ class StdioUI(UserInterface):
 
     def write(self, string):
         sys.stdout.write(string)
-
-class Region(object):
-    def __init__(self, asdf):
-        self.regions = Foo
 
 class Verifier(object):
     def __init__(self, ui, repo=None):
