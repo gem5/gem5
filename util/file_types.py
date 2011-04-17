@@ -140,7 +140,10 @@ def update_file(dst, src, language, mutator):
 
     if isinstance(src, str):
         # if a filename was provided, open the file
-        mode = 'r+' if inplace else 'r'
+        if inplace:
+            mode = 'r+'
+        else:
+            mode = 'r'
         src = file(src, mode)
 
     orig_lines = []
