@@ -243,7 +243,6 @@ class SortedIncludes(Verifier):
 
         mod = modified_regions(old, new)
         modified = mod & regions
-        print mod, regions, modified
 
         if modified:
             self.write("invalid sorting of includes\n")
