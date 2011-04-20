@@ -69,6 +69,8 @@ class Info
   public:
     /** The name of the stat. */
     std::string name;
+    /** The separator string used for vectors, dist, etc. */
+    static std::string separatorString;
     /** The description of the stat. */
     std::string desc;
     /** The formatting flags. */
@@ -93,6 +95,7 @@ class Info
 
     /** Set the name of this statistic */
     void setName(const std::string &name);
+    void setSeparator(std::string _sep) { separatorString = _sep;}
 
     /**
      * Check that this stat has been set up properly and is ready for

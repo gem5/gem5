@@ -48,6 +48,7 @@ using namespace std;
 
 namespace Stats {
 
+std::string Info::separatorString = "::";
 typedef map<const void *, Info *> MapType;
 
 // We wrap these in a function to make sure they're built in time.

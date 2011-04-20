@@ -234,6 +234,7 @@ ScalarPrint::operator()(ostream &stream) const
 struct VectorPrint
 {
     string name;
+    string separatorString;
     string desc;
     vector<string> subnames;
     vector<string> subdescs;
@@ -258,7 +259,7 @@ VectorPrint::operator()(std::ostream &stream) const
         }
     }
 
-    string base = name + "::";
+    string base = name + separatorString;
 
     ScalarPrint print;
     print.name = name;
@@ -301,6 +302,7 @@ VectorPrint::operator()(std::ostream &stream) const
 struct DistPrint
 {
     string name;
+    string separatorString;
     string desc;
     Flags flags;
     bool descriptions;
@@ -336,6 +338,7 @@ void
 DistPrint::init(const Text *text, const Info &info)
 {
     name = info.name;
+    separatorString = info.separatorString;
     desc = info.desc;
     flags = info.flags;
     precision = info.precision;
@@ -345,7 +348,7 @@ DistPrint::init(const Text *text, const Info &info)
 void
 DistPrint::operator()(ostream &stream) const
 {
-    string base = name + "::";
+    string base = name + separatorString;
 
     ScalarPrint print;
     print.precision = precision;
@@ -465,6 +468,7 @@ Text::visit(const VectorInfo &info)
     VectorPrint print;
 
     print.name = info.name;
+    print.separatorString = info.separatorString;
     print.desc = info.desc;
     print.flags = info.flags;
     print.descriptions = descriptions;
@@ -504,6 +508,7 @@ Text::visit(const Vector2dInfo &info)
 
     print.subnames = info.y_subnames;
     print.flags = info.flags;
+    print.separatorString = info.separatorString;
     print.descriptions = descriptions;
     print.precision = info.precision;
 

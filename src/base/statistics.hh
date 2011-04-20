@@ -256,6 +256,23 @@ class DataWrap : public InfoAccess
     const std::string &name() const { return this->info()->name; }
 
     /**
+     * Set the character(s) used between the name and vector number
+     * on vectors, dist, etc.
+     * @param _sep The new separator string
+     * @return A reference to this stat.
+     */
+    Derived &
+    setSeparator(const std::string &_sep)
+    {
+      this->info()->setSeparator(_sep);
+      return this->self();
+    }
+    const std::string &setSeparator() const
+    {
+      return this->info()->separatorString;
+    }
+
+    /**
      * Set the description and marks this stat to print at the end of
      * simulation.
      * @param desc The new description.
