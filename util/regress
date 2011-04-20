@@ -52,7 +52,7 @@ add_option('--builds', dest='builds',
            'X86_SE,X86_FS,' \
            'ARM_SE,ARM_FS',
            help="comma-separated build targets to test (default: '%default')")
-add_option('--variants', dest='variants', default='fast',
+add_option('--variants', dest='variants', default='opt',
            help="comma-separated build variants to test (default: '%default')")
 add_option('--scons-opts', dest='scons_opts', default='', metavar='OPTS',
            help='scons options')
