@@ -188,83 +188,83 @@ DefaultCommit<Impl>::regStats()
         .prereq(branchMispredicts);
     numCommittedDist
         .init(0,commitWidth,1)
-        .name(name() + ".COM:committed_per_cycle")
+        .name(name() + ".committed_per_cycle")
         .desc("Number of insts commited each cycle")
         .flags(Stats::pdf)
         ;
 
     statComInst
         .init(cpu->numThreads)
-        .name(name() + ".COM:count")
+        .name(name() + ".count")
         .desc("Number of instructions committed")
         .flags(total)
         ;
 
     statComSwp
         .init(cpu->numThreads)
-        .name(name() + ".COM:swp_count")
+        .name(name() + ".swp_count")
         .desc("Number of s/w prefetches committed")
         .flags(total)
         ;
 
     statComRefs
         .init(cpu->numThreads)
-        .name(name() +  ".COM:refs")
+        .name(name() +  ".refs")
         .desc("Number of memory references committed")
         .flags(total)
         ;
 
     statComLoads
         .init(cpu->numThreads)
-        .name(name() +  ".COM:loads")
+        .name(name() +  ".loads")
         .desc("Number of loads committed")
         .flags(total)
         ;
 
     statComMembars
         .init(cpu->numThreads)
-        .name(name() +  ".COM:membars")
+        .name(name() +  ".membars")
         .desc("Number of memory barriers committed")
         .flags(total)
         ;
 
     statComBranches
         .init(cpu->numThreads)
-        .name(name() + ".COM:branches")
+        .name(name() + ".branches")
         .desc("Number of branches committed")
         .flags(total)
         ;
 
     statComFloating
         .init(cpu->numThreads)
-        .name(name() + ".COM:fp_insts")
+        .name(name() + ".fp_insts")
         .desc("Number of committed floating point instructions.")
         .flags(total)
         ;
 
     statComInteger
         .init(cpu->numThreads)
-        .name(name()+".COM:int_insts")
+        .name(name()+".int_insts")
         .desc("Number of committed integer instructions.")
         .flags(total)
         ;
 
     statComFunctionCalls
         .init(cpu->numThreads)
-        .name(name()+".COM:function_calls")
+        .name(name()+".function_calls")
         .desc("Number of function calls committed.")
         .flags(total)
         ;
 
     commitEligible
         .init(cpu->numThreads)
-        .name(name() + ".COM:bw_limited")
+        .name(name() + ".bw_limited")
         .desc("number of insts not committed due to BW limits")
         .flags(total)
         ;
 
     commitEligibleSamples
-        .name(name() + ".COM:bw_lim_events")
+        .name(name() + ".bw_lim_events")
         .desc("number cycles where commit BW limit reached")
         ;
 }

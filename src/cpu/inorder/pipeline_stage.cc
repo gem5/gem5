@@ -88,7 +88,7 @@ PipelineStage::init(Params *params)
 std::string
 PipelineStage::name() const
 {
-     return cpu->name() + ".stage-" + to_string(stageNum);
+     return cpu->name() + ".stage" + to_string(stageNum);
 }
 
 

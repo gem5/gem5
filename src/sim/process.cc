@@ -180,7 +180,7 @@ Process::regStats()
     using namespace Stats;
 
     num_syscalls
-        .name(name() + ".PROG:num_syscalls")
+        .name(name() + ".num_syscalls")
         .desc("Number of system calls")
         ;
 }

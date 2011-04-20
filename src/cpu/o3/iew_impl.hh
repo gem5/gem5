@@ -194,36 +194,36 @@ DefaultIEW<Impl>::regStats()
 
     iewExecutedSwp
         .init(cpu->numThreads)
-        .name(name() + ".EXEC:swp")
+        .name(name() + ".exec_swp")
         .desc("number of swp insts executed")
         .flags(total);
 
     iewExecutedNop
         .init(cpu->numThreads)
-        .name(name() + ".EXEC:nop")
+        .name(name() + ".exec_nop")
         .desc("number of nop insts executed")
         .flags(total);
 
     iewExecutedRefs
         .init(cpu->numThreads)
-        .name(name() + ".EXEC:refs")
+        .name(name() + ".exec_refs")
         .desc("number of memory reference insts executed")
         .flags(total);
 
     iewExecutedBranches
         .init(cpu->numThreads)
-        .name(name() + ".EXEC:branches")
+        .name(name() + ".exec_branches")
         .desc("Number of branches executed")
         .flags(total);
 
     iewExecStoreInsts
-        .name(name() + ".EXEC:stores")
+        .name(name() + ".exec_stores")
         .desc("Number of stores executed")
         .flags(total);
     iewExecStoreInsts = iewExecutedRefs - iewExecLoadInsts;
 
     iewExecRate
-        .name(name() + ".EXEC:rate")
+        .name(name() + ".exec_rate")
         .desc("Inst execution rate")
         .flags(total);
 
@@ -231,50 +231,50 @@ DefaultIEW<Impl>::regStats()
 
     iewInstsToCommit
         .init(cpu->numThreads)
-        .name(name() + ".WB:sent")
+        .name(name() + ".wb_sent")
         .desc("cumulative count of insts sent to commit")
         .flags(total);
 
     writebackCount
         .init(cpu->numThreads)
-        .name(name() + ".WB:count")
+        .name(name() + ".wb_count")
         .desc("cumulative count of insts written-back")
         .flags(total);
 
     producerInst
         .init(cpu->numThreads)
-        .name(name() + ".WB:producers")
+        .name(name() + ".wb_producers")
         .desc("num instructions producing a value")
         .flags(total);
 
     consumerInst
         .init(cpu->numThreads)
-        .name(name() + ".WB:consumers")
+        .name(name() + ".wb_consumers")
         .desc("num instructions consuming a value")
         .flags(total);
 
     wbPenalized
         .init(cpu->numThreads)
-        .name(name() + ".WB:penalized")
+        .name(name() + ".wb_penalized")
         .desc("number of instrctions required to write to 'other' IQ")
         .flags(total);
 
     wbPenalizedRate
-        .name(name() + ".WB:penalized_rate")
+        .name(name() + ".wb_penalized_rate")
         .desc ("fraction of instructions written-back that wrote to 'other' IQ")
         .flags(total);
 
     wbPenalizedRate = wbPenalized / writebackCount;
 
     wbFanout
-        .name(name() + ".WB:fanout")
+        .name(name() + ".wb_fanout")
         .desc("average fanout of values written-back")
         .flags(total);
 
     wbFanout = producerInst / consumerInst;
 
     wbRate
-        .name(name() + ".WB:rate")
+        .name(name() + ".wb_rate")
         .desc("insts written-back per cycle")
         .flags(total);
     wbRate = writebackCount / cpu->numCycles;

@@ -103,90 +103,90 @@ void
 DefaultRename<Impl>::regStats()
 {
     renameSquashCycles
-        .name(name() + ".RENAME:SquashCycles")
+        .name(name() + ".SquashCycles")
         .desc("Number of cycles rename is squashing")
         .prereq(renameSquashCycles);
     renameIdleCycles
-        .name(name() + ".RENAME:IdleCycles")
+        .name(name() + ".IdleCycles")
         .desc("Number of cycles rename is idle")
         .prereq(renameIdleCycles);
     renameBlockCycles
-        .name(name() + ".RENAME:BlockCycles")
+        .name(name() + ".BlockCycles")
         .desc("Number of cycles rename is blocking")
         .prereq(renameBlockCycles);
     renameSerializeStallCycles
-        .name(name() + ".RENAME:serializeStallCycles")
+        .name(name() + ".serializeStallCycles")
         .desc("count of cycles rename stalled for serializing inst")
         .flags(Stats::total);
     renameRunCycles
-        .name(name() + ".RENAME:RunCycles")
+        .name(name() + ".RunCycles")
         .desc("Number of cycles rename is running")
         .prereq(renameIdleCycles);
     renameUnblockCycles
-        .name(name() + ".RENAME:UnblockCycles")
+        .name(name() + ".UnblockCycles")
         .desc("Number of cycles rename is unblocking")
         .prereq(renameUnblockCycles);
     renameRenamedInsts
-        .name(name() + ".RENAME:RenamedInsts")
+        .name(name() + ".RenamedInsts")
         .desc("Number of instructions processed by rename")
         .prereq(renameRenamedInsts);
     renameSquashedInsts
-        .name(name() + ".RENAME:SquashedInsts")
+        .name(name() + ".SquashedInsts")
         .desc("Number of squashed instructions processed by rename")
         .prereq(renameSquashedInsts);
     renameROBFullEvents
-        .name(name() + ".RENAME:ROBFullEvents")
+        .name(name() + ".ROBFullEvents")
         .desc("Number of times rename has blocked due to ROB full")
         .prereq(renameROBFullEvents);
     renameIQFullEvents
-        .name(name() + ".RENAME:IQFullEvents")
+        .name(name() + ".IQFullEvents")
         .desc("Number of times rename has blocked due to IQ full")
         .prereq(renameIQFullEvents);
     renameLSQFullEvents
-        .name(name() + ".RENAME:LSQFullEvents")
+        .name(name() + ".LSQFullEvents")
         .desc("Number of times rename has blocked due to LSQ full")
         .prereq(renameLSQFullEvents);
     renameFullRegistersEvents
-        .name(name() + ".RENAME:FullRegisterEvents")
+        .name(name() + ".FullRegisterEvents")
         .desc("Number of times there has been no free registers")
         .prereq(renameFullRegistersEvents);
     renameRenamedOperands
-        .name(name() + ".RENAME:RenamedOperands")
+        .name(name() + ".RenamedOperands")
         .desc("Number of destination operands rename has renamed")
         .prereq(renameRenamedOperands);
     renameRenameLookups
-        .name(name() + ".RENAME:RenameLookups")
+        .name(name() + ".RenameLookups")
         .desc("Number of register rename lookups that rename has made")
         .prereq(renameRenameLookups);
     renameCommittedMaps
-        .name(name() + ".RENAME:CommittedMaps")
+        .name(name() + ".CommittedMaps")
         .desc("Number of HB maps that are committed")
         .prereq(renameCommittedMaps);
     renameUndoneMaps
-        .name(name() + ".RENAME:UndoneMaps")
+        .name(name() + ".UndoneMaps")
         .desc("Number of HB maps that are undone due to squashing")
         .prereq(renameUndoneMaps);
     renamedSerializing
-        .name(name() + ".RENAME:serializingInsts")
+        .name(name() + ".serializingInsts")
         .desc("count of serializing insts renamed")
         .flags(Stats::total)
         ;
     renamedTempSerializing
-        .name(name() + ".RENAME:tempSerializingInsts")
+        .name(name() + ".tempSerializingInsts")
         .desc("count of temporary serializing insts renamed")
         .flags(Stats::total)
         ;
     renameSkidInsts
-        .name(name() + ".RENAME:skidInsts")
+        .name(name() + ".skidInsts")
         .desc("count of insts added to the skid buffer")
         .flags(Stats::total)
         ;
     intRenameLookups
-        .name(name() + ".RENAME:int_rename_lookups")
+        .name(name() + ".int_rename_lookups")
         .desc("Number of integer rename lookups")
         .prereq(intRenameLookups);
     fpRenameLookups
-        .name(name() + ".RENAME:fp_rename_lookups")
+        .name(name() + ".fp_rename_lookups")
         .desc("Number of floating rename lookups")
         .prereq(fpRenameLookups);
 }

@@ -48,37 +48,48 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, InOrderCPUParams *params)
     // Declare Resource Objects
     // name - id - bandwidth - latency - CPU - Parameters
     // --------------------------------------------------
-    resources.push_back(new FetchSeqUnit("Fetch-Seq-Unit", FetchSeq, StageWidth * 2, 0, _cpu, params));
+    resources.push_back(new FetchSeqUnit("fetch_seq_unit", FetchSeq,
+            StageWidth * 2, 0, _cpu, params));
 
-    resources.push_back(new TLBUnit("I-TLB", ITLB, StageWidth, 0, _cpu, params));
+    resources.push_back(new TLBUnit("itlb", ITLB, StageWidth, 0, _cpu, params));
 
     memObjects.push_back(ICache);
-    resources.push_back(new CacheUnit("icache_port", ICache, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new CacheUnit("icache_port", ICache,
+            StageWidth * MaxThreads, 0, _cpu, params));
 
-    resources.push_back(new DecodeUnit("Decode-Unit", Decode, StageWidth, 0, _cpu, params));
+    resources.push_back(new DecodeUnit("decode_unit", Decode, StageWidth, 0,
+            _cpu, params));
 
-    resources.push_back(new BranchPredictor("Branch-Predictor", BPred, StageWidth, 0, _cpu, params));
+    resources.push_back(new BranchPredictor("branch_predictor", BPred,
+            StageWidth, 0, _cpu, params));
 
     for (int i = 0; i < params->numberOfThreads; i++) {
         char fbuff_name[20];
-        sprintf(fbuff_name, "Fetch-Buffer-T%i", i);
-        resources.push_back(new InstBuffer(fbuff_name, FetchBuff + i, 4, 0, _cpu, params));
+        sprintf(fbuff_name, "fetch_buffer_t%i", i);
+        resources.push_back(new InstBuffer(fbuff_name, FetchBuff + i, 4, 0,
+                _cpu, params));
     }
 
-    resources.push_back(new UseDefUnit("RegFile-Manager", RegManager, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new UseDefUnit("regfile_manager", RegManager,
+            StageWidth * MaxThreads, 0, _cpu, params));
 
-    resources.push_back(new AGENUnit("AGEN-Unit", AGEN, StageWidth, 0, _cpu, params));
+    resources.push_back(new AGENUnit("agen_unit", AGEN, StageWidth, 0, _cpu,
+            params));
 
-    resources.push_back(new ExecutionUnit("Execution-Unit", ExecUnit, StageWidth, 0, _cpu, params));
+    resources.push_back(new ExecutionUnit("execution_unit", ExecUnit,
+            StageWidth, 0, _cpu, params));
 
-    resources.push_back(new MultDivUnit("Mult-Div-Unit", MDU, 5, 0, _cpu, params));
+    resources.push_back(new MultDivUnit("mult_div_unit", MDU, 5, 0, _cpu,
+            params));
 
-    resources.push_back(new TLBUnit("D-TLB", DTLB, StageWidth, 0, _cpu, params));
+    resources.push_back(new TLBUnit("dtlb", DTLB, StageWidth, 0, _cpu, params));
 
     memObjects.push_back(DCache);
-    resources.push_back(new CacheUnit("dcache_port", DCache, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new CacheUnit("dcache_port", DCache,
+            StageWidth * MaxThreads, 0, _cpu, params));
 
-    resources.push_back(new GraduationUnit("Graduation-Unit", Grad, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new GraduationUnit("graduation_unit", Grad,
+            StageWidth * MaxThreads, 0, _cpu, params));
 }
 
 void

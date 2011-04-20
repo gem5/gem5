@@ -258,14 +258,14 @@ InstructionQueue<Impl>::regStats()
 */
     numIssuedDist
         .init(0,totalWidth,1)
-        .name(name() + ".ISSUE:issued_per_cycle")
+        .name(name() + ".issued_per_cycle")
         .desc("Number of insts issued each cycle")
         .flags(pdf)
         ;
 /*
     dist_unissued
         .init(Num_OpClasses+2)
-        .name(name() + ".ISSUE:unissued_cause")
+        .name(name() + ".unissued_cause")
         .desc("Reason ready instruction not issued")
         .flags(pdf | dist)
         ;
@@ -275,7 +275,7 @@ InstructionQueue<Impl>::regStats()
 */
     statIssuedInstType
         .init(numThreads,Enums::Num_OpClass)
-        .name(name() + ".ISSUE:FU_type")
+        .name(name() + ".FU_type")
         .desc("Type of FU issued")
         .flags(total | pdf | dist)
         ;
@@ -287,7 +287,7 @@ InstructionQueue<Impl>::regStats()
 /*
     issueDelayDist
         .init(Num_OpClasses,0,99,2)
-        .name(name() + ".ISSUE:")
+        .name(name() + ".")
         .desc("cycles from operands ready to issue")
         .flags(pdf | cdf)
         ;
@@ -299,7 +299,7 @@ InstructionQueue<Impl>::regStats()
     }
 */
     issueRate
-        .name(name() + ".ISSUE:rate")
+        .name(name() + ".rate")
         .desc("Inst issue rate")
         .flags(total)
         ;
@@ -307,7 +307,7 @@ InstructionQueue<Impl>::regStats()
 
     statFuBusy
         .init(Num_OpClasses)
-        .name(name() + ".ISSUE:fu_full")
+        .name(name() + ".fu_full")
         .desc("attempts to use FU when none available")
         .flags(pdf | dist)
         ;
@@ -317,13 +317,13 @@ InstructionQueue<Impl>::regStats()
 
     fuBusy
         .init(numThreads)
-        .name(name() + ".ISSUE:fu_busy_cnt")
+        .name(name() + ".fu_busy_cnt")
         .desc("FU busy when requested")
         .flags(total)
         ;
 
     fuBusyRate
-        .name(name() + ".ISSUE:fu_busy_rate")
+        .name(name() + ".fu_busy_rate")
         .desc("FU busy rate (busy events/executed inst)")
         .flags(total)
         ;

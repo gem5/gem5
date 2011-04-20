@@ -77,44 +77,44 @@ void
 DefaultDecode<Impl>::regStats()
 {
     decodeIdleCycles
-        .name(name() + ".DECODE:IdleCycles")
+        .name(name() + ".IdleCycles")
         .desc("Number of cycles decode is idle")
         .prereq(decodeIdleCycles);
     decodeBlockedCycles
-        .name(name() + ".DECODE:BlockedCycles")
+        .name(name() + ".BlockedCycles")
         .desc("Number of cycles decode is blocked")
         .prereq(decodeBlockedCycles);
     decodeRunCycles
-        .name(name() + ".DECODE:RunCycles")
+        .name(name() + ".RunCycles")
         .desc("Number of cycles decode is running")
         .prereq(decodeRunCycles);
     decodeUnblockCycles
-        .name(name() + ".DECODE:UnblockCycles")
+        .name(name() + ".UnblockCycles")
         .desc("Number of cycles decode is unblocking")
         .prereq(decodeUnblockCycles);
     decodeSquashCycles
-        .name(name() + ".DECODE:SquashCycles")
+        .name(name() + ".SquashCycles")
         .desc("Number of cycles decode is squashing")
         .prereq(decodeSquashCycles);
     decodeBranchResolved
-        .name(name() + ".DECODE:BranchResolved")
+        .name(name() + ".BranchResolved")
         .desc("Number of times decode resolved a branch")
         .prereq(decodeBranchResolved);
     decodeBranchMispred
-        .name(name() + ".DECODE:BranchMispred")
+        .name(name() + ".BranchMispred")
         .desc("Number of times decode detected a branch misprediction")
         .prereq(decodeBranchMispred);
     decodeControlMispred
-        .name(name() + ".DECODE:ControlMispred")
+        .name(name() + ".ControlMispred")
         .desc("Number of times decode detected an instruction incorrectly"
               " predicted as a control")
         .prereq(decodeControlMispred);
     decodeDecodedInsts
-        .name(name() + ".DECODE:DecodedInsts")
+        .name(name() + ".DecodedInsts")
         .desc("Number of instructions handled by decode")
         .prereq(decodeDecodedInsts);
     decodeSquashedInsts
-        .name(name() + ".DECODE:SquashedInsts")
+        .name(name() + ".SquashedInsts")
         .desc("Number of squashed instructions handled by decode")
         .prereq(decodeSquashedInsts);
 }

@@ -94,7 +94,7 @@ BaseTags::regStats(const string &name)
         ;
 
     avgOccs
-        .name(name + ".occ_%")
+        .name(name + ".occ_percent")
         .desc("Average percentage of cache occupancy")
         .flags(nozero)
         ;
