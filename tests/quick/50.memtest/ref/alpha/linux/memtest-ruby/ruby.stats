@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Feb/07/2011 01:50:48
+Real time: Apr/19/2011 11:59:23
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 190
-Elapsed_time_in_minutes: 3.16667
-Elapsed_time_in_hours: 0.0527778
-Elapsed_time_in_days: 0.00219907
+Elapsed_time_in_seconds: 48
+Elapsed_time_in_minutes: 0.8
+Elapsed_time_in_hours: 0.0133333
+Elapsed_time_in_days: 0.000555556
 
-Virtual_time_in_seconds: 99.44
-Virtual_time_in_minutes: 1.65733
-Virtual_time_in_hours:   0.0276222
-Virtual_time_in_days:    0.00115093
+Virtual_time_in_seconds: 47.95
+Virtual_time_in_minutes: 0.799167
+Virtual_time_in_hours:   0.0133194
+Virtual_time_in_days:    0.000554977
 
 Ruby_current_time: 57251340
 Ruby_start_time: 0
 Ruby_cycles: 57251340
 
-mbytes_resident: 36.6133
-mbytes_total: 355.375
-resident_ratio: 0.103038
+mbytes_resident: 37.5156
+mbytes_total: 335.734
+resident_ratio: 0.111754
 
 ruby_cycles_executed: [ 57251341 57251341 57251341 57251341 57251341 57251341 57251341 57251341 ]
 
@@ -118,13 +118,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 18 count: 2458515 average: 0.00032173
 Resource Usage
 --------------
 page_size: 4096
-user_time: 99
+user_time: 47
 system_time: 0
-page_reclaims: 10455
+page_reclaims: 9943
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 112
+block_outputs: 104
 
 Network Stats
 -------------
@@ -284,7 +284,7 @@ Cache Stats: system.l1_cntrl0.cacheMemory
   system.l1_cntrl0.cacheMemory_request_type_LD:   65.2232%
   system.l1_cntrl0.cacheMemory_request_type_ST:   34.7768%
 
-  system.l1_cntrl0.cacheMemory_access_mode_type_SupervisorMode:   153154    100%
+  system.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   153154    100%
 
  --- L1Cache ---
  - Event Counts -
@@ -335,7 +335,7 @@ Cache Stats: system.l1_cntrl1.cacheMemory
   system.l1_cntrl1.cacheMemory_request_type_LD:   64.9786%
   system.l1_cntrl1.cacheMemory_request_type_ST:   35.0214%
 
-  system.l1_cntrl1.cacheMemory_access_mode_type_SupervisorMode:   153355    100%
+  system.l1_cntrl1.cacheMemory_access_mode_type_Supervisor:   153355    100%
 
 Cache Stats: system.l1_cntrl2.cacheMemory
   system.l1_cntrl2.cacheMemory_total_misses: 153381
@@ -347,7 +347,7 @@ Cache Stats: system.l1_cntrl2.cacheMemory
   system.l1_cntrl2.cacheMemory_request_type_LD:   65.0433%
   system.l1_cntrl2.cacheMemory_request_type_ST:   34.9567%
 
-  system.l1_cntrl2.cacheMemory_access_mode_type_SupervisorMode:   153381    100%
+  system.l1_cntrl2.cacheMemory_access_mode_type_Supervisor:   153381    100%
 
 Cache Stats: system.l1_cntrl3.cacheMemory
   system.l1_cntrl3.cacheMemory_total_misses: 153389
@@ -359,7 +359,7 @@ Cache Stats: system.l1_cntrl3.cacheMemory
   system.l1_cntrl3.cacheMemory_request_type_LD:   64.9884%
   system.l1_cntrl3.cacheMemory_request_type_ST:   35.0116%
 
-  system.l1_cntrl3.cacheMemory_access_mode_type_SupervisorMode:   153389    100%
+  system.l1_cntrl3.cacheMemory_access_mode_type_Supervisor:   153389    100%
 
 Cache Stats: system.l1_cntrl4.cacheMemory
   system.l1_cntrl4.cacheMemory_total_misses: 153758
@@ -371,7 +371,7 @@ Cache Stats: system.l1_cntrl4.cacheMemory
   system.l1_cntrl4.cacheMemory_request_type_LD:   64.9436%
   system.l1_cntrl4.cacheMemory_request_type_ST:   35.0564%
 
-  system.l1_cntrl4.cacheMemory_access_mode_type_SupervisorMode:   153758    100%
+  system.l1_cntrl4.cacheMemory_access_mode_type_Supervisor:   153758    100%
 
 Cache Stats: system.l1_cntrl5.cacheMemory
   system.l1_cntrl5.cacheMemory_total_misses: 153613
@@ -383,7 +383,7 @@ Cache Stats: system.l1_cntrl5.cacheMemory
   system.l1_cntrl5.cacheMemory_request_type_LD:   65.1%
   system.l1_cntrl5.cacheMemory_request_type_ST:   34.9%
 
-  system.l1_cntrl5.cacheMemory_access_mode_type_SupervisorMode:   153613    100%
+  system.l1_cntrl5.cacheMemory_access_mode_type_Supervisor:   153613    100%
 
 Cache Stats: system.l1_cntrl6.cacheMemory
   system.l1_cntrl6.cacheMemory_total_misses: 153962
@@ -395,7 +395,7 @@ Cache Stats: system.l1_cntrl6.cacheMemory
   system.l1_cntrl6.cacheMemory_request_type_LD:   64.8465%
   system.l1_cntrl6.cacheMemory_request_type_ST:   35.1535%
 
-  system.l1_cntrl6.cacheMemory_access_mode_type_SupervisorMode:   153962    100%
+  system.l1_cntrl6.cacheMemory_access_mode_type_Supervisor:   153962    100%
 
 Cache Stats: system.l1_cntrl7.cacheMemory
   system.l1_cntrl7.cacheMemory_total_misses: 152712
@@ -407,7 +407,7 @@ Cache Stats: system.l1_cntrl7.cacheMemory
   system.l1_cntrl7.cacheMemory_request_type_LD:   64.9484%
   system.l1_cntrl7.cacheMemory_request_type_ST:   35.0516%
 
-  system.l1_cntrl7.cacheMemory_access_mode_type_SupervisorMode:   152712    100%
+  system.l1_cntrl7.cacheMemory_access_mode_type_Supervisor:   152712    100%
 
 Memory controller: system.dir_cntrl0.memBuffer:
   memory_total_requests: 2421588

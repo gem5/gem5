@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 26 2011 14:06:20
-M5 started Mar 26 2011 22:00:43
-M5 executing on phenom
+M5 compiled Apr 19 2011 12:17:10
+M5 started Apr 19 2011 12:17:16
+M5 executing on maize
 command line: build/ALPHA_SE_MOESI_CMP_token/m5.fast -d build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

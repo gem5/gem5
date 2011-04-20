@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Feb/23/2011 14:32:39
+Real time: Apr/19/2011 12:12:06
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 343
-Elapsed_time_in_minutes: 5.71667
-Elapsed_time_in_hours: 0.0952778
-Elapsed_time_in_days: 0.00396991
+Elapsed_time_in_seconds: 136
+Elapsed_time_in_minutes: 2.26667
+Elapsed_time_in_hours: 0.0377778
+Elapsed_time_in_days: 0.00157407
 
-Virtual_time_in_seconds: 266.4
-Virtual_time_in_minutes: 4.44
-Virtual_time_in_hours:   0.074
-Virtual_time_in_days:    0.00308333
+Virtual_time_in_seconds: 135.92
+Virtual_time_in_minutes: 2.26533
+Virtual_time_in_hours:   0.0377556
+Virtual_time_in_days:    0.00157315
 
 Ruby_current_time: 38170519
 Ruby_start_time: 0
 Ruby_cycles: 38170519
 
-mbytes_resident: 35.4453
-mbytes_total: 337.395
-resident_ratio: 0.105079
+mbytes_resident: 37.4531
+mbytes_total: 335.598
+resident_ratio: 0.111613
 
 ruby_cycles_executed: [ 38170520 38170520 38170520 38170520 38170520 38170520 38170520 38170520 ]
 
@@ -124,13 +124,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard dev
 Resource Usage
 --------------
 page_size: 4096
-user_time: 265
+user_time: 135
 system_time: 0
-page_reclaims: 10328
+page_reclaims: 9924
 page_faults: 0
 swaps: 0
-block_inputs: 568
-block_outputs: 0
+block_inputs: 0
+block_outputs: 168
 
 Network Stats
 -------------
@@ -379,7 +379,7 @@ Cache Stats: system.l1_cntrl0.L1DcacheMemory
   system.l1_cntrl0.L1DcacheMemory_request_type_LD:   64.988%
   system.l1_cntrl0.L1DcacheMemory_request_type_ST:   35.012%
 
-  system.l1_cntrl0.L1DcacheMemory_access_mode_type_SupervisorMode:   153213    100%
+  system.l1_cntrl0.L1DcacheMemory_access_mode_type_Supervisor:   153213    100%
 
 Cache Stats: system.l1_cntrl0.L2cacheMemory
   system.l1_cntrl0.L2cacheMemory_total_misses: 153213
@@ -391,7 +391,7 @@ Cache Stats: system.l1_cntrl0.L2cacheMemory
   system.l1_cntrl0.L2cacheMemory_request_type_LD:   64.988%
   system.l1_cntrl0.L2cacheMemory_request_type_ST:   35.012%
 
-  system.l1_cntrl0.L2cacheMemory_access_mode_type_SupervisorMode:   153213    100%
+  system.l1_cntrl0.L2cacheMemory_access_mode_type_Supervisor:   153213    100%
 
  --- L1Cache ---
  - Event Counts -
@@ -411,13 +411,15 @@ NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 Invalidate [0 0 0 0 0 0 0 0 ] 0
 Ack [1066502 1065611 1070273 1066825 1066414 1070011 1068622 1066110 ] 8540368
 Shared_Ack [115 119 110 96 98 118 109 121 ] 886
-Data [5959 5967 5973 5842 5910 5904 5761 5814 ] 47130
-Shared_Data [2080 2145 2106 2083 2029 2073 2131 2053 ] 16700
+Data [5953 5964 5970 5839 5905 5902 5754 5810 ] 47097
+Shared_Data [2086 2148 2109 2086 2034 2075 2138 2057 ] 16733
 Exclusive_Data [145032 144875 145557 145214 145130 145617 145502 145154 ] 1162081
 Writeback_Ack [144148 143915 144662 144412 144342 144857 144660 144311 ] 1155307
 Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
-All_acks [2183 2248 2197 2165 2115 2175 2229 2160 ] 17472
-All_acks_no_sharers [150891 150740 151440 150974 150955 151420 151165 150862 ] 1208447
+All_acks [2189 2251 2200 2168 2120 2177 2236 2164 ] 17505
+All_acks_no_sharers [150885 150737 151437 150971 150950 151418 151158 150858 ] 1208414
+Flush_line [0 0 0 0 0 0 0 0 ] 0
+Block_Ack [0 0 0 0 0 0 0 0 ] 0
 
  - Transitions -
 I  Load [99750 99564 99937 99608 99480 99765 99511 99345 ] 796960
@@ -432,6 +434,7 @@ I  Other_GETS [693803 693943 693553 693953 693978 693842 694042 694198 ] 5551312
 I  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 I  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 I  Invalidate [0 0 0 0 0 0 0 0 ] 0
+I  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 S  Load [8 4 4 4 3 2 3 3 ] 31
 S  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -445,6 +448,7 @@ S  Other_GETS [112 114 109 105 125 103 116 102 ] 886
 S  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 S  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 S  Invalidate [0 0 0 0 0 0 0 0 ] 0
+S  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 O  Load [0 0 1 0 1 2 2 0 ] 6
 O  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -459,6 +463,7 @@ O  Merged_GETS [3 4 3 5 2 4 7 1 ] 29
 O  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 O  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 O  Invalidate [0 0 0 0 0 0 0 0 ] 0
+O  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 M  Load [47 50 34 38 49 45 60 45 ] 368
 M  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -473,6 +478,7 @@ M  Merged_GETS [2 0 3 5 0 1 4 4 ] 19
 M  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 M  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 M  Invalidate [0 0 0 0 0 0 0 0 ] 0
+M  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 MM  Load [27 16 26 24 17 31 22 21 ] 184
 MM  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -487,6 +493,7 @@ MM  Merged_GETS [3 0 2 3 1 1 2 3 ] 15
 MM  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 MM  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 MM  Invalidate [0 0 0 0 0 0 0 0 ] 0
+MM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 IM  Load [0 0 0 0 0 0 0 0 ] 0
 IM  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -501,6 +508,7 @@ IM  Invalidate [0 0 0 0 0 0 0 0 ] 0
 IM  Ack [366480 366723 369003 367797 368111 369500 370499 368866 ] 2946979
 IM  Data [2025 2055 2056 2044 2059 2123 2028 2074 ] 16464
 IM  Exclusive_Data [51296 51369 51643 51488 51528 51709 51856 51601 ] 412490
+IM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 SM  Load [0 0 0 0 0 0 0 0 ] 0
 SM  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -515,6 +523,7 @@ SM  Invalidate [0 0 0 0 0 0 0 0 ] 0
 SM  Ack [7 7 14 7 12 0 7 14 ] 68
 SM  Data [1 1 2 1 2 0 1 2 ] 10
 SM  Exclusive_Data [0 0 0 0 0 0 0 0 ] 0
+SM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 OM  Load [0 0 0 0 0 0 0 0 ] 0
 OM  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -530,6 +539,7 @@ OM  Invalidate [0 0 0 0 0 0 0 0 ] 0
 OM  Ack [21 7 7 0 7 7 0 7 ] 56
 OM  All_acks [0 0 0 0 0 0 0 0 ] 0
 OM  All_acks_no_sharers [3 1 1 0 1 1 0 1 ] 8
+OM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 ISM  Load [0 0 0 0 0 0 0 0 ] 0
 ISM  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -538,6 +548,7 @@ ISM  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
 ISM  L1_to_L2 [17 6 0 0 0 0 0 0 ] 23
 ISM  Ack [66 76 43 31 35 38 34 51 ] 374
 ISM  All_acks_no_sharers [2026 2056 2058 2045 2061 2123 2029 2076 ] 16474
+ISM  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 M_W  Load [0 0 0 0 0 0 0 0 ] 0
 M_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -546,6 +557,7 @@ M_W  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
 M_W  L1_to_L2 [38 69 88 42 90 112 70 83 ] 592
 M_W  Ack [3352 3658 3551 3465 3460 3459 3415 3426 ] 27786
 M_W  All_acks_no_sharers [93736 93506 93914 93726 93602 93908 93646 93553 ] 749591
+M_W  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 MM_W  Load [0 0 0 0 0 0 0 0 ] 0
 MM_W  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -554,6 +566,7 @@ MM_W  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
 MM_W  L1_to_L2 [72 120 137 81 70 152 83 104 ] 819
 MM_W  Ack [5046 5371 5115 5121 5255 5486 4940 5149 ] 41483
 MM_W  All_acks_no_sharers [51296 51369 51643 51488 51528 51709 51856 51601 ] 412490
+MM_W  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 IS  Load [0 0 0 0 0 0 0 0 ] 0
 IS  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -567,9 +580,10 @@ IS  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 IS  Invalidate [0 0 0 0 0 0 0 0 ] 0
 IS  Ack [685197 683360 686266 683975 683583 685323 683273 682541 ] 5473518
 IS  Shared_Ack [107 110 101 89 94 113 104 114 ] 832
-IS  Data [3933 3911 3915 3797 3849 3781 3732 3738 ] 30656
-IS  Shared_Data [2080 2145 2106 2083 2029 2073 2131 2053 ] 16700
+IS  Data [3927 3908 3912 3794 3844 3779 3725 3734 ] 30623
+IS  Shared_Data [2086 2148 2109 2086 2034 2075 2138 2057 ] 16733
 IS  Exclusive_Data [93736 93506 93914 93726 93602 93908 93646 93553 ] 749591
+IS  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 SS  Load [0 0 0 0 0 0 0 0 ] 0
 SS  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -578,8 +592,9 @@ SS  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
 SS  L1_to_L2 [85 168 135 117 120 81 154 151 ] 1011
 SS  Ack [6333 6409 6274 6429 5951 6198 6454 6056 ] 50104
 SS  Shared_Ack [8 9 9 7 4 5 5 7 ] 54
-SS  All_acks [2183 2248 2197 2165 2115 2175 2229 2160 ] 17472
-SS  All_acks_no_sharers [3830 3808 3824 3715 3763 3679 3634 3631 ] 29884
+SS  All_acks [2189 2251 2200 2168 2120 2177 2236 2164 ] 17505
+SS  All_acks_no_sharers [3824 3805 3821 3712 3758 3677 3627 3627 ] 29851
+SS  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 OI  Load [1 0 1 0 0 0 1 0 ] 3
 OI  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -593,6 +608,7 @@ OI  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 OI  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 OI  Invalidate [0 0 0 0 0 0 0 0 ] 0
 OI  Writeback_Ack [2057 1993 2064 2063 2153 2000 2031 2064 ] 16425
+OI  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 MI  Load [16 24 21 18 21 11 18 16 ] 145
 MI  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -606,6 +622,7 @@ MI  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 MI  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 MI  Invalidate [0 0 0 0 0 0 0 0 ] 0
 MI  Writeback_Ack [142087 141920 142596 142344 142188 142855 142627 142243 ] 1138860
+MI  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 II  Load [0 0 0 0 0 0 0 0 ] 0
 II  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -619,6 +636,7 @@ II  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 II  Invalidate [0 0 0 0 0 0 0 0 ] 0
 II  Writeback_Ack [4 2 2 5 1 2 2 4 ] 22
 II  Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
+II  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 IT  Load [4 3 0 1 0 1 4 1 ] 14
 IT  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -632,6 +650,7 @@ IT  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
 IT  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 IT  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 IT  Invalidate [0 0 0 0 0 0 0 0 ] 0
+IT  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 ST  Load [0 1 3 3 1 3 2 0 ] 13
 ST  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -645,6 +664,7 @@ ST  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
 ST  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 ST  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 ST  Invalidate [0 0 0 0 0 0 0 0 ] 0
+ST  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 OT  Load [3 0 2 0 0 1 0 1 ] 7
 OT  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -658,6 +678,7 @@ OT  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
 OT  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 OT  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 OT  Invalidate [0 0 0 0 0 0 0 0 ] 0
+OT  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 MT  Load [42 47 46 36 41 44 49 36 ] 341
 MT  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -671,6 +692,7 @@ MT  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
 MT  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 MT  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 MT  Invalidate [0 0 0 0 0 0 0 0 ] 0
+MT  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 MMT  Load [15 18 18 21 13 24 22 17 ] 148
 MMT  Ifetch [0 0 0 0 0 0 0 0 ] 0
@@ -684,6 +706,94 @@ MMT  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
 MMT  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
 MMT  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
 MMT  Invalidate [0 0 0 0 0 0 0 0 ] 0
+MMT  Flush_line [0 0 0 0 0 0 0 0 ] 0
+
+MI_F  Load [0 0 0 0 0 0 0 0 ] 0
+MI_F  Ifetch [0 0 0 0 0 0 0 0 ] 0
+MI_F  Store [0 0 0 0 0 0 0 0 ] 0
+MI_F  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
+MI_F  Writeback_Ack [0 0 0 0 0 0 0 0 ] 0
+MI_F  Flush_line [0 0 0 0 0 0 0 0 ] 0
+
+MM_F  Load [0 0 0 0 0 0 0 0 ] 0
+MM_F  Ifetch [0 0 0 0 0 0 0 0 ] 0
+MM_F  Store [0 0 0 0 0 0 0 0 ] 0
+MM_F  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
+MM_F  Other_GETX [0 0 0 0 0 0 0 0 ] 0
+MM_F  Other_GETS [0 0 0 0 0 0 0 0 ] 0
+MM_F  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
+MM_F  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
+MM_F  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
+MM_F  Invalidate [0 0 0 0 0 0 0 0 ] 0
+MM_F  Ack [0 0 0 0 0 0 0 0 ] 0
+MM_F  All_acks [0 0 0 0 0 0 0 0 ] 0
+MM_F  All_acks_no_sharers [0 0 0 0 0 0 0 0 ] 0
+MM_F  Flush_line [0 0 0 0 0 0 0 0 ] 0
+MM_F  Block_Ack [0 0 0 0 0 0 0 0 ] 0
+
+IM_F  Load [0 0 0 0 0 0 0 0 ] 0
+IM_F  Ifetch [0 0 0 0 0 0 0 0 ] 0
+IM_F  Store [0 0 0 0 0 0 0 0 ] 0
+IM_F  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
+IM_F  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
+IM_F  Other_GETX [0 0 0 0 0 0 0 0 ] 0
+IM_F  Other_GETS [0 0 0 0 0 0 0 0 ] 0
+IM_F  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
+IM_F  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
+IM_F  Invalidate [0 0 0 0 0 0 0 0 ] 0
+IM_F  Ack [0 0 0 0 0 0 0 0 ] 0
+IM_F  Data [0 0 0 0 0 0 0 0 ] 0
+IM_F  Exclusive_Data [0 0 0 0 0 0 0 0 ] 0
+IM_F  Flush_line [0 0 0 0 0 0 0 0 ] 0
+
+ISM_F  Load [0 0 0 0 0 0 0 0 ] 0
+ISM_F  Ifetch [0 0 0 0 0 0 0 0 ] 0
+ISM_F  Store [0 0 0 0 0 0 0 0 ] 0
+ISM_F  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
+ISM_F  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
+ISM_F  Ack [0 0 0 0 0 0 0 0 ] 0
+ISM_F  All_acks_no_sharers [0 0 0 0 0 0 0 0 ] 0
+ISM_F  Flush_line [0 0 0 0 0 0 0 0 ] 0
+
+SM_F  Load [0 0 0 0 0 0 0 0 ] 0
+SM_F  Ifetch [0 0 0 0 0 0 0 0 ] 0
+SM_F  Store [0 0 0 0 0 0 0 0 ] 0
+SM_F  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
+SM_F  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
+SM_F  Other_GETX [0 0 0 0 0 0 0 0 ] 0
+SM_F  Other_GETS [0 0 0 0 0 0 0 0 ] 0
+SM_F  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
+SM_F  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
+SM_F  Invalidate [0 0 0 0 0 0 0 0 ] 0
+SM_F  Ack [0 0 0 0 0 0 0 0 ] 0
+SM_F  Data [0 0 0 0 0 0 0 0 ] 0
+SM_F  Exclusive_Data [0 0 0 0 0 0 0 0 ] 0
+SM_F  Flush_line [0 0 0 0 0 0 0 0 ] 0
+
+OM_F  Load [0 0 0 0 0 0 0 0 ] 0
+OM_F  Ifetch [0 0 0 0 0 0 0 0 ] 0
+OM_F  Store [0 0 0 0 0 0 0 0 ] 0
+OM_F  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
+OM_F  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
+OM_F  Other_GETX [0 0 0 0 0 0 0 0 ] 0
+OM_F  Other_GETS [0 0 0 0 0 0 0 0 ] 0
+OM_F  Merged_GETS [0 0 0 0 0 0 0 0 ] 0
+OM_F  Other_GETS_No_Mig [0 0 0 0 0 0 0 0 ] 0
+OM_F  NC_DMA_GETS [0 0 0 0 0 0 0 0 ] 0
+OM_F  Invalidate [0 0 0 0 0 0 0 0 ] 0
+OM_F  Ack [0 0 0 0 0 0 0 0 ] 0
+OM_F  All_acks [0 0 0 0 0 0 0 0 ] 0
+OM_F  All_acks_no_sharers [0 0 0 0 0 0 0 0 ] 0
+OM_F  Flush_line [0 0 0 0 0 0 0 0 ] 0
+
+MM_WF  Load [0 0 0 0 0 0 0 0 ] 0
+MM_WF  Ifetch [0 0 0 0 0 0 0 0 ] 0
+MM_WF  Store [0 0 0 0 0 0 0 0 ] 0
+MM_WF  L2_Replacement [0 0 0 0 0 0 0 0 ] 0
+MM_WF  L1_to_L2 [0 0 0 0 0 0 0 0 ] 0
+MM_WF  Ack [0 0 0 0 0 0 0 0 ] 0
+MM_WF  All_acks_no_sharers [0 0 0 0 0 0 0 0 ] 0
+MM_WF  Flush_line [0 0 0 0 0 0 0 0 ] 0
 
 Cache Stats: system.l1_cntrl1.L1IcacheMemory
   system.l1_cntrl1.L1IcacheMemory_total_misses: 0
@@ -703,7 +813,7 @@ Cache Stats: system.l1_cntrl1.L1DcacheMemory
   system.l1_cntrl1.L1DcacheMemory_request_type_LD:   64.9565%
   system.l1_cntrl1.L1DcacheMemory_request_type_ST:   35.0435%
 
-  system.l1_cntrl1.L1DcacheMemory_access_mode_type_SupervisorMode:   153763    100%
+  system.l1_cntrl1.L1DcacheMemory_access_mode_type_Supervisor:   153763    100%
 
 Cache Stats: system.l1_cntrl1.L2cacheMemory
   system.l1_cntrl1.L2cacheMemory_total_misses: 153763
@@ -715,7 +825,7 @@ Cache Stats: system.l1_cntrl1.L2cacheMemory
   system.l1_cntrl1.L2cacheMemory_request_type_LD:   64.9565%
   system.l1_cntrl1.L2cacheMemory_request_type_ST:   35.0435%
 
-  system.l1_cntrl1.L2cacheMemory_access_mode_type_SupervisorMode:   153763    100%
+  system.l1_cntrl1.L2cacheMemory_access_mode_type_Supervisor:   153763    100%
 
 Cache Stats: system.l1_cntrl2.L1IcacheMemory
   system.l1_cntrl2.L1IcacheMemory_total_misses: 0
@@ -735,7 +845,7 @@ Cache Stats: system.l1_cntrl2.L1DcacheMemory
   system.l1_cntrl2.L1DcacheMemory_request_type_LD:   64.8703%
   system.l1_cntrl2.L1DcacheMemory_request_type_ST:   35.1297%
 
-  system.l1_cntrl2.L1DcacheMemory_access_mode_type_SupervisorMode:   153588    100%
+  system.l1_cntrl2.L1DcacheMemory_access_mode_type_Supervisor:   153588    100%
 
 Cache Stats: system.l1_cntrl2.L2cacheMemory
   system.l1_cntrl2.L2cacheMemory_total_misses: 153588
@@ -747,7 +857,7 @@ Cache Stats: system.l1_cntrl2.L2cacheMemory
   system.l1_cntrl2.L2cacheMemory_request_type_LD:   64.8703%
   system.l1_cntrl2.L2cacheMemory_request_type_ST:   35.1297%
 
-  system.l1_cntrl2.L2cacheMemory_access_mode_type_SupervisorMode:   153588    100%
+  system.l1_cntrl2.L2cacheMemory_access_mode_type_Supervisor:   153588    100%
 
 Cache Stats: system.l1_cntrl3.L1IcacheMemory
   system.l1_cntrl3.L1IcacheMemory_total_misses: 0
@@ -767,7 +877,7 @@ Cache Stats: system.l1_cntrl3.L1DcacheMemory
   system.l1_cntrl3.L1DcacheMemory_request_type_LD:   64.9158%
   system.l1_cntrl3.L1DcacheMemory_request_type_ST:   35.0842%
 
-  system.l1_cntrl3.L1DcacheMemory_access_mode_type_SupervisorMode:   153177    100%
+  system.l1_cntrl3.L1DcacheMemory_access_mode_type_Supervisor:   153177    100%
 
 Cache Stats: system.l1_cntrl3.L2cacheMemory
   system.l1_cntrl3.L2cacheMemory_total_misses: 153177
@@ -779,7 +889,7 @@ Cache Stats: system.l1_cntrl3.L2cacheMemory
   system.l1_cntrl3.L2cacheMemory_request_type_LD:   64.9158%
   system.l1_cntrl3.L2cacheMemory_request_type_ST:   35.0842%
 
-  system.l1_cntrl3.L2cacheMemory_access_mode_type_SupervisorMode:   153177    100%
+  system.l1_cntrl3.L2cacheMemory_access_mode_type_Supervisor:   153177    100%
 
 Cache Stats: system.l1_cntrl4.L1IcacheMemory
   system.l1_cntrl4.L1IcacheMemory_total_misses: 0
@@ -799,7 +909,7 @@ Cache Stats: system.l1_cntrl4.L1DcacheMemory
   system.l1_cntrl4.L1DcacheMemory_request_type_LD:   65.1631%
   system.l1_cntrl4.L1DcacheMemory_request_type_ST:   34.8369%
 
-  system.l1_cntrl4.L1DcacheMemory_access_mode_type_SupervisorMode:   153237    100%
+  system.l1_cntrl4.L1DcacheMemory_access_mode_type_Supervisor:   153237    100%
 
 Cache Stats: system.l1_cntrl4.L2cacheMemory
   system.l1_cntrl4.L2cacheMemory_total_misses: 153237
@@ -811,7 +921,7 @@ Cache Stats: system.l1_cntrl4.L2cacheMemory
   system.l1_cntrl4.L2cacheMemory_request_type_LD:   65.1631%
   system.l1_cntrl4.L2cacheMemory_request_type_ST:   34.8369%
 
-  system.l1_cntrl4.L2cacheMemory_access_mode_type_SupervisorMode:   153237    100%
+  system.l1_cntrl4.L2cacheMemory_access_mode_type_Supervisor:   153237    100%
 
 Cache Stats: system.l1_cntrl5.L1IcacheMemory
   system.l1_cntrl5.L1IcacheMemory_total_misses: 0
@@ -831,7 +941,7 @@ Cache Stats: system.l1_cntrl5.L1DcacheMemory
   system.l1_cntrl5.L1DcacheMemory_request_type_LD:   65.0802%
   system.l1_cntrl5.L1DcacheMemory_request_type_ST:   34.9198%
 
-  system.l1_cntrl5.L1DcacheMemory_access_mode_type_SupervisorMode:   153154    100%
+  system.l1_cntrl5.L1DcacheMemory_access_mode_type_Supervisor:   153154    100%
 
 Cache Stats: system.l1_cntrl5.L2cacheMemory
   system.l1_cntrl5.L2cacheMemory_total_misses: 153154
@@ -843,7 +953,7 @@ Cache Stats: system.l1_cntrl5.L2cacheMemory
   system.l1_cntrl5.L2cacheMemory_request_type_LD:   65.0802%
   system.l1_cntrl5.L2cacheMemory_request_type_ST:   34.9198%
 
-  system.l1_cntrl5.L2cacheMemory_access_mode_type_SupervisorMode:   153154    100%
+  system.l1_cntrl5.L2cacheMemory_access_mode_type_Supervisor:   153154    100%
 
 Cache Stats: system.l1_cntrl6.L1IcacheMemory
   system.l1_cntrl6.L1IcacheMemory_total_misses: 0
@@ -863,7 +973,7 @@ Cache Stats: system.l1_cntrl6.L1DcacheMemory
   system.l1_cntrl6.L1DcacheMemory_request_type_LD:   65.0437%
   system.l1_cntrl6.L1DcacheMemory_request_type_ST:   34.9563%
 
-  system.l1_cntrl6.L1DcacheMemory_access_mode_type_SupervisorMode:   153815    100%
+  system.l1_cntrl6.L1DcacheMemory_access_mode_type_Supervisor:   153815    100%
 
 Cache Stats: system.l1_cntrl6.L2cacheMemory
   system.l1_cntrl6.L2cacheMemory_total_misses: 153815
@@ -875,7 +985,7 @@ Cache Stats: system.l1_cntrl6.L2cacheMemory
   system.l1_cntrl6.L2cacheMemory_request_type_LD:   65.0437%
   system.l1_cntrl6.L2cacheMemory_request_type_ST:   34.9563%
 
-  system.l1_cntrl6.L2cacheMemory_access_mode_type_SupervisorMode:   153815    100%
+  system.l1_cntrl6.L2cacheMemory_access_mode_type_Supervisor:   153815    100%
 
 Cache Stats: system.l1_cntrl7.L1IcacheMemory
   system.l1_cntrl7.L1IcacheMemory_total_misses: 0
@@ -895,7 +1005,7 @@ Cache Stats: system.l1_cntrl7.L1DcacheMemory
   system.l1_cntrl7.L1DcacheMemory_request_type_LD:   65.0441%
   system.l1_cntrl7.L1DcacheMemory_request_type_ST:   34.9559%
 
-  system.l1_cntrl7.L1DcacheMemory_access_mode_type_SupervisorMode:   153279    100%
+  system.l1_cntrl7.L1DcacheMemory_access_mode_type_Supervisor:   153279    100%
 
 Cache Stats: system.l1_cntrl7.L2cacheMemory
   system.l1_cntrl7.L2cacheMemory_total_misses: 153279
@@ -907,7 +1017,7 @@ Cache Stats: system.l1_cntrl7.L2cacheMemory
   system.l1_cntrl7.L2cacheMemory_request_type_LD:   65.0441%
   system.l1_cntrl7.L2cacheMemory_request_type_ST:   34.9559%
 
-  system.l1_cntrl7.L2cacheMemory_access_mode_type_SupervisorMode:   153279    100%
+  system.l1_cntrl7.L2cacheMemory_access_mode_type_Supervisor:   153279    100%
 
 Cache Stats: system.dir_cntrl0.probeFilter
   system.dir_cntrl0.probeFilter_total_misses: 0
@@ -963,6 +1073,8 @@ All_acks_and_shared_data [0 ] 0
 All_acks_and_owner_data [0 ] 0
 All_acks_and_data_no_sharers [0 ] 0
 All_Unblocks [64 ] 64
+GETF [0 ] 0
+PUTF [0 ] 0
 
  - Transitions -
 NX  GETX [114 ] 114
@@ -971,6 +1083,7 @@ NX  PUT [16446 ] 16446
 NX  Pf_Replacement [0 ] 0
 NX  DMA_READ [0 ] 0
 NX  DMA_WRITE [0 ] 0
+NX  GETF [0 ] 0
 
 NO  GETX [13808 ] 13808
 NO  GETS [25807 ] 25807
@@ -978,6 +1091,7 @@ NO  PUT [1138861 ] 1138861
 NO  Pf_Replacement [0 ] 0
 NO  DMA_READ [0 ] 0
 NO  DMA_WRITE [0 ] 0
+NO  GETF [0 ] 0
 
 S  GETX [0 ] 0
 S  GETS [0 ] 0
@@ -985,6 +1099,7 @@ S  PUT [0 ] 0
 S  Pf_Replacement [0 ] 0
 S  DMA_READ [0 ] 0
 S  DMA_WRITE [0 ] 0
+S  GETF [0 ] 0
 
 O  GETX [16346 ] 16346
 O  GETS [30623 ] 30623
@@ -992,12 +1107,14 @@ O  PUT [0 ] 0
 O  Pf_Replacement [0 ] 0
 O  DMA_READ [0 ] 0
 O  DMA_WRITE [0 ] 0
+O  GETF [0 ] 0
 
 E  GETX [398716 ] 398716
 E  GETS [740301 ] 740301
 E  PUT [0 ] 0
 E  DMA_READ [0 ] 0
 E  DMA_WRITE [0 ] 0
+E  GETF [0 ] 0
 
 O_R  GETX [0 ] 0
 O_R  GETS [0 ] 0
@@ -1007,6 +1124,7 @@ O_R  DMA_READ [0 ] 0
 O_R  DMA_WRITE [0 ] 0
 O_R  Ack [0 ] 0
 O_R  All_acks_and_data_no_sharers [0 ] 0
+O_R  GETF [0 ] 0
 
 S_R  GETX [0 ] 0
 S_R  GETS [0 ] 0
@@ -1017,6 +1135,7 @@ S_R  DMA_WRITE [0 ] 0
 S_R  Ack [0 ] 0
 S_R  Data [0 ] 0
 S_R  All_acks_and_data_no_sharers [0 ] 0
+S_R  GETF [0 ] 0
 
 NO_R  GETX [0 ] 0
 NO_R  GETS [0 ] 0
@@ -1028,6 +1147,7 @@ NO_R  Ack [0 ] 0
 NO_R  Data [0 ] 0
 NO_R  Exclusive_Data [0 ] 0
 NO_R  All_acks_and_data_no_sharers [0 ] 0
+NO_R  GETF [0 ] 0
 
 NO_B  GETX [31 ] 31
 NO_B  GETS [64 ] 64
@@ -1037,6 +1157,7 @@ NO_B  UnblockM [1178502 ] 1178502
 NO_B  Pf_Replacement [0 ] 0
 NO_B  DMA_READ [0 ] 0
 NO_B  DMA_WRITE [0 ] 0
+NO_B  GETF [0 ] 0
 
 NO_B_X  GETX [0 ] 0
 NO_B_X  GETS [0 ] 0
@@ -1046,6 +1167,7 @@ NO_B_X  UnblockM [26 ] 26
 NO_B_X  Pf_Replacement [0 ] 0
 NO_B_X  DMA_READ [0 ] 0
 NO_B_X  DMA_WRITE [0 ] 0
+NO_B_X  GETF [0 ] 0
 
 NO_B_S  GETX [0 ] 0
 NO_B_S  GETS [0 ] 0
@@ -1055,6 +1177,7 @@ NO_B_S  UnblockM [34 ] 34
 NO_B_S  Pf_Replacement [0 ] 0
 NO_B_S  DMA_READ [0 ] 0
 NO_B_S  DMA_WRITE [0 ] 0
+NO_B_S  GETF [0 ] 0
 
 NO_B_S_W  GETX [0 ] 0
 NO_B_S_W  GETS [0 ] 0
@@ -1064,6 +1187,7 @@ NO_B_S_W  Pf_Replacement [0 ] 0
 NO_B_S_W  DMA_READ [0 ] 0
 NO_B_S_W  DMA_WRITE [0 ] 0
 NO_B_S_W  All_Unblocks [64 ] 64
+NO_B_S_W  GETF [0 ] 0
 
 O_B  GETX [0 ] 0
 O_B  GETS [0 ] 0
@@ -1073,6 +1197,7 @@ O_B  UnblockM [0 ] 0
 O_B  Pf_Replacement [0 ] 0
 O_B  DMA_READ [0 ] 0
 O_B  DMA_WRITE [0 ] 0
+O_B  GETF [0 ] 0
 
 NO_B_W  GETX [3987 ] 3987
 NO_B_W  GETS [7416 ] 7416
@@ -1083,6 +1208,7 @@ NO_B_W  Pf_Replacement [0 ] 0
 NO_B_W  DMA_READ [0 ] 0
 NO_B_W  DMA_WRITE [0 ] 0
 NO_B_W  Memory_Data [1155339 ] 1155339
+NO_B_W  GETF [0 ] 0
 
 O_B_W  GETX [95 ] 95
 O_B_W  GETS [209 ] 209
@@ -1092,6 +1218,7 @@ O_B_W  Pf_Replacement [0 ] 0
 O_B_W  DMA_READ [0 ] 0
 O_B_W  DMA_WRITE [0 ] 0
 O_B_W  Memory_Data [30623 ] 30623
+O_B_W  GETF [0 ] 0
 
 NO_W  GETX [0 ] 0
 NO_W  GETS [0 ] 0
@@ -1100,6 +1227,7 @@ NO_W  Pf_Replacement [0 ] 0
 NO_W  DMA_READ [0 ] 0
 NO_W  DMA_WRITE [0 ] 0
 NO_W  Memory_Data [0 ] 0
+NO_W  GETF [0 ] 0
 
 O_W  GETX [0 ] 0
 O_W  GETS [0 ] 0
@@ -1108,6 +1236,7 @@ O_W  Pf_Replacement [0 ] 0
 O_W  DMA_READ [0 ] 0
 O_W  DMA_WRITE [0 ] 0
 O_W  Memory_Data [0 ] 0
+O_W  GETF [0 ] 0
 
 NO_DW_B_W  GETX [0 ] 0
 NO_DW_B_W  GETS [0 ] 0
@@ -1119,6 +1248,7 @@ NO_DW_B_W  Ack [0 ] 0
 NO_DW_B_W  Data [0 ] 0
 NO_DW_B_W  Exclusive_Data [0 ] 0
 NO_DW_B_W  All_acks_and_data_no_sharers [0 ] 0
+NO_DW_B_W  GETF [0 ] 0
 
 NO_DR_B_W  GETX [0 ] 0
 NO_DR_B_W  GETS [0 ] 0
@@ -1132,6 +1262,7 @@ NO_DR_B_W  Shared_Ack [0 ] 0
 NO_DR_B_W  Shared_Data [0 ] 0
 NO_DR_B_W  Data [0 ] 0
 NO_DR_B_W  Exclusive_Data [0 ] 0
+NO_DR_B_W  GETF [0 ] 0
 
 NO_DR_B_D  GETX [0 ] 0
 NO_DR_B_D  GETS [0 ] 0
@@ -1147,6 +1278,7 @@ NO_DR_B_D  Exclusive_Data [0 ] 0
 NO_DR_B_D  All_acks_and_shared_data [0 ] 0
 NO_DR_B_D  All_acks_and_owner_data [0 ] 0
 NO_DR_B_D  All_acks_and_data_no_sharers [0 ] 0
+NO_DR_B_D  GETF [0 ] 0
 
 NO_DR_B  GETX [0 ] 0
 NO_DR_B  GETS [0 ] 0
@@ -1162,6 +1294,7 @@ NO_DR_B  Exclusive_Data [0 ] 0
 NO_DR_B  All_acks_and_shared_data [0 ] 0
 NO_DR_B  All_acks_and_owner_data [0 ] 0
 NO_DR_B  All_acks_and_data_no_sharers [0 ] 0
+NO_DR_B  GETF [0 ] 0
 
 NO_DW_W  GETX [0 ] 0
 NO_DW_W  GETS [0 ] 0
@@ -1170,6 +1303,7 @@ NO_DW_W  Pf_Replacement [0 ] 0
 NO_DW_W  DMA_READ [0 ] 0
 NO_DW_W  DMA_WRITE [0 ] 0
 NO_DW_W  Memory_Ack [0 ] 0
+NO_DW_W  GETF [0 ] 0
 
 O_DR_B_W  GETX [0 ] 0
 O_DR_B_W  GETS [0 ] 0
@@ -1180,6 +1314,7 @@ O_DR_B_W  DMA_WRITE [0 ] 0
 O_DR_B_W  Memory_Data [0 ] 0
 O_DR_B_W  Ack [0 ] 0
 O_DR_B_W  Shared_Ack [0 ] 0
+O_DR_B_W  GETF [0 ] 0
 
 O_DR_B  GETX [0 ] 0
 O_DR_B  GETS [0 ] 0
@@ -1191,6 +1326,7 @@ O_DR_B  Ack [0 ] 0
 O_DR_B  Shared_Ack [0 ] 0
 O_DR_B  All_acks_and_owner_data [0 ] 0
 O_DR_B  All_acks_and_data_no_sharers [0 ] 0
+O_DR_B  GETF [0 ] 0
 
 WB  GETX [160 ] 160
 WB  GETS [342 ] 342
@@ -1203,6 +1339,7 @@ WB  Writeback_Exclusive_Dirty [423817 ] 423817
 WB  Pf_Replacement [0 ] 0
 WB  DMA_READ [0 ] 0
 WB  DMA_WRITE [0 ] 0
+WB  GETF [0 ] 0
 
 WB_O_W  GETX [2 ] 2
 WB_O_W  GETS [2 ] 2
@@ -1211,6 +1348,7 @@ WB_O_W  Pf_Replacement [0 ] 0
 WB_O_W  DMA_READ [0 ] 0
 WB_O_W  DMA_WRITE [0 ] 0
 WB_O_W  Memory_Ack [178 ] 178
+WB_O_W  GETF [0 ] 0
 
 WB_E_W  GETX [2043 ] 2043
 WB_E_W  GETS [3853 ] 3853
@@ -1218,4 +1356,22 @@ WB_E_W  PUT [0 ] 0
 WB_E_W  Pf_Replacement [0 ] 0
 WB_E_W  DMA_READ [0 ] 0
 WB_E_W  DMA_WRITE [0 ] 0
-WB_E_W  Memory_Ack
+WB_E_W  Memory_Ack [423803 ] 423803
+WB_E_W  GETF [0 ] 0
+
+NO_F  GETX [0 ] 0
+NO_F  GETS [0 ] 0
+NO_F  PUT [0 ] 0
+NO_F  UnblockM [0 ] 0
+NO_F  Pf_Replacement [0 ] 0
+NO_F  GETF [0 ] 0
+NO_F  PUTF [0 ] 0
+
+NO_F_W  GETX [0 ] 0
+NO_F_W  GETS [0 ] 0
+NO_F_W  PUT [0 ] 0
+NO_F_W  Pf_Replacement [0 ] 0
+NO_F_W  DMA_READ [0 ] 0
+NO_F_W  DMA_WRITE [0 ] 0
+NO_F_W  Memory_Data [0 ] 0
+NO_F_W  GETF

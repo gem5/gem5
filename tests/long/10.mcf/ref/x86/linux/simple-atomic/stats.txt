@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1568972                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 358500                       # Number of bytes of host memory used
-host_seconds                                   177.31                       # Real time elapsed on the host
-host_tick_rate                              952856596                       # Simulator tick rate (ticks/s)
+host_inst_rate                                3107267                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 337076                       # Number of bytes of host memory used
+host_seconds                                    89.53                       # Real time elapsed on the host
+host_tick_rate                             1887081425                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   278192520                       # Number of instructions simulated
 sim_seconds                                  0.168950                       # Number of seconds simulated
@@ -29,6 +29,6 @@ system.cpu.num_int_register_writes          248344166                       # nu
 system.cpu.num_load_insts                    90779388                       # Number of load instructions
 system.cpu.num_mem_refs                     122219139                       # number of memory refs
 system.cpu.num_store_insts                   31439751                       # Number of store instructions
-system.cpu.workload.PROG:num_syscalls             444                       # Number of system calls
+system.cpu.workload.num_syscalls                  444                       # Number of system calls
 
 ---------- End Simulation Statistics   ----------

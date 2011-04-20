@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Mar/26/2011 22:03:29
+Real time: Apr/19/2011 12:19:56
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 165
-Elapsed_time_in_minutes: 2.75
-Elapsed_time_in_hours: 0.0458333
-Elapsed_time_in_days: 0.00190972
+Elapsed_time_in_seconds: 160
+Elapsed_time_in_minutes: 2.66667
+Elapsed_time_in_hours: 0.0444444
+Elapsed_time_in_days: 0.00185185
 
-Virtual_time_in_seconds: 165.12
-Virtual_time_in_minutes: 2.752
-Virtual_time_in_hours:   0.0458667
-Virtual_time_in_days:    0.00191111
+Virtual_time_in_seconds: 160.29
+Virtual_time_in_minutes: 2.6715
+Virtual_time_in_hours:   0.044525
+Virtual_time_in_days:    0.00185521
 
 Ruby_current_time: 38958200
 Ruby_start_time: 0
 Ruby_cycles: 38958200
 
-mbytes_resident: 36.9609
-mbytes_total: 326.926
-resident_ratio: 0.113068
+mbytes_resident: 37.7383
+mbytes_total: 335.953
+resident_ratio: 0.112344
 
 ruby_cycles_executed: [ 38958201 38958201 38958201 38958201 38958201 38958201 38958201 38958201 ]
 
@@ -125,13 +125,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard dev
 Resource Usage
 --------------
 page_size: 4096
-user_time: 165
+user_time: 160
 system_time: 0
-page_reclaims: 9802
+page_reclaims: 9997
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 120
+block_outputs: 176
 
 Network Stats
 -------------

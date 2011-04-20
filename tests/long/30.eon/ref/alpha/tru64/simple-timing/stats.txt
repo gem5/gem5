@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 531142                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 232344                       # Number of bytes of host memory used
-host_seconds                                   750.58                       # Real time elapsed on the host
-host_tick_rate                              755872580                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2583171                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 210032                       # Number of bytes of host memory used
+host_seconds                                   154.33                       # Real time elapsed on the host
+host_tick_rate                             3676130341                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   398664609                       # Number of instructions simulated
 sim_seconds                                  0.567343                       # Number of seconds simulated
@@ -50,8 +50,8 @@ system.cpu.dcache.demand_mshr_misses             4152                       # nu
 system.cpu.dcache.fast_writes                       0                       # number of fast writes performed
 system.cpu.dcache.mshr_cap_events                   0                       # number of times MSHR cap was activated
 system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
-system.cpu.dcache.occ_%::0                   0.802957                       # Average percentage of cache occupancy
 system.cpu.dcache.occ_blocks::0           3288.912598                       # Average occupied blocks per context
+system.cpu.dcache.occ_percent::0             0.802957                       # Average percentage of cache occupancy
 system.cpu.dcache.overall_accesses          168275220                       # number of overall (read+write) accesses
 system.cpu.dcache.overall_avg_miss_latency 54209.537572                       # average overall miss latency
 system.cpu.dcache.overall_avg_mshr_miss_latency 51209.537572                       # average overall mshr miss latency
@@ -121,8 +121,8 @@ system.cpu.icache.demand_mshr_misses             3673                       # nu
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.mshr_cap_events                   0                       # number of times MSHR cap was activated
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
-system.cpu.icache.occ_%::0                   0.876529                       # Average percentage of cache occupancy
 system.cpu.icache.occ_blocks::0           1795.131074                       # Average occupied blocks per context
+system.cpu.icache.occ_percent::0             0.876529                       # Average percentage of cache occupancy
 system.cpu.icache.overall_accesses          398664666                       # number of overall (read+write) accesses
 system.cpu.icache.overall_avg_miss_latency 50648.516199                       # average overall miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency 47648.516199                       # average overall mshr miss latency
@@ -205,10 +205,10 @@ system.cpu.l2cache.demand_mshr_misses            7180                       # nu
 system.cpu.l2cache.fast_writes                      0                       # number of fast writes performed
 system.cpu.l2cache.mshr_cap_events                  0                       # number of times MSHR cap was activated
 system.cpu.l2cache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu.l2cache.occ_%::0                  0.103674                       # Average percentage of cache occupancy
-system.cpu.l2cache.occ_%::1                  0.011338                       # Average percentage of cache occupancy
 system.cpu.l2cache.occ_blocks::0          3397.175455                       # Average occupied blocks per context
 system.cpu.l2cache.occ_blocks::1           371.536808                       # Average occupied blocks per context
+system.cpu.l2cache.occ_percent::0            0.103674                       # Average percentage of cache occupancy
+system.cpu.l2cache.occ_percent::1            0.011338                       # Average percentage of cache occupancy
 system.cpu.l2cache.overall_accesses              7825                       # number of overall (read+write) accesses
 system.cpu.l2cache.overall_avg_miss_latency        52000                       # average overall miss latency
 system.cpu.l2cache.overall_avg_mshr_miss_latency        40000                       # average overall mshr miss latency
@@ -250,6 +250,6 @@ system.cpu.num_int_register_writes          159335870                       # nu
 system.cpu.num_load_insts                    94754511                       # Number of load instructions
 system.cpu.num_mem_refs                     168275276                       # number of memory refs
 system.cpu.num_store_insts                   73520765                       # Number of store instructions
-system.cpu.workload.PROG:num_syscalls             215                       # Number of system calls
+system.cpu.workload.num_syscalls                  215                       # Number of system calls
 
 ---------- End Simulation Statistics   ----------

@@ -5,10 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  7 2011 02:10:38
-M5 revision 4b4b02c5553c 7929 default qtip reupdatestats.patch tip
-M5 started Feb  7 2011 02:10:45
-M5 executing on burrito
+M5 compiled Apr 19 2011 12:22:08
+M5 started Apr 19 2011 12:22:10
+M5 executing on maize
 command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re tests/run.py build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second
 info: No kernel set for full system simulation. Assuming you know what you're doing...

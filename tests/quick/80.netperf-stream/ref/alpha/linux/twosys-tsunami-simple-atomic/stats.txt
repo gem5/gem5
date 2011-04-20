@@ -172,10 +172,10 @@ drivesys.tsunami.ethernet.txPPS                    25                       # Pa
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
 drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
-host_inst_rate                               71982907                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 498216                       # Number of bytes of host memory used
-host_seconds                                     3.80                       # Real time elapsed on the host
-host_tick_rate                            52659325700                       # Simulator tick rate (ticks/s)
+host_inst_rate                              269342091                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 478340                       # Number of bytes of host memory used
+host_seconds                                     1.02                       # Real time elapsed on the host
+host_tick_rate                           197020377111                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.200001                       # Number of seconds simulated
@@ -479,10 +479,10 @@ drivesys.tsunami.ethernet.totalSwi                  0                       # to
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-host_inst_rate                            86035621838                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 498216                       # Number of bytes of host memory used
+host_inst_rate                           178043202572                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 478340                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-host_tick_rate                              235143018                       # Simulator tick rate (ticks/s)
+host_tick_rate                              482553899                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated

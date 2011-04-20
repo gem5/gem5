@@ -1,37 +1,25 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 121455                       # Simulator instruction rate (inst/s)
-host_mem_usage                                1130520                       # Number of bytes of host memory used
-host_seconds                                 14983.11                       # Real time elapsed on the host
-host_tick_rate                               65403738                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 191712                       # Simulator instruction rate (inst/s)
+host_mem_usage                                1122860                       # Number of bytes of host memory used
+host_seconds                                  9492.28                       # Real time elapsed on the host
+host_tick_rate                              103236678                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                  1819780127                       # Number of instructions simulated
 sim_seconds                                  0.979951                       # Number of seconds simulated
 sim_ticks                                979951369500                       # Number of ticks simulated
-system.cpu.AGEN-Unit.agens                  614316005                       # Number of Address Generations
-system.cpu.Branch-Predictor.BTBHitPct       69.872947                       # BTB Hit Percentage
-system.cpu.Branch-Predictor.BTBHits          82064192                       # Number of BTB hits
-system.cpu.Branch-Predictor.BTBLookups      117447733                       # Number of BTB lookups
-system.cpu.Branch-Predictor.RASInCorrect            6                       # Number of incorrect RAS predictions.
-system.cpu.Branch-Predictor.condIncorrect     79224651                       # Number of conditional branches incorrect
-system.cpu.Branch-Predictor.condPredicted    175157411                       # Number of conditional branches predicted
-system.cpu.Branch-Predictor.lookups         253574750                       # Number of BP lookups
-system.cpu.Branch-Predictor.predictedNotTaken    124923988                       # Number of Branches Predicted As Not Taken (False).
-system.cpu.Branch-Predictor.predictedTaken    128650762                       # Number of Branches Predicted As Taken (True).
-system.cpu.Branch-Predictor.usedRAS          16767439                       # Number of times the RAS was used to get a target.
-system.cpu.Execution-Unit.executions       1162207758                       # Number of Instructions Executed.
-system.cpu.Execution-Unit.mispredictPct     36.911759                       # Percentage of Incorrect Branches Predicts
-system.cpu.Execution-Unit.mispredicted       79224651                       # Number of Branches Incorrectly Predicted
-system.cpu.Execution-Unit.predicted         135407901                       # Number of Branches Incorrectly Predicted
-system.cpu.Execution-Unit.predictedNotTakenIncorrect     71572967                       # Number of Branches Incorrectly Predicted As Not Taken).
-system.cpu.Execution-Unit.predictedTakenIncorrect      7651684                       # Number of Branches Incorrectly Predicted As Taken.
-system.cpu.Mult-Div-Unit.divides                    0                       # Number of Divide Operations Executed
-system.cpu.Mult-Div-Unit.multiplies                75                       # Number of Multipy Operations Executed
-system.cpu.RegFile-Manager.regFileAccesses   3178023708                       # Number of Total Accesses (Read+Write) to the Register File
-system.cpu.RegFile-Manager.regFileReads    1801820745                       # Number of Reads from Register File
-system.cpu.RegFile-Manager.regFileWrites   1376202963                       # Number of Writes to Register File
-system.cpu.RegFile-Manager.regForwards      604786987                       # Number of Registers Read Through Forwarding Logic
 system.cpu.activity                         74.309805                       # Percentage of cycles cpu is active
+system.cpu.agen_unit.agens                  614316005                       # Number of Address Generations
+system.cpu.branch_predictor.BTBHitPct       69.872947                       # BTB Hit Percentage
+system.cpu.branch_predictor.BTBHits          82064192                       # Number of BTB hits
+system.cpu.branch_predictor.BTBLookups      117447733                       # Number of BTB lookups
+system.cpu.branch_predictor.RASInCorrect            6                       # Number of incorrect RAS predictions.
+system.cpu.branch_predictor.condIncorrect     79224651                       # Number of conditional branches incorrect
+system.cpu.branch_predictor.condPredicted    175157411                       # Number of conditional branches predicted
+system.cpu.branch_predictor.lookups         253574750                       # Number of BP lookups
+system.cpu.branch_predictor.predictedNotTaken    124923988                       # Number of Branches Predicted As Not Taken (False).
+system.cpu.branch_predictor.predictedTaken    128650762                       # Number of Branches Predicted As Taken (True).
+system.cpu.branch_predictor.usedRAS          16767439                       # Number of times the RAS was used to get a target.
 system.cpu.comBranches                      214632552                       # Number of Branches instructions committed
 system.cpu.comFloats                              190                       # Number of Floating Point instructions committed
 system.cpu.comInts                          916086844                       # Number of Integer instructions committed
@@ -88,8 +76,8 @@ system.cpu.dcache.demand_mshr_misses          9111643                       # nu
 system.cpu.dcache.fast_writes                       0                       # number of fast writes performed
 system.cpu.dcache.mshr_cap_events                   0                       # number of times MSHR cap was activated
 system.cpu.dcache.no_allocate_misses                0                       # Number of misses that were no-allocate
-system.cpu.dcache.occ_%::0                   0.996505                       # Average percentage of cache occupancy
 system.cpu.dcache.occ_blocks::0           4081.685602                       # Average occupied blocks per context
+system.cpu.dcache.occ_percent::0             0.996505                       # Average percentage of cache occupancy
 system.cpu.dcache.overall_accesses          605324165                       # number of overall (read+write) accesses
 system.cpu.dcache.overall_avg_miss_latency 27335.708502                       # average overall miss latency
 system.cpu.dcache.overall_avg_mshr_miss_latency 23594.611641                       # average overall mshr miss latency
@@ -127,6 +115,12 @@ system.cpu.dtb.write_accesses               162429806                       # DT
 system.cpu.dtb.write_acv                            0                       # DTB write access violations
 system.cpu.dtb.write_hits                   160728502                       # DTB write hits
 system.cpu.dtb.write_misses                   1701304                       # DTB write misses
+system.cpu.execution_unit.executions       1162207758                       # Number of Instructions Executed.
+system.cpu.execution_unit.mispredictPct     36.911759                       # Percentage of Incorrect Branches Predicts
+system.cpu.execution_unit.mispredicted       79224651                       # Number of Branches Incorrectly Predicted
+system.cpu.execution_unit.predicted         135407901                       # Number of Branches Incorrectly Predicted
+system.cpu.execution_unit.predictedNotTakenIncorrect     71572967                       # Number of Branches Incorrectly Predicted As Not Taken).
+system.cpu.execution_unit.predictedTakenIncorrect      7651684                       # Number of Branches Incorrectly Predicted As Taken.
 system.cpu.icache.ReadReq_accesses          207004701                       # number of ReadReq accesses(hits+misses)
 system.cpu.icache.ReadReq_avg_miss_latency 54777.453839                       # average ReadReq miss latency
 system.cpu.icache.ReadReq_avg_mshr_miss_latency 53438.372093                       # average ReadReq mshr miss latency
@@ -160,8 +154,8 @@ system.cpu.icache.demand_mshr_misses              860                       # nu
 system.cpu.icache.fast_writes                       0                       # number of fast writes performed
 system.cpu.icache.mshr_cap_events                   0                       # number of times MSHR cap was activated
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
-system.cpu.icache.occ_%::0                   0.324416                       # Average percentage of cache occupancy
 system.cpu.icache.occ_blocks::0            664.403935                       # Average occupied blocks per context
+system.cpu.icache.occ_percent::0             0.324416                       # Average percentage of cache occupancy
 system.cpu.icache.overall_accesses          207004701                       # number of overall (read+write) accesses
 system.cpu.icache.overall_avg_miss_latency 54777.453839                       # average overall miss latency
 system.cpu.icache.overall_avg_mshr_miss_latency 53438.372093                       # average overall mshr miss latency
@@ -246,10 +240,10 @@ system.cpu.l2cache.demand_mshr_misses         2697152                       # nu
 system.cpu.l2cache.fast_writes                      0                       # number of fast writes performed
 system.cpu.l2cache.mshr_cap_events                  0                       # number of times MSHR cap was activated
 system.cpu.l2cache.no_allocate_misses               0                       # Number of misses that were no-allocate
-system.cpu.l2cache.occ_%::0                  0.458476                       # Average percentage of cache occupancy
-system.cpu.l2cache.occ_%::1                  0.337280                       # Average percentage of cache occupancy
 system.cpu.l2cache.occ_blocks::0         15023.339345                       # Average occupied blocks per context
 system.cpu.l2cache.occ_blocks::1         11052.003329                       # Average occupied blocks per context
+system.cpu.l2cache.occ_percent::0            0.458476                       # Average percentage of cache occupancy
+system.cpu.l2cache.occ_percent::1            0.337280                       # Average percentage of cache occupancy
 system.cpu.l2cache.overall_accesses           9112503                       # number of overall (read+write) accesses
 system.cpu.l2cache.overall_avg_miss_latency 52212.225711                       # average overall miss latency
 system.cpu.l2cache.overall_avg_mshr_miss_latency 40035.092201                       # average overall mshr miss latency
@@ -271,31 +265,37 @@ system.cpu.l2cache.tagsinuse             26075.342674                       # Cy
 system.cpu.l2cache.total_refs                 7565242                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle          230207194000                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                 1170923                       # number of writebacks
+system.cpu.mult_div_unit.divides                    0                       # Number of Divide Operations Executed
+system.cpu.mult_div_unit.multiplies                75                       # Number of Multipy Operations Executed
 system.cpu.numCycles                       1959902740                       # number of cpu cycles simulated
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
+system.cpu.regfile_manager.regFileAccesses   3178023708                       # Number of Total Accesses (Read+Write) to the Register File
+system.cpu.regfile_manager.regFileReads    1801820745                       # Number of Reads from Register File
+system.cpu.regfile_manager.regFileWrites   1376202963                       # Number of Writes to Register File
+system.cpu.regfile_manager.regForwards      604786987                       # Number of Registers Read Through Forwarding Logic
 system.cpu.runCycles                       1456399909                       # Number of cycles cpu stages are processed.
 system.cpu.smtCommittedInsts                        0                       # Number of SMT Instructions Simulated (Per-Thread)
 system.cpu.smtCycles                                0                       # Total number of cycles that the CPU was in SMT-mode
 system.cpu.smt_cpi                           no_value                       # CPI: Total SMT-CPI
 system.cpu.smt_ipc                           no_value                       # IPC: Total SMT-IPC
-system.cpu.stage-0.idleCycles               902142172                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-0.runCycles               1057760568                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-0.utilization              53.970054                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.stage-1.idleCycles              1064240534                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-1.runCycles                895662206                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-1.utilization              45.699319                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.stage-2.idleCycles              1036315285                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-2.runCycles                923587455                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-2.utilization              47.124147                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.stage-3.idleCycles              1537492347                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-3.runCycles                422410393                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-3.utilization              21.552620                       # Percentage of cycles stage was utilized (processing insts).
-system.cpu.stage-4.idleCycles               932643705                       # Number of cycles 0 instructions are processed.
-system.cpu.stage-4.runCycles               1027259035                       # Number of cycles 1+ instructions are processed.
-system.cpu.stage-4.utilization              52.413776                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage0.idleCycles                902142172                       # Number of cycles 0 instructions are processed.
+system.cpu.stage0.runCycles                1057760568                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage0.utilization               53.970054                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage1.idleCycles               1064240534                       # Number of cycles 0 instructions are processed.
+system.cpu.stage1.runCycles                 895662206                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage1.utilization               45.699319                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage2.idleCycles               1036315285                       # Number of cycles 0 instructions are processed.
+system.cpu.stage2.runCycles                 923587455                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage2.utilization               47.124147                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage3.idleCycles               1537492347                       # Number of cycles 0 instructions are processed.
+system.cpu.stage3.runCycles                 422410393                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage3.utilization               21.552620                       # Percentage of cycles stage was utilized (processing insts).
+system.cpu.stage4.idleCycles                932643705                       # Number of cycles 0 instructions are processed.
+system.cpu.stage4.runCycles                1027259035                       # Number of cycles 1+ instructions are processed.
+system.cpu.stage4.utilization               52.413776                       # Percentage of cycles stage was utilized (processing insts).
 system.cpu.threadCycles                    1619523667                       # Total Number of Cycles A Thread Was Active in CPU (Per-Thread)
 system.cpu.timesIdled                         8517352                       # Number of times that the entire CPU went into an idle state and unscheduled itself
-system.cpu.workload.PROG:num_syscalls              29                       # Number of system calls
+system.cpu.workload.num_syscalls                   29                       # Number of system calls
 
 ---------- End Simulation Statistics   ----------

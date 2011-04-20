@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar 17 2011 21:44:37
-M5 started Mar 17 2011 21:58:43
-M5 executing on zizzer
+M5 compiled Apr 19 2011 11:52:53
+M5 started Apr 19 2011 11:58:24
+M5 executing on maize
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

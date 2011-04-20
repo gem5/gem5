@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Feb/08/2011 17:50:03
+Real time: Apr/19/2011 12:19:09
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 500
-Elapsed_time_in_minutes: 8.33333
-Elapsed_time_in_hours: 0.138889
-Elapsed_time_in_days: 0.00578704
+Elapsed_time_in_seconds: 257
+Elapsed_time_in_minutes: 4.28333
+Elapsed_time_in_hours: 0.0713889
+Elapsed_time_in_days: 0.00297454
 
-Virtual_time_in_seconds: 500.11
-Virtual_time_in_minutes: 8.33517
-Virtual_time_in_hours:   0.138919
-Virtual_time_in_days:    0.00578831
+Virtual_time_in_seconds: 257.26
+Virtual_time_in_minutes: 4.28767
+Virtual_time_in_hours:   0.0714611
+Virtual_time_in_days:    0.00297755
 
 Ruby_current_time: 38939096
 Ruby_start_time: 0
 Ruby_cycles: 38939096
 
-mbytes_resident: 36.1992
-mbytes_total: 338.434
-resident_ratio: 0.106984
+mbytes_resident: 38.2109
+mbytes_total: 336.34
+resident_ratio: 0.11362
 
 ruby_cycles_executed: [ 38939097 38939097 38939097 38939097 38939097 38939097 38939097 38939097 ]
 
@@ -116,13 +116,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard dev
 Resource Usage
 --------------
 page_size: 4096
-user_time: 499
+user_time: 257
 system_time: 0
-page_reclaims: 10514
+page_reclaims: 10115
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 0
+block_outputs: 176
 
 Network Stats
 -------------
@@ -735,6 +735,7 @@ Writeback_Ack [1201719 ] 1201719
 Writeback_Nack [0 ] 0
 Unblock [21977 ] 21977
 Exclusive_Unblock [1213749 ] 1213749
+DmaAck [0 ] 0
 L2_Replacement [1209622 ] 1209622
 
  - Transitions -
@@ -1484,6 +1485,76 @@ ILSI  All_Acks [0 ] 0
 ILSI  Writeback_Ack [0 ] 0
 ILSI  L2_Replacement [0 ] 0
 
+ILOSD  L1_GETS [0 ] 0
+ILOSD  L1_GETX [0 ] 0
+ILOSD  L1_PUTO [0 ] 0
+ILOSD  L1_PUTX [0 ] 0
+ILOSD  L1_PUTS_only [0 ] 0
+ILOSD  L1_PUTS [0 ] 0
+ILOSD  Fwd_GETX [0 ] 0
+ILOSD  Fwd_GETS [0 ] 0
+ILOSD  Fwd_DMA [0 ] 0
+ILOSD  Own_GETX [0 ] 0
+ILOSD  Inv [0 ] 0
+ILOSD  DmaAck [0 ] 0
+ILOSD  L2_Replacement [0 ] 0
+
+ILOSXD  L1_GETS [0 ] 0
+ILOSXD  L1_GETX [0 ] 0
+ILOSXD  L1_PUTO [0 ] 0
+ILOSXD  L1_PUTX [0 ] 0
+ILOSXD  L1_PUTS_only [0 ] 0
+ILOSXD  L1_PUTS [0 ] 0
+ILOSXD  Fwd_GETX [0 ] 0
+ILOSXD  Fwd_GETS [0 ] 0
+ILOSXD  Fwd_DMA [0 ] 0
+ILOSXD  Own_GETX [0 ] 0
+ILOSXD  Inv [0 ] 0
+ILOSXD  DmaAck [0 ] 0
+ILOSXD  L2_Replacement [0 ] 0
+
+ILOD  L1_GETS [0 ] 0
+ILOD  L1_GETX [0 ] 0
+ILOD  L1_PUTO [0 ] 0
+ILOD  L1_PUTX [0 ] 0
+ILOD  L1_PUTS_only [0 ] 0
+ILOD  L1_PUTS [0 ] 0
+ILOD  Fwd_GETX [0 ] 0
+ILOD  Fwd_GETS [0 ] 0
+ILOD  Fwd_DMA [0 ] 0
+ILOD  Own_GETX [0 ] 0
+ILOD  Inv [0 ] 0
+ILOD  DmaAck [0 ] 0
+ILOD  L2_Replacement [0 ] 0
+
+ILXD  L1_GETS [0 ] 0
+ILXD  L1_GETX [0 ] 0
+ILXD  L1_PUTO [0 ] 0
+ILXD  L1_PUTX [0 ] 0
+ILXD  L1_PUTS_only [0 ] 0
+ILXD  L1_PUTS [0 ] 0
+ILXD  Fwd_GETX [0 ] 0
+ILXD  Fwd_GETS [0 ] 0
+ILXD  Fwd_DMA [0 ] 0
+ILXD  Own_GETX [0 ] 0
+ILXD  Inv [0 ] 0
+ILXD  DmaAck [0 ] 0
+ILXD  L2_Replacement [0 ] 0
+
+ILOXD  L1_GETS [0 ] 0
+ILOXD  L1_GETX [0 ] 0
+ILOXD  L1_PUTO [0 ] 0
+ILOXD  L1_PUTX [0 ] 0
+ILOXD  L1_PUTS_only [0 ] 0
+ILOXD  L1_PUTS [0 ] 0
+ILOXD  Fwd_GETX [0 ] 0
+ILOXD  Fwd_GETS [0 ] 0
+ILOXD  Fwd_DMA [0 ] 0
+ILOXD  Own_GETX [0 ] 0
+ILOXD  Inv [0 ] 0
+ILOXD  DmaAck [0 ] 0
+ILOXD  L2_Replacement [0 ] 0
+
 Memory controller: system.dir_cntrl0.memBuffer:
   memory_total_requests: 1633762
   memory_reads: 1206708
@@ -1520,6 +1591,7 @@ Memory_Data [1206704 ] 1206704
 Memory_Ack [427031 ] 427031
 DMA_READ [0 ] 0
 DMA_WRITE [0 ] 0
+DMA_ACK [0 ] 0
 Data [0 ] 0
 
  - Transitions -
@@ -1700,4 +1772,22 @@ OI_D  PUTO [0 ] 0
 OI_D  PUTO_SHARERS [0 ] 0
 OI_D  DMA_READ [0 ] 0
 OI_D  DMA_WRITE [0 ] 0
-OI_D  Data
+OI_D  Data [0 ] 0
+
+OD  GETX [0 ] 0
+OD  GETS [0 ] 0
+OD  PUTX [0 ] 0
+OD  PUTO [0 ] 0
+OD  PUTO_SHARERS [0 ] 0
+OD  DMA_READ [0 ] 0
+OD  DMA_WRITE [0 ] 0
+OD  DMA_ACK [0 ] 0
+
+MD  GETX [0 ] 0
+MD  GETS [0 ] 0
+MD  PUTX [0 ] 0
+MD  PUTO [0 ] 0
+MD  PUTO_SHARERS [0 ] 0
+MD  DMA_READ [0 ] 0
+MD  DMA_WRITE [0 ] 0
+MD  DMA_ACK

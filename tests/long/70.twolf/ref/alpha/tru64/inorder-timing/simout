@@ -5,10 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 18 2011 15:40:30
-M5 revision Unknown
-M5 started Feb 18 2011 19:04:15
-M5 executing on m55-001.pool
+M5 compiled Apr 19 2011 11:52:53
+M5 started Apr 19 2011 12:01:01
+M5 executing on maize
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing
 Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing/smred.sav
 Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing/smred.sv2

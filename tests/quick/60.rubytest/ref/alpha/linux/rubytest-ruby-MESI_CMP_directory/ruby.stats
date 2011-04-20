@@ -34,7 +34,7 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Feb/08/2011 17:31:55
+Real time: Apr/19/2011 12:12:40
 
 Profiler Stats
 --------------
@@ -43,18 +43,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.79
-Virtual_time_in_minutes: 0.0131667
-Virtual_time_in_hours:   0.000219444
-Virtual_time_in_days:    9.14352e-06
+Virtual_time_in_seconds: 0.36
+Virtual_time_in_minutes: 0.006
+Virtual_time_in_hours:   0.0001
+Virtual_time_in_days:    4.16667e-06
 
 Ruby_current_time: 352261
 Ruby_start_time: 0
 Ruby_cycles: 352261
 
-mbytes_resident: 33.6719
-mbytes_total: 208.004
-resident_ratio: 0.161956
+mbytes_resident: 35.7031
+mbytes_total: 206.043
+resident_ratio: 0.173299
 
 ruby_cycles_executed: [ 352262 ]
 
@@ -71,9 +71,9 @@ sequencer_requests_outstanding: [binsize: 1 max: 16 count: 986 average: 15.8337 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
 miss_latency: [binsize: 256 max: 33636 count: 971 average: 5617.58 | standard deviation: 7479.54 | 86 25 67 61 60 60 59 49 37 31 22 33 21 30 13 6 17 12 14 11 11 7 4 2 6 3 6 6 4 2 3 2 4 4 1 1 2 1 0 1 0 1 2 1 0 1 1 0 2 5 0 3 0 1 0 3 2 5 3 5 2 2 4 3 6 4 3 3 2 4 2 4 3 4 5 7 1 2 5 5 5 4 0 3 2 8 5 5 2 7 2 2 4 1 2 1 0 2 3 2 2 1 0 0 3 2 2 2 0 1 0 0 0 0 1 0 1 0 0 0 0 2 0 1 0 0 0 0 2 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_IFETCH: [binsize: 16 max: 2135 count: 46 average: 937.935 | standard deviation: 408.53 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 1 0 2 0 0 0 0 1 1 1 0 0 2 0 1 0 0 1 0 0 0 3 3 1 0 0 0 0 2 1 1 1 0 0 2 0 0 3 0 1 2 0 0 0 0 0 0 1 2 1 0 3 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_LD: [binsize: 256 max: 26910 count: 54 average: 5436.72 | standard deviation: 7279.79 | 4 1 3 3 5 5 2 1 3 1 2 5 1 2 1 1 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_ST: [binsize: 256 max: 33636 count: 871 average: 5875.94 | standard deviation: 7609.86 | 82 18 51 47 46 53 53 48 33 30 20 28 20 28 12 5 16 12 14 11 11 6 4 2 6 3 5 6 4 2 3 2 4 4 1 1 2 1 0 1 0 1 1 1 0 1 1 0 2 5 0 3 0 1 0 3 2 5 2 5 1 1 4 3 6 3 3 3 2 3 2 4 3 3 5 7 1 2 5 5 5 4 0 3 2 8 5 5 1 7 1 2 4 1 1 1 0 2 3 2 2 1 0 0 3 1 2 2 0 1 0 0 0 0 1 0 1 0 0 0 0 2 0 1 0 0 0 0 2 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_IFETCH: [binsize: 16 max: 2135 count: 46 average: 937.935 | standard deviation: 408.53 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 1 0 2 0 0 0 0 1 1 1 0 0 2 0 1 0 0 1 0 0 0 3 3 1 0 0 0 0 2 1 1 1 0 0 2 0 0 3 0 1 2 0 0 0 0 0 0 1 2 1 0 3 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_NULL: [binsize: 256 max: 33636 count: 971 average: 5617.58 | standard deviation: 7479.54 | 86 25 67 61 60 60 59 49 37 31 22 33 21 30 13 6 17 12 14 11 11 7 4 2 6 3 6 6 4 2 3 2 4 4 1 1 2 1 0 1 0 1 2 1 0 1 1 0 2 5 0 3 0 1 0 3 2 5 3 5 2 2 4 3 6 4 3 3 2 4 2 4 3 4 5 7 1 2 5 5 5 4 0 3 2 8 5 5 2 7 2 2 4 1 2 1 0 2 3 2 2 1 0 0 3 2 2 2 0 1 0 0 0 0 1 0 1 0 0 0 0 2 0 1 0 0 0 0 2 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_wCC_issue_to_initial_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 miss_latency_wCC_initial_forward_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
@@ -85,9 +85,9 @@ miss_latency_dir_initial_forward_request: [binsize: 1 max: 0 count: 0 average: N
 miss_latency_dir_forward_to_first_response: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 miss_latency_dir_first_response_to_completion: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 imcomplete_dir_Times: 0
-miss_latency_IFETCH_NULL: [binsize: 16 max: 2135 count: 46 average: 937.935 | standard deviation: 408.53 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 1 0 2 0 0 0 0 1 1 1 0 0 2 0 1 0 0 1 0 0 0 3 3 1 0 0 0 0 2 1 1 1 0 0 2 0 0 3 0 1 2 0 0 0 0 0 0 1 2 1 0 3 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_LD_NULL: [binsize: 256 max: 26910 count: 54 average: 5436.72 | standard deviation: 7279.79 | 4 1 3 3 5 5 2 1 3 1 2 5 1 2 1 1 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_ST_NULL: [binsize: 256 max: 33636 count: 871 average: 5875.94 | standard deviation: 7609.86 | 82 18 51 47 46 53 53 48 33 30 20 28 20 28 12 5 16 12 14 11 11 6 4 2 6 3 5 6 4 2 3 2 4 4 1 1 2 1 0 1 0 1 1 1 0 1 1 0 2 5 0 3 0 1 0 3 2 5 2 5 1 1 4 3 6 3 3 3 2 3 2 4 3 3 5 7 1 2 5 5 5 4 0 3 2 8 5 5 1 7 1 2 4 1 1 1 0 2 3 2 2 1 0 0 3 1 2 2 0 1 0 0 0 0 1 0 1 0 0 0 0 2 0 1 0 0 0 0 2 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_IFETCH_NULL: [binsize: 16 max: 2135 count: 46 average: 937.935 | standard deviation: 408.53 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 1 0 2 0 0 0 0 1 1 1 0 0 2 0 1 0 0 1 0 0 0 3 3 1 0 0 0 0 2 1 1 1 0 0 2 0 0 3 0 1 2 0 0 0 0 0 0 1 2 1 0 3 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 ]
 
 All Non-Zero Cycle SW Prefetch Requests
 ------------------------------------
@@ -119,11 +119,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 9831
+page_reclaims: 9430
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 0
+block_outputs: 48
 
 Network Stats
 -------------

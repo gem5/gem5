@@ -1,5 +1,5 @@
 warn: Sockets disabled, not accepting gdb connections
 For more information see: http://www.m5sim.org/warn/d946bea6
-warn: allowing mmap of file @ fd 17488232. This will break if not /dev/zero.
+warn: allowing mmap of file @ fd 32051064. This will break if not /dev/zero.
 For more information see: http://www.m5sim.org/warn/3a2134f6
 hack: be nice to actually delete the event here
