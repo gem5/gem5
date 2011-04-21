@@ -155,7 +155,7 @@ class Benchmark(object):
         cwd = process_args.get('cwd')
 
         if not cwd:
-            from m5.main import options
+            from m5 import options
             cwd = options.outdir
             process_args['cwd'] = cwd
         if not isdir(cwd):
