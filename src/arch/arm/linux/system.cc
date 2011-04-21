@@ -47,6 +47,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Loader.hh"
 #include "kern/linux/events.hh"
 #include "mem/physical.hh"
 

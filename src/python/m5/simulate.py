@@ -47,7 +47,7 @@ MaxTick = 2**63 - 1
 # The final hook to generate .ini files.  Called from the user script
 # once the config is built.
 def instantiate(ckpt_dir=None):
-    from main import options
+    from m5 import options
 
     root = objects.Root.getInstance()
 

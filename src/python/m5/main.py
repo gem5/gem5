@@ -144,6 +144,8 @@ def interact(scope):
         code.InteractiveConsole(scope).interact(banner)
 
 def main(*args):
+    import m5
+
     import core
     import debug
     import defines
@@ -154,13 +156,14 @@ def main(*args):
 
     from util import fatal
 
-    global options
     if len(args) == 0:
         options, arguments = parse_options()
     elif len(args) == 2:
         options, arguments = args
     else:
         raise TypeError, "main() takes 0 or 2 arguments (%d given)" % len(args)
+
+    m5.options = options
 
     def check_tracing():
         if defines.TRACING_ON:

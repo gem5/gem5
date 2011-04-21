@@ -42,6 +42,8 @@
 #include "base/bitmap.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "debug/PL111.hh"
+#include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/gic.hh"
 #include "dev/arm/pl111.hh"

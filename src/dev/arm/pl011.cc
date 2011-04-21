@@ -41,6 +41,8 @@
  */
 
 #include "base/trace.hh"
+#include "debug/Checkpoint.hh"
+#include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/gic.hh"
 #include "dev/arm/pl011.hh"

@@ -77,6 +77,7 @@ class Func(Symbol):
         code('''
 /** Auto generated C++ code started by $__file__:$__line__ */
 
+#include "debug/RubySlicc.hh"
 #include "mem/protocol/Types.hh"
 ''')
 

@@ -43,6 +43,8 @@
 
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
+#include "debug/Checkpoint.hh"
+#include "debug/GIC.hh"
 #include "dev/arm/gic.hh"
 #include "dev/platform.hh"
 #include "dev/terminal.hh"

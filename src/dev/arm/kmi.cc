@@ -43,6 +43,7 @@
 
 #include "base/vnc/vncserver.hh"
 #include "base/trace.hh"
+#include "debug/Pl050.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/kmi.hh"
 #include "dev/ps2.hh"

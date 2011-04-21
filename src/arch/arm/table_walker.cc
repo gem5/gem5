@@ -42,6 +42,9 @@
 #include "arch/arm/tlb.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Checkpoint.hh"
+#include "debug/TLB.hh"
+#include "debug/TLBVerbose.hh"
 #include "dev/io_device.hh"
 #include "sim/system.hh"
 

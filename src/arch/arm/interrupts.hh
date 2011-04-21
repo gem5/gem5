@@ -48,6 +48,7 @@
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/registers.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Interrupt.hh"
 #include "params/ArmInterrupts.hh"
 #include "sim/sim_object.hh"
 
