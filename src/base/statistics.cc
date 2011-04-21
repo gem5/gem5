@@ -138,9 +138,43 @@ Info::~Info()
 {
 }
 
+bool
+validateStatName(const string &name)
+{
+    if (name.empty())
+        return false;
+
+    vector<string> vec;
+    tokenize(vec, name, '.');
+    vector<string>::const_iterator item = vec.begin();
+    while (item != vec.end()) {
+        if (item->empty())
+            return false;
+
+        string::const_iterator c = item->begin();
+
+        // The first character is different
+        if (!isalpha(*c) && *c != '_')
+            return false;
+
+        // The rest of the characters have different rules.
+        while (++c != item->end()) {
+            if (!isalnum(*c) && *c != '_')
+                return false;
+        }
+
+        ++item;
+    }
+
+    return true;
+}
+
 void
 Info::setName(const string &name)
 {
+    if (!validateStatName(name))
+        panic("invalid stat name '%s'", name);
+
     pair<NameMapType::iterator, bool> p =
         nameMap().insert(make_pair(name, this));
 
