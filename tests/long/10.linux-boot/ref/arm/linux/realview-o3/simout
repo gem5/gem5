@@ -5,8 +5,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 19 2011 13:41:05
-M5 started Apr 19 2011 13:41:08
+M5 compiled Apr 21 2011 12:05:49
+M5 started Apr 21 2011 15:19:16
 M5 executing on maize
 command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second

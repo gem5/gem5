@@ -5,8 +5,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 19 2011 12:19:46
-M5 started Apr 19 2011 12:19:52
+M5 compiled Apr 21 2011 13:27:10
+M5 started Apr 21 2011 13:27:31
 M5 executing on maize
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
 Global frequency set at 1000000000000 ticks per second

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 253143                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 215164                       # Number of bytes of host memory used
-host_seconds                                  6806.72                       # Real time elapsed on the host
-host_tick_rate                               94449374                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 154101                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 217652                       # Number of bytes of host memory used
+host_seconds                                 11181.42                       # Real time elapsed on the host
+host_tick_rate                               57496303                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                  1723073854                       # Number of instructions simulated
 sim_seconds                                  0.642891                       # Number of seconds simulated
@@ -266,16 +266,16 @@ system.cpu.iew.iewIdleCycles                        0                       # Nu
 system.cpu.iew.iewLSQFullEvents                 76087                       # Number of times the LSQ has become full, causing a stall
 system.cpu.iew.iewSquashCycles               70439042                       # Number of cycles IEW is squashing
 system.cpu.iew.iewUnblockCycles               2509999                       # Number of cycles IEW is unblocking
-system.cpu.iew.lsq.thread.0.blockedLoads            0                       # Number of blocked loads due to partial load-store forwarding
-system.cpu.iew.lsq.thread.0.cacheBlocked       185300                       # Number of times an access to memory failed due to the cache being blocked
-system.cpu.iew.lsq.thread.0.forwLoads        54506765                       # Number of loads that had data forwarded from stores
-system.cpu.iew.lsq.thread.0.ignoredResponses       584812                       # Number of memory responses ignored because the instruction is squashed
-system.cpu.iew.lsq.thread.0.invAddrLoads            0                       # Number of loads ignored due to an invalid address
-system.cpu.iew.lsq.thread.0.invAddrSwpfs            0                       # Number of software prefetches ignored due to an invalid address
-system.cpu.iew.lsq.thread.0.memOrderViolation       734835                       # Number of memory ordering violations
-system.cpu.iew.lsq.thread.0.rescheduledLoads            2                       # Number of loads that were rescheduled
-system.cpu.iew.lsq.thread.0.squashedLoads    140151655                       # Number of loads squashed
-system.cpu.iew.lsq.thread.0.squashedStores     50405377                       # Number of stores squashed
+system.cpu.iew.lsq.thread0.blockedLoads             0                       # Number of blocked loads due to partial load-store forwarding
+system.cpu.iew.lsq.thread0.cacheBlocked        185300                       # Number of times an access to memory failed due to the cache being blocked
+system.cpu.iew.lsq.thread0.forwLoads         54506765                       # Number of loads that had data forwarded from stores
+system.cpu.iew.lsq.thread0.ignoredResponses       584812                       # Number of memory responses ignored because the instruction is squashed
+system.cpu.iew.lsq.thread0.invAddrLoads             0                       # Number of loads ignored due to an invalid address
+system.cpu.iew.lsq.thread0.invAddrSwpfs             0                       # Number of software prefetches ignored due to an invalid address
+system.cpu.iew.lsq.thread0.memOrderViolation       734835                       # Number of memory ordering violations
+system.cpu.iew.lsq.thread0.rescheduledLoads            2                       # Number of loads that were rescheduled
+system.cpu.iew.lsq.thread0.squashedLoads    140151655                       # Number of loads squashed
+system.cpu.iew.lsq.thread0.squashedStores     50405377                       # Number of stores squashed
 system.cpu.iew.memOrderViolationEvents         734835                       # Number of memory order violations
 system.cpu.iew.predictedNotTakenIncorrect      3232685                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.predictedTakenIncorrect       16119258                       # Number of branches that were predicted taken incorrectly

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 245660                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 294304                       # Number of bytes of host memory used
-host_seconds                                   232.36                       # Real time elapsed on the host
-host_tick_rate                             8184534150                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 146685                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 297796                       # Number of bytes of host memory used
+host_seconds                                   389.14                       # Real time elapsed on the host
+host_tick_rate                             4887032789                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    57080594                       # Number of instructions simulated
 sim_seconds                                  1.901725                       # Number of seconds simulated
@@ -362,16 +362,16 @@ system.cpu0.iew.iewIdleCycles                       0                       # Nu
 system.cpu0.iew.iewLSQFullEvents                 5675                       # Number of times the LSQ has become full, causing a stall
 system.cpu0.iew.iewSquashCycles               1085015                       # Number of cycles IEW is squashing
 system.cpu0.iew.iewUnblockCycles               526785                       # Number of cycles IEW is unblocking
-system.cpu0.iew.lsq.thread.0.blockedLoads            0                       # Number of blocked loads due to partial load-store forwarding
-system.cpu0.iew.lsq.thread.0.cacheBlocked       157871                       # Number of times an access to memory failed due to the cache being blocked
-system.cpu0.iew.lsq.thread.0.forwLoads         427137                       # Number of loads that had data forwarded from stores
-system.cpu0.iew.lsq.thread.0.ignoredResponses         7542                       # Number of memory responses ignored because the instruction is squashed
-system.cpu0.iew.lsq.thread.0.invAddrLoads            0                       # Number of loads ignored due to an invalid address
-system.cpu0.iew.lsq.thread.0.invAddrSwpfs            0                       # Number of software prefetches ignored due to an invalid address
-system.cpu0.iew.lsq.thread.0.memOrderViolation        14768                       # Number of memory ordering violations
-system.cpu0.iew.lsq.thread.0.rescheduledLoads        12869                       # Number of loads that were rescheduled
-system.cpu0.iew.lsq.thread.0.squashedLoads      1004382                       # Number of loads squashed
-system.cpu0.iew.lsq.thread.0.squashedStores       318301                       # Number of stores squashed
+system.cpu0.iew.lsq.thread0.blockedLoads            0                       # Number of blocked loads due to partial load-store forwarding
+system.cpu0.iew.lsq.thread0.cacheBlocked       157871                       # Number of times an access to memory failed due to the cache being blocked
+system.cpu0.iew.lsq.thread0.forwLoads          427137                       # Number of loads that had data forwarded from stores
+system.cpu0.iew.lsq.thread0.ignoredResponses         7542                       # Number of memory responses ignored because the instruction is squashed
+system.cpu0.iew.lsq.thread0.invAddrLoads            0                       # Number of loads ignored due to an invalid address
+system.cpu0.iew.lsq.thread0.invAddrSwpfs            0                       # Number of software prefetches ignored due to an invalid address
+system.cpu0.iew.lsq.thread0.memOrderViolation        14768                       # Number of memory ordering violations
+system.cpu0.iew.lsq.thread0.rescheduledLoads        12869                       # Number of loads that were rescheduled
+system.cpu0.iew.lsq.thread0.squashedLoads      1004382                       # Number of loads squashed
+system.cpu0.iew.lsq.thread0.squashedStores       318301                       # Number of stores squashed
 system.cpu0.iew.memOrderViolationEvents         14768                       # Number of memory order violations
 system.cpu0.iew.predictedNotTakenIncorrect       331464                       # Number of branches that were predicted not taken incorrectly
 system.cpu0.iew.predictedTakenIncorrect        323527                       # Number of branches that were predicted taken incorrectly
@@ -978,16 +978,16 @@ system.cpu1.iew.iewIdleCycles                       0                       # Nu
 system.cpu1.iew.iewLSQFullEvents                 5665                       # Number of times the LSQ has become full, causing a stall
 system.cpu1.iew.iewSquashCycles                401676                       # Number of cycles IEW is squashing
 system.cpu1.iew.iewUnblockCycles                76714                       # Number of cycles IEW is unblocking
-system.cpu1.iew.lsq.thread.0.blockedLoads            0                       # Number of blocked loads due to partial load-store forwarding
-system.cpu1.iew.lsq.thread.0.cacheBlocked        25188                       # Number of times an access to memory failed due to the cache being blocked
-system.cpu1.iew.lsq.thread.0.forwLoads          88996                       # Number of loads that had data forwarded from stores
-system.cpu1.iew.lsq.thread.0.ignoredResponses         4435                       # Number of memory responses ignored because the instruction is squashed
-system.cpu1.iew.lsq.thread.0.invAddrLoads            0                       # Number of loads ignored due to an invalid address
-system.cpu1.iew.lsq.thread.0.invAddrSwpfs            0                       # Number of software prefetches ignored due to an invalid address
-system.cpu1.iew.lsq.thread.0.memOrderViolation         4299                       # Number of memory ordering violations
-system.cpu1.iew.lsq.thread.0.rescheduledLoads         5923                       # Number of loads that were rescheduled
-system.cpu1.iew.lsq.thread.0.squashedLoads       416191                       # Number of loads squashed
-system.cpu1.iew.lsq.thread.0.squashedStores       148395                       # Number of stores squashed
+system.cpu1.iew.lsq.thread0.blockedLoads            0                       # Number of blocked loads due to partial load-store forwarding
+system.cpu1.iew.lsq.thread0.cacheBlocked        25188                       # Number of times an access to memory failed due to the cache being blocked
+system.cpu1.iew.lsq.thread0.forwLoads           88996                       # Number of loads that had data forwarded from stores
+system.cpu1.iew.lsq.thread0.ignoredResponses         4435                       # Number of memory responses ignored because the instruction is squashed
+system.cpu1.iew.lsq.thread0.invAddrLoads            0                       # Number of loads ignored due to an invalid address
+system.cpu1.iew.lsq.thread0.invAddrSwpfs            0                       # Number of software prefetches ignored due to an invalid address
+system.cpu1.iew.lsq.thread0.memOrderViolation         4299                       # Number of memory ordering violations
+system.cpu1.iew.lsq.thread0.rescheduledLoads         5923                       # Number of loads that were rescheduled
+system.cpu1.iew.lsq.thread0.squashedLoads       416191                       # Number of loads squashed
+system.cpu1.iew.lsq.thread0.squashedStores       148395                       # Number of stores squashed
 system.cpu1.iew.memOrderViolationEvents          4299                       # Number of memory order violations
 system.cpu1.iew.predictedNotTakenIncorrect       105547                       # Number of branches that were predicted not taken incorrectly
 system.cpu1.iew.predictedTakenIncorrect        123821                       # Number of branches that were predicted taken incorrectly

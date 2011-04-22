@@ -5,8 +5,8 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 19 2011 12:22:33
-M5 started Apr 19 2011 12:39:55
+M5 compiled Apr 21 2011 13:30:37
+M5 started Apr 21 2011 13:53:57
 M5 executing on maize
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing
 Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing/smred.sav

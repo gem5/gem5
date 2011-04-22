@@ -4,4 +4,5 @@ warn: instruction 'fnstcw_Mw' unimplemented
 For more information see: http://www.m5sim.org/warn/437d5238
 warn: instruction 'fldcw_Mw' unimplemented
 For more information see: http://www.m5sim.org/warn/437d5238
-hack: be nice to actually delete the event here
+m5.fast: build/X86_SE/arch/x86/emulenv.cc:49: void X86ISA::EmulEnv::doModRM(const X86ISA::ExtMachInst&): Assertion `machInst.modRM.mod != 3' failed.
+Program aborted at cycle 582313255000
