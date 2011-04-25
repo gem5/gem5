@@ -37,6 +37,7 @@
 #include <string>
 
 #include "base/stats/output.hh"
+#include "base/types.hh"
 #include "config/use_mysql.hh"
 
 namespace MySQL { class Connection; }
