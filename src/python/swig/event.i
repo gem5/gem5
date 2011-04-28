@@ -77,8 +77,10 @@
 %import "sim/serialize.hh"
 
 %include "base/types.hh"
-%include "python/swig/pyevent.hh"
 %include "sim/eventq.hh"
+
+// This must follow eventq.hh
+%include "python/swig/pyevent.hh"
 
 struct CountedDrainEvent : public Event
 {
