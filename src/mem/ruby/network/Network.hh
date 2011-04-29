@@ -66,10 +66,7 @@ class Network : public SimObject
 
     virtual void init();
 
-    int getBufferSize() { return m_buffer_size; }
     int getNumberOfVirtualNetworks() { return m_virtual_networks; }
-    int getEndpointBandwidth() { return m_endpoint_bandwidth; }
-    bool getAdaptiveRouting() {return m_adaptive_routing; }
     int getLinkLatency() { return m_link_latency; }
     int MessageSizeType_to_int(MessageSizeType size_type);
 
@@ -110,10 +107,7 @@ class Network : public SimObject
     const std::string m_name;
     int m_nodes;
     int m_virtual_networks;
-    int m_buffer_size;
-    int m_endpoint_bandwidth;
     Topology* m_topology_ptr;
-    bool m_adaptive_routing;
     int m_link_latency;
     int m_control_msg_size;
     int m_data_msg_size;

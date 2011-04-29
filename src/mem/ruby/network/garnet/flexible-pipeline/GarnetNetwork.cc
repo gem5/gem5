@@ -48,6 +48,8 @@ using m5::stl_helpers::deletePointers;
 GarnetNetwork::GarnetNetwork(const Params *p)
     : BaseGarnetNetwork(p)
 {
+    m_buffer_size = p->buffer_size;
+
     m_ruby_start = 0;
     m_flits_received = 0;
     m_flits_injected = 0;

@@ -36,9 +36,6 @@ Network::Network(const Params *p)
 {
     m_virtual_networks = p->number_of_virtual_networks;
     m_topology_ptr = p->topology;
-    m_buffer_size = p->buffer_size;
-    m_endpoint_bandwidth = p->endpoint_bandwidth;
-    m_adaptive_routing = p->adaptive_routing;
     m_link_latency = p->link_latency;
     m_control_msg_size = p->control_msg_size;
 

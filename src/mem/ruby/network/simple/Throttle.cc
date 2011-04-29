@@ -49,21 +49,22 @@ const int PRIORITY_SWITCH_LIMIT = 128;
 static int network_message_to_size(NetworkMessage* net_msg_ptr);
 
 Throttle::Throttle(int sID, NodeID node, int link_latency,
-    int link_bandwidth_multiplier)
+                   int link_bandwidth_multiplier, int endpoint_bandwidth)
 {
-    init(node, link_latency, link_bandwidth_multiplier);
+    init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
     m_sID = sID;
 }
 
 Throttle::Throttle(NodeID node, int link_latency,
-    int link_bandwidth_multiplier)
+                   int link_bandwidth_multiplier, int endpoint_bandwidth)
 {
-    init(node, link_latency, link_bandwidth_multiplier);
+    init(node, link_latency, link_bandwidth_multiplier, endpoint_bandwidth);
     m_sID = 0;
 }
 
 void
-Throttle::init(NodeID node, int link_latency, int link_bandwidth_multiplier)
+Throttle::init(NodeID node, int link_latency, int link_bandwidth_multiplier, 
+               int endpoint_bandwidth)
 {
     m_node = node;
     m_vnets = 0;
@@ -71,6 +72,7 @@ Throttle::init(NodeID node, int link_latency, int link_bandwidth_multiplier)
     assert(link_bandwidth_multiplier > 0);
     m_link_bandwidth_multiplier = link_bandwidth_multiplier;
     m_link_latency = link_latency;
+    m_endpoint_bandwidth = endpoint_bandwidth;
 
     m_wakeups_wo_switch = 0;
     clearStats();

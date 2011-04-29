@@ -49,7 +49,6 @@ class PerfectSwitch;
 class NetDest;
 class SimpleNetwork;
 class Throttle;
-class Network;
 
 class Switch
 {
@@ -79,7 +78,7 @@ class Switch
     Switch& operator=(const Switch& obj);
 
     PerfectSwitch* m_perfect_switch_ptr;
-    Network* m_network_ptr;
+    SimpleNetwork* m_network_ptr;
     std::vector<Throttle*> m_throttles;
     std::vector<MessageBuffer*> m_buffers_to_free;
     SwitchID m_switch_id;

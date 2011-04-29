@@ -33,9 +33,9 @@
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
+#include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
-#include "mem/ruby/network/Network.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;
@@ -69,10 +69,12 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
     const NetDest& routing_table_entry, int link_latency, int bw_multiplier)
 {
     Throttle* throttle_ptr = NULL;
+    SimpleNetwork* net_ptr = 
+        safe_cast<SimpleNetwork*>(RubySystem::getNetwork());
 
     // Create a throttle
     throttle_ptr = new Throttle(m_switch_id, m_throttles.size(), link_latency,
-        bw_multiplier);
+                                bw_multiplier, net_ptr->getEndpointBandwidth());
     m_throttles.push_back(throttle_ptr);
 
     // Create one buffer per vnet (these are intermediaryQueues)
@@ -81,7 +83,6 @@ Switch::addOutPort(const vector<MessageBuffer*>& out,
         MessageBuffer* buffer_ptr = new MessageBuffer;
         // Make these queues ordered
         buffer_ptr->setOrdering(true);
-        Network* net_ptr = RubySystem::getNetwork();
         if (net_ptr->getBufferSize() > 0) {
             buffer_ptr->resize(net_ptr->getBufferSize());
         }

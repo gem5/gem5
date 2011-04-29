@@ -62,6 +62,10 @@ Network::createNetwork(int nodes)
 SimpleNetwork::SimpleNetwork(const Params *p)
     : Network(p)
 {
+    m_buffer_size = p->buffer_size;
+    m_endpoint_bandwidth = p->endpoint_bandwidth;
+    m_adaptive_routing = p->adaptive_routing;
+
     // Note: the parent Network Object constructor is called before the
     // SimpleNetwork child constructor.  Therefore, the member variables
     // used below should already be initialized.

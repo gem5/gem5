@@ -33,4 +33,6 @@ from BaseGarnetNetwork import BaseGarnetNetwork
 
 class GarnetNetwork(BaseGarnetNetwork):
     type = 'GarnetNetwork'
+    buffer_size = Param.Int(0,
+        "default buffer size; 0 indicates infinite buffering");
 

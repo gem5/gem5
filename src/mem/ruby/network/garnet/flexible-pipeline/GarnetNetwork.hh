@@ -56,6 +56,8 @@ class GarnetNetwork : public BaseGarnetNetwork
 
     void init();
 
+    int getBufferSize() { return m_buffer_size; }
+
     // returns the queue requested for the given component
     MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
     MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
@@ -122,6 +124,7 @@ class GarnetNetwork : public BaseGarnetNetwork
     std::vector<NetworkInterface *> m_ni_ptr_vector; // All NI's in Network
 
     Time m_ruby_start;
+    int m_buffer_size;
 };
 
 inline std::ostream&

@@ -54,8 +54,9 @@ class Throttle : public Consumer
 {
   public:
     Throttle(int sID, NodeID node, int link_latency,
-        int link_bandwidth_multiplier);
-    Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier);
+             int link_bandwidth_multiplier, int endpoint_bandwidth);
+    Throttle(NodeID node, int link_latency, int link_bandwidth_multiplier,
+             int endpoint_bandwidth);
     ~Throttle() {}
 
     std::string name()
@@ -73,8 +74,7 @@ class Throttle : public Consumer
     int
     getLinkBandwidth() const
     {
-        return RubySystem::getNetwork()->getEndpointBandwidth() *
-            m_link_bandwidth_multiplier;
+        return m_endpoint_bandwidth * m_link_bandwidth_multiplier;
     }
     int getLatency() const { return m_link_latency; }
 
@@ -89,7 +89,8 @@ class Throttle : public Consumer
     void print(std::ostream& out) const;
 
   private:
-    void init(NodeID node, int link_latency, int link_bandwidth_multiplier);
+    void init(NodeID node, int link_latency, int link_bandwidth_multiplier,
+              int endpoint_bandwidth);
     void addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr);
     void linkUtilized(double ratio) { m_links_utilized += ratio; }
 
@@ -107,6 +108,7 @@ class Throttle : public Consumer
     int m_link_bandwidth_multiplier;
     int m_link_latency;
     int m_wakeups_wo_switch;
+    int m_endpoint_bandwidth;
 
     // For tracking utilization
     Time m_ruby_start;

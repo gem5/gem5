@@ -53,6 +53,10 @@ class SimpleNetwork : public Network
 
     void init();
 
+    int getBufferSize() { return m_buffer_size; }
+    int getEndpointBandwidth() { return m_endpoint_bandwidth; }
+    bool getAdaptiveRouting() {return m_adaptive_routing; }
+
     void printStats(std::ostream& out) const;
     void clearStats();
     void printConfig(std::ostream& out) const;
@@ -107,6 +111,10 @@ class SimpleNetwork : public Network
     std::vector<Switch*> m_switch_ptr_vector;
     std::vector<MessageBuffer*> m_buffers_to_free;
     std::vector<Switch*> m_endpoint_switches;
+
+    int m_buffer_size;
+    int m_endpoint_bandwidth;
+    bool m_adaptive_routing;    
 };
 
 inline std::ostream&
