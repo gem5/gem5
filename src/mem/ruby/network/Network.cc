@@ -36,7 +36,6 @@ Network::Network(const Params *p)
 {
     m_virtual_networks = p->number_of_virtual_networks;
     m_topology_ptr = p->topology;
-    m_link_latency = p->link_latency;
     m_control_msg_size = p->control_msg_size;
 
     // Total nodes/controllers in network

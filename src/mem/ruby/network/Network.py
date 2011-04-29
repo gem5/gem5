@@ -47,6 +47,4 @@ class RubyNetwork(SimObject):
     abstract = True
     number_of_virtual_networks = Param.Int(10, "");
     topology = Param.Topology("");
-    link_latency = Param.Int(1,
-        "local memory latency ?? NetworkLinkLatency");
     control_msg_size = Param.Int(8, "");

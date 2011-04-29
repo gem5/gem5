@@ -67,7 +67,6 @@ class Network : public SimObject
     virtual void init();
 
     int getNumberOfVirtualNetworks() { return m_virtual_networks; }
-    int getLinkLatency() { return m_link_latency; }
     int MessageSizeType_to_int(MessageSizeType size_type);
 
     // returns the queue requested for the given component
@@ -108,7 +107,6 @@ class Network : public SimObject
     int m_nodes;
     int m_virtual_networks;
     Topology* m_topology_ptr;
-    int m_link_latency;
     int m_control_msg_size;
     int m_data_msg_size;
 };
