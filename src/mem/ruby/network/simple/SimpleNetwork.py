@@ -34,5 +34,5 @@ class SimpleNetwork(RubyNetwork):
     type = 'SimpleNetwork'
     buffer_size = Param.Int(0,
         "default buffer size; 0 indicates infinite buffering");
-    endpoint_bandwidth = Param.Int(10000, "");
+    endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor");
     adaptive_routing = Param.Bool(False, "enable adaptive routing");
