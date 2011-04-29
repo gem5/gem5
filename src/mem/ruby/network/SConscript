@@ -36,3 +36,4 @@ if not env['RUBY']:
 SimObject('Network.py')
 
 Source('Network.cc')
+Source('Topology.cc')

@@ -39,7 +39,7 @@
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkInterface_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
-#include "mem/ruby/network/simple/Topology.hh"
+#include "mem/ruby/network/Topology.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;

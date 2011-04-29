@@ -40,7 +40,7 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
-#include "mem/ruby/network/simple/Topology.hh"
+#include "mem/ruby/network/Topology.hh"
 
 using namespace std;
 using m5::stl_helpers::deletePointers;

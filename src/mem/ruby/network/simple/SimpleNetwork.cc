@@ -38,7 +38,7 @@
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
-#include "mem/ruby/network/simple/Topology.hh"
+#include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
 
