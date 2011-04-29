@@ -87,8 +87,8 @@ def create_system(options, system, piobus = None, dma_devices = []):
         class RouterClass(GarnetRouter): pass
     else:
         class NetworkClass(SimpleNetwork): pass
-        class IntLinkClass(BasicIntLink): pass
-        class ExtLinkClass(BasicExtLink): pass
+        class IntLinkClass(SimpleIntLink): pass
+        class ExtLinkClass(SimpleExtLink): pass
         class RouterClass(BasicRouter): pass
     
     #

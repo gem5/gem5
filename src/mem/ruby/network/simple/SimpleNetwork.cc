@@ -36,6 +36,7 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
+#include "mem/ruby/network/simple/SimpleLink.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
@@ -148,10 +149,12 @@ SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
         return;
     }
 
+    SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
+
     m_switch_ptr_vector[src]->addOutPort(m_fromNetQueues[dest],
                                          routing_table_entry,
-                                         link->m_latency,
-                                         link->m_bw_multiplier);
+                                         simple_link->m_latency,
+                                         simple_link->m_bw_multiplier);
 
     m_endpoint_switches[dest] = m_switch_ptr_vector[src];
 }
@@ -198,10 +201,12 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
         m_buffers_to_free.push_back(buffer_ptr);
     }
     // Connect it to the two switches
+    SimpleIntLink *simple_link = safe_cast<SimpleIntLink*>(link);
+
     m_switch_ptr_vector[dest]->addInPort(queues);
     m_switch_ptr_vector[src]->addOutPort(queues, routing_table_entry,
-                                         link->m_latency, 
-                                         link->m_bw_multiplier);
+                                         simple_link->m_latency, 
+                                         simple_link->m_bw_multiplier);
 }
 
 void

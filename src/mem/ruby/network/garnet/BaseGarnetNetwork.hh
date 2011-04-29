@@ -48,14 +48,14 @@ class BaseGarnetNetwork : public Network
     BaseGarnetNetwork(const Params *p);
 
     void init();
-    int getFlitSize() {return m_flit_size; }
+    int getNiFlitSize() {return m_ni_flit_size; }
     int getNumPipeStages() {return m_number_of_pipe_stages; }
     int getVCsPerClass() {return m_vcs_per_class; }
     int getBuffersPerDataVC() {return m_buffers_per_data_vc; }
     int getBuffersPerCtrlVC() {return m_buffers_per_ctrl_vc; }
 
   protected:
-    int m_flit_size;
+    int m_ni_flit_size;
     int m_number_of_pipe_stages;
     int m_vcs_per_class;
     int m_buffers_per_data_vc;

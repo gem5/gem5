@@ -33,9 +33,11 @@ Import('*')
 if not env['RUBY']:
     Return()
 
+SimObject('SimpleLink.py')
 SimObject('SimpleNetwork.py')
 
 Source('PerfectSwitch.cc')
+Source('SimpleLink.cc')
 Source('SimpleNetwork.cc')
 Source('Switch.cc')
 Source('Throttle.cc')

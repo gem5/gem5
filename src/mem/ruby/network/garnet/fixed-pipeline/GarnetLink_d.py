@@ -41,7 +41,8 @@ class NetworkLink_d(SimObject):
                               "virtual channels per message class")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
-    channel_width = Param.Int(Parent.flit_size, "channel width == flit size")
+    channel_width = Param.Int(Parent.bandwidth_factor,
+                              "channel width == bw factor")
 
 class CreditLink_d(NetworkLink_d):
     type = 'CreditLink_d'

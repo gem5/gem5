@@ -28,16 +28,37 @@
  * Authors: Niket Agarwal
  */
 
+#include "mem/ruby/network/BasicLink.hh"
+#include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 
 BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
     : Network(p)
 {
-    m_flit_size = p->flit_size;
+    m_ni_flit_size = p->ni_flit_size;
     m_number_of_pipe_stages = p->number_of_pipe_stages;
     m_vcs_per_class = p->vcs_per_class;
     m_buffers_per_data_vc = p->buffers_per_data_vc;
     m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
+
+    // Currently Garnet only supports uniform bandwidth for all
+    // links and network interfaces.
+    for (std::vector<BasicExtLink*>::const_iterator i = 
+             m_topology_ptr->params()->ext_links.begin();
+         i != m_topology_ptr->params()->ext_links.end(); ++i) {
+        BasicExtLink* ext_link = (*i);
+        if (ext_link->params()->bandwidth_factor != m_ni_flit_size) {
+            fatal("Garnet only supports uniform bw across all links and NIs\n");
+        }
+    }
+    for (std::vector<BasicIntLink*>::const_iterator i = 
+             m_topology_ptr->params()->int_links.begin();
+         i != m_topology_ptr->params()->int_links.end(); ++i) {
+        BasicIntLink* int_link = (*i);
+        if (int_link->params()->bandwidth_factor != m_ni_flit_size) {
+            fatal("Garnet only supports uniform bw across all links and NIs\n");
+        }
+    }
 }
 
 void

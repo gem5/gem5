@@ -32,7 +32,7 @@ BasicLink::BasicLink(const Params *p)
     : SimObject(p)
 {
     m_latency = p->latency;
-    m_bw_multiplier = p->bw_multiplier;
+    m_bandwidth_factor = p->bandwidth_factor;
     m_weight = p->weight;
 }
 

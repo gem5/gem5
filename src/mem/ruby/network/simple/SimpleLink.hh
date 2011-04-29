@@ -26,71 +26,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_NETWORK_BASIC_LINK_HH__
-#define __MEM_RUBY_NETWORK_BASIC_LINK_HH__
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_LINK_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_LINK_HH__
 
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "params/BasicExtLink.hh"
-#include "params/BasicIntLink.hh"
-#include "params/BasicLink.hh"
-#include "mem/ruby/network/BasicRouter.hh"
-#include "mem/ruby/network/Topology.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "sim/sim_object.hh"
+#include "params/SimpleExtLink.hh"
+#include "params/SimpleIntLink.hh"
+#include "mem/ruby/network/BasicLink.hh"
 
-class BasicLink : public SimObject
+class SimpleExtLink : public BasicExtLink
 {
   public:
-    typedef BasicLinkParams Params;
-    BasicLink(const Params *p);
+    typedef SimpleExtLinkParams Params;
+    SimpleExtLink(const Params *p);
     const Params *params() const { return (const Params *)_params; }
 
-    void init();
-
+    friend class Topology;
     void print(std::ostream& out) const;
 
-    int m_latency;
-    int m_bandwidth_factor;
-    int m_weight;
+    int m_bw_multiplier;
 };
 
 inline std::ostream&
-operator<<(std::ostream& out, const BasicLink& obj)
+operator<<(std::ostream& out, const SimpleExtLink& obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-class BasicExtLink : public BasicLink
+class SimpleIntLink : public BasicIntLink
 {
   public:
-    typedef BasicExtLinkParams Params;
-    BasicExtLink(const Params *p);
+    typedef SimpleIntLinkParams Params;
+    SimpleIntLink(const Params *p);
     const Params *params() const { return (const Params *)_params; }
 
     friend class Topology;
+    void print(std::ostream& out) const;
 
-  protected:
-    BasicRouter* m_int_node;
-    AbstractController* m_ext_node;
+    int m_bw_multiplier;
 };
 
-class BasicIntLink : public BasicLink
+inline std::ostream&
+operator<<(std::ostream& out, const SimpleIntLink& obj)
 {
-  public:
-    typedef BasicIntLinkParams Params;
-    BasicIntLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    obj.print(out);
+    out << std::flush;
+    return out;
+}
 
-    friend class Topology;
-
-  protected:
-    BasicRouter* m_node_a;
-    BasicRouter* m_node_b;
-};
-
-#endif // __MEM_RUBY_NETWORK_BASIC_LINK_HH__
+#endif // __MEM_RUBY_NETWORK_SIMPLE_LINK_HH__

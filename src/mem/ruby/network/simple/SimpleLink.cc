@@ -26,71 +26,48 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_NETWORK_BASIC_LINK_HH__
-#define __MEM_RUBY_NETWORK_BASIC_LINK_HH__
+#include "mem/ruby/network/simple/SimpleLink.hh"
 
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "params/BasicExtLink.hh"
-#include "params/BasicIntLink.hh"
-#include "params/BasicLink.hh"
-#include "mem/ruby/network/BasicRouter.hh"
-#include "mem/ruby/network/Topology.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "sim/sim_object.hh"
-
-class BasicLink : public SimObject
+SimpleExtLink::SimpleExtLink(const Params *p)
+    : BasicExtLink(p)
 {
-  public:
-    typedef BasicLinkParams Params;
-    BasicLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
-
-    void init();
-
-    void print(std::ostream& out) const;
-
-    int m_latency;
-    int m_bandwidth_factor;
-    int m_weight;
-};
-
-inline std::ostream&
-operator<<(std::ostream& out, const BasicLink& obj)
-{
-    obj.print(out);
-    out << std::flush;
-    return out;
+    // For the simple links, the bandwidth factor translates to the
+    // bandwidth multiplier.  The multipiler, in combination with the 
+    // endpoint bandwidth multiplier - message size multiplier ratio, 
+    // determines the link bandwidth in bytes 
+    m_bw_multiplier = p->bandwidth_factor;
 }
 
-class BasicExtLink : public BasicLink
+void
+SimpleExtLink::print(std::ostream& out) const
 {
-  public:
-    typedef BasicExtLinkParams Params;
-    BasicExtLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    out << name();
+}
 
-    friend class Topology;
-
-  protected:
-    BasicRouter* m_int_node;
-    AbstractController* m_ext_node;
-};
-
-class BasicIntLink : public BasicLink
+SimpleExtLink *
+SimpleExtLinkParams::create()
 {
-  public:
-    typedef BasicIntLinkParams Params;
-    BasicIntLink(const Params *p);
-    const Params *params() const { return (const Params *)_params; }
+    return new SimpleExtLink(this);
+}
 
-    friend class Topology;
+SimpleIntLink::SimpleIntLink(const Params *p)
+    : BasicIntLink(p)
+{
+    // For the simple links, the bandwidth factor translates to the
+    // bandwidth multiplier.  The multipiler, in combination with the 
+    // endpoint bandwidth multiplier - message size multiplier ratio, 
+    // determines the link bandwidth in bytes 
+    m_bw_multiplier = p->bandwidth_factor;
+}
 
-  protected:
-    BasicRouter* m_node_a;
-    BasicRouter* m_node_b;
-};
+void
+SimpleIntLink::print(std::ostream& out) const
+{
+    out << name();
+}
 
-#endif // __MEM_RUBY_NETWORK_BASIC_LINK_HH__
+SimpleIntLink *
+SimpleIntLinkParams::create()
+{
+    return new SimpleIntLink(this);
+}

@@ -34,17 +34,21 @@ class BasicLink(SimObject):
     type = 'BasicLink'
     link_id = Param.Int("ID in relation to other links")
     latency = Param.Int(1, "latency")
-    bw_multiplier = Param.Int("simple network bw constant, usually in bytes")
+    # The following banwidth factor does not translate to the same value for
+    # both the simple and Garnet models.  For the most part, the bandwidth
+    # factor is the width of the link in bytes, expect for certain situations
+    # with regard to the simple network.
+    bandwidth_factor = Param.Int("generic bandwidth factor, usually in bytes")
     weight = Param.Int(1, "used to restrict routing in shortest path analysis")
 
 class BasicExtLink(BasicLink):
     type = 'BasicExtLink'
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicRouter("ID of internal node")
-    bw_multiplier = 64
+    bandwidth_factor = 64
 
 class BasicIntLink(BasicLink):
     type = 'BasicIntLink'
     node_a = Param.BasicRouter("Router on one end")
     node_b = Param.BasicRouter("Router on other end")
-    bw_multiplier = 16
+    bandwidth_factor = 16
