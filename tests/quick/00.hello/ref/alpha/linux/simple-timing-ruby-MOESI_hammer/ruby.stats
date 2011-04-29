@@ -34,7 +34,7 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/19/2011 12:10:00
+Real time: Apr/28/2011 15:12:18
 
 Profiler Stats
 --------------
@@ -43,18 +43,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.18
-Virtual_time_in_minutes: 0.003
-Virtual_time_in_hours:   5e-05
-Virtual_time_in_days:    2.08333e-06
+Virtual_time_in_seconds: 0.46
+Virtual_time_in_minutes: 0.00766667
+Virtual_time_in_hours:   0.000127778
+Virtual_time_in_days:    5.32407e-06
 
 Ruby_current_time: 208400
 Ruby_start_time: 0
 Ruby_cycles: 208400
 
-mbytes_resident: 38.6719
-mbytes_total: 208.031
-resident_ratio: 0.185913
+mbytes_resident: 39.1133
+mbytes_total: 221.852
+resident_ratio: 0.176357
 
 ruby_cycles_executed: [ 208401 ]
 
@@ -126,11 +126,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 10195
+page_reclaims: 11228
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 64
+block_outputs: 0
 
 Network Stats
 -------------
@@ -144,9 +144,9 @@ total_msgs: 20718 total_bytes: 430512
 
 switch_0_inlinks: 2
 switch_0_outlinks: 2
-links_utilized_percent_switch_0: 0.111054
-  links_utilized_percent_switch_0_link_0: 0.0694218 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 0.152687 bw: 160000 base_latency: 1
+links_utilized_percent_switch_0: 2.15187
+  links_utilized_percent_switch_0_link_0: 2.77687 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_0_link_1: 1.52687 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_0_link_0_Response_Data: 1159 83448 [ 0 0 0 0 1159 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_0_link_0_Writeback_Control: 1143 9144 [ 0 0 0 1143 0 0 0 0 0 0 ] base_latency: 1
@@ -157,9 +157,9 @@ links_utilized_percent_switch_0: 0.111054
 
 switch_1_inlinks: 2
 switch_1_outlinks: 2
-links_utilized_percent_switch_1: 0.157929
-  links_utilized_percent_switch_1_link_0: 0.0381718 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 0.277687 bw: 160000 base_latency: 1
+links_utilized_percent_switch_1: 2.15187
+  links_utilized_percent_switch_1_link_0: 1.52687 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_1_link_1: 2.77687 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_1_link_0_Request_Control: 1159 9272 [ 0 0 1159 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_1_link_0_Writeback_Data: 220 15840 [ 0 0 0 0 0 220 0 0 0 0 ] base_latency: 1
@@ -170,9 +170,9 @@ links_utilized_percent_switch_1: 0.157929
 
 switch_2_inlinks: 2
 switch_2_outlinks: 2
-links_utilized_percent_switch_2: 0.215187
-  links_utilized_percent_switch_2_link_0: 0.277687 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 0.152687 bw: 160000 base_latency: 1
+links_utilized_percent_switch_2: 2.15187
+  links_utilized_percent_switch_2_link_0: 2.77687 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_2_link_1: 1.52687 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_2_link_0_Response_Data: 1159 83448 [ 0 0 0 0 1159 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_0_Writeback_Control: 1143 9144 [ 0 0 0 1143 0 0 0 0 0 0 ] base_latency: 1

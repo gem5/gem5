@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 19 2011 12:17:10
-M5 started Apr 19 2011 12:17:16
-M5 executing on maize
-command line: build/ALPHA_SE_MOESI_CMP_token/m5.fast -d build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_SE_MOESI_CMP_token/tests/fast/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_token
+M5 compiled Apr 28 2011 15:03:17
+M5 started Apr 28 2011 15:03:52
+M5 executing on SC2B0617
+command line: build/ALPHA_SE_MOESI_CMP_token/m5.opt -d build/ALPHA_SE_MOESI_CMP_token/tests/opt/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_SE_MOESI_CMP_token/tests/opt/quick/00.hello/alpha/tru64/simple-timing-ruby-MOESI_CMP_token
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 84059 because target called exit()
+Exiting @ tick 87899 because target called exit()

@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 19 2011 12:09:47
-M5 started Apr 19 2011 12:09:50
-M5 executing on maize
-command line: build/ALPHA_SE_MOESI_hammer/m5.fast -d build/ALPHA_SE_MOESI_hammer/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer
+M5 compiled Apr 28 2011 15:11:39
+M5 started Apr 28 2011 15:12:18
+M5 executing on SC2B0617
+command line: build/ALPHA_SE_MOESI_hammer/m5.opt -d build/ALPHA_SE_MOESI_hammer/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 210961 because Ruby Tester completed
+Exiting @ tick 218861 because Ruby Tester completed

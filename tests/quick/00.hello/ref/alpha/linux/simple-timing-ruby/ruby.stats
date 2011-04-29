@@ -34,7 +34,7 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/19/2011 11:58:50
+Real time: Apr/28/2011 14:27:56
 
 Profiler Stats
 --------------
@@ -43,18 +43,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.17
-Virtual_time_in_minutes: 0.00283333
-Virtual_time_in_hours:   4.72222e-05
-Virtual_time_in_days:    1.96759e-06
+Virtual_time_in_seconds: 0.44
+Virtual_time_in_minutes: 0.00733333
+Virtual_time_in_hours:   0.000122222
+Virtual_time_in_days:    5.09259e-06
 
 Ruby_current_time: 342698
 Ruby_start_time: 0
 Ruby_cycles: 342698
 
-mbytes_resident: 38.5859
-mbytes_total: 208.09
-resident_ratio: 0.185448
+mbytes_resident: 38.9805
+mbytes_total: 221.645
+resident_ratio: 0.175922
 
 ruby_cycles_executed: [ 342699 ]
 
@@ -122,11 +122,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 10179
-page_faults: 0
+page_reclaims: 11208
+page_faults: 3
 swaps: 0
-block_inputs: 0
-block_outputs: 64
+block_inputs: 1184
+block_outputs: 0
 
 Network Stats
 -------------
@@ -139,9 +139,9 @@ total_msgs: 20736 total_bytes: 829440
 
 switch_0_inlinks: 2
 switch_0_outlinks: 2
-links_utilized_percent_switch_0: 0.157486
-  links_utilized_percent_switch_0_link_0: 0.0630876 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 0.251884 bw: 160000 base_latency: 1
+links_utilized_percent_switch_0: 2.52117
+  links_utilized_percent_switch_0_link_0: 2.5235 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_0_link_1: 2.51884 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_0_link_0_Response_Data: 1730 124560 [ 0 0 0 0 1730 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_0_link_0_Writeback_Control: 1726 13808 [ 0 0 0 1726 0 0 0 0 0 0 ] base_latency: 1
@@ -150,9 +150,9 @@ links_utilized_percent_switch_0: 0.157486
 
 switch_1_inlinks: 2
 switch_1_outlinks: 2
-links_utilized_percent_switch_1: 0.157661
-  links_utilized_percent_switch_1_link_0: 0.0629709 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 0.25235 bw: 160000 base_latency: 1
+links_utilized_percent_switch_1: 2.52117
+  links_utilized_percent_switch_1_link_0: 2.51884 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_1_link_1: 2.5235 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_1_link_0_Control: 1730 13840 [ 0 0 1730 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_1_link_0_Data: 1726 124272 [ 0 0 1726 0 0 0 0 0 0 0 ] base_latency: 1
@@ -161,9 +161,9 @@ links_utilized_percent_switch_1: 0.157661
 
 switch_2_inlinks: 2
 switch_2_outlinks: 2
-links_utilized_percent_switch_2: 0.252117
-  links_utilized_percent_switch_2_link_0: 0.25235 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 0.251884 bw: 160000 base_latency: 1
+links_utilized_percent_switch_2: 2.52117
+  links_utilized_percent_switch_2_link_0: 2.5235 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_2_link_1: 2.51884 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_2_link_0_Response_Data: 1730 124560 [ 0 0 0 0 1730 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_0_Writeback_Control: 1726 13808 [ 0 0 0 1726 0 0 0 0 0 0 ] base_latency: 1
@@ -227,9 +227,9 @@ Memory controller: system.dir_cntrl0.memBuffer:
   memory_reads: 1730
   memory_writes: 1726
   memory_refreshes: 714
-  memory_total_request_delays: 5050
-  memory_delays_per_request: 1.46123
-  memory_delays_in_input_queue: 1722
+  memory_total_request_delays: 4411
+  memory_delays_per_request: 1.27633
+  memory_delays_in_input_queue: 1083
   memory_delays_behind_head_of_bank_queue: 8
   memory_delays_stalled_at_head_of_bank_queue: 3320
   memory_stalls_for_bank_busy: 1509

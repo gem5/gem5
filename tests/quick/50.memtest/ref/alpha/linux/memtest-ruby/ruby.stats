@@ -34,29 +34,29 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/19/2011 11:59:23
+Real time: Apr/28/2011 14:30:39
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 48
-Elapsed_time_in_minutes: 0.8
-Elapsed_time_in_hours: 0.0133333
-Elapsed_time_in_days: 0.000555556
+Elapsed_time_in_seconds: 118
+Elapsed_time_in_minutes: 1.96667
+Elapsed_time_in_hours: 0.0327778
+Elapsed_time_in_days: 0.00136574
 
-Virtual_time_in_seconds: 47.95
-Virtual_time_in_minutes: 0.799167
-Virtual_time_in_hours:   0.0133194
-Virtual_time_in_days:    0.000554977
+Virtual_time_in_seconds: 118.52
+Virtual_time_in_minutes: 1.97533
+Virtual_time_in_hours:   0.0329222
+Virtual_time_in_days:    0.00137176
 
-Ruby_current_time: 57251340
+Ruby_current_time: 57055090
 Ruby_start_time: 0
-Ruby_cycles: 57251340
+Ruby_cycles: 57055090
 
-mbytes_resident: 37.5156
-mbytes_total: 335.734
-resident_ratio: 0.111754
+mbytes_resident: 37.8164
+mbytes_total: 349.336
+resident_ratio: 0.108275
 
-ruby_cycles_executed: [ 57251341 57251341 57251341 57251341 57251341 57251341 57251341 57251341 ]
+ruby_cycles_executed: [ 57055091 57055091 57055091 57055091 57055091 57055091 57055091 57055091 ]
 
 Busy Controller Counts:
 L1Cache-0:0  L1Cache-1:0  L1Cache-2:0  L1Cache-3:0  L1Cache-4:0  L1Cache-5:0  L1Cache-6:0  L1Cache-7:0  
@@ -66,29 +66,29 @@ Directory-0:0
 
 Busy Bank Count:0
 
-sequencer_requests_outstanding: [binsize: 1 max: 16 count: 1227441 average: 15.9992 | standard deviation: 0.0898992 | 0 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 1227321 ]
+sequencer_requests_outstanding: [binsize: 1 max: 16 count: 1223186 average: 15.9992 | standard deviation: 0.0900554 | 0 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 1223066 ]
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
-miss_latency: [binsize: 128 max: 16170 count: 1227313 average: 5970.6 | standard deviation: 6226.1 | 0 5 5 5 5 5 5 5 3 0 6 5 4 9 28 67 117 196 325 493 850 1372 2115 2889 3474 5267 7331 8923 10961 13117 17439 19106 22197 27797 27598 30754 34950 40376 40150 37193 44218 47799 45035 44430 44397 47887 43214 42194 45299 37620 36866 36136 37155 31716 26415 28478 27184 22299 20319 18521 18170 14600 13557 13481 10233 9188 8568 8384 6564 5202 5341 4736 3697 3355 2785 2534 2139 1813 1715 1305 1213 1037 977 761 540 516 459 368 287 221 221 156 133 132 101 86 57 64 45 25 28 41 28 25 18 17 8 7 9 7 4 5 8 3 2 0 0 1 0 2 1 0 1 1 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_LD: [binsize: 128 max: 16170 count: 797864 average: 5970.96 | standard deviation: 5567.96 | 0 4 4 4 4 4 4 4 1 0 1 4 4 6 23 42 79 125 214 331 544 877 1397 1863 2231 3466 4741 5801 7112 8516 11461 12380 14439 17894 17955 19944 22577 26201 26233 24153 28751 31184 29257 28993 28655 31123 28291 27538 29428 24371 23978 23499 24308 20557 17139 18652 17606 14368 13155 11966 11765 9607 8837 8844 6659 5936 5560 5504 4210 3414 3473 3145 2395 2145 1816 1622 1380 1171 1141 849 772 673 638 482 346 347 309 240 185 140 136 95 84 85 65 59 40 42 31 15 21 23 20 16 13 11 6 3 6 5 3 3 6 3 1 0 0 0 0 0 1 0 1 1 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_ST: [binsize: 128 max: 15290 count: 429449 average: 5969.93 | standard deviation: 1423.42 | 0 1 1 1 1 1 1 1 2 0 5 1 0 3 5 25 38 71 111 162 306 495 718 1026 1243 1801 2590 3122 3849 4601 5978 6726 7758 9903 9643 10810 12373 14175 13917 13040 15467 16615 15778 15437 15742 16764 14923 14656 15871 13249 12888 12637 12847 11159 9276 9826 9578 7931 7164 6555 6405 4993 4720 4637 3574 3252 3008 2880 2354 1788 1868 1591 1302 1210 969 912 759 642 574 456 441 364 339 279 194 169 150 128 102 81 85 61 49 47 36 27 17 22 14 10 7 18 8 9 5 6 2 4 3 2 1 2 2 0 1 0 0 1 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_Directory: [binsize: 128 max: 16170 count: 1210799 average: 5976.91 | standard deviation: 6306.43 | 0 5 5 5 5 5 5 5 3 0 6 5 4 9 25 62 110 189 305 465 806 1312 2035 2792 3339 5094 7111 8663 10701 12775 17023 18729 21808 27255 27055 30221 34375 39759 39511 36575 43613 47122 44479 43852 43802 47301 42687 41791 44754 37147 36463 35788 36800 31395 26170 28198 26928 22083 20141 18352 18010 14477 13445 13354 10138 9095 8497 8327 6511 5159 5306 4695 3671 3321 2764 2511 2121 1803 1701 1296 1209 1028 975 758 537 511 458 365 284 218 218 156 133 132 101 86 57 62 43 25 28 41 28 25 18 17 8 7 9 7 4 5 8 3 2 0 0 1 0 2 1 0 1 1 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_L1Cache_wCC: [binsize: 64 max: 12585 count: 16514 average: 5507.92 | standard deviation: 1405.44 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 1 3 2 3 4 3 4 10 10 16 12 19 25 26 34 35 45 45 52 71 64 84 89 98 122 124 136 137 123 165 177 197 219 187 190 187 202 274 268 276 267 243 290 258 317 297 320 337 302 325 293 290 315 320 357 281 275 296 282 331 264 270 316 252 275 203 200 297 248 265 208 206 197 170 178 187 168 186 135 131 114 140 140 129 127 114 102 100 78 86 83 72 88 56 67 54 58 72 55 56 39 45 48 44 27 26 31 22 31 24 19 19 16 27 14 14 12 24 10 13 8 8 15 10 8 4 6 9 5 3 6 2 2 2 7 1 1 0 3 1 2 3 2 0 1 2 1 2 1 2 1 1 2 0 0 0 0 0 0 0 0 0 0 0 0 1 1 2 ]
+miss_latency: [binsize: 128 max: 16710 count: 1223058 average: 5970.81 | standard deviation: 6247.68 | 0 5 5 5 5 5 5 5 3 0 6 4 4 17 30 62 116 192 365 508 831 1304 2021 2988 3516 5462 7628 8955 10900 13254 17715 19297 22175 27647 27539 31110 34478 40126 39446 36816 44021 47568 44293 43929 44544 47606 42657 42360 44775 37578 36515 36061 36913 31421 25978 28119 27128 22462 20497 18670 18218 14995 13739 13345 10406 9212 8611 8186 6744 5154 5354 4849 3704 3156 2851 2622 1932 1766 1731 1261 1081 1005 890 710 525 543 475 355 261 252 242 193 142 160 92 103 74 79 60 55 34 49 32 25 22 28 4 16 14 6 9 11 4 2 5 4 1 2 0 3 1 0 3 2 0 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_LD: [binsize: 128 max: 16510 count: 795046 average: 5972.01 | standard deviation: 5587.89 | 0 4 4 4 4 4 4 4 1 0 1 3 3 10 17 39 73 121 238 323 544 870 1273 1989 2304 3514 4951 5820 7034 8605 11545 12570 14421 18015 17864 20148 22587 26062 25651 23904 28541 30856 28693 28624 28883 30953 27530 27626 29120 24340 23687 23373 23951 20582 16850 18264 17699 14690 13377 12253 11977 9671 9022 8623 6733 5927 5608 5306 4362 3395 3476 3155 2445 2019 1835 1732 1227 1138 1145 828 722 643 588 477 357 351 296 248 167 169 153 129 90 112 64 82 52 49 38 32 24 31 23 17 15 21 4 9 8 3 5 8 2 1 3 2 1 1 0 2 0 0 0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_ST: [binsize: 128 max: 16710 count: 428012 average: 5968.58 | standard deviation: 1425.71 | 0 1 1 1 1 1 1 1 2 0 5 1 1 7 13 23 43 71 127 185 287 434 748 999 1212 1948 2677 3135 3866 4649 6170 6727 7754 9632 9675 10962 11891 14064 13795 12912 15480 16712 15600 15305 15661 16653 15127 14734 15655 13238 12828 12688 12962 10839 9128 9855 9429 7772 7120 6417 6241 5324 4717 4722 3673 3285 3003 2880 2382 1759 1878 1694 1259 1137 1016 890 705 628 586 433 359 362 302 233 168 192 179 107 94 83 89 64 52 48 28 21 22 30 22 23 10 18 9 8 7 7 0 7 6 3 4 3 2 1 2 2 0 1 0 1 1 0 3 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_Directory: [binsize: 128 max: 16710 count: 1206540 average: 5977.03 | standard deviation: 6328.62 | 0 5 5 5 5 5 5 5 3 0 6 4 3 15 29 58 108 183 348 481 792 1259 1946 2890 3403 5293 7409 8715 10621 12918 17326 18881 21750 27153 27002 30601 33899 39474 38840 36202 43398 46842 43651 43395 43924 47009 42152 41921 44315 37118 36104 35689 36547 31115 25691 27834 26879 22267 20324 18486 18065 14884 13629 13252 10303 9132 8536 8126 6678 5109 5313 4809 3673 3136 2823 2604 1918 1753 1720 1252 1072 996 883 704 520 541 472 352 260 251 239 193 141 159 91 103 73 78 59 54 32 48 32 25 22 28 4 16 14 6 9 10 4 2 5 4 1 2 0 3 1 0 3 2 0 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_L1Cache_wCC: [binsize: 128 max: 14292 count: 16518 average: 5516.81 | standard deviation: 1404.63 | 0 0 0 0 0 0 0 0 0 0 0 0 1 2 1 4 8 9 17 27 39 45 75 98 113 169 219 240 279 336 389 416 425 494 537 509 579 652 606 614 623 726 642 534 620 597 505 439 460 460 411 372 366 306 287 285 249 195 173 184 153 111 110 93 103 80 75 60 66 45 41 40 31 20 28 18 14 13 11 9 9 9 7 6 5 2 3 3 1 1 3 0 1 1 1 0 1 1 1 1 2 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_wCC_issue_to_initial_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 miss_latency_wCC_initial_forward_request: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 miss_latency_wCC_forward_to_first_response: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 miss_latency_wCC_first_response_to_completion: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-imcomplete_wCC_Times: 16514
+imcomplete_wCC_Times: 16518
 miss_latency_dir_issue_to_initial_request: [binsize: 1 max: 0 count: 8 average:     0 | standard deviation: 0 | 8 ]
 miss_latency_dir_initial_forward_request: [binsize: 1 max: 0 count: 8 average:     0 | standard deviation: 0 | 8 ]
 miss_latency_dir_forward_to_first_response: [binsize: 1 max: 0 count: 8 average:     0 | standard deviation: 0 | 8 ]
 miss_latency_dir_first_response_to_completion: [binsize: 4 max: 569 count: 8 average: 330.25 | standard deviation: 178.281 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-imcomplete_dir_Times: 1210791
-miss_latency_LD_Directory: [binsize: 128 max: 16170 count: 787157 average: 5977.4 | standard deviation: 5638.59 | 0 4 4 4 4 4 4 4 1 0 1 4 4 6 20 37 73 120 198 310 520 832 1338 1800 2148 3355 4608 5614 6946 8289 11207 12142 14179 17561 17587 19588 22210 25807 25824 23747 28369 30735 28910 28603 28263 30729 27952 27268 29067 24058 23732 23284 24091 20357 16975 18458 17439 14222 13051 11864 11662 9526 8758 8751 6596 5876 5513 5476 4177 3395 3452 3117 2376 2125 1802 1609 1370 1164 1131 844 770 668 638 481 345 344 308 238 182 138 133 95 84 85 65 59 40 42 31 15 21 23 20 16 13 11 6 3 6 5 3 3 6 3 1 0 0 0 0 0 1 0 1 1 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_LD_L1Cache_wCC: [binsize: 64 max: 11604 count: 10707 average: 5497.29 | standard deviation: 1398.22 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 1 3 2 2 4 2 3 10 6 11 10 12 12 21 24 26 33 30 33 43 40 49 62 62 71 90 97 85 81 109 118 117 137 123 115 124 136 167 166 175 193 160 196 158 209 187 207 224 185 212 194 180 202 215 234 180 167 201 189 218 174 184 210 163 176 141 129 197 164 169 144 128 118 105 110 104 113 120 80 90 74 101 93 83 84 71 75 61 43 49 53 49 54 38 43 42 37 49 44 36 27 27 33 26 21 9 19 11 22 10 9 12 9 20 8 11 8 14 6 9 5 6 7 5 5 4 3 6 4 3 2 1 1 1 4 0 0 0 1 0 1 2 1 0 1 2 0 2 1 2 0 1 2 ]
-miss_latency_ST_Directory: [binsize: 128 max: 15290 count: 423642 average:  5976 | standard deviation: 1422.53 | 0 1 1 1 1 1 1 1 2 0 5 1 0 3 5 25 37 69 107 155 286 480 697 992 1191 1739 2503 3049 3755 4486 5816 6587 7629 9694 9468 10633 12165 13952 13687 12828 15244 16387 15569 15249 15539 16572 14735 14523 15687 13089 12731 12504 12709 11038 9195 9740 9489 7861 7090 6488 6348 4951 4687 4603 3542 3219 2984 2851 2334 1764 1854 1578 1295 1196 962 902 751 639 570 452 439 360 337 277 192 167 150 127 102 80 85 61 49 47 36 27 17 20 12 10 7 18 8 9 5 6 2 4 3 2 1 2 2 0 1 0 0 1 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_ST_L1Cache_wCC: [binsize: 64 max: 12585 count: 5807 average: 5527.52 | standard deviation: 1418.56 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1 0 4 5 2 7 13 5 10 9 12 15 19 28 24 35 27 36 51 34 39 52 42 56 59 80 82 64 75 63 66 107 102 101 74 83 94 100 108 110 113 113 117 113 99 110 113 105 123 101 108 95 93 113 90 86 106 89 99 62 71 100 84 96 64 78 79 65 68 83 55 66 55 41 40 39 47 46 43 43 27 39 35 37 30 23 34 18 24 12 21 23 11 20 12 18 15 18 6 17 12 11 9 14 10 7 7 7 6 3 4 10 4 4 3 2 8 5 3 0 3 3 1 0 4 1 1 1 3 1 1 0 2 1 1 1 1 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 2 ]
+imcomplete_dir_Times: 1206532
+miss_latency_LD_Directory: [binsize: 128 max: 16510 count: 784313 average: 5978.03 | standard deviation: 5659.2 | 0 4 4 4 4 4 4 4 1 0 1 3 2 8 17 36 68 117 225 303 520 843 1226 1927 2239 3412 4801 5667 6831 8385 11301 12290 14152 17683 17528 19843 22213 25643 25266 23514 28132 30410 28262 28264 28495 30573 27187 27339 28820 24028 23430 23121 23711 20379 16667 18077 17534 14559 13263 12138 11874 9601 8946 8556 6658 5874 5567 5261 4316 3366 3452 3129 2425 2007 1815 1717 1221 1129 1138 820 716 637 582 474 355 349 293 245 166 168 150 129 89 111 63 82 51 49 37 31 24 31 23 17 15 21 4 9 8 3 5 7 2 1 3 2 1 1 0 2 0 0 0 1 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_LD_L1Cache_wCC: [binsize: 128 max: 14292 count: 10733 average: 5531.95 | standard deviation: 1414.69 | 0 0 0 0 0 0 0 0 0 0 0 0 1 2 0 3 5 4 13 20 24 27 47 62 65 102 150 153 203 220 244 280 269 332 336 305 374 419 385 390 409 446 431 360 388 380 343 287 300 312 257 252 240 203 183 187 165 131 114 115 103 70 76 67 75 53 41 45 46 29 24 26 20 12 20 15 6 9 7 8 6 6 6 3 2 2 3 3 1 1 3 0 1 1 1 0 1 0 1 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_ST_Directory: [binsize: 128 max: 16710 count: 422227 average: 5975.16 | standard deviation: 1425.14 | 0 1 1 1 1 1 1 1 2 0 5 1 1 7 12 22 40 66 123 178 272 416 720 963 1164 1881 2608 3048 3790 4533 6025 6591 7598 9470 9474 10758 11686 13831 13574 12688 15266 16432 15389 15131 15429 16436 14965 14582 15495 13090 12674 12568 12836 10736 9024 9757 9345 7708 7061 6348 6191 5283 4683 4696 3645 3258 2969 2865 2362 1743 1861 1680 1248 1129 1008 887 697 624 582 432 356 359 301 230 165 192 179 107 94 83 89 64 52 48 28 21 22 29 22 23 8 17 9 8 7 7 0 7 6 3 4 3 2 1 2 2 0 1 0 1 1 0 3 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_ST_L1Cache_wCC: [binsize: 128 max: 13038 count: 5785 average: 5488.72 | standard deviation: 1385.45 | 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 3 5 4 7 15 18 28 36 48 67 69 87 76 116 145 136 156 162 201 204 205 233 221 224 214 280 211 174 232 217 162 152 160 148 154 120 126 103 104 98 84 64 59 69 50 41 34 26 28 27 34 15 20 16 17 14 11 8 8 3 8 4 4 1 3 3 1 3 3 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 
 All Non-Zero Cycle SW Prefetch Requests
 ------------------------------------
@@ -102,11 +102,11 @@ filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN
 
 Message Delayed Cycles
 ----------------------
-Total_delay_cycles: [binsize: 1 max: 18 count: 2458515 average: 0.000321739 | standard deviation: 0.0752325 | 2458470 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 19 26 ]
-Total_nonPF_delay_cycles: [binsize: 1 max: 18 count: 2458515 average: 0.000321739 | standard deviation: 0.0752325 | 2458470 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 19 26 ]
+Total_delay_cycles: [binsize: 1 max: 24 count: 2450334 average: 0.00749367 | standard deviation: 0.176657 | 2445337 159 360 864 3577 2 1 0 0 0 0 1 1 11 1 1 0 0 12 0 0 0 6 0 1 ]
+Total_nonPF_delay_cycles: [binsize: 1 max: 24 count: 2450334 average: 0.00749367 | standard deviation: 0.176657 | 2445337 159 360 864 3577 2 1 0 0 0 0 1 1 11 1 1 0 0 12 0 0 0 6 0 1 ]
   virtual_network_0_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-  virtual_network_1_delay_cycles: [binsize: 1 max: 0 count: 1227313 average:     0 | standard deviation: 0 | 1227313 ]
-  virtual_network_2_delay_cycles: [binsize: 1 max: 18 count: 1231202 average: 0.000642462 | standard deviation: 0.106311 | 1231157 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 19 26 ]
+  virtual_network_1_delay_cycles: [binsize: 1 max: 4 count: 1223058 average: 0.000358119 | standard deviation: 0.0257982 | 1222789 117 137 13 2 ]
+  virtual_network_2_delay_cycles: [binsize: 1 max: 24 count: 1227276 average: 0.0146047 | standard deviation: 0.24808 | 1222548 42 223 851 3575 2 1 0 0 0 0 1 1 11 1 1 0 0 12 0 0 0 6 0 1 ]
   virtual_network_3_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_4_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_5_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
@@ -118,337 +118,337 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 18 count: 2458515 average: 0.00032173
 Resource Usage
 --------------
 page_size: 4096
-user_time: 47
+user_time: 118
 system_time: 0
-page_reclaims: 9943
+page_reclaims: 10946
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 104
+block_outputs: 0
 
 Network Stats
 -------------
 
-total_msg_count_Control: 3681972 29455776
-total_msg_count_Data: 3644124 262376928
-total_msg_count_Response_Data: 3681939 265099608
-total_msg_count_Writeback_Control: 3693606 29548848
-total_msgs: 14701641 total_bytes: 586481160
+total_msg_count_Control: 3669213 29353704
+total_msg_count_Data: 3632319 261526968
+total_msg_count_Response_Data: 3669174 264180528
+total_msg_count_Writeback_Control: 3681828 29454624
+total_msgs: 14652534 total_bytes: 584515824
 
 switch_0_inlinks: 2
 switch_0_outlinks: 2
-links_utilized_percent_switch_0: 0.083792
-  links_utilized_percent_switch_0_link_0: 0.0334493 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 0.134135 bw: 160000 base_latency: 1
+links_utilized_percent_switch_0: 1.34003
+  links_utilized_percent_switch_0_link_0: 1.33803 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_0_link_1: 1.34202 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_0_link_0_Response_Data: 153153 11027016 [ 0 0 0 0 153153 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_Writeback_Control: 153635 1229080 [ 0 0 0 153635 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Control: 153154 1225232 [ 0 0 153154 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Data: 151525 10909800 [ 0 0 151525 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Response_Data: 2111 151992 [ 0 0 0 0 2111 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_Response_Data: 152626 10989072 [ 0 0 0 0 152626 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_Writeback_Control: 153195 1225560 [ 0 0 0 153195 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Control: 152627 1221016 [ 0 0 152627 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Data: 151125 10881000 [ 0 0 151125 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Response_Data: 2070 149040 [ 0 0 0 0 2070 0 0 0 0 0 ] base_latency: 1
 
 switch_1_inlinks: 2
 switch_1_outlinks: 2
-links_utilized_percent_switch_1: 0.0839004
-  links_utilized_percent_switch_1_link_0: 0.0334929 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 0.134308 bw: 160000 base_latency: 1
+links_utilized_percent_switch_1: 1.34729
+  links_utilized_percent_switch_1_link_0: 1.34547 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_1_link_1: 1.34911 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_1_link_0_Response_Data: 153353 11041416 [ 0 0 0 0 153353 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Writeback_Control: 153833 1230664 [ 0 0 0 153833 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Control: 153355 1226840 [ 0 0 153355 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Data: 151790 10928880 [ 0 0 151790 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Response_Data: 2044 147168 [ 0 0 0 0 2044 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_0_Response_Data: 153480 11050560 [ 0 0 0 0 153480 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_0_Writeback_Control: 153999 1231992 [ 0 0 0 153999 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Control: 153482 1227856 [ 0 0 153482 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Data: 151946 10940112 [ 0 0 151946 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_1_link_1_Response_Data: 2053 147816 [ 0 0 0 0 2053 0 0 0 0 0 ] base_latency: 1
 
 switch_2_inlinks: 2
 switch_2_outlinks: 2
-links_utilized_percent_switch_2: 0.0839292
-  links_utilized_percent_switch_2_link_0: 0.0334995 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 0.134359 bw: 160000 base_latency: 1
+links_utilized_percent_switch_2: 1.33873
+  links_utilized_percent_switch_2_link_0: 1.33679 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_2_link_1: 1.34067 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_2_link_0_Response_Data: 153380 11043360 [ 0 0 0 0 153380 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_Writeback_Control: 153895 1231160 [ 0 0 0 153895 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Control: 153381 1227048 [ 0 0 153381 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Data: 151808 10930176 [ 0 0 151808 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Response_Data: 2088 150336 [ 0 0 0 0 2088 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_0_Response_Data: 152487 10979064 [ 0 0 0 0 152487 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_0_Writeback_Control: 153035 1224280 [ 0 0 0 153035 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Control: 152489 1219912 [ 0 0 152489 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Data: 150957 10868904 [ 0 0 150957 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_2_link_1_Response_Data: 2082 149904 [ 0 0 0 0 2082 0 0 0 0 0 ] base_latency: 1
 
 switch_3_inlinks: 2
 switch_3_outlinks: 2
-links_utilized_percent_switch_3: 0.0839178
-  links_utilized_percent_switch_3_link_0: 0.0335004 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_3_link_1: 0.134335 bw: 160000 base_latency: 1
+links_utilized_percent_switch_3: 1.34218
+  links_utilized_percent_switch_3_link_0: 1.34053 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_3_link_1: 1.34383 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_3_link_0_Response_Data: 153388 11043936 [ 0 0 0 0 153388 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_0_Writeback_Control: 153864 1230912 [ 0 0 0 153864 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Control: 153389 1227112 [ 0 0 153389 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Data: 151791 10928952 [ 0 0 151791 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Response_Data: 2074 149328 [ 0 0 0 0 2074 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_0_Response_Data: 152921 11010312 [ 0 0 0 0 152921 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_0_Writeback_Control: 153389 1227112 [ 0 0 0 153389 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Control: 152923 1223384 [ 0 0 152923 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Data: 151387 10899864 [ 0 0 151387 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_3_link_1_Response_Data: 2005 144360 [ 0 0 0 0 2005 0 0 0 0 0 ] base_latency: 1
 
 switch_4_inlinks: 2
 switch_4_outlinks: 2
-links_utilized_percent_switch_4: 0.0841195
-  links_utilized_percent_switch_4_link_0: 0.0335808 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_4_link_1: 0.134658 bw: 160000 base_latency: 1
+links_utilized_percent_switch_4: 1.34841
+  links_utilized_percent_switch_4_link_0: 1.34646 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_4_link_1: 1.35037 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_4_link_0_Response_Data: 153756 11070432 [ 0 0 0 0 153756 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_0_Writeback_Control: 154232 1233856 [ 0 0 0 154232 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Control: 153758 1230064 [ 0 0 153758 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Data: 152172 10956384 [ 0 0 152172 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Response_Data: 2063 148536 [ 0 0 0 0 2063 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_0_Response_Data: 153589 11058408 [ 0 0 0 0 153589 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_0_Writeback_Control: 154143 1233144 [ 0 0 0 154143 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Control: 153590 1228720 [ 0 0 153590 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Data: 152020 10945440 [ 0 0 152020 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_4_link_1_Response_Data: 2126 153072 [ 0 0 0 0 2126 0 0 0 0 0 ] base_latency: 1
 
 switch_5_inlinks: 2
 switch_5_outlinks: 2
-links_utilized_percent_switch_5: 0.0840452
-  links_utilized_percent_switch_5_link_0: 0.0335493 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_5_link_1: 0.134541 bw: 160000 base_latency: 1
+links_utilized_percent_switch_5: 1.34312
+  links_utilized_percent_switch_5_link_0: 1.34131 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_5_link_1: 1.34493 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_5_link_0_Response_Data: 153611 11059992 [ 0 0 0 0 153611 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_0_Writeback_Control: 154097 1232776 [ 0 0 0 154097 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Control: 153613 1228904 [ 0 0 153613 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Data: 152110 10951920 [ 0 0 152110 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Response_Data: 1992 143424 [ 0 0 0 0 1992 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_0_Response_Data: 153006 11016432 [ 0 0 0 0 153006 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_0_Writeback_Control: 153520 1228160 [ 0 0 0 153520 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Control: 153008 1224064 [ 0 0 153008 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Data: 151445 10904040 [ 0 0 151445 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_5_link_1_Response_Data: 2077 149544 [ 0 0 0 0 2077 0 0 0 0 0 ] base_latency: 1
 
 switch_6_inlinks: 2
 switch_6_outlinks: 2
-links_utilized_percent_switch_6: 0.084233
-  links_utilized_percent_switch_6_link_0: 0.0336256 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_6_link_1: 0.13484 bw: 160000 base_latency: 1
+links_utilized_percent_switch_6: 1.33595
+  links_utilized_percent_switch_6_link_0: 1.33418 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_6_link_1: 1.33771 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_6_link_0_Response_Data: 153961 11085192 [ 0 0 0 0 153961 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_0_Writeback_Control: 154441 1235528 [ 0 0 0 154441 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Control: 153962 1231696 [ 0 0 153962 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Data: 152406 10973232 [ 0 0 152406 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Response_Data: 2038 146736 [ 0 0 0 0 2038 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_0_Response_Data: 152193 10957896 [ 0 0 0 0 152193 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_0_Writeback_Control: 152694 1221552 [ 0 0 0 152694 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Control: 152195 1217560 [ 0 0 152195 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Data: 150638 10845936 [ 0 0 150638 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_6_link_1_Response_Data: 2059 148248 [ 0 0 0 0 2059 0 0 0 0 0 ] base_latency: 1
 
 switch_7_inlinks: 2
 switch_7_outlinks: 2
-links_utilized_percent_switch_7: 0.0835571
-  links_utilized_percent_switch_7_link_0: 0.033353 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_7_link_1: 0.133761 bw: 160000 base_latency: 1
+links_utilized_percent_switch_7: 1.34106
+  links_utilized_percent_switch_7_link_0: 1.33915 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_7_link_1: 1.34297 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_7_link_0_Response_Data: 152711 10995192 [ 0 0 0 0 152711 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_0_Writeback_Control: 153205 1225640 [ 0 0 0 153205 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Control: 152712 1221696 [ 0 0 152712 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Data: 151106 10879632 [ 0 0 151106 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Response_Data: 2104 151488 [ 0 0 0 0 2104 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_0_Response_Data: 152756 10998432 [ 0 0 0 0 152756 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_0_Writeback_Control: 153301 1226408 [ 0 0 0 153301 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Control: 152757 1222056 [ 0 0 152757 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Data: 151255 10890360 [ 0 0 151255 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_7_link_1_Response_Data: 2046 147312 [ 0 0 0 0 2046 0 0 0 0 0 ] base_latency: 1
 
 switch_8_inlinks: 2
 switch_8_outlinks: 2
-links_utilized_percent_switch_8: 0.662356
-  links_utilized_percent_switch_8_link_0: 0.265489 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_8_link_1: 1.05922 bw: 160000 base_latency: 1
+links_utilized_percent_switch_8: 10.6065
+  links_utilized_percent_switch_8_link_0: 10.6213 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_8_link_1: 10.5916 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_8_link_0_Control: 1227324 9818592 [ 0 0 1227324 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_0_Data: 1214708 87458976 [ 0 0 1214708 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_1_Response_Data: 1210799 87177528 [ 0 0 0 0 1210799 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_1_Writeback_Control: 1231202 9849616 [ 0 0 0 1231202 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_0_Control: 1223071 9784568 [ 0 0 1223071 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_0_Data: 1210773 87175656 [ 0 0 1210773 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_1_Response_Data: 1206540 86870880 [ 0 0 0 0 1206540 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_1_Writeback_Control: 1227276 9818208 [ 0 0 0 1227276 0 0 0 0 0 0 ] base_latency: 1
 
 switch_9_inlinks: 9
 switch_9_outlinks: 9
-links_utilized_percent_switch_9: 0.237129
-  links_utilized_percent_switch_9_link_0: 0.133797 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_1: 0.133972 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_2: 0.133998 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_3: 0.134002 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_4: 0.134323 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_5: 0.134197 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_6: 0.134503 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_7: 0.133412 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_9_link_8: 1.06196 bw: 160000 base_latency: 1
+links_utilized_percent_switch_9: 2.37147
+  links_utilized_percent_switch_9_link_0: 1.33803 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_1: 1.34547 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_2: 1.33679 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_3: 1.34053 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_4: 1.34646 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_5: 1.34131 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_6: 1.33418 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_7: 1.33915 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_9_link_8: 10.6213 bw: 16000 base_latency: 1
 
-  outgoing_messages_switch_9_link_0_Response_Data: 153153 11027016 [ 0 0 0 0 153153 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_0_Writeback_Control: 153635 1229080 [ 0 0 0 153635 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_1_Response_Data: 153353 11041416 [ 0 0 0 0 153353 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_1_Writeback_Control: 153833 1230664 [ 0 0 0 153833 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_2_Response_Data: 153380 11043360 [ 0 0 0 0 153380 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_2_Writeback_Control: 153895 1231160 [ 0 0 0 153895 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_3_Response_Data: 153388 11043936 [ 0 0 0 0 153388 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_3_Writeback_Control: 153864 1230912 [ 0 0 0 153864 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_4_Response_Data: 153756 11070432 [ 0 0 0 0 153756 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_4_Writeback_Control: 154232 1233856 [ 0 0 0 154232 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_5_Response_Data: 153611 11059992 [ 0 0 0 0 153611 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_5_Writeback_Control: 154097 1232776 [ 0 0 0 154097 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_6_Response_Data: 153961 11085192 [ 0 0 0 0 153961 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_6_Writeback_Control: 154441 1235528 [ 0 0 0 154441 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_7_Response_Data: 152711 10995192 [ 0 0 0 0 152711 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_7_Writeback_Control: 153205 1225640 [ 0 0 0 153205 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_8_Control: 1227324 9818592 [ 0 0 1227324 0 0 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_9_link_8_Data: 1214708 87458976 [ 0 0 1214708 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_0_Response_Data: 152626 10989072 [ 0 0 0 0 152626 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_0_Writeback_Control: 153195 1225560 [ 0 0 0 153195 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_1_Response_Data: 153480 11050560 [ 0 0 0 0 153480 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_1_Writeback_Control: 153999 1231992 [ 0 0 0 153999 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_2_Response_Data: 152487 10979064 [ 0 0 0 0 152487 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_2_Writeback_Control: 153035 1224280 [ 0 0 0 153035 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_3_Response_Data: 152921 11010312 [ 0 0 0 0 152921 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_3_Writeback_Control: 153389 1227112 [ 0 0 0 153389 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_4_Response_Data: 153589 11058408 [ 0 0 0 0 153589 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_4_Writeback_Control: 154143 1233144 [ 0 0 0 154143 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_5_Response_Data: 153006 11016432 [ 0 0 0 0 153006 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_5_Writeback_Control: 153520 1228160 [ 0 0 0 153520 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_6_Response_Data: 152193 10957896 [ 0 0 0 0 152193 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_6_Writeback_Control: 152694 1221552 [ 0 0 0 152694 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_7_Response_Data: 152756 10998432 [ 0 0 0 0 152756 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_7_Writeback_Control: 153301 1226408 [ 0 0 0 153301 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_8_Control: 1223071 9784568 [ 0 0 1223071 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_9_link_8_Data: 1210773 87175656 [ 0 0 1210773 0 0 0 0 0 0 0 ] base_latency: 1
 
 Cache Stats: system.l1_cntrl0.cacheMemory
-  system.l1_cntrl0.cacheMemory_total_misses: 153154
-  system.l1_cntrl0.cacheMemory_total_demand_misses: 153154
+  system.l1_cntrl0.cacheMemory_total_misses: 152627
+  system.l1_cntrl0.cacheMemory_total_demand_misses: 152627
   system.l1_cntrl0.cacheMemory_total_prefetches: 0
   system.l1_cntrl0.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl0.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl0.cacheMemory_request_type_LD:   65.2232%
-  system.l1_cntrl0.cacheMemory_request_type_ST:   34.7768%
+  system.l1_cntrl0.cacheMemory_request_type_LD:   65.0344%
+  system.l1_cntrl0.cacheMemory_request_type_ST:   34.9656%
 
-  system.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   153154    100%
+  system.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   152627    100%
 
  --- L1Cache ---
  - Event Counts -
-Load [99856 100002 99839 99184 99892 99648 99764 99685 ] 797870
+Load [99667 99333 99231 99289 99260 100003 99030 99242 ] 795055
 Ifetch [0 0 0 0 0 0 0 0 ] 0
-Store [53902 53611 54123 53528 53262 53707 53617 53704 ] 429454
-Data [153756 153611 153961 152711 153153 153353 153380 153388 ] 1227313
-Fwd_GETX [2063 1992 2038 2104 2111 2044 2088 2074 ] 16514
+Store [53923 53675 52964 53468 53367 53480 53459 53681 ] 428017
+Data [153589 153006 152193 152756 152626 153480 152487 152921 ] 1223058
+Fwd_GETX [2126 2077 2059 2046 2070 2053 2082 2005 ] 16518
 Inv [0 0 0 0 0 0 0 0 ] 0
-Replacement [153754 153609 153958 152708 153150 153351 153377 153385 ] 1227292
-Writeback_Ack [151688 151612 151917 150599 151038 151306 151288 151310 ] 1210758
-Writeback_Nack [481 493 486 502 486 483 519 480 ] 3930
+Replacement [153586 153004 152191 152753 152623 153479 152485 152919 ] 1223040
+Writeback_Ack [151457 150926 150129 150707 150554 151425 150399 150911 ] 1206508
+Writeback_Nack [560 517 506 548 571 521 554 473 ] 4250
 
  - Transitions -
-I  Load [99856 100002 99839 99184 99892 99648 99764 99685 ] 797870
+I  Load [99667 99333 99231 99289 99260 100003 99030 99242 ] 795055
 I  Ifetch [0 0 0 0 0 0 0 0 ] 0
-I  Store [53902 53611 54123 53528 53262 53707 53617 53704 ] 429454
+I  Store [53923 53675 52964 53468 53367 53480 53459 53681 ] 428017
 I  Inv [0 0 0 0 0 0 0 0 ] 0
-I  Replacement [1582 1499 1552 1602 1625 1561 1569 1594 ] 12584
+I  Replacement [1566 1559 1553 1498 1498 1532 1528 1532 ] 12266
 
-II  Writeback_Nack [481 493 486 502 486 483 519 480 ] 3930
+II  Writeback_Nack [560 517 506 548 571 521 554 473 ] 4250
 
 M  Load [0 0 0 0 0 0 0 0 ] 0
 M  Ifetch [0 0 0 0 0 0 0 0 ] 0
 M  Store [0 0 0 0 0 0 0 0 ] 0
-M  Fwd_GETX [1582 1499 1552 1602 1625 1561 1569 1594 ] 12584
+M  Fwd_GETX [1566 1560 1553 1498 1499 1532 1528 1532 ] 12268
 M  Inv [0 0 0 0 0 0 0 0 ] 0
-M  Replacement [152172 152110 152406 151106 151525 151790 151808 151791 ] 1214708
+M  Replacement [152020 151445 150638 151255 151125 151947 150957 151387 ] 1210774
 
-MI  Fwd_GETX [481 493 486 502 486 483 519 480 ] 3930
+MI  Fwd_GETX [560 517 506 548 571 521 554 473 ] 4250
 MI  Inv [0 0 0 0 0 0 0 0 ] 0
-MI  Writeback_Ack [151688 151612 151917 150599 151038 151306 151288 151310 ] 1210758
+MI  Writeback_Ack [151457 150926 150129 150707 150554 151425 150399 150911 ] 1206508
 MI  Writeback_Nack [0 0 0 0 0 0 0 0 ] 0
 
 MII  Fwd_GETX [0 0 0 0 0 0 0 0 ] 0
 
-IS  Data [99856 100000 99838 99183 99892 99647 99764 99684 ] 797864
+IS  Data [99667 99333 99229 99289 99259 100000 99029 99240 ] 795046
 
-IM  Data [53900 53611 54123 53528 53261 53706 53616 53704 ] 429449
+IM  Data [53922 53673 52964 53467 53367 53480 53458 53681 ] 428012
 
 Cache Stats: system.l1_cntrl1.cacheMemory
-  system.l1_cntrl1.cacheMemory_total_misses: 153355
-  system.l1_cntrl1.cacheMemory_total_demand_misses: 153355
+  system.l1_cntrl1.cacheMemory_total_misses: 153483
+  system.l1_cntrl1.cacheMemory_total_demand_misses: 153483
   system.l1_cntrl1.cacheMemory_total_prefetches: 0
   system.l1_cntrl1.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl1.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl1.cacheMemory_request_type_LD:   64.9786%
-  system.l1_cntrl1.cacheMemory_request_type_ST:   35.0214%
+  system.l1_cntrl1.cacheMemory_request_type_LD:   65.1558%
+  system.l1_cntrl1.cacheMemory_request_type_ST:   34.8442%
 
-  system.l1_cntrl1.cacheMemory_access_mode_type_Supervisor:   153355    100%
+  system.l1_cntrl1.cacheMemory_access_mode_type_Supervisor:   153483    100%
 
 Cache Stats: system.l1_cntrl2.cacheMemory
-  system.l1_cntrl2.cacheMemory_total_misses: 153381
-  system.l1_cntrl2.cacheMemory_total_demand_misses: 153381
+  system.l1_cntrl2.cacheMemory_total_misses: 152489
+  system.l1_cntrl2.cacheMemory_total_demand_misses: 152489
   system.l1_cntrl2.cacheMemory_total_prefetches: 0
   system.l1_cntrl2.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl2.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl2.cacheMemory_request_type_LD:   65.0433%
-  system.l1_cntrl2.cacheMemory_request_type_ST:   34.9567%
+  system.l1_cntrl2.cacheMemory_request_type_LD:   64.9424%
+  system.l1_cntrl2.cacheMemory_request_type_ST:   35.0576%
 
-  system.l1_cntrl2.cacheMemory_access_mode_type_Supervisor:   153381    100%
+  system.l1_cntrl2.cacheMemory_access_mode_type_Supervisor:   152489    100%
 
 Cache Stats: system.l1_cntrl3.cacheMemory
-  system.l1_cntrl3.cacheMemory_total_misses: 153389
-  system.l1_cntrl3.cacheMemory_total_demand_misses: 153389
+  system.l1_cntrl3.cacheMemory_total_misses: 152923
+  system.l1_cntrl3.cacheMemory_total_demand_misses: 152923
   system.l1_cntrl3.cacheMemory_total_prefetches: 0
   system.l1_cntrl3.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl3.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl3.cacheMemory_request_type_LD:   64.9884%
-  system.l1_cntrl3.cacheMemory_request_type_ST:   35.0116%
+  system.l1_cntrl3.cacheMemory_request_type_LD:   64.8967%
+  system.l1_cntrl3.cacheMemory_request_type_ST:   35.1033%
 
-  system.l1_cntrl3.cacheMemory_access_mode_type_Supervisor:   153389    100%
+  system.l1_cntrl3.cacheMemory_access_mode_type_Supervisor:   152923    100%
 
 Cache Stats: system.l1_cntrl4.cacheMemory
-  system.l1_cntrl4.cacheMemory_total_misses: 153758
-  system.l1_cntrl4.cacheMemory_total_demand_misses: 153758
+  system.l1_cntrl4.cacheMemory_total_misses: 153590
+  system.l1_cntrl4.cacheMemory_total_demand_misses: 153590
   system.l1_cntrl4.cacheMemory_total_prefetches: 0
   system.l1_cntrl4.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl4.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl4.cacheMemory_request_type_LD:   64.9436%
-  system.l1_cntrl4.cacheMemory_request_type_ST:   35.0564%
+  system.l1_cntrl4.cacheMemory_request_type_LD:   64.8916%
+  system.l1_cntrl4.cacheMemory_request_type_ST:   35.1084%
 
-  system.l1_cntrl4.cacheMemory_access_mode_type_Supervisor:   153758    100%
+  system.l1_cntrl4.cacheMemory_access_mode_type_Supervisor:   153590    100%
 
 Cache Stats: system.l1_cntrl5.cacheMemory
-  system.l1_cntrl5.cacheMemory_total_misses: 153613
-  system.l1_cntrl5.cacheMemory_total_demand_misses: 153613
+  system.l1_cntrl5.cacheMemory_total_misses: 153008
+  system.l1_cntrl5.cacheMemory_total_demand_misses: 153008
   system.l1_cntrl5.cacheMemory_total_prefetches: 0
   system.l1_cntrl5.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl5.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl5.cacheMemory_request_type_LD:   65.1%
-  system.l1_cntrl5.cacheMemory_request_type_ST:   34.9%
+  system.l1_cntrl5.cacheMemory_request_type_LD:   64.9201%
+  system.l1_cntrl5.cacheMemory_request_type_ST:   35.0799%
 
-  system.l1_cntrl5.cacheMemory_access_mode_type_Supervisor:   153613    100%
+  system.l1_cntrl5.cacheMemory_access_mode_type_Supervisor:   153008    100%
 
 Cache Stats: system.l1_cntrl6.cacheMemory
-  system.l1_cntrl6.cacheMemory_total_misses: 153962
-  system.l1_cntrl6.cacheMemory_total_demand_misses: 153962
+  system.l1_cntrl6.cacheMemory_total_misses: 152195
+  system.l1_cntrl6.cacheMemory_total_demand_misses: 152195
   system.l1_cntrl6.cacheMemory_total_prefetches: 0
   system.l1_cntrl6.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl6.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl6.cacheMemory_request_type_LD:   64.8465%
-  system.l1_cntrl6.cacheMemory_request_type_ST:   35.1535%
+  system.l1_cntrl6.cacheMemory_request_type_LD:   65.1999%
+  system.l1_cntrl6.cacheMemory_request_type_ST:   34.8001%
 
-  system.l1_cntrl6.cacheMemory_access_mode_type_Supervisor:   153962    100%
+  system.l1_cntrl6.cacheMemory_access_mode_type_Supervisor:   152195    100%
 
 Cache Stats: system.l1_cntrl7.cacheMemory
-  system.l1_cntrl7.cacheMemory_total_misses: 152712
-  system.l1_cntrl7.cacheMemory_total_demand_misses: 152712
+  system.l1_cntrl7.cacheMemory_total_misses: 152757
+  system.l1_cntrl7.cacheMemory_total_demand_misses: 152757
   system.l1_cntrl7.cacheMemory_total_prefetches: 0
   system.l1_cntrl7.cacheMemory_total_sw_prefetches: 0
   system.l1_cntrl7.cacheMemory_total_hw_prefetches: 0
 
-  system.l1_cntrl7.cacheMemory_request_type_LD:   64.9484%
-  system.l1_cntrl7.cacheMemory_request_type_ST:   35.0516%
+  system.l1_cntrl7.cacheMemory_request_type_LD:   64.998%
+  system.l1_cntrl7.cacheMemory_request_type_ST:   35.002%
 
-  system.l1_cntrl7.cacheMemory_access_mode_type_Supervisor:   152712    100%
+  system.l1_cntrl7.cacheMemory_access_mode_type_Supervisor:   152757    100%
 
 Memory controller: system.dir_cntrl0.memBuffer:
-  memory_total_requests: 2421588
-  memory_reads: 1210803
-  memory_writes: 1210758
-  memory_refreshes: 119274
-  memory_total_request_delays: 190155514
-  memory_delays_per_request: 78.5251
-  memory_delays_in_input_queue: 11307810
-  memory_delays_behind_head_of_bank_queue: 85310074
-  memory_delays_stalled_at_head_of_bank_queue: 93537630
-  memory_stalls_for_bank_busy: 14384463
+  memory_total_requests: 2413075
+  memory_reads: 1206541
+  memory_writes: 1206511
+  memory_refreshes: 118865
+  memory_total_request_delays: 187888490
+  memory_delays_per_request: 77.8627
+  memory_delays_in_input_queue: 9814295
+  memory_delays_behind_head_of_bank_queue: 84866739
+  memory_delays_stalled_at_head_of_bank_queue: 93207456
+  memory_stalls_for_bank_busy: 14333454
   memory_stalls_for_random_busy: 0
-  memory_stalls_for_anti_starvation: 24076432
-  memory_stalls_for_arbitration: 18499124
-  memory_stalls_for_bus: 25289267
+  memory_stalls_for_anti_starvation: 23982519
+  memory_stalls_for_arbitration: 18429986
+  memory_stalls_for_bus: 25198677
   memory_stalls_for_tfaw: 0
-  memory_stalls_for_read_write_turnaround: 9173208
-  memory_stalls_for_read_read_turnaround: 2115136
-  accesses_per_bank: 75973  75871  75584  75990  75871  76208  76264  75323  76082  76056  76271  75892  75688  75751  75586  75406  75587  75216  76023  75699  75573  75534  75382  75564  75891  75161  75298  74700  75598  75166  76030  75350  
+  memory_stalls_for_read_write_turnaround: 9154843
+  memory_stalls_for_read_read_turnaround: 2107977
+  accesses_per_bank: 75689  75716  75340  75751  75577  76015  75888  75057  75824  75723  75944  75570  75368  75465  75339  75225  75306  74796  75693  75506  75386  75135  75159  75300  75666  74918  75094  74513  75321  74927  75681  75183  
 
  --- Directory ---
  - Event Counts -
-GETX [2497405 ] 2497405
+GETX [2508342 ] 2508342
 GETS [0 ] 0
-PUTX [1210778 ] 1210778
-PUTX_NotOwner [3930 ] 3930
+PUTX [1206523 ] 1206523
+PUTX_NotOwner [4250 ] 4250
 DMA_READ [0 ] 0
 DMA_WRITE [0 ] 0
-Memory_Data [1210799 ] 1210799
-Memory_Ack [1210758 ] 1210758
+Memory_Data [1206540 ] 1206540
+Memory_Ack [1206508 ] 1206508
 
  - Transitions -
-I  GETX [1210810 ] 1210810
+I  GETX [1206552 ] 1206552
 I  PUTX_NotOwner [0 ] 0
 I  DMA_READ [0 ] 0
 I  DMA_WRITE [0 ] 0
 
-M  GETX [16514 ] 16514
-M  PUTX [1210778 ] 1210778
-M  PUTX_NotOwner [3930 ] 3930
+M  GETX [16518 ] 16518
+M  PUTX [1206523 ] 1206523
+M  PUTX_NotOwner [4250 ] 4250
 M  DMA_READ [0 ] 0
 M  DMA_WRITE [0 ] 0
 
@@ -464,21 +464,21 @@ M_DWRI  Memory_Ack [0 ] 0
 M_DRDI  GETX [0 ] 0
 M_DRDI  Memory_Ack [0 ] 0
 
-IM  GETX [491344 ] 491344
+IM  GETX [506832 ] 506832
 IM  GETS [0 ] 0
 IM  PUTX [0 ] 0
 IM  PUTX_NotOwner [0 ] 0
 IM  DMA_READ [0 ] 0
 IM  DMA_WRITE [0 ] 0
-IM  Memory_Data [1210799 ] 1210799
+IM  Memory_Data [1206540 ] 1206540
 
-MI  GETX [778737 ] 778737
+MI  GETX [778440 ] 778440
 MI  GETS [0 ] 0
 MI  PUTX [0 ] 0
 MI  PUTX_NotOwner [0 ] 0
 MI  DMA_READ [0 ] 0
 MI  DMA_WRITE [0 ] 0
-MI  Memory_Ack [1210758 ] 1210758
+MI  Memory_Ack [1206508 ] 1206508
 
 ID  GETX [0 ] 0
 ID  GETS [0 ] 0
