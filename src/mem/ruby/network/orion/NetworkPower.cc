@@ -96,7 +96,8 @@ Router_d::calculate_power()
     uint32_t num_vc_per_vclass = m_vc_per_vnet;
     uint32_t in_buf_per_data_vc = m_network_ptr->getBuffersPerDataVC();
     uint32_t in_buf_per_ctrl_vc = m_network_ptr->getBuffersPerCtrlVC();
-    uint32_t flit_width = m_flit_width * 8; //flit width in bits
+    //flit width in bits
+    uint32_t flit_width = m_network_ptr->getNiFlitSize() * 8; 
 
     orion_rtr_ptr = new OrionRouter(
         num_in_port,

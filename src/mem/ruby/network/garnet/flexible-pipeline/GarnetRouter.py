@@ -39,6 +39,5 @@ class GarnetRouter(BasicRouter):
                               "virtual channels per message class")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
-    flit_width = Param.Int(Parent.ni_flit_size, "flit width == flit size")
 
 

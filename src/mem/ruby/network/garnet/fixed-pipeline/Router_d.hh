@@ -96,7 +96,6 @@ class Router_d : public BasicRouter
   private:
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
     GarnetNetwork_d *m_network_ptr;
-    int m_flit_width;
 
     std::vector<double> buf_read_count;
     std::vector<double> buf_write_count;
