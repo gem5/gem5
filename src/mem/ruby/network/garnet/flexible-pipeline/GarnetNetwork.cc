@@ -34,12 +34,10 @@
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkInterface.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/Router.hh"
-#include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/Topology.hh"
 
 using namespace std;
