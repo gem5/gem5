@@ -26,40 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * The SimpleNetwork class implements the interconnection
- * SimpleNetwork between components (processor/cache components and
- * memory/directory components).  The interconnection network as
- * described here is not a physical network, but a programming concept
- * used to implement all communication between components.  Thus parts
- * of this 'network' may model the on-chip connections between cache
- * controllers and directory controllers as well as the links between
- * chip and network switches.
- *
- * Two conceptual networks, an address and data network, are modeled.
- * The data network is unordered, where the address network provides
- * and conforms to a global ordering of all transactions.
- *
- * Currently the data network is point-to-point and the address
- * network is a broadcast network. These two distinct conceptual
- * network can be modeled as physically separate networks or
- * multiplexed over a single physical network.
- *
- * The network encapsulates all notion of virtual global time and is
- * responsible for ordering the network transactions received.  This
- * hides all of these ordering details from the processor/cache and
- * directory/memory modules.
- *
- * FIXME: Various flavor of networks are provided as a compiler time
- *        configurable. We currently include this SimpleNetwork in the
- *        makefile's vpath, so that SimpleNetwork.cc can provide an alternative
- *        version constructor for the abstract Network class. It is easy to
- *        modify this to make network a runtime configuable. Just make the
- *        abstract Network class take a enumeration parameter, and based on
- *        that to initial proper network. Or even better, just make the ruby
- *        system initializer choose the proper network to initiate.
- */
-
 #ifndef __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__
 #define __MEM_RUBY_NETWORK_SIMPLE_SIMPLENETWORK_HH__
 
