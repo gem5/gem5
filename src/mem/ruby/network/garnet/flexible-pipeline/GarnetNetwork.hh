@@ -110,20 +110,10 @@ class GarnetNetwork : public BaseGarnetNetwork
     GarnetNetwork(const GarnetNetwork& obj);
     GarnetNetwork& operator=(const GarnetNetwork& obj);
 
-    int m_flits_received, m_flits_injected;
-    double m_network_latency, m_queueing_latency;
-
-    std::vector<bool> m_in_use;
-    std::vector<bool> m_ordered;
-
-    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
-    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
-
     std::vector<Router *> m_router_ptr_vector;   // All Routers in Network
     std::vector<NetworkLink *> m_link_ptr_vector; // All links in network
     std::vector<NetworkInterface *> m_ni_ptr_vector; // All NI's in Network
 
-    Time m_ruby_start;
     int m_buffer_size;
 };
 

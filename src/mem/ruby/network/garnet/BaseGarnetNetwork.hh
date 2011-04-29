@@ -60,6 +60,19 @@ class BaseGarnetNetwork : public Network
     int m_vcs_per_class;
     int m_buffers_per_data_vc;
     int m_buffers_per_ctrl_vc;
+
+    int m_flits_received;
+    int m_flits_injected;
+    double m_network_latency;
+    double m_queueing_latency;
+
+    std::vector<bool> m_in_use;
+    std::vector<bool> m_ordered;
+
+    std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
+    std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
+
+    Time m_ruby_start;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_BASEGARNETNETWORK_HH__

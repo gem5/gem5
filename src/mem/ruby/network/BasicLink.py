@@ -45,7 +45,7 @@ class BasicExtLink(BasicLink):
     type = 'BasicExtLink'
     ext_node = Param.RubyController("External node")
     int_node = Param.BasicRouter("ID of internal node")
-    bandwidth_factor = 64
+    bandwidth_factor = 16
 
 class BasicIntLink(BasicLink):
     type = 'BasicIntLink'

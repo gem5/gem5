@@ -49,44 +49,12 @@ using m5::stl_helpers::deletePointers;
 GarnetNetwork_d::GarnetNetwork_d(const Params *p)
     : BaseGarnetNetwork(p)
 {
-    m_ruby_start = 0;
-    m_flits_received = 0;
-    m_flits_injected = 0;
-    m_network_latency = 0.0;
-    m_queueing_latency = 0.0;
-
     // record the routers
     for (vector<BasicRouter*>::const_iterator i = 
              m_topology_ptr->params()->routers.begin();
          i != m_topology_ptr->params()->routers.end(); ++i) {
         Router_d* router = safe_cast<Router_d*>(*i);
         m_router_ptr_vector.push_back(router);
-    }
-
-    // Queues that are getting messages from protocol
-    m_toNetQueues.resize(m_nodes);
-
-    // Queues that are feeding the protocol
-    m_fromNetQueues.resize(m_nodes);
-    m_in_use.resize(m_virtual_networks);
-    m_ordered.resize(m_virtual_networks);
-    for (int i = 0; i < m_virtual_networks; i++) {
-        m_in_use[i] = false;
-        m_ordered[i] = false;
-    }
-
-    for (int node = 0; node < m_nodes; node++) {
-        // Setting how many vitual message buffers
-        // will there be per Network Queue
-        m_toNetQueues[node].resize(m_virtual_networks);
-        m_fromNetQueues[node].resize(m_virtual_networks);
-
-        // Instantiating the Message Buffers
-        // that interact with the coherence protocol
-        for (int j = 0; j < m_virtual_networks; j++) {
-            m_toNetQueues[node][j] = new MessageBuffer();
-            m_fromNetQueues[node][j] = new MessageBuffer();
-        }
     }
 }
 

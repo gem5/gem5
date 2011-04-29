@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
@@ -40,6 +41,12 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
     m_vcs_per_class = p->vcs_per_class;
     m_buffers_per_data_vc = p->buffers_per_data_vc;
     m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
+
+    m_ruby_start = 0;
+    m_flits_received = 0;
+    m_flits_injected = 0;
+    m_network_latency = 0.0;
+    m_queueing_latency = 0.0;
 
     // Currently Garnet only supports uniform bandwidth for all
     // links and network interfaces.
@@ -57,6 +64,34 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
         BasicIntLink* int_link = (*i);
         if (int_link->params()->bandwidth_factor != m_ni_flit_size) {
             fatal("Garnet only supports uniform bw across all links and NIs\n");
+        }
+    }
+
+    // Allocate to and from queues
+
+    // Queues that are getting messages from protocol
+    m_toNetQueues.resize(m_nodes);
+
+    // Queues that are feeding the protocol
+    m_fromNetQueues.resize(m_nodes);
+
+    m_in_use.resize(m_virtual_networks);
+    m_ordered.resize(m_virtual_networks);
+    for (int i = 0; i < m_virtual_networks; i++) {
+        m_in_use[i] = false;
+        m_ordered[i] = false;
+    }
+
+    for (int node = 0; node < m_nodes; node++) {
+        // Setting number of virtual message buffers per Network Queue
+        m_toNetQueues[node].resize(m_virtual_networks);
+        m_fromNetQueues[node].resize(m_virtual_networks);
+
+        // Instantiating the Message Buffers that
+        // interact with the coherence protocol
+        for (int j = 0; j < m_virtual_networks; j++) {
+            m_toNetQueues[node][j] = new MessageBuffer();
+            m_fromNetQueues[node][j] = new MessageBuffer();
         }
     }
 }
