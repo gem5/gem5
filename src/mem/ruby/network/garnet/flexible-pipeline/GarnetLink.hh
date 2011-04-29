@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,78 +24,66 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
+#ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_LINK_HH__
+#define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_LINK_HH__
 
-NetworkLink_d::NetworkLink_d(const Params *p)
-    : SimObject(p)
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "mem/ruby/network/BasicLink.hh"
+#include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
+#include "params/GarnetIntLink.hh"
+#include "params/GarnetExtLink.hh"
+
+class GarnetIntLink : public BasicLink
 {
-    m_latency = p->link_latency;
-    channel_width = p->channel_width;
-    m_id = p->link_id;
-    linkBuffer = new flitBuffer_d();
-    m_link_utilized = 0;
-    m_vc_load.resize(p->vcs_per_class * p->virt_nets);
+  public:
+    typedef GarnetIntLinkParams Params;
+    GarnetIntLink(const Params *p);
 
-    for (int i = 0; i < (p->vcs_per_class * p->virt_nets); i++) {
-        m_vc_load[i] = 0;
-    }
+    void init();
+
+    void print(std::ostream& out) const;
+
+    friend class GarnetNetwork;
+
+  protected:
+    NetworkLink* m_network_links[2];
+};
+
+inline std::ostream&
+operator<<(std::ostream& out, const GarnetIntLink& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-NetworkLink_d::~NetworkLink_d()
+class GarnetExtLink : public BasicLink
 {
-    delete linkBuffer;
+  public:
+    typedef GarnetExtLinkParams Params;
+    GarnetExtLink(const Params *p);
+
+    void init();
+
+    void print(std::ostream& out) const;
+
+    friend class GarnetNetwork;
+
+  protected:
+    NetworkLink* m_network_links[2];
+};
+
+inline std::ostream&
+operator<<(std::ostream& out, const GarnetExtLink& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-void
-NetworkLink_d::setLinkConsumer(Consumer *consumer)
-{
-    link_consumer = consumer;
-}
-
-void
-NetworkLink_d::setSourceQueue(flitBuffer_d *srcQueue)
-{
-    link_srcQueue = srcQueue;
-}
-
-void
-NetworkLink_d::wakeup()
-{
-    if (link_srcQueue->isReady()) {
-        flit_d *t_flit = link_srcQueue->getTopFlit();
-        t_flit->set_time(g_eventQueue_ptr->getTime() + m_latency);
-        linkBuffer->insert(t_flit);
-        g_eventQueue_ptr->scheduleEvent(link_consumer, m_latency);
-        m_link_utilized++;
-        m_vc_load[t_flit->get_vc()]++;
-    }
-}
-
-std::vector<int>
-NetworkLink_d::getVcLoad()
-{
-    return m_vc_load;
-}
-
-int
-NetworkLink_d::getLinkUtilization()
-{
-    return m_link_utilized;
-}
-
-NetworkLink_d *
-NetworkLink_dParams::create()
-{
-    return new NetworkLink_d(this);
-}
-
-CreditLink_d *
-CreditLink_dParams::create()
-{
-    return new CreditLink_d(this);
-}
+#endif // __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_LINK_HH__

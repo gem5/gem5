@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2011 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,24 +24,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Steve Reinhardt
+#          Brad Beckmann
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
 
-if not env['RUBY']:
-    Return()
-
-SimObject('GarnetLink.py')
-SimObject('GarnetNetwork.py')
-SimObject('GarnetRouter.py')
-
-Source('GarnetLink.cc')
-Source('GarnetNetwork.cc')
-Source('InVcState.cc')
-Source('NetworkInterface.cc')
-Source('NetworkLink.cc')
-Source('OutVcState.cc')
-Source('Router.cc')
-Source('VCarbiter.cc')
-Source('flit.cc')
-Source('flitBuffer.cc')
+class BasicRouter(SimObject):
+    type = 'BasicRouter'
+    router_id = Param.Int("ID in relation to other routers")

@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/FlexibleConsumer.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/InVcState.hh"
@@ -42,13 +43,15 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/OutVcState.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/flitBuffer.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
+#include "params/GarnetRouter.hh"
 
 class VCarbiter;
 
-class Router : public FlexibleConsumer
+class Router : public BasicRouter, public FlexibleConsumer
 {
   public:
-    Router(int id, GarnetNetwork *network_ptr);
+    typedef GarnetRouterParams Params;
+    Router(const Params *p);
 
     ~Router();
 
@@ -66,6 +69,11 @@ class Router : public FlexibleConsumer
 
     void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
+
+    void init_net_ptr(GarnetNetwork* net_ptr) 
+    { 
+        m_net_ptr = net_ptr; 
+    }
 
   private:
     int m_id;

@@ -71,25 +71,41 @@ def create_system(options, system, piobus = None, dma_devices = []):
     except:
         print "Error: could not create sytem for ruby protocol %s" % protocol
         raise
-        
+
+    #
+    # Set the network classes based on the command line options
+    #
+    if options.garnet_network == "fixed":
+        class NetworkClass(GarnetNetwork_d): pass
+        class IntLinkClass(GarnetIntLink_d): pass
+        class ExtLinkClass(GarnetExtLink_d): pass
+        class RouterClass(GarnetRouter_d): pass
+    elif options.garnet_network == "flexible":
+        class NetworkClass(GarnetNetwork): pass
+        class IntLinkClass(GarnetIntLink): pass
+        class ExtLinkClass(GarnetExtLink): pass
+        class RouterClass(GarnetRouter): pass
+    else:
+        class NetworkClass(SimpleNetwork): pass
+        class IntLinkClass(BasicIntLink): pass
+        class ExtLinkClass(BasicExtLink): pass
+        class RouterClass(BasicRouter): pass
+    
     #
     # Important: the topology must be created before the network and after the
     # controllers.
     #
     exec "import %s" % options.topology
     try:
-        net_topology = eval("%s.makeTopology(all_cntrls, options)" \
+        net_topology = eval("%s.makeTopology(all_cntrls, options, \
+                                             IntLinkClass, ExtLinkClass, \
+                                             RouterClass)" \
                             % options.topology)
     except:
         print "Error: could not create topology %s" % options.topology
         raise
-        
-    if options.garnet_network == "fixed":
-        network = GarnetNetwork_d(topology = net_topology)
-    elif options.garnet_network == "flexible":
-        network = GarnetNetwork(topology = net_topology)
-    else:
-        network = SimpleNetwork(topology = net_topology)
+
+    network = NetworkClass(topology = net_topology)
 
     #
     # Loop through the directory controlers.

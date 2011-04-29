@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,78 +24,60 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Niket Agarwal
  */
 
 #include "mem/ruby/network/garnet/fixed-pipeline/CreditLink_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/GarnetLink_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
 
-NetworkLink_d::NetworkLink_d(const Params *p)
-    : SimObject(p)
+GarnetIntLink_d::GarnetIntLink_d(const Params *p)
+    : BasicLink(p)
 {
-    m_latency = p->link_latency;
-    channel_width = p->channel_width;
-    m_id = p->link_id;
-    linkBuffer = new flitBuffer_d();
-    m_link_utilized = 0;
-    m_vc_load.resize(p->vcs_per_class * p->virt_nets);
-
-    for (int i = 0; i < (p->vcs_per_class * p->virt_nets); i++) {
-        m_vc_load[i] = 0;
-    }
-}
-
-NetworkLink_d::~NetworkLink_d()
-{
-    delete linkBuffer;
+    m_network_links[0] = p->network_links[0];
+    m_credit_links[0] = p->credit_links[0];
+    m_network_links[1] = p->network_links[1];
+    m_credit_links[1] = p->credit_links[1];
 }
 
 void
-NetworkLink_d::setLinkConsumer(Consumer *consumer)
+GarnetIntLink_d::init()
 {
-    link_consumer = consumer;
 }
 
 void
-NetworkLink_d::setSourceQueue(flitBuffer_d *srcQueue)
+GarnetIntLink_d::print(std::ostream& out) const
 {
-    link_srcQueue = srcQueue;
+    out << name();
+}
+
+GarnetIntLink_d *
+GarnetIntLink_dParams::create()
+{
+    return new GarnetIntLink_d(this);
+}
+
+GarnetExtLink_d::GarnetExtLink_d(const Params *p)
+    : BasicLink(p)
+{
+    m_network_links[0] = p->network_links[0];
+    m_credit_links[0] = p->credit_links[0];
+    m_network_links[1] = p->network_links[1];
+    m_credit_links[1] = p->credit_links[1];
 }
 
 void
-NetworkLink_d::wakeup()
+GarnetExtLink_d::init()
 {
-    if (link_srcQueue->isReady()) {
-        flit_d *t_flit = link_srcQueue->getTopFlit();
-        t_flit->set_time(g_eventQueue_ptr->getTime() + m_latency);
-        linkBuffer->insert(t_flit);
-        g_eventQueue_ptr->scheduleEvent(link_consumer, m_latency);
-        m_link_utilized++;
-        m_vc_load[t_flit->get_vc()]++;
-    }
 }
 
-std::vector<int>
-NetworkLink_d::getVcLoad()
+void
+GarnetExtLink_d::print(std::ostream& out) const
 {
-    return m_vc_load;
+    out << name();
 }
 
-int
-NetworkLink_d::getLinkUtilization()
+GarnetExtLink_d *
+GarnetExtLink_dParams::create()
 {
-    return m_link_utilized;
-}
-
-NetworkLink_d *
-NetworkLink_dParams::create()
-{
-    return new NetworkLink_d(this);
-}
-
-CreditLink_d *
-CreditLink_dParams::create()
-{
-    return new CreditLink_d(this);
+    return new GarnetExtLink_d(this);
 }

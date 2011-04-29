@@ -33,6 +33,8 @@
 #include "mem/protocol/Protocol.hh"
 #include "mem/protocol/TopologyType.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/BasicLink.hh"
+#include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
@@ -41,7 +43,8 @@
 using namespace std;
 
 const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
-const int DEFAULT_BW_MULTIPLIER = 1;  // Just to be consistent with above :)
+
+class BasicRouter;
 
 // Note: In this file, we use the first 2*m_nodes SwitchIDs to
 // represent the input and output endpoint links.  These really are
@@ -64,7 +67,8 @@ Topology::Topology(const Params *p)
     : SimObject(p)
 {
     m_print_config = p->print_config;
-    m_number_of_switches = p->num_int_nodes;
+    m_number_of_switches = p->routers.size();
+
     // initialize component latencies record
     m_component_latencies.resize(0);
     m_component_inter_switches.resize(0);
@@ -77,47 +81,68 @@ Topology::Topology(const Params *p)
     if (m_nodes != params()->ext_links.size() &&
         m_nodes != params()->ext_links.size()) {
         fatal("m_nodes (%d) != ext_links vector length (%d)\n",
-            m_nodes != params()->ext_links.size());
+              m_nodes != params()->ext_links.size());
     }
 
-    // First create the links between the endpoints (i.e. controllers)
-    // and the network.
-    for (vector<ExtLink*>::const_iterator i = params()->ext_links.begin();
+    // analyze both the internal and external links, create data structures
+    // Note that the python created links are bi-directional, but that the
+    // topology and networks utilize uni-directional links.  Thus each 
+    // BasicLink is converted to two calls to add link, on for each direction
+    for (vector<BasicExtLink*>::const_iterator i = params()->ext_links.begin();
          i != params()->ext_links.end(); ++i) {
-        const ExtLinkParams *p = (*i)->params();
-        AbstractController *c = p->ext_node;
+        BasicExtLink *ext_link = (*i);
+        AbstractController *abs_cntrl = ext_link->params()->ext_node;
+        BasicRouter *router = ext_link->params()->int_node;
 
-        // Store the controller pointers for later
-        m_controller_vector.push_back(c);
+        // Store the controller and ExtLink pointers for later
+        m_controller_vector.push_back(abs_cntrl);
+        m_ext_link_vector.push_back(ext_link);
 
-        int ext_idx1 =
-            MachineType_base_number(c->getMachineType()) + c->getVersion();
+        int ext_idx1 = abs_cntrl->params()->cntrl_id;
         int ext_idx2 = ext_idx1 + m_nodes;
-        int int_idx = p->int_node + 2*m_nodes;
+        int int_idx = router->params()->router_id + 2*m_nodes;
 
-        // create the links in both directions
-        addLink(ext_idx1, int_idx, p->latency, p->bw_multiplier, p->weight);
-        addLink(int_idx, ext_idx2, p->latency, p->bw_multiplier, p->weight);
+        // create the internal uni-directional links in both directions
+        //   the first direction is marked: In
+        addLink(ext_idx1, int_idx, ext_link, LinkDirection_In);
+        //   the first direction is marked: Out
+        addLink(int_idx, ext_idx2, ext_link, LinkDirection_Out);
     }
 
-    for (vector<IntLink*>::const_iterator i = params()->int_links.begin();
+    for (vector<BasicIntLink*>::const_iterator i = params()->int_links.begin();
          i != params()->int_links.end(); ++i) {
-        const IntLinkParams *p = (*i)->params();
-        int a = p->node_a + 2*m_nodes;
-        int b = p->node_b + 2*m_nodes;
+        BasicIntLink *int_link = (*i);
+        BasicRouter *router_a = int_link->params()->node_a;
+        BasicRouter *router_b = int_link->params()->node_b;
 
-        // create the links in both directions
-        addLink(a, b, p->latency, p->bw_multiplier, p->weight);
-        addLink(b, a, p->latency, p->bw_multiplier, p->weight);
+        // Store the IntLink pointers for later
+        m_int_link_vector.push_back(int_link);
+
+        int a = router_a->params()->router_id + 2*m_nodes;
+        int b = router_b->params()->router_id + 2*m_nodes;
+
+        // create the internal uni-directional links in both directions
+        //   the first direction is marked: In
+        addLink(a, b, int_link, LinkDirection_In);
+        //   the second direction is marked: Out
+        addLink(b, a, int_link, LinkDirection_Out);
     }
+}
+
+void
+Topology::init()
+{
 }
 
 
 void
 Topology::initNetworkPtr(Network* net_ptr)
 {
-    for (int cntrl = 0; cntrl < m_controller_vector.size(); cntrl++) {
-        m_controller_vector[cntrl]->initNetworkPtr(net_ptr);
+    for (vector<BasicExtLink*>::const_iterator i = params()->ext_links.begin();
+         i != params()->ext_links.end(); ++i) {
+        BasicExtLink *ext_link = (*i);
+        AbstractController *abs_cntrl = ext_link->params()->ext_node;
+        abs_cntrl->initNetworkPtr(net_ptr);
     }
 }
 
@@ -126,41 +151,29 @@ Topology::createLinks(Network *net, bool isReconfiguration)
 {
     // Find maximum switchID
     SwitchID max_switch_id = 0;
-    for (int i = 0; i < m_links_src_vector.size(); i++) {
-        max_switch_id = max(max_switch_id, m_links_src_vector[i]);
-        max_switch_id = max(max_switch_id, m_links_dest_vector[i]);
+    for (LinkMap::const_iterator i = m_link_map.begin();
+         i != m_link_map.end(); ++i) {
+        std::pair<int, int> src_dest = (*i).first;
+        max_switch_id = max(max_switch_id, src_dest.first);
+        max_switch_id = max(max_switch_id, src_dest.second);        
     }
 
-    // Initialize weight vector
+    // Initialize weight, latency, and inter switched vectors
     Matrix topology_weights;
-    Matrix topology_latency;
-    Matrix topology_bw_multis;
     int num_switches = max_switch_id+1;
     topology_weights.resize(num_switches);
-    topology_latency.resize(num_switches);
-    topology_bw_multis.resize(num_switches);
-
-    // FIXME setting the size of a member variable here is a HACK!
     m_component_latencies.resize(num_switches);
-
-    // FIXME setting the size of a member variable here is a HACK!
     m_component_inter_switches.resize(num_switches);
 
     for (int i = 0; i < topology_weights.size(); i++) {
         topology_weights[i].resize(num_switches);
-        topology_latency[i].resize(num_switches);
-        topology_bw_multis[i].resize(num_switches);
         m_component_latencies[i].resize(num_switches);
-
-        // FIXME setting the size of a member variable here is a HACK!
         m_component_inter_switches[i].resize(num_switches);
 
         for (int j = 0; j < topology_weights[i].size(); j++) {
             topology_weights[i][j] = INFINITE_LATENCY;
 
             // initialize to invalid values
-            topology_latency[i][j] = -1;
-            topology_bw_multis[i][j] = -1;
             m_component_latencies[i][j] = -1;
 
             // initially assume direct connections / no intermediate
@@ -175,89 +188,85 @@ Topology::createLinks(Network *net, bool isReconfiguration)
     }
 
     // Fill in the topology weights and bandwidth multipliers
-    for (int i = 0; i < m_links_src_vector.size(); i++) {
-        int src = m_links_src_vector[i];
-        int dst = m_links_dest_vector[i];
-        topology_weights[src][dst] = m_links_weight_vector[i];
-        topology_latency[src][dst] = m_links_latency_vector[i];
-        m_component_latencies[src][dst] = m_links_latency_vector[i];
-        topology_bw_multis[src][dst] = m_bw_multiplier_vector[i];
+    for (LinkMap::const_iterator i = m_link_map.begin();
+         i != m_link_map.end(); ++i) {
+        std::pair<int, int> src_dest = (*i).first;
+        BasicLink* link = (*i).second.link;
+        int src = src_dest.first;
+        int dst = src_dest.second;
+        m_component_latencies[src][dst] = link->m_latency;
+        topology_weights[src][dst] = link->m_weight;
     }
-
+        
     // Walk topology and hookup the links
     Matrix dist = shortest_path(topology_weights, m_component_latencies,
         m_component_inter_switches);
     for (int i = 0; i < topology_weights.size(); i++) {
         for (int j = 0; j < topology_weights[i].size(); j++) {
             int weight = topology_weights[i][j];
-            int bw_multiplier = topology_bw_multis[i][j];
-            int latency = topology_latency[i][j];
             if (weight > 0 && weight != INFINITE_LATENCY) {
                 NetDest destination_set = shortest_path_to_node(i, j,
-                    topology_weights, dist);
-                assert(latency != -1);
-                makeLink(net, i, j, destination_set, latency, weight,
-                    bw_multiplier, isReconfiguration);
+                                                     topology_weights, dist);
+                makeLink(net, i, j, destination_set, isReconfiguration);
             }
         }
     }
 }
 
-SwitchID
-Topology::newSwitchID()
-{
-    m_number_of_switches++;
-    return m_number_of_switches-1+m_nodes+m_nodes;
-}
-
 void
-Topology::addLink(SwitchID src, SwitchID dest, int link_latency)
-{
-    addLink(src, dest, link_latency, DEFAULT_BW_MULTIPLIER, link_latency);
-}
-
-void
-Topology::addLink(SwitchID src, SwitchID dest, int link_latency,
-    int bw_multiplier)
-{
-    addLink(src, dest, link_latency, bw_multiplier, link_latency);
-}
-
-void
-Topology::addLink(SwitchID src, SwitchID dest, int link_latency,
-    int bw_multiplier, int link_weight)
+Topology::addLink(SwitchID src, SwitchID dest, BasicLink* link, 
+                  LinkDirection dir)
 {
     assert(src <= m_number_of_switches+m_nodes+m_nodes);
     assert(dest <= m_number_of_switches+m_nodes+m_nodes);
-    m_links_src_vector.push_back(src);
-    m_links_dest_vector.push_back(dest);
-    m_links_latency_vector.push_back(link_latency);
-    m_links_weight_vector.push_back(link_weight);
-    m_bw_multiplier_vector.push_back(bw_multiplier);
+    
+    std::pair<int, int> src_dest_pair;
+    LinkEntry link_entry;
+
+    src_dest_pair.first = src;
+    src_dest_pair.second = dest;
+    link_entry.direction = dir;
+    link_entry.link = link;
+    m_link_map[src_dest_pair] = link_entry;
 }
 
 void
 Topology::makeLink(Network *net, SwitchID src, SwitchID dest,
-    const NetDest& routing_table_entry, int link_latency, int link_weight,
-    int bw_multiplier, bool isReconfiguration)
+                   const NetDest& routing_table_entry, bool isReconfiguration)
 {
     // Make sure we're not trying to connect two end-point nodes
     // directly together
     assert(src >= 2 * m_nodes || dest >= 2 * m_nodes);
 
+    std::pair<int, int> src_dest;
+    LinkEntry link_entry;    
+
     if (src < m_nodes) {
-        net->makeInLink(src, dest-(2*m_nodes), routing_table_entry,
-            link_latency, bw_multiplier, isReconfiguration);
+        src_dest.first = src;
+        src_dest.second = dest;
+        link_entry = m_link_map[src_dest];
+        net->makeInLink(src, dest - (2 * m_nodes), link_entry.link,
+                        link_entry.direction, 
+                        routing_table_entry,
+                        isReconfiguration);
     } else if (dest < 2*m_nodes) {
         assert(dest >= m_nodes);
-        NodeID node = dest-m_nodes;
-        net->makeOutLink(src-(2*m_nodes), node, routing_table_entry,
-            link_latency, link_weight, bw_multiplier, isReconfiguration);
+        NodeID node = dest - m_nodes;
+        src_dest.first = src;
+        src_dest.second = dest;
+        link_entry = m_link_map[src_dest];
+        net->makeOutLink(src - (2 * m_nodes), node, link_entry.link,
+                         link_entry.direction, 
+                         routing_table_entry,
+                         isReconfiguration);
     } else {
-        assert((src >= 2*m_nodes) && (dest >= 2*m_nodes));
-        net->makeInternalLink(src-(2*m_nodes), dest-(2*m_nodes),
-            routing_table_entry, link_latency, link_weight, bw_multiplier,
-            isReconfiguration);
+        assert((src >= 2 * m_nodes) && (dest >= 2 * m_nodes));
+        src_dest.first = src;
+        src_dest.second = dest;
+        link_entry = m_link_map[src_dest];
+        net->makeInternalLink(src - (2 * m_nodes), dest - (2 * m_nodes),
+                              link_entry.link, link_entry.direction,
+                              routing_table_entry, isReconfiguration);
     }
 }
 
@@ -423,20 +432,3 @@ TopologyParams::create()
     return new Topology(this);
 }
 
-Link *
-LinkParams::create()
-{
-    return new Link(this);
-}
-
-ExtLink *
-ExtLinkParams::create()
-{
-    return new ExtLink(this);
-}
-
-IntLink *
-IntLinkParams::create()
-{
-    return new IntLink(this);
-}

@@ -29,32 +29,15 @@
 
 from m5.params import *
 from m5.SimObject import SimObject
-
-class Link(SimObject):
-    type = 'Link'
-    latency = Param.Int(1, "")
-    bw_multiplier = Param.Int("")
-    weight = Param.Int(1, "")
-
-class ExtLink(Link):
-    type = 'ExtLink'
-    ext_node = Param.RubyController("External node")
-    int_node = Param.Int("ID of internal node")
-    bw_multiplier = 64
-
-class IntLink(Link):
-    type = 'IntLink'
-    node_a = Param.Int("ID of internal node on one end")
-    node_b = Param.Int("ID of internal node on other end")
-    bw_multiplier = 16
+from BasicLink import BasicLink
 
 class Topology(SimObject):
     type = 'Topology'
     description = Param.String("Not Specified",
                                "the name of the imported topology module")
-    ext_links = VectorParam.ExtLink("Links to external nodes")
-    int_links = VectorParam.IntLink("Links between internal nodes")
-    num_int_nodes = Param.Int("Nunber of internal nodes")
+    ext_links = VectorParam.BasicExtLink("Links to external nodes")
+    int_links = VectorParam.BasicIntLink("Links between internal nodes")
+    routers = VectorParam.BasicRouter("Network routers")
     print_config = Param.Bool(False,
         "display topology config in the stats file")
 

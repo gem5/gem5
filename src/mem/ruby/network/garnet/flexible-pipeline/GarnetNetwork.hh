@@ -89,15 +89,18 @@ class GarnetNetwork : public BaseGarnetNetwork
     void reset();
 
     // Methods used by Topology to setup the network
-    void makeOutLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency,
-        int link_weight,  int bw_multiplier, bool isReconfiguration);
-    void makeInLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency,
-        int bw_multiplier, bool isReconfiguration);
-    void makeInternalLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency,
-        int link_weight, int bw_multiplier, bool isReconfiguration);
+    void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
+                     LinkDirection direction, 
+                     const NetDest& routing_table_entry, 
+                     bool isReconfiguration);
+    void makeInLink(NodeID src, SwitchID dest, BasicLink* link, 
+                    LinkDirection direction, 
+                    const NetDest& routing_table_entry, 
+                    bool isReconfiguration);
+    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
+                          LinkDirection direction, 
+                          const NetDest& routing_table_entry, 
+                          bool isReconfiguration);
 
   private:
     void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
@@ -105,8 +108,6 @@ class GarnetNetwork : public BaseGarnetNetwork
     GarnetNetwork(const GarnetNetwork& obj);
     GarnetNetwork& operator=(const GarnetNetwork& obj);
 
-    // int m_virtual_networks;
-    // int m_nodes;
     int m_flits_received, m_flits_injected;
     double m_network_latency, m_queueing_latency;
 
@@ -120,7 +121,6 @@ class GarnetNetwork : public BaseGarnetNetwork
     std::vector<NetworkLink *> m_link_ptr_vector; // All links in network
     std::vector<NetworkInterface *> m_ni_ptr_vector; // All NI's in Network
 
-    // Topology* m_topology_ptr;
     Time m_ruby_start;
 };
 

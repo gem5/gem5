@@ -31,17 +31,17 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 
-NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
+NetworkLink::NetworkLink(const Params *p)
+    : SimObject(p)
 {
-    m_id = id;
     linkBuffer = new flitBuffer();
     m_in_port = 0;
     m_out_port = 0;
     m_link_utilized = 0;
-    m_net_ptr = net_ptr;
-    m_latency = latency;
-    int num_net = net_ptr->getNumberOfVirtualNetworks();
-    int num_vc = m_net_ptr->getVCsPerClass();
+    m_latency = p->link_latency;
+    m_id = p->link_id;
+    int num_net = p->virt_nets;
+    int num_vc = p->vcs_per_class;
     m_vc_load.resize(num_net * num_vc);
 
     for (int i = 0; i < num_net * num_vc; i++)
@@ -157,4 +157,10 @@ flit*
 NetworkLink::consumeLink()
 {
     return linkBuffer->getTopFlit();
+}
+
+NetworkLink *
+NetworkLinkParams::create()
+{
+    return new NetworkLink(this);
 }

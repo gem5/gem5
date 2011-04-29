@@ -1,3 +1,4 @@
+# Copyright (c) 2008 Princeton University
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -28,16 +29,40 @@
 #          Brad Beckmann
 
 from m5.params import *
+from m5.proxy import *
 from m5.SimObject import SimObject
+from BasicLink import BasicIntLink, BasicExtLink
 
-class RubyController(SimObject):
-    type = 'RubyController'
-    cxx_class = 'AbstractController'
-    abstract = True
-    version = Param.Int("")
-    cntrl_id = Param.Int("")
-    transitions_per_cycle = \
-        Param.Int(32, "no. of  SLICC state machine transitions per cycle")
-    buffer_size = Param.Int(0, "max buffer size 0 means infinite")
-    recycle_latency = Param.Int(10, "")
-    number_of_TBEs = Param.Int(256, "")
+class NetworkLink(SimObject):
+    type = 'NetworkLink'
+    link_id = Param.Int(Parent.link_id, "link id")
+    link_latency = Param.Int(Parent.latency, "link latency")
+    vcs_per_class = Param.Int(Parent.vcs_per_class,
+                              "virtual channels per message class")
+    virt_nets = Param.Int(Parent.number_of_virtual_networks,
+                          "number of virtual networks")
+    channel_width = Param.Int(Parent.flit_size, "channel width == flit size")
+
+# Interior fixed pipeline links between routers
+class GarnetIntLink(BasicIntLink):
+    type = 'GarnetIntLink'
+    # The flexible pipeline bi-directional link only include two main
+    # forward links and no backward flow-control links
+    nls = []
+    # In uni-directional link
+    nls.append(NetworkLink()); 
+    # Out uni-directional link
+    nls.append(NetworkLink());
+    network_links = VectorParam.NetworkLink(nls, "forward links")
+
+# Exterior fixed pipeline links between a router and a controller
+class GarnetExtLink(BasicExtLink):
+    type = 'GarnetExtLink'
+    # The flexible pipeline bi-directional link only include two main
+    # forward links and no backward flow-control links
+    nls = []
+    # In uni-directional link
+    nls.append(NetworkLink());
+    # Out uni-directional link
+    nls.append(NetworkLink());
+    network_links = VectorParam.NetworkLink(nls, "forward links")

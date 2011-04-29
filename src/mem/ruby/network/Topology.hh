@@ -44,42 +44,24 @@
 #include <string>
 #include <vector>
 
+#include "mem/protocol/LinkDirection.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "params/ExtLink.hh"
-#include "params/IntLink.hh"
-#include "params/Link.hh"
 #include "params/Topology.hh"
 #include "sim/sim_object.hh"
 
-class Network;
 class NetDest;
+class Network;
 
 typedef std::vector<std::vector<int> > Matrix;
 
-class Link : public SimObject
+struct LinkEntry 
 {
-  public:
-    typedef LinkParams Params;
-    Link(const Params *p) : SimObject(p) {}
-    const Params *params() const { return (const Params *)_params; }
+    BasicLink *link;
+    LinkDirection direction;
 };
 
-class ExtLink : public Link
-{
-  public:
-    typedef ExtLinkParams Params;
-    ExtLink(const Params *p) : Link(p) {}
-    const Params *params() const { return (const Params *)_params; }
-};
-
-class IntLink : public Link
-{
-  public:
-    typedef IntLinkParams Params;
-    IntLink(const Params *p) : Link(p) {}
-    const Params *params() const { return (const Params *)_params; }
-};
+typedef std::map<std::pair<int, int>, LinkEntry> LinkMap;
 
 class Topology : public SimObject
 {
@@ -89,6 +71,7 @@ class Topology : public SimObject
     virtual ~Topology() {}
     const Params *params() const { return (const Params *)_params; }
 
+    void init();
     int numSwitches() const { return m_number_of_switches; }
     void createLinks(Network *net, bool isReconfiguration);
 
@@ -101,19 +84,11 @@ class Topology : public SimObject
     void print(std::ostream& out) const { out << "[Topology]"; }
 
   protected:
-    SwitchID newSwitchID();
-    void addLink(SwitchID src, SwitchID dest, int link_latency);
-    void addLink(SwitchID src, SwitchID dest, int link_latency,
-        int bw_multiplier);
-    void addLink(SwitchID src, SwitchID dest, int link_latency,
-        int bw_multiplier, int link_weight);
+    void addLink(SwitchID src, SwitchID dest, BasicLink* link,
+                 LinkDirection dir);
     void makeLink(Network *net, SwitchID src, SwitchID dest,
-        const NetDest& routing_table_entry, int link_latency, int weight,
-        int bw_multiplier, bool isReconfiguration);
-
-    //void makeSwitchesPerChip(std::vector<std::vector<SwitchID > > &nodePairs,
-    //    std::vector<int> &latencies, std::vector<int> &bw_multis,
-    //    int numberOfChips);
+                  const NetDest& routing_table_entry, 
+                  bool isReconfiguration);
 
     std::string getDesignStr();
     // Private copy constructor and assignment operator
@@ -126,15 +101,14 @@ class Topology : public SimObject
     int m_number_of_switches;
 
     std::vector<AbstractController*> m_controller_vector;
-
-    std::vector<SwitchID> m_links_src_vector;
-    std::vector<SwitchID> m_links_dest_vector;
-    std::vector<int> m_links_latency_vector;
-    std::vector<int> m_links_weight_vector;
-    std::vector<int> m_bw_multiplier_vector;
+    std::vector<BasicExtLink*> m_ext_link_vector;
+    std::vector<BasicIntLink*> m_int_link_vector;
 
     Matrix m_component_latencies;
     Matrix m_component_inter_switches;
+
+    LinkMap m_link_map;
+    std::vector<BasicRouter*> m_router_vector;
 };
 
 inline std::ostream&

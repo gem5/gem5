@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Princeton University
+ * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,62 +24,73 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Authors: Niket Agarwal
  */
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_LINK_D_HH__
-#define __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_LINK_D_HH__
+#ifndef __MEM_RUBY_NETWORK_BASIC_LINK_HH__
+#define __MEM_RUBY_NETWORK_BASIC_LINK_HH__
 
 #include <iostream>
+#include <string>
 #include <vector>
 
-#include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"
-#include "mem/ruby/network/garnet/NetworkHeader.hh"
-#include "mem/ruby/network/orion/NetworkPower.hh"
-#include "params/NetworkLink_d.hh"
+#include "params/BasicExtLink.hh"
+#include "params/BasicIntLink.hh"
+#include "params/BasicLink.hh"
+#include "mem/ruby/network/BasicRouter.hh"
+#include "mem/ruby/network/Topology.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "sim/sim_object.hh"
 
-class GarnetNetwork_d;
-
-class NetworkLink_d : public SimObject, public Consumer
+class BasicLink : public SimObject
 {
   public:
-    typedef NetworkLink_dParams Params;
-    NetworkLink_d(const Params *p);
-    ~NetworkLink_d();
+    typedef BasicLinkParams Params;
+    BasicLink(const Params *p);
+    const Params *params() const { return (const Params *)_params; }
 
-    void setLinkConsumer(Consumer *consumer);
-    void setSourceQueue(flitBuffer_d *srcQueue);
-    void print(std::ostream& out) const{}
-    int getLinkUtilization();
-    std::vector<int> getVcLoad();
-    int get_id(){return m_id;}
-    double get_dynamic_power(){return m_power_dyn;}
-    double get_static_power(){return m_power_sta;}
-    void wakeup();
+    void init();
 
-    double calculate_power();
+    void print(std::ostream& out) const;
 
-    inline bool isReady()           { return linkBuffer->isReady(); }
-    inline flit_d* peekLink()       { return linkBuffer->peekTopFlit(); }
-    inline flit_d* consumeLink()    { return linkBuffer->getTopFlit(); }
-
-  protected:
-    int m_id;
     int m_latency;
-
-    int channel_width;
-    flitBuffer_d *linkBuffer;
-    Consumer *link_consumer;
-    flitBuffer_d *link_srcQueue;
-    int m_link_utilized;
-    std::vector<int> m_vc_load;
-    int m_flit_width;
-
-    double m_power_dyn;
-    double m_power_sta;
+    int m_bw_multiplier;
+    int m_weight;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_NETWORK_LINK_D_HH__
+inline std::ostream&
+operator<<(std::ostream& out, const BasicLink& obj)
+{
+    obj.print(out);
+    out << std::flush;
+    return out;
+}
+
+class BasicExtLink : public BasicLink
+{
+  public:
+    typedef BasicExtLinkParams Params;
+    BasicExtLink(const Params *p);
+    const Params *params() const { return (const Params *)_params; }
+
+    friend class Topology;
+
+  protected:
+    BasicRouter* m_int_node;
+    AbstractController* m_ext_node;
+};
+
+class BasicIntLink : public BasicLink
+{
+  public:
+    typedef BasicIntLinkParams Params;
+    BasicIntLink(const Params *p);
+    const Params *params() const { return (const Params *)_params; }
+
+    friend class Topology;
+
+  protected:
+    BasicRouter* m_node_a;
+    BasicRouter* m_node_b;
+};
+
+#endif // __MEM_RUBY_NETWORK_BASIC_LINK_HH__

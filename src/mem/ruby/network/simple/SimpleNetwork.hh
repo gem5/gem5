@@ -70,15 +70,18 @@ class SimpleNetwork : public Network
     int getNumNodes() {return m_nodes; }
 
     // Methods used by Topology to setup the network
-    void makeOutLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency, int link_weight,
-        int bw_multiplier, bool isReconfiguration);
-    void makeInLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency,
-        int bw_multiplier, bool isReconfiguration);
-    void makeInternalLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency, int link_weight,
-        int bw_multiplier, bool isReconfiguration);
+    void makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
+                     LinkDirection direction, 
+                     const NetDest& routing_table_entry, 
+                     bool isReconfiguration);
+    void makeInLink(NodeID src, SwitchID dest, BasicLink* link, 
+                    LinkDirection direction, 
+                    const NetDest& routing_table_entry, 
+                    bool isReconfiguration);
+    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
+                          LinkDirection direction, 
+                          const NetDest& routing_table_entry, 
+                          bool isReconfiguration);
 
     void print(std::ostream& out) const;
 

@@ -33,7 +33,11 @@ Import('*')
 if not env['RUBY']:
     Return()
 
+SimObject('BasicLink.py')
+SimObject('BasicRouter.py')
 SimObject('Network.py')
 
+Source('BasicLink.cc')
+Source('BasicRouter.cc')
 Source('Network.cc')
 Source('Topology.cc')

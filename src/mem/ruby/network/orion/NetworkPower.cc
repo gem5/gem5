@@ -231,7 +231,6 @@ NetworkLink_d::calculate_power()
     OrionLink* orion_link_ptr;
     static double freq_Hz;
     double link_length;
-    int channel_width;
 
     // Initialization
     const string cfg_fn = "src/mem/ruby/network/orion/router.cfg";
@@ -239,17 +238,19 @@ NetworkLink_d::calculate_power()
     freq_Hz = orion_cfg_ptr->get<double>("FREQUENCY");
 
     link_length = orion_cfg_ptr->get<double>("LINK_LENGTH");
-    channel_width = m_net_ptr->getFlitSize();
 
     orion_link_ptr = new OrionLink(
         link_length,
         channel_width    /* channel width */,
         orion_cfg_ptr);
 
-
-    // Dynamic Power
-    double sim_cycles =
-        (double)(g_eventQueue_ptr->getTime() - m_net_ptr->getRubyStartTime());
+//
+//  NOTE!  I believe this calculation will be moved to McPAT, thus this
+//  reference to the net_ptr can be removed
+//
+//    // Dynamic Power
+    double sim_cycles = 0.0;
+//         (double)(g_eventQueue_ptr->getTime() - m_net_ptr->getRubyStartTime());
 
     double Plink_dyn = orion_link_ptr->calc_dynamic_energy(channel_width/2)*
         (m_link_utilized/ sim_cycles)*freq_Hz;

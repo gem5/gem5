@@ -70,6 +70,8 @@ def create_system(options, system, piobus, dma_devices):
     #
     l2_bits = int(math.log(options.num_l2caches, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
+
+    cntrl_count = 0
     
     for i in xrange(options.num_cpus):
         #
@@ -92,6 +94,7 @@ def create_system(options, system, piobus, dma_devices):
             cpu_seq.pio_port = piobus.port
 
         l1_cntrl = L1Cache_Controller(version = i,
+                                      cntrl_id = cntrl_count,
                                       sequencer = cpu_seq,
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
@@ -104,6 +107,8 @@ def create_system(options, system, piobus, dma_devices):
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
 
+        cntrl_count += 1
+
     l2_index_start = block_size_bits + l2_bits
 
     for i in xrange(options.num_l2caches):
@@ -115,10 +120,13 @@ def create_system(options, system, piobus, dma_devices):
                            start_index_bit = l2_index_start)
 
         l2_cntrl = L2Cache_Controller(version = i,
+                                      cntrl_id = cntrl_count,
                                       L2cacheMemory = l2_cache)
         
         exec("system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
+
+        cntrl_count += 1
         
     phys_mem_size = long(system.physmem.range.second) - \
                       long(system.physmem.range.first) + 1
@@ -135,6 +143,7 @@ def create_system(options, system, piobus, dma_devices):
         dir_size.value = mem_module_size
 
         dir_cntrl = Directory_Controller(version = i,
+                                         cntrl_id = cntrl_count,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
                                                              size = \
@@ -143,6 +152,8 @@ def create_system(options, system, piobus, dma_devices):
 
         exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
+
+        cntrl_count += 1
 
     for i, dma_device in enumerate(dma_devices):
         #
@@ -153,6 +164,7 @@ def create_system(options, system, piobus, dma_devices):
                                physmem = system.physmem)
         
         dma_cntrl = DMA_Controller(version = i,
+                                   cntrl_id = cntrl_count,
                                    dma_sequencer = dma_seq)
 
         exec("system.dma_cntrl%d = dma_cntrl" % i)
@@ -161,6 +173,8 @@ def create_system(options, system, piobus, dma_devices):
         else:
             exec("system.dma_cntrl%d.dma_sequencer.port = dma_device.dma" % i)
         dma_cntrl_nodes.append(dma_cntrl)
+
+        cntrl_count += 1
 
     all_cntrls = l1_cntrl_nodes + \
                  l2_cntrl_nodes + \

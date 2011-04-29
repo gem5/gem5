@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 
+#include "mem/protocol/LinkDirection.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
@@ -80,15 +81,18 @@ class Network : public SimObject
     virtual const std::vector<Throttle*>* getThrottles(NodeID id) const;
     virtual int getNumNodes() {return 1;}
 
-    virtual void makeOutLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency, int link_weight,
-        int bw_multiplier, bool isReconfiguration) = 0;
-    virtual void makeInLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency,
-        int bw_multiplier, bool isReconfiguration) = 0;
-    virtual void makeInternalLink(SwitchID src, NodeID dest,
-        const NetDest& routing_table_entry, int link_latency, int link_weight,
-        int bw_multiplier, bool isReconfiguration) = 0;
+    virtual void makeOutLink(SwitchID src, NodeID dest, BasicLink* link,
+                             LinkDirection direction,
+                             const NetDest& routing_table_entry,
+                             bool isReconfiguration) = 0;
+    virtual void makeInLink(NodeID src, SwitchID dest, BasicLink* link,
+                            LinkDirection direction,
+                            const NetDest& routing_table_entry, 
+                            bool isReconfiguration) = 0;
+    virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
+                                  LinkDirection direction,
+                                  const NetDest& routing_table_entry,
+                                  bool isReconfiguration) = 0;
 
     virtual void reset() = 0;
 

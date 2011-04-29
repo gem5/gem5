@@ -33,8 +33,11 @@ Import('*')
 if not env['RUBY']:
     Return()
 
+SimObject('GarnetLink_d.py')
 SimObject('GarnetNetwork_d.py')
+SimObject('GarnetRouter_d.py')
 
+Source('GarnetLink_d.cc')
 Source('GarnetNetwork_d.cc', Werror=False)
 Source('InputUnit_d.cc', Werror=False)
 Source('NetworkInterface_d.cc')

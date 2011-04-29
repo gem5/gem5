@@ -35,6 +35,7 @@
 #include "mem/protocol/TopologyType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/network/simple/Switch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
@@ -133,9 +134,10 @@ SimpleNetwork::~SimpleNetwork()
 
 // From a switch to an endpoint node
 void
-SimpleNetwork::makeOutLink(SwitchID src, NodeID dest,
-    const NetDest& routing_table_entry, int link_latency, int link_weight,
-    int bw_multiplier, bool isReconfiguration)
+SimpleNetwork::makeOutLink(SwitchID src, NodeID dest, BasicLink* link, 
+                           LinkDirection direction, 
+                           const NetDest& routing_table_entry, 
+                           bool isReconfiguration)
 {
     assert(dest < m_nodes);
     assert(src < m_switch_ptr_vector.size());
@@ -147,15 +149,19 @@ SimpleNetwork::makeOutLink(SwitchID src, NodeID dest,
     }
 
     m_switch_ptr_vector[src]->addOutPort(m_fromNetQueues[dest],
-        routing_table_entry, link_latency, bw_multiplier);
+                                         routing_table_entry,
+                                         link->m_latency,
+                                         link->m_bw_multiplier);
+
     m_endpoint_switches[dest] = m_switch_ptr_vector[src];
 }
 
 // From an endpoint node to a switch
 void
-SimpleNetwork::makeInLink(NodeID src, SwitchID dest,
-    const NetDest& routing_table_entry, int link_latency, int bw_multiplier,
-    bool isReconfiguration)
+SimpleNetwork::makeInLink(NodeID src, SwitchID dest, BasicLink* link, 
+                          LinkDirection direction, 
+                          const NetDest& routing_table_entry, 
+                          bool isReconfiguration)
 {
     assert(src < m_nodes);
     if (isReconfiguration) {
@@ -168,9 +174,10 @@ SimpleNetwork::makeInLink(NodeID src, SwitchID dest,
 
 // From a switch to a switch
 void
-SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest,
-    const NetDest& routing_table_entry, int link_latency, int link_weight,
-    int bw_multiplier, bool isReconfiguration)
+SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link, 
+                                LinkDirection direction, 
+                                const NetDest& routing_table_entry,
+                                bool isReconfiguration)
 {
     if (isReconfiguration) {
         m_switch_ptr_vector[src]->reconfigureOutPort(routing_table_entry);
@@ -193,7 +200,8 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest,
     // Connect it to the two switches
     m_switch_ptr_vector[dest]->addInPort(queues);
     m_switch_ptr_vector[src]->addOutPort(queues, routing_table_entry,
-        link_latency, bw_multiplier);
+                                         link->m_latency, 
+                                         link->m_bw_multiplier);
 }
 
 void

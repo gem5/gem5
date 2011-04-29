@@ -323,3 +323,9 @@ enumeration(RequestStatus, desc="...", default="RequestStatus_NULL")  {
   Aliased, desc="This request aliased with a currently outstanding request";
   NULL, desc="";
 }
+
+// LinkDirection
+enumeration(LinkDirection, desc="...") {
+  In, desc="Inward link direction";
+  Out, desc="Outward link direction";
+}

@@ -43,14 +43,13 @@
 using namespace std;
 using m5::stl_helpers::deletePointers;
 
-Router_d::Router_d(int id, GarnetNetwork_d *network_ptr)
+Router_d::Router_d(const Params *p)
+    : BasicRouter(p)
 {
-    m_id = id;
-    m_network_ptr = network_ptr;
-    m_virtual_networks = network_ptr->getNumberOfVirtualNetworks();
-    m_vc_per_vnet = m_network_ptr->getVCsPerClass();
-    m_num_vcs = m_virtual_networks*m_vc_per_vnet;
-    m_flit_width = m_network_ptr->getFlitSize();
+    m_virtual_networks = p->virt_nets;
+    m_vc_per_vnet = p->vcs_per_class;
+    m_num_vcs = m_virtual_networks * m_vc_per_vnet;
+    m_flit_width = p->flit_width;
 
     m_routing_unit = new RoutingUnit_d(this);
     m_vc_alloc = new VCallocator_d(this);
@@ -88,6 +87,8 @@ Router_d::~Router_d()
 void
 Router_d::init()
 {
+    BasicRouter::init();
+
     m_vc_alloc->init();
     m_sw_alloc->init();
     m_switch->init();
@@ -178,7 +179,7 @@ Router_d::calculate_performance_numbers()
 void
 Router_d::printConfig(ostream& out)
 {
-    out << "[Router " << m_id << "] :: " << endl;
+    out << name() << endl;
     out << "[inLink - ";
     for (int i = 0;i < m_input_unit.size(); i++)
         out << m_input_unit[i]->get_inlink_id() << " - ";
@@ -187,4 +188,10 @@ Router_d::printConfig(ostream& out)
     for (int i = 0;i < m_output_unit.size(); i++)
         out << m_output_unit[i]->get_outlink_id() << " - ";
     out << "]" << endl;
+}
+
+Router_d *
+GarnetRouter_dParams::create()
+{
+    return new Router_d(this);
 }

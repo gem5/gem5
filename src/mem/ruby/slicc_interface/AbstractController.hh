@@ -47,6 +47,7 @@ class AbstractController : public SimObject, public Consumer
   public:
     typedef RubyControllerParams Params;
     AbstractController(const Params *p) : SimObject(p) {}
+    const Params *params() const { return (const Params *)_params; }
 
     // returns the number of controllers created of the specific subtype
     //  virtual int getNumberOfControllers() const = 0;

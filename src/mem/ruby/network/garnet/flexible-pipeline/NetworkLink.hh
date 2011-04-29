@@ -38,14 +38,16 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/FlexibleConsumer.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/flitBuffer.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
+#include "params/NetworkLink.hh"
+#include "sim/sim_object.hh"
 
 class GarnetNetwork;
 
-class NetworkLink : public FlexibleConsumer
+class NetworkLink : public SimObject, public FlexibleConsumer
 {
   public:
-    NetworkLink();
-    NetworkLink(int id, int latency, GarnetNetwork *net_ptr);
+    typedef NetworkLinkParams Params;
+    NetworkLink(const Params *p);
     ~NetworkLink();
 
     void setLinkConsumer(FlexibleConsumer *consumer);
@@ -69,6 +71,11 @@ class NetworkLink : public FlexibleConsumer
     void setSource(FlexibleConsumer *source);
     double getLinkUtilization();
     std::vector<int> getVcLoad();
+
+    void init_net_ptr(GarnetNetwork* net_ptr) 
+    { 
+        m_net_ptr = net_ptr; 
+    }
 
   protected:
     int m_id, m_latency;

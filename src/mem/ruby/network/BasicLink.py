@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2011 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,24 +24,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Steve Reinhardt
+#          Brad Beckmann
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
 
-if not env['RUBY']:
-    Return()
+class BasicLink(SimObject):
+    type = 'BasicLink'
+    link_id = Param.Int("ID in relation to other links")
+    latency = Param.Int(1, "latency")
+    bw_multiplier = Param.Int("simple network bw constant, usually in bytes")
+    weight = Param.Int(1, "used to restrict routing in shortest path analysis")
 
-SimObject('GarnetLink.py')
-SimObject('GarnetNetwork.py')
-SimObject('GarnetRouter.py')
+class BasicExtLink(BasicLink):
+    type = 'BasicExtLink'
+    ext_node = Param.RubyController("External node")
+    int_node = Param.BasicRouter("ID of internal node")
+    bw_multiplier = 64
 
-Source('GarnetLink.cc')
-Source('GarnetNetwork.cc')
-Source('InVcState.cc')
-Source('NetworkInterface.cc')
-Source('NetworkLink.cc')
-Source('OutVcState.cc')
-Source('Router.cc')
-Source('VCarbiter.cc')
-Source('flit.cc')
-Source('flitBuffer.cc')
+class BasicIntLink(BasicLink):
+    type = 'BasicIntLink'
+    node_a = Param.BasicRouter("Router on one end")
+    node_b = Param.BasicRouter("Router on other end")
+    bw_multiplier = 16

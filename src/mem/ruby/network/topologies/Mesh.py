@@ -34,7 +34,7 @@ class Mesh(Topology):
 
 # Makes a generic mesh assuming an equal number of cache and directory cntrls
 
-def makeTopology(nodes, options):
+def makeTopology(nodes, options, IntLink, ExtLink, Router):
 
     num_routers = options.num_cpus
     num_rows = options.mesh_rows
@@ -45,6 +45,12 @@ def makeTopology(nodes, options):
     assert(num_rows <= num_routers)
     num_columns = int(num_routers / num_rows)
     assert(num_columns * num_rows == num_routers)
+
+    # Create the routers in the mesh
+    routers = [Router(router_id=i) for i in range(num_routers)]
+
+    # link counter to set unique link ids
+    link_count = 0
 
     # Add all but the remainder nodes to the list of nodes to be uniformly
     # distributed across the network.
@@ -61,14 +67,18 @@ def makeTopology(nodes, options):
     for (i, n) in enumerate(network_nodes):
         cntrl_level, router_id = divmod(i, num_routers)
         assert(cntrl_level < cntrls_per_router)
-        ext_links.append(ExtLink(ext_node=n, int_node=router_id))
+        ext_links.append(ExtLink(link_id=link_count, ext_node=n,
+                                 int_node=routers[router_id]))
+        link_count += 1
 
     # Connect the remainding nodes to router 0.  These should only be
     # DMA nodes.
     for (i, node) in enumerate(remainder_nodes):
         assert(node.type == 'DMA_Controller')
         assert(i < remainder)
-        ext_links.append(ExtLink(ext_node=node, int_node=0))
+        ext_links.append(ExtLink(link_id=link_count, ext_node=node,
+                                 int_node=routers[0]))
+        link_count += 1
 
     # Create the mesh links.  First row (east-west) links then column
     # (north-south) links
@@ -78,18 +88,22 @@ def makeTopology(nodes, options):
             if (col + 1 < num_columns):
                 east_id = col + (row * num_columns)
                 west_id = (col + 1) + (row * num_columns)
-                int_links.append(IntLink(node_a=east_id,
-                                         node_b=west_id,
+                int_links.append(IntLink(link_id=link_count,
+                                         node_a=routers[east_id],
+                                         node_b=routers[west_id],
                                          weight=1))
+                link_count += 1
+                
     for col in xrange(num_columns):
         for row in xrange(num_rows):
             if (row + 1 < num_rows):
                 north_id = col + (row * num_columns)
                 south_id = col + ((row + 1) * num_columns)
-                int_links.append(IntLink(node_a=north_id,
-                                         node_b=south_id,
+                int_links.append(IntLink(link_id=link_count,
+                                         node_a=routers[north_id],
+                                         node_b=routers[south_id],
                                          weight=2))
-
+                link_count += 1
     return Mesh(ext_links=ext_links,
                 int_links=int_links,
-                num_int_nodes=num_routers)
+                routers=routers)

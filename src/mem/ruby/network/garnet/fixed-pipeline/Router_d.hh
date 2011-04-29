@@ -35,9 +35,11 @@
 #include <vector>
 
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flit_d.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/orion/NetworkPower.hh"
+#include "params/GarnetRouter_d.hh"
 
 class GarnetNetwork_d;
 class NetworkLink_d;
@@ -49,10 +51,11 @@ class VCallocator_d;
 class SWallocator_d;
 class Switch_d;
 
-class Router_d
+class Router_d : public BasicRouter
 {
   public:
-    Router_d(int id, GarnetNetwork_d *network_ptr);
+    typedef GarnetRouter_dParams Params;
+    Router_d(const Params *p);
 
     ~Router_d();
 
@@ -67,6 +70,11 @@ class Router_d
     int get_num_inports()   { return m_input_unit.size(); }
     int get_num_outports()  { return m_output_unit.size(); }
     int get_id()            { return m_id; }
+
+    void init_net_ptr(GarnetNetwork_d* net_ptr) 
+    { 
+        m_network_ptr = net_ptr; 
+    }
 
     GarnetNetwork_d* get_net_ptr()                  { return m_network_ptr; }
     std::vector<InputUnit_d *>& get_inputUnit_ref()   { return m_input_unit; }
@@ -86,7 +94,6 @@ class Router_d
     double get_static_power(){return m_power_sta;}
 
   private:
-    int m_id;
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
     GarnetNetwork_d *m_network_ptr;
     int m_flit_width;

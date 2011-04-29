@@ -79,6 +79,8 @@ def create_system(options, system, piobus, dma_devices):
     # controller constructors are called before the network constructor
     #
     block_size_bits = int(math.log(options.cacheline_size, 2))
+
+    cntrl_count = 0
     
     for i in xrange(options.num_cpus):
         #
@@ -104,6 +106,7 @@ def create_system(options, system, piobus, dma_devices):
             cpu_seq.pio_port = piobus.port
 
         l1_cntrl = L1Cache_Controller(version = i,
+                                      cntrl_id = cntrl_count,
                                       sequencer = cpu_seq,
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
@@ -120,6 +123,8 @@ def create_system(options, system, piobus, dma_devices):
         #
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
+
+        cntrl_count += 1
 
     phys_mem_size = long(system.physmem.range.second) - \
                       long(system.physmem.range.first) + 1
@@ -162,6 +167,7 @@ def create_system(options, system, piobus, dma_devices):
                          start_index_bit = pf_start_bit)
 
         dir_cntrl = Directory_Controller(version = i,
+                                         cntrl_id = cntrl_count,
                                          directory = \
                                          RubyDirectoryMemory( \
                                                     version = i,
@@ -182,6 +188,8 @@ def create_system(options, system, piobus, dma_devices):
         exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
+        cntrl_count += 1
+
     for i, dma_device in enumerate(dma_devices):
         #
         # Create the Ruby objects associated with the dma controller
@@ -191,6 +199,7 @@ def create_system(options, system, piobus, dma_devices):
                                physmem = system.physmem)
         
         dma_cntrl = DMA_Controller(version = i,
+                                   cntrl_id = cntrl_count,
                                    dma_sequencer = dma_seq)
 
         exec("system.dma_cntrl%d = dma_cntrl" % i)
@@ -202,6 +211,8 @@ def create_system(options, system, piobus, dma_devices):
 
         if options.recycle_latency:
             dma_cntrl.recycle_latency = options.recycle_latency
+
+        cntrl_count += 1
 
     all_cntrls = l1_cntrl_nodes + dir_cntrl_nodes + dma_cntrl_nodes
 

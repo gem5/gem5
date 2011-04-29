@@ -39,15 +39,15 @@
 using namespace std;
 using m5::stl_helpers::deletePointers;
 
-Router::Router(int id, GarnetNetwork *network_ptr)
+Router::Router(const Params *p)
+    : BasicRouter(p)
 {
-    m_id = id;
-    m_net_ptr = network_ptr;
-    m_virtual_networks = m_net_ptr->getNumberOfVirtualNetworks();
-    m_vc_per_vnet = m_net_ptr->getVCsPerClass();
+    m_id = p->router_id;
+    m_virtual_networks = p->virt_nets;
+    m_vc_per_vnet = p->vcs_per_class;
     m_round_robin_inport = 0;
     m_round_robin_start = 0;
-    m_num_vcs = m_vc_per_vnet*m_virtual_networks;
+    m_num_vcs = m_vc_per_vnet * m_virtual_networks;
     m_vc_arbiter = new VCarbiter(this);
 }
 
@@ -439,4 +439,10 @@ void
 Router::print(ostream& out) const
 {
     out << "[Router]";
+}
+
+Router *
+GarnetRouterParams::create()
+{
+    return new Router(this);
 }
