@@ -967,18 +967,24 @@ for variant_path in variant_paths:
 
         # Get default build variables from source tree.  Variables are
         # normally determined by name of $VARIANT_DIR, but can be
-        # overriden by 'default=' arg on command line.
+        # overridden by '--default=' arg on command line.
         default = GetOption('default')
-        if not default:
-            default = variant_dir
-        default_vars_file = joinpath('build_opts', default)
-        if isfile(default_vars_file):
+        opts_dir = joinpath(main.root.abspath, 'build_opts')
+        if default:
+            default_vars_files = [joinpath(build_root, 'variables', default),
+                                  joinpath(opts_dir, default)]
+        else:
+            default_vars_files = [joinpath(opts_dir, variant_dir)]
+        existing_files = filter(isfile, default_vars_files)
+        if existing_files:
+            default_vars_file = existing_files[0]
             sticky_vars.files.append(default_vars_file)
             print "Variables file %s not found,\n  using defaults in %s" \
                   % (current_vars_file, default_vars_file)
         else:
-            print "Error: cannot find variables file %s or %s" \
-                  % (current_vars_file, default_vars_file)
+            print "Error: cannot find variables file %s or " \
+                  "default file(s) %s" \
+                  % (current_vars_file, ' or '.join(default_vars_files))
             Exit(1)
 
     # Apply current variable settings to env
