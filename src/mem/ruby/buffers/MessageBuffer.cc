@@ -126,8 +126,7 @@ MessageBuffer::getMsgPtrCopy() const
 const Message*
 MessageBuffer::peekAtHeadOfQueue() const
 {
-    DPRINTF(RubyQueue, "Peeking at head of queue time: %lld\n",
-            g_eventQueue_ptr->getTime());
+    DPRINTF(RubyQueue, "Peeking at head of queue.\n");
     assert(isReady());
 
     const Message* msg_ptr = m_prio_heap.front().m_msgptr.get();
@@ -196,8 +195,11 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "
                   "delta: %d arrival_time: %d last arrival_time: %d\n",
-                  *this, m_name, current_time, delta, arrival_time,
-                  m_last_arrival_time);
+                  *this, m_name,
+                  current_time * g_eventQueue_ptr->getClock(),
+                  delta * g_eventQueue_ptr->getClock(),
+                  arrival_time * g_eventQueue_ptr->getClock(),
+                  m_last_arrival_time * g_eventQueue_ptr->getClock());
         }
     }
     m_last_arrival_time = arrival_time;
@@ -220,8 +222,8 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     push_heap(m_prio_heap.begin(), m_prio_heap.end(),
         greater<MessageBufferNode>());
 
-    DPRINTF(RubyQueue, "Enqueue with arrival_time %lld (cur_time: %lld).\n",
-            arrival_time, g_eventQueue_ptr->getTime());
+    DPRINTF(RubyQueue, "Enqueue with arrival_time %lld.\n",
+            arrival_time * g_eventQueue_ptr->getClock());
     DPRINTF(RubyQueue, "Enqueue Message: %s.\n", (*(message.get())));
 
     // Schedule the wakeup

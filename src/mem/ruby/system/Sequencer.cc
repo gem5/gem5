@@ -500,10 +500,10 @@ Sequencer::hitCallback(SequencerRequest* srequest,
                                                    g_eventQueue_ptr->getTime());
         }
 
-        DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %d cycles\n",
-            g_eventQueue_ptr->getTime(), m_version, "Seq",
-            success ? "Done" : "SC_Failed", "", "",
-            ruby_request.m_PhysicalAddress, miss_latency);
+        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",
+                 curTick(), m_version, "Seq",
+                 success ? "Done" : "SC_Failed", "", "",
+                 ruby_request.m_PhysicalAddress, miss_latency);
     }
 #if 0
     if (request.getPrefetch() == PrefetchBit_Yes) {
@@ -685,9 +685,9 @@ Sequencer::issueRequest(const RubyRequest& request)
                                        ctype, amtype, request.pkt,
                                        PrefetchBit_No, proc_id);
 
-    DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\n",
-        g_eventQueue_ptr->getTime(), m_version, "Seq", "Begin", "", "",
-        request.m_PhysicalAddress, RubyRequestType_to_string(request.m_Type));
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n",
+            curTick(), m_version, "Seq", "Begin", "", "",
+            request.m_PhysicalAddress, RubyRequestType_to_string(request.m_Type));
 
     Time latency = 0;  // initialzed to an null value
 

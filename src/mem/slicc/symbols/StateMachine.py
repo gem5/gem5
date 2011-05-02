@@ -1104,12 +1104,12 @@ ${ident}_Controller::doTransition(${ident}_Event event,
         DPRINTF(RubyGenerated, "next_state: %s\\n",
                 ${ident}_State_to_string(next_state));
         m_profiler.countTransition(state, event);
-        DPRINTFR(ProtocolTrace, "%7d %3s %10s%20s %6s>%-6s %s %s\\n",
-            g_eventQueue_ptr->getTime(), m_version, "${ident}",
-            ${ident}_Event_to_string(event),
-            ${ident}_State_to_string(state),
-            ${ident}_State_to_string(next_state),
-            addr, GET_TRANSITION_COMMENT());
+        DPRINTFR(ProtocolTrace, "%15d %3s %10s%20s %6s>%-6s %s %s\\n",
+                 curTick(), m_version, "${ident}",
+                 ${ident}_Event_to_string(event),
+                 ${ident}_State_to_string(state),
+                 ${ident}_State_to_string(next_state),
+                 addr, GET_TRANSITION_COMMENT());
 
         CLEAR_TRANSITION_COMMENT();
 ''')
@@ -1126,20 +1126,20 @@ ${ident}_Controller::doTransition(${ident}_Event event,
 
         code('''
     } else if (result == TransitionResult_ResourceStall) {
-        DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\\n",
-            g_eventQueue_ptr->getTime(), m_version, "${ident}",
-            ${ident}_Event_to_string(event),
-            ${ident}_State_to_string(state),
-            ${ident}_State_to_string(next_state),
-            addr, "Resource Stall");
+        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
+                 curTick(), m_version, "${ident}",
+                 ${ident}_Event_to_string(event),
+                 ${ident}_State_to_string(state),
+                 ${ident}_State_to_string(next_state),
+                 addr, "Resource Stall");
     } else if (result == TransitionResult_ProtocolStall) {
         DPRINTF(RubyGenerated, "stalling\\n");
-        DPRINTFR(ProtocolTrace, "%7s %3s %10s%20s %6s>%-6s %s %s\\n",
-            g_eventQueue_ptr->getTime(), m_version, "${ident}",
-            ${ident}_Event_to_string(event),
-            ${ident}_State_to_string(state),
-            ${ident}_State_to_string(next_state),
-            addr, "Protocol Stall");
+        DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\\n",
+                 curTick(), m_version, "${ident}",
+                 ${ident}_Event_to_string(event),
+                 ${ident}_State_to_string(state),
+                 ${ident}_State_to_string(next_state),
+                 addr, "Protocol Stall");
     }
 
     return result;

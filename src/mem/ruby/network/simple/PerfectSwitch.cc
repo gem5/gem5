@@ -302,9 +302,8 @@ PerfectSwitch::wakeup()
 
                         // Enqeue msg
                         DPRINTF(RubyNetwork, "Enqueuing net msg from "
-                                "inport[%d][%d] to outport [%d][%d] time: %lld.\n",
-                                incoming, vnet, outgoing, vnet,
-                                g_eventQueue_ptr->getTime());
+                                "inport[%d][%d] to outport [%d][%d].\n",
+                                incoming, vnet, outgoing, vnet);
 
                         m_out[outgoing][vnet]->enqueue(msg_ptr);
                     }
