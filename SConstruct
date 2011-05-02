@@ -264,30 +264,29 @@ def rfind(l, elt, offs = -1):
             return i
     raise ValueError, "element not found"
 
+# Take a list of paths (or SCons Nodes) and return a list with all
+# paths made absolute and ~-expanded.  Paths will be interpreted
+# relative to the launch directory unless a different root is provided
+def makePathListAbsolute(path_list, root=GetLaunchDir()):
+    return [abspath(joinpath(root, expanduser(str(p))))
+            for p in path_list]
+
 # Each target must have 'build' in the interior of the path; the
 # directory below this will determine the build parameters.  For
 # example, for target 'foo/bar/build/ALPHA_SE/arch/alpha/blah.do' we
 # recognize that ALPHA_SE specifies the configuration because it
-# follow 'build' in the bulid path.
+# follow 'build' in the build path.
 
-# Generate absolute paths to targets so we can see where the build dir is
-if COMMAND_LINE_TARGETS:
-    # Ask SCons which directory it was invoked from
-    launch_dir = GetLaunchDir()
-    # Make targets relative to invocation directory
-    abs_targets = [ normpath(joinpath(launch_dir, str(x))) for x in \
-                    COMMAND_LINE_TARGETS]
-else:
-    # Default targets are relative to root of tree
-    abs_targets = [ normpath(joinpath(main.root.abspath, str(x))) for x in \
-                    DEFAULT_TARGETS]
-
+# The funky assignment to "[:]" is needed to replace the list contents
+# in place rather than reassign the symbol to a new list, which
+# doesn't work (obviously!).
+BUILD_TARGETS[:] = makePathListAbsolute(BUILD_TARGETS)
 
 # Generate a list of the unique build roots and configs that the
 # collected targets reference.
 variant_paths = []
 build_root = None
-for t in abs_targets:
+for t in BUILD_TARGETS:
     path_dirs = t.split('/')
     try:
         build_top = rfind(path_dirs, 'build', -2)
@@ -326,21 +325,6 @@ main.SetOption('duplicate', 'soft-copy')
 # tree (not specific to a particular build like ALPHA_SE)
 #
 
-# Variable validators & converters for global sticky variables
-def PathListMakeAbsolute(val):
-    if not val:
-        return val
-    f = lambda p: abspath(expanduser(p))
-    return ':'.join(map(f, val.split(':')))
-
-def PathListAllExist(key, val, env):
-    if not val:
-        return
-    paths = val.split(':')
-    for path in paths:
-        if not isdir(path):
-            raise SCons.Errors.UserError("Path does not exist: '%s'" % path)
-
 global_vars_file = joinpath(build_root, 'variables.global')
 
 global_vars = Variables(global_vars_file, args=ARGUMENTS)
@@ -351,8 +335,7 @@ global_vars.AddVariables(
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('M5_BUILD_CACHE', 'Cache built objects in this directory', False),
-    ('EXTRAS', 'Add extra directories to the compilation', '',
-     PathListAllExist, PathListMakeAbsolute),
+    ('EXTRAS', 'Add extra directories to the compilation', '')
     )
 
 # Update main environment with values from ARGUMENTS & global_vars_file
@@ -363,10 +346,10 @@ help_texts["global_vars"] += global_vars.GenerateHelpText(main)
 global_vars.Save(global_vars_file, main)
 
 # Parse EXTRAS variable to build list of all directories where we're
-# look for sources etc.  This list is exported as base_dir_list.
+# look for sources etc.  This list is exported as extras_dir_list.
 base_dir = main.srcdir.abspath
 if main['EXTRAS']:
-    extras_dir_list = main['EXTRAS'].split(':')
+    extras_dir_list = makePathListAbsolute(main['EXTRAS'].split(':'))
 else:
     extras_dir_list = []
 
@@ -808,6 +791,9 @@ Export('export_vars')
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above variables
 for bdir in [ base_dir ] + extras_dir_list:
+    if not isdir(bdir):
+        print "Error: directory '%s' does not exist" % bdir
+        Exit(1)
     for root, dirs, files in os.walk(bdir):
         if 'SConsopts' in files:
             print "Reading", joinpath(root, 'SConsopts')
