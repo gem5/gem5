@@ -101,14 +101,14 @@ void
 CompoundFlag::enable()
 {
     SimpleFlag::enable();
-    for_each(flags.begin(), flags.end(), mem_fun(&Flag::enable));
+    for_each(_kids.begin(), _kids.end(), mem_fun(&Flag::enable));
 }
 
 void
 CompoundFlag::disable()
 {
     SimpleFlag::disable();
-    for_each(flags.begin(), flags.end(), mem_fun(&Flag::disable));
+    for_each(_kids.begin(), _kids.end(), mem_fun(&Flag::disable));
 }
 
 struct AllFlags : public Flag

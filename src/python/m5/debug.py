@@ -26,24 +26,36 @@
 #
 # Authors: Nathan Binkert
 
+from UserDict import DictMixin
+
 import internal
 
+from internal.debug import SimpleFlag, CompoundFlag
 from internal.debug import schedBreakCycle, setRemoteGDBPort
+from m5.util import printList
 
 def help():
     print "Base Flags:"
-    for flag in flags.basic:
-        print "    %s: %s" % (flag, flags.descriptions[flag])
+    for name in sorted(flags):
+        if name == 'All':
+            continue
+        flag = flags[name]
+        children = [c for c in flag.kids() ]
+        if not children:
+            print "    %s: %s" % (name, flag.desc())
     print
     print "Compound Flags:"
-    for flag in flags.compound:
-        if flag == 'All':
+    for name in sorted(flags):
+        if name == 'All':
             continue
-        print "    %s: %s" % (flag, flags.descriptions[flag])
-        util.printList(flags.compoundMap[flag], indent=8)
-        print
+        flag = flags[name]
+        children = [c for c in flag.kids() ]
+        if children:
+            print "    %s: %s" % (name, flag.desc())
+            printList([ c.name() for c in children ], indent=8)
+    print
 
-class AllFlags(object):
+class AllFlags(DictMixin):
     def __init__(self):
         self._version = -1
         self._dict = {}

@@ -44,6 +44,7 @@ class Flag
   protected:
     const char *_name;
     const char *_desc;
+    std::vector<Flag *> _kids;
 
   public:
     Flag(const char *name, const char *desc);
@@ -51,6 +52,7 @@ class Flag
 
     std::string name() const { return _name; }
     std::string desc() const { return _desc; }
+    std::vector<Flag *> kids() { return _kids; }
 
     virtual void enable() = 0;
     virtual void disable() = 0;
@@ -77,7 +79,12 @@ class SimpleFlag : public Flag
 class CompoundFlag : public SimpleFlag
 {
   protected:
-    std::vector<Flag *> flags;
+    void
+    addFlag(Flag &f)
+    {
+        if (&f != NULL)
+            _kids.push_back(&f);
+    }
 
   public:
     CompoundFlag(const char *name, const char *desc,
@@ -97,13 +104,6 @@ class CompoundFlag : public SimpleFlag
         addFlag(f05); addFlag(f06); addFlag(f07); addFlag(f08); addFlag(f09);
         addFlag(f10); addFlag(f11); addFlag(f12); addFlag(f13); addFlag(f14);
         addFlag(f15); addFlag(f16); addFlag(f17); addFlag(f18); addFlag(f19);
-    }
-
-    void
-    addFlag(Flag &f)
-    {
-        if (&f != NULL)
-            flags.push_back(&f);
     }
 
     void enable();
