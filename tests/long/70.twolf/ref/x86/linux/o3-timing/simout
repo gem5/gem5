@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2011 13:30:37
-M5 started Apr 21 2011 13:53:57
-M5 executing on maize
+M5 compiled May  1 2011 16:48:51
+M5 started May  1 2011 16:48:54
+M5 executing on u200439-lin.austin.arm.com
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing
 Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing/smred.sav
 Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing/smred.sv2
@@ -28,4 +28,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 106785381000 because target called exit()
+122 123 124 Exiting @ tick 106659390000 because target called exit()

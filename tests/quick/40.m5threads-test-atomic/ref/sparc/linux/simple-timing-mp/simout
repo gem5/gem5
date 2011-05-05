@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 19 2011 12:19:46
-M5 started Apr 19 2011 12:20:58
-M5 executing on maize
+M5 compiled May  1 2011 16:25:10
+M5 started May  1 2011 16:26:16
+M5 executing on u200439-lin.austin.arm.com
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp -re tests/run.py build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -83,4 +83,4 @@ Iteration 9 completed
 [Iteration 10, Thread 3] Critical section done, previously next=1, now next=3
 Iteration 10 completed
 PASSED :-)
-Exiting @ tick 262295000 because target called exit()
+Exiting @ tick 262298000 because target called exit()
