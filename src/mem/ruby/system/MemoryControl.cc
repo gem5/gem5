@@ -176,8 +176,6 @@ MemoryControl::init()
 {
     m_msg_counter = 0;
 
-    m_debug = 0;
-
     assert(m_tFaw <= 62); // must fit in a uint64 shift register
 
     m_total_banks = m_banks_per_rank * m_ranks_per_dimm * m_dimms_per_channel;
@@ -253,15 +251,13 @@ MemoryControl::enqueueMemRef(MemoryNode& memRef)
 {
     m_msg_counter++;
     memRef.m_msg_counter = m_msg_counter;
-    Time arrival_time = memRef.m_time;
-    uint64 at = arrival_time;
-    bool is_mem_read = memRef.m_is_mem_read;
     physical_address_t addr = memRef.m_addr;
     int bank = getBank(addr);
-    if (m_debug) {
-        cprintf("New memory request%7d: %#08x %c arrived at %10d bank = %3x\n",
-                m_msg_counter, addr, is_mem_read? 'R':'W', at, bank);
-    }
+
+    DPRINTF(RubyMemory, "New memory request%7d: %#08x %c arrived at %10d bank = %3x\n",
+            m_msg_counter, addr, memRef.m_is_mem_read ? 'R':'W',
+            memRef.m_time * g_eventQueue_ptr->getClock(),
+            bank);
 
     m_profiler_ptr->profileMemReq(bank);
     m_input_queue.push_back(memRef);
@@ -294,12 +290,9 @@ MemoryControl::peekNode()
 {
     assert(isReady());
     MemoryNode req = m_response_queue.front();
-    uint64 returnTime = req.m_time;
-    if (m_debug) {
-        cprintf("Old memory request%7d: %#08x %c peeked at  %10d\n",
-                req.m_msg_counter, req.m_addr, req.m_is_mem_read ? 'R':'W',
-                returnTime);
-    }
+    DPRINTF(RubyMemory, "Peek: memory request%7d: %#08x %c\n",
+            req.m_msg_counter, req.m_addr, req.m_is_mem_read ? 'R':'W');
+
     return req;
 }
 
@@ -353,12 +346,6 @@ MemoryControl::printConfig(ostream& out)
 }
 
 void
-MemoryControl::setDebug(int debugFlag)
-{
-    m_debug = debugFlag;
-}
-
-void
 MemoryControl::clearStats() const
 {
     m_profiler_ptr->clearStats();
@@ -378,6 +365,10 @@ MemoryControl::enqueueToDirectory(MemoryNode req, int latency)
         + (latency * m_mem_bus_cycle_multiplier);
     req.m_time = arrival_time;
     m_response_queue.push_back(req);
+
+    DPRINTF(RubyMemory, "Enqueueing msg %#08x %c back to directory at %15d\n",
+            req.m_addr, req.m_is_mem_read ? 'R':'W',
+            arrival_time * g_eventQueue_ptr->getClock());
 
     // schedule the wake up
     g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, arrival_time);
@@ -413,10 +404,8 @@ MemoryControl::queueReady(int bank)
 {
     if ((m_bankBusyCounter[bank] > 0) && !m_mem_fixed_delay) {
         m_profiler_ptr->profileMemBankBusy();
-#if 0
-        if (m_debug)
-            printf("  bank %x busy %d\n", bank, m_bankBusyCounter[bank]);
-#endif
+
+        DPRINTF(RubyMemory, "bank %x busy %d\n", bank, m_bankBusyCounter[bank]);
         return false;
     }
 
@@ -489,12 +478,7 @@ MemoryControl::issueRefresh(int bank)
         return false;
 
     // Issue it:
-#if 0
-    if (m_debug) {
-        uint64 current_time = g_eventQueue_ptr->getTime();
-        printf("    Refresh bank %3x at %lld\n", bank, current_time);
-    }
-#endif
+    DPRINTF(RubyMemory, "Refresh bank %3x\n", bank);
 
     m_profiler_ptr->profileMemRefresh();
     m_need_refresh--;
@@ -528,13 +512,12 @@ MemoryControl::issueRequest(int bank)
     int rank = getRank(bank);
     MemoryNode req = m_bankQueues[bank].front();
     m_bankQueues[bank].pop_front();
-    if (m_debug) {
-        uint64 current_time = g_eventQueue_ptr->getTime();
-        cprintf("    Mem issue request%7d: %#08x %c         at %10d  "
-                "bank=%3x\n",
-                req.m_msg_counter, req.m_addr, req.m_is_mem_read? 'R':'W',
-                current_time, bank);
-    }
+
+    DPRINTF(RubyMemory, "Mem issue request%7d: %#08x %c "
+            "bank=%3x\n", req.m_msg_counter, req.m_addr,
+            req.m_is_mem_read? 'R':'W',
+            bank);
+
     if (req.m_msgptr) {  // don't enqueue L3 writebacks
         enqueueToDirectory(req, m_mem_ctl_latency + m_mem_fixed_delay);
     }

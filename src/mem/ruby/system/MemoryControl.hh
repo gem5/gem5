@@ -84,7 +84,6 @@ class MemoryControl :
 
     void printConfig(std::ostream& out);
     void print(std::ostream& out) const;
-    void setDebug(int debugFlag);
     void clearStats() const;
     void printStats(std::ostream& out) const;
 
@@ -161,7 +160,6 @@ class MemoryControl :
     int m_refresh_bank;       // which bank to refresh next
     int m_ageCounter;         // age of old requests; to detect starvation
     int m_idleCount;          // watchdog timer for shutting down
-    int m_debug;              // turn on printf's
 
     MemCntrlProfiler* m_profiler_ptr;
 };

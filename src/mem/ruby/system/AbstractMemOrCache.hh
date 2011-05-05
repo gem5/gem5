@@ -53,7 +53,6 @@ class AbstractMemOrCache
     virtual bool areNSlotsAvailable (int n) = 0;
     virtual void printConfig (std::ostream& out) = 0;
     virtual void print (std::ostream& out) const = 0;
-    virtual void setDebug (int debugFlag) = 0;
 };
 
 #endif // __MEM_RUBY_SYSTEM_ABSTRACTMEMORCACHE_HH__
