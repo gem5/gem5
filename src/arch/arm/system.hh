@@ -53,7 +53,7 @@
 
 class ArmSystem : public System
 {
-  private:
+  protected:
     /**
      * PC based event to skip the dprink() call and emulate its
      * functionality

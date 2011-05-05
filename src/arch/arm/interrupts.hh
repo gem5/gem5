@@ -137,6 +137,19 @@ class Interrupts : public SimObject
                 (interrupts[INT_RST]));
     }
 
+    /**
+     * Check the raw interrupt state.
+     * This function is used to check if a wfi operation should sleep. If there
+     * is an interrupt pending, even if it's masked, wfi doesn't sleep.
+     * @return any interrupts pending
+     */
+    bool
+    checkRaw() const
+    {
+        return intStatus;
+    }
+
+
     Fault
     getInterrupt(ThreadContext *tc)
     {

@@ -96,6 +96,7 @@ let {{
         IWNPC = cSwap(%s, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
         NextItState = ((((CPSR)Spsr).it2 << 2) & 0xFC)
                 | (((CPSR)Spsr).it1 & 0x3);
+        SevMailbox = 1;
     '''
 
     microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
