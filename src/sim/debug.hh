@@ -33,7 +33,25 @@
 
 #include "base/types.hh"
 
+/** @file This file provides the definitions for some useful debugging
+ * functions. These are intended to be called from a debugger such as
+ * gdb.
+ */
+
+
+/** Cause the simulator to execute a breakpoint
+ * @param when the cycle to break
+ */
 void schedBreakCycle(Tick when);
+
+/** Cause the simulator to return to python to create a checkpoint
+ * @param when the cycle to break
+ */
+void takeCheckpoint(Tick when);
+
+/** Dump all the events currently on the event queue
+ */
+void eventqDump();
 
 int getRemoteGDBPort();
 // Remote gdb base port.  0 disables remote gdb.

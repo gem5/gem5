@@ -38,6 +38,7 @@
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
+#include "sim/sim_exit.hh"
 
 using namespace std;
 
@@ -86,6 +87,17 @@ schedBreakCycle(Tick when)
 {
     mainEventQueue.schedule(new DebugBreakEvent, when);
     warn("need to stop all queues");
+}
+
+///
+/// Function to cause the simulator to take a checkpoint from the debugger
+///
+void
+takeCheckpoint(Tick when)
+{
+    if (!when)
+        when = curTick() + 1;
+    exitSimLoop("checkpoint", 0, when, 0);
 }
 
 void
