@@ -42,11 +42,10 @@
  */
 
 #include "base/trace.hh"
-#include "cpu/intr_control.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/GIC.hh"
+#include "debug/IPI.hh"
 #include "dev/arm/gic.hh"
-#include "dev/platform.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -54,31 +53,39 @@
 Gic::Gic(const Params *p)
     : PioDevice(p),distAddr(p->dist_addr), cpuAddr(p->cpu_addr),
       distPioDelay(p->dist_pio_delay), cpuPioDelay(p->cpu_pio_delay),
-      enabled(false), itLines(p->it_lines)
+      intLatency(p->int_latency), enabled(false), itLines(p->it_lines)
 {
     itLinesLog2 = ceilLog2(itLines);
 
-    for (int x = 0; x < 8; x++) {
+    for (int x = 0; x < CPU_MAX; x++) {
         cpuEnabled[x] = false;
-        cpuPriority[x] = 0;
+        cpuPriority[x] = 0xff;
         cpuBpr[x] = 0;
         // Initialize cpu highest int
         cpuHighestInt[x] = SPURIOUS_INT;
+        postIntEvent[x] = new PostIntEvent(x, p->platform);
     }
+    DPRINTF(Interrupt, "cpuEnabled[0]=%d cpuEnabled[1]=%d\n", cpuEnabled[0],
+            cpuEnabled[1]);
 
-    for (int x = 0; x < 32; x++) {
+    for (int x = 0; x < INT_BITS_MAX; x++) {
         intEnabled[x] = 0;
         pendingInt[x] = 0;
         activeInt[x] = 0;
     }
 
-    for (int x = 0; x < 1020; x++) {
+    for (int x = 0; x < INT_LINES_MAX; x++) {
         intPriority[x] = 0;
         cpuTarget[x] = 0;
     }
 
-    for (int x = 0; x < 64; x++) {
+    for (int x = 0; x < INT_BITS_MAX*2; x++) {
         intConfig[x] = 0;
+    }
+
+    for (int x = 0; x < SGI_MAX; x++) {
+        cpuSgiActive[x] = 0;
+        cpuSgiPending[x] = 0;
     }
 }
 
@@ -117,7 +124,7 @@ Gic::readDistributor(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - distAddr;
     pkt->allocate();
 
-    DPRINTF(Interrupt, "gic distributor read register %#x\n", daddr);
+    DPRINTF(GIC, "gic distributor read register %#x\n", daddr);
 
     if (daddr >= ICDISER_ST && daddr < ICDISER_ED + 4) {
         assert((daddr-ICDISER_ST) >> 2 < 32);
@@ -152,9 +159,9 @@ Gic::readDistributor(PacketPtr pkt)
     if (daddr >= ICDIPR_ST && daddr < ICDIPR_ED + 4) {
         Addr int_num;
         int_num = daddr - ICDIPR_ST;
-        assert(int_num < 1020);
+        assert(int_num < INT_LINES_MAX);
         DPRINTF(Interrupt, "Reading interrupt priority at int# %#x \n",int_num);
-        switch(pkt->getSize()){
+        switch(pkt->getSize()) {
           case 1:
             pkt->set<uint8_t>(intPriority[int_num]);
             break;
@@ -169,25 +176,35 @@ Gic::readDistributor(PacketPtr pkt)
                                intPriority[int_num+3] << 24);
             break;
           default:
-            panic("Invalid access size while reading, priority registers in Gic: %d", pkt->getSize());
+            panic("Invalid size while reading priority regs in GIC: %d\n",
+                   pkt->getSize());
         }
         goto done;
     }
 
     if (daddr >= ICDIPTR_ST && daddr < ICDIPTR_ED + 4) {
         Addr int_num;
-        int_num = (daddr-ICDIPTR_ST) << 2;
-        assert(int_num < 1020);
+        int_num = (daddr-ICDIPTR_ST) ;
+        DPRINTF(GIC, "Reading processor target register for int# %#x \n",
+                 int_num);
+        assert(int_num < INT_LINES_MAX);
 
-        // First 31 interrupts only target single processor
+        // First 31 interrupts only target single processor (SGI)
         if (int_num > 31) {
-            pkt->set<uint32_t>(cpuTarget[int_num] |
-                               cpuTarget[int_num+1] << 8 |
-                               cpuTarget[int_num+2] << 16 |
-                               cpuTarget[int_num+3] << 24) ;
+            if (pkt->getSize() == 1) {
+                pkt->set<uint8_t>(cpuTarget[int_num]);
+            } else {
+                assert(pkt->getSize() == 4);
+                int_num = mbits(int_num, 31, 2);
+                pkt->set<uint32_t>(cpuTarget[int_num] |
+                                   cpuTarget[int_num+1] << 8 |
+                                   cpuTarget[int_num+2] << 16 |
+                                   cpuTarget[int_num+3] << 24) ;
+            }
         } else {
-            /** @todo should be processor id */
-            pkt->set<uint32_t>(0);
+            int ctx_id = pkt->req->contextId();
+            assert(ctx_id < sys->numRunningContexts());
+            pkt->set<uint32_t>(ctx_id);
         }
         goto done;
     }
@@ -206,10 +223,9 @@ Gic::readDistributor(PacketPtr pkt)
         pkt->set<uint32_t>(enabled);
         break;
       case ICDICTR:
-        /* @todo this needs to refelct the number of CPUs in the system */
         uint32_t tmp;
-        tmp = 0 << 5 | // cpu number
-              (itLines/32 -1);
+        tmp = ((sys->numRunningContexts() - 1) << 5) |
+              (itLines/INT_BITS_MAX -1);
         pkt->set<uint32_t>(tmp);
         break;
       default:
@@ -227,30 +243,59 @@ Gic::readCpu(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - cpuAddr;
     pkt->allocate();
 
-    DPRINTF(Interrupt, "gic cpu read register %#x\n", daddr);
+    assert(pkt->req->hasContextId());
+    int ctx_id = pkt->req->contextId();
+    assert(ctx_id < sys->numRunningContexts());
+
+    DPRINTF(GIC, "gic cpu read register %#x cpu context: %d\n", daddr,
+            ctx_id);
 
     switch(daddr) {
       case ICCICR:
-        pkt->set<uint32_t>(cpuEnabled[0]);
+        pkt->set<uint32_t>(cpuEnabled[ctx_id]);
         break;
       case ICCPMR:
-        pkt->set<uint32_t>(cpuPriority[0]);
+        pkt->set<uint32_t>(cpuPriority[ctx_id]);
         break;
       case ICCBPR:
-        pkt->set<uint32_t>(cpuBpr[0]);
+        pkt->set<uint32_t>(cpuBpr[ctx_id]);
         break;
       case ICCIAR:
-        DPRINTF(Interrupt, "CPU reading IAR = %d\n", cpuHighestInt[0]);
-        if(enabled && cpuEnabled[0]){
-            pkt->set<uint32_t>(cpuHighestInt[0]);
-            activeInt[intNumToWord(cpuHighestInt[0])] |=
-                1 << intNumToBit(cpuHighestInt[0]);
-            updateRunPri();
-            pendingInt[intNumToWord(cpuHighestInt[0])] &=
-                ~(1 << intNumToBit(cpuHighestInt[0]));
-            cpuHighestInt[0] = SPURIOUS_INT;
+        if (enabled && cpuEnabled[ctx_id]) {
+            int active_int = cpuHighestInt[ctx_id];
+            IAR iar = 0;
+            iar.ack_id = active_int;
+            iar.cpu_id = 0;
+            if (active_int < SGI_MAX) {
+                // this is a software interrupt from another CPU
+                if (!cpuSgiPending[active_int])
+                    panic("Interrupt %d active but no CPU generated it?\n",
+                            active_int);
+                for (int x = 0; x < CPU_MAX; x++) {
+                    // See which CPU generated the interrupt
+                    uint8_t cpugen =
+                        bits(cpuSgiPending[active_int], 7 + 8 * x, 8 * x);
+                    if (cpugen & (1 << ctx_id)) {
+                        iar.cpu_id = x;
+                        break;
+                    }
+                }
+                uint64_t sgi_num = ULL(1) << (ctx_id + 8 * iar.cpu_id);
+                cpuSgiActive[iar.ack_id] |= sgi_num;
+                cpuSgiPending[iar.ack_id] &= ~sgi_num;
+            } else {
+                uint32_t int_num = 1 << intNumToBit(cpuHighestInt[ctx_id]);
+                activeInt[intNumToWord(cpuHighestInt[ctx_id])] |= int_num;
+                updateRunPri();
+                pendingInt[intNumToWord(cpuHighestInt[ctx_id])] &= ~int_num;
+            }
+
+            DPRINTF(Interrupt,"CPU %d reading IAR.id=%d IAR.cpu=%d, iar=0x%x\n",
+                    ctx_id, iar.ack_id, iar.cpu_id, iar);
+            cpuHighestInt[ctx_id] = SPURIOUS_INT;
             updateIntState(-1);
-            platform->intrctrl->clear(0, ArmISA::INT_IRQ, 0);
+            pkt->set<uint32_t>(iar);
+            platform->intrctrl->clear(ctx_id, ArmISA::INT_IRQ, 0);
         } else {
              pkt->set<uint32_t>(SPURIOUS_INT);
         }
@@ -278,58 +323,64 @@ Gic::writeDistributor(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - distAddr;
     pkt->allocate();
 
-    DPRINTF(Interrupt, "gic distributor write register %#x size %#x\n",
-            daddr, pkt->getSize());
+    assert(pkt->req->hasContextId());
+    int ctx_id = pkt->req->contextId();
+
+    DPRINTF(GIC, "gic distributor write register %#x size %#x value %#x \n",
+            daddr, pkt->getSize(), pkt->get<uint32_t>());
 
     if (daddr >= ICDISER_ST && daddr < ICDISER_ED + 4) {
         assert((daddr-ICDISER_ST) >> 2 < 32);
-        intEnabled[(daddr-ICDISER_ST)>>2] |= pkt->get<uint32_t>();
+        intEnabled[(daddr-ICDISER_ST) >> 2] |= pkt->get<uint32_t>();
         goto done;
     }
 
     if (daddr >= ICDICER_ST && daddr < ICDICER_ED + 4) {
         assert((daddr-ICDICER_ST) >> 2 < 32);
-        intEnabled[(daddr-ICDICER_ST)>>2] &= ~pkt->get<uint32_t>();
+        intEnabled[(daddr-ICDICER_ST) >> 2] &= ~pkt->get<uint32_t>();
         goto done;
     }
 
     if (daddr >= ICDISPR_ST && daddr < ICDISPR_ED + 4) {
         assert((daddr-ICDISPR_ST) >> 2 < 32);
-        pendingInt[(daddr-ICDISPR_ST)>>2] |= pkt->get<uint32_t>();
-        updateIntState((daddr-ICDISPR_ST)>>2);
+        pendingInt[(daddr-ICDISPR_ST) >> 2] |= pkt->get<uint32_t>();
+        pendingInt[0] &= SGI_MASK; // Don't allow SGIs to be changed
+        updateIntState((daddr-ICDISPR_ST) >> 2);
         goto done;
     }
 
     if (daddr >= ICDICPR_ST && daddr < ICDICPR_ED + 4) {
         assert((daddr-ICDICPR_ST) >> 2 < 32);
-        pendingInt[(daddr-ICDICPR_ST)>>2] &= ~pkt->get<uint32_t>();
-        updateIntState((daddr-ICDICPR_ST)>>2);
+        pendingInt[(daddr-ICDICPR_ST) >> 2] &= ~pkt->get<uint32_t>();
+        pendingInt[0] &= SGI_MASK; // Don't allow SGIs to be changed
+        updateIntState((daddr-ICDICPR_ST) >> 2);
         goto done;
     }
 
     if (daddr >= ICDIPR_ST && daddr < ICDIPR_ED + 4) {
         Addr int_num = daddr - ICDIPR_ST;
-        assert(int_num < 1020);
+        assert(int_num < INT_LINES_MAX);
         uint32_t tmp;
-        switch(pkt->getSize()){
+        switch(pkt->getSize()) {
           case 1:
             tmp = pkt->get<uint8_t>();
-            intPriority[int_num] = tmp & 0xff;
+            intPriority[int_num] = bits(tmp, 7, 0);
             break;
           case 2:
             tmp = pkt->get<uint16_t>();
-            intPriority[int_num] = tmp & 0xff;
-            intPriority[int_num + 1] = (tmp >> 8) & 0xff;
+            intPriority[int_num] = bits(tmp, 7, 0);
+            intPriority[int_num + 1] = bits(tmp, 15, 8);
             break;
           case 4:
             tmp = pkt->get<uint32_t>();
-            intPriority[int_num] = tmp & 0xff;
-            intPriority[int_num + 1] = (tmp >> 8) & 0xff;
-            intPriority[int_num + 2] = (tmp >> 16) & 0xff;
-            intPriority[int_num + 3] = (tmp >> 24) & 0xff;
+            intPriority[int_num] = bits(tmp, 7, 0);
+            intPriority[int_num + 1] = bits(tmp, 15, 8);
+            intPriority[int_num + 2] = bits(tmp, 23, 16);
+            intPriority[int_num + 3] = bits(tmp, 31, 24);
             break;
           default:
-            panic("Invalid access size while writing to, priority registers in Gic: %d", pkt->getSize());
+            panic("Invalid size when writing to priority regs in Gic: %d\n",
+                   pkt->getSize());
         }
 
         updateIntState(-1);
@@ -338,16 +389,22 @@ Gic::writeDistributor(PacketPtr pkt)
     }
 
     if (daddr >= ICDIPTR_ST && daddr < ICDIPTR_ED + 4) {
-        Addr int_num = (daddr-ICDIPTR_ST) << 2;
-        assert(int_num < 1020);
-
+        Addr int_num = (daddr-ICDIPTR_ST) ;
+        assert(int_num < INT_LINES_MAX);
         // First 31 interrupts only target single processor
-        if (int_num > 31) {
-            uint32_t tmp = pkt->get<uint32_t>();
-            cpuTarget[int_num] = tmp & 0xff;
-            cpuTarget[int_num+1] = (tmp >> 8) & 0xff;
-            cpuTarget[int_num+2] = (tmp >> 16) & 0xff;
-            cpuTarget[int_num+3] = (tmp >> 24) & 0xff;
+        if (int_num >= SGI_MAX) {
+            if (pkt->getSize() == 1) {
+                uint8_t tmp = pkt->get<uint8_t>();
+                cpuTarget[int_num] = tmp & 0xff;
+            } else {
+                assert (pkt->getSize() == 4);
+                int_num = mbits(int_num, 31, 2);
+                uint32_t tmp = pkt->get<uint32_t>();
+                cpuTarget[int_num]   = bits(tmp, 7, 0);
+                cpuTarget[int_num+1] = bits(tmp, 15, 8);
+                cpuTarget[int_num+2] = bits(tmp, 23, 16);
+                cpuTarget[int_num+3] = bits(tmp, 31, 24);
+            }
             updateIntState((daddr-ICDIPTR_ST)>>2);
         }
         goto done;
@@ -356,6 +413,8 @@ Gic::writeDistributor(PacketPtr pkt)
     if (daddr >= ICDICFR_ST && daddr < ICDICFR_ED + 4) {
         assert((daddr-ICDICFR_ST) >> 2 < 64);
         intConfig[(daddr-ICDICFR_ST)>>2] = pkt->get<uint32_t>();
+        if (pkt->get<uint32_t>() & NN_CONFIG_MASK)
+            warn("GIC N:N mode selected and not supported at this time\n");
         goto done;
     }
 
@@ -365,7 +424,7 @@ Gic::writeDistributor(PacketPtr pkt)
         DPRINTF(Interrupt, "Distributor enable flag set to = %d\n", enabled);
         break;
       case ICDSGIR:
-        softInt(pkt->get<uint32_t>());
+        softInt(ctx_id, pkt->get<uint32_t>());
         break;
       default:
         panic("Tried to write Gic distributor at offset %#x\n", daddr);
@@ -383,97 +442,181 @@ Gic::writeCpu(PacketPtr pkt)
     Addr daddr = pkt->getAddr() - cpuAddr;
     pkt->allocate();
 
-    DPRINTF(Interrupt, "gic cpu write register %#x val: %#x\n",
-            daddr, pkt->get<uint32_t>());
+    assert(pkt->req->hasContextId());
+    int ctx_id = pkt->req->contextId();
+    IAR iar;
+
+    DPRINTF(GIC, "gic cpu write register cpu:%d %#x val: %#x\n",
+            ctx_id, daddr, pkt->get<uint32_t>());
 
     switch(daddr) {
       case ICCICR:
-        cpuEnabled[0] = pkt->get<uint32_t>();
-        updateIntState(-1);
+        cpuEnabled[ctx_id] = pkt->get<uint32_t>();
         break;
       case ICCPMR:
-        cpuPriority[0] = pkt->get<uint32_t>();
-        updateIntState(-1);
+        cpuPriority[ctx_id] = pkt->get<uint32_t>();
         break;
       case ICCBPR:
-        cpuBpr[0] = pkt->get<uint32_t>();
-        updateIntState(-1);
+        cpuBpr[ctx_id] = pkt->get<uint32_t>();
         break;
       case ICCEOIR:
-        uint32_t tmp;
-        tmp = pkt->get<uint32_t>();
-        if (!(activeInt[intNumToWord(tmp)] & (1 << intNumToBit(tmp))))
-            panic("Done handling interrupt that isn't active?\n");
-        activeInt[intNumToWord(tmp)] &= ~(1 << intNumToBit(tmp));
+        iar = pkt->get<uint32_t>();
+        if (iar.ack_id < SGI_MAX) {
+            // Clear out the bit that corrseponds to the cleared int
+            uint64_t clr_int = ULL(1) << (ctx_id + 8 * iar.cpu_id);
+            if (!(cpuSgiActive[iar.ack_id] & clr_int))
+                panic("Done handling a SGI that isn't active?\n");
+            cpuSgiActive[iar.ack_id] &= ~clr_int;
+        } else {
+            uint32_t int_num = 1 << intNumToBit(iar.ack_id);
+            if (!(activeInt[intNumToWord(iar.ack_id)] & int_num))
+                panic("Done handling interrupt that isn't active?\n");
+            activeInt[intNumToWord(iar.ack_id)] &= ~int_num;
+        }
         updateRunPri();
-        DPRINTF(Interrupt, "CPU done handling interrupt IAR = %d\n", tmp);
+        DPRINTF(Interrupt, "CPU %d done handling intr IAR = %d from cpu %d\n",
+                ctx_id, iar.ack_id, iar.cpu_id);
         break;
       default:
         panic("Tried to write Gic cpu at offset %#x\n", daddr);
         break;
     }
+    if (cpuEnabled[ctx_id]) updateIntState(-1);
     pkt->makeAtomicResponse();
     return cpuPioDelay;
 }
 
 void
-Gic::softInt(SWI swi)
+Gic::softInt(int ctx_id, SWI swi)
 {
-    warn("Should be causing software interrupt");
+    switch (swi.list_type) {
+      case 1:
+        // interrupt all
+        uint8_t cpu_list;
+        cpu_list = 0;
+        for (int x = 0; x < CPU_MAX; x++)
+            cpu_list |= cpuEnabled[x] ? 1 << x : 0;
+        swi.cpu_list = cpu_list;
+        break;
+      case 2:
+        // interrupt requesting cpu only
+        swi.cpu_list = 1 << ctx_id;
+        break;
+        // else interrupt cpus specified
+    }
+
+    DPRINTF(IPI, "Generating softIRQ from CPU %d for %#x\n", ctx_id,
+            swi.cpu_list);
+    for (int i = 0; i < CPU_MAX; i++) {
+        DPRINTF(IPI, "Processing CPU %d\n", i);
+        if (!cpuEnabled[i])
+            continue;
+        if (swi.cpu_list & (1 << i))
+            cpuSgiPending[swi.sgi_id] |= (1 << i) << (8 * ctx_id);
+        DPRINTF(IPI, "SGI[%d]=%#x\n", swi.sgi_id, cpuSgiPending[swi.sgi_id]);
+    }
+    updateIntState(-1);
+}
+
+uint64_t
+Gic::genSwiMask(int cpu)
+{
+    if (cpu > 7)
+        panic("Invalid CPU ID\n");
+    return ULL(0x0101010101010101) << cpu;
 }
 
 void
 Gic::updateIntState(int hint)
 {
-    /*@todo use hint to do less work. */
-    int highest_int = SPURIOUS_INT;
-    // Priorities below that set in ICCPMR can be ignored
-    uint8_t highest_pri = cpuPriority[0];
+    for (int cpu = 0; cpu < CPU_MAX; cpu++) {
+        if (!cpuEnabled[cpu])
+            continue;
+        if (cpu >= sys->numContexts())
+            break;
 
-    for (int x = 0; x < (itLines/32) ; x++) {
-        if (intEnabled[x] & pendingInt[x]) {
-            for (int y = 0; y < 32; y++) {
-                if (bits(intEnabled[x], y) & bits(pendingInt[x], y))
-                    if (intPriority[x*32+y] < highest_pri) {
-                        highest_pri = intPriority[x*32+y];
-                        highest_int = x*32 + y;
-                    }
+        /*@todo use hint to do less work. */
+        int highest_int = SPURIOUS_INT;
+        // Priorities below that set in ICCPMR can be ignored
+        uint8_t highest_pri = cpuPriority[cpu];
+
+        // Check SGIs
+        for (int swi = 0; swi < SGI_MAX; swi++) {
+            if (!cpuSgiPending[swi])
+                continue;
+            if (cpuSgiPending[swi] & genSwiMask(cpu))
+                if (highest_pri > intPriority[swi]) {
+                    highest_pri = intPriority[swi];
+                    highest_int = swi;
+                }
+        }
+
+        bool mp_sys = sys->numRunningContexts() > 1;
+        // Check other ints
+        for (int x = 0; x < (itLines/INT_BITS_MAX) ; x++) {
+            if (intEnabled[x] & pendingInt[x]) {
+                for (int y = 0; y < INT_BITS_MAX; y++) {
+                   uint32_t int_nm = x * INT_BITS_MAX + y;
+                   DPRINTF(GIC, "Checking for interrupt# %d \n",int_nm);
+                    /* Set current pending int as highest int for current cpu
+                       if the interrupt's priority higher than current prioirty
+                       and if currrent cpu is the target (for mp configs only)
+                     */
+                    if ((bits(intEnabled[x], y) & bits(pendingInt[x], y)) &&
+                        (intPriority[int_nm] < highest_pri))
+                        if (mp_sys || (cpuTarget[int_nm] & (1 << cpu))) {
+                            highest_pri = intPriority[int_nm];
+                            highest_int = int_nm;
+                        }
+                }
             }
         }
-    }
 
-    if (highest_int == SPURIOUS_INT)
-        return;
+        cpuHighestInt[cpu] = highest_int;
 
-    cpuHighestInt[0] = highest_int;
+        if (highest_int == SPURIOUS_INT)
+            continue;
 
+        /* @todo make this work for more than one cpu, need to handle 1:N, N:N
+         * models */
+        if (enabled && cpuEnabled[cpu] && (highest_pri < cpuPriority[cpu]) &&
+            !(activeInt[intNumToWord(highest_int)]
+            & (1 << intNumToBit(highest_int)))) {
 
-    /* @todo make this work for more than one cpu, need to handle 1:N, N:N
-     * models */
-    if (enabled && cpuEnabled[0] && (highest_pri < cpuPriority[0])) {
-        /* @todo delay interrupt by some time to deal with calculation delay */
-        /* @todo only interrupt if we've haven't already interrupted for this
-         * int !!!!!!!!!! */
-        DPRINTF(Interrupt, "Posting interrupt %d to cpu0\n", highest_int);
-        platform->intrctrl->post(0, ArmISA::INT_IRQ, 0);
+            DPRINTF(Interrupt, "Posting interrupt %d to cpu%d\n", highest_int,
+                    cpu);
+            postInt(cpu, curTick() + intLatency);
+        }
     }
 }
 
 void
 Gic::updateRunPri()
 {
-    uint8_t maxPriority = 0xff;
-    for (int i = 0 ; i < itLines ; i++){
-        if ( activeInt[intNumToWord(i)] & (1 << intNumToBit(i))){
-            if (intPriority[i] < maxPriority) maxPriority = intPriority[i];
+    for (int cpu = 0; cpu < CPU_MAX; cpu++) {
+        uint8_t maxPriority = 0xff;
+        for (int i = 0 ; i < itLines ; i++){
+            if (i < SGI_MAX) {
+                if ((cpuSgiActive[i] & genSwiMask(cpu)) &&
+                        (intPriority[i] < maxPriority))
+                    maxPriority = intPriority[i];
+            } else {
+                if (activeInt[intNumToWord(i)] & (1 << intNumToBit(i)))
+                    if (intPriority[i] < maxPriority)
+                        maxPriority = intPriority[i];
+            }
         }
+        iccrpr[cpu] = maxPriority;
     }
-    iccrpr[0] = maxPriority;
 }
+
 void
 Gic::sendInt(uint32_t num)
 {
-    DPRINTF(Interrupt, "Received Interupt number %d\n", num);
+    DPRINTF(Interrupt, "Received Interupt number %d,  cpuTarget %#x: \n",
+            num, cpuTarget[num]);
+    if (cpuTarget[num] & (cpuTarget[num] - 1))
+        panic("Multiple targets for peripheral interrupts is not supported\n");
     pendingInt[intNumToWord(num)] |= 1 << intNumToBit(num);
     updateIntState(intNumToWord(num));
 
@@ -483,6 +626,13 @@ void
 Gic::clearInt(uint32_t number)
 {
     /* @todo assume edge triggered only at the moment. Nothing to do. */
+}
+
+void
+Gic::postInt(uint32_t cpu, Tick when)
+{
+    if (!(postIntEvent[cpu]->scheduled()))
+        eventq->schedule(postIntEvent[cpu], when);
 }
 
 void
@@ -506,18 +656,29 @@ Gic::serialize(std::ostream &os)
     SERIALIZE_SCALAR(enabled);
     SERIALIZE_SCALAR(itLines);
     SERIALIZE_SCALAR(itLinesLog2);
-    SERIALIZE_ARRAY(intEnabled, 32);
-    SERIALIZE_ARRAY(pendingInt, 32);
-    SERIALIZE_ARRAY(activeInt, 32);
-    SERIALIZE_ARRAY(iccrpr, 8);
-    SERIALIZE_ARRAY(intPriority, 1020);
-    SERIALIZE_ARRAY(cpuTarget, 1020);
-    SERIALIZE_ARRAY(intConfig, 64);
-    SERIALIZE_ARRAY(cpuEnabled, 8);
-    SERIALIZE_ARRAY(cpuPriority, 8);
-    SERIALIZE_ARRAY(cpuBpr, 8);
-    SERIALIZE_ARRAY(cpuHighestInt, 8);
+    SERIALIZE_ARRAY(intEnabled, INT_BITS_MAX);
+    SERIALIZE_ARRAY(pendingInt, INT_BITS_MAX);
+    SERIALIZE_ARRAY(activeInt, INT_BITS_MAX);
+    SERIALIZE_ARRAY(iccrpr, CPU_MAX);
+    SERIALIZE_ARRAY(intPriority, INT_LINES_MAX);
+    SERIALIZE_ARRAY(cpuTarget, INT_LINES_MAX);
+    SERIALIZE_ARRAY(intConfig, INT_BITS_MAX * 2);
+    SERIALIZE_ARRAY(cpuEnabled, CPU_MAX);
+    SERIALIZE_ARRAY(cpuPriority, CPU_MAX);
+    SERIALIZE_ARRAY(cpuBpr, CPU_MAX);
+    SERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
+    SERIALIZE_ARRAY(cpuSgiActive, SGI_MAX);
+    SERIALIZE_ARRAY(cpuSgiPending, SGI_MAX);
     SERIALIZE_SCALAR(irqEnable);
+    Tick interrupt_time[CPU_MAX];
+    for (uint32_t cpu = 0; cpu < CPU_MAX; cpu++) {
+        interrupt_time[cpu] = 0;
+        if (postIntEvent[cpu]->scheduled()) {
+            interrupt_time[cpu] = postIntEvent[cpu]->when();
+        }
+    }
+    SERIALIZE_ARRAY(interrupt_time, CPU_MAX);
+
 }
 
 void
@@ -532,18 +693,29 @@ Gic::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(enabled);
     UNSERIALIZE_SCALAR(itLines);
     UNSERIALIZE_SCALAR(itLinesLog2);
-    UNSERIALIZE_ARRAY(intEnabled, 32);
-    UNSERIALIZE_ARRAY(pendingInt, 32);
-    UNSERIALIZE_ARRAY(activeInt, 32);
-    UNSERIALIZE_ARRAY(iccrpr, 8);
-    UNSERIALIZE_ARRAY(intPriority, 1020);
-    UNSERIALIZE_ARRAY(cpuTarget, 1020);
-    UNSERIALIZE_ARRAY(intConfig, 64);
-    UNSERIALIZE_ARRAY(cpuEnabled, 8);
-    UNSERIALIZE_ARRAY(cpuPriority, 8);
-    UNSERIALIZE_ARRAY(cpuBpr, 8);
-    UNSERIALIZE_ARRAY(cpuHighestInt, 8);
+    UNSERIALIZE_ARRAY(intEnabled, INT_BITS_MAX);
+    UNSERIALIZE_ARRAY(pendingInt, INT_BITS_MAX);
+    UNSERIALIZE_ARRAY(activeInt, INT_BITS_MAX);
+    UNSERIALIZE_ARRAY(iccrpr, CPU_MAX);
+    UNSERIALIZE_ARRAY(intPriority, INT_LINES_MAX);
+    UNSERIALIZE_ARRAY(cpuTarget, INT_LINES_MAX);
+    UNSERIALIZE_ARRAY(intConfig, INT_BITS_MAX * 2);
+    UNSERIALIZE_ARRAY(cpuEnabled, CPU_MAX);
+    UNSERIALIZE_ARRAY(cpuPriority, CPU_MAX);
+    UNSERIALIZE_ARRAY(cpuBpr, CPU_MAX);
+    UNSERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
+    UNSERIALIZE_ARRAY(cpuSgiActive, SGI_MAX);
+    UNSERIALIZE_ARRAY(cpuSgiPending, SGI_MAX);
     UNSERIALIZE_SCALAR(irqEnable);
+
+    Tick interrupt_time[CPU_MAX];
+    UNSERIALIZE_ARRAY(interrupt_time, CPU_MAX);
+
+    for (uint32_t cpu = 0; cpu < CPU_MAX; cpu++) {
+        if (interrupt_time[cpu])
+            schedule(postIntEvent[cpu], interrupt_time[cpu]);
+    }
+
 }
 
 Gic *
@@ -557,8 +729,8 @@ void
 Gic::driveSPI(unsigned int spiVect)
 {
     DPRINTF(GIC, "Received SPI Vector:%x Enable: %d\n", spiVect, irqEnable);
-    if( irqEnable && enabled ){
-        pendingInt[1] |= spiVect;
+    pendingInt[1] |= spiVect;
+    if (irqEnable && enabled) {
         updateIntState(-1);
     }
 }
@@ -567,13 +739,15 @@ void
 Gic::driveIrqEn( bool state)
 {
     irqEnable = state;
+    DPRINTF(GIC, " Enabling Irq\n");
+    updateIntState(-1);
 }
 
 void
 Gic::driveLegIRQ(bool state)
 {
-    if (irqEnable && !(!enabled && cpuEnabled[0])){
-        if(state){
+    if (irqEnable && !(!enabled && cpuEnabled[0])) {
+        if (state) {
             DPRINTF(GIC, "Driving Legacy Irq\n");
             platform->intrctrl->post(0, ArmISA::INT_IRQ, 0);
         }

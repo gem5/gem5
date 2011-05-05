@@ -51,6 +51,8 @@
 #include "base/bitunion.hh"
 #include "base/range.hh"
 #include "dev/io_device.hh"
+#include "dev/platform.hh"
+#include "cpu/intr_control.hh"
 #include "params/Gic.hh"
 
 /** @todo this code only assumes one processor for now. Low word
@@ -97,13 +99,29 @@ class Gic : public PioDevice
     static const int ICCIIDR = 0xfc; // cpu interface id register
     static const int CPU_SIZE  = 0xff;
 
+    static const int SGI_MAX = 16;  // Number of Software Gen Interrupts
+
+    /** Mask off SGI's when setting/clearing pending bits */
+    static const int SGI_MASK = 0xFFFF0000;
+
+    /** Mask for bits that config N:N mode in ICDICFR's */
+    static const int NN_CONFIG_MASK = 0x55555555;
+
+    static const int CPU_MAX = 8;   // Max number of supported CPU interfaces
     static const int SPURIOUS_INT = 1023;
+    static const int INT_BITS_MAX = 32;
+    static const int INT_LINES_MAX = 1020;
 
     BitUnion32(SWI)
         Bitfield<3,0> sgi_id;
         Bitfield<23,16> cpu_list;
         Bitfield<25,24> list_type;
     EndBitUnion(SWI)
+
+    BitUnion32(IAR)
+        Bitfield<9,0> ack_id;
+        Bitfield<12,10> cpu_id;
+    EndBitUnion(IAR)
 
     /** Distributor address GIC listens at */
     Addr distAddr;
@@ -118,6 +136,9 @@ class Gic : public PioDevice
     /** Latency for a cpu operation */
     Tick cpuPioDelay;
 
+    /** Latency for a interrupt to get to CPU */
+    Tick intLatency;
+
     /** Gic enabled */
     bool enabled;
 
@@ -128,44 +149,51 @@ class Gic : public PioDevice
 
     /** interrupt enable bits for all possible 1020 interupts.
      * one bit per interrupt, 32 bit per word = 32 words */
-    uint32_t intEnabled[32];
+    uint32_t intEnabled[INT_BITS_MAX];
 
     /** interrupt pending bits for all possible 1020 interupts.
      * one bit per interrupt, 32 bit per word = 32 words */
-    uint32_t pendingInt[32];
+    uint32_t pendingInt[INT_BITS_MAX];
 
     /** interrupt active bits for all possible 1020 interupts.
      * one bit per interrupt, 32 bit per word = 32 words */
-    uint32_t activeInt[32];
+    uint32_t activeInt[INT_BITS_MAX];
 
     /** read only running priroity register, 1 per cpu*/
-    uint32_t iccrpr[8];
+    uint32_t iccrpr[CPU_MAX];
 
     /** an 8 bit priority (lower is higher priority) for each
      * of the 1020 possible supported interrupts.
      */
-    uint8_t intPriority[1020];
+    uint8_t intPriority[INT_LINES_MAX];
 
     /** an 8 bit cpu target id for each shared peripheral interrupt
      * of the 1020 possible supported interrupts.
      */
-    uint8_t cpuTarget[1020];
+    uint8_t cpuTarget[INT_LINES_MAX];
 
     /** 2 bit per interrupt signaling if it's level or edge sensitive
      * and if it is 1:N or N:N */
-    uint32_t intConfig[64];
+    uint32_t intConfig[INT_BITS_MAX*2];
 
     /** CPU enabled */
-    bool cpuEnabled[8];
+    bool cpuEnabled[CPU_MAX];
 
     /** CPU priority */
-    uint8_t cpuPriority[8];
+    uint8_t cpuPriority[CPU_MAX];
 
     /** Binary point registers */
-    uint8_t cpuBpr[8];
+    uint8_t cpuBpr[CPU_MAX];
 
     /** highest interrupt that is interrupting CPU */
-    uint32_t cpuHighestInt[8];
+    uint32_t cpuHighestInt[CPU_MAX];
+
+    /** One bit per cpu per software interrupt that is pending for each possible
+     * sgi source. Indexed by SGI number. Each byte in generating cpu id and
+     * bits in position is destination id. e.g. 0x4 = CPU 0 generated interrupt
+     * for CPU 2. */
+    uint64_t cpuSgiPending[SGI_MAX];
+    uint64_t cpuSgiActive[SGI_MAX];
 
     /** IRQ Enable Used for debug */
     bool irqEnable;
@@ -173,7 +201,7 @@ class Gic : public PioDevice
     /** software generated interrupt
      * @param data data to decode that indicates which cpus to interrupt
      */
-    void softInt(SWI swi);
+    void softInt(int ctx_id, SWI swi);
 
     /** See if some processor interrupt flags need to be enabled/disabled
      * @param hint which set of interrupts needs to be checked
@@ -184,8 +212,27 @@ class Gic : public PioDevice
      *  active interrupt*/
     void updateRunPri();
 
+    /** generate a bit mask to check cpuSgi for an interrupt. */
+    uint64_t genSwiMask(int cpu);
+
     int intNumToWord(int num) const { return num >> 5; }
     int intNumToBit(int num) const { return num % 32; }
+
+    /** Event definition to post interrupt to CPU after a delay
+    */
+    class PostIntEvent : public Event
+    {
+      private:
+        uint32_t cpu;
+        Platform *platform;
+      public:
+        PostIntEvent( uint32_t c, Platform* p)
+            : cpu(c), platform(p)
+        { }
+        void process() { platform->intrctrl->post(cpu, ArmISA::INT_IRQ, 0);}
+        const char *description() const { return "Post Interrupt to CPU"; }
+    };
+    PostIntEvent *postIntEvent[CPU_MAX];
 
   public:
    typedef GicParams Params;
@@ -241,6 +288,10 @@ class Gic : public PioDevice
      * Depending on the configuration, the gic may de-assert it's cpu line
      * @param number number of interrupt to send */
     void clearInt(uint32_t number);
+
+    /** Post an interrupt to a CPU
+     */
+    void postInt(uint32_t cpu, Tick when);
 
     /* Various functions fer testing and debugging */
     void driveSPI(uint32_t spi);
