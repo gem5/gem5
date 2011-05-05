@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 116803                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 223612                       # Number of bytes of host memory used
-host_seconds                                  4908.63                       # Real time elapsed on the host
-host_tick_rate                               67784916                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  95018                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 268868                       # Number of bytes of host memory used
+host_seconds                                  6034.01                       # Real time elapsed on the host
+host_tick_rate                               55142639                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   573342397                       # Number of instructions simulated
 sim_seconds                                  0.332731                       # Number of seconds simulated
@@ -510,15 +510,15 @@ system.cpu.rename.IQFullEvents                9081964                       # Nu
 system.cpu.rename.IdleCycles                293899856                       # Number of cycles rename is idle
 system.cpu.rename.LSQFullEvents              10512591                       # Number of times rename has blocked due to LSQ full
 system.cpu.rename.ROBFullEvents                   133                       # Number of times rename has blocked due to ROB full
-system.cpu.rename.RenameLookups            2673538298                       # Number of register rename lookups that rename has made
+system.cpu.rename.RenameLookups            2673538381                       # Number of register rename lookups that rename has made
 system.cpu.rename.RenamedInsts             1068521543                       # Number of instructions processed by rename
-system.cpu.rename.RenamedOperands           798521782                       # Number of destination operands rename has renamed
+system.cpu.rename.RenamedOperands           798521865                       # Number of destination operands rename has renamed
 system.cpu.rename.RunCycles                 223635059                       # Number of cycles rename is running
 system.cpu.rename.SquashCycles               57332647                       # Number of cycles rename is squashing
 system.cpu.rename.UnblockCycles              24492193                       # Number of cycles rename is unblocking
-system.cpu.rename.UndoneMaps                350028044                       # Number of HB maps that are undone due to squashing
+system.cpu.rename.UndoneMaps                350028127                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.fp_rename_lookups              1141                       # Number of floating rename lookups
-system.cpu.rename.int_rename_lookups       2673537157                       # Number of integer rename lookups
+system.cpu.rename.int_rename_lookups       2673537240                       # Number of integer rename lookups
 system.cpu.rename.serializeStallCycles       49776793                       # count of cycles rename stalled for serializing inst
 system.cpu.rename.serializingInsts            2837350                       # count of serializing insts renamed
 system.cpu.rename.skidInsts                  62579735                       # count of insts added to the skid buffer

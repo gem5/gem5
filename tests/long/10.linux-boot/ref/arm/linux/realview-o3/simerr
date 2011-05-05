@@ -8,16 +8,12 @@ warn: The clidr register always reports 0 caches.
 For more information see: http://www.m5sim.org/warn/23a3c326
 warn: The csselr register isn't implemented.
 For more information see: http://www.m5sim.org/warn/c0c486b8
-warn: Need to flush all TLBs in MP
-For more information see: http://www.m5sim.org/warn/6cccf999
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
 warn: The ccsidr register isn't implemented and always reads as 0.
 For more information see: http://www.m5sim.org/warn/2c4acb9c
 warn: 	instruction 'mcr dccimvac' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Need to flush all TLBs in MP
-For more information see: http://www.m5sim.org/warn/6cccf999
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
 warn: 	instruction 'mcr dccmvau' unimplemented
@@ -36,8 +32,6 @@ warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
-warn: Need to flush all TLBs in MP
-For more information see: http://www.m5sim.org/warn/6cccf999
 warn: 	instruction 'mcr bpiall' unimplemented
 For more information see: http://www.m5sim.org/warn/21b09adb
 hack: be nice to actually delete the event here

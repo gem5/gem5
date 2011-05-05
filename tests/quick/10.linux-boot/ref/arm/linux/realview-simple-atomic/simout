@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May  1 2011 21:51:08
-M5 started May  1 2011 21:51:14
+M5 compiled May  2 2011 15:06:32
+M5 started May  2 2011 15:06:36
 M5 executing on u200439-lin.austin.arm.com
 command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-atomic -re tests/run.py build/ARM_FS/tests/fast/quick/10.linux-boot/arm/linux/realview-simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux.arm
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 26341084000 because m5_exit instruction encountered
+Exiting @ tick 26344863500 because m5_exit instruction encountered
