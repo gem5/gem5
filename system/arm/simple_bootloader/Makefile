@@ -34,25 +34,25 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Ali Saidi
+#          Prakash Ramrakhyani
 
-# Need to have CROSS_COMPILE set to /path/to/bin/arm-none-eabi-
-# arm-unknown-linux-gnu- might also work
-#
-#
 
-CROSS_COMPILE=arm-none-eabi-
+# Need to have CROSS_COMPILE set to /path/to/bin/arm-unknown-linux-gnu-
+# or have arm-unknown-linux-gnu in your path
+
+CROSS_COMPILE?=arm-none-linux-gnueabi-
 
 CC=$(CROSS_COMPILE)gcc
 CPP=$(CROSS_COMPILE)g++
 LD=$(CROSS_COMPILE)ld
 
-all: boot
+all: boot.arm
 
-boot.o: boot.S
-	$(CC) -mfloat-abi=softfp -march=armv7-a -mfpu=vfpv3 -mthumb -fno-builtin -nostdinc -o boot.o -c boot.S
+boot.o: simple.S
+	$(CC) -mfloat-abi=softfp -march=armv7-a -fno-builtin -nostdinc -o boot.o -c simple.S
 
 boot.arm: boot.o
-	$(LD) -o boot.arm -N -Ttext 0 boot.o -non_shared -static
+	$(LD) -o boot.arm -N -Ttext 0x80000000 boot.o -non_shared -static
 
 
 clean:	

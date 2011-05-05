@@ -44,7 +44,7 @@
  *
  * Upon executing this code:
  * r0 = 0, r1 = machine number, r2 = atags ptr
- * r3 = kernel start address
+ * r3 = kernel start address, r4 = GIC address, r5 = flag register address
  *
  * CPU 0 should branch to the kernel start address and it's done with
  * the boot loader. Other CPUs need to start in a wfi loop. When CPU0 sends
@@ -56,16 +56,27 @@
 .extern	main
 _start:
 _entry:
-    mrc p15, 0, r4, c0, c0, 5 // get the MPIDR register
-    uxtb r4, r4               // isolate the lower 8 bits (affinity lvl 1)
-    adds r4, r4, #0           // set flags for branch
+    b bootldr // All the interrupt vectors jump to the boot loader
+    b bootldr
+    b bootldr
+    b bootldr
+    b bootldr
+    b bootldr
+    b bootldr
+    b bootldr
+    b bootldr
+
+bootldr:
+    mrc p15, 0, r8, c0, c0, 5 // get the MPIDR register
+    uxtb r8, r8               // isolate the lower 8 bits (affinity lvl 1)
+    adds r8, r8, #0           // set flags for branch
     bxeq r3                   // if it's 0 (CPU 0), branch to kernel
+    mov  r8, #1
+    str  r8, [r4, #0]         //  Enable CPU interface on GIC
+    wfi                       //  wait for an interrupt
 pen:
-    wfi                       // otherwise wait for an interrupt
-    mov r4, #0x30             // Build address of the system controller
-    movt r4, #0x1000          // flag register r4 =  0x10000030
-    ldr r5, [r4]              // load the value
-    movs r5, r5               // set the flags on this value
+    ldr r8, [r5]              // load the value
+    movs r8, r8               // set the flags on this value
     beq pen                   // if it's zero try again
-    bx r5                     // Jump to where we've been told
+    bx r8                     // Jump to where we've been told
     bkpt                      // We should never get here
