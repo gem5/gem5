@@ -235,6 +235,13 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
             self.physmem = PhysicalMemory(range = AddrRange(Addr('256MB')),
                                           zero = True)
             boot_flags += "mem=256MB root=/dev/sda1 "
+            self.nvmem = PhysicalMemory(range = AddrRange(Addr('2GB'),
+                                        size = '64MB'), zero = True)
+            self.nvmem.port = self.membus.port
+            self.boot_loader = binary('boot.arm')
+            self.boot_loader_mem = self.nvmem
+            self.gic_cpu_addr = self.realview.gic.cpu_addr
+            self.flags_addr = self.realview.realview_io.pio_addr + 0x30
         else:
             self.physmem = PhysicalMemory(range = AddrRange(Addr('128MB')),
                                           zero = True)
@@ -244,6 +251,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
             self.diskmem.port = self.membus.port
             boot_flags +=  "mem=128MB slram=slram0,0x8000000,+0x8000000 " + \
                             "mtdparts=slram0:- root=/dev/mtdblock0 "
+
         if mdesc.disk().count('android'):
             boot_flags += "init=/init "
         self.boot_osflags = boot_flags
