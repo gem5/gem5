@@ -70,6 +70,9 @@ class AmbaDmaDevice(DmaDevice):
     int_num = Param.UInt32("Interrupt number that connects to GIC")
     amba_id = Param.UInt32("ID of AMBA device for kernel detection")
 
+class A9SCU(BasicPioDevice):
+    type = 'A9SCU'
+
 class RealViewCtrl(BasicPioDevice):
     type = 'RealViewCtrl'
     proc_id = Param.UInt32(0x0C000000, "Platform ID")
@@ -132,6 +135,7 @@ class RealViewPBX(RealView):
     clcd = Pl111(pio_addr=0x10020000, int_num=55)
     kmi0   = Pl050(pio_addr=0x10006000, int_num=52)
     kmi1   = Pl050(pio_addr=0x10007000, int_num=53, is_mouse=True)
+    a9scu  = A9SCU(pio_addr=0x1f000000)
     cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=0,
                             io_shift = 1, ctrl_offset = 2, Command = 0x1,
                             BAR0 = 0x18000000, BAR0Size = '16B',
@@ -162,6 +166,7 @@ class RealViewPBX(RealView):
     def attachOnChipIO(self, bus):
        self.gic.pio = bus.port
        self.l2x0_fake.pio = bus.port
+       self.a9scu.pio = bus.port
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
