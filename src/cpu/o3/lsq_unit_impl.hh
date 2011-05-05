@@ -465,8 +465,7 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
         Addr ld_eff_addr2 =
             (ld_inst->effAddr + ld_inst->effSize - 1) >> depCheckShift;
 
-        if ((inst_eff_addr2 > ld_eff_addr1 && inst_eff_addr1 < ld_eff_addr2) ||
-               inst_eff_addr1 == ld_eff_addr1) {
+        if (inst_eff_addr2 >= ld_eff_addr1 && inst_eff_addr1 <= ld_eff_addr2) {
             // A load/store incorrectly passed this load/store.
             // Check if we already have a violator, or if it's newer
             // squash and refetch.
