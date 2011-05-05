@@ -2349,8 +2349,8 @@ let {{
               case 0x7:
                 if (opc3 == 0x3) {
                     if (single) {
-                        vm = (IntRegIndex)(bits(machInst, 5) |
-                                (bits(machInst, 3, 0) << 1));
+                        vd = (IntRegIndex)((bits(machInst, 22) << 5) |
+                                (bits(machInst, 15, 12) << 1));
                         return new VcvtFpSFpD(machInst, vd, vm);
                     } else {
                         vd = (IntRegIndex)(bits(machInst, 22) |
