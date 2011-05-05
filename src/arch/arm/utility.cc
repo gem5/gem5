@@ -60,8 +60,7 @@ initCPU(ThreadContext *tc, int cpuId)
     // FPEXC.EN = 0
     
     static Fault reset = new Reset;
-    if (cpuId == 0)
-        reset->invoke(tc);
+    reset->invoke(tc);
 }
 
 uint64_t

@@ -43,20 +43,73 @@
 #include <iostream>
 
 #include "arch/arm/system.hh"
+#include "base/loader/object_file.hh"
+#include "base/loader/symtab.hh"
+#include "cpu/thread_context.hh"
+#include "mem/physical.hh"
 
 using namespace std;
 using namespace Linux;
 
 ArmSystem::ArmSystem(Params *p)
-    : System(p)
+    : System(p), bootldr(NULL)
 {
     debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
 
+    if ((p->boot_loader == "") != (p->boot_loader_mem == NULL))
+        fatal("If boot_loader is specifed, memory to load it must be also.\n");
+
+    if (p->boot_loader != "") {
+        bootldr = createObjectFile(p->boot_loader);
+
+        if (!bootldr)
+            fatal("Could not read bootloader: %s\n", p->boot_loader);
+
+        Port *mem_port;
+        FunctionalPort fp(name() + "-fport");
+        mem_port = p->boot_loader_mem->getPort("functional");
+        fp.setPeer(mem_port);
+        mem_port->setPeer(&fp);
+
+        bootldr->loadSections(&fp);
+        bootldr->loadGlobalSymbols(debugSymbolTable);
+
+        uint8_t jump_to_bl[] =
+        {
+            0x07, 0xf0, 0xa0, 0xe1  // branch to r7
+        };
+        functionalPort->writeBlob(0x0, jump_to_bl, sizeof(jump_to_bl));
+
+        inform("Using bootloader at address %#x\n", bootldr->entryPoint());
+    }
+}
+
+void
+ArmSystem::initState()
+{
+    System::initState();
+    if (bootldr) {
+        // Put the address of the boot loader into r7 so we know
+        // where to branch to after the reset fault
+        // All other values needed by the boot loader to know what to do
+        for (int i = 0; i < threadContexts.size(); i++) {
+            threadContexts[i]->setIntReg(3, kernelEntry & loadAddrMask);
+            threadContexts[i]->setIntReg(4, params()->gic_cpu_addr);
+            threadContexts[i]->setIntReg(5, params()->flags_addr);
+            threadContexts[i]->setIntReg(7, bootldr->entryPoint());
+        }
+        if (!params()->gic_cpu_addr || !params()->flags_addr)
+            fatal("gic_cpu_addr && flags_addr must be set with bootloader\n");
+    } else {
+        // Set the initial PC to be at start of the kernel code
+        threadContexts[0]->pcState(kernelEntry & loadAddrMask);
+    }
 }
 
 ArmSystem::~ArmSystem()
 {
-    delete debugPrintkEvent;
+    if (debugPrintkEvent)
+        delete debugPrintkEvent;
 }
 
 

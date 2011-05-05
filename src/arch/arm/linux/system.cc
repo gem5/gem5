@@ -123,15 +123,12 @@ void
 LinuxArmSystem::initState()
 {
     ArmSystem::initState();
-    ThreadContext *tc = threadContexts[0];
 
-    // Set the initial PC to be at start of the kernel code
-    tc->pcState(tc->getSystemPtr()->kernelEntry & loadAddrMask);
-
-    // Setup the machine type
-    tc->setIntReg(0, 0);
-    tc->setIntReg(1, params()->machine_type);
-    tc->setIntReg(2, ParamsList);
+    for (int i = 0; i < threadContexts.size(); i++) {
+        threadContexts[i]->setIntReg(0, 0);
+        threadContexts[i]->setIntReg(1, params()->machine_type);
+        threadContexts[i]->setIntReg(2, ParamsList);
+    }
 }
 
 LinuxArmSystem::~LinuxArmSystem()

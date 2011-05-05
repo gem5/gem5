@@ -46,9 +46,16 @@ class ArmMachineType(Enum):
 class ArmSystem(System):
     type = 'ArmSystem'
     load_addr_mask = 0xffffffff
+    boot_loader = Param.String("", "File that contains the boot loader code if any")
+    boot_loader_mem = Param.PhysicalMemory(NULL,
+                          "Memory object that boot loader is to be loaded into")
+    gic_cpu_addr = Param.Addr(0, "Addres of the GIC CPU interface")
+    flags_addr = Param.Addr(0, "Address of the flags register for MP booting")
 
 class LinuxArmSystem(ArmSystem):
     type = 'LinuxArmSystem'
     load_addr_mask = 0x0fffffff
     machine_type = Param.ArmMachineType('RealView_PBX',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
+
+

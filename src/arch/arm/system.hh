@@ -60,11 +60,24 @@ class ArmSystem : public System
      */
     Linux::DebugPrintkEvent *debugPrintkEvent;
 
+    /**
+     * Pointer to the bootloader object
+     */
+    ObjectFile *bootldr;
+
   public:
     typedef ArmSystemParams Params;
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
     ArmSystem(Params *p);
     ~ArmSystem();
-    
+
+    void initState();
+
     virtual Addr fixFuncEventAddr(Addr addr)
     {
         // Remove the low bit that thumb symbols have set
