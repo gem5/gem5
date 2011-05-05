@@ -54,7 +54,11 @@ namespace Trace {
 static const char *regNames[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
     "r8", "r9", "r10", "fp", "r12", "sp", "lr", "pc",
-    "cpsr"
+    "cpsr", "f0", "f1", "f2", "f3", "f4", "f5", "f6",
+    "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14",
+    "f15", "f16", "f17", "f18", "f19", "f20", "f21", "f22",
+    "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30",
+    "f31", "fpscr"
 };
 #endif
 
@@ -67,7 +71,7 @@ Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
 
     memcpy(newState, oldState, sizeof(state[0]));
 
-    uint32_t diffVector;
+    uint64_t diffVector;
     parent->read(&diffVector, sizeof(diffVector));
     diffVector = ArmISA::gtoh(diffVector);
 
@@ -82,7 +86,7 @@ Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
         diffVector >>= 1;
     }
 
-    uint32_t values[changes];
+    uint64_t values[changes];
     parent->read(values, sizeof(values));
     int pos = 0;
     for (int i = 0; i < STATE_NUMVALS; i++) {
@@ -114,6 +118,14 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
     newState[STATE_CPSR] = tc->readMiscReg(MISCREG_CPSR) |
                            tc->readIntReg(INTREG_CONDCODES);
     changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
+
+    for (int i = 0; i < NumFloatArchRegs; i += 2) {
+        newState[STATE_F0 + (i >> 1)] =
+            static_cast<uint64_t>(tc->readFloatRegBits(i + 1)) << 32 |
+            tc->readFloatRegBits(i);
+    }
+    newState[STATE_FPSCR] = tc->readMiscRegNoEffect(MISCREG_FPSCR) |
+                            tc->readIntReg(INTREG_FPCONDCODES);
 }
 
 void

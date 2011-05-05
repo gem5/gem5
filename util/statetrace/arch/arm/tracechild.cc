@@ -56,23 +56,28 @@ ARMTraceChild::ARMTraceChild()
 {
     foundMvn = false;
 
+    memset(&regs, 0, sizeof(regs));
+    memset(&oldregs, 0, sizeof(regs));
+    memset(&fpregs, 0, sizeof(vfp_regs));
+    memset(&oldfpregs, 0, sizeof(vfp_regs));
+
     for (int x = 0; x < numregs; x++) {
-        memset(&regs, 0, sizeof(regs));
-        memset(&oldregs, 0, sizeof(regs));
         regDiffSinceUpdate[x] = false;
     }
+
+    assert(sizeof(regs.uregs)/sizeof(regs.uregs[0]) > CPSR);
 }
 
 bool
 ARMTraceChild::sendState(int socket)
 {
     uint32_t regVal = 0;
-    uint32_t message[numregs + 1];
+    uint64_t message[numregs + 1];
     int pos = 1;
     message[0] = 0;
     for (int x = 0; x < numregs; x++) {
         if (regDiffSinceUpdate[x]) {
-            message[0] = message[0] | (1 << x);
+            message[0] = message[0] | (1ULL << x);
             message[pos++] = getRegVal(x);
         }
     }
@@ -97,8 +102,19 @@ ARMTraceChild::sendState(int socket)
 uint32_t
 ARMTraceChild::getRegs(user_regs &myregs, int num)
 {
-    assert(num < numregs && num >= 0);
+    assert(num <= CPSR && num >= 0);
     return myregs.uregs[num];
+}
+
+uint64_t
+ARMTraceChild::getFpRegs(vfp_regs &my_fp_regs, int num)
+{
+    assert(num >= F0 && num < numregs);
+    if (num == FPSCR)
+        return my_fp_regs.fpscr;
+
+    num -= F0;
+    return my_fp_regs.fpregs[num];
 }
 
 bool
@@ -110,21 +126,36 @@ ARMTraceChild::update(int pid)
         return false;
     }
 
+    const uint32_t get_vfp_regs = 32;
+
+    oldfpregs = fpregs;
+    if (ptrace((__ptrace_request)get_vfp_regs, pid, 0, &fpregs) != 0) {
+        cerr << "update: " << strerror(errno) << endl;
+        return false;
+    }
+
     for (unsigned int x = 0; x < numregs; x++)
         regDiffSinceUpdate[x] = (getRegVal(x) != getOldRegVal(x));
+
     return true;
 }
 
 int64_t
 ARMTraceChild::getRegVal(int num)
 {
-    return getRegs(regs, num);
+    if (num <= CPSR)
+        return getRegs(regs, num);
+    else
+        return (int64_t)getFpRegs(fpregs, num);
 }
 
 int64_t
 ARMTraceChild::getOldRegVal(int num)
 {
-    return getRegs(oldregs,  num);
+    if (num <= CPSR)
+        return getRegs(oldregs, num);
+    else
+        return (int64_t)getFpRegs(oldfpregs, num);
 }
 
 ostream &
