@@ -32,6 +32,10 @@
 #ifndef __SIM_CORE_HH__
 #define __SIM_CORE_HH__
 
+/** @file This header provides some core simulator functionality such as time
+ * information, output directory and exit events
+ */
+
 #include <string>
 
 #include "base/types.hh"
@@ -44,32 +48,49 @@ inline void curTick(Tick newVal) { _curTick = newVal; }
 
 const Tick retryTime = 1000;
 
+/// These are variables that are set based on the simulator frequency
+///@{
 namespace SimClock {
-/// The simulated frequency of curTick().
-extern Tick Frequency;
+extern Tick Frequency; ///< The number of ticks that equal one second
 
 namespace Float {
-extern double s;
-extern double ms;
-extern double us;
-extern double ns;
-extern double ps;
 
-extern double Hz;
-extern double kHz;
-extern double MHz;
-extern double GHZ;
+/** These variables equal the number of ticks in the unit of time they're
+ * named after in a double.
+ * @{
+ */
+extern double s;  ///< second
+extern double ms; ///< millisecond
+extern double us; ///< microsecond
+extern double ns; ///< nanosecond
+extern double ps; ///< picosecond
+/** @} */
+
+/** These variables the inverse of above. They're all < 1.
+ * @{
+ */
+extern double Hz;  ///< Hz
+extern double kHz; ///< kHz
+extern double MHz; ///< MHz
+extern double GHZ; ///< GHz
+/** @}*/
 } // namespace Float
 
+/** These variables equal the number of ticks in the unit of time they're
+ *  named after in a 64 bit integer.
+ *
+ * @{
+ */
 namespace Int {
-extern Tick s;
-extern Tick ms;
-extern Tick us;
-extern Tick ns;
-extern Tick ps;
+extern Tick s;  ///< second
+extern Tick ms; ///< millisecond
+extern Tick us; ///< microsecond
+extern Tick ns; ///< nanosecond
+extern Tick ps; ///< picosecond
+/** @} */
 } // namespace Int
 } // namespace SimClock
-
+/** @} */
 void setClockFrequency(Tick ticksPerSecond);
 
 void setOutputDir(const std::string &dir);
