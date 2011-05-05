@@ -725,6 +725,7 @@ TimingSimpleCPU::fetch()
     bool needToFetch = !isRomMicroPC(pcState.microPC()) && !curMacroStaticInst;
 
     if (needToFetch) {
+        _status = Running;
         Request *ifetch_req = new Request();
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);
@@ -771,7 +772,20 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
 void
 TimingSimpleCPU::advanceInst(Fault fault)
 {
-    if (fault != NoFault || !stayAtPC)
+
+    if (_status == Faulting)
+        return;
+
+    if (fault != NoFault) {
+        advancePC(fault);
+        DPRINTF(SimpleCPU, "Fault occured, scheduling fetch event\n");
+        reschedule(fetchEvent, nextCycle(), true);
+        _status = Faulting;
+        return;
+    }
+
+
+    if (!stayAtPC)
         advancePC(fault);
 
     if (_status == Running) {
@@ -786,8 +800,6 @@ TimingSimpleCPU::advanceInst(Fault fault)
 void
 TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 {
-    DPRINTF(SimpleCPU, "Complete ICache Fetch\n");
-
     // received a response from the icache: execute the received
     // instruction
 
@@ -878,8 +890,7 @@ TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
             tickEvent.schedule(pkt, next_tick);
 
         return true;
-    }
-    else if (pkt->wasNacked()) {
+    } else if (pkt->wasNacked()) {
         assert(cpu->_status == IcacheWaitResponse);
         pkt->reinitNacked();
         if (!sendTiming(pkt)) {

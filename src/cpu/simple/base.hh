@@ -124,6 +124,7 @@ class BaseSimpleCPU : public BaseCPU
     enum Status {
         Idle,
         Running,
+        Faulting,
         ITBWaitResponse,
         IcacheRetry,
         IcacheWaitResponse,
