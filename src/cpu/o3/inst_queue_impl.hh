@@ -1199,7 +1199,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
                        !squashed_inst->isCompleted()) {
                 NonSpecMapIt ns_inst_it =
                     nonSpecInsts.find(squashed_inst->seqNum);
-                assert(ns_inst_it != nonSpecInsts.end());
+
                 if (ns_inst_it == nonSpecInsts.end()) {
                     assert(squashed_inst->getFault() != NoFault);
                 } else {
