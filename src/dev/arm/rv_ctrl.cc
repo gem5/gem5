@@ -43,7 +43,7 @@
 #include "mem/packet_access.hh"
 
 RealViewCtrl::RealViewCtrl(Params *p)
-    : BasicPioDevice(p)
+    : BasicPioDevice(p), flags(0)
 {
     pioSize = 0xD4;
 }
@@ -94,6 +94,9 @@ RealViewCtrl::read(PacketPtr pkt)
       case Lock:
         pkt->set<uint32_t>(sysLock);
         break;
+      case Flags:
+        pkt->set<uint32_t>(flags);
+        break;
       default:
         panic("Tried to read RealView I/O at offset %#x that doesn't exist\n", daddr);
         break;
@@ -121,6 +124,9 @@ RealViewCtrl::write(PacketPtr pkt)
       case Lock:
         sysLock.lockVal = pkt->get<uint16_t>();
         break;
+      case Flags:
+        flags = pkt->get<uint32_t>();
+        break;
       default:
         panic("Tried to write RVIO at offset %#x that doesn't exist\n", daddr);
         break;
@@ -132,11 +138,13 @@ RealViewCtrl::write(PacketPtr pkt)
 void
 RealViewCtrl::serialize(std::ostream &os)
 {
+    SERIALIZE_SCALAR(flags);
 }
 
 void
 RealViewCtrl::unserialize(Checkpoint *cp, const std::string &section)
 {
+    UNSERIALIZE_SCALAR(flags);
 }
 
 RealViewCtrl *

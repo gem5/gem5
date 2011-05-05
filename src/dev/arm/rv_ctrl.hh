@@ -95,6 +95,13 @@ class RealViewCtrl : public BasicPioDevice
 
     SysLockReg sysLock;
 
+    /** This register is used for smp booting.
+     * The primary cpu writes the secondary start address here before
+     * sends it a soft interrupt. The secondary cpu reads this register and if
+     * it's non-zero it jumps to the address
+     */
+    uint32_t flags;
+
   public:
     typedef RealViewCtrlParams Params;
     const Params *
