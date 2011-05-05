@@ -729,6 +729,7 @@ TimingSimpleCPU::fetch()
         Request *ifetch_req = new Request();
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);
+        DPRINTF(SimpleCPU, "Translating address %#x\n", ifetch_req->getVaddr());
         thread->itb->translateTiming(ifetch_req, tc, &fetchTranslation,
                 BaseTLB::Execute);
     } else {
@@ -745,8 +746,11 @@ void
 TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
 {
     if (fault == NoFault) {
+        DPRINTF(SimpleCPU, "Sending fetch for addr %#x(pa: %#x)\n",
+                req->getVaddr(), req->getPaddr());
         ifetch_pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         ifetch_pkt->dataStatic(&inst);
+        DPRINTF(SimpleCPU, " -- pkt addr: %#x\n", ifetch_pkt->getAddr());
 
         if (!icachePort.sendTiming(ifetch_pkt)) {
             // Need to wait for retry
@@ -758,6 +762,7 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
             ifetch_pkt = NULL;
         }
     } else {
+        DPRINTF(SimpleCPU, "Translation of addr %#x faulted\n", req->getVaddr());
         delete req;
         // fetch fault: advance directly to next instruction (fault handler)
         _status = Running;
@@ -800,6 +805,9 @@ TimingSimpleCPU::advanceInst(Fault fault)
 void
 TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 {
+    DPRINTF(SimpleCPU, "Complete ICache Fetch for addr %#x\n", pkt ?
+            pkt->getAddr() : 0);
+
     // received a response from the icache: execute the received
     // instruction
 
@@ -881,6 +889,7 @@ bool
 TimingSimpleCPU::IcachePort::recvTiming(PacketPtr pkt)
 {
     if (pkt->isResponse() && !pkt->wasNacked()) {
+        DPRINTF(SimpleCPU, "Received timing response %#x\n", pkt->getAddr());
         // delay processing of returned data until next CPU clock edge
         Tick next_tick = cpu->nextCycle(curTick());
 
