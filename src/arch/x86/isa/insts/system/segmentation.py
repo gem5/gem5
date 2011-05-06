@@ -223,8 +223,8 @@ def macroop LLDT_R
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
     chks reg, t1, LDTCheck
     wrdh t3, t1, t2
-    wrdl tr, t1, reg
-    wrbase tr, t3, dataSize=8
+    wrdl tsl, t1, reg
+    wrbase tsl, t3, dataSize=8
 end:
     fault "NoFault"
 };
@@ -241,8 +241,8 @@ def macroop LLDT_M
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
     chks t5, t1, LDTCheck
     wrdh t3, t1, t2
-    wrdl tr, t1, t5
-    wrbase tr, t3, dataSize=8
+    wrdl tsl, t1, t5
+    wrbase tsl, t3, dataSize=8
 end:
     fault "NoFault"
 };
@@ -260,8 +260,8 @@ def macroop LLDT_P
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
     chks t5, t1, LDTCheck
     wrdh t3, t1, t2
-    wrdl tr, t1, t5
-    wrbase tr, t3, dataSize=8
+    wrdl tsl, t1, t5
+    wrbase tsl, t3, dataSize=8
 end:
     fault "NoFault"
 };
