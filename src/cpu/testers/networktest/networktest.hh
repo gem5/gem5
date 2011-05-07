@@ -125,7 +125,6 @@ class NetworkTest : public MemObject
     };
 
     PacketPtr retryPkt;
-    bool accessRetry;
     unsigned size;
     int id;
 
@@ -134,6 +133,7 @@ class NetworkTest : public MemObject
     Tick noResponseCycles;
 
     int numMemories;
+    Tick simCycles;
     bool fixedPkts;
     int maxPackets;
     int numPacketsSent;

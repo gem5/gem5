@@ -103,13 +103,10 @@ NetworkTest::CpuPort::recvRetry()
 void
 NetworkTest::sendPkt(PacketPtr pkt)
 {
-    if (cachePort.sendTiming(pkt)) {
-        numPacketsSent++;
-        accessRetry = false;
-    } else {
-        accessRetry = true;
-        retryPkt = pkt;
+    if (!cachePort.sendTiming(pkt)) {
+        retryPkt = pkt; // RubyPort will retry sending
     }
+    numPacketsSent++;
 }
 
 NetworkTest::NetworkTest(const Params *p)
@@ -120,6 +117,7 @@ NetworkTest::NetworkTest(const Params *p)
       size(p->memory_size),
       blockSizeBits(p->block_offset),
       numMemories(p->num_memories),
+      simCycles(p->sim_cycles),
       fixedPkts(p->fixed_pkts),
       maxPackets(p->max_packets),
       trafficType(p->traffic_type),
@@ -135,8 +133,6 @@ NetworkTest::NetworkTest(const Params *p)
     id = TESTER_NETWORK++;
     DPRINTF(NetworkTest,"Config Created: Name = %s , and id = %d\n",
             name(), id);
-
-    accessRetry = false;
 }
 
 Port *
@@ -174,17 +170,9 @@ NetworkTest::completeRequest(PacketPtr pkt)
 void
 NetworkTest::tick()
 {
-    if (!tickEvent.scheduled())
-        schedule(tickEvent, curTick() + ticks(1));
-
     if (++noResponseCycles >= 500000) {
         cerr << name() << ": deadlocked at cycle " << curTick() << endl;
         fatal("");
-    }
-
-    if (accessRetry) {
-        sendPkt(retryPkt);
-        return;
     }
 
     // make new request based on injection rate
@@ -209,6 +197,14 @@ NetworkTest::tick()
             generatePkt();
         }
     }
+
+    // Schedule wakeup
+    if (curTick() >= simCycles)
+        exitSimLoop("Network Tester completed simCycles");
+    else {
+        if (!tickEvent.scheduled())
+            schedule(tickEvent, curTick() + ticks(1));
+    }
 }
 
 void
@@ -216,8 +212,7 @@ NetworkTest::generatePkt()
 {
     unsigned destination = id;
     if (trafficType == 0) { // Uniform Random
-        while (destination == id)
-            destination = random() % numMemories;
+        destination = random() % numMemories;
     } else if (trafficType == 1) { // Tornado
         int networkDimension = (int) sqrt(numMemories);
         int my_x = id%networkDimension;
@@ -315,7 +310,6 @@ void
 NetworkTest::doRetry()
 {
     if (cachePort.sendTiming(retryPkt)) {
-        accessRetry = false;
         retryPkt = NULL;
     }
 }

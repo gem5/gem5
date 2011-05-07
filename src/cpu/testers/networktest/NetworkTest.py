@@ -34,6 +34,7 @@ class NetworkTest(MemObject):
     block_offset = Param.Int(6, "block offset in bits")
     num_memories = Param.Int(1, "Num Memories")
     memory_size = Param.Int(65536, "memory size")
+    sim_cycles = Param.Int(1000, "Number of simulation cycles")
     fixed_pkts = Param.Bool(False, "Send fixed number of packets")
     max_packets = Param.Counter(0, "Number of packets to send when in fixed_pkts mode")
     traffic_type = Param.Counter(0, "Traffic type: uniform random, tornado, bit complement")

@@ -61,6 +61,9 @@ parser.add_option("--precision", type="int", default=3,
                   help="Number of digits of precision after decimal point\
                         for injection rate")
 
+parser.add_option("--sim-cycles", type="int", default=1000,
+                   help="Number of simulation cycles")
+
 parser.add_option("--fixed-pkts", action="store_true",
                   help="Network_test: send only -p number of packets")
 
@@ -88,8 +91,10 @@ if options.num_cpus > block_size:
            % (options.num_cpus, block_size)
      sys.exit(1)
 
+
 cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts, \
                      max_packets=options.maxpackets, \
+                     sim_cycles=options.sim_cycles, \
                      traffic_type=options.synthetic, \
                      inj_rate=options.injectionrate, \
                      precision=options.precision, \
