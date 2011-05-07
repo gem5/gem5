@@ -106,10 +106,6 @@ def parse_options():
 
     # Tracing options
     group("Trace Options")
-    option("--trace-help", action='store_true',
-        help="Print help on trace flags")
-    option("--trace-flags", metavar="FLAG[,FLAG]", action='append', split=',',
-        help="Sets the flags for tracing (-FLAG disables a flag)")
     option("--trace-start", metavar="TIME", type='int',
         help="Start tracing at TIME (must be in ticks)")
     option("--trace-file", metavar="FILE", default="cout",
