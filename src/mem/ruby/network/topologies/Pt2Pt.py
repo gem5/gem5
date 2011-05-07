@@ -1,6 +1,5 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2010 Advanced Micro Devices, Inc.
+# Copyright (c) 2011 Advanced Micro Devices, Inc.
+#               2011 Massachusetts Institute of Technology
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,14 +26,30 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Brad Beckmann
+#          Tushar Krishna
 
-Import('*')
+from m5.params import *
+from m5.objects import *
 
-if not env['RUBY']:
-    Return()
+class Pt2Pt(Topology):
+    description='Pt2Pt'
 
-PySource('', 'Crossbar.py')
-PySource('', 'Mesh.py')
-PySource('', 'MeshDirCorners.py')
-PySource('', 'Pt2Pt.py')
-PySource('', 'Torus.py')
+def makeTopology(nodes, options, IntLink, ExtLink, Router):
+    # Create an individual router for each controller, and connect all to all.
+    routers = [Router(router_id=i) for i in range(len(nodes))]
+    ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
+                 for (i, n) in enumerate(nodes)]
+    link_count = len(nodes)
+
+    int_links = []
+    for i in xrange(len(nodes)):
+        for j in xrange(len(nodes)):
+            if (i != j):
+                link_count += 1
+                int_links.append(IntLink(link_id=link_count,
+                                         node_a=routers[i],
+                                         node_b=routers[j]))
+
+    return Pt2Pt(ext_links=ext_links,
+                 int_links=int_links,
+                 routers=routers)
