@@ -260,7 +260,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 
     Tick when = cpu->nextCycle(curTick() + cpu->ticks(delay));
 
-    switch (e_type)
+    switch ((int)e_type)
     {
       case InOrderCPU::ActivateThread:
         {
@@ -505,7 +505,7 @@ ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool,
 void
 ResourcePool::ResPoolEvent::process()
 {
-    switch (eventType)
+    switch ((int)eventType)
     {
       case InOrderCPU::ActivateThread:
         resPool->activateAll(tid);
