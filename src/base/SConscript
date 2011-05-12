@@ -73,10 +73,6 @@ Source('loader/symtab.cc')
 
 Source('stats/text.cc')
 
-if env['USE_MYSQL']:
-    Source('mysql.cc')
-    Source('stats/mysql.cc')
-
 TraceFlag('Annotate', "State machine annotation debugging")
 TraceFlag('AnnotateQ', "State machine annotation queue debugging")
 TraceFlag('AnnotateVerbose', "Dump all state machine annotation details")

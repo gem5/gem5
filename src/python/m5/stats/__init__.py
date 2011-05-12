@@ -39,16 +39,6 @@ def initText(filename, desc=True):
     output = internal.stats.initText(filename, desc)
     outputList.append(output)
 
-def initMySQL(host, database, user='', passwd='', project='test', name='test',
-              sample='0'):
-    if not user:
-        import getpass
-        user = getpass.getuser()
-
-    output = internal.stats.initMySQL(host, database, user, passwd,
-                                      project, name, sample)
-    outputList.append(output)
-
 def initSimStats():
     internal.stats.initSimStats()
 

@@ -710,32 +710,6 @@ if not have_fenv:
 
 ######################################################################
 #
-# Check for mysql.
-#
-mysql_config = WhereIs('mysql_config')
-have_mysql = bool(mysql_config)
-
-# Check MySQL version.
-if have_mysql:
-    mysql_version = readCommand(mysql_config + ' --version')
-    min_mysql_version = '4.1'
-    if compareVersions(mysql_version, min_mysql_version) < 0:
-        print 'Warning: MySQL', min_mysql_version, 'or newer required.'
-        print '         Version', mysql_version, 'detected.'
-        have_mysql = False
-
-# Set up mysql_config commands.
-if have_mysql:
-    mysql_config_include = mysql_config + ' --include'
-    if os.system(mysql_config_include + ' > /dev/null') != 0:
-        # older mysql_config versions don't support --include, use
-        # --cflags instead
-        mysql_config_include = mysql_config + ' --cflags | sed s/\\\'//g'
-    # This seems to work in all versions
-    mysql_config_libs = mysql_config + ' --libs'
-
-######################################################################
-#
 # Finish the configuration
 #
 main = conf.Finish()
@@ -820,7 +794,6 @@ sticky_vars.AddVariables(
     BoolVariable('USE_SSE2',
                  'Compile for SSE2 (-msse2) to get IEEE FP on x86 hosts',
                  False),
-    BoolVariable('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('USE_CHECKER', 'Use checker for detailed CPU models', False),
@@ -829,7 +802,7 @@ sticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['FULL_SYSTEM', 'USE_FENV', 'USE_MYSQL',
+export_vars += ['FULL_SYSTEM', 'USE_FENV',
                 'NO_FAST_ALLOC', 'FORCE_FAST_ALLOC', 'FAST_ALLOC_STATS',
                 'SS_COMPATIBLE_FP', 'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE',
                 'USE_POSIX_CLOCK' ]
@@ -993,16 +966,6 @@ for variant_path in variant_paths:
 
     if env['EFENCE']:
         env.Append(LIBS=['efence'])
-
-    if env['USE_MYSQL']:
-        if not have_mysql:
-            print "Warning: MySQL not available; " \
-                  "forcing USE_MYSQL to False in", variant_dir + "."
-            env['USE_MYSQL'] = False
-        else:
-            print "Compiling in", variant_dir, "with MySQL support."
-            env.ParseConfig(mysql_config_libs)
-            env.ParseConfig(mysql_config_include)
 
     # Save sticky variable settings back to current variables file
     sticky_vars.Save(current_vars_file, env)

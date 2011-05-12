@@ -36,7 +36,6 @@
 %include <stdint.i>
 
 %{
-#include "base/stats/mysql.hh"
 #include "base/stats/text.hh"
 #include "base/stats/types.hh"
 #include "base/callback.hh"
@@ -141,9 +140,6 @@ template <class T> T cast_info(Info *info);
 
 void initSimStats();
 Output *initText(const std::string &filename, bool desc);
-Output *initMySQL(std::string host, std::string database, std::string user,
-    std::string passwd, std::string project, std::string name,
-    std::string sample);
 
 void schedStatEvent(bool dump, bool reset,
                     Tick when = curTick(), Tick repeat = 0);
