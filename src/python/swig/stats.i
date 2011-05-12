@@ -32,20 +32,68 @@
 
 %include <std_list.i>
 %include <std_string.i>
+%include <std_vector.i>
+%include <stdint.i>
 
 %{
 #include "base/stats/mysql.hh"
 #include "base/stats/text.hh"
+#include "base/stats/types.hh"
 #include "base/statistics.hh"
 #include "sim/core.hh"
 #include "sim/stat_control.hh"
+
+namespace Stats {
+template <class T>
+inline T
+cast_info(Info *info)
+{
+    return dynamic_cast<T>(info);
+}
+
+inline FlagsType
+Stats_Info_flags_get(Info *info)
+{
+    return info->flags;
+}
+
+inline void
+Stats_Info_flags_set(Info *info, FlagsType flags)
+{
+    info->flags = flags;
+}
+
+} // namespace Stats
 %}
+
+%extend Stats::Info {
+    short flags;
+}
+
+%ignore Stats::Info::flags;
 
 %import "base/stats/types.hh"
 
 %include "base/stats/info.hh"
 
+namespace std {
+%template(list_info) list<Stats::Info *>;
+%template(vector_double) vector<double>;
+%template(vector_string) vector<string>;
+%template(vector_DistData) vector<Stats::DistData>;
+}
+
 namespace Stats {
+
+template <class T> T cast_info(Info *info);
+
+%template(dynamic_ScalarInfo) cast_info<ScalarInfo *>;
+%template(dynamic_VectorInfo) cast_info<VectorInfo *>;
+%template(dynamic_DistInfo) cast_info<DistInfo *>;
+%template(dynamic_VectorDistInfo) cast_info<VectorDistInfo *>;
+%template(dynamic_Vector2dInfo) cast_info<Vector2dInfo *>;
+%template(dynamic_FormulaInfo) cast_info<FormulaInfo *>;
+
 void initSimStats();
 void initText(const std::string &filename, bool desc);
 void initMySQL(std::string host, std::string database, std::string user,

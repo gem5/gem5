@@ -1,4 +1,5 @@
 # Copyright (c) 2007 The Regents of The University of Michigan
+# Copyright (c) 2010 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,10 +27,10 @@
 #
 # Authors: Nathan Binkert
 
-import internal
-
-from internal.stats import schedStatEvent as schedEvent
-from objects import Root
+from m5 import internal
+from m5.internal.stats import schedStatEvent as schedEvent
+from m5.objects import Root
+from m5.util import attrdict
 
 def initText(filename, desc=True):
     internal.stats.initText(filename, desc)
@@ -46,7 +47,38 @@ def initMySQL(host, database, user='', passwd='', project='test', name='test',
 def initSimStats():
     internal.stats.initSimStats()
 
+names = []
+stats_dict = {}
+stats_list = []
+raw_stats_list = []
 def enable():
+    '''Enable the statistics package.  Before the statistics package is
+    enabled, all statistics must be created and initialized and once
+    the package is enabled, no more statistics can be created.'''
+    __dynamic_cast = []
+    for k, v in internal.stats.__dict__.iteritems():
+        if k.startswith('dynamic_'):
+            __dynamic_cast.append(v)
+
+    for stat in internal.stats.statsList():
+        for cast in __dynamic_cast:
+            val = cast(stat)
+            if val is not None:
+                stats_list.append(val)
+                raw_stats_list.append(val)
+                break
+        else:
+            fatal("unknown stat type %s", stat)
+
+    def less(stat1, stat2):
+        v1 = stat1.name.split('.')
+        v2 = stat2.name.split('.')
+        return v1 < v2
+
+    stats_list.sort(less)
+    for stat in stats_list:
+        stats_dict[stat.name] = stat
+
     internal.stats.enable()
 
 def dump():
@@ -64,3 +96,15 @@ def reset():
 
     # call any other registered stats reset callbacks
     internal.stats.reset()
+
+flags = attrdict({
+    'none'    : 0x0000,
+    'init'    : 0x0001,
+    'display' : 0x0002,
+    'total'   : 0x0010,
+    'pdf'     : 0x0020,
+    'cdf'     : 0x0040,
+    'dist'    : 0x0080,
+    'nozero'  : 0x0100,
+    'nonan'   : 0x0200,
+})
