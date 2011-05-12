@@ -62,7 +62,7 @@ const FlagsType nonan =         0x0200;
 const FlagsType __reserved =    init | display;
 
 struct StorageParams;
-struct Visit;
+struct Output;
 
 class Info
 {
@@ -129,7 +129,7 @@ class Info
     /**
      * Visitor entry for outputing statistics data
      */
-    virtual void visit(Visit &visitor) = 0;
+    virtual void visit(Output &visitor) = 0;
 
     /**
      * Checks if the first stat's name is alphabetically less than the second.

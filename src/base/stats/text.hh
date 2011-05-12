@@ -70,10 +70,11 @@ class Text : public Output
 
     // Implement Output
     virtual bool valid() const;
-    virtual void output();
+    virtual void begin();
+    virtual void end();
 };
 
-bool initText(const std::string &filename, bool desc);
+Output *initText(const std::string &filename, bool desc);
 
 } // namespace Stats
 

@@ -27,13 +27,17 @@
 #
 # Authors: Nathan Binkert
 
+import m5
+
 from m5 import internal
 from m5.internal.stats import schedStatEvent as schedEvent
 from m5.objects import Root
-from m5.util import attrdict
+from m5.util import attrdict, fatal
 
+outputList = []
 def initText(filename, desc=True):
-    internal.stats.initText(filename, desc)
+    output = internal.stats.initText(filename, desc)
+    outputList.append(output)
 
 def initMySQL(host, database, user='', passwd='', project='test', name='test',
               sample='0'):
@@ -41,8 +45,9 @@ def initMySQL(host, database, user='', passwd='', project='test', name='test',
         import getpass
         user = getpass.getuser()
 
-    internal.stats.initMySQL(host, database, user, passwd, project, name,
-                             sample)
+    output = internal.stats.initMySQL(host, database, user, passwd,
+                                      project, name, sample)
+    outputList.append(output)
 
 def initSimStats():
     internal.stats.initSimStats()
@@ -70,6 +75,13 @@ def enable():
         else:
             fatal("unknown stat type %s", stat)
 
+    for stat in stats_list:
+        if not stat.check() or not stat.baseCheck():
+            fatal("stat check failed for '%s' %d\n", stat.name, stat.id)
+
+        if not (stat.flags & flags.display):
+            stat.name = "__Stat%06d" % stat.id
+
     def less(stat1, stat2):
         v1 = stat1.name.split('.')
         v2 = stat2.name.split('.')
@@ -78,24 +90,49 @@ def enable():
     stats_list.sort(less)
     for stat in stats_list:
         stats_dict[stat.name] = stat
+        stat.enable()
 
-    internal.stats.enable()
+def prepare():
+    '''Prepare all stats for data access.  This must be done before
+    dumping and serialization.'''
 
+    for stat in stats_list:
+        stat.prepare()
+
+lastDump = 0
 def dump():
-    # Currently prepare happens in the dump, but we should maybe move
-    # that out.
+    '''Dump all statistics data to the registered outputs'''
 
-    #internal.stats.prepare()
-    internal.stats.dump()
+    curTick = m5.curTick()
+
+    global lastDump
+    assert lastDump <= curTick
+    if lastDump == curTick:
+        return
+    lastDump = curTick
+
+    prepare()
+
+    for output in outputList:
+        if output.valid():
+            output.begin()
+            for stat in stats_list:
+                output.visit(stat)
+            output.end()
 
 def reset():
+    '''Reset all statistics to the base state'''
+
     # call reset stats on all SimObjects
     root = Root.getInstance()
     if root:
         for obj in root.descendants(): obj.resetStats()
 
     # call any other registered stats reset callbacks
-    internal.stats.reset()
+    for stat in stats_list:
+        stat.reset()
+
+    internal.stats.processResetQueue()
 
 flags = attrdict({
     'none'    : 0x0000,

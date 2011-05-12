@@ -433,61 +433,7 @@ Formula::str() const
     return root ? root->str() : "";
 }
 
-void
-enable()
-{
-    typedef list<Info *>::iterator iter_t;
-
-    iter_t i, end = statsList().end();
-    for (i = statsList().begin(); i != end; ++i) {
-        Info *info = *i;
-        assert(info);
-        if (!info->check() || !info->baseCheck())
-            panic("stat check failed for '%s' %d\n", info->name, info->id);
-    }
-
-    off_t j = 0;
-    for (i = statsList().begin(); i != end; ++i) {
-        Info *info = *i;
-        if (!(info->flags & display))
-            info->name = "__Stat" + to_string(j++);
-    }
-
-    statsList().sort(Info::less);
-
-    for (i = statsList().begin(); i != end; ++i) {
-        Info *info = *i;
-        info->enable();
-    }
-}
-
-void
-prepare()
-{
-    list<Info *>::iterator i = statsList().begin();
-    list<Info *>::iterator end = statsList().end();
-    while (i != end) {
-        Info *info = *i;
-        info->prepare();
-        ++i;
-    }
-}
-
 CallbackQueue resetQueue;
-
-void
-reset()
-{
-    list<Info *>::iterator i = statsList().begin();
-    list<Info *>::iterator end = statsList().end();
-    while (i != end) {
-        Info *info = *i;
-        info->reset();
-        ++i;
-    }
-
-    resetQueue.process();
-}
 
 void
 registerResetCallback(Callback *cb)
@@ -496,3 +442,9 @@ registerResetCallback(Callback *cb)
 }
 
 } // namespace Stats
+
+void
+debugDumpStats()
+{
+    Stats::dump();
+}

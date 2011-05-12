@@ -31,17 +31,31 @@
 #ifndef __BASE_STATS_OUTPUT_HH__
 #define __BASE_STATS_OUTPUT_HH__
 
+#include <list>
 #include <string>
-
-#include "base/stats/visit.hh"
 
 namespace Stats {
 
-struct Output : public Visit
+class Info;
+class ScalarInfo;
+class VectorInfo;
+class DistInfo;
+class VectorDistInfo;
+class Vector2dInfo;
+class FormulaInfo;
+
+struct Output
 {
-    inline void operator()() { output(); }
-    virtual void output() = 0;
+    virtual void begin() = 0;
+    virtual void end() = 0;
     virtual bool valid() const = 0;
+
+    virtual void visit(const ScalarInfo &info) = 0;
+    virtual void visit(const VectorInfo &info) = 0;
+    virtual void visit(const DistInfo &info) = 0;
+    virtual void visit(const VectorDistInfo &info) = 0;
+    virtual void visit(const Vector2dInfo &info) = 0;
+    virtual void visit(const FormulaInfo &info) = 0;
 };
 
 } // namespace Stats

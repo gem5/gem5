@@ -147,10 +147,12 @@ class MySql : public Output
 
     // Implement Output
     virtual bool valid() const;
-    virtual void output();
+    virtual void begin();
+    virtual void end();
 
   protected:
     // Output helper
+    void commit();
     void output(const ScalarInfo &info);
     void output(const VectorInfo &info);
     void output(const DistInfo &info);
@@ -169,17 +171,17 @@ class MySql : public Output
     void configure(const FormulaInfo &info);
 };
 
-bool initMySQL(std::string host, std::string database, std::string user,
+Output *initMySQL(std::string host, std::string database, std::string user,
     std::string passwd, std::string project, std::string name,
     std::string sample);
 
 #if !USE_MYSQL
-inline bool
+inline Output *
 initMySQL(std::string host, std::string user, std::string password,
     std::string database, std::string project, std::string name,
     std::string sample)
 {
-    return false;
+    return NULL;
 }
 #endif
 

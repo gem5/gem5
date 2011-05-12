@@ -60,8 +60,8 @@
 #include <vector>
 
 #include "base/stats/info.hh"
+#include "base/stats/output.hh"
 #include "base/stats/types.hh"
-#include "base/stats/visit.hh"
 #include "base/cast.hh"
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
@@ -90,7 +90,7 @@ class InfoProxy : public Base
     void prepare() { s.prepare(); }
     void reset() { s.reset(); }
     void
-    visit(Visit &visitor)
+    visit(Output &visitor)
     {
         visitor.visit(*static_cast<Base *>(this));
     }
@@ -738,7 +738,7 @@ class ProxyInfo : public ScalarInfo
     void reset() { }
     bool zero() const { return value() == 0; }
 
-    void visit(Visit &visitor) { visitor.visit(*this); }
+    void visit(Output &visitor) { visitor.visit(*this); }
 };
 
 template <class T>
@@ -2933,28 +2933,10 @@ sum(Temp val)
     return NodePtr(new SumNode<std::plus<Result> >(val));
 }
 
-/**
- * Enable the statistics package.  Before the statistics package is
- * enabled, all statistics must be created and initialized and once
- * the package is enabled, no more statistics can be created.
- */
-void enable();
-
-/**
- * Prepare all stats for data access.  This must be done before
- * dumping and serialization.
- */
-void prepare();
-
-/**
- * Dump all statistics data to the registered outputs
- */
+/** Dump all statistics data to the registered outputs */
 void dump();
-
-/**
- * Reset all statistics to the base state
- */
 void reset();
+
 /**
  * Register a callback that should be called whenever statistics are
  * reset

@@ -131,7 +131,7 @@ def curTick():
     return internal.core.curTick()
 
 # Python exit handlers happen in reverse order.  We want to dump stats last.
-atexit.register(internal.stats.dump)
+atexit.register(stats.dump)
 
 # register our C++ exit callback function with Python
 atexit.register(internal.core.doExitCleanup)

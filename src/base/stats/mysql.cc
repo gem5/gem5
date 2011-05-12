@@ -395,7 +395,8 @@ MySql::configure()
 
     list<Info *>::const_iterator i, end = statsList().end();
     for (i = statsList().begin(); i != end; ++i) {
-        (*i)->visit(*this);
+        Info *info = *i;
+        info->visit(*this);
     }
 
     for (i = statsList().begin(); i != end; ++i) {
@@ -606,7 +607,7 @@ MySql::valid() const
 }
 
 void
-MySql::output()
+MySql::begin()
 {
     assert(valid());
 
@@ -615,18 +616,20 @@ MySql::output()
 
     // store sample #
     newdata.tick = curTick();
+}
 
-    MySQL::Connection &mysql = run->conn();
-
-    list<Info *>::const_iterator i, end = statsList().end();
-    for (i = statsList().begin(); i != end; ++i) {
-        Info *stat = *i;
-        stat->visit(*this);
-        if (mysql.commit())
-            panic("could not commit transaction\n%s\n", mysql.error);
-    }
-
+void
+MySql::end()
+{
     newdata.flush();
+}
+
+void
+MySql::commit()
+{
+    MySQL::Connection &mysql = run->conn();
+    if (mysql.commit())
+        panic("could not commit transaction\n%s\n", mysql.error);
 }
 
 void
@@ -641,6 +644,8 @@ MySql::output(const ScalarInfo &info)
     newdata.data = info.value();
 
     newdata.insert();
+
+    commit();
 }
 
 void
@@ -659,6 +664,8 @@ MySql::output(const VectorInfo &info)
         newdata.data = cvec[x];
         newdata.insert();
     }
+
+    commit();
 }
 
 void
@@ -708,6 +715,8 @@ MySql::output(const DistData &data, const DistParams *params)
             newdata.insert();
         }
     }
+
+    commit();
 }
 
 void
@@ -719,6 +728,8 @@ MySql::output(const DistInfo &info)
     newdata.stat = find(info.id);
     newdata.y = 0;
     output(info.data, safe_cast<const DistParams *>(info.storageParams));
+
+    commit();
 }
 
 void
@@ -735,6 +746,8 @@ MySql::output(const VectorDistInfo &info)
         output(info.data[y],
                safe_cast<const DistParams *>(info.storageParams));
     }
+
+    commit();
 }
 
 void
@@ -754,6 +767,8 @@ MySql::output(const Vector2dInfo &info)
             newdata.insert();
         }
     }
+
+    commit();
 }
 
 void
@@ -821,20 +836,17 @@ MySql::visit(const FormulaInfo &info)
         output(info);
 }
 
-bool
+Output *
 initMySQL(string host, string user, string password, string database,
     string project, string name, string sample)
 {
-    extern list<Output *> OutputList;
     static MySql mysql;
 
-    if (mysql.connected())
-        return false;
+    if (mysql.connected()) {
+        mysql.connect(host, user, password, database, name, sample, project);
+    }
 
-    mysql.connect(host, user, password, database, name, sample, project);
-    OutputList.push_back(&mysql);
-
-    return true;
+    return &mysql;
 }
 
 } // namespace Stats

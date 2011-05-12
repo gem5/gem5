@@ -39,6 +39,8 @@
 #include "base/stats/mysql.hh"
 #include "base/stats/text.hh"
 #include "base/stats/types.hh"
+#include "base/callback.hh"
+#include "base/misc.hh"
 #include "base/statistics.hh"
 #include "sim/core.hh"
 #include "sim/stat_control.hh"
@@ -63,6 +65,48 @@ Stats_Info_flags_set(Info *info, FlagsType flags)
     info->flags = flags;
 }
 
+inline void
+processResetQueue()
+{
+    extern CallbackQueue resetQueue;
+    resetQueue.process();
+}
+
+inline char *
+PCC(const char *string)
+{
+    return const_cast<char *>(string);
+}
+
+void
+call_module_function(const char *module_name, const char *func_name)
+{
+    PyObject *module = PyImport_ImportModule(PCC(module_name));
+    if (module == NULL)
+        panic("Could not import %s", module);
+
+    PyObject *result = PyObject_CallMethod(module, PCC(func_name), PCC(""));
+    if (result == NULL) {
+        PyErr_Print();
+        panic("failure on call to function %s", func_name);
+    }
+
+    Py_DECREF(module);
+    Py_DECREF(result);
+}
+
+void
+dump()
+{
+    call_module_function("m5.stats", "dump");
+}
+
+void
+reset()
+{
+    call_module_function("m5.stats", "reset");
+}
+
 } // namespace Stats
 %}
 
@@ -72,9 +116,10 @@ Stats_Info_flags_set(Info *info, FlagsType flags)
 
 %ignore Stats::Info::flags;
 
-%import "base/stats/types.hh"
+%import  "base/stats/types.hh"
 
 %include "base/stats/info.hh"
+%include "base/stats/output.hh"
 
 namespace std {
 %template(list_info) list<Stats::Info *>;
@@ -95,18 +140,15 @@ template <class T> T cast_info(Info *info);
 %template(dynamic_FormulaInfo) cast_info<FormulaInfo *>;
 
 void initSimStats();
-void initText(const std::string &filename, bool desc);
-void initMySQL(std::string host, std::string database, std::string user,
+Output *initText(const std::string &filename, bool desc);
+Output *initMySQL(std::string host, std::string database, std::string user,
     std::string passwd, std::string project, std::string name,
     std::string sample);
 
 void schedStatEvent(bool dump, bool reset,
                     Tick when = curTick(), Tick repeat = 0);
 
-void enable();
-void prepare();
-void dump();
-void reset();
+void processResetQueue();
 
 std::list<Info *> &statsList();
 

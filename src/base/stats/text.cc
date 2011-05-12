@@ -48,7 +48,6 @@
 
 #include "base/stats/info.hh"
 #include "base/stats/text.hh"
-#include "base/stats/visit.hh"
 #include "base/cast.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
@@ -138,12 +137,14 @@ Text::valid() const
 }
 
 void
-Text::output()
+Text::begin()
 {
     ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
-    list<Info *>::const_iterator i, end = statsList().end();
-    for (i = statsList().begin(); i != end; ++i)
-        (*i)->visit(*this);
+}
+
+void
+Text::end()
+{
     ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
     stream->flush();
 }
@@ -580,23 +581,19 @@ Text::visit(const FormulaInfo &info)
     visit((const VectorInfo &)info);
 }
 
-bool
+Output *
 initText(const string &filename, bool desc)
 {
     static Text text;
     static bool connected = false;
 
-    if (connected)
-        return false;
+    if (!connected) {
+        text.open(*simout.find(filename));
+        text.descriptions = desc;
+        connected = true;
+    }
 
-    extern list<Output *> OutputList;
-
-    text.open(*simout.find(filename));
-    text.descriptions = desc;
-    OutputList.push_back(&text);
-    connected = true;
-
-    return true;
+    return &text;
 }
 
 } // namespace Stats
