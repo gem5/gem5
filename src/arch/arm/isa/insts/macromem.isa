@@ -90,11 +90,10 @@ let {{
         CPSR cpsr = Cpsr;
         SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(cpsr | CondCodesF | CondCodesQ | CondCodesGE,
+            cpsrWriteByInstr(cpsr | CondCodesF | CondCodesGE,
                              Spsr, 0xF, true, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodesF = CondCodesMaskF & newCpsr;
-        CondCodesQ = CondCodesMaskQ & newCpsr;
         CondCodesGE = CondCodesMaskGE & newCpsr;
         IWNPC = cSwap(%s, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
         NextItState = ((((CPSR)Spsr).it2 << 2) & 0xFC)
@@ -635,7 +634,6 @@ let {{
                     NextItState = ((((CPSR)URb).it2 << 2) & 0xFC)
                                     | (((CPSR)URb).it1 & 0x3);
                     CondCodesF = CondCodesMaskF & newCpsr;
-                    CondCodesQ = CondCodesMaskQ & newCpsr;
                     CondCodesGE = CondCodesMaskGE & newCpsr;
                     '''
 

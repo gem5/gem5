@@ -61,7 +61,7 @@ let {{
     header_output = decoder_output = exec_output = ""
 
     mrsCpsrCode = '''
-        Dest = (Cpsr | CondCodesF | CondCodesQ | CondCodesGE) & 0xF8FF03DF
+        Dest = (Cpsr | CondCodesF | CondCodesGE) & 0xF8FF03DF
     '''
 
     mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
@@ -84,11 +84,10 @@ let {{
     msrCpsrRegCode = '''
         SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesQ | CondCodesGE, Op1,
+            cpsrWriteByInstr(Cpsr | CondCodesF |  CondCodesGE, Op1,
                              byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodesF = CondCodesMaskF & newCpsr;
-        CondCodesQ = CondCodesMaskQ & newCpsr;
         CondCodesGE = CondCodesMaskGE & newCpsr;
     '''
     msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
@@ -111,11 +110,10 @@ let {{
     msrCpsrImmCode = '''
         SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesQ | CondCodesGE, imm,
+            cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesGE, imm,
                              byteMask, false, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
         CondCodesF = CondCodesMaskF & newCpsr;
-        CondCodesQ = CondCodesMaskQ & newCpsr;
         CondCodesGE = CondCodesMaskGE & newCpsr;
     '''
     msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
@@ -205,9 +203,7 @@ let {{
         int32_t operand = shift_rm_imm(Op1, shiftAmt, shiftType, 0);
         int32_t res;
         if (satInt(res, operand, imm))
-            CondCodesQ = CondCodesQ | (1 << 27);
-        else
-            CondCodesQ = CondCodesQ;
+            CpsrQ = 1 << 27;
         Dest = res;
     '''
     ssatIop = InstObjParams("ssat", "Ssat", "RegImmRegShiftOp",
@@ -221,9 +217,7 @@ let {{
         int32_t operand = shift_rm_imm(Op1, shiftAmt, shiftType, 0);
         int32_t res;
         if (uSatInt(res, operand, imm))
-            CondCodesQ = CondCodesQ | (1 << 27);
-        else
-            CondCodesQ = CondCodesQ;
+            CpsrQ = 1 << 27;
         Dest = res;
     '''
     usatIop = InstObjParams("usat", "Usat", "RegImmRegShiftOp",
@@ -236,14 +230,13 @@ let {{
     ssat16Code = '''
         int32_t res;
         uint32_t resTemp = 0;
-        CondCodesQ = CondCodesQ;
         int32_t argLow = sext<16>(bits(Op1, 15, 0));
         int32_t argHigh = sext<16>(bits(Op1, 31, 16));
         if (satInt(res, argLow, imm))
-            CondCodesQ = CondCodesQ | (1 << 27);
+            CpsrQ = 1 << 27;
         replaceBits(resTemp, 15, 0, res);
         if (satInt(res, argHigh, imm))
-            CondCodesQ = CondCodesQ | (1 << 27);
+            CpsrQ = 1 << 27;
         replaceBits(resTemp, 31, 16, res);
         Dest = resTemp;
     '''
@@ -257,14 +250,13 @@ let {{
     usat16Code = '''
         int32_t res;
         uint32_t resTemp = 0;
-        CondCodesQ = CondCodesQ;
         int32_t argLow = sext<16>(bits(Op1, 15, 0));
         int32_t argHigh = sext<16>(bits(Op1, 31, 16));
         if (uSatInt(res, argLow, imm))
-            CondCodesQ = CondCodesQ | (1 << 27);
+            CpsrQ = 1 << 27;
         replaceBits(resTemp, 15, 0, res);
         if (uSatInt(res, argHigh, imm))
-            CondCodesQ = CondCodesQ | (1 << 27);
+            CpsrQ = 1 << 27;
         replaceBits(resTemp, 31, 16, res);
         Dest = resTemp;
     '''

@@ -44,7 +44,7 @@ let {{
     exec_output = ""
 
     calcQCode = '''
-        CondCodesQ = CondCodesQ | ((resTemp & 1) << 27);
+        CpsrQ = (resTemp & 1) << 27;
     '''
 
     calcCcCode = '''

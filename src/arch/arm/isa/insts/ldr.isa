@@ -106,7 +106,7 @@ let {{
                 wbDiff = 8
             accCode = '''
             CPSR cpsr = Cpsr;
-            URc = cpsr | CondCodesF | CondCodesQ | CondCodesGE;
+            URc = cpsr | CondCodesF | CondCodesGE;
             URa = cSwap<uint32_t>(Mem.ud, cpsr.e);
             URb = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
             '''

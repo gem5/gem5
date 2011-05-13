@@ -216,6 +216,8 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         warn("Not doing anything for read to miscreg %s\n",
                 miscRegName[misc_reg]);
         break;
+      case MISCREG_CPSR_Q:
+        panic("shouldn't be reading this register seperately\n");
       case MISCREG_FPSCR_QC:
         return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrQcMask;
       case MISCREG_FPSCR_EXC:
@@ -314,6 +316,13 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 fpscrMask.n = ones;
                 newVal = (newVal & (uint32_t)fpscrMask) |
                          (miscRegs[MISCREG_FPSCR] & ~(uint32_t)fpscrMask);
+            }
+            break;
+          case MISCREG_CPSR_Q:
+            {
+                assert(!(newVal & ~CpsrMaskQ));
+                newVal = miscRegs[MISCREG_CPSR] | newVal;
+                misc_reg = MISCREG_CPSR;
             }
             break;
           case MISCREG_FPSCR_QC:

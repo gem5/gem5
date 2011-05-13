@@ -157,7 +157,6 @@ def operands {{
 
     #Pseudo integer condition code registers
     'CondCodesF': intRegCC('INTREG_CONDCODES_F'),
-    'CondCodesQ': intRegCC('INTREG_CONDCODES_Q'),
     'CondCodesGE': intRegCC('INTREG_CONDCODES_GE'),
     'OptCondCodesF': intRegCC(
             '''(condCode == COND_AL || condCode == COND_UC) ?
@@ -219,6 +218,7 @@ def operands {{
 
     #Fixed index control regs
     'Cpsr': cntrlReg('MISCREG_CPSR', srtCpsr),
+    'CpsrQ': cntrlReg('MISCREG_CPSR_Q', srtCpsr),
     'Spsr': cntrlRegNC('MISCREG_SPSR'),
     'Fpsr': cntrlRegNC('MISCREG_FPSR'),
     'Fpsid': cntrlRegNC('MISCREG_FPSID'),

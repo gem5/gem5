@@ -48,7 +48,7 @@ let {{
     '''
 
     calcQCode = '''
-        CondCodesQ = CondCodesQ | ((resTemp & 1) << 27);
+        CpsrQ = (resTemp & 1) << 27;
     '''
 
     calcCcCode = '''
@@ -239,11 +239,10 @@ let {{
             code += '''
             SCTLR sctlr = Sctlr;
             uint32_t newCpsr =
-                cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesQ | CondCodesGE,
+                cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesGE,
                                  Spsr, 0xF, true, sctlr.nmfi);
             Cpsr = ~CondCodesMask & newCpsr;
             CondCodesF = CondCodesMaskF & newCpsr;
-            CondCodesQ = CondCodesMaskQ & newCpsr;
             CondCodesGE = CondCodesMaskGE & newCpsr;
             NextThumb = ((CPSR)newCpsr).t;
             NextJazelle = ((CPSR)newCpsr).j;
