@@ -103,8 +103,8 @@ let {{
 
     secondOpRe = re.compile("secondOp")
     immOp2 = "imm"
-    regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodesC)"
-    regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodesC)"
+    regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, OptShiftRmCondCodesC)"
+    regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, 0)"
 
     def buildImmDataInst(mnem, code, flagType = "logic", suffix = "Imm", \
                          buildCc = True, buildNonCc = True, instFlags = []):
@@ -125,12 +125,12 @@ let {{
             }
         immCode = secondOpRe.sub(immOp2, code)
         immIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataImmOp",
-                               {"code" : immCode,
-                                "predicate_test": predicateTest}, instFlags)
+                       {"code" : immCode,
+                        "predicate_test": pickPredicate(immCode)}, instFlags)
         immIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
-                                 "DataImmOp",
-                                 {"code" : immCode + immCcCode,
-                                  "predicate_test": condPredicateTest}, instFlags)
+             "DataImmOp",
+             {"code" : immCode + immCcCode,
+              "predicate_test": pickPredicate(immCode + immCcCode)}, instFlags)
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -163,15 +163,15 @@ let {{
             }
         regCode = secondOpRe.sub(regOp2, code)
         regIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataRegOp",
-                               {"code" : regCode, "is_ras_pop" : isRasPop,
-                                "is_branch" : isBranch,
-                                "predicate_test": predicateTest}, instFlags)
+                       {"code" : regCode, "is_ras_pop" : isRasPop,
+                        "is_branch" : isBranch,
+                        "predicate_test": pickPredicate(regCode)}, instFlags)
         regIopCc = InstObjParams(mnem + "s", mnem.capitalize() + suffix + "Cc",
-                                 "DataRegOp",
-                                 {"code" : regCode + regCcCode,
-                                  "predicate_test": condPredicateTest,
-                                  "is_ras_pop" : isRasPop,
-                                  "is_branch" : isBranch}, instFlags)
+                         "DataRegOp",
+                         {"code" : regCode + regCcCode,
+                          "predicate_test": pickPredicate(regCode + regCcCode),
+                          "is_ras_pop" : isRasPop,
+                          "is_branch" : isBranch}, instFlags)
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -204,14 +204,14 @@ let {{
             }
         regRegCode = secondOpRe.sub(regRegOp2, code)
         regRegIop = InstObjParams(mnem, mnem.capitalize() + suffix,
-                                  "DataRegRegOp",
-                                  {"code" : regRegCode,
-                                   "predicate_test": predicateTest})
+                          "DataRegRegOp",
+                          {"code" : regRegCode,
+                           "predicate_test": pickPredicate(regRegCode)})
         regRegIopCc = InstObjParams(mnem + "s",
-                                    mnem.capitalize() + suffix + "Cc",
-                                    "DataRegRegOp",
-                                    {"code" : regRegCode + regRegCcCode,
-                                     "predicate_test": condPredicateTest})
+                mnem.capitalize() + suffix + "Cc",
+                "DataRegRegOp",
+                {"code" : regRegCode + regRegCcCode,
+                 "predicate_test": pickPredicate(regRegCode + regRegCcCode)})
 
         def subst(iop):
             global header_output, decoder_output, exec_output
@@ -241,10 +241,6 @@ let {{
             code += '''
             SCTLR sctlr = Sctlr;
             CPSR old_cpsr = Cpsr;
-            old_cpsr.nz = CondCodesNZ;
-            old_cpsr.c = CondCodesC;
-            old_cpsr.v = CondCodesV;
-            old_cpsr.ge = CondCodesGE;
 
             CPSR new_cpsr =
                 cpsrWriteByInstr(old_cpsr, Spsr, 0xF, true, sctlr.nmfi);

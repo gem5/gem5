@@ -169,6 +169,11 @@ def operands {{
             '''(condCode == COND_HI || condCode == COND_LS ||
                 condCode == COND_CS || condCode == COND_CC) ?
                INTREG_CONDCODES_C : INTREG_ZERO'''),
+    'OptShiftRmCondCodesC': intRegCC(
+            '''(condCode == COND_HI || condCode == COND_LS ||
+                condCode == COND_CS || condCode == COND_CC ||
+                shiftType == ROR) ?
+               INTREG_CONDCODES_C : INTREG_ZERO'''),
     'OptCondCodesV': intRegCC(
             '''(condCode == COND_VS || condCode == COND_VC ||
                 condCode == COND_GE || condCode == COND_LT ||

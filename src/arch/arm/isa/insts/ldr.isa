@@ -141,7 +141,7 @@ let {{
         def __init__(self, *args, **kargs):
             super(LoadRegInst, self).__init__(*args, **kargs)
             self.offset = self.op + " shift_rm_imm(Index, shiftAmt," + \
-                                    " shiftType, CondCodesC)"
+                                    " shiftType, OptShiftRmCondCodesC)"
             if self.add:
                  self.wbDecl = '''
                      MicroAddUop(machInst, base, base, wbIndexReg, shiftAmt, shiftType);

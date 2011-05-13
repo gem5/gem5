@@ -120,14 +120,21 @@ let {{
 
     def pickPredicate(blobs):
         opt_nz = True
-        opt_c = True
+        opt_c = 'opt'
         opt_v = True
-        for val in blobs.values():
-            if re.search('(?<!Opt)CondCodesNZ', val):
+
+        if not isinstance(blobs, dict):
+            vals = [blobs]
+        else:
+            vals = blobs.values()
+        for val in vals:
+            if re.search('(?<!Opt)CondCodesNZ(?!.*=)', val):
                 opt_nz = False
-            if re.search('(?<!Opt)CondCodesC', val):
-                opt_c = False
-            if re.search('(?<!Opt)CondCodesV', val):
+            if re.search('OptShiftRmCondCodesC(?!.*=)', val):
+                opt_c = 'opt_shift_rm'
+            elif re.search('(?<!Opt)CondCodesC(?!.*=)', val):
+                opt_c = 'none'
+            if re.search('(?<!Opt)CondCodesV(?!.*=)', val):
                 opt_v = False
 
         # Build up the predicate piece by piece depending on which
@@ -137,8 +144,10 @@ let {{
             predicate += 'OptCondCodesNZ, '
         else:
             predicate += 'CondCodesNZ, '
-        if opt_c:
+        if opt_c == 'opt':
             predicate += 'OptCondCodesC, '
+        elif opt_c == 'opt_shift_rm':
+            predicate += 'OptShiftRmCondCodesC, '
         else:
             predicate += 'CondCodesC, '
         if opt_v:
@@ -146,7 +155,7 @@ let {{
         else:
             predicate += 'CondCodesV, '
         predicate += 'condCode)'
-
+        predicate += '/*auto*/'
         return predicate
 
     def memClassName(base, post, add, writeback, \

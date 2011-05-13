@@ -89,10 +89,6 @@ let {{
     microRetUopCode = '''
         CPSR old_cpsr = Cpsr;
         SCTLR sctlr = Sctlr;
-        old_cpsr.nz = CondCodesNZ;
-        old_cpsr.c = CondCodesC;
-        old_cpsr.v = CondCodesV;
-        old_cpsr.ge = CondCodesGE;
 
         CPSR new_cpsr =
             cpsrWriteByInstr(old_cpsr, Spsr, 0xF, true, sctlr.nmfi);
@@ -588,14 +584,14 @@ let {{
                                      'predicate_test': predicateTest},
                                     ['IsMicroop'])
 
+    microAddUopCode = '''
+        URa = URb + shift_rm_imm(URc, shiftAmt, shiftType, OptShiftRmCondCodesC);
+    '''
+
     microAddUopIop = InstObjParams('add_uop', 'MicroAddUop',
                                    'MicroIntRegOp',
-                                   {'code':
-                                    '''URa = URb + shift_rm_imm(URc, shiftAmt,
-                                                              shiftType,
-                                                              CondCodesC);
-                                    ''',
-                                    'predicate_test': predicateTest},
+                                   {'code': microAddUopCode,
+                                    'predicate_test': pickPredicate(microAddUopCode)},
                                    ['IsMicroop'])
 
     microSubiUopIop = InstObjParams('subi_uop', 'MicroSubiUop',
@@ -604,14 +600,13 @@ let {{
                                      'predicate_test': predicateTest},
                                     ['IsMicroop'])
 
+    microSubUopCode = '''
+        URa = URb - shift_rm_imm(URc, shiftAmt, shiftType, OptShiftRmCondCodesC);
+    '''
     microSubUopIop = InstObjParams('sub_uop', 'MicroSubUop',
                                    'MicroIntRegOp',
-                                   {'code':
-                                    '''URa = URb - shift_rm_imm(URc, shiftAmt,
-                                                              shiftType,
-                                                              CondCodesC);
-                                    ''',
-                                    'predicate_test': predicateTest},
+                                   {'code': microSubUopCode,
+                                    'predicate_test': pickPredicate(microSubUopCode)},
                                    ['IsMicroop'])
 
     microUopRegMovIop = InstObjParams('uopReg_uop', 'MicroUopRegMov',
