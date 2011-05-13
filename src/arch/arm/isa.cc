@@ -52,7 +52,7 @@ void
 ISA::clear()
 {
     SCTLR sctlr_rst = miscRegs[MISCREG_SCTLR_RST];
-
+    uint32_t midr = miscRegs[MISCREG_MIDR];
     memset(miscRegs, 0, sizeof(miscRegs));
     CPSR cpsr = 0;
     cpsr.mode = MODE_USER;
@@ -71,20 +71,11 @@ ISA::clear()
     miscRegs[MISCREG_SCTLR] = sctlr;
     miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
 
+    // Preserve MIDR accross reset
+    miscRegs[MISCREG_MIDR] = midr;
+
     /* Start with an event in the mailbox */
     miscRegs[MISCREG_SEV_MAILBOX] = 1;
-
-    /*
-     * Implemented = '5' from "M5",
-     * Variant = 0,
-     */
-    miscRegs[MISCREG_MIDR] =
-        (0x35 << 24) | // Implementor is '5' from "M5"
-        (0 << 20)    | // Variant
-        (0xf << 16)  | // Architecture from CPUID scheme
-        (0xf00 << 4) | // Primary part number
-        (0 << 0)     | // Revision
-        0;
 
     // Separate Instruction and Data TLBs.
     miscRegs[MISCREG_TLBTR] = 1;
@@ -209,6 +200,9 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         warn("Returning thumbEE disabled for now since we don't support CP14"
              "config registers and jumping to ThumbEE vectors\n");
         return 0x0031; // !ThumbEE | !Jazelle | Thumb | ARM
+      case MISCREG_ID_PFR1:
+        warn("reading unimplmented register ID_PFR1");
+        return 0;
       case MISCREG_ID_MMFR0:
         return 0x03; //VMSAz7
       case MISCREG_CTR:
@@ -219,7 +213,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_PMCR:
       case MISCREG_PMCCNTR:
       case MISCREG_PMSELR:
-        warn("Not doing anyhting for read to miscreg %s\n",
+        warn("Not doing anything for read to miscreg %s\n",
                 miscRegName[misc_reg]);
         break;
       case MISCREG_FPSCR_QC:

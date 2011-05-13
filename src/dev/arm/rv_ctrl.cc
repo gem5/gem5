@@ -97,8 +97,12 @@ RealViewCtrl::read(PacketPtr pkt)
       case Flags:
         pkt->set<uint32_t>(flags);
         break;
+      case IdReg:
+        pkt->set<uint32_t>(params()->idreg);
+        break;
       default:
-        panic("Tried to read RealView I/O at offset %#x that doesn't exist\n", daddr);
+        warn("Tried to read RealView I/O at offset %#x that doesn't exist\n",
+             daddr);
         break;
     }
     pkt->makeAtomicResponse();
@@ -128,7 +132,8 @@ RealViewCtrl::write(PacketPtr pkt)
         flags = pkt->get<uint32_t>();
         break;
       default:
-        panic("Tried to write RVIO at offset %#x that doesn't exist\n", daddr);
+        warn("Tried to write RVIO at offset %#x that doesn't exist\n",
+             daddr);
         break;
     }
     pkt->makeAtomicResponse();

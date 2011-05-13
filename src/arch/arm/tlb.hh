@@ -236,6 +236,11 @@ protected:
         miscRegValid = true;
     }
 public:
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
     inline void invalidateMiscReg() { miscRegValid = false; }
 };
 

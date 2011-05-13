@@ -75,7 +75,8 @@ class A9SCU(BasicPioDevice):
 
 class RealViewCtrl(BasicPioDevice):
     type = 'RealViewCtrl'
-    proc_id = Param.UInt32(0x0C000000, "Platform ID")
+    proc_id = Param.UInt32(0x0C000000, "Processor ID, SYS_PROCID")
+    idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
 class Gic(PioDevice):
     type = 'Gic'
@@ -145,7 +146,7 @@ class RealViewPBX(RealView):
 
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff)
-    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x4000000)
+    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x20000000)
     dmac_fake     = AmbaFake(pio_addr=0x10030000)
     uart1_fake    = AmbaFake(pio_addr=0x1000a000)
     uart2_fake    = AmbaFake(pio_addr=0x1000b000)
@@ -212,10 +213,12 @@ class RealViewEB(RealView):
     kmi1   = Pl050(pio_addr=0x10007000, int_num=21, is_mouse=True)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff, warn_access="1")
+    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x20000000-1)
     dmac_fake     = AmbaFake(pio_addr=0x10030000)
     uart1_fake    = AmbaFake(pio_addr=0x1000a000)
     uart2_fake    = AmbaFake(pio_addr=0x1000b000)
     uart3_fake    = AmbaFake(pio_addr=0x1000c000)
+    smcreg_fake   = IsaFake(pio_addr=0x10080000, pio_size=0x10000-1)
     smc_fake      = AmbaFake(pio_addr=0x100e1000)
     sp810_fake    = AmbaFake(pio_addr=0x10001000, ignore_access=True)
     watchdog_fake = AmbaFake(pio_addr=0x10010000)
@@ -261,4 +264,6 @@ class RealViewEB(RealView):
        self.aaci_fake.pio     = bus.port
        self.mmc_fake.pio      = bus.port
        self.rtc_fake.pio      = bus.port
+       self.flash_fake.pio    = bus.port
+       self.smcreg_fake.pio   = bus.port
 

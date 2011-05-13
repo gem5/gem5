@@ -46,6 +46,12 @@ class ArmMachineType(Enum):
 class ArmSystem(System):
     type = 'ArmSystem'
     load_addr_mask = 0xffffffff
+    # 0x35 Implementor is '5' from "M5"
+    # 0x0 Variant
+    # 0xf Architecture from CPUID scheme
+    # 0xf00 Primary part number
+    # 0x0 Revision
+    midr_regval = Param.UInt32(0x350ff000, "MIDR value")
     boot_loader = Param.String("", "File that contains the boot loader code if any")
     boot_loader_mem = Param.PhysicalMemory(NULL,
                           "Memory object that boot loader is to be loaded into")
