@@ -485,8 +485,16 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
             inst->seqNum < toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;
         toCommit->squashedSeqNum[tid] = inst->seqNum;
-        TheISA::PCState pc = inst->pcState();
-        TheISA::advancePC(pc, inst->staticInst);
+        TheISA::PCState pc;
+        if (inst->isMemRef() && inst->isIndirectCtrl()) {
+            // If an operation is a control operation as well as a memory
+            // reference we need to use the predicted PC, not the PC+N
+            // This instruction will verify misprediction based on predPC
+            pc = inst->readPredTarg();
+        } else {
+            pc = inst->pcState();
+            TheISA::advancePC(pc, inst->staticInst);
+        }
         toCommit->pc[tid] = pc;
         toCommit->mispredictInst[tid] = NULL;
 
