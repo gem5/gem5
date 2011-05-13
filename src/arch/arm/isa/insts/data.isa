@@ -51,27 +51,36 @@ let {{
         CpsrQ = (resTemp & 1) << 27;
     '''
 
-    calcCcCode = '''
-        uint16_t _ic, _iv, _iz, _in;
-        _in = (resTemp >> %(negBit)d) & 1;
-        _iz = (resTemp == 0);
-        _iv = %(ivValue)s & 1;
-        _ic = %(icValue)s & 1;
-
-        CondCodesNZ = (_in << 1) | _iz;
-        CondCodesC =  _ic;
-        CondCodesV =  _iv;
-
-        DPRINTF(Arm, "(in, iz, ic, iv) = (%%d, %%d, %%d, %%d)\\n",
-                     _in, _iz, _ic, _iv);
-       '''
+    def createCcCode(negBit, carry, overflow):
+        code = ""
+        code += '''
+            uint16_t _iz, _in;
+            _in = (resTemp >> %d) & 1;
+            _iz = (resTemp == 0);
+            CondCodesNZ = (_in << 1) | _iz;
+            DPRINTF(Arm, "(in, iz) = (%%d, %%d)\\n", _in, _iz);
+        ''' % negBit
+        if overflow and overflow != "none":
+            code +=  '''
+                uint16_t _iv;
+                _iv = %s & 1;
+                CondCodesV =  _iv;
+                DPRINTF(Arm, "(iv) = (%%d)\\n", _iv);
+            ''' % overflow
+        if carry and carry != "none":
+            code += '''
+                uint16_t _ic;
+                _ic = %s & 1;
+                CondCodesC =  _ic;
+                DPRINTF(Arm, "(ic) = (%%d)\\n", _ic);
+            ''' % carry
+        return code
 
     # Dict of code to set the carry flag. (imm, reg, reg-reg)
     oldC = 'CondCodesC'
-    oldV = 'CondCodesV'
     carryCode = {
-        "none": (oldC, oldC, oldC),
-        "llbit": (oldC, oldC, oldC),
+        "none": ("none", "none", "none"),
+        "llbit": ("none", "none", "none"),
         "saturate": ('0', '0', '0'),
         "overflow": ('0', '0', '0'),
         "ge": ('0', '0', '0'),
@@ -90,15 +99,15 @@ let {{
     }
     # Dict of code to set the overflow flag.
     overflowCode = {
-        "none": oldV,
-        "llbit": oldV,
+        "none": "none",
+        "llbit": "none",
         "saturate": '0',
         "overflow": '0',
         "ge": '0',
         "add": 'findOverflow(32, resTemp, Op1, secondOp)',
         "sub": 'findOverflow(32, resTemp, Op1, ~secondOp)',
         "rsb": 'findOverflow(32, resTemp, secondOp, ~Op1)',
-        "logic": oldV
+        "logic": "none"
     }
 
     secondOpRe = re.compile("secondOp")
@@ -118,11 +127,9 @@ let {{
         elif flagType == "ge":
             immCcCode = calcGECode
         else:
-            immCcCode = calcCcCode % {
-                "icValue": secondOpRe.sub(immOp2, cCode[0]),
-                "ivValue": secondOpRe.sub(immOp2, vCode),
-                "negBit": negBit
-            }
+            immCcCode = createCcCode(negBit, secondOpRe.sub(immOp2, cCode[0]),
+                                     secondOpRe.sub(immOp2, vCode))
+
         immCode = secondOpRe.sub(immOp2, code)
         immIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataImmOp",
                        {"code" : immCode,
@@ -149,6 +156,7 @@ let {{
         cCode = carryCode[flagType]
         vCode = overflowCode[flagType]
         negBit = 31
+        regCcCode = ""
         if flagType == "llbit":
             negBit = 63
         if flagType == "saturate":
@@ -156,12 +164,16 @@ let {{
         elif flagType == "ge":
             regCcCode = calcGECode
         else:
-            regCcCode = calcCcCode % {
-                "icValue": secondOpRe.sub(regOp2, cCode[1]),
-                "ivValue": secondOpRe.sub(regOp2, vCode),
-                "negBit": negBit
-            }
+            regCcCode = createCcCode(negBit,secondOpRe.sub(regOp2, cCode[1]),
+                                     secondOpRe.sub(regOp2, vCode))
+
         regCode = secondOpRe.sub(regOp2, code)
+
+        # If we end up needing CondCodesC then remove any trace of the OptShift
+        if re.search('(?<!OptShiftRm)CondCodesC(?!.*=)', regCode + regCcCode):
+            regCode = re.sub('OptShiftRmCondCodesC', 'CondCodesC', regCode)
+            regCcCode = re.sub('OptShiftRmCondCodesC', 'CondCodesC', regCcCode)
+
         regIop = InstObjParams(mnem, mnem.capitalize() + suffix, "DataRegOp",
                        {"code" : regCode, "is_ras_pop" : isRasPop,
                         "is_branch" : isBranch,
@@ -197,11 +209,10 @@ let {{
         elif flagType == "ge":
             regRegCcCode = calcGECode
         else:
-            regRegCcCode = calcCcCode % {
-                "icValue": secondOpRe.sub(regRegOp2, cCode[2]),
-                "ivValue": secondOpRe.sub(regRegOp2, vCode),
-                "negBit": negBit
-            }
+            regRegCcCode = createCcCode(negBit,
+                                        secondOpRe.sub(regRegOp2, cCode[2]),
+                                        secondOpRe.sub(regRegOp2, vCode))
+
         regRegCode = secondOpRe.sub(regRegOp2, code)
         regRegIop = InstObjParams(mnem, mnem.capitalize() + suffix,
                           "DataRegRegOp",
