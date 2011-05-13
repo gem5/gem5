@@ -120,7 +120,7 @@ let {{
 
     def pickPredicate(blobs):
         for val in blobs.values():
-            if re.search('(?<!Opt)CondCodes', val):
+            if re.search('(?<!Opt)CondCodesF', val):
                 return condPredicateTest
         return predicateTest
 

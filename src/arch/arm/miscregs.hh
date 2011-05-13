@@ -269,7 +269,10 @@ namespace ArmISA
 
     // This mask selects bits of the CPSR that actually go in the CondCodes
     // integer register to allow renaming.
-    static const uint32_t CondCodesMask = 0xF80F0000;
+    static const uint32_t CondCodesMask   = 0xF80F0000;
+    static const uint32_t CondCodesMaskF  = 0xF0000000;
+    static const uint32_t CondCodesMaskQ  = 0x08000000;
+    static const uint32_t CondCodesMaskGE = 0x000F0000;
 
     BitUnion32(SCTLR)
         Bitfield<31> ie;  // Instruction endianness

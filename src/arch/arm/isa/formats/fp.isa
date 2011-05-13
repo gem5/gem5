@@ -2074,11 +2074,10 @@ let {{
                     cpsrMask.c = 1;
                     cpsrMask.v = 1;
                     if (specReg == MISCREG_FPSCR) {
-                        return new VmrsApsrFpscr(machInst, INTREG_CONDCODES,
+                        return new VmrsApsrFpscr(machInst, INTREG_CONDCODES_F,
                                 (IntRegIndex)specReg, (uint32_t)cpsrMask);
                     } else {
-                        return new VmrsApsr(machInst, INTREG_CONDCODES,
-                                (IntRegIndex)specReg, (uint32_t)cpsrMask);
+                        return new Unknown(machInst);
                     }
                 } else if (specReg == MISCREG_FPSCR) {
                     return new VmrsFpscr(machInst, rt, (IntRegIndex)specReg);

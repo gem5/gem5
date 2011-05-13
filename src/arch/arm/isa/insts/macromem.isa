@@ -90,9 +90,12 @@ let {{
         CPSR cpsr = Cpsr;
         SCTLR sctlr = Sctlr;
         uint32_t newCpsr =
-            cpsrWriteByInstr(cpsr | CondCodes, Spsr, 0xF, true, sctlr.nmfi);
+            cpsrWriteByInstr(cpsr | CondCodesF | CondCodesQ | CondCodesGE,
+                             Spsr, 0xF, true, sctlr.nmfi);
         Cpsr = ~CondCodesMask & newCpsr;
-        CondCodes = CondCodesMask & newCpsr;
+        CondCodesF = CondCodesMaskF & newCpsr;
+        CondCodesQ = CondCodesMaskQ & newCpsr;
+        CondCodesGE = CondCodesMaskGE & newCpsr;
         IWNPC = cSwap(%s, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
         NextItState = ((((CPSR)Spsr).it2 << 2) & 0xFC)
                 | (((CPSR)Spsr).it1 & 0x3);
@@ -585,7 +588,7 @@ let {{
                                    {'code':
                                     '''URa = URb + shift_rm_imm(URc, shiftAmt,
                                                               shiftType,
-                                                              CondCodes<29:>);
+                                                              CondCodesF<29:>);
                                     ''',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
@@ -601,7 +604,7 @@ let {{
                                    {'code':
                                     '''URa = URb - shift_rm_imm(URc, shiftAmt,
                                                               shiftType,
-                                                              CondCodes<29:>);
+                                                              CondCodesF<29:>);
                                     ''',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
@@ -631,7 +634,9 @@ let {{
                     NextJazelle = ((CPSR)newCpsr).j;
                     NextItState = ((((CPSR)URb).it2 << 2) & 0xFC)
                                     | (((CPSR)URb).it1 & 0x3);
-                    CondCodes = CondCodesMask & newCpsr;
+                    CondCodesF = CondCodesMaskF & newCpsr;
+                    CondCodesQ = CondCodesMaskQ & newCpsr;
+                    CondCodesGE = CondCodesMaskGE & newCpsr;
                     '''
 
     microUopSetPCCPSRIop = InstObjParams('uopSet_uop', 'MicroUopSetPCCPSR',

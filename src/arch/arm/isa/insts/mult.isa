@@ -44,7 +44,7 @@ let {{
     exec_output = ""
 
     calcQCode = '''
-        CondCodes = CondCodes | ((resTemp & 1) << 27);
+        CondCodesQ = CondCodesQ | ((resTemp & 1) << 27);
     '''
 
     calcCcCode = '''
@@ -52,7 +52,7 @@ let {{
         _in = (resTemp >> %(negBit)d) & 1;
         _iz = ((%(zType)s)resTemp == 0);
 
-        CondCodes =  _in << 31 | _iz << 30 | (CondCodes & 0x3FFFFFFF);
+        CondCodesF =  _in << 31 | _iz << 30 | (CondCodesF & 0x3FFFFFFF);
 
         DPRINTF(Arm, "(in, iz) = (%%d, %%d)\\n", _in, _iz);
        '''

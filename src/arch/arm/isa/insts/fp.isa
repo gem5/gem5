@@ -235,21 +235,8 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmrsFpscrIop);
     exec_output += PredOpExecute.subst(vmrsFpscrIop);
 
-    vmrsApsrCode = vmrsEnabledCheckCode + '''
-        Dest = (MiscOp1 & imm) | (Dest & ~imm);
-    '''
-    vmrsApsrIop = InstObjParams("vmrs", "VmrsApsr", "FpRegRegImmOp",
-                                { "code": vmrsApsrCode,
-                                  "predicate_test": predicateTest,
-                                  "op_class": "SimdFloatMiscOp" },
-                                ["IsSerializeBefore"])
-    header_output += FpRegRegImmOpDeclare.subst(vmrsApsrIop);
-    decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrIop);
-    exec_output += PredOpExecute.subst(vmrsApsrIop);
-
     vmrsApsrFpscrCode = vmrsEnabledCheckCode + '''
-    assert((imm & ~FpCondCodesMask) == 0);
-    Dest = (FpCondCodes & imm) | (Dest & ~imm);
+        Dest = FpCondCodes & FpCondCodesMask;
     '''
     vmrsApsrFpscrIop = InstObjParams("vmrs", "VmrsApsrFpscr", "FpRegRegImmOp",
                                      { "code": vmrsApsrFpscrCode,

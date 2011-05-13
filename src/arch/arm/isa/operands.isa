@@ -156,10 +156,12 @@ def operands {{
     'R3': intRegNPC('3'),
 
     #Pseudo integer condition code registers
-    'CondCodes': intRegCC('INTREG_CONDCODES'),
-    'OptCondCodes': intRegCC(
+    'CondCodesF': intRegCC('INTREG_CONDCODES_F'),
+    'CondCodesQ': intRegCC('INTREG_CONDCODES_Q'),
+    'CondCodesGE': intRegCC('INTREG_CONDCODES_GE'),
+    'OptCondCodesF': intRegCC(
             '''(condCode == COND_AL || condCode == COND_UC) ?
-               INTREG_ZERO : INTREG_CONDCODES'''),
+               INTREG_ZERO : INTREG_CONDCODES_F'''),
     'FpCondCodes': intRegCC('INTREG_FPCONDCODES'),
 
     #Abstracted floating point reg operands

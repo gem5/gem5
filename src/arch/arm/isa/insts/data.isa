@@ -44,11 +44,11 @@ let {{
     exec_output = ""
 
     calcGECode = '''
-        CondCodes = insertBits(CondCodes, 19, 16, resTemp);
+        CondCodesGE = insertBits(0, 19, 16, resTemp);
     '''
 
     calcQCode = '''
-        CondCodes = CondCodes | ((resTemp & 1) << 27);
+        CondCodesQ = CondCodesQ | ((resTemp & 1) << 27);
     '''
 
     calcCcCode = '''
@@ -58,16 +58,15 @@ let {{
         _iv = %(ivValue)s & 1;
         _ic = %(icValue)s & 1;
 
-        CondCodes =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28 |
-                    (CondCodes & 0x0FFFFFFF);
+        CondCodesF =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28;
 
         DPRINTF(Arm, "(in, iz, ic, iv) = (%%d, %%d, %%d, %%d)\\n",
                      _in, _iz, _ic, _iv);
        '''
 
     # Dict of code to set the carry flag. (imm, reg, reg-reg)
-    oldC = 'CondCodes<29:>'
-    oldV = 'CondCodes<28:>'
+    oldC = 'CondCodesF<29:>'
+    oldV = 'CondCodesF<28:>'
     carryCode = {
         "none": (oldC, oldC, oldC),
         "llbit": (oldC, oldC, oldC),
@@ -102,8 +101,8 @@ let {{
 
     secondOpRe = re.compile("secondOp")
     immOp2 = "imm"
-    regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodes<29:>)"
-    regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodes<29:>)"
+    regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodesF<29:>)"
+    regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodesF<29:>)"
 
     def buildImmDataInst(mnem, code, flagType = "logic", suffix = "Imm", \
                          buildCc = True, buildNonCc = True, instFlags = []):
@@ -240,9 +239,12 @@ let {{
             code += '''
             SCTLR sctlr = Sctlr;
             uint32_t newCpsr =
-                cpsrWriteByInstr(Cpsr | CondCodes, Spsr, 0xF, true, sctlr.nmfi);
+                cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesQ | CondCodesGE,
+                                 Spsr, 0xF, true, sctlr.nmfi);
             Cpsr = ~CondCodesMask & newCpsr;
-            CondCodes = CondCodesMask & newCpsr;
+            CondCodesF = CondCodesMaskF & newCpsr;
+            CondCodesQ = CondCodesMaskQ & newCpsr;
+            CondCodesGE = CondCodesMaskGE & newCpsr;
             NextThumb = ((CPSR)newCpsr).t;
             NextJazelle = ((CPSR)newCpsr).j;
             NextItState = ((((CPSR)newCpsr).it2 << 2) & 0xFC)
