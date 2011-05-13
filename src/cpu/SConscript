@@ -168,6 +168,9 @@ TraceFlag('ExecThread')
 TraceFlag('ExecTicks')
 TraceFlag('ExecMicro')
 TraceFlag('ExecMacro')
+TraceFlag('ExecUser')
+TraceFlag('ExecKernel')
+TraceFlag('ExecAsid')
 TraceFlag('Fetch')
 TraceFlag('IntrControl')
 TraceFlag('PCEvent')
@@ -176,8 +179,11 @@ TraceFlag('Quiesce')
 CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
     'ExecFaulting', 'ExecFetchSeq', 'ExecOpClass', 'ExecRegDelta',
     'ExecResult', 'ExecSpeculative', 'ExecSymbol', 'ExecThread',
-    'ExecTicks', 'ExecMicro', 'ExecMacro' ])
+    'ExecTicks', 'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
+    'ExecAsid' ])
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecFaulting' ])
+    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecFaulting',
+    'ExecUser', 'ExecKernel' ])
 CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecFaulting' ])
+    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecFaulting',
+    'ExecUser', 'ExecKernel' ])

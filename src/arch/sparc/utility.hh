@@ -94,6 +94,12 @@ advancePC(PCState &pc, const StaticInstPtr inst)
     inst->advancePC(pc);
 }
 
+inline uint64_t
+getExecutingAsid(ThreadContext *tc)
+{
+    return tc->readMiscRegNoEffect(MISCREG_MMU_P_CONTEXT);
+}
+
 } // namespace SparcISA
 
 #endif

@@ -29,7 +29,6 @@
  *          Ali Saidi
  */
 
-#include "arch/alpha/ev5.hh"
 #include "arch/alpha/utility.hh"
 
 #if FULL_SYSTEM

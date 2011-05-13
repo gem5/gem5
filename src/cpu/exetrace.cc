@@ -60,6 +60,12 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 {
     ostream &outs = Trace::output();
 
+    if (!Debug::ExecUser || !Debug::ExecKernel) {
+        bool in_user_mode = TheISA::inUserMode(thread);
+        if (in_user_mode && !Debug::ExecUser) return;
+        if (!in_user_mode && !Debug::ExecKernel) return;
+    }
+
     if (Debug::ExecTicks)
         dumpTicks(outs);
 
@@ -67,6 +73,9 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 
     if (Debug::ExecSpeculative)
         outs << (misspeculating ? "-" : "+") << " ";
+
+    if (Debug::ExecAsid)
+        outs << "A" << dec << TheISA::getExecutingAsid(thread) << " ";
 
     if (Debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";

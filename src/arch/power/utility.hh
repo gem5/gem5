@@ -78,6 +78,19 @@ advancePC(PCState &pc, const StaticInstPtr inst)
     pc.advance();
 }
 
+static inline bool
+inUserMode(ThreadContext *tc)
+{
+    return 0;
+}
+
+inline uint64_t
+getExecutingAsid(ThreadContext *tc)
+{
+    return 0;
+}
+
 } // namespace PowerISA
+
 
 #endif // __ARCH_POWER_UTILITY_HH__

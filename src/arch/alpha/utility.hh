@@ -39,6 +39,7 @@
 #include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "arch/alpha/ev5.hh"
 
 namespace AlphaISA {
 
@@ -109,6 +110,12 @@ inline void
 advancePC(PCState &pc, const StaticInstPtr inst)
 {
     pc.advance();
+}
+
+inline uint64_t
+getExecutingAsid(ThreadContext *tc)
+{
+    return DTB_ASN_ASN(tc->readMiscRegNoEffect(IPR_DTB_ASN));
 }
 
 } // namespace AlphaISA

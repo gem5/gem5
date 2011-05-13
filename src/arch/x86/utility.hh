@@ -102,6 +102,13 @@ namespace X86ISA
     {
         inst->advancePC(pc);
     }
+
+    inline uint64_t
+    getExecutingAsid(ThreadContext *tc)
+    {
+        return 0;
+    }
+
 };
 
 #endif // __ARCH_X86_UTILITY_HH__
