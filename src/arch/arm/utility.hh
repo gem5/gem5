@@ -65,24 +65,27 @@ buildRetPC(const PCState &curPC, const PCState &callPC)
 }
 
 inline bool
-testPredicate(CPSR cpsr, ConditionCode code)
+testPredicate(uint32_t nz, uint32_t c, uint32_t v, ConditionCode code)
 {
+    bool n = (nz & 0x2);
+    bool z = (nz & 0x1);
+
     switch (code)
     {
-        case COND_EQ: return  cpsr.z;
-        case COND_NE: return !cpsr.z;
-        case COND_CS: return  cpsr.c;
-        case COND_CC: return !cpsr.c;
-        case COND_MI: return  cpsr.n;
-        case COND_PL: return !cpsr.n;
-        case COND_VS: return  cpsr.v;
-        case COND_VC: return !cpsr.v;
-        case COND_HI: return  (cpsr.c && !cpsr.z);
-        case COND_LS: return !(cpsr.c && !cpsr.z);
-        case COND_GE: return !(cpsr.n ^ cpsr.v);
-        case COND_LT: return  (cpsr.n ^ cpsr.v);
-        case COND_GT: return !(cpsr.n ^ cpsr.v || cpsr.z);
-        case COND_LE: return  (cpsr.n ^ cpsr.v || cpsr.z);
+        case COND_EQ: return  z;
+        case COND_NE: return !z;
+        case COND_CS: return  c;
+        case COND_CC: return !c;
+        case COND_MI: return  n;
+        case COND_PL: return !n;
+        case COND_VS: return  v;
+        case COND_VC: return !v;
+        case COND_HI: return  (c && !z);
+        case COND_LS: return !(c && !z);
+        case COND_GE: return !(n ^ v);
+        case COND_LT: return  (n ^ v);
+        case COND_GT: return !(n ^ v || z);
+        case COND_LE: return  (n ^ v || z);
         case COND_AL: return true;
         case COND_UC: return true;
         default:

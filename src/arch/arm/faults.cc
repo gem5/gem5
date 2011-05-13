@@ -106,9 +106,12 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    CPSR saved_cpsr = tc->readMiscReg(MISCREG_CPSR) | 
-                      tc->readIntReg(INTREG_CONDCODES_F) |
-                      tc->readIntReg(INTREG_CONDCODES_GE);
+    CPSR saved_cpsr = tc->readMiscReg(MISCREG_CPSR);
+    saved_cpsr.nz = tc->readIntReg(INTREG_CONDCODES_NZ);
+    saved_cpsr.c = tc->readIntReg(INTREG_CONDCODES_C);
+    saved_cpsr.v = tc->readIntReg(INTREG_CONDCODES_V);
+    saved_cpsr.ge = tc->readIntReg(INTREG_CONDCODES_GE);
+
     Addr curPc M5_VAR_USED = tc->pcState().pc();
     ITSTATE it = tc->pcState().itstate();
     saved_cpsr.it2 = it.top6;

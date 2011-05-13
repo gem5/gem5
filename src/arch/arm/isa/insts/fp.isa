@@ -235,16 +235,18 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vmrsFpscrIop);
     exec_output += PredOpExecute.subst(vmrsFpscrIop);
 
-    vmrsApsrFpscrCode = vmrsEnabledCheckCode + '''
-        Dest = FpCondCodes & FpCondCodesMask;
+    vmrsApsrFpscrCode = vmrsApsrEnabledCheckCode + '''
+        FPSCR fpscr = FpCondCodes;
+        CondCodesNZ = (fpscr.n << 1) | fpscr.z;
+        CondCodesC = fpscr.c;
+        CondCodesV = fpscr.v;
     '''
-    vmrsApsrFpscrIop = InstObjParams("vmrs", "VmrsApsrFpscr", "FpRegRegImmOp",
+    vmrsApsrFpscrIop = InstObjParams("vmrs", "VmrsApsrFpscr", "PredOp",
                                      { "code": vmrsApsrFpscrCode,
                                        "predicate_test": predicateTest,
-                                       "op_class": "SimdFloatMiscOp" },
-                                     ["IsSerializeBefore"])
-    header_output += FpRegRegImmOpDeclare.subst(vmrsApsrFpscrIop);
-    decoder_output += FpRegRegImmOpConstructor.subst(vmrsApsrFpscrIop);
+                                       "op_class": "SimdFloatMiscOp" })
+    header_output += BasicDeclare.subst(vmrsApsrFpscrIop);
+    decoder_output += BasicConstructor.subst(vmrsApsrFpscrIop);
     exec_output += PredOpExecute.subst(vmrsApsrFpscrIop);
 
     vmovImmSCode = vfpEnabledCheckCode + '''

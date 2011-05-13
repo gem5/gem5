@@ -46,8 +46,8 @@
 //
 
 let {{
-    predicateTest = 'testPredicate(OptCondCodesF, condCode)'
-    condPredicateTest = 'testPredicate(CondCodesF, condCode)'
+    predicateTest = 'testPredicate(OptCondCodesNZ, OptCondCodesC, OptCondCodesV, condCode)'
+    condPredicateTest = 'testPredicate(CondCodesNZ, CondCodesC, CondCodesV, condCode)'
 }};
 
 def template DataImmDeclare {{

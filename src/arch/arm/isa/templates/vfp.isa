@@ -62,6 +62,10 @@ let {{
             if (op1 != (int)MISCREG_FPSCR)
                 return disabledFault();
     '''
+    vmrsApsrEnabledCheckCode = '''
+        if (!vfpEnabled(Cpacr, Cpsr))
+                return disabledFault();
+    '''
 }};
 
 def template FpRegRegOpDeclare {{

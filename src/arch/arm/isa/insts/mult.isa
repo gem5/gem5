@@ -52,7 +52,7 @@ let {{
         _in = (resTemp >> %(negBit)d) & 1;
         _iz = ((%(zType)s)resTemp == 0);
 
-        CondCodesF =  _in << 31 | _iz << 30 | (CondCodesF & 0x3FFFFFFF);
+        CondCodesNZ = (_in << 1) | _iz;
 
         DPRINTF(Arm, "(in, iz) = (%%d, %%d)\\n", _in, _iz);
        '''

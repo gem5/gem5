@@ -106,7 +106,11 @@ let {{
                 wbDiff = 8
             accCode = '''
             CPSR cpsr = Cpsr;
-            URc = cpsr | CondCodesF | CondCodesGE;
+            cpsr.nz = CondCodesNZ;
+            cpsr.c = CondCodesC;
+            cpsr.v = CondCodesV;
+            cpsr.ge = CondCodesGE;
+            URc = cpsr;
             URa = cSwap<uint32_t>(Mem.ud, cpsr.e);
             URb = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
             '''
@@ -137,7 +141,7 @@ let {{
         def __init__(self, *args, **kargs):
             super(LoadRegInst, self).__init__(*args, **kargs)
             self.offset = self.op + " shift_rm_imm(Index, shiftAmt," + \
-                                    " shiftType, CondCodesF<29:>)"
+                                    " shiftType, CondCodesC)"
             if self.add:
                  self.wbDecl = '''
                      MicroAddUop(machInst, base, base, wbIndexReg, shiftAmt, shiftType);

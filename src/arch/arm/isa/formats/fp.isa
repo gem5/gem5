@@ -2068,14 +2068,8 @@ let {{
                     return new Unknown(machInst);
                 }
                 if (rt == 0xf) {
-                    CPSR cpsrMask = 0;
-                    cpsrMask.n = 1;
-                    cpsrMask.z = 1;
-                    cpsrMask.c = 1;
-                    cpsrMask.v = 1;
                     if (specReg == MISCREG_FPSCR) {
-                        return new VmrsApsrFpscr(machInst, INTREG_CONDCODES_F,
-                                (IntRegIndex)specReg, (uint32_t)cpsrMask);
+                        return new VmrsApsrFpscr(machInst);
                     } else {
                         return new Unknown(machInst);
                     }

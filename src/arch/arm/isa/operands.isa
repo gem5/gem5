@@ -156,11 +156,24 @@ def operands {{
     'R3': intRegNPC('3'),
 
     #Pseudo integer condition code registers
-    'CondCodesF': intRegCC('INTREG_CONDCODES_F'),
+    'CondCodesNZ': intRegCC('INTREG_CONDCODES_NZ'),
+    'CondCodesC': intRegCC('INTREG_CONDCODES_C'),
+    'CondCodesV': intRegCC('INTREG_CONDCODES_V'),
     'CondCodesGE': intRegCC('INTREG_CONDCODES_GE'),
-    'OptCondCodesF': intRegCC(
-            '''(condCode == COND_AL || condCode == COND_UC) ?
-               INTREG_ZERO : INTREG_CONDCODES_F'''),
+    'OptCondCodesNZ': intRegCC(
+            '''(condCode == COND_AL || condCode == COND_UC ||
+                condCode == COND_CC || condCode == COND_CS ||
+                condCode == COND_VS || condCode == COND_VC) ?
+               INTREG_ZERO : INTREG_CONDCODES_NZ'''),
+    'OptCondCodesC': intRegCC(
+            '''(condCode == COND_HI || condCode == COND_LS ||
+                condCode == COND_CS || condCode == COND_CC) ?
+               INTREG_CONDCODES_C : INTREG_ZERO'''),
+    'OptCondCodesV': intRegCC(
+            '''(condCode == COND_VS || condCode == COND_VC ||
+                condCode == COND_GE || condCode == COND_LT ||
+                condCode == COND_GT || condCode == COND_LE) ?
+               INTREG_CONDCODES_V : INTREG_ZERO'''),
     'FpCondCodes': intRegCC('INTREG_FPCONDCODES'),
 
     #Abstracted floating point reg operands

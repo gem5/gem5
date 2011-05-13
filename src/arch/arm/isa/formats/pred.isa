@@ -53,7 +53,9 @@ let {{
             _iv = %(ivValue)s & 1;
             _ic = %(icValue)s & 1;
             
-            CondCodesF =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28;
+            CondCodesNZ =  (_in << 1) | (_iz);
+            CondCodesC  =  _ic;
+            CondCodesV  =  _iv;
 
             DPRINTF(Arm, "in = %%d\\n", _in);
             DPRINTF(Arm, "iz = %%d\\n", _iz);
@@ -70,11 +72,11 @@ let {{
         canOverflow = 'false'
 
         if flagtype == "none":
-            icReg = icImm = 'CondCodesF<29:>'
-            iv = 'CondCodesF<28:>'
+            icReg = icImm = 'CondCodesC'
+            iv = 'CondCodesV'
         elif flagtype == "llbit":
-            icReg = icImm = 'CondCodesF<29:>'
-            iv = 'CondCodesF<28:>'
+            icReg = icImm = 'CondCodesC'
+            iv = 'CondCodesV'
             negBit = 63
         elif flagtype == "overflow":
             canOverflow = "true" 
@@ -89,9 +91,9 @@ let {{
             icReg = icImm = 'findCarry(32, resTemp, op2, ~Rn)'
             iv = 'findOverflow(32, resTemp, op2, ~Rn)'
         else:
-            icReg = 'shift_carry_rs(Rm, Rs<7:0>, shift, CondCodesF<29:>)'
-            icImm = 'shift_carry_imm(Rm, shift_size, shift, CondCodesF<29:>)'
-            iv = 'CondCodesF<28:>'
+            icReg = 'shift_carry_rs(Rm, Rs<7:0>, shift, CondCodesC)'
+            icImm = 'shift_carry_imm(Rm, shift_size, shift, CondCodesC)'
+            iv = 'CondCodesV'
         return (calcCcCode % {"icValue" : icReg, 
                               "ivValue" : iv, 
                               "negBit" : negBit,
@@ -106,11 +108,11 @@ let {{
         negBit = 31
         canOverflow = 'false'
         if flagtype == "none":
-            icValue = 'CondCodesF<29:>'
-            ivValue = 'CondCodesF<28:>'
+            icValue = 'CondCodesC'
+            ivValue = 'CondCodesV'
         elif flagtype == "llbit":
-            icValue = 'CondCodesF<29:>'
-            ivValue = 'CondCodesF<28:>'
+            icValue = 'CondCodesC'
+            ivValue = 'CondCodesV'
             negBit = 63
         elif flagtype == "overflow":
             icVaule = ivValue = '0'
@@ -126,20 +128,20 @@ let {{
             ivValue = 'findOverflow(32, resTemp, rotated_imm, ~Rn)'
         elif flagtype == "modImm":
             icValue = 'rotated_carry'
-            ivValue = 'CondCodesF<28:>'
+            ivValue = 'CondCodesV'
         else:
-            icValue = '(rotate ? rotated_carry:CondCodesF<29:>)'
-            ivValue = 'CondCodesF<28:>'
+            icValue = '(rotate ? rotated_carry:CondCodesC)'
+            ivValue = 'CondCodesV'
         return calcCcCode % vars()
 }};
 
 def format DataOp(code, flagtype = logic) {{
     (regCcCode, immCcCode) = getCcCode(flagtype)
     regCode = '''uint32_t op2 = shift_rm_rs(Rm, Rs<7:0>,
-                                            shift, CondCodesF<29:>);
+                                            shift, CondCodesC);
                  op2 = op2;''' + code
     immCode = '''uint32_t op2 = shift_rm_imm(Rm, shift_size,
-                                             shift, CondCodesF<29:>);
+                                             shift, CondCodesC);
                  op2 = op2;''' + code
     regIop = InstObjParams(name, Name, 'PredIntOp',
                            {"code": regCode,

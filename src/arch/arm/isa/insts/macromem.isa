@@ -87,15 +87,21 @@ let {{
                                       ['IsMicroop'])
 
     microRetUopCode = '''
-        CPSR cpsr = Cpsr;
+        CPSR old_cpsr = Cpsr;
         SCTLR sctlr = Sctlr;
-        uint32_t newCpsr =
-            cpsrWriteByInstr(cpsr | CondCodesF | CondCodesGE,
-                             Spsr, 0xF, true, sctlr.nmfi);
-        Cpsr = ~CondCodesMask & newCpsr;
-        CondCodesF = CondCodesMaskF & newCpsr;
-        CondCodesGE = CondCodesMaskGE & newCpsr;
-        IWNPC = cSwap(%s, cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
+        old_cpsr.nz = CondCodesNZ;
+        old_cpsr.c = CondCodesC;
+        old_cpsr.v = CondCodesV;
+        old_cpsr.ge = CondCodesGE;
+
+        CPSR new_cpsr =
+            cpsrWriteByInstr(old_cpsr, Spsr, 0xF, true, sctlr.nmfi);
+        Cpsr = ~CondCodesMask & new_cpsr;
+        CondCodesNZ = new_cpsr.nz;
+        CondCodesC = new_cpsr.c;
+        CondCodesV = new_cpsr.v;
+        CondCodesGE = new_cpsr.ge;
+        IWNPC = cSwap(%s, old_cpsr.e) | ((Spsr & 0x20) ? 1 : 0);
         NextItState = ((((CPSR)Spsr).it2 << 2) & 0xFC)
                 | (((CPSR)Spsr).it1 & 0x3);
         SevMailbox = 1;
@@ -587,7 +593,7 @@ let {{
                                    {'code':
                                     '''URa = URb + shift_rm_imm(URc, shiftAmt,
                                                               shiftType,
-                                                              CondCodesF<29:>);
+                                                              CondCodesC);
                                     ''',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
@@ -603,7 +609,7 @@ let {{
                                    {'code':
                                     '''URa = URb - shift_rm_imm(URc, shiftAmt,
                                                               shiftType,
-                                                              CondCodesF<29:>);
+                                                              CondCodesC);
                                     ''',
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
@@ -625,16 +631,18 @@ let {{
                     CPSR cpsrOrCondCodes = URc;
                     SCTLR sctlr = Sctlr;
                     pNPC = URa;
-                    uint32_t newCpsr =
+                    CPSR new_cpsr =
                     cpsrWriteByInstr(cpsrOrCondCodes, URb,
                                      0xF, true, sctlr.nmfi);
-                    Cpsr = ~CondCodesMask & newCpsr;
-                    NextThumb = ((CPSR)newCpsr).t;
-                    NextJazelle = ((CPSR)newCpsr).j;
+                    Cpsr = ~CondCodesMask & new_cpsr;
+                    NextThumb = new_cpsr.t;
+                    NextJazelle = new_cpsr.j;
                     NextItState = ((((CPSR)URb).it2 << 2) & 0xFC)
                                     | (((CPSR)URb).it1 & 0x3);
-                    CondCodesF = CondCodesMaskF & newCpsr;
-                    CondCodesGE = CondCodesMaskGE & newCpsr;
+                    CondCodesNZ = new_cpsr.nz;
+                    CondCodesC = new_cpsr.c;
+                    CondCodesV = new_cpsr.v;
+                    CondCodesGE = new_cpsr.ge;
                     '''
 
     microUopSetPCCPSRIop = InstObjParams('uopSet_uop', 'MicroUopSetPCCPSR',

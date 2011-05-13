@@ -44,7 +44,7 @@ let {{
     exec_output = ""
 
     calcGECode = '''
-        CondCodesGE = insertBits(0, 19, 16, resTemp);
+        CondCodesGE = resTemp;
     '''
 
     calcQCode = '''
@@ -58,15 +58,17 @@ let {{
         _iv = %(ivValue)s & 1;
         _ic = %(icValue)s & 1;
 
-        CondCodesF =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28;
+        CondCodesNZ = (_in << 1) | _iz;
+        CondCodesC =  _ic;
+        CondCodesV =  _iv;
 
         DPRINTF(Arm, "(in, iz, ic, iv) = (%%d, %%d, %%d, %%d)\\n",
                      _in, _iz, _ic, _iv);
        '''
 
     # Dict of code to set the carry flag. (imm, reg, reg-reg)
-    oldC = 'CondCodesF<29:>'
-    oldV = 'CondCodesF<28:>'
+    oldC = 'CondCodesC'
+    oldV = 'CondCodesV'
     carryCode = {
         "none": (oldC, oldC, oldC),
         "llbit": (oldC, oldC, oldC),
@@ -101,8 +103,8 @@ let {{
 
     secondOpRe = re.compile("secondOp")
     immOp2 = "imm"
-    regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodesF<29:>)"
-    regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodesF<29:>)"
+    regOp2 = "shift_rm_imm(Op2, shiftAmt, shiftType, CondCodesC)"
+    regRegOp2 = "shift_rm_rs(Op2, Shift<7:0>, shiftType, CondCodesC)"
 
     def buildImmDataInst(mnem, code, flagType = "logic", suffix = "Imm", \
                          buildCc = True, buildNonCc = True, instFlags = []):
@@ -238,16 +240,24 @@ let {{
         if subsPcLr:
             code += '''
             SCTLR sctlr = Sctlr;
-            uint32_t newCpsr =
-                cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesGE,
-                                 Spsr, 0xF, true, sctlr.nmfi);
-            Cpsr = ~CondCodesMask & newCpsr;
-            CondCodesF = CondCodesMaskF & newCpsr;
-            CondCodesGE = CondCodesMaskGE & newCpsr;
-            NextThumb = ((CPSR)newCpsr).t;
-            NextJazelle = ((CPSR)newCpsr).j;
-            NextItState = ((((CPSR)newCpsr).it2 << 2) & 0xFC)
-                | (((CPSR)newCpsr).it1 & 0x3);
+            CPSR old_cpsr = Cpsr;
+            old_cpsr.nz = CondCodesNZ;
+            old_cpsr.c = CondCodesC;
+            old_cpsr.v = CondCodesV;
+            old_cpsr.ge = CondCodesGE;
+
+            CPSR new_cpsr =
+                cpsrWriteByInstr(old_cpsr, Spsr, 0xF, true, sctlr.nmfi);
+            Cpsr = ~CondCodesMask & new_cpsr;
+            CondCodesNZ = new_cpsr.nz;
+            CondCodesC = new_cpsr.c;
+            CondCodesV = new_cpsr.v;
+            CondCodesGE = new_cpsr.ge;
+
+            NextThumb = (new_cpsr).t;
+            NextJazelle = (new_cpsr).j;
+            NextItState = (((new_cpsr).it2 << 2) & 0xFC)
+                | ((new_cpsr).it1 & 0x3);
             SevMailbox = 1;
             '''
             buildImmDataInst(mnem + 's', code, flagType,

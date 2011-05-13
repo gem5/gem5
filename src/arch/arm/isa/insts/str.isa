@@ -152,7 +152,7 @@ let {{
         def __init__(self, *args, **kargs):
             super(StoreRegInst, self).__init__(*args, **kargs)
             self.offset = self.op + " shift_rm_imm(Index, shiftAmt," + \
-                                    " shiftType, CondCodesF<29:>)"
+                                    " shiftType, CondCodesC)"
             if self.add:
                  self.wbDecl = '''
                      MicroAddUop(machInst, base, base, index, shiftAmt, shiftType);

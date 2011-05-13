@@ -119,10 +119,35 @@ let {{
             return (header_output, decoder_output, exec_output)
 
     def pickPredicate(blobs):
+        opt_nz = True
+        opt_c = True
+        opt_v = True
         for val in blobs.values():
-            if re.search('(?<!Opt)CondCodesF', val):
-                return condPredicateTest
-        return predicateTest
+            if re.search('(?<!Opt)CondCodesNZ', val):
+                opt_nz = False
+            if re.search('(?<!Opt)CondCodesC', val):
+                opt_c = False
+            if re.search('(?<!Opt)CondCodesV', val):
+                opt_v = False
+
+        # Build up the predicate piece by piece depending on which
+        # flags the instruction needs
+        predicate = 'testPredicate('
+        if opt_nz:
+            predicate += 'OptCondCodesNZ, '
+        else:
+            predicate += 'CondCodesNZ, '
+        if opt_c:
+            predicate += 'OptCondCodesC, '
+        else:
+            predicate += 'CondCodesC, '
+        if opt_v:
+            predicate += 'OptCondCodesV, '
+        else:
+            predicate += 'CondCodesV, '
+        predicate += 'condCode)'
+
+        return predicate
 
     def memClassName(base, post, add, writeback, \
                      size=4, sign=False, user=False):

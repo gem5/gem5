@@ -61,7 +61,12 @@ let {{
     header_output = decoder_output = exec_output = ""
 
     mrsCpsrCode = '''
-        Dest = (Cpsr | CondCodesF | CondCodesGE) & 0xF8FF03DF
+        CPSR cpsr = Cpsr;
+        cpsr.nz = CondCodesNZ;
+        cpsr.c = CondCodesC;
+        cpsr.v = CondCodesV;
+        cpsr.ge = CondCodesGE;
+        Dest = cpsr & 0xF8FF03DF
     '''
 
     mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
@@ -83,12 +88,19 @@ let {{
 
     msrCpsrRegCode = '''
         SCTLR sctlr = Sctlr;
-        uint32_t newCpsr =
-            cpsrWriteByInstr(Cpsr | CondCodesF |  CondCodesGE, Op1,
-                             byteMask, false, sctlr.nmfi);
-        Cpsr = ~CondCodesMask & newCpsr;
-        CondCodesF = CondCodesMaskF & newCpsr;
-        CondCodesGE = CondCodesMaskGE & newCpsr;
+        CPSR old_cpsr = Cpsr;
+        old_cpsr.nz = CondCodesNZ;
+        old_cpsr.c = CondCodesC;
+        old_cpsr.v = CondCodesV;
+        old_cpsr.ge = CondCodesGE;
+
+        CPSR new_cpsr =
+            cpsrWriteByInstr(old_cpsr, Op1, byteMask, false, sctlr.nmfi);
+        Cpsr = ~CondCodesMask & new_cpsr;
+        CondCodesNZ = new_cpsr.nz;
+        CondCodesC = new_cpsr.c;
+        CondCodesV = new_cpsr.v;
+        CondCodesGE = new_cpsr.ge;
     '''
     msrCpsrRegIop = InstObjParams("msr", "MsrCpsrReg", "MsrRegOp",
                                   { "code": msrCpsrRegCode,
@@ -109,12 +121,18 @@ let {{
 
     msrCpsrImmCode = '''
         SCTLR sctlr = Sctlr;
-        uint32_t newCpsr =
-            cpsrWriteByInstr(Cpsr | CondCodesF | CondCodesGE, imm,
-                             byteMask, false, sctlr.nmfi);
-        Cpsr = ~CondCodesMask & newCpsr;
-        CondCodesF = CondCodesMaskF & newCpsr;
-        CondCodesGE = CondCodesMaskGE & newCpsr;
+        CPSR old_cpsr = Cpsr;
+        old_cpsr.nz = CondCodesNZ;
+        old_cpsr.c = CondCodesC;
+        old_cpsr.v = CondCodesV;
+        old_cpsr.ge = CondCodesGE;
+        CPSR new_cpsr =
+            cpsrWriteByInstr(old_cpsr, imm, byteMask, false, sctlr.nmfi);
+        Cpsr = ~CondCodesMask & new_cpsr;
+        CondCodesNZ = new_cpsr.nz;
+        CondCodesC = new_cpsr.c;
+        CondCodesV = new_cpsr.v;
+        CondCodesGE = new_cpsr.ge;
     '''
     msrCpsrImmIop = InstObjParams("msr", "MsrCpsrImm", "MsrImmOp",
                                   { "code": msrCpsrImmCode,
@@ -415,14 +433,14 @@ let {{
             int low = i * 8;
             int high = low + 7;
             replaceBits(resTemp, high, low,
-                        bits(CondCodesGE, 16 + i) ?
+                        bits(CondCodesGE, i) ?
                             bits(Op1, high, low) : bits(Op2, high, low));
         }
         Dest = resTemp;
     '''
     selIop = InstObjParams("sel", "Sel", "RegRegRegOp",
                            { "code": selCode,
-                             "predicate_test": condPredicateTest }, [])
+                             "predicate_test": predicateTest }, [])
     header_output += RegRegRegOpDeclare.subst(selIop)
     decoder_output += RegRegRegOpConstructor.subst(selIop)
     exec_output += PredOpExecute.subst(selIop)

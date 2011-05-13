@@ -115,9 +115,13 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
     changed[STATE_PC] = (newState[STATE_PC] != oldState[STATE_PC]);
 
     //CPSR
-    newState[STATE_CPSR] = tc->readMiscReg(MISCREG_CPSR) |
-                           tc->readIntReg(INTREG_CONDCODES_F) |
-                           tc->readIntReg(INTREG_CONDCODES_GE);
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    cpsr.nz = tc->readIntReg(INTREG_CONDCODES_NZ);
+    cpsr.c = tc->readIntReg(INTREG_CONDCODES_C);
+    cpsr.v = tc->readIntReg(INTREG_CONDCODES_V);
+    cpsr.ge = tc->readIntReg(INTREG_CONDCODES_GE);
+
+    newState[STATE_CPSR] = cpsr;
     changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
 
     for (int i = 0; i < NumFloatArchRegs; i += 2) {
