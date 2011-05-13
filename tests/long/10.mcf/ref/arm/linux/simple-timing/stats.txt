@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                2007081                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 346528                       # Number of bytes of host memory used
-host_seconds                                    45.45                       # Real time elapsed on the host
-host_tick_rate                             3258049978                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1371366                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 393424                       # Number of bytes of host memory used
+host_seconds                                    66.52                       # Real time elapsed on the host
+host_tick_rate                             2226109550                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    91226321                       # Number of instructions simulated
 sim_seconds                                  0.148086                       # Number of seconds simulated
@@ -259,8 +259,8 @@ system.cpu.num_idle_cycles                          0                       # Nu
 system.cpu.num_insts                         91226321                       # Number of instructions executed
 system.cpu.num_int_alu_accesses              72525682                       # Number of integer alu accesses
 system.cpu.num_int_insts                     72525682                       # number of integer instructions
-system.cpu.num_int_register_reads           257193253                       # number of times the integer registers were read
-system.cpu.num_int_register_writes           70993656                       # number of times the integer registers were written
+system.cpu.num_int_register_reads           464563396                       # number of times the integer registers were read
+system.cpu.num_int_register_writes          106840370                       # number of times the integer registers were written
 system.cpu.num_load_insts                    22573967                       # Number of load instructions
 system.cpu.num_mem_refs                      27318811                       # number of memory refs
 system.cpu.num_store_insts                    4744844                       # Number of store instructions

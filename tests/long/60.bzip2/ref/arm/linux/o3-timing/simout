@@ -1,3 +1,5 @@
+Redirecting stdout to build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/o3-timing/simout
+Redirecting stderr to build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/o3-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,9 +7,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2011 12:05:01
-M5 started Apr 21 2011 15:04:28
-M5 executing on maize
+M5 compiled May  4 2011 13:56:47
+M5 started May  4 2011 15:15:49
+M5 executing on nadc-0364
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/long/60.bzip2/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -28,4 +30,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 642890553000 because target called exit()
+Exiting @ tick 567799725500 because target called exit()

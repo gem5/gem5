@@ -1,3 +1,5 @@
+Redirecting stdout to build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3/simout
+Redirecting stderr to build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May  2 2011 15:06:32
-M5 started May  2 2011 15:06:36
-M5 executing on u200439-lin.austin.arm.com
+M5 compiled May  4 2011 15:43:04
+M5 started May  4 2011 15:43:52
+M5 executing on nadc-0364
 command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux.arm
+info: kernel located at: /arm/scratch/alisai01/dist/binaries/vmlinux.arm
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 82662703500 because m5_exit instruction encountered
+Exiting @ tick 82034111500 because m5_exit instruction encountered
