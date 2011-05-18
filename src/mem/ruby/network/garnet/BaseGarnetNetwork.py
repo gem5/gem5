@@ -35,7 +35,4 @@ class BaseGarnetNetwork(RubyNetwork):
     type = 'BaseGarnetNetwork'
     abstract = True
     ni_flit_size = Param.Int(16, "network interface flit size in bytes")
-    number_of_pipe_stages = Param.Int(4, "router pipeline stages");
-    vcs_per_class = Param.Int(4, "virtual channels per message class");
-    buffers_per_data_vc = Param.Int(4, "buffers per data virtual channel");
-    buffers_per_ctrl_vc = Param.Int(1, "buffers per ctrl virtual channel");
+    vcs_per_vnet = Param.Int(4, "virtual channels per virtual network");

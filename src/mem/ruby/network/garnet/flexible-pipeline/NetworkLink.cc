@@ -41,7 +41,7 @@ NetworkLink::NetworkLink(const Params *p)
     m_latency = p->link_latency;
     m_id = p->link_id;
     int num_net = p->virt_nets;
-    int num_vc = p->vcs_per_class;
+    int num_vc = p->vcs_per_vnet;
     m_vc_load.resize(num_net * num_vc);
 
     for (int i = 0; i < num_net * num_vc; i++)

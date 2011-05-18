@@ -57,6 +57,7 @@ class GarnetNetwork : public BaseGarnetNetwork
     void init();
 
     int getBufferSize() { return m_buffer_size; }
+    int getNumPipeStages() {return m_number_of_pipe_stages; }
 
     // returns the queue requested for the given component
     MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
@@ -115,6 +116,7 @@ class GarnetNetwork : public BaseGarnetNetwork
     std::vector<NetworkInterface *> m_ni_ptr_vector; // All NI's in Network
 
     int m_buffer_size;
+    int m_number_of_pipe_stages;
 };
 
 inline std::ostream&

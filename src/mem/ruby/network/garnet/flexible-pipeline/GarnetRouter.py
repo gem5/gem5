@@ -35,8 +35,8 @@ from BasicRouter import BasicRouter
 class GarnetRouter(BasicRouter):
     type = 'GarnetRouter'
     cxx_class = 'Router'
-    vcs_per_class = Param.Int(Parent.vcs_per_class,
-                              "virtual channels per message class")
+    vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
+                              "virtual channels per virtual network")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
 

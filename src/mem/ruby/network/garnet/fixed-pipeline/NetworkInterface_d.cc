@@ -47,7 +47,7 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks,
     m_id = id;
     m_net_ptr = network_ptr;
     m_virtual_networks  = virtual_networks;
-    m_vc_per_vnet = m_net_ptr->getVCsPerClass();
+    m_vc_per_vnet = m_net_ptr->getVCsPerVnet();
     m_num_vcs = m_vc_per_vnet*m_virtual_networks;
 
     m_vc_round_robin = 0;

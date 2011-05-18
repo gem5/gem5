@@ -49,6 +49,7 @@ GarnetNetwork::GarnetNetwork(const Params *p)
     : BaseGarnetNetwork(p)
 {
     m_buffer_size = p->buffer_size;
+    m_number_of_pipe_stages = p->number_of_pipe_stages;
 
     // record the routers
     for (vector<BasicRouter*>::const_iterator i = 
@@ -221,9 +222,9 @@ GarnetNetwork::printStats(ostream& out) const
 {
     double average_link_utilization = 0;
     vector<double> average_vc_load;
-    average_vc_load.resize(m_virtual_networks*m_vcs_per_class);
+    average_vc_load.resize(m_virtual_networks*m_vcs_per_vnet);
 
-    for (int i = 0; i < m_virtual_networks*m_vcs_per_class; i++) {
+    for (int i = 0; i < m_virtual_networks*m_vcs_per_vnet; i++) {
         average_vc_load[i] = 0;
     }
 
@@ -236,7 +237,7 @@ GarnetNetwork::printStats(ostream& out) const
             m_link_ptr_vector[i]->getLinkUtilization();
         vector<int> vc_load = m_link_ptr_vector[i]->getVcLoad();
         for (int j = 0; j < vc_load.size(); j++) {
-            assert(vc_load.size() == m_vcs_per_class*m_virtual_networks);
+            assert(vc_load.size() == m_vcs_per_vnet*m_virtual_networks);
             average_vc_load[j] += vc_load[j];
         }
     }
@@ -246,8 +247,8 @@ GarnetNetwork::printStats(ostream& out) const
            " flits/cycle" <<endl;
     out << "-------------" << endl;
 
-    for (int i = 0; i < m_vcs_per_class*m_virtual_networks; i++) {
-        if (!m_in_use[i/m_vcs_per_class])
+    for (int i = 0; i < m_vcs_per_vnet*m_virtual_networks; i++) {
+        if (!m_in_use[i/m_vcs_per_vnet])
             continue;
 
         average_vc_load[i] = (double(average_vc_load[i]) /

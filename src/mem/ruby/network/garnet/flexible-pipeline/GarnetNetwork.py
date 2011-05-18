@@ -35,4 +35,4 @@ class GarnetNetwork(BaseGarnetNetwork):
     type = 'GarnetNetwork'
     buffer_size = Param.Int(0,
         "default buffer size; 0 indicates infinite buffering");
-
+    number_of_pipe_stages = Param.Int(4, "router pipeline stages");

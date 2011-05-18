@@ -47,7 +47,7 @@ Router_d::Router_d(const Params *p)
     : BasicRouter(p)
 {
     m_virtual_networks = p->virt_nets;
-    m_vc_per_vnet = p->vcs_per_class;
+    m_vc_per_vnet = p->vcs_per_vnet;
     m_num_vcs = m_virtual_networks * m_vc_per_vnet;
 
     m_routing_unit = new RoutingUnit_d(this);

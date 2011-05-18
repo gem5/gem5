@@ -37,8 +37,8 @@ class NetworkLink_d(SimObject):
     type = 'NetworkLink_d'
     link_id = Param.Int(Parent.link_id, "link id")
     link_latency = Param.Int(Parent.latency, "link latency")
-    vcs_per_class = Param.Int(Parent.vcs_per_class,
-                              "virtual channels per message class")
+    vcs_per_vnet = Param.Int(Parent.vcs_per_vnet,
+                              "virtual channels per virtual network")
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
     channel_width = Param.Int(Parent.bandwidth_factor,

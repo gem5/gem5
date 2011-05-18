@@ -44,7 +44,7 @@ Router::Router(const Params *p)
 {
     m_id = p->router_id;
     m_virtual_networks = p->virt_nets;
-    m_vc_per_vnet = p->vcs_per_class;
+    m_vc_per_vnet = p->vcs_per_vnet;
     m_round_robin_inport = 0;
     m_round_robin_start = 0;
     m_num_vcs = m_vc_per_vnet * m_virtual_networks;

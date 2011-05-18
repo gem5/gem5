@@ -39,9 +39,9 @@ NetworkLink_d::NetworkLink_d(const Params *p)
     m_id = p->link_id;
     linkBuffer = new flitBuffer_d();
     m_link_utilized = 0;
-    m_vc_load.resize(p->vcs_per_class * p->virt_nets);
+    m_vc_load.resize(p->vcs_per_vnet * p->virt_nets);
 
-    for (int i = 0; i < (p->vcs_per_class * p->virt_nets); i++) {
+    for (int i = 0; i < (p->vcs_per_vnet * p->virt_nets); i++) {
         m_vc_load[i] = 0;
     }
 }

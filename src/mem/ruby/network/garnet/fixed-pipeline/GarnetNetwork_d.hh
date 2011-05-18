@@ -59,6 +59,9 @@ class GarnetNetwork_d : public BaseGarnetNetwork
 
     int getNumNodes() { return m_nodes; }
 
+    int getBuffersPerDataVC() {return m_buffers_per_data_vc; }
+    int getBuffersPerCtrlVC() {return m_buffers_per_ctrl_vc; }
+
     // returns the queue requested for the given component
     MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
     MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
@@ -71,14 +74,14 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     void
     set_vnet_type(int vc, VNET_type vnet_type)
     {
-        int vnet = vc/getVCsPerClass();
+        int vnet = vc/getVCsPerVnet();
         m_vnet_type[vnet] = vnet_type;
     }
 
     VNET_type
     get_vnet_type(int vc)
     {
-        int vnet = vc/getVCsPerClass();
+        int vnet = vc/getVCsPerVnet();
         return m_vnet_type[vnet];
     }
 
@@ -130,6 +133,9 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     std::vector<NetworkLink_d *> m_link_ptr_vector; // All links in the network
     std::vector<CreditLink_d *> m_creditlink_ptr_vector; // All links in net
     std::vector<NetworkInterface_d *> m_ni_ptr_vector;   // All NI's in Network
+
+    int m_buffers_per_data_vc;
+    int m_buffers_per_ctrl_vc;
 };
 
 inline std::ostream&

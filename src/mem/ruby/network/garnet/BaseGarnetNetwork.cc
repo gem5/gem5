@@ -37,10 +37,7 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
     : Network(p)
 {
     m_ni_flit_size = p->ni_flit_size;
-    m_number_of_pipe_stages = p->number_of_pipe_stages;
-    m_vcs_per_class = p->vcs_per_class;
-    m_buffers_per_data_vc = p->buffers_per_data_vc;
-    m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
+    m_vcs_per_vnet = p->vcs_per_vnet;
 
     m_ruby_start = 0;
     m_flits_received = 0;
