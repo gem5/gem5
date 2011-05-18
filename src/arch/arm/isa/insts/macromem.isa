@@ -541,6 +541,9 @@ let {{
             for (unsigned i = 0; i < %(sRegs)d; i++) {
                 destRegs.elements[i] = sourceRegs[i].elements[lane];
             }
+            for (unsigned i = %(sRegs)d; i < %(dRegs)d * perDReg; ++i) {
+                destRegs.elements[i] = 0;
+            }
 
             %(unloadRegs)s
             ''' % { "sRegs" : sRegs, "dRegs" : dRegs,
