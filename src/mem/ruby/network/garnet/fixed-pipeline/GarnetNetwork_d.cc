@@ -227,14 +227,20 @@ GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
 }
 
 MessageBuffer*
-GarnetNetwork_d::getToNetQueue(NodeID id, bool ordered, int network_num)
+GarnetNetwork_d::getToNetQueue(NodeID id, bool ordered, int network_num,
+                               std::string vnet_type)
 {
+    // TODO:
+    //if (vnet_type == "response")
+    //    mark vnet as data vnet and use buffers_per_data_vc
+
     checkNetworkAllocation(id, ordered, network_num);
     return m_toNetQueues[id][network_num];
 }
 
 MessageBuffer*
-GarnetNetwork_d::getFromNetQueue(NodeID id, bool ordered, int network_num)
+GarnetNetwork_d::getFromNetQueue(NodeID id, bool ordered, int network_num,  
+                                 std::string vnet_type)
 {
     checkNetworkAllocation(id, ordered, network_num);
     return m_fromNetQueues[id][network_num];

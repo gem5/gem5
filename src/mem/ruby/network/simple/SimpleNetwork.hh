@@ -64,8 +64,8 @@ class SimpleNetwork : public Network
     void reset();
 
     // returns the queue requested for the given component
-    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
-    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
+    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num, std::string vnet_type);
+    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num, std::string vnet_type);
     virtual const std::vector<Throttle*>* getThrottles(NodeID id) const;
 
     bool isVNetOrdered(int vnet) { return m_ordered[vnet]; }

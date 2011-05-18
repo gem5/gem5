@@ -5,13 +5,13 @@ machine(DMA, "DMA Controller")
   int response_latency = 14
 {
   
-  MessageBuffer goo1, network="From", virtual_network="0", ordered="false";
-  MessageBuffer goo2, network="From", virtual_network="1", ordered="false";
-  MessageBuffer responseFromDir, network="From", virtual_network="2", ordered="false";
+  MessageBuffer goo1, network="From", virtual_network="0", ordered="false", vnet_type="goo";
+  MessageBuffer goo2, network="From", virtual_network="1", ordered="false", vnet_type="goo";
+  MessageBuffer responseFromDir, network="From", virtual_network="2", ordered="false", vnet_type="response";
 
-  MessageBuffer foo1, network="To", virtual_network="0", ordered="false";
-  MessageBuffer reqToDir, network="To", virtual_network="1", ordered="false";
-  MessageBuffer respToDir, network="To", virtual_network="2", ordered="false";
+  MessageBuffer foo1, network="To", virtual_network="0", ordered="false", vnet_type="foo";
+  MessageBuffer reqToDir, network="To", virtual_network="1", ordered="false", vnet_type="request";
+  MessageBuffer respToDir, network="To", virtual_network="2", ordered="false", vnet_type="dmaresponse";
   
   state_declaration(State, desc="DMA states", default="DMA_State_READY") {
     READY, AccessPermission:Invalid, desc="Ready to accept a new request";

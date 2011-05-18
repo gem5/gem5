@@ -37,9 +37,9 @@ machine(L1Cache, "Network_test L1 Cache")
 {
 
   // NETWORK BUFFERS
-  MessageBuffer requestFromCache, network="To", virtual_network="0", ordered="false";
-  MessageBuffer forwardFromCache, network="To", virtual_network="1", ordered="false";
-  MessageBuffer responseFromCache, network="To", virtual_network="2", ordered="false";
+  MessageBuffer requestFromCache, network="To", virtual_network="0", ordered="false", vnet_type = "request";
+  MessageBuffer forwardFromCache, network="To", virtual_network="1", ordered="false", vnet_type = "forward";
+  MessageBuffer responseFromCache, network="To", virtual_network="2", ordered="false", vnet_type = "response";
 
   // STATES
   state_declaration(State, desc="Cache states", default="L1Cache_State_I") {

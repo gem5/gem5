@@ -38,13 +38,13 @@ machine(Directory, "Directory protocol")
 {
 
   // ** IN QUEUES **
-  MessageBuffer foo1, network="From", virtual_network="0", ordered="false";  // a mod-L2 bank -> this Dir
-  MessageBuffer requestToDir, network="From", virtual_network="1", ordered="false";  // a mod-L2 bank -> this Dir
-  MessageBuffer responseToDir, network="From", virtual_network="2", ordered="false";  // a mod-L2 bank -> this Dir
+  MessageBuffer foo1, network="From", virtual_network="0", ordered="false", vnet_type="foo";  // a mod-L2 bank -> this Dir
+  MessageBuffer requestToDir, network="From", virtual_network="1", ordered="false", vnet_type="request";  // a mod-L2 bank -> this Dir
+  MessageBuffer responseToDir, network="From", virtual_network="2", ordered="false", vnet_type="response";  // a mod-L2 bank -> this Dir
   
-  MessageBuffer goo1, network="To", virtual_network="0", ordered="false";
-  MessageBuffer forwardFromDir, network="To", virtual_network="1", ordered="false";
-  MessageBuffer responseFromDir, network="To", virtual_network="2", ordered="false";  // Dir -> mod-L2 bank
+  MessageBuffer goo1, network="To", virtual_network="0", ordered="false", vnet_type="goo";
+  MessageBuffer forwardFromDir, network="To", virtual_network="1", ordered="false", vnet_type="forward";
+  MessageBuffer responseFromDir, network="To", virtual_network="2", ordered="false", vnet_type="response";  // Dir -> mod-L2 bank
 
 
   // STATES

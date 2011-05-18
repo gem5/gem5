@@ -594,12 +594,13 @@ $c_ident::init()
                 network = var["network"]
                 ordered =  var["ordered"]
                 vnet = var["virtual_network"]
+                vnet_type = var["vnet_type"]
 
                 assert var.machine is not None
                 code('''
 machine_type = string_to_MachineType("${{var.machine.ident}}");
 base = MachineType_base_number(machine_type);
-$vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet);
+$vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet, "$vnet_type");
 ''')
 
                 code('assert($vid != NULL);')

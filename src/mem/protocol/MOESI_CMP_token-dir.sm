@@ -41,15 +41,15 @@ machine(Directory, "Token protocol")
    int fixed_timeout_latency = 100
 {
 
-  MessageBuffer dmaResponseFromDir, network="To", virtual_network="5", ordered="true";
-  MessageBuffer responseFromDir, network="To", virtual_network="4", ordered="false";
-  MessageBuffer persistentFromDir, network="To", virtual_network="3", ordered="true";
-  MessageBuffer requestFromDir, network="To", virtual_network="1", ordered="false";
+  MessageBuffer dmaResponseFromDir, network="To", virtual_network="5", ordered="true", vnet_type="response";
+  MessageBuffer responseFromDir, network="To", virtual_network="4", ordered="false", vnet_type="response";
+  MessageBuffer persistentFromDir, network="To", virtual_network="3", ordered="true", vnet_type="persistent";
+  MessageBuffer requestFromDir, network="To", virtual_network="1", ordered="false", vnet_type="request";
 
-  MessageBuffer responseToDir, network="From", virtual_network="4", ordered="false";
-  MessageBuffer persistentToDir, network="From", virtual_network="3", ordered="true";
-  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="false";
-  MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true";
+  MessageBuffer responseToDir, network="From", virtual_network="4", ordered="false", vnet_type="response";
+  MessageBuffer persistentToDir, network="From", virtual_network="3", ordered="true", vnet_type="persistent";
+  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="false", vnet_type="request";
+  MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true", vnet_type="request";
 
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_O") {

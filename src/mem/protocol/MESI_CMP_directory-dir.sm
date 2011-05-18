@@ -42,11 +42,11 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
    int directory_latency = 6
 {
 
-  MessageBuffer requestToDir, network="From", virtual_network="0", ordered="false";
-  MessageBuffer responseToDir, network="From", virtual_network="1", ordered="false";
+  MessageBuffer requestToDir, network="From", virtual_network="0", ordered="false", vnet_type="request";
+  MessageBuffer responseToDir, network="From", virtual_network="1", ordered="false", vnet_type="response";
 
-  MessageBuffer requestFromDir, network="To", virtual_network="0", ordered="false";
-  MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false";
+  MessageBuffer requestFromDir, network="To", virtual_network="0", ordered="false", vnet_type="request";
+  MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false", vnet_type="response";
 
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {

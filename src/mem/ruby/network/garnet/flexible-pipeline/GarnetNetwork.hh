@@ -60,8 +60,10 @@ class GarnetNetwork : public BaseGarnetNetwork
     int getNumPipeStages() {return m_number_of_pipe_stages; }
 
     // returns the queue requested for the given component
-    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
-    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num);
+    MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num,
+                                 std::string vnet_type);
+    MessageBuffer* getFromNetQueue(NodeID id, bool ordered, int network_num,
+                                   std::string vnet_type);
 
     void clearStats();
     void printStats(std::ostream& out) const;

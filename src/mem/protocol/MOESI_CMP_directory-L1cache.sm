@@ -43,17 +43,17 @@ machine(L1Cache, "Directory protocol")
   // NODE L1 CACHE
   // From this node's L1 cache TO the network
   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
-  MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false";
+  MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false", vnet_type="request";
   // a local L1 -> this L2 bank
-  MessageBuffer responseFromL1Cache, network="To", virtual_network="2", ordered="false";
-//  MessageBuffer writebackFromL1Cache, network="To", virtual_network="3", ordered="false";
+  MessageBuffer responseFromL1Cache, network="To", virtual_network="2", ordered="false", vnet_type="response";
+//  MessageBuffer writebackFromL1Cache, network="To", virtual_network="3", ordered="false", vnet_type="writeback";
 
 
   // To this node's L1 cache FROM the network
   // a L2 bank -> this L1
-  MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false";
+  MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false", vnet_type="request";
   // a L2 bank -> this L1
-  MessageBuffer responseToL1Cache, network="From", virtual_network="2", ordered="false";
+  MessageBuffer responseToL1Cache, network="From", virtual_network="2", ordered="false", vnet_type="response";
 
 
 

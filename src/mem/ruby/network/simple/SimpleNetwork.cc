@@ -226,14 +226,16 @@ SimpleNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
 }
 
 MessageBuffer*
-SimpleNetwork::getToNetQueue(NodeID id, bool ordered, int network_num)
+SimpleNetwork::getToNetQueue(NodeID id, bool ordered, int network_num,
+                             std::string vnet_type)
 {
     checkNetworkAllocation(id, ordered, network_num);
     return m_toNetQueues[id][network_num];
 }
 
 MessageBuffer*
-SimpleNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num)
+SimpleNetwork::getFromNetQueue(NodeID id, bool ordered, int network_num,
+                               std::string vnet_type)
 {
     checkNetworkAllocation(id, ordered, network_num);
     return m_fromNetQueues[id][network_num];

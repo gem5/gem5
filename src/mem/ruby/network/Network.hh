@@ -71,9 +71,9 @@ class Network : public SimObject
 
     // returns the queue requested for the given component
     virtual MessageBuffer* getToNetQueue(NodeID id, bool ordered,
-        int netNumber) = 0;
+        int netNumber, std::string vnet_type) = 0;
     virtual MessageBuffer* getFromNetQueue(NodeID id, bool ordered,
-        int netNumber) = 0;
+        int netNumber, std::string vnet_type) = 0;
     virtual const std::vector<Throttle*>* getThrottles(NodeID id) const;
     virtual int getNumNodes() {return 1;}
 
