@@ -53,8 +53,8 @@ parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
                   metavar="T",
                   help="Stop after T ticks")
 parser.add_option("--maxtime", type="float")
-parser.add_option("--maxinsts", type="int")
-parser.add_option("--prog_intvl", type="int")
+parser.add_option("-I", "--maxinsts", action="store", type="int", default=None,
+                  help="Total number of instructions to simulate (default: run forever)")
 parser.add_option("--work-item-id", action="store", type="int",
                   help="the specific work id for exit & checkpointing")
 parser.add_option("--work-begin-cpu-id-exit", action="store", type="int",
@@ -94,14 +94,12 @@ parser.add_option("-s", "--standard-switch", action="store_true",
 parser.add_option("-w", "--warmup", action="store", type="int",
     help="if -s, then this is the warmup period.  else, this is ignored",
     default=5000000000)
-parser.add_option("--profile", help="CPU profile interval")
+parser.add_option("-p", "--prog-interval", type="int", help="CPU Progress Interval")
 
 # Fastforwarding and simpoint related materials
 parser.add_option("-W", "--warmup-insts", action="store", type="int",
     default=None,
     help="Warmup period in total instructions (requires --standard-switch)")
-parser.add_option("-I", "--max-inst", action="store", type="int", default=None,
-    help="Total number of instructions to simulate (default: run forever)")
 parser.add_option("--bench", action="store", type="string", default=None,
     help="base names for --take-checkpoint and --checkpoint-restore")
 parser.add_option("-F", "--fast-forward", action="store", type="string",

@@ -98,7 +98,7 @@ def run(options, root, testsys, cpu_class):
 
     if options.prog_intvl:
         for i in xrange(np):
-            testsys.cpu[i].progress_interval = options.prog_intvl
+            testsys.cpu[i].progress_interval = options.prog_interval
 
     if options.maxinsts:
         for i in xrange(np):
@@ -116,8 +116,8 @@ def run(options, root, testsys, cpu_class):
                 switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
             # simulation period
-            if options.max_inst:
-                switch_cpus[i].max_insts_any_thread = options.max_inst
+            if options.maxinsts:
+                switch_cpus[i].max_insts_any_thread = options.maxinsts
 
         testsys.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
@@ -163,8 +163,8 @@ def run(options, root, testsys, cpu_class):
                 switch_cpus[i].max_insts_any_thread =  options.warmup_insts
 
             # simulation period
-            if options.max_inst:
-                switch_cpus_1[i].max_insts_any_thread = options.max_inst
+            if options.maxinsts:
+                switch_cpus_1[i].max_insts_any_thread = options.maxinsts
 
         testsys.switch_cpus = switch_cpus
         testsys.switch_cpus_1 = switch_cpus_1
