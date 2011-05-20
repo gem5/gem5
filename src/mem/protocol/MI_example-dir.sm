@@ -5,12 +5,12 @@ machine(Directory, "Directory protocol")
   int directory_latency = 12
 {
 
-  MessageBuffer forwardFromDir, network="To", virtual_network="3", ordered="false";
-  MessageBuffer responseFromDir, network="To", virtual_network="4", ordered="false";
-  MessageBuffer dmaResponseFromDir, network="To", virtual_network="1", ordered="true";
+  MessageBuffer forwardFromDir, network="To", virtual_network="3", ordered="false", vnet_type="forward";
+  MessageBuffer responseFromDir, network="To", virtual_network="4", ordered="false", vnet_type="response";
+  MessageBuffer dmaResponseFromDir, network="To", virtual_network="1", ordered="true", vnet_type="response";
 
-  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="true";
-  MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true";
+  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="true", vnet_type="request";
+  MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true", vnet_type="request";
 
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
