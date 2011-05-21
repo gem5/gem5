@@ -52,6 +52,11 @@ GarnetNetwork_d::GarnetNetwork_d(const Params *p)
     m_buffers_per_data_vc = p->buffers_per_data_vc;
     m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
 
+    m_vnet_type.resize(m_virtual_networks);
+    for (int i = 0; i < m_vnet_type.size(); i++) {
+        m_vnet_type[i] = NULL_VNET_; // default
+    }
+
     // record the routers
     for (vector<BasicRouter*>::const_iterator i = 
              m_topology_ptr->params()->routers.begin();
@@ -85,12 +90,6 @@ GarnetNetwork_d::init()
     }
     // false because this isn't a reconfiguration
     m_topology_ptr->createLinks(this, false);
-
-    m_vnet_type.resize(m_virtual_networks);
-    for (int i = 0; i < m_vnet_type.size(); i++) {
-        m_vnet_type[i] = CTRL_VNET_;
-        // DATA_VNET_ updated later based on traffic
-    }
 }
 
 GarnetNetwork_d::~GarnetNetwork_d()
@@ -215,7 +214,8 @@ GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
 void
 GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
-    int network_num)
+                                        int network_num,
+                                        string vnet_type)
 {
     assert(id < m_nodes);
     assert(network_num < m_virtual_networks);
@@ -224,25 +224,26 @@ GarnetNetwork_d::checkNetworkAllocation(NodeID id, bool ordered,
         m_ordered[network_num] = true;
     }
     m_in_use[network_num] = true;
+
+    if (vnet_type == "response")
+        m_vnet_type[network_num] = DATA_VNET_; // carries data (and ctrl) packets
+    else
+        m_vnet_type[network_num] = CTRL_VNET_; // carries only ctrl packets
 }
 
 MessageBuffer*
 GarnetNetwork_d::getToNetQueue(NodeID id, bool ordered, int network_num,
-                               std::string vnet_type)
+                               string vnet_type)
 {
-    // TODO:
-    //if (vnet_type == "response")
-    //    mark vnet as data vnet and use buffers_per_data_vc
-
-    checkNetworkAllocation(id, ordered, network_num);
+    checkNetworkAllocation(id, ordered, network_num, vnet_type);
     return m_toNetQueues[id][network_num];
 }
 
 MessageBuffer*
 GarnetNetwork_d::getFromNetQueue(NodeID id, bool ordered, int network_num,  
-                                 std::string vnet_type)
+                                 string vnet_type)
 {
-    checkNetworkAllocation(id, ordered, network_num);
+    checkNetworkAllocation(id, ordered, network_num, vnet_type);
     return m_fromNetQueues[id][network_num];
 }
 

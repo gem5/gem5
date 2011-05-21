@@ -164,12 +164,6 @@ NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
             // flitisized and an output vc is acquired
             net_msg_ptr->getInternalDestination().removeNetDest(personal_dest);
         }
-        if (num_flits > 1) { // data packet
-            // defining ctrl vnet to be 1-flit packets
-            // and data vnet to be > 1 flit packets
-            m_net_ptr->set_vnet_type(vc, DATA_VNET_);
-            m_out_vc_state[vc]->set_credit_count();
-        }
 
         for (int i = 0; i < num_flits; i++) {
             m_net_ptr->increment_injected_flits();

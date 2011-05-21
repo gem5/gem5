@@ -73,13 +73,6 @@ class GarnetNetwork_d : public BaseGarnetNetwork
     void printConfig(std::ostream& out) const;
     void print(std::ostream& out) const;
 
-    void
-    set_vnet_type(int vc, VNET_type vnet_type)
-    {
-        int vnet = vc/getVCsPerVnet();
-        m_vnet_type[vnet] = vnet_type;
-    }
-
     VNET_type
     get_vnet_type(int vc)
     {
@@ -124,7 +117,8 @@ class GarnetNetwork_d : public BaseGarnetNetwork
                           bool isReconfiguration);
 
   private:
-    void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
+    void checkNetworkAllocation(NodeID id, bool ordered, int network_num,
+                                std::string vnet_type);
 
     GarnetNetwork_d(const GarnetNetwork_d& obj);
     GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);

@@ -42,15 +42,6 @@ class OutVcState_d
     int get_inport()                { return m_in_port; }
     int get_invc()                  { return m_in_vc; }
     int get_credit_count()          { return m_credit_count; }
-    void
-    set_credit_count()
-    {
-        // only need to initialize credit count for data VCs
-        // constructor sets this to BuffersPerCtrlVC by default
-
-        if (m_network_ptr->get_vnet_type(m_id) == DATA_VNET_)
-            m_credit_count = m_network_ptr->getBuffersPerDataVC();
-    }
 
     void set_inport(int port)       { m_in_port = port; }
     void set_invc(int vc)           { m_in_vc = vc; }
