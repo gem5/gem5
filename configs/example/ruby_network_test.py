@@ -65,11 +65,11 @@ parser.add_option("--sim-cycles", type="int", default=1000,
                    help="Number of simulation cycles")
 
 parser.add_option("--fixed-pkts", action="store_true",
-                  help="Network_test: send only -p number of packets")
+                  help="Network_test: inject --maxpackets and stop")
 
-parser.add_option("-p", "--maxpackets", type="int", default=1,
-                  metavar="P",
-                  help="Stop after Packets (works only with --fixed-pkts")
+parser.add_option("--maxpackets", type="int", default=1,
+                  help="Stop injecting after --maxpackets. \
+                        Works only with --fixed-pkts")
 
 #
 # Add the ruby specific and protocol specific options
