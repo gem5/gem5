@@ -804,7 +804,12 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 
         ++lsqCacheBlocked;
 
-        iewStage->decrWb(load_inst->seqNum);
+        // If the first part of a split access succeeds, then let the LSQ
+        // handle the decrWb when completeDataAccess is called upon return
+        // of the requested first part of data
+        if (!completedFirst)
+            iewStage->decrWb(load_inst->seqNum);
+
         // There's an older load that's already going to squash.
         if (isLoadBlocked && blockedLoadSeqNum < load_inst->seqNum)
             return NoFault;

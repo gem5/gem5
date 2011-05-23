@@ -1221,7 +1221,9 @@ DefaultIEW<Impl>::executeInsts()
 
         // Check if the instruction is squashed; if so then skip it
         if (inst->isSquashed()) {
-            DPRINTF(IEW, "Execute: Instruction was squashed.\n");
+            DPRINTF(IEW, "Execute: Instruction was squashed. PC: %s, [tid:%i]"
+                         " [sn:%i]\n", inst->pcState(), inst->threadNumber,
+                         inst->seqNum);
 
             // Consider this instruction executed so that commit can go
             // ahead and retire the instruction.

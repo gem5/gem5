@@ -228,7 +228,7 @@ class DefaultIEW
     {
         if (++wbOutstanding == wbMax)
             ableToIssue = false;
-        DPRINTF(IEW, "wbOutstanding: %i\n", wbOutstanding);
+        DPRINTF(IEW, "wbOutstanding: %i [sn:%lli]\n", wbOutstanding, sn);
         assert(wbOutstanding <= wbMax);
 #ifdef DEBUG
         wbList.insert(sn);
