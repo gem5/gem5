@@ -126,7 +126,7 @@ class PowerLinux : public Linux
     //@}
 
     /// For mmap().
-    static const unsigned TGT_MAP_ANONYMOUS = 0x800;
+    static const unsigned TGT_MAP_ANONYMOUS = 0x20;
 
     //@{
     /// ioctl() command codes.

@@ -313,7 +313,7 @@ Process::free_fd(int tgt_fd)
 int
 Process::sim_fd(int tgt_fd)
 {
-    if (tgt_fd > MAX_FD)
+    if (tgt_fd < 0 || tgt_fd > MAX_FD)
         return -1;
 
     return fd_map[tgt_fd].fd;
@@ -322,8 +322,8 @@ Process::sim_fd(int tgt_fd)
 Process::FdMap *
 Process::sim_fd_obj(int tgt_fd)
 {
-    if (tgt_fd > MAX_FD)
-        panic("sim_fd_obj called in fd out of range.");
+    if (tgt_fd < 0 || tgt_fd > MAX_FD)
+        return NULL;
 
     return &fd_map[tgt_fd];
 }

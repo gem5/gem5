@@ -989,13 +989,8 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 /// We don't really handle mmap().  If the target is mmaping an
 /// anonymous region or /dev/zero, we can get away with doing basically
 /// nothing (since memory is initialized to zero and the simulator
-/// doesn't really check addresses anyway).  Always print a warning,
-/// since this could be seriously broken if we're not mapping
-/// /dev/zero.
-//
-/// Someday we should explicitly check for /dev/zero in open, flag the
-/// file descriptor, and fail (or implement!) a non-anonymous mmap to
-/// anything else.
+/// doesn't really check addresses anyway).
+///
 template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
@@ -1005,9 +1000,24 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     uint64_t length = p->getSyscallArg(tc, index);
     index++; // int prot = p->getSyscallArg(tc, index);
     int flags = p->getSyscallArg(tc, index);
-    int fd = p->sim_fd(p->getSyscallArg(tc, index));
+    int tgt_fd = p->getSyscallArg(tc, index);
     // int offset = p->getSyscallArg(tc, index);
 
+    if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
+        Process::FdMap *fd_map = p->sim_fd_obj(tgt_fd);
+        if (!fd_map || fd_map->fd < 0) {
+            warn("mmap failing: target fd %d is not valid\n", tgt_fd);
+            return -EBADF;
+        }
+
+        if (fd_map->filename != "/dev/zero") {
+            // This is very likely broken, but leave a warning here
+            // (rather than panic) in case /dev/zero is known by
+            // another name on some platform
+            warn("allowing mmap of file %s; mmap not supported on files"
+                 " other than /dev/zero\n", fd_map->filename);
+        }
+    }
 
     if ((start  % TheISA::VMPageSize) != 0 ||
         (length % TheISA::VMPageSize) != 0) {
@@ -1031,11 +1041,6 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         p->mmap_end += length;
     }
     p->pTable->allocate(start, length);
-
-    if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
-        warn("allowing mmap of file @ fd %d. "
-             "This will break if not /dev/zero.", fd);
-    }
 
     return start;
 }
