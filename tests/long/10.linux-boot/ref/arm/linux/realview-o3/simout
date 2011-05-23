@@ -7,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May  4 2011 15:43:04
-M5 started May  4 2011 15:43:52
-M5 executing on nadc-0364
+M5 compiled May 16 2011 21:41:16
+M5 started May 16 2011 21:43:01
+M5 executing on nadc-0271
 command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /arm/scratch/alisai01/dist/binaries/vmlinux.arm
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 82034111500 because m5_exit instruction encountered
+Exiting @ tick 81956970500 because m5_exit instruction encountered

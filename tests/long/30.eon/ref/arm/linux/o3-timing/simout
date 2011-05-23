@@ -7,9 +7,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May  4 2011 13:56:47
-M5 started May  4 2011 14:39:34
-M5 executing on nadc-0364
+M5 compiled May 16 2011 15:11:25
+M5 started May 16 2011 19:29:23
+M5 executing on nadc-0271
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/30.eon/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/long/30.eon/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -19,4 +19,4 @@ info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 info: Increasing stack size by one page.
 OO-style eon Time= 0.110000
-Exiting @ tick 117809491500 because target called exit()
+Exiting @ tick 117852123500 because target called exit()

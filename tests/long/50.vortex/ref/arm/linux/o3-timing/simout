@@ -7,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May  4 2011 13:56:47
-M5 started May  4 2011 15:24:46
-M5 executing on nadc-0364
+M5 compiled May 16 2011 15:11:25
+M5 started May 16 2011 15:12:09
+M5 executing on nadc-0271
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/50.vortex/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/long/50.vortex/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 36353754500 because target called exit()
+Exiting @ tick 36348210000 because target called exit()

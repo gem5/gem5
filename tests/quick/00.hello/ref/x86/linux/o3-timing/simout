@@ -1,3 +1,5 @@
+Redirecting stdout to build/X86_SE/tests/fast/quick/00.hello/x86/linux/o3-timing/simout
+Redirecting stderr to build/X86_SE/tests/fast/quick/00.hello/x86/linux/o3-timing/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,12 +7,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2011 13:30:37
-M5 started Apr 21 2011 14:05:23
-M5 executing on maize
+M5 compiled May 17 2011 12:22:59
+M5 started May 17 2011 13:06:27
+M5 executing on nadc-0309
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/quick/00.hello/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/quick/00.hello/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 11371000 because target called exit()
+Exiting @ tick 11369000 because target called exit()
