@@ -403,6 +403,9 @@ class DefaultFetch
 
     StaticInstPtr macroop[Impl::MaxThreads];
 
+    /** Can the fetch stage redirect from an interrupt on this instruction? */
+    bool delayedCommit[Impl::MaxThreads];
+
     /** Memory request used to access cache. */
     RequestPtr memReq[Impl::MaxThreads];
 

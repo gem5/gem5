@@ -219,6 +219,8 @@ AbortFault<T>::invoke(ThreadContext *tc, StaticInstPtr inst)
     fsr.ext = 0;
     tc->setMiscReg(T::FsrIndex, fsr);
     tc->setMiscReg(T::FarIndex, faultAddr);
+
+    DPRINTF(Faults, "Abort Fault fsr=%#x faultAddr=%#x\n", fsr, faultAddr);
 }
 
 void

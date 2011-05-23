@@ -346,6 +346,7 @@ DefaultFetch<Impl>::initStage()
         pc[tid] = cpu->pcState(tid);
         fetchOffset[tid] = 0;
         macroop[tid] = NULL;
+        delayedCommit[tid] = false;
     }
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {
@@ -1070,6 +1071,9 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
     assert(numInst < fetchWidth);
     toDecode->insts[toDecode->size++] = instruction;
 
+    // Keep track of if we can take an interrupt at this boundary
+    delayedCommit[tid] = instruction->isDelayedCommit();
+
     return instruction;
 }
 
@@ -1112,8 +1116,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // Align the fetch PC so its at the start of a cache block.
         Addr block_PC = icacheBlockAlignPC(fetchAddr);
 
-        // Unless buffer already got the block, fetch it from icache.
-        if (!(cacheDataValid[tid] && block_PC == cacheDataPC[tid]) && !inRom) {
+        // If buffer is no longer valid or fetchAddr has moved to point
+        // to the next cache block, AND we have no remaining ucode
+        // from a macro-op, then start fetch from icache.
+        if (!(cacheDataValid[tid] && block_PC == cacheDataPC[tid])
+            && !inRom && !macroop[tid]) {
             DPRINTF(Fetch, "[tid:%i]: Attempting to translate and read "
                     "instruction, starting at PC %s.\n", tid, thisPC);
 
@@ -1126,7 +1133,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             else
                 ++fetchMiscStallCycles;
             return;
-        } else if (checkInterrupt(thisPC.instAddr()) || isSwitchedOut()) {
+        } else if ((checkInterrupt(thisPC.instAddr()) && !delayedCommit[tid])
+                   || isSwitchedOut()) {
+            // Stall CPU if an interrupt is posted and we're not issuing
+            // an delayed commit micro-op currently (delayed commit instructions
+            // are not interruptable by interrupts, only faults)
             ++fetchMiscStallCycles;
             return;
         }
@@ -1184,9 +1195,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     unsigned blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
 
     // Loop through instruction memory from the cache.
-    while (blkOffset < numInsts &&
-           numInst < fetchWidth &&
-           !predictedBranch) {
+    // Keep issuing while we have not reached the end of the block or a
+    // macroop is active and fetchWidth is available and branch is not
+    // predicted taken
+    while ((blkOffset < numInsts || curMacroop) &&
+                           numInst < fetchWidth && !predictedBranch) {
 
         // If we need to process more memory, do it now.
         if (!(curMacroop || inRom) && !predecoder.extMachInstReady()) {
@@ -1232,7 +1245,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                         pcOffset = 0;
                     }
                 } else {
-                    // We need more bytes for this instruction.
+                    // We need more bytes for this instruction so blkOffset and
+                    // pcOffset will be updated
                     break;
                 }
             }
