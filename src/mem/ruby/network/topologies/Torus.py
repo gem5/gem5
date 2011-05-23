@@ -51,8 +51,11 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
     num_columns = int(num_routers / num_rows)
     assert(num_columns * num_rows == num_routers)
 
+    # Create the torus object
+    torus = Torus()
+
     # Create the routers in the torus
-    routers = [Router(router_id=i) for i in range(num_routers)]
+    torus.routers = [Router(router_id=i) for i in range(num_routers)]
 
     # link counter to set unique link ids
     link_count = 0
@@ -73,7 +76,7 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
         cntrl_level, router_id = divmod(i, num_routers)
         assert(cntrl_level < cntrls_per_router)
         ext_links.append(ExtLink(link_id=link_count, ext_node=n, 
-                                 int_node=routers[router_id]))
+                                 int_node=torus.routers[router_id]))
         link_count += 1
 
     # Connect the remainding nodes to router 0.  These should only be
@@ -82,7 +85,7 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
         assert(node.type == 'DMA_Controller')
         assert(i < remainder)
         ext_links.append(ExtLink(link_id=link_count, ext_node=node,
-                                 int_node=routers[0]))
+                                 int_node=torus.routers[0]))
         link_count += 1
 
     # Create the torus links.  First row (east-west) links then column
@@ -97,8 +100,8 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
             else:
                 east_id = (row * num_columns)
             int_links.append(IntLink(link_id=link_count,
-                                     node_a=routers[east_id],
-                                     node_b=routers[west_id],
+                                     node_a=torus.routers[east_id],
+                                     node_b=torus.routers[west_id],
                                      latency=2,
                                      weight=1))
             link_count += 1
@@ -111,12 +114,13 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
             else:
                 south_id = col
             int_links.append(IntLink(link_id=link_count,
-                                     node_a=routers[north_id],
-                                     node_b=routers[south_id],
+                                     node_a=torus.routers[north_id],
+                                     node_b=torus.routers[south_id],
                                      latency=2,
                                      weight=2))
             link_count += 1
 
-    return Torus(ext_links=ext_links,
-                 int_links=int_links,
-                 routers=routers)
+    torus.ext_links = ext_links
+    torus.int_links = int_links
+
+    return torus

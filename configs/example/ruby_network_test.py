@@ -108,7 +108,7 @@ system = System(cpu = cpus,
 system.ruby = Ruby.create_system(options, system)
 
 i = 0
-for ruby_port in system.ruby.cpu_ruby_ports:
+for ruby_port in system.ruby._cpu_ruby_ports:
      #
      # Tie the cpu test ports to the ruby cpu port
      #

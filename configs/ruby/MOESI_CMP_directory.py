@@ -84,21 +84,22 @@ def create_system(options, system, piobus, dma_devices):
                             assoc = options.l1d_assoc,
                             start_index_bit = block_size_bits)
 
+        l1_cntrl = L1Cache_Controller(version = i,
+                                      cntrl_id = cntrl_count,
+                                      L1IcacheMemory = l1i_cache,
+                                      L1DcacheMemory = l1d_cache,
+                                      l2_select_num_bits = l2_bits)
+
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
                                 dcache = l1d_cache,
                                 physMemPort = system.physmem.port,
                                 physmem = system.physmem)
 
+        l1_cntrl.sequencer = cpu_seq
+
         if piobus != None:
             cpu_seq.pio_port = piobus.port
-
-        l1_cntrl = L1Cache_Controller(version = i,
-                                      cntrl_id = cntrl_count,
-                                      sequencer = cpu_seq,
-                                      L1IcacheMemory = l1i_cache,
-                                      L1DcacheMemory = l1d_cache,
-                                      l2_select_num_bits = l2_bits)
 
         exec("system.l1_cntrl%d = l1_cntrl" % i)
         #

@@ -83,19 +83,20 @@ def create_system(options, system, piobus, dma_devices):
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.
         #
+        l1_cntrl = L1Cache_Controller(version = i,
+                                      cntrl_id = cntrl_count,
+                                      cacheMemory = cache)
+
         cpu_seq = RubySequencer(icache = cache,
                                 dcache = cache,
                                 physMemPort = system.physmem.port,
                                 physmem = system.physmem,
                                 using_network_tester = True)
 
+        l1_cntrl.sequencer = cpu_seq
+
         if piobus != None:
             cpu_seq.pio_port = piobus.port
-
-        l1_cntrl = L1Cache_Controller(version = i,
-                                      cntrl_id = cntrl_count,
-                                      sequencer = cpu_seq,
-                                      cacheMemory = cache)
 
         exec("system.l1_cntrl%d = l1_cntrl" % i)
         #

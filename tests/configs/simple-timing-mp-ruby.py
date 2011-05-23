@@ -79,14 +79,14 @@ system = System(cpu = cpus, physmem = PhysicalMemory())
 
 system.ruby = Ruby.create_system(options, system)
 
-assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
+assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 
 for (i, cpu) in enumerate(system.cpu):
     #
     # Tie the cpu ports to the ruby cpu ports
     #
-    cpu.icache_port = system.ruby.cpu_ruby_ports[i].port
-    cpu.dcache_port = system.ruby.cpu_ruby_ports[i].port
+    cpu.icache_port = system.ruby._cpu_ruby_ports[i].port
+    cpu.dcache_port = system.ruby._cpu_ruby_ports[i].port
 
 # -----------------------
 # run simulation

@@ -128,11 +128,11 @@ for (i, cpu) in enumerate(system.cpu):
     #
     # Tie the cpu ports to the correct ruby system ports
     #
-    cpu.icache_port = system.ruby.cpu_ruby_ports[i].port
-    cpu.dcache_port = system.ruby.cpu_ruby_ports[i].port
+    cpu.icache_port = system.ruby._cpu_ruby_ports[i].port
+    cpu.dcache_port = system.ruby._cpu_ruby_ports[i].port
     if buildEnv['TARGET_ISA'] == "x86":
-        cpu.itb.walker.port = system.ruby.cpu_ruby_ports[i].port
-        cpu.dtb.walker.port = system.ruby.cpu_ruby_ports[i].port
+        cpu.itb.walker.port = system.ruby._cpu_ruby_ports[i].port
+        cpu.dtb.walker.port = system.ruby._cpu_ruby_ports[i].port
         cpu.interrupts.pio = system.piobus.port
         cpu.interrupts.int_port = system.piobus.port
 

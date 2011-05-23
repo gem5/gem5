@@ -178,7 +178,7 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
 if options.ruby:
     options.use_map = True
     system.ruby = Ruby.create_system(options, system)
-    assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
+    assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 else:
     system.physmem.port = system.membus.port
     CacheConfig.config_cache(options, system)
@@ -187,8 +187,8 @@ for i in xrange(np):
     system.cpu[i].workload = multiprocesses[i]
 
     if options.ruby:
-        system.cpu[i].icache_port = system.ruby.cpu_ruby_ports[i].port
-        system.cpu[i].dcache_port = system.ruby.cpu_ruby_ports[i].port
+        system.cpu[i].icache_port = system.ruby._cpu_ruby_ports[i].port
+        system.cpu[i].dcache_port = system.ruby._cpu_ruby_ports[i].port
 
     if options.fastmem:
         system.cpu[0].physmem_port = system.physmem.port

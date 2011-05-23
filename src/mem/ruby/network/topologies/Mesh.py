@@ -46,8 +46,11 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
     num_columns = int(num_routers / num_rows)
     assert(num_columns * num_rows == num_routers)
 
+    # Create the mesh object
+    mesh = Mesh()
+
     # Create the routers in the mesh
-    routers = [Router(router_id=i) for i in range(num_routers)]
+    mesh.routers = [Router(router_id=i) for i in range(num_routers)]
 
     # link counter to set unique link ids
     link_count = 0
@@ -68,7 +71,7 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
         cntrl_level, router_id = divmod(i, num_routers)
         assert(cntrl_level < cntrls_per_router)
         ext_links.append(ExtLink(link_id=link_count, ext_node=n,
-                                 int_node=routers[router_id]))
+                                 int_node=mesh.routers[router_id]))
         link_count += 1
 
     # Connect the remainding nodes to router 0.  These should only be
@@ -77,7 +80,7 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
         assert(node.type == 'DMA_Controller')
         assert(i < remainder)
         ext_links.append(ExtLink(link_id=link_count, ext_node=node,
-                                 int_node=routers[0]))
+                                 int_node=mesh.routers[0]))
         link_count += 1
 
     # Create the mesh links.  First row (east-west) links then column
@@ -89,8 +92,8 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
                 east_id = col + (row * num_columns)
                 west_id = (col + 1) + (row * num_columns)
                 int_links.append(IntLink(link_id=link_count,
-                                         node_a=routers[east_id],
-                                         node_b=routers[west_id],
+                                         node_a=mesh.routers[east_id],
+                                         node_b=mesh.routers[west_id],
                                          weight=1))
                 link_count += 1
                 
@@ -100,10 +103,12 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
                 north_id = col + (row * num_columns)
                 south_id = col + ((row + 1) * num_columns)
                 int_links.append(IntLink(link_id=link_count,
-                                         node_a=routers[north_id],
-                                         node_b=routers[south_id],
+                                         node_a=mesh.routers[north_id],
+                                         node_b=mesh.routers[south_id],
                                          weight=2))
                 link_count += 1
-    return Mesh(ext_links=ext_links,
-                int_links=int_links,
-                routers=routers)
+
+    mesh.int_links = int_links
+    mesh.ext_links = ext_links
+
+    return mesh

@@ -145,7 +145,7 @@ def create_system(options, system, piobus = None, dma_devices = []):
                       tracer = RubyTracer(),
                       mem_size = total_mem_size)
 
-    ruby.cpu_ruby_ports = cpu_sequencers
+    ruby._cpu_ruby_ports = cpu_sequencers
     ruby.random_seed    = options.random_seed
 
     return ruby

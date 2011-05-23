@@ -37,14 +37,15 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
     # centralized crossbar.  The large numbers of routers are needed because
     # external links do not model outgoing bandwidth in the simple network, but
     # internal links do.
-    routers = [Router(router_id=i) for i in range(len(nodes)+1)]
-    ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
-                 for (i, n) in enumerate(nodes)]
+    cb = Crossbar()
+    cb.routers = [Router(router_id=i) for i in range(len(nodes)+1)]
+    cb.ext_links = [ExtLink(link_id=i, ext_node=n, int_node=cb.routers[i])
+                    for (i, n) in enumerate(nodes)]
     link_count = len(nodes)
-    xbar = routers[len(nodes)] # the crossbar router is the last router created
-    int_links = [IntLink(link_id=(link_count+i), node_a=routers[i], node_b=xbar)
-                 for i in range(len(nodes))]
-    return Crossbar(ext_links=ext_links, int_links=int_links,
-                    routers=routers)
+    xbar = cb.routers[len(nodes)] # the crossbar router is the last router created
+    cb.int_links = [IntLink(link_id=(link_count+i),
+                            node_a=cb.routers[i], node_b=xbar)
+                    for i in range(len(nodes))]
+    return cb
 
 

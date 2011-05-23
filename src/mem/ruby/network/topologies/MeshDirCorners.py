@@ -65,8 +65,10 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
     assert(remainder == 0)
     assert(len(dir_nodes) == 4)
 
+    mesh = MeshDirCorners()
+
     # Create the routers in the mesh
-    routers = [Router(router_id=i) for i in range(num_routers)]
+    mesh.routers = [Router(router_id=i) for i in range(num_routers)]
 
     # link counter to set unique link ids
     link_count = 0
@@ -77,27 +79,27 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
         cntrl_level, router_id = divmod(i, num_routers)
         assert(cntrl_level < caches_per_router)
         ext_links.append(ExtLink(link_id=link_count, ext_node=n,
-                                 int_node=routers[router_id]))
+                                 int_node=mesh.routers[router_id]))
         link_count += 1
 
     # Connect the dir nodes to the corners.
     ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[0],
-                             int_node=routers[0]))
+                             int_node=mesh.routers[0]))
     link_count += 1
     ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[1],
-                             int_node=routers[num_columns - 1]))
+                             int_node=mesh.routers[num_columns - 1]))
     link_count += 1
     ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[2],
-                             int_node=routers[num_routers - num_columns]))
+                             int_node=mesh.routers[num_routers - num_columns]))
     link_count += 1
     ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[3],
-                             int_node=routers[num_routers - 1]))
+                             int_node=mesh.routers[num_routers - 1]))
     link_count += 1
 
     # Connect the dma nodes to router 0.  These should only be DMA nodes.
     for (i, node) in enumerate(dma_nodes):
         assert(node.type == 'DMA_Controller')
-        ext_links.append(ExtLink(ext_node=node, int_node=routers[0]))
+        ext_links.append(ExtLink(ext_node=node, int_node=mesh.routers[0]))
 
     # Create the mesh links.  First row (east-west) links then column
     # (north-south) links
@@ -108,8 +110,8 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
                 east_id = col + (row * num_columns)
                 west_id = (col + 1) + (row * num_columns)
                 int_links.append(IntLink(link_id=link_count,
-                                         node_a=routers[east_id],
-                                         node_b=routers[west_id],
+                                         node_a=mesh.routers[east_id],
+                                         node_b=mesh.routers[west_id],
                                          weight=1))
                 link_count += 1
                 
@@ -119,12 +121,12 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
                 north_id = col + (row * num_columns)
                 south_id = col + ((row + 1) * num_columns)
                 int_links.append(IntLink(link_id=link_count,
-                                         node_a=routers[north_id],
-                                         node_b=routers[south_id],
+                                         node_a=mesh.routers[north_id],
+                                         node_b=mesh.routers[south_id],
                                          weight=2))
                 link_count += 1
 
-    return MeshDirCorners(ext_links=ext_links,
-                          int_links=int_links,
-                          routers=routers)
+    mesh.ext_links = ext_links
+    mesh.int_links = int_links
 
+    return mesh

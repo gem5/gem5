@@ -101,7 +101,7 @@ system = System(tester = tester, physmem = PhysicalMemory())
 
 system.ruby = Ruby.create_system(options, system)
 
-assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
+assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 
 #
 # The tester is most effective when randomization is turned on and
@@ -109,7 +109,7 @@ assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
 #
 system.ruby.randomization = True
 
-for ruby_port in system.ruby.cpu_ruby_ports:
+for ruby_port in system.ruby._cpu_ruby_ports:
     #
     # Tie the ruby tester ports to the ruby cpu ports
     #

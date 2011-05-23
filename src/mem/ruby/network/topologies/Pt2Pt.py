@@ -36,8 +36,9 @@ class Pt2Pt(Topology):
 
 def makeTopology(nodes, options, IntLink, ExtLink, Router):
     # Create an individual router for each controller, and connect all to all.
-    routers = [Router(router_id=i) for i in range(len(nodes))]
-    ext_links = [ExtLink(link_id=i, ext_node=n, int_node=routers[i])
+    pt2pt = Pt2Pt()
+    pt2pt.routers = [Router(router_id=i) for i in range(len(nodes))]
+    ext_links = [ExtLink(link_id=i, ext_node=n, int_node=pt2pt.routers[i])
                  for (i, n) in enumerate(nodes)]
     link_count = len(nodes)
 
@@ -47,9 +48,10 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
             if (i != j):
                 link_count += 1
                 int_links.append(IntLink(link_id=link_count,
-                                         node_a=routers[i],
-                                         node_b=routers[j]))
+                                         node_a=pt2pt.routers[i],
+                                         node_b=pt2pt.routers[j]))
 
-    return Pt2Pt(ext_links=ext_links,
-                 int_links=int_links,
-                 routers=routers)
+    pt2pt.ext_links = ext_links
+    pt2pt.int_links = int_links
+
+    return pt2pt

@@ -126,20 +126,20 @@ system.ruby = Ruby.create_system(options, \
 #
 system.ruby.randomization = True
  
-assert(len(cpus) == len(system.ruby.cpu_ruby_ports))
+assert(len(cpus) == len(system.ruby._cpu_ruby_ports))
 
 for (i, cpu) in enumerate(cpus):
     #
     # Tie the cpu memtester ports to the correct system ports
     #
-    cpu.test = system.ruby.cpu_ruby_ports[i].port
+    cpu.test = system.ruby._cpu_ruby_ports[i].port
     cpu.functional = system.funcmem.port
 
     #
     # Since the memtester is incredibly bursty, increase the deadlock
     # threshold to 5 million cycles
     #
-    system.ruby.cpu_ruby_ports[i].deadlock_threshold = 5000000
+    system.ruby._cpu_ruby_ports[i].deadlock_threshold = 5000000
 
 for (i, dma) in enumerate(dmas):
     #
