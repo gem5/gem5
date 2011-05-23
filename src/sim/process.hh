@@ -126,7 +126,7 @@ class Process : public SimObject
 
   protected:
     // constructor
-    Process(ProcessParams * params);
+    Process(ProcessParams *params);
 
     virtual void initState();
 
@@ -144,30 +144,21 @@ class Process : public SimObject
     class FdMap
     {
       public:
-            int fd;
-            std::string filename;
-            int mode;
-            int flags;
-            bool isPipe;
-            int readPipeSource;
-            uint64_t fileOffset;
+        int fd;
+        std::string filename;
+        int mode;
+        int flags;
+        bool isPipe;
+        int readPipeSource;
+        uint64_t fileOffset;
 
-
-            FdMap()
-            {
-                    fd = -1;
-                    filename = "NULL";
-                    mode = 0;
-                    flags = 0;
-                    isPipe = false;
-                    readPipeSource = 0;
-                    fileOffset = 0;
-
-            }
+        FdMap()
+            : fd(-1), filename("NULL"), mode(0), flags(0),
+              isPipe(false), readPipeSource(0), fileOffset(0)
+        { }
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
-
     };
 
   private:
@@ -192,13 +183,14 @@ class Process : public SimObject
     }
 
     // Find a free context to use
-    ThreadContext * findFreeContext();
+    ThreadContext *findFreeContext();
 
     // map simulator fd sim_fd to target fd tgt_fd
     void dup_fd(int sim_fd, int tgt_fd);
 
     // generate new target fd for sim_fd
-    int alloc_fd(int sim_fd, std::string filename, int flags, int mode, bool pipe);
+    int alloc_fd(int sim_fd, std::string filename, int flags, int mode,
+                 bool pipe);
 
     // free target fd (e.g., after close)
     void free_fd(int tgt_fd);
@@ -207,7 +199,7 @@ class Process : public SimObject
     int sim_fd(int tgt_fd);
 
     // look up simulator fd_map object for a given target fd
-    FdMap * sim_fd_obj(int tgt_fd);
+    FdMap *sim_fd_obj(int tgt_fd);
 
     // fix all offsets for currently open files and save them
     void fix_file_offsets();
@@ -240,7 +232,7 @@ class LiveProcess : public Process
     std::vector<std::string> envp;
     std::string cwd;
 
-    LiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+    LiveProcess(LiveProcessParams *params, ObjectFile *objFile);
 
     // Id of the owner of the process
     uint64_t __uid;
@@ -316,12 +308,12 @@ class LiveProcess : public Process
     virtual void setSyscallReturn(ThreadContext *tc,
             SyscallReturn return_value) = 0;
 
-    virtual SyscallDesc* getDesc(int callnum) = 0;
+    virtual SyscallDesc *getDesc(int callnum) = 0;
 
     // this function is used to create the LiveProcess object, since
     // we can't tell which subclass of LiveProcess to use until we
     // open and look at the object file.
-    static LiveProcess *create(LiveProcessParams * params);
+    static LiveProcess *create(LiveProcessParams *params);
 };
 
 
