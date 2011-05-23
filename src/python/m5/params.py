@@ -203,12 +203,8 @@ class SimObjectVector(VectorParamValue):
             for i,v in enumerate(self):
                 v.set_parent(parent, "%s%0*d" % (name, width, i))
 
-    def get_parent(self):
-        parent_set = set(v._parent for v in self)
-        if len(parent_set) != 1:
-            raise RuntimeError, \
-                  "SimObjectVector elements have inconsistent parent value."
-        return parent_set.pop()
+    def has_parent(self):
+        return reduce(lambda x,y: x and y, [v.has_parent() for v in self])
 
     # return 'cpu0 cpu1' etc. for print_ini()
     def get_name(self):

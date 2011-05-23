@@ -278,12 +278,26 @@ class MetaSimObject(type):
     def _set_param(cls, name, value, param):
         assert(param.name == name)
         try:
-            cls._values[name] = param.convert(value)
+            value = param.convert(value)
         except Exception, e:
             msg = "%s\nError setting param %s.%s to %s\n" % \
                   (e, cls.__name__, name, value)
             e.args = (msg, )
             raise
+        cls._values[name] = value
+        # if param value is a SimObject, make it a child too, so that
+        # it gets cloned properly when the class is instantiated
+        if isSimObjectOrVector(value) and not value.has_parent():
+            cls._add_cls_child(name, value)
+
+    def _add_cls_child(cls, name, child):
+        # It's a little funky to have a class as a parent, but these
+        # objects should never be instantiated (only cloned, which
+        # clears the parent pointer), and this makes it clear that the
+        # object is not an orphan and can provide better error
+        # messages.
+        child.set_parent(cls, name)
+        cls._children[name] = child
 
     def _new_port(cls, name, port):
         # each port should be uniquely assigned to one variable
@@ -334,7 +348,7 @@ class MetaSimObject(type):
 
         if isSimObjectOrSequence(value):
             # If RHS is a SimObject, it's an implicit child assignment.
-            cls._children[attr] = coerceSimObjectOrVector(value)
+            cls._add_cls_child(attr, coerceSimObjectOrVector(value))
             return
 
         # no valid assignment... raise exception
@@ -508,6 +522,14 @@ class SimObject(object):
         self._ccParams = None
         self._instantiated = False # really "cloned"
 
+        # Clone children specified at class level.  No need for a
+        # multidict here since we will be cloning everything.
+        # Do children before parameter values so that children that
+        # are also param values get cloned properly.
+        self._children = {}
+        for key,val in ancestor._children.iteritems():
+            self.add_child(key, val(_memo=memo_dict))
+
         # Inherit parameter values from class using multidict so
         # individual value settings can be overridden but we still
         # inherit late changes to non-overridden class values.
@@ -517,12 +539,6 @@ class SimObject(object):
             val = tryAsSimObjectOrVector(val)
             if val is not None:
                 self._values[key] = val(_memo=memo_dict)
-
-        # Clone children specified at class level.  No need for a
-        # multidict here since we will be cloning everything.
-        self._children = {}
-        for key,val in ancestor._children.iteritems():
-            self.add_child(key, val(_memo=memo_dict))
 
         # clone port references.  no need to use a multidict here
         # since we will be creating new references for all ports.
@@ -614,6 +630,9 @@ class SimObject(object):
                 e.args = (msg, )
                 raise
             self._values[attr] = value
+            # implicitly parent unparented objects assigned as params
+            if isSimObjectOrVector(value) and not value.has_parent():
+                self.add_child(attr, value)
             return
 
         # if RHS is a SimObject, it's an implicit child assignment
@@ -647,10 +666,9 @@ class SimObject(object):
     def get_name(self):
         return self._name
 
-    # use this rather than directly accessing _parent for symmetry
-    # with SimObjectVector
-    def get_parent(self):
-        return self._parent
+    # Also implemented by SimObjectVector
+    def has_parent(self):
+        return self._parent is not None
 
     # clear out child with given name. This code is not likely to be exercised.
     # See comment in add_child.
@@ -662,10 +680,9 @@ class SimObject(object):
     # Add a new child to this object.
     def add_child(self, name, child):
         child = coerceSimObjectOrVector(child)
-        if child.get_parent():
-            raise RuntimeError, \
-                  "add_child('%s'): child '%s' already has parent '%s'" % \
-                  (name, child._name, child._parent)
+        if child.has_parent():
+            print "warning: add_child('%s'): child '%s' already has parent" % \
+                  (name, child.get_name())
         if self._children.has_key(name):
             # This code path had an undiscovered bug that would make it fail
             # at runtime. It had been here for a long time and was only
@@ -684,15 +701,17 @@ class SimObject(object):
         for key,val in self._values.iteritems():
             if not isSimObjectVector(val) and isSimObjectSequence(val):
                 # need to convert raw SimObject sequences to
-                # SimObjectVector class so we can call get_parent()
+                # SimObjectVector class so we can call has_parent()
                 val = SimObjectVector(val)
                 self._values[key] = val
-            if isSimObjectOrVector(val) and not val.get_parent():
+            if isSimObjectOrVector(val) and not val.has_parent():
+                print "warning: %s adopting orphan SimObject param '%s'" \
+                      % (self, key)
                 self.add_child(key, val)
 
     def path(self):
         if not self._parent:
-            return '(orphan)'
+            return '<orphan %s>' % self.__class__
         ppath = self._parent.path()
         if ppath == 'root':
             return self._name
