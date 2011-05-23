@@ -616,7 +616,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         // If the store's data has all of the data needed, we can forward.
         if ((store_has_lower_limit && store_has_upper_limit)) {
             // Get shift amount for offset into the store's data.
-            int shift_amt = req->getVaddr() & (store_size - 1);
+            int shift_amt = req->getVaddr() - storeQueue[store_idx].inst->effAddr;
 
             memcpy(data, storeQueue[store_idx].data + shift_amt,
                    req->getSize());
