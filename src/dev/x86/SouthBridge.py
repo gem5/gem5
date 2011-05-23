@@ -57,9 +57,6 @@ class SouthBridge(SimObject):
     _pit = I8254(pio_addr=x86IOAddress(0x40))
     _speaker = PcSpeaker(pio_addr=x86IOAddress(0x61))
     _io_apic = I82094AA(pio_addr=0xFEC00000)
-    # This is to make sure the interrupt lines are instantiated. Don't use
-    # it for anything directly.
-    int_lines = VectorParam.X86IntLine([], "Interrupt lines")
 
     pic1 = Param.I8259(_pic1, "Master PIC")
     pic2 = Param.I8259(_pic2, "Slave PIC")
@@ -69,9 +66,6 @@ class SouthBridge(SimObject):
     pit = Param.I8254(_pit, "Programmable interval timer")
     speaker = Param.PcSpeaker(_speaker, "PC speaker")
     io_apic = Param.I82094AA(_io_apic, "I/O APIC")
-
-    def connectPins(self, source, sink):
-        self.int_lines.append(X86IntLine(source=source, sink=sink))
 
     # IDE controller
     ide = IdeController(disks=[], pci_func=0, pci_dev=4, pci_bus=0)
@@ -93,19 +87,16 @@ class SouthBridge(SimObject):
 
     def attachIO(self, bus):
         # Route interupt signals
-        self.connectPins(self.pic1.output, self.io_apic.pin(0))
-        self.connectPins(self.pic2.output, self.pic1.pin(2))
-        self.connectPins(self.cmos.int_pin, self.pic2.pin(0))
-        self.connectPins(self.pit.int_pin, self.pic1.pin(0))
-        self.connectPins(self.pit.int_pin, self.io_apic.pin(2))
-#        self.connectPins(self.keyboard.keyboard_int_pin,
-#                         self.pic1.pin(1))
-        self.connectPins(self.keyboard.keyboard_int_pin,
-                         self.io_apic.pin(1))
-#        self.connectPins(self.keyboard.mouse_int_pin,
-#                         self.pic2.pin(4))
-        self.connectPins(self.keyboard.mouse_int_pin,
-                         self.io_apic.pin(12))
+        self.int_lines = \
+          [X86IntLine(source=self.pic1.output, sink=self.io_apic.pin(0)),
+           X86IntLine(source=self.pic2.output, sink=self.pic1.pin(2)),
+           X86IntLine(source=self.cmos.int_pin, sink=self.pic2.pin(0)),
+           X86IntLine(source=self.pit.int_pin, sink=self.pic1.pin(0)),
+           X86IntLine(source=self.pit.int_pin, sink=self.io_apic.pin(2)),
+           X86IntLine(source=self.keyboard.keyboard_int_pin,
+                      sink=self.io_apic.pin(1)),
+           X86IntLine(source=self.keyboard.mouse_int_pin,
+                      sink=self.io_apic.pin(12))]
         # Tell the devices about each other
         self.pic1.slave = self.pic2
         self.speaker.i8254 = self.pit

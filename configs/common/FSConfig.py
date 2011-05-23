@@ -306,7 +306,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
 
 def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
-    return IO_address_space_base + port;
+    return IO_address_space_base + port
 
 def connectX86ClassicSystem(x86_sys):
     x86_sys.membus = MemBus(bus_id=1)
@@ -375,27 +375,29 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
     self.smbios_table.structures = structures
 
     # Set up the Intel MP table
+    base_entries = []
+    ext_entries = []
     for i in xrange(numCPUs):
         bp = X86IntelMPProcessor(
                 local_apic_id = i,
                 local_apic_version = 0x14,
                 enable = True,
                 bootstrap = (i == 0))
-        self.intel_mp_table.add_entry(bp)
+        base_entries.append(bp)
     io_apic = X86IntelMPIOAPIC(
             id = numCPUs,
             version = 0x11,
             enable = True,
             address = 0xfec00000)
     self.pc.south_bridge.io_apic.apic_id = io_apic.id
-    self.intel_mp_table.add_entry(io_apic)
+    base_entries.append(io_apic)
     isa_bus = X86IntelMPBus(bus_id = 0, bus_type='ISA')
-    self.intel_mp_table.add_entry(isa_bus)
+    base_entries.append(isa_bus)
     pci_bus = X86IntelMPBus(bus_id = 1, bus_type='PCI')
-    self.intel_mp_table.add_entry(pci_bus)
+    base_entries.append(pci_bus)
     connect_busses = X86IntelMPBusHierarchy(bus_id=0,
             subtractive_decode=True, parent_bus=1)
-    self.intel_mp_table.add_entry(connect_busses)
+    ext_entries.append(connect_busses)
     pci_dev4_inta = X86IntelMPIOIntAssignment(
             interrupt_type = 'INT',
             polarity = 'ConformPolarity',
@@ -404,7 +406,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
             source_bus_irq = 0 + (4 << 2),
             dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 16)
-    self.intel_mp_table.add_entry(pci_dev4_inta);
+    base_entries.append(pci_dev4_inta)
     def assignISAInt(irq, apicPin):
         assign_8259_to_apic = X86IntelMPIOIntAssignment(
                 interrupt_type = 'ExtInt',
@@ -414,7 +416,7 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
                 source_bus_irq = irq,
                 dest_io_apic_id = io_apic.id,
                 dest_io_apic_intin = 0)
-        self.intel_mp_table.add_entry(assign_8259_to_apic)
+        base_entries.append(assign_8259_to_apic)
         assign_to_apic = X86IntelMPIOIntAssignment(
                 interrupt_type = 'INT',
                 polarity = 'ConformPolarity',
@@ -423,11 +425,13 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None, Ruby = False
                 source_bus_irq = irq,
                 dest_io_apic_id = io_apic.id,
                 dest_io_apic_intin = apicPin)
-        self.intel_mp_table.add_entry(assign_to_apic)
+        base_entries.append(assign_to_apic)
     assignISAInt(0, 2)
     assignISAInt(1, 1)
     for i in range(3, 15):
         assignISAInt(i, i)
+    self.intel_mp_table.base_entries = base_entries
+    self.intel_mp_table.ext_entries = ext_entries
 
 def setWorkCountOptions(system, options):
     if options.work_item_id != None:
@@ -456,17 +460,15 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
     # just to avoid corner cases.
     assert(self.physmem.range.second.getValue() >= 0x200000)
 
-    # Mark the first megabyte of memory as reserved
-    self.e820_table.entries.append(X86E820Entry(
-                addr = 0,
-                size = '1MB',
-                range_type = 2))
-
-    # Mark the rest as available
-    self.e820_table.entries.append(X86E820Entry(
-                addr = 0x100000,
+    self.e820_table.entries = \
+       [
+        # Mark the first megabyte of memory as reserved
+        X86E820Entry(addr = 0, size = '1MB', range_type = 2),
+        # Mark the rest as available
+        X86E820Entry(addr = 0x100000,
                 size = '%dB' % (self.physmem.range.second - 0x100000 + 1),
-                range_type = 1))
+                range_type = 1)
+        ]
 
     # Command line
     self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 ' + \

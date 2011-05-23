@@ -50,4 +50,4 @@ class X86E820Table(SimObject):
     type = 'X86E820Table'
     cxx_class = 'X86ISA::E820Table'
 
-    entries = VectorParam.X86E820Entry([], 'entries for the e820 table')
+    entries = VectorParam.X86E820Entry('entries for the e820 table')
