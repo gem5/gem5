@@ -37,10 +37,9 @@ progname = os.path.basename(sys.argv[0])
 
 optparser = optparse.OptionParser()
 add_option = optparser.add_option
-add_option('-v', '--verbose', dest='verbose', action='store_true',
-           default=False,
+add_option('-v', '--verbose', action='store_true', default=False,
            help='echo commands before executing')
-add_option('--builds', dest='builds',
+add_option('--builds',
            default='ALPHA_SE,ALPHA_SE_MOESI_hammer,' \
            'ALPHA_SE_MESI_CMP_directory,'  \
            'ALPHA_SE_MOESI_CMP_directory,' \
@@ -52,15 +51,21 @@ add_option('--builds', dest='builds',
            'X86_SE,X86_FS,' \
            'ARM_SE,ARM_FS',
            help="comma-separated build targets to test (default: '%default')")
-add_option('--variants', dest='variants', default='opt',
-           help="comma-separated build variants to test (default: '%default')")
-add_option('--scons-opts', dest='scons_opts', default='', metavar='OPTS',
+add_option('--test-variants', default='opt',
+           help="comma-separated build variants to test (default: '%default')"\
+           ", set to '' for none")
+add_option('--compile-variants', default='debug,fast',
+           help="comma-separated build variants to compile only (not test) " \
+           "(default: '%default'), set to '' for none", metavar='VARIANTS')
+add_option('--scons-opts', default='', metavar='OPTS',
            help='scons options')
-add_option('-j', '--jobs', type='int', default=1,
-           help='number of parallel jobs to use')
+add_option('-j', '--jobs', type='int', default=1, metavar='N',
+           help='number of parallel jobs to use (0 to use all cores)')
 add_option('-k', '--keep-going', action='store_true',
            help='keep going after errors')
-add_option('-D', '--build-dir', default='',
+add_option('--update-ref', action='store_true',
+           help='update reference outputs')
+add_option('-D', '--build-dir', default='', metavar='DIR',
            help='build directory location')
 add_option('-n', "--no-exec", default=False, action='store_true',
            help="don't actually invoke scons, just echo SCons command line")
@@ -68,9 +73,17 @@ add_option('-n', "--no-exec", default=False, action='store_true',
 (options, tests) = optparser.parse_args()
 
 
+# split a comma-separated list, but return an empty list if given the
+# empty string
+def split_if_nonempty(s):
+    if not s:
+        return []
+    return s.split(',')
+
 # split list options on ',' to get Python lists
-builds = options.builds.split(',')
-variants = options.variants.split(',')
+builds = split_if_nonempty(options.builds)
+test_variants = split_if_nonempty(options.test_variants)
+compile_variants = split_if_nonempty(options.compile_variants)
 
 options.build_dir = os.path.join(options.build_dir, 'build')
 
@@ -91,30 +104,33 @@ def system(cmd):
         print >>sys.stderr, "When attemping to execute: %s" % cmd
         sys.exit(1)
 
-# Quote string s so it can be passed as a shell arg
-def shellquote(s):
-    if ' ' in s:
-        s = "'%s'" % s
-    return s
+targets = []
 
+# start with compile-only targets, if any
+if compile_variants:
+    targets += ['%s/%s/m5.%s' % (options.build_dir, build, variant)
+                for variant in compile_variants
+                for build in builds]
+
+# By default run the 'quick' tests
 if not tests:
-    print "No tests specified, just building binaries."
-    targets = ['%s/%s/m5.%s' % (options.build_dir, build, variant)
-               for build in builds
-               for variant in variants]
-elif 'all' in tests:
-    targets = ['%s/%s/tests/%s' % (options.build_dir, build, variant)
-               for build in builds
-               for variant in variants]
+    tests = ['quick']
+
+# set up test targets for scons
+if 'all' in tests:
+    targets += ['%s/%s/tests/%s' % (options.build_dir, build, variant)
+                for build in builds
+                for variant in test_variants]
 else:
-    # Ugly! Since we don't have any quick SPARC_FS tests remove the SPARC_FS target
-    # If we ever get a quick SPARC_FS test, this code should be removed
+    # Ugly! Since we don't have any quick SPARC_FS tests remove the
+    # SPARC_FS target If we ever get a quick SPARC_FS test, this code
+    # should be removed
     if 'quick' in tests and 'SPARC_FS' in builds:
         builds.remove('SPARC_FS')
-    targets = ['%s/%s/tests/%s/%s' % (options.build_dir, build, variant, test)
-               for build in builds
-               for variant in variants
-               for test in tests]
+    targets += ['%s/%s/tests/%s/%s' % (options.build_dir, build, variant, test)
+                for build in builds
+                for variant in test_variants
+                for test in tests]
 
 def cpu_count():
     if 'bsd' in sys.platform or sys.platform == 'darwin':
@@ -137,6 +153,8 @@ if options.jobs != 1:
     scons_opts += ' -j %d' % options.jobs
 if options.keep_going:
     scons_opts += ' -k'
+if options.update_ref:
+    scons_opts += ' --update-ref'
 
 cmd = 'scons --ignore-style %s %s' % (scons_opts, ' '.join(targets))
 if options.no_exec:
