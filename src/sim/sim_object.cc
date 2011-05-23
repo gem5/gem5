@@ -38,7 +38,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
-#include "debug/Config.hh"
+#include "debug/Checkpoint.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
@@ -78,8 +78,12 @@ SimObject::init()
 void
 SimObject::loadState(Checkpoint *cp)
 {
-    if (cp->sectionExists(name()))
+    if (cp->sectionExists(name())) {
+        DPRINTF(Checkpoint, "unserializing\n");
         unserialize(cp, name());
+    } else {
+        DPRINTF(Checkpoint, "no checkpoint section found\n");
+    }
 }
 
 void
@@ -125,25 +129,6 @@ SimObject::serializeAll(ostream &os)
         obj->serialize(os);
    }
 }
-
-void
-SimObject::unserializeAll(Checkpoint *cp)
-{
-    SimObjectList::reverse_iterator ri = simObjectList.rbegin();
-    SimObjectList::reverse_iterator rend = simObjectList.rend();
-
-    for (; ri != rend; ++ri) {
-        SimObject *obj = *ri;
-        DPRINTFR(Config, "Unserializing '%s'\n",
-                 obj->name());
-        if(cp->sectionExists(obj->name()))
-            obj->unserialize(cp, obj->name());
-        else
-            warn("Not unserializing '%s': no section found in checkpoint.\n",
-                 obj->name());
-   }
-}
-
 
 
 #ifdef DEBUG
