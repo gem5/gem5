@@ -34,10 +34,10 @@ import sys
 
 __all__ = [ 'options', 'arguments', 'main' ]
 
-usage="%prog [m5 options] script.py [script options]"
+usage="%prog [gem5 options] script.py [script options]"
 version="%prog 2.0"
 brief_copyright='''
-Copyright (c) 2001-2008
+Copyright (c) 2001-2011
 The Regents of The University of Michigan
 All Rights Reserved
 '''
@@ -130,7 +130,7 @@ def parse_options():
     return options,arguments
 
 def interact(scope):
-    banner = "M5 Interactive Console"
+    banner = "gem5 Interactive Console"
     sys.argv = []
     try:
         from IPython.Shell import IPShellEmbed
@@ -263,14 +263,15 @@ def main(*args):
 
     verbose = options.verbose - options.quiet
     if options.verbose >= 0:
-        print "M5 Simulator System"
+        print "gem5 Simulator System"
         print brief_copyright
         print
 
-        print "M5 compiled %s" % defines.compileDate;
+        print "gem5 compiled %s" % defines.compileDate;
 
-        print "M5 started %s" % datetime.datetime.now().strftime("%b %e %Y %X")
-        print "M5 executing on %s" % socket.gethostname()
+        print "gem5 started %s" % \
+            datetime.datetime.now().strftime("%b %e %Y %X")
+        print "gem5 executing on %s" % socket.gethostname()
 
         print "command line:",
         for argv in sys.argv:
