@@ -400,10 +400,12 @@ def do_check_style(hgui, repo, *files, **args):
         if skip(fname):
             continue
 
-        if whitespace.apply(fname, prompt):
+        fpath = joinpath(repo.root, fname)
+
+        if whitespace.apply(fpath, prompt):
             return True
 
-        if sorted_includes.apply(fname, prompt):
+        if sorted_includes.apply(fpath, prompt):
             return True
 
     try:
@@ -416,12 +418,13 @@ def do_check_style(hgui, repo, *files, **args):
         if skip(fname):
             continue
 
+        fpath = joinpath(repo.root, fname)
         regions = modregions(wctx, fname)
 
-        if whitespace.apply(fname, prompt, regions):
+        if whitespace.apply(fpath, prompt, regions):
             return True
 
-        if sorted_includes.apply(fname, prompt, regions):
+        if sorted_includes.apply(fpath, prompt, regions):
             return True
 
     return False
@@ -434,7 +437,7 @@ def do_check_format(hgui, repo, **args):
     verbose = 0
     stats = ValidationStats()
     for f in modified + added:
-        validate(f, stats, verbose, None)
+        validate(joinpath(repo.root, f), stats, verbose, None)
 
     if stats:
         stats.dump()
