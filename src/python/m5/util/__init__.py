@@ -42,22 +42,11 @@ from smartdict import SmartDict
 from sorteddict import SortedDict
 from region import neg_inf, pos_inf, Region, Regions
 
-# define this here so we can use it right away if necessary
-def errorURL(prefix, s):
-    try:
-        import zlib
-        hashstr = "%x" % zlib.crc32(s)
-    except:
-        hashstr = "UnableToHash"
-    return "For more information see: http://www.m5sim.org/%s/%s" % \
-            (prefix, hashstr)
-
 # panic() should be called when something happens that should never
 # ever happen regardless of what the user does (i.e., an acutal m5
 # bug).
 def panic(fmt, *args):
     print >>sys.stderr, 'panic:', fmt % args
-    print >>sys.stderr, errorURL('panic',fmt)
     sys.exit(1)
 
 # fatal() should be called when the simulation cannot continue due to
@@ -65,7 +54,6 @@ def panic(fmt, *args):
 # arguments, etc.) and not a simulator bug.
 def fatal(fmt, *args):
     print >>sys.stderr, 'fatal:', fmt % args
-    print >>sys.stderr, errorURL('fatal',fmt)
     sys.exit(1)
 
 class Singleton(type):

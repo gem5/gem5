@@ -28,8 +28,6 @@
  * Authors: Nathan Binkert
  */
 
-#include <zlib.h>
-
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -70,20 +68,15 @@ __exit_message(const char *prefix, int code,
       default:
         format += "\n";
     }
-    
-    uint32_t crc = crc32(0, (const Bytef*)fmt, strlen(fmt));
 
     format += " @ cycle %d\n[%s:%s, line %d]\n";
     format += "Memory Usage: %ld KBytes\n";
-    format += "For more information see: http://www.m5sim.org/%s/%x\n";
 
     args.push_back(curTick());
     args.push_back(func);
     args.push_back(file);
     args.push_back(line);
     args.push_back(memUsage());
-    args.push_back(prefix);
-    args.push_back(crc);
 
     ccprintf(cerr, format.c_str(), args);
 
@@ -110,8 +103,6 @@ __base_message(std::ostream &stream, const char *prefix, bool verbose,
       default:
         format += "\n";
     }
-    
-    uint32_t crc = crc32(0, (const Bytef*)fmt, strlen(fmt));
 
     if (verbose) {
         format += " @ cycle %d\n[%s:%s, line %d]\n";
@@ -119,12 +110,6 @@ __base_message(std::ostream &stream, const char *prefix, bool verbose,
         args.push_back(func);
         args.push_back(file);
         args.push_back(line);
-    }
-
-    if (strcmp(prefix, "warn") == 0) {
-        format += "For more information see: http://www.m5sim.org/%s/%x\n";
-        args.push_back(prefix);
-        args.push_back(crc);
     }
 
     ccprintf(stream, format.c_str(), args);
