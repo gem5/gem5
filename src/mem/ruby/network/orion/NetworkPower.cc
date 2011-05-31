@@ -40,7 +40,8 @@ Router_d::calculate_power()
     //Network Activities from garnet
     calculate_performance_numbers();
     double sim_cycles;
-    sim_cycles = g_eventQueue_ptr->getTime() - m_network_ptr->getRubyStartTime();
+    sim_cycles =
+        g_eventQueue_ptr->getTime() - m_network_ptr->getRubyStartTime();
 
     // Number of virtual networks/message classes declared in Ruby
     // maybe greater than active virtual networks.
@@ -88,7 +89,8 @@ Router_d::calculate_power()
     for (int i = 0; i < m_virtual_networks; i++) {
         if (active_vclass_ary[i]) {
             int temp_vc = i*m_vc_per_vnet;
-            vclass_type_ary.push_back((uint32_t) m_network_ptr->get_vnet_type(temp_vc));
+            vclass_type_ary.push_back((uint32_t) 
+                m_network_ptr->get_vnet_type(temp_vc));
         }
     }
     assert(vclass_type_ary.size() == num_active_vclass);
@@ -97,7 +99,7 @@ Router_d::calculate_power()
     uint32_t in_buf_per_data_vc = m_network_ptr->getBuffersPerDataVC();
     uint32_t in_buf_per_ctrl_vc = m_network_ptr->getBuffersPerCtrlVC();
     //flit width in bits
-    uint32_t flit_width = m_network_ptr->getNiFlitSize() * 8; 
+    uint32_t flit_width_bits = m_network_ptr->getNiFlitSize() * 8; 
 
     orion_rtr_ptr = new OrionRouter(
         num_in_port,
@@ -107,7 +109,7 @@ Router_d::calculate_power()
         num_vc_per_vclass,
         in_buf_per_data_vc,
         in_buf_per_ctrl_vc,
-        flit_width,
+        flit_width_bits,
         orion_cfg_ptr
     );
 
@@ -120,7 +122,6 @@ Router_d::calculate_power()
     double Psw_arb_local_dyn = 0.0;
     double Psw_arb_global_dyn = 0.0;
     double Pxbar_dyn = 0.0;
-    double Pclk_dyn = 0.0;
     double Ptotal_dyn = 0.0;
 
     double Pbuf_sta = 0.0;
@@ -178,7 +179,7 @@ Router_d::calculate_power()
     // Switch Allocation Local
     // Each input port chooses one input VC as requestor
     // Arbiter size: num_vclass*num_vc_per_vclass:1
-    Psw_arb_local_dyn +=
+    Psw_arb_local_dyn =
         orion_rtr_ptr->calc_dynamic_energy_local_sw_arb(
             num_vclass*num_vc_per_vclass/2, false)*
             (sw_local_arbit_count/sim_cycles)*
@@ -187,28 +188,27 @@ Router_d::calculate_power()
     // Switch Allocation Global
     // Each output port chooses one input port as winner
     // Arbiter size: num_in_port:1
-    Psw_arb_global_dyn +=
+    Psw_arb_global_dyn =
         orion_rtr_ptr->calc_dynamic_energy_global_sw_arb(
             num_in_port/2, false)*
                 (sw_global_arbit_count/sim_cycles)*
                 freq_Hz;
 
     // Crossbar
-    Pxbar_dyn +=
+    Pxbar_dyn =
         orion_rtr_ptr->calc_dynamic_energy_xbar(false)*
             (crossbar_count/sim_cycles)*freq_Hz;
-
-    // Clock
-    Pclk_dyn += orion_rtr_ptr->calc_dynamic_energy_clock()*freq_Hz;
 
     // Total
     Ptotal_dyn = Pbuf_wr_dyn + Pbuf_rd_dyn +
                  Pvc_arb_local_dyn + Pvc_arb_global_dyn +
                  Psw_arb_local_dyn + Psw_arb_global_dyn +
-                 Pxbar_dyn +
-                 Pclk_dyn;
+                 Pxbar_dyn;
 
     m_power_dyn = Ptotal_dyn;
+    
+    // Clock Power
+    m_clk_power = orion_rtr_ptr->calc_dynamic_energy_clock()*freq_Hz;
 
     // Static Power
     Pbuf_sta = orion_rtr_ptr->get_static_power_buf();
@@ -220,7 +220,7 @@ Router_d::calculate_power()
 
     m_power_sta = Ptotal_sta;
 
-    Ptotal = Ptotal_dyn + Ptotal_sta;
+    Ptotal = m_power_dyn + m_power_sta + m_clk_power;
 
     return Ptotal;
 }
@@ -240,26 +240,32 @@ NetworkLink_d::calculate_power()
 
     link_length = orion_cfg_ptr->get<double>("LINK_LENGTH");
 
+    int channel_width_bits = channel_width*8;
+
     orion_link_ptr = new OrionLink(
         link_length,
-        channel_width    /* channel width */,
+        channel_width_bits,
         orion_cfg_ptr);
 
-//    // Dynamic Power
     double sim_cycles =
         (double)(g_eventQueue_ptr->getTime() - m_net_ptr->getRubyStartTime());
 
-    double Plink_dyn = orion_link_ptr->calc_dynamic_energy(channel_width/2)*
+    // Dynamic Power
+    // Assume half the bits flipped on every link activity
+    double Plink_dyn =
+        orion_link_ptr->calc_dynamic_energy(channel_width_bits/2)*
         (m_link_utilized/ sim_cycles)*freq_Hz;
 
     m_power_dyn = Plink_dyn;
 
     // Static Power
+    // Calculates number of repeaters needed in link, and their static power
+    // For short links, like 1mm, no repeaters are needed so static power is 0
     double Plink_sta = orion_link_ptr->get_static_power();
 
     m_power_sta = Plink_sta;
 
-    double Ptotal = Plink_dyn + Plink_sta;
+    double Ptotal = m_power_dyn + m_power_sta;
 
     return Ptotal;
 }

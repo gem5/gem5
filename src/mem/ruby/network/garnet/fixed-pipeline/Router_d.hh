@@ -92,6 +92,7 @@ class Router_d : public BasicRouter
 
     double get_dynamic_power(){return m_power_dyn;}
     double get_static_power(){return m_power_sta;}
+    double get_clk_power(){return m_clk_power;}
 
   private:
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
@@ -113,6 +114,7 @@ class Router_d : public BasicRouter
 
     double m_power_dyn;
     double m_power_sta;
+    double m_clk_power;
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET_FIXED_PIPELINE_ROUTER_D_HH__
