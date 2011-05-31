@@ -245,13 +245,9 @@ NetworkLink_d::calculate_power()
         channel_width    /* channel width */,
         orion_cfg_ptr);
 
-//
-//  NOTE!  I believe this calculation will be moved to McPAT, thus this
-//  reference to the net_ptr can be removed
-//
 //    // Dynamic Power
-    double sim_cycles = 0.0;
-//         (double)(g_eventQueue_ptr->getTime() - m_net_ptr->getRubyStartTime());
+    double sim_cycles =
+        (double)(g_eventQueue_ptr->getTime() - m_net_ptr->getRubyStartTime());
 
     double Plink_dyn = orion_link_ptr->calc_dynamic_energy(channel_width/2)*
         (m_link_utilized/ sim_cycles)*freq_Hz;

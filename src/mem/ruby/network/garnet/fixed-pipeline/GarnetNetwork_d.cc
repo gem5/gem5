@@ -90,6 +90,13 @@ GarnetNetwork_d::init()
     }
     // false because this isn't a reconfiguration
     m_topology_ptr->createLinks(this, false);
+
+    // initialize the link's network pointers
+   for (vector<NetworkLink_d*>::const_iterator i = m_link_ptr_vector.begin();
+         i != m_link_ptr_vector.end(); ++i) {
+        NetworkLink_d* net_link = safe_cast<NetworkLink_d*>(*i);
+        net_link->init_net_ptr(this);
+    }
 }
 
 GarnetNetwork_d::~GarnetNetwork_d()
