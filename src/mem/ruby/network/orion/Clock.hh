@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2009 Princeton University, and 
- *                    Regents of the University of California
+ * Copyright (c) 2009 Princeton University
+ * Copyright (c) 2009 The Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

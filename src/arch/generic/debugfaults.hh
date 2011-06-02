@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Advanced Micro Devices
+ * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall

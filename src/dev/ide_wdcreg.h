@@ -2,8 +2,8 @@
 /*	$NetBSD: wdcreg.h,v 1.22 1999/03/07 14:02:54 bouyer Exp $	*/
 
 /*-
- * Copyright (c) 1991 The Regents of the University of California.
- * All rights reserved.
+ * Copyright (c) 1991 The Regents of the University of California
+ * All rights reserved
  *
  * This code is derived from software contributed to Berkeley by
  * William Jolitz.
