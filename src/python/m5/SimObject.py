@@ -29,7 +29,7 @@
 #          Nathan Binkert
 
 import sys
-from types import FunctionType, MethodType
+from types import FunctionType, MethodType, ModuleType
 
 try:
     import pydot
@@ -130,7 +130,8 @@ def default_swig_objdecls(cls, code):
 
 def public_value(key, value):
     return key.startswith('_') or \
-               isinstance(value, (FunctionType, MethodType, classmethod, type))
+               isinstance(value, (FunctionType, MethodType, ModuleType,
+                                  classmethod, type))
 
 # The metaclass for SimObject.  This class controls how new classes
 # that derive from SimObject are instantiated, and provides inherited
