@@ -1,0 +1,47 @@
+Please see individual files for details of the license on each file.
+The preferred license can be found in LICENSE.
+
+All files in this distribution (other than in the ext directory) have
+licenses based on the BSD or MIT licenses.  Some files in the ext
+directory are GNU LGPL.  No other licenses are found in this
+distribution.
+
+Beyond the BSD license, some files include the following clarification
+of the license as required by the copyright holder:
+
+    The license below extends only to copyright in the software and
+    shall not be construed as granting a license to any other
+    intellectual property including but not limited to intellectual
+    property relating to a hardware implementation of the
+    functionality of the software licensed hereunder.  You may use the
+    software subject to the license terms below provided that you
+    ensure that this notice is replicated unmodified and in its
+    entirety in all distributions of the software, modified or
+    unmodified, in source code or in binary form.
+
+The copyright holders include (not counting the ext directory):
+
+Copyright (c) 2000-2011 The Regents of The University of Michigan
+Copyright (c) 1990,1993-1995,2007-2010 The Hewlett-Packard Development Company
+Copyright (c) 1999-2009,2011 Mark D. Hill and David A. Wood
+Copyright (c) 2009-2011 ARM Limited
+Copyright (c) 2008-2009 Princeton University
+Copyright (c) 2007 MIPS Technologies, Inc.
+Copyright (c) 2009-2011 Advanced Micro Devices, Inc.
+Copyright (c) 2009 The University of Edinburgh
+Copyright (c) 2007-2008 The Florida State University
+Copyright (c) 2010 Massachusetts Institute of Technology
+Copyright (c) 1990-1993 The Regents of the University of California
+Copyright (c) 2006-2009 Nathan Binkert
+Copyright (c) 2001 The NetBSD Foundation, Inc.
+Copyright (c) 2010-2011 Gabe Black
+Copyright (c) 1994 Adam Glass
+Copyright (c) 1990-1992 MIPS Computer Systems, Inc.
+Copyright (c) 2004 Richard J. Wagner
+Copyright (c) 2000 Computer Engineering and Communication Networks Lab
+Copyright (c) 2001 Eric Jackson
+Copyright (c) 1990 Hewlett-Packard Development Company
+Copyright (c) 1994-1996 Carnegie-Mellon University.
+Copyright (c) 1993-1994 Christopher G. Demetriou
+Copyright (c) 1997-2002 Makoto Matsumoto and Takuji Nishimura
+Copyright (c) 1998,2001 Manuel Bouyer.

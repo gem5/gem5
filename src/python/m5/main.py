@@ -36,11 +36,8 @@ __all__ = [ 'options', 'arguments', 'main' ]
 
 usage="%prog [gem5 options] script.py [script options]"
 version="%prog 2.0"
-brief_copyright='''
-Copyright (c) 2001-2011
-The Regents of The University of Michigan
-All Rights Reserved
-'''
+brief_copyright=\
+    "gem5 is copyrighted software; use the --copyright option for details."
 
 def parse_options():
     import config
@@ -52,8 +49,6 @@ def parse_options():
     group = options.set_group
 
     # Help options
-    option('-A', "--authors", action="store_true", default=False,
-        help="Show author information")
     option('-B', "--build-info", action="store_true", default=False,
         help="Show build information")
     option('-C', "--copyright", action="store_true", default=False,
@@ -211,14 +206,7 @@ def main(*args):
 
     if options.copyright:
         done = True
-        print info.LICENSE
-        print
-
-    if options.authors:
-        done = True
-        print 'Author information:'
-        print
-        print info.AUTHORS
+        print info.COPYING
         print
 
     if options.readme:
@@ -263,7 +251,7 @@ def main(*args):
 
     verbose = options.verbose - options.quiet
     if options.verbose >= 0:
-        print "gem5 Simulator System"
+        print "gem5 Simulator System.  http://gem5.org"
         print brief_copyright
         print
 
