@@ -199,53 +199,62 @@ main.AppendENVPath('PYTHONPATH', extra_python_paths)
 hgdir = main.root.Dir(".hg")
 
 mercurial_style_message = """
-You're missing the M5 style hook.
-Please install the hook so we can ensure that all code fits a common style.
+You're missing the gem5 style hook, which automatically checks your code
+against the gem5 style rules on hg commit and qrefresh commands.  This
+script will now install the hook in your .hg/hgrc file.
+Press enter to continue, or ctrl-c to abort: """
 
-All you'd need to do is add the following lines to your repository .hg/hgrc
-or your personal .hgrc
-----------------
-
+mercurial_style_hook = """
+# The following lines were automatically added by gem5/SConstruct
+# to provide the gem5 style-checking hooks
 [extensions]
 style = %s/util/style.py
 
 [hooks]
 pretxncommit.style = python:style.check_style
 pre-qrefresh.style = python:style.check_style
-""" % (main.root)
+# End of SConstruct additions
 
-mercurial_bin_not_found = """
-Mercurial binary cannot be found, unfortunately this means that we
-cannot easily determine the version of M5 that you are running and
-this makes error messages more difficult to collect.  Please consider
-installing mercurial if you choose to post an error message
-"""
+""" % (main.root.abspath)
 
 mercurial_lib_not_found = """
-Mercurial libraries cannot be found, ignoring style hook
-If you are actually a M5 developer, please fix this and
-run the style hook. It is important.
+Mercurial libraries cannot be found, ignoring style hook.  If
+you are a gem5 developer, please fix this and run the style
+hook. It is important.
 """
 
-if hgdir.exists():
-    # Ensure that the style hook is in place.
+# Check for style hook and prompt for installation if it's not there.
+# Skip this if --ignore-style was specified, there's no .hg dir to
+# install a hook in, or there's no interactive terminal to prompt.
+if not GetOption('ignore_style') and hgdir.exists() and sys.stdin.isatty():
+    style_hook = True
     try:
-        ui = None
-        if not GetOption('ignore_style'):
-            from mercurial import ui
-            ui = ui.ui()
+        from mercurial import ui
+        ui = ui.ui()
+        ui.readconfig(hgdir.File('hgrc').abspath)
+        style_hook = ui.config('hooks', 'pretxncommit.style', None) and \
+                     ui.config('hooks', 'pre-qrefresh.style', None)
     except ImportError:
         print mercurial_lib_not_found
 
-    if ui is not None:
-        ui.readconfig(hgdir.File('hgrc').abspath)
-        style_hook = ui.config('hooks', 'pretxncommit.style', None)
-
-        if not style_hook:
-            print mercurial_style_message
+    if not style_hook:
+        print mercurial_style_message,
+        # continue unless user does ctrl-c/ctrl-d etc.
+        try:
+            raw_input()
+        except:
+            print "Input exception, exiting scons.\n"
             sys.exit(1)
-else:
-    print ".hg directory not found"
+        hgrc_path = '%s/.hg/hgrc' % main.root.abspath
+        print "Adding style hook to", hgrc_path, "\n"
+        try:
+            hgrc = open(hgrc_path, 'a')
+            hgrc.write(mercurial_style_hook)
+            hgrc.close()
+        except:
+            print "Error updating", hgrc_path
+            sys.exit(1)
+
 
 ###################################################
 #
