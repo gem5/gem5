@@ -45,7 +45,7 @@ if env['TARGET_ISA'] == 'power':
     Source('utility.cc')
 
     SimObject('PowerTLB.py')
-    TraceFlag('Power')
+    DebugFlag('Power')
 
     if not env['FULL_SYSTEM']:
         Source('process.cc')

@@ -44,4 +44,4 @@ Source('RubyTester.cc')
 Source('Check.cc')
 Source('CheckTable.cc')
 
-TraceFlag('RubyTest')
+DebugFlag('RubyTest')

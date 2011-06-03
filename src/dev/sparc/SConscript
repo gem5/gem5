@@ -39,4 +39,4 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'sparc':
     Source('t1000.cc')
     Source('mm_disk.cc')
 
-    TraceFlag('Iob')
+    DebugFlag('Iob')

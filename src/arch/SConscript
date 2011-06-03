@@ -126,7 +126,7 @@ isa_desc_builder = Builder(action=isa_desc_action, emitter=isa_desc_emitter)
 
 env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
 
-TraceFlag('IntRegs')
-TraceFlag('FloatRegs')
-TraceFlag('MiscRegs')
+DebugFlag('IntRegs')
+DebugFlag('FloatRegs')
+DebugFlag('MiscRegs')
 CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'MiscRegs' ])

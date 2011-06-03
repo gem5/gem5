@@ -42,5 +42,5 @@ Source('cacheset.cc')
 SimObject('iic_repl/Repl.py')
 Source('iic_repl/gen.cc')
 
-TraceFlag('IIC')
-TraceFlag('IICMore')
+DebugFlag('IIC')
+DebugFlag('IICMore')

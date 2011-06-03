@@ -37,8 +37,8 @@ if env['FULL_SYSTEM']:
     Source('kernel_stats.cc')
     Source('system_events.cc')
 
-    TraceFlag('DebugPrintf')
-    TraceFlag('Printf')
+    DebugFlag('DebugPrintf')
+    DebugFlag('Printf')
 
     Source('linux/events.cc')
     Source('linux/linux_syscalls.cc')
@@ -49,7 +49,7 @@ if env['FULL_SYSTEM']:
         Source('tru64/printf.cc')
         Source('tru64/tru64_events.cc')
         Source('tru64/tru64_syscalls.cc')
-        TraceFlag('BADADDR')
+        DebugFlag('BADADDR')
 else:
     Source('linux/linux.cc')
     Source('operatingsystem.cc')

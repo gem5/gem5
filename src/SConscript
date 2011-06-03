@@ -270,7 +270,6 @@ def DebugFlag(name, desc=None):
     if name in debug_flags:
         raise AttributeError, "Flag %s already specified" % name
     debug_flags[name] = (name, (), desc)
-TraceFlag = DebugFlag
 
 def CompoundFlag(name, flags, desc=None):
     if name in debug_flags:
@@ -280,7 +279,6 @@ def CompoundFlag(name, flags, desc=None):
     debug_flags[name] = (name, compound, desc)
 
 Export('DebugFlag')
-Export('TraceFlag')
 Export('CompoundFlag')
 
 ########################################################################

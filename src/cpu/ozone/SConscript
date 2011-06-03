@@ -45,11 +45,11 @@ if 'OzoneCPU' in env['CPU_MODELS']:
     Source('lw_lsq.cc')
     Source('rename_table.cc')
 
-    TraceFlag('BE')
-    TraceFlag('FE')
-    TraceFlag('IBE')
-    TraceFlag('OzoneCPU')
-    TraceFlag('OzoneLSQ')
+    DebugFlag('BE')
+    DebugFlag('FE')
+    DebugFlag('IBE')
+    DebugFlag('OzoneCPU')
+    DebugFlag('OzoneLSQ')
 
     CompoundFlag('OzoneCPUAll', [ 'BE', 'FE', 'IBE', 'OzoneLSQ', 'OzoneCPU' ])
 

@@ -34,4 +34,4 @@ SimObject('NetworkTest.py')
 
 Source('networktest.cc', Werror=False)
 
-TraceFlag('NetworkTest')
+DebugFlag('NetworkTest')

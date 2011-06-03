@@ -39,32 +39,32 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
 
     SimObject('Cmos.py')
     Source('cmos.cc')
-    TraceFlag('CMOS', 'Accesses to CMOS devices')
+    DebugFlag('CMOS', 'Accesses to CMOS devices')
 
     SimObject('I8259.py')
     Source('i8259.cc')
-    TraceFlag('I8259', 'Accesses to the I8259 PIC devices')
+    DebugFlag('I8259', 'Accesses to the I8259 PIC devices')
 
     SimObject('I8254.py')
     Source('i8254.cc')
-    TraceFlag('I8254', 'Interrupts from the I8254 timer');
+    DebugFlag('I8254', 'Interrupts from the I8254 timer');
 
     SimObject('I8237.py')
     Source('i8237.cc')
-    TraceFlag('I8237', 'The I8237 dma controller');
+    DebugFlag('I8237', 'The I8237 dma controller');
 
     SimObject('I8042.py')
     Source('i8042.cc')
-    TraceFlag('I8042', 'The I8042 keyboard controller');
+    DebugFlag('I8042', 'The I8042 keyboard controller');
 
     SimObject('PcSpeaker.py')
     Source('speaker.cc')
-    TraceFlag('PcSpeaker')
+    DebugFlag('PcSpeaker')
 
     SimObject('I82094AA.py')
     Source('i82094aa.cc')
-    TraceFlag('I82094AA')
+    DebugFlag('I82094AA')
 
     SimObject('X86IntPin.py')
     Source('intdev.cc')
-    TraceFlag('IntDev')
+    DebugFlag('IntDev')

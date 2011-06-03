@@ -34,7 +34,7 @@ Import('*')
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'mips':
     SimObject('Malta.py')
 
-    TraceFlag('Malta')
+    DebugFlag('Malta')
 
     Source('malta.cc')
     Source('malta_cchip.cc')

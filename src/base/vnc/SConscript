@@ -42,7 +42,7 @@ Import('*')
 if env['FULL_SYSTEM']:
     SimObject('VncServer.py')
     Source('vncserver.cc')
-    TraceFlag('VNC')
+    DebugFlag('VNC')
 
 Source('convert.cc')
 

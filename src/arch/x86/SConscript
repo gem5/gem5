@@ -66,14 +66,14 @@ if env['TARGET_ISA'] == 'x86':
     SimObject('X86NativeTrace.py')
 
     SimObject('X86TLB.py')
-    TraceFlag('Predecoder', "Predecoder debug output")
-    TraceFlag('X86', "Generic X86 ISA debugging")
+    DebugFlag('Predecoder', "Predecoder debug output")
+    DebugFlag('X86', "Generic X86 ISA debugging")
 
     if env['FULL_SYSTEM']:
-        TraceFlag('LocalApic', "Local APIC debugging")
-        TraceFlag('PageTableWalker', \
+        DebugFlag('LocalApic', "Local APIC debugging")
+        DebugFlag('PageTableWalker', \
                   "Page table walker state machine debugging")
-        TraceFlag('Faults', "Trace all faults/exceptions/traps")
+        DebugFlag('Faults', "Trace all faults/exceptions/traps")
 
         SimObject('X86LocalApic.py')
         SimObject('X86System.py')

@@ -43,7 +43,7 @@ if 'TimingSimpleCPU' in env['CPU_MODELS']:
 
 if 'AtomicSimpleCPU' in env['CPU_MODELS'] or \
        'TimingSimpleCPU' in env['CPU_MODELS']:
-    TraceFlag('SimpleCPU')
+    DebugFlag('SimpleCPU')
 
 if need_simple_base:
     Source('base.cc')

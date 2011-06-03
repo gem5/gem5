@@ -45,4 +45,4 @@ Source('DirectedGenerator.cc')
 Source('SeriesRequestGenerator.cc')
 Source('InvalidateGenerator.cc')
 
-TraceFlag('DirectedTest')
+DebugFlag('DirectedTest')

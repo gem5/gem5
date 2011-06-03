@@ -33,9 +33,9 @@ import sys
 Import('*')
 
 if 'O3CPU' in env['CPU_MODELS'] or 'OzoneCPU' in env['CPU_MODELS']:
-    TraceFlag('CommitRate')
-    TraceFlag('IEW')
-    TraceFlag('IQ')
+    DebugFlag('CommitRate')
+    DebugFlag('IEW')
+    DebugFlag('IQ')
 
 if 'O3CPU' in env['CPU_MODELS']:
     SimObject('FUPool.py')
@@ -64,15 +64,15 @@ if 'O3CPU' in env['CPU_MODELS']:
     Source('store_set.cc')
     Source('thread_context.cc')
 
-    TraceFlag('LSQ')
-    TraceFlag('LSQUnit')
-    TraceFlag('MemDepUnit')
-    TraceFlag('O3CPU')
-    TraceFlag('ROB')
-    TraceFlag('Rename')
-    TraceFlag('Scoreboard')
-    TraceFlag('StoreSet')
-    TraceFlag('Writeback')
+    DebugFlag('LSQ')
+    DebugFlag('LSQUnit')
+    DebugFlag('MemDepUnit')
+    DebugFlag('O3CPU')
+    DebugFlag('ROB')
+    DebugFlag('Rename')
+    DebugFlag('Scoreboard')
+    DebugFlag('StoreSet')
+    DebugFlag('Writeback')
 
     CompoundFlag('O3CPUAll', [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit',
         'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',

@@ -35,4 +35,4 @@ SimObject('MemTest.py')
 
 Source('memtest.cc')
 
-TraceFlag('MemTest')
+DebugFlag('MemTest')

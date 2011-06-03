@@ -65,10 +65,10 @@ if env['TARGET_ISA'] == 'arm':
     SimObject('ArmNativeTrace.py')
     SimObject('ArmTLB.py')
 
-    TraceFlag('Arm')
-    TraceFlag('TLBVerbose')
-    TraceFlag('Faults', "Trace Exceptions, interrupts, svc/swi")
-    TraceFlag('Predecoder', "Instructions returned by the predecoder")
+    DebugFlag('Arm')
+    DebugFlag('TLBVerbose')
+    DebugFlag('Faults', "Trace Exceptions, interrupts, svc/swi")
+    DebugFlag('Predecoder', "Instructions returned by the predecoder")
     if env['FULL_SYSTEM']:
         Source('interrupts.cc')
         Source('stacktrace.cc')

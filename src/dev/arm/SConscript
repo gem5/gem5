@@ -53,7 +53,7 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'arm':
     Source('rv_ctrl.cc')
     Source('realview.cc')
 
-    TraceFlag('AMBA')
-    TraceFlag('PL111')
-    TraceFlag('Pl050')
-    TraceFlag('GIC')
+    DebugFlag('AMBA')
+    DebugFlag('PL111')
+    DebugFlag('Pl050')
+    DebugFlag('GIC')

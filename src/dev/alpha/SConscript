@@ -41,5 +41,5 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'alpha':
     Source('tsunami_io.cc')
     Source('tsunami_pchip.cc')
 
-    TraceFlag('AlphaBackdoor')
-    TraceFlag('Tsunami')
+    DebugFlag('AlphaBackdoor')
+    DebugFlag('Tsunami')
