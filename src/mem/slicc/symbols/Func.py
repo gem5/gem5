@@ -37,15 +37,12 @@ class Func(Symbol):
         self.param_strings = param_strings
         self.body = body
         self.isInternalMachineFunc = False
+        self.c_ident = ident
 
-        if machine is None:
-            self.c_ident = ident
-        elif "external" in self or "primitive" in self:
-            self.c_ident = ident
+        if machine is None or "external" in self or "primitive" in self:
+            pass
         else:
             self.machineStr = str(machine)
-            # Append with machine name
-            self.c_ident = "%s_%s" % (self.machineStr, ident)
             self.isInternalMachineFunc = True
 
     def __repr__(self):
@@ -107,6 +104,9 @@ ${klass}::${{self.c_ident}}($params)
 ${{self.body}}
 }
 ''')
-        code.write(path, "%s.cc" % self.c_ident)
+        if self.isInternalMachineFunc:
+            code.write(path, "%s_%s.cc" % (self.machineStr,self.c_ident))
+        else:
+            code.write(path, "%s.cc" % self.c_ident)
 
 __all__ = [ "Func" ]

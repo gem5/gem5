@@ -1071,13 +1071,13 @@ ${ident}_Controller::doTransition(${ident}_Event event,
 {
 ''')
         if self.TBEType != None and self.EntryType != None:
-            code('${ident}_State state = ${ident}_getState(m_tbe_ptr, m_cache_entry_ptr, addr);')
+            code('${ident}_State state = getState(m_tbe_ptr, m_cache_entry_ptr, addr);')
         elif self.TBEType != None:
-            code('${ident}_State state = ${ident}_getState(m_tbe_ptr, addr);')
+            code('${ident}_State state = getState(m_tbe_ptr, addr);')
         elif self.EntryType != None:
-            code('${ident}_State state = ${ident}_getState(m_cache_entry_ptr, addr);')
+            code('${ident}_State state = getState(m_cache_entry_ptr, addr);')
         else:
-            code('${ident}_State state = ${ident}_getState(addr);')
+            code('${ident}_State state = getState(addr);')
 
         code('''
     ${ident}_State next_state = state;
@@ -1115,15 +1115,15 @@ ${ident}_Controller::doTransition(${ident}_Event event,
         CLEAR_TRANSITION_COMMENT();
 ''')
         if self.TBEType != None and self.EntryType != None:
-            code('${ident}_setState(m_tbe_ptr, m_cache_entry_ptr, addr, next_state);')
+            code('setState(m_tbe_ptr, m_cache_entry_ptr, addr, next_state);')
             code('set_permission(m_cache_entry_ptr, ${ident}_State_to_permission(next_state));')
         elif self.TBEType != None:
-            code('${ident}_setState(m_tbe_ptr, addr, next_state);')
+            code('setState(m_tbe_ptr, addr, next_state);')
         elif self.EntryType != None:
-            code('${ident}_setState(m_cache_entry_ptr, addr, next_state);')
+            code('setState(m_cache_entry_ptr, addr, next_state);')
             code('set_permission(m_cache_entry_ptr, ${ident}_State_to_permission(next_state));')
         else:
-            code('${ident}_setState(addr, next_state);')
+            code('setState(addr, next_state);')
 
         code('''
     } else if (result == TransitionResult_ResourceStall) {
