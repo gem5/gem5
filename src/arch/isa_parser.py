@@ -1215,7 +1215,7 @@ class ISAParser(Grammar):
         return t
 
     def t_NEWFILE(self, t):
-        r'^\#\#newfile\s+"[\w/.-]*"'
+        r'^\#\#newfile\s+"[^"]*"'
         self.fileNameStack.push((t.value[11:-1], t.lexer.lineno))
         t.lexer.lineno = 0
 
@@ -1998,7 +1998,7 @@ StaticInstPtr
             f.close()
 
     # This regular expression matches '##include' directives
-    includeRE = re.compile(r'^\s*##include\s+"(?P<filename>[\w/.-]*)".*$',
+    includeRE = re.compile(r'^\s*##include\s+"(?P<filename>[^"]*)".*$',
                            re.MULTILINE)
 
     def replace_include(self, matchobj, dirname):
