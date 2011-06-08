@@ -120,7 +120,9 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   int contextId,             desc="this goes away but must be replace with Nilay";
 }
 
-external_type(AbstractEntry, primitive="yes");
+structure(AbstractEntry, primitive="yes", external = "yes") {
+  void changePermission(AccessPermission);
+}
 
 structure (DirectoryMemory, external = "yes") {
   AbstractEntry lookup(Address);
@@ -128,7 +130,9 @@ structure (DirectoryMemory, external = "yes") {
   void invalidateBlock(Address);
 }
 
-external_type(AbstractCacheEntry, primitive="yes");
+structure(AbstractCacheEntry, primitive="yes", external = "yes") {
+  void changePermission(AccessPermission);
+}
 
 structure (CacheMemory, external = "yes") {
   bool cacheAvail(Address);

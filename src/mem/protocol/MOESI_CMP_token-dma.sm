@@ -63,6 +63,13 @@ machine(DMA, "DMA Controller")
   cur_state := state;
   }
 
+  AccessPermission getAccessPermission(Address addr) {
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Address addr, State state) {
+  }
+
   out_port(reqToDirectory_out, DMARequestMsg, reqToDirectory, desc="...");
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {

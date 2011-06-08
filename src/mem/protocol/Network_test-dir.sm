@@ -69,6 +69,13 @@ machine(Directory, "Network_test Directory")
 
   }
 
+  AccessPermission getAccessPermission(Address addr) {
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Address addr, State state) {
+  }
+
   // ** IN_PORTS **
 
   in_port(requestQueue_in, RequestMsg, requestToDir) {

@@ -199,7 +199,20 @@ machine(Directory, "Token protocol")
       // assert(getDirectoryEntry(addr).Tokens >= (max_tokens() / 2)); // Only mostly true; this might not always hold
     }
   }
-  
+
+  AccessPermission getAccessPermission(Address addr) {
+    TBE tbe := TBEs[addr];
+    if(is_valid(tbe)) {
+      return Directory_State_to_permission(tbe.TBEState);
+    }
+
+    return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+  }
+
+  void setAccessPermission(Address addr, State state) {
+    getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
+  }
+
   bool okToIssueStarving(Address addr, MachineID machinID) {
     return persistentTable.okToIssueStarving(addr, machineID);
   }

@@ -202,7 +202,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     return L2Cache_State_to_string(getState(tbe, cache_entry, addr));
   }
 
-  // when is this called
   void setState(TBE tbe, Entry cache_entry, Address addr, State state) {
 
     // MUST CHANGE
@@ -212,6 +211,26 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
     if (is_valid(cache_entry)) {
       cache_entry.CacheState := state;
+    }
+  }
+
+  AccessPermission getAccessPermission(Address addr) {
+    TBE tbe := L2_TBEs[addr];
+    if(is_valid(tbe)) {
+      return L2Cache_State_to_permission(tbe.TBEState);
+    }
+
+    Entry cache_entry := getCacheEntry(addr);
+    if(is_valid(cache_entry)) {
+      return L2Cache_State_to_permission(cache_entry.CacheState);
+    }
+
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+    if (is_valid(cache_entry)) {
+      cache_entry.changePermission(L2Cache_State_to_permission(state));
     }
   }
 

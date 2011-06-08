@@ -348,8 +348,6 @@ static int m_num_controllers;
 // Set and Reset for cache_entry variable
 void set_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, AbstractCacheEntry* m_new_cache_entry);
 void unset_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr);
-// Set permissions for the cache_entry
-void set_permission(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, AccessPermission perm);
 ''')
 
         if self.TBEType != None:
@@ -864,15 +862,6 @@ $c_ident::unset_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr)
 {
   m_cache_entry_ptr = 0;
 }
-
-void
-$c_ident::set_permission(${{self.EntryType.c_ident}}*& m_cache_entry_ptr,
-                         AccessPermission perm)
-{
-    if (m_cache_entry_ptr != NULL) {
-       m_cache_entry_ptr->changePermission(perm);
-    }
-}
 ''')
 
         if self.TBEType != None:
@@ -1116,14 +1105,16 @@ ${ident}_Controller::doTransition(${ident}_Event event,
 ''')
         if self.TBEType != None and self.EntryType != None:
             code('setState(m_tbe_ptr, m_cache_entry_ptr, addr, next_state);')
-            code('set_permission(m_cache_entry_ptr, ${ident}_State_to_permission(next_state));')
+            code('setAccessPermission(m_cache_entry_ptr, addr, next_state);')
         elif self.TBEType != None:
             code('setState(m_tbe_ptr, addr, next_state);')
+            code('setAccessPermission(addr, next_state);')
         elif self.EntryType != None:
             code('setState(m_cache_entry_ptr, addr, next_state);')
-            code('set_permission(m_cache_entry_ptr, ${ident}_State_to_permission(next_state));')
+            code('setAccessPermission(m_cache_entry_ptr, addr, next_state);')
         else:
             code('setState(addr, next_state);')
+            code('setAccessPermission(addr, next_state);')
 
         code('''
     } else if (result == TransitionResult_ResourceStall) {

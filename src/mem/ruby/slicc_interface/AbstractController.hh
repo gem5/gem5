@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 
+#include "mem/protocol/AccessPermission.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -67,6 +68,9 @@ class AbstractController : public SimObject, public Consumer
     virtual void wakeup() = 0;
     //  virtual void dumpStats(std::ostream & out) = 0;
     virtual void clearStats() = 0;
+
+  private:
+    virtual AccessPermission getAccessPermission(Address addr) = 0;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

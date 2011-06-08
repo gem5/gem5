@@ -171,6 +171,20 @@ machine(Directory, "Directory protocol")
     }
   }
 
+  AccessPermission getAccessPermission(Address addr) {
+    if (directory.isPresent(addr)) {
+      return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+    }
+
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Address addr, State state) {
+    if (directory.isPresent(addr)) {
+      getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
+    }
+  }
+
   // if no sharers, then directory can be considered both a sharer and exclusive w.r.t. coherence checking
   bool isBlockShared(Address addr) {
     if (directory.isPresent(addr)) {

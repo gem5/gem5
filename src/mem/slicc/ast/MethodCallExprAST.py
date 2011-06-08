@@ -160,7 +160,13 @@ class MemberMethodCallExprAST(MethodCallExprAST):
 
         if return_type.isInterface:
             prefix = "static_cast<%s &>" % return_type.c_ident
-        prefix = "%s((%s)." % (prefix, code)
+
+        if str(obj_type) == "AbstractCacheEntry" or \
+           ("interface" in obj_type and
+            obj_type["interface"] == "AbstractCacheEntry"):
+            prefix = "%s((*(%s))." % (prefix, code)
+        else:
+            prefix = "%s((%s)." % (prefix, code)
 
         return obj_type, methodId, prefix
 

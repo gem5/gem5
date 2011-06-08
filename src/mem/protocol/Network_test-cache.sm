@@ -120,6 +120,13 @@ machine(L1Cache, "Network_test L1 Cache")
 
   }
 
+  AccessPermission getAccessPermission(Address addr) {
+    return AccessPermission:NotPresent;
+  }
+
+  void setAccessPermission(Entry cache_entry, Address addr, State state) {
+  }
+
   Entry getCacheEntry(Address address), return_by_pointer="yes" {
     return OOD;
   }
