@@ -90,7 +90,7 @@ PhysicalMemory::PhysicalMemory(const Params *p)
         int fd = open(params()->file.c_str(), O_RDONLY);
         _size = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);
-        pmemAddr = (uint8_t *)mmap(NULL, roundUp(size(), PAGE_SIZE),
+        pmemAddr = (uint8_t *)mmap(NULL, roundUp(size(), sysconf(_SC_PAGESIZE)),
                                    PROT_READ | PROT_WRITE, map_flags, fd, 0);
     }
 
