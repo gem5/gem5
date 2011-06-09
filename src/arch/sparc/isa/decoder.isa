@@ -141,7 +141,7 @@ decode OP default Unknown::unknown()
             IntReg midVal;
             R15 = midVal = (Pstate<3:> ? (PC)<31:0> : PC);
             NNPC = midVal + disp;
-    }});
+    }},None, None, IsIndirectControl, IsCall);
     0x2: decode OP3 {
         format IntOp {
             0x00: add({{Rd = Rs1.sdw + Rs2_or_imm13;}});
@@ -1005,7 +1005,7 @@ decode OP default Unknown::unknown()
                         Rd = PC;
                     NNPC = target;
                 }
-            }});
+            }}, IsUncondControl, IsIndirectControl);
             0x39: Branch::return({{
                 Addr target = Rs1 + Rs2_or_imm13;
                 if (fault == NoFault) {
@@ -1025,7 +1025,7 @@ decode OP default Unknown::unknown()
                         Canrestore = Canrestore - 1;
                     }
                 }
-            }});
+            }}, IsUncondControl, IsIndirectControl, IsReturn);
             0x3A: decode CC
             {
                 0x0: Trap::tcci({{

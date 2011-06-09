@@ -260,6 +260,32 @@ def template StoreCompleteAcc {{
         }
 }};
 
+def template EACompExecute {{
+    Fault
+    %(class_name)s::eaComp(%(CPU_exec_context)s *xc,
+                                   Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+        %(fault_check)s;
+
+        // NOTE: Trace Data is written using execute or completeAcc templates
+        if (fault == NoFault) {
+            %(EA_trunc)s
+            xc->setEA(EA);
+        }
+
+        return fault;
+    }
+}};
+
+def template EACompDeclare {{
+    Fault eaComp(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
+
 // This delcares the initiateAcc function in memory operations
 def template InitiateAccDeclare {{
     Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;

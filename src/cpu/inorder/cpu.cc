@@ -32,6 +32,7 @@
 #include <algorithm>
 
 #include "arch/utility.hh"
+#include "base/bigint.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/resources/resource_list.hh"
