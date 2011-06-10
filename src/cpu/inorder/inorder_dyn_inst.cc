@@ -35,6 +35,7 @@
 #include <string>
 
 #include "arch/faults.hh"
+#include "base/bigint.hh"
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -536,6 +537,14 @@ InOrderDynInst::read(Addr addr, T &data, unsigned flags)
 
 template
 Fault
+InOrderDynInst::read(Addr addr, Twin32_t &data, unsigned flags);
+
+template
+Fault
+InOrderDynInst::read(Addr addr, Twin64_t &data, unsigned flags);
+
+template
+Fault
 InOrderDynInst::read(Addr addr, uint64_t &data, unsigned flags);
 
 template
@@ -599,6 +608,16 @@ InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template
+Fault
+InOrderDynInst::write(Twin32_t data, Addr addr,
+                      unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderDynInst::write(Twin64_t data, Addr addr,
+                      unsigned flags, uint64_t *res);
 template
 Fault
 InOrderDynInst::write(uint64_t data, Addr addr,

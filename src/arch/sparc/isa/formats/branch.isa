@@ -262,6 +262,9 @@ def format Branch(code, *opt_flags) {{
 let {{
     def doBranch(name, Name, base, cond,
             code, annul_code, fail, annul_fail, opt_flags):
+        if "IsIndirectControl" not in opt_flags:
+           opt_flags += ('IsDirectControl', )
+
         iop = InstObjParams(name, Name, base,
                 {"code": code,
                  "fail": fail,
@@ -289,12 +292,14 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 
     def doCondBranch(name, Name, base, cond, code, opt_flags):
+        opt_flags += ('IsCondControl', )
         return doBranch(name, Name, base, cond, code, code,
                 'NNPC = NNPC; NPC = NPC;\n',
                 'NNPC = NPC + 8; NPC = NPC + 4;\n',
                 opt_flags)
 
     def doUncondBranch(name, Name, base, code, annul_code, opt_flags):
+        opt_flags += ('IsUncondControl', )
         return doBranch(name, Name, base, "true", code, annul_code,
                 ";", ";", opt_flags)
 
