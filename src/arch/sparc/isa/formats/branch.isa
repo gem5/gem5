@@ -262,8 +262,9 @@ def format Branch(code, *opt_flags) {{
 let {{
     def doBranch(name, Name, base, cond,
             code, annul_code, fail, annul_fail, opt_flags):
-        if "IsIndirectControl" not in opt_flags:
-           opt_flags += ('IsDirectControl', )
+        #@todo: add flags and branchTarget() for DirectCntrl branches
+        #       the o3 model can take advantage of this annotation if
+        #       done correctly
 
         iop = InstObjParams(name, Name, base,
                 {"code": code,
