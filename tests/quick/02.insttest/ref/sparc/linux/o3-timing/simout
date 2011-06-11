@@ -1,14 +1,10 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Apr 21 2011 13:27:10
-M5 started Apr 21 2011 13:28:40
-M5 executing on maize
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing
+gem5 compiled Jun 10 2011 22:06:52
+gem5 started Jun 10 2011 22:07:32
+gem5 executing on zooks
+command line: build/SPARC_SE/gem5.opt -d build/SPARC_SE/tests/opt/quick/02.insttest/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/opt/quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Begining test of difficult SPARC instructions...
@@ -22,4 +18,4 @@ LDTX:		Passed
 LDTW:		Passed
 STTW:		Passed
 Done
-Exiting @ tick 18633000 because target called exit()
+Exiting @ tick 19016500 because target called exit()

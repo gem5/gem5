@@ -1,30 +1,26 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Apr 21 2011 13:27:10
-M5 started Apr 21 2011 13:27:31
-M5 executing on maize
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
+gem5 compiled Jun 10 2011 22:06:52
+gem5 started Jun 10 2011 22:06:57
+gem5 executing on zooks
+command line: build/SPARC_SE/gem5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Init done
 [Iteration 1, Thread 2] Got lock
 [Iteration 1, Thread 2] Critical section done, previously next=0, now next=2
-[Iteration 1, Thread 1] Got lock
-[Iteration 1, Thread 1] Critical section done, previously next=2, now next=1
 [Iteration 1, Thread 3] Got lock
-[Iteration 1, Thread 3] Critical section done, previously next=1, now next=3
+[Iteration 1, Thread 3] Critical section done, previously next=2, now next=3
+[Iteration 1, Thread 1] Got lock
+[Iteration 1, Thread 1] Critical section done, previously next=3, now next=1
 Iteration 1 completed
-[Iteration 2, Thread 3] Got lock
-[Iteration 2, Thread 3] Critical section done, previously next=0, now next=3
 [Iteration 2, Thread 1] Got lock
-[Iteration 2, Thread 1] Critical section done, previously next=3, now next=1
+[Iteration 2, Thread 1] Critical section done, previously next=0, now next=1
+[Iteration 2, Thread 3] Got lock
+[Iteration 2, Thread 3] Critical section done, previously next=1, now next=3
 [Iteration 2, Thread 2] Got lock
-[Iteration 2, Thread 2] Critical section done, previously next=1, now next=2
+[Iteration 2, Thread 2] Critical section done, previously next=3, now next=2
 Iteration 2 completed
 [Iteration 3, Thread 2] Got lock
 [Iteration 3, Thread 2] Critical section done, previously next=0, now next=2
@@ -61,19 +57,19 @@ Iteration 6 completed
 [Iteration 7, Thread 2] Got lock
 [Iteration 7, Thread 2] Critical section done, previously next=3, now next=2
 Iteration 7 completed
-[Iteration 8, Thread 3] Got lock
-[Iteration 8, Thread 3] Critical section done, previously next=0, now next=3
 [Iteration 8, Thread 2] Got lock
-[Iteration 8, Thread 2] Critical section done, previously next=3, now next=2
+[Iteration 8, Thread 2] Critical section done, previously next=0, now next=2
+[Iteration 8, Thread 3] Got lock
+[Iteration 8, Thread 3] Critical section done, previously next=2, now next=3
 [Iteration 8, Thread 1] Got lock
-[Iteration 8, Thread 1] Critical section done, previously next=2, now next=1
+[Iteration 8, Thread 1] Critical section done, previously next=3, now next=1
 Iteration 8 completed
-[Iteration 9, Thread 2] Got lock
-[Iteration 9, Thread 2] Critical section done, previously next=0, now next=2
 [Iteration 9, Thread 3] Got lock
-[Iteration 9, Thread 3] Critical section done, previously next=2, now next=3
+[Iteration 9, Thread 3] Critical section done, previously next=0, now next=3
+[Iteration 9, Thread 2] Got lock
+[Iteration 9, Thread 2] Critical section done, previously next=3, now next=2
 [Iteration 9, Thread 1] Got lock
-[Iteration 9, Thread 1] Critical section done, previously next=3, now next=1
+[Iteration 9, Thread 1] Critical section done, previously next=2, now next=1
 Iteration 9 completed
 [Iteration 10, Thread 1] Got lock
 [Iteration 10, Thread 1] Critical section done, previously next=0, now next=1
@@ -83,4 +79,4 @@ Iteration 9 completed
 [Iteration 10, Thread 3] Critical section done, previously next=2, now next=3
 Iteration 10 completed
 PASSED :-)
-Exiting @ tick 117445500 because target called exit()
+Exiting @ tick 117354500 because target called exit()
