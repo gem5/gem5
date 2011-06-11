@@ -90,7 +90,7 @@ void
 DefaultFetch<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 {
     DPRINTF(Fetch, "DefaultFetch doesn't update its state from a "
-            "functional call.");
+            "functional call.\n");
 }
 
 template<class Impl>

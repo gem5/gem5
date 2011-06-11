@@ -65,7 +65,7 @@ template <class Impl>
 void
 LSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
 {
-    DPRINTF(LSQ, "LSQ doesn't update things on a recvFunctional.");
+    DPRINTF(LSQ, "LSQ doesn't update things on a recvFunctional.\n");
 }
 
 template <class Impl>
@@ -151,7 +151,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
         maxSQEntries = SQEntries / numThreads;
 
         DPRINTF(Fetch, "LSQ sharing policy set to Partitioned: "
-                "%i entries per LQ | %i entries per SQ",
+                "%i entries per LQ | %i entries per SQ\n",
                 maxLQEntries,maxSQEntries);
     } else if (policy == "threshold") {
         lsqPolicy = Threshold;
@@ -166,7 +166,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
         maxSQEntries  = params->smtLSQThreshold;
 
         DPRINTF(LSQ, "LSQ sharing policy set to Threshold: "
-                "%i entries per LQ | %i entries per SQ",
+                "%i entries per LQ | %i entries per SQ\n",
                 maxLQEntries,maxSQEntries);
     } else {
         assert(0 && "Invalid LSQ Sharing Policy.Options Are:{Dynamic,"

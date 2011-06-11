@@ -88,7 +88,7 @@ SimpleRenameMap::init(unsigned _numLogicalIntRegs,
     floatRenameMap.resize(numLogicalRegs);
 
     if (bindRegs) {
-        DPRINTF(Rename, "Binding registers into rename map %i",id);
+        DPRINTF(Rename, "Binding registers into rename map %i\n",id);
 
         // Initialize the entries in the integer rename map to point to the
         // physical registers of the same index
@@ -108,7 +108,7 @@ SimpleRenameMap::init(unsigned _numLogicalIntRegs,
             floatRenameMap[index].physical_reg = freg_idx++;
         }
     } else {
-        DPRINTF(Rename, "Binding registers into rename map %i",id);
+        DPRINTF(Rename, "Binding registers into rename map %i\n",id);
 
         PhysRegIndex temp_ireg = ireg_idx;
 

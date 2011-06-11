@@ -118,7 +118,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
     if (policy == "aggressive"){
         commitPolicy = Aggressive;
 
-        DPRINTF(Commit,"Commit Policy set to Aggressive.");
+        DPRINTF(Commit,"Commit Policy set to Aggressive.\n");
     } else if (policy == "roundrobin"){
         commitPolicy = RoundRobin;
 
@@ -127,7 +127,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
             priority_list.push_back(tid);
         }
 
-        DPRINTF(Commit,"Commit Policy set to Round Robin.");
+        DPRINTF(Commit,"Commit Policy set to Round Robin.\n");
     } else if (policy == "oldestready"){
         commitPolicy = OldestReady;
 
