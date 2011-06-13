@@ -71,10 +71,10 @@ elf_errmsg(int error)
         if (error < 0 || error >= ELF_E_NUM)
                 return _libelf_errors[ELF_E_NUM];
         if (oserr) {
-                strlcpy(LIBELF_PRIVATE(msg), _libelf_errors[error],
+                strncpy(LIBELF_PRIVATE(msg), _libelf_errors[error],
                     sizeof(LIBELF_PRIVATE(msg)));
-                strlcat(LIBELF_PRIVATE(msg), ": ", sizeof(LIBELF_PRIVATE(msg)));
-                strlcat(LIBELF_PRIVATE(msg), strerror(oserr),
+                strncat(LIBELF_PRIVATE(msg), ": ", sizeof(LIBELF_PRIVATE(msg)));
+                strncat(LIBELF_PRIVATE(msg), strerror(oserr),
                     sizeof(LIBELF_PRIVATE(msg)));
                 return (const char *)&LIBELF_PRIVATE(msg);
         }

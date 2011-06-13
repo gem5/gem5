@@ -30,6 +30,7 @@
 #define	__LIBELF_H_
 
 #include "elf_queue.h"
+#include "libelf.h"
 
 #ifndef	NULL
 #define NULL 	((void *) 0)
