@@ -266,12 +266,20 @@ ElfObject::ElfObject(const string &_filename, int _fd,
         gelf_getshdr(section, &shdr);
         char * secName = elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name);
 
-        if (!strcmp(".text", secName)) {
-            textSecStart = shdr.sh_addr;
-        } else if (!strcmp(".data", secName)) {
-            dataSecStart = shdr.sh_addr;
-        } else if (!strcmp(".bss", secName)) {
-            bssSecStart = shdr.sh_addr;
+        if (secName) {
+            if (!strcmp(".text", secName)) {
+                textSecStart = shdr.sh_addr;
+            } else if (!strcmp(".data", secName)) {
+                dataSecStart = shdr.sh_addr;
+            } else if (!strcmp(".bss", secName)) {
+                bssSecStart = shdr.sh_addr;
+            }
+        } else {
+            Elf_Error errorNum = (Elf_Error)elf_errno();
+            if (errorNum != ELF_E_NONE) {
+                const char *errorMessage = elf_errmsg(errorNum);
+                fatal("Error from libelf: %s.\n", errorMessage);
+            }
         }
 
         section = elf_getscn(elf, ++secIdx);
