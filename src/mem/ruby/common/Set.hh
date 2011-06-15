@@ -54,7 +54,7 @@ class Set
     long *m_p_nArray;      // an word array to hold the bits in the set
     long m_p_nArray_Static[NUMBER_WORDS_PER_SET];
 
-    static const int LONG_BITS = std::numeric_limits<long>::digits;
+    static const int LONG_BITS = std::numeric_limits<long>::digits + 1;
     static const int INDEX_SHIFT = LONG_BITS == 64 ? 6 : 5;
     static const int INDEX_MASK = (1 << INDEX_SHIFT) - 1;
 
