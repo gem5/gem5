@@ -264,6 +264,9 @@ TLB::serialize(ostream &os)
     DPRINTF(Checkpoint, "Serializing Arm TLB\n");
 
     SERIALIZE_SCALAR(_attr);
+
+    int num_entries = size;
+    SERIALIZE_SCALAR(num_entries);
     for(int i = 0; i < size; i++){
         nameOut(os, csprintf("%s.TlbEntry%d", name(), i));
         table[i].serialize(os);
@@ -276,7 +279,9 @@ TLB::unserialize(Checkpoint *cp, const string &section)
     DPRINTF(Checkpoint, "Unserializing Arm TLB\n");
 
     UNSERIALIZE_SCALAR(_attr);
-    for(int i = 0; i < size; i++){
+    int num_entries;
+    UNSERIALIZE_SCALAR(num_entries);
+    for(int i = 0; i < min(size, num_entries); i++){
         table[i].unserialize(cp, csprintf("%s.TlbEntry%d", section, i));
     }
     miscRegValid = false;
