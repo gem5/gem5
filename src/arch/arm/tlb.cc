@@ -75,7 +75,7 @@ TLB::TLB(const Params *p)
     , rangeMRU(1), miscRegValid(false)
 {
     table = new TlbEntry[size];
-    memset(table, 0, sizeof(TlbEntry[size]));
+    memset(table, 0, sizeof(TlbEntry) * size);
 
 #if FULL_SYSTEM
     tableWalker->setTlb(this);
@@ -192,7 +192,7 @@ TLB::flushAll()
        x++;
     }
 
-    memset(table, 0, sizeof(TlbEntry[size]));
+    memset(table, 0, sizeof(TlbEntry) * size);
 
     flushTlb++;
 }
