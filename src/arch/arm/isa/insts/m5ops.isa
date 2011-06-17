@@ -313,4 +313,30 @@ let {{
     decoder_output += BasicConstructor.subst(m5panicIop)
     exec_output += PredOpExecute.subst(m5panicIop)
 
+    m5workbeginCode = '''PseudoInst::workbegin(
+                          xc->tcBase(),
+                          join32to64(R1, R0),
+                          join32to64(R3, R2)
+                      );'''
+    m5workbeginIop = InstObjParams("m5workbegin", "M5workbegin", "PredOp",
+                     { "code": m5workbeginCode,
+                       "predicate_test": predicateTest },
+                       ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5workbeginIop)
+    decoder_output += BasicConstructor.subst(m5workbeginIop)
+    exec_output += PredOpExecute.subst(m5workbeginIop)
+
+    m5workendCode = '''PseudoInst::workend(
+                        xc->tcBase(),
+                        join32to64(R1, R0),
+                        join32to64(R3, R2)
+                    );'''
+    m5workendIop = InstObjParams("m5workend", "M5workend", "PredOp",
+                     { "code": m5workendCode,
+                       "predicate_test": predicateTest },
+                       ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5workendIop)
+    decoder_output += BasicConstructor.subst(m5workendIop)
+    exec_output += PredOpExecute.subst(m5workendIop)
+
 }};

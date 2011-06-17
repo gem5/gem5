@@ -72,6 +72,8 @@ def format M5ops() {{
             case 0x53: return new M5addsymbol(machInst);
 #endif
             case 0x54: return new M5panic(machInst);
+            case 0x5a: return new M5workbegin(machInst);
+            case 0x5b: return new M5workend(machInst);
         }
    }
    '''
