@@ -348,10 +348,14 @@ Resource::squashThenTrap(int stage_num, DynInstPtr inst)
     inst->setSquashInfo(stage_num);
     setupSquash(inst, stage_num, tid);
 
-    if (inst->traceData && DTRACE(ExecFaulting)) {
-        inst->traceData->setStageCycle(stage_num, curTick());
-        inst->traceData->setFetchSeq(inst->seqNum);
-        inst->traceData->dump();
+    if (inst->traceData) {
+        if (inst->staticInst &&
+            inst->fault != NoFault && DTRACE(ExecFaulting)) {
+            inst->traceData->setStageCycle(stage_num, curTick());
+            inst->traceData->setFetchSeq(inst->seqNum);
+            inst->traceData->dump();
+        }
+
         delete inst->traceData;
         inst->traceData = NULL;
     }
