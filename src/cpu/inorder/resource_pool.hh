@@ -175,13 +175,13 @@ class ResourcePool {
                              InstSeqNum done_seq_num, ThreadID tid);
 
     /** Activate Thread in all resources */
-    void activateAll(ThreadID tid);
+    void activateThread(ThreadID tid);
 
     /** De-Activate Thread in all resources */
-    void deactivateAll(ThreadID tid);
+    void deactivateThread(ThreadID tid);
 
-    /** De-Activate Thread in all resources */
-    void suspendAll(ThreadID tid);
+    /** Suspend Thread in all resources */
+    void suspendThread(ThreadID tid);
 
     /** Broadcast Context Switch Update to all resources */
     void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);
@@ -218,8 +218,11 @@ class ResourcePool {
   private:
     std::vector<Resource *> resources;
 
+    /** Resources that interface with memory objects */
     std::vector<int> memObjects;
 
+    /** Resources that need to be updated on an inst. graduation */
+    std::vector<int> gradObjects;
 };
 
 #endif //__CPU_INORDER_RESOURCE_HH__

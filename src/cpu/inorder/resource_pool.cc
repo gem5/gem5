@@ -86,6 +86,7 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
                                       stage_width * 2 + MaxThreads, 0, _cpu,
                                       params));
 
+    gradObjects.push_back(BPred);
     resources.push_back(new GraduationUnit("graduation_unit", Grad,
                                            stage_width, 0, _cpu,
                                            params));
@@ -274,59 +275,6 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 
     switch ((int)e_type)
     {
-      case InOrderCPU::ActivateThread:
-        {
-            DPRINTF(Resource, "Scheduling Activate Thread Resource Pool Event "
-                    "for tick %i, [tid:%i].\n", curTick() + delay, 
-                    inst->readTid());
-            ResPoolEvent *res_pool_event = 
-                new ResPoolEvent(this,
-                                 e_type,
-                                 inst,
-                                 inst->squashingStage,
-                                 inst->squashSeqNum,
-                                 inst->readTid());
-            cpu->schedule(res_pool_event, when);
-        }
-        break;
-
-      case InOrderCPU::HaltThread:
-      case InOrderCPU::DeactivateThread:
-        {
-
-            DPRINTF(Resource, "Scheduling Deactivate Thread Resource Pool "
-                    "Event for tick %i.\n", curTick() + delay);
-            ResPoolEvent *res_pool_event = 
-                new ResPoolEvent(this,
-                                 e_type,
-                                 inst,
-                                 inst->squashingStage,
-                                 inst->squashSeqNum,
-                                 tid);
-
-            cpu->schedule(res_pool_event, when);
-        }
-        break;
-
-      case InOrderCPU::SuspendThread:
-        {
-            // not sure why we add another nextCycle() call here...
-            Tick sked_tick = cpu->nextCycle(when);
-
-            DPRINTF(Resource, "Scheduling Suspend Thread Resource Pool "
-                    "Event for tick %i.\n", sked_tick);
-
-            ResPoolEvent *res_pool_event = new ResPoolEvent(this,
-                                                            e_type,
-                                                            inst,
-                                                            inst->squashingStage,
-                                                            inst->squashSeqNum,
-                                                            tid);
-
-            cpu->schedule(res_pool_event, sked_tick);
-        }
-        break;
-
       case ResourcePool::InstGraduated:
         {
             DPRINTF(Resource, "Scheduling Inst-Graduated Resource Pool "
@@ -357,22 +305,6 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  inst->squashSeqNum,
                                  inst->readTid(),
                                  squash_pri);
-            cpu->schedule(res_pool_event, when);
-        }
-        break;
-
-      case InOrderCPU::SquashFromMemStall:
-        {
-            DPRINTF(Resource, "Scheduling Squash Due to Memory Stall Resource "
-                    "Pool Event for tick %i.\n",
-                    curTick() + delay);
-            ResPoolEvent *res_pool_event = 
-                new ResPoolEvent(this,
-                                 e_type,
-                                 inst,
-                                 inst->squashingStage,
-                                 inst->seqNum - 1,
-                                 inst->readTid());
             cpu->schedule(res_pool_event, when);
         }
         break;
@@ -436,7 +368,7 @@ ResourcePool::squashDueToMemStall(DynInstPtr inst, int stage_num,
 }
 
 void
-ResourcePool::activateAll(ThreadID tid)
+ResourcePool::activateThread(ThreadID tid)
 {
     bool do_activate = cpu->threadModel != InOrderCPU::SwitchOnCacheMiss ||
         cpu->numActiveThreads() < 1 ||
@@ -459,7 +391,7 @@ ResourcePool::activateAll(ThreadID tid)
 }
 
 void
-ResourcePool::deactivateAll(ThreadID tid)
+ResourcePool::deactivateThread(ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Broadcasting Thread Deactivation to all "
             "resources.\n", tid);
@@ -472,7 +404,7 @@ ResourcePool::deactivateAll(ThreadID tid)
 }
 
 void
-ResourcePool::suspendAll(ThreadID tid)
+ResourcePool::suspendThread(ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Broadcasting Thread Suspension to all "
             "resources.\n", tid);
@@ -487,13 +419,13 @@ ResourcePool::suspendAll(ThreadID tid)
 void
 ResourcePool::instGraduated(InstSeqNum seq_num, ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Broadcasting [sn:%i] graduation to all "
-            "resources.\n", tid, seq_num);
+    DPRINTF(Resource, "[tid:%i] Broadcasting [sn:%i] graduation to "
+            "appropriate resources.\n", tid, seq_num);
 
-    int num_resources = resources.size();
+    int num_resources = gradObjects.size();
 
     for (int idx = 0; idx < num_resources; idx++) {
-        resources[idx]->instGraduated(seq_num, tid);
+        resources[gradObjects[idx]]->instGraduated(seq_num, tid);
     }
 }
 
@@ -528,18 +460,6 @@ ResourcePool::ResPoolEvent::process()
 {
     switch ((int)eventType)
     {
-      case InOrderCPU::ActivateThread:
-        resPool->activateAll(tid);
-        break;
-
-      case InOrderCPU::DeactivateThread:
-      case InOrderCPU::HaltThread:
-        resPool->deactivateAll(tid);
-        break;
-
-      case InOrderCPU::SuspendThread:
-        resPool->suspendAll(tid);
-        break;
 
       case ResourcePool::InstGraduated:
         resPool->instGraduated(seqNum, tid);
@@ -547,10 +467,6 @@ ResourcePool::ResPoolEvent::process()
 
       case ResourcePool::SquashAll:
         resPool->squashAll(inst, stageNum, seqNum, tid);
-        break;
-
-      case InOrderCPU::SquashFromMemStall:
-        resPool->squashDueToMemStall(inst, stageNum, seqNum, tid);
         break;
 
       case ResourcePool::UpdateAfterContextSwitch:

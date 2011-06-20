@@ -117,6 +117,7 @@ InOrderCPU::CPUEvent::process()
     {
       case ActivateThread:
         cpu->activateThread(tid);
+        cpu->resPool->activateThread(tid);
         break;
 
       case ActivateNextReadyThread:
@@ -125,18 +126,23 @@ InOrderCPU::CPUEvent::process()
 
       case DeactivateThread:
         cpu->deactivateThread(tid);
+        cpu->resPool->deactivateThread(tid);
         break;
 
       case HaltThread:
         cpu->haltThread(tid);
+        cpu->resPool->deactivateThread(tid);
         break;
 
       case SuspendThread: 
         cpu->suspendThread(tid);
+        cpu->resPool->suspendThread(tid);
         break;
 
       case SquashFromMemStall:
         cpu->squashDueToMemStall(inst->squashingStage, inst->seqNum, tid);
+        cpu->resPool->squashDueToMemStall(inst, inst->squashingStage,
+                                          inst->seqNum, tid);
         break;
 
       case Trap:
@@ -896,7 +902,7 @@ InOrderCPU::activateNextReadyThread()
         activateThread(ready_tid);                        
         
         // Activate in Resource Pool
-        resPool->activateAll(ready_tid);
+        resPool->activateThread(ready_tid);
         
         list<ThreadID>::iterator ready_it =
             std::find(readyThreads.begin(), readyThreads.end(), ready_tid);
