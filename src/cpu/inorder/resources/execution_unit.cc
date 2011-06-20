@@ -139,10 +139,11 @@ ExecutionUnit::execute(int slot_num)
                 lastControlTick = curTick();
 
                 // Evaluate Branch
+                DPRINTF(IEW, "Pre-Execute %s PC:%s nextPC:%s predPC:%s\n", inst->instName(), inst->pcState(), inst->readPredTarg());
                 fault = inst->execute();
                 executions++;
-
                 inst->setExecuted();
+                DPRINTF(IEW, "Post-Execute %s PC:%s nextPC:%s predPC:%s\n", inst->instName(), inst->pcState(), inst->readPredTarg());
 
                 if (fault == NoFault) {
                     // If branch is mispredicted, then signal squash
@@ -160,14 +161,14 @@ ExecutionUnit::execute(int slot_num)
                             inst->setPredTarg(pc);
 
                             if (inst->predTaken() && inst->isCondDelaySlot()) {
+                                assert(0 && "Not Handling Conditional Delay Slots (1)");
                                 inst->bdelaySeqNum = seq_num;
-
                                 DPRINTF(InOrderExecute, "[tid:%i]: Conditional"
                                         " branch inst [sn:%i] PC %s mis"
                                         "predicted as taken.\n", tid,
                                         seq_num, inst->pcState());
-                            } else if (!inst->predTaken() &&
-                                       inst->isCondDelaySlot()) {
+                            } else if (!inst->predTaken() && inst->isCondDelaySlot()) {
+                                assert(0 && "Not Handling Conditional Delay Slots (2)");
                                 inst->bdelaySeqNum = seq_num;
                                 inst->procDelaySlotOnMispred = true;
 

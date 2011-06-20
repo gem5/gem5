@@ -66,12 +66,18 @@ BranchPredictor::regStats()
 void
 BranchPredictor::execute(int slot_num)
 {
-    // After this is working, change this to a reinterpret cast
-    // for performance considerations
     ResourceRequest* bpred_req = reqs[slot_num];
     DynInstPtr inst = bpred_req->inst;
     ThreadID tid = inst->readTid();
     InstSeqNum seq_num = inst->seqNum;
+
+    if (!inst->isControl()) {
+        DPRINTF(Resource, "Ignoring %s, not a control inst.\n",
+                inst->instName());
+        bpred_req->done();
+        return;
+    }
+
 
     switch (bpred_req->cmd)
     {
@@ -84,12 +90,6 @@ BranchPredictor::execute(int slot_num)
             } else {
                 TheISA::PCState pred_PC = inst->pcState();
                 TheISA::advancePC(pred_PC, inst->staticInst);
-#if ISA_HAS_DELAY_SLOT
-                // By default set target to NNPC (e.g. PC + 8)
-                // so that a not-taken branch will update
-                // correctly
-                pred_PC.advance();
-#endif
 
                 if (inst->isControl()) {
                     // If not, the pred_PC be updated to pc+8
@@ -111,8 +111,8 @@ BranchPredictor::execute(int slot_num)
                 }
 
                 inst->setPredTarg(pred_PC);
-                DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Predicted PC is "
-                        "%s.\n", tid, seq_num, pred_PC);
+                DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: %s Predicted PC is "
+                        "%s.\n", tid, seq_num, inst->instName(), pred_PC);
             }
 
             bpred_req->done();

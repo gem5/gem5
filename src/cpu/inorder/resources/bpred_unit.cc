@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
@@ -189,10 +190,6 @@ BPredUnit::predict(DynInstPtr &inst, TheISA::PCState &predPC, ThreadID tid)
         ++condPredicted;
 
         pred_taken = BPLookup(predPC.instAddr(), bp_history);
-
-        DPRINTF(InOrderBPred, "[tid:%i]: Branch predictor predicted %i "
-                "for PC %s\n",
-                tid, pred_taken, inst->pcState());
     }
 
     PredictorHistory predict_record(inst->seqNum, predPC, pred_taken,
@@ -242,10 +239,6 @@ BPredUnit::predict(DynInstPtr &inst, TheISA::PCState &predPC, ThreadID tid)
                 inst->isUncondCtrl() &&
                 inst->isDirectCtrl()) {
                 target = inst->branchTarget();
-
-                DPRINTF(InOrderBPred, "[tid:%i]: Setting %s predicted"
-                        " target to %s.\n",
-                        tid, inst->pcState(), target);
             } else if (BTB.valid(predPC.instAddr(), asid)) {
                 ++BTBHits;
 
@@ -267,6 +260,8 @@ BPredUnit::predict(DynInstPtr &inst, TheISA::PCState &predPC, ThreadID tid)
         // Set the PC and the instruction's predicted target.
         predPC = target;
     }
+    DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Setting Predicted PC to %s.\n",
+            tid, inst->seqNum, predPC);
 
     predHist[tid].push_front(predict_record);
 

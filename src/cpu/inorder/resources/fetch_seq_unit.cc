@@ -111,13 +111,16 @@ FetchSeqUnit::execute(int slot_num)
         {
             if (inst->isControl()) {
                 // If it's a return, then we must wait for resolved address.
+                // The Predictor will mark a return a false as "not taken"
+                // if there is no RAS entry
                 if (inst->isReturn() && !inst->predTaken()) {
                     cpu->pipelineStage[stage_num]->
                         toPrevStages->stageBlock[stage_num][tid] = true;
                     pcValid[tid] = false;
                     pcBlockStage[tid] = stage_num;
                 } else if (inst->isCondDelaySlot() && !inst->predTaken()) {
-                // Not-Taken AND Conditional Control
+                    assert(0 && "Not Handling Conditional Delay Slot");
+                    // Not-Taken AND Conditional Control
                     DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: [PC:%s] "
                             "Predicted Not-Taken Cond. Delay inst. Skipping "
                             "delay slot and  Updating PC to %s\n",
@@ -138,15 +141,9 @@ FetchSeqUnit::execute(int slot_num)
                             "Not-Taken Control "
                             "inst. updating PC to %s\n", tid, inst->seqNum,
                             inst->readPredTarg());
-#if ISA_HAS_DELAY_SLOT
-                    pc[tid] = inst->pcState();
-                    advancePC(pc[tid], inst->staticInst);
-#endif
                 } else if (inst->predTaken()) {
                     // Taken Control
 #if ISA_HAS_DELAY_SLOT
-                    pc[tid] = inst->readPredTarg();
-
                     DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i] Updating delay"
                             " slot target to PC %s\n", tid, inst->seqNum,
                             inst->readPredTarg());
@@ -184,9 +181,6 @@ FetchSeqUnit::squashAfterInst(DynInstPtr inst, int stage_num, ThreadID tid)
     // Squash In Pipeline Stage
     cpu->pipelineStage[stage_num]->squashDueToBranch(inst, tid);
 
-    // Squash inside current resource, so if there needs to be fetching on
-    // same cycle the fetch information will be correct.
-
     // Schedule Squash Through-out Resource Pool
     cpu->resPool->scheduleEvent(
             (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst, 0);
@@ -222,32 +216,32 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
         squashSeqNum[tid] = done_seq_num;
         lastSquashCycle[tid] = curTick();
 
-        // If The very next instruction number is the done seq. num,
-        // then we haven't seen the delay slot yet ... if it isn't
-        // the last done_seq_num then this is the delay slot inst.
-        if (cpu->nextInstSeqNum(tid) != done_seq_num &&
-            !inst->procDelaySlotOnMispred) {
-
-            // Reset PC
-            pc[tid] = newPC;
-#if ISA_HAS_DELAY_SLOT
-            TheISA::advancePC(pc[tid], inst->staticInst);
-#endif
-
-            DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to %s.\n",
-                    tid, newPC);
-        } else {
-            assert(ISA_HAS_DELAY_SLOT);
-
-            pc[tid] = (inst->procDelaySlotOnMispred) ?
-                inst->branchTarget() : newPC;
-
-            // Reset PC to Delay Slot Instruction
-            if (inst->procDelaySlotOnMispred) {
+        if (inst->isControl()) {
+            // If the next inst. num is greater than done seq num,
+            // then that means we have seen the delay slot
+            assert(cpu->nextInstSeqNum(tid) >= done_seq_num);
+            if (cpu->nextInstSeqNum(tid) > done_seq_num) {
                 // Reset PC
                 pc[tid] = newPC;
-            }
 
+#if ISA_HAS_DELAY_SLOT
+                // The Pred. Target will be (NPC, NNPC, NNPC+4)
+                // so since we already saw the NPC (i.e. delay slot)
+                // advance one more to get (NNPC, NNPC+4, NNPC+8)
+                TheISA::advancePC(pc[tid], inst->staticInst);
+#endif
+
+                DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to %s.\n",
+                        tid, newPC);
+            } else {
+                // If The very next instruction number that needs to be given
+                // out by the CPU is the done seq. num, then we haven't seen
+                // the delay slot instruction yet.
+                assert(ISA_HAS_DELAY_SLOT);
+                pc[tid] =  newPC;
+            }
+        } else {
+            pc[tid] = newPC;
         }
 
         // Unblock Any Stages Waiting for this information to be updated ...

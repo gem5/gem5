@@ -305,8 +305,10 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
 
             int req_slot_num = req_ptr->getSlot();
 
-            if (resourceEvent[req_slot_num].scheduled())
-                unscheduleEvent(req_slot_num);
+            if (latency > 0) {
+                if (resourceEvent[req_slot_num].scheduled())
+                    unscheduleEvent(req_slot_num);
+            }
 
             freeSlot(req_slot_num);
         }
