@@ -43,15 +43,15 @@ using namespace ThePipeline;
 
 RegDepMap::RegDepMap(int size)
 {
-    regMap.resize(size);
+    regMap.resize(InOrderCPU::NumRegTypes);
+    regMap[InOrderCPU::IntType].resize(NumIntRegs);
+    regMap[InOrderCPU::FloatType].resize(NumFloatRegs);
+    regMap[InOrderCPU::MiscType].resize(NumMiscRegs);
 }
 
 RegDepMap::~RegDepMap()
 {
-    for (int i = 0; i < regMap.size(); i++) {
-        regMap[i].clear();
-    }
-    regMap.clear();
+    clear();
 }
 
 string
@@ -59,6 +59,9 @@ RegDepMap::name()
 {
     return cpu->name() + ".RegDepMap";
 }
+
+std::string RegDepMap::mapNames[InOrderCPU::NumRegTypes] =
+{"IntReg", "FloatReg", "MiscReg"};
 
 void
 RegDepMap::setCPU(InOrderCPU *_cpu)
@@ -70,6 +73,11 @@ RegDepMap::setCPU(InOrderCPU *_cpu)
 void
 RegDepMap::clear()
 {
+    for (int i = 0; i < regMap.size(); i++) {
+        for (int j = 0; j < regMap[j].size(); j++)
+            regMap[i][j].clear();
+        regMap[i].clear();
+    }
     regMap.clear();
 }
 
@@ -84,26 +92,23 @@ RegDepMap::insert(DynInstPtr inst)
             inst->staticInst->getName(),
             dest_regs);
 
-    for (int i = 0; i < dest_regs; i++) {
-        int idx = inst->destRegIdx(i);
-
-        //if (inst->numFPDestRegs())
-        //  idx += TheISA::FP_Base_DepTag;
-
-        insert(idx, inst);
-    }
+    for (int i = 0; i < dest_regs; i++)
+        insert(inst->destRegIdx(i), inst);
 }
 
 
 void
-RegDepMap::insert(unsigned idx, DynInstPtr inst)
+RegDepMap::insert(RegIndex idx, DynInstPtr inst)
 {
-    TheISA::RegIndex flat_idx = cpu->flattenRegIdx(idx, inst->threadNumber);
+    InOrderCPU::RegType reg_type;
+    TheISA::RegIndex flat_idx = cpu->flattenRegIdx(idx, reg_type,
+                                                   inst->threadNumber);
 
-    DPRINTF(RegDepMap, "Inserting [sn:%i] onto dep. list for reg. idx %i (%i).\n",
-            inst->seqNum, idx, flat_idx);
+    DPRINTF(RegDepMap, "Inserting [sn:%i] onto %s dep. list for "
+            "reg. idx %i (%i).\n", inst->seqNum, mapNames[reg_type],
+            idx, flat_idx);
 
-    regMap[flat_idx].push_back(inst);
+    regMap[reg_type][flat_idx].push_back(inst);
 
     inst->setRegDepEntry();
 }
@@ -116,52 +121,52 @@ RegDepMap::remove(DynInstPtr inst)
                 inst->seqNum);
 
         int dest_regs = inst->numDestRegs();
-
-        for (int i = 0; i < dest_regs; i++) {
-            int idx = inst->destRegIdx(i);
-            remove(idx, inst);
-        }
+        for (int i = 0; i < dest_regs; i++)
+            remove(inst->destRegIdx(i), inst);
     }
 }
 
 void
-RegDepMap::remove(unsigned idx, DynInstPtr inst)
+RegDepMap::remove(RegIndex idx, DynInstPtr inst)
 {
-    std::list<DynInstPtr>::iterator list_it = regMap[idx].begin();
-    std::list<DynInstPtr>::iterator list_end = regMap[idx].end();
+    InOrderCPU::RegType reg_type;
+    TheISA::RegIndex flat_idx = cpu->flattenRegIdx(idx, reg_type,
+                                                   inst->threadNumber);
+
+    std::list<DynInstPtr>::iterator list_it = regMap[reg_type][flat_idx].begin();
+    std::list<DynInstPtr>::iterator list_end = regMap[reg_type][flat_idx].end();
 
     while (list_it != list_end) {
         if((*list_it) == inst) {
-            regMap[idx].erase(list_it);
+            regMap[reg_type][flat_idx].erase(list_it);
             break;
         }
-
         list_it++;
     }
 }
 
 void
-RegDepMap::removeFront(unsigned idx, DynInstPtr inst)
+RegDepMap::removeFront(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 {
-   std::list<DynInstPtr>::iterator list_it = regMap[idx].begin();
+   std::list<DynInstPtr>::iterator list_it = regMap[reg_type][idx].begin();
 
-   DPRINTF(RegDepMap, "[tid:%u]: Removing dependency entry on phys. reg."
+   DPRINTF(RegDepMap, "[tid:%u]: Removing dependency entry on reg. idx"
            "%i for [sn:%i].\n", inst->readTid(), idx, inst->seqNum);
 
-   assert(list_it != regMap[idx].end());
+   assert(list_it != regMap[reg_type][idx].end());
 
    assert(inst == (*list_it));
 
-   regMap[idx].erase(list_it);
+   regMap[reg_type][idx].erase(list_it);
 }
 
 bool
-RegDepMap::canRead(unsigned idx, DynInstPtr inst)
+RegDepMap::canRead(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 {
-    if (regMap[idx].size() == 0)
+    if (regMap[reg_type][idx].size() == 0)
         return true;
 
-    std::list<DynInstPtr>::iterator list_it = regMap[idx].begin();
+    std::list<DynInstPtr>::iterator list_it = regMap[reg_type][idx].begin();
 
     if (inst->seqNum <= (*list_it)->seqNum) {
         return true;
@@ -174,14 +179,15 @@ RegDepMap::canRead(unsigned idx, DynInstPtr inst)
 }
 
 ThePipeline::DynInstPtr
-RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst, unsigned clean_idx)
+RegDepMap::canForward(uint8_t reg_type, unsigned reg_idx, DynInstPtr inst,
+                      unsigned clean_idx)
 {
-    std::list<DynInstPtr>::iterator list_it = regMap[reg_idx].begin();
-    std::list<DynInstPtr>::iterator list_end = regMap[reg_idx].end();
+    std::list<DynInstPtr>::iterator list_it = regMap[reg_type][reg_idx].begin();
+    std::list<DynInstPtr>::iterator list_end = regMap[reg_type][reg_idx].end();
 
     DynInstPtr forward_inst = NULL;
 
-    // Look for first, oldest instruction
+    // Look for first/oldest instruction
     while (list_it != list_end &&
            (*list_it)->seqNum < inst->seqNum) {
         forward_inst = (*list_it);
@@ -220,12 +226,12 @@ RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst, unsigned clean_idx)
 }
 
 bool
-RegDepMap::canWrite(unsigned idx, DynInstPtr inst)
+RegDepMap::canWrite(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 {
-    if (regMap[idx].size() == 0)
+    if (regMap[reg_type][idx].size() == 0)
         return true;
 
-    std::list<DynInstPtr>::iterator list_it = regMap[idx].begin();
+    std::list<DynInstPtr>::iterator list_it = regMap[reg_type][idx].begin();
 
     if (inst->seqNum <= (*list_it)->seqNum) {
         return true;
@@ -238,52 +244,25 @@ RegDepMap::canWrite(unsigned idx, DynInstPtr inst)
     return false;
 }
 
-int
-RegDepMap::depSize(unsigned idx)
-{
-    return regMap[idx].size();
-}
-
-ThePipeline::DynInstPtr
-RegDepMap::findBypassInst(unsigned idx)
-{
-    std::list<DynInstPtr>::iterator list_it = regMap[idx].begin();
-
-    if (depSize(idx) == 1)
-        return NULL;
-
-    list_it++;
-
-    while (list_it != regMap[idx].end()) {
-        if((*list_it)->isExecuted()) {
-            return *list_it;
-            break;
-        }
-    }
-
-    return NULL;
-}
-
 void
 RegDepMap::dump()
 {
-    
-    for (int idx=0; idx < regMap.size(); idx++) {
-        
-        if (regMap[idx].size() > 0) {
-            cprintf("Reg #%i (size:%i): ", idx, regMap[idx].size());
+    for (int reg_type = 0; reg_type < InOrderCPU::NumRegTypes; reg_type++) {
+        for (int idx=0; idx < regMap.size(); idx++) {
+            if (regMap[idx].size() > 0) {
+                cprintf("Reg #%i (size:%i): ", idx, regMap[reg_type][idx].size());
 
-            std::list<DynInstPtr>::iterator list_it = regMap[idx].begin();
-            std::list<DynInstPtr>::iterator list_end = regMap[idx].end();
-        
-            while (list_it != list_end) {
-                cprintf("[sn:%i] ", (*list_it)->seqNum);
+                std::list<DynInstPtr>::iterator list_it =
+                    regMap[reg_type][idx].begin();
+                std::list<DynInstPtr>::iterator list_end =
+                    regMap[reg_type][idx].end();
 
-                list_it++;            
-            }        
-
-            cprintf("\n");
+                while (list_it != list_end) {
+                    cprintf("[sn:%i] ", (*list_it)->seqNum);
+                    list_it++;
+                }
+                cprintf("\n");
+            }
         }
-        
     }    
 }

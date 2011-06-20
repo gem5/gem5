@@ -288,6 +288,9 @@ class InOrderCPU : public BaseCPU
     /** Dependency Tracker for Integer & Floating Point Regs */
     RegDepMap archRegDepMap[ThePipeline::MaxThreads];
 
+    /** Register Types Used in Dependency Tracking */
+    enum RegType { IntType, FloatType, MiscType, NumRegTypes};
+
     /** Global communication structure */
     TimeBuffer<TimeStruct> timeBuffer;
 
@@ -522,7 +525,7 @@ class InOrderCPU : public BaseCPU
 
     void setFloatRegBits(RegIndex reg_idx, FloatRegBits val,  ThreadID tid);
 
-    RegIndex flattenRegIdx(RegIndex reg_idx, ThreadID tid);
+    RegIndex flattenRegIdx(RegIndex reg_idx, RegType &reg_type, ThreadID tid);
 
     /** Reads a miscellaneous register. */
     MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);

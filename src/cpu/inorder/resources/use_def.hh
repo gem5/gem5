@@ -67,31 +67,21 @@ class UseDefUnit : public Resource {
 
     void execute(int slot_num);
 
-    void squash(DynInstPtr inst, int stage_num,
-                        InstSeqNum squash_seq_num, ThreadID tid);
-
     void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);    
-
-    const InstSeqNum maxSeqNum;
 
     void regStats();
     
   protected:
     RegDepMap *regDepMap[ThePipeline::MaxThreads];
 
-    /** Outstanding Seq. Num. Trying to Read from Register File */
-    InstSeqNum outReadSeqNum[ThePipeline::MaxThreads];
-
-    InstSeqNum outWriteSeqNum[ThePipeline::MaxThreads];
-
     bool *nonSpecInstActive[ThePipeline::MaxThreads];
 
     InstSeqNum *nonSpecSeqNum[ThePipeline::MaxThreads];
 
-    InstSeqNum floatRegSize[ThePipeline::MaxThreads];
-
     Stats::Average uniqueRegsPerSwitch;
-    std::map<unsigned, bool> uniqueRegMap;    
+    std::map<RegIndex, bool> uniqueIntRegMap;
+    std::map<RegIndex, bool> uniqueFloatRegMap;
+    std::map<RegIndex, bool> uniqueMiscRegMap;
 
   public:
     class UseDefRequest : public ResourceRequest {

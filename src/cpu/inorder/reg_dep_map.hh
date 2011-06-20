@@ -34,21 +34,23 @@
 
 #include <list>
 #include <vector>
+#include <string>
 
 #include "arch/isa_traits.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 
-class InOrderCPU;
-
 class RegDepMap
 {
-    typedef ThePipeline::DynInstPtr DynInstPtr;
-
   public:
-    RegDepMap(int size = TheISA::TotalNumRegs);
+    typedef ThePipeline::DynInstPtr DynInstPtr;
+    typedef TheISA::RegIndex RegIndex;
+    typedef uint8_t RegType;
 
+    RegDepMap(int size = TheISA::TotalNumRegs);
     ~RegDepMap();
+
+    static std::string mapNames[];
 
     std::string name();
 
@@ -60,47 +62,49 @@ class RegDepMap
     /** Insert all of a instruction's destination registers into map*/
     void insert(DynInstPtr inst);
 
-    /** Insert an instruction into a specific destination register index
-     *  onto map
-     */
-    void insert(unsigned idx, DynInstPtr inst);
-
     /** Remove all of a instruction's destination registers into map*/
     void remove(DynInstPtr inst);
 
-    /** Remove a specific instruction and dest. register index from map*/
-    void remove(unsigned idx, DynInstPtr inst);
-
     /** Remove Front instruction from a destination register */
-    void removeFront(unsigned idx, DynInstPtr inst);
+    void removeFront(uint8_t reg_type, RegIndex idx, DynInstPtr inst);
 
     /** Is the current instruction able to read from this
      *  destination register?
      */
-    bool canRead(unsigned idx, DynInstPtr inst);
+    bool canRead(uint8_t reg_type, RegIndex idx, DynInstPtr inst);
 
     /** Is the current instruction able to get a forwarded value from
      *  another instruction for this destination register?
      */
-    DynInstPtr canForward(unsigned reg_idx, DynInstPtr inst, unsigned clean_idx);
+    DynInstPtr canForward(uint8_t reg_type, unsigned reg_idx,
+                          DynInstPtr inst, unsigned clean_idx);
 
     /** find an instruction to forward/bypass a value from */
-    DynInstPtr findBypassInst(unsigned idx);
+    DynInstPtr findBypassInst(RegIndex idx);
 
     /** Is the current instruction able to write to this
      *  destination register?
      */
-    bool canWrite(unsigned idx, DynInstPtr inst);
+    bool canWrite(uint8_t reg_type, RegIndex idx, DynInstPtr inst);
 
     /** Size of Dependency of Map */
-    int depSize(unsigned idx);
+    int depSize(RegIndex idx);
 
     void dump();
     
-  protected:
-    // Eventually make this a map of lists for
-    // efficiency sake!
-    std::vector<std::list<DynInstPtr> > regMap;
+  private:
+    /** Insert an instruction into a specific destination register index
+     *  onto map. This must be called w/the unflattened registered index
+     */
+    void insert(RegIndex idx, DynInstPtr inst);
+
+    /** Remove a specific instruction and dest. register index from map
+     *  This must be called w/the unflattened registered index
+     */
+    void remove(RegIndex idx, DynInstPtr inst);
+
+    typedef std::vector<std::list<DynInstPtr> > DepMap;
+    std::vector<DepMap> regMap;
 
     InOrderCPU *cpu;
 };

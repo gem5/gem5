@@ -1096,15 +1096,18 @@ InOrderCPU::getPipeStage(int stage_num)
 }
 
 RegIndex
-InOrderCPU::flattenRegIdx(RegIndex reg_idx, ThreadID tid)
+InOrderCPU::flattenRegIdx(RegIndex reg_idx, RegType &reg_type, ThreadID tid)
 {
     if (reg_idx < FP_Base_DepTag) {
+        reg_type = IntType;
         return isa[tid].flattenIntIndex(reg_idx);
     } else if (reg_idx < Ctrl_Base_DepTag) {
+        reg_type = FloatType;
         reg_idx -= FP_Base_DepTag;
         return isa[tid].flattenFloatIndex(reg_idx);
     } else {
-        return reg_idx -= TheISA::Ctrl_Base_DepTag;
+        reg_type = MiscType;
+        return reg_idx - TheISA::Ctrl_Base_DepTag;
     }
 }
 

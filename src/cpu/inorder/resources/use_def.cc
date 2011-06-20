@@ -47,15 +47,11 @@ using namespace ThePipeline;
 UseDefUnit::UseDefUnit(string res_name, int res_id, int res_width,
                        int res_latency, InOrderCPU *_cpu,
                        ThePipeline::Params *params)
-    : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      maxSeqNum((InstSeqNum)-1)
+    : Resource(res_name, res_id, res_width, res_latency, _cpu)
 {
     for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         nonSpecInstActive[tid] = &cpu->nonSpecInstActive[tid];
         nonSpecSeqNum[tid] = &cpu->nonSpecSeqNum[tid];
-
-        outReadSeqNum[tid] = maxSeqNum;
-        outWriteSeqNum[tid] = maxSeqNum;
 
         regDepMap[tid] = &cpu->archRegDepMap[tid];
     }
@@ -167,21 +163,21 @@ UseDefUnit::execute(int slot_idx)
     {
       case ReadSrcReg:
         {
+            InOrderCPU::RegType reg_type;
             RegIndex reg_idx = inst->_srcRegIdx[ud_idx];
-            RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, tid);
+            RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
             
             DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Attempting to read source "
                     "register idx %i (reg #%i, flat#%i).\n",
                     tid, seq_num, ud_idx, reg_idx, flat_idx);
 
-            // Ask register dependency map if it is OK to read from Arch. 
-            // Reg. File
-            if (regDepMap[tid]->canRead(flat_idx, inst)) {
-                
-                uniqueRegMap[reg_idx] = true;
+            if (regDepMap[tid]->canRead(reg_type, flat_idx, inst)) {
+                switch (reg_type)
+                {
+                  case InOrderCPU::IntType:
+                    {
+                        uniqueIntRegMap[flat_idx] = true;
 
-                if (inst->seqNum <= outReadSeqNum[tid]) {
-                    if (reg_idx < FP_Base_DepTag) {
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Int Reg %i"
                                 " (%i) from Register File:%i.\n",
                                 tid, seq_num,
@@ -190,12 +186,16 @@ UseDefUnit::execute(int slot_idx)
                         inst->setIntSrc(ud_idx,
                                         cpu->readIntReg(flat_idx,
                                                         inst->readTid()));
-                    } else if (reg_idx < Ctrl_Base_DepTag) {
-                        reg_idx -= FP_Base_DepTag;
+                    }
+                    break;
+
+                  case InOrderCPU::FloatType:
+                    {
+                        uniqueFloatRegMap[flat_idx] = true;
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Float Reg %i"
                                 " (%i) from Register File:%x (%08f).\n",
                                 tid, seq_num,
-                                reg_idx, flat_idx,
+                                reg_idx - FP_Base_DepTag, flat_idx,
                                 cpu->readFloatRegBits(flat_idx,
                                                       inst->readTid()),
                                 cpu->readFloatReg(flat_idx,
@@ -204,45 +204,45 @@ UseDefUnit::execute(int slot_idx)
                         inst->setFloatSrc(ud_idx,
                                           cpu->readFloatReg(flat_idx,
                                                             inst->readTid()));
-                    } else {
-                        reg_idx -= Ctrl_Base_DepTag;
+                    }
+                    break;
+
+                  case InOrderCPU::MiscType:
+                    {
+                        uniqueMiscRegMap[flat_idx] = true;
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Misc Reg %i "
                                 " (%i) from Register File:%i.\n",
                                 tid, seq_num,
-                                reg_idx, flat_idx,
-                                cpu->readMiscReg(reg_idx, 
+                                reg_idx - Ctrl_Base_DepTag, flat_idx,
+                                cpu->readMiscReg(flat_idx,
                                                  inst->readTid()));
                         inst->setIntSrc(ud_idx,
-                                        cpu->readMiscReg(reg_idx, 
+                                        cpu->readMiscReg(flat_idx,
                                                          inst->readTid()));
                     }
+                    break;
 
-                    outReadSeqNum[tid] = maxSeqNum;
-                    regFileReads++;
-                    ud_req->done();
-                } else {
-                    DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Unable to read because "
-                            "of [sn:%i] hasnt read it's registers yet.\n", 
-                            tid, seq_num, outReadSeqNum[tid]);
-                    DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for "
-                            "[sn:%i] to write\n",
-                            tid, outReadSeqNum[tid]);
-                    ud_req->done(false);
+                  default:
+                    panic("Invalid Register Type: %i", reg_type);
                 }
 
+                regFileReads++;
+                ud_req->done();
             } else {
                 // Look for forwarding opportunities
-                DynInstPtr forward_inst = regDepMap[tid]->canForward(flat_idx,
+                DynInstPtr forward_inst = regDepMap[tid]->canForward(reg_type,
+                                                                     flat_idx,
                                                                      inst,
                                                                      reg_idx);
 
                 if (forward_inst) {
+                    int dest_reg_idx =
+                        forward_inst->getDestIdxNum(reg_idx);
 
-                    if (inst->seqNum <= outReadSeqNum[tid]) {
-                        int dest_reg_idx = 
-                            forward_inst->getDestIdxNum(reg_idx);
-
-                        if (reg_idx < FP_Base_DepTag) {
+                    switch (reg_type)
+                    {
+                      case InOrderCPU::IntType:
+                        {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i), value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
@@ -253,21 +253,29 @@ UseDefUnit::execute(int slot_idx)
                             inst->setIntSrc(ud_idx, 
                                             forward_inst->
                                             readIntResult(dest_reg_idx));
-                        } else if (reg_idx < Ctrl_Base_DepTag) {
+                        }
+                        break;
+
+                      case InOrderCPU::FloatType:
+                        {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i) value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
-                                    tid, reg_idx, flat_idx,
+                                    tid, reg_idx - FP_Base_DepTag, flat_idx,
                                     forward_inst->readFloatResult(dest_reg_idx),
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
                             inst->setFloatSrc(ud_idx,
                                               forward_inst->
                                               readFloatResult(dest_reg_idx));
-                        } else {
+                        }
+                        break;
+
+                      case InOrderCPU::MiscType:
+                        {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i) value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
-                                    tid, reg_idx, flat_idx,
+                                    tid, reg_idx - Ctrl_Base_DepTag, flat_idx,
                                     forward_inst->readIntResult(dest_reg_idx),
                                     forward_inst->seqNum, 
                                     inst->seqNum, ud_idx);
@@ -275,27 +283,21 @@ UseDefUnit::execute(int slot_idx)
                                             forward_inst->
                                             readIntResult(dest_reg_idx));
                         }
+                        break;
 
-                        outReadSeqNum[tid] = maxSeqNum;
-                        regForwards++;
-                        ud_req->done();
-                    } else {
-                        DPRINTF(InOrderUseDef, "[tid:%i]: Unable to read "
-                                "because of [sn:%i] hasnt read it's"
-                                " registers yet.\n", tid, outReadSeqNum[tid]);
-                        DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for "
-                                "[sn:%i] to forward\n",
-                                tid, outReadSeqNum[tid]);
-                        ud_req->done(false);
+                      default:
+                        panic("Invalid Register Type: %i", reg_type);
                     }
+
+                    regForwards++;
+                    ud_req->done();
                 } else {
-                    DPRINTF(InOrderUseDef, "[tid:%i]: Source register idx: %i"
+                    DPRINTF(InOrderUseDef, "[tid:%i]: Source register idx: %i "
                             "is not ready to read.\n",
                             tid, reg_idx);
                     DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting to read "
                             "register (idx=%i)\n",
                             tid, reg_idx);
-                    outReadSeqNum[tid] = inst->seqNum;
                     ud_req->done(false);
                 }
             }
@@ -304,32 +306,41 @@ UseDefUnit::execute(int slot_idx)
 
       case WriteDestReg:
         {
+            InOrderCPU::RegType reg_type;
             RegIndex reg_idx = inst->_destRegIdx[ud_idx];
-            RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, tid);
+            RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
 
-            if (regDepMap[tid]->canWrite(flat_idx, inst)) {
+            if (regDepMap[tid]->canWrite(reg_type, flat_idx, inst)) {
                 DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Flattening register idx %i "
                         "(%i) and Attempting to write to Register File.\n",
                         tid, seq_num, reg_idx, flat_idx);
-                uniqueRegMap[reg_idx] = true;
-                if (inst->seqNum <= outReadSeqNum[tid]) {
-                    if (reg_idx < FP_Base_DepTag) {
+
+                switch (reg_type)
+                {
+                  case InOrderCPU::IntType:
+                    {
+                        uniqueIntRegMap[flat_idx] = true;
+
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Writing Int. Result "
                                 "0x%x to register idx %i (%i).\n",
                                 tid, seq_num, inst->readIntResult(ud_idx),
                                 reg_idx, flat_idx);
 
                         // Remove Dependencies
-                        regDepMap[tid]->removeFront(flat_idx, inst);
+                        regDepMap[tid]->removeFront(reg_type, flat_idx, inst);
 
                         cpu->setIntReg(flat_idx,
                                        inst->readIntResult(ud_idx),
                                        inst->readTid());
-                    } else if(reg_idx < Ctrl_Base_DepTag) {
-                        // Remove Dependencies
-                        regDepMap[tid]->removeFront(flat_idx, inst);
+                    }
+                    break;
 
-                        reg_idx -= FP_Base_DepTag;
+                  case InOrderCPU::FloatType:
+                    {
+                        uniqueFloatRegMap[flat_idx] = true;
+
+                        // Remove Reg. Dependecny Block on this Register
+                        regDepMap[tid]->removeFront(reg_type, flat_idx, inst);
 
                         if (inst->resultType(ud_idx) == 
                             InOrderDynInst::Integer) {
@@ -339,12 +350,12 @@ UseDefUnit::execute(int slot_idx)
                                     tid, seq_num,
                                     inst->readFloatResult(ud_idx), 
                                     inst->readIntResult(ud_idx), 
-                                    reg_idx, flat_idx);
+                                    reg_idx - FP_Base_DepTag, flat_idx);
 
                             // Check for FloatRegBits Here
                             cpu->setFloatRegBits(flat_idx,
-                                             inst->readIntResult(ud_idx),
-                                             inst->readTid());
+                                                 inst->readIntResult(ud_idx),
+                                                 inst->readTid());
                         } else if (inst->resultType(ud_idx) == 
                                    InOrderDynInst::Float) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Writing Float "
@@ -352,7 +363,7 @@ UseDefUnit::execute(int slot_idx)
                                     "idx %i (%i).\n",
                                     tid, seq_num, inst->readFloatResult(ud_idx),
                                     inst->readIntResult(ud_idx), 
-                                    reg_idx, flat_idx);
+                                    reg_idx - FP_Base_DepTag, flat_idx);
 
                             cpu->setFloatReg(flat_idx,
                                              inst->readFloatResult(ud_idx),
@@ -365,7 +376,7 @@ UseDefUnit::execute(int slot_idx)
                                     tid, seq_num,
                                     inst->readFloatResult(ud_idx), 
                                     inst->readIntResult(ud_idx), 
-                                    reg_idx, flat_idx);
+                                    reg_idx - FP_Base_DepTag, flat_idx);
 
                             // Check for FloatRegBits Here
                             cpu->setFloatReg(flat_idx,
@@ -376,33 +387,32 @@ UseDefUnit::execute(int slot_idx)
                                   inst->seqNum, inst->instName());
                         }
 
-                    } else {
+                    }
+                    break;
+
+                  case InOrderCPU::MiscType:
+                    {
+                        uniqueMiscRegMap[flat_idx] = true;
+
                         DPRINTF(InOrderUseDef, "[tid:%i]: Writing Misc. 0x%x "
                                 "to register idx %i.\n",
-                                tid, inst->readIntResult(ud_idx), reg_idx);
+                                tid, inst->readIntResult(ud_idx), reg_idx - Ctrl_Base_DepTag);
 
                         // Remove Dependencies
-                        regDepMap[tid]->removeFront(flat_idx, inst);
+                        regDepMap[tid]->removeFront(reg_type, flat_idx, inst);
 
-                        reg_idx -= Ctrl_Base_DepTag;
-
-                        cpu->setMiscReg(reg_idx,
-                                        inst->readIntResult(ud_idx),
+                        cpu->setMiscReg(flat_idx,
+                                    inst->readIntResult(ud_idx),
                                         inst->readTid());
                     }
+                    break;
 
-                    outWriteSeqNum[tid] = maxSeqNum;
-                    regFileWrites++;
-                    ud_req->done();
-                } else {
-                    DPRINTF(InOrderUseDef, "[tid:%i]: Unable to write because "
-                            "of [sn:%i] hasnt read it's"
-                            " registers yet.\n", tid, outReadSeqNum);
-                    DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for "
-                            "[sn:%i] to read\n",
-                            tid, outReadSeqNum);
-                    ud_req->done(false);
+                  default:
+                    panic("Invalid Register Type: %i", reg_type);
                 }
+
+                regFileWrites++;
+                ud_req->done();
             } else {
                 DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Dest. register idx: %i is "
                         "not ready to write.\n",
@@ -410,7 +420,6 @@ UseDefUnit::execute(int slot_idx)
                 DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting to write "
                         "register (idx=%i)\n",
                         tid, reg_idx);
-                outWriteSeqNum[tid] = inst->seqNum;
                 ud_req->done(false);
             }
         }
@@ -423,59 +432,11 @@ UseDefUnit::execute(int slot_idx)
 }
 
 void
-UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
-                   ThreadID tid)
-{
-    DPRINTF(InOrderUseDef, "[tid:%i]: Updating Due To Squash After [sn:%i].\n",
-            tid, squash_seq_num);
-
-    for (int i = 0; i < width; i++) {
-        ResReqPtr req_ptr = reqs[i];
-
-        if (req_ptr->valid &&
-            req_ptr->getInst()->readTid() == tid &&
-            req_ptr->getInst()->seqNum > squash_seq_num) {
-
-            DPRINTF(InOrderUseDef, "[tid:%i]: Squashing [sn:%i].\n",
-                    req_ptr->getInst()->readTid(),
-                    req_ptr->getInst()->seqNum);
-
-            int req_slot_num = req_ptr->getSlot();
-
-            if (latency > 0) {                
-                assert(0);
-                
-                unscheduleEvent(req_slot_num);
-            }
-
-            freeSlot(req_slot_num);
-        }
-    }
-
-    if (outReadSeqNum[tid] >= squash_seq_num) {
-        DPRINTF(InOrderUseDef, "[tid:%i]: Outstanding Read Seq Num Reset.\n", 
-                tid);
-        outReadSeqNum[tid] = maxSeqNum;
-    } else if (outReadSeqNum[tid] != maxSeqNum) {
-        DPRINTF(InOrderUseDef, "[tid:%i]: No need to reset Outstanding Read "
-                "Seq Num %i\n",
-                tid, outReadSeqNum[tid]);
-    }
-
-    if (outWriteSeqNum[tid] >= squash_seq_num) {
-        DPRINTF(InOrderUseDef, "[tid:%i]: Outstanding Write Seq Num Reset.\n", 
-                tid);
-        outWriteSeqNum[tid] = maxSeqNum;
-    } else if (outWriteSeqNum[tid] != maxSeqNum) {
-        DPRINTF(InOrderUseDef, "[tid:%i]: No need to reset Outstanding Write "
-                "Seq Num %i\n",
-                tid, outWriteSeqNum[tid]);
-    }
-}
-
-void
 UseDefUnit::updateAfterContextSwitch(DynInstPtr inst, ThreadID tid)
 {
-    uniqueRegsPerSwitch = uniqueRegMap.size();
-    uniqueRegMap.clear();    
+    uniqueRegsPerSwitch = uniqueIntRegMap.size() + uniqueFloatRegMap.size()
+        + uniqueMiscRegMap.size();
+    uniqueIntRegMap.clear();
+    uniqueFloatRegMap.clear();
+    uniqueMiscRegMap.clear();
 }
