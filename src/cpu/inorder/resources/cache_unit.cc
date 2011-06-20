@@ -70,21 +70,27 @@ printMemData(uint8_t *data, unsigned size)
 Tick
 CacheUnit::CachePort::recvAtomic(PacketPtr pkt)
 {
-    panic("CacheUnit::CachePort doesn't expect recvAtomic callback!");
+    panic("%s doesn't expect recvAtomic callback!", cachePortUnit->name());
     return curTick();
 }
 
 void
 CacheUnit::CachePort::recvFunctional(PacketPtr pkt)
 {
-    panic("CacheUnit::CachePort doesn't expect recvFunctional callback!");
+    DPRINTF(InOrderCachePort, "Doesn't update state on a recvFunctional."
+            "Ignoring packet for %x.\n", pkt->getAddr());
 }
 
 void
 CacheUnit::CachePort::recvStatusChange(Status status)
 {
-    if (status == RangeChange)
+    if (status == RangeChange) {
+        if (!snoopRangeSent) {
+            snoopRangeSent = true;
+            sendStatusChange(Port::RangeChange);
+        }
         return;
+    }
 
     panic("CacheUnit::CachePort doesn't expect recvStatusChange callback!");
 }
@@ -92,7 +98,16 @@ CacheUnit::CachePort::recvStatusChange(Status status)
 bool
 CacheUnit::CachePort::recvTiming(Packet *pkt)
 {
-    cachePortUnit->processCacheCompletion(pkt);
+    DPRINTF(Cache, "RecvTiming: Pkt %x,\n", pkt->getAddr());
+
+    if (pkt->isError())
+        DPRINTF(InOrderCachePort, "Got error packet back for address: %x\n",
+                pkt->getAddr());
+    else if (pkt->isResponse())
+        cachePortUnit->processCacheCompletion(pkt);
+    else
+        DPRINTF(Cache, "Received snoop pkt %x,Ignoring\n", pkt->getAddr());
+
     return true;
 }
 
@@ -128,6 +143,21 @@ CacheUnit::tlb()
 {
     return _tlb;
 
+}
+
+void
+CacheUnit::CachePort::setPeer(Port *port)
+{
+    Port::setPeer(port);
+
+#if FULL_SYSTEM
+    // Update the ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    if (cachePortUnit->resName == "dcache_port") {
+        cachePortUnit->cpu->updateMemPorts();
+    }
+
+#endif
 }
 
 Port *
@@ -1022,6 +1052,8 @@ CacheUnit::processSquash(CacheReqPacket *cache_pkt)
 void
 CacheUnit::processCacheCompletion(PacketPtr pkt)
 {
+    //@todo: use packet sender state instead of deriving from packet class to
+    //  get special state
     CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
     assert(cache_pkt);
 

@@ -89,16 +89,18 @@ class CacheUnit : public Resource
         CachePort(CacheUnit *_cachePortUnit)
           : Port(_cachePortUnit->name() + "-cache-port",
                  (MemObject*)_cachePortUnit->cpu),
-            cachePortUnit(_cachePortUnit)
+            cachePortUnit(_cachePortUnit), snoopRangeSent(false)
         { }
 
         bool snoopRangeSent;
+
+        void setPeer(Port *port);
 
       protected:
         /** Atomic version of receive.  Panics. */
         Tick recvAtomic(PacketPtr pkt);
 
-        /** Functional version of receive.  Panics. */
+        /** Functional version of receive.*/
         void recvFunctional(PacketPtr pkt);
 
         /** Receives status change.  Other than range changing, panics. */
@@ -106,11 +108,10 @@ class CacheUnit : public Resource
 
         /** Returns the address ranges of this device. */
         void getDeviceAddressRanges(AddrRangeList &resp,
-                                            AddrRangeList &snoop)
-        { resp.clear(); snoop.clear(); }
+                                    bool &snoop)
+        {  resp.clear(); snoop = true; }
 
-        /** Timing version of receive. Handles setting fetch to the
-         * proper status to start fetching. */
+        /** Timing version of receive */
         bool recvTiming(PacketPtr pkt);
 
         /** Handles doing a retry of a failed fetch. */

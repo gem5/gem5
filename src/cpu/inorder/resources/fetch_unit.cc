@@ -423,6 +423,8 @@ void
 FetchUnit::processCacheCompletion(PacketPtr pkt)
 {
     // Cast to correct packet type
+    // @todo: use pkt Sender state here to be consistent with other
+    // cpu models
     CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
     assert(cache_pkt);
 
