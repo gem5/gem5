@@ -172,12 +172,6 @@ UseDefUnit::execute(int slot_idx)
         *nonSpecSeqNum[tid] = seq_num;
     }
 
-    //@todo: may want to make a separate schedule entry for setting
-    //       destination register dependencies
-    if (!inst->isRegDepEntry()) {
-        regDepMap[tid]->insert(inst);
-    }
-
     switch (ud_req->cmd)
     {
       case ReadSrcReg:
@@ -443,6 +437,13 @@ UseDefUnit::execute(int slot_idx)
                         tid, reg_idx);
                 ud_req->done(false);
             }
+        }
+        break;
+
+      case MarkDestRegs:
+        {
+            regDepMap[tid]->insert(inst);
+            ud_req->done();
         }
         break;
 

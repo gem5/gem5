@@ -50,7 +50,8 @@ class UseDefUnit : public Resource {
 
     enum Command {
         ReadSrcReg,
-        WriteDestReg
+        WriteDestReg,
+        MarkDestRegs
     };
 
   public:

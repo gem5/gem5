@@ -419,6 +419,7 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
     }
 
     // EXECUTE
+    X.needs(RegManager, UseDefUnit::MarkDestRegs);
     for (int idx=0; idx < inst->numSrcRegs(); idx++) {
         if (!idx || !inst->isStore()) {
             X.needs(RegManager, UseDefUnit::ReadSrcReg, idx);

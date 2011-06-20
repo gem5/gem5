@@ -99,18 +99,6 @@ ExecutionUnit::execute(int slot_num)
         return;
     }
 
-
-    //@todo: may want to make a separate schedule entry for setting
-    //       destination register dependencies
-    //@note: typically want to set the output dependencies right
-    //       before we do any reading or writing of registers
-    //       (in RegFile Manager(use_def.cc)) but there are some
-    //       instructions that dont have src regs, so just in case
-    //       take care of reg. dep. map stuff here
-    if (!inst->isRegDepEntry()) {
-        regDepMap[tid]->insert(inst);
-    }
-
     switch (exec_req->cmd)
     {
       case ExecuteInst:
