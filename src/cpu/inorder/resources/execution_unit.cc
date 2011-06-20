@@ -249,8 +249,9 @@ ExecutionUnit::execute(int slot_num)
 
                     exec_req->done();
                 } else {
-                    warn("inst [sn:%i] had a %s fault",
-                         seq_num, fault->name());
+                    warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
+
+                    exec_req->done();
                 }
             } else {
                 // Regular ALU instruction

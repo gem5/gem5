@@ -141,6 +141,7 @@ InOrderCPU::CPUEvent::process()
         break;
 
       case Trap:
+        DPRINTF(InOrderCPU, "Trapping CPU\n");
         cpu->trapCPU(fault, tid, inst);
         break;
 

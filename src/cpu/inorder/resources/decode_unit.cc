@@ -64,8 +64,8 @@ DecodeUnit::execute(int slot_num)
 
             if (inst->backSked != NULL) {
                 DPRINTF(InOrderDecode,
-                    "[tid:%i]: Setting Destination Register(s) for [sn:%i].\n",
-                    tid, inst->seqNum);
+                    "[tid:%i]: %s Setting Destination Register(s) for [sn:%i].\n",
+                        tid, inst->instName(), inst->seqNum);
                 regDepMap[tid]->insert(inst);
 
                 //inst->printSked();

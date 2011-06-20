@@ -68,13 +68,11 @@ GraduationUnit::execute(int slot_num)
             // Handle Any Faults Before Graduating Instruction
             if (inst->fault != NoFault) {
                 cpu->trap(inst->fault, tid, inst);
-                grad_req->setCompleted(false);
-                return;
             }
 
             DPRINTF(InOrderGraduation,
-                    "[tid:%i] Graduating instruction [sn:%i].\n",
-                    tid, inst->seqNum);
+                    "[tid:%i] Graduating instruction %s [sn:%i].\n",
+                    tid, inst->instName(), inst->seqNum);
 
             // Release Non-Speculative "Block" on instructions that could not
             // execute because there was a non-speculative inst. active.
