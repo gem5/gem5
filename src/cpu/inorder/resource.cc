@@ -35,6 +35,7 @@
 #include "base/str.hh"
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/resource.hh"
+#include "cpu/inorder/resource_pool.hh"
 #include "debug/RefCount.hh"
 #include "debug/ResReqCount.hh"
 #include "debug/Resource.hh"
@@ -286,6 +287,18 @@ Resource::deactivateThread(ThreadID tid)
     squash(dummy_inst, 0, 0, tid);
 }
 
+void
+Resource::setupSquash(DynInstPtr inst, int stage_num, ThreadID tid)
+{
+    assert(inst->isControl() && "Function Assumes Squash From A Branch");
+
+    // Squash In Pipeline Stage
+    cpu->pipelineStage[stage_num]->squashDueToBranch(inst, tid);
+
+    // Schedule Squash Through-out Resource Pool
+    cpu->resPool->scheduleEvent(
+        (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst, 0);
+}
 void
 Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                  ThreadID tid)

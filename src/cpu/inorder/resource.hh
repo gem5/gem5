@@ -154,10 +154,14 @@ class Resource {
     virtual Fault doCacheAccess(DynInstPtr inst, uint64_t *res=NULL)
     { panic("doCacheAccess undefined for %s", name()); return NoFault; }
 
+    /** Setup Squash to be sent out to pipeline and resource pool */
+    void setupSquash(DynInstPtr inst, int stage_num, ThreadID tid);
+
     /** Squash All Requests After This Seq Num */
     virtual void squash(DynInstPtr inst, int stage_num,
                         InstSeqNum squash_seq_num, ThreadID tid);
 
+    /** Squash Requests Due to a Memory Stall (By Default, same as "squash" */
     virtual void squashDueToMemStall(DynInstPtr inst, int stage_num,
                                      InstSeqNum squash_seq_num, ThreadID tid);
 

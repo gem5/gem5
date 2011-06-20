@@ -576,6 +576,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
     bool procDelaySlotOnMispred;
 
+    void setSquashInfo(unsigned stage_num);
+
     ////////////////////////////////////////////
     //
     // MEMORY ACCESS

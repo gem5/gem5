@@ -148,19 +148,15 @@ void
 BranchPredictor::squash(DynInstPtr inst, int squash_stage,
                         InstSeqNum squash_seq_num, ThreadID tid)
 {
-    DPRINTF(InOrderBPred, "[tid:%i][sn:%i] Squashing...\n", tid, inst->seqNum);
-
-#if ISA_HAS_DELAY_SLOT
-    // We need to squash the actual branch , NOT the delay slot
-    // in the branch predictor
-    //squash_seq_num = squash_seq_num - 1;
-#endif
+    InstSeqNum bpred_squash_num = inst->seqNum;
+    DPRINTF(InOrderBPred, "[tid:%i][sn:%i] Squashing...\n", tid,
+            bpred_squash_num);
 
     if (squash_stage >= ThePipeline::BackEndStartStage) {
         bool taken = inst->predTaken();
-        branchPred.squash(squash_seq_num, inst->readPredTarg(), taken, tid);
+        branchPred.squash(bpred_squash_num, inst->readPredTarg(), taken, tid);
     } else {
-        branchPred.squash(squash_seq_num, tid);
+        branchPred.squash(bpred_squash_num, tid);
     }
 }
 

@@ -581,6 +581,9 @@ class InOrderCPU : public BaseCPU
      */
     ListIt addInst(DynInstPtr inst);
 
+    /** Find instruction on instruction list */
+    ListIt findInst(InstSeqNum seq_num, ThreadID tid);
+
     /** Function to tell the CPU that an instruction has completed. */
     void instDone(DynInstPtr inst, ThreadID tid);
 

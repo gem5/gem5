@@ -78,7 +78,6 @@ FetchSeqUnit::execute(int slot_num)
     DynInstPtr inst = fs_req->inst;
     ThreadID tid = inst->readTid();
     int stage_num = fs_req->getStageNum();
-    InstSeqNum seq_num = inst->seqNum;
 
     DPRINTF(InOrderFetchSeq, "[tid:%i]: Current PC is %s\n", tid,
             pc[tid]);
@@ -109,48 +108,26 @@ FetchSeqUnit::execute(int slot_num)
 
       case UpdateTargetPC:
         {
+            assert(!inst->isCondDelaySlot()  &&
+                   "Not Handling Conditional Delay Slot");
+
             if (inst->isControl()) {
-                // If it's a return, then we must wait for resolved address.
-                // The Predictor will mark a return a false as "not taken"
-                // if there is no RAS entry
                 if (inst->isReturn() && !inst->predTaken()) {
+                    // If it's a return, then we must wait for resolved address.
+                    // The Predictor will mark a return a false as "not taken"
+                    // if there is no RAS entry
                     cpu->pipelineStage[stage_num]->
                         toPrevStages->stageBlock[stage_num][tid] = true;
                     pcValid[tid] = false;
                     pcBlockStage[tid] = stage_num;
-                } else if (inst->isCondDelaySlot() && !inst->predTaken()) {
-                    assert(0 && "Not Handling Conditional Delay Slot");
-                    // Not-Taken AND Conditional Control
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: [PC:%s] "
-                            "Predicted Not-Taken Cond. Delay inst. Skipping "
-                            "delay slot and  Updating PC to %s\n",
-                            tid, inst->seqNum, inst->pcState(),
-                            inst->readPredTarg());
-
-                    DPRINTF(InOrderFetchSeq, "[tid:%i] Setting up squash to "
-                            "start from stage %i, after [sn:%i].\n", tid,
-                            stage_num, seq_num);
-
-                    inst->bdelaySeqNum = seq_num;
-                    inst->squashingStage = stage_num;
-
-                    squashAfterInst(inst, stage_num, tid);
-                } else if (!inst->isCondDelaySlot() && !inst->predTaken()) {
-                    // Not-Taken Control
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Predicted "
-                            "Not-Taken Control "
-                            "inst. updating PC to %s\n", tid, inst->seqNum,
-                            inst->readPredTarg());
                 } else if (inst->predTaken()) {
                     // Taken Control
-                    inst->bdelaySeqNum = seq_num;
-                    inst->squashingStage = stage_num;
+                    inst->setSquashInfo(stage_num);
+                    setupSquash(inst, stage_num, tid);
+
                     DPRINTF(InOrderFetchSeq, "[tid:%i] Setting up squash to "
                             "start from stage %i, after [sn:%i].\n",
                             tid, stage_num, inst->bdelaySeqNum);
-
-                    // Do Squashing
-                    squashAfterInst(inst, stage_num, tid);
                 }
             } else {
                 DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Ignoring branch "
@@ -167,17 +144,6 @@ FetchSeqUnit::execute(int slot_num)
     }
 }
 
-inline void
-FetchSeqUnit::squashAfterInst(DynInstPtr inst, int stage_num, ThreadID tid)
-{
-    // Squash In Pipeline Stage
-    cpu->pipelineStage[stage_num]->squashDueToBranch(inst, tid);
-
-    // Schedule Squash Through-out Resource Pool
-    cpu->resPool->scheduleEvent(
-            (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst, 0);
-}
-
 void
 FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
                      InstSeqNum squash_seq_num, ThreadID tid)
@@ -185,25 +151,6 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
     DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating due to squash from %s (%s) "
             "stage %i.\n", tid, inst->instName(), inst->pcState(),
             squash_stage);
-    assert(squash_seq_num == inst->seqNum);
-
-    TheISA::PCState nextPC = inst->pcState();
-    assert(inst->staticInst);
-    advancePC(nextPC, inst->staticInst);
-
-#if ISA_HAS_DELAY_SLOT
-    if (inst->isControl()) {
-        if (inst->onInstList) {
-            ListIt inst_it = inst->getInstListIt();
-            inst_it++;
-            if (inst_it != cpu->instList[tid].end())  {
-                DynInstPtr delaySlotInst = (*inst_it);
-                if (delaySlotInst->pcState() != nextPC)
-                    squash_seq_num = delaySlotInst->seqNum;
-            }
-        }
-    }
-#endif
 
     if (squashSeqNum[tid] <= squash_seq_num &&
         lastSquashCycle[tid] == curTick()) {
@@ -213,6 +160,45 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
     } else {
         squashSeqNum[tid] = squash_seq_num;
         lastSquashCycle[tid] = curTick();
+
+        TheISA::PCState nextPC;
+        assert(inst->staticInst);
+        if (inst->isControl()) {
+            nextPC = inst->readPredTarg();
+
+            // If we are already fetching this PC then advance to next PC
+            // =======
+            // This should handle ISAs w/delay slots and annulled delay
+            // slots to figure out which is the next PC to fetch after
+            // a mispredict
+            DynInstPtr bdelay_inst = NULL;
+            ListIt bdelay_it;
+            if (inst->onInstList) {
+                bdelay_it = inst->getInstListIt();
+                bdelay_it++;
+            } else {
+                InstSeqNum branch_delay_num = inst->seqNum + 1;
+                bdelay_it = cpu->findInst(branch_delay_num, tid);
+            }
+
+            if (bdelay_it != cpu->instList[tid].end()) {
+                bdelay_inst = (*bdelay_it);
+            }
+
+            if (bdelay_inst) {
+                DPRINTF(Resource, "Evaluating %s v. %s\n",
+                        bdelay_inst->pc, nextPC);
+
+                if (bdelay_inst->pc.instAddr() == nextPC.instAddr()) {
+                    advancePC(nextPC, inst->staticInst);
+                    DPRINTF(Resource, "Advanced PC to %s\n", nextPC);
+                }
+            }
+        } else {
+            nextPC = inst->pcState();
+            advancePC(nextPC, inst->staticInst);
+        }
+
 
         DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to %s.\n",
                 tid, nextPC);

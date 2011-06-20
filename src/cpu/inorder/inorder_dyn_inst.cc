@@ -316,6 +316,28 @@ InOrderDynInst::syscall(int64_t callnum)
 #endif
 
 void
+InOrderDynInst::setSquashInfo(unsigned stage_num)
+{
+    squashingStage = stage_num;
+    bdelaySeqNum = seqNum;
+
+#if ISA_HAS_DELAY_SLOT
+    if (isControl()) {
+        TheISA::PCState nextPC = pc;
+        TheISA::advancePC(nextPC, staticInst);
+
+        // Check to see if we should squash after the
+        // branch or after a branch delay slot.
+        if (pc.nextInstAddr() == pc.instAddr() + sizeof(MachInst))
+            bdelaySeqNum = seqNum + 1;
+        else
+            bdelaySeqNum = seqNum;
+
+    }
+#endif
+}
+
+void
 InOrderDynInst::releaseReq(ResourceRequest* req)
 {
     std::list<ResourceRequest*>::iterator list_it = reqList.begin();

@@ -1272,6 +1272,24 @@ InOrderCPU::addInst(DynInstPtr inst)
     return --(instList[tid].end());
 }
 
+InOrderCPU::ListIt
+InOrderCPU::findInst(InstSeqNum seq_num, ThreadID tid)
+{
+    ListIt it = instList[tid].begin();
+    ListIt end = instList[tid].end();
+
+    while (it != end) {
+        if ((*it)->seqNum == seq_num)
+            return it;
+        else if ((*it)->seqNum > seq_num)
+            break;
+
+        it++;
+    }
+
+    return instList[tid].end();
+}
+
 void 
 InOrderCPU::updateContextSwitchStats()
 {
