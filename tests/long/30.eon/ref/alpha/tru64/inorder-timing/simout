@@ -1,0 +1,18 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Apr 21 2011 12:29:56
+M5 started Apr 21 2011 13:02:51
+M5 executing on maize
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+Eon, Version 1.1
+info: Increasing stack size by one page.
+OO-style eon Time= 0.100000
+Exiting @ tick 113012733500 because target called exit()
