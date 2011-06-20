@@ -1,14 +1,10 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Apr 19 2011 11:52:53
-M5 started Apr 19 2011 11:58:24
-M5 executing on maize
-command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/simple-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/simple-timing
+gem5 compiled Jun 19 2011 06:59:13
+gem5 started Jun 20 2011 12:47:45
+gem5 executing on m60-009.pool
+command line: build/ALPHA_SE/gem5.fast -d build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/simple-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
