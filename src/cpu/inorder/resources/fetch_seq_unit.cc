@@ -198,6 +198,7 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
                             bdelay_inst->pc, nextPC);
 
                     if (bdelay_inst->pc.instAddr() == nextPC.instAddr()) {
+                        bdelay_inst->pc = nextPC;
                         advancePC(nextPC, inst->staticInst);
                         DPRINTF(Resource, "Advanced PC to %s\n", nextPC);
                     }
