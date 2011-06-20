@@ -1221,7 +1221,7 @@ InOrderCPU::setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid)
 
 
 InOrderCPU::ListIt
-InOrderCPU::addInst(DynInstPtr &inst)
+InOrderCPU::addInst(DynInstPtr inst)
 {
     ThreadID tid = inst->readTid();
 
@@ -1318,7 +1318,7 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 // currently unused function, but substitute repetitive code w/this function
 // call
 void
-InOrderCPU::addToRemoveList(DynInstPtr &inst)
+InOrderCPU::addToRemoveList(DynInstPtr inst)
 {
     removeInstsThisCycle = true;
     if (!inst->isRemoveList()) {            
@@ -1336,7 +1336,7 @@ InOrderCPU::addToRemoveList(DynInstPtr &inst)
 }
 
 void
-InOrderCPU::removeInst(DynInstPtr &inst)
+InOrderCPU::removeInst(DynInstPtr inst)
 {
     DPRINTF(InOrderCPU, "Removing graduated instruction [tid:%i] PC %s "
             "[sn:%lli]\n",

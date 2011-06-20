@@ -989,7 +989,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     ListIt instListIt;
 
     /** Returns iterator to this instruction in the list of all insts. */
-    ListIt &getInstListIt() { return instListIt; }
+    ListIt getInstListIt() { return instListIt; }
 
     /** Sets iterator for this instruction in the list of all insts. */
     void setInstListIt(ListIt _instListIt) { instListIt = _instListIt; }

@@ -577,16 +577,16 @@ class InOrderCPU : public BaseCPU
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
-    ListIt addInst(DynInstPtr &inst);
+    ListIt addInst(DynInstPtr inst);
 
     /** Function to tell the CPU that an instruction has completed. */
     void instDone(DynInstPtr inst, ThreadID tid);
 
     /** Add Instructions to the CPU Remove List*/
-    void addToRemoveList(DynInstPtr &inst);
+    void addToRemoveList(DynInstPtr inst);
 
     /** Remove an instruction from CPU */
-    void removeInst(DynInstPtr &inst);
+    void removeInst(DynInstPtr inst);
 
     /** Remove all instructions younger than the given sequence number. */
     void removeInstsUntil(const InstSeqNum &seq_num,ThreadID tid);
