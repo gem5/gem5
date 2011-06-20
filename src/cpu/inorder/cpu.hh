@@ -777,9 +777,6 @@ class InOrderCPU : public BaseCPU
 #if FULL_SYSTEM
     /** Pointer to the system. */
     System *system;
-
-    /** Pointer to physical memory. */
-    PhysicalMemory *physmem;
 #endif
 
     /** The global sequence number counter. */
@@ -793,8 +790,13 @@ class InOrderCPU : public BaseCPU
     unsigned resReqCount;
 #endif
 
-    /** Counter of how many stages have completed switching out. */
-    int switchCount;
+    Addr lockAddr;
+
+    /** Temporary fix for the lock flag, works in the UP case. */
+    bool lockFlag;
+
+    /** Counter of how many stages have completed draining */
+    int drainCount;
 
     /** Pointers to all of the threads in the CPU. */
     std::vector<Thread *> thread;

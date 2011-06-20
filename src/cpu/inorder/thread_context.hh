@@ -37,6 +37,12 @@
 #include "cpu/inorder/thread_state.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/thread_context.hh"
+#include "arch/kernel_stats.hh"
+
+class EndQuiesceEvent;
+namespace Kernel {
+    class Statistics;
+};
 
 class TranslatingPort;
 

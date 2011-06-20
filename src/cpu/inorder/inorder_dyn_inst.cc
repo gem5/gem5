@@ -36,6 +36,7 @@
 
 #include "arch/faults.hh"
 #include "base/bigint.hh"
+#include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -267,7 +268,24 @@ InOrderDynInst::memAccess()
 Fault
 InOrderDynInst::hwrei()
 {
-    panic("InOrderDynInst: hwrei: unimplemented\n");    
+#if THE_ISA == ALPHA_ISA
+    // Can only do a hwrei when in pal mode.
+    if (!(this->instAddr() & 0x3))
+        return new AlphaISA::UnimplementedOpcodeFault;
+
+    // Set the next PC based on the value of the EXC_ADDR IPR.
+    AlphaISA::PCState pc = this->pcState();
+    pc.npc(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
+                                          this->threadNumber));
+    this->pcState(pc);
+    if (CPA::available()) {
+        ThreadContext *tc = this->cpu->tcBase(this->threadNumber);
+        CPA::cpa()->swAutoBegin(tc, this->nextInstAddr());
+    }
+
+    // Tell CPU to clear any state it needs to if a hwrei is taken.
+    this->cpu->hwrei(this->threadNumber);
+#endif
     return NoFault;
 }
 

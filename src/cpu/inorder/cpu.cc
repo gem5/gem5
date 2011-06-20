@@ -151,11 +151,12 @@ InOrderCPU::CPUEvent::process()
         cpu->resPool->trap(fault, tid, inst);
         break;
 
+#if !FULL_SYSTEM
       case Syscall:
         cpu->syscall(inst->syscallNum, tid);
         cpu->resPool->trap(fault, tid, inst);
         break;
-
+#endif
       default:
         fatal("Unrecognized Event Type %s", eventNames[cpuEventType]);    
     }
@@ -198,13 +199,12 @@ InOrderCPU::InOrderCPU(Params *params)
       stCondFails(0),
 #if FULL_SYSTEM
       system(params->system),
-      physmem(system->physmem),
 #endif // FULL_SYSTEM
 #ifdef DEBUG
       cpuEventNum(0),
       resReqCount(0),
 #endif // DEBUG
-      switchCount(0),
+      drainCount(0),
       deferRegistration(false/*params->deferRegistration*/),
       stageTracing(params->stageTracing),
       lastRunningCycle(0),
@@ -289,6 +289,11 @@ InOrderCPU::InOrderCPU(Params *params)
         tc->cpu = this;
         tc->thread = thread[tid];
 
+#if FULL_SYSTEM
+        // Setup quiesce event.
+        this->thread[tid]->quiesceEvent = new EndQuiesceEvent(tc);
+#endif
+
         // Give the thread the TC.
         thread[tid]->tc = tc;
         thread[tid]->setFuncExeInst(0);
@@ -360,12 +365,8 @@ InOrderCPU::InOrderCPU(Params *params)
     
     lastRunningCycle = curTick();
 
-    // Reset CPU to reset state.
-#if FULL_SYSTEM
-    Fault resetFault = new ResetFault();
-    resetFault->invoke(tcBase());
-#endif
-
+    lockAddr = 0;
+    lockFlag = false;
     
     // Schedule First Tick Event, CPU will reschedule itself from here on out.
     scheduleTickEvent(0);
@@ -760,7 +761,13 @@ InOrderCPU::getPort(const std::string &if_name, int idx)
 Fault
 InOrderCPU::hwrei(ThreadID tid)
 {
-    panic("hwrei: Unimplemented");
+#if THE_ISA == ALPHA_ISA
+    // Need to clear the lock flag upon returning from an interrupt.
+    setMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG, false, tid);
+
+    thread[tid]->kernelStats->hwrei();
+    // FIXME: XXX check for interrupts? XXX
+#endif
     
     return NoFault;
 }
@@ -769,8 +776,25 @@ InOrderCPU::hwrei(ThreadID tid)
 bool
 InOrderCPU::simPalCheck(int palFunc, ThreadID tid)
 {
-    panic("simPalCheck: Unimplemented");
+#if THE_ISA == ALPHA_ISA
+    if (this->thread[tid]->kernelStats)
+        this->thread[tid]->kernelStats->callpal(palFunc,
+                                                this->threadContexts[tid]);
 
+    switch (palFunc) {
+      case PAL::halt:
+        halt();
+        if (--System::numSystemsRunning == 0)
+            exitSimLoop("all cpus halted");
+        break;
+
+      case PAL::bpt:
+      case PAL::bugchk:
+        if (this->system->breakpoint())
+            return false;
+        break;
+    }
+#endif
     return true;
 }
 
@@ -1608,7 +1632,7 @@ InOrderCPU::wakeCPU()
 }
 
 #if FULL_SYSTEM
-
+// Lots of copied full system code...place into BaseCPU class?
 void
 InOrderCPU::wakeup()
 {
