@@ -187,9 +187,9 @@ class CacheUnit : public Resource
 
     bool cachePortBlocked;
 
-    std::vector<Addr> addrList[ThePipeline::MaxThreads];
+    std::list<Addr> addrList[ThePipeline::MaxThreads];
 
-    std::map<Addr, InstSeqNum> addrMap[ThePipeline::MaxThreads];
+    m5::hash_map<Addr, InstSeqNum> addrMap[ThePipeline::MaxThreads];
 
   public:
     int cacheBlkSize;

@@ -240,17 +240,17 @@ CacheUnit::removeAddrDependency(DynInstPtr inst)
     inst->unsetMemAddr();
 
     // Erase from Address List
-    vector<Addr>::iterator vect_it = find(addrList[tid].begin(),
+    std::list<Addr>::iterator list_it = find(addrList[tid].begin(),
                                           addrList[tid].end(),
                                           mem_addr);
-    assert(vect_it != addrList[tid].end() || inst->splitInst);
+    assert(list_it != addrList[tid].end() || inst->splitInst);
 
-    if (vect_it != addrList[tid].end()) {
+    if (list_it != addrList[tid].end()) {
         DPRINTF(AddrDep,
                 "[tid:%i]: [sn:%i] Address %08p removed from dependency "
-                "list\n", inst->readTid(), inst->seqNum, (*vect_it));
+                "list\n", inst->readTid(), inst->seqNum, (*list_it));
 
-        addrList[tid].erase(vect_it);
+        addrList[tid].erase(list_it);
 
         // Erase From Address Map (Used for Debugging)
         addrMap[tid].erase(addrMap[tid].find(mem_addr));
