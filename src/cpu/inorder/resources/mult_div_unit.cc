@@ -86,25 +86,6 @@ MultDivUnit::init()
     initSlots();
 }
 
-int
-MultDivUnit::findSlot(DynInstPtr inst)
-{
-    DPRINTF(InOrderMDU, "Finding slot for inst:%i\n | slots-free:%i | "
-            "slots-used:%i\n", inst->seqNum, slotsAvail(), slotsInUse());
-    
-    return Resource::findSlot(inst);    
-}
-
-void
-MultDivUnit::freeSlot(int slot_idx)
-{
-    DPRINTF(InOrderMDU, "Freeing slot for inst:%i\n | slots-free:%i | "
-            "slots-used:%i\n", reqs[slot_idx]->getInst()->seqNum,
-            slotsAvail(), slotsInUse());
-    
-    Resource::freeSlot(slot_idx);    
-}
-
 //@TODO: Should we push this behavior into base-class to generically
 //       accomodate all multicyle resources?
 void
@@ -124,7 +105,7 @@ MultDivUnit::requestAgain(DynInstPtr inst, bool &service_request)
                 "[tid:%i]: [sn:%i]: Updating the command for this "
                 "instruction\n", inst->readTid(), inst->seqNum);
     } else {
-        // If same command, just check to see if memory access was completed
+        // If same command, just check to see if access was completed
         // but dont try to re-execute
         DPRINTF(InOrderMDU,
                 "[tid:%i]: [sn:%i]: requesting this resource again\n",
@@ -212,41 +193,47 @@ MultDivUnit::execute(int slot_num)
     ResourceRequest* mult_div_req = reqs[slot_num];
     DynInstPtr inst = reqs[slot_num]->inst;
  
+    DPRINTF(InOrderMDU, "Executing [sn:%i] ...\n", slot_num);
+
     switch (mult_div_req->cmd)
     {
       case StartMultDiv:
-        DPRINTF(InOrderMDU, "Start MDU called ...\n");        
+        {
+            DPRINTF(InOrderMDU, "Start MDU called ...\n");
 
-        if (inst->opClass() == IntMultOp) {
-            scheduleEvent(slot_num, multLatency);
-        } else if (inst->opClass() == IntDivOp) {
-            int op_size = getDivOpSize(inst);
+            OpClass op_class = inst->opClass();
+            if (op_class == IntMultOp) {
+                scheduleEvent(slot_num, multLatency);
+            } else if (op_class == IntDivOp) {
+                int op_size = getDivOpSize(inst);
 
-            switch (op_size)
-            {
-              case 8:
-                scheduleEvent(slot_num, div8Latency);
-                break;
+                switch (op_size)
+                {
+                  case 8:
+                    scheduleEvent(slot_num, div8Latency);
+                    break;
 
-              case 16:
-                scheduleEvent(slot_num, div16Latency);
-                break;
+                  case 16:
+                    scheduleEvent(slot_num, div16Latency);
+                    break;
 
-              case 24:
-                scheduleEvent(slot_num, div24Latency);
-                break;
+                  case 24:
+                    scheduleEvent(slot_num, div24Latency);
+                    break;
 
-              case 32:
-                scheduleEvent(slot_num, div32Latency);
-                break;
+                  case 32:
+                    scheduleEvent(slot_num, div32Latency);
+                    break;
+                }
+
+                lastDivSize = op_size;
             }
 
-            lastDivSize = op_size;
+            // Allow to pass through to next stage while
+            // event processes
+            mult_div_req->setProcessing();
+            mult_div_req->setCompleted();
         }
-
-        // Allow to pass through to next stage while
-        // event processes
-        mult_div_req->setCompleted();
         break;
         
       case MultDiv:
@@ -264,7 +251,7 @@ MultDivUnit::execute(int slot_num)
         //      counting down the time
         {
             DPRINTF(InOrderMDU, "End MDU called ...\n");    
-            if (mult_div_req->getInst()->isExecuted()) {
+            if (!mult_div_req->isProcessing()) {
                 DPRINTF(InOrderMDU, "Mult/Div finished.\n");                    
                 mult_div_req->done();            
             } else {                
@@ -295,7 +282,6 @@ MultDivUnit::exeMulDiv(int slot_num)
 
     if (inst->fault == NoFault) {
         inst->setExecuted();
-        mult_div_req->setCompleted();
 
         DPRINTF(InOrderMDU, "[tid:%i]: The result of execution is 0x%x.\n",
                 inst->readTid(), inst->readIntResult(0));
@@ -303,8 +289,40 @@ MultDivUnit::exeMulDiv(int slot_num)
         DPRINTF(InOrderMDU, "[tid:%i]: [sn:%i]: had a %s "
                 "fault.\n", inst->readTid(), inst->seqNum, inst->fault->name());
     }    
+
+    mult_div_req->setProcessing(false);
 }
 
+void
+MultDivUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                 ThreadID tid)
+{
+    for (int i = 0; i < width; i++) {
+        ResReqPtr req_ptr = reqs[i];
+        DynInstPtr inst = req_ptr->getInst();
+
+        if (req_ptr->valid &&
+            inst->readTid() == tid &&
+            inst->seqNum > squash_seq_num) {
+
+            DPRINTF(InOrderMDU, "[tid:%i]: Squashing [sn:%i].\n",
+                    req_ptr->getInst()->readTid(),
+                    req_ptr->getInst()->seqNum);
+
+            req_ptr->setSquashed();
+
+            int req_slot_num = req_ptr->getSlot();
+
+            if (req_ptr->isProcessing())
+                DPRINTF(InOrderMDU, "[tid:%i]: Squashed [sn:%i], but "
+                        "waiting for MDU operation to complete.\n",
+                        req_ptr->getInst()->readTid(),
+                        req_ptr->getInst()->seqNum);
+            else
+                freeSlot(req_slot_num);
+        }
+    }
+}
 
 MDUEvent::MDUEvent()
     : ResourceEvent()
@@ -319,7 +337,8 @@ MDUEvent::process()
 
     ResourceRequest* mult_div_req = resource->reqs[slotIdx];
 
-    mult_div_req->done();    
+    if (mult_div_req->isSquashed())
+        mdu_res->freeSlot(slotIdx);
 }
 
 

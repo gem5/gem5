@@ -389,7 +389,7 @@ class ResourceRequest
 
     /** Get/Set IsProcessing variables */
     bool isProcessing() { return processing; }
-    void setProcessing() { processing = true; }
+    void setProcessing(bool cond = true) { processing = cond; }
 
     /** Get/Set IsWaiting variables */
     bool isMemStall() { return memStall; }

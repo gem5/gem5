@@ -297,16 +297,18 @@ Resource::setupSquash(DynInstPtr inst, int stage_num, ThreadID tid)
     cpu->resPool->scheduleEvent(
         (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst, 0);
 }
+
 void
 Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                  ThreadID tid)
 {
     for (int i = 0; i < width; i++) {
         ResReqPtr req_ptr = reqs[i];
+        DynInstPtr inst = req_ptr->getInst();
 
         if (req_ptr->valid &&
-            req_ptr->getInst()->readTid() == tid &&
-            req_ptr->getInst()->seqNum > squash_seq_num) {
+            inst->readTid() == tid &&
+            inst->seqNum > squash_seq_num) {
 
             DPRINTF(Resource, "[tid:%i]: Squashing [sn:%i].\n",
                     req_ptr->getInst()->readTid(),

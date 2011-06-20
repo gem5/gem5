@@ -79,7 +79,10 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
                                           stage_width, 0, _cpu, params));
 
     resources.push_back(new MultDivUnit("mult_div_unit", MDU,
-                                        stage_width * 2, 0, _cpu, params));
+                                        stage_width * 2,
+                                        0,
+                                        _cpu,
+                                        params));
 
     memObjects.push_back(DCache);
     resources.push_back(new CacheUnit("dcache_port", DCache, 

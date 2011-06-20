@@ -64,10 +64,6 @@ class MultDivUnit : public Resource {
      *  valid mult/div sequence is being maintained
      */
     int getSlot(DynInstPtr inst);
-
-    int findSlot(DynInstPtr inst);
-
-    void freeSlot(int slot_idx);
     
     void init();
     
@@ -83,6 +79,9 @@ class MultDivUnit : public Resource {
     void regStats();
 
     void requestAgain(DynInstPtr inst, bool &try_request);
+
+    void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                ThreadID tid);
 
   protected:
     /** Latency & Repeat Rate for Multiply Insts */
