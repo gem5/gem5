@@ -161,8 +161,7 @@ const int ByteBytes = 1;
 const int ANNOTE_NONE = 0;
 const uint32_t ITOUCH_ANNOTE = 0xffffffff;
 
-// Memory accesses cannot be unaligned
-const bool HasUnalignedMemAcc = false;
+const bool HasUnalignedMemAcc = true;
 
 } // namespace MipsISA
 
