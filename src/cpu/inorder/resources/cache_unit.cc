@@ -433,7 +433,7 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
 
     if (inst->fault != NoFault) {
         DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
-                "addr:%08p for [sn:%i].\n", tid, tlb_fault->name(),
+                "addr:%08p for [sn:%i].\n", tid, inst->fault->name(),
                 cache_req->memReq->getVaddr(), inst->seqNum);
 
         tlbBlocked[tid] = true;
