@@ -62,6 +62,10 @@ DecodeUnit::execute(int slot_num)
         {
             assert(!inst->staticInst->isMacroop());
 
+            DPRINTF(Decode,"Decoded instruction [sn:%i]: %s : 0x%x\n",
+                    inst->seqNum, inst->instName(),
+                    inst->staticInst->machInst);
+
             inst->setBackSked(cpu->createBackEndSked(inst));
 
             if (inst->backSked != NULL) {

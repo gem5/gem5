@@ -1312,7 +1312,6 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     lastCommittedPC[tid] = comm_pc;
     TheISA::advancePC(comm_pc, inst->staticInst);
     pcState(comm_pc, tid);
-    DPRINTF(InOrderGraduation, "Precise State PC = %s\n", pcState(tid));
 
     //@todo: may be unnecessary with new-ISA-specific branch handling code
     if (inst->isControl()) {

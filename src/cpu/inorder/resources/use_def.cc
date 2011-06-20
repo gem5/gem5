@@ -181,9 +181,16 @@ UseDefUnit::execute(int slot_idx)
             RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
             inst->flattenSrcReg(ud_idx, flat_idx);
             
-            DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Attempting to read source "
-                    "register idx %i (reg #%i, flat#%i).\n",
-                    tid, seq_num, ud_idx, reg_idx, flat_idx);
+            if (flat_idx == TheISA::ZeroReg) {
+                DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Ignoring Reading of ISA-ZeroReg "
+                        "(Int. Reg %i).\n", tid, inst->seqNum, flat_idx);
+                ud_req->done();
+                return;
+            } else {
+                DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Attempting to read source "
+                        "register idx %i (reg #%i, flat#%i).\n",
+                        tid, seq_num, ud_idx, reg_idx, flat_idx);
+            }
 
             if (regDepMap[tid]->canRead(reg_type, flat_idx, inst)) {
                 switch (reg_type)
@@ -323,6 +330,13 @@ UseDefUnit::execute(int slot_idx)
             InOrderCPU::RegType reg_type;
             RegIndex reg_idx = inst->_destRegIdx[ud_idx];
             RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
+
+            if (flat_idx == TheISA::ZeroReg) {
+                DPRINTF(IntRegs, "[tid:%i]: Ignoring Writing of ISA-ZeroReg "
+                        "(Int. Reg %i)\n", tid, flat_idx);
+                ud_req->done();
+                return;
+            }
 
             if (regDepMap[tid]->canWrite(reg_type, flat_idx, inst)) {
                 DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Flattening register idx %i "

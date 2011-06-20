@@ -103,6 +103,14 @@ RegDepMap::insert(DynInstPtr inst)
                 inst->seqNum, i, raw_idx, flat_idx);
 
         inst->flattenDestReg(i, flat_idx);
+
+        if (flat_idx == TheISA::ZeroReg) {
+            DPRINTF(IntRegs, "[sn:%i]: Ignoring Insert-Dependency tracking for "
+                    "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
+                    flat_idx);
+            continue;
+        }
+
         insert(reg_type, flat_idx, inst);
     }
 }
@@ -134,8 +142,17 @@ RegDepMap::remove(DynInstPtr inst)
 
 
         for (int i = 0; i < dest_regs; i++) {
+            RegIndex flat_idx = inst->flattenedDestRegIdx(i);
+
+            if (flat_idx == TheISA::ZeroReg) {
+                DPRINTF(IntRegs, "[sn:%i]: Ignoring Remove-Dependency tracking for "
+                        "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
+                        flat_idx);
+                continue;
+            }
+
             InOrderCPU::RegType reg_type = cpu->getRegType(inst->destRegIdx(i));
-            remove(reg_type, inst->flattenedDestRegIdx(i), inst);
+            remove(reg_type, flat_idx, inst);
         }
     }
 }
