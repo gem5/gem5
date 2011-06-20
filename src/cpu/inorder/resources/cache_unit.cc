@@ -98,7 +98,7 @@ CacheUnit::CachePort::recvStatusChange(Status status)
 bool
 CacheUnit::CachePort::recvTiming(Packet *pkt)
 {
-    DPRINTF(Cache, "RecvTiming: Pkt %x,\n", pkt->getAddr());
+    DPRINTF(InOrderCachePort, "RecvTiming: Pkt %x,\n", pkt->getAddr());
 
     if (pkt->isError())
         DPRINTF(InOrderCachePort, "Got error packet back for address: %x\n",
@@ -1218,7 +1218,7 @@ CacheUnitEvent::process()
 
     //@todo: eventually, we should do a timing translation w/
     //       hw page table walk on tlb miss
-    DPRINTF(Fault, "Handling Fault %s : [sn:%i] %x\n", inst->fault->name(), inst->seqNum, inst->getMemAddr());
+    DPRINTF(InOrderTLB, "Handling Fault %s : [sn:%i] %x\n", inst->fault->name(), inst->seqNum, inst->getMemAddr());
     inst->fault->invoke(tlb_res->cpu->tcBase(tid), inst->staticInst);
 
     tlb_res->tlbBlocked[tid] = false;

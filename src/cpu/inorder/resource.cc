@@ -36,6 +36,7 @@
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/resource.hh"
 #include "cpu/inorder/resource_pool.hh"
+#include "debug/ExecFaulting.hh"
 #include "debug/RefCount.hh"
 #include "debug/ResReqCount.hh"
 #include "debug/Resource.hh"

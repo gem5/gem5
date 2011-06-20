@@ -35,6 +35,7 @@
 #include "cpu/inorder/resources/execution_unit.hh"
 #include "cpu/inorder/cpu.hh"
 #include "cpu/inorder/resource_pool.hh"
+#include "debug/Fault.hh"
 #include "debug/InOrderExecute.hh"
 #include "debug/InOrderStall.hh"
 

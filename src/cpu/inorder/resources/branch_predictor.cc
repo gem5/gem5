@@ -33,6 +33,7 @@
 #include "cpu/inorder/resources/branch_predictor.hh"
 #include "debug/InOrderBPred.hh"
 #include "debug/InOrderStage.hh"
+#include "debug/Resource.hh"
 
 using namespace std;
 using namespace TheISA;

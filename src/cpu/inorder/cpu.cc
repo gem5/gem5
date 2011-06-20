@@ -52,6 +52,7 @@
 #include "debug/InOrderCPU.hh"
 #include "debug/RefCount.hh"
 #include "debug/SkedCache.hh"
+#include "debug/Quiesce.hh"
 #include "mem/translating_port.hh"
 #include "params/InOrderCPU.hh"
 #include "sim/process.hh"
