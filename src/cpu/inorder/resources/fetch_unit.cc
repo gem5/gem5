@@ -175,9 +175,13 @@ FetchUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
 {
     ThreadID tid = inst->readTid();
     Addr aligned_addr = cacheBlockAlign(inst->getMemAddr());
-    cache_req->memReq =
+    if (cache_req->memReq == NULL) {
+        cache_req->memReq =
             new Request(tid, aligned_addr, acc_size, flags,
                         inst->instAddr(), cpu->readCpuId(), tid);
+        DPRINTF(InOrderCachePort, "[sn:%i] Created memReq @%x, ->%x\n",
+                inst->seqNum, &cache_req->memReq, cache_req->memReq);
+    }
 }
 
 std::list<FetchUnit::FetchBlock*>::iterator
@@ -230,6 +234,23 @@ FetchUnit::markBlockUsed(std::list<FetchBlock*>::iterator block_it)
     }
 }
 
+int
+FetchUnit::blocksInUse()
+{
+    std::list<FetchBlock*>::iterator fetch_it = fetchBuffer.begin();
+    std::list<FetchBlock*>::iterator end_it = fetchBuffer.end();
+
+    int cnt = 0;
+    while (fetch_it != end_it) {
+        if ((*fetch_it)->cnt > 0)
+            cnt++;
+
+        fetch_it++;
+    }
+
+    return cnt;
+}
+
 void
 FetchUnit::execute(int slot_num)
 {
@@ -256,6 +277,8 @@ FetchUnit::execute(int slot_num)
             // Check to see if we've already got this request buffered
             // or pending to be buffered
             bool do_fetch = true;
+            int total_pending = pendingFetch.size() + blocksInUse();
+
             std::list<FetchBlock*>::iterator pending_it;
             pending_it = findBlock(pendingFetch, asid, block_addr);
             if (pending_it != pendingFetch.end()) {
@@ -265,14 +288,14 @@ FetchUnit::execute(int slot_num)
                 DPRINTF(InOrderCachePort, "%08p is a pending fetch block "
                         "(pending:%i).\n", block_addr,
                         (*pending_it)->cnt);
-            } else if (pendingFetch.size() < fetchBuffSize) {
+            } else if (total_pending < fetchBuffSize) {
                 std::list<FetchBlock*>::iterator buff_it;
                 buff_it = findBlock(fetchBuffer, asid, block_addr);
-                if (buff_it  != fetchBuffer.end()) {
+                if (buff_it != fetchBuffer.end()) {
                     (*buff_it)->cnt++;
                     do_fetch = false;
 
-                    DPRINTF(InOrderCachePort, "%08p is in fetch buffer"
+                    DPRINTF(InOrderCachePort, "%08p is in fetch buffer "
                             "(pending:%i).\n", block_addr, (*buff_it)->cnt);
                 }
             }
@@ -287,9 +310,9 @@ FetchUnit::execute(int slot_num)
 
             // Check to see if there is room in the fetchbuffer for this instruction.
             // If not, block this request.
-            if (pendingFetch.size() >= fetchBuffSize) {
+            if (total_pending >= fetchBuffSize) {
                 DPRINTF(InOrderCachePort, "No room available in fetch buffer.\n");
-                cache_req->done();
+                cache_req->done(false);
                 return;
             }
 
@@ -309,6 +332,8 @@ FetchUnit::execute(int slot_num)
 
                 if (cache_req->isMemAccPending()) {
                     pendingFetch.push_back(new FetchBlock(asid, block_addr));
+
+                    // mark replacement block
                 }
             }
 
@@ -509,19 +534,22 @@ FetchUnit::squashCacheRequest(CacheReqPtr req_ptr)
                                                          block_addr);
     if (buff_it != fetchBuffer.end()) {
         (*buff_it)->cnt--;
-        DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Fetch "
-                "for Buffer block %08p (cnt=%i)\n", inst->seqNum,
+        DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Access "
+                "for Fetch Buffer block %08p (cnt=%i)\n", inst->seqNum,
                 block_addr, (*buff_it)->cnt);
+        assert((*buff_it)->cnt >= 0);
     } else {
         std::list<FetchBlock*>::iterator block_it = findBlock(pendingFetch,
                                                               asid,
                                                               block_addr);
         if (block_it != pendingFetch.end()) {
             (*block_it)->cnt--;
+            DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Access "
+                    "for Pending Buffer Block %08p (cnt=%i)\n",
+                    inst->seqNum,
+                    block_addr, (*block_it)->cnt);
+            assert((*block_it)->cnt >= 0);
             if ((*block_it)->cnt == 0) {
-                DPRINTF(InOrderCachePort, "[sn:%i] Removing Pending Fetch "
-                        "for block %08p (cnt=%i)\n", inst->seqNum,
-                        block_addr, (*block_it)->cnt);
                 if ((*block_it)->block) {
                     delete [] (*block_it)->block;
                 }

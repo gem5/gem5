@@ -120,6 +120,8 @@ class FetchUnit : public CacheUnit
 
     void markBlockUsed(std::list<FetchBlock*>::iterator block_it);
 
+    int blocksInUse();
+
     int instSize;
 
     int fetchBuffSize;
