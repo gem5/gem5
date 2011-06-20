@@ -1135,10 +1135,16 @@ InOrderCPU::readFloatRegBits(RegIndex reg_idx, ThreadID tid)
 void
 InOrderCPU::setIntReg(RegIndex reg_idx, uint64_t val, ThreadID tid)
 {
-    DPRINTF(IntRegs, "[tid:%i]: Setting Int. Reg %i to %x\n",
-            tid, reg_idx, val);
+    if (reg_idx == TheISA::ZeroReg) {
+        DPRINTF(IntRegs, "[tid:%i]: Ignoring Setting of ISA-ZeroReg "
+                "(Int. Reg %i) to %x\n", tid, reg_idx, val);
+        return;
+    } else {
+        DPRINTF(IntRegs, "[tid:%i]: Setting Int. Reg %i to %x\n",
+                tid, reg_idx, val);
 
-    intRegs[tid][reg_idx] = val;
+        intRegs[tid][reg_idx] = val;
+    }
 }
 
 
