@@ -143,15 +143,7 @@ FetchSeqUnit::execute(int slot_num)
                             inst->readPredTarg());
                 } else if (inst->predTaken()) {
                     // Taken Control
-#if ISA_HAS_DELAY_SLOT
-                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i] Updating delay"
-                            " slot target to PC %s\n", tid, inst->seqNum,
-                            inst->readPredTarg());
-                    inst->bdelaySeqNum = seq_num + 1;
-#else
                     inst->bdelaySeqNum = seq_num;
-#endif
-
                     inst->squashingStage = stage_num;
                     DPRINTF(InOrderFetchSeq, "[tid:%i] Setting up squash to "
                             "start from stage %i, after [sn:%i].\n",
@@ -190,59 +182,41 @@ void
 FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
                      InstSeqNum squash_seq_num, ThreadID tid)
 {
-    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating due to squash from stage %i."
-            "\n", tid, squash_stage);
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating due to squash from %s (%s) "
+            "stage %i.\n", tid, inst->instName(), inst->pcState(),
+            squash_stage);
+    assert(squash_seq_num == inst->seqNum);
 
-    InstSeqNum done_seq_num = inst->bdelaySeqNum;
+    TheISA::PCState nextPC = inst->pcState();
+    assert(inst->staticInst);
+    advancePC(nextPC, inst->staticInst);
 
-    // Handles the case where we are squashing because of something that is
-    // not a branch...like a memory stall
-    TheISA::PCState newPC;
+#if ISA_HAS_DELAY_SLOT
     if (inst->isControl()) {
-        newPC = inst->readPredTarg();
-    } else {
-        TheISA::PCState thisPC = inst->pcState();
-        assert(inst->staticInst);
-        advancePC(thisPC, inst->staticInst);
-        newPC = thisPC;
+        if (inst->onInstList) {
+            ListIt inst_it = inst->getInstListIt();
+            inst_it++;
+            if (inst_it != cpu->instList[tid].end())  {
+                DynInstPtr delaySlotInst = (*inst_it);
+                if (delaySlotInst->pcState() != nextPC)
+                    squash_seq_num = delaySlotInst->seqNum;
+            }
+        }
     }
+#endif
 
-    if (squashSeqNum[tid] <= done_seq_num &&
+    if (squashSeqNum[tid] <= squash_seq_num &&
         lastSquashCycle[tid] == curTick()) {
         DPRINTF(InOrderFetchSeq, "[tid:%i]: Ignoring squash from stage %i, "
                 "since there is an outstanding squash that is older.\n",
                 tid, squash_stage);
     } else {
-        squashSeqNum[tid] = done_seq_num;
+        squashSeqNum[tid] = squash_seq_num;
         lastSquashCycle[tid] = curTick();
 
-        if (inst->isControl()) {
-            // If the next inst. num is greater than done seq num,
-            // then that means we have seen the delay slot
-            assert(cpu->nextInstSeqNum(tid) >= done_seq_num);
-            if (cpu->nextInstSeqNum(tid) > done_seq_num) {
-                // Reset PC
-                pc[tid] = newPC;
-
-#if ISA_HAS_DELAY_SLOT
-                // The Pred. Target will be (NPC, NNPC, NNPC+4)
-                // so since we already saw the NPC (i.e. delay slot)
-                // advance one more to get (NNPC, NNPC+4, NNPC+8)
-                TheISA::advancePC(pc[tid], inst->staticInst);
-#endif
-
-                DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to %s.\n",
-                        tid, newPC);
-            } else {
-                // If The very next instruction number that needs to be given
-                // out by the CPU is the done seq. num, then we haven't seen
-                // the delay slot instruction yet.
-                assert(ISA_HAS_DELAY_SLOT);
-                pc[tid] =  newPC;
-            }
-        } else {
-            pc[tid] = newPC;
-        }
+        DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to %s.\n",
+                tid, nextPC);
+        pc[tid] = nextPC;
 
         // Unblock Any Stages Waiting for this information to be updated ...
         if (!pcValid[tid]) {

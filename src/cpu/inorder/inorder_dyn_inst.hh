@@ -988,11 +988,13 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Iterator pointing to this BaseDynInst in the list of all insts. */
     ListIt instListIt;
 
+    bool onInstList;
+
     /** Returns iterator to this instruction in the list of all insts. */
     ListIt getInstListIt() { return instListIt; }
 
     /** Sets iterator for this instruction in the list of all insts. */
-    void setInstListIt(ListIt _instListIt) { instListIt = _instListIt; }
+    void setInstListIt(ListIt _instListIt) { onInstList = true; instListIt = _instListIt; }
 
     /** Count of total number of dynamic instructions. */
     static int instcount;

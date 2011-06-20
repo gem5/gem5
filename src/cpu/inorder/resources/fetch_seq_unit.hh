@@ -45,6 +45,7 @@
 class FetchSeqUnit : public Resource {
   public:
     typedef ThePipeline::DynInstPtr DynInstPtr;
+    typedef std::list<DynInstPtr>::iterator ListIt;
 
     enum Command {
         AssignNextPC,

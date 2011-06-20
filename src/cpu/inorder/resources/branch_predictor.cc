@@ -153,7 +153,7 @@ BranchPredictor::squash(DynInstPtr inst, int squash_stage,
 #if ISA_HAS_DELAY_SLOT
     // We need to squash the actual branch , NOT the delay slot
     // in the branch predictor
-    squash_seq_num = squash_seq_num - 1;
+    //squash_seq_num = squash_seq_num - 1;
 #endif
 
     if (squash_stage >= ThePipeline::BackEndStartStage) {

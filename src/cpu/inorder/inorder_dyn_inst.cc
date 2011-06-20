@@ -66,7 +66,7 @@ InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
     inFrontEnd(true), frontSked(NULL), backSked(NULL),
     squashingStage(0), predictTaken(false), procDelaySlotOnMispred(false),
     fetchMemReq(NULL), dataMemReq(NULL), instEffAddr(0), eaCalcDone(false),
-    lqIdx(0), sqIdx(0), instListIt(NULL)
+    lqIdx(0), sqIdx(0), instListIt(NULL), onInstList(false)
 {
     for(int i = 0; i < MaxInstSrcRegs; i++) {
         instSrc[i].integer = 0;

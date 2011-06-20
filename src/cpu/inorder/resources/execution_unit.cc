@@ -177,11 +177,8 @@ ExecutionUnit::execute(int slot_num)
                                         "predicted as not taken.\n", tid,
                                         seq_num, inst->pcState());
                             } else {
-#if ISA_HAS_DELAY_SLOT
-                                inst->bdelaySeqNum = seq_num + 1;
-#else
                                 inst->bdelaySeqNum = seq_num;
-#endif
+
                                 DPRINTF(InOrderExecute, "[tid:%i]: "
                                         "Misprediction detected at "
                                         "[sn:%i] PC %s,\n\t squashing after "
@@ -203,11 +200,7 @@ ExecutionUnit::execute(int slot_num)
                             inst->seqNum = seq_num;
                             inst->setPredTarg(pc);
 
-#if ISA_HAS_DELAY_SLOT
-                            inst->bdelaySeqNum = seq_num + 1;
-#else
                             inst->bdelaySeqNum = seq_num;
-#endif
 
                             DPRINTF(InOrderExecute, "[tid:%i] Redirecting"
                                     " fetch to %s.\n", tid,

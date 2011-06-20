@@ -1433,9 +1433,7 @@ InOrderCPU::cleanUpRemovedInsts()
         ThreadID tid = inst->threadNumber;
 
         // Remove From Register Dependency Map, If Necessary
-        archRegDepMap[(*removeList.front())->threadNumber].
-            remove((*removeList.front()));
-
+        archRegDepMap[tid].remove(inst);
 
         // Clear if Non-Speculative
         if (inst->staticInst &&
@@ -1443,6 +1441,8 @@ InOrderCPU::cleanUpRemovedInsts()
             nonSpecInstActive[tid] == true) {
             nonSpecInstActive[tid] = false;
         }
+
+        inst->onInstList = false;
 
         instList[tid].erase(removeList.front());
 
