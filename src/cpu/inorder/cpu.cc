@@ -350,6 +350,16 @@ InOrderCPU::InOrderCPU(Params *params)
                                             asid[tid]);
 
         dummyReq[tid] = new ResourceRequest(resPool->getResource(0));
+
+#if FULL_SYSTEM
+    // Use this dummy inst to force squashing behind every instruction
+    // in pipeline
+    dummyTrapInst[tid] = new InOrderDynInst(this, NULL, 0, 0, 0);
+    dummyTrapInst[tid]->seqNum = 0;
+    dummyTrapInst[tid]->squashSeqNum = 0;
+    dummyTrapInst[tid]->setTid(tid);
+#endif
+
     }
 
     dummyReqInst = new InOrderDynInst(this, NULL, 0, 0, 0);
@@ -687,6 +697,8 @@ InOrderCPU::tick()
         pipes_idle = pipes_idle && pipelineStage[stNum]->idle;
     }
 
+    checkForInterrupts();
+
     if (pipes_idle)
         idleCycles++;
     else
@@ -800,6 +812,43 @@ InOrderCPU::simPalCheck(int palFunc, ThreadID tid)
     return true;
 }
 
+void
+InOrderCPU::checkForInterrupts()
+{
+    for (int i = 0; i < threadContexts.size(); i++) {
+        ThreadContext *tc = threadContexts[i];
+
+        if (interrupts->checkInterrupts(tc)) {
+            Fault interrupt = interrupts->getInterrupt(tc);
+
+            if (interrupt != NoFault) {
+                DPRINTF(Interrupt, "Processing Intterupt for [tid:%i].\n",
+                        tc->threadId());
+
+                ThreadID tid = tc->threadId();
+                interrupts->updateIntrInfo(tc);
+
+                // Squash from Last Stage in Pipeline
+                unsigned last_stage = NumStages - 1;
+                dummyTrapInst[tid]->squashingStage = last_stage;
+                pipelineStage[last_stage]->setupSquash(dummyTrapInst[tid],
+                                                       tid);
+
+                // By default, setupSquash will always squash from stage + 1
+                pipelineStage[BackEndStartStage - 1]->setupSquash(dummyTrapInst[tid],
+                                                                  tid);
+
+                // Schedule Squash Through-out Resource Pool
+                resPool->scheduleEvent(
+                    (InOrderCPU::CPUEventType)ResourcePool::SquashAll,
+                    dummyTrapInst[tid], 0);
+
+                // Finally, Setup Trap to happen at end of cycle
+                trapContext(interrupt, tid, dummyTrapInst[tid]);
+            }
+        }
+    }
+}
 
 Fault
 InOrderCPU::getInterrupts()

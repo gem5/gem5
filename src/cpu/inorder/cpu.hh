@@ -253,6 +253,7 @@ class InOrderCPU : public BaseCPU
     DynInstPtr dummyInst[ThePipeline::MaxThreads];
     DynInstPtr dummyBufferInst;
     DynInstPtr dummyReqInst;
+    DynInstPtr dummyTrapInst[ThePipeline::MaxThreads];
 
     /** Used by resources to signify a denied access to a resource. */
     ResourceRequest *dummyReq[ThePipeline::MaxThreads];
@@ -413,6 +414,8 @@ class InOrderCPU : public BaseCPU
     Fault hwrei(ThreadID tid);
 
     bool simPalCheck(int palFunc, ThreadID tid);
+
+    void checkForInterrupts();
 
     /** Returns the Fault for any valid interrupt. */
     Fault getInterrupts();

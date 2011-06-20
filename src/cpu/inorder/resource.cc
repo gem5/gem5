@@ -302,6 +302,8 @@ void
 Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                  ThreadID tid)
 {
+    //@todo: check squash seq num before squashing. can save time going
+    //       through this function.
     for (int i = 0; i < width; i++) {
         ResReqPtr req_ptr = reqs[i];
         DynInstPtr inst = req_ptr->getInst();

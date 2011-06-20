@@ -364,9 +364,10 @@ PipelineStage::setupSquash(DynInstPtr inst, ThreadID tid)
         toPrevStages->stageInfo[squash_stage][tid].doneSeqNum =
             squash_seq_num;
 
-        DPRINTF(InOrderStage, "[tid:%i]: Squashing after [sn:%i], "
-                "due to [sn:%i] %s.\n", tid, squash_seq_num,
-                inst->seqNum, inst->instName());
+        DPRINTF(InOrderStage, "[tid:%i]: Setting up squashing after "
+                "[sn:%i], due to [sn:%i] %s. Squash-Start-Stage:%i\n",
+                tid, squash_seq_num, inst->seqNum, inst->instName(),
+                squash_stage);
 
         // Save squash num for later stage use
         cpu->lastSquashCycle[tid] = curTick();

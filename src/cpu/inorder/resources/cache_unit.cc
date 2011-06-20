@@ -1248,7 +1248,8 @@ void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
                   InstSeqNum squash_seq_num, ThreadID tid)
 {
-    if (tlbBlockSeqNum[tid] > squash_seq_num) {
+    if (tlbBlockSeqNum[tid] &&
+        tlbBlockSeqNum[tid] > squash_seq_num) {
         DPRINTF(InOrderCachePort, "Releasing TLB Block due to "
                 " squash after [sn:%i].\n", squash_seq_num);
         tlbBlocked[tid] = false;
