@@ -385,6 +385,9 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     bool isQuiesce() const { return staticInst->isQuiesce(); }
     bool isIprAccess() const { return staticInst->isIprAccess(); }
     bool isUnverifiable() const { return staticInst->isUnverifiable(); }
+    bool isSyscall() const
+    { return staticInst->isSyscall(); }
+
 
     /////////////////////////////////////////////
     //
@@ -509,6 +512,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
 #else
+    short syscallNum;
+
     /** Calls a syscall. */
     void syscall(int64_t callnum);
 #endif

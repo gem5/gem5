@@ -182,7 +182,7 @@ class InOrderCPU : public BaseCPU
         HaltThread,
         SuspendThread,
         Trap,
-        InstGraduated,
+        Syscall,
         SquashFromMemStall,
         UpdatePCs,
         NumCPUEvents
@@ -192,6 +192,7 @@ class InOrderCPU : public BaseCPU
 
     enum CPUEventPri {
         InOrderCPU_Pri                 = Event::CPU_Tick_Pri,
+        Syscall_Pri                    = Event::CPU_Tick_Pri + 9,
         ActivateNextReadyThread_Pri    = Event::CPU_Tick_Pri + 10
     };
 
@@ -207,6 +208,7 @@ class InOrderCPU : public BaseCPU
         DynInstPtr inst;
         Fault fault;
         unsigned vpe;
+        short syscall_num;
         
       public:
         /** Constructs a CPU event. */
@@ -436,6 +438,13 @@ class InOrderCPU : public BaseCPU
 
     /** Check if this address is a valid data address. */
     bool validDataAddr(Addr addr) { return true; }
+#else
+    /** Schedule a syscall on the CPU */
+    void syscallContext(Fault fault, ThreadID tid, DynInstPtr inst,
+                        int delay = 0);
+
+    /** Executes a syscall.*/
+    void syscall(int64_t callnum, ThreadID tid);
 #endif
 
     /** Schedule a trap on the CPU */
@@ -649,9 +658,6 @@ class InOrderCPU : public BaseCPU
      */
     Fault write(DynInstPtr inst, uint8_t *data, unsigned size,
                 Addr addr, unsigned flags, uint64_t *write_res = NULL);
-
-    /** Executes a syscall.*/
-    void syscall(int64_t callnum, ThreadID tid);
 
   public:
     /** Per-Thread List of all the instructions in flight. */

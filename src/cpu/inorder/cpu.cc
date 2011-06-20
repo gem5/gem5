@@ -105,7 +105,7 @@ std::string InOrderCPU::eventNames[NumCPUEvents] =
     "HaltThread",
     "SuspendThread",
     "Trap",
-    "InstGraduated",
+    "Syscall",
     "SquashFromMemStall",
     "UpdatePCs"
 };
@@ -148,6 +148,11 @@ InOrderCPU::CPUEvent::process()
       case Trap:
         DPRINTF(InOrderCPU, "Trapping CPU\n");
         cpu->trap(fault, tid, inst);
+        cpu->resPool->trap(fault, tid, inst);
+        break;
+
+      case Syscall:
+        cpu->syscall(inst->syscallNum, tid);
         cpu->resPool->trap(fault, tid, inst);
         break;
 
@@ -1068,9 +1073,6 @@ InOrderCPU::activateNextReadyContext(int delay)
 {
     DPRINTF(InOrderCPU,"Activating next ready thread\n");
 
-    // NOTE: Add 5 to the event priority so that we always activate
-    // threads after we've finished deactivating, squashing,etc.
-    // other threads
     scheduleCpuEvent(ActivateNextReadyThread, NoFault, 0/*tid*/, dummyInst[0], 
                      delay, ActivateNextReadyThread_Pri);
 
@@ -1382,11 +1384,6 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     // Check for instruction-count-based events.
     comInstEventQueue[tid]->serviceEvents(thread[tid]->numInst);
 
-    // Broadcast to other resources an instruction
-    // has been completed
-    resPool->scheduleEvent((CPUEventType)ResourcePool::InstGraduated, inst, 
-                           0, 0, tid);
-
     // Finally, remove instruction from CPU
     removeInst(inst);
 }
@@ -1600,6 +1597,12 @@ InOrderCPU::wakeup()
 #endif
 
 #if !FULL_SYSTEM
+void
+InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
+{
+    scheduleCpuEvent(Syscall, fault, tid, inst, delay, Syscall_Pri);
+}
+
 void
 InOrderCPU::syscall(int64_t callnum, ThreadID tid)
 {

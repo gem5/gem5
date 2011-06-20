@@ -296,7 +296,8 @@ InOrderDynInst::simPalCheck(int palFunc)
 void
 InOrderDynInst::syscall(int64_t callnum)
 {
-    cpu->syscall(callnum, this->threadNumber);
+    syscallNum = callnum;
+    cpu->syscallContext(NoFault, this->threadNumber, this);
 }
 #endif
 
