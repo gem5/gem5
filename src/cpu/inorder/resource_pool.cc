@@ -331,12 +331,15 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
             DPRINTF(Resource, "Scheduling Inst-Graduated Resource Pool "
                     "Event for tick %i.\n", curTick() + delay);
+            ResPoolEventPri grad_pri = ResGrad_Pri;
             ResPoolEvent *res_pool_event = 
-                new ResPoolEvent(this,e_type,
+                new ResPoolEvent(this,
+                                 e_type,
                                  inst,
                                  inst->squashingStage,
                                  inst->seqNum,
-                                 inst->readTid());
+                                 inst->readTid(),
+                                 grad_pri);
             cpu->schedule(res_pool_event, when);
         }
         break;
@@ -345,12 +348,15 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
             DPRINTF(Resource, "Scheduling Squash Resource Pool Event for "
                     "tick %i.\n", curTick() + delay);
+            ResPoolEventPri squash_pri = ResSquash_Pri;
             ResPoolEvent *res_pool_event = 
-                new ResPoolEvent(this,e_type,
+                new ResPoolEvent(this,
+                                 e_type,
                                  inst,
                                  inst->squashingStage,
                                  inst->squashSeqNum,
-                                 inst->readTid());
+                                 inst->readTid(),
+                                 squash_pri);
             cpu->schedule(res_pool_event, when);
         }
         break;
@@ -361,7 +367,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                     "Pool Event for tick %i.\n",
                     curTick() + delay);
             ResPoolEvent *res_pool_event = 
-                new ResPoolEvent(this,e_type,
+                new ResPoolEvent(this,
+                                 e_type,
                                  inst,
                                  inst->squashingStage,
                                  inst->seqNum - 1,
@@ -375,7 +382,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
             DPRINTF(Resource, "Scheduling UpdatePC Resource Pool Event "
                     "for tick %i.\n",
                     curTick() + delay);
-            ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
+            ResPoolEvent *res_pool_event = new ResPoolEvent(this,
+                                                            e_type,
                                                             inst,
                                                             inst->squashingStage,
                                                             inst->seqNum,
@@ -507,8 +515,9 @@ ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool,
                                          DynInstPtr _inst,
                                          int stage_num,
                                          InstSeqNum seq_num,
-                                         ThreadID _tid)
-    : Event(ResPool_Pri), resPool(_resPool),
+                                         ThreadID _tid,
+                                         ResPoolEventPri res_pri)
+    : Event(res_pri), resPool(_resPool),
       eventType(e_type), inst(_inst), seqNum(seq_num),
       stageNum(stage_num), tid(_tid)
 { }

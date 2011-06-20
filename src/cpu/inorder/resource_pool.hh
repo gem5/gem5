@@ -68,7 +68,9 @@ class ResourcePool {
     };
 
     enum ResPoolEventPri {
-        ResPool_Pri =  InOrderCPU::InOrderCPU_Pri - 5
+        ResPool_Pri =  InOrderCPU::InOrderCPU_Pri - 5,
+        ResGrad_Pri,
+        ResSquash_Pri
     };
 
     class ResPoolEvent : public Event
@@ -95,7 +97,8 @@ class ResourcePool {
                      DynInstPtr _inst,
                      int stage_num,
                      InstSeqNum seq_num,
-                     ThreadID _tid);
+                     ThreadID _tid,
+                     ResPoolEventPri res_pri = ResPool_Pri);
 
         /** Set Type of Event To Be Scheduled */
         void setEvent(InOrderCPU::CPUEventType e_type,
