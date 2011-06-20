@@ -943,6 +943,9 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Sets this instruction as entered on the CPU Reg Dep Map */
     void setRegDepEntry() { status.set(RegDepMapEntry); }
 
+    /** Unsets this instruction as entered on the CPU Reg Dep Map */
+    void clearRegDepEntry() { status.reset(RegDepMapEntry); }
+
     /** Returns whether or not the entry is on the CPU Reg Dep Map */
     bool isRegDepEntry() const { return status[RegDepMapEntry]; }
 

@@ -157,6 +157,8 @@ RegDepMap::remove(DynInstPtr inst)
 
             remove(reg_type, flat_idx, inst);
         }
+
+        inst->clearRegDepEntry();
     }
 }
 
