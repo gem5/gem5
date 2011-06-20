@@ -344,6 +344,7 @@ class InOrderCPU : public BaseCPU
     static const uint8_t INST_NONSPEC                       = 22;
     static const uint8_t INST_DEST_REGS                     = 18;
     static const uint8_t INST_SRC_REGS                      = 14;
+    static const uint8_t INST_SPLIT_DATA                    = 13;
 
     inline SkedID genSkedID(DynInstPtr inst)
     {
@@ -354,7 +355,8 @@ class InOrderCPU : public BaseCPU
             (inst->isControl() << INST_CONTROL) |
             (inst->isNonSpeculative() << INST_NONSPEC) |
             (inst->numDestRegs() << INST_DEST_REGS) |
-            (inst->numSrcRegs() << INST_SRC_REGS);
+            (inst->numSrcRegs() << INST_SRC_REGS) |
+            (inst->splitInst << INST_SPLIT_DATA);
         return id;
     }
 

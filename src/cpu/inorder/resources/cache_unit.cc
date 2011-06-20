@@ -488,48 +488,32 @@ CacheUnit::read(DynInstPtr inst, Addr addr,
 
     
     if (secondAddr > addr && !inst->split2ndAccess) {
-        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Read Access (1 of 2) for "
-                "(%#x, %#x).\n", curTick(), inst->seqNum, addr, secondAddr);
-        
-        // Save All "Total" Split Information
-        // ==============================
-        inst->splitInst = true;        
-        inst->splitMemData = new uint8_t[size];
-        
-        if (!inst->splitInstSked) {
-            assert(0 && "Split Requests Not Supported for Now...");
 
-            // Schedule Split Read/Complete for Instruction
+        if (!inst->splitInst) {
+            DPRINTF(InOrderCachePort, "%i: sn[%i] Split Read Access (1 of 2) for "
+                    "(%#x, %#x).\n", curTick(), inst->seqNum, addr, secondAddr);
+
+            unsigned stage_num = cache_req->getStageNum();
+            unsigned cmd = inst->curSkedEntry->cmd;
+
+            // 1. Make A New Inst. Schedule w/Split Read/Complete Entered on
+            // the schedule
             // ==============================
-            int stage_num = cache_req->getStageNum();
-            RSkedPtr inst_sked = (stage_num >= ThePipeline::BackEndStartStage) ?
-                inst->backSked : inst->frontSked;
-
-            // this is just an arbitrarily high priority to ensure that this
-            // gets pushed to the back of the list
-            int stage_pri = 20;
-        
-            int isplit_cmd = CacheUnit::InitSecondSplitRead;
-            inst_sked->push(new
-                                ScheduleEntry(stage_num,
-                                              stage_pri,
-                                              cpu->resPool->getResIdx(DCache),
-                                              isplit_cmd,
-                                              1));
-
-            int csplit_cmd = CacheUnit::CompleteSecondSplitRead;
-            inst_sked->push(new
-                                ScheduleEntry(stage_num + 1,
-                                              1/*stage_pri*/,
-                                              cpu->resPool->getResIdx(DCache),
-                                              csplit_cmd,
-                                              1));
-            inst->splitInstSked = true;
+            // 2. Reassign curSkedPtr to current command (InitiateRead) on new
+            // schedule
+            // ==============================
+            inst->splitInst = true;
+            inst->setBackSked(cpu->createBackEndSked(inst));
+            inst->curSkedEntry = inst->backSked->find(stage_num, cmd);
         } else {
             DPRINTF(InOrderCachePort, "[tid:%i] [sn:%i] Retrying Split Read "
                     "Access (1 of 2) for (%#x, %#x).\n", inst->readTid(),
                     inst->seqNum, addr, secondAddr);
         }
+
+        // Save All "Total" Split Information
+        // ==============================
+        inst->splitMemData = new uint8_t[size];
 
         // Split Information for First Access
         // ==============================

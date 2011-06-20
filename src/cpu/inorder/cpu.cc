@@ -447,12 +447,16 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
 
         if ( inst->isLoad() ) {
             M.needs(DCache, CacheUnit::InitiateReadData);
+            if (inst->splitInst)
+                M.needs(DCache, CacheUnit::InitSecondSplitRead);
         } else if ( inst->isStore() ) {
             if ( inst->numSrcRegs() >= 2 ) {
                 M.needs(RegManager, UseDefUnit::ReadSrcReg, 1);
             }
             M.needs(AGEN, AGENUnit::GenerateAddr);
             M.needs(DCache, CacheUnit::InitiateWriteData);
+            if (inst->splitInst)
+                M.needs(DCache, CacheUnit::InitSecondSplitWrite);
         }
     }
 
@@ -460,8 +464,12 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
     if (!inst->isNonSpeculative()) {
         if ( inst->isLoad() ) {
             W.needs(DCache, CacheUnit::CompleteReadData);
+            if (inst->splitInst)
+                W.needs(DCache, CacheUnit::CompleteSecondSplitRead);
         } else if ( inst->isStore() ) {
             W.needs(DCache, CacheUnit::CompleteWriteData);
+            if (inst->splitInst)
+                W.needs(DCache, CacheUnit::CompleteSecondSplitWrite);
         }
     } else {
         // Finally, Execute Speculative Data
@@ -469,14 +477,22 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
             if (inst->isLoad()) {
                 W.needs(AGEN, AGENUnit::GenerateAddr);
                 W.needs(DCache, CacheUnit::InitiateReadData);
+                if (inst->splitInst)
+                    W.needs(DCache, CacheUnit::InitSecondSplitRead);
                 W.needs(DCache, CacheUnit::CompleteReadData);
+                if (inst->splitInst)
+                    W.needs(DCache, CacheUnit::CompleteSecondSplitRead);
             } else if (inst->isStore()) {
                 if ( inst->numSrcRegs() >= 2 ) {
                     W.needs(RegManager, UseDefUnit::ReadSrcReg, 1);
                 }
                 W.needs(AGEN, AGENUnit::GenerateAddr);
                 W.needs(DCache, CacheUnit::InitiateWriteData);
+                if (inst->splitInst)
+                    W.needs(DCache, CacheUnit::InitSecondSplitWrite);
                 W.needs(DCache, CacheUnit::CompleteWriteData);
+                if (inst->splitInst)
+                    W.needs(DCache, CacheUnit::CompleteSecondSplitWrite);
             }
         } else {
             W.needs(ExecUnit, ExecutionUnit::ExecuteInst);

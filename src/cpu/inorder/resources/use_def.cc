@@ -198,7 +198,7 @@ UseDefUnit::execute(int slot_idx)
                         uniqueIntRegMap[flat_idx] = true;
 
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Int Reg %i"
-                                " (%i) from Register File:%i.\n",
+                                " (%i) from Register File:0x%x.\n",
                                 tid, seq_num,
                                 reg_idx, flat_idx,
                                 cpu->readIntReg(flat_idx,inst->readTid()));
@@ -232,7 +232,7 @@ UseDefUnit::execute(int slot_idx)
                     {
                         uniqueMiscRegMap[flat_idx] = true;
                         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Reading Misc Reg %i "
-                                " (%i) from Register File:%i.\n",
+                                " (%i) from Register File:0x%x.\n",
                                 tid, seq_num,
                                 reg_idx - Ctrl_Base_DepTag, flat_idx,
                                 cpu->readMiscReg(flat_idx,
@@ -265,7 +265,7 @@ UseDefUnit::execute(int slot_idx)
                         {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest."
                                     " reg %i (%i), value 0x%x from "
-                                    "[sn:%i] to [sn:%i] source #%i.\n",
+                                    "[sn:%i] to [sn:%i] source #%x.\n",
                                     tid, reg_idx, flat_idx,
                                     forward_inst->readIntResult(dest_reg_idx),
                                     forward_inst->seqNum, 
