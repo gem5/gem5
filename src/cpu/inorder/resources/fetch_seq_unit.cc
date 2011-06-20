@@ -79,13 +79,13 @@ FetchSeqUnit::execute(int slot_num)
     ThreadID tid = inst->readTid();
     int stage_num = fs_req->getStageNum();
 
-    DPRINTF(InOrderFetchSeq, "[tid:%i]: Current PC is %s\n", tid,
-            pc[tid]);
-
     switch (fs_req->cmd)
     {
       case AssignNextPC:
         {
+            DPRINTF(InOrderFetchSeq, "[tid:%i]: Current PC is %s\n", tid,
+                    pc[tid]);
+
             if (pcValid[tid]) {
                 inst->pcState(pc[tid]);
                 inst->setMemAddr(pc[tid].instAddr());

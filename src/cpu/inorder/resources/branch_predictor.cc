@@ -152,10 +152,14 @@ BranchPredictor::squash(DynInstPtr inst, int squash_stage,
     DPRINTF(InOrderBPred, "[tid:%i][sn:%i] Squashing...\n", tid,
             bpred_squash_num);
 
+    // update due to branch resolution
     if (squash_stage >= ThePipeline::BackEndStartStage) {
-        bool taken = inst->predTaken();
-        branchPred.squash(bpred_squash_num, inst->readPredTarg(), taken, tid);
+        branchPred.squash(bpred_squash_num,
+                          inst->pcState(),
+                          inst->pcState().branching(),
+                          tid);
     } else {
+    // update due to predicted taken branch
         branchPred.squash(bpred_squash_num, tid);
     }
 }

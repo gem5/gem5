@@ -420,7 +420,7 @@ PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
     while (cur_it != end_it) {
         if ((*cur_it)->seqNum <= squash_seq_num) {
             DPRINTF(InOrderStage, "[tid:%i]: Cannot remove skidBuffer "
-                    "instructions (starting w/[sn:%i]) before delay slot "
+                    "instructions (starting w/[sn:%i]) before "
                     "[sn:%i]. %i insts left.\n", tid, 
                     (*cur_it)->seqNum, squash_seq_num,
                     skidBuffer[tid].size());

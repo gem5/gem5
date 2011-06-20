@@ -506,6 +506,9 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
         W.needs(RegManager, UseDefUnit::WriteDestReg, idx);
     }
 
+    if (inst->isControl())
+        W.needs(BPred, BranchPredictor::UpdatePredictor);
+
     // Insert Back Schedule into our cache of
     // resource schedules
     addToSkedCache(inst, res_sked);

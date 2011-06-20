@@ -250,7 +250,7 @@ BPredUnit::predict(DynInstPtr &inst, TheISA::PCState &predPC, ThreadID tid)
                         tid, asid, inst->pcState(), target);
             } else {
                 DPRINTF(InOrderBPred, "[tid:%i]: BTB doesn't have a "
-                        "valid entry.\n",tid);
+                        "valid entry, predicting false.\n",tid);
                 pred_taken = false;
             }
         }
@@ -369,7 +369,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         BPUpdate((*hist_it).pc.instAddr(), actually_taken,
                  pred_hist.front().bpHistory);
 
-        BTB.update((*hist_it).pc.instAddr(), corrTarget, asid);
+        // only update BTB on branch taken right???
+        if (actually_taken)
+            BTB.update((*hist_it).pc.instAddr(), corrTarget, asid);
 
         DPRINTF(InOrderBPred, "[tid:%i]: Removing history for [sn:%i] "
                 "PC %s.\n", tid, (*hist_it).seqNum, (*hist_it).pc);
