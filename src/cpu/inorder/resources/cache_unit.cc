@@ -840,6 +840,12 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
         } else {
             cache_req->dataPkt->dataStatic(&cache_req->inst->storeData);            
         }
+
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: [sn:%i]: Storing data: %s\n",
+                tid, inst->seqNum,
+                printMemData(cache_req->dataPkt->getPtr<uint8_t>(),
+                             cache_req->dataPkt->getSize()));
         
         if (cache_req->memReq->isCondSwap()) {
             assert(write_res);

@@ -527,7 +527,10 @@ InOrderDynInst::read(Addr addr, T &data, unsigned flags)
         traceData->setData(data);
     }
     Fault fault = readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
+    DPRINTF(InOrderDynInst, "[sn:%i] (1) Received Bytes %x\n", seqNum, data);
     data = TheISA::gtoh(data);
+    DPRINTF(InOrderDynInst, "[sn%:i] (2) Received Bytes %x\n", seqNum, data);
+
     if (traceData)
         traceData->setData(data);
     return fault;
@@ -588,6 +591,8 @@ InOrderDynInst::writeBytes(uint8_t *data, unsigned size,
 {
     assert(sizeof(storeData) >= size);
     memcpy(&storeData, data, size);
+    DPRINTF(InOrderDynInst, "(2) [tid:%i]: [sn:%i] Setting store data to %#x.\n",
+            threadNumber, seqNum, storeData);
     return cpu->write(this, (uint8_t *)&storeData, size, addr, flags, res);
 }
 
@@ -595,15 +600,13 @@ template<class T>
 inline Fault
 InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    storeData  = data;
-
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting store data to %#x.\n",
-            threadNumber, seqNum, storeData);
     if (traceData) {
         traceData->setAddr(addr);
         traceData->setData(data);
     }
-    storeData = TheISA::htog(data);
+    data = TheISA::htog(data);
+    DPRINTF(InOrderDynInst, "(1) [tid:%i]: [sn:%i] Setting store data to %#x.\n",
+            threadNumber, seqNum, data);
     return writeBytes((uint8_t*)&data, sizeof(T), addr, flags, res);
 }
 
