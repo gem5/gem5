@@ -114,6 +114,11 @@ class SimpleThread : public ThreadState
     bool predicate;
 
   public:
+    std::string name() const
+    {
+        return csprintf("%s.[tid:%i]", cpu->name(), tc->threadId());
+    }
+
     // pointer to CPU associated with this SimpleThread
     BaseCPU *cpu;
 
