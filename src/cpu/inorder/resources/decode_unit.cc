@@ -60,6 +60,8 @@ DecodeUnit::execute(int slot_num)
     {
       case DecodeInst:
         {
+            assert(!inst->staticInst->isMacroop());
+
             inst->setBackSked(cpu->createBackEndSked(inst));
 
             if (inst->backSked != NULL) {
