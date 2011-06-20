@@ -226,6 +226,7 @@ PipelineStage::checkStall(ThreadID tid) const
     }
 
     if (!stalls[tid].resources.empty()) {
+#if TRACING_ON
         string stall_src;
 
         for (int i=0; i < stalls[tid].resources.size(); i++) {
@@ -234,6 +235,7 @@ PipelineStage::checkStall(ThreadID tid) const
 
         DPRINTF(InOrderStage,"[tid:%i]: Stall fom resources (%s) detected.\n",
                 tid, stall_src);
+#endif
         ret_val = true;
     }
 
@@ -294,8 +296,11 @@ PipelineStage::block(ThreadID tid)
 
         stageStatus[tid] = Blocked;
 
-        if (prevStageValid)
+        if (prevStageValid) {
+            DPRINTF(InOrderStage, "[tid:%d]: Stage %i setting block signal.\n",
+                    tid, stageNum);
             toPrevStages->stageBlock[stageNum][tid] = true;
+        }
 
         return true;
     }
@@ -323,6 +328,7 @@ PipelineStage::blockDueToBuffer(ThreadID tid)
 bool
 PipelineStage::unblock(ThreadID tid)
 {
+    // @todo: Shouldnt this be if any available slots are open???
     // Stage is done unblocking only if the skid buffer is empty.
     if (skidBuffer[tid].empty()) {
         DPRINTF(InOrderStage, "[tid:%u]: Done unblocking.\n", tid);
@@ -623,6 +629,13 @@ PipelineStage::readStallSignals(ThreadID tid)
     for (int stage_idx = stageNum+1; stage_idx <= lastStallingStage[tid];
          stage_idx++) {
 
+        DPRINTF(InOrderStage, "[tid:%i] Reading stall signals from Stage "
+                "%i. Block:%i Unblock:%i.\n",
+                tid,
+                stage_idx,
+                fromNextStages->stageBlock[stage_idx][tid],
+                fromNextStages->stageUnblock[stage_idx][tid]);
+
         // Check for Stage Blocking Signal
         if (fromNextStages->stageBlock[stage_idx][tid]) {
             DPRINTF(InOrderStage, "[tid:%i] Stall from stage %i set.\n", tid,
@@ -637,6 +650,20 @@ PipelineStage::readStallSignals(ThreadID tid)
             stalls[tid].stage[stage_idx] = false;
         }
     }
+
+    for (int stage_idx = 0; stage_idx < NumStages;
+         stage_idx++) {
+
+        DPRINTF(InOrderStage, "[tid:%i] Stall signals from Stage "
+                "%i. Block:%i Unblock:%i...NBlock:%i NUnblock:%i\n",
+                tid,
+                stage_idx,
+                fromNextStages->stageBlock[stage_idx][tid],
+                fromNextStages->stageUnblock[stage_idx][tid],
+                toPrevStages->stageBlock[stage_idx][tid],
+                toPrevStages->stageUnblock[stage_idx][tid]);
+    }
+
 }
 
 
@@ -866,7 +893,9 @@ PipelineStage::processInsts(ThreadID tid)
         inst = insts_to_stage.front();
 
         DPRINTF(InOrderStage, "[tid:%u]: Processing instruction [sn:%lli] "
-                "with PC %s\n", tid, inst->seqNum, inst->pcState());
+                "%s with PC %s\n", tid, inst->seqNum,
+                inst->instName(),
+                inst->pcState());
 
         if (inst->isSquashed()) {
             DPRINTF(InOrderStage, "[tid:%u]: Instruction %i with PC %s is "

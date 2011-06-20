@@ -116,6 +116,9 @@ FetchSeqUnit::execute(int slot_num)
                     // If it's a return, then we must wait for resolved address.
                     // The Predictor will mark a return a false as "not taken"
                     // if there is no RAS entry
+                    DPRINTF(InOrderFetchSeq, "[tid:%d]: Setting block signal "
+                            "for stage %i.\n",
+                            tid, stage_num);
                     cpu->pipelineStage[stage_num]->
                         toPrevStages->stageBlock[stage_num][tid] = true;
                     pcValid[tid] = false;
@@ -215,8 +218,16 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
 
             // Unblock Any Stages Waiting for this information to be updated ...
             if (!pcValid[tid]) {
+                DPRINTF(InOrderFetchSeq, "[tid:%d]: Setting unblock signal "
+                        "for stage %i.\n",
+                        tid, pcBlockStage[tid]);
+
+                // Need to use "fromNextStages" instead of "toPrevStages"
+                // because the timebuffer will have already have advanced
+                // in the tick function and this squash function will happen after
+                // the tick
                 cpu->pipelineStage[pcBlockStage[tid]]->
-                    toPrevStages->stageUnblock[pcBlockStage[tid]][tid] = true;
+                    fromNextStages->stageUnblock[pcBlockStage[tid]][tid] = true;
             }
 
             pcValid[tid] = true;
@@ -291,6 +302,8 @@ FetchSeqUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
             "%s.\n", tid, pc[tid]);
     DPRINTF(InOrderFetchSeq, "[tid:%i]: Trap updating to PC: "
             "%s.\n", tid, pc[tid]);
+
+    cpu->removePipelineStalls(tid);
 }
 
 void

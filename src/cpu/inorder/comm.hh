@@ -55,18 +55,32 @@ struct InterStageStruct {
 
 /** Struct that defines all backwards communication. */
 struct TimeStruct {
-    struct stageComm {
+    struct StageComm {
         bool squash;
         InstSeqNum doneSeqNum;
 
         bool uncached;
         ThePipeline::DynInstPtr uncachedLoad;
+
+        StageComm()
+            : squash(false), doneSeqNum(0), uncached(false), uncachedLoad(NULL)
+        { }
     };
 
-    stageComm stageInfo[ThePipeline::NumStages][ThePipeline::MaxThreads];
-
+    StageComm stageInfo[ThePipeline::NumStages][ThePipeline::MaxThreads];
     bool stageBlock[ThePipeline::NumStages][ThePipeline::MaxThreads];
     bool stageUnblock[ThePipeline::NumStages][ThePipeline::MaxThreads];
+
+    TimeStruct()
+    {
+        for (int i = 0; i < ThePipeline::NumStages; i++) {
+            for (int j = 0; j < ThePipeline::MaxThreads; j++) {
+                stageBlock[i][j] = false;
+                stageUnblock[i][j] = false;
+            }
+        }
+    }
+
 };
 
 #endif //__CPU_INORDER_COMM_HH__

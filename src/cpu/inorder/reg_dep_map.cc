@@ -105,7 +105,7 @@ RegDepMap::insert(DynInstPtr inst)
         inst->flattenDestReg(i, flat_idx);
 
         if (flat_idx == TheISA::ZeroReg) {
-            DPRINTF(IntRegs, "[sn:%i]: Ignoring Insert-Dependency tracking for "
+            DPRINTF(RegDepMap, "[sn:%i]: Ignoring Insert-Dependency tracking for "
                     "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
                     flat_idx);
             continue;
@@ -145,7 +145,7 @@ RegDepMap::remove(DynInstPtr inst)
             RegIndex flat_idx = inst->flattenedDestRegIdx(i);
 
             if (flat_idx == TheISA::ZeroReg) {
-                DPRINTF(IntRegs, "[sn:%i]: Ignoring Remove-Dependency tracking for "
+                DPRINTF(RegDepMap, "[sn:%i]: Ignoring Remove-Dependency tracking for "
                         "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
                         flat_idx);
                 continue;
