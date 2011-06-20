@@ -52,7 +52,8 @@ UseDefUnit::UseDefUnit(string res_name, int res_id, int res_width,
     for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         nonSpecInstActive[tid] = &cpu->nonSpecInstActive[tid];
         nonSpecSeqNum[tid] = &cpu->nonSpecSeqNum[tid];
-
+        serializeOnNextInst[tid] =  false;
+        serializeAfterSeqNum[tid] = 0;
         regDepMap[tid] = &cpu->archRegDepMap[tid];
     }
 
@@ -152,11 +153,12 @@ UseDefUnit::findRequest(DynInstPtr inst)
 void
 UseDefUnit::execute(int slot_idx)
 {
-    // After this is working, change this to a reinterpret cast
-    // for performance considerations
     UseDefRequest* ud_req = dynamic_cast<UseDefRequest*>(reqs[slot_idx]);
-    assert(ud_req);
     DynInstPtr inst = ud_req->inst;
+    ThreadID tid = inst->readTid();
+    InstSeqNum seq_num = inst->seqNum;
+    int ud_idx = ud_req->useDefIdx;
+
     if (inst->fault != NoFault) {
         DPRINTF(InOrderUseDef,
                 "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
@@ -166,11 +168,28 @@ UseDefUnit::execute(int slot_idx)
         return;
     }
 
-    ThreadID tid = inst->readTid();
-    InstSeqNum seq_num = inst->seqNum;
-    int ud_idx = ud_req->useDefIdx;
+    if (serializeOnNextInst[tid] &&
+        seq_num > serializeAfterSeqNum[tid]) {
+        inst->setSerializeBefore();
+        serializeOnNextInst[tid] = false;
+    }
+
+    if ((inst->isIprAccess() || inst->isSerializeBefore()) &&
+        cpu->instList[tid].front() != inst) {
+        DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i] Serialize before instruction encountered."
+                " Blocking until pipeline is clear.\n", tid, seq_num);
+        ud_req->done(false);
+        return;
+    } else if (inst->isStoreConditional() || inst->isSerializeAfter()) {
+        DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i] Serialize after instruction encountered."
+                " Blocking until pipeline is clear.\n", tid, seq_num);
+        serializeOnNextInst[tid] = true;
+        serializeAfterSeqNum[tid] = seq_num;
+    }
+
     // If there is a non-speculative instruction
     // in the pipeline then stall instructions here
+    // ---
     if (*nonSpecInstActive[tid] == true && seq_num > *nonSpecSeqNum[tid]) {
         DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i] cannot execute because"
                 "there is non-speculative instruction [sn:%i] has not "

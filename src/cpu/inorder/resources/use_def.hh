@@ -76,8 +76,10 @@ class UseDefUnit : public Resource {
     RegDepMap *regDepMap[ThePipeline::MaxThreads];
 
     bool *nonSpecInstActive[ThePipeline::MaxThreads];
-
     InstSeqNum *nonSpecSeqNum[ThePipeline::MaxThreads];
+
+    bool serializeOnNextInst[ThePipeline::MaxThreads];
+    InstSeqNum serializeAfterSeqNum[ThePipeline::MaxThreads];
 
     Stats::Average uniqueRegsPerSwitch;
     std::map<RegIndex, bool> uniqueIntRegMap;

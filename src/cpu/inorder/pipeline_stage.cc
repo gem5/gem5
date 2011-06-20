@@ -1093,6 +1093,7 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
 
             // Take note of trace data for this inst & stage
             if (inst->traceData) {
+                //@todo: exec traces are broke. fix them
                 inst->traceData->setStageCycle(stageNum, curTick());
             }
 

@@ -45,7 +45,7 @@ ExecutionUnit::ExecutionUnit(string res_name, int res_id, int res_width,
                              int res_latency, InOrderCPU *_cpu,
                              ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      lastExecuteTick(0), lastControlTick(0), serializeTick(0)
+      lastExecuteTick(0), lastControlTick(0)
 { }
 
 void
@@ -103,13 +103,6 @@ ExecutionUnit::execute(int slot_num)
 #if TRACING_ON
     InstSeqNum seq_num = inst->seqNum;
 #endif
-    if (cur_tick == serializeTick) {
-        DPRINTF(InOrderExecute, "Can not execute [tid:%i][sn:%i][PC:%s] %s. "
-                "All instructions are being serialized this cycle\n",
-                inst->readTid(), seq_num, inst->pcState(), inst->instName());
-        exec_req->done(false);
-        return;
-    }
 
     switch (exec_req->cmd)
     {
@@ -131,14 +124,8 @@ ExecutionUnit::execute(int slot_num)
                 lastExecuteTick = cur_tick;
             }
 
+            //@todo: handle address generation here
             assert(!inst->isMemRef());
-
-            if (inst->isSerializeAfter()) {
-                serializeTick = cur_tick;
-                DPRINTF(InOrderExecute, "Serializing execution after [tid:%i] "
-                        "[sn:%i] [PC:%s] %s.\n", inst->readTid(), seq_num,
-                        inst->pcState(), inst->instName());
-            }
 
             if (inst->isControl()) {
                 if (lastControlTick == cur_tick) {
@@ -219,11 +206,12 @@ ExecutionUnit::execute(int slot_num)
 #if TRACING_ON
                     for (int didx = 0; didx < inst->numDestRegs(); didx++)
                         if (inst->resultType(didx) == InOrderDynInst::Float ||
+                            inst->resultType(didx) == InOrderDynInst::FloatBits ||
                             inst->resultType(didx) == InOrderDynInst::Double)
                             DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: Dest result %i "
                                     "of FP execution is %08f (%x).\n", inst->readTid(),
                                     seq_num, didx, inst->readFloatResult(didx),
-                                    inst->readIntResult(didx));
+                                    inst->readFloatBitsResult(didx));
                         else
                             DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: Dest result %i "
                                     "of Int execution is 0x%x.\n", inst->readTid(),

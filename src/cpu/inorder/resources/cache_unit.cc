@@ -105,8 +105,10 @@ CacheUnit::CachePort::recvTiming(Packet *pkt)
                 pkt->getAddr());
     else if (pkt->isResponse())
         cachePortUnit->processCacheCompletion(pkt);
-    else
-        DPRINTF(Cache, "Received snoop pkt %x,Ignoring\n", pkt->getAddr());
+    else {
+        //@note: depending on consistency model, update here
+        DPRINTF(InOrderCachePort, "Received snoop pkt %x,Ignoring\n", pkt->getAddr());
+    }
 
     return true;
 }

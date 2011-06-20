@@ -272,6 +272,7 @@ Resource::rejectRequest(DynInstPtr inst)
 void
 Resource::execute(int slot_idx)
 {
+    //@todo: have each resource print out command their executing
     DPRINTF(Resource, "[tid:%i]: Executing %s resource.\n",
             reqs[slot_idx]->getTid(), name());
     reqs[slot_idx]->setCompleted(true);
