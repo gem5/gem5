@@ -261,6 +261,16 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      */
     bool _readySrcRegIdx[MaxInstSrcRegs];
 
+    /** Flattened register index of the destination registers of this
+     *  instruction.
+     */
+    TheISA::RegIndex _flatDestRegIdx[TheISA::MaxInstDestRegs];
+
+    /** Flattened register index of the source registers of this
+     *  instruction.
+     */
+    TheISA::RegIndex _flatSrcRegIdx[TheISA::MaxInstSrcRegs];
+
     /** Physical register index of the destination registers of this
      *  instruction.
      */
@@ -706,6 +716,35 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         return _srcRegIdx[idx];
     }
 
+    /** Flattens a source architectural register index into a logical index.
+     */
+    void flattenSrcReg(int idx, TheISA::RegIndex flattened_src)
+    {
+        _flatSrcRegIdx[idx] = flattened_src;
+    }
+
+    /** Flattens a destination architectural register index into a logical
+     * index.
+     */
+    void flattenDestReg(int idx, TheISA::RegIndex flattened_dest)
+    {
+        _flatDestRegIdx[idx] = flattened_dest;
+    }
+
+    /** Returns the flattened register index of the i'th destination
+     *  register.
+     */
+    TheISA::RegIndex flattenedDestRegIdx(int idx) const
+    {
+        return _flatDestRegIdx[idx];
+    }
+
+    /** Returns the flattened register index of the i'th source register */
+    TheISA::RegIndex flattenedSrcRegIdx(int idx) const
+    {
+        return _flatSrcRegIdx[idx];
+    }
+
     /** Returns the physical register index of the previous physical register
      *  that remapped to the same logical register index.
      */
@@ -770,7 +809,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     int getDestIdxNum(PhysRegIndex dest_idx)
     {
         for (int i=0; i < staticInst->numDestRegs(); i++) {
-            if (_destRegIdx[i] == dest_idx)
+            if (_flatDestRegIdx[i] == dest_idx)
                 return i;
         }
 

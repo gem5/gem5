@@ -92,23 +92,26 @@ RegDepMap::insert(DynInstPtr inst)
             inst->staticInst->getName(),
             dest_regs);
 
-    for (int i = 0; i < dest_regs; i++)
-        insert(inst->destRegIdx(i), inst);
+    for (int i = 0; i < dest_regs; i++) {
+        InOrderCPU::RegType reg_type;
+        TheISA::RegIndex raw_idx = inst->destRegIdx(i);
+        TheISA::RegIndex flat_idx = cpu->flattenRegIdx(raw_idx,
+                                                       reg_type,
+                                                       inst->threadNumber);
+        inst->flattenDestReg(i, flat_idx);
+        insert(reg_type, flat_idx, inst);
+    }
 }
 
 
 void
-RegDepMap::insert(RegIndex idx, DynInstPtr inst)
+RegDepMap::insert(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 {
-    InOrderCPU::RegType reg_type;
-    TheISA::RegIndex flat_idx = cpu->flattenRegIdx(idx, reg_type,
-                                                   inst->threadNumber);
-
     DPRINTF(RegDepMap, "Inserting [sn:%i] onto %s dep. list for "
-            "reg. idx %i (%i).\n", inst->seqNum, mapNames[reg_type],
-            idx, flat_idx);
+            "reg. idx %i.\n", inst->seqNum, mapNames[reg_type],
+            idx);
 
-    regMap[reg_type][flat_idx].push_back(inst);
+    regMap[reg_type][idx].push_back(inst);
 
     inst->setRegDepEntry();
 }
@@ -179,27 +182,28 @@ RegDepMap::canRead(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 }
 
 ThePipeline::DynInstPtr
-RegDepMap::canForward(uint8_t reg_type, unsigned reg_idx, DynInstPtr inst,
-                      unsigned clean_idx)
+RegDepMap::canForward(uint8_t reg_type, unsigned reg_idx, DynInstPtr inst)
 {
     std::list<DynInstPtr>::iterator list_it = regMap[reg_type][reg_idx].begin();
     std::list<DynInstPtr>::iterator list_end = regMap[reg_type][reg_idx].end();
 
     DynInstPtr forward_inst = NULL;
 
-    // Look for first/oldest instruction
+    // Look for instruction immediately in front of requestor to supply
+    // data
     while (list_it != list_end &&
            (*list_it)->seqNum < inst->seqNum) {
         forward_inst = (*list_it);
         list_it++;
     }
-    DPRINTF(RegDepMap, "[sn:%i] Found potential forwarding value for reg %i (%i)"
-            " w/ [sn:%i]\n",
-            inst->seqNum, reg_idx, clean_idx, inst->seqNum);
 
     if (forward_inst) {
-        int dest_reg_idx = forward_inst->getDestIdxNum(clean_idx);
+        int dest_reg_idx = forward_inst->getDestIdxNum(reg_idx);
         assert(dest_reg_idx != -1);
+
+        DPRINTF(RegDepMap, "[sn:%i] Found potential forwarding value for reg %i "
+                " w/ [sn:%i] dest. reg. #%i\n",
+                inst->seqNum, reg_idx, forward_inst->seqNum, dest_reg_idx);
 
         if (forward_inst->isExecuted() &&
             forward_inst->readResultTime(dest_reg_idx) < curTick()) {
@@ -207,8 +211,8 @@ RegDepMap::canForward(uint8_t reg_type, unsigned reg_idx, DynInstPtr inst,
         } else {
             if (!forward_inst->isExecuted()) {
                 DPRINTF(RegDepMap, "[sn:%i] Can't get value through "
-                        "forwarding, [sn:%i] has not been executed yet.\n",
-                        inst->seqNum, forward_inst->seqNum);
+                        "forwarding, [sn:%i] %s has not been executed yet.\n",
+                        inst->seqNum, forward_inst->seqNum, forward_inst->instName());
             } else if (forward_inst->readResultTime(dest_reg_idx) >= curTick()) {
                 DPRINTF(RegDepMap, "[sn:%i] Can't get value through "
                         "forwarding, [sn:%i] executed on tick:%i.\n",

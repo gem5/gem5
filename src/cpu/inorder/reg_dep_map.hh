@@ -77,7 +77,7 @@ class RegDepMap
      *  another instruction for this destination register?
      */
     DynInstPtr canForward(uint8_t reg_type, unsigned reg_idx,
-                          DynInstPtr inst, unsigned clean_idx);
+                          DynInstPtr inst);
 
     /** find an instruction to forward/bypass a value from */
     DynInstPtr findBypassInst(RegIndex idx);
@@ -94,9 +94,9 @@ class RegDepMap
     
   private:
     /** Insert an instruction into a specific destination register index
-     *  onto map. This must be called w/the unflattened registered index
+     *  onto map.
      */
-    void insert(RegIndex idx, DynInstPtr inst);
+    void insert(uint8_t reg_type, RegIndex idx, DynInstPtr inst);
 
     /** Remove a specific instruction and dest. register index from map
      *  This must be called w/the unflattened registered index

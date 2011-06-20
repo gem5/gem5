@@ -324,9 +324,10 @@ InOrderDynInst::setSquashInfo(unsigned stage_num)
     // the faulting instruction too. Squash
     // functions squash above a seqNum, so we
     // decrement here for that case
-    if (fault != NoFault)
+    if (fault != NoFault) {
         squashSeqNum = seqNum - 1;
-    else
+        return;
+    } else
         squashSeqNum = seqNum;
 
 #if ISA_HAS_DELAY_SLOT

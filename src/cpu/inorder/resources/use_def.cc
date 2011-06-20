@@ -179,6 +179,7 @@ UseDefUnit::execute(int slot_idx)
             InOrderCPU::RegType reg_type;
             RegIndex reg_idx = inst->_srcRegIdx[ud_idx];
             RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
+            inst->flattenSrcReg(ud_idx, flat_idx);
             
             DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Attempting to read source "
                     "register idx %i (reg #%i, flat#%i).\n",
@@ -246,12 +247,11 @@ UseDefUnit::execute(int slot_idx)
                 // Look for forwarding opportunities
                 DynInstPtr forward_inst = regDepMap[tid]->canForward(reg_type,
                                                                      flat_idx,
-                                                                     inst,
-                                                                     reg_idx);
+                                                                     inst);
 
                 if (forward_inst) {
                     int dest_reg_idx =
-                        forward_inst->getDestIdxNum(reg_idx);
+                        forward_inst->getDestIdxNum(flat_idx);
 
                     switch (reg_type)
                     {

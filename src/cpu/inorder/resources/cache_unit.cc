@@ -1075,7 +1075,7 @@ CacheUnitEvent::process()
 
     //@todo: eventually, we should do a timing translation w/
     //       hw page table walk on tlb miss
-    DPRINTF(Fault, "Handling Fault %s\n", inst->fault->name());
+    DPRINTF(Fault, "Handling Fault %s : [sn:%i] %x\n", inst->fault->name(), inst->seqNum, inst->getMemAddr());
     inst->fault->invoke(tlb_res->cpu->tcBase(tid), inst->staticInst);
 
     tlb_res->tlbBlocked[tid] = false;
