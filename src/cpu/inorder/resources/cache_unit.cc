@@ -426,9 +426,16 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
     ThreadID tid = inst->readTid();
 
     setupMemRequest(inst, cache_req, acc_size, flags);
+
+    //@todo: HACK: the DTB expects the correct PC in the ThreadContext
+    //       but how if the memory accesses are speculative? Shouldn't
+    //       we send along the requestor's PC to the translate functions?
+    ThreadContext *tc = cpu->thread[tid]->getTC();
+    PCState old_pc = tc->pcState();
+    tc->pcState() = inst->pcState();
     inst->fault =
-        _tlb->translateAtomic(cache_req->memReq,
-                              cpu->thread[tid]->getTC(), tlb_mode);
+        _tlb->translateAtomic(cache_req->memReq, tc, tlb_mode);
+    tc->pcState() = old_pc;
 
     if (inst->fault != NoFault) {
         DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "

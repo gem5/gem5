@@ -457,7 +457,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         return new DtbAlignmentFault(req->getVaddr(), req->getFlags(), flags);
     }
 
-    if (PcPAL(tc->pcState().pc())) {
+    if (PcPAL(req->getPC())) {
         mode = (req->getFlags() & Request::ALTMODE) ?
             (mode_type)ALT_MODE_AM(
                 tc->readMiscRegNoEffect(IPR_ALT_MODE))
