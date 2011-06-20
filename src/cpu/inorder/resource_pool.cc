@@ -508,7 +508,7 @@ ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool,
                                          int stage_num,
                                          InstSeqNum seq_num,
                                          ThreadID _tid)
-    : Event(CPU_Tick_Pri), resPool(_resPool),
+    : Event(ResPool_Pri), resPool(_resPool),
       eventType(e_type), inst(_inst), seqNum(seq_num),
       stageNum(stage_num), tid(_tid)
 { }

@@ -165,7 +165,8 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
             // A Trap Caused This Fault and will update the pc state
             // when done trapping
             DPRINTF(InOrderFetchSeq, "[tid:%i] Blocking due to fault @ "
-                    "[sn:%i].\n", inst->seqNum);
+                    "[sn:%i].%s %s \n", inst->seqNum,
+                    inst->instName(), inst->pcState());
             pcValid[tid] = false;
         } else {
             TheISA::PCState nextPC;

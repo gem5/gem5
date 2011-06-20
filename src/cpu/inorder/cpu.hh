@@ -190,6 +190,11 @@ class InOrderCPU : public BaseCPU
 
     static std::string eventNames[NumCPUEvents];
 
+    enum CPUEventPri {
+        InOrderCPU_Pri                 = Event::CPU_Tick_Pri,
+        ActivateNextReadyThread_Pri    = Event::CPU_Tick_Pri + 10
+    };
+
     /** Define CPU Event */
     class CPUEvent : public Event
     {
@@ -206,7 +211,7 @@ class InOrderCPU : public BaseCPU
       public:
         /** Constructs a CPU event. */
         CPUEvent(InOrderCPU *_cpu, CPUEventType e_type, Fault fault,
-                 ThreadID _tid, DynInstPtr inst, unsigned event_pri_offset);
+                 ThreadID _tid, DynInstPtr inst, CPUEventPri event_pri);
 
         /** Set Type of Event To Be Scheduled */
         void setEvent(CPUEventType e_type, Fault _fault, ThreadID _tid,
@@ -235,7 +240,7 @@ class InOrderCPU : public BaseCPU
     /** Schedule a CPU Event */
     void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, ThreadID tid,
                           DynInstPtr inst, unsigned delay = 0,
-                          unsigned event_pri_offset = 0);
+                          CPUEventPri event_pri = InOrderCPU_Pri);
 
   public:
     /** Interface between the CPU and CPU resources. */

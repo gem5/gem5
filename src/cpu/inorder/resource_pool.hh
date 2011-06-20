@@ -67,6 +67,10 @@ class ResourcePool {
         Default
     };
 
+    enum ResPoolEventPri {
+        ResPool_Pri =  InOrderCPU::InOrderCPU_Pri - 5
+    };
+
     class ResPoolEvent : public Event
     {
       protected:

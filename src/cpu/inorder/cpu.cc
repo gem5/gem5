@@ -90,9 +90,8 @@ InOrderCPU::TickEvent::description()
 
 InOrderCPU::CPUEvent::CPUEvent(InOrderCPU *_cpu, CPUEventType e_type,
                                Fault fault, ThreadID _tid, DynInstPtr inst,
-                               unsigned event_pri_offset)
-    : Event(Event::Priority((unsigned int)CPU_Tick_Pri + event_pri_offset)),
-      cpu(_cpu)
+                               CPUEventPri event_pri)
+    : Event(event_pri), cpu(_cpu)
 {
     setEvent(e_type, fault, _tid, inst);
 }
@@ -836,10 +835,10 @@ InOrderCPU::squashDueToMemStall(int stage_num, InstSeqNum seq_num,
 void
 InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
                              ThreadID tid, DynInstPtr inst, 
-                             unsigned delay, unsigned event_pri_offset)
+                             unsigned delay, CPUEventPri event_pri)
 {
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst,
-                                       event_pri_offset);
+                                       event_pri);
 
     Tick sked_tick = nextCycle(curTick() + ticks(delay));
     if (delay >= 0) {
@@ -1064,7 +1063,7 @@ InOrderCPU::activateNextReadyContext(int delay)
     // threads after we've finished deactivating, squashing,etc.
     // other threads
     scheduleCpuEvent(ActivateNextReadyThread, NoFault, 0/*tid*/, dummyInst[0], 
-                     delay, 5);
+                     delay, ActivateNextReadyThread_Pri);
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
