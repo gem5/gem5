@@ -59,13 +59,18 @@ DecodeUnit::execute(int slot_num)
     {
       case DecodeInst:
         {
-            assert(!inst->staticInst->isMacroop());
 
-            DPRINTF(Decode,"Decoded instruction [sn:%i]: %s : 0x%x\n",
-                    inst->seqNum, inst->instName(),
-                    inst->staticInst->machInst);
-
-            inst->setBackSked(cpu->createBackEndSked(inst));
+            if (inst->fault != NoFault) {
+                inst->setBackSked(cpu->faultSked);
+                DPRINTF(Decode,"[tid:%i]: Fault found for instruction [sn:%i]\n",
+                        inst->readTid(), inst->seqNum);
+            } else {
+                assert(!inst->staticInst->isMacroop());
+                inst->setBackSked(cpu->createBackEndSked(inst));
+                DPRINTF(Decode,"Decoded instruction [sn:%i]: %s : 0x%x\n",
+                        inst->seqNum, inst->instName(),
+                        inst->staticInst->machInst);
+            }
 
             if (inst->backSked != NULL) {
                 DPRINTF(InOrderDecode,

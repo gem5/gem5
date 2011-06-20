@@ -37,12 +37,13 @@ using namespace ThePipeline;
 GraduationUnit::GraduationUnit(std::string res_name, int res_id, int res_width,
                                int res_latency, InOrderCPU *_cpu,
                                ThePipeline::Params *params)
-    : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      lastNonSpecTick(0)
+    : Resource(res_name, res_id, res_width, res_latency, _cpu)
 {
     for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         nonSpecInstActive[tid] = &cpu->nonSpecInstActive[tid];
         nonSpecSeqNum[tid] = &cpu->nonSpecSeqNum[tid];
+        lastNonSpecTick[tid] = 0;
+        lastFaultTick[tid] = 0;
     }
 }
 
@@ -53,6 +54,25 @@ GraduationUnit::execute(int slot_num)
     DynInstPtr inst = reqs[slot_num]->inst;
     ThreadID tid = inst->readTid();
     int stage_num = inst->curSkedEntry->stageNum;
+    Tick cur_tick = curTick();
+
+    //@todo: not the common case, anyway we can move this
+    //       check to the stage and just ignore instructions
+    //       after?
+    if (lastNonSpecTick[tid] == cur_tick) {
+        DPRINTF(InOrderGraduation, "Unable to graduate [sn:%i]. "
+                "Only 1 nonspec inst. per cycle can graduate.\n");
+        grad_req->done(false);
+        return;
+    }
+
+    if (lastFaultTick[tid] == cur_tick) {
+        DPRINTF(InOrderGraduation, "Unable to graduate [sn:%i]. "
+                "Only 1 fault can be handled per tick.\n");
+        grad_req->done(false);
+        return;
+    }
+
 
     switch (grad_req->cmd)
     {
@@ -64,6 +84,7 @@ GraduationUnit::execute(int slot_num)
                         tid, inst->seqNum, inst->fault->name(),
                         inst->instName());
                 squashThenTrap(stage_num, inst);
+                lastFaultTick[tid] = cur_tick;
                 grad_req->done(false);
                 return;
             }
@@ -76,13 +97,6 @@ GraduationUnit::execute(int slot_num)
 
       case GraduateInst:
         {
-            if (lastNonSpecTick == curTick()) {
-                DPRINTF(InOrderGraduation, "Unable to graduate [sn:%i]. "
-                        "Only 1 nonspec inst. per cycle can graduate.\n");
-                grad_req->done(false);
-                return;
-            }
-
             DPRINTF(InOrderGraduation,
                     "[tid:%i]:[sn:%i]: Graduating instruction %s.\n",
                     tid, inst->seqNum, inst->staticInst->disassemble(inst->instAddr()));
@@ -90,16 +104,19 @@ GraduationUnit::execute(int slot_num)
             // Release Non-Speculative "Block" on instructions that could not
             // execute because there was a non-speculative inst. active.
             // @TODO: Fix this functionality. Probably too conservative.
+            //        Maybe it should be, non-spec. insts should block other
+            //        non-spec insts because they can potentially be reading
+            //        system state that will be changed by the 1st non-spec inst.
             if (inst->isNonSpeculative()) {
                 *nonSpecInstActive[tid] = false;
                 DPRINTF(InOrderGraduation,
                         "[tid:%i] Non-speculative inst [sn:%i] graduated\n",
                         tid, inst->seqNum);
-                lastNonSpecTick = curTick();
+                lastNonSpecTick[tid] = cur_tick;
             }
 
             if (inst->traceData) {
-                inst->traceData->setStageCycle(stage_num, curTick());
+                inst->traceData->setStageCycle(stage_num, cur_tick);
             }
 
             // Tell CPU that instruction is finished processing

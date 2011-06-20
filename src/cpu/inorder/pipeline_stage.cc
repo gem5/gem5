@@ -130,6 +130,7 @@ PipelineStage::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
     timeBuffer = tb_ptr;
 
     // Setup wire to write information back to fetch.
+    // @todo: should this be writing to the next stage => -1 and reading from is (0)???
     toPrevStages = timeBuffer->getWire(0);
 
     // Create wires to get information from proper places in time buffer.

@@ -395,7 +395,7 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
         if (cache_req->memReq == NULL) {
             cache_req->memReq =
                 new Request(cpu->asid[tid], aligned_addr, acc_size, flags,
-                            inst->instAddr(), cpu->readCpuId(),
+                            inst->instAddr(), cpu->readCpuId(), //@todo: use context id
                             tid);
             DPRINTF(InOrderCachePort, "[sn:%i] Created memReq @%x, ->%x\n",
                     inst->seqNum, &cache_req->memReq, cache_req->memReq);
@@ -685,6 +685,15 @@ CacheUnit::execute(int slot_num)
     }
 
     DynInstPtr inst = cache_req->inst;
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
+                inst->getMemAddr());
+        finishCacheUnitReq(inst, cache_req);
+        return;
+    }
+
 #if TRACING_ON
     ThreadID tid = inst->readTid();
     std::string acc_type = "write";
@@ -747,14 +756,6 @@ CacheUnit::execute(int slot_num)
                 "[tid:%i]: [sn:%i]: Trying to Complete Data Read Access\n",
                 tid, inst->seqNum);
 
-        if (inst->fault != NoFault) {
-            DPRINTF(InOrderCachePort,
-                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
-                "next stage.\n", tid, inst->seqNum, inst->fault->name(),
-                inst->getMemAddr());
-            finishCacheUnitReq(inst, cache_req);
-            return;
-        }
 
         //@todo: timing translations need to check here...
         assert(!inst->isInstPrefetch() && "Can't Handle Inst. Prefecthes");
@@ -774,14 +775,6 @@ CacheUnit::execute(int slot_num)
                     "[tid:%i]: [sn:%i]: Trying to Complete Data Write Access\n",
                     tid, inst->seqNum);
 
-            if (inst->fault != NoFault) {
-                DPRINTF(InOrderCachePort,
-                        "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to ",
-                        "next stage.\n", tid, inst->seqNum, inst->fault->name(),
-                        inst->getMemAddr());
-                finishCacheUnitReq(inst, cache_req);
-                return;
-            }
 
             //@todo: check that timing translation is finished here
             RequestPtr mem_req = cache_req->memReq;
@@ -937,7 +930,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
         if (mem_req->isLLSC()) {
             assert(cache_req->inst->isStoreConditional());
             DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
-            do_access = TheISA::handleLockedWrite(cpu, mem_req);
+            do_access = TheISA::handleLockedWrite(inst.get(), mem_req);
         }
      }
 
@@ -1129,7 +1122,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
             DPRINTF(InOrderCachePort,
                     "[tid:%u]: Handling Load-Linked for [sn:%u]\n",
                     tid, inst->seqNum);
-            TheISA::handleLockedRead(cpu, cache_pkt->req);
+            TheISA::handleLockedRead(inst.get(), cache_pkt->req);
         }
 
         DPRINTF(InOrderCachePort,
@@ -1280,7 +1273,7 @@ void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
                   InstSeqNum squash_seq_num, ThreadID tid)
 {
-    if (tlbBlockSeqNum[tid] &&
+    if (tlbBlocked[tid] &&
         tlbBlockSeqNum[tid] > squash_seq_num) {
         DPRINTF(InOrderCachePort, "Releasing TLB Block due to "
                 " squash after [sn:%i].\n", squash_seq_num);

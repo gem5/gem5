@@ -87,6 +87,15 @@ ExecutionUnit::execute(int slot_num)
 {
     ResourceRequest* exec_req = reqs[slot_num];
     DynInstPtr inst = reqs[slot_num]->inst;
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderExecute,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
+                inst->pcState());
+        exec_req->done();
+        return;
+    }
+
     Fault fault = NoFault;
     Tick cur_tick = curTick();
     unsigned stage_num = exec_req->getStageNum();

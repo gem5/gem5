@@ -196,7 +196,6 @@ InOrderCPU::InOrderCPU(Params *params)
       timeBuffer(2 , 2),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),
-      stCondFails(0),
 #if FULL_SYSTEM
       system(params->system),
 #endif // FULL_SYSTEM
@@ -372,7 +371,8 @@ InOrderCPU::InOrderCPU(Params *params)
 
     endOfSkedIt = skedCache.end();
     frontEndSked = createFrontEndSked();
-    
+    faultSked = createFaultSked();
+
     lastRunningCycle = curTick();
 
     lockAddr = 0;
@@ -417,8 +417,18 @@ InOrderCPU::createFrontEndSked()
     D.needs(FetchSeq, FetchSeqUnit::UpdateTargetPC);
 
 
-    DPRINTF(SkedCache, "Resource Sked created for instruction \"front_end\"\n");
+    DPRINTF(SkedCache, "Resource Sked created for instruction Front End\n");
 
+    return res_sked;
+}
+
+RSkedPtr
+InOrderCPU::createFaultSked()
+{
+    RSkedPtr res_sked = new ResourceSked();
+    StageScheduler W(res_sked, NumStages - 1);
+    W.needs(Grad, GraduationUnit::CheckFault);
+    DPRINTF(SkedCache, "Resource Sked created for instruction Faults\n");
     return res_sked;
 }
 

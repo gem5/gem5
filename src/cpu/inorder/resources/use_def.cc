@@ -92,6 +92,9 @@ UseDefUnit::regStats()
         .desc("Total Accesses (Read+Write) to the FP Register File");
     floatRegFileAccs = floatRegFileReads + floatRegFileWrites;
 
+    //@todo: add miscreg reads/writes
+    //       add forwarding by type???
+
     regForwards
         .name(name() + ".regForwards")
         .desc("Number of Registers Read Through Forwarding Logic");
@@ -153,12 +156,19 @@ UseDefUnit::execute(int slot_idx)
     // for performance considerations
     UseDefRequest* ud_req = dynamic_cast<UseDefRequest*>(reqs[slot_idx]);
     assert(ud_req);
-
     DynInstPtr inst = ud_req->inst;
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderUseDef,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
+                inst->pcState());
+        ud_req->done();
+        return;
+    }
+
     ThreadID tid = inst->readTid();
     InstSeqNum seq_num = inst->seqNum;
     int ud_idx = ud_req->useDefIdx;
-
     // If there is a non-speculative instruction
     // in the pipeline then stall instructions here
     if (*nonSpecInstActive[tid] == true && seq_num > *nonSpecSeqNum[tid]) {

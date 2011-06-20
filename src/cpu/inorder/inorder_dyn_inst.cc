@@ -87,6 +87,12 @@ InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
 
 int InOrderDynInst::instcount = 0;
 
+int
+InOrderDynInst::cpuId()
+{
+    return cpu->cpuId();
+}
+
 void
 InOrderDynInst::setMachInst(ExtMachInst machInst)
 {
@@ -330,7 +336,7 @@ InOrderDynInst::setSquashInfo(unsigned stage_num)
         squashSeqNum = seqNum;
 
 #if ISA_HAS_DELAY_SLOT
-    if (isControl()) {
+    if (staticInst && isControl()) {
         TheISA::PCState nextPC = pc;
         TheISA::advancePC(nextPC, staticInst);
 

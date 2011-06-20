@@ -319,6 +319,7 @@ class InOrderCPU : public BaseCPU
     SkedCacheIt endOfSkedIt;
 
     ThePipeline::RSkedPtr frontEndSked;
+    ThePipeline::RSkedPtr faultSked;
 
     /** Add a new instruction schedule to the schedule cache */
     void addToSkedCache(DynInstPtr inst, ThePipeline::RSkedPtr inst_sked)
@@ -366,6 +367,7 @@ class InOrderCPU : public BaseCPU
     }
 
     ThePipeline::RSkedPtr createFrontEndSked();
+    ThePipeline::RSkedPtr createFaultSked();
     ThePipeline::RSkedPtr createBackEndSked(DynInstPtr inst);
 
     class StageScheduler {
@@ -751,7 +753,7 @@ class InOrderCPU : public BaseCPU
     virtual void wakeup();
 #endif
 
-    // LL/SC debug functionality
+    /* LL/SC debug functionality
     unsigned stCondFails;
 
     unsigned readStCondFailures() 
@@ -759,6 +761,7 @@ class InOrderCPU : public BaseCPU
 
     unsigned setStCondFailures(unsigned st_fails) 
     { return stCondFails = st_fails; }
+    */
 
     /** Returns a pointer to a thread context. */
     ThreadContext *tcBase(ThreadID tid = 0)

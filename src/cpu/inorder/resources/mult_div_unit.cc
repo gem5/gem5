@@ -192,7 +192,15 @@ MultDivUnit::execute(int slot_num)
 {
     ResourceRequest* mult_div_req = reqs[slot_num];
     DynInstPtr inst = reqs[slot_num]->inst;
- 
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderMDU,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
+                inst->pcState());
+        mult_div_req->done();
+        return;
+    }
+
     DPRINTF(InOrderMDU, "Executing [sn:%i] ...\n", slot_num);
 
     switch (mult_div_req->cmd)

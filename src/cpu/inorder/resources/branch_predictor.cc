@@ -68,8 +68,14 @@ BranchPredictor::execute(int slot_num)
 {
     ResourceRequest* bpred_req = reqs[slot_num];
     DynInstPtr inst = bpred_req->inst;
-    ThreadID tid = inst->readTid();
-    InstSeqNum seq_num = inst->seqNum;
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderBPred,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
+                inst->pcState());
+        bpred_req->done();
+        return;
+    }
 
     if (!inst->isControl()) {
         DPRINTF(Resource, "Ignoring %s, not a control inst.\n",
@@ -78,7 +84,8 @@ BranchPredictor::execute(int slot_num)
         return;
     }
 
-
+    ThreadID tid = inst->readTid();
+    InstSeqNum seq_num = inst->seqNum;
     switch (bpred_req->cmd)
     {
       case PredictBranch:
@@ -110,6 +117,8 @@ BranchPredictor::execute(int slot_num)
                     inst->setBranchPred(predict_taken);
                 }
 
+                //@todo: Check to see how hw_rei is handled here...how does PC,NPC get
+                //       updated to compare mispredict against???
                 inst->setPredTarg(pred_PC);
                 DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: %s Predicted PC is "
                         "%s.\n", tid, seq_num, inst->instName(), pred_PC);

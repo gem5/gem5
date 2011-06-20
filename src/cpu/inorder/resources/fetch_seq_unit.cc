@@ -81,6 +81,15 @@ FetchSeqUnit::execute(int slot_num)
     ThreadID tid = inst->readTid();
     int stage_num = fs_req->getStageNum();
 
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderFetchSeq,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", tid, inst->seqNum, inst->fault->name(),
+                inst->pcState());
+        fs_req->done();
+        return;
+    }
+
     switch (fs_req->cmd)
     {
       case AssignNextPC:
@@ -302,8 +311,6 @@ FetchSeqUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
 {
     pcValid[tid] = true;
     pc[tid] = cpu->pcState(tid);
-    DPRINTF(Fault, "[tid:%i]: Trap updating to PC: "
-            "%s.\n", tid, pc[tid]);
     DPRINTF(InOrderFetchSeq, "[tid:%i]: Trap updating to PC: "
             "%s.\n", tid, pc[tid]);
 }

@@ -355,6 +355,12 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Returns the fault type. */
     Fault getFault() { return fault; }
 
+    /** Read this CPU's ID. */
+    int cpuId();
+
+    /** Read this context's system-wide ID **/
+    int contextId() { return thread->contextId(); }
+
     ////////////////////////////////////////////////////////////
     //
     //  INSTRUCTION TYPES -  Forward checks to StaticInst object.
@@ -473,12 +479,12 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         curSkedEntry++;
 
         if (inFrontEnd && curSkedEntry == frontSked_end) {
-          DPRINTF(InOrderDynInst, "[sn:%i] Switching to "
+            DPRINTF(InOrderDynInst, "[sn:%i] Switching to "
                   "back end schedule.\n", seqNum);
           assert(backSked != NULL);
-            curSkedEntry.init(backSked);
-            curSkedEntry = backSked->begin();
-            inFrontEnd = false;
+          curSkedEntry.init(backSked);
+          curSkedEntry = backSked->begin();
+          inFrontEnd = false;
         } else if (!inFrontEnd && curSkedEntry == backSked_end) {
             return true;
         }
@@ -914,6 +920,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
                                         ThreadID tid = InvalidThreadID);
     virtual void setRegOtherThread(unsigned idx, const uint64_t &val,
                                    ThreadID tid = InvalidThreadID);
+
+    /** Returns the number of consecutive store conditional failures. */
+    unsigned readStCondFailures()
+    { return thread->storeCondFailures; }
 
     /** Sets the number of consecutive store conditional failures. */
     void setStCondFailures(unsigned sc_failures)

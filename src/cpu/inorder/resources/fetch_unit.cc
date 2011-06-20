@@ -247,7 +247,14 @@ FetchUnit::execute(int slot_num)
     Addr block_addr = cacheBlockAlign(inst->getMemAddr());
     int asid = cpu->asid[tid];
 
-    inst->fault = NoFault;
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", tid, inst->seqNum, inst->fault->name(),
+                cacheBlockAlign(inst->getMemAddr()));
+        finishCacheUnitReq(inst, cache_req);
+        return;
+    }
 
     switch (cache_req->cmd)
     {
@@ -295,7 +302,7 @@ FetchUnit::execute(int slot_num)
                 return;
             }
 
-            doTLBAccess(inst, cache_req, cacheBlkSize, 0, TheISA::TLB::Execute);
+            doTLBAccess(inst, cache_req, cacheBlkSize, Request::INST_FETCH, TheISA::TLB::Execute);
 
             if (inst->fault == NoFault) {
                 DPRINTF(InOrderCachePort,
@@ -320,6 +327,15 @@ FetchUnit::execute(int slot_num)
         }
 
       case CompleteFetch:
+        if (inst->fault != NoFault) {
+            DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", tid, inst->seqNum, inst->fault->name(),
+                inst->getMemAddr());
+            finishCacheUnitReq(inst, cache_req);
+            return;
+        }
+
         if (cache_req->fetchBufferFill) {
             // Block request if it's depending on a previous fetch, but it hasnt made it yet
             std::list<FetchBlock*>::iterator fetch_it = findBlock(fetchBuffer, asid, block_addr);

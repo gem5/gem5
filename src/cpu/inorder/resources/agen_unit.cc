@@ -58,6 +58,15 @@ AGENUnit::execute(int slot_num)
 #endif
     InstSeqNum seq_num = inst->seqNum;
 
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderAGEN,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", tid, inst->seqNum, inst->fault->name(),
+                inst->pcState());
+        agen_req->done();
+        return;
+    }
+
     switch (agen_req->cmd)
     {
       case GenerateAddr:
