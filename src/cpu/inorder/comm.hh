@@ -44,62 +44,23 @@
 /** Struct that defines the information passed from in between stages */
 /** This information mainly goes forward through the pipeline. */
 struct InterStageStruct {
+    //@todo: probably should make this a list since the amount of
+    //       instructions that get passed forward per cycle is
+    //       really dependent on issue width, CPI, etc.
     std::vector<ThePipeline::DynInstPtr> insts;
-    bool squash;
-    bool branchMispredict;
-    bool branchTaken;
-    uint64_t mispredPC;
-    uint64_t nextPC;
-    InstSeqNum squashedSeqNum;
-    bool includeSquashInst;
 
-    InterStageStruct()
-        : squash(false),
-          branchMispredict(false), branchTaken(false),
-          mispredPC(0), nextPC(0),
-          squashedSeqNum(0), includeSquashInst(false)
-    { }
-
+    // Add any information that needs to be passed forward to stages
+    // below ...
 };
 
-/** Turn This into a Class */
 /** Struct that defines all backwards communication. */
 struct TimeStruct {
     struct stageComm {
         bool squash;
-        bool predIncorrect;
-        uint64_t branchAddr;
-
-        // @todo: Might want to package this kind of branch stuff into a single
-        // struct as it is used pretty frequently.
-        bool branchMispredict;
-        bool branchTaken;
-        Addr mispredPC;
-        TheISA::PCState nextPC;
-
-        unsigned branchCount;
-
-        // Represents the instruction that has either been retired or
-        // squashed.  Similar to having a single bus that broadcasts the
-        // retired or squashed sequence number.
         InstSeqNum doneSeqNum;
-        InstSeqNum bdelayDoneSeqNum;
-        bool squashDelaySlot;
-
-        //Just in case we want to do a commit/squash on a cycle
-        //(necessary for multiple ROBs?)
-        bool commitInsts;
-        InstSeqNum squashSeqNum;
-
-        // Communication specifically to the IQ to tell the IQ that it can
-        // schedule a non-speculative instruction.
-        InstSeqNum nonSpecSeqNum;
 
         bool uncached;
         ThePipeline::DynInstPtr uncachedLoad;
-
-        bool interruptPending;
-        bool clearInterrupt;
     };
 
     stageComm stageInfo[ThePipeline::NumStages][ThePipeline::MaxThreads];
