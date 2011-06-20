@@ -203,9 +203,9 @@ class CacheUnit : public Resource
     }
 
     bool tlbBlocked[ThePipeline::MaxThreads];
+    InstSeqNum tlbBlockSeqNum[ThePipeline::MaxThreads];
 
     TheISA::TLB* tlb();
-
     TheISA::TLB *_tlb;
 };
 

@@ -119,6 +119,7 @@ CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
 
     for (int i=0; i < MaxThreads; i++) {
         tlbBlocked[i] = false;
+        tlbBlockSeqNum[i] = 0;
     }
 }
 
@@ -391,12 +392,8 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                        int flags, TheISA::TLB::Mode tlb_mode)
 {
     ThreadID tid = inst->readTid();
-    //Addr aligned_addr = inst->getMemAddr();
-    unsigned stage_num = cache_req->getStageNum();
-    unsigned slot_idx = cache_req->getSlot();
 
     setupMemRequest(inst, cache_req, acc_size, flags);
-
     inst->fault =
         _tlb->translateAtomic(cache_req->memReq,
                               cpu->thread[tid]->getTC(), tlb_mode);
@@ -406,16 +403,25 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                 "addr:%08p for [sn:%i].\n", tid, inst->fault->name(),
                 cache_req->memReq->getVaddr(), inst->seqNum);
 
-        cpu->pipelineStage[stage_num]->setResStall(cache_req, tid);
-
         tlbBlocked[tid] = true;
+        tlbBlockSeqNum[tid] = inst->seqNum;
 
+#if !FULL_SYSTEM
+        unsigned stage_num = cache_req->getStageNum();
+
+        cpu->pipelineStage[stage_num]->setResStall(cache_req, tid);
         cache_req->tlbStall = true;
 
         // schedule a time to process the tlb miss.
         // latency hardcoded to 1 (for now), but will be updated
         // when timing translation gets added in
         scheduleEvent(slot_idx, 1);
+        unsigned slot_idx = cache_req->getSlot();
+#endif
+
+        // Mark it as complete so it can pass through next stage.
+        // Fault Handling will happen at commit/graduation
+        cache_req->setCompleted();
     } else {
         DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
                 "to phys. addr:%08p.\n", tid, inst->seqNum,
@@ -654,8 +660,6 @@ CacheUnit::execute(int slot_num)
     std::string acc_type = "write";
 #endif
 
-    inst->fault = NoFault;
-
     switch (cache_req->cmd)
     {
 
@@ -712,6 +716,16 @@ CacheUnit::execute(int slot_num)
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Trying to Complete Data Read Access\n",
                 tid, inst->seqNum);
+
+        if (inst->fault != NoFault) {
+            DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", tid, inst->seqNum, inst->fault->name(),
+                inst->getMemAddr());
+            finishCacheUnitReq(inst, cache_req);
+            return;
+        }
+
         //@todo: timing translations need to check here...
         assert(!inst->isInstPrefetch() && "Can't Handle Inst. Prefecthes");
         if (cache_req->isMemAccComplete() || inst->isDataPrefetch()) {
@@ -729,6 +743,15 @@ CacheUnit::execute(int slot_num)
             DPRINTF(InOrderCachePort,
                     "[tid:%i]: [sn:%i]: Trying to Complete Data Write Access\n",
                     tid, inst->seqNum);
+
+            if (inst->fault != NoFault) {
+                DPRINTF(InOrderCachePort,
+                        "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to ",
+                        "next stage.\n", tid, inst->seqNum, inst->fault->name(),
+                        inst->getMemAddr());
+                finishCacheUnitReq(inst, cache_req);
+                return;
+            }
 
             //@todo: check that timing translation is finished here
             RequestPtr mem_req = cache_req->memReq;
@@ -789,7 +812,8 @@ CacheUnit::execute(int slot_num)
                 "[tid:%i]: [sn:%i]: Trying to Complete Split Data Write "
                 "Access\n", tid, inst->seqNum);
         //@todo: illegal to have a unaligned cond.swap or llsc?
-        assert(!cache_req->memReq->isSwap() && !cache_req->memReq->isCondSwap() && !cache_req->memReq->isLLSC());
+        assert(!cache_req->memReq->isSwap() && !cache_req->memReq->isCondSwap()
+               && !cache_req->memReq->isLLSC());
 
         if (cache_req->isMemAccPending()) {
             cache_req->dataPkt->reqData = cache_req->reqData;
@@ -1224,6 +1248,12 @@ void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
                   InstSeqNum squash_seq_num, ThreadID tid)
 {
+    if (tlbBlockSeqNum[tid] > squash_seq_num) {
+        DPRINTF(InOrderCachePort, "Releasing TLB Block due to "
+                " squash after [sn:%i].\n", squash_seq_num);
+        tlbBlocked[tid] = false;
+    }
+
     for (int i = 0; i < width; i++) {
         ResReqPtr req_ptr = reqs[i];
 

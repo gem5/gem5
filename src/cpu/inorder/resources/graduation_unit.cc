@@ -70,18 +70,7 @@ GraduationUnit::execute(int slot_num)
                 DPRINTF(Fault, "[sn:%i]: fault %s found for %s\n",
                         inst->seqNum, inst->fault->name(),
                         inst->instName());
-                inst->setSquashInfo(stage_num);
-                setupSquash(inst, stage_num, tid);
-
-                if (inst->traceData && DTRACE(ExecFaulting)) {
-                    inst->traceData->setStageCycle(stage_num, curTick());
-                    inst->traceData->setFetchSeq(inst->seqNum);
-                    inst->traceData->dump();
-                    delete inst->traceData;
-                    inst->traceData = NULL;
-                }
-
-                cpu->trapContext(inst->fault, tid, inst);
+                squashThenTrap(stage_num, inst);
                 grad_req->done(false);
                 return;
             }

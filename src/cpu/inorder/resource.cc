@@ -336,6 +336,25 @@ Resource::squashDueToMemStall(DynInstPtr inst, int stage_num,
     squash(inst, stage_num, squash_seq_num, tid);    
 }
 
+void
+Resource::squashThenTrap(int stage_num, DynInstPtr inst)
+{
+    ThreadID tid = inst->readTid();
+
+    inst->setSquashInfo(stage_num);
+    setupSquash(inst, stage_num, tid);
+
+    if (inst->traceData && DTRACE(ExecFaulting)) {
+        inst->traceData->setStageCycle(stage_num, curTick());
+        inst->traceData->setFetchSeq(inst->seqNum);
+        inst->traceData->dump();
+        delete inst->traceData;
+        inst->traceData = NULL;
+    }
+
+    cpu->trapContext(inst->fault, tid, inst);
+}
+
 Tick
 Resource::ticks(int num_cycles)
 {

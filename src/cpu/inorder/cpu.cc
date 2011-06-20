@@ -847,6 +847,7 @@ void
 InOrderCPU::trap(Fault fault, ThreadID tid, DynInstPtr inst)
 {
     fault->invoke(tcBase(tid), inst->staticInst);
+    removePipelineStalls(tid);
 }
 
 void 
@@ -1650,6 +1651,7 @@ InOrderCPU::wakeup()
 void
 InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
 {
+    //@todo: squash behind syscall
     scheduleCpuEvent(Syscall, fault, tid, inst, delay, Syscall_Pri);
 }
 

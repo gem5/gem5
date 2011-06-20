@@ -168,6 +168,9 @@ class Resource {
     virtual void squashDueToMemStall(DynInstPtr inst, int stage_num,
                                      InstSeqNum squash_seq_num, ThreadID tid);
 
+    /** Handle Squash & Trap that occured from an instruction in a resource */
+    void squashThenTrap(int stage_num, DynInstPtr inst);
+
     /** The number of instructions available that this resource can
      *  can still process
      */
