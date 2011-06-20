@@ -98,8 +98,6 @@ CacheUnit::CachePort::recvStatusChange(Status status)
 bool
 CacheUnit::CachePort::recvTiming(Packet *pkt)
 {
-    DPRINTF(InOrderCachePort, "RecvTiming: Pkt %x,\n", pkt->getAddr());
-
     if (pkt->isError())
         DPRINTF(InOrderCachePort, "Got error packet back for address: %x\n",
                 pkt->getAddr());
@@ -393,10 +391,9 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
         if (cache_req->memReq == NULL) {
             cache_req->memReq =
                 new Request(cpu->asid[tid], aligned_addr, acc_size, flags,
-                            inst->instAddr(), cpu->readCpuId(), //@todo: use context id
+                            inst->instAddr(),
+                            cpu->readCpuId(), //@todo: use context id
                             tid);
-            DPRINTF(InOrderCachePort, "[sn:%i] Created memReq @%x, ->%x\n",
-                    inst->seqNum, &cache_req->memReq, cache_req->memReq);
         }
     } else {
         assert(inst->splitInst);
@@ -790,14 +787,6 @@ CacheUnit::execute(int slot_num)
 
             //@todo: check that timing translation is finished here
             RequestPtr mem_req = cache_req->memReq;
-            DPRINTF(InOrderCachePort,
-                    "[tid:%i]: [sn:%i]: cSwap:%i LLSC:%i isSwap:%i isCond:%i\n",
-                    tid, inst->seqNum,
-                    mem_req->isCondSwap(),
-                    mem_req->isLLSC(),
-                    mem_req->isSwap(),
-                    inst->isStoreConditional());
-
             if (mem_req->isCondSwap() || mem_req->isLLSC() || mem_req->isSwap()) {
                 DPRINTF(InOrderCachePort, "Detected Conditional Store Inst.\n");
 
@@ -820,7 +809,6 @@ CacheUnit::execute(int slot_num)
                 DPRINTF(InOrderCachePort, "Store Instruction Finished Completion.\n");
 
             //@todo: if split inst save data
-
             finishCacheUnitReq(inst, cache_req);
         }
         break;
@@ -892,11 +880,9 @@ CacheUnit::buildDataPacket(CacheRequest *cache_req)
                                             cache_req->pktCmd,
                                             Packet::Broadcast,
                                             cache_req->instIdx);
-    DPRINTF(InOrderCachePort, "[slot:%i]: Slot marked for %x [pkt:%x->%x]\n",
+    DPRINTF(InOrderCachePort, "[slot:%i]: Slot marked for %x\n",
             cache_req->getSlot(),
-            cache_req->dataPkt->getAddr(),
-            &cache_req->dataPkt,
-            cache_req->dataPkt);
+            cache_req->dataPkt->getAddr());
 
     cache_req->dataPkt->hasSlot = true;
     cache_req->dataPkt->dataStatic(cache_req->reqData);
@@ -1062,10 +1048,8 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
     assert(cache_pkt);
 
-    DPRINTF(InOrderCachePort, "Finished request for %x [pkt:%x->%x]\n",
-            pkt->getAddr(), &cache_pkt, cache_pkt);
+    DPRINTF(InOrderCachePort, "Finished request for %x\n", pkt->getAddr());
 
-    //@todo: process Squashed Completion
     if (processSquash(cache_pkt))
         return;
 
@@ -1156,8 +1140,6 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                                            cache_pkt->getSize()));
     }
 
-    DPRINTF(InOrderCachePort, "Deleting packets %x (%x).\n",
-            cache_pkt, cache_req->dataPkt);
 
     if (split_pkt) {
         delete split_pkt;
@@ -1346,20 +1328,14 @@ CacheRequest::clearRequest()
         if (reqData && !splitAccess)
             delete [] reqData;
 
-        if (memReq) {
-            DPRINTF(InOrderCachePort, "Clearing request for %x...%x\n",
-                    memReq->getVaddr(), (memReq->hasPaddr()) ? memReq->getPaddr() : 0);
+        if (memReq)
             delete memReq;
-        }
 
         if (dataPkt)
             delete dataPkt;
     } else {
-        if (dataPkt) {
+        if (dataPkt)
             dataPkt->hasSlot = false;
-            DPRINTF(InOrderCachePort, "[slot:%i]: Slot unmarked for %x for [pkt:%x->%x]\n",
-                    getSlot(), dataPkt->getAddr(), &dataPkt, dataPkt);
-        }
     }
 
     memReq = NULL;

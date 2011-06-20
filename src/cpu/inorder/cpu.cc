@@ -1370,11 +1370,6 @@ InOrderCPU::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 MiscReg
 InOrderCPU::readMiscReg(int misc_reg, ThreadID tid)
 {
-    DPRINTF(InOrderCPU, "MiscReg: %i\n", misc_reg);
-    DPRINTF(InOrderCPU, "tid: %i\n", tid);
-    DPRINTF(InOrderCPU, "tcBase: %x\n", tcBase(tid));
-    DPRINTF(InOrderCPU, "isa-tid: %x\n", &isa[tid]);
-
     return isa[tid].readMiscReg(misc_reg, tcBase(tid));
 }
 
