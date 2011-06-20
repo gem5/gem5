@@ -54,7 +54,6 @@ DecodeUnit::execute(int slot_num)
 {
     ResourceRequest* decode_req = reqs[slot_num];
     DynInstPtr inst = reqs[slot_num]->inst;
-    ThreadID tid = inst->readTid();
 
     switch (decode_req->cmd)
     {
@@ -71,11 +70,12 @@ DecodeUnit::execute(int slot_num)
             if (inst->backSked != NULL) {
                 DPRINTF(InOrderDecode,
                     "[tid:%i]: Back End Schedule created for %s  [sn:%i].\n",
-                        tid, inst->instName(), inst->seqNum);
+                        inst->readTid(), inst->instName(), inst->seqNum);
                 decode_req->done();
             } else {
                 DPRINTF(Resource,
-                    "[tid:%i] Static Inst not available to decode.\n", tid);
+                    "[tid:%i] Static Inst not available to decode.\n",
+                        inst->readTid());
                 DPRINTF(Resource,
                     "Unable to create schedule for instruction [sn:%i] \n",
                     inst->seqNum);
@@ -90,14 +90,3 @@ DecodeUnit::execute(int slot_num)
     }
 }
 
-
-void
-DecodeUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
-                   ThreadID tid)
-{
-    DPRINTF(InOrderDecode,
-            "[tid:%i]: Updating due to squash from stage %i after [sn:%i].\n",
-            tid, stage_num, squash_seq_num);
-
-    //cpu->removeInstsUntil(squash_seq_num, tid);
-}

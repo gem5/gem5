@@ -88,9 +88,10 @@ ExecutionUnit::execute(int slot_num)
     ResourceRequest* exec_req = reqs[slot_num];
     DynInstPtr inst = reqs[slot_num]->inst;
     Fault fault = NoFault;
-    InstSeqNum seq_num = inst->seqNum;
     Tick cur_tick = curTick();
-
+#if TRACING_ON
+    InstSeqNum seq_num = inst->seqNum;
+#endif
     if (cur_tick == serializeTick) {
         DPRINTF(InOrderExecute, "Can not execute [tid:%i][sn:%i][PC:%s] %s. "
                 "All instructions are being serialized this cycle\n",
