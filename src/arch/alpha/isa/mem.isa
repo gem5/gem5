@@ -396,7 +396,7 @@ def template MiscExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        warn_once("Prefetch instrutions is Alpha do not do anything\n");
+        warn_once("Prefetch instructions in Alpha do not do anything\n");
         if (fault == NoFault) {
             %(memacc_code)s;
         }
