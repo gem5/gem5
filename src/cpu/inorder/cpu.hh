@@ -300,9 +300,9 @@ class InOrderCPU : public BaseCPU
     typedef uint32_t SkedID;
 
     /** Cache of Instruction Schedule using the instruction's name as a key */
-    static std::map<SkedID, ThePipeline::RSkedPtr> skedCache;
+    static m5::hash_map<SkedID, ThePipeline::RSkedPtr> skedCache;
 
-    typedef std::map<SkedID, ThePipeline::RSkedPtr>::iterator SkedCacheIt;
+    typedef m5::hash_map<SkedID, ThePipeline::RSkedPtr>::iterator SkedCacheIt;
 
     /** Initialized to last iterator in map, signifying a invalid entry
         on map searches

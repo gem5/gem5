@@ -358,10 +358,8 @@ InOrderCPU::~InOrderCPU()
 {
     delete resPool;
 
-    std::map<SkedID, ThePipeline::RSkedPtr>::iterator sked_it =
-        skedCache.begin();
-    std::map<SkedID, ThePipeline::RSkedPtr>::iterator sked_end =
-        skedCache.end();
+    SkedCacheIt sked_it = skedCache.begin();
+    SkedCacheIt sked_end = skedCache.end();
 
     while (sked_it != sked_end) {
         delete (*sked_it).second;
@@ -370,7 +368,7 @@ InOrderCPU::~InOrderCPU()
     skedCache.clear();
 }
 
-std::map<InOrderCPU::SkedID, ThePipeline::RSkedPtr> InOrderCPU::skedCache;
+m5::hash_map<InOrderCPU::SkedID, ThePipeline::RSkedPtr> InOrderCPU::skedCache;
 
 RSkedPtr
 InOrderCPU::createFrontEndSked()
