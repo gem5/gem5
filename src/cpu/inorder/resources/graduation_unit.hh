@@ -46,6 +46,7 @@ class GraduationUnit : public Resource {
     typedef ThePipeline::DynInstPtr DynInstPtr;
 
     enum Command {
+        CheckFault,
         GraduateInst
     };
 

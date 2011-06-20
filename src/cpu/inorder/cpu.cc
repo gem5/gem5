@@ -517,7 +517,7 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
         }
     }
 
-    W.needs(Grad, GraduationUnit::GraduateInst);
+    W.needs(Grad, GraduationUnit::CheckFault);
 
     for (int idx=0; idx < inst->numDestRegs(); idx++) {
         W.needs(RegManager, UseDefUnit::WriteDestReg, idx);
@@ -525,6 +525,8 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
 
     if (inst->isControl())
         W.needs(BPred, BranchPredictor::UpdatePredictor);
+
+    W.needs(Grad, GraduationUnit::GraduateInst);
 
     // Insert Back Schedule into our cache of
     // resource schedules

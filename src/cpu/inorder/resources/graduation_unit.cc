@@ -56,21 +56,29 @@ GraduationUnit::execute(int slot_num)
 
     switch (grad_req->cmd)
     {
+      case CheckFault:
+        {
+            // Handle Any Faults Before Graduating Instruction
+            if (inst->fault != NoFault) {
+                DPRINTF(InOrderGraduation, "[tid:%i]: [sn:%i]: fault %s found for %s\n",
+                        tid, inst->seqNum, inst->fault->name(),
+                        inst->instName());
+                squashThenTrap(stage_num, inst);
+                grad_req->done(false);
+                return;
+            }
+
+            DPRINTF(InOrderGraduation, "[tid:%i] [sn:%i]: No fault found for %s\n",
+                    tid, inst->seqNum, inst->instName());
+            grad_req->done();
+        }
+        break;
+
       case GraduateInst:
         {
             if (lastNonSpecTick == curTick()) {
                 DPRINTF(InOrderGraduation, "Unable to graduate [sn:%i]. "
                         "Only 1 nonspec inst. per cycle can graduate.\n");
-                grad_req->done(false);
-                return;
-            }
-
-            // Handle Any Faults Before Graduating Instruction
-            if (inst->fault != NoFault) {
-                DPRINTF(Fault, "[sn:%i]: fault %s found for %s\n",
-                        inst->seqNum, inst->fault->name(),
-                        inst->instName());
-                squashThenTrap(stage_num, inst);
                 grad_req->done(false);
                 return;
             }
