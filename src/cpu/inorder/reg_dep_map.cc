@@ -104,7 +104,7 @@ RegDepMap::insert(DynInstPtr inst)
 
         inst->flattenDestReg(i, flat_idx);
 
-        if (flat_idx == TheISA::ZeroReg) {
+        if (flat_idx == TheISA::ZeroReg && reg_type == InOrderCPU::IntType) {
             DPRINTF(RegDepMap, "[sn:%i]: Ignoring Insert-Dependency tracking for "
                     "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
                     flat_idx);
@@ -143,15 +143,18 @@ RegDepMap::remove(DynInstPtr inst)
 
         for (int i = 0; i < dest_regs; i++) {
             RegIndex flat_idx = inst->flattenedDestRegIdx(i);
+            InOrderCPU::RegType reg_type = cpu->getRegType(inst->destRegIdx(i));
 
-            if (flat_idx == TheISA::ZeroReg) {
+            // Merge Dyn Inst & CPU Result Types
+            if (flat_idx == TheISA::ZeroReg &&
+                reg_type == InOrderCPU::IntType) {
                 DPRINTF(RegDepMap, "[sn:%i]: Ignoring Remove-Dependency tracking for "
                         "ISA-ZeroReg (Int. Reg %i).\n", inst->seqNum,
                         flat_idx);
                 continue;
             }
 
-            InOrderCPU::RegType reg_type = cpu->getRegType(inst->destRegIdx(i));
+
             remove(reg_type, flat_idx, inst);
         }
     }
@@ -174,7 +177,7 @@ RegDepMap::remove(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
         }
         list_it++;
     }
-    panic("[sn:%i] Did not find entry for %i ", inst->seqNum, idx);
+    panic("[sn:%i] Did not find entry for %i, type:%i\n", inst->seqNum, idx, reg_type);
 }
 
 void

@@ -142,6 +142,9 @@ ExecutionUnit::execute(int slot_num)
 
                 // Evaluate Branch
                 fault = inst->execute();
+
+                // Should unconditional control , pc relative count as an
+                // execution??? Probably not.
                 executions++;
 
                 if (fault == NoFault) {
@@ -204,11 +207,19 @@ ExecutionUnit::execute(int slot_num)
                 if (fault == NoFault) {
                     inst->setExecuted();
 
-                    DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: The result "
-                            "of execution is 0x%x.\n", inst->readTid(),
-                            seq_num,
-                            (inst->resultType(0) == InOrderDynInst::Float) ?
-                            inst->readFloatResult(0) : inst->readIntResult(0));
+#if TRACING_ON
+                    for (int didx = 0; didx < inst->numDestRegs(); didx++)
+                        if (inst->resultType(didx) == InOrderDynInst::Float ||
+                            inst->resultType(didx) == InOrderDynInst::Double)
+                            DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: Dest result %i "
+                                    "of FP execution is %08f (%x).\n", inst->readTid(),
+                                    seq_num, didx, inst->readFloatResult(didx),
+                                    inst->readIntResult(didx));
+                        else
+                            DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: Dest result %i "
+                                    "of Int execution is 0x%x.\n", inst->readTid(),
+                                    seq_num, didx, inst->readIntResult(didx));
+#endif
 
 #if !FULL_SYSTEM
                     // The Syscall might change the PC, so conservatively

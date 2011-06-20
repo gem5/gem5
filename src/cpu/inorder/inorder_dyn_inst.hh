@@ -89,6 +89,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     // Floating point register type.
     typedef TheISA::FloatReg FloatReg;
     // Floating point register type.
+    typedef TheISA::FloatRegBits FloatRegBits;
+    // Floating point register type.
     typedef TheISA::MiscReg MiscReg;
 
     typedef short int PhysRegIndex;
@@ -207,13 +209,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** How many source registers are ready. */
     unsigned readyRegs;
 
-    /** An instruction src/dest has to be one of these types */
-    union InstValue {
-        uint64_t integer;
-        double dbl;
-    };
-
-    //@TODO: Naming Convention for Enums?
     enum ResultType {
         None,
         Integer,
@@ -221,19 +216,30 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         Double
     };
 
+    /** An instruction src/dest has to be one of these types */
+    struct InstValue {
+        IntReg intVal;
+        union {
+            FloatReg f;
+            FloatRegBits i;
+        } fpVal;
+
+        InstValue()
+        {
+            intVal = 0;
+            fpVal.i = 0;
+        }
+    };
 
     /** Result of an instruction execution */
     struct InstResult {
         ResultType type;
-        InstValue val;
+        InstValue res;
         Tick tick;
 
         InstResult()
           : type(None), tick(0)
-        {
-          val.integer = 0;
-          val.dbl = 0;
-        }
+        { }
     };
 
     /** The source of the instruction; assumes for now that there's only one
@@ -852,10 +858,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      *  source register to a value. */
     void setIntSrc(int idx, uint64_t val);
     void setFloatSrc(int idx, FloatReg val);
-    void setFloatRegBitsSrc(int idx, uint64_t val);
+    void setFloatRegBitsSrc(int idx, TheISA::FloatRegBits val);
 
-    uint64_t* getIntSrcPtr(int idx) { return &instSrc[idx].integer; }
-    uint64_t readIntSrc(int idx) { return instSrc[idx].integer; }
+    uint64_t* getIntSrcPtr(int idx) { return &instSrc[idx].intVal; }
+    uint64_t readIntSrc(int idx) { return instSrc[idx].intVal; }
 
     /** These Instructions read a integer/float/misc. source register
      *  value in the instruction. The instruction's execute function will
@@ -879,18 +885,17 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
     uint64_t readIntResult(int idx)
     {
-        return instResult[idx].val.integer;
+        return instResult[idx].res.intVal;
     }
 
-    /** Depending on type, return Float or Double */
-    double readFloatResult(int idx)
+    FloatReg readFloatResult(int idx)
     {
-       return instResult[idx].val.dbl;
+       return instResult[idx].res.fpVal.f;
     }
 
     Tick readResultTime(int idx) { return instResult[idx].tick; }
 
-    uint64_t* getIntResultPtr(int idx) { return &instResult[idx].val.integer; }
+    uint64_t* getIntResultPtr(int idx) { return &instResult[idx].res.intVal; }
 
     /** This is the interface that an instruction will use to write
      *  it's destination register.

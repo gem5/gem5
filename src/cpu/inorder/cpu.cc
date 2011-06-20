@@ -195,6 +195,7 @@ InOrderCPU::InOrderCPU(Params *params)
       timeBuffer(2 , 2),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),
+      stCondFails(0),
 #if FULL_SYSTEM
       system(params->system),
       physmem(system->physmem),
@@ -206,6 +207,7 @@ InOrderCPU::InOrderCPU(Params *params)
       switchCount(0),
       deferRegistration(false/*params->deferRegistration*/),
       stageTracing(params->stageTracing),
+      lastRunningCycle(0),
       instsPerSwitch(0)
 {    
     ThreadID active_threads;
@@ -258,6 +260,9 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        pc[tid].set(0);
+        lastCommittedPC[tid].set(0);
+
 #if FULL_SYSTEM
         // SMT is not supported in FS mode yet.
         assert(numThreads == 1);
@@ -1170,12 +1175,18 @@ InOrderCPU::readIntReg(RegIndex reg_idx, ThreadID tid)
 FloatReg
 InOrderCPU::readFloatReg(RegIndex reg_idx, ThreadID tid)
 {
+    DPRINTF(FloatRegs, "[tid:%i]: Reading Float Reg %i as %x, %08f\n",
+            tid, reg_idx, floatRegs.i[tid][reg_idx], floatRegs.f[tid][reg_idx]);
+
     return floatRegs.f[tid][reg_idx];
 }
 
 FloatRegBits
 InOrderCPU::readFloatRegBits(RegIndex reg_idx, ThreadID tid)
-{;
+{
+    DPRINTF(FloatRegs, "[tid:%i]: Reading Float Reg %i as %x, %08f\n",
+            tid, reg_idx, floatRegs.i[tid][reg_idx], floatRegs.f[tid][reg_idx]);
+
     return floatRegs.i[tid][reg_idx];
 }
 
@@ -1199,6 +1210,11 @@ void
 InOrderCPU::setFloatReg(RegIndex reg_idx, FloatReg val, ThreadID tid)
 {
     floatRegs.f[tid][reg_idx] = val;
+    DPRINTF(FloatRegs, "[tid:%i]: Setting Float. Reg %i bits to "
+            "%x, %08f\n",
+            tid, reg_idx,
+            floatRegs.i[tid][reg_idx],
+            floatRegs.f[tid][reg_idx]);
 }
 
 
@@ -1206,6 +1222,11 @@ void
 InOrderCPU::setFloatRegBits(RegIndex reg_idx, FloatRegBits val, ThreadID tid)
 {
     floatRegs.i[tid][reg_idx] = val;
+    DPRINTF(FloatRegs, "[tid:%i]: Setting Float. Reg %i bits to "
+            "%x, %08f\n",
+            tid, reg_idx,
+            floatRegs.i[tid][reg_idx],
+            floatRegs.f[tid][reg_idx]);
 }
 
 uint64_t
@@ -1257,6 +1278,11 @@ InOrderCPU::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 MiscReg
 InOrderCPU::readMiscReg(int misc_reg, ThreadID tid)
 {
+    DPRINTF(InOrderCPU, "MiscReg: %i\n", misc_reg);
+    DPRINTF(InOrderCPU, "tid: %i\n", tid);
+    DPRINTF(InOrderCPU, "tcBase: %x\n", tcBase(tid));
+    DPRINTF(InOrderCPU, "isa-tid: %x\n", &isa[tid]);
+
     return isa[tid].readMiscReg(misc_reg, tcBase(tid));
 }
 

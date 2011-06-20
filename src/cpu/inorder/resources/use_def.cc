@@ -181,7 +181,7 @@ UseDefUnit::execute(int slot_idx)
             RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
             inst->flattenSrcReg(ud_idx, flat_idx);
             
-            if (flat_idx == TheISA::ZeroReg) {
+            if (flat_idx == TheISA::ZeroReg && reg_type == InOrderCPU::IntType) {
                 DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Ignoring Reading of ISA-ZeroReg "
                         "(Int. Reg %i).\n", tid, inst->seqNum, flat_idx);
                 ud_req->done();
@@ -226,6 +226,9 @@ UseDefUnit::execute(int slot_idx)
                         inst->setFloatSrc(ud_idx,
                                           cpu->readFloatReg(flat_idx,
                                                             inst->readTid()));
+                        inst->setFloatRegBitsSrc(ud_idx,
+                                                 cpu->readFloatRegBits(flat_idx,
+                                                                       inst->readTid()));
                         floatRegFileReads++;
                     }
                     break;
@@ -238,7 +241,7 @@ UseDefUnit::execute(int slot_idx)
                                 tid, seq_num,
                                 reg_idx - Ctrl_Base_DepTag, flat_idx,
                                 cpu->readMiscReg(flat_idx,
-                                                 inst->readTid()));
+                                inst->readTid()));
                         inst->setIntSrc(ud_idx,
                                         cpu->readMiscReg(flat_idx,
                                                          inst->readTid()));
@@ -331,7 +334,7 @@ UseDefUnit::execute(int slot_idx)
             RegIndex reg_idx = inst->_destRegIdx[ud_idx];
             RegIndex flat_idx = cpu->flattenRegIdx(reg_idx, reg_type, tid);
 
-            if (flat_idx == TheISA::ZeroReg) {
+            if (flat_idx == TheISA::ZeroReg && reg_type == InOrderCPU::IntType) {
                 DPRINTF(IntRegs, "[tid:%i]: Ignoring Writing of ISA-ZeroReg "
                         "(Int. Reg %i)\n", tid, flat_idx);
                 ud_req->done();
@@ -374,7 +377,7 @@ UseDefUnit::execute(int slot_idx)
                         if (inst->resultType(ud_idx) == 
                             InOrderDynInst::Integer) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Writing FP-Bits "
-                                    "Result 0x%x (bits:0x%x) to register "
+                                    "Result %08f (bits:0x%x) to register "
                                     "idx %i (%i).\n",
                                     tid, seq_num,
                                     inst->readFloatResult(ud_idx), 
@@ -388,7 +391,7 @@ UseDefUnit::execute(int slot_idx)
                         } else if (inst->resultType(ud_idx) == 
                                    InOrderDynInst::Float) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Writing Float "
-                                    "Result 0x%x (bits:0x%x) to register "
+                                    "Result %08f (bits:0x%x) to register "
                                     "idx %i (%i).\n",
                                     tid, seq_num, inst->readFloatResult(ud_idx),
                                     inst->readIntResult(ud_idx), 
@@ -400,7 +403,7 @@ UseDefUnit::execute(int slot_idx)
                         } else if (inst->resultType(ud_idx) == 
                                    InOrderDynInst::Double) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Writing Double "
-                                    "Result 0x%x (bits:0x%x) to register "
+                                    "Result %08f (bits:0x%x) to register "
                                     "idx %i (%i).\n",
                                     tid, seq_num,
                                     inst->readFloatResult(ud_idx), 

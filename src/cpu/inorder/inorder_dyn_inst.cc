@@ -69,8 +69,6 @@ InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
     lqIdx(0), sqIdx(0), instListIt(NULL), onInstList(false)
 {
     for(int i = 0; i < MaxInstSrcRegs; i++) {
-        instSrc[i].integer = 0;
-        instSrc[i].dbl = 0;
         _readySrcRegIdx[i] = false;
         _srcRegIdx[i] = 0;
     }
@@ -123,9 +121,6 @@ InOrderDynInst::initVars()
     readyRegs = 0;
 
     nextStage = 0;
-
-    for(int i = 0; i < MaxInstDestRegs; i++)
-        instResult[i].val.integer = 0;
 
     status.reset();
 
@@ -355,39 +350,48 @@ InOrderDynInst::releaseReq(ResourceRequest* req)
 void
 InOrderDynInst::setIntSrc(int idx, uint64_t val)
 {
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Source Value %i being set "
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] [src:%i] Int being set "
             "to %#x.\n", threadNumber, seqNum, idx, val);
-    instSrc[idx].integer = val;
+    instSrc[idx].intVal = val;
 }
 
 /** Records an fp register being set to a value. */
 void
 InOrderDynInst::setFloatSrc(int idx, FloatReg val)
 {
-    instSrc[idx].dbl = val;
+    instSrc[idx].fpVal.f = val;
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] [src:%i] FP being set "
+            "to %x, %08f...%08f\n", threadNumber, seqNum, idx,
+            instSrc[idx].fpVal.i, instSrc[idx].fpVal.f, val);
 }
 
 /** Records an fp register being set to an integer value. */
 void
-InOrderDynInst::setFloatRegBitsSrc(int idx, uint64_t val)
+InOrderDynInst::setFloatRegBitsSrc(int idx, FloatRegBits val)
 {
-    instSrc[idx].integer = val;
+    instSrc[idx].fpVal.i = val;
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] [src:%i] FPBits being set "
+            "to %x, %08f...%x\n", threadNumber, seqNum, idx,
+            instSrc[idx].fpVal.i, instSrc[idx].fpVal.f, val);
 }
 
 /** Reads a integer register. */
 IntReg
 InOrderDynInst::readIntRegOperand(const StaticInst *si, int idx, ThreadID tid)
 {
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Source Value %i read as %#x.\n",
-            threadNumber, seqNum, idx, instSrc[idx].integer);
-    return instSrc[idx].integer;
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] [src:%i] IntVal read as %#x.\n",
+            threadNumber, seqNum, idx, instSrc[idx].intVal);
+    return instSrc[idx].intVal;
 }
 
 /** Reads a FP register. */
 FloatReg
 InOrderDynInst::readFloatRegOperand(const StaticInst *si, int idx)
 {
-    return instSrc[idx].dbl;
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] [src:%i] FPVal being read "
+            "as %x, %08f.\n", threadNumber, seqNum, idx,
+            instSrc[idx].fpVal.i, instSrc[idx].fpVal.f);
+    return instSrc[idx].fpVal.f;
 }
 
 
@@ -395,7 +399,10 @@ InOrderDynInst::readFloatRegOperand(const StaticInst *si, int idx)
 FloatRegBits
 InOrderDynInst::readFloatRegOperandBits(const StaticInst *si, int idx)
 {
-    return instSrc[idx].integer;
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] [src:%i] FPBits being read "
+            "as %x, %08f.\n", threadNumber, seqNum, idx,
+            instSrc[idx].fpVal.i, instSrc[idx].fpVal.f);
+    return instSrc[idx].fpVal.i;
 }
 
 /** Reads a miscellaneous register. */
@@ -414,8 +421,8 @@ InOrderDynInst::readMiscRegOperand(const StaticInst *si, int idx)
 {
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Misc. Reg Source Value %i"
             " read as %#x.\n", threadNumber, seqNum, idx,
-            instSrc[idx].integer);
-    return instSrc[idx].integer;
+            instSrc[idx].intVal);
+    return instSrc[idx].intVal;
 }
 
 
@@ -427,7 +434,7 @@ InOrderDynInst::setMiscRegOperand(const StaticInst *si, int idx,
                        const MiscReg &val)
 {
     instResult[idx].type = Integer;
-    instResult[idx].val.integer = val;
+    instResult[idx].res.intVal = val;
     instResult[idx].tick = curTick();
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Misc Reg. Operand %i "
@@ -457,7 +464,7 @@ void
 InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
 {
     instResult[idx].type = Integer;
-    instResult[idx].val.integer = val;
+    instResult[idx].res.intVal = val;
     instResult[idx].tick = curTick();
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Int Reg. %i "
@@ -469,13 +476,13 @@ InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
 void
 InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
 {
-    instResult[idx].val.dbl = val;
+    instResult[idx].res.fpVal.f = val;
     instResult[idx].type = Float;
     instResult[idx].tick = curTick();
 
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Float Reg. %i "
-            "being set to %#x (result-tick:%i).\n",
-            threadNumber, seqNum, idx, val, instResult[idx].tick);
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Result Float Reg. %i "
+            "being set to %#x, %08f (result-tick:%i).\n",
+            threadNumber, seqNum, idx, val, val, instResult[idx].tick);
 }
 
 /** Sets a FP register as a integer. */
@@ -484,10 +491,10 @@ InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
                               FloatRegBits val)
 {
     instResult[idx].type = Integer;
-    instResult[idx].val.integer = val;
+    instResult[idx].res.fpVal.i = val;
     instResult[idx].tick = curTick();
 
-    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Result Float Reg. %i "
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Result Float Reg. Bits %i "
             "being set to %#x (result-tick:%i).\n",
             threadNumber, seqNum, idx, val, instResult[idx].tick);
 }

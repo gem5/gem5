@@ -262,16 +262,10 @@ class InOrderCPU : public BaseCPU
      */
     unsigned fetchPortIdx;
 
-    /** Identifies the resource id that identifies a ITB       */
-    unsigned itbIdx;
-
     /** Identifies the resource id that identifies a data
      * access unit.
      */
     unsigned dataPortIdx;
-
-    /** Identifies the resource id that identifies a DTB       */
-    unsigned dtbIdx;
 
     /** The Pipeline Stages for the CPU */
     PipelineStage *pipelineStage[ThePipeline::NumStages];
