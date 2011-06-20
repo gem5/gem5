@@ -667,6 +667,8 @@ class InOrderCPU : public BaseCPU
      */
     std::queue<ListIt> removeList;
 
+    bool trapPending[ThePipeline::MaxThreads];
+
     /** List of all the cpu event requests that will be removed at the end of
      *  the current cycle.
      */

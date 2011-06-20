@@ -149,6 +149,7 @@ InOrderCPU::CPUEvent::process()
         DPRINTF(InOrderCPU, "Trapping CPU\n");
         cpu->trap(fault, tid, inst);
         cpu->resPool->trap(fault, tid, inst);
+        cpu->trapPending[tid] = false;
         break;
 
 #if !FULL_SYSTEM
@@ -358,6 +359,8 @@ InOrderCPU::InOrderCPU(Params *params)
     dummyTrapInst[tid]->squashSeqNum = 0;
     dummyTrapInst[tid]->setTid(tid);
 #endif
+
+    trapPending[tid] = false;
 
     }
 
@@ -698,16 +701,14 @@ InOrderCPU::tick()
 
     ++numCycles;
 
+    checkForInterrupts();
     bool pipes_idle = true;
-    
     //Tick each of the stages
     for (int stNum=NumStages - 1; stNum >= 0 ; stNum--) {
         pipelineStage[stNum]->tick();
 
         pipes_idle = pipes_idle && pipelineStage[stNum]->idle;
     }
-
-    checkForInterrupts();
 
     if (pipes_idle)
         idleCycles++;
@@ -902,6 +903,7 @@ void
 InOrderCPU::trapContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
 {
     scheduleCpuEvent(Trap, fault, tid, inst, delay);
+    trapPending[tid] = true;
 }
 
 void

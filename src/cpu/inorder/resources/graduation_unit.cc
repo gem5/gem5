@@ -66,7 +66,9 @@ GraduationUnit::execute(int slot_num)
         return;
     }
 
-    if (lastFaultTick[tid] == cur_tick) {
+    //@todo: use trap Pending
+    if (cpu->trapPending[tid]) {
+        //if (lastFaultTick[tid] == cur_tick) {
         DPRINTF(InOrderGraduation, "Unable to graduate [sn:%i]. "
                 "Only 1 fault can be handled per tick.\n");
         grad_req->done(false);
