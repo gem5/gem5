@@ -833,9 +833,17 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
                                             Packet::Broadcast,
                                             cache_req->instIdx);
 
-    if (cache_req->dataPkt->isRead()) {
+    bool is_read = cache_req->dataPkt->isRead();
+    bool is_write = cache_req->dataPkt->isWrite();
+
+    //@note: a compare and swap will both marked both read and write
+    if (is_read && !is_write) {
+        DPRINTF(InOrderCachePort, "Read Data Set in Packet\n");
+
         cache_req->dataPkt->dataStatic(cache_req->reqData);
-    } else if (cache_req->dataPkt->isWrite()) {        
+    }
+
+    if (is_write) {
         if (inst->split2ndAccess) {            
             cache_req->dataPkt->dataStatic(inst->split2ndStoreDataPtr);
         } else {
@@ -858,7 +866,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
 
     Request *memReq = cache_req->dataPkt->req;
 
-    if (cache_req->dataPkt->isWrite() && cache_req->memReq->isLLSC()) {
+    if (is_write && cache_req->memReq->isLLSC()) {
         assert(cache_req->inst->isStoreConditional());
         DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
         do_access = TheISA::handleLockedWrite(cpu, memReq);
