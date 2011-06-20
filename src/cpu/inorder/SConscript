@@ -61,7 +61,7 @@ if 'InOrderCPU' in env['CPU_MODELS']:
                'InOrderMDU', 'InOrderAGEN', 'InOrderFetchSeq', 'InOrderTLB', 'InOrderBPred',
                'InOrderDecode', 'InOrderExecute', 'InOrderInstBuffer', 'InOrderUseDef',
                'InOrderGraduation', 'InOrderCachePort', 'RegDepMap', 'Resource',
-               'ThreadModel', 'AddrDep'])
+               'InOrderStall','ThreadModel', 'AddrDep'])
 
         Source('inorder_dyn_inst.cc')
         Source('inorder_cpu_builder.cc')

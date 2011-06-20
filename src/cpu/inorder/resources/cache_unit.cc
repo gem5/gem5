@@ -338,7 +338,7 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
         cache_req->cmd = inst->curSkedEntry->cmd;
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Updating the command for this "
-                "instruction\n ", inst->readTid(), inst->seqNum);
+                "instruction\n", inst->readTid(), inst->seqNum);
 
         service_request = true;
     } else if (inst->curSkedEntry->idx != CacheUnit::InitSecondSplitRead &&
@@ -725,40 +725,46 @@ CacheUnit::execute(int slot_num)
         break;
 
       case CompleteWriteData:
-        DPRINTF(InOrderCachePort,
-                "[tid:%i]: [sn:%i]: Trying to Complete Data Write Access\n",
-                tid, inst->seqNum);
-        DPRINTF(InOrderCachePort,
-                "[tid:%i]: [sn:%i]: cSwap:%i LLSC:%i isSwap:%i isCond:%i\n",
-                tid, inst->seqNum,
-                cache_req->memReq->isCondSwap(),
-                cache_req->memReq->isLLSC(),
-                cache_req->memReq->isSwap(),
-                inst->isStoreConditional());
+        {
+            DPRINTF(InOrderCachePort,
+                    "[tid:%i]: [sn:%i]: Trying to Complete Data Write Access\n",
+                    tid, inst->seqNum);
 
-        //@todo: check that timing translation is finished here
-        if (cache_req->dataPkt->isRead()) {
-            assert(cache_req->memReq->isCondSwap() ||
-                   cache_req->memReq->isLLSC() ||
-                   cache_req->memReq->isSwap());
+            //@todo: check that timing translation is finished here
+            RequestPtr mem_req = cache_req->memReq;
+            DPRINTF(InOrderCachePort,
+                    "[tid:%i]: [sn:%i]: cSwap:%i LLSC:%i isSwap:%i isCond:%i\n",
+                    tid, inst->seqNum,
+                    mem_req->isCondSwap(),
+                    mem_req->isLLSC(),
+                    mem_req->isSwap(),
+                    inst->isStoreConditional());
 
-            if (!cache_req->isMemAccComplete()) {
-                DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
-                        tid, cache_req->inst->getMemAddr());
-                cache_req->setCompleted(false);
-                cache_req->setMemStall(true);
-                return;
+            if (mem_req->isCondSwap() || mem_req->isLLSC() || mem_req->isSwap()) {
+                DPRINTF(InOrderCachePort, "Detected Conditional Store Inst.\n");
+
+                if (!cache_req->isMemAccComplete()) {
+                    DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
+                            tid, cache_req->inst->getMemAddr());
+                    cache_req->setCompleted(false);
+                    cache_req->setMemStall(true);
+                    return;
+                } else {
+                    DPRINTF(InOrderStall, "Mem Acc Completed\n");
+                }
             }
+
+            if (cache_req->isMemAccPending()) {
+                DPRINTF(InOrderCachePort, "Store Instruction Pending Completion.\n");
+                cache_req->dataPkt->reqData = cache_req->reqData;
+                cache_req->dataPkt->memReq = cache_req->memReq;
+            } else
+                DPRINTF(InOrderCachePort, "Store Instruction Finished Completion.\n");
+
+            //@todo: if split inst save data
+
+            finishCacheUnitReq(inst, cache_req);
         }
-
-        if (cache_req->isMemAccPending()) {
-            cache_req->dataPkt->reqData = cache_req->reqData;
-            cache_req->dataPkt->memReq = cache_req->memReq;
-        }
-
-        //@todo: if split inst save data
-
-        finishCacheUnitReq(inst, cache_req);
         break;
 
       case CompleteSecondSplitRead:
