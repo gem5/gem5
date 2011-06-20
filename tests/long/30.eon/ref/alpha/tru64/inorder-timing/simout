@@ -1,18 +1,14 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Apr 21 2011 12:29:56
-M5 started Apr 21 2011 13:02:51
-M5 executing on maize
-command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/o3-timing
+gem5 compiled Jun 19 2011 09:22:03
+gem5 started Jun 19 2011 12:35:06
+gem5 executing on zooks
+command line: build/ALPHA_SE/gem5.fast -d build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/30.eon/alpha/tru64/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Eon, Version 1.1
 info: Increasing stack size by one page.
-OO-style eon Time= 0.100000
-Exiting @ tick 113012733500 because target called exit()
+OO-style eon Time= 0.133333
+Exiting @ tick 140230347500 because target called exit()
