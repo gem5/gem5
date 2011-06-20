@@ -159,8 +159,7 @@ int
 CacheUnit::getSlot(DynInstPtr inst)
 {
     ThreadID tid = inst->readTid();
-    
-    if (tlbBlocked[inst->threadNumber]) {
+    if (tlbBlocked[tid]) {
         return -1;
     }
 
@@ -171,40 +170,11 @@ CacheUnit::getSlot(DynInstPtr inst)
               "cache access\n", inst->readTid(), inst->seqNum);
     }
 
-    Addr req_addr = inst->getMemAddr();
-
-    if (resName == "icache_port" ||
-        find(addrList[tid].begin(), addrList[tid].end(), req_addr) == 
-        addrList[tid].end()) {
-
-        int new_slot = Resource::getSlot(inst);
-
-        if (new_slot == -1)
-            return -1;
-
-        inst->memTime = curTick();
-        setAddrDependency(inst);            
-        return new_slot;
-    } else {
-        // Allow same instruction multiple accesses to same address
-        // should only happen maybe after a squashed inst. needs to replay
-        if (addrMap[tid][req_addr] == inst->seqNum) {
-            int new_slot = Resource::getSlot(inst);
-        
-            if (new_slot == -1)
-                return -1;     
-
-            return new_slot;       
-        } else {                    
-            DPRINTF(InOrderCachePort,
-                "[tid:%i] Denying request because there is an outstanding"
-                " request to/for addr. %08p. by [sn:%i] @ tick %i\n",
-                inst->readTid(), req_addr, addrMap[tid][req_addr], inst->memTime);
-            return -1;
-        }        
-    }
-
-    return -1;   
+    int new_slot = Resource::getSlot(inst);
+    inst->memTime = curTick();
+    //@note: add back in if you want speculative loads/store capability
+    //setAddrDependency(inst);
+    return new_slot;
 }
 
 void
@@ -758,6 +728,14 @@ CacheUnit::execute(int slot_num)
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Trying to Complete Data Write Access\n",
                 tid, inst->seqNum);
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: cSwap:%i LLSC:%i isSwap:%i isCond:%i\n",
+                tid, inst->seqNum,
+                cache_req->memReq->isCondSwap(),
+                cache_req->memReq->isLLSC(),
+                cache_req->memReq->isSwap(),
+                inst->isStoreConditional());
+
         //@todo: check that timing translation is finished here
         if (cache_req->dataPkt->isRead()) {
             assert(cache_req->memReq->isCondSwap() ||
@@ -824,7 +802,8 @@ CacheUnit::execute(int slot_num)
 void
 CacheUnit::finishCacheUnitReq(DynInstPtr inst, CacheRequest *cache_req)
 {
-    removeAddrDependency(inst);
+    //@note: add back in for speculative load/store capability
+    //removeAddrDependency(inst);
     cache_req->setMemStall(false);
     cache_req->done();
 }
@@ -1219,10 +1198,11 @@ void
 CacheUnit::squashCacheRequest(CacheReqPtr req_ptr)
 {
     DynInstPtr inst =  req_ptr->getInst();
-
     req_ptr->setSquashed();
     inst->setSquashed();
-    if (inst->validMemAddr()) {
+
+    //@note: add back in for speculative load/store capability
+    /*if (inst->validMemAddr()) {
         DPRINTF(AddrDep, "Squash of [tid:%i] [sn:%i], attempting to "
                 "remove addr. %08p dependencies.\n",
                 inst->readTid(),
@@ -1230,7 +1210,7 @@ CacheUnit::squashCacheRequest(CacheReqPtr req_ptr)
                 inst->getMemAddr());
 
         removeAddrDependency(inst);
-    }
+    }*/
 }
 
 

@@ -88,7 +88,7 @@ GraduationUnit::execute(int slot_num)
 
             DPRINTF(InOrderGraduation,
                     "[tid:%i]:[sn:%i]: Graduating instruction %s.\n",
-                    tid, inst->seqNum, inst->instName());
+                    tid, inst->seqNum, inst->staticInst->disassemble(inst->instAddr()));
 
             // Release Non-Speculative "Block" on instructions that could not
             // execute because there was a non-speculative inst. active.

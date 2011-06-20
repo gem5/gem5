@@ -83,8 +83,6 @@ class FetchUnit : public CacheUnit
                                 int res_idx, int slot_num,
                                 unsigned cmd);
 
-    int getSlot(DynInstPtr inst);
-
     /** Executes one of the commands from the "Command" enum */
     void execute(int slot_num);
 

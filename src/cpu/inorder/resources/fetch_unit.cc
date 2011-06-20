@@ -118,27 +118,6 @@ FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
     inst->setMachInst(ext_inst);
 }
 
-int
-FetchUnit::getSlot(DynInstPtr inst)
-{
-    if (tlbBlocked[inst->threadNumber]) {
-        return -1;
-    }
-
-    if (!inst->validMemAddr()) {
-        panic("[tid:%i][sn:%i] Mem. Addr. must be set before requesting "
-              "cache access\n", inst->readTid(), inst->seqNum);
-    }
-
-    int new_slot = Resource::getSlot(inst);
-
-    if (new_slot == -1)
-        return -1;
-
-    inst->memTime = curTick();
-    return new_slot;
-}
-
 void
 FetchUnit::removeAddrDependency(DynInstPtr inst)
 {
