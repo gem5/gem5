@@ -213,6 +213,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         None,
         Integer,
         Float,
+        FloatBits,
         Double
     };
 
@@ -889,7 +890,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         return instResult[idx].type;
     }
 
-    uint64_t readIntResult(int idx)
+    IntReg readIntResult(int idx)
     {
         return instResult[idx].res.intVal;
     }
@@ -899,9 +900,14 @@ class InOrderDynInst : public FastAlloc, public RefCounted
        return instResult[idx].res.fpVal.f;
     }
 
+    FloatRegBits readFloatBitsResult(int idx)
+    {
+       return instResult[idx].res.fpVal.i;
+    }
+
     Tick readResultTime(int idx) { return instResult[idx].tick; }
 
-    uint64_t* getIntResultPtr(int idx) { return &instResult[idx].res.intVal; }
+    IntReg* getIntResultPtr(int idx) { return &instResult[idx].res.intVal; }
 
     /** This is the interface that an instruction will use to write
      *  it's destination register.

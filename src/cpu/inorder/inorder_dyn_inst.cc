@@ -500,8 +500,8 @@ InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
 void
 InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
 {
-    instResult[idx].res.fpVal.f = val;
     instResult[idx].type = Float;
+    instResult[idx].res.fpVal.f = val;
     instResult[idx].tick = curTick();
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Result Float Reg. %i "
@@ -514,7 +514,7 @@ void
 InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
                               FloatRegBits val)
 {
-    instResult[idx].type = Integer;
+    instResult[idx].type = FloatBits;
     instResult[idx].res.fpVal.i = val;
     instResult[idx].tick = curTick();
 

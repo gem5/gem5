@@ -404,18 +404,18 @@ UseDefUnit::execute(int slot_idx)
                         regDepMap[tid]->removeFront(reg_type, flat_idx, inst);
 
                         if (inst->resultType(ud_idx) == 
-                            InOrderDynInst::Integer) {
+                            InOrderDynInst::FloatBits) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Writing FP-Bits "
                                     "Result %08f (bits:0x%x) to register "
                                     "idx %i (%i).\n",
                                     tid, seq_num,
                                     inst->readFloatResult(ud_idx), 
-                                    inst->readIntResult(ud_idx), 
+                                    inst->readFloatBitsResult(ud_idx),
                                     reg_idx - FP_Base_DepTag, flat_idx);
 
                             // Check for FloatRegBits Here
                             cpu->setFloatRegBits(flat_idx,
-                                                 inst->readIntResult(ud_idx),
+                                                 inst->readFloatBitsResult(ud_idx),
                                                  inst->readTid());
                         } else if (inst->resultType(ud_idx) == 
                                    InOrderDynInst::Float) {
@@ -439,7 +439,6 @@ UseDefUnit::execute(int slot_idx)
                                     inst->readIntResult(ud_idx), 
                                     reg_idx - FP_Base_DepTag, flat_idx);
 
-                            // Check for FloatRegBits Here
                             cpu->setFloatReg(flat_idx,
                                              inst->readFloatResult(ud_idx),
                                              inst->readTid());
