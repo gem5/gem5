@@ -425,6 +425,8 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
         }
     }
 
+    //@todo: schedule non-spec insts to operate on this cycle
+    // as long as all previous insts are done
     if ( inst->isNonSpeculative() ) {
         // skip execution of non speculative insts until later
     } else if ( inst->isMemRef() ) {
@@ -437,32 +439,48 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
         X.needs(ExecUnit, ExecutionUnit::ExecuteInst);
     }
 
-    if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
-        X.needs(MDU, MultDivUnit::EndMultDiv);
-    }
-
     // MEMORY
-    if ( inst->isLoad() ) {
-        M.needs(DCache, CacheUnit::InitiateReadData);
-    } else if ( inst->isStore() ) {
-        if ( inst->numSrcRegs() >= 2 ) {
-            M.needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+    if (!inst->isNonSpeculative()) {
+        if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
+            M.needs(MDU, MultDivUnit::EndMultDiv);
         }
-        M.needs(AGEN, AGENUnit::GenerateAddr);
-        M.needs(DCache, CacheUnit::InitiateWriteData);
-    }
 
+        if ( inst->isLoad() ) {
+            M.needs(DCache, CacheUnit::InitiateReadData);
+        } else if ( inst->isStore() ) {
+            if ( inst->numSrcRegs() >= 2 ) {
+                M.needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+            }
+            M.needs(AGEN, AGENUnit::GenerateAddr);
+            M.needs(DCache, CacheUnit::InitiateWriteData);
+        }
+    }
 
     // WRITEBACK
-    if ( inst->isLoad() ) {
-        W.needs(DCache, CacheUnit::CompleteReadData);
-    } else if ( inst->isStore() ) {
-        W.needs(DCache, CacheUnit::CompleteWriteData);
-    }
-
-    if ( inst->isNonSpeculative() ) {
-        if ( inst->isMemRef() ) fatal("Non-Speculative Memory Instruction");
-        W.needs(ExecUnit, ExecutionUnit::ExecuteInst);
+    if (!inst->isNonSpeculative()) {
+        if ( inst->isLoad() ) {
+            W.needs(DCache, CacheUnit::CompleteReadData);
+        } else if ( inst->isStore() ) {
+            W.needs(DCache, CacheUnit::CompleteWriteData);
+        }
+    } else {
+        // Finally, Execute Speculative Data
+        if (inst->isMemRef()) {
+            if (inst->isLoad()) {
+                W.needs(AGEN, AGENUnit::GenerateAddr);
+                W.needs(DCache, CacheUnit::InitiateReadData);
+                W.needs(DCache, CacheUnit::CompleteReadData);
+            } else if (inst->isStore()) {
+                if ( inst->numSrcRegs() >= 2 ) {
+                    W.needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+                }
+                W.needs(AGEN, AGENUnit::GenerateAddr);
+                W.needs(DCache, CacheUnit::InitiateWriteData);
+                W.needs(DCache, CacheUnit::CompleteWriteData);
+            }
+        } else {
+            W.needs(ExecUnit, ExecutionUnit::ExecuteInst);
+        }
     }
 
     W.needs(Grad, GraduationUnit::GraduateInst);
