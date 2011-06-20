@@ -1713,7 +1713,16 @@ InOrderCPU::wakeup()
 void
 InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
 {
-    //@todo: squash behind syscall
+    // Syscall must be non-speculative, so squash from last stage
+    unsigned squash_stage = NumStages - 1;
+    inst->setSquashInfo(squash_stage);
+
+    // Squash In Pipeline Stage
+    pipelineStage[squash_stage]->setupSquash(inst, tid);
+
+    // Schedule Squash Through-out Resource Pool
+    resPool->scheduleEvent(
+        (InOrderCPU::CPUEventType)ResourcePool::SquashAll, inst, 0);
     scheduleCpuEvent(Syscall, fault, tid, inst, delay, Syscall_Pri);
 }
 

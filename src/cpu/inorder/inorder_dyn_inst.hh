@@ -867,7 +867,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void setFloatSrc(int idx, FloatReg val);
     void setFloatRegBitsSrc(int idx, TheISA::FloatRegBits val);
 
-    uint64_t* getIntSrcPtr(int idx) { return &instSrc[idx].intVal; }
+    TheISA::IntReg* getIntSrcPtr(int idx) { return &instSrc[idx].intVal; }
     uint64_t readIntSrc(int idx) { return instSrc[idx].intVal; }
 
     /** These Instructions read a integer/float/misc. source register
