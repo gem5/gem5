@@ -57,9 +57,11 @@ FetchUnit::FetchUnit(string res_name, int res_id, int res_width,
                      int res_latency, InOrderCPU *_cpu,
                      ThePipeline::Params *params)
     : CacheUnit(res_name, res_id, res_width, res_latency, _cpu, params),
-      instSize(sizeof(TheISA::MachInst)), fetchBuffSize(params->fetchBuffSize),
-      predecoder(NULL)
-{ }
+      instSize(sizeof(TheISA::MachInst)), fetchBuffSize(params->fetchBuffSize)
+{
+    for (int tid = 0; tid < MaxThreads; tid++)
+        predecoder[tid] = new Predecoder(NULL);
+}
 
 FetchUnit::~FetchUnit()
 {
@@ -109,10 +111,10 @@ FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
     MachInst mach_inst =
         TheISA::gtoh(fetchInsts[fetch_offset]);
 
-    predecoder.setTC(cpu->thread[tid]->getTC());
-    predecoder.moreBytes(instPC, inst->instAddr(), mach_inst);
-    assert(predecoder.extMachInstReady());
-    ext_inst = predecoder.getExtMachInst(instPC);
+    predecoder[tid]->setTC(cpu->thread[tid]->getTC());
+    predecoder[tid]->moreBytes(instPC, inst->instAddr(), mach_inst);
+    assert(predecoder[tid]->extMachInstReady());
+    ext_inst = predecoder[tid]->getExtMachInst(instPC);
 
     inst->pcState(instPC);
     inst->setMachInst(ext_inst);
@@ -228,6 +230,22 @@ FetchUnit::blocksInUse()
     }
 
     return cnt;
+}
+
+void
+FetchUnit::clearFetchBuffer()
+{
+    std::list<FetchBlock*>::iterator fetch_it = fetchBuffer.begin();
+    std::list<FetchBlock*>::iterator end_it = fetchBuffer.end();
+
+    while (fetch_it != end_it) {
+        if ((*fetch_it)->block) {
+            delete [] (*fetch_it)->block;
+        }
+        delete *fetch_it;
+        fetch_it++;
+    }
+    fetchBuffer.clear();
 }
 
 void
@@ -563,5 +581,15 @@ void
 FetchUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
 {
     //@todo: per thread?
-    predecoder.reset();
+    predecoder[tid]->reset();
+
+    //@todo: squash using dummy inst seq num
+    squash(NULL, NumStages - 1, 0, tid);
+
+    //@todo: make sure no blocks are in use
+    assert(blocksInUse() == 0);
+    assert(pendingFetch.size() == 0);
+
+    //@todo: clear pendingFetch and fetchBuffer
+    clearFetchBuffer();
 }

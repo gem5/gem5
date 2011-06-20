@@ -120,11 +120,13 @@ class FetchUnit : public CacheUnit
 
     int blocksInUse();
 
+    void clearFetchBuffer();
+
     int instSize;
 
     int fetchBuffSize;
 
-    TheISA::Predecoder predecoder;
+    TheISA::Predecoder *predecoder[ThePipeline::MaxThreads];
 
     /** Valid Cache Blocks*/
     std::list<FetchBlock*> fetchBuffer;
