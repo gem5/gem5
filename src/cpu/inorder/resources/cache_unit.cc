@@ -454,8 +454,8 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
         // schedule a time to process the tlb miss.
         // latency hardcoded to 1 (for now), but will be updated
         // when timing translation gets added in
-        scheduleEvent(slot_idx, 1);
         unsigned slot_idx = cache_req->getSlot();
+        scheduleEvent(slot_idx, 1);
 #endif
 
         // Mark it as complete so it can pass through next stage.

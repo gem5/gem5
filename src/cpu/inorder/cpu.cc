@@ -702,7 +702,10 @@ InOrderCPU::tick()
 
     ++numCycles;
 
+#if FULL_SYSTEM
     checkForInterrupts();
+#endif
+
     bool pipes_idle = true;
     //Tick each of the stages
     for (int stNum=NumStages - 1; stNum >= 0 ; stNum--) {
