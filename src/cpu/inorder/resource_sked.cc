@@ -90,6 +90,27 @@ ResourceSked::end()
     return stages[num_stages - 1].end();
 }
 
+ResourceSked::SkedIt
+ResourceSked::end(int stage_num)
+{
+    return stages[stage_num].end();
+}
+
+ResourceSked::SkedIt
+ResourceSked::find(int stage_num, int cmd)
+{
+    SkedIt stage_it = stages[stage_num].begin();
+    SkedIt stage_end = stages[stage_num].end();
+
+    while (stage_it != stage_end) {
+        if ((*stage_it)->cmd == cmd)
+            return stage_it;
+        stage_it++;
+    }
+
+    return stages[stage_num].end();
+}
+
 ScheduleEntry*
 ResourceSked::top()
 {

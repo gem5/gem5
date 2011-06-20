@@ -111,6 +111,12 @@ class ResourceSked {
     /** Ending Entry of this schedule */
     SkedIt end();
 
+    /** Ending Entry of a specified stage */
+    SkedIt end(int stage_num);
+
+    /** Find a schedule entry based on stage and command */
+    SkedIt find(int stage_num, int cmd);
+
     /** What is the next task for this instruction schedule? */
     ScheduleEntry* top();
 
