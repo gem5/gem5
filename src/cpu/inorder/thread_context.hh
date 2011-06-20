@@ -175,7 +175,7 @@ class InOrderThreadContext : public ThreadContext
     void unserialize(Checkpoint *cp, const std::string &section);
 
     /** Returns this thread's ID number. */
-    int getThreadNum() { return thread->readTid(); }
+    int getThreadNum() { return thread->threadId(); }
 
     /** Copies the architectural registers from another TC into this TC. */
     void copyArchRegs(ThreadContext *src_tc);
@@ -205,29 +205,29 @@ class InOrderThreadContext : public ThreadContext
 
     /** Reads this thread's PC. */
     TheISA::PCState pcState()
-    { return cpu->pcState(thread->readTid()); }
+    { return cpu->pcState(thread->threadId()); }
 
     /** Sets this thread's PC. */
     void pcState(const TheISA::PCState &val)
-    { cpu->pcState(val, thread->readTid()); }
+    { cpu->pcState(val, thread->threadId()); }
 
     Addr instAddr()
-    { return cpu->instAddr(thread->readTid()); }
+    { return cpu->instAddr(thread->threadId()); }
 
     Addr nextInstAddr()
-    { return cpu->nextInstAddr(thread->readTid()); }
+    { return cpu->nextInstAddr(thread->threadId()); }
 
     MicroPC microPC()
-    { return cpu->microPC(thread->readTid()); }
+    { return cpu->microPC(thread->threadId()); }
 
     /** Reads a miscellaneous register. */
     MiscReg readMiscRegNoEffect(int misc_reg)
-    { return cpu->readMiscRegNoEffect(misc_reg, thread->readTid()); }
+    { return cpu->readMiscRegNoEffect(misc_reg, thread->threadId()); }
 
     /** Reads a misc. register, including any side-effects the
      * read might have as defined by the architecture. */
     MiscReg readMiscReg(int misc_reg)
-    { return cpu->readMiscReg(misc_reg, thread->readTid()); }
+    { return cpu->readMiscReg(misc_reg, thread->threadId()); }
 
     /** Sets a misc. register. */
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
@@ -237,16 +237,16 @@ class InOrderThreadContext : public ThreadContext
     void setMiscReg(int misc_reg, const MiscReg &val);
 
     int flattenIntIndex(int reg)
-    { return cpu->isa[thread->readTid()].flattenIntIndex(reg); }
+    { return cpu->isa[thread->threadId()].flattenIntIndex(reg); }
 
     int flattenFloatIndex(int reg)
-    { return cpu->isa[thread->readTid()].flattenFloatIndex(reg); }
+    { return cpu->isa[thread->threadId()].flattenFloatIndex(reg); }
 
     void activateContext(int delay)
-    { cpu->activateContext(thread->readTid(), delay); }
+    { cpu->activateContext(thread->threadId(), delay); }
 
     void deallocateContext()
-    { cpu->deallocateContext(thread->readTid()); }
+    { cpu->deallocateContext(thread->threadId()); }
 
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.
@@ -268,7 +268,7 @@ class InOrderThreadContext : public ThreadContext
 #if !FULL_SYSTEM
     /** Executes a syscall in SE mode. */
     void syscall(int64_t callnum)
-    { return cpu->syscall(callnum, thread->readTid()); }
+    { return cpu->syscall(callnum, thread->threadId()); }
 #endif
 
     /** Reads the funcExeInst counter. */

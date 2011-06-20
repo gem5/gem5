@@ -82,7 +82,7 @@ class RegDepMap
     /** Is the current instruction able to get a forwarded value from
      *  another instruction for this destination register?
      */
-    DynInstPtr canForward(unsigned reg_idx, DynInstPtr inst);
+    DynInstPtr canForward(unsigned reg_idx, DynInstPtr inst, unsigned clean_idx);
 
     /** find an instruction to forward/bypass a value from */
     DynInstPtr findBypassInst(unsigned idx);

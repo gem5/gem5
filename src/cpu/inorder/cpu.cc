@@ -1095,40 +1095,59 @@ InOrderCPU::getPipeStage(int stage_num)
     return pipelineStage[stage_num];
 }
 
-uint64_t
-InOrderCPU::readIntReg(int reg_idx, ThreadID tid)
+RegIndex
+InOrderCPU::flattenRegIdx(RegIndex reg_idx, ThreadID tid)
 {
+    if (reg_idx < FP_Base_DepTag) {
+        return isa[tid].flattenIntIndex(reg_idx);
+    } else if (reg_idx < Ctrl_Base_DepTag) {
+        reg_idx -= FP_Base_DepTag;
+        return isa[tid].flattenFloatIndex(reg_idx);
+    } else {
+        return reg_idx -= TheISA::Ctrl_Base_DepTag;
+    }
+}
+
+uint64_t
+InOrderCPU::readIntReg(RegIndex reg_idx, ThreadID tid)
+{
+    DPRINTF(IntRegs, "[tid:%i]: Reading Int. Reg %i as %x\n",
+            tid, reg_idx, intRegs[tid][reg_idx]);
+
     return intRegs[tid][reg_idx];
 }
 
 FloatReg
-InOrderCPU::readFloatReg(int reg_idx, ThreadID tid)
+InOrderCPU::readFloatReg(RegIndex reg_idx, ThreadID tid)
 {
     return floatRegs.f[tid][reg_idx];
 }
 
 FloatRegBits
-InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid)
+InOrderCPU::readFloatRegBits(RegIndex reg_idx, ThreadID tid)
 {;
     return floatRegs.i[tid][reg_idx];
 }
 
 void
-InOrderCPU::setIntReg(int reg_idx, uint64_t val, ThreadID tid)
+InOrderCPU::setIntReg(RegIndex reg_idx, uint64_t val, ThreadID tid)
 {
+    DPRINTF(IntRegs, "[tid:%i]: Setting Int. Reg %i to %x\n",
+            tid, reg_idx, val);
+
     intRegs[tid][reg_idx] = val;
 }
 
 
 void
-InOrderCPU::setFloatReg(int reg_idx, FloatReg val, ThreadID tid)
+InOrderCPU::setFloatReg(RegIndex reg_idx, FloatReg val, ThreadID tid)
 {
     floatRegs.f[tid][reg_idx] = val;
 }
 
 
 void
-InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, ThreadID tid)
+InOrderCPU::setFloatRegBits(RegIndex reg_idx, FloatRegBits val, ThreadID tid)
 {
     floatRegs.i[tid][reg_idx] = val;
 }

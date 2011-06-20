@@ -104,10 +104,6 @@ class InOrderThreadState : public ThreadState {
 
     /** Returns a pointer to the TC of this thread. */
     ThreadContext *getTC() { return tc; }
-
-    /** Return the thread id */
-    int readTid() { return threadId(); }
-
     
     /** Is last instruction graduated a branch? */
     bool lastGradIsBranch;

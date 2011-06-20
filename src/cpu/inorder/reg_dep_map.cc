@@ -64,6 +64,7 @@ void
 RegDepMap::setCPU(InOrderCPU *_cpu)
 {
     cpu = _cpu;
+
 }
 
 void
@@ -97,10 +98,12 @@ RegDepMap::insert(DynInstPtr inst)
 void
 RegDepMap::insert(unsigned idx, DynInstPtr inst)
 {
-    DPRINTF(RegDepMap, "Inserting [sn:%i] onto dep. list for reg. idx %i.\n",
-            inst->seqNum, idx);
+    TheISA::RegIndex flat_idx = cpu->flattenRegIdx(idx, inst->threadNumber);
 
-    regMap[idx].push_back(inst);
+    DPRINTF(RegDepMap, "Inserting [sn:%i] onto dep. list for reg. idx %i (%i).\n",
+            inst->seqNum, idx, flat_idx);
+
+    regMap[flat_idx].push_back(inst);
 
     inst->setRegDepEntry();
 }
@@ -171,7 +174,7 @@ RegDepMap::canRead(unsigned idx, DynInstPtr inst)
 }
 
 ThePipeline::DynInstPtr
-RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst)
+RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst, unsigned clean_idx)
 {
     std::list<DynInstPtr>::iterator list_it = regMap[reg_idx].begin();
     std::list<DynInstPtr>::iterator list_end = regMap[reg_idx].end();
@@ -184,9 +187,12 @@ RegDepMap::canForward(unsigned reg_idx, DynInstPtr inst)
         forward_inst = (*list_it);
         list_it++;
     }
+    DPRINTF(RegDepMap, "[sn:%i] Found potential forwarding value for reg %i (%i)"
+            " w/ [sn:%i]\n",
+            inst->seqNum, reg_idx, clean_idx, inst->seqNum);
 
     if (forward_inst) {
-        int dest_reg_idx = forward_inst->getDestIdxNum(reg_idx);
+        int dest_reg_idx = forward_inst->getDestIdxNum(clean_idx);
         assert(dest_reg_idx != -1);
 
         if (forward_inst->isExecuted() &&

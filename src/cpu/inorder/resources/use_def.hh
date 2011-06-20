@@ -46,6 +46,7 @@
 class UseDefUnit : public Resource {
   public:
     typedef ThePipeline::DynInstPtr DynInstPtr;
+    typedef TheISA::RegIndex RegIndex;
 
     enum Command {
         ReadSrcReg,

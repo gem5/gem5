@@ -80,6 +80,7 @@ class InOrderCPU : public BaseCPU
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
+    typedef TheISA::RegIndex RegIndex;
 
     //DynInstPtr TypeDefs
     typedef ThePipeline::DynInstPtr DynInstPtr;
@@ -509,17 +510,19 @@ class InOrderCPU : public BaseCPU
     }
 
     /** Register file accessors  */
-    uint64_t readIntReg(int reg_idx, ThreadID tid);
+    uint64_t readIntReg(RegIndex reg_idx, ThreadID tid);
 
-    FloatReg readFloatReg(int reg_idx, ThreadID tid);
+    FloatReg readFloatReg(RegIndex reg_idx, ThreadID tid);
 
-    FloatRegBits readFloatRegBits(int reg_idx, ThreadID tid);
+    FloatRegBits readFloatRegBits(RegIndex reg_idx, ThreadID tid);
 
-    void setIntReg(int reg_idx, uint64_t val, ThreadID tid);
+    void setIntReg(RegIndex reg_idx, uint64_t val, ThreadID tid);
 
-    void setFloatReg(int reg_idx, FloatReg val, ThreadID tid);
+    void setFloatReg(RegIndex reg_idx, FloatReg val, ThreadID tid);
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val,  ThreadID tid);
+    void setFloatRegBits(RegIndex reg_idx, FloatRegBits val,  ThreadID tid);
+
+    RegIndex flattenRegIdx(RegIndex reg_idx, ThreadID tid);
 
     /** Reads a miscellaneous register. */
     MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
