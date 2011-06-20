@@ -71,11 +71,11 @@ FaultName PDtbMissFault::_name = "dtb_miss_double";
 FaultVect PDtbMissFault::_vect = 0x0281;
 FaultStat PDtbMissFault::_count;
 
-FaultName DtbPageFault::_name = "dfault";
+FaultName DtbPageFault::_name = "dtb_page_fault";
 FaultVect DtbPageFault::_vect = 0x0381;
 FaultStat DtbPageFault::_count;
 
-FaultName DtbAcvFault::_name = "dfault";
+FaultName DtbAcvFault::_name = "dtb_acv_fault";
 FaultVect DtbAcvFault::_vect = 0x0381;
 FaultStat DtbAcvFault::_count;
 
