@@ -46,7 +46,8 @@ using namespace std;
 Resource::Resource(string res_name, int res_id, int res_width,
                    int res_latency, InOrderCPU *_cpu)
     : resName(res_name), id(res_id),
-      width(res_width), latency(res_latency), cpu(_cpu)
+      width(res_width), latency(res_latency), cpu(_cpu),
+      resourceEvent(NULL)
 {
     reqs.resize(width);
 
@@ -75,15 +76,13 @@ Resource::init()
     // If the resource has a zero-cycle (no latency)
     // function, then no reason to have events
     // that will process them for the right tick
-    if (latency > 0) {
-        resourceEvent = new ResourceEvent[width];
-    } else {
-        resourceEvent = NULL;
-    }
+    if (latency > 0)
+      resourceEvent = new ResourceEvent[width];
 
-    for (int i = 0; i < width; i++) {
-        reqs[i] = new ResourceRequest(this);
-    }
+
+    for (int i = 0; i < width; i++)
+      reqs[i] = new ResourceRequest(this);
+
 
     initSlots();
 }

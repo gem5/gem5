@@ -159,15 +159,6 @@ UseDefUnit::execute(int slot_idx)
     InstSeqNum seq_num = inst->seqNum;
     int ud_idx = ud_req->useDefIdx;
 
-    if (inst->fault != NoFault) {
-        DPRINTF(InOrderUseDef,
-                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
-                "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
-                inst->pcState());
-        ud_req->done();
-        return;
-    }
-
     if (serializeOnNextInst[tid] &&
         seq_num > serializeAfterSeqNum[tid]) {
         inst->setSerializeBefore();
@@ -185,6 +176,15 @@ UseDefUnit::execute(int slot_idx)
                 " Blocking until pipeline is clear.\n", tid, seq_num);
         serializeOnNextInst[tid] = true;
         serializeAfterSeqNum[tid] = seq_num;
+    }
+
+    if (inst->fault != NoFault) {
+        DPRINTF(InOrderUseDef,
+                "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
+                "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
+                inst->pcState());
+        ud_req->done();
+        return;
     }
 
     // If there is a non-speculative instruction

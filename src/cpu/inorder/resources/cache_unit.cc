@@ -178,10 +178,6 @@ CacheUnit::init()
         reqs[i] = new CacheRequest(this);
     }
 
-    // Currently Used to Model TLB Latency. Eventually
-    // Switch to Timing TLB translations.
-    resourceEvent = new CacheUnitEvent[width];
-
     cacheBlkSize = this->cachePort->peerBlockSize();
     cacheBlkMask = cacheBlkSize  - 1;
 
@@ -433,30 +429,22 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
     ThreadContext *tc = cpu->thread[tid]->getTC();
     PCState old_pc = tc->pcState();
     tc->pcState() = inst->pcState();
+
     inst->fault =
         _tlb->translateAtomic(cache_req->memReq, tc, tlb_mode);
     tc->pcState() = old_pc;
 
     if (inst->fault != NoFault) {
         DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
-                "addr:%08p for [sn:%i].\n", tid, inst->fault->name(),
+                "addr:%08p for [sn:%i].\n", tid, tlb_fault->name(),
                 cache_req->memReq->getVaddr(), inst->seqNum);
 
         tlbBlocked[tid] = true;
         tlbBlockSeqNum[tid] = inst->seqNum;
 
-#if !FULL_SYSTEM
-        unsigned stage_num = cache_req->getStageNum();
-
-        cpu->pipelineStage[stage_num]->setResStall(cache_req, tid);
-        cache_req->tlbStall = true;
-
-        // schedule a time to process the tlb miss.
-        // latency hardcoded to 1 (for now), but will be updated
-        // when timing translation gets added in
-        unsigned slot_idx = cache_req->getSlot();
-        scheduleEvent(slot_idx, 1);
-#endif
+        // Make sure nothing gets executed until after this faulting
+        // instruction gets handled.
+        inst->setSerializeAfter();
 
         // Mark it as complete so it can pass through next stage.
         // Fault Handling will happen at commit/graduation
@@ -467,8 +455,15 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                 cache_req->memReq->getVaddr(),
                 cache_req->memReq->getPaddr());
     }
-
 }
+
+#if !FULL_SYSTEM
+void
+CacheUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+{
+    tlbBlocked[tid] = false;
+}
+#endif
 
 Fault
 CacheUnit::read(DynInstPtr inst, Addr addr,
@@ -699,6 +694,14 @@ CacheUnit::execute(int slot_num)
                 "[tid:%i]: [sn:%i]: Detected %s fault @ %x. Forwarding to "
                 "next stage.\n", inst->readTid(), inst->seqNum, inst->fault->name(),
                 inst->getMemAddr());
+        finishCacheUnitReq(inst, cache_req);
+        return;
+    }
+
+    if (inst->isSquashed()) {
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Detected squashed instruction "
+                "next stage.\n", inst->readTid(), inst->seqNum);
         finishCacheUnitReq(inst, cache_req);
         return;
     }
