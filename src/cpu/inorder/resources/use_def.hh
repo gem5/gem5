@@ -106,17 +106,26 @@ class UseDefUnit : public Resource {
     };
 
   protected:
-    /** Register File Reads */
-    Stats::Scalar regFileReads;
+    /** Int. Register File Reads */
+    Stats::Scalar intRegFileReads;
 
-    /** Register File Writes */
-    Stats::Scalar regFileWrites;
+    /** Int. Register File Writes */
+    Stats::Scalar intRegFileWrites;
+
+    /** Int. Register File Total Accesses (Read+Write) */
+    Stats::Formula intRegFileAccs;
+
+    /** Float Register File Reads */
+    Stats::Scalar floatRegFileReads;
+
+    /** Float Register File Writes */
+    Stats::Scalar floatRegFileWrites;
+
+    /** Float Register File Total Accesses (Read+Write) */
+    Stats::Formula floatRegFileAccs;
 
     /** Source Register Forwarding */
     Stats::Scalar regForwards;
-
-    /** Register File Total Accesses (Read+Write) */
-    Stats::Formula regFileAccs;
 };
 
 #endif //__CPU_INORDER_USE_DEF_UNIT_HH__

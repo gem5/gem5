@@ -66,22 +66,35 @@ UseDefUnit::regStats()
         .desc("Number of Unique Registers Needed Per Context Switch")
         .prereq(uniqueRegsPerSwitch);
 
-    regFileReads
-        .name(name() + ".regFileReads")
-        .desc("Number of Reads from Register File");
+    intRegFileReads
+        .name(name() + ".intRegFileReads")
+        .desc("Number of Reads from Int. Register File");
+
+    intRegFileWrites
+        .name(name() + ".intRegFileWrites")
+        .desc("Number of Writes to Int. Register File");
+
+    intRegFileAccs
+        .name(name() + ".intRegFileAccesses")
+        .desc("Total Accesses (Read+Write) to the Int. Register File");
+    intRegFileAccs = intRegFileReads + intRegFileWrites;
+
+    floatRegFileReads
+        .name(name() + ".floatRegFileReads")
+        .desc("Number of Reads from FP Register File");
+
+    floatRegFileWrites
+        .name(name() + ".floatRegFileWrites")
+        .desc("Number of Writes to FP Register File");
+
+    floatRegFileAccs
+        .name(name() + ".floatRegFileAccesses")
+        .desc("Total Accesses (Read+Write) to the FP Register File");
+    floatRegFileAccs = floatRegFileReads + floatRegFileWrites;
 
     regForwards
         .name(name() + ".regForwards")
         .desc("Number of Registers Read Through Forwarding Logic");
-
-    regFileWrites
-        .name(name() + ".regFileWrites")
-        .desc("Number of Writes to Register File");
-
-    regFileAccs
-        .name(name() + ".regFileAccesses")
-        .desc("Number of Total Accesses (Read+Write) to the Register File");
-    regFileAccs = regFileReads + regFileWrites;
     
     Resource::regStats();
 }
@@ -192,6 +205,7 @@ UseDefUnit::execute(int slot_idx)
                         inst->setIntSrc(ud_idx,
                                         cpu->readIntReg(flat_idx,
                                                         inst->readTid()));
+                        intRegFileReads++;
                     }
                     break;
 
@@ -210,6 +224,7 @@ UseDefUnit::execute(int slot_idx)
                         inst->setFloatSrc(ud_idx,
                                           cpu->readFloatReg(flat_idx,
                                                             inst->readTid()));
+                        floatRegFileReads++;
                     }
                     break;
 
@@ -232,7 +247,6 @@ UseDefUnit::execute(int slot_idx)
                     panic("Invalid Register Type: %i", reg_type);
                 }
 
-                regFileReads++;
                 ud_req->done();
             } else {
                 // Look for forwarding opportunities
@@ -338,6 +352,7 @@ UseDefUnit::execute(int slot_idx)
                         cpu->setIntReg(flat_idx,
                                        inst->readIntResult(ud_idx),
                                        inst->readTid());
+                        intRegFileWrites++;
                     }
                     break;
 
@@ -393,6 +408,7 @@ UseDefUnit::execute(int slot_idx)
                                   inst->seqNum, inst->instName());
                         }
 
+                        floatRegFileWrites++;
                     }
                     break;
 
@@ -417,7 +433,6 @@ UseDefUnit::execute(int slot_idx)
                     panic("Invalid Register Type: %i", reg_type);
                 }
 
-                regFileWrites++;
                 ud_req->done();
             } else {
                 DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i]: Dest. register idx: %i is "
