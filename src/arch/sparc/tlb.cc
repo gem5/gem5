@@ -50,7 +50,7 @@ namespace SparcISA {
 
 TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), usedEntries(0), lastReplaced(0),
-      cacheValid(false)
+      cacheState(0), cacheValid(false)
 {
     // To make this work you'll have to change the hypervisor and OS
     if (size > 64)
