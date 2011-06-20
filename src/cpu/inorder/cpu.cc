@@ -1130,6 +1130,7 @@ InOrderCPU::getPipeStage(int stage_num)
     return pipelineStage[stage_num];
 }
 
+
 RegIndex
 InOrderCPU::flattenRegIdx(RegIndex reg_idx, RegType &reg_type, ThreadID tid)
 {
@@ -1455,29 +1456,31 @@ InOrderCPU::removeInstsUntil(const InstSeqNum &seq_num, ThreadID tid)
 
 
 inline void
-InOrderCPU::squashInstIt(const ListIt &instIt, ThreadID tid)
+InOrderCPU::squashInstIt(const ListIt inst_it, ThreadID tid)
 {
-    if ((*instIt)->threadNumber == tid) {
+    DynInstPtr inst = (*inst_it);
+    if (inst->threadNumber == tid) {
         DPRINTF(InOrderCPU, "Squashing instruction, "
                 "[tid:%i] [sn:%lli] PC %s\n",
-                (*instIt)->threadNumber,
-                (*instIt)->seqNum,
-                (*instIt)->pcState());
+                inst->threadNumber,
+                inst->seqNum,
+                inst->pcState());
 
-        (*instIt)->setSquashed();
+        inst->setSquashed();
+        archRegDepMap[tid].remove(inst);
 
-        if (!(*instIt)->isRemoveList()) {            
+        if (!inst->isRemoveList()) {
             DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %s "
                     "[sn:%lli] to remove list\n",
-                    (*instIt)->threadNumber, (*instIt)->pcState(),
-                    (*instIt)->seqNum);
-            (*instIt)->setRemoveList();        
-            removeList.push(instIt);
+                    inst->threadNumber, inst->pcState(),
+                    inst->seqNum);
+            inst->setRemoveList();
+            removeList.push(inst_it);
         } else {
             DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i]"
                     " PC %s [sn:%lli], already on remove list\n",
-                    (*instIt)->threadNumber, (*instIt)->pcState(),
-                    (*instIt)->seqNum);
+                    inst->threadNumber, inst->pcState(),
+                    inst->seqNum);
         }
     
     }
@@ -1499,7 +1502,7 @@ InOrderCPU::cleanUpRemovedInsts()
         ThreadID tid = inst->threadNumber;
 
         // Remove From Register Dependency Map, If Necessary
-        archRegDepMap[tid].remove(inst);
+        // archRegDepMap[tid].remove(inst);
 
         // Clear if Non-Speculative
         if (inst->staticInst &&

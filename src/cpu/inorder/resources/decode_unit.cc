@@ -66,11 +66,8 @@ DecodeUnit::execute(int slot_num)
 
             if (inst->backSked != NULL) {
                 DPRINTF(InOrderDecode,
-                    "[tid:%i]: %s Setting Destination Register(s) for [sn:%i].\n",
+                    "[tid:%i]: Back End Schedule created for %s  [sn:%i].\n",
                         tid, inst->instName(), inst->seqNum);
-
-                //inst->printSked();
-
                 decode_req->done();
             } else {
                 DPRINTF(Resource,

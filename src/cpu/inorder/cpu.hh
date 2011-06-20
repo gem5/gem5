@@ -547,6 +547,16 @@ class InOrderCPU : public BaseCPU
 
     void setFloatRegBits(RegIndex reg_idx, FloatRegBits val,  ThreadID tid);
 
+    RegType inline getRegType(RegIndex reg_idx)
+    {
+        if (reg_idx < TheISA::FP_Base_DepTag)
+            return IntType;
+        else if (reg_idx < TheISA::Ctrl_Base_DepTag)
+            return FloatType;
+        else
+            return MiscType;
+    }
+
     RegIndex flattenRegIdx(RegIndex reg_idx, RegType &reg_type, ThreadID tid);
 
     /** Reads a miscellaneous register. */
@@ -617,7 +627,7 @@ class InOrderCPU : public BaseCPU
     void removeInstsUntil(const InstSeqNum &seq_num,ThreadID tid);
 
     /** Removes the instruction pointed to by the iterator. */
-    inline void squashInstIt(const ListIt &instIt, ThreadID tid);
+    inline void squashInstIt(const ListIt inst_it, ThreadID tid);
 
     /** Cleans up all instructions on the instruction remove list. */
     void cleanUpRemovedInsts();

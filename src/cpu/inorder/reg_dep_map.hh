@@ -98,10 +98,8 @@ class RegDepMap
      */
     void insert(uint8_t reg_type, RegIndex idx, DynInstPtr inst);
 
-    /** Remove a specific instruction and dest. register index from map
-     *  This must be called w/the unflattened registered index
-     */
-    void remove(RegIndex idx, DynInstPtr inst);
+    /** Remove a specific instruction and dest. register index from map */
+    void remove(uint8_t reg_type, RegIndex idx, DynInstPtr inst);
 
     typedef std::vector<std::list<DynInstPtr> > DepMap;
     std::vector<DepMap> regMap;

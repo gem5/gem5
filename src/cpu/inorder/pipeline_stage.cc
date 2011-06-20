@@ -351,9 +351,11 @@ PipelineStage::setupSquash(DynInstPtr inst, ThreadID tid)
                 inst->seqNum, cpu->squashSeqNum[tid]);
     } else {
         InstSeqNum squash_seq_num = inst->squashSeqNum;
+        unsigned squash_stage = (nextStageValid) ? stageNum + 1
+            : stageNum;
 
-        toPrevStages->stageInfo[stageNum][tid].squash = true;
-        toPrevStages->stageInfo[stageNum][tid].doneSeqNum =
+        toPrevStages->stageInfo[squash_stage][tid].squash = true;
+        toPrevStages->stageInfo[squash_stage][tid].doneSeqNum =
             squash_seq_num;
 
         DPRINTF(InOrderStage, "[tid:%i]: Squashing after [sn:%i], "

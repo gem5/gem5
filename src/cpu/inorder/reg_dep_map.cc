@@ -89,7 +89,7 @@ RegDepMap::insert(DynInstPtr inst)
     DPRINTF(RegDepMap, "Setting Output Dependencies for [sn:%i] "
             ", %s (dest. regs = %i).\n",
             inst->seqNum,
-            inst->staticInst->getName(),
+            inst->instName(),
             dest_regs);
 
     for (int i = 0; i < dest_regs; i++) {
@@ -98,6 +98,10 @@ RegDepMap::insert(DynInstPtr inst)
         TheISA::RegIndex flat_idx = cpu->flattenRegIdx(raw_idx,
                                                        reg_type,
                                                        inst->threadNumber);
+
+        DPRINTF(RegDepMap, "[sn:%i] #%i flattened %i to %i.\n",
+                inst->seqNum, i, raw_idx, flat_idx);
+
         inst->flattenDestReg(i, flat_idx);
         insert(reg_type, flat_idx, inst);
     }
@@ -120,32 +124,40 @@ void
 RegDepMap::remove(DynInstPtr inst)
 {
     if (inst->isRegDepEntry()) {
-        DPRINTF(RegDepMap, "Removing [sn:%i]'s entries from reg. dep. map.\n",
-                inst->seqNum);
-
         int dest_regs = inst->numDestRegs();
-        for (int i = 0; i < dest_regs; i++)
-            remove(inst->destRegIdx(i), inst);
+
+        DPRINTF(RegDepMap, "Removing [sn:%i]'s entries from reg. dep. map. for "
+                ", %s (dest. regs = %i).\n",
+                inst->seqNum,
+                inst->instName(),
+                dest_regs);
+
+
+        for (int i = 0; i < dest_regs; i++) {
+            InOrderCPU::RegType reg_type = cpu->getRegType(inst->destRegIdx(i));
+            remove(reg_type, inst->flattenedDestRegIdx(i), inst);
+        }
     }
 }
 
 void
-RegDepMap::remove(RegIndex idx, DynInstPtr inst)
+RegDepMap::remove(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 {
-    InOrderCPU::RegType reg_type;
-    TheISA::RegIndex flat_idx = cpu->flattenRegIdx(idx, reg_type,
-                                                   inst->threadNumber);
+    std::list<DynInstPtr>::iterator list_it = regMap[reg_type][idx].begin();
+    std::list<DynInstPtr>::iterator list_end = regMap[reg_type][idx].end();
 
-    std::list<DynInstPtr>::iterator list_it = regMap[reg_type][flat_idx].begin();
-    std::list<DynInstPtr>::iterator list_end = regMap[reg_type][flat_idx].end();
 
     while (list_it != list_end) {
         if((*list_it) == inst) {
-            regMap[reg_type][flat_idx].erase(list_it);
-            break;
+            DPRINTF(RegDepMap, "Removing [sn:%i] from %s dep. list for "
+                    "reg. idx %i.\n", inst->seqNum, mapNames[reg_type],
+                    idx);
+            regMap[reg_type][idx].erase(list_it);
+            return;
         }
         list_it++;
     }
+    panic("[sn:%i] Did not find entry for %i ", inst->seqNum, idx);
 }
 
 void
@@ -153,7 +165,7 @@ RegDepMap::removeFront(uint8_t reg_type, RegIndex idx, DynInstPtr inst)
 {
    std::list<DynInstPtr>::iterator list_it = regMap[reg_type][idx].begin();
 
-   DPRINTF(RegDepMap, "[tid:%u]: Removing dependency entry on reg. idx"
+   DPRINTF(RegDepMap, "[tid:%u]: Removing dependency entry on reg. idx "
            "%i for [sn:%i].\n", inst->readTid(), idx, inst->seqNum);
 
    assert(list_it != regMap[reg_type][idx].end());
