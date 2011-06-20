@@ -441,9 +441,10 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
 
         cache_req->tlbStall = true;
 
+        // schedule a time to process the tlb miss.
+        // latency hardcoded to 1 (for now), but will be updated
+        // when timing translation gets added in
         scheduleEvent(slot_idx, 1);
-
-        cpu->trap(inst->fault, tid, inst);
     } else {
         DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
                 "to phys. addr:%08p.\n", tid, inst->seqNum,
@@ -1071,6 +1072,11 @@ CacheUnitEvent::process()
 
     CacheUnit* tlb_res = dynamic_cast<CacheUnit*>(resource);
     assert(tlb_res);
+
+    //@todo: eventually, we should do a timing translation w/
+    //       hw page table walk on tlb miss
+    DPRINTF(Fault, "Handling Fault %s\n", inst->fault->name());
+    inst->fault->invoke(tlb_res->cpu->tcBase(tid), inst->staticInst);
 
     tlb_res->tlbBlocked[tid] = false;
 

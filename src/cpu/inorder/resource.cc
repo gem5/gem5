@@ -290,10 +290,8 @@ Resource::deactivateThread(ThreadID tid)
 void
 Resource::setupSquash(DynInstPtr inst, int stage_num, ThreadID tid)
 {
-    assert(inst->isControl() && "Function Assumes Squash From A Branch");
-
     // Squash In Pipeline Stage
-    cpu->pipelineStage[stage_num]->squashDueToBranch(inst, tid);
+    cpu->pipelineStage[stage_num]->setupSquash(inst, tid);
 
     // Schedule Squash Through-out Resource Pool
     cpu->resPool->scheduleEvent(

@@ -182,6 +182,9 @@ class ResourcePool {
     /** Broadcast graduation to all resources */
     void instGraduated(InstSeqNum seq_num, ThreadID tid);
 
+    /** Broadcast trap to all resources */
+    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+
     /** The number of instructions available that a resource can
      *  can still process.
      */

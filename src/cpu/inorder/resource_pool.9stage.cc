@@ -192,7 +192,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
             res_pool_event->setEvent(e_type,
                                      inst,
                                      inst->squashingStage,
-                                     inst->bdelaySeqNum,
+                                     inst->squashSeqNum,
                                      inst->readTid());
             res_pool_event->schedule(curTick() + cpu->cycles(delay));
 
@@ -208,7 +208,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
             res_pool_event->setEvent(e_type,
                                      inst,
                                      inst->squashingStage,
-                                     inst->bdelaySeqNum,
+                                     inst->squashSeqNum,
                                      tid);
 
             res_pool_event->schedule(curTick() + cpu->cycles(delay));
@@ -238,7 +238,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
             res_pool_event->setEvent(e_type,
                                      inst,
                                      inst->squashingStage,
-                                     inst->bdelaySeqNum,
+                                     inst->squashSeqNum,
                                      inst->readTid());
             res_pool_event->schedule(curTick() + cpu->cycles(delay));
 

@@ -111,6 +111,7 @@ FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
 
     predecoder.setTC(cpu->thread[tid]->getTC());
     predecoder.moreBytes(instPC, inst->instAddr(), mach_inst);
+    assert(predecoder.extMachInstReady());
     ext_inst = predecoder.getExtMachInst(instPC);
 
     inst->pcState(instPC);
@@ -552,3 +553,9 @@ FetchUnit::squashCacheRequest(CacheReqPtr req_ptr)
     CacheUnit::squashCacheRequest(req_ptr);
 }
 
+void
+FetchUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+{
+    //@todo: per thread?
+    predecoder.reset();
+}

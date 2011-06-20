@@ -122,8 +122,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** The sequence number of the instruction. */
     InstSeqNum seqNum;
 
-    /** The sequence number of the instruction. */
-    InstSeqNum bdelaySeqNum;
+    /** If this instruction is squashing, the number should we squash behind. */
+    InstSeqNum squashSeqNum;
 
     enum Status {
         RegDepMapEntry,          /// Instruction is entered onto the RegDepMap

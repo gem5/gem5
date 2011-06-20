@@ -88,6 +88,8 @@ class FetchUnit : public CacheUnit
     /** Executes one of the commands from the "Command" enum */
     void execute(int slot_num);
 
+    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+
   private:
     void squashCacheRequest(CacheReqPtr req_ptr);
 

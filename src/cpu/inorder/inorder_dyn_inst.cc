@@ -54,7 +54,7 @@ InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
                                InstSeqNum seq_num,
                                ThreadID tid,
                                unsigned _asid)
-  : seqNum(seq_num), bdelaySeqNum(0), threadNumber(tid), asid(_asid),
+  : seqNum(seq_num), squashSeqNum(0), threadNumber(tid), asid(_asid),
     virtProcNumber(0), staticInst(NULL), traceData(NULL), cpu(cpu),
     thread(state), fault(NoFault), memData(NULL), loadData(0),
     storeData(0), effAddr(0), physEffAddr(0), memReqFlags(0),
@@ -319,7 +319,15 @@ void
 InOrderDynInst::setSquashInfo(unsigned stage_num)
 {
     squashingStage = stage_num;
-    bdelaySeqNum = seqNum;
+
+    // If it's a fault, then we need to squash
+    // the faulting instruction too. Squash
+    // functions squash above a seqNum, so we
+    // decrement here for that case
+    if (fault != NoFault)
+        squashSeqNum = seqNum - 1;
+    else
+        squashSeqNum = seqNum;
 
 #if ISA_HAS_DELAY_SLOT
     if (isControl()) {
@@ -329,10 +337,9 @@ InOrderDynInst::setSquashInfo(unsigned stage_num)
         // Check to see if we should squash after the
         // branch or after a branch delay slot.
         if (pc.nextInstAddr() == pc.instAddr() + sizeof(MachInst))
-            bdelaySeqNum = seqNum + 1;
+            squashSeqNum = seqNum + 1;
         else
-            bdelaySeqNum = seqNum;
-
+            squashSeqNum = seqNum;
     }
 #endif
 }

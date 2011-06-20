@@ -142,7 +142,8 @@ InOrderCPU::CPUEvent::process()
 
       case Trap:
         DPRINTF(InOrderCPU, "Trapping CPU\n");
-        cpu->trapCPU(fault, tid, inst);
+        cpu->trap(fault, tid, inst);
+        cpu->resPool->trap(fault, tid, inst);
         break;
 
       default:
@@ -451,8 +452,8 @@ InOrderCPU::createBackEndSked(DynInstPtr inst)
             if (inst->splitInst)
                 M.needs(DCache, CacheUnit::InitSecondSplitRead);
         } else if ( inst->isStore() ) {
-            if ( inst->numSrcRegs() >= 2 ) {
-                M.needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+            for (int i = 1; i < inst->numSrcRegs(); i++ ) {
+                M.needs(RegManager, UseDefUnit::ReadSrcReg, i);
             }
             M.needs(AGEN, AGENUnit::GenerateAddr);
             M.needs(DCache, CacheUnit::InitiateWriteData);
@@ -795,14 +796,13 @@ InOrderCPU::updateMemPorts()
 #endif
 
 void
-InOrderCPU::trap(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
+InOrderCPU::trapContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
 {
-    //@ Squash Pipeline during TRAP
     scheduleCpuEvent(Trap, fault, tid, inst, delay);
 }
 
 void
-InOrderCPU::trapCPU(Fault fault, ThreadID tid, DynInstPtr inst)
+InOrderCPU::trap(Fault fault, ThreadID tid, DynInstPtr inst)
 {
     fault->invoke(tcBase(tid), inst->staticInst);
 }
@@ -1302,11 +1302,18 @@ InOrderCPU::updateContextSwitchStats()
 void
 InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 {
-    // Set the CPU's PCs - This contributes to the precise state of the CPU 
+    // Set the nextPC to be fetched if this is the last instruction
+    // committed
+    // ========
+    // This contributes to the precise state of the CPU
     // which can be used when restoring a thread to the CPU after after any
     // type of context switching activity (fork, exception, etc.)
-    pcState(inst->pcState(), tid);
+    TheISA::PCState comm_pc = inst->pcState();
+    lastCommittedPC[tid] = comm_pc;
+    TheISA::advancePC(comm_pc, inst->staticInst);
+    pcState(comm_pc, tid);
 
+    //@todo: may be unnecessary with new-ISA-specific branch handling code
     if (inst->isControl()) {
         thread[tid]->lastGradIsBranch = true;
         thread[tid]->lastBranchPC = inst->pcState();

@@ -227,20 +227,16 @@ class PipelineStage
   public:
     void activateThread(ThreadID tid);
     
-    /** Squashes if there is a PC-relative branch that was predicted
-     * incorrectly. Sends squash information back to fetch.
-     */
-    void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
+    /** Setup Squashing Information to be passed back thru the pipeline */
+    void setupSquash(DynInstPtr inst, ThreadID tid);
 
     virtual void squashDueToMemStall(InstSeqNum seq_num, ThreadID tid);
 
+    /** Perform squash of instructions above seq_num */
+    virtual void squash(InstSeqNum squash_num, ThreadID tid);
+
     /** Squash instructions from stage buffer  */
     void squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid);
-
-    /** Squashes due to commit signalling a squash. Changes status to
-     *  squashing and clears block/unblock signals as needed.
-     */
-    virtual void squash(InstSeqNum squash_num, ThreadID tid);
 
     void dumpInsts();
 

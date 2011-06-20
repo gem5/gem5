@@ -65,15 +65,12 @@ class FetchSeqUnit : public Resource {
     void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);
     
 
-    /** Override default Resource squash sequence. This actually,
-     *  looks in the global communication buffer to get squash
-     *  info
-     */
+    /** Update to correct PC from a squash */
     void squash(DynInstPtr inst, int squash_stage,
-                        InstSeqNum squash_seq_num, ThreadID tid);
+                InstSeqNum squash_seq_num, ThreadID tid);
 
-
-    inline void squashAfterInst(DynInstPtr inst, int stage_num, ThreadID tid);
+    /** Update to correct PC from a trap */
+    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
 
   protected:
     unsigned instSize;

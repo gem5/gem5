@@ -234,6 +234,18 @@ ResourcePool::squash(DynInstPtr inst, int res_idx, InstSeqNum done_seq_num,
                                tid);
 }
 
+void
+ResourcePool::trap(Fault fault, ThreadID tid, DynInstPtr inst)
+{
+    DPRINTF(Resource, "[tid:%i] Broadcasting Trap to all "
+            "resources.\n", tid);
+
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++)
+        resources[idx]->trap(fault, tid, inst);
+}
+
 int
 ResourcePool::slotsAvail(int res_idx)
 {
@@ -272,7 +284,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  e_type,
                                  inst,
                                  inst->squashingStage,
-                                 inst->bdelaySeqNum,
+                                 inst->squashSeqNum,
                                  inst->readTid());
             cpu->schedule(res_pool_event, when);
         }
@@ -289,7 +301,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                  e_type,
                                  inst,
                                  inst->squashingStage,
-                                 inst->bdelaySeqNum,
+                                 inst->squashSeqNum,
                                  tid);
 
             cpu->schedule(res_pool_event, when);
@@ -308,7 +320,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                                             e_type,
                                                             inst,
                                                             inst->squashingStage,
-                                                            inst->bdelaySeqNum,
+                                                            inst->squashSeqNum,
                                                             tid);
 
             cpu->schedule(res_pool_event, sked_tick);
@@ -337,7 +349,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                 new ResPoolEvent(this,e_type,
                                  inst,
                                  inst->squashingStage,
-                                 inst->bdelaySeqNum,
+                                 inst->squashSeqNum,
                                  inst->readTid());
             cpu->schedule(res_pool_event, when);
         }

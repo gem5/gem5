@@ -275,6 +275,9 @@ class InOrderCPU : public BaseCPU
     /** Program Counters */
     TheISA::PCState pc[ThePipeline::MaxThreads];
 
+    /** Last Committed PC */
+    TheISA::PCState lastCommittedPC[ThePipeline::MaxThreads];
+
     /** The Register File for the CPU */
     union {
         FloatReg f[ThePipeline::MaxThreads][TheISA::NumFloatRegs];
@@ -430,33 +433,45 @@ class InOrderCPU : public BaseCPU
     bool validDataAddr(Addr addr) { return true; }
 #endif
 
-    /** trap() - sets up a trap event on the cpuTraps to handle given fault.
-     *  trapCPU() - Traps to handle given fault
-     */
-    void trap(Fault fault, ThreadID tid, DynInstPtr inst, int delay = 0);
-    void trapCPU(Fault fault, ThreadID tid, DynInstPtr inst);
+    /** Schedule a trap on the CPU */
+    void trapContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay = 0);
+
+    /** Perform trap to Handle Given Fault */
+    void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+
+    /** Schedule thread activation on the CPU */
+    void activateContext(ThreadID tid, int delay = 0);
 
     /** Add Thread to Active Threads List. */
-    void activateContext(ThreadID tid, int delay = 0);
     void activateThread(ThreadID tid);
+
+    /** Activate Thread In Each Pipeline Stage */
     void activateThreadInPipeline(ThreadID tid);
     
-    /** Add Thread to Active Threads List. */
+    /** Schedule Thread Activation from Ready List */
     void activateNextReadyContext(int delay = 0);
+
+    /** Add Thread From Ready List to Active Threads List. */
     void activateNextReadyThread();
 
-    /** Remove from Active Thread List */
+    /** Schedule a thread deactivation on the CPU */
     void deactivateContext(ThreadID tid, int delay = 0);
+
+    /** Remove from Active Thread List */
     void deactivateThread(ThreadID tid);
 
-    /** Suspend Thread, Remove from Active Threads List, Add to Suspend List */
+    /** Schedule a thread suspension on the CPU */
     void suspendContext(ThreadID tid, int delay = 0);
+
+    /** Suspend Thread, Remove from Active Threads List, Add to Suspend List */
     void suspendThread(ThreadID tid);
+
+    /** Schedule a thread halt on the CPU */
+    void haltContext(ThreadID tid, int delay = 0);
 
     /** Halt Thread, Remove from Active Thread List, Place Thread on Halted 
      *  Threads List 
      */
-    void haltContext(ThreadID tid, int delay = 0);
     void haltThread(ThreadID tid);
 
     /** squashFromMemStall() - sets up a squash event

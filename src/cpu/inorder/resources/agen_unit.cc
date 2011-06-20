@@ -78,8 +78,8 @@ AGENUnit::execute(int slot_num)
                 if (inst->fault == NoFault) {
                     agen_req->done();
                 } else {
-                    fatal("%s encountered while calculating address [sn:%i]",
-                          inst->fault->name(), seq_num);
+                    fatal("%s encountered while calculating address [sn:%i] %s",
+                          inst->fault->name(), seq_num, inst->instName());
                 }
 
                 agens++;

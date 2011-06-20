@@ -140,9 +140,10 @@ ExecutionUnit::execute(int slot_num)
                 // Evaluate Branch
                 fault = inst->execute();
                 executions++;
-                inst->setExecuted();
 
                 if (fault == NoFault) {
+                    inst->setExecuted();
+
                     if (inst->mispredicted()) {
                         assert(inst->isControl());
 
@@ -190,7 +191,8 @@ ExecutionUnit::execute(int slot_num)
 
                     exec_req->done();
                 } else {
-                    warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
+                    DPRINTF(Fault, "[tid:%i]:[sn:%i]: Fault %s found\n",
+                            inst->readTid(), inst->seqNum, fault->name());
                     inst->fault = fault;
                     exec_req->done();
                 }
@@ -210,6 +212,8 @@ ExecutionUnit::execute(int slot_num)
                 } else {
                     DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: had a %s "
                             "fault.\n", inst->readTid(), seq_num, fault->name());
+                    DPRINTF(Fault, "[tid:%i]:[sn:%i]: Fault %s found\n",
+                            inst->readTid(), inst->seqNum, fault->name());
                     inst->fault = fault;
                 }
 

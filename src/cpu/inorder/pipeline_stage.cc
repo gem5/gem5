@@ -342,43 +342,27 @@ PipelineStage::unblock(ThreadID tid)
 }
 
 void
-PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
+PipelineStage::setupSquash(DynInstPtr inst, ThreadID tid)
 {
-    if (cpu->squashSeqNum[tid] < inst->seqNum &&
-        cpu->lastSquashCycle[tid] == curTick()){
+    if (cpu->lastSquashCycle[tid] == curTick() &&
+        cpu->squashSeqNum[tid] < inst->seqNum){
         DPRINTF(Resource, "Ignoring [sn:%i] branch squash signal due to "
                 "another stage's squash signal for after [sn:%i].\n", 
                 inst->seqNum, cpu->squashSeqNum[tid]);
     } else {
-        // Send back mispredict information.
-        toPrevStages->stageInfo[stageNum][tid].branchMispredict = true;
-        toPrevStages->stageInfo[stageNum][tid].predIncorrect = true;
-        toPrevStages->stageInfo[stageNum][tid].doneSeqNum = inst->seqNum;
+        InstSeqNum squash_seq_num = inst->squashSeqNum;
+
         toPrevStages->stageInfo[stageNum][tid].squash = true;
-        toPrevStages->stageInfo[stageNum][tid].nextPC = inst->readPredTarg();
+        toPrevStages->stageInfo[stageNum][tid].doneSeqNum =
+            squash_seq_num;
 
-        toPrevStages->stageInfo[stageNum][tid].branchTaken =
-            inst->pcState().branching();
-
-#if ISA_HAS_DELAY_SLOT
-        toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum =
-            inst->bdelaySeqNum;
-
-        InstSeqNum squash_seq_num = inst->bdelaySeqNum;
-#else
-        toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = inst->seqNum;
-        InstSeqNum squash_seq_num = inst->seqNum;
-#endif
-
-        DPRINTF(InOrderStage, "Target being re-set to %08p\n", 
-                inst->predInstAddr());
         DPRINTF(InOrderStage, "[tid:%i]: Squashing after [sn:%i], "
-                "due to [sn:%i] branch.\n", tid, squash_seq_num, 
-                inst->seqNum);
+                "due to [sn:%i] %s.\n", tid, squash_seq_num,
+                inst->seqNum, inst->instName());
 
         // Save squash num for later stage use
-        cpu->squashSeqNum[tid] = squash_seq_num;
         cpu->lastSquashCycle[tid] = curTick();
+        cpu->squashSeqNum[tid] = squash_seq_num;
     }
 }
 
@@ -398,7 +382,6 @@ PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid)
     for (int i=0; i < insts_from_prev_stage; i++) {
         if (prevStage->insts[i]->threadNumber == tid &&
             prevStage->insts[i]->seqNum > squash_seq_num) {
-            // Change Comment to Annulling previous instruction
             DPRINTF(InOrderStage, "[tid:%i]: Squashing instruction, "
                     "[sn:%i] PC %s.\n",
                     tid,
@@ -676,7 +659,7 @@ PipelineStage::checkSignalsAndUpdate(ThreadID tid)
             DPRINTF(InOrderStage, "[tid:%u]: Squashing instructions due to "
                     "squash from stage %u.\n", tid, stage_idx);
             InstSeqNum squash_seq_num = fromNextStages->
-                stageInfo[stage_idx][tid].bdelayDoneSeqNum;
+                stageInfo[stage_idx][tid].doneSeqNum;
             squash(squash_seq_num, tid);
             break; //return true;
         }
@@ -989,7 +972,7 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                     
                     // Remove Thread From Pipeline & Resource Pool
                     inst->squashingStage = stageNum;
-                    inst->bdelaySeqNum = inst->seqNum;
+                    inst->squashSeqNum = inst->seqNum;
                     cpu->squashFromMemStall(inst, tid);  
 
                     // Switch On Cache Miss

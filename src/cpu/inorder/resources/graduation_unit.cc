@@ -67,7 +67,14 @@ GraduationUnit::execute(int slot_num)
 
             // Handle Any Faults Before Graduating Instruction
             if (inst->fault != NoFault) {
-                cpu->trap(inst->fault, tid, inst);
+                DPRINTF(Fault, "[sn:%i]: fault %s found for %s\n",
+                        inst->seqNum, inst->fault->name(),
+                        inst->instName());
+                inst->setSquashInfo(stage_num);
+                setupSquash(inst, stage_num, tid);
+                cpu->trapContext(inst->fault, tid, inst);
+                grad_req->done(false);
+                return;
             }
 
             DPRINTF(InOrderGraduation,
