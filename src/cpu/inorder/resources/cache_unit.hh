@@ -150,6 +150,12 @@ class CacheUnit : public Resource
     virtual void setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
                                  int acc_size, int flags);
 
+    void finishCacheUnitReq(DynInstPtr inst, CacheRequest *cache_req);
+
+    void buildDataPacket(CacheRequest *cache_req);
+
+    bool processSquash(CacheReqPacket *cache_pkt);
+
     void recvRetry();
 
     /** Returns a specific port. */
@@ -246,25 +252,7 @@ class CacheRequest : public ResourceRequest
         ResourceRequest::setRequest(_inst, stage_num, res_idx, slot_num, _cmd);
     }
 
-    void clearRequest()
-    {
-        if (reqData && !splitAccess)
-            delete [] reqData;
-
-        memReq = NULL;
-        reqData = NULL;
-        dataPkt = NULL;
-        memAccComplete = false;
-        memAccPending = false;
-        tlbStall = false;
-        splitAccess = false;
-        splitAccessNum = -1;
-        split2ndAccess = false;
-        instIdx = 0;
-        fetchBufferFill = false;
-
-        ResourceRequest::clearRequest();
-    }
+    void clearRequest();
 
     virtual PacketDataPtr getData()
     { return reqData; }
@@ -309,14 +297,17 @@ class CacheReqPacket : public Packet
   public:
     CacheReqPacket(CacheRequest *_req,
                    Command _cmd, short _dest, int _idx = 0)
-        : Packet(_req->memReq, _cmd, _dest), cacheReq(_req), instIdx(_idx)
+        : Packet(&(*_req->memReq), _cmd, _dest), cacheReq(_req),
+          instIdx(_idx), hasSlot(false), reqData(NULL), memReq(NULL)
     {
 
     }
 
     CacheRequest *cacheReq;
     int instIdx;
-    
+    bool hasSlot;
+    PacketDataPtr reqData;
+    RequestPtr memReq;
 };
 
 #endif //__CPU_CACHE_UNIT_HH__

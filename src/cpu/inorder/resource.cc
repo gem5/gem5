@@ -413,7 +413,7 @@ ResourceRequest::~ResourceRequest()
 std::string
 ResourceRequest::name()
 {
-    return res->name() + "."  + to_string(slotNum);
+    return csprintf("%s[slot:%i]:", res->name(), slotNum);
 }
 
 void
@@ -452,8 +452,8 @@ ResourceRequest::freeSlot()
 void
 ResourceRequest::done(bool completed)
 {
-    DPRINTF(Resource, "%s [slot:%i] done with request from "
-            "[sn:%i] [tid:%i].\n", res->name(), slotNum,
+    DPRINTF(Resource, "done with request from "
+            "[sn:%i] [tid:%i].\n",
             inst->seqNum, inst->readTid());
 
     setCompleted(completed);

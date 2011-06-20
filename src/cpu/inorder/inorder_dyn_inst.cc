@@ -176,21 +176,6 @@ InOrderDynInst::resetInstCount()
 
 InOrderDynInst::~InOrderDynInst()
 {
-    if (fetchMemReq != 0x0) {
-        delete fetchMemReq;
-        fetchMemReq = NULL;
-    }
-
-    if (dataMemReq != 0x0) {
-        delete dataMemReq;
-        dataMemReq = NULL;
-    }
-
-    if (splitMemReq != 0x0) {
-        delete dataMemReq;
-        dataMemReq = NULL;
-    }
-
     if (traceData)
         delete traceData;
 
@@ -557,6 +542,8 @@ InOrderDynInst::read(Addr addr, T &data, unsigned flags)
         traceData->setData(data);
     }
     Fault fault = readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
+    //@todo: the below lines should be unnecessary, timing access
+    // wont have valid data right here
     DPRINTF(InOrderDynInst, "[sn:%i] (1) Received Bytes %x\n", seqNum, data);
     data = TheISA::gtoh(data);
     DPRINTF(InOrderDynInst, "[sn%:i] (2) Received Bytes %x\n", seqNum, data);
@@ -619,11 +606,7 @@ Fault
 InOrderDynInst::writeBytes(uint8_t *data, unsigned size,
                            Addr addr, unsigned flags, uint64_t *res)
 {
-    assert(sizeof(storeData) >= size);
-    memcpy(&storeData, data, size);
-    DPRINTF(InOrderDynInst, "(2) [tid:%i]: [sn:%i] Setting store data to %#x.\n",
-            threadNumber, seqNum, storeData);
-    return cpu->write(this, (uint8_t *)&storeData, size, addr, flags, res);
+    return cpu->write(this, data, size, addr, flags, res);
 }
 
 template<class T>
@@ -635,8 +618,6 @@ InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setData(data);
     }
     data = TheISA::htog(data);
-    DPRINTF(InOrderDynInst, "(1) [tid:%i]: [sn:%i] Setting store data to %#x.\n",
-            threadNumber, seqNum, data);
     return writeBytes((uint8_t*)&data, sizeof(T), addr, flags, res);
 }
 

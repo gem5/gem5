@@ -391,17 +391,18 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
     Addr aligned_addr = inst->getMemAddr();
 
     if (!cache_req->is2ndSplit()) {
-        if (inst->dataMemReq == NULL) {
-            inst->dataMemReq =
+        if (cache_req->memReq == NULL) {
+            cache_req->memReq =
                 new Request(cpu->asid[tid], aligned_addr, acc_size, flags,
                             inst->instAddr(), cpu->readCpuId(),
                             tid);
-            cache_req->memReq = inst->dataMemReq;
+            DPRINTF(InOrderCachePort, "[sn:%i] Created memReq @%x, ->%x\n",
+                    inst->seqNum, &cache_req->memReq, cache_req->memReq);
         }
     } else {
         assert(inst->splitInst);
 
-        if (inst->splitMemReq ==  NULL) {
+        if (inst->splitMemReq == NULL) {
             inst->splitMemReq = new Request(cpu->asid[tid], 
                                             inst->split2ndAddr,
                                             acc_size, 
@@ -636,8 +637,6 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
         // ==============================
         inst->split2ndSize = addr + fullSize - secondAddr;
         inst->split2ndAddr = secondAddr;            
-        inst->split2ndStoreDataPtr = &cache_req->inst->storeData;
-        inst->split2ndStoreDataPtr += size;
         inst->split2ndFlags = flags;        
         inst->splitInstSked = true;
     }    
@@ -645,7 +644,13 @@ CacheUnit::write(DynInstPtr inst, uint8_t *data, unsigned size,
     doTLBAccess(inst, cache_req, size, flags, TheISA::TLB::Write);
 
     if (inst->fault == NoFault) {
-        if (!cache_req->splitAccess) {            
+        if (!cache_req->splitAccess) {
+            cache_req->reqData = new uint8_t[size];
+            memcpy(cache_req->reqData, data, size);
+
+            //inst->split2ndStoreDataPtr = cache_req->reqData;
+            //inst->split2ndStoreDataPtr += size;
+
             doCacheAccess(inst, write_res);
         } else {            
             doCacheAccess(inst, write_res, cache_req);            
@@ -734,17 +739,13 @@ CacheUnit::execute(int slot_num)
         break;
 
       case CompleteReadData:
-      case CompleteWriteData:
         DPRINTF(InOrderCachePort,
-                "[tid:%i]: [sn:%i]: Trying to Complete Data Access\n",
+                "[tid:%i]: [sn:%i]: Trying to Complete Data Read Access\n",
                 tid, inst->seqNum);
-
-        if (cache_req->isMemAccComplete() ||
-            inst->isDataPrefetch() ||
-            inst->isInstPrefetch()) {
-            removeAddrDependency(inst);
-            cache_req->setMemStall(false);            
-            cache_req->done();
+        //@todo: timing translations need to check here...
+        assert(!inst->isInstPrefetch() && "Can't Handle Inst. Prefecthes");
+        if (cache_req->isMemAccComplete() || inst->isDataPrefetch()) {
+            finishCacheUnitReq(inst, cache_req);
         } else {
             DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
                     tid, cache_req->inst->getMemAddr());
@@ -753,17 +754,44 @@ CacheUnit::execute(int slot_num)
         }
         break;
 
+      case CompleteWriteData:
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Trying to Complete Data Write Access\n",
+                tid, inst->seqNum);
+        //@todo: check that timing translation is finished here
+        if (cache_req->dataPkt->isRead()) {
+            assert(cache_req->memReq->isCondSwap() ||
+                   cache_req->memReq->isLLSC() ||
+                   cache_req->memReq->isSwap());
+
+            if (!cache_req->isMemAccComplete()) {
+                DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
+                        tid, cache_req->inst->getMemAddr());
+                cache_req->setCompleted(false);
+                cache_req->setMemStall(true);
+                return;
+            }
+        }
+
+        if (cache_req->isMemAccPending()) {
+            cache_req->dataPkt->reqData = cache_req->reqData;
+            cache_req->dataPkt->memReq = cache_req->memReq;
+        }
+
+        //@todo: if split inst save data
+
+        finishCacheUnitReq(inst, cache_req);
+        break;
+
       case CompleteSecondSplitRead:
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Trying to Complete Split Data Read "
                 "Access\n", tid, inst->seqNum);
 
-        if (cache_req->isMemAccComplete() ||
-            inst->isDataPrefetch() ||
-            inst->isInstPrefetch()) {
-            removeAddrDependency(inst);
-            cache_req->setMemStall(false);            
-            cache_req->done();
+        //@todo: check that timing translation is finished here
+        assert(!inst->isInstPrefetch() && "Can't Handle Inst. Prefecthes");
+        if (cache_req->isMemAccComplete() || inst->isDataPrefetch()) {
+            finishCacheUnitReq(inst, cache_req);
         } else {
             DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
                     tid, cache_req->inst->split2ndAddr);
@@ -776,19 +804,16 @@ CacheUnit::execute(int slot_num)
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Trying to Complete Split Data Write "
                 "Access\n", tid, inst->seqNum);
+        //@todo: illegal to have a unaligned cond.swap or llsc?
+        assert(!cache_req->memReq->isSwap() && !cache_req->memReq->isCondSwap() && !cache_req->memReq->isLLSC());
 
-        if (cache_req->isMemAccComplete() ||
-            inst->isDataPrefetch() ||
-            inst->isInstPrefetch()) {
-            removeAddrDependency(inst);
-            cache_req->setMemStall(false);            
-            cache_req->done();
-        } else {
-            DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
-                    tid, cache_req->inst->split2ndAddr);
-            cache_req->setCompleted(false);
-            cache_req->setMemStall(true);            
+        if (cache_req->isMemAccPending()) {
+            cache_req->dataPkt->reqData = cache_req->reqData;
+            cache_req->dataPkt->memReq = cache_req->memReq;
         }
+
+        //@todo: check that timing translation is finished here
+        finishCacheUnitReq(inst, cache_req);
         break;
         
       default:
@@ -796,26 +821,17 @@ CacheUnit::execute(int slot_num)
     }
 }
 
-// @TODO: Split into doCacheRead() and doCacheWrite()
 void
-CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
-                         CacheReqPtr split_req)
+CacheUnit::finishCacheUnitReq(DynInstPtr inst, CacheRequest *cache_req)
 {
-    Fault fault = NoFault;
-#if TRACING_ON
-    ThreadID tid = inst->readTid();
-#endif
+    removeAddrDependency(inst);
+    cache_req->setMemStall(false);
+    cache_req->done();
+}
 
-    CacheReqPtr cache_req;
-    
-    if (split_req == NULL) {        
-        cache_req = dynamic_cast<CacheReqPtr>(reqs[inst->getCurResSlot()]);
-    } else{
-        cache_req = split_req;
-    }        
-
-    assert(cache_req);
-
+void
+CacheUnit::buildDataPacket(CacheRequest *cache_req)
+{
     // Check for LL/SC and if so change command
     if (cache_req->memReq->isLLSC() && cache_req->pktCmd == MemCmd::ReadReq) {
         cache_req->pktCmd = MemCmd::LoadLockedReq;
@@ -832,46 +848,61 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
                                             cache_req->pktCmd,
                                             Packet::Broadcast,
                                             cache_req->instIdx);
+    DPRINTF(InOrderCachePort, "[slot:%i]: Slot marked for %x [pkt:%x->%x]\n",
+            cache_req->getSlot(),
+            cache_req->dataPkt->getAddr(),
+            &cache_req->dataPkt,
+            cache_req->dataPkt);
 
-    bool is_read = cache_req->dataPkt->isRead();
-    bool is_write = cache_req->dataPkt->isWrite();
+    cache_req->dataPkt->hasSlot = true;
+    cache_req->dataPkt->dataStatic(cache_req->reqData);
+}
 
-    //@note: a compare and swap will both marked both read and write
-    if (is_read && !is_write) {
-        DPRINTF(InOrderCachePort, "Read Data Set in Packet\n");
-
-        cache_req->dataPkt->dataStatic(cache_req->reqData);
-    }
-
-    if (is_write) {
-        if (inst->split2ndAccess) {            
-            cache_req->dataPkt->dataStatic(inst->split2ndStoreDataPtr);
-        } else {
-            cache_req->dataPkt->dataStatic(&cache_req->inst->storeData);            
-        }
-
-        DPRINTF(InOrderCachePort,
-                "[tid:%u]: [sn:%i]: Storing data: %s\n",
-                tid, inst->seqNum,
-                printMemData(cache_req->dataPkt->getPtr<uint8_t>(),
-                             cache_req->dataPkt->getSize()));
-        
-        if (cache_req->memReq->isCondSwap()) {
-            assert(write_res);
-            cache_req->memReq->setExtraData(*write_res);
-        }
-    }
-
+void
+CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
+                         CacheReqPtr split_req)
+{
+    Fault fault = NoFault;
+#if TRACING_ON
+    ThreadID tid = inst->readTid();
+#endif
     bool do_access = true;  // flag to suppress cache access
 
-    Request *memReq = cache_req->dataPkt->req;
-
-    if (is_write && cache_req->memReq->isLLSC()) {
-        assert(cache_req->inst->isStoreConditional());
-        DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
-        do_access = TheISA::handleLockedWrite(cpu, memReq);
+    // Special Handling if this is a split request
+    CacheReqPtr cache_req;
+    if (split_req == NULL)
+        cache_req = dynamic_cast<CacheReqPtr>(reqs[inst->getCurResSlot()]);
+    else {
+        cache_req = split_req;
+        assert(0);
     }
 
+    // Make a new packet inside the CacheRequest object
+    assert(cache_req);
+    buildDataPacket(cache_req);
+
+    // Special Handling for LL/SC or Compare/Swap
+     bool is_write = cache_req->dataPkt->isWrite();
+     RequestPtr mem_req = cache_req->dataPkt->req;
+     if (is_write) {
+         DPRINTF(InOrderCachePort,
+                 "[tid:%u]: [sn:%i]: Storing data: %s\n",
+                 tid, inst->seqNum,
+                 printMemData(cache_req->dataPkt->getPtr<uint8_t>(),
+                              cache_req->dataPkt->getSize()));
+
+        if (mem_req->isCondSwap()) {
+             assert(write_res);
+             cache_req->memReq->setExtraData(*write_res);
+         }
+        if (mem_req->isLLSC()) {
+            assert(cache_req->inst->isStoreConditional());
+            DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
+            do_access = TheISA::handleLockedWrite(cpu, mem_req);
+        }
+     }
+
+    // Finally, go ahead and make the access if we can...
     DPRINTF(InOrderCachePort,
             "[tid:%i] [sn:%i] attempting to access cache for addr %08p\n",
             tid, inst->seqNum, cache_req->dataPkt->getAddr());
@@ -883,6 +914,11 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
                     "is blocked. now waiting to retry request\n", tid, 
                     inst->seqNum);
             delete cache_req->dataPkt;
+            cache_req->dataPkt = NULL;
+
+            delete cache_req->memReq;
+            cache_req->memReq = NULL;
+
             cache_req->done(false);
             cachePortBlocked = true;
         } else {
@@ -893,7 +929,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
             cache_req->setMemAccPending();
             cachePortBlocked = false;
         }
-    } else if (!do_access && memReq->isLLSC()){
+    } else if (mem_req->isLLSC()){
         // Store-Conditional instructions complete even if they "failed"
         assert(cache_req->inst->isStoreConditional());
         cache_req->setCompleted(true);
@@ -905,6 +941,11 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
         processCacheCompletion(cache_req->dataPkt);
     } else {
         delete cache_req->dataPkt;
+        cache_req->dataPkt = NULL;
+
+        delete cache_req->memReq;
+        cache_req->memReq = NULL;
+
         // Make cache request again since access due to
         // inability to access
         DPRINTF(InOrderStall, "STALL: \n");
@@ -913,39 +954,75 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res,
 
 }
 
-void
-CacheUnit::processCacheCompletion(PacketPtr pkt)
+bool
+CacheUnit::processSquash(CacheReqPacket *cache_pkt)
 {
-    // Cast to correct packet type
-    CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
-             
-    assert(cache_pkt);
+    // The resource may no longer be actively servicing this
+    // packet. Scenarios like a store that has been sent to the
+    // memory system or access that's been squashed. If that's
+    // the case, we can't access the request slot because it
+    // will be either invalid or servicing another request.
+    if (!cache_pkt->hasSlot) {
+        DPRINTF(InOrderCachePort,
+                "%x does not have a slot in unit, ignoring.\n",
+                cache_pkt->getAddr());
 
+        if (cache_pkt->reqData) {
+            delete [] cache_pkt->reqData;
+            cache_pkt->reqData = NULL;
+        }
+
+        if (cache_pkt->memReq) {
+            delete cache_pkt->memReq;
+            cache_pkt->memReq = NULL;
+        }
+
+        delete cache_pkt;
+        cache_pkt = NULL;
+        cpu->wakeCPU();
+        return true;
+    } else {
+        DPRINTF(InOrderCachePort, "%x has slot %i\n",
+                cache_pkt->getAddr(), cache_pkt->cacheReq->getSlot());
+    }
+
+
+    // It's possible that the request is squashed but the
+    // packet is still acknowledged by the resource. Squashes
+    // should happen at the end of the cycles and trigger the
+    // code above, but if not, this would handle any timing
+    // variations due to diff. user parameters.
     if (cache_pkt->cacheReq->isSquashed()) {
         DPRINTF(InOrderCachePort,
                 "Ignoring completion of squashed access, [tid:%i] [sn:%i]\n",
                 cache_pkt->cacheReq->getInst()->readTid(),
                 cache_pkt->cacheReq->getInst()->seqNum);
-        DPRINTF(RefCount,
-                "Ignoring completion of squashed access, [tid:%i] [sn:%i]\n",
-                cache_pkt->cacheReq->getTid(),
-                cache_pkt->cacheReq->seqNum);
 
+        cache_pkt->cacheReq->setMemAccPending(false);
         cache_pkt->cacheReq->freeSlot();
         delete cache_pkt;
-
+        cache_pkt = NULL;
         cpu->wakeCPU();
-
-        return;
+        return true;
     }
 
-    DPRINTF(InOrderCachePort,
-            "[tid:%u]: [sn:%i]: Waking from cache access to addr. %08p\n",
-            cache_pkt->cacheReq->getInst()->readTid(),
-            cache_pkt->cacheReq->getInst()->seqNum,
-            cache_pkt->cacheReq->getInst()->getMemAddr());
 
-    // Cast to correct request type
+    return false;
+}
+
+void
+CacheUnit::processCacheCompletion(PacketPtr pkt)
+{
+    CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
+    assert(cache_pkt);
+
+    DPRINTF(InOrderCachePort, "Finished request for %x [pkt:%x->%x]\n",
+            pkt->getAddr(), &cache_pkt, cache_pkt);
+
+    //@todo: process Squashed Completion
+    if (processSquash(cache_pkt))
+        return;
+
     CacheRequest *cache_req = dynamic_cast<CacheReqPtr>(
         findRequest(cache_pkt->cacheReq->getInst(), cache_pkt->instIdx));
 
@@ -957,7 +1034,15 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     }
     
     assert(cache_req);
+    assert(cache_req == cache_pkt->cacheReq);
 
+    DPRINTF(InOrderCachePort,
+            "[tid:%u]: [sn:%i]: [slot:%i] Waking from cache access (vaddr.%08p, paddr:%08p)\n",
+            cache_pkt->cacheReq->getInst()->readTid(),
+            cache_pkt->cacheReq->getInst()->seqNum,
+            cache_req->getSlot(),
+            cache_pkt->req->getVaddr(),
+            cache_pkt->req->getPaddr());
 
     // Get resource request info
     unsigned stage_num = cache_req->getStageNum();
@@ -971,8 +1056,8 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     DPRINTF(InOrderCachePort,
             "[tid:%u]: [sn:%i]: Processing cache access\n",
             tid, inst->seqNum);
-    PacketPtr dataPkt = NULL;
 
+    PacketPtr split_pkt = NULL;
     if (inst->splitInst) {
         inst->splitFinishCnt++;
 
@@ -983,22 +1068,18 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                                        0,
                                        0);
 
-            Packet split_pkt(cache_req->memReq, cache_req->pktCmd,
-                             Packet::Broadcast);
+            split_pkt = new Packet(cache_req->memReq, cache_req->pktCmd,
+                                   Packet::Broadcast);
+            split_pkt->dataStatic(inst->splitMemData);
 
-
-            if (inst->isLoad()) {
-                split_pkt.dataStatic(inst->splitMemData);
-            } else  {
-                split_pkt.dataStatic(&inst->storeData);
-            }
-
-            dataPkt = &split_pkt;
+            DPRINTF(InOrderCachePort, "Completing Split Access.\n");
+            inst->completeAcc(split_pkt);
         }
     } else {
-        dataPkt = pkt;
+        inst->completeAcc(cache_pkt);
     }
-    inst->completeAcc(dataPkt);
+
+    inst->setExecuted();
 
     if (inst->isLoad()) {
         assert(cache_pkt->isRead());
@@ -1013,19 +1094,30 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
         DPRINTF(InOrderCachePort,
                 "[tid:%u]: [sn:%i]: Bytes loaded were: %s\n",
                 tid, inst->seqNum,
-                printMemData(dataPkt->getPtr<uint8_t>(),
-                             dataPkt->getSize()));
+                (split_pkt) ? printMemData(split_pkt->getPtr<uint8_t>(),
+                                           split_pkt->getSize()) :
+                              printMemData(cache_pkt->getPtr<uint8_t>(),
+                                           cache_pkt->getSize()));
     } else if(inst->isStore()) {
         assert(cache_pkt->isWrite());
 
         DPRINTF(InOrderCachePort,
                 "[tid:%u]: [sn:%i]: Bytes stored were: %s\n",
                 tid, inst->seqNum,
-                printMemData(dataPkt->getPtr<uint8_t>(),
-                             dataPkt->getSize()));
+                (split_pkt) ? printMemData(split_pkt->getPtr<uint8_t>(),
+                                           split_pkt->getSize()) :
+                              printMemData(cache_pkt->getPtr<uint8_t>(),
+                                           cache_pkt->getSize()));
     }
 
-    delete cache_pkt;
+    DPRINTF(InOrderCachePort, "Deleting packets %x (%x).\n",
+            cache_pkt, cache_req->dataPkt);
+
+    if (split_pkt) {
+        delete split_pkt;
+        split_pkt = NULL;
+    }
+
     cache_req->setMemAccPending(false);
     cache_req->setMemAccCompleted();
 
@@ -1093,6 +1185,10 @@ CacheUnitEvent::process()
 
     req_ptr->tlbStall = false;
 
+    //@todo: timing translation needs to have some type of independent
+    //       info regarding if it's squashed or not so we can
+    //       free up the resource if a request gets squashed in the middle
+    //       of a table walk
     if (req_ptr->isSquashed()) {
         req_ptr->freeSlot();
     }
@@ -1177,21 +1273,52 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
                     unsetResStall(reqs[req_slot_num], tid);
             }
 
-            if (!cache_req->tlbStall && !cache_req->isMemAccPending()) {
-                freeSlot(req_slot_num);
-            } else {
-                DPRINTF(InOrderCachePort,
-                        "[tid:%i] Request from [sn:%i] squashed, but still "
-                        "pending completion.\n",
-                        req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum);
-                DPRINTF(RefCount,
-                        "[tid:%i] Request from [sn:%i] squashed (split:%i), but "
-                        "still pending completion.\n",
-                        req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum,
-                        req_ptr->getInst()->splitInst);
+            if (cache_req->isMemAccPending()) {
+                cache_req->dataPkt->reqData = cache_req->reqData;
+                cache_req->dataPkt->memReq = cache_req->memReq;
             }
+
+            if (!cache_req->tlbStall)
+                freeSlot(req_slot_num);
         }
     }
 
 }
 
+void
+CacheRequest::clearRequest()
+{
+    if (!memAccPending) {
+        if (reqData && !splitAccess)
+            delete [] reqData;
+
+        if (memReq) {
+            DPRINTF(InOrderCachePort, "Clearing request for %x...%x\n",
+                    memReq->getVaddr(), (memReq->hasPaddr()) ? memReq->getPaddr() : 0);
+            delete memReq;
+        }
+
+        if (dataPkt)
+            delete dataPkt;
+    } else {
+        if (dataPkt) {
+            dataPkt->hasSlot = false;
+            DPRINTF(InOrderCachePort, "[slot:%i]: Slot unmarked for %x for [pkt:%x->%x]\n",
+                    getSlot(), dataPkt->getAddr(), &dataPkt, dataPkt);
+        }
+    }
+
+    memReq = NULL;
+    reqData = NULL;
+    dataPkt = NULL;
+    memAccComplete = false;
+    memAccPending = false;
+    tlbStall = false;
+    splitAccess = false;
+    splitAccessNum = -1;
+    split2ndAccess = false;
+    instIdx = 0;
+    fetchBufferFill = false;
+
+    ResourceRequest::clearRequest();
+}

@@ -650,20 +650,6 @@ PipelineStage::readStallSignals(ThreadID tid)
             stalls[tid].stage[stage_idx] = false;
         }
     }
-
-    for (int stage_idx = 0; stage_idx < NumStages;
-         stage_idx++) {
-
-        DPRINTF(InOrderStage, "[tid:%i] Stall signals from Stage "
-                "%i. Block:%i Unblock:%i...NBlock:%i NUnblock:%i\n",
-                tid,
-                stage_idx,
-                fromNextStages->stageBlock[stage_idx][tid],
-                fromNextStages->stageUnblock[stage_idx][tid],
-                toPrevStages->stageBlock[stage_idx][tid],
-                toPrevStages->stageUnblock[stage_idx][tid]);
-    }
-
 }
 
 

@@ -175,14 +175,9 @@ FetchUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
 {
     ThreadID tid = inst->readTid();
     Addr aligned_addr = cacheBlockAlign(inst->getMemAddr());
-
-    if (inst->fetchMemReq == NULL)
-        inst->fetchMemReq =
+    cache_req->memReq =
             new Request(tid, aligned_addr, acc_size, flags,
                         inst->instAddr(), cpu->readCpuId(), tid);
-
-
-    cache_req->memReq = inst->fetchMemReq;
 }
 
 std::list<FetchUnit::FetchBlock*>::iterator
@@ -400,8 +395,6 @@ FetchUnit::execute(int slot_num)
 
             inst->unsetMemAddr();
 
-            delete cache_req->dataPkt;
-
             cache_req->done();
         } else {
             DPRINTF(InOrderCachePort,
@@ -429,23 +422,11 @@ FetchUnit::processCacheCompletion(PacketPtr pkt)
     CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
     assert(cache_pkt);
 
-    if (cache_pkt->cacheReq->isSquashed()) {
-        DPRINTF(InOrderCachePort,
-                "Ignoring completion of squashed access, [tid:%i] [sn:%i]\n",
-                cache_pkt->cacheReq->getInst()->readTid(),
-                cache_pkt->cacheReq->getInst()->seqNum);
-        DPRINTF(RefCount,
-                "Ignoring completion of squashed access, [tid:%i] [sn:%i]\n",
-                cache_pkt->cacheReq->getTid(),
-                cache_pkt->cacheReq->seqNum);
+    DPRINTF(InOrderCachePort, "Finished request for %x\n",
+            cache_pkt->getAddr());
 
-        cache_pkt->cacheReq->done();
-        cache_pkt->cacheReq->freeSlot();
-        delete cache_pkt;
-
-        cpu->wakeCPU();
+    if (processSquash(cache_pkt))
         return;
-    }
 
     Addr block_addr = cacheBlockAlign(cache_pkt->cacheReq->
                                       getInst()->getMemAddr());
