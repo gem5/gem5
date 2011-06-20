@@ -100,6 +100,17 @@ ExecutionUnit::execute(int slot_num)
     }
 
 
+    //@todo: may want to make a separate schedule entry for setting
+    //       destination register dependencies
+    //@note: typically want to set the output dependencies right
+    //       before we do any reading or writing of registers
+    //       (in RegFile Manager(use_def.cc)) but there are some
+    //       instructions that dont have src regs, so just in case
+    //       take care of reg. dep. map stuff here
+    if (!inst->isRegDepEntry()) {
+        regDepMap[tid]->insert(inst);
+    }
+
     switch (exec_req->cmd)
     {
       case ExecuteInst:
@@ -139,11 +150,9 @@ ExecutionUnit::execute(int slot_num)
                 lastControlTick = curTick();
 
                 // Evaluate Branch
-                DPRINTF(IEW, "Pre-Execute %s PC:%s nextPC:%s predPC:%s\n", inst->instName(), inst->pcState(), inst->readPredTarg());
                 fault = inst->execute();
                 executions++;
                 inst->setExecuted();
-                DPRINTF(IEW, "Post-Execute %s PC:%s nextPC:%s predPC:%s\n", inst->instName(), inst->pcState(), inst->readPredTarg());
 
                 if (fault == NoFault) {
                     // If branch is mispredicted, then signal squash

@@ -68,7 +68,6 @@ DecodeUnit::execute(int slot_num)
                 DPRINTF(InOrderDecode,
                     "[tid:%i]: %s Setting Destination Register(s) for [sn:%i].\n",
                         tid, inst->instName(), inst->seqNum);
-                regDepMap[tid]->insert(inst);
 
                 //inst->printSked();
 
