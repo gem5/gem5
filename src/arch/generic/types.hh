@@ -98,6 +98,12 @@ class PCStateBase
         return _pc == opc._pc && _npc == opc._npc;
     }
 
+    bool
+    operator != (const PCStateBase &opc) const
+    {
+        return !(*this == opc);
+    }
+
     void
     serialize(std::ostream &os)
     {
@@ -235,6 +241,12 @@ class UPCState : public SimplePCState<MachInst>
                _upc == opc._upc && _nupc == opc._nupc;
     }
 
+    bool
+    operator != (const UPCState<MachInst> &opc) const
+    {
+        return !(*this == opc);
+    }
+
     void
     serialize(std::ostream &os)
     {
@@ -308,6 +320,12 @@ class DelaySlotPCState : public SimplePCState<MachInst>
         return Base::_pc == opc._pc &&
                Base::_npc == opc._npc &&
                _nnpc == opc._nnpc;
+    }
+
+    bool
+    operator != (const DelaySlotPCState<MachInst> &opc) const
+    {
+        return !(*this == opc);
     }
 
     void
@@ -399,6 +417,12 @@ class DelaySlotUPCState : public DelaySlotPCState<MachInst>
                Base::_npc == opc._npc &&
                Base::_nnpc == opc._nnpc &&
                _upc == opc._upc && _nupc == opc._nupc;
+    }
+
+    bool
+    operator != (const DelaySlotUPCState<MachInst> &opc) const
+    {
+        return !(*this == opc);
     }
 
     void

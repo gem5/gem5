@@ -433,6 +433,12 @@ namespace ArmISA
                 _itstate == opc._itstate && _nextItstate == opc._nextItstate;
         }
 
+        bool
+        operator != (const PCState &opc) const
+        {
+            return !(*this == opc);
+        }
+
         void
         serialize(std::ostream &os)
         {
