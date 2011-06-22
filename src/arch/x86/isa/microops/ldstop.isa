@@ -177,7 +177,6 @@ def template MicroStoreExecute {{
             fault = write(xc, Mem, EA, memFlags);
             if(fault == NoFault)
             {
-                %(post_code)s;
                 %(op_wb)s;
             }
         }
@@ -411,8 +410,7 @@ let {{
                       '(StoreCheck << FlagShift) | Request::LOCKED')
     defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;', big = False)
 
-    def defineMicroStoreOp(mnemonic, code, \
-            postCode="", completeCode="", mem_flags="0"):
+    def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0"):
         global header_output
         global decoder_output
         global exec_output
@@ -423,7 +421,6 @@ let {{
         # Build up the all register version of this micro op
         iop = InstObjParams(name, Name, 'X86ISA::LdStOp',
                 {"code": code,
-                 "post_code": postCode,
                  "complete_code": completeCode,
                  "ea_code": calculateEA})
         header_output += MicroLdStOpDeclare.subst(iop)
