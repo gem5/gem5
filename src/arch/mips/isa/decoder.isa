@@ -1548,7 +1548,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
                 0x6: decode FUNCTION_LO {
                     0x0: nmadd_s({{ Fd.sf = (-1 * Fs.sf * Ft.sf) - Fr.sf; }});
-                    0x1: nmadd_d({{ Fd.df = (-1 * Fs.df * Ft.df) + Fr.df; }});
+                    0x1: nmadd_d({{ Fd.df = (-1 * Fs.df * Ft.df) - Fr.df; }});
                     0x6: nmadd_ps({{
                         Fd1.sf = -((Fs1.df * Ft1.df) + Fr1.df);
                         Fd2.sf = -((Fs2.df * Ft2.df) + Fr2.df);
@@ -1556,8 +1556,8 @@ decode OPCODE_HI default Unknown::unknown() {
                 }
 
                 0x7: decode FUNCTION_LO {
-                    0x0: nmsub_s({{ Fd.sf = (-1 * Fs.sf * Ft.sf) - Fr.sf; }});
-                    0x1: nmsub_d({{ Fd.df = (-1 * Fs.df * Ft.df) - Fr.df; }});
+                    0x0: nmsub_s({{ Fd.sf = (-1 * Fs.sf * Ft.sf) + Fr.sf; }});
+                    0x1: nmsub_d({{ Fd.df = (-1 * Fs.df * Ft.df) + Fr.df; }});
                     0x6: nmsub_ps({{
                         Fd1.sf = -((Fs1.df * Ft1.df) - Fr1.df);
                         Fd2.sf = -((Fs2.df * Ft2.df) - Fr2.df);
