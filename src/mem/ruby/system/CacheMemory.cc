@@ -428,31 +428,6 @@ CacheMemory::printStats(ostream& out) const
 }
 
 void
-CacheMemory::getMemoryValue(const Address& addr, char* value,
-                            unsigned size_in_bytes)
-{
-    AbstractCacheEntry* entry = lookup(line_address(addr));
-    unsigned startByte = addr.getAddress() - line_address(addr).getAddress();
-    for (unsigned i = 0; i < size_in_bytes; ++i) {
-        value[i] = entry->getDataBlk().getByte(i + startByte);
-    }
-}
-
-void
-CacheMemory::setMemoryValue(const Address& addr, char* value,
-                            unsigned size_in_bytes)
-{
-    AbstractCacheEntry* entry = lookup(line_address(addr));
-    unsigned startByte = addr.getAddress() - line_address(addr).getAddress();
-    assert(size_in_bytes > 0);
-    for (unsigned i = 0; i < size_in_bytes; ++i) {
-        entry->getDataBlk().setByte(i + startByte, value[i]);
-    }
-
-    // entry = lookup(line_address(addr));
-}
-
-void
 CacheMemory::setLocked(const Address& address, int context)
 {
     DPRINTF(RubyCache, "Setting Lock for addr: %x to %d\n", address, context);

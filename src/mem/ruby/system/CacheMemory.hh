@@ -117,11 +117,6 @@ class CacheMemory : public SimObject
                                RubyAccessMode accessType,
                                PrefetchBit pfBit);
 
-    void getMemoryValue(const Address& addr, char* value,
-                        unsigned int size_in_bytes);
-    void setMemoryValue(const Address& addr, char* value,
-                        unsigned int size_in_bytes);
-
     void setLocked (const Address& addr, int context);
     void clearLocked (const Address& addr);
     bool isLocked (const Address& addr, int context);
