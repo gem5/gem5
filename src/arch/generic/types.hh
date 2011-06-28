@@ -269,7 +269,7 @@ std::ostream &
 operator<<(std::ostream & os, const UPCState<MachInst> &pc)
 {
     ccprintf(os, "(%#x=>%#x).(%d=>%d)",
-            pc.pc(), pc.npc(), pc.upc(), pc.npc());
+            pc.pc(), pc.npc(), pc.upc(), pc.nupc());
     return os;
 }
 
