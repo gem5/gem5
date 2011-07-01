@@ -1,14 +1,10 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Apr 28 2011 15:11:39
-M5 started Apr 28 2011 15:12:18
-M5 executing on SC2B0617
-command line: build/ALPHA_SE_MOESI_hammer/m5.opt -d build/ALPHA_SE_MOESI_hammer/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer
+gem5 compiled Jun 30 2011 15:20:24
+gem5 started Jun 30 2011 15:20:49
+gem5 executing on SC2B0622
+command line: build/ALPHA_SE_MOESI_hammer/gem5.opt -d build/ALPHA_SE_MOESI_hammer/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 38145419 because maximum number of loads reached
+Exiting @ tick 19206609 because maximum number of loads reached

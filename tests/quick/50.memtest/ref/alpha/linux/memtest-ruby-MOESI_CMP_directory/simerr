@@ -1,74 +1,74 @@
-system.cpu6: completed 10000 read accesses @3870766
-system.cpu3: completed 10000 read accesses @3878746
-system.cpu0: completed 10000 read accesses @3886856
-system.cpu5: completed 10000 read accesses @3927076
-system.cpu4: completed 10000 read accesses @3928136
-system.cpu1: completed 10000 read accesses @3933986
-system.cpu7: completed 10000 read accesses @3939136
-system.cpu2: completed 10000 read accesses @3961336
-system.cpu3: completed 20000 read accesses @7711976
-system.cpu6: completed 20000 read accesses @7755206
-system.cpu1: completed 20000 read accesses @7790946
-system.cpu0: completed 20000 read accesses @7793836
-system.cpu7: completed 20000 read accesses @7819156
-system.cpu5: completed 20000 read accesses @7842116
-system.cpu2: completed 20000 read accesses @7861796
-system.cpu4: completed 20000 read accesses @7869216
-system.cpu6: completed 30000 read accesses @11632716
-system.cpu3: completed 30000 read accesses @11640476
-system.cpu0: completed 30000 read accesses @11674406
-system.cpu7: completed 30000 read accesses @11723106
-system.cpu1: completed 30000 read accesses @11750786
-system.cpu5: completed 30000 read accesses @11771946
-system.cpu2: completed 30000 read accesses @11779206
-system.cpu4: completed 30000 read accesses @11786866
-system.cpu6: completed 40000 read accesses @15549176
-system.cpu3: completed 40000 read accesses @15569106
-system.cpu0: completed 40000 read accesses @15575406
-system.cpu1: completed 40000 read accesses @15639866
-system.cpu7: completed 40000 read accesses @15651376
-system.cpu4: completed 40000 read accesses @15684456
-system.cpu2: completed 40000 read accesses @15693786
-system.cpu5: completed 40000 read accesses @15694256
-system.cpu3: completed 50000 read accesses @19433226
-system.cpu6: completed 50000 read accesses @19494266
-system.cpu0: completed 50000 read accesses @19522326
-system.cpu7: completed 50000 read accesses @19555506
-system.cpu2: completed 50000 read accesses @19582037
-system.cpu5: completed 50000 read accesses @19602186
-system.cpu4: completed 50000 read accesses @19612156
-system.cpu1: completed 50000 read accesses @19619536
-system.cpu3: completed 60000 read accesses @23350676
-system.cpu6: completed 60000 read accesses @23398486
-system.cpu7: completed 60000 read accesses @23413166
-system.cpu2: completed 60000 read accesses @23446897
-system.cpu0: completed 60000 read accesses @23459826
-system.cpu5: completed 60000 read accesses @23480596
-system.cpu1: completed 60000 read accesses @23493697
-system.cpu4: completed 60000 read accesses @23550560
-system.cpu6: completed 70000 read accesses @27257556
-system.cpu3: completed 70000 read accesses @27284686
-system.cpu7: completed 70000 read accesses @27295276
-system.cpu0: completed 70000 read accesses @27323626
-system.cpu2: completed 70000 read accesses @27347866
-system.cpu5: completed 70000 read accesses @27397476
-system.cpu1: completed 70000 read accesses @27431506
-system.cpu4: completed 70000 read accesses @27445496
-system.cpu3: completed 80000 read accesses @31119376
-system.cpu6: completed 80000 read accesses @31139476
-system.cpu7: completed 80000 read accesses @31156808
-system.cpu0: completed 80000 read accesses @31162576
-system.cpu2: completed 80000 read accesses @31207156
-system.cpu5: completed 80000 read accesses @31296626
-system.cpu1: completed 80000 read accesses @31342336
-system.cpu4: completed 80000 read accesses @31369706
-system.cpu3: completed 90000 read accesses @34977986
-system.cpu7: completed 90000 read accesses @35027516
-system.cpu0: completed 90000 read accesses @35081906
-system.cpu6: completed 90000 read accesses @35116116
-system.cpu2: completed 90000 read accesses @35133146
-system.cpu5: completed 90000 read accesses @35236356
-system.cpu1: completed 90000 read accesses @35243480
-system.cpu4: completed 90000 read accesses @35321756
-system.cpu3: completed 100000 read accesses @38906196
+system.cpu1: completed 10000 read, 5302 write accesses @1928146
+system.cpu4: completed 10000 read, 5365 write accesses @1942166
+system.cpu7: completed 10000 read, 5319 write accesses @1965207
+system.cpu3: completed 10000 read, 5359 write accesses @1968836
+system.cpu0: completed 10000 read, 5498 write accesses @1974677
+system.cpu2: completed 10000 read, 5513 write accesses @1977476
+system.cpu6: completed 10000 read, 5448 write accesses @1980956
+system.cpu5: completed 10000 read, 5483 write accesses @1995684
+system.cpu4: completed 20000 read, 10717 write accesses @3830467
+system.cpu1: completed 20000 read, 10577 write accesses @3871337
+system.cpu7: completed 20000 read, 10556 write accesses @3902287
+system.cpu5: completed 20000 read, 10901 write accesses @3923395
+system.cpu0: completed 20000 read, 10861 write accesses @3926315
+system.cpu2: completed 20000 read, 10674 write accesses @3934695
+system.cpu6: completed 20000 read, 10925 write accesses @3939046
+system.cpu3: completed 20000 read, 10752 write accesses @3981115
+system.cpu4: completed 30000 read, 16128 write accesses @5754566
+system.cpu7: completed 30000 read, 16027 write accesses @5841539
+system.cpu5: completed 30000 read, 16312 write accesses @5857206
+system.cpu2: completed 30000 read, 16104 write accesses @5869696
+system.cpu1: completed 30000 read, 16084 write accesses @5872577
+system.cpu0: completed 30000 read, 16133 write accesses @5895696
+system.cpu6: completed 30000 read, 16259 write accesses @5909016
+system.cpu3: completed 30000 read, 16253 write accesses @5970997
+system.cpu4: completed 40000 read, 21443 write accesses @7732298
+system.cpu7: completed 40000 read, 21518 write accesses @7817106
+system.cpu0: completed 40000 read, 21561 write accesses @7817675
+system.cpu2: completed 40000 read, 21432 write accesses @7822846
+system.cpu1: completed 40000 read, 21383 write accesses @7845525
+system.cpu5: completed 40000 read, 21816 write accesses @7858096
+system.cpu6: completed 40000 read, 21672 write accesses @7885486
+system.cpu3: completed 40000 read, 21581 write accesses @7941597
+system.cpu4: completed 50000 read, 26787 write accesses @9651285
+system.cpu7: completed 50000 read, 26989 write accesses @9793686
+system.cpu0: completed 50000 read, 26994 write accesses @9797807
+system.cpu2: completed 50000 read, 26921 write accesses @9830875
+system.cpu5: completed 50000 read, 27153 write accesses @9839316
+system.cpu6: completed 50000 read, 27189 write accesses @9858608
+system.cpu1: completed 50000 read, 26834 write accesses @9863587
+system.cpu3: completed 50000 read, 27039 write accesses @9921406
+system.cpu4: completed 60000 read, 32175 write accesses @11605575
+system.cpu2: completed 60000 read, 32358 write accesses @11729986
+system.cpu0: completed 60000 read, 32424 write accesses @11735436
+system.cpu7: completed 60000 read, 32432 write accesses @11778007
+system.cpu6: completed 60000 read, 32473 write accesses @11788255
+system.cpu5: completed 60000 read, 32623 write accesses @11789575
+system.cpu1: completed 60000 read, 32116 write accesses @11821356
+system.cpu3: completed 60000 read, 32229 write accesses @11884826
+system.cpu4: completed 70000 read, 37533 write accesses @13546365
+system.cpu0: completed 70000 read, 37907 write accesses @13701646
+system.cpu2: completed 70000 read, 37745 write accesses @13708257
+system.cpu6: completed 70000 read, 37768 write accesses @13710576
+system.cpu7: completed 70000 read, 37843 write accesses @13719776
+system.cpu5: completed 70000 read, 37934 write accesses @13770505
+system.cpu1: completed 70000 read, 37322 write accesses @13773596
+system.cpu3: completed 70000 read, 37575 write accesses @13859246
+system.cpu4: completed 80000 read, 42663 write accesses @15468226
+system.cpu6: completed 80000 read, 43059 write accesses @15617186
+system.cpu7: completed 80000 read, 43185 write accesses @15635279
+system.cpu0: completed 80000 read, 43129 write accesses @15668486
+system.cpu2: completed 80000 read, 43262 write accesses @15680656
+system.cpu1: completed 80000 read, 42658 write accesses @15703946
+system.cpu5: completed 80000 read, 43215 write accesses @15712586
+system.cpu3: completed 80000 read, 42991 write accesses @15858096
+system.cpu4: completed 90000 read, 48047 write accesses @17468576
+system.cpu2: completed 90000 read, 48557 write accesses @17581105
+system.cpu7: completed 90000 read, 48648 write accesses @17584296
+system.cpu6: completed 90000 read, 48515 write accesses @17584397
+system.cpu1: completed 90000 read, 48024 write accesses @17672186
+system.cpu0: completed 90000 read, 48750 write accesses @17683641
+system.cpu5: completed 90000 read, 48534 write accesses @17695277
+system.cpu3: completed 90000 read, 48496 write accesses @17843215
+system.cpu4: completed 100000 read, 53558 write accesses @19400856
 hack: be nice to actually delete the event here
