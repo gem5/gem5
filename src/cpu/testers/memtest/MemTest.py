@@ -50,3 +50,5 @@ class MemTest(MemObject):
 
     test = Port("Port to the memory system to test")
     functional = Port("Port to the functional memory used for verification")
+    suppress_func_warnings = Param.Bool(False,
+        "suppress warnings when functional accesses fail.\n")

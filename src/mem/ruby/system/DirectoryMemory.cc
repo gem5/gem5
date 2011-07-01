@@ -156,7 +156,7 @@ DirectoryMemory::lookup(PhysAddress address)
     assert(isPresent(address));
     Directory_Entry* entry;
     uint64 idx;
-    DPRINTF(RubyCache, "address: %s\n", address);
+    DPRINTF(RubyCache, "Looking up address: %s\n", address);
 
     if (m_use_map) {
         if (m_sparseMemory->exist(address)) {
@@ -166,6 +166,7 @@ DirectoryMemory::lookup(PhysAddress address)
             // Note: SparseMemory internally creates a new Directory Entry
             m_sparseMemory->add(address);
             entry = m_sparseMemory->lookup(address);
+            entry->changePermission(AccessPermission_Read_Write);
         }
     } else {
         idx = mapAddressToLocalIdx(address);
@@ -175,6 +176,7 @@ DirectoryMemory::lookup(PhysAddress address)
         if (entry == NULL) {
             entry = new Directory_Entry();
             entry->getDataBlk().assign(m_ram->getBlockPtr(address));
+            entry->changePermission(AccessPermission_Read_Only);
             m_entries[idx] = entry;
         }
     }

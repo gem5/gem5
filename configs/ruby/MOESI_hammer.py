@@ -58,8 +58,8 @@ def define_options(parser):
     parser.add_option("--dir-on", action="store_true",
           help="Hammer: enable Full-bit Directory")
 
-def create_system(options, system, piobus, dma_devices):
-    
+def create_system(options, system, piobus, dma_devices, ruby_system):
+
     if buildEnv['PROTOCOL'] != 'MOESI_hammer':
         panic("This script requires the MOESI_hammer protocol to be built.")
 
@@ -102,13 +102,15 @@ def create_system(options, system, piobus, dma_devices):
                                       L1DcacheMemory = l1d_cache,
                                       L2cacheMemory = l2_cache,
                                       no_mig_atomic = not \
-                                        options.allow_atomic_migration)
+                                        options.allow_atomic_migration,
+                                      ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
                                 dcache = l1d_cache,
                                 physMemPort = system.physmem.port,
-                                physmem = system.physmem)
+                                physmem = system.physmem,
+                                ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq
 
@@ -181,7 +183,8 @@ def create_system(options, system, piobus, dma_devices):
                                          probeFilter = pf,
                                          memBuffer = mem_cntrl,
                                          probe_filter_enabled = options.pf_on,
-                                         full_bit_dir_enabled = options.dir_on)
+                                         full_bit_dir_enabled = options.dir_on,
+                                         ruby_system = ruby_system)
 
         if options.recycle_latency:
             dir_cntrl.recycle_latency = options.recycle_latency

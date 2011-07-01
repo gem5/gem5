@@ -41,7 +41,7 @@ class Cache(RubyCache):
 def define_options(parser):
     return
 
-def create_system(options, system, piobus, dma_devices):
+def create_system(options, system, piobus, dma_devices, ruby_system):
     
     if buildEnv['PROTOCOL'] != 'MI_example':
         panic("This script requires the MI_example protocol to be built.")
@@ -80,13 +80,15 @@ def create_system(options, system, piobus, dma_devices):
         #
         l1_cntrl = L1Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
-                                      cacheMemory = cache)
+                                      cacheMemory = cache,
+                                      ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,
                                 icache = cache,
                                 dcache = cache,
                                 physMemPort = system.physmem.port,
-                                physmem = system.physmem)
+                                physmem = system.physmem,
+                                ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq
 
@@ -125,7 +127,8 @@ def create_system(options, system, piobus, dma_devices):
                                                     use_map = options.use_map,
                                                     map_levels = \
                                                       options.map_levels),
-                                         memBuffer = mem_cntrl)
+                                         memBuffer = mem_cntrl,
+                                         ruby_system = ruby_system)
 
         exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)

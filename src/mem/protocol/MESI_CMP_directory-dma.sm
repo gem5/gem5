@@ -42,6 +42,10 @@ machine(DMA, "DMA Controller")
   void setAccessPermission(Address addr, State state) {
   }
 
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    error("DMA does not support get data block.");
+  }
+
   out_port(reqToDirectory_out, RequestMsg, reqToDirectory, desc="...");
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {

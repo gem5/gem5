@@ -174,9 +174,11 @@ class MemTest : public MemObject
     Tick noResponseCycles;
 
     uint64_t numReads;
+    uint64_t numWrites;
     uint64_t maxLoads;
 
     bool atomic;
+    bool suppress_func_warnings;
 
     Stats::Scalar numReadsStat;
     Stats::Scalar numWritesStat;

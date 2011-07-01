@@ -57,6 +57,13 @@ enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent")
   Read_Only,  desc="block is Read Only (modulo functional writes)";
   Read_Write, desc="block is Read/Write";
 
+  // Possibly Invalid data
+  // The maybe stale permission indicates that accordingly to the protocol, 
+  // there is no guarantee the block contains valid data.  However, functional
+  // writes should update the block because a dataless PUT request may
+  // revalidate the block's data.
+  Maybe_Stale, desc="block can be stale or revalidated by a dataless PUT";
+
   // Invalid data
   Invalid,    desc="block is in an Invalid base state";
   NotPresent, desc="block is NotPresent";

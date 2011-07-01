@@ -117,10 +117,7 @@ elif buildEnv['TARGET_ISA'] == "x86":
 else:
     fatal("incapable of building non-alpha or non-x86 full system!")
 
-system.ruby = Ruby.create_system(options,
-                                 system,
-                                 system.piobus,
-                                 system._dma_devices)
+Ruby.create_system(options, system, system.piobus, system._dma_devices)
 
 system.cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)]
 

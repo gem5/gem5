@@ -146,7 +146,8 @@ MemTest::MemTest(const Params *p)
       percentSourceUnaligned(p->percent_source_unaligned),
       percentDestUnaligned(p->percent_dest_unaligned),
       maxLoads(p->max_loads),
-      atomic(p->atomic)
+      atomic(p->atomic),
+      suppress_func_warnings(p->suppress_func_warnings)
 {
     cachePort.snoopRangeSent = false;
     funcPort.snoopRangeSent = true;
@@ -162,6 +163,7 @@ MemTest::MemTest(const Params *p)
     // set up counters
     noResponseCycles = 0;
     numReads = 0;
+    numWrites = 0;
     schedule(tickEvent, 0);
 
     accessRetry = false;
@@ -201,9 +203,10 @@ MemTest::completeRequest(PacketPtr pkt)
         dmaOutstanding = false;
     }
 
-    DPRINTF(MemTest, "completing %s at address %x (blk %x)\n",
+    DPRINTF(MemTest, "completing %s at address %x (blk %x) %s\n",
             pkt->isWrite() ? "write" : "read",
-            req->getPaddr(), blockAddr(req->getPaddr()));
+            req->getPaddr(), blockAddr(req->getPaddr()),
+            pkt->isError() ? "error" : "success");
 
     MemTestSenderState *state =
         dynamic_cast<MemTestSenderState *>(pkt->senderState);
@@ -217,28 +220,37 @@ MemTest::completeRequest(PacketPtr pkt)
     assert(removeAddr != outstandingAddrs.end());
     outstandingAddrs.erase(removeAddr);
 
-    if (pkt->isRead()) {
-        if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
-            panic("%s: read of %x (blk %x) @ cycle %d "
-                  "returns %x, expected %x\n", name(),
-                  req->getPaddr(), blockAddr(req->getPaddr()), curTick(),
-                  *pkt_data, *data);
+    if (pkt->isError()) {
+        if (!suppress_func_warnings) {
+          warn("Functional Access failed for %x at %x\n",
+               pkt->isWrite() ? "write" : "read", req->getPaddr());
         }
-
-        numReads++;
-        numReadsStat++;
-
-        if (numReads == (uint64_t)nextProgressMessage) {
-            ccprintf(cerr, "%s: completed %d read accesses @%d\n",
-                     name(), numReads, curTick());
-            nextProgressMessage += progressInterval;
-        }
-
-        if (maxLoads != 0 && numReads >= maxLoads)
-            exitSimLoop("maximum number of loads reached");
     } else {
-        assert(pkt->isWrite());
-        numWritesStat++;
+        if (pkt->isRead()) {
+            if (memcmp(pkt_data, data, pkt->getSize()) != 0) {
+                panic("%s: read of %x (blk %x) @ cycle %d "
+                      "returns %x, expected %x\n", name(),
+                      req->getPaddr(), blockAddr(req->getPaddr()), curTick(),
+                      *pkt_data, *data);
+            }
+
+            numReads++;
+            numReadsStat++;
+
+            if (numReads == (uint64_t)nextProgressMessage) {
+                ccprintf(cerr, "%s: completed %d read, %d write accesses @%d\n",
+                         name(), numReads, numWrites, curTick());
+                nextProgressMessage += progressInterval;
+            }
+
+            if (maxLoads != 0 && numReads >= maxLoads)
+                exitSimLoop("maximum number of loads reached");
+        } else {
+            assert(pkt->isWrite());
+            funcPort.writeBlob(req->getPaddr(), pkt_data, req->getSize());
+            numWrites++;
+            numWritesStat++;
+        }
     }
 
     noResponseCycles = 0;
@@ -361,6 +373,8 @@ MemTest::tick()
         pkt->senderState = state;
 
         if (do_functional) {
+            assert(pkt->needsResponse());
+            pkt->setSuppressFuncError();
             cachePort.sendFunctional(pkt);
             completeRequest(pkt);
         } else {
@@ -392,9 +406,8 @@ MemTest::tick()
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
 
-        funcPort.writeBlob(req->getPaddr(), pkt_data, req->getSize());
-
         if (do_functional) {
+            pkt->setSuppressFuncError();
             cachePort.sendFunctional(pkt);
             completeRequest(pkt);
         } else {

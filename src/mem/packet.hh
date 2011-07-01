@@ -103,6 +103,8 @@ class MemCmd
         NetworkNackError,  // nacked at network layer (not by protocol)
         InvalidDestError,  // packet dest field invalid
         BadAddressError,   // memory address invalid
+        FunctionalReadError, // unable to fulfill functional read
+        FunctionalWriteError, // unable to fulfill functional write
         // Fake simulator-only commands
         PrintReq,       // Print state matching address
         FlushReq,      //request for a cache flush
@@ -240,6 +242,9 @@ class Packet : public FastAlloc, public Printable
     /// the data pointer points to an array (thus delete []) needs to
     /// be called on it rather than simply delete.
     static const FlagsType ARRAY_DATA             = 0x00004000;
+    /// suppress the error if this packet encounters a functional
+    /// access failure.
+    static const FlagsType SUPPRESS_FUNC_ERROR    = 0x00008000;
 
     Flags flags;
 
@@ -428,6 +433,8 @@ class Packet : public FastAlloc, public Printable
     void setSupplyExclusive()   { flags.set(SUPPLY_EXCLUSIVE); }
     void clearSupplyExclusive() { flags.clear(SUPPLY_EXCLUSIVE); }
     bool isSupplyExclusive()    { return flags.isSet(SUPPLY_EXCLUSIVE); }
+    void setSuppressFuncError() { flags.set(SUPPRESS_FUNC_ERROR); }
+    bool suppressFuncError()    { return flags.isSet(SUPPRESS_FUNC_ERROR); }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
@@ -615,6 +622,18 @@ class Packet : public FastAlloc, public Printable
     makeTimingResponse()
     {
         makeResponse();
+    }
+
+    void
+    setFunctionalResponseStatus(bool success)
+    {
+        if (!success) {
+            if (isWrite()) {
+                cmd = MemCmd::FunctionalWriteError;
+            } else {
+                cmd = MemCmd::FunctionalReadError;
+            }
+        }
     }
 
     /**

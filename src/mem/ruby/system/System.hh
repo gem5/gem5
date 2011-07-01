@@ -39,9 +39,12 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/system/RubyPort.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "params/RubySystem.hh"
 #include "sim/sim_object.hh"
 
+class AbstractController;
+class AbstractMemory;
 class CacheRecorder;
 class MemoryVector;
 class Network;
@@ -128,6 +131,12 @@ class RubySystem : public SimObject
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    void registerNetwork(Network*);
+    void registerProfiler(Profiler*);
+    void registerTracer(Tracer*);
+    void registerAbstractMemory(AbstractMemory*);
+    void registerAbstractController(AbstractController*);
+
   private:
     // Private copy constructor and assignment operator
     RubySystem(const RubySystem& obj);
@@ -153,6 +162,7 @@ class RubySystem : public SimObject
     static Profiler* m_profiler_ptr;
     static Tracer* m_tracer_ptr;
     static MemoryVector* m_mem_vec_ptr;
+    std::vector<AbstractController*> m_abs_cntrl_vec;
 };
 
 inline std::ostream&
@@ -180,6 +190,3 @@ class RubyExitCallback : public Callback
 };
 
 #endif // __MEM_RUBY_SYSTEM_SYSTEM_HH__
-
-
-

@@ -48,6 +48,7 @@ Network::Network(const Params *p)
 
     // Initialize the controller's network pointers
     m_topology_ptr->initNetworkPtr(this);
+    p->ruby_system->registerNetwork(this);
 }
 
 void

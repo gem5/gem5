@@ -49,10 +49,15 @@ class MemberExprAST(ExprAST):
         code.fix(fix)
 
         # Verify that this is a valid field name for this type
-        if self.field not in return_type.data_members:
-            self.error("Invalid object field: " +
-                       "Type '%s' does not have data member %s" % \
-                       (return_type, self.field))
-
-        # Return the type of the field
-        return return_type.data_members[self.field].type
+        if self.field in return_type.data_members:
+            # Return the type of the field
+            return return_type.data_members[self.field].type
+        else:
+            if "interface" in return_type:
+               interface_type = self.symtab.find(return_type["interface"]);
+               if self.field in interface_type.data_members:
+                   # Return the type of the field
+                   return interface_type.data_members[self.field].type
+        self.error("Invalid object field: " +
+                   "Type '%s' does not have data member %s" % \
+                   (return_type, self.field))

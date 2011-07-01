@@ -40,7 +40,7 @@ Tracer::Tracer(const Params *p)
     m_enabled = false;
     m_warmup_length = p->warmup_length;
     assert(m_warmup_length  > 0);
-    RubySystem::m_tracer_ptr = this;
+    p->ruby_system->registerTracer(this);
 }
 
 void

@@ -48,3 +48,4 @@ class RubyNetwork(SimObject):
     number_of_virtual_networks = Param.Int(10, "");
     topology = Param.Topology("");
     control_msg_size = Param.Int(8, "");
+    ruby_system = Param.RubySystem("");

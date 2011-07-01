@@ -74,10 +74,6 @@ RubySystem::RubySystem(const Params *p)
         m_memory_size_bits = floorLog2(m_memory_size_bytes);
     }
 
-    m_network_ptr = p->network;
-    m_profiler_ptr = p->profiler;
-    m_tracer_ptr = p->tracer;
-
     g_eventQueue_ptr = new RubyEventQueue(p->eventq, m_clock);
     g_system_ptr = this;
     if (p->no_mem_vec) {
@@ -98,6 +94,30 @@ void
 RubySystem::init()
 {
     m_profiler_ptr->clearStats();
+}
+
+void
+RubySystem::registerNetwork(Network* network_ptr)
+{
+  m_network_ptr = network_ptr;
+}
+
+void
+RubySystem::registerProfiler(Profiler* profiler_ptr)
+{
+  m_profiler_ptr = profiler_ptr;
+}
+
+void
+RubySystem::registerTracer(Tracer* tracer_ptr)
+{
+  m_tracer_ptr = tracer_ptr;
+}
+
+void
+RubySystem::registerAbstractController(AbstractController* cntrl)
+{
+  m_abs_cntrl_vec.push_back(cntrl);
 }
 
 RubySystem::~RubySystem()

@@ -77,7 +77,7 @@ options.num_cpus = nb_cores
 # system simulated
 system = System(cpu = cpus, physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system)
+Ruby.create_system(options, system)
 
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 

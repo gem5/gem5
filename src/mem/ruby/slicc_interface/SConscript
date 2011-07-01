@@ -35,6 +35,7 @@ if not env['RUBY']:
 
 SimObject('Controller.py')
 
+Source('AbstractController.cc')
 Source('AbstractEntry.cc')
 Source('AbstractCacheEntry.cc')
 Source('RubyRequest.cc')

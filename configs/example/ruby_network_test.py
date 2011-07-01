@@ -105,7 +105,7 @@ cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts, \
 system = System(cpu = cpus,
                 physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system)
+Ruby.create_system(options, system)
 
 i = 0
 for ruby_port in system.ruby._cpu_ruby_ports:

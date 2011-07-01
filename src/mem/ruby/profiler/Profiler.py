@@ -36,3 +36,4 @@ class RubyProfiler(SimObject):
     hot_lines = Param.Bool(False, "")
     all_instructions = Param.Bool(False, "")
     num_of_sequencers = Param.Int("")
+    ruby_system = Param.RubySystem("")

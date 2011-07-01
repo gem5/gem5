@@ -62,11 +62,15 @@ def define_options(parser):
 
 def create_system(options, system, piobus = None, dma_devices = []):
 
+    system.ruby = RubySystem(clock = options.clock)
+    ruby = system.ruby
+
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, all_cntrls) = \
-             eval("%s.create_system(options, system, piobus, dma_devices)" \
+             eval("%s.create_system(options, system, piobus, \
+                                    dma_devices, ruby)" \
                   % protocol)
     except:
         print "Error: could not create sytem for ruby protocol %s" % protocol
@@ -105,7 +109,7 @@ def create_system(options, system, piobus = None, dma_devices = []):
         print "Error: could not create topology %s" % options.topology
         raise
 
-    network = NetworkClass(topology = net_topology)
+    network = NetworkClass(ruby_system = ruby, topology = net_topology)
 
     #
     # Loop through the directory controlers.
@@ -137,15 +141,13 @@ def create_system(options, system, piobus = None, dma_devices = []):
                      long(system.physmem.range.first) + 1
     assert(total_mem_size.value == physmem_size)
 
-    ruby_profiler = RubyProfiler(num_of_sequencers = len(cpu_sequencers))
+    ruby_profiler = RubyProfiler(ruby_system = ruby,
+                                 num_of_sequencers = len(cpu_sequencers))
+    ruby_tracer   = RubyTracer(ruby_system = ruby)
     
-    ruby = RubySystem(clock = options.clock,
-                      network = network,
-                      profiler = ruby_profiler,
-                      tracer = RubyTracer(),
-                      mem_size = total_mem_size)
-
+    ruby.network = network
+    ruby.profiler = ruby_profiler
+    ruby.tracer = ruby_tracer
+    ruby.mem_size = total_mem_size
     ruby._cpu_ruby_ports = cpu_sequencers
     ruby.random_seed    = options.random_seed
-
-    return ruby

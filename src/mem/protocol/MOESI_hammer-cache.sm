@@ -189,6 +189,10 @@ machine(L1Cache, "AMD Hammer-like protocol")
     return L1Icache_entry;
   }
 
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    return getCacheEntry(addr).DataBlk;
+  }
+
   Entry getL2CacheEntry(Address address), return_by_pointer="yes" {
     Entry L2cache_entry := static_cast(Entry, "pointer", L2cacheMemory.lookup(address));
     return L2cache_entry;

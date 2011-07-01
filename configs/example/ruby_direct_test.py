@@ -97,7 +97,7 @@ system.tester = RubyDirectedTester(requests_to_complete = \
                                    options.requests,
                                    generator = generator)
 
-system.ruby = Ruby.create_system(options, system)
+Ruby.create_system(options, system)
 
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 

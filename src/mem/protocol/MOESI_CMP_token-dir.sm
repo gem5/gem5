@@ -55,7 +55,7 @@ machine(Directory, "Token protocol")
   state_declaration(State, desc="Directory states", default="Directory_State_O") {
     // Base states
     O, AccessPermission:Read_Only, desc="Owner, memory has valid data, but not necessarily all the tokens";
-    NO, AccessPermission:Invalid, desc="Not Owner";
+    NO, AccessPermission:Maybe_Stale, desc="Not Owner";
     L, AccessPermission:Busy, desc="Locked";
 
     // Memory wait states - can block all messages including persistent requests
@@ -169,6 +169,10 @@ machine(Directory, "Token protocol")
     return static_cast(Entry, directory[addr]);
   }
 
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    return getDirectoryEntry(addr).DataBlk;
+  }
+
   State getState(TBE tbe, Address addr) {
     if (is_valid(tbe)) {
       return tbe.TBEState;
@@ -206,7 +210,13 @@ machine(Directory, "Token protocol")
       return Directory_State_to_permission(tbe.TBEState);
     }
 
-    return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+    if (directory.isPresent(addr)) {
+      DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState));
+      return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+    }
+
+    DPRINTF(RubySlicc, "AccessPermission_NotPresent\n");
+    return AccessPermission:NotPresent;
   }
 
   void setAccessPermission(Address addr, State state) {

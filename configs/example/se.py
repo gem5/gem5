@@ -177,7 +177,7 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
 
 if options.ruby:
     options.use_map = True
-    system.ruby = Ruby.create_system(options, system)
+    Ruby.create_system(options, system)
     assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 else:
     system.physmem.port = system.membus.port

@@ -50,12 +50,13 @@ class RubyPort : public MemObject
     {
       private:
         RubyPort *ruby_port;
+        RubySystem* ruby_system;
         bool _onRetryList;
         bool access_phys_mem;
 
       public:
         M5Port(const std::string &_name, RubyPort *_port,
-               bool _access_phys_mem);
+               RubySystem*_system, bool _access_phys_mem);
         bool sendTiming(PacketPtr pkt);
         void hitCallback(PacketPtr pkt);
         unsigned deviceBlockSize() const;
@@ -69,9 +70,12 @@ class RubyPort : public MemObject
       protected:
         virtual bool recvTiming(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
       private:
         bool isPhysMemAddress(Addr addr);
+        bool doFunctionalRead(PacketPtr pkt);
+        bool doFunctionalWrite(PacketPtr pkt);
     };
 
     friend class M5Port;
@@ -145,6 +149,7 @@ class RubyPort : public MemObject
     M5Port* physMemPort;
 
     PhysicalMemory* physmem;
+    RubySystem* ruby_system;
 
     //
     // Based on similar code in the M5 bus.  Stores pointers to those ports

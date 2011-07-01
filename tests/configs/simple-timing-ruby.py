@@ -74,7 +74,7 @@ options.num_cpus = 1
 cpu = TimingSimpleCPU(cpu_id=0)
 system = System(cpu = cpu, physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system)
+Ruby.create_system(options, system)
 
 assert(len(system.ruby._cpu_ruby_ports) == 1)
 

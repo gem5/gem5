@@ -43,6 +43,7 @@ class RubyPort(MemObject):
     using_network_tester = Param.Bool(False, "")
     access_phys_mem = Param.Bool(True,
         "should the rubyport atomically update phys_mem")
+    ruby_system = Param.RubySystem("")
     
 class RubySequencer(RubyPort):
     type = 'RubySequencer'

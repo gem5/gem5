@@ -70,6 +70,10 @@ machine(DMA, "DMA Controller")
   void setAccessPermission(Address addr, State state) {
   }
 
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    error("DMA Controller does not support getDataBlock function.\n");
+  }
+
   out_port(reqToDirectory_out, DMARequestMsg, reqToDirectory, desc="...");
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {

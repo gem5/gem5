@@ -148,10 +148,14 @@ MemCmd::commandInfo[] =
     { SET2(IsResponse, IsError), InvalidCmd, "InvalidDestError" },
     /* BadAddressError   -- memory address invalid */
     { SET2(IsResponse, IsError), InvalidCmd, "BadAddressError" },
+    /* FunctionalReadError */
+    { SET3(IsRead, IsResponse, IsError), InvalidCmd, "FunctionalReadError" },
+    /* FunctionalWriteError */
+    { SET3(IsWrite, IsResponse, IsError), InvalidCmd, "FunctionalWriteError" },
     /* PrintReq */
     { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" },
     /* Flush Request */
-    { SET3(IsRequest, IsFlush, NeedsExclusive), InvalidCmd, "FlushReq" }
+    { SET3(IsRequest, IsFlush, NeedsExclusive), InvalidCmd, "FlushReq" },
 };
 
 bool

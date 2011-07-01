@@ -186,15 +186,22 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   AccessPermission getAccessPermission(Address addr) {
     TBE tbe := L1_TBEs[addr];
     if(is_valid(tbe)) {
+      DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(tbe.TBEState));
       return L1Cache_State_to_permission(tbe.TBEState);
     }
 
     Entry cache_entry := getCacheEntry(addr);
     if(is_valid(cache_entry)) {
+      DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(cache_entry.CacheState));
       return L1Cache_State_to_permission(cache_entry.CacheState);
     }
 
+    DPRINTF(RubySlicc, "%s\n", AccessPermission:NotPresent);
     return AccessPermission:NotPresent;
+  }
+
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    return getCacheEntry(addr).DataBlk;
   }
 
   void setAccessPermission(Entry cache_entry, Address addr, State state) {

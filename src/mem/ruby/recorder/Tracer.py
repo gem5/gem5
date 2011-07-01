@@ -34,3 +34,4 @@ class RubyTracer(SimObject):
     type = 'RubyTracer'
     cxx_class = 'Tracer'
     warmup_length = Param.Int(100000, "")
+    ruby_system = Param.RubySystem("")

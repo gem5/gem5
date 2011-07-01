@@ -68,6 +68,10 @@ machine(DMA, "DMA Controller")
   void setAccessPermission(Address addr, State state) {
   }
 
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+     error("DMA Controller does not support getDataBlock().\n");
+  }
+
   out_port(reqToDirectory_out, RequestMsg, reqToDir, desc="...");
   out_port(respToDirectory_out, ResponseMsg, respToDir, desc="...");
   out_port(foo1_out, ResponseMsg, foo1, desc="...");

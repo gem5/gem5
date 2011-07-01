@@ -31,8 +31,8 @@
 #include "arch/x86/insts/microldstop.hh"
 #endif // X86_ISA
 #include "cpu/testers/rubytest/RubyTester.hh"
-#include "debug/MemoryAccess.hh"
 #include "debug/Ruby.hh"
+#include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "mem/physical.hh"
@@ -54,6 +54,8 @@ RubyPort::RubyPort(const Params *p)
 
     m_usingRubyTester = p->using_ruby_tester;
     access_phys_mem = p->access_phys_mem;
+
+    ruby_system = p->ruby_system;
 }
 
 void
@@ -68,7 +70,7 @@ RubyPort::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "port") {
         return new M5Port(csprintf("%s-port%d", name(), idx), this,
-                          access_phys_mem);
+                          ruby_system, access_phys_mem);
     }
 
     if (if_name == "pio_port") {
@@ -85,7 +87,7 @@ RubyPort::getPort(const std::string &if_name, int idx)
         assert (physMemPort == NULL);
 
         physMemPort = new M5Port(csprintf("%s-physMemPort", name()), this,
-                                 access_phys_mem);
+                                 ruby_system, access_phys_mem);
 
         return physMemPort;
     }
@@ -109,12 +111,13 @@ RubyPort::PioPort::PioPort(const std::string &_name,
     ruby_port = _port;
 }
 
-RubyPort::M5Port::M5Port(const std::string &_name,
-                         RubyPort *_port, bool _access_phys_mem)
+RubyPort::M5Port::M5Port(const std::string &_name, RubyPort *_port,
+                         RubySystem *_system, bool _access_phys_mem)
     : SimpleTimingPort(_name, _port)
 {
     DPRINTF(RubyPort, "creating port from ruby sequcner to cpu %s\n", _name);
     ruby_port = _port;
+    ruby_system = _system;
     _onRetryList = false;
     access_phys_mem = _access_phys_mem;
 }
@@ -287,6 +290,168 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     pkt->senderState = senderState->saved;
     delete senderState;
     return false;
+}
+
+bool
+RubyPort::M5Port::doFunctionalRead(PacketPtr pkt)
+{
+    Address address(pkt->getAddr());
+    Address line_address(address);
+    line_address.makeLineAddress();
+
+    AccessPermission accessPerm = AccessPermission_NotPresent;
+    int num_controllers = ruby_system->m_abs_cntrl_vec.size();
+
+    // In this loop, we try to figure which controller has a read only or
+    // a read write copy of the given address. Any valid copy would suffice
+    // for a functional read.
+
+    DPRINTF(RubyPort, "Functional Read request for %s\n",address);
+    for(int i = 0;i < num_controllers;++i)
+    {
+        accessPerm = ruby_system->m_abs_cntrl_vec[i]
+                                          ->getAccessPermission(line_address);
+        if(accessPerm == AccessPermission_Read_Only ||
+           accessPerm == AccessPermission_Read_Write)
+        {
+            unsigned startByte = address.getAddress() - line_address.getAddress();
+
+            uint8* data = pkt->getPtr<uint8_t>(true);
+            unsigned int size_in_bytes = pkt->getSize();
+            DataBlock& block = ruby_system->m_abs_cntrl_vec[i]
+                                                 ->getDataBlock(line_address);
+
+            DPRINTF(RubyPort, "reading from %s block %s\n",
+                    ruby_system->m_abs_cntrl_vec[i]->name(), block);
+            for (unsigned i = 0; i < size_in_bytes; ++i)
+            {
+                data[i] = block.getByte(i + startByte);
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
+RubyPort::M5Port::doFunctionalWrite(PacketPtr pkt)
+{
+    Address addr(pkt->getAddr());
+    Address line_addr = line_address(addr);
+    AccessPermission accessPerm = AccessPermission_NotPresent;
+    int num_controllers = ruby_system->m_abs_cntrl_vec.size();
+
+    DPRINTF(RubyPort, "Functional Write request for %s\n",addr);
+
+    unsigned int num_ro = 0;
+    unsigned int num_rw = 0;
+    unsigned int num_busy = 0;
+
+    // In this loop we count the number of controllers that have the given
+    // address in read only, read write and busy states.
+    for(int i = 0;i < num_controllers;++i)
+    {
+        accessPerm = ruby_system->m_abs_cntrl_vec[i]->
+                                            getAccessPermission(line_addr);
+        if(accessPerm == AccessPermission_Read_Only) num_ro++;
+        else if(accessPerm == AccessPermission_Read_Write) num_rw++;
+        else if(accessPerm == AccessPermission_Busy) num_busy++;
+    }
+
+    // If the number of read write copies is more than 1, then there is bug in
+    // coherence protocol. Otherwise, if all copies are in stable states, i.e.
+    // num_busy == 0, we update all the copies. If there is at least one copy
+    // in busy state, then we check if there is read write copy. If yes, then
+    // also we let the access go through.
+
+    DPRINTF(RubyPort, "num_busy = %d, num_ro = %d, num_rw = %d\n",
+            num_busy, num_ro, num_rw);
+    assert(num_rw <= 1);
+    if((num_busy == 0 && num_ro > 0) || num_rw == 1)
+    {
+        uint8* data = pkt->getPtr<uint8_t>(true);
+        unsigned int size_in_bytes = pkt->getSize();
+        unsigned startByte = addr.getAddress() - line_addr.getAddress();
+
+        for(int i = 0; i < num_controllers;++i)
+        {
+            accessPerm = ruby_system->m_abs_cntrl_vec[i]->
+                                                getAccessPermission(line_addr);
+            if(accessPerm == AccessPermission_Read_Only ||
+               accessPerm == AccessPermission_Read_Write||
+               accessPerm == AccessPermission_Maybe_Stale)
+            {
+                DataBlock& block = ruby_system->m_abs_cntrl_vec[i]
+                                                      ->getDataBlock(line_addr);
+
+                DPRINTF(RubyPort, "%s\n",block);
+                for (unsigned i = 0; i < size_in_bytes; ++i)
+                {
+                  block.setByte(i + startByte, data[i]);
+                }
+                DPRINTF(RubyPort, "%s\n",block);
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+void
+RubyPort::M5Port::recvFunctional(PacketPtr pkt)
+{
+    DPRINTF(RubyPort, "Functional access caught for address %#x\n",
+                                                           pkt->getAddr());
+
+    // Check for pio requests and directly send them to the dedicated
+    // pio port.
+    if (!isPhysMemAddress(pkt->getAddr())) {
+        assert(ruby_port->pio_port != NULL);
+        DPRINTF(RubyPort, "Request for address 0x%#x is a pio request\n",
+                                                           pkt->getAddr());
+        panic("RubyPort::PioPort::recvFunctional() not implemented!\n");
+    }
+
+    assert(pkt->getAddr() + pkt->getSize() <=
+                line_address(Address(pkt->getAddr())).getAddress() +
+                RubySystem::getBlockSizeBytes());
+
+    bool accessSucceeded = false;
+    bool needsResponse = pkt->needsResponse();
+
+    // Do the functional access on ruby memory
+    if (pkt->isRead()) {
+        accessSucceeded = doFunctionalRead(pkt);
+    } else if (pkt->isWrite()) {
+        accessSucceeded = doFunctionalWrite(pkt);
+    } else {
+        panic("RubyPort: unsupported functional command %s\n",
+              pkt->cmdString());
+    }
+
+    // Unless the requester explicitly said otherwise, generate an error if
+    // the functional request failed
+    if (!accessSucceeded && !pkt->suppressFuncError()) {
+        fatal("Ruby functional %s failed for address %#x\n",
+              pkt->isWrite() ? "write" : "read", pkt->getAddr());
+    }
+
+    if (access_phys_mem) {
+        // The attached physmem contains the official version of data.
+        // The following command performs the real functional access.
+        // This line should be removed once Ruby supplies the official version
+        // of data.
+        ruby_port->physMemPort->sendFunctional(pkt);
+    }
+
+    // turn packet around to go back to requester if response expected
+    if (needsResponse) {
+        pkt->setFunctionalResponseStatus(accessSucceeded);
+        DPRINTF(RubyPort, "Sending packet back over port\n");
+        sendFunctional(pkt);
+    }
+    DPRINTF(RubyPort, "Functional access %s!\n",
+            accessSucceeded ? "successful":"failed");
 }
 
 void

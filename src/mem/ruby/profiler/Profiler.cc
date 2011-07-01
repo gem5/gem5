@@ -92,6 +92,8 @@ Profiler::Profiler(const Params *p)
         m_inst_profiler_ptr->setHotLines(m_hot_lines);
         m_inst_profiler_ptr->setAllInstructions(m_all_instructions);
     }
+
+    p->ruby_system->registerProfiler(this);
 }
 
 Profiler::~Profiler()

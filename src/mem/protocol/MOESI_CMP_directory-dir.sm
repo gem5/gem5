@@ -50,16 +50,16 @@ machine(Directory, "Directory protocol")
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states
-    I, AccessPermission:Invalid, desc="Invalid";
+    I, AccessPermission:Read_Write, desc="Invalid";
     S, AccessPermission:Read_Only, desc="Shared";
-    O, AccessPermission:Read_Only, desc="Owner";
-    M, AccessPermission:Read_Write, desc="Modified";
+    O, AccessPermission:Maybe_Stale, desc="Owner";
+    M, AccessPermission:Maybe_Stale, desc="Modified";
 
     IS, AccessPermission:Busy, desc="Blocked, was in idle";
     SS, AccessPermission:Read_Only, desc="Blocked, was in shared";
-    OO, AccessPermission:Read_Only, desc="Blocked, was in owned";
-    MO, AccessPermission:Read_Only, desc="Blocked, going to owner or maybe modified";
-    MM, AccessPermission:Read_Only, desc="Blocked, going to modified";
+    OO, AccessPermission:Busy, desc="Blocked, was in owned";
+    MO, AccessPermission:Busy, desc="Blocked, going to owner or maybe modified";
+    MM, AccessPermission:Busy, desc="Blocked, going to modified";
     MM_DMA, AccessPermission:Busy, desc="Blocked, going to I";
 
     MI, AccessPermission:Busy, desc="Blocked on a writeback";
@@ -173,9 +173,11 @@ machine(Directory, "Directory protocol")
 
   AccessPermission getAccessPermission(Address addr) {
     if (directory.isPresent(addr)) {
+      DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState));
       return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
     }
 
+    DPRINTF(RubySlicc, "AccessPermission_NotPresent\n");
     return AccessPermission:NotPresent;
   }
 
@@ -183,6 +185,10 @@ machine(Directory, "Directory protocol")
     if (directory.isPresent(addr)) {
       getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
     }
+  }
+
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    return getDirectoryEntry(addr).DataBlk;
   }
 
   // if no sharers, then directory can be considered both a sharer and exclusive w.r.t. coherence checking

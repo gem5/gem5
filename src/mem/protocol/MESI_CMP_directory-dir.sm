@@ -55,7 +55,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     ID, AccessPermission:Busy, desc="Intermediate state for DMA_READ when in I";
     ID_W, AccessPermission:Busy, desc="Intermediate state for DMA_WRITE when in I";    
 
-    M, AccessPermission:Invalid, desc="memory copy may be stale, i.e. other modified copies may exist";
+    M, AccessPermission:Maybe_Stale, desc="memory copy may be stale, i.e. other modified copies may exist";
     IM, AccessPermission:Busy, desc="Intermediate State I>M";
     MI, AccessPermission:Busy, desc="Intermediate State M>I";
     M_DRD, AccessPermission:Busy, desc="Intermediate State when there is a dma read";
@@ -147,10 +147,21 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   AccessPermission getAccessPermission(Address addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
+      DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(tbe.TBEState));
       return Directory_State_to_permission(tbe.TBEState);
     }
 
-    return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+    if(directory.isPresent(addr)) {
+      DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState));
+      return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+    }
+
+    DPRINTF(RubySlicc, "%s\n", AccessPermission:NotPresent);
+    return AccessPermission:NotPresent;
+  }
+
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    return getDirectoryEntry(addr).DataBlk;
   }
 
   void setAccessPermission(Address addr, State state) {

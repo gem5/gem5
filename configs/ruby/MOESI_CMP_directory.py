@@ -47,8 +47,8 @@ class L2Cache(RubyCache):
 def define_options(parser):
     return
 
-def create_system(options, system, piobus, dma_devices):
-    
+def create_system(options, system, piobus, dma_devices, ruby_system):
+
     if buildEnv['PROTOCOL'] != 'MOESI_CMP_directory':
         panic("This script requires the MOESI_CMP_directory protocol to be built.")
 
@@ -88,13 +88,15 @@ def create_system(options, system, piobus, dma_devices):
                                       cntrl_id = cntrl_count,
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
-                                      l2_select_num_bits = l2_bits)
+                                      l2_select_num_bits = l2_bits,
+                                      ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,
                                 icache = l1i_cache,
                                 dcache = l1d_cache,
                                 physMemPort = system.physmem.port,
-                                physmem = system.physmem)
+                                physmem = system.physmem,
+                                ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq
 
@@ -122,7 +124,8 @@ def create_system(options, system, piobus, dma_devices):
 
         l2_cntrl = L2Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
-                                      L2cacheMemory = l2_cache)
+                                      L2cacheMemory = l2_cache,
+                                      ruby_system = ruby_system)
         
         exec("system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
@@ -147,9 +150,9 @@ def create_system(options, system, piobus, dma_devices):
                                          cntrl_id = cntrl_count,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
-                                                             size = \
-                                                             dir_size),
-                                         memBuffer = mem_cntrl)
+                                                             size = dir_size),
+                                         memBuffer = mem_cntrl,
+                                         ruby_system = ruby_system)
 
         exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)

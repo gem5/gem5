@@ -36,7 +36,9 @@
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/network/Network.hh"
+#include "mem/ruby/system/System.hh"
 #include "params/RubyController.hh"
 #include "sim/sim_object.hh"
 
@@ -47,7 +49,7 @@ class AbstractController : public SimObject, public Consumer
 {
   public:
     typedef RubyControllerParams Params;
-    AbstractController(const Params *p) : SimObject(p) {}
+    AbstractController(const Params *p);
     const Params *params() const { return (const Params *)_params; }
 
     // returns the number of controllers created of the specific subtype
@@ -61,6 +63,8 @@ class AbstractController : public SimObject, public Consumer
     virtual void blockOnQueue(Address, MessageBuffer*) = 0;
     virtual void unblock(Address) = 0;
     virtual void initNetworkPtr(Network* net_ptr) = 0;
+    virtual AccessPermission getAccessPermission(Address addr) = 0;
+    virtual DataBlock& getDataBlock(Address addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
     virtual void printStats(std::ostream & out) const = 0;
@@ -68,9 +72,6 @@ class AbstractController : public SimObject, public Consumer
     virtual void wakeup() = 0;
     //  virtual void dumpStats(std::ostream & out) = 0;
     virtual void clearStats() = 0;
-
-  private:
-    virtual AccessPermission getAccessPermission(Address addr) = 0;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

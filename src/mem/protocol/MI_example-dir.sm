@@ -122,13 +122,21 @@ machine(Directory, "Directory protocol")
       return Directory_State_to_permission(tbe.TBEState);
     }
 
-    return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+    if(directory.isPresent(addr)) {
+      return Directory_State_to_permission(getDirectoryEntry(addr).DirectoryState);
+    }
+
+    return AccessPermission:NotPresent;
   }
 
   void setAccessPermission(Address addr, State state) {
     if (directory.isPresent(addr)) {
       getDirectoryEntry(addr).changePermission(Directory_State_to_permission(state));
     }
+  }
+
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    return getDirectoryEntry(addr).DataBlk;
   }
 
   // ** OUT_PORTS **

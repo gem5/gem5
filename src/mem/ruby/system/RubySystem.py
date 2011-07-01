@@ -39,9 +39,6 @@ class RubySystem(SimObject):
     block_size_bytes = Param.Int(64,
         "default cache block size; must be a power of two");
     mem_size = Param.MemorySize("total memory size of the system");
-    network = Param.RubyNetwork("")
-    profiler = Param.RubyProfiler("");
-    tracer = Param.RubyTracer("");
     stats_filename = Param.String("ruby.stats",
         "file to which ruby dumps its stats")
     no_mem_vec = Param.Bool(False, "do not allocate Ruby's mem vector");

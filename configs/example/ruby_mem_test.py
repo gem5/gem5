@@ -55,6 +55,10 @@ parser.add_option("--progress", type="int", default=1000,
                   help="Progress message interval "
                   "[default: %default]")
 parser.add_option("--num-dmas", type="int", default=0, help="# of dma testers")
+parser.add_option("--functional", type="int", default=0,
+                  help="percentage of accesses that should be functional")
+parser.add_option("--suppress-func-warnings", action="store_true",
+                  help="suppress warnings when functional accesses fail")
 
 #
 # Add the ruby specific and protocol specific options
@@ -90,14 +94,15 @@ if options.num_cpus > block_size:
      sys.exit(1)
 
 #
-# Currently ruby does not support atomic, functional, or uncacheable accesses
+# Currently ruby does not support atomic or uncacheable accesses
 #
 cpus = [ MemTest(atomic = False, \
                  max_loads = options.maxloads, \
                  issue_dmas = False, \
-                 percent_functional = 0, \
+                 percent_functional = options.functional, \
                  percent_uncacheable = 0, \
-                 progress_interval = options.progress) \
+                 progress_interval = options.progress, \
+                 suppress_func_warnings = options.suppress_func_warnings) \
          for i in xrange(options.num_cpus) ]
 
 system = System(cpu = cpus,
@@ -110,15 +115,14 @@ if options.num_dmas > 0:
                      issue_dmas = True, \
                      percent_functional = 0, \
                      percent_uncacheable = 0, \
-                     progress_interval = options.progress) \
+                     progress_interval = options.progress, \
+                     warn_on_failure = options.warn_on_failure) \
              for i in xrange(options.num_dmas) ]
     system.dma_devices = dmas
 else:
     dmas = []
 
-system.ruby = Ruby.create_system(options, \
-                                 system, \
-                                 dma_devices = dmas)
+Ruby.create_system(options, system, dma_devices = dmas)
 
 #
 # The tester is most effective when randomization is turned on and
@@ -140,6 +144,12 @@ for (i, cpu) in enumerate(cpus):
     # threshold to 5 million cycles
     #
     system.ruby._cpu_ruby_ports[i].deadlock_threshold = 5000000
+
+    #
+    # Ruby doesn't need the backing image of memory when running with
+    # the tester.
+    #
+    system.ruby._cpu_ruby_ports[i].access_phys_mem = False
 
 for (i, dma) in enumerate(dmas):
     #

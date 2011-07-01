@@ -56,12 +56,12 @@ machine(L2Cache, "Token protocol")
     // Stable states
     NP, AccessPermission:Invalid, desc="Not Present";
     I, AccessPermission:Invalid, desc="Invalid";
-    ILS, AccessPermission:Busy, desc="Idle/NP, but local sharers exist";
-    ILX, AccessPermission:Busy, desc="Idle/NP, but local exclusive exists";
-    ILO, AccessPermission:Busy, desc="Idle/NP, but local owner exists";
-    ILOX, AccessPermission:Busy, desc="Idle/NP, but local owner exists and chip is exclusive";
-    ILOS, AccessPermission:Busy, desc="Idle/NP, but local owner exists and local sharers as well";
-    ILOSX, AccessPermission:Busy, desc="Idle/NP, but local owner exists, local sharers exist, chip is exclusive ";
+    ILS, AccessPermission:Invalid, desc="Idle/NP, but local sharers exist";
+    ILX, AccessPermission:Invalid, desc="Idle/NP, but local exclusive exists";
+    ILO, AccessPermission:Invalid, desc="Idle/NP, but local owner exists";
+    ILOX, AccessPermission:Invalid, desc="Idle/NP, but local owner exists and chip is exclusive";
+    ILOS, AccessPermission:Invalid, desc="Idle/NP, but local owner exists and local sharers as well";
+    ILOSX, AccessPermission:Invalid, desc="Idle/NP, but local owner exists, local sharers exist, chip is exclusive ";
     S, AccessPermission:Read_Only, desc="Shared, no local sharers";
     O, AccessPermission:Read_Only, desc="Owned, no local sharers";
     OLS, AccessPermission:Read_Only, desc="Owned with local sharers";
@@ -502,14 +502,22 @@ machine(L2Cache, "Token protocol")
   AccessPermission getAccessPermission(Address addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
+      DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(tbe.TBEState));
       return L2Cache_State_to_permission(tbe.TBEState);
     }
 
     Entry cache_entry := getCacheEntry(addr);
     if(is_valid(cache_entry)) {
+      DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(cache_entry.CacheState));
       return L2Cache_State_to_permission(cache_entry.CacheState);
     }
 
+    else if (localDirectory.isTagPresent(addr)) {
+      DPRINTF(RubySlicc, "%s\n", L2Cache_State_to_permission(localDirectory[addr].DirState));
+      return L2Cache_State_to_permission(localDirectory[addr].DirState);
+    }
+
+    DPRINTF(RubySlicc, "AccessPermission_NotPresent\n");
     return AccessPermission:NotPresent;
   }
 
@@ -517,6 +525,10 @@ machine(L2Cache, "Token protocol")
     if (is_valid(cache_entry)) {
       cache_entry.changePermission(L2Cache_State_to_permission(state));
     }
+  }
+
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    return getCacheEntry(addr).DataBlk;
   }
 
   MessageBuffer triggerQueue, ordered="true";

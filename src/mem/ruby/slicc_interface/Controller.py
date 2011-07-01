@@ -41,3 +41,4 @@ class RubyController(SimObject):
     buffer_size = Param.Int(0, "max buffer size 0 means infinite")
     recycle_latency = Param.Int(10, "")
     number_of_TBEs = Param.Int(256, "")
+    ruby_system = Param.RubySystem("");

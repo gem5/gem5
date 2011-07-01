@@ -77,7 +77,7 @@ tester = RubyTester(checks_to_complete = 100, wakeup_frequency = 10)
 
 system = System(tester = tester, physmem = PhysicalMemory())
 
-system.ruby = Ruby.create_system(options, system)
+Ruby.create_system(options, system)
 
 assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
 
@@ -98,6 +98,12 @@ for ruby_port in system.ruby._cpu_ruby_ports:
     # copies the subblock back to the checker
     #
     ruby_port.using_ruby_tester = True
+
+    #
+    # Ruby doesn't need the backing image of memory when running with
+    # the tester.
+    #
+    ruby_port.access_phys_mem = False
 
 # -----------------------
 # run simulation
