@@ -96,12 +96,12 @@ if options.num_cpus > block_size:
 #
 # Currently ruby does not support atomic or uncacheable accesses
 #
-cpus = [ MemTest(atomic = False, \
-                 max_loads = options.maxloads, \
-                 issue_dmas = False, \
-                 percent_functional = options.functional, \
-                 percent_uncacheable = 0, \
-                 progress_interval = options.progress, \
+cpus = [ MemTest(atomic = False,
+                 max_loads = options.maxloads,
+                 issue_dmas = False,
+                 percent_functional = options.functional,
+                 percent_uncacheable = 0,
+                 progress_interval = options.progress,
                  suppress_func_warnings = options.suppress_func_warnings) \
          for i in xrange(options.num_cpus) ]
 
@@ -110,12 +110,12 @@ system = System(cpu = cpus,
                 physmem = PhysicalMemory())
 
 if options.num_dmas > 0:
-    dmas = [ MemTest(atomic = False, \
-                     max_loads = options.maxloads, \
-                     issue_dmas = True, \
-                     percent_functional = 0, \
-                     percent_uncacheable = 0, \
-                     progress_interval = options.progress, \
+    dmas = [ MemTest(atomic = False,
+                     max_loads = options.maxloads,
+                     issue_dmas = True,
+                     percent_functional = 0,
+                     percent_uncacheable = 0,
+                     progress_interval = options.progress,
                      warn_on_failure = options.warn_on_failure) \
              for i in xrange(options.num_dmas) ]
     system.dma_devices = dmas

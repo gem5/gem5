@@ -92,12 +92,12 @@ if options.num_cpus > block_size:
      sys.exit(1)
 
 
-cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts, \
-                     max_packets=options.maxpackets, \
-                     sim_cycles=options.sim_cycles, \
-                     traffic_type=options.synthetic, \
-                     inj_rate=options.injectionrate, \
-                     precision=options.precision, \
+cpus = [ NetworkTest(fixed_pkts=options.fixed_pkts,
+                     max_packets=options.maxpackets,
+                     sim_cycles=options.sim_cycles,
+                     traffic_type=options.synthetic,
+                     inj_rate=options.injectionrate,
+                     precision=options.precision,
                      num_memories=options.num_dirs) \
          for i in xrange(options.num_cpus) ]
 
