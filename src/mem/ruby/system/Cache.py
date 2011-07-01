@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,29 +24,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Steve Reinhardt
+#          Brad Beckmann
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
+from Controller import RubyController
 
-if not env['RUBY']:
-    Return()
-
-SimObject('Cache.py')
-SimObject('Sequencer.py')
-SimObject('DirectoryMemory.py')
-SimObject('MemoryControl.py')
-SimObject('WireBuffer.py')
-SimObject('RubySystem.py')
-
-Source('DMASequencer.cc')
-Source('DirectoryMemory.cc')
-Source('SparseMemory.cc')
-Source('CacheMemory.cc')
-Source('MemoryControl.cc')
-Source('WireBuffer.cc')
-Source('MemoryNode.cc')
-Source('PersistentTable.cc')
-Source('RubyPort.cc')
-Source('Sequencer.cc', Werror=False)
-Source('System.cc')
-Source('TimerTable.cc')
+class RubyCache(SimObject):
+    type = 'RubyCache'
+    cxx_class = 'CacheMemory'
+    size = Param.MemorySize("capacity in bytes");
+    latency = Param.Int("");
+    assoc = Param.Int("");
+    replacement_policy = Param.String("PSEUDO_LRU", "");
+    start_index_bit = Param.Int(6, "index start, default 6 for 64-byte line");
