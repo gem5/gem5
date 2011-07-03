@@ -87,8 +87,8 @@ def template SwapExecute {{
             %(preacc_code)s;
 
             if (fault == NoFault) {
-                fault = xc->write((uint%(mem_acc_size)d_t&)Mem,
-                        EA, memAccessFlags, &memData);
+                fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                        &memData);
             }
 
             if (fault == NoFault) {
@@ -123,8 +123,8 @@ def template SwapInitiateAcc {{
             %(preacc_code)s;
 
             if (fault == NoFault) {
-                fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                                  memAccessFlags, &memData);
+                fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
+                        &memData);
             }
         } else {
             xc->setPredicate(false);
@@ -147,7 +147,8 @@ def template SwapCompleteAcc {{
         if (%(predicate_test)s)
         {
             // ARM instructions will not have a pkt if the predicate is false
-            uint64_t memData = pkt->get<typeof(Mem)>();
+            getMem(pkt, Mem, traceData);
+            uint64_t memData = Mem;
 
             %(postacc_code)s;
 
@@ -174,7 +175,7 @@ def template LoadExecute {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
+                fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
                 %(memacc_code)s;
             }
 
@@ -208,7 +209,7 @@ def template NeonLoadExecute {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->readBytes(EA, dataPtr, %(size)d, memAccessFlags);
+                fault = xc->readMem(EA, dataPtr, %(size)d, memAccessFlags);
                 %(memacc_code)s;
             }
 
@@ -241,8 +242,8 @@ def template StoreExecute {{
             }
 
             if (fault == NoFault) {
-                fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                                  memAccessFlags, NULL);
+                fault = writeMemAtomic(xc, traceData, Mem, EA,
+                        memAccessFlags, NULL);
             }
 
             if (fault == NoFault) {
@@ -279,8 +280,8 @@ def template NeonStoreExecute {{
             }
 
             if (fault == NoFault) {
-                fault = xc->writeBytes(dataPtr, %(size)d, EA,
-                                       memAccessFlags, NULL);
+                fault = xc->writeMem(dataPtr, %(size)d, EA,
+                                     memAccessFlags, NULL);
             }
 
             if (fault == NoFault) {
@@ -314,8 +315,8 @@ def template StoreExExecute {{
             uint64_t writeResult;
 
             if (fault == NoFault) {
-                fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                                  memAccessFlags, &writeResult);
+                fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                        &writeResult);
             }
 
             if (fault == NoFault) {
@@ -351,8 +352,8 @@ def template StoreExInitiateAcc {{
             }
 
             if (fault == NoFault) {
-                fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                                  memAccessFlags, NULL);
+                fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
+                        NULL);
             }
         } else {
             xc->setPredicate(false);
@@ -380,8 +381,8 @@ def template StoreInitiateAcc {{
             }
 
             if (fault == NoFault) {
-                fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                                  memAccessFlags, NULL);
+                fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
+                        NULL);
             }
         } else {
             xc->setPredicate(false);
@@ -412,8 +413,8 @@ def template NeonStoreInitiateAcc {{
             }
 
             if (fault == NoFault) {
-                fault = xc->writeBytes(memUnion.bytes, %(size)d, EA,
-                                       memAccessFlags, NULL);
+                fault = xc->writeMem(memUnion.bytes, %(size)d, EA,
+                                     memAccessFlags, NULL);
             }
         } else {
             xc->setPredicate(false);
@@ -437,7 +438,7 @@ def template LoadInitiateAcc {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
+                fault = readMemTiming(xc, traceData, EA, Mem, memAccessFlags);
             }
         } else {
             xc->setPredicate(false);
@@ -466,7 +467,7 @@ def template NeonLoadInitiateAcc {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->readBytes(EA, dataPtr, %(size)d, memAccessFlags);
+                fault = xc->readMem(EA, dataPtr, %(size)d, memAccessFlags);
             }
         } else {
             xc->setPredicate(false);
@@ -489,7 +490,7 @@ def template LoadCompleteAcc {{
         if (%(predicate_test)s)
         {
             // ARM instructions will not have a pkt if the predicate is false
-            Mem = pkt->get<typeof(Mem)>();
+            getMem(pkt, Mem, traceData);
 
             if (fault == NoFault) {
                 %(memacc_code)s;

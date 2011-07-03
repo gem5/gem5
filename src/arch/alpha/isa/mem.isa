@@ -197,7 +197,7 @@ def template LoadExecute {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
+            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
             %(memacc_code)s;
         }
 
@@ -223,7 +223,7 @@ def template LoadInitiateAcc {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
+            fault = readMemTiming(xc, traceData, EA, Mem, memAccessFlags);
         }
 
         return fault;
@@ -241,7 +241,7 @@ def template LoadCompleteAcc {{
         %(fp_enable_check)s;
         %(op_decl)s;
 
-        Mem = pkt->get<typeof(Mem)>();
+        getMem(pkt, Mem, traceData);
 
         if (fault == NoFault) {
             %(memacc_code)s;
@@ -273,8 +273,8 @@ def template StoreExecute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
+            fault = writeMemAtomic(xc, traceData, Mem, EA,
+                    memAccessFlags, NULL);
         }
 
         if (fault == NoFault) {
@@ -307,8 +307,8 @@ def template StoreCondExecute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
+            fault = writeMemAtomic(xc, traceData, Mem, EA,
+                    memAccessFlags, &write_result);
         }
 
         if (fault == NoFault) {
@@ -340,8 +340,8 @@ def template StoreInitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
+            fault = writeMemTiming(xc, traceData, Mem, EA,
+                    memAccessFlags, NULL);
         }
 
         return fault;

@@ -143,7 +143,7 @@ def template LoadExecute {{
             %(fault_check)s;
             if (fault == NoFault) {
                 %(EA_trunc)s
-                fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
+                fault = readMemAtomic(xc, traceData, EA, Mem, %(asi_val)s);
             }
             if (fault == NoFault) {
                 %(code)s;
@@ -171,7 +171,7 @@ def template LoadInitiateAcc {{
             %(fault_check)s;
             if (fault == NoFault) {
                 %(EA_trunc)s
-                fault = xc->read(EA, (%(mem_acc_type)s%(mem_acc_size)s_t&)Mem, %(asi_val)s);
+                fault = readMemTiming(xc, traceData, EA, Mem, %(asi_val)s);
             }
             return fault;
         }
@@ -184,7 +184,7 @@ def template LoadCompleteAcc {{
             Fault fault = NoFault;
             %(op_decl)s;
             %(op_rd)s;
-            Mem = pkt->get<typeof(Mem)>();
+            getMem(pkt, Mem, traceData);
             %(code)s;
             if (fault == NoFault) {
                 %(op_wb)s;
@@ -214,8 +214,7 @@ def template StoreExecute {{
             }
             if (storeCond && fault == NoFault) {
                 %(EA_trunc)s
-                fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
-                        EA, %(asi_val)s, 0);
+                fault = writeMemAtomic(xc, traceData, Mem, EA, %(asi_val)s, 0);
             }
             if (fault == NoFault) {
                 // Write the resulting state to the execution context
@@ -245,8 +244,7 @@ def template StoreInitiateAcc {{
             }
             if (storeCond && fault == NoFault) {
                 %(EA_trunc)s
-                fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
-                        EA, %(asi_val)s, 0);
+                fault = writeMemTiming(xc, traceData, Mem, EA, %(asi_val)s, 0);
             }
             return fault;
         }

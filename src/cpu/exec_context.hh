@@ -106,21 +106,10 @@ class ExecContext {
     /** Returns a pointer to the ThreadContext. */
     ThreadContext *tcBase();
 
-    /** Reads an address, creating a memory request with the given
-     * flags.  Stores result of read in data. */
-    template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 
-    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
-
-    /** Writes to an address, creating a memory request with the given
-     * flags.  Writes data to memory.  For store conditionals, returns
-     * the result of the store in res. */
-    template <class T>
-    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
-
-    Fault writeBytes(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
 
 #if FULL_SYSTEM
     /** Somewhat Alpha-specific function that handles returning from

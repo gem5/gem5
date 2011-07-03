@@ -3,10 +3,10 @@
 sim_seconds                                  0.106734                       # Number of seconds simulated
 sim_ticks                                106734154000                       # Number of ticks simulated
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 173636                       # Simulator instruction rate (inst/s)
-host_tick_rate                               83720146                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 258788                       # Number of bytes of host memory used
-host_seconds                                  1274.89                       # Real time elapsed on the host
+host_inst_rate                                 152335                       # Simulator instruction rate (inst/s)
+host_tick_rate                               73451239                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 239116                       # Number of bytes of host memory used
+host_seconds                                  1453.13                       # Real time elapsed on the host
 sim_insts                                   221363017                       # Number of instructions simulated
 system.cpu.workload.num_syscalls                  400                       # Number of system calls
 system.cpu.numCycles                        213468309                       # number of cpu cycles simulated
@@ -60,82 +60,82 @@ system.cpu.rename.BlockCycles                18068346                       # Nu
 system.cpu.rename.serializeStallCycles          22426                       # count of cycles rename stalled for serializing inst
 system.cpu.rename.RunCycles                  57435303                       # Number of cycles rename is running
 system.cpu.rename.UnblockCycles              39871804                       # Number of cycles rename is unblocking
-system.cpu.rename.RenamedInsts              409779934                       # Number of instructions processed by rename
+system.cpu.rename.RenamedInsts              409779933                       # Number of instructions processed by rename
 system.cpu.rename.IQFullEvents               21501033                       # Number of times rename has blocked due to IQ full
 system.cpu.rename.LSQFullEvents              16352489                       # Number of times rename has blocked due to LSQ full
-system.cpu.rename.RenamedOperands           430797249                       # Number of destination operands rename has renamed
-system.cpu.rename.RenameLookups            1054244251                       # Number of register rename lookups that rename has made
-system.cpu.rename.int_rename_lookups       1043122686                       # Number of integer rename lookups
+system.cpu.rename.RenamedOperands           430797248                       # Number of destination operands rename has renamed
+system.cpu.rename.RenameLookups            1054244247                       # Number of register rename lookups that rename has made
+system.cpu.rename.int_rename_lookups       1043122682                       # Number of integer rename lookups
 system.cpu.rename.fp_rename_lookups          11121565                       # Number of floating rename lookups
 system.cpu.rename.CommittedMaps             234363409                       # Number of HB maps that are committed
-system.cpu.rename.UndoneMaps                196433840                       # Number of HB maps that are undone due to squashing
+system.cpu.rename.UndoneMaps                196433839                       # Number of HB maps that are undone due to squashing
 system.cpu.rename.serializingInsts               1440                       # count of serializing insts renamed
 system.cpu.rename.tempSerializingInsts           1310                       # count of temporary serializing insts renamed
-system.cpu.rename.skidInsts                  83098345                       # count of insts added to the skid buffer
+system.cpu.rename.skidInsts                  83098346                       # count of insts added to the skid buffer
 system.cpu.memDep0.insertedLoads            104980766                       # Number of loads inserted to the mem dependence unit.
 system.cpu.memDep0.insertedStores            37095594                       # Number of stores inserted to the mem dependence unit.
-system.cpu.memDep0.conflictingLoads          90430171                       # Number of conflicting loads.
-system.cpu.memDep0.conflictingStores         30425406                       # Number of conflicting stores.
-system.cpu.iq.iqInstsAdded                  395507958                       # Number of instructions added to the IQ (excludes non-spec)
+system.cpu.memDep0.conflictingLoads          90430174                       # Number of conflicting loads.
+system.cpu.memDep0.conflictingStores         30425407                       # Number of conflicting stores.
+system.cpu.iq.iqInstsAdded                  395507957                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu.iq.iqNonSpecInstsAdded                1424                       # Number of non-speculative instructions added to the IQ
-system.cpu.iq.iqInstsIssued                 281831488                       # Number of instructions issued
-system.cpu.iq.iqSquashedInstsIssued             66022                       # Number of squashed instructions issued
-system.cpu.iq.iqSquashedInstsExamined       173816816                       # Number of squashed instructions iterated over during squash; mainly for profiling
-system.cpu.iq.iqSquashedOperandsExamined    357685429                       # Number of squashed operands that are examined and possibly removed from graph
+system.cpu.iq.iqInstsIssued                 281825994                       # Number of instructions issued
+system.cpu.iq.iqSquashedInstsIssued             65208                       # Number of squashed instructions issued
+system.cpu.iq.iqSquashedInstsExamined       173816854                       # Number of squashed instructions iterated over during squash; mainly for profiling
+system.cpu.iq.iqSquashedOperandsExamined    357698242                       # Number of squashed operands that are examined and possibly removed from graph
 system.cpu.iq.iqSquashedNonSpecRemoved            178                       # Number of squashed non-spec instructions that were removed
 system.cpu.iq.issued_per_cycle::samples     213378820                       # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::mean         1.320803                       # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::stdev        1.372846                       # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::mean         1.320778                       # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::stdev        1.372811                       # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::underflows            0      0.00%      0.00% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::0            72508340     33.98%     33.98% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::1            65572290     30.73%     64.71% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::2            36644917     17.17%     81.89% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::3            20570479      9.64%     91.53% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::4            12013956      5.63%     97.16% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::5             3959522      1.86%     99.01% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::6             1478424      0.69%     99.70% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::7              513187      0.24%     99.94% # Number of insts issued each cycle
-system.cpu.iq.issued_per_cycle::8              117705      0.06%    100.00% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::0            72508898     33.98%     33.98% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::1            65573468     30.73%     64.71% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::2            36643591     17.17%     81.89% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::3            20570957      9.64%     91.53% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::4            12013670      5.63%     97.16% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::5             3959812      1.86%     99.01% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::6             1477782      0.69%     99.70% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::7              513095      0.24%     99.94% # Number of insts issued each cycle
+system.cpu.iq.issued_per_cycle::8              117547      0.06%    100.00% # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::overflows            0      0.00%    100.00% # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::min_value            0                       # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::max_value            8                       # Number of insts issued each cycle
 system.cpu.iq.issued_per_cycle::total       213378820                       # Number of insts issued each cycle
 system.cpu.iq.fu_full::No_OpClass                   0      0.00%      0.00% # attempts to use FU when none available
-system.cpu.iq.fu_full::IntAlu                   68507      2.43%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::IntMult                      0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::IntDiv                       0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatAdd                     0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatCmp                     0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatCvt                     0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatMult                    0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatDiv                     0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::FloatSqrt                    0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdAdd                      0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdAddAcc                   0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdAlu                      0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdCmp                      0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdCvt                      0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdMisc                     0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdMult                     0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdMultAcc                  0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdShift                    0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdShiftAcc                 0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdSqrt                     0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatAdd                 0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatAlu                 0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatCmp                 0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatCvt                 0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatDiv                 0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatMisc                0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatMult                0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatMultAcc             0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::SimdFloatSqrt                0      0.00%      2.43% # attempts to use FU when none available
-system.cpu.iq.fu_full::MemRead                2380396     84.55%     86.98% # attempts to use FU when none available
+system.cpu.iq.fu_full::IntAlu                   68694      2.44%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::IntMult                      0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::IntDiv                       0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatAdd                     0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatCmp                     0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatCvt                     0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatMult                    0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatDiv                     0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::FloatSqrt                    0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdAdd                      0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdAddAcc                   0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdAlu                      0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdCmp                      0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdCvt                      0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdMisc                     0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdMult                     0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdMultAcc                  0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdShift                    0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdShiftAcc                 0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdSqrt                     0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatAdd                 0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatAlu                 0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatCmp                 0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatCvt                 0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatDiv                 0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatMisc                0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatMult                0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatMultAcc             0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::SimdFloatSqrt                0      0.00%      2.44% # attempts to use FU when none available
+system.cpu.iq.fu_full::MemRead                2379905     84.54%     86.98% # attempts to use FU when none available
 system.cpu.iq.fu_full::MemWrite                366520     13.02%    100.00% # attempts to use FU when none available
 system.cpu.iq.fu_full::IprAccess                    0      0.00%    100.00% # attempts to use FU when none available
 system.cpu.iq.fu_full::InstPrefetch                 0      0.00%    100.00% # attempts to use FU when none available
 system.cpu.iq.FU_type_0::No_OpClass           1200241      0.43%      0.43% # Type of FU issued
-system.cpu.iq.FU_type_0::IntAlu             187039498     66.37%     66.79% # Type of FU issued
+system.cpu.iq.FU_type_0::IntAlu             187039988     66.37%     66.79% # Type of FU issued
 system.cpu.iq.FU_type_0::IntMult                    0      0.00%     66.79% # Type of FU issued
 system.cpu.iq.FU_type_0::IntDiv                     0      0.00%     66.79% # Type of FU issued
 system.cpu.iq.FU_type_0::FloatAdd             1589434      0.56%     67.36% # Type of FU issued
@@ -164,27 +164,27 @@ system.cpu.iq.FU_type_0::SimdFloatMisc              0      0.00%     67.36% # Ty
 system.cpu.iq.FU_type_0::SimdFloatMult              0      0.00%     67.36% # Type of FU issued
 system.cpu.iq.FU_type_0::SimdFloatMultAcc            0      0.00%     67.36% # Type of FU issued
 system.cpu.iq.FU_type_0::SimdFloatSqrt              0      0.00%     67.36% # Type of FU issued
-system.cpu.iq.FU_type_0::MemRead             68498295     24.30%     91.66% # Type of FU issued
-system.cpu.iq.FU_type_0::MemWrite            23504020      8.34%    100.00% # Type of FU issued
+system.cpu.iq.FU_type_0::MemRead             68492447     24.30%     91.66% # Type of FU issued
+system.cpu.iq.FU_type_0::MemWrite            23503884      8.34%    100.00% # Type of FU issued
 system.cpu.iq.FU_type_0::IprAccess                  0      0.00%    100.00% # Type of FU issued
 system.cpu.iq.FU_type_0::InstPrefetch               0      0.00%    100.00% # Type of FU issued
-system.cpu.iq.FU_type_0::total              281831488                       # Type of FU issued
-system.cpu.iq.rate                           1.320250                       # Inst issue rate
-system.cpu.iq.fu_busy_cnt                     2815423                       # FU busy when requested
-system.cpu.iq.fu_busy_rate                   0.009990                       # FU busy rate (busy events/executed inst)
-system.cpu.iq.int_inst_queue_reads          774688380                       # Number of integer instruction queue reads
-system.cpu.iq.int_inst_queue_writes         563666165                       # Number of integer instruction queue writes
-system.cpu.iq.int_inst_queue_wakeup_accesses    273461056                       # Number of integer instruction queue wakeup accesses
+system.cpu.iq.FU_type_0::total              281825994                       # Type of FU issued
+system.cpu.iq.rate                           1.320224                       # Inst issue rate
+system.cpu.iq.fu_busy_cnt                     2815119                       # FU busy when requested
+system.cpu.iq.fu_busy_rate                   0.009989                       # FU busy rate (busy events/executed inst)
+system.cpu.iq.int_inst_queue_reads          774676274                       # Number of integer instruction queue reads
+system.cpu.iq.int_inst_queue_writes         563666202                       # Number of integer instruction queue writes
+system.cpu.iq.int_inst_queue_wakeup_accesses    273457668                       # Number of integer instruction queue wakeup accesses
 system.cpu.iq.fp_inst_queue_reads             5234861                       # Number of floating instruction queue reads
 system.cpu.iq.fp_inst_queue_writes            5690969                       # Number of floating instruction queue writes
 system.cpu.iq.fp_inst_queue_wakeup_accesses      2532279                       # Number of floating instruction queue wakeup accesses
-system.cpu.iq.int_alu_accesses              280809032                       # Number of integer alu accesses
+system.cpu.iq.int_alu_accesses              280803234                       # Number of integer alu accesses
 system.cpu.iq.fp_alu_accesses                 2637638                       # Number of floating point alu accesses
-system.cpu.iew.lsq.thread0.forwLoads         16340043                       # Number of loads that had data forwarded from stores
+system.cpu.iew.lsq.thread0.forwLoads         16340040                       # Number of loads that had data forwarded from stores
 system.cpu.iew.lsq.thread0.invAddrLoads             0                       # Number of loads ignored due to an invalid address
 system.cpu.iew.lsq.thread0.squashedLoads     48331176                       # Number of loads squashed
 system.cpu.iew.lsq.thread0.ignoredResponses        20419                       # Number of memory responses ignored because the instruction is squashed
-system.cpu.iew.lsq.thread0.memOrderViolation        34133                       # Number of memory ordering violations
+system.cpu.iew.lsq.thread0.memOrderViolation        34128                       # Number of memory ordering violations
 system.cpu.iew.lsq.thread0.squashedStores     16579878                       # Number of stores squashed
 system.cpu.iew.lsq.thread0.invAddrSwpfs             0                       # Number of software prefetches ignored due to an invalid address
 system.cpu.iew.lsq.thread0.blockedLoads             0                       # Number of blocked loads due to partial load-store forwarding
@@ -194,36 +194,36 @@ system.cpu.iew.iewIdleCycles                        0                       # Nu
 system.cpu.iew.iewSquashCycles               23148585                       # Number of cycles IEW is squashing
 system.cpu.iew.iewBlockCycles                  533368                       # Number of cycles IEW is blocking
 system.cpu.iew.iewUnblockCycles                548562                       # Number of cycles IEW is unblocking
-system.cpu.iew.iewDispatchedInsts           395509382                       # Number of instructions dispatched to IQ
+system.cpu.iew.iewDispatchedInsts           395509381                       # Number of instructions dispatched to IQ
 system.cpu.iew.iewDispSquashedInsts            255580                       # Number of squashed instructions skipped by dispatch
 system.cpu.iew.iewDispLoadInsts             104980766                       # Number of dispatched load instructions
 system.cpu.iew.iewDispStoreInsts             37095594                       # Number of dispatched store instructions
 system.cpu.iew.iewDispNonSpecInsts               1424                       # Number of dispatched non-speculative instructions
 system.cpu.iew.iewIQFullEvents                 479390                       # Number of times the IQ has become full, causing a stall
 system.cpu.iew.iewLSQFullEvents                 13059                       # Number of times the LSQ has become full, causing a stall
-system.cpu.iew.memOrderViolationEvents          34133                       # Number of memory order violations
+system.cpu.iew.memOrderViolationEvents          34128                       # Number of memory order violations
 system.cpu.iew.predictedTakenIncorrect        2541200                       # Number of branches that were predicted taken incorrectly
 system.cpu.iew.predictedNotTakenIncorrect       744980                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.branchMispredicts              3286180                       # Number of branch mispredicts detected at execute
-system.cpu.iew.iewExecutedInsts             278314164                       # Number of executed instructions
-system.cpu.iew.iewExecLoadInsts              67081099                       # Number of load instructions executed
-system.cpu.iew.iewExecSquashedInsts           3517324                       # Number of squashed instructions skipped in execute
+system.cpu.iew.iewExecutedInsts             278309942                       # Number of executed instructions
+system.cpu.iew.iewExecLoadInsts              67077031                       # Number of load instructions executed
+system.cpu.iew.iewExecSquashedInsts           3516052                       # Number of squashed instructions skipped in execute
 system.cpu.iew.exec_swp                             0                       # number of swp insts executed
 system.cpu.iew.exec_nop                             0                       # number of nop insts executed
-system.cpu.iew.exec_refs                     90254153                       # number of memory reference insts executed
-system.cpu.iew.exec_branches                 15873858                       # Number of branches executed
-system.cpu.iew.exec_stores                   23173054                       # Number of stores executed
-system.cpu.iew.exec_rate                     1.303773                       # Inst execution rate
-system.cpu.iew.wb_sent                      277023863                       # cumulative count of insts sent to commit
-system.cpu.iew.wb_count                     275993335                       # cumulative count of insts written-back
-system.cpu.iew.wb_producers                 222941305                       # num instructions producing a value
-system.cpu.iew.wb_consumers                 371922764                       # num instructions consuming a value
+system.cpu.iew.exec_refs                     90250007                       # number of memory reference insts executed
+system.cpu.iew.exec_branches                 15873940                       # Number of branches executed
+system.cpu.iew.exec_stores                   23172976                       # Number of stores executed
+system.cpu.iew.exec_rate                     1.303753                       # Inst execution rate
+system.cpu.iew.wb_sent                      277022685                       # cumulative count of insts sent to commit
+system.cpu.iew.wb_count                     275989947                       # cumulative count of insts written-back
+system.cpu.iew.wb_producers                 222941067                       # num instructions producing a value
+system.cpu.iew.wb_consumers                 371922286                       # num instructions consuming a value
 system.cpu.iew.wb_penalized                         0                       # number of instrctions required to write to 'other' IQ
-system.cpu.iew.wb_rate                       1.292901                       # insts written-back per cycle
+system.cpu.iew.wb_rate                       1.292885                       # insts written-back per cycle
 system.cpu.iew.wb_fanout                     0.599429                       # average fanout of values written-back
 system.cpu.iew.wb_penalized_rate                    0                       # fraction of instructions written-back that wrote to 'other' IQ
 system.cpu.commit.commitCommittedInsts      221363017                       # The number of committed instructions
-system.cpu.commit.commitSquashedInsts       174164321                       # The number of squashed insts skipped by commit
+system.cpu.commit.commitSquashedInsts       174164320                       # The number of squashed insts skipped by commit
 system.cpu.commit.commitNonSpecStalls            1246                       # The number of times commit has been forced to stall to communicate backwards
 system.cpu.commit.branchMispredicts           3072754                       # The number of times a branch was mispredicted
 system.cpu.commit.committed_per_cycle::samples    190230235                       # Number of insts commited each cycle
@@ -254,8 +254,8 @@ system.cpu.commit.int_insts                 220339606                       # Nu
 system.cpu.commit.function_calls                    0                       # Number of function calls committed.
 system.cpu.commit.bw_lim_events               2359489                       # number cycles where commit BW limit reached
 system.cpu.commit.bw_limited                        0                       # number of insts not committed due to BW limits
-system.cpu.rob.rob_reads                    583398084                       # The number of ROB reads
-system.cpu.rob.rob_writes                   814214437                       # The number of ROB writes
+system.cpu.rob.rob_reads                    583398083                       # The number of ROB reads
+system.cpu.rob.rob_writes                   814214435                       # The number of ROB writes
 system.cpu.timesIdled                            1914                       # Number of times that the entire CPU went into an idle state and unscheduled itself
 system.cpu.idleCycles                           89489                       # Total number of cycles that the CPU has spent unscheduled due to idling
 system.cpu.committedInsts                   221363017                       # Number of Instructions Simulated
@@ -264,11 +264,11 @@ system.cpu.cpi                               0.964336                       # CP
 system.cpu.cpi_total                         0.964336                       # CPI: Total CPI of All Threads
 system.cpu.ipc                               1.036983                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         1.036983                       # IPC: Total IPC of All Threads
-system.cpu.int_regfile_reads                516528082                       # number of integer regfile reads
-system.cpu.int_regfile_writes               284024941                       # number of integer regfile writes
+system.cpu.int_regfile_reads                516519288                       # number of integer regfile reads
+system.cpu.int_regfile_writes               284023651                       # number of integer regfile writes
 system.cpu.fp_regfile_reads                   3512884                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                  2186553                       # number of floating regfile writes
-system.cpu.misc_regfile_reads               145160346                       # number of misc regfile reads
+system.cpu.misc_regfile_reads               145156303                       # number of misc regfile reads
 system.cpu.misc_regfile_writes                    844                       # number of misc regfile writes
 system.cpu.icache.replacements                   3419                       # number of replacements
 system.cpu.icache.tagsinuse               1603.937064                       # Cycle average of tags in use
@@ -328,16 +328,16 @@ system.cpu.icache.soft_prefetch_mshr_full            0                       # n
 system.cpu.icache.no_allocate_misses                0                       # Number of misses that were no-allocate
 system.cpu.dcache.replacements                     48                       # number of replacements
 system.cpu.dcache.tagsinuse               1400.553684                       # Cycle average of tags in use
-system.cpu.dcache.total_refs                 71038551                       # Total number of references to valid blocks.
+system.cpu.dcache.total_refs                 71034499                       # Total number of references to valid blocks.
 system.cpu.dcache.sampled_refs                   1955                       # Sample count of references to valid blocks.
-system.cpu.dcache.avg_refs               36336.854731                       # Average number of references to valid blocks.
+system.cpu.dcache.avg_refs               36334.782097                       # Average number of references to valid blocks.
 system.cpu.dcache.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
 system.cpu.dcache.occ_blocks::0           1400.553684                       # Average occupied blocks per context
 system.cpu.dcache.occ_percent::0             0.341932                       # Average percentage of cache occupancy
-system.cpu.dcache.ReadReq_hits               50529918                       # number of ReadReq hits
+system.cpu.dcache.ReadReq_hits               50525866                       # number of ReadReq hits
 system.cpu.dcache.WriteReq_hits              20508631                       # number of WriteReq hits
-system.cpu.dcache.demand_hits                71038549                       # number of demand (read+write) hits
-system.cpu.dcache.overall_hits               71038549                       # number of overall hits
+system.cpu.dcache.demand_hits                71034497                       # number of demand (read+write) hits
+system.cpu.dcache.overall_hits               71034497                       # number of overall hits
 system.cpu.dcache.ReadReq_misses                  700                       # number of ReadReq misses
 system.cpu.dcache.WriteReq_misses                7099                       # number of WriteReq misses
 system.cpu.dcache.demand_misses                  7799                       # number of demand (read+write) misses
@@ -346,10 +346,10 @@ system.cpu.dcache.ReadReq_miss_latency       23034500                       # nu
 system.cpu.dcache.WriteReq_miss_latency     187834000                       # number of WriteReq miss cycles
 system.cpu.dcache.demand_miss_latency       210868500                       # number of demand (read+write) miss cycles
 system.cpu.dcache.overall_miss_latency      210868500                       # number of overall miss cycles
-system.cpu.dcache.ReadReq_accesses           50530618                       # number of ReadReq accesses(hits+misses)
+system.cpu.dcache.ReadReq_accesses           50526566                       # number of ReadReq accesses(hits+misses)
 system.cpu.dcache.WriteReq_accesses          20515730                       # number of WriteReq accesses(hits+misses)
-system.cpu.dcache.demand_accesses            71046348                       # number of demand (read+write) accesses
-system.cpu.dcache.overall_accesses           71046348                       # number of overall (read+write) accesses
+system.cpu.dcache.demand_accesses            71042296                       # number of demand (read+write) accesses
+system.cpu.dcache.overall_accesses           71042296                       # number of overall (read+write) accesses
 system.cpu.dcache.ReadReq_miss_rate          0.000014                       # miss rate for ReadReq accesses
 system.cpu.dcache.WriteReq_miss_rate         0.000346                       # miss rate for WriteReq accesses
 system.cpu.dcache.demand_miss_rate           0.000110                       # miss rate for demand accesses

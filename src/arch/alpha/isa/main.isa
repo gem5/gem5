@@ -73,6 +73,7 @@ output exec {{
 
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/regredir.hh"
+#include "arch/generic/memhelpers.hh"
 #include "base/cp_annotate.hh"
 #include "base/fenv.hh"
 #include "config/ss_compatible_fp.hh"

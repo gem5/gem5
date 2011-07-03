@@ -612,32 +612,11 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     // MEMORY ACCESS
     //
     ////////////////////////////////////////////
-    /**
-     * Does a read to a given address.
-     * @param addr The address to read.
-     * @param data The read's data is written into this parameter.
-     * @param flags The request's flags.
-     * @return Returns any fault due to the read.
-     */
-    template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
 
-    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 
-    /**
-     * Does a write to a given address.
-     * @param data The data to be written.
-     * @param addr The address to write to.
-     * @param flags The request's flags.
-     * @param res The result of the write (for load locked/store conditionals).
-     * @return Returns any fault due to the write.
-     */
-    template <class T>
-    Fault write(T data, Addr addr, unsigned flags,
-                        uint64_t *res);
-
-    Fault writeBytes(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
 
     /** Initiates a memory access - Calculate Eff. Addr & Initiate Memory
      *  Access Only valid for memory operations.

@@ -256,16 +256,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual void activateContext(int thread_num, int delay);
     virtual void suspendContext(int thread_num);
 
-    template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 
-    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
-
-    template <class T>
-    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
-
-    Fault writeBytes(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
 
     void fetch();
     void sendFetch(Fault fault, RequestPtr req, ThreadContext *tc);
@@ -286,11 +280,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void finishTranslation(WholeTranslationState *state);
 
   private:
-
-    // The backend for writeBytes and write. It's the same as writeBytes, but
-    // doesn't make a copy of data.
-    Fault writeTheseBytes(uint8_t *data, unsigned size,
-                          Addr addr, unsigned flags, uint64_t *res);
 
     typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;
     FetchEvent fetchEvent;

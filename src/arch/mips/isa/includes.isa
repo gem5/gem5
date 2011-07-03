@@ -68,6 +68,7 @@ using namespace MipsISA;
 output exec {{
 #include <math.h>
 
+#include "arch/generic/memhelpers.hh"
 #include "arch/mips/dsp.hh"
 #include "arch/mips/dt_constants.hh"
 #include "arch/mips/faults.hh"

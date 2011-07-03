@@ -98,7 +98,7 @@ def template MicroLoadExecute {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = read(xc, EA, Mem, memFlags);
+        fault = readMemAtomic(xc, traceData, EA, Mem, dataSize, memFlags);
 
         if (fault == NoFault) {
             %(code)s;
@@ -127,7 +127,7 @@ def template MicroLoadInitiateAcc {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = read(xc, EA, Mem, memFlags);
+        fault = readMemTiming(xc, traceData, EA, Mem, dataSize, memFlags);
 
         return fault;
     }
@@ -143,7 +143,7 @@ def template MicroLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        Mem = get(pkt);
+        Mem = getMem(pkt, dataSize, traceData);
 
         %(code)s;
 
@@ -174,7 +174,8 @@ def template MicroStoreExecute {{
 
         if(fault == NoFault)
         {
-            fault = write(xc, Mem, EA, memFlags);
+            fault = writeMemAtomic(xc, traceData, Mem, dataSize, EA,
+                    memFlags, NULL);
             if(fault == NoFault)
             {
                 %(op_wb)s;
@@ -201,7 +202,8 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            write(xc, Mem, EA, memFlags);
+            fault = writeMemTiming(xc, traceData, Mem, dataSize, EA,
+                    memFlags, NULL);
         }
         return fault;
     }
