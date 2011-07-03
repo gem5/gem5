@@ -70,6 +70,7 @@ output exec {{
 #include <cmath>
 #include <limits>
 
+#include "arch/generic/memhelpers.hh"
 #include "arch/sparc/asi.hh"
 #include "base/bigint.hh"
 #include "cpu/base.hh"

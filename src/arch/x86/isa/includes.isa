@@ -112,6 +112,7 @@ output exec {{
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/cpuid.hh"
 #include "arch/x86/faults.hh"
+#include "arch/x86/memhelpers.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bigint.hh"
 #include "base/compiler.hh"

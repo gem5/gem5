@@ -216,7 +216,7 @@ def template LoadExecute {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
+            fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
             %(memacc_code)s;
         }
 
@@ -248,7 +248,7 @@ def template LoadInitiateAcc {{
         %(ea_code)s;
 
         if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
+            fault = readMemTiming(xc, traceData, EA, Mem, memAccessFlags);
         }
 
         return fault;
@@ -272,7 +272,7 @@ def template LoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        Mem = pkt->get<typeof(Mem)>();
+        getMem(pkt, Mem, traceData);
 
         if (fault == NoFault) {
             %(memacc_code)s;
@@ -303,8 +303,8 @@ def template StoreExecute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
+            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                    NULL);
         }
 
         if (fault == NoFault) {
@@ -339,8 +339,8 @@ def template StoreFPExecute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
+            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                    NULL);
         }
 
         if (fault == NoFault) {
@@ -373,8 +373,8 @@ def template StoreCondExecute {{
         }
 
         if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
+            fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
+                    &write_result);
         }
 
         if (fault == NoFault) {
@@ -406,8 +406,8 @@ def template StoreInitiateAcc {{
         }
 
         if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
+            fault = writeMemTiming(xc, traceData, Mem, EA, memAccessFlags,
+                    NULL);
         }
 
         return fault;
@@ -559,14 +559,15 @@ def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; 
 
 def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; }},
                      mem_flags = [], inst_flags = []) {{
-    decl_code = 'uint32_t mem_word = 0;\n'
-    decl_code += 'uint32_t unaligned_addr = Rs + disp;\n'
-    decl_code += 'uint32_t byte_offset = unaligned_addr & 3;\n'
-    decl_code += '#if BYTE_ORDER == BIG_ENDIAN\n'
-    decl_code += '\tbyte_offset ^= 3;\n'
-    decl_code += '#endif\n'
-    decl_code += 'fault = xc->read(EA, (uint32_t&)mem_word, memAccessFlags);\n'
-    #decl_code += 'xc->readFunctional(EA,(uint32_t&)mem_word);'
+    decl_code = '''
+        uint32_t mem_word = 0;
+        uint32_t unaligned_addr = Rs + disp;
+        uint32_t byte_offset = unaligned_addr & 3;
+        #if BYTE_ORDER == BIG_ENDIAN
+            byte_offset ^= 3;
+        #endif
+        fault = readMemAtomic(xc, traceData, EA, mem_word, memAccessFlags);
+    '''
     memacc_code = decl_code + memacc_code + '\nMem = mem_word;\n'
 
     (header_output, decoder_output, decode_block, exec_output) = \
