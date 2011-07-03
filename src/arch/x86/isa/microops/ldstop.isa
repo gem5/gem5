@@ -201,7 +201,7 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            write(xc, Mem, EA, memFlags);
+            fault = write(xc, Mem, EA, memFlags);
         }
         return fault;
     }
