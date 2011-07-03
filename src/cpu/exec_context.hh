@@ -106,10 +106,10 @@ class ExecContext {
     /** Returns a pointer to the ThreadContext. */
     ThreadContext *tcBase();
 
-    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 
-    Fault writeBytes(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
 
 #if FULL_SYSTEM
     /** Somewhat Alpha-specific function that handles returning from

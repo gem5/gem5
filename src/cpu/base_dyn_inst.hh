@@ -124,10 +124,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
         cpu->demapPage(vaddr, asn);
     }
 
-    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 
-    Fault writeBytes(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
 
     /** Splits a request in two if it crosses a dcache block. */
     void splitRequest(RequestPtr req, RequestPtr &sreqLow,
@@ -841,8 +841,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
 template<class Impl>
 Fault
-BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
-                             unsigned size, unsigned flags)
+BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
+                           unsigned size, unsigned flags)
 {
     reqMade = true;
     Request *req = NULL;
@@ -893,8 +893,8 @@ BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
 
 template<class Impl>
 Fault
-BaseDynInst<Impl>::writeBytes(uint8_t *data, unsigned size,
-                              Addr addr, unsigned flags, uint64_t *res)
+BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
+                            Addr addr, unsigned flags, uint64_t *res)
 {
     if (traceData) {
         traceData->setAddr(addr);

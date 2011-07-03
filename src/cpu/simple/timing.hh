@@ -256,10 +256,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual void activateContext(int thread_num, int delay);
     virtual void suspendContext(int thread_num);
 
-    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 
-    Fault writeBytes(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
 
     void fetch();
     void sendFetch(Fault fault, RequestPtr req, ThreadContext *tc);

@@ -299,8 +299,8 @@ AtomicSimpleCPU::suspendContext(int thread_num)
 
 
 Fault
-AtomicSimpleCPU::readBytes(Addr addr, uint8_t * data,
-                           unsigned size, unsigned flags)
+AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
+                         unsigned size, unsigned flags)
 {
     // use the CPU's statically allocated read request and packet objects
     Request *req = &data_read_req;
@@ -387,8 +387,8 @@ AtomicSimpleCPU::readBytes(Addr addr, uint8_t * data,
 
 
 Fault
-AtomicSimpleCPU::writeBytes(uint8_t *data, unsigned size,
-                            Addr addr, unsigned flags, uint64_t *res)
+AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
+                          Addr addr, unsigned flags, uint64_t *res)
 {
     // use the CPU's statically allocated write request and packet objects
     Request *req = &data_write_req;

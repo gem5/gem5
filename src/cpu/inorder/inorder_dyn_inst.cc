@@ -559,15 +559,15 @@ InOrderDynInst::deallocateContext(int thread_num)
 }
 
 Fault
-InOrderDynInst::readBytes(Addr addr, uint8_t *data,
-                          unsigned size, unsigned flags)
+InOrderDynInst::readMem(Addr addr, uint8_t *data,
+                        unsigned size, unsigned flags)
 {
     return cpu->read(this, addr, data, size, flags);
 }
 
 Fault
-InOrderDynInst::writeBytes(uint8_t *data, unsigned size,
-                           Addr addr, unsigned flags, uint64_t *res)
+InOrderDynInst::writeMem(uint8_t *data, unsigned size,
+                         Addr addr, unsigned flags, uint64_t *res)
 {
     return cpu->write(this, data, size, addr, flags, res);
 }

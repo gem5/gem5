@@ -44,7 +44,7 @@ Fault
 readMemTiming(XC *xc, Trace::InstRecord *traceData, Addr addr,
         uint64_t &mem, unsigned dataSize, unsigned flags)
 {
-    return xc->readBytes(addr, (uint8_t *)&mem, dataSize, flags);
+    return xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
 }
 
 static inline uint64_t
@@ -99,7 +99,7 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
         traceData->setData(mem);
     }
     mem = TheISA::htog(mem);
-    return xc->writeBytes((uint8_t *)&mem, dataSize, addr, flags, res);
+    return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
 }
 
 template <class XC>

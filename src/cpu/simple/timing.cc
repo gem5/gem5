@@ -432,8 +432,8 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 }
 
 Fault
-TimingSimpleCPU::readBytes(Addr addr, uint8_t *data,
-                           unsigned size, unsigned flags)
+TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
+                         unsigned size, unsigned flags)
 {
     Fault fault;
     const int asid = 0;
@@ -500,8 +500,8 @@ TimingSimpleCPU::handleWritePacket()
 }
 
 Fault
-TimingSimpleCPU::writeBytes(uint8_t *data, unsigned size,
-                            Addr addr, unsigned flags, uint64_t *res)
+TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
+                          Addr addr, unsigned flags, uint64_t *res)
 {
     uint8_t *newData = new uint8_t[size];
     memcpy(newData, data, size);

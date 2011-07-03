@@ -613,10 +613,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     //
     ////////////////////////////////////////////
 
-    Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 
-    Fault writeBytes(uint8_t *data, unsigned size,
-                     Addr addr, unsigned flags, uint64_t *res);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
 
     /** Initiates a memory access - Calculate Eff. Addr & Initiate Memory
      *  Access Only valid for memory operations.

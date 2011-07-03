@@ -42,7 +42,7 @@ Fault
 readMemTiming(XC *xc, Trace::InstRecord *traceData, Addr addr,
         MemT &mem, unsigned flags)
 {
-    return xc->readBytes(addr, (uint8_t *)&mem, sizeof(MemT), flags);
+    return xc->readMem(addr, (uint8_t *)&mem, sizeof(MemT), flags);
 }
 
 /// Extract the data returned from a timing mode read.
@@ -81,7 +81,7 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData, MemT mem, Addr addr,
         traceData->setData(mem);
     }
     mem = TheISA::htog(mem);
-    return xc->writeBytes((uint8_t *)&mem, sizeof(MemT), addr, flags, res);
+    return xc->writeMem((uint8_t *)&mem, sizeof(MemT), addr, flags, res);
 }
 
 /// Write to memory in atomic mode.

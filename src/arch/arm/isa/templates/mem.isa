@@ -209,7 +209,7 @@ def template NeonLoadExecute {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->readBytes(EA, dataPtr, %(size)d, memAccessFlags);
+                fault = xc->readMem(EA, dataPtr, %(size)d, memAccessFlags);
                 %(memacc_code)s;
             }
 
@@ -280,8 +280,8 @@ def template NeonStoreExecute {{
             }
 
             if (fault == NoFault) {
-                fault = xc->writeBytes(dataPtr, %(size)d, EA,
-                                       memAccessFlags, NULL);
+                fault = xc->writeMem(dataPtr, %(size)d, EA,
+                                     memAccessFlags, NULL);
             }
 
             if (fault == NoFault) {
@@ -413,8 +413,8 @@ def template NeonStoreInitiateAcc {{
             }
 
             if (fault == NoFault) {
-                fault = xc->writeBytes(memUnion.bytes, %(size)d, EA,
-                                       memAccessFlags, NULL);
+                fault = xc->writeMem(memUnion.bytes, %(size)d, EA,
+                                     memAccessFlags, NULL);
             }
         } else {
             xc->setPredicate(false);
@@ -467,7 +467,7 @@ def template NeonLoadInitiateAcc {{
         if (%(predicate_test)s)
         {
             if (fault == NoFault) {
-                fault = xc->readBytes(EA, dataPtr, %(size)d, memAccessFlags);
+                fault = xc->readMem(EA, dataPtr, %(size)d, memAccessFlags);
             }
         } else {
             xc->setPredicate(false);
