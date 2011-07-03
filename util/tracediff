@@ -124,11 +124,11 @@ $sim2 = shift @cmd2;
 $args1 = join(' ', @cmd1);
 $args2 = join(' ', @cmd2);
 
-# Common mistake: if you don't set any traceflags this often isn't
+# Common mistake: if you don't set any debugflags this often isn't
 # doing what you want.
-if ($args1 !~ /--trace-flags/) {
+if ($args1 !~ /--debug-flags/) {
     print "****\n";
-    print "**** WARNING: no trace flags set... you may not be diffing much!\n";
+    print "**** WARNING: no debug flags set... you may not be diffing much!\n";
     print "****\n";
 }
 
