@@ -479,62 +479,6 @@ TimingSimpleCPU::readBytes(Addr addr, uint8_t *data,
     return NoFault;
 }
 
-template <class T>
-Fault
-TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
-{
-    return readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
-}
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template
-Fault
-TimingSimpleCPU::read(Addr addr, Twin64_t &data, unsigned flags);
-
-template
-Fault
-TimingSimpleCPU::read(Addr addr, Twin32_t &data, unsigned flags);
-
-template
-Fault
-TimingSimpleCPU::read(Addr addr, uint64_t &data, unsigned flags);
-
-template
-Fault
-TimingSimpleCPU::read(Addr addr, uint32_t &data, unsigned flags);
-
-template
-Fault
-TimingSimpleCPU::read(Addr addr, uint16_t &data, unsigned flags);
-
-template
-Fault
-TimingSimpleCPU::read(Addr addr, uint8_t &data, unsigned flags);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-TimingSimpleCPU::read(Addr addr, double &data, unsigned flags)
-{
-    return read(addr, *(uint64_t*)&data, flags);
-}
-
-template<>
-Fault
-TimingSimpleCPU::read(Addr addr, float &data, unsigned flags)
-{
-    return read(addr, *(uint32_t*)&data, flags);
-}
-
-template<>
-Fault
-TimingSimpleCPU::read(Addr addr, int32_t &data, unsigned flags)
-{
-    return read(addr, (uint32_t&)data, flags);
-}
-
 bool
 TimingSimpleCPU::handleWritePacket()
 {
@@ -556,9 +500,12 @@ TimingSimpleCPU::handleWritePacket()
 }
 
 Fault
-TimingSimpleCPU::writeTheseBytes(uint8_t *data, unsigned size,
-                                 Addr addr, unsigned flags, uint64_t *res)
+TimingSimpleCPU::writeBytes(uint8_t *data, unsigned size,
+                            Addr addr, unsigned flags, uint64_t *res)
 {
+    uint8_t *newData = new uint8_t[size];
+    memcpy(newData, data, size);
+
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->instAddr();
@@ -582,7 +529,7 @@ TimingSimpleCPU::writeTheseBytes(uint8_t *data, unsigned size,
         req->splitOnVaddr(split_addr, req1, req2);
 
         WholeTranslationState *state =
-            new WholeTranslationState(req, req1, req2, data, res, mode);
+            new WholeTranslationState(req, req1, req2, newData, res, mode);
         DataTranslation<TimingSimpleCPU> *trans1 =
             new DataTranslation<TimingSimpleCPU>(this, state, 0);
         DataTranslation<TimingSimpleCPU> *trans2 =
@@ -592,7 +539,7 @@ TimingSimpleCPU::writeTheseBytes(uint8_t *data, unsigned size,
         thread->dtb->translateTiming(req2, tc, trans2, mode);
     } else {
         WholeTranslationState *state =
-            new WholeTranslationState(req, data, res, mode);
+            new WholeTranslationState(req, newData, res, mode);
         DataTranslation<TimingSimpleCPU> *translation =
             new DataTranslation<TimingSimpleCPU>(this, state);
         thread->dtb->translateTiming(req, tc, translation, mode);
@@ -600,84 +547,6 @@ TimingSimpleCPU::writeTheseBytes(uint8_t *data, unsigned size,
 
     // Translation faults will be returned via finishTranslation()
     return NoFault;
-}
-
-Fault
-TimingSimpleCPU::writeBytes(uint8_t *data, unsigned size,
-                            Addr addr, unsigned flags, uint64_t *res)
-{
-    uint8_t *newData = new uint8_t[size];
-    memcpy(newData, data, size);
-    return writeTheseBytes(newData, size, addr, flags, res);
-}
-
-template <class T>
-Fault
-TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
-{
-    if (traceData) {
-        traceData->setData(data);
-    }
-    T *dataP = (T*) new uint8_t[sizeof(T)];
-    *dataP = TheISA::htog(data);
-
-    return writeTheseBytes((uint8_t *)dataP, sizeof(T), addr, flags, res);
-}
-
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-template
-Fault
-TimingSimpleCPU::write(Twin32_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-TimingSimpleCPU::write(Twin64_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-TimingSimpleCPU::write(uint64_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-TimingSimpleCPU::write(uint32_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-TimingSimpleCPU::write(uint16_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-template
-Fault
-TimingSimpleCPU::write(uint8_t data, Addr addr,
-                       unsigned flags, uint64_t *res);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-TimingSimpleCPU::write(double data, Addr addr, unsigned flags, uint64_t *res)
-{
-    return write(*(uint64_t*)&data, addr, flags, res);
-}
-
-template<>
-Fault
-TimingSimpleCPU::write(float data, Addr addr, unsigned flags, uint64_t *res)
-{
-    return write(*(uint32_t*)&data, addr, flags, res);
-}
-
-
-template<>
-Fault
-TimingSimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
-{
-    return write((uint32_t)data, addr, flags, res);
 }
 
 

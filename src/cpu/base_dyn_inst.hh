@@ -124,28 +124,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
         cpu->demapPage(vaddr, asn);
     }
 
-    /**
-     * Does a read to a given address.
-     * @param addr The address to read.
-     * @param data The read's data is written into this parameter.
-     * @param flags The request's flags.
-     * @return Returns any fault due to the read.
-     */
-    template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
-
     Fault readBytes(Addr addr, uint8_t *data, unsigned size, unsigned flags);
-
-    /**
-     * Does a write to a given address.
-     * @param data The data to be written.
-     * @param addr The address to write to.
-     * @param flags The request's flags.
-     * @param res The result of the write (for load locked/store conditionals).
-     * @return Returns any fault due to the write.
-     */
-    template <class T>
-    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     Fault writeBytes(uint8_t *data, unsigned size,
                      Addr addr, unsigned flags, uint64_t *res);
@@ -913,22 +892,6 @@ BaseDynInst<Impl>::readBytes(Addr addr, uint8_t *data,
 }
 
 template<class Impl>
-template<class T>
-inline Fault
-BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
-{
-    Fault fault = readBytes(addr, (uint8_t *)&data, sizeof(T), flags);
-
-    data = TheISA::gtoh(data);
-
-    if (traceData) {
-        traceData->setData(data);
-    }
-
-    return fault;
-}
-
-template<class Impl>
 Fault
 BaseDynInst<Impl>::writeBytes(uint8_t *data, unsigned size,
                               Addr addr, unsigned flags, uint64_t *res)
@@ -965,18 +928,6 @@ BaseDynInst<Impl>::writeBytes(uint8_t *data, unsigned size,
     }
 
     return fault;
-}
-
-template<class Impl>
-template<class T>
-inline Fault
-BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
-{
-    if (traceData) {
-        traceData->setData(data);
-    }
-    data = TheISA::htog(data);
-    return writeBytes((uint8_t *)&data, sizeof(T), addr, flags, res);
 }
 
 template<class Impl>
