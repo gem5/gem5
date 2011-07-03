@@ -55,7 +55,7 @@ machine(Directory, "Network_test Directory")
 
   // TYPES
   // DirectoryEntry
-  structure(Entry, desc="...") {
+  structure(Entry, desc="...", interface="AbstractEntry") {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
   }
@@ -74,6 +74,10 @@ machine(Directory, "Network_test Directory")
   }
 
   void setAccessPermission(Address addr, State state) {
+  }
+
+  DataBlock getDataBlock(Address addr), return_by_ref="yes" {
+    error("Network Test does not support get data block.");
   }
 
   // ** IN_PORTS **

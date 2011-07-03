@@ -41,7 +41,7 @@ class Cache(RubyCache):
 def define_options(parser):
     return
 
-def create_system(options, system, piobus, dma_devices):
+def create_system(options, system, piobus, dma_devices, ruby_system):
     
     if buildEnv['PROTOCOL'] != 'Network_test':
         panic("This script requires the Network_test protocol to be built.")
@@ -85,13 +85,15 @@ def create_system(options, system, piobus, dma_devices):
         #
         l1_cntrl = L1Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
-                                      cacheMemory = cache)
+                                      cacheMemory = cache,
+                                      ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(icache = cache,
                                 dcache = cache,
                                 physMemPort = system.physmem.port,
                                 physmem = system.physmem,
-                                using_network_tester = True)
+                                using_network_tester = True,
+                                ruby_system = ruby_system)
 
         l1_cntrl.sequencer = cpu_seq
 
@@ -126,7 +128,8 @@ def create_system(options, system, piobus, dma_devices):
                                          directory = \
                                          RubyDirectoryMemory(version = i,
                                                              size = dir_size),
-                                         memBuffer = mem_cntrl)
+                                         memBuffer = mem_cntrl,
+                                         ruby_system = ruby_system)
 
         exec("system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
