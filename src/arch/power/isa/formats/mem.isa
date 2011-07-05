@@ -125,7 +125,7 @@ def template LoadCompleteAcc {{
     {
         Addr EA;
         Fault fault = NoFault;
-        uint%(mem_acc_size)d_t val;
+        %(mem_acc_type)s val;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -133,7 +133,7 @@ def template LoadCompleteAcc {{
         EA = xc->getEA();
 
         getMem(pkt, val, traceData);
-        *((uint%(mem_acc_size)d_t*)&Mem) = val;
+        *((%(mem_acc_type)s*)&Mem) = val;
 
         if (fault == NoFault) {
             %(memacc_code)s;

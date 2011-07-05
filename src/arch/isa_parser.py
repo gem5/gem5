@@ -210,7 +210,6 @@ class Template(object):
             myDict['op_wb'] = op_wb_str
 
             if d.operands.memOperand:
-                myDict['mem_acc_size'] = d.operands.memOperand.mem_acc_size
                 myDict['mem_acc_type'] = d.operands.memOperand.mem_acc_type
 
         elif isinstance(d, dict):
@@ -417,29 +416,18 @@ class Operand(object):
         subst_dict = {"name": self.base_name,
                       "func": func,
                       "reg_idx": self.reg_spec,
-                      "size": self.size,
                       "ctype": self.ctype}
         if hasattr(self, 'src_reg_idx'):
             subst_dict['op_idx'] = self.src_reg_idx
         code = self.read_code % subst_dict
-        if self.size != self.dflt_size:
-            return '%s = bits(%s, %d, 0);\n' % \
-                   (self.base_name, code, self.size-1)
-        else:
-            return '%s = %s;\n' % \
-                   (self.base_name, code)
+        return '%s = %s;\n' % (self.base_name, code)
 
     def buildWriteCode(self, func = None):
-        if (self.size != self.dflt_size and self.is_signed):
-            final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
-        else:
-            final_val = self.base_name
         subst_dict = {"name": self.base_name,
                       "func": func,
                       "reg_idx": self.reg_spec,
-                      "size": self.size,
                       "ctype": self.ctype,
-                      "final_val": final_val}
+                      "final_val": self.base_name}
         if hasattr(self, 'dest_reg_idx'):
             subst_dict['op_idx'] = self.dest_reg_idx
         code = self.write_code % subst_dict
@@ -448,7 +436,7 @@ class Operand(object):
             %s final_val = %s;
             %s;
             if (traceData) { traceData->setData(final_val); }
-        }''' % (self.dflt_ctype, final_val, code)
+        }''' % (self.dflt_ctype, self.base_name, code)
 
     def __init__(self, parser, full_name, ext, is_src, is_dest):
         self.full_name = full_name
@@ -463,17 +451,12 @@ class Operand(object):
             self.eff_ext = self.dflt_ext
 
         if hasattr(self, 'eff_ext'):
-            self.size, self.ctype, self.is_signed = \
-                        parser.operandTypeMap[self.eff_ext]
+            self.ctype = parser.operandTypeMap[self.eff_ext]
 
-        # note that mem_acc_size is undefined for non-mem operands...
+        # note that mem_acc_type is undefined for non-mem operands...
         # template must be careful not to use it if it doesn't apply.
         if self.isMem():
-            self.mem_acc_size = self.makeAccSize()
-            if self.ctype in ['Twin32_t', 'Twin64_t']:
-                self.mem_acc_type = 'Twin'
-            else:
-                self.mem_acc_type = 'uint'
+            self.mem_acc_type = self.ctype
 
     # Finalize additional fields (primarily code fields).  This step
     # is done separately since some of these fields may depend on the
@@ -556,34 +539,20 @@ class IntRegOperand(Operand):
             error('Attempt to read integer register as FP')
         if self.read_code != None:
             return self.buildReadCode('readIntRegOperand')
-        if (self.size == self.dflt_size):
-            return '%s = xc->readIntRegOperand(this, %d);\n' % \
-                   (self.base_name, self.src_reg_idx)
-        elif (self.size > self.dflt_size):
-            int_reg_val = 'xc->readIntRegOperand(this, %d)' % \
-                          (self.src_reg_idx)
-            if (self.is_signed):
-                int_reg_val = 'sext<%d>(%s)' % (self.dflt_size, int_reg_val)
-            return '%s = %s;\n' % (self.base_name, int_reg_val)
-        else:
-            return '%s = bits(xc->readIntRegOperand(this, %d), %d, 0);\n' % \
-                   (self.base_name, self.src_reg_idx, self.size-1)
+        int_reg_val = 'xc->readIntRegOperand(this, %d)' % self.src_reg_idx
+        return '%s = %s;\n' % (self.base_name, int_reg_val)
 
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error('Attempt to write integer register as FP')
         if self.write_code != None:
             return self.buildWriteCode('setIntRegOperand')
-        if (self.size != self.dflt_size and self.is_signed):
-            final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
-        else:
-            final_val = self.base_name
         wb = '''
         {
             %s final_val = %s;
             xc->setIntRegOperand(this, %d, final_val);\n
             if (traceData) { traceData->setData(final_val); }
-        }''' % (self.dflt_ctype, final_val, self.dest_reg_idx)
+        }''' % (self.ctype, self.base_name, self.dest_reg_idx)
         return wb
 
 class FloatRegOperand(Operand):
@@ -609,29 +578,16 @@ class FloatRegOperand(Operand):
             func = 'readFloatRegOperand'
         else:
             func = 'readFloatRegOperandBits'
-            if (self.size != self.dflt_size):
-                bit_select = 1
-        base = 'xc->%s(this, %d)' % (func, self.src_reg_idx)
         if self.read_code != None:
             return self.buildReadCode(func)
-        if bit_select:
-            return '%s = bits(%s, %d, 0);\n' % \
-                   (self.base_name, base, self.size-1)
-        else:
-            return '%s = %s;\n' % (self.base_name, base)
+        return '%s = xc->%s(this, %d);\n' % \
+            (self.base_name, func, self.src_reg_idx)
 
     def makeWrite(self):
-        final_val = self.base_name
-        final_ctype = self.ctype
         if (self.ctype == 'float' or self.ctype == 'double'):
             func = 'setFloatRegOperand'
-        elif (self.ctype == 'uint32_t' or self.ctype == 'uint64_t'):
-            func = 'setFloatRegOperandBits'
         else:
             func = 'setFloatRegOperandBits'
-            final_ctype = 'uint%d_t' % self.dflt_size
-            if (self.size != self.dflt_size and self.is_signed):
-                final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
         if self.write_code != None:
             return self.buildWriteCode(func)
         wb = '''
@@ -639,7 +595,7 @@ class FloatRegOperand(Operand):
             %s final_val = %s;
             xc->%s(this, %d, final_val);\n
             if (traceData) { traceData->setData(final_val); }
-        }''' % (final_ctype, final_val, func, self.dest_reg_idx)
+        }''' % (self.ctype, self.base_name, func, self.dest_reg_idx)
         return wb
 
 class ControlRegOperand(Operand):
@@ -665,12 +621,8 @@ class ControlRegOperand(Operand):
             error('Attempt to read control register as FP')
         if self.read_code != None:
             return self.buildReadCode('readMiscRegOperand')
-        base = 'xc->readMiscRegOperand(this, %s)' % self.src_reg_idx
-        if self.size == self.dflt_size:
-            return '%s = %s;\n' % (self.base_name, base)
-        else:
-            return '%s = bits(%s, %d, 0);\n' % \
-                   (self.base_name, base, self.size-1)
+        return '%s = xc->readMiscRegOperand(this, %s);\n' % \
+            (self.base_name, self.src_reg_idx)
 
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
@@ -694,9 +646,6 @@ class MemOperand(Operand):
         # Note that initializations in the declarations are solely
         # to avoid 'uninitialized variable' errors from the compiler.
         # Declare memory data variable.
-        if self.ctype in ['Twin32_t','Twin64_t']:
-            return "%s %s; %s.a = 0; %s.b = 0;\n" % \
-                   (self.ctype, self.base_name, self.base_name, self.base_name)
         return '%s %s = 0;\n' % (self.ctype, self.base_name)
 
     def makeRead(self):
@@ -708,11 +657,6 @@ class MemOperand(Operand):
         if self.write_code != None:
             return self.buildWriteCode()
         return ''
-
-    # Return the memory access size *in bits*, suitable for
-    # forming a type via "uint%d_t".  Divide by 8 if you want bytes.
-    def makeAccSize(self):
-        return self.size
 
 class PCStateOperand(Operand):
     def makeConstructor(self):
@@ -1851,26 +1795,21 @@ StaticInstPtr
         for (ext, (desc, size)) in user_dict.iteritems():
             if desc == 'signed int':
                 ctype = 'int%d_t' % size
-                is_signed = 1
             elif desc == 'unsigned int':
                 ctype = 'uint%d_t' % size
-                is_signed = 0
             elif desc == 'float':
-                is_signed = 1       # shouldn't really matter
                 if size == 32:
                     ctype = 'float'
                 elif size == 64:
                     ctype = 'double'
             elif desc == 'twin64 int':
-                is_signed = 0
                 ctype = 'Twin64_t'
             elif desc == 'twin32 int':
-                is_signed = 0
                 ctype = 'Twin32_t'
             if ctype == '':
                 error(parser, lineno,
                       'Unrecognized type description "%s" in user_dict')
-            operand_type[ext] = (size, ctype, is_signed)
+            operand_type[ext] = ctype
 
         self.operandTypeMap = operand_type
 
@@ -1916,10 +1855,8 @@ StaticInstPtr
             attrList = ['reg_spec', 'flags', 'sort_pri',
                         'read_code', 'write_code']
             if dflt_ext:
-                (dflt_size, dflt_ctype, dflt_is_signed) = \
-                            self.operandTypeMap[dflt_ext]
-                attrList.extend(['dflt_size', 'dflt_ctype',
-                                 'dflt_is_signed', 'dflt_ext'])
+                dflt_ctype = self.operandTypeMap[dflt_ext]
+                attrList.extend(['dflt_ctype', 'dflt_ext'])
             for attr in attrList:
                 tmp_dict[attr] = eval(attr)
             tmp_dict['base_name'] = op_name
