@@ -161,16 +161,16 @@ def bitfield HW_IPR_IDX <15:0>;  // IPR index
 def bitfield M5FUNC <7:0>;
 
 def operand_types {{
-    'sb' : ('signed int', 8),
-    'ub' : ('unsigned int', 8),
-    'sw' : ('signed int', 16),
-    'uw' : ('unsigned int', 16),
-    'sl' : ('signed int', 32),
-    'ul' : ('unsigned int', 32),
-    'sq' : ('signed int', 64),
-    'uq' : ('unsigned int', 64),
-    'sf' : ('float', 32),
-    'df' : ('float', 64)
+    'sb' : 'int8_t',
+    'ub' : 'uint8_t',
+    'sw' : 'int16_t',
+    'uw' : 'uint16_t',
+    'sl' : 'int32_t',
+    'ul' : 'uint32_t',
+    'sq' : 'int64_t',
+    'uq' : 'uint64_t',
+    'sf' : 'float',
+    'df' : 'double'
 }};
 
 def operands {{

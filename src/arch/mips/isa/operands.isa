@@ -30,16 +30,16 @@
 //          Jaidev Patwardhan
 
 def operand_types {{
-    'sb' : ('signed int', 8),
-    'ub' : ('unsigned int', 8),
-    'sh' : ('signed int', 16),
-    'uh' : ('unsigned int', 16),
-    'sw' : ('signed int', 32),
-    'uw' : ('unsigned int', 32),
-    'sd' : ('signed int', 64),
-    'ud' : ('unsigned int', 64),
-    'sf' : ('float', 32),
-    'df' : ('float', 64),
+    'sb' : 'int8_t',
+    'ub' : 'uint8_t',
+    'sh' : 'int16_t',
+    'uh' : 'uint16_t',
+    'sw' : 'int32_t',
+    'uw' : 'uint32_t',
+    'sd' : 'int64_t',
+    'ud' : 'uint64_t',
+    'sf' : 'float',
+    'df' : 'double'
 }};
 
 def operands {{

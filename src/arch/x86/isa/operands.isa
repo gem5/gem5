@@ -39,16 +39,16 @@
 // Authors: Gabe Black
 
 def operand_types {{
-    'sb' : ('signed int', 8),
-    'ub' : ('unsigned int', 8),
-    'sw' : ('signed int', 16),
-    'uw' : ('unsigned int', 16),
-    'sdw' : ('signed int', 32),
-    'udw' : ('unsigned int', 32),
-    'sqw' : ('signed int', 64),
-    'uqw' : ('unsigned int', 64),
-    'sf' : ('float', 32),
-    'df' : ('float', 64),
+    'sb' : 'int8_t',
+    'ub' : 'uint8_t',
+    'sw' : 'int16_t',
+    'uw' : 'uint16_t',
+    'sdw' : 'int32_t',
+    'udw' : 'uint32_t',
+    'sqw' : 'int64_t',
+    'uqw' : 'uint64_t',
+    'sf' : 'float',
+    'df' : 'double',
 }};
 
 let {{

@@ -1321,13 +1321,12 @@ StaticInstPtr
     def p_def_operand_types(self, t):
         'def_operand_types : DEF OPERAND_TYPES CODELIT SEMI'
         try:
-            user_dict = eval('{' + t[3] + '}')
+            self.operandTypeMap = eval('{' + t[3] + '}')
         except Exception, exc:
             if debug:
                 raise
             error(t,
                   'error: %s in def operand_types block "%s".' % (exc, t[3]))
-        self.buildOperandTypeMap(user_dict, t.lexer.lineno)
         t[0] = GenCode(self) # contributes nothing to the output C++ file
 
     # Define the mapping from operand names to operand classes and
@@ -1787,31 +1786,6 @@ StaticInstPtr
         (i.e. those not followed by '(')'''
 
         return re.sub(r'%(?!\()', '%%', s)
-
-    def buildOperandTypeMap(self, user_dict, lineno):
-        """Generate operandTypeMap from the user's 'def operand_types'
-        statement."""
-        operand_type = {}
-        for (ext, (desc, size)) in user_dict.iteritems():
-            if desc == 'signed int':
-                ctype = 'int%d_t' % size
-            elif desc == 'unsigned int':
-                ctype = 'uint%d_t' % size
-            elif desc == 'float':
-                if size == 32:
-                    ctype = 'float'
-                elif size == 64:
-                    ctype = 'double'
-            elif desc == 'twin64 int':
-                ctype = 'Twin64_t'
-            elif desc == 'twin32 int':
-                ctype = 'Twin32_t'
-            if ctype == '':
-                error(parser, lineno,
-                      'Unrecognized type description "%s" in user_dict')
-            operand_type[ext] = ctype
-
-        self.operandTypeMap = operand_type
 
     def buildOperandNameMap(self, user_dict, lineno):
         operand_name = {}
