@@ -1125,10 +1125,10 @@ decode OP default Unknown::unknown()
                   }});
         }
         format Load {
-            0x08: ldsw({{Rd = (int32_t)Mem.sw;}});
-            0x09: ldsb({{Rd = (int8_t)Mem.sb;}});
-            0x0A: ldsh({{Rd = (int16_t)Mem.shw;}});
-            0x0B: ldx({{Rd = (int64_t)Mem.sdw;}});
+            0x08: ldsw({{Rd = Mem.sw;}});
+            0x09: ldsb({{Rd = Mem.sb;}});
+            0x0A: ldsh({{Rd = Mem.shw;}});
+            0x0B: ldx({{Rd = Mem.sdw;}});
         }
         0x0D: Swap::ldstub({{Mem.ub = 0xFF;}},
                            {{
@@ -1223,10 +1223,10 @@ decode OP default Unknown::unknown()
                   }});
         }
         format LoadAlt {
-            0x18: ldswa({{Rd = (int32_t)Mem.sw;}});
-            0x19: ldsba({{Rd = (int8_t)Mem.sb;}});
-            0x1A: ldsha({{Rd = (int16_t)Mem.shw;}});
-            0x1B: ldxa({{Rd = (int64_t)Mem.sdw;}});
+            0x18: ldswa({{Rd = Mem.sw;}});
+            0x19: ldsba({{Rd = Mem.sb;}});
+            0x1A: ldsha({{Rd = Mem.shw;}});
+            0x1B: ldxa({{Rd = Mem.sdw;}});
         }
         0x1D: SwapAlt::ldstuba({{Mem.ub = 0xFF;}},
                            {{
