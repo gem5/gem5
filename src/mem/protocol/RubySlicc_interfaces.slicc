@@ -1,7 +1,7 @@
-RubySlicc_Exports.sm
-RubySlicc_Types.sm
-RubySlicc_Util.sm
-RubySlicc_ComponentMapping.sm
-RubySlicc_Profiler.sm
-RubySlicc_Defines.sm
-RubySlicc_MemControl.sm
+include "RubySlicc_Exports.sm";
+include "RubySlicc_Types.sm";
+include "RubySlicc_Util.sm";
+include "RubySlicc_ComponentMapping.sm";
+include "RubySlicc_Profiler.sm";
+include "RubySlicc_Defines.sm";
+include "RubySlicc_MemControl.sm";

@@ -66,7 +66,7 @@ def main(args=None):
                       help="don't print messages")
     opts,files = parser.parse_args(args=args)
 
-    if len(files) < 1:
+    if len(files) != 1:
         parser.print_help()
         sys.exit(2)
 
@@ -75,8 +75,7 @@ def main(args=None):
     output("SLICC v0.4")
     output("Parsing...")
 
-    slicc = SLICC(debug=opts.debug)
-    slicc.load(files)
+    slicc = SLICC(files[0], verbose=True, debug=opts.debug, traceback=opts.tb)
 
     if opts.print_files:
         for i in sorted(slicc.files()):

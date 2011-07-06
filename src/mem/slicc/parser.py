@@ -37,25 +37,19 @@ import slicc.ast as ast
 import slicc.util as util
 from slicc.symbols import SymbolTable
 
-def read_slicc(sources):
-    if not isinstance(sources, (list,tuple)):
-        sources = [ sources ]
-
-    for source in sources:
-        for sm_file in file(source, "r"):
-            sm_file = sm_file.strip()
-            if not sm_file:
-                continue
-            if sm_file.startswith("#"):
-                continue
-            yield sm_file
-
 class SLICC(Grammar):
-    def __init__(self, protocol, verbose=False):
-        self.decl_list_vec = []
-        self.protocol = protocol
+    def __init__(self, filename, verbose=False, traceback=False, **kwargs):
+        self.protocol = None
+        self.traceback = traceback
         self.verbose = verbose
         self.symtab = SymbolTable(self)
+
+        try:
+            self.decl_list = self.parse_file(filename, **kwargs)
+        except ParseError, e:
+            if not self.traceback:
+                sys.exit(str(e))
+            raise
 
     def currentLocation(self):
         return util.Location(self.current_source, self.current_line,
@@ -66,35 +60,9 @@ class SLICC(Grammar):
         code['protocol'] = self.protocol
         return code
 
-    def parse(self, filename):
-        try:
-            decl_list = self.parse_file(filename)
-        except ParseError, e:
-            sys.exit(str(e))
-        self.decl_list_vec.append(decl_list)
-
-    def load(self, filenames):
-        filenames = list(filenames)
-        while filenames:
-            f = filenames.pop(0)
-            if isinstance(f, (list, tuple)):
-                filenames[0:0] = list(f)
-                continue
-
-            if f.endswith(".slicc"):
-                dirname,basename = os.path.split(f)
-                filenames[0:0] = [ os.path.join(dirname, x) \
-                                   for x in read_slicc(f)]
-            else:
-                assert f.endswith(".sm")
-                self.parse(f)
-
     def process(self):
-        for decl_list in self.decl_list_vec:
-            decl_list.findMachines()
-
-        for decl_list in self.decl_list_vec:
-            decl_list.generate()
+        self.decl_list.findMachines()
+        self.decl_list.generate()
 
     def writeCodeFiles(self, code_path):
         self.symtab.writeCodeFiles(code_path)
@@ -108,8 +76,7 @@ class SLICC(Grammar):
             'MachineType.hh',
             'Types.hh' ])
 
-        for decl_list in self.decl_list_vec:
-            f |= decl_list.files()
+        f |= self.decl_list.files()
 
         return f
 
@@ -129,6 +96,8 @@ class SLICC(Grammar):
         t.lexer.lineno += len(t.value)
 
     reserved = {
+        'protocol' : 'PROTOCOL',
+        'include' : 'INCLUDE',
         'global' : 'GLOBAL',
         'machine' : 'MACHINE',
         'in_port' : 'IN_PORT',
@@ -256,11 +225,32 @@ class SLICC(Grammar):
 
     def p_declsx__list(self, p):
         "declsx : decl declsx"
-        p[0] = [ p[1] ] + p[2]
+        if isinstance(p[1], ast.DeclListAST):
+            decls = p[1].decls
+        elif p[1] is None:
+            decls = []
+        else:
+            decls = [ p[1] ]
+        p[0] = decls + p[2]
 
     def p_declsx__none(self, p):
         "declsx : empty"
         p[0] = []
+
+    def p_decl__protocol(self, p):
+        "decl : PROTOCOL STRING SEMI"
+        if self.protocol:
+            msg = "Protocol can only be set once! Error at %s:%s\n" % \
+                (self.current_source, self.current_line)
+            raise ParseError(msg)
+        self.protocol = p[2]
+        p[0] = None
+
+    def p_decl__include(self, p):
+        "decl : INCLUDE STRING SEMI"
+        dirname = os.path.dirname(self.current_source)
+        filename = os.path.join(dirname, p[2])
+        p[0] = self.parse_file(filename)
 
     def p_decl__machine(self, p):
         "decl : MACHINE '(' ident pairs ')' ':' params '{' decls '}'"

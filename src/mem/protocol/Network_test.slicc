@@ -1,4 +1,6 @@
-Network_test-msg.sm
-Network_test-cache.sm
-Network_test-dir.sm
-standard_1level_CMP-protocol.sm
+protocol "Network_test";
+include "RubySlicc_interfaces.slicc";
+include "Network_test-msg.sm";
+include "Network_test-cache.sm";
+include "Network_test-dir.sm";
+include "standard_1level_CMP-protocol.sm";

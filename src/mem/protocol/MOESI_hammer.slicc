@@ -1,5 +1,7 @@
-MOESI_hammer-msg.sm
-MOESI_hammer-cache.sm
-MOESI_hammer-dir.sm
-MOESI_hammer-dma.sm
-standard_1level_CMP-protocol.sm
+protocol "MOESI_hammer";
+include "RubySlicc_interfaces.slicc";
+include "MOESI_hammer-msg.sm";
+include "MOESI_hammer-cache.sm";
+include "MOESI_hammer-dir.sm";
+include "MOESI_hammer-dma.sm";
+include "standard_1level_CMP-protocol.sm";

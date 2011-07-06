@@ -63,10 +63,10 @@ slicc_scanner = Classic("SliccScanner", ['.sm', '.slicc'], "SLICC_PATH",
 env.Append(SCANNERS=slicc_scanner)
 
 def slicc_emitter(target, source, env):
-    protocol = source[0].get_contents()
-    files = [s.srcnode().abspath for s in source[1:]]
-    slicc = SLICC(protocol, verbose=False)
-    slicc.load(files)
+    assert len(source) == 1
+    filepath = source[0].srcnode().abspath
+
+    slicc = SLICC(filepath, verbose=False)
     slicc.process()
     slicc.writeCodeFiles(protocol_dir.abspath)
     if not env['NO_HTML']:
@@ -76,10 +76,10 @@ def slicc_emitter(target, source, env):
     return target, source
 
 def slicc_action(target, source, env):
-    protocol = source[0].get_contents()
-    files = [s.srcnode().abspath for s in source[1:]]
-    slicc = SLICC(protocol, verbose=True)
-    slicc.load(files)
+    assert len(source) == 1
+    filepath = source[0].srcnode().abspath
+
+    slicc = SLICC(filepath, verbose=True)
     slicc.process()
     slicc.writeCodeFiles(protocol_dir.abspath)
     if not env['NO_HTML']:
@@ -89,11 +89,10 @@ slicc_builder = Builder(action=MakeAction(slicc_action, Transform("SLICC")),
                         emitter=slicc_emitter)
 
 protocol = env['PROTOCOL']
-sources = [ protocol_dir.File("RubySlicc_interfaces.slicc"),
-            protocol_dir.File("%s.slicc" % protocol) ]
+sources = [ protocol_dir.File("%s.slicc" % protocol) ]
 
 env.Append(BUILDERS={'SLICC' : slicc_builder})
-nodes = env.SLICC([], [ Value(protocol) ] + sources)
+nodes = env.SLICC([], sources)
 env.Depends(nodes, slicc_depends)
 
 for f in nodes:
