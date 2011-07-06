@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2009 Nathan Binkert <nate@binkert.org>
+# Copyright (c) 2006-2011 Nathan Binkert <nate@binkert.org>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,100 +24,116 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ply import lex, yacc
+import os
 
-class TokenError(lex.LexError):
-    def __init__(self, msg, t):
-        super(TokenError, self).__init__(msg)
-        self.token = t
+import ply.lex
+import ply.yacc
 
-class ParseError(yacc.YaccError):
+class ParseError(Exception):
     def __init__(self, message, token=None):
-        super(ParseError, self).__init__(message)
+        Exception.__init__(self, message)
         self.token = token
 
-class Tokenizer(object):
-    def __init__(self, lexer, data):
-        if isinstance(data, basestring):
-            indata = [ data ]
-        elif isinstance(data, file):
-            indata = data.xreadlines()
-        else:
-            indata = data
-
-        def _input():
-            for i,line in enumerate(indata):
-                lexer.lineno = i + 1
-                lexer.input(line)
-                while True:
-                    tok = lexer.token()
-                    if not tok:
-                        break
-                    yield tok
-        self.input = _input()
-        self.lexer = lexer
-
-    def next(self):
-        return self.input.next()
-
-    def __iter__(self):
-        return self
-
-    def token(self):
-        try:
-            return self.next()
-        except StopIteration:
-            return None
-
-    def __getattr__(self, attr):
-        return getattr(self.lexer, attr)
-
 class Grammar(object):
-    def __init__(self, output=None, debug=False):
-        self.yacc_args = {}
-        self.yacc_args['debug'] = debug
+    def setupLexerFactory(self, **kwargs):
+        if 'module' in kwargs:
+            raise AttributeError, "module is an illegal attribute"
+        self.lex_kwargs = kwargs
 
-        if output:
-            import os
+    def setupParserFactory(self, **kwargs):
+        if 'module' in kwargs:
+            raise AttributeError, "module is an illegal attribute"
 
+        if 'output' in kwargs:
             dir,tab = os.path.split(output)
             if not tab.endswith('.py'):
-                raise AttributeError, 'The output file must end with .py'
-            self.yacc_args['outputdir'] = dir
-            self.yacc_args['tabmodule'] = tab[:-3]
+                raise AttributeError, \
+                    'The output file must end with .py'
+            kwargs['outputdir'] = dir
+            kwargs['tabmodule'] = tab[:-3]
 
-    def t_error(self, t):
-        raise lex.LexError("Illegal character %s @ %d:%d" % \
-              (`t.value[0]`, t.lineno, t.lexpos), `t.value[0]`)
+        self.yacc_kwargs = kwargs
+
+    def __getattr__(self, attr):
+        if attr == 'lexers':
+            self.lexers = []
+            return self.lexers
+
+        if attr == 'lex_kwargs':
+            self.setupLexerFactory()
+            return self.lex_kwargs
+
+        if attr == 'yacc_kwargs':
+            self.setupParserFactory()
+            return self.yacc_kwargs
+
+        if attr == 'lex':
+            self.lex = ply.lex.lex(module=self, **self.lex_kwargs)
+            return self.lex
+
+        if attr == 'yacc':
+            self.yacc = ply.yacc.yacc(module=self, **self.yacc_kwargs)
+            return self.yacc
+
+        if attr == 'current_lexer':
+            if not self.lexers:
+                return None
+            return self.lexers[-1][0]
+
+        if attr == 'current_source':
+            if not self.lexers:
+                return '<none>'
+            return self.lexers[-1][1]
+
+        if attr == 'current_line':
+            if not self.lexers:
+                return -1
+            return self.current_lexer.lineno
+
+        raise AttributeError, \
+            "'%s' object has no attribute '%s'" % (type(self), attr)
+
+    def parse_string(self, data, source='<string>', debug=None, tracking=0):
+        if not isinstance(data, basestring):
+            raise AttributeError, \
+                "argument must be a string, was '%s'" % type(f)
+
+        import new
+        lexer = self.lex.clone()
+        lexer.input(data)
+        self.lexers.append((lexer, source))
+        dict = {
+            'productions' : self.yacc.productions,
+            'action'      : self.yacc.action,
+            'goto'        : self.yacc.goto,
+            'errorfunc'   : self.yacc.errorfunc,
+            }
+        parser = new.instance(ply.yacc.LRParser, dict)
+        result = parser.parse(lexer=lexer, debug=debug, tracking=tracking)
+        self.lexers.pop()
+        return result
+
+    def parse_file(self, f, **kwargs):
+        if isinstance(f, basestring):
+            source = f
+            f = file(f, 'r')
+        elif isinstance(f, file):
+            source = f.name
+        else:
+            raise AttributeError, \
+                "argument must be either a string or file, was '%s'" % type(f)
+
+        return self.parse_string(f.read(), source, **kwargs)
 
     def p_error(self, t):
         if t:
-            msg = "Syntax error at %d:%d\n>>%s<<" % \
-                  (t.lineno, t.lexpos + 1, t.value)
+            msg = "Syntax error at %s:%d:%d\n>>%s<<" % \
+                  (self.current_source, t.lineno, t.lexpos + 1, t.value)
         else:
-            msg = "Syntax error at end of input"
+            msg = "Syntax error at end of %s" % (self.current_source, )
         raise ParseError(msg, t)
 
-    def __getattr__(self, attr):
-        if attr == 'parser':
-            import ply.yacc
-            parser = ply.yacc.yacc(module=self, **self.yacc_args)
-            self.parser = parser
-            return parser
-
-        if attr == 'lexer':
-            import ply.lex
-            lexer = ply.lex.lex(module=self)
-            self.lexer = lexer
-            return lexer
-
-        raise AttributeError, "'%s' object has no attribute '%s'" % \
-              (self.__class__.__name__, attr)
-
-    def parse(self, stmt, **kwargs):
-        self.lexer.lineno = 1
-        result = self.parser.parse(lexer=Tokenizer(self.lexer, stmt), **kwargs)
-        self.parser.restart()
-
-        return result
-
+    def t_error(self, t):
+        msg = "Illegal character %s @ %d:%d" % \
+            (`t.value[0]`, t.lineno, t.lexpos)
+        raise ParseError(msg, t)

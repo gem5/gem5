@@ -1957,7 +1957,7 @@ StaticInstPtr
 
         # Parse it.
         (isa_name, namespace, global_code, namespace_code) = \
-                   self.parse(isa_desc)
+                   self.parse_string(isa_desc)
 
         # grab the last three path components of isa_desc_file to put in
         # the output

@@ -31,7 +31,7 @@ import re
 import sys
 
 from m5.util import code_formatter
-from m5.util.grammar import Grammar, TokenError, ParseError
+from m5.util.grammar import Grammar, ParseError
 
 import slicc.ast as ast
 import slicc.util as util
@@ -52,9 +52,7 @@ def read_slicc(sources):
 
 class SLICC(Grammar):
     def __init__(self, protocol, **kwargs):
-        super(SLICC, self).__init__(**kwargs)
         self.decl_list_vec = []
-        self.current_file = None
         self.protocol = protocol
         self.symtab = SymbolTable(self)
 
@@ -64,15 +62,11 @@ class SLICC(Grammar):
         return code
 
     def parse(self, filename):
-        self.current_file = filename
-        f = file(filename, 'r')
-        text = f.read()
         try:
-            decl_list = super(SLICC, self).parse(text)
-        except (TokenError, ParseError), e:
-            sys.exit("%s: %s:%d" % (e, filename, e.token.lineno))
+            decl_list = self.parse_file(filename)
+        except ParseError, e:
+            sys.exit(str(e))
         self.decl_list_vec.append(decl_list)
-        self.current_file = None
 
     def _load(self, *filenames):
         filenames = list(filenames)
@@ -238,7 +232,7 @@ class SLICC(Grammar):
         try:
             t.value = float(t.value)
         except ValueError:
-            raise TokenError("Illegal float", t)
+            raise ParseError("Illegal float", t)
         return t
 
     def t_NUMBER(self, t):
@@ -246,7 +240,7 @@ class SLICC(Grammar):
         try:
             t.value = int(t.value)
         except ValueError:
-            raise TokenError("Illegal number", t)
+            raise ParseError("Illegal number", t)
         return t
 
     def t_STRING1(self, t):
