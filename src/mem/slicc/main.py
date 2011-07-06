@@ -60,6 +60,8 @@ def main(args=None):
                       help="Path where html output goes")
     parser.add_option("-F", "--print-files",
                       help="Print files that SLICC will generate")
+    parser.add_option("--tb", "--traceback", action='store_true',
+                      help="print traceback on error")
     parser.add_option("-q", "--quiet",
                       help="don't print messages")
     opts,files = parser.parse_args(args=args)
@@ -71,30 +73,26 @@ def main(args=None):
     output = nprint if opts.quiet else eprint
 
     output("SLICC v0.4")
-    slicc = SLICC(debug=opts.debug)
-
     output("Parsing...")
-    for filename in slicc.load(files, verbose=True):
-        output("    %s", filename)
+
+    slicc = SLICC(debug=opts.debug)
+    slicc.load(files)
 
     if opts.print_files:
         for i in sorted(slicc.files()):
             print '    %s' % i
     else:
-        output("Generator pass 1...")
-        slicc.findMachines()
+        output("Processing AST...")
+        slicc.process()
 
-        output("Generator pass 2...")
-        slicc.generate()
-
-        output("Generating C++ files...")
+        output("Writing C++ files...")
         slicc.writeCodeFiles(opts.code_path)
 
         if opts.html_path:
-            nprint("Writing HTML files...")
+            output("Writing HTML files...")
             slicc.writeHTMLFiles(opts.html_path)
 
-    eprint("SLICC is Done.")
+    output("SLICC is Done.")
 
 if __name__ == "__main__":
     main()

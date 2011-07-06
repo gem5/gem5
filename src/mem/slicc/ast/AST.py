@@ -30,7 +30,7 @@ from slicc.util import PairContainer, Location
 class AST(PairContainer):
     def __init__(self, slicc, pairs=None):
         self.slicc = slicc
-        self.location = Location(slicc.current_source, slicc.current_line)
+        self.location = slicc.currentLocation()
         self.pairs = {}
         if pairs:
             self.pairs.update(getattr(pairs, "pairs", pairs))

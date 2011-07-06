@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
+from m5.util import makeDir
 
 from slicc.generate import html
 from slicc.symbols.StateMachine import StateMachine
@@ -42,13 +42,15 @@ class SymbolTable(object):
 
         pairs = {}
         pairs["enumeration"] = "yes"
-        MachineType = Type(self, "MachineType", Location("init", 0), pairs)
+        location = Location("init", 0, no_warning=not slicc.verbose)
+        MachineType = Type(self, "MachineType", location, pairs)
         self.newSymbol(MachineType)
 
         pairs = {}
         pairs["primitive"] = "yes"
         pairs["external"] = "yes"
-        void = Type(self, "void", Location("init", 0), pairs)
+        location = Location("init", 0, no_warning=not slicc.verbose)
+        void = Type(self, "void", location, pairs)
         self.newSymbol(void)
 
     def __repr__(self):
@@ -123,6 +125,8 @@ class SymbolTable(object):
                 yield symbol
 
     def writeCodeFiles(self, path):
+        makeDir(path)
+
         code = self.codeFormatter()
         code('''
 /** Auto generated C++ code started by $__file__:$__line__ */
@@ -139,6 +143,8 @@ class SymbolTable(object):
             symbol.writeCodeFiles(path)
 
     def writeHTMLFiles(self, path):
+        makeDir(path)
+
         machines = list(self.getAllType(StateMachine))
         if len(machines) > 1:
             name = "%s_table.html" % machines[0].ident

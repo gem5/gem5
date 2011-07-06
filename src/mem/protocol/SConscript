@@ -29,9 +29,12 @@
 # Authors: Nathan Binkert
 
 import os
+import re
 import sys
 
 from os.path import isdir, isfile, join as joinpath
+
+from SCons.Scanner import Classic
 
 Import('*')
 
@@ -54,77 +57,36 @@ for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
 #
 # Use SLICC
 #
-
-def slicc_scanner(node, env, path):
-    contents = node.get_contents()
-    files = [ line.strip() for line in contents.splitlines() if line ]
-    return files
-
-env.Append(SCANNERS=Scanner(function=slicc_scanner,skeys=['.slicc']))
+env['SLICC_PATH'] = str(protocol_dir)
+slicc_scanner = Classic("SliccScanner", ['.sm', '.slicc'], "SLICC_PATH",
+                        r'''include[ \t]["'](.*)["'];''')
+env.Append(SCANNERS=slicc_scanner)
 
 def slicc_emitter(target, source, env):
     protocol = source[0].get_contents()
     files = [s.srcnode().abspath for s in source[1:]]
-    slicc = SLICC(protocol, debug=True)
-    print "SLICC parsing..."
-    for name in slicc.load(files, verbose=True):
-        print "    %s" % name
+    slicc = SLICC(protocol, verbose=False)
+    slicc.load(files)
+    slicc.process()
+    slicc.writeCodeFiles(protocol_dir.abspath)
+    if not env['NO_HTML']:
+        slicc.writeHTMLFiles(html_dir.abspath)
 
-    target.extend(sorted(slicc.files()))
-    pdir = str(protocol_dir)
-    hdir = str(html_dir)
-
-    if not isdir(pdir):
-        os.mkdir(pdir)
-    if not isdir(hdir):
-        os.mkdir(hdir)
-
-    print "SLICC Generator pass 1..."
-    slicc.findMachines()
-
-    print "SLICC Generator pass 2..."
-    slicc.generate()
-
-    print "SLICC writing C++ files..."
-    slicc.writeCodeFiles(pdir)
-
-    if env['NO_HTML']:
-        print "skipping HTML file creation"
-    else:
-        print "SLICC writing HTML files..."
-        slicc.writeHTMLFiles(hdir)
+    target.extend([protocol_dir.File(f) for f in sorted(slicc.files())])
     return target, source
 
 def slicc_action(target, source, env):
     protocol = source[0].get_contents()
-    pdir = str(protocol_dir)
-    hdir = str(html_dir)
+    files = [s.srcnode().abspath for s in source[1:]]
+    slicc = SLICC(protocol, verbose=True)
+    slicc.load(files)
+    slicc.process()
+    slicc.writeCodeFiles(protocol_dir.abspath)
+    if not env['NO_HTML']:
+        slicc.writeHTMLFiles(html_dir.abspath)
 
-    if not isdir(pdir):
-        os.mkdir(pdir)
-    if not isdir(hdir):
-        os.mkdir(hdir)
-
-    slicc = SLICC(protocol, debug=True)
-    files = [str(s) for s in source[1:]]
-    slicc.load(files, verbose=False)
-
-    print "SLICC Generator pass 1..."
-    slicc.findMachines()
-
-    print "SLICC Generator pass 2..."
-    slicc.generate()
-
-    print "SLICC writing C++ files..."
-    slicc.writeCodeFiles(pdir)
-
-    if env['NO_HTML']:
-        print "skipping HTML file creation"
-    else:
-        print "SLICC writing HTML files..."
-        slicc.writeHTMLFiles(hdir)
-
-slicc_builder = Builder(action=slicc_action, emitter=slicc_emitter)
+slicc_builder = Builder(action=MakeAction(slicc_action, Transform("SLICC")),
+                        emitter=slicc_emitter)
 
 protocol = env['PROTOCOL']
 sources = [ protocol_dir.File("RubySlicc_interfaces.slicc"),

@@ -51,10 +51,15 @@ def read_slicc(sources):
             yield sm_file
 
 class SLICC(Grammar):
-    def __init__(self, protocol, **kwargs):
+    def __init__(self, protocol, verbose=False):
         self.decl_list_vec = []
         self.protocol = protocol
+        self.verbose = verbose
         self.symtab = SymbolTable(self)
+
+    def currentLocation(self):
+        return util.Location(self.current_source, self.current_line,
+                             no_warning=not self.verbose)
 
     def codeFormatter(self, *args, **kwargs):
         code = code_formatter(*args, **kwargs)
@@ -68,7 +73,7 @@ class SLICC(Grammar):
             sys.exit(str(e))
         self.decl_list_vec.append(decl_list)
 
-    def _load(self, *filenames):
+    def load(self, filenames):
         filenames = list(filenames)
         while filenames:
             f = filenames.pop(0)
@@ -76,7 +81,6 @@ class SLICC(Grammar):
                 filenames[0:0] = list(f)
                 continue
 
-            yield f
             if f.endswith(".slicc"):
                 dirname,basename = os.path.split(f)
                 filenames[0:0] = [ os.path.join(dirname, x) \
@@ -85,34 +89,18 @@ class SLICC(Grammar):
                 assert f.endswith(".sm")
                 self.parse(f)
 
-    def load(self, *filenames, **kwargs):
-        verbose = kwargs.pop("verbose", False)
-        if kwargs:
-            raise TypeError
-
-        gen = self._load(*filenames)
-        if verbose:
-            return gen
-        else:
-            # Run out the generator if we don't want the verbosity
-            for foo in gen:
-                pass
-
-    def findMachines(self):
+    def process(self):
         for decl_list in self.decl_list_vec:
             decl_list.findMachines()
 
-    def generate(self):
         for decl_list in self.decl_list_vec:
             decl_list.generate()
 
     def writeCodeFiles(self, code_path):
-        util.makeDir(code_path)
         self.symtab.writeCodeFiles(code_path)
 
-    def writeHTMLFiles(self, code_path):
-        util.makeDir(code_path)
-        self.symtab.writeHTMLFiles(code_path)
+    def writeHTMLFiles(self, html_path):
+        self.symtab.writeHTMLFiles(html_path)
 
     def files(self):
         f = set([

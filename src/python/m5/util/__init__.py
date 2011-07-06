@@ -176,3 +176,12 @@ def readCommand(cmd, **kwargs):
         raise
 
     return subp.communicate()[0]
+
+def makeDir(path):
+    """Make a directory if it doesn't exist.  If the path does exist,
+    ensure that it is a directory"""
+    if os.path.exists(path):
+        if not os.path.isdir(path):
+            raise AttributeError, "%s exists but is not directory" % path
+    else:
+        os.mkdir(path)

@@ -27,13 +27,6 @@
 import os
 import sys
 
-def makeDir(path):
-    if os.path.exists(path):
-        if not os.path.isdir(path):
-            raise AttributeError, "%s exists but is not directory" % path
-    else:
-        os.mkdir(path)
-
 class PairContainer(object):
     def __init__(self, pairs=None):
         self.pairs = {}
@@ -53,14 +46,23 @@ class PairContainer(object):
         return self.pairs.get(item, failobj)
 
 class Location(object):
-    def __init__(self, filename, lineno):
+    def __init__(self, filename, lineno, no_warning=False):
+        if not isinstance(filename, basestring):
+            raise AttributeError, \
+                "filename must be a string, found '%s'" % (type(filename), )
+        if not isinstance(lineno, (int, long)):
+            raise AttributeError, \
+                "filename must be an integer, found '%s'" % (type(lineno), )
         self.filename = filename
         self.lineno = lineno
+        self.no_warning = no_warning
 
     def __str__(self):
         return '%s:%d' % (os.path.basename(self.filename), self.lineno)
 
     def warning(self, message, *args):
+        if self.no_warning:
+            return
         if args:
             message = message % args
         #raise Exception, "%s: Warning: %s" % (self, message)
@@ -72,4 +74,4 @@ class Location(object):
         raise Exception, "%s: Error: %s" % (self, message)
         sys.exit("\n%s: Error: %s" % (self, message))
 
-__all__ = [ 'makeDir', 'PairContainer', 'Location' ]
+__all__ = [ 'PairContainer', 'Location' ]
