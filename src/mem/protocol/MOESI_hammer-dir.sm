@@ -951,6 +951,20 @@ machine(Directory, "AMD Hammer-like protocol")
             }
         }
       }
+    } else {
+      peek(requestQueue_in, RequestMsg) {
+          enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+            out_msg.Address := address;
+            out_msg.Type := CoherenceResponseType:ACK;
+            out_msg.Sender := machineID;
+            out_msg.Destination.add(in_msg.Requestor);
+            out_msg.Dirty := false; // By definition, the block is now clean
+            out_msg.Acks := 0;
+            out_msg.SilentAcks := 0;
+            DPRINTF(RubySlicc, "%d\n", out_msg.Acks);
+            out_msg.MessageSize := MessageSizeType:Response_Control;
+          }
+      }
     }
   }
 

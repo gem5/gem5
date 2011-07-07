@@ -545,6 +545,21 @@ machine(L1Cache, "AMD Hammer-like protocol")
     }
   }
 
+  action(b_issueGETXIfMoreThanOne, "bo", desc="Issue GETX") {
+    if (machineCount(MachineType:L1Cache) > 1) {
+      enqueue(requestNetwork_out, RequestMsg, latency=issue_latency) {
+        assert(is_valid(tbe));
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:GETX;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.InitialRequestTime := get_time();
+      }
+    }
+    tbe.NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
+  }
+
   action(bf_issueGETF, "bf", desc="Issue GETF") {
     enqueue(requestNetwork_out, RequestMsg, latency=issue_latency) {
       assert(is_valid(tbe));
@@ -921,7 +936,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
     peek(responseToCache_in, ResponseMsg) {
-      assert(in_msg.Acks > 0);
+      assert(in_msg.Acks >= 0);
       assert(is_valid(tbe));
       DPRINTF(RubySlicc, "Sender = %s\n", in_msg.Sender);
       DPRINTF(RubySlicc, "SilentAcks = %d\n", in_msg.SilentAcks);
