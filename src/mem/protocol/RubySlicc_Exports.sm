@@ -173,6 +173,7 @@ enumeration(GenericMachineType, desc="...", default="GenericMachineType_NULL") {
   L2Cache,     desc="L2 Cache Mach";
   L3Cache,     desc="L3 Cache Mach";
   Directory,   desc="Directory Mach";
+  DMA,         desc="DMA Mach";
   Collector,   desc="Collector Mach";
   L1Cache_wCC, desc="L1 Cache Mach with Cache Coherence (used for miss latency profile)";
   L2Cache_wCC, desc="L1 Cache Mach with Cache Coherence (used for miss latency profile)";

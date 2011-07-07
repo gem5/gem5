@@ -151,6 +151,9 @@ ConvertMachToGenericMach(MachineType machType)
     if (machType == MachineType_Directory)
         return GenericMachineType_Directory;
 
+    if (machType == MACHINETYPE_DMA_ENUM)
+        return GenericMachineType_DMA;
+
     panic("cannot convert to a GenericMachineType");
 }
 
