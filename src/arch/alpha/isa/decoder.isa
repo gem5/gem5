@@ -935,7 +935,7 @@ decode OPCODE default Unknown::unknown() {
   0x1e: decode PALMODE {
       0: OpcdecFault::hw_rei();
         format BasicOperate {
-          1: hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore, IsControl);
+          1: hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
         }
     }
 
