@@ -184,7 +184,7 @@ class VectorParamValue(list):
         return [ v.getValue() for v in self ]
 
     def unproxy(self, base):
-        if len(self) == 1 and isinstance(self[0], AllProxy):
+        if len(self) == 1 and isinstance(self[0], proxy.AllProxy):
             return self[0].unproxy(base)
         else:
              return [v.unproxy(base) for v in self]

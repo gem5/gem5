@@ -633,6 +633,18 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
 
     // If translation was successful, attempt to read the icache block.
     if (fault == NoFault) {
+        // Check that we're not going off into random memory
+        // If we have, just wait around for commit to squash something and put
+        // us on the right track
+        if (!cpu->system->isMemory(mem_req->getPaddr())) {
+            warn("Address %#x is outside of physical memory, stopping fetch\n",
+                    mem_req->getPaddr());
+            fetchStatus[tid] = NoGoodAddr;
+            delete mem_req;
+            memReq[tid] = NULL;
+            return;
+        }
+
         // Build packet here.
         PacketPtr data_pkt = new Packet(mem_req,
                                         MemCmd::ReadReq, Packet::Broadcast);
@@ -1162,7 +1174,11 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         } else if (fetchStatus[tid] == TrapPending) {
             DPRINTF(Fetch, "[tid:%i]: Fetch is waiting for a pending trap\n",
                     tid);
+        } else if (fetchStatus[tid] == NoGoodAddr) {
+            DPRINTF(Fetch, "[tid:%i]: Fetch predicted non-executable address\n",
+                    tid);
         }
+
 
 
         // Status is Idle, Squashing, Blocked, ItlbWait or IcacheWaitResponse

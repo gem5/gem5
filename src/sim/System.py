@@ -44,8 +44,9 @@ class System(SimObject):
     def swig_objdecls(cls, code):
         code('%include "python/swig/system.i"')
 
-    physmem = Param.PhysicalMemory(Parent.any, "physical memory")
+    physmem = Param.PhysicalMemory("Physical Memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
+    memories = VectorParam.PhysicalMemory(Self.all, "All memories is the system")
 
     work_item_id = Param.Int(-1, "specific work item id")
     work_begin_cpu_id_exit = Param.Int(-1,

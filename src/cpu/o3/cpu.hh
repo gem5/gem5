@@ -652,10 +652,8 @@ class FullO3CPU : public BaseO3CPU
     Checker<DynInstPtr> *checker;
 #endif
 
-#if FULL_SYSTEM
     /** Pointer to the system. */
     System *system;
-#endif
 
     /** Event to call process() on once draining has completed. */
     Event *drainEvent;

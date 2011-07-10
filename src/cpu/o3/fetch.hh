@@ -172,7 +172,8 @@ class DefaultFetch
         ItlbWait,
         IcacheWaitResponse,
         IcacheWaitRetry,
-        IcacheAccessComplete
+        IcacheAccessComplete,
+        NoGoodAddr
     };
 
     /** Fetching Policy, Add new policies here.*/

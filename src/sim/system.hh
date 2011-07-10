@@ -105,6 +105,14 @@ class System : public SimObject
      * system.  These threads could be Active or Suspended. */
     int numRunningContexts();
 
+    /** List to store ranges of memories in this system */
+    AddrRangeList memRanges;
+
+    /** check if an address points to valid system memory
+     * and thus we can fetch instructions out of it
+     */
+    bool isMemory(const Addr addr) const;
+
 #if FULL_SYSTEM
     Platform *platform;
     uint64_t init_param;

@@ -46,10 +46,10 @@
 #include "enums/MemoryMode.hh"
 #include "sim/core.hh"
 #include "sim/stat_control.hh"
+#include "sim/system.hh"
 
 #if FULL_SYSTEM
 #include "cpu/quiesce_event.hh"
-#include "sim/system.hh"
 #else
 #include "sim/process.hh"
 #endif
@@ -204,9 +204,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
                   params->activity),
 
       globalSeqNum(1),
-#if FULL_SYSTEM
       system(params->system),
-#endif // FULL_SYSTEM
       drainCount(0),
       deferRegistration(params->defer_registration)
 {
@@ -1105,9 +1103,7 @@ FullO3CPU<Impl>::resume()
     if (_status == SwitchedOut || _status == Idle)
         return;
 
-#if FULL_SYSTEM
     assert(system->getMemoryMode() == Enums::timing);
-#endif
 
     if (!tickEvent.scheduled())
         schedule(tickEvent, nextCycle());

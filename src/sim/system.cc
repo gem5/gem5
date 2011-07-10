@@ -83,6 +83,16 @@ System::System(Params *p)
     // add self to global system list
     systemList.push_back(this);
 
+    /** Keep track of all memories we can execute code out of
+     * in our system
+     */
+    for (int x = 0; x < p->memories.size(); x++) {
+        if (!p->memories[x])
+            continue;
+        memRanges.push_back(RangeSize(p->memories[x]->start(),
+                                      p->memories[x]->size()));
+    }
+
 #if FULL_SYSTEM
     kernelSymtab = new SymbolTable;
     if (!debugSymbolTable)
@@ -287,6 +297,17 @@ System::freeMemSize()
 }
 
 #endif
+
+bool
+System::isMemory(const Addr addr) const
+{
+    std::list<Range<Addr> >::const_iterator i;
+    for (i = memRanges.begin(); i != memRanges.end(); i++) {
+        if (*i == addr)
+            return true;
+    }
+    return false;
+}
 
 void
 System::resume()
