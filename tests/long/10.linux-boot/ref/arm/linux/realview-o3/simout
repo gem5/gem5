@@ -1,17 +1,11 @@
-Redirecting stdout to build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3/simout
-Redirecting stderr to build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3/simerr
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled May 16 2011 21:41:16
-M5 started May 16 2011 21:43:01
-M5 executing on nadc-0271
-command line: build/ARM_FS/m5.fast -d build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM_FS/tests/fast/long/10.linux-boot/arm/linux/realview-o3
+gem5 compiled Jul  8 2011 15:21:58
+gem5 started Jul  9 2011 04:29:24
+gem5 executing on u200439-lin.austin.arm.com
+command line: build/ARM_FS/gem5.opt -d build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /arm/scratch/alisai01/dist/binaries/vmlinux.arm
+info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux.arm
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 81956970500 because m5_exit instruction encountered
+Exiting @ tick 80755049500 because m5_exit instruction encountered

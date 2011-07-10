@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 27 2011 02:06:34
-gem5 started Jun 27 2011 02:06:35
-gem5 executing on burrito
-command line: build/X86_SE/gem5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing
-Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing/smred.sav
-Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/o3-timing/smred.sv2
+gem5 compiled Jul  8 2011 15:18:15
+gem5 started Jul  9 2011 00:22:05
+gem5 executing on u200439-lin.austin.arm.com
+command line: build/X86_SE/gem5.opt -d build/X86_SE/tests/opt/long/70.twolf/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/long/70.twolf/x86/linux/o3-timing
+Couldn't unlink  build/X86_SE/tests/opt/long/70.twolf/x86/linux/o3-timing/smred.sav
+Couldn't unlink  build/X86_SE/tests/opt/long/70.twolf/x86/linux/o3-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -24,4 +24,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 106734154000 because target called exit()
+122 123 124 Exiting @ tick 105045070000 because target called exit()

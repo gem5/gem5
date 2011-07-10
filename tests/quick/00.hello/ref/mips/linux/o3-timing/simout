@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 19 2011 07:04:09
-gem5 started Jun 19 2011 07:04:15
-gem5 executing on m60-009.pool
-command line: build/MIPS_SE/gem5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/o3-timing -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/o3-timing
+gem5 compiled Jul  8 2011 15:04:50
+gem5 started Jul  8 2011 15:22:25
+gem5 executing on u200439-lin.austin.arm.com
+command line: build/MIPS_SE/gem5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/o3-timing -re tests/run.py build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 12793500 because target called exit()
+Exiting @ tick 12285500 because target called exit()

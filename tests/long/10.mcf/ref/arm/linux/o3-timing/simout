@@ -1,16 +1,10 @@
-Redirecting stdout to build/ARM_SE/tests/fast/long/10.mcf/arm/linux/o3-timing/simout
-Redirecting stderr to build/ARM_SE/tests/fast/long/10.mcf/arm/linux/o3-timing/simerr
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled May 16 2011 15:11:25
-M5 started May 16 2011 18:02:55
-M5 executing on nadc-0271
-command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/long/10.mcf/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/fast/long/10.mcf/arm/linux/o3-timing
+gem5 compiled Jul  8 2011 15:18:43
+gem5 started Jul  9 2011 01:04:44
+gem5 executing on u200439-lin.austin.arm.com
+command line: build/ARM_SE/gem5.opt -d build/ARM_SE/tests/opt/long/10.mcf/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/long/10.mcf/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -29,4 +23,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 38330782000 because target called exit()
+Exiting @ tick 33955329500 because target called exit()
