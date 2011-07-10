@@ -564,7 +564,7 @@ Gic::updateIntState(int hint)
                      */
                     if ((bits(intEnabled[x], y) & bits(pendingInt[x], y)) &&
                         (intPriority[int_nm] < highest_pri))
-                        if (mp_sys || (cpuTarget[int_nm] & (1 << cpu))) {
+                        if ( (!mp_sys) || (cpuTarget[int_nm] & (1 << cpu))) {
                             highest_pri = intPriority[int_nm];
                             highest_int = int_nm;
                         }
