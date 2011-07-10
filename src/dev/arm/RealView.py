@@ -146,7 +146,8 @@ class RealViewPBX(RealView):
 
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff)
-    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x20000000)
+    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x20000000,
+                            fake_mem=True)
     dmac_fake     = AmbaFake(pio_addr=0x10030000)
     uart1_fake    = AmbaFake(pio_addr=0x1000a000)
     uart2_fake    = AmbaFake(pio_addr=0x1000b000)
@@ -213,7 +214,8 @@ class RealViewEB(RealView):
     kmi1   = Pl050(pio_addr=0x10007000, int_num=21, is_mouse=True)
 
     l2x0_fake     = IsaFake(pio_addr=0x1f002000, pio_size=0xfff, warn_access="1")
-    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x20000000-1)
+    flash_fake    = IsaFake(pio_addr=0x40000000, pio_size=0x20000000-1,
+                            fake_mem=True)
     dmac_fake     = AmbaFake(pio_addr=0x10030000)
     uart1_fake    = AmbaFake(pio_addr=0x1000a000)
     uart2_fake    = AmbaFake(pio_addr=0x1000b000)

@@ -64,6 +64,8 @@ class IsaFake(BasicPioDevice):
     ret_bad_addr = Param.Bool(False, "Return pkt status bad address on access")
     update_data = Param.Bool(False, "Update the data that is returned on writes")
     warn_access = Param.String("", "String to print when device is accessed")
+    fake_mem = Param.Bool(False,
+      "Is this device acting like a memory and thus may get a cache line sized req")
 
 class BadAddr(IsaFake):
     pio_addr = 0

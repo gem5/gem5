@@ -56,8 +56,9 @@ IsaFake::IsaFake(Params *p)
 Tick
 IsaFake::read(PacketPtr pkt)
 {
-
+    pkt->allocate();
     pkt->makeAtomicResponse();
+
     if (params()->warn_access != "")
         warn("Device %s accessed by read to address %#x size=%d\n",
                 name(), pkt->getAddr(), pkt->getSize());
@@ -83,7 +84,10 @@ IsaFake::read(PacketPtr pkt)
              pkt->set(retData8);
              break;
           default:
-            panic("invalid access size!\n");
+             if (params()->fake_mem)
+                 std::memset(pkt->getPtr<uint8_t>(), 0, pkt->getSize());
+             else
+                 panic("invalid access size! Device being accessed by cache?\n");
         }
     }
     return pioDelay;
