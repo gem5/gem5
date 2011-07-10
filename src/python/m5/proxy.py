@@ -184,6 +184,13 @@ class AnyProxy(BaseProxy):
     def path(self):
         return 'any'
 
+class AllProxy(BaseProxy):
+    def find(self, obj):
+        return obj.find_all(self._pdesc.ptype)
+
+    def path(self):
+        return 'all'
+
 def isproxy(obj):
     if isinstance(obj, (BaseProxy, params.EthernetAddr)):
         return True
@@ -201,6 +208,10 @@ class ProxyFactory(object):
     def __getattr__(self, attr):
         if attr == 'any':
             return AnyProxy(self.search_self, self.search_up)
+        elif attr == 'all':
+            if self.search_up:
+                assert("Parant.all is not supported")
+            return AllProxy(self.search_self, self.search_up)
         else:
             return AttrProxy(self.search_self, self.search_up, attr)
 

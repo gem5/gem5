@@ -746,6 +746,21 @@ class SimObject(object):
                 found_obj = match_obj
         return found_obj, found_obj != None
 
+    def find_all(self, ptype):
+        all = {}
+        # search children
+        for child in self._children.itervalues():
+            if isinstance(child, ptype) and not isproxy(child) and \
+               not isNullPointer(child):
+                all[child] = True
+        # search param space
+        for pname,pdesc in self._params.iteritems():
+            if issubclass(pdesc.ptype, ptype):
+                match_obj = self._values[pname]
+                if not isproxy(match_obj) and not isNullPointer(match_obj):
+                    all[match_obj] = True
+        return all.keys(), True
+
     def unproxy(self, base):
         return self
 
