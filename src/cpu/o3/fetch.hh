@@ -150,6 +150,45 @@ class DefaultFetch
         }
     };
 
+  private:
+    /* Event to delay delivery of a fetch translation result in case of
+     * a fault and the nop to carry the fault cannot be generated
+     * immediately */
+    class FinishTranslationEvent : public Event
+    {
+      private:
+        DefaultFetch<Impl> *fetch;
+        Fault fault;
+        RequestPtr req;
+
+      public:
+        FinishTranslationEvent(DefaultFetch<Impl> *_fetch)
+            : fetch(_fetch)
+        {}
+
+        void setFault(Fault _fault)
+        {
+            fault = _fault;
+        }
+
+        void setReq(RequestPtr _req)
+        {
+            req = _req;
+        }
+
+        /** Process the delayed finish translation */
+        void process()
+        {
+            assert(fetch->numInst < fetch->fetchWidth);
+            fetch->finishTranslation(fault, req);
+        }
+
+        const char *description() const
+        {
+            return "FullO3CPU FetchFinishTranslation";
+        }
+      };
+
   public:
     /** Overall fetch status. Used to determine if the CPU can
      * deschedule itsef due to a lack of activity.
@@ -363,6 +402,12 @@ class DefaultFetch
      * policy. */
     ThreadID branchCount();
 
+    /** Pipeline the next I-cache access to the current one. */
+    void pipelineIcacheAccesses(ThreadID tid);
+
+    /** Profile the reasons of fetch stall. */
+    void profileStall(ThreadID tid);
+
   private:
     /** Pointer to the O3CPU. */
     O3CPU *cpu;
@@ -497,6 +542,12 @@ class DefaultFetch
     /** Records if fetch is switched out. */
     bool switchedOut;
 
+    /** Set to true if a pipelined I-cache request should be issued. */
+    bool issuePipelinedIfetch[Impl::MaxThreads];
+
+    /** Event used to delay fault generation of translation faults */
+    FinishTranslationEvent finishTranslationEvent;
+
     // @todo: Consider making these vectors and tracking on a per thread basis.
     /** Stat for total number of cycles stalled due to an icache miss. */
     Stats::Scalar icacheStallCycles;
@@ -520,6 +571,16 @@ class DefaultFetch
     Stats::Scalar fetchBlockedCycles;
     /** Total number of cycles spent in any other state. */
     Stats::Scalar fetchMiscStallCycles;
+    /** Total number of cycles spent in waiting for drains. */
+    Stats::Scalar fetchPendingDrainCycles;
+    /** Total number of stall cycles caused by no active threads to run. */
+    Stats::Scalar fetchNoActiveThreadStallCycles;
+    /** Total number of stall cycles caused by pending traps. */
+    Stats::Scalar fetchPendingTrapStallCycles;
+    /** Total number of stall cycles caused by pending quiesce instructions. */
+    Stats::Scalar fetchPendingQuiesceStallCycles;
+    /** Total number of stall cycles caused by I-cache wait retrys. */
+    Stats::Scalar fetchIcacheWaitRetryStallCycles;
     /** Stat for total number of fetched cache lines. */
     Stats::Scalar fetchedCacheLines;
     /** Total number of outstanding icache accesses that were dropped

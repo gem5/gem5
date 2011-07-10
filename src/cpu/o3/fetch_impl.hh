@@ -49,6 +49,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
+#include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/exetrace.hh"
@@ -59,6 +60,7 @@
 #include "params/DerivO3CPU.hh"
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
+#include "sim/eventq.hh"
 
 #if FULL_SYSTEM
 #include "arch/tlb.hh"
@@ -135,6 +137,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       branchPred(params),
       predecoder(NULL),
+      numInst(0),
       decodeToFetchDelay(params->decodeToFetchDelay),
       renameToFetchDelay(params->renameToFetchDelay),
       iewToFetchDelay(params->iewToFetchDelay),
@@ -147,7 +150,8 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
       numFetchingThreads(params->smtNumFetchingThreads),
       interruptPending(false),
       drainPending(false),
-      switchedOut(false)
+      switchedOut(false),
+      finishTranslationEvent(this)
 {
     if (numThreads > Impl::MaxThreads)
         fatal("numThreads (%d) is larger than compiled limit (%d),\n"
@@ -267,6 +271,31 @@ DefaultFetch<Impl>::regStats()
         .desc("Number of cycles fetch has spent waiting on interrupts, or "
               "bad addresses, or out of MSHRs")
         .prereq(fetchMiscStallCycles);
+
+    fetchPendingDrainCycles
+        .name(name() + ".PendingDrainCycles")
+        .desc("Number of cycles fetch has spent waiting on pipes to drain")
+        .prereq(fetchPendingDrainCycles);
+
+    fetchNoActiveThreadStallCycles
+        .name(name() + ".NoActiveThreadStallCycles")
+        .desc("Number of stall cycles due to no active thread to fetch from")
+        .prereq(fetchNoActiveThreadStallCycles);
+
+    fetchPendingTrapStallCycles
+        .name(name() + ".PendingTrapStallCycles")
+        .desc("Number of stall cycles due to pending traps")
+        .prereq(fetchPendingTrapStallCycles);
+
+    fetchPendingQuiesceStallCycles
+        .name(name() + ".PendingQuiesceStallCycles")
+        .desc("Number of stall cycles due to pending quiesce instructions")
+        .prereq(fetchPendingQuiesceStallCycles);
+
+    fetchIcacheWaitRetryStallCycles
+        .name(name() + ".IcacheWaitRetryStallCycles")
+        .desc("Number of stall cycles due to full MSHR")
+        .prereq(fetchIcacheWaitRetryStallCycles);
 
     fetchIcacheSquashes
         .name(name() + ".IcacheSquashes")
@@ -675,8 +704,15 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
             fetchStatus[tid] = IcacheWaitResponse;
         }
     } else {
+        if (!(numInst < fetchWidth)) {
+            assert(!finishTranslationEvent.scheduled());
+            finishTranslationEvent.setFault(fault);
+            finishTranslationEvent.setReq(mem_req);
+            cpu->schedule(finishTranslationEvent, cpu->nextCycle(curTick() + cpu->ticks(1)));
+            return;
+        }
         DPRINTF(Fetch, "[tid:%i] Got back req with addr %#x but expected %#x\n",
-                mem_req->getVaddr(), memReq[tid]->getVaddr());
+                tid, mem_req->getVaddr(), memReq[tid]->getVaddr());
         // Translation faulted, icache request won't be sent.
         delete mem_req;
         memReq[tid] = NULL;
@@ -851,6 +887,10 @@ DefaultFetch<Impl>::tick()
 
     wroteToTimeBuffer = false;
 
+    for (ThreadID i = 0; i < Impl::MaxThreads; ++i) {
+        issuePipelinedIfetch[i] = false;
+    }
+
     while (threads != end) {
         ThreadID tid = *threads++;
 
@@ -862,10 +902,7 @@ DefaultFetch<Impl>::tick()
 
     DPRINTF(Fetch, "Running stage.\n");
 
-    // Reset the number of the instruction we're fetching.
-    numInst = 0;
-
-#if FULL_SYSTEM
+    #if FULL_SYSTEM
     if (fromCommit->commitInfo[0].interruptPending) {
         interruptPending = true;
     }
@@ -895,6 +932,16 @@ DefaultFetch<Impl>::tick()
 
         cpu->activityThisCycle();
     }
+
+    // Issue the next I-cache request if possible.
+    for (ThreadID i = 0; i < Impl::MaxThreads; ++i) {
+        if (issuePipelinedIfetch[i]) {
+            pipelineIcacheAccesses(i);
+        }
+    }
+
+    // Reset the number of the instruction we've fetched.
+    numInst = 0;
 }
 
 template <class Impl>
@@ -1099,10 +1146,13 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     ThreadID tid = getFetchingThread(fetchPolicy);
 
     if (tid == InvalidThreadID || drainPending) {
-        DPRINTF(Fetch,"There are no more threads available to fetch from.\n");
-
         // Breaks looping condition in tick()
         threadFetched = numFetchingThreads;
+
+        if (numThreads == 1) {  // @todo Per-thread stats
+            profileStall(0);
+        }
+
         return;
     }
 
@@ -1157,32 +1207,9 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         if (fetchStatus[tid] == Idle) {
             ++fetchIdleCycles;
             DPRINTF(Fetch, "[tid:%i]: Fetch is idle!\n", tid);
-        } else if (fetchStatus[tid] == Blocked) {
-            ++fetchBlockedCycles;
-            DPRINTF(Fetch, "[tid:%i]: Fetch is blocked!\n", tid);
-        } else if (fetchStatus[tid] == Squashing) {
-            ++fetchSquashCycles;
-            DPRINTF(Fetch, "[tid:%i]: Fetch is squashing!\n", tid);
-        } else if (fetchStatus[tid] == IcacheWaitResponse) {
-            ++icacheStallCycles;
-            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting cache response!\n",
-                    tid);
-        } else if (fetchStatus[tid] == ItlbWait) {
-            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting ITLB walk to "
-                    "finish! \n", tid);
-            ++fetchTlbCycles;
-        } else if (fetchStatus[tid] == TrapPending) {
-            DPRINTF(Fetch, "[tid:%i]: Fetch is waiting for a pending trap\n",
-                    tid);
-        } else if (fetchStatus[tid] == NoGoodAddr) {
-            DPRINTF(Fetch, "[tid:%i]: Fetch predicted non-executable address\n",
-                    tid);
         }
 
-
-
-        // Status is Idle, Squashing, Blocked, ItlbWait or IcacheWaitResponse
-        // so fetch should do nothing.
+        // Status is Idle, so fetch should do nothing.
         return;
     }
 
@@ -1329,6 +1356,17 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     }
 
     pc[tid] = thisPC;
+
+    // pipeline a fetch if we're crossing a cache boundary and not in
+    // a state that would preclude fetching
+    fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
+    Addr block_PC = icacheBlockAlignPC(fetchAddr);
+    issuePipelinedIfetch[tid] = block_PC != cacheDataPC[tid] &&
+        fetchStatus[tid] != IcacheWaitResponse &&
+        fetchStatus[tid] != ItlbWait &&
+        fetchStatus[tid] != IcacheWaitRetry &&
+        fetchStatus[tid] != QuiescePending &&
+        !curMacroop;
 }
 
 template<class Impl>
@@ -1510,4 +1548,82 @@ DefaultFetch<Impl>::branchCount()
 
     panic("Branch Count Fetch policy unimplemented\n");
     return InvalidThreadID;
+}
+
+template<class Impl>
+void
+DefaultFetch<Impl>::pipelineIcacheAccesses(ThreadID tid)
+{
+    if (!issuePipelinedIfetch[tid]) {
+        return;
+    }
+
+    // The next PC to access.
+    TheISA::PCState thisPC = pc[tid];
+
+    if (isRomMicroPC(thisPC.microPC())) {
+        return;
+    }
+
+    Addr pcOffset = fetchOffset[tid];
+    Addr fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
+
+    // Align the fetch PC so its at the start of a cache block.
+    Addr block_PC = icacheBlockAlignPC(fetchAddr);
+
+    // Unless buffer already got the block, fetch it from icache.
+    if (!(cacheDataValid[tid] && block_PC == cacheDataPC[tid])) {
+        DPRINTF(Fetch, "[tid:%i]: Issuing a pipelined I-cache access, "
+                "starting at PC %s.\n", tid, thisPC);
+
+        fetchCacheLine(fetchAddr, tid, thisPC.instAddr());
+    }
+}
+
+template<class Impl>
+void
+DefaultFetch<Impl>::profileStall(ThreadID tid) {
+    DPRINTF(Fetch,"There are no more threads available to fetch from.\n");
+
+    // @todo Per-thread stats
+
+    if (drainPending) {
+        ++fetchPendingDrainCycles;
+        DPRINTF(Fetch, "Fetch is waiting for a drain!\n");
+    } else if (activeThreads->empty()) {
+        ++fetchNoActiveThreadStallCycles;
+        DPRINTF(Fetch, "Fetch has no active thread!\n");
+    } else if (fetchStatus[tid] == Blocked) {
+        ++fetchBlockedCycles;
+        DPRINTF(Fetch, "[tid:%i]: Fetch is blocked!\n", tid);
+    } else if (fetchStatus[tid] == Squashing) {
+        ++fetchSquashCycles;
+        DPRINTF(Fetch, "[tid:%i]: Fetch is squashing!\n", tid);
+    } else if (fetchStatus[tid] == IcacheWaitResponse) {
+        ++icacheStallCycles;
+        DPRINTF(Fetch, "[tid:%i]: Fetch is waiting cache response!\n",
+                tid);
+    } else if (fetchStatus[tid] == ItlbWait) {
+        ++fetchTlbCycles;
+        DPRINTF(Fetch, "[tid:%i]: Fetch is waiting ITLB walk to "
+                "finish!\n", tid);
+    } else if (fetchStatus[tid] == TrapPending) {
+        ++fetchPendingTrapStallCycles;
+        DPRINTF(Fetch, "[tid:%i]: Fetch is waiting for a pending trap!\n",
+                tid);
+    } else if (fetchStatus[tid] == QuiescePending) {
+        ++fetchPendingQuiesceStallCycles;
+        DPRINTF(Fetch, "[tid:%i]: Fetch is waiting for a pending quiesce "
+                "instruction!\n", tid);
+    } else if (fetchStatus[tid] == IcacheWaitRetry) {
+        ++fetchIcacheWaitRetryStallCycles;
+        DPRINTF(Fetch, "[tid:%i]: Fetch is waiting for an I-cache retry!\n",
+                tid);
+    } else if (fetchStatus[tid] == NoGoodAddr) {
+            DPRINTF(Fetch, "[tid:%i]: Fetch predicted non-executable address\n",
+                    tid);
+    } else {
+        DPRINTF(Fetch, "[tid:%i]: Unexpected fetch stall reason (Status: %i).\n",
+             tid, fetchStatus[tid]);
+    }
 }
