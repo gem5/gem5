@@ -36,8 +36,8 @@ TournamentBP::TournamentBP(unsigned _localPredictorSize,
                            unsigned _localHistoryTableSize,
                            unsigned _localHistoryBits,
                            unsigned _globalPredictorSize,
-                           unsigned _globalCtrBits,
                            unsigned _globalHistoryBits,
+                           unsigned _globalCtrBits,
                            unsigned _choicePredictorSize,
                            unsigned _choiceCtrBits,
                            unsigned _instShiftAmt)
@@ -247,12 +247,47 @@ TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history)
             // decerement the counter.  Otherwise increment the
             // counter.
             if (history->localPredTaken == taken) {
-                choiceCtrs[globalHistory].decrement();
+                choiceCtrs[history->globalHistory].decrement();
             } else if (history->globalPredTaken == taken){
-                choiceCtrs[globalHistory].increment();
+                choiceCtrs[history->globalHistory].increment();
             }
+
         }
 
+        // Update the counters and local history with the proper
+        // resolution of the branch.  Global history is updated
+        // speculatively and restored upon squash() calls, so it does not
+        // need to be updated.
+        if (taken) {
+               localCtrs[local_predictor_idx].increment();
+               globalCtrs[history->globalHistory].increment();
+
+               updateLocalHistTaken(local_history_idx);
+        } else {
+               localCtrs[local_predictor_idx].decrement();
+               globalCtrs[history->globalHistory].decrement();
+
+               updateLocalHistNotTaken(local_history_idx);
+       }
+
+       bool mispredict = false;
+
+       //global predictor used and mispredicted
+       if (history->globalUsed && history->globalPredTaken != taken)
+           mispredict = true;
+       //local predictor used and mispredicted
+       else if (!history->globalUsed && history->localPredTaken != taken)
+           mispredict = true;
+
+       if (mispredict) {
+           if (taken) {
+              globalHistory = globalHistory | 1;
+           } else {
+              unsigned mask = globalHistoryMask - 1;
+              globalHistory = globalHistory & mask;
+           }
+
+        }
         // We're done with this history, now delete it.
         delete history;
     }
@@ -261,21 +296,7 @@ TournamentBP::update(Addr &branch_addr, bool taken, void *bp_history)
            local_history_idx < localHistoryTableSize &&
            local_predictor_idx < localPredictorSize);
 
-    // Update the counters and local history with the proper
-    // resolution of the branch.  Global history is updated
-    // speculatively and restored upon squash() calls, so it does not
-    // need to be updated.
-    if (taken) {
-        localCtrs[local_predictor_idx].increment();
-        globalCtrs[globalHistory].increment();
 
-        updateLocalHistTaken(local_history_idx);
-    } else {
-        localCtrs[local_predictor_idx].decrement();
-        globalCtrs[globalHistory].decrement();
-
-        updateLocalHistNotTaken(local_history_idx);
-    }
 }
 
 void
