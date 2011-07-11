@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -42,9 +43,8 @@
 #if FULL_SYSTEM
 #include "arch/x86/interrupts.hh"
 #endif
-#include "arch/x86/regs/int.hh"
-#include "arch/x86/regs/misc.hh"
-#include "arch/x86/regs/segment.hh"
+#include "arch/x86/registers.hh"
+#include "arch/x86/tlb.hh"
 #include "arch/x86/utility.hh"
 #include "arch/x86/x86_traits.hh"
 #include "cpu/base.hh"
@@ -214,7 +214,9 @@ void startupCPU(ThreadContext *tc, int cpuId)
 void
 copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
-    warn("copyMiscRegs is naively implemented for x86\n");
+    // This function assumes no side effects other than TLB invalidation
+    // need to be considered while copying state. That will likely not be
+    // true in the future.
     for (int i = 0; i < NUM_MISCREGS; ++i) {
         if ( ( i != MISCREG_CR1 &&
              !(i > MISCREG_CR4 && i < MISCREG_CR8) &&
@@ -223,16 +225,21 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
         }
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
     }
+
+    dest->getITBPtr()->invalidateAll();
+    dest->getDTBPtr()->invalidateAll();
 }
 
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
-    panic("copyRegs not implemented for x86!\n");
     //copy int regs
+    for (int i = 0; i < NumIntRegs; ++i)
+         dest->setIntReg(i, src->readIntReg(i));
     //copy float regs
+    for (int i = 0; i < NumFloatRegs; ++i)
+         dest->setFloatRegBits(i, src->readFloatRegBits(i));
     copyMiscRegs(src, dest);
-
     dest->pcState(src->pcState());
 }
 
