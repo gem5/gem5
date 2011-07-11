@@ -209,9 +209,6 @@ class Template(object):
                     op_wb_str = op_desc.op_wb + op_wb_str
             myDict['op_wb'] = op_wb_str
 
-            if d.operands.memOperand:
-                myDict['mem_acc_type'] = d.operands.memOperand.mem_acc_type
-
         elif isinstance(d, dict):
             # if the argument is a dictionary, we just use it.
             myDict.update(d)
@@ -452,11 +449,6 @@ class Operand(object):
 
         if hasattr(self, 'eff_ext'):
             self.ctype = parser.operandTypeMap[self.eff_ext]
-
-        # note that mem_acc_type is undefined for non-mem operands...
-        # template must be careful not to use it if it doesn't apply.
-        if self.isMem():
-            self.mem_acc_type = self.ctype
 
     # Finalize additional fields (primarily code fields).  This step
     # is done separately since some of these fields may depend on the
