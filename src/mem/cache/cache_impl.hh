@@ -420,7 +420,17 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         // must be cache-to-cache response from upper to lower level
         ForwardResponseRecord *rec =
             dynamic_cast<ForwardResponseRecord *>(pkt->senderState);
-        assert(rec != NULL);
+
+        if (rec == NULL) {
+            assert(pkt->cmd == MemCmd::HardPFResp);
+            // Check if it's a prefetch response and handle it. We shouldn't
+            // get any other kinds of responses without FRRs.
+            DPRINTF(Cache, "Got prefetch response from above for addr %#x\n",
+                    pkt->getAddr());
+            handleResponse(pkt);
+            return true;
+        }
+
         rec->restore(pkt, this);
         delete rec;
         memSidePort->respond(pkt, time);
@@ -1472,6 +1482,33 @@ Cache<TagStore>::getTimingPacket()
         pkt = tgt_pkt;
     } else {
         BlkType *blk = tags->findBlock(mshr->addr);
+
+        if (tgt_pkt->cmd == MemCmd::HardPFReq) {
+            // It might be possible for a writeback to arrive between
+            // the time the prefetch is placed in the MSHRs and when
+            // it's selected to send... if so, this assert will catch
+            // that, and then we'll have to figure out what to do.
+            assert(blk == NULL);
+
+            // We need to check the caches above us to verify that they don't have
+            // a copy of this block in the dirty state at the moment. Without this
+            // check we could get a stale copy from memory  that might get used
+            // in place of the dirty one.
+            PacketPtr snoop_pkt = new Packet(tgt_pkt, true);
+            snoop_pkt->setExpressSnoop();
+            snoop_pkt->senderState = mshr;
+            cpuSidePort->sendTiming(snoop_pkt);
+
+            if (snoop_pkt->memInhibitAsserted()) {
+                markInService(mshr, snoop_pkt);
+                DPRINTF(Cache, "Upward snoop of prefetch for addr %#x hit\n",
+                        tgt_pkt->getAddr());
+                delete snoop_pkt;
+                return NULL;
+            }
+            delete snoop_pkt;
+        }
+
         pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive());
 
         mshr->isForward = (pkt == NULL);
