@@ -71,8 +71,18 @@ let {{
             decoder_output += newDecoder
             exec_output += newExec
 
+    swpPreAccCode = '''
+        if (!((SCTLR)Sctlr).sw) {
+#if FULL_SYSTEM
+            return new UndefinedInstruction;
+#else
+            return new UndefinedInstruction(false, mnemonic);
+#endif
+        }
+    '''
+
     SwapInst('swp', 'Swp', 'EA = Base;',
-             'Mem = cSwap(Op1.uw, ((CPSR)Cpsr).e);',
+             swpPreAccCode + 'Mem = cSwap(Op1.uw, ((CPSR)Cpsr).e);',
              'Dest = cSwap((uint32_t)memData, ((CPSR)Cpsr).e);',
              ['Request::MEM_SWAP',
               'ArmISA::TLB::AlignWord',
@@ -80,7 +90,7 @@ let {{
               ['IsStoreConditional']).emit()
 
     SwapInst('swpb', 'Swpb', 'EA = Base;',
-             'Mem.ub = cSwap(Op1.ub, ((CPSR)Cpsr).e);',
+             swpPreAccCode + 'Mem.ub = cSwap(Op1.ub, ((CPSR)Cpsr).e);',
              'Dest.ub = cSwap((uint8_t)memData, ((CPSR)Cpsr).e);',
              ['Request::MEM_SWAP',
               'ArmISA::TLB::AlignByte',
