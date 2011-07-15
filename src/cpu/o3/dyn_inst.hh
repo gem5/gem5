@@ -123,6 +123,17 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     int _numDestMiscRegs;
 
   public:
+
+#if TRACING_ON
+    /** Tick records used for the pipeline activity viewer. */
+    Tick fetchTick;
+    Tick decodeTick;
+    Tick renameTick;
+    Tick dispatchTick;
+    Tick issueTick;
+    Tick completeTick;
+#endif
+
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */

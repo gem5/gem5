@@ -1312,6 +1312,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             numInst++;
 
+#if TRACING_ON
+            instruction->fetchTick = curTick();
+#endif
+
             nextPC = thisPC;
 
             // If we're branching after this instruction, quite fetching

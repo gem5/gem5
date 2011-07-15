@@ -857,6 +857,10 @@ InstructionQueue<Impl>::scheduleReadyInsts()
             issuing_inst->setIssued();
             ++total_issued;
 
+#if TRACING_ON
+            issuing_inst->issueTick = curTick();
+#endif
+
             if (!issuing_inst->isMemRef()) {
                 // Memory instructions can not be freed from the IQ until they
                 // complete.

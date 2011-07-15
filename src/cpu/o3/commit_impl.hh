@@ -58,6 +58,7 @@
 #include "debug/Commit.hh"
 #include "debug/CommitRate.hh"
 #include "debug/ExecFaulting.hh"
+#include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
 
@@ -1206,6 +1207,22 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
     // Finally clear the head ROB entry.
     rob->retireHead(tid);
+
+#if TRACING_ON
+    // Print info needed by the pipeline activity viewer.
+    DPRINTFR(O3PipeView, "O3PipeView:fetch:%llu:0x%08llx:%d:%llu:%s\n",
+             head_inst->fetchTick,
+             head_inst->instAddr(),
+             head_inst->microPC(),
+             head_inst->seqNum,
+             head_inst->staticInst->disassemble(head_inst->instAddr()));
+    DPRINTFR(O3PipeView, "O3PipeView:decode:%llu\n", head_inst->decodeTick);
+    DPRINTFR(O3PipeView, "O3PipeView:rename:%llu\n", head_inst->renameTick);
+    DPRINTFR(O3PipeView, "O3PipeView:dispatch:%llu\n", head_inst->dispatchTick);
+    DPRINTFR(O3PipeView, "O3PipeView:issue:%llu\n", head_inst->issueTick);
+    DPRINTFR(O3PipeView, "O3PipeView:complete:%llu\n", head_inst->completeTick);
+    DPRINTFR(O3PipeView, "O3PipeView:retire:%llu\n", curTick());
+#endif
 
     // If this was a store, record it for this cycle.
     if (head_inst->isStore())

@@ -1147,6 +1147,10 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
         toRename->iewInfo[tid].dispatched++;
 
         ++iewDispatchedInsts;
+
+#if TRACING_ON
+        inst->dispatchTick = curTick();
+#endif
     }
 
     if (!insts_to_dispatch.empty()) {
@@ -1617,6 +1621,10 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
         iewIewExecutedcutedInsts++;
 #else
     iewExecutedInsts++;
+#endif
+
+#if TRACING_ON
+    inst->completeTick = curTick();
 #endif
 
     //

@@ -85,6 +85,15 @@ BaseO3DynInst<Impl>::initVars()
     }
 
     _numDestMiscRegs = 0;
+
+#if TRACING_ON
+    fetchTick = 0;
+    decodeTick = 0;
+    renameTick = 0;
+    dispatchTick = 0;
+    issueTick = 0;
+    completeTick = 0;
+#endif
 }
 
 template <class Impl>

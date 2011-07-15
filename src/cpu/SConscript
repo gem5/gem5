@@ -173,6 +173,7 @@ DebugFlag('ExecKernel')
 DebugFlag('ExecAsid')
 DebugFlag('Fetch')
 DebugFlag('IntrControl')
+DebugFlag('O3PipeView')
 DebugFlag('PCEvent')
 DebugFlag('Quiesce')
 

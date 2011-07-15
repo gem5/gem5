@@ -706,6 +706,10 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         ++decodeDecodedInsts;
         --insts_available;
 
+#if TRACING_ON
+        inst->decodeTick = curTick();
+#endif
+
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
         if (inst->readPredTaken() && !inst->isControl()) {

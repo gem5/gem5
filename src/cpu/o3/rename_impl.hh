@@ -692,6 +692,10 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         ++renamed_insts;
 
+#if TRACING_ON
+        inst->renameTick = curTick();
+#endif
+
         // Put instruction in rename queue.
         toIEW->insts[toIEWIndex] = inst;
         ++(toIEW->size);
