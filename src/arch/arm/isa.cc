@@ -186,12 +186,19 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_MPIDR:
         return tc->cpuId();
         break;
+      case MISCREG_ID_MMFR0:
+        return 0x03; // VMSAv7 support
+      case MISCREG_ID_MMFR2:
+        return 0x01230000; // no HW access | WFI stalling | ISB and DSB
+                           // | all TLB maintenance | no Harvard
       case MISCREG_ID_MMFR3:
         return 0xF0102211; // SuperSec | Coherent TLB | Bcast Maint |
                            // BP Maint | Cache Maint Set/way | Cache Maint MVA
       case MISCREG_CLIDR:
         warn_once("The clidr register always reports 0 caches.\n");
-        break;
+        warn_once("clidr LoUIS field of 0b001 to match current "
+                  "ARM implementations.\n");
+        return 0x00200000;
       case MISCREG_CCSIDR:
         warn_once("The ccsidr register isn't implemented and "
                 "always reads as 0.\n");
@@ -203,8 +210,6 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
       case MISCREG_ID_PFR1:
         warn("reading unimplmented register ID_PFR1");
         return 0;
-      case MISCREG_ID_MMFR0:
-        return 0x03; //VMSAz7
       case MISCREG_CTR:
         return 0x86468006; // V7, 64 byte cache line, load/exclusive is exact
       case MISCREG_ACTLR:
