@@ -773,13 +773,16 @@ Export('export_vars')
 
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above variables
+if not GetOption('verbose'):
+    print "Reading SConsopts"
 for bdir in [ base_dir ] + extras_dir_list:
     if not isdir(bdir):
         print "Error: directory '%s' does not exist" % bdir
         Exit(1)
     for root, dirs, files in os.walk(bdir):
         if 'SConsopts' in files:
-            print "Reading", joinpath(root, 'SConsopts')
+            if GetOption('verbose'):
+                print "Reading", joinpath(root, 'SConsopts')
             SConscript(joinpath(root, 'SConsopts'))
 
 all_isa_list.sort()
