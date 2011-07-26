@@ -141,11 +141,13 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
         #
         dma_seq = DMASequencer(version = i,
                                physMemPort = system.physmem.port,
-                               physmem = system.physmem)
+                               physmem = system.physmem,
+                               ruby_system = ruby_system)
         
         dma_cntrl = DMA_Controller(version = i,
                                    cntrl_id = cntrl_count,
-                                   dma_sequencer = dma_seq)
+                                   dma_sequencer = dma_seq,
+                                   ruby_system = ruby_system)
 
         exec("system.dma_cntrl%d = dma_cntrl" % i)
         if dma_device.type == 'MemTest':
