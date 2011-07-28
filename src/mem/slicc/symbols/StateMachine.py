@@ -168,9 +168,6 @@ class StateMachine(Symbol):
         self.printProfileDumperCC(path)
         self.printProfileDumperHH(path)
 
-        for func in self.functions:
-            func.writeCodeFiles(path)
-
     def printControllerPython(self, path):
         code = self.symtab.codeFormatter()
         ident = self.ident
@@ -945,6 +942,9 @@ $c_ident::${{action.ident}}(const Address& addr)
 }
 
 ''')
+        for func in self.functions:
+            code(func.generateCode())
+
         code.write(path, "%s.cc" % c_ident)
 
     def printCWakeup(self, path):

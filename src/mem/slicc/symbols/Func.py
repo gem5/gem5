@@ -64,24 +64,15 @@ class Func(Symbol):
                                ", ".join(self.param_strings))
 
     def writeCodeFiles(self, path):
+        return
+
+    def generateCode(self):
         '''This write a function of object Chip'''
         if "external" in self:
-            return
+            return ""
 
         code = self.symtab.codeFormatter()
 
-        # Header
-        code('''
-/** Auto generated C++ code started by $__file__:$__line__ */
-
-#include "debug/RubySlicc.hh"
-#include "mem/protocol/Types.hh"
-''')
-
-        if self.isInternalMachineFunc:
-            code('#include "mem/protocol/${{self.machineStr}}_Controller.hh"')
-
-        code('using namespace std;')
         # Generate function header
         void_type = self.symtab.find("void", Type)
         return_type = self.return_type.c_ident
@@ -104,9 +95,6 @@ ${klass}::${{self.c_ident}}($params)
 ${{self.body}}
 }
 ''')
-        if self.isInternalMachineFunc:
-            code.write(path, "%s_%s.cc" % (self.machineStr,self.c_ident))
-        else:
-            code.write(path, "%s.cc" % self.c_ident)
+        return str(code)
 
 __all__ = [ "Func" ]

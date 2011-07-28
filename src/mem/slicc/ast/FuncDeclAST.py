@@ -41,14 +41,7 @@ class FuncDeclAST(DeclAST):
         return "[FuncDecl: %s]" % self.ident
 
     def files(self, parent=None):
-        if "external" in self or self.statements is None:
-            return set()
-
-        if parent:
-            ident = "%s_%s" % (parent, self.ident)
-        else:
-            ident = self.ident
-        return set(("%s.cc" % ident,))
+        return set()
 
     def generate(self):
         types = []
