@@ -1238,14 +1238,22 @@ DefaultFetch<Impl>::fetch(bool &status_change)
     unsigned blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
 
     // Loop through instruction memory from the cache.
-    // Keep issuing while we have not reached the end of the block or a
-    // macroop is active and fetchWidth is available and branch is not
+    // Keep issuing while fetchWidth is available and branch is not
     // predicted taken
-    while ((blkOffset < numInsts || curMacroop) &&
-                           numInst < fetchWidth && !predictedBranch) {
+    while (numInst < fetchWidth && !predictedBranch) {
 
-        // If we need to process more memory, do it now.
-        if (!(curMacroop || inRom) && !predecoder.extMachInstReady()) {
+        // We need to process more memory if we aren't going to get a
+        // StaticInst from the rom, the current macroop, or what's already
+        // in the predecoder.
+        bool needMem = !inRom && !curMacroop && !predecoder.extMachInstReady();
+
+        if (needMem) {
+            if (blkOffset >= numInsts) {
+                // We need to process more memory, but we've run out of the
+                // current block.
+                break;
+            }
+
             if (ISA_HAS_DELAY_SLOT && pcOffset == 0) {
                 // Walk past any annulled delay slot instructions.
                 Addr pcAddr = thisPC.instAddr() & BaseCPU::PCMask;
