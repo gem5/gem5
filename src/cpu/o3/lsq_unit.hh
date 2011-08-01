@@ -39,6 +39,7 @@
 
 #include "arch/faults.hh"
 #include "arch/locked_mem.hh"
+#include "arch/mmapped_ipr.hh"
 #include "base/fast_alloc.hh"
 #include "base/hashmap.hh"
 #include "config/full_system.hh"
@@ -576,6 +577,43 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         load_inst->recordResult = false;
         TheISA::handleLockedRead(load_inst.get(), req);
         load_inst->recordResult = true;
+    }
+
+    if (req->isMmappedIpr()) {
+        assert(!load_inst->memData);
+        load_inst->memData = new uint8_t[64];
+
+        ThreadContext *thread = cpu->tcBase(lsqID);
+        Tick delay;
+        PacketPtr data_pkt =
+            new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+
+        if (!TheISA::HasUnalignedMemAcc || !sreqLow) {
+            data_pkt->dataStatic(load_inst->memData);
+            delay = TheISA::handleIprRead(thread, data_pkt);
+        } else {
+            assert(sreqLow->isMmappedIpr() && sreqHigh->isMmappedIpr());
+            PacketPtr fst_data_pkt =
+                new Packet(sreqLow, MemCmd::ReadReq, Packet::Broadcast);
+            PacketPtr snd_data_pkt =
+                new Packet(sreqHigh, MemCmd::ReadReq, Packet::Broadcast);
+
+            fst_data_pkt->dataStatic(load_inst->memData);
+            snd_data_pkt->dataStatic(load_inst->memData + sreqLow->getSize());
+
+            delay = TheISA::handleIprRead(thread, fst_data_pkt);
+            unsigned delay2 = TheISA::handleIprRead(thread, snd_data_pkt);
+            if (delay2 > delay)
+                delay = delay2;
+
+            delete sreqLow;
+            delete sreqHigh;
+            delete fst_data_pkt;
+            delete snd_data_pkt;
+        }
+        WritebackEvent *wb = new WritebackEvent(load_inst, data_pkt, this);
+        cpu->schedule(wb, curTick() + delay);
+        return NoFault;
     }
 
     while (store_idx != -1) {

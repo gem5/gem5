@@ -716,6 +716,9 @@ LSQUnit<Impl>::writebackStores()
         DynInstPtr inst = storeQueue[storeWBIdx].inst;
 
         Request *req = storeQueue[storeWBIdx].req;
+        RequestPtr sreqLow = storeQueue[storeWBIdx].sreqLow;
+        RequestPtr sreqHigh = storeQueue[storeWBIdx].sreqHigh;
+
         storeQueue[storeWBIdx].committed = true;
 
         assert(!inst->memData);
@@ -741,9 +744,6 @@ LSQUnit<Impl>::writebackStores()
             data_pkt->dataStatic(inst->memData);
             data_pkt->senderState = state;
         } else {
-            RequestPtr sreqLow = storeQueue[storeWBIdx].sreqLow;
-            RequestPtr sreqHigh = storeQueue[storeWBIdx].sreqHigh;
-
             // Create two packets if the store is split in two.
             data_pkt = new Packet(sreqLow, command, Packet::Broadcast);
             snd_data_pkt = new Packet(sreqHigh, command, Packet::Broadcast);
@@ -794,20 +794,40 @@ LSQUnit<Impl>::writebackStores()
             state->noWB = true;
         }
 
-        if (!sendStore(data_pkt)) {
+        bool split =
+            TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit;
+
+        ThreadContext *thread = cpu->tcBase(lsqID);
+
+        if (req->isMmappedIpr()) {
+            assert(!inst->isStoreConditional());
+            TheISA::handleIprWrite(thread, data_pkt);
+            delete data_pkt;
+            if (split) {
+                assert(snd_data_pkt->req->isMmappedIpr());
+                TheISA::handleIprWrite(thread, snd_data_pkt);
+                delete snd_data_pkt;
+                delete sreqLow;
+                delete sreqHigh;
+            }
+            delete state;
+            delete req;
+            completeStore(storeWBIdx);
+            incrStIdx(storeWBIdx);
+        } else if (!sendStore(data_pkt)) {
             DPRINTF(IEW, "D-Cache became blocked when writing [sn:%lli], will"
                     "retry later\n",
                     inst->seqNum);
 
             // Need to store the second packet, if split.
-            if (TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit) {
+            if (split) {
                 state->pktToSend = true;
                 state->pendingPacket = snd_data_pkt;
             }
         } else {
 
             // If split, try to send the second packet too
-            if (TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit) {
+            if (split) {
                 assert(snd_data_pkt);
 
                 // Ensure there are enough ports to use.
