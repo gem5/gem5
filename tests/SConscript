@@ -289,16 +289,6 @@ else:
                 'inorder-timing', 'rubytest']
 
 if env['RUBY']:
-    # With Ruby, A protocol must be specified in the environment
-    assert(env['PROTOCOL'])
-
-    #
-    # Is there a way to determine what is Protocol EnumVariable
-    # default and eliminate the need to hard code the default protocol below?
-    #
-    # If the binary includes the default ruby protocol, run both ruby and
-    # non-ruby versions of the tests.  Otherwise just run the ruby versions.
-    #
     if env['PROTOCOL'] == 'MI_example':
         configs += [c + "-ruby" for c in configs]
     else:

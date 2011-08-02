@@ -71,13 +71,12 @@ parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
 parser.add_option("--output", default="", help="Redirect stdout to a file.")
 parser.add_option("--errout", default="", help="Redirect stderr to a file.")
 
-if 'PROTOCOL' in buildEnv:
-    parser.add_option("--ruby", action="store_true")
-
 execfile(os.path.join(config_root, "common", "Options.py"))
 
-if '--ruby' in sys.argv:
-    Ruby.define_options(parser)
+if buildEnv['PROTOCOL'] != 'None':
+    parser.add_option("--ruby", action="store_true")
+    if '--ruby' in sys.argv:
+        Ruby.define_options(parser)
 
 (options, args) = parser.parse_args()
 

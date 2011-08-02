@@ -34,24 +34,15 @@ Import('*')
 
 all_protocols = [
     'MESI_CMP_directory',
-    'MESI_SCMP_bankdirectory',
-    'MESI_SCMP_bankdirectory_m',
     'MI_example',
     'MOESI_CMP_directory',
-    'MOESI_CMP_directory_m',
     'MOESI_CMP_token',
-    'MOESI_SMP_directory',
-    'MOESI_SMP_token',
-    'MOSI_SMP_bcast',
-    'MOSI_SMP_bcast_1level',
-    'MOSI_SMP_bcast_m',
-    'MOSI_SMP_directory_1level',
-    'MSI_MOSI_CMP_directory',
     'MOESI_hammer',
     'Network_test',
+    'None'
     ]
 
-opt = EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'MI_example',
+opt = EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
                    all_protocols)
 
 sticky_vars.AddVariables(opt)
