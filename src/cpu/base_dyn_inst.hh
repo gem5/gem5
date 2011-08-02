@@ -380,16 +380,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     BaseDynInst(StaticInstPtr staticInst, TheISA::PCState pc,
                 TheISA::PCState predPC, InstSeqNum seq_num, ImplCPU *cpu);
 
-    /** BaseDynInst constructor given a binary instruction.
-     *  @param inst The binary instruction.
-     *  @param _pc The PC state for the instruction.
-     *  @param _predPC The predicted next PC state for the instruction.
-     *  @param seq_num The sequence number of the instruction.
-     *  @param cpu Pointer to the instruction's CPU.
-     */
-    BaseDynInst(TheISA::ExtMachInst inst, TheISA::PCState pc,
-                TheISA::PCState predPC, InstSeqNum seq_num, ImplCPU *cpu);
-
     /** BaseDynInst constructor given a StaticInst pointer.
      *  @param _staticInst The StaticInst for this BaseDynInst.
      */

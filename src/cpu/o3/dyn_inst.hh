@@ -90,11 +90,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
                   TheISA::PCState pc, TheISA::PCState predPC,
                   InstSeqNum seq_num, O3CPU *cpu);
 
-    /** BaseDynInst constructor given a binary instruction. */
-    BaseO3DynInst(ExtMachInst inst,
-                  TheISA::PCState pc, TheISA::PCState predPC,
-                  InstSeqNum seq_num, O3CPU *cpu);
-
     /** BaseDynInst constructor given a static inst pointer. */
     BaseO3DynInst(StaticInstPtr &_staticInst);
 

@@ -90,21 +90,6 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
 }
 
 template <class Impl>
-BaseDynInst<Impl>::BaseDynInst(TheISA::ExtMachInst inst,
-                               TheISA::PCState _pc, TheISA::PCState _predPC,
-                               InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(inst, _pc.instAddr()), traceData(NULL), cpu(cpu)
-{
-    seqNum = seq_num;
-
-    pc = _pc;
-    predPC = _predPC;
-    predTaken = false;
-
-    initVars();
-}
-
-template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(StaticInstPtr &_staticInst)
     : staticInst(_staticInst), traceData(NULL)
 {

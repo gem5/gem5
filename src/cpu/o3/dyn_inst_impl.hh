@@ -53,15 +53,6 @@ BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr staticInst,
 }
 
 template <class Impl>
-BaseO3DynInst<Impl>::BaseO3DynInst(ExtMachInst inst,
-                                   TheISA::PCState pc, TheISA::PCState predPC,
-                                   InstSeqNum seq_num, O3CPU *cpu)
-    : BaseDynInst<Impl>(inst, pc, predPC, seq_num, cpu)
-{
-    initVars();
-}
-
-template <class Impl>
 BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr &_staticInst)
     : BaseDynInst<Impl>(_staticInst)
 {

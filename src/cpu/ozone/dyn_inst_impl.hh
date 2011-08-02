@@ -47,14 +47,6 @@ OzoneDynInst<Impl>::OzoneDynInst(OzoneCPU *cpu)
 }
 
 template <class Impl>
-OzoneDynInst<Impl>::OzoneDynInst(ExtMachInst inst, Addr PC, Addr Pred_PC,
-                                 InstSeqNum seq_num, OzoneCPU *cpu)
-    : BaseDynInst<Impl>(inst, PC, Pred_PC, seq_num, cpu)
-{
-    initInstPtrs();
-}
-
-template <class Impl>
 OzoneDynInst<Impl>::OzoneDynInst(StaticInstPtr _staticInst)
     : BaseDynInst<Impl>(_staticInst)
 {
