@@ -86,7 +86,8 @@ def MakeIncludeAction(target, source, env):
 
 def MakeInclude(source):
     target = generated_dir.File(basename(source))
-    env.Command(target, source, MakeIncludeAction)
+    include_action = MakeAction(MakeIncludeAction, Transform("MAKE INC", 1))
+    env.Command(target, source, include_action)
 
 MakeInclude('slicc_interface/AbstractEntry.hh')
 MakeInclude('slicc_interface/AbstractCacheEntry.hh')

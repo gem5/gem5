@@ -835,13 +835,8 @@ def build_config_file(target, source, env):
     f.close()
     return None
 
-# Generate the message to be printed when building the config file.
-def build_config_file_string(target, source, env):
-    (variable, value) = [s.get_contents() for s in source]
-    return "Defining %s as %s in %s." % (variable, value, target[0])
-
 # Combine the two functions into a scons Action object.
-config_action = Action(build_config_file, build_config_file_string)
+config_action = MakeAction(build_config_file, Transform("CONFIG H", 2))
 
 # The emitter munges the source & target node lists to reflect what
 # we're really doing.
