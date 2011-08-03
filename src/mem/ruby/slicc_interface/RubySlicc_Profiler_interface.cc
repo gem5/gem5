@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/protocol/Protocol.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
@@ -35,17 +34,6 @@
 #include "mem/ruby/system/System.hh"
 
 using namespace std;
-
-void
-profile_request(int cache_state, Directory_State directory_state,
-                GenericRequestType request_type)
-{
-    string requestStr = L1Cache_State_to_string(L1Cache_State(cache_state))+
-        ":" +
-        Directory_State_to_string(directory_state) + ":" +
-        GenericRequestType_to_string(request_type);
-    g_system_ptr->getProfiler()->profileRequest(requestStr);
-}
 
 void
 profile_request(const string& L1CacheState, const string& L2CacheState,

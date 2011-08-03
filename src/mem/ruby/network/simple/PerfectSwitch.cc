@@ -29,7 +29,6 @@
 #include <algorithm>
 
 #include "debug/RubyNetwork.hh"
-#include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"

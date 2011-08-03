@@ -36,9 +36,6 @@
 #include <string>
 
 #include "mem/protocol/AccessType.hh"
-#include "mem/protocol/Directory_State.hh"
-#include "mem/protocol/GenericRequestType.hh"
-#include "mem/protocol/L1Cache_State.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/Profiler.hh"
@@ -46,8 +43,6 @@
 
 class Set;
 
-void profile_request(int cache_state, Directory_State directory_state,
-                     GenericRequestType request_type);
 void profile_outstanding_persistent_request(int outstanding);
 void profile_outstanding_request(int outstanding);
 void profile_sharing(const Address& addr, AccessType type, NodeID requestor,

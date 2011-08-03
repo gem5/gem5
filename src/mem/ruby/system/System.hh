@@ -44,7 +44,6 @@
 #include "sim/sim_object.hh"
 
 class AbstractController;
-class AbstractMemory;
 class CacheRecorder;
 class MemoryVector;
 class Network;
@@ -134,7 +133,6 @@ class RubySystem : public SimObject
     void registerNetwork(Network*);
     void registerProfiler(Profiler*);
     void registerTracer(Tracer*);
-    void registerAbstractMemory(AbstractMemory*);
     void registerAbstractController(AbstractController*);
 
   private:

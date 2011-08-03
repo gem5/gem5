@@ -184,34 +184,6 @@ DirectoryMemory::lookup(PhysAddress address)
     return *entry;
 }
 
-#if 0
-Directory_Entry&
-DirectoryMemory::lookup(PhysAddress address)
-{
-    assert(isPresent(address));
-    Index index = address.memoryModuleIndex();
-
-    if (index < 0 || index > m_size) {
-        WARN_EXPR(address.getAddress());
-        WARN_EXPR(index);
-        WARN_EXPR(m_size);
-        ERROR_MSG("Directory Memory Assertion: accessing memory out of range");
-    }
-    Directory_Entry* entry = m_entries[index];
-
-    // allocate the directory entry on demand.
-    if (entry == NULL) {
-        entry = new Directory_Entry;
-        entry->getDataBlk().assign(m_ram->getBlockPtr(address));
-
-        // store entry to the table
-        m_entries[index] = entry;
-    }
-
-    return *entry;
-}
-#endif
-
 void
 DirectoryMemory::invalidateBlock(PhysAddress address)
 {

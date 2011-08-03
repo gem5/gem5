@@ -36,9 +36,7 @@
 #include <cassert>
 
 #include "mem/protocol/AccessType.hh"
-#include "mem/protocol/Directory_State.hh"
 #include "mem/protocol/GenericRequestType.hh"
-#include "mem/protocol/L1Cache_State.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/protocol/PrefetchBit.hh"
@@ -67,12 +65,6 @@ multicast_retry()
     } else {
         return true;
     }
-}
-
-inline int
-cache_state_to_int(L1Cache_State state)
-{
-    return state;
 }
 
 inline Time

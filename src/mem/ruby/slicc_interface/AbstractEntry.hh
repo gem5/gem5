@@ -66,4 +66,3 @@ operator<<(std::ostream& out, const AbstractEntry& obj)
 }
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTENTRY_HH__
-

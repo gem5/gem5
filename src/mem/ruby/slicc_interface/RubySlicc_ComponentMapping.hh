@@ -34,7 +34,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/NetDest.hh"
-#include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/system/MachineID.hh"
 #include "mem/ruby/system/NodeID.hh"

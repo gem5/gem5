@@ -130,7 +130,6 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   MessageBuffer mandatoryQueue, ordered="false";
 
-  int cache_state_to_int(State state);
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
   void set_cache_entry(AbstractCacheEntry a);

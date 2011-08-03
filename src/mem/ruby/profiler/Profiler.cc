@@ -52,7 +52,6 @@
 #include "base/stl_helpers.hh"
 #include "base/str.hh"
 #include "mem/protocol/MachineType.hh"
-#include "mem/protocol/Protocol.hh"
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"

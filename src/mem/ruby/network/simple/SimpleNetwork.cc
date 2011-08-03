@@ -31,7 +31,6 @@
 
 #include "base/stl_helpers.hh"
 #include "mem/protocol/MachineType.hh"
-#include "mem/protocol/Protocol.hh"
 #include "mem/protocol/TopologyType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
