@@ -474,9 +474,6 @@ class FullO3CPU : public BaseO3CPU
     /** Function to tell the CPU that an instruction has completed. */
     void instDone(ThreadID tid);
 
-    /** Add Instructions to the CPU Remove List*/
-    void addToRemoveList(DynInstPtr &inst);
-
     /** Remove an instruction from the front end of the list.  There's
      *  no restriction on location of the instruction.
      */

@@ -1420,15 +1420,6 @@ FullO3CPU<Impl>::instDone(ThreadID tid)
 
 template <class Impl>
 void
-FullO3CPU<Impl>::addToRemoveList(DynInstPtr &inst)
-{
-    removeInstsThisCycle = true;
-
-    removeList.push(inst->getInstListIt());
-}
-
-template <class Impl>
-void
 FullO3CPU<Impl>::removeFrontInst(DynInstPtr &inst)
 {
     DPRINTF(O3CPU, "Removing committed instruction [tid:%i] PC %s "
