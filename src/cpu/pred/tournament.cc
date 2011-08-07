@@ -221,6 +221,7 @@ TournamentBP::uncondBr(void * &bp_history)
     history->globalHistory = globalHistory;
     history->localPredTaken = true;
     history->globalPredTaken = true;
+    history->globalUsed = true;
     bp_history = static_cast<void *>(history);
 
     updateGlobalHistTaken();
