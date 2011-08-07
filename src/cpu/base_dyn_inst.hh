@@ -91,6 +91,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     // The DynInstPtr type.
     typedef typename Impl::DynInstPtr DynInstPtr;
+    typedef RefCountingPtr<BaseDynInst<Impl> > BaseDynInstPtr;
 
     // The list of instructions iterator type.
     typedef typename std::list<DynInstPtr>::iterator ListIt;
@@ -950,8 +951,8 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
             new WholeTranslationState(req, NULL, res, mode);
 
         // One translation if the request isn't split.
-        DataTranslation<BaseDynInst<Impl> > *trans =
-            new DataTranslation<BaseDynInst<Impl> >(this, state);
+        DataTranslation<BaseDynInstPtr> *trans =
+            new DataTranslation<BaseDynInstPtr>(this, state);
         cpu->dtb->translateTiming(req, thread->getTC(), trans, mode);
         if (!translationCompleted) {
             // Save memory requests.
@@ -964,10 +965,10 @@ BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
             new WholeTranslationState(req, sreqLow, sreqHigh, NULL, res, mode);
 
         // Two translations when the request is split.
-        DataTranslation<BaseDynInst<Impl> > *stransLow =
-            new DataTranslation<BaseDynInst<Impl> >(this, state, 0);
-        DataTranslation<BaseDynInst<Impl> > *stransHigh =
-            new DataTranslation<BaseDynInst<Impl> >(this, state, 1);
+        DataTranslation<BaseDynInstPtr> *stransLow =
+            new DataTranslation<BaseDynInstPtr>(this, state, 0);
+        DataTranslation<BaseDynInstPtr> *stransHigh =
+            new DataTranslation<BaseDynInstPtr>(this, state, 1);
 
         cpu->dtb->translateTiming(sreqLow, thread->getTC(), stransLow, mode);
         cpu->dtb->translateTiming(sreqHigh, thread->getTC(), stransHigh, mode);

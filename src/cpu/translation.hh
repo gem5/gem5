@@ -214,21 +214,21 @@ class WholeTranslationState
  * translation state class indicate that the whole translation is complete
  * then the execution context is informed.
  */
-template <class ExecContext>
+template <class ExecContextPtr>
 class DataTranslation : public BaseTLB::Translation
 {
   protected:
-    ExecContext *xc;
+    ExecContextPtr xc;
     WholeTranslationState *state;
     int index;
 
   public:
-    DataTranslation(ExecContext *_xc, WholeTranslationState* _state)
+    DataTranslation(ExecContextPtr _xc, WholeTranslationState* _state)
         : xc(_xc), state(_state), index(0)
     {
     }
 
-    DataTranslation(ExecContext *_xc, WholeTranslationState* _state,
+    DataTranslation(ExecContextPtr _xc, WholeTranslationState* _state,
                     int _index)
         : xc(_xc), state(_state), index(_index)
     {

@@ -461,18 +461,18 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
         WholeTranslationState *state =
             new WholeTranslationState(req, req1, req2, new uint8_t[size],
                                       NULL, mode);
-        DataTranslation<TimingSimpleCPU> *trans1 =
-            new DataTranslation<TimingSimpleCPU>(this, state, 0);
-        DataTranslation<TimingSimpleCPU> *trans2 =
-            new DataTranslation<TimingSimpleCPU>(this, state, 1);
+        DataTranslation<TimingSimpleCPU *> *trans1 =
+            new DataTranslation<TimingSimpleCPU *>(this, state, 0);
+        DataTranslation<TimingSimpleCPU *> *trans2 =
+            new DataTranslation<TimingSimpleCPU *>(this, state, 1);
 
         thread->dtb->translateTiming(req1, tc, trans1, mode);
         thread->dtb->translateTiming(req2, tc, trans2, mode);
     } else {
         WholeTranslationState *state =
             new WholeTranslationState(req, new uint8_t[size], NULL, mode);
-        DataTranslation<TimingSimpleCPU> *translation
-            = new DataTranslation<TimingSimpleCPU>(this, state);
+        DataTranslation<TimingSimpleCPU *> *translation
+            = new DataTranslation<TimingSimpleCPU *>(this, state);
         thread->dtb->translateTiming(req, tc, translation, mode);
     }
 
@@ -530,18 +530,18 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
 
         WholeTranslationState *state =
             new WholeTranslationState(req, req1, req2, newData, res, mode);
-        DataTranslation<TimingSimpleCPU> *trans1 =
-            new DataTranslation<TimingSimpleCPU>(this, state, 0);
-        DataTranslation<TimingSimpleCPU> *trans2 =
-            new DataTranslation<TimingSimpleCPU>(this, state, 1);
+        DataTranslation<TimingSimpleCPU *> *trans1 =
+            new DataTranslation<TimingSimpleCPU *>(this, state, 0);
+        DataTranslation<TimingSimpleCPU *> *trans2 =
+            new DataTranslation<TimingSimpleCPU *>(this, state, 1);
 
         thread->dtb->translateTiming(req1, tc, trans1, mode);
         thread->dtb->translateTiming(req2, tc, trans2, mode);
     } else {
         WholeTranslationState *state =
             new WholeTranslationState(req, newData, res, mode);
-        DataTranslation<TimingSimpleCPU> *translation =
-            new DataTranslation<TimingSimpleCPU>(this, state);
+        DataTranslation<TimingSimpleCPU *> *translation =
+            new DataTranslation<TimingSimpleCPU *>(this, state);
         thread->dtb->translateTiming(req, tc, translation, mode);
     }
 
