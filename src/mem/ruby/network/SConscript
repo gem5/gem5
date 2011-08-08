@@ -30,7 +30,7 @@
 
 Import('*')
 
-if not env['RUBY']:
+if env['PROTOCOL'] == 'None':
     Return()
 
 SimObject('BasicLink.py')

@@ -979,11 +979,6 @@ for variant_path in variant_paths:
     if env['USE_SSE2']:
         env.Append(CCFLAGS=['-msse2'])
 
-    if env['PROTOCOL'] != 'None':
-        env['RUBY'] = True
-    else:
-        env['RUBY'] = False
-
     # The src/SConscript file sets up the build rules in 'env' according
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)

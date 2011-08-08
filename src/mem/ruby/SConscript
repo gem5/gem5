@@ -40,7 +40,7 @@ Import('*')
 if env['TARGET_ISA'] == 'no':
     Return()
 
-if not env['RUBY']:
+if env['PROTOCOL'] == 'None':
     Return()
 
 def do_embed_text(target, source, env):

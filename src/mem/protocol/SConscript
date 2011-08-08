@@ -38,7 +38,7 @@ from SCons.Scanner import Classic
 
 Import('*')
 
-if not env['RUBY']:
+if env['PROTOCOL'] == 'None':
     Return()
 
 protocol_dir = Dir('.')

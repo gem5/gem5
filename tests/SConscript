@@ -288,7 +288,7 @@ else:
                 'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp',
                 'inorder-timing', 'rubytest']
 
-if env['RUBY']:
+if env['PROTOCOL'] != 'None':
     if env['PROTOCOL'] == 'MI_example':
         configs += [c + "-ruby" for c in configs]
     else:
