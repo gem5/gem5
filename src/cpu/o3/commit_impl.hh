@@ -714,9 +714,9 @@ DefaultCommit<Impl>::handleInterrupt()
         return;
     }
 
-    // Wait until the ROB is empty and all stores have drained in
-    // order to enter the interrupt.
-    if (rob->isEmpty() && !iewStage->hasStoresToWB()) {
+    // Wait until all in flight instructions are finished before enterring
+    // the interrupt.
+    if (cpu->instList.empty()) {
         // Squash or record that I need to squash this cycle if
         // an interrupt needed to be handled.
         DPRINTF(Commit, "Interrupt detected.\n");
