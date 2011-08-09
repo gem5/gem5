@@ -1301,6 +1301,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                     break;
                 }
             }
+            // Whether we're moving to a new macroop because we're at the
+            // end of the current one, or the branch predictor incorrectly
+            // thinks we are...
+            bool newMacro = false;
             if (curMacroop || inRom) {
                 if (inRom) {
                     staticInst = cpu->microcodeRom.fetchMicroop(
@@ -1308,10 +1312,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 } else {
                     staticInst = curMacroop->fetchMicroop(thisPC.microPC());
                 }
-                if (staticInst->isLastMicroop()) {
-                    curMacroop = NULL;
-                    pcOffset = 0;
-                }
+                newMacro |= staticInst->isLastMicroop();
             }
 
             DynInstPtr instruction =
@@ -1335,8 +1336,15 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 DPRINTF(Fetch, "Branch detected with PC = %s\n", thisPC);
             }
 
+            newMacro |= thisPC.instAddr() != nextPC.instAddr();
+
             // Move to the next instruction, unless we have a branch.
             thisPC = nextPC;
+
+            if (newMacro) {
+                pcOffset = 0;
+                curMacroop = NULL;
+            }
 
             if (instruction->isQuiesce()) {
                 DPRINTF(Fetch,
