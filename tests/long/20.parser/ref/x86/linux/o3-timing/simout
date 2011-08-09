@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 29 2011 20:26:37
-gem5 started Jul 29 2011 20:48:01
-gem5 executing on chips
+gem5 compiled Aug  9 2011 03:42:03
+gem5 started Aug  9 2011 03:42:10
+gem5 executing on burrito
 command line: build/X86_SE/gem5.opt -d build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/long/20.parser/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -77,4 +77,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 589091030500 because target called exit()
+Exiting @ tick 589090675500 because target called exit()
