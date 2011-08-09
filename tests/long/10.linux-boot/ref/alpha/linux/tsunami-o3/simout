@@ -1,12 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  8 2011 15:02:59
-gem5 started Jul  8 2011 18:21:28
-gem5 executing on u200439-lin.austin.arm.com
+gem5 compiled Aug  9 2011 03:11:31
+gem5 started Aug  9 2011 03:11:36
+gem5 executing on burrito
 command line: build/ALPHA_FS/gem5.opt -d build/ALPHA_FS/tests/opt/long/10.linux-boot/alpha/linux/tsunami-o3 -re tests/run.py build/ALPHA_FS/tests/opt/long/10.linux-boot/alpha/linux/tsunami-o3
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /chips/pd/randd/dist/binaries/vmlinux
+info: kernel located at: /dist/m5/system/binaries/vmlinux
       0: system.tsunami.io.rtc: Real-time clock set to Thu Jan  1 00:00:00 2009
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 1860642398500 because m5_exit instruction encountered
+Exiting @ tick 1858690543500 because m5_exit instruction encountered
