@@ -281,7 +281,8 @@ if env['FULL_SYSTEM']:
                     'realview-o3']
     if env['TARGET_ISA'] == 'x86':
         configs += ['pc-simple-atomic',
-                    'pc-simple-timing']
+                    'pc-simple-timing',
+                    'pc-o3-timing']
 
 else:
     configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
