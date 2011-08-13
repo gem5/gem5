@@ -1342,6 +1342,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             thisPC = nextPC;
 
             if (newMacro) {
+                fetchAddr = thisPC.instAddr() & BaseCPU::PCMask;
+                blkOffset = (fetchAddr - cacheDataPC[tid]) / instSize;
                 pcOffset = 0;
                 curMacroop = NULL;
             }
