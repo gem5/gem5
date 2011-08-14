@@ -1097,7 +1097,7 @@ DefaultFetch<Impl>::buildInst(ThreadID tid, StaticInstPtr staticInst,
 
     // Create a new DynInst from the instruction fetched.
     DynInstPtr instruction =
-        new DynInst(staticInst, thisPC, nextPC, seq, cpu);
+        new DynInst(staticInst, curMacroop, thisPC, nextPC, seq, cpu);
     instruction->setTid(tid);
 
     instruction->setASID(tid);

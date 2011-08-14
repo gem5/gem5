@@ -76,9 +76,10 @@ my_hash_t thishash;
 
 template <class Impl>
 BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
+                               StaticInstPtr _macroop,
                                TheISA::PCState _pc, TheISA::PCState _predPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(_staticInst), traceData(NULL), cpu(cpu)
+  : staticInst(_staticInst), macroop(_macroop), traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
 
@@ -90,8 +91,9 @@ BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
 }
 
 template <class Impl>
-BaseDynInst<Impl>::BaseDynInst(StaticInstPtr &_staticInst)
-    : staticInst(_staticInst), traceData(NULL)
+BaseDynInst<Impl>::BaseDynInst(StaticInstPtr _staticInst,
+                               StaticInstPtr _macroop)
+    : staticInst(_staticInst), macroop(_macroop), traceData(NULL)
 {
     seqNum = 0;
     initVars();

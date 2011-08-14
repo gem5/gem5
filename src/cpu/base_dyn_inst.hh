@@ -103,6 +103,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     /** The StaticInst used by this BaseDynInst. */
     StaticInstPtr staticInst;
+    StaticInstPtr macroop;
 
     ////////////////////////////////////////////
     //
@@ -378,13 +379,14 @@ class BaseDynInst : public FastAlloc, public RefCounted
      *  @param seq_num The sequence number of the instruction.
      *  @param cpu Pointer to the instruction's CPU.
      */
-    BaseDynInst(StaticInstPtr staticInst, TheISA::PCState pc,
-                TheISA::PCState predPC, InstSeqNum seq_num, ImplCPU *cpu);
+    BaseDynInst(StaticInstPtr staticInst, StaticInstPtr macroop,
+                TheISA::PCState pc, TheISA::PCState predPC,
+                InstSeqNum seq_num, ImplCPU *cpu);
 
     /** BaseDynInst constructor given a StaticInst pointer.
      *  @param _staticInst The StaticInst for this BaseDynInst.
      */
-    BaseDynInst(StaticInstPtr &_staticInst);
+    BaseDynInst(StaticInstPtr staticInst, StaticInstPtr macroop);
 
     /** BaseDynInst destructor. */
     ~BaseDynInst();
