@@ -616,7 +616,7 @@ Sequencer::issueRequest(const RubyRequest& request)
 {
     // TODO: Eliminate RubyRequest being copied again.
 
-    RubyRequestType ctype;
+    RubyRequestType ctype = RubyRequestType_NUM;
     switch(request.m_Type) {
       case RubyRequestType_IFETCH:
         ctype = RubyRequestType_IFETCH;
@@ -657,7 +657,7 @@ Sequencer::issueRequest(const RubyRequest& request)
         assert(0);
     }
 
-    RubyAccessMode amtype;
+    RubyAccessMode amtype = RubyAccessMode_NUM;
     switch(request.m_AccessMode){
       case RubyAccessMode_User:
         amtype = RubyAccessMode_User;

@@ -56,6 +56,7 @@ RubyPort::RubyPort(const Params *p)
     access_phys_mem = p->access_phys_mem;
 
     ruby_system = p->ruby_system;
+    waitingOnSequencer = false;
 }
 
 void
