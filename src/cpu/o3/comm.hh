@@ -135,6 +135,7 @@ struct TimeBufStruct {
         bool branchTaken;
         Addr mispredPC;
         TheISA::PCState nextPC;
+        DynInstPtr squashInst;
         unsigned branchCount;
     };
 

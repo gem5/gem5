@@ -280,6 +280,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, ThreadID tid)
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
     toFetch->decodeInfo[tid].nextPC = inst->branchTarget();
     toFetch->decodeInfo[tid].branchTaken = inst->pcState().branching();
+    toFetch->decodeInfo[tid].squashInst = inst;
 
     InstSeqNum squash_seq_num = inst->seqNum;
 

@@ -746,14 +746,18 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
 
 template <class Impl>
 inline void
-DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC, ThreadID tid)
+DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
+                             const DynInstPtr squashInst, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i]: Squashing, setting PC to: %s.\n",
             tid, newPC);
 
     pc[tid] = newPC;
     fetchOffset[tid] = 0;
-    macroop[tid] = NULL;
+    if (squashInst && squashInst->pcState().instAddr() == newPC.instAddr())
+        macroop[tid] = squashInst->macroop;
+    else
+        macroop[tid] = NULL;
     predecoder.reset();
 
     // Clear the icache miss if it's outstanding.
@@ -786,11 +790,12 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC, ThreadID tid)
 template<class Impl>
 void
 DefaultFetch<Impl>::squashFromDecode(const TheISA::PCState &newPC,
-                                     const InstSeqNum &seq_num, ThreadID tid)
+                                     const DynInstPtr squashInst,
+                                     const InstSeqNum seq_num, ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%i]: Squashing from decode.\n", tid);
 
-    doSquash(newPC, tid);
+    doSquash(newPC, squashInst, tid);
 
     // Tell the CPU to remove any instructions that are in flight between
     // fetch and decode.
@@ -866,12 +871,12 @@ DefaultFetch<Impl>::updateFetchStatus()
 template <class Impl>
 void
 DefaultFetch<Impl>::squash(const TheISA::PCState &newPC,
-                           const InstSeqNum &seq_num, DynInstPtr &squashInst,
+                           const InstSeqNum seq_num, DynInstPtr squashInst,
                            ThreadID tid)
 {
     DPRINTF(Fetch, "[tid:%u]: Squash from commit.\n", tid);
 
-    doSquash(newPC, tid);
+    doSquash(newPC, squashInst, tid);
 
     // Tell the CPU to remove any instructions that are not in the ROB.
     cpu->removeInstsNotInROB(tid);
@@ -1052,6 +1057,7 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
             DPRINTF(Fetch, "Squashing from decode with PC = %s\n", nextPC);
             // Squash unless we're already squashing
             squashFromDecode(fromDecode->decodeInfo[tid].nextPC,
+                             fromDecode->decodeInfo[tid].squashInst,
                              fromDecode->decodeInfo[tid].doneSeqNum,
                              tid);
 
