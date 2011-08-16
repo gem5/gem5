@@ -38,6 +38,7 @@
 #include <queue>
 
 #include "arch/faults.hh"
+#include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
 #include "arch/mmapped_ipr.hh"
 #include "base/fast_alloc.hh"
