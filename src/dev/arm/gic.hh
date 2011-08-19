@@ -227,6 +227,10 @@ class Gic : public PioDevice
     int intNumToWord(int num) const { return num >> 5; }
     int intNumToBit(int num) const { return num % 32; }
 
+    /** Post an interrupt to a CPU
+     */
+    void postInt(uint32_t cpu, Tick when);
+
     /** Event definition to post interrupt to CPU after a delay
     */
     class PostIntEvent : public Event
@@ -300,10 +304,6 @@ class Gic : public PioDevice
      * Depending on the configuration, the gic may de-assert it's cpu line
      * @param number number of interrupt to send */
     void clearInt(uint32_t number);
-
-    /** Post an interrupt to a CPU
-     */
-    void postInt(uint32_t cpu, Tick when);
 
     /* Various functions fer testing and debugging */
     void driveSPI(uint32_t spi);
