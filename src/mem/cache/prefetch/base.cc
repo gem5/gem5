@@ -139,25 +139,25 @@ BasePrefetcher::getPacket()
     }
 
     PacketPtr pkt;
-    bool keep_trying = false;
-    do {
+    while (!pf.empty()) {
         pkt = *pf.begin();
         pf.pop_front();
 
-        if (keep_trying) {
-            DPRINTF(HWPrefetch, "addr 0x%x in cache, skipping\n",
-                    pkt->getAddr());
-            delete pkt->req;
-            delete pkt;
-        }
+        Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
+
+        if (!inCache(blk_addr) && !inMissQueue(blk_addr))
+            // we found a prefetch, return it
+            break;
+
+        DPRINTF(HWPrefetch, "addr 0x%x in cache, skipping\n", pkt->getAddr());
+        delete pkt->req;
+        delete pkt;
 
         if (pf.empty()) {
             cache->deassertMemSideBusRequest(BaseCache::Request_PF);
-            if (keep_trying) {
-                return NULL; // None left, all were in cache
-            }
+            return NULL; // None left, all were in cache
         }
-    } while (keep_trying);
+    }
 
     pfIssued++;
     assert(pkt != NULL);

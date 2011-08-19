@@ -1443,6 +1443,10 @@ Cache<TagStore>::getNextMSHR()
                 mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
                 // Don't request bus, since we already have it
                 return allocateMissBuffer(pkt, curTick(), false);
+            } else {
+                // free the request and packet
+                delete pkt->req;
+                delete pkt;
             }
         }
     }

@@ -118,6 +118,9 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                 }
             }
             DPRINTF(HWPrefetch, "  replacing PC %x\n", (*min_pos)->instAddr);
+
+            // free entry and delete it
+            delete *min_pos;
             tab.erase(min_pos);
         }
 
