@@ -210,8 +210,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         self.realview = RealViewPBX()
     elif machine_type == "RealView_EB":
         self.realview = RealViewEB()
-    elif machine_type == "VersatileExpress":
-        self.realview = VExpress()
+    elif machine_type == "VExpress_ELT":
+        self.realview = VExpress_ELT()
     else:
         print "Unknown Machine Type"
         sys.exit(1)
@@ -221,8 +221,12 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         use_cf = True
         self.cf0 = CowIdeDisk(driveID='master')
         self.cf0.childImage(mdesc.disk())
-        self.realview.cf_ctrl.disks = [self.cf0]
-
+        # default to an IDE controller rather than a CF one
+        # assuming we've got one
+        try:
+            self.realview.ide.disks = [self.cf0]
+        except:
+            self.realview.cf_ctrl.disks = [self.cf0]
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
@@ -261,7 +265,6 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     self.physmem.port = self.membus.port
     self.realview.attachOnChipIO(self.membus)
     self.realview.attachIO(self.iobus)
-
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
     self.vncserver = VncServer()

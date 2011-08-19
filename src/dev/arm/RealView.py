@@ -43,6 +43,8 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr, DmaDevice
+from Pci import PciConfigAll
+from Ethernet import NSGigE, IGbE_e1000, IGbE_igb
 from Ide import *
 from Platform import Platform
 from Terminal import Terminal
@@ -132,6 +134,7 @@ class Pl111(AmbaDmaDevice):
 class RealView(Platform):
     type = 'RealView'
     system = Param.System(Parent.any, "system")
+    pci_cfg_base = Param.Addr(0, "Base address of PCI Configuraiton Space")
 
 # Reference for memory map and interrupt number
 # RealView Platform Baseboard Explore for Cortex-A9 User Guide(ARM DUI 0440A)
@@ -147,7 +150,7 @@ class RealViewPBX(RealView):
     kmi0   = Pl050(pio_addr=0x10006000, int_num=52)
     kmi1   = Pl050(pio_addr=0x10007000, int_num=53, is_mouse=True)
     a9scu  = A9SCU(pio_addr=0x1f000000)
-    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=0,
+    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=7, pci_bus=2,
                             io_shift = 1, ctrl_offset = 2, Command = 0x1,
                             BAR0 = 0x18000000, BAR0Size = '16B',
                             BAR1 = 0x18000100, BAR1Size = '1B',
@@ -279,7 +282,8 @@ class RealViewEB(RealView):
        self.flash_fake.pio    = bus.port
        self.smcreg_fake.pio   = bus.port
 
-class VExpress(RealView):
+class VExpress_ELT(RealView):
+    pci_cfg_base = 0xD0000000
     elba_uart = Pl011(pio_addr=0xE0009000, int_num=42)
     uart = Pl011(pio_addr=0xFF009000, int_num=121)
     realview_io = RealViewCtrl(proc_id0=0x0C000222, pio_addr=0xFF000000)
@@ -295,11 +299,18 @@ class VExpress(RealView):
     elba_kmi0   = Pl050(pio_addr=0xE0006000, int_num=52)
     elba_kmi1   = Pl050(pio_addr=0xE0007000, int_num=53)
     a9scu  = A9SCU(pio_addr=0xE0200000)
-    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=0,
+    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
                             io_shift = 2, ctrl_offset = 2, Command = 0x1,
                             BAR0 = 0xFF01A000, BAR0Size = '256B',
                             BAR1 = 0xFF01A100, BAR1Size = '4096B',
                             BAR0LegacyIO = True, BAR1LegacyIO = True)
+
+    pciconfig = PciConfigAll()
+    ethernet = IGbE_e1000(pci_bus=0, pci_dev=0, pci_func=0,
+                          InterruptLine=1, InterruptPin=1)
+
+    ide = IdeController(disks = [], pci_bus=0, pci_dev=1, pci_func=0,
+                        InterruptLine=2, InterruptPin=2)
 
     l2x0_fake      = IsaFake(pio_addr=0xE0202000, pio_size=0xfff)
     dmac_fake      = AmbaFake(pio_addr=0xE0020000)
@@ -341,6 +352,11 @@ class VExpress(RealView):
        self.elba_kmi0.pio       = bus.port
        self.elba_kmi1.pio       = bus.port
        self.cf_ctrl.pio         = bus.port
+       self.ide.pio             = bus.port
+       self.ethernet.pio        = bus.port
+       self.pciconfig.pio       = bus.default
+       bus.use_default_range    = True
+
        self.l2x0_fake.pio       = bus.port
        self.dmac_fake.pio       = bus.port
        self.uart1_fake.pio      = bus.port

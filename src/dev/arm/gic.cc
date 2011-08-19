@@ -46,6 +46,7 @@
 #include "debug/GIC.hh"
 #include "debug/IPI.hh"
 #include "dev/arm/gic.hh"
+#include "dev/arm/realview.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -97,6 +98,10 @@ Gic::Gic(const Params *p)
             bankedIntPriority[i][j] = 0;
         }
     }
+
+    RealView *rv = dynamic_cast<RealView*>(p->platform);
+    assert(rv);
+    rv->setGic(this);
 
 }
 

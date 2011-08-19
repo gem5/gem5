@@ -50,6 +50,7 @@
 
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
+#include "dev/arm/gic.hh"
 #include "dev/arm/realview.hh"
 #include "dev/terminal.hh"
 #include "sim/system.hh"
@@ -88,27 +89,28 @@ RealView::clearConsoleInt()
 void
 RealView::postPciInt(int line)
 {
-    panic("Need implementation\n");
+    gic->sendInt(line);
 }
 
 void
 RealView::clearPciInt(int line)
 {
-    panic("Need implementation\n");
+    gic->clearInt(line);
 }
 
 Addr
 RealView::pciToDma(Addr pciAddr) const
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    return pciAddr;
 }
 
 
 Addr
 RealView::calcPciConfigAddr(int bus, int dev, int func)
 {
-    return ULL(-1);
+    if (bus != 0)
+        return ULL(-1);
+    return params()->pci_cfg_base | ((func & 7) << 16) | ((dev & 0x1f) << 19);
 }
 
 Addr
@@ -120,8 +122,7 @@ RealView::calcPciIOAddr(Addr addr)
 Addr
 RealView::calcPciMemAddr(Addr addr)
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    return addr;
 }
 
 RealView *

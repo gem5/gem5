@@ -143,7 +143,7 @@ PciDev::PciDev(const Params *p)
         }
     }
 
-    plat->registerPciDevice(0, p->pci_dev, p->pci_func,
+    plat->registerPciDevice(p->pci_bus, p->pci_dev, p->pci_func,
             letoh(config.interruptLine));
 }
 

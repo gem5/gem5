@@ -61,8 +61,15 @@ class RealView : public Platform
     /** Pointer to the system */
     System *system;
 
+    Gic *gic;
+
   public:
     typedef RealViewParams Params;
+    const Params *
+    params() const {
+        return dynamic_cast<const Params *>(_params);
+    }
+
     /**
      * Constructor for the Tsunami Class.
      * @param name name of the object
@@ -70,6 +77,9 @@ class RealView : public Platform
      * @param intctrl pointer to the interrupt controller
      */
     RealView(const Params *p);
+
+    /** Give platform a pointer to interrupt controller */
+    void setGic(Gic *_gic) { gic = _gic; }
 
     /**
      * Return the interrupting frequency to AlphaAccess
