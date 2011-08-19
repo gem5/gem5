@@ -663,7 +663,7 @@ TableWalker::doL1DescriptorWrapper()
         currState->req = NULL;
         currState->tc = NULL;
         currState->delayed = false;
-
+        delete currState;
     }
     else if (!currState->delayed) {
         // delay is not set so there is no L2 to do
