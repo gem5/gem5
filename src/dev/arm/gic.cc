@@ -87,6 +87,17 @@ Gic::Gic(const Params *p)
         cpuSgiActive[x] = 0;
         cpuSgiPending[x] = 0;
     }
+    for (int x = 0; x < CPU_MAX; x++) {
+        cpuPpiActive[x] = 0;
+        cpuPpiPending[x] = 0;
+    }
+
+    for (int i = 0; i < CPU_MAX; i++) {
+        for (int j = 0; j < (SGI_MAX + PPI_MAX); j++) {
+            bankedIntPriority[i][j] = 0;
+        }
+    }
+
 }
 
 Tick
@@ -123,6 +134,8 @@ Gic::readDistributor(PacketPtr pkt)
 {
     Addr daddr = pkt->getAddr() - distAddr;
     pkt->allocate();
+
+    int ctx_id = pkt->req->contextId();
 
     DPRINTF(GIC, "gic distributor read register %#x\n", daddr);
 
@@ -161,19 +174,26 @@ Gic::readDistributor(PacketPtr pkt)
         int_num = daddr - ICDIPR_ST;
         assert(int_num < INT_LINES_MAX);
         DPRINTF(Interrupt, "Reading interrupt priority at int# %#x \n",int_num);
-        switch(pkt->getSize()) {
+
+        uint8_t* int_p;
+        if (int_num < (SGI_MAX + PPI_MAX))
+            int_p = bankedIntPriority[ctx_id];
+        else
+            int_p = intPriority;
+
+        switch (pkt->getSize()) {
           case 1:
-            pkt->set<uint8_t>(intPriority[int_num]);
+            pkt->set<uint8_t>(int_p[int_num]);
             break;
           case 2:
-            pkt->set<uint16_t>(intPriority[int_num] |
-                               intPriority[int_num+1] << 8);
+            pkt->set<uint16_t>(int_p[int_num] |
+                               int_p[int_num+1] << 8);
             break;
           case 4:
-            pkt->set<uint32_t>(intPriority[int_num] |
-                               intPriority[int_num+1] << 8 |
-                               intPriority[int_num+2] << 16 |
-                               intPriority[int_num+3] << 24);
+            pkt->set<uint32_t>(int_p[int_num] |
+                               int_p[int_num+1] << 8 |
+                               int_p[int_num+2] << 16 |
+                               int_p[int_num+3] << 24);
             break;
           default:
             panic("Invalid size while reading priority regs in GIC: %d\n",
@@ -283,6 +303,12 @@ Gic::readCpu(PacketPtr pkt)
                 uint64_t sgi_num = ULL(1) << (ctx_id + 8 * iar.cpu_id);
                 cpuSgiActive[iar.ack_id] |= sgi_num;
                 cpuSgiPending[iar.ack_id] &= ~sgi_num;
+            } else if (active_int < (SGI_MAX + PPI_MAX) ) {
+                uint32_t int_num = 1 << (cpuHighestInt[ctx_id] - SGI_MAX);
+                cpuPpiActive[ctx_id] |= int_num;
+                updateRunPri();
+                cpuPpiPending[ctx_id] &= ~int_num;
+
             } else {
                 uint32_t int_num = 1 << intNumToBit(cpuHighestInt[ctx_id]);
                 activeInt[intNumToWord(cpuHighestInt[ctx_id])] |= int_num;
@@ -360,23 +386,28 @@ Gic::writeDistributor(PacketPtr pkt)
     if (daddr >= ICDIPR_ST && daddr < ICDIPR_ED + 4) {
         Addr int_num = daddr - ICDIPR_ST;
         assert(int_num < INT_LINES_MAX);
+        uint8_t* int_p;
+        if (int_num < (SGI_MAX + PPI_MAX))
+            int_p = bankedIntPriority[ctx_id];
+        else
+            int_p = intPriority;
         uint32_t tmp;
         switch(pkt->getSize()) {
           case 1:
             tmp = pkt->get<uint8_t>();
-            intPriority[int_num] = bits(tmp, 7, 0);
+            int_p[int_num] = bits(tmp, 7, 0);
             break;
           case 2:
             tmp = pkt->get<uint16_t>();
-            intPriority[int_num] = bits(tmp, 7, 0);
-            intPriority[int_num + 1] = bits(tmp, 15, 8);
+            int_p[int_num] = bits(tmp, 7, 0);
+            int_p[int_num + 1] = bits(tmp, 15, 8);
             break;
           case 4:
             tmp = pkt->get<uint32_t>();
-            intPriority[int_num] = bits(tmp, 7, 0);
-            intPriority[int_num + 1] = bits(tmp, 15, 8);
-            intPriority[int_num + 2] = bits(tmp, 23, 16);
-            intPriority[int_num + 3] = bits(tmp, 31, 24);
+            int_p[int_num] = bits(tmp, 7, 0);
+            int_p[int_num + 1] = bits(tmp, 15, 8);
+            int_p[int_num + 2] = bits(tmp, 23, 16);
+            int_p[int_num + 3] = bits(tmp, 31, 24);
             break;
           default:
             panic("Invalid size when writing to priority regs in Gic: %d\n",
@@ -467,6 +498,11 @@ Gic::writeCpu(PacketPtr pkt)
             if (!(cpuSgiActive[iar.ack_id] & clr_int))
                 panic("Done handling a SGI that isn't active?\n");
             cpuSgiActive[iar.ack_id] &= ~clr_int;
+        } else if (iar.ack_id < (SGI_MAX + PPI_MAX) ) {
+            uint32_t int_num = 1 << (iar.ack_id - SGI_MAX);
+            if (!(cpuPpiActive[ctx_id] & int_num))
+                panic("CPU %d Done handling a PPI interrupt that isn't active?\n", ctx_id);
+            cpuPpiActive[ctx_id] &= ~int_num;
         } else {
             uint32_t int_num = 1 << intNumToBit(iar.ack_id);
             if (!(activeInt[intNumToWord(iar.ack_id)] & int_num))
@@ -545,15 +581,26 @@ Gic::updateIntState(int hint)
             if (!cpuSgiPending[swi])
                 continue;
             if (cpuSgiPending[swi] & genSwiMask(cpu))
-                if (highest_pri > intPriority[swi]) {
-                    highest_pri = intPriority[swi];
+                if (highest_pri > bankedIntPriority[cpu][swi]) {
+                    highest_pri = bankedIntPriority[cpu][swi];
                     highest_int = swi;
                 }
         }
 
+        // Check PPIs
+        if (cpuPpiPending[cpu]) {
+        for (int ppi = 0; ppi < PPI_MAX; ppi++) {
+            if (cpuPpiPending[cpu] & (1 << ppi))
+                if (highest_pri > bankedIntPriority[cpu][SGI_MAX + ppi]) {
+                    highest_pri = bankedIntPriority[cpu][SGI_MAX + ppi];
+                    highest_int = SGI_MAX + ppi;
+                }
+            }
+        }
+
         bool mp_sys = sys->numRunningContexts() > 1;
         // Check other ints
-        for (int x = 0; x < (itLines/INT_BITS_MAX) ; x++) {
+        for (int x = 0; x < (itLines/INT_BITS_MAX); x++) {
             if (intEnabled[x] & pendingInt[x]) {
                 for (int y = 0; y < INT_BITS_MAX; y++) {
                    uint32_t int_nm = x * INT_BITS_MAX + y;
@@ -594,12 +641,19 @@ void
 Gic::updateRunPri()
 {
     for (int cpu = 0; cpu < CPU_MAX; cpu++) {
+        if (!cpuEnabled[cpu])
+            continue;
         uint8_t maxPriority = 0xff;
-        for (int i = 0 ; i < itLines ; i++){
+        for (int i = 0; i < itLines; i++){
             if (i < SGI_MAX) {
                 if ((cpuSgiActive[i] & genSwiMask(cpu)) &&
-                        (intPriority[i] < maxPriority))
-                    maxPriority = intPriority[i];
+                        (bankedIntPriority[cpu][i] < maxPriority))
+                    maxPriority = bankedIntPriority[cpu][i];
+            } else if (i < (SGI_MAX + PPI_MAX)) {
+                if ((cpuPpiActive[cpu] & ( 1 << (i - SGI_MAX))) &&
+                        (bankedIntPriority[cpu][i] < maxPriority))
+                    maxPriority = bankedIntPriority[cpu][i];
+
             } else {
                 if (activeInt[intNumToWord(i)] & (1 << intNumToBit(i)))
                     if (intPriority[i] < maxPriority)
@@ -620,6 +674,13 @@ Gic::sendInt(uint32_t num)
     pendingInt[intNumToWord(num)] |= 1 << intNumToBit(num);
     updateIntState(intNumToWord(num));
 
+}
+
+void
+Gic::sendPPInt(uint32_t num, uint32_t cpu)
+{
+    cpuPpiPending[cpu] |= 1 << (num - SGI_MAX);
+    updateIntState(intNumToWord(num));
 }
 
 void
@@ -669,6 +730,9 @@ Gic::serialize(std::ostream &os)
     SERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
     SERIALIZE_ARRAY(cpuSgiActive, SGI_MAX);
     SERIALIZE_ARRAY(cpuSgiPending, SGI_MAX);
+    SERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
+    SERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
+    SERIALIZE_ARRAY(*bankedIntPriority, CPU_MAX * (SGI_MAX + PPI_MAX));
     SERIALIZE_SCALAR(irqEnable);
     Tick interrupt_time[CPU_MAX];
     for (uint32_t cpu = 0; cpu < CPU_MAX; cpu++) {
@@ -706,6 +770,9 @@ Gic::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuSgiActive, SGI_MAX);
     UNSERIALIZE_ARRAY(cpuSgiPending, SGI_MAX);
+    UNSERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
+    UNSERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
+    UNSERIALIZE_ARRAY(*bankedIntPriority, CPU_MAX * (SGI_MAX + PPI_MAX));
     UNSERIALIZE_SCALAR(irqEnable);
 
     Tick interrupt_time[CPU_MAX];

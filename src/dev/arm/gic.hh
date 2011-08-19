@@ -100,6 +100,7 @@ class Gic : public PioDevice
     static const int CPU_SIZE  = 0xff;
 
     static const int SGI_MAX = 16;  // Number of Software Gen Interrupts
+    static const int PPI_MAX = 16;  // Number of Private Peripheral Interrupts
 
     /** Mask off SGI's when setting/clearing pending bits */
     static const int SGI_MASK = 0xFFFF0000;
@@ -195,6 +196,14 @@ class Gic : public PioDevice
     uint64_t cpuSgiPending[SGI_MAX];
     uint64_t cpuSgiActive[SGI_MAX];
 
+    /** One bit per private peripheral interrupt. Only upper 16 bits
+     * will be used since PPI interrupts are numberred from 16 to 32 */
+    uint32_t cpuPpiPending[CPU_MAX];
+    uint32_t cpuPpiActive[CPU_MAX];
+
+    /** Banked interrupt prioirty registers for SGIs and PPIs */
+    uint8_t bankedIntPriority[CPU_MAX][SGI_MAX + PPI_MAX];
+
     /** IRQ Enable Used for debug */
     bool irqEnable;
 
@@ -283,6 +292,9 @@ class Gic : public PioDevice
      * on through to a CPU.
      * @param number number of interrupt to send */
     void sendInt(uint32_t number);
+
+    /** Interface call for private peripheral interrupts  */
+    void sendPPInt(uint32_t num, uint32_t cpu);
 
     /** Clear an interrupt from a device that is connected to the Gic
      * Depending on the configuration, the gic may de-assert it's cpu line
