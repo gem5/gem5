@@ -30,7 +30,7 @@ import m5
 from m5.objects import *
 m5.util.addToPath('../configs/common')
 import FSConfig
-
+from Benchmarks import *
 
 # --------------------
 # Base L1 Cache
@@ -68,31 +68,33 @@ class IOCache(BaseCache):
     forward_snoops = False
 
 #cpu
-cpu = TimingSimpleCPU(cpu_id=0)
+cpus = [TimingSimpleCPU(cpu_id=i) for i in xrange(2) ]
 #the system
 system = FSConfig.makeArmSystem('timing', "RealView_PBX", None, False)
-
-system.cpu = cpu
-#create the l1/l2 bus
-system.toL2Bus = Bus()
 system.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
 system.bridge.filter_ranges_b=[AddrRange(0, size='256MB')]
 system.iocache = IOCache()
 system.iocache.cpu_side = system.iobus.port
 system.iocache.mem_side = system.membus.port
 
+system.cpu = cpus
+#create the l1/l2 bus
+system.toL2Bus = Bus()
 
 #connect up the l2 cache
 system.l2c = L2(size='4MB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.port
 system.l2c.mem_side = system.membus.port
+system.l2c.num_cpus = 2
 
 #connect up the cpu and l1s
-cpu.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
-                            L1(size = '32kB', assoc = 4))
-# connect cpu level-1 caches to shared level-2 cache
-cpu.connectAllPorts(system.toL2Bus, system.membus)
-cpu.clock = '2GHz'
+for c in cpus:
+    c.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
+                                L1(size = '32kB', assoc = 4))
+    # connect cpu level-1 caches to shared level-2 cache
+    c.connectAllPorts(system.toL2Bus, system.membus)
+    c.clock = '2GHz'
+
 
 root = Root(system=system)
 m5.ticks.setGlobalFrequency('1THz')

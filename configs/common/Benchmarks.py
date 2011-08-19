@@ -56,7 +56,7 @@ class SysConfig:
         elif buildEnv['TARGET_ISA'] == 'x86':
             return env.get('LINUX_IMAGE', disk('x86root.img'))
         elif buildEnv['TARGET_ISA'] == 'arm':
-            return env.get('LINUX_IMAGE', disk('ael-arm.ext2'))
+            return env.get('LINUX_IMAGE', disk('linux-arm-ael.img'))
         else:
             print "Don't know what default disk image to use for ISA %s" % \
                 buildEnv['TARGET_ISA']
@@ -111,9 +111,6 @@ Benchmarks = {
     'ValStreamCopy':    [SysConfig('micro_streamcopy.rcS', '512MB')],
 
     'MutexTest':        [SysConfig('mutex-test.rcS', '128MB')],
-    'ArmLinux':         [SysConfig('null.rcS', '128MB', 'ael-arm.ext2')],
-    'ArmLinuxFrameBuf': [SysConfig('null.rcS', '128MB', 'ael-full.ext2')],
-    'ArmLinuxCflash':   [SysConfig('null.rcS', '256MB', 'linux-arm.img')],
     'ArmAndroid':       [SysConfig('null.rcS', '256MB', 'android-mbr.img')],
 }
 

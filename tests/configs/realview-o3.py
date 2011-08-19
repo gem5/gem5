@@ -64,7 +64,7 @@ class IOCache(BaseCache):
     mshrs = 20
     size = '1kB'
     tgts_per_mshr = 12
-    addr_range=AddrRange(0, size='128MB')
+    addr_range=AddrRange(0, size='256MB')
     forward_snoops = False
 
 #cpu
@@ -76,7 +76,7 @@ system.cpu = cpu
 #create the l1/l2 bus
 system.toL2Bus = Bus()
 system.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
-system.bridge.filter_ranges_b=[AddrRange(0, size='128MB')]
+system.bridge.filter_ranges_b=[AddrRange(0, size='256MB')]
 system.iocache = IOCache()
 system.iocache.cpu_side = system.iobus.port
 system.iocache.mem_side = system.membus.port

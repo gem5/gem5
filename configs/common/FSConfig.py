@@ -41,6 +41,7 @@
 
 from m5.objects import *
 from Benchmarks import *
+from m5.util import convert
 
 class CowIdeDisk(IdeDisk):
     image = CowDiskImage(child=RawDiskImage(read_only=True),
@@ -216,47 +217,40 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         print "Unknown Machine Type"
         sys.exit(1)
 
-    use_cf = False
-    if mdesc.disk()[-4:] == ".img":
-        use_cf = True
-        self.cf0 = CowIdeDisk(driveID='master')
-        self.cf0.childImage(mdesc.disk())
-        # default to an IDE controller rather than a CF one
-        # assuming we've got one
-        try:
-            self.realview.ide.disks = [self.cf0]
-        except:
-            self.realview.cf_ctrl.disks = [self.cf0]
+    self.cf0 = CowIdeDisk(driveID='master')
+    self.cf0.childImage(mdesc.disk())
+    # default to an IDE controller rather than a CF one
+    # assuming we've got one
+    try:
+        self.realview.ide.disks = [self.cf0]
+    except:
+        self.realview.cf_ctrl.disks = [self.cf0]
+
     if bare_metal:
         # EOT character on UART will end the simulation
         self.realview.uart.end_on_eot = True
-        self.physmem = PhysicalMemory(range = AddrRange(Addr('256MB')),
+        self.physmem = PhysicalMemory(range = AddrRange(Addr(mdesc.mem())),
                                       zero = True)
     else:
-        self.kernel = binary('vmlinux.arm')
+        self.kernel = binary('vmlinux.arm.smp.fb.2.6.38.8')
         self.machine_type = machine_type
+        if convert.toMemorySize(mdesc.mem()) > convert.toMemorySize('256MB'):
+            print "The currently implemented ARM platforms only easily support 256MB of DRAM"
+            print "It might be possible to get some more by using 256MB@0x30000000, but this"
+            print "is untested and may require some heroics"
+
         boot_flags = 'earlyprintk console=ttyAMA0 lpj=19988480 norandmaps ' + \
-                     'rw loglevel=8 '
-        if use_cf:
-            self.physmem = PhysicalMemory(range = AddrRange(Addr('256MB')),
-                                          zero = True)
-            boot_flags += "mem=256MB root=/dev/sda1 "
-            self.nvmem = PhysicalMemory(range = AddrRange(Addr('2GB'),
-                                        size = '64MB'), zero = True)
-            self.nvmem.port = self.membus.port
-            self.boot_loader = binary('boot.arm')
-            self.boot_loader_mem = self.nvmem
-            self.gic_cpu_addr = self.realview.gic.cpu_addr
-            self.flags_addr = self.realview.realview_io.pio_addr + 0x30
-        else:
-            self.physmem = PhysicalMemory(range = AddrRange(Addr('128MB')),
-                                          zero = True)
-            self.diskmem = PhysicalMemory(range = AddrRange(Addr('128MB'),
-                                          size = '128MB'),
-                                          file = disk(mdesc.disk()))
-            self.diskmem.port = self.membus.port
-            boot_flags +=  "mem=128MB slram=slram0,0x8000000,+0x8000000 " + \
-                            "mtdparts=slram0:- root=/dev/mtdblock0 "
+                     'rw loglevel=8 mem=%s root=/dev/sda1' % mdesc.mem()
+
+        self.physmem = PhysicalMemory(range = AddrRange(Addr(mdesc.mem())),
+                                      zero = True)
+        self.nvmem = PhysicalMemory(range = AddrRange(Addr('2GB'),
+                                    size = '64MB'), zero = True)
+        self.nvmem.port = self.membus.port
+        self.boot_loader = binary('boot.arm')
+        self.boot_loader_mem = self.nvmem
+        self.gic_cpu_addr = self.realview.gic.cpu_addr
+        self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
         if mdesc.disk().count('android'):
             boot_flags += "init=/init "

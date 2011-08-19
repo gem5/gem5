@@ -10,4 +10,4 @@ command line: build/ARM_FS/gem5.opt -d build/ARM_FS/tests/opt/long/10.linux-boot
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /arm/scratch/sysexplr/dist/binaries/vmlinux.arm
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 79074238500 because m5_exit instruction encountered
+Exiting @ tick 2503824454500 because m5_exit instruction encountered
