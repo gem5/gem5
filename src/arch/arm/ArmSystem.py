@@ -41,7 +41,8 @@ from System import System
 
 class ArmMachineType(Enum):
     map = {'RealView_EB' : 827,
-           'RealView_PBX' : 1901 }
+           'RealView_PBX' : 1901,
+           'VersatileExpress' : 2272}
 
 class ArmSystem(System):
     type = 'ArmSystem'

@@ -210,6 +210,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         self.realview = RealViewPBX()
     elif machine_type == "RealView_EB":
         self.realview = RealViewEB()
+    elif machine_type == "VersatileExpress":
+        self.realview = VExpress()
     else:
         print "Unknown Machine Type"
         sys.exit(1)

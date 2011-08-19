@@ -85,8 +85,6 @@ Sp804::read(PacketPtr pkt)
 void
 Sp804::Timer::read(PacketPtr pkt, Addr daddr)
 {
-    DPRINTF(Timer, "Reading from Timer at offset: %#x\n", daddr);
-
     switch(daddr) {
       case LoadReg:
         pkt->set<uint32_t>(loadValue);
@@ -116,6 +114,7 @@ Sp804::Timer::read(PacketPtr pkt, Addr daddr)
         panic("Tried to read SP804 timer at offset %#x\n", daddr);
         break;
     }
+    DPRINTF(Timer, "Reading %#x from Timer at offset: %#x\n", pkt->get<uint32_t>(), daddr);
 }
 
 Tick
@@ -140,7 +139,7 @@ Sp804::write(PacketPtr pkt)
 void
 Sp804::Timer::write(PacketPtr pkt, Addr daddr)
 {
-    DPRINTF(Timer, "Writing to Timer at offset: %#x\n", daddr);
+    DPRINTF(Timer, "Writing %#x to Timer at offset: %#x\n", pkt->get<uint32_t>(), daddr);
     switch (daddr) {
       case LoadReg:
         loadValue = pkt->get<uint32_t>();

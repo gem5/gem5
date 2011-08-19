@@ -57,8 +57,11 @@ RealViewCtrl::read(PacketPtr pkt)
     pkt->allocate();
 
     switch(daddr) {
-      case ProcId:
-        pkt->set(params()->proc_id);
+      case ProcId0:
+        pkt->set(params()->proc_id0);
+        break;
+      case ProcId1:
+        pkt->set(params()->proc_id1);
         break;
       case Clock24:
         Tick clk;
@@ -130,6 +133,9 @@ RealViewCtrl::write(PacketPtr pkt)
         break;
       case Flags:
         flags = pkt->get<uint32_t>();
+        break;
+      case FlagsClr:
+        flags = 0;
         break;
       default:
         warn("Tried to write RVIO at offset %#x that doesn't exist\n",

@@ -75,7 +75,8 @@ class A9SCU(BasicPioDevice):
 
 class RealViewCtrl(BasicPioDevice):
     type = 'RealViewCtrl'
-    proc_id = Param.UInt32(0x0C000000, "Processor ID, SYS_PROCID")
+    proc_id0 = Param.UInt32(0x0C000000, "Processor ID, SYS_PROCID")
+    proc_id1 = Param.UInt32(0x0C000222, "Processor ID, SYS_PROCID1")
     idreg = Param.UInt32(0x00000000, "ID Register, SYS_ID")
 
 class Gic(PioDevice):
@@ -277,4 +278,82 @@ class RealViewEB(RealView):
        self.rtc_fake.pio      = bus.port
        self.flash_fake.pio    = bus.port
        self.smcreg_fake.pio   = bus.port
+
+class VExpress(RealView):
+    elba_uart = Pl011(pio_addr=0xE0009000, int_num=42)
+    uart = Pl011(pio_addr=0xFF009000, int_num=121)
+    realview_io = RealViewCtrl(proc_id0=0x0C000222, pio_addr=0xFF000000)
+    gic = Gic(dist_addr=0xE0201000, cpu_addr=0xE0200100)
+    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0xE0200600)
+    v2m_timer0 = Sp804(int_num0=120, int_num1=120, pio_addr=0xFF011000)
+    v2m_timer1 = Sp804(int_num0=121, int_num1=121, pio_addr=0xFF012000)
+    elba_timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0xE0011000, clock0='50MHz', clock1='50MHz')
+    elba_timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0xE0012000, clock0='50MHz', clock1='50MHz')
+    clcd   = Pl111(pio_addr=0xE0022000, int_num=46)   # CLCD interrupt no. unknown
+    kmi0   = Pl050(pio_addr=0xFF006000, int_num=124)
+    kmi1   = Pl050(pio_addr=0xFF007000, int_num=125)
+    elba_kmi0   = Pl050(pio_addr=0xE0006000, int_num=52)
+    elba_kmi1   = Pl050(pio_addr=0xE0007000, int_num=53)
+    a9scu  = A9SCU(pio_addr=0xE0200000)
+    cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=0,
+                            io_shift = 2, ctrl_offset = 2, Command = 0x1,
+                            BAR0 = 0xFF01A000, BAR0Size = '256B',
+                            BAR1 = 0xFF01A100, BAR1Size = '4096B',
+                            BAR0LegacyIO = True, BAR1LegacyIO = True)
+
+    l2x0_fake      = IsaFake(pio_addr=0xE0202000, pio_size=0xfff)
+    dmac_fake      = AmbaFake(pio_addr=0xE0020000)
+    uart1_fake     = AmbaFake(pio_addr=0xE000A000)
+    uart2_fake     = AmbaFake(pio_addr=0xE000B000)
+    uart3_fake     = AmbaFake(pio_addr=0xE000C000)
+    smc_fake       = AmbaFake(pio_addr=0xEC000000)
+    sp810_fake     = AmbaFake(pio_addr=0xFF001000, ignore_access=True)
+    watchdog_fake  = AmbaFake(pio_addr=0xE0010000)
+    aaci_fake      = AmbaFake(pio_addr=0xFF004000)
+    elba_aaci_fake = AmbaFake(pio_addr=0xE0004000)
+    mmc_fake       = AmbaFake(pio_addr=0xE0005000) # not sure if we need this
+    rtc_fake       = AmbaFake(pio_addr=0xE0017000, amba_id=0x41031)
+    spsc_fake      = IsaFake(pio_addr=0xE001B000, pio_size=0x2000)
+    lan_fake       = IsaFake(pio_addr=0xFA000000, pio_size=0xffff)
+    usb_fake       = IsaFake(pio_addr=0xFB000000, pio_size=0x1ffff)
+
+
+    # Attach I/O devices that are on chip
+    def attachOnChipIO(self, bus):
+       self.gic.pio = bus.port
+       self.a9scu.pio = bus.port
+
+    # Attach I/O devices to specified bus object.  Can't do this
+    # earlier, since the bus object itself is typically defined at the
+    # System level.
+    def attachIO(self, bus):
+       self.elba_uart.pio       = bus.port
+       self.uart.pio            = bus.port
+       self.realview_io.pio     = bus.port
+       self.local_cpu_timer.pio = bus.port
+       self.v2m_timer0.pio      = bus.port
+       self.v2m_timer1.pio      = bus.port
+       self.elba_timer0.pio     = bus.port
+       self.elba_timer1.pio     = bus.port
+       self.clcd.pio            = bus.port
+       self.kmi0.pio            = bus.port
+       self.kmi1.pio            = bus.port
+       self.elba_kmi0.pio       = bus.port
+       self.elba_kmi1.pio       = bus.port
+       self.cf_ctrl.pio         = bus.port
+       self.l2x0_fake.pio       = bus.port
+       self.dmac_fake.pio       = bus.port
+       self.uart1_fake.pio      = bus.port
+       self.uart2_fake.pio      = bus.port
+       self.uart3_fake.pio      = bus.port
+       self.smc_fake.pio        = bus.port
+       self.sp810_fake.pio      = bus.port
+       self.watchdog_fake.pio   = bus.port
+       self.aaci_fake.pio       = bus.port
+       self.elba_aaci_fake.pio  = bus.port
+       self.mmc_fake.pio        = bus.port
+       self.rtc_fake.pio        = bus.port
+       self.spsc_fake.pio       = bus.port
+       self.lan_fake.pio        = bus.port
+       self.usb_fake.pio        = bus.port
 
