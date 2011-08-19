@@ -1,11 +1,13 @@
+Redirecting stdout to build/ARM_SE/tests/opt/long/50.vortex/arm/linux/o3-timing/simout
+Redirecting stderr to build/ARM_SE/tests/opt/long/50.vortex/arm/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug  6 2011 16:04:36
-gem5 started Aug  6 2011 16:04:41
-gem5 executing on burrito
+gem5 compiled Aug 16 2011 09:57:35
+gem5 started Aug 16 2011 10:08:58
+gem5 executing on nadc-0270
 command line: build/ARM_SE/gem5.opt -d build/ARM_SE/tests/opt/long/50.vortex/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/long/50.vortex/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 36244602000 because target called exit()
+Exiting @ tick 36358325000 because target called exit()
