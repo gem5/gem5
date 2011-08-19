@@ -63,17 +63,23 @@ class StoreSet
     StoreSet() { };
 
     /** Creates store set predictor with given table sizes. */
-    StoreSet(int SSIT_size, int LFST_size);
+    StoreSet(uint64_t clear_period, int SSIT_size, int LFST_size);
 
     /** Default destructor. */
     ~StoreSet();
 
     /** Initializes the store set predictor with the given table sizes. */
-    void init(int SSIT_size, int LFST_size);
+    void init(uint64_t clear_period, int SSIT_size, int LFST_size);
 
     /** Records a memory ordering violation between the younger load
      * and the older store. */
     void violation(Addr store_PC, Addr load_PC);
+
+    /** Clears the store set predictor every so often so that all the
+     * entries aren't used and stores are constantly predicted as
+     * conflicting.
+     */
+    void checkClear();
 
     /** Inserts a load into the store set predictor.  This does nothing but
      * is included in case other predictors require a similar function.
@@ -130,6 +136,11 @@ class StoreSet
 
     typedef std::map<InstSeqNum, int, ltseqnum>::iterator SeqNumMapIt;
 
+    /** Number of loads/stores to process before wiping predictor so all
+     * entries don't get saturated
+     */
+    uint64_t clearPeriod;
+
     /** Store Set ID Table size, in entries. */
     int SSITSize;
 
@@ -141,6 +152,9 @@ class StoreSet
 
     // HACK: Hardcoded for now.
     int offsetBits;
+
+    /** Number of memory operations predicted since last clear of predictor */
+    int memOpsPred;
 };
 
 #endif // __CPU_O3_STORE_SET_HH__

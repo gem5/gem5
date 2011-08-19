@@ -121,6 +121,8 @@ class DerivO3CPU(BaseCPU):
     LSQDepCheckShift = Param.Unsigned(4, "Number of places to shift addr before check")
     LSQCheckLoads = Param.Bool(True,
         "Should dependency violations be checked for loads & stores or just stores")
+    store_set_clear_period = Param.Unsigned(250000,
+            "Number of load/store insts before the dep predictor should be invalidated")
     LFSTSize = Param.Unsigned(1024, "Last fetched store table size")
     SSITSize = Param.Unsigned(1024, "Store set ID table size")
 

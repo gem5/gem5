@@ -34,8 +34,8 @@
 #include "cpu/o3/store_set.hh"
 #include "debug/StoreSet.hh"
 
-StoreSet::StoreSet(int _SSIT_size, int _LFST_size)
-    : SSITSize(_SSIT_size), LFSTSize(_LFST_size)
+StoreSet::StoreSet(uint64_t clear_period, int _SSIT_size, int _LFST_size)
+    : clearPeriod(clear_period), SSITSize(_SSIT_size), LFSTSize(_LFST_size)
 {
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
     DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
@@ -68,6 +68,8 @@ StoreSet::StoreSet(int _SSIT_size, int _LFST_size)
     indexMask = SSITSize - 1;
 
     offsetBits = 2;
+
+    memOpsPred = 0;
 }
 
 StoreSet::~StoreSet()
@@ -75,10 +77,11 @@ StoreSet::~StoreSet()
 }
 
 void
-StoreSet::init(int _SSIT_size, int _LFST_size)
+StoreSet::init(uint64_t clear_period, int _SSIT_size, int _LFST_size)
 {
     SSITSize = _SSIT_size;
     LFSTSize = _LFST_size;
+    clearPeriod = clear_period;
 
     DPRINTF(StoreSet, "StoreSet: Creating store set object.\n");
     DPRINTF(StoreSet, "StoreSet: SSIT size: %i, LFST size: %i.\n",
@@ -103,6 +106,8 @@ StoreSet::init(int _SSIT_size, int _LFST_size)
     indexMask = SSITSize - 1;
 
     offsetBits = 2;
+
+    memOpsPred = 0;
 }
 
 
@@ -180,8 +185,21 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
 }
 
 void
+StoreSet::checkClear()
+{
+    memOpsPred++;
+    if (memOpsPred > clearPeriod) {
+        DPRINTF(StoreSet, "Wiping predictor state beacuse %d ld/st executed\n",
+                clearPeriod);
+        memOpsPred = 0;
+        clear();
+    }
+}
+
+void
 StoreSet::insertLoad(Addr load_PC, InstSeqNum load_seq_num)
 {
+    checkClear();
     // Does nothing.
     return;
 }
@@ -193,6 +211,7 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
 
     int store_SSID;
 
+    checkClear();
     assert(index < SSITSize);
 
     if (!validSSIT[index]) {

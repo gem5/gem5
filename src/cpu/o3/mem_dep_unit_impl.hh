@@ -45,8 +45,10 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit()
 template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::MemDepUnit(DerivO3CPUParams *params)
     : _name(params->name + ".memdepunit"),
-      depPred(params->SSITSize, params->LFSTSize), loadBarrier(false),
-      loadBarrierSN(0), storeBarrier(false), storeBarrierSN(0), iqPtr(NULL)
+      depPred(params->store_set_clear_period, params->SSITSize,
+              params->LFSTSize),
+      loadBarrier(false), loadBarrierSN(0), storeBarrier(false),
+      storeBarrierSN(0), iqPtr(NULL)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
 }
@@ -85,7 +87,8 @@ MemDepUnit<MemDepPred, Impl>::init(DerivO3CPUParams *params, ThreadID tid)
     _name = csprintf("%s.memDep%d", params->name, tid);
     id = tid;
 
-    depPred.init(params->SSITSize, params->LFSTSize);
+    depPred.init(params->store_set_clear_period, params->SSITSize,
+            params->LFSTSize);
 }
 
 template <class MemDepPred, class Impl>
