@@ -405,15 +405,14 @@ MemDepUnit<MemDepPred, Impl>::completeBarrier(DynInstPtr &inst)
     completed(inst);
 
     InstSeqNum barr_sn = inst->seqNum;
-
+    DPRINTF(MemDepUnit, "barrier completed: %s SN:%lli\n", inst->pcState(),
+            inst->seqNum);
     if (inst->isMemBarrier()) {
-        assert(loadBarrier && storeBarrier);
         if (loadBarrierSN == barr_sn)
             loadBarrier = false;
         if (storeBarrierSN == barr_sn)
             storeBarrier = false;
     } else if (inst->isWriteBarrier()) {
-        assert(storeBarrier);
         if (storeBarrierSN == barr_sn)
             storeBarrier = false;
     }
@@ -480,6 +479,12 @@ MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
         DPRINTF(MemDepUnit, "Squashing inst [sn:%lli]\n",
                 (*squash_it)->seqNum);
 
+        if ((*squash_it)->seqNum == loadBarrierSN)
+              loadBarrier = false;
+
+        if ((*squash_it)->seqNum == storeBarrierSN)
+              storeBarrier = false;
+
         hash_it = memDepHash.find((*squash_it)->seqNum);
 
         assert(hash_it != memDepHash.end());
@@ -509,7 +514,7 @@ MemDepUnit<MemDepPred, Impl>::violation(DynInstPtr &store_inst,
             " load: %#x, store: %#x\n", violating_load->instAddr(),
             store_inst->instAddr());
     // Tell the memory dependence unit of the violation.
-    depPred.violation(violating_load->instAddr(), store_inst->instAddr());
+    depPred.violation(store_inst->instAddr(), violating_load->instAddr());
 }
 
 template <class MemDepPred, class Impl>
