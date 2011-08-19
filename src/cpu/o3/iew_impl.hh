@@ -478,27 +478,24 @@ template<class Impl>
 void
 DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
 {
-    DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, "
-            "PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
-
+    DPRINTF(IEW, "[tid:%i]: Memory violation, squashing violator and younger "
+            "insts, PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
+    // Need to include inst->seqNum in the following comparison to cover the
+    // corner case when a branch misprediction and a memory violation for the
+    // same instruction (e.g. load PC) are detected in the same cycle.  In this
+    // case the memory violator should take precedence over the branch
+    // misprediction because it requires the violator itself to be included in
+    // the squash.
     if (toCommit->squash[tid] == false ||
-            inst->seqNum < toCommit->squashedSeqNum[tid]) {
+            inst->seqNum <= toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;
+
         toCommit->squashedSeqNum[tid] = inst->seqNum;
-        TheISA::PCState pc;
-        if (inst->isMemRef() && inst->isIndirectCtrl()) {
-            // If an operation is a control operation as well as a memory
-            // reference we need to use the predicted PC, not the PC+N
-            // This instruction will verify misprediction based on predPC
-            pc = inst->readPredTarg();
-        } else {
-            pc = inst->pcState();
-            TheISA::advancePC(pc, inst->staticInst);
-        }
-        toCommit->pc[tid] = pc;
+        toCommit->pc[tid] = inst->pcState();
         toCommit->mispredictInst[tid] = NULL;
 
-        toCommit->includeSquashInst[tid] = false;
+        // Must include the memory violator in the squash.
+        toCommit->includeSquashInst[tid] = true;
 
         wroteToTimeBuffer = true;
     }
@@ -1374,7 +1371,7 @@ DefaultIEW<Impl>::executeInsts()
                 instQueue.violation(inst, violator);
 
                 // Squash.
-                squashDueToMemOrder(inst,tid);
+                squashDueToMemOrder(violator, tid);
 
                 ++memOrderViolationEvents;
             } else if (ldstQueue.loadBlocked(tid) &&
