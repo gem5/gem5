@@ -514,17 +514,17 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     bool needsResponse = pkt->needsResponse();
 
     if (satisfied) {
+        if (prefetcher && (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
+            if (blk)
+                blk->status &= ~BlkHWPrefetched;
+            next_pf_time = prefetcher->notify(pkt, time);
+        }
+
         if (needsResponse) {
             pkt->makeTimingResponse();
             cpuSidePort->respond(pkt, curTick()+lat);
         } else {
             delete pkt;
-        }
-
-        if (prefetcher && (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
-            if (blk)
-                blk->status &= ~BlkHWPrefetched;
-            next_pf_time = prefetcher->notify(pkt, time);
         }
     } else {
         // miss
