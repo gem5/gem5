@@ -257,6 +257,15 @@ static inline Fault genMachineCheckFault()
     return new Reset();
 }
 
+// A fault that flushes the pipe, excluding the faulting instructions
+class ArmSev : public ArmFaultVals<ArmSev>
+{
+  public:
+    ArmSev () {}
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+};
+
 } // namespace ArmISA
 
 #endif // __ARM_FAULTS_HH__

@@ -78,6 +78,8 @@ template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals =
 template<> ArmFault::FaultVals ArmFaultVals<ReExec>::vals =
     {"ReExec Flush", 0x00, MODE_SVC, 0, 0, true, true}; // some dummy values
 
+template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals =
+    {"ArmSev Flush", 0x00, MODE_SVC, 0, 0, true, true}; // some dummy values
 Addr 
 ArmFault::getVector(ThreadContext *tc)
 {
@@ -127,6 +129,8 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     cpsr.i = 1;
     cpsr.e = sctlr.ee;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
+    // Make sure mailbox sets to one always
+    tc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
     tc->setIntReg(INTREG_LR, curPc +
             (saved_cpsr.t ? thumbPcOffset() : armPcOffset()));
 
@@ -251,6 +255,18 @@ template void AbortFault<PrefetchAbort>::invoke(ThreadContext *tc,
                                                 StaticInstPtr inst);
 template void AbortFault<DataAbort>::invoke(ThreadContext *tc,
                                             StaticInstPtr inst);
+
+void
+ArmSev::invoke(ThreadContext *tc, StaticInstPtr inst) {
+    DPRINTF(Faults, "Invoking ArmSev Fault\n");
+#if FULL_SYSTEM
+    // Set sev_mailbox to 1, clear the pending interrupt from remote
+    // SEV execution and let pipeline continue as pcState is still
+    // valid.
+    tc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
+    tc->getCpuPtr()->clearInterrupt(INT_SEV, 0);
+#endif
+}
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm
 

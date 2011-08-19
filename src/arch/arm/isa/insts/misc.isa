@@ -502,20 +502,32 @@ let {{
 
     wfeCode = '''
 #if FULL_SYSTEM
+    // WFE Sleeps if SevMailbox==0 and no unmasked interrupts are pending
     if (SevMailbox == 1) {
         SevMailbox = 0;
+        PseudoInst::quiesceSkip(xc->tcBase());
+    } else if (xc->tcBase()->getCpuPtr()->getInterruptController()->checkInterrupts(xc->tcBase())) {
         PseudoInst::quiesceSkip(xc->tcBase());
     } else {
         PseudoInst::quiesce(xc->tcBase());
     }
 #endif
     '''
+    wfePredFixUpCode = '''
+#if FULL_SYSTEM
+    // WFE is predicated false, reset SevMailbox to reduce spurious sleeps
+    // and SEV interrupts
+    SevMailbox = 1;
+#endif
+    '''
     wfeIop = InstObjParams("wfe", "WfeInst", "PredOp", \
-            { "code" : wfeCode, "predicate_test" : predicateTest },
+            { "code" : wfeCode,
+              "pred_fixup" : wfePredFixUpCode,
+              "predicate_test" : predicateTest },
             ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
     header_output += BasicDeclare.subst(wfeIop)
     decoder_output += BasicConstructor.subst(wfeIop)
-    exec_output += QuiescePredOpExecute.subst(wfeIop)
+    exec_output += QuiescePredOpExecuteWithFixup.subst(wfeIop)
 
     wfiCode = '''
 #if FULL_SYSTEM
@@ -535,19 +547,20 @@ let {{
     exec_output += QuiescePredOpExecute.subst(wfiIop)
 
     sevCode = '''
-    // Need a way for O3 to not scoreboard these accesses as pipe flushes.
+#if FULL_SYSTEM
     SevMailbox = 1;
     System *sys = xc->tcBase()->getSystemPtr();
     for (int x = 0; x < sys->numContexts(); x++) {
         ThreadContext *oc = sys->getThreadContext(x);
         if (oc == xc->tcBase())
             continue;
-        // Only wake if they were sleeping
+        // Wake CPU with interrupt if they were sleeping
         if (oc->readMiscReg(MISCREG_SEV_MAILBOX) == 0) {
-            oc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
-            PseudoInst::wakeCPU(xc->tcBase(), x);
+            // Post Interrupt and wake cpu if needed
+            oc->getCpuPtr()->postInterrupt(INT_SEV, 0);
         }
     }
+#endif
     '''
     sevIop = InstObjParams("sev", "SevInst", "PredOp", \
             { "code" : sevCode, "predicate_test" : predicateTest },

@@ -505,6 +505,7 @@ DefaultCommit<Impl>::generateTrapEvent(ThreadID tid)
 
     cpu->schedule(trap, curTick() + trapLatency);
     trapInFlight[tid] = true;
+    thread[tid]->trapPending = true;
 }
 
 template <class Impl>

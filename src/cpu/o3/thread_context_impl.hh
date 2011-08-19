@@ -351,8 +351,7 @@ O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscReg(int misc_reg,
-                                                const MiscReg &val)
+O3ThreadContext<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 {
     cpu->setMiscReg(misc_reg, val, thread->threadId());
 

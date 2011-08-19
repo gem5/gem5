@@ -134,7 +134,8 @@ class Interrupts : public SimObject
         return ((interrupts[INT_IRQ] && !cpsr.i) ||
                 (interrupts[INT_FIQ] && !cpsr.f) ||
                 (interrupts[INT_ABT] && !cpsr.a) ||
-                (interrupts[INT_RST]));
+                (interrupts[INT_RST]) ||
+                (interrupts[INT_SEV]));
     }
 
     /**
@@ -167,6 +168,8 @@ class Interrupts : public SimObject
                     ArmFault::AsynchronousExternalAbort);
         if (interrupts[INT_RST])
            return new Reset;
+        if (interrupts[INT_SEV])
+           return new ArmSev;
 
         panic("intStatus and interrupts not in sync\n");
     }

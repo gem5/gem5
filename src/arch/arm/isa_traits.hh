@@ -121,6 +121,7 @@ namespace ArmISA
         INT_ABT,
         INT_IRQ,
         INT_FIQ,
+        INT_SEV, // Special interrupt for recieving SEV's
         NumInterruptTypes
     };
 } // namespace ArmISA

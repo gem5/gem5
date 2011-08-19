@@ -184,9 +184,19 @@ class FullO3CPU : public BaseO3CPU
         if (activateThreadEvent[tid].squashed())
             reschedule(activateThreadEvent[tid],
                 nextCycle(curTick() + ticks(delay)));
-        else if (!activateThreadEvent[tid].scheduled())
-            schedule(activateThreadEvent[tid],
-                nextCycle(curTick() + ticks(delay)));
+        else if (!activateThreadEvent[tid].scheduled()) {
+            Tick when = nextCycle(curTick() + ticks(delay));
+
+            // Check if the deallocateEvent is also scheduled, and make
+            // sure they do not happen at same time causing a sleep that
+            // is never woken from.
+            if (deallocateContextEvent[tid].scheduled() &&
+                deallocateContextEvent[tid].when() == when) {
+                when++;
+            }
+
+            schedule(activateThreadEvent[tid], when);
+        }
     }
 
     /** Unschedule actiavte thread event, regardless of its current state. */

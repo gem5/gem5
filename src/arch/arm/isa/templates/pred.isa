@@ -205,6 +205,34 @@ def template QuiescePredOpExecute {{
     }
 }};
 
+def template QuiescePredOpExecuteWithFixup {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        uint64_t resTemp = 0;
+        resTemp = resTemp;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        if (%(predicate_test)s)
+        {
+            %(code)s;
+            if (fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+        } else {
+            xc->setPredicate(false);
+            %(pred_fixup)s;
+#if FULL_SYSTEM
+            PseudoInst::quiesceSkip(xc->tcBase());
+#endif
+        }
+
+        return fault;
+    }
+}};
+
 def template DataDecode {{
     if (machInst.opcode4 == 0) {
         if (machInst.sField == 0)
