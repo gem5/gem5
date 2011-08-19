@@ -140,7 +140,7 @@ ISA::clear()
 
     // See section B4.1.84 of ARM ARM
     // All values are latest for ARMv7-A profile
-    miscRegs[MISCREG_ID_ISAR0] = 0x01101111;
+    miscRegs[MISCREG_ID_ISAR0] = 0x02101111;
     miscRegs[MISCREG_ID_ISAR1] = 0x02112111;
     miscRegs[MISCREG_ID_ISAR2] = 0x21232141;
     miscRegs[MISCREG_ID_ISAR3] = 0x01112131;

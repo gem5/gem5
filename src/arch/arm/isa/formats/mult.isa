@@ -394,6 +394,16 @@ def format ArmSignedMultiplies() {{
                 }
             }
             break;
+          case 0x1:
+            if (op2 == 0 && m == 0 && ra == 0xf) {
+                return new Sdiv(machInst, rd, rn, rm);
+            }
+            break;
+          case 0x3:
+            if (op2 == 0 && m == 0 && ra == 0xf) {
+                return new Udiv(machInst, rd, rn, rm);
+            }
+            break;
           case 0x4:
             if (op2 == 0) {
                 if (m) {
