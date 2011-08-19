@@ -61,6 +61,7 @@
 #include "sim/process.hh"
 
 #if FULL_SYSTEM
+#include "arch/arm/system.hh"
 #include "arch/arm/table_walker.hh"
 #endif
 
@@ -72,7 +73,7 @@ TLB::TLB(const Params *p)
 #if FULL_SYSTEM
       , tableWalker(p->walker)
 #endif
-    , rangeMRU(1), miscRegValid(false)
+    , rangeMRU(1), bootUncacheability(false), miscRegValid(false)
 {
     table = new TlbEntry[size];
     memset(table, 0, sizeof(TlbEntry) * size);
@@ -575,6 +576,11 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
+
+    if (!bootUncacheability &&
+            ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(vaddr))
+        req->setFlags(Request::UNCACHEABLE);
+
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:
         domainFaults++;
@@ -704,7 +710,7 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 #else
     fault = translateSe(req, tc, mode, translation, delay, true);
 #endif
-    DPRINTF(TLB, "Translation returning delay=%d fault=%d\n", delay, fault !=
+    DPRINTF(TLBVerbose, "Translation returning delay=%d fault=%d\n", delay, fault !=
             NoFault);
     if (!delay)
         translation->finish(fault, req, tc, mode);

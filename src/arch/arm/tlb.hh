@@ -128,6 +128,8 @@ class TLB : public BaseTLB
 
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
 
+    bool bootUncacheability;
+
   public:
     typedef ArmTLBParams Params;
     TLB(const Params *p);
@@ -162,6 +164,7 @@ class TLB : public BaseTLB
 
     void printTlb();
 
+    void allCpusCaching() { bootUncacheability = true; }
     void demapPage(Addr vaddr, uint64_t asn)
     {
         flushMvaAsid(vaddr, asn);

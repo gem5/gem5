@@ -69,6 +69,8 @@ class LinuxArmSystem : public ArmSystem
 
     void initState();
 
+    bool adderBootUncacheable(Addr a);
+
   private:
 #ifndef NDEBUG
     /** Event to halt the simulator if the kernel calls panic()  */
@@ -87,6 +89,15 @@ class LinuxArmSystem : public ArmSystem
      * Thus we need to do some division to get back to us.
      */
     Linux::UDelayEvent *constUDelaySkipEvent;
+
+    /** These variables store addresses of important data structures
+     * that are normaly kept coherent at boot with cache mainetence operations.
+     * Since these operations aren't supported in gem5, we keep them coherent
+     * by making them uncacheable until all processors in the system boot.
+     */
+    Addr secDataPtrAddr;
+    Addr secDataAddr;
+    Addr penReleaseAddr;
 };
 
 #endif // __ARCH_ARM_LINUX_SYSTEM_HH__

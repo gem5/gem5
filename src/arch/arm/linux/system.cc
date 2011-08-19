@@ -117,6 +117,27 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     } else {
         panic("couldn't find kernel symbol \'udelay\'");
     }
+
+    secDataPtrAddr = 0;
+    secDataAddr = 0;
+    penReleaseAddr = 0;
+    kernelSymtab->findAddress("__secondary_data", secDataPtrAddr);
+    kernelSymtab->findAddress("secondary_data", secDataAddr);
+    kernelSymtab->findAddress("pen_release", penReleaseAddr);
+
+    secDataPtrAddr &= ~ULL(0x7F);
+    secDataAddr &= ~ULL(0x7F);
+    penReleaseAddr &= ~ULL(0x7F);
+}
+
+bool
+LinuxArmSystem::adderBootUncacheable(Addr a)
+{
+    Addr block = a & ~ULL(0x7F);
+    if (block == secDataPtrAddr || block == secDataAddr ||
+            block == penReleaseAddr)
+        return true;
+    return false;
 }
 
 void

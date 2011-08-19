@@ -360,6 +360,23 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 miscRegs[MISCREG_SCTLR] = (MiscReg)new_sctlr;
                 tc->getITBPtr()->invalidateMiscReg();
                 tc->getDTBPtr()->invalidateMiscReg();
+
+                // Check if all CPUs are booted with caches enabled
+                // so we can stop enforcing coherency of some kernel
+                // structures manually.
+                sys = tc->getSystemPtr();
+                for (x = 0; x < sys->numContexts(); x++) {
+                    oc = sys->getThreadContext(x);
+                    SCTLR other_sctlr = oc->readMiscRegNoEffect(MISCREG_SCTLR);
+                    if (!other_sctlr.c && oc->status() != ThreadContext::Halted)
+                        return;
+                }
+
+                for (x = 0; x < sys->numContexts(); x++) {
+                    oc = sys->getThreadContext(x);
+                    oc->getDTBPtr()->allCpusCaching();
+                    oc->getITBPtr()->allCpusCaching();
+                }
                 return;
             }
           case MISCREG_TLBTR:
