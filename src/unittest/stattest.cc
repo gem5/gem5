@@ -92,6 +92,7 @@ struct StatTest
     Histogram h10;
     Histogram h11;
     Histogram h12;
+    SparseHistogram sh1;
 
     Formula f1;
     Formula f2;
@@ -314,6 +315,12 @@ StatTest::init()
         .init(10)
         .name("Histogram12")
         .desc("this is histogram 12")
+        ;
+
+    sh1
+        .init(0)
+        .name("SparseHistogram1")
+        .desc("this is sparse histogram 1")
         ;
 
     f1
@@ -622,5 +629,9 @@ StatTest::run()
     for (int i = -1024; i <= 1023; i++) {
         h11.sample(i);
         h12.sample(i);
+    }
+
+    for (int i = 0; i < 1000; i++) {
+        sh1.sample(random() % 10000);
     }
 }

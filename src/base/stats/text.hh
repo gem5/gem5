@@ -67,6 +67,7 @@ class Text : public Output
     virtual void visit(const VectorDistInfo &info);
     virtual void visit(const Vector2dInfo &info);
     virtual void visit(const FormulaInfo &info);
+    virtual void visit(const SparseHistInfo &info);
 
     // Implement Output
     virtual bool valid() const;

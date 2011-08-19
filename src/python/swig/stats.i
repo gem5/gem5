@@ -137,6 +137,7 @@ template <class T> T cast_info(Info *info);
 %template(dynamic_VectorDistInfo) cast_info<VectorDistInfo *>;
 %template(dynamic_Vector2dInfo) cast_info<Vector2dInfo *>;
 %template(dynamic_FormulaInfo) cast_info<FormulaInfo *>;
+%template(dynamic_SparseHistInfo) cast_info<SparseHistInfo *>;
 
 void initSimStats();
 Output *initText(const std::string &filename, bool desc);

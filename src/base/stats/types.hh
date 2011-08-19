@@ -32,6 +32,7 @@
 #define __BASE_STATS_TYPES_HH__
 
 #include <limits>
+#include <map>
 #include <vector>
 
 #include "base/types.hh"
@@ -42,6 +43,8 @@ namespace Stats {
 typedef double Counter;
 /** vector of counters. */
 typedef std::vector<Counter> VCounter;
+/** map of counters */
+typedef std::map<Counter, int> MCounter;
 
 typedef std::numeric_limits<Counter> CounterLimits;
 

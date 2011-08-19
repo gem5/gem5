@@ -581,6 +581,92 @@ Text::visit(const FormulaInfo &info)
     visit((const VectorInfo &)info);
 }
 
+/*
+  This struct implements the output methods for the sparse
+  histogram stat
+*/
+struct SparseHistPrint
+{
+    string name;
+    string separatorString;
+    string desc;
+    Flags flags;
+    bool descriptions;
+    int precision;
+
+    const SparseHistData &data;
+
+    SparseHistPrint(const Text *text, const SparseHistInfo &info);
+    void init(const Text *text, const Info &info);
+    void operator()(ostream &stream) const;
+};
+
+/* Call initialization function */
+SparseHistPrint::SparseHistPrint(const Text *text, const SparseHistInfo &info)
+    : data(info.data)
+{
+    init(text, info);
+}
+
+/* Initialization function */
+void
+SparseHistPrint::init(const Text *text, const Info &info)
+{
+    name = info.name;
+    separatorString = info.separatorString;
+    desc = info.desc;
+    flags = info.flags;
+    precision = info.precision;
+    descriptions = text->descriptions;
+}
+
+/* Grab data from map and write to output stream */
+void
+SparseHistPrint::operator()(ostream &stream) const
+{
+    string base = name + separatorString;
+
+    ScalarPrint print;
+    print.precision = precision;
+    print.flags = flags;
+    print.descriptions = descriptions;
+    print.desc = desc;
+    print.pdf = NAN;
+    print.cdf = NAN;
+
+    print.name = base + "samples";
+    print.value = data.samples;
+    print(stream);
+
+    MCounter::const_iterator it;
+    for (it = data.cmap.begin(); it != data.cmap.end(); it++) {
+        stringstream namestr;
+        namestr << base;
+
+        namestr <<(*it).first;
+        print.name = namestr.str();
+        print.value = (*it).second;
+        print(stream);
+    }
+
+    print.pdf = NAN;
+    print.cdf = NAN;
+
+    print.name = base + "total";
+    print.value = total;
+    print(stream);
+}
+
+void
+Text::visit(const SparseHistInfo &info)
+{
+    if (noOutput(info))
+        return;
+
+    SparseHistPrint print(this, info);
+    print(*stream);
+}
+
 Output *
 initText(const string &filename, bool desc)
 {

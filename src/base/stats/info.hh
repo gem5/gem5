@@ -234,6 +234,20 @@ class FormulaInfo : public VectorInfo
     virtual std::string str() const = 0;
 };
 
+/** Data structure of sparse histogram */
+struct SparseHistData
+{
+    MCounter cmap;
+    Counter samples;
+};
+
+
+class SparseHistInfo : public Info
+{
+  public:
+    /** Local storage for the entry values, used for printing. */
+    SparseHistData data;
+};
 
 } // namespace Stats
 

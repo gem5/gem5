@@ -56,6 +56,7 @@
 #include <functional>
 #include <iosfwd>
 #include <list>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -2606,6 +2607,190 @@ class FormulaInfoProxy : public InfoProxy<Stat, FormulaInfo>
     VCounter &value() const { return cvec; }
 
     std::string str() const { return this->s.str(); }
+};
+
+template <class Stat>
+class SparseHistInfoProxy : public InfoProxy<Stat, SparseHistInfo>
+{
+  public:
+    SparseHistInfoProxy(Stat &stat) : InfoProxy<Stat, SparseHistInfo>(stat) {}
+};
+
+/**
+ * Implementation of a sparse histogram stat. The storage class is
+ * determined by the Storage template.
+ */
+template <class Derived, class Stor>
+class SparseHistBase : public DataWrap<Derived, SparseHistInfoProxy>
+{
+  public:
+    typedef SparseHistInfoProxy<Derived> Info;
+    typedef Stor Storage;
+    typedef typename Stor::Params Params;
+
+  protected:
+    /** The storage for this stat. */
+    char storage[sizeof(Storage)];
+
+  protected:
+    /**
+     * Retrieve the storage.
+     * @return The storage object for this stat.
+     */
+    Storage *
+    data()
+    {
+        return reinterpret_cast<Storage *>(storage);
+    }
+
+    /**
+     * Retrieve a const pointer to the storage.
+     * @return A const pointer to the storage object for this stat.
+     */
+    const Storage *
+    data() const
+    {
+        return reinterpret_cast<const Storage *>(storage);
+    }
+
+    void
+    doInit()
+    {
+        new (storage) Storage(this->info());
+        this->setInit();
+    }
+
+  public:
+    SparseHistBase() { }
+
+    /**
+     * Add a value to the distribtion n times. Calls sample on the storage
+     * class.
+     * @param v The value to add.
+     * @param n The number of times to add it, defaults to 1.
+     */
+    template <typename U>
+    void sample(const U &v, int n = 1) { data()->sample(v, n); }
+
+    /**
+     * Return the number of entries in this stat.
+     * @return The number of entries.
+     */
+    size_type size() const { return data()->size(); }
+    /**
+     * Return true if no samples have been added.
+     * @return True if there haven't been any samples.
+     */
+    bool zero() const { return data()->zero(); }
+
+    void
+    prepare()
+    {
+        Info *info = this->info();
+        data()->prepare(info, info->data);
+    }
+
+    /**
+     * Reset stat value to default
+     */
+    void
+    reset()
+    {
+        data()->reset(this->info());
+    }
+};
+
+/**
+ * Templatized storage and interface for a sparse histogram stat.
+ */
+class SparseHistStor
+{
+  public:
+    /** The parameters for a sparse histogram stat. */
+    struct Params : public DistParams
+    {
+        Params() : DistParams(Hist) {}
+    };
+
+  private:
+    /** Counter for number of samples */
+    Counter samples;
+    /** Counter for each bucket. */
+    MCounter cmap;
+
+  public:
+    SparseHistStor(Info *info)
+    {
+        reset(info);
+    }
+
+    /**
+     * Add a value to the distribution for the given number of times.
+     * @param val The value to add.
+     * @param number The number of times to add the value.
+     */
+    void
+    sample(Counter val, int number)
+    {
+        cmap[val] += number;
+        samples += number;
+    }
+
+    /**
+     * Return the number of buckets in this distribution.
+     * @return the number of buckets.
+     */
+    size_type size() const { return cmap.size(); }
+
+    /**
+     * Returns true if any calls to sample have been made.
+     * @return True if any values have been sampled.
+     */
+    bool
+    zero() const
+    {
+        return samples == Counter();
+    }
+
+    void
+    prepare(Info *info, SparseHistData &data)
+    {
+        MCounter::iterator it;
+        data.cmap.clear();
+        for (it = cmap.begin(); it != cmap.end(); it++) {
+            data.cmap[(*it).first] = (*it).second;
+        }
+
+        data.samples = samples;
+    }
+
+    /**
+     * Reset stat value to default
+     */
+    void
+    reset(Info *info)
+    {
+        cmap.clear();
+        samples = 0;
+    }
+};
+
+class SparseHistogram : public SparseHistBase<SparseHistogram, SparseHistStor>
+{
+  public:
+    /**
+     * Set the parameters of this histogram. @sa HistStor::Params
+     * @param size The number of buckets in the histogram
+     * @return A reference to this histogram.
+     */
+    SparseHistogram &
+    init(size_type size)
+    {
+        SparseHistStor::Params *params = new SparseHistStor::Params;
+        this->setParams(params);
+        this->doInit();
+        return this->self();
+    }
 };
 
 class Temp;

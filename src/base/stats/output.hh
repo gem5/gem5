@@ -43,6 +43,7 @@ class DistInfo;
 class VectorDistInfo;
 class Vector2dInfo;
 class FormulaInfo;
+class SparseHistInfo; // Sparse histogram
 
 struct Output
 {
@@ -57,6 +58,7 @@ struct Output
     virtual void visit(const VectorDistInfo &info) = 0;
     virtual void visit(const Vector2dInfo &info) = 0;
     virtual void visit(const FormulaInfo &info) = 0;
+    virtual void visit(const SparseHistInfo &info) = 0; // Sparse histogram
 };
 
 } // namespace Stats
