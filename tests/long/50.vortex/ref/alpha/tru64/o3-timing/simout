@@ -1,11 +1,13 @@
+Redirecting stdout to build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing/simout
+Redirecting stderr to build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 15 2011 17:43:54
-gem5 started Jul 15 2011 19:00:26
-gem5 executing on u200439-lin.austin.arm.com
+gem5 compiled Aug 17 2011 14:47:20
+gem5 started Aug 17 2011 14:49:49
+gem5 executing on nadc-0388
 command line: build/ALPHA_SE/gem5.opt -d build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/50.vortex/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
-Exiting @ tick 22743377000 because target called exit()
+Exiting @ tick 21280925000 because target called exit()

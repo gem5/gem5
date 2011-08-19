@@ -1,9 +1,11 @@
+Redirecting stdout to build/X86_SE/tests/opt/long/00.gzip/x86/linux/o3-timing/simout
+Redirecting stderr to build/X86_SE/tests/opt/long/00.gzip/x86/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 15 2011 18:01:24
-gem5 started Jul 15 2011 20:50:21
-gem5 executing on u200439-lin.austin.arm.com
+gem5 compiled Aug 18 2011 15:15:16
+gem5 started Aug 18 2011 15:56:00
+gem5 executing on nadc-0330
 command line: build/X86_SE/gem5.opt -d build/X86_SE/tests/opt/long/00.gzip/x86/linux/o3-timing -re tests/run.py build/X86_SE/tests/opt/long/00.gzip/x86/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -1062,4 +1064,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 749294021000 because target called exit()
+Exiting @ tick 631043541000 because target called exit()
