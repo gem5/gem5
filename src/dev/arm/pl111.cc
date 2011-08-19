@@ -263,7 +263,7 @@ Pl111::write(PacketPtr pkt)
         DPRINTF(PL111, "####### Upper panel base set to: %#x #######\n", lcdUpbase);
         break;
       case LcdLpBase:
-        warn("LCD dual screen mode not supported\n");
+        warn_once("LCD dual screen mode not supported\n");
         lcdLpbase = data;
         DPRINTF(PL111, "###### Lower panel base set to: %#x #######\n", lcdLpbase);
         break;
