@@ -211,7 +211,10 @@ IdeController::readConfig(PacketPtr pkt)
                 (uint32_t)pkt->get<uint16_t>());
         break;
       case sizeof(uint32_t):
-        panic("No 32bit reads implemented for this device.");
+        if (offset == IDEConfig)
+            pkt->set<uint32_t>(ideConfig);
+        else
+            panic("No 32bit reads implemented for this device.");
         DPRINTF(IdeCtrl, "PCI read offset: %#x size: 4 data: %#x\n", offset,
                 (uint32_t)pkt->get<uint32_t>());
         break;
@@ -275,7 +278,10 @@ IdeController::writeConfig(PacketPtr pkt)
                     offset, (uint32_t)pkt->get<uint16_t>());
             break;
           case sizeof(uint32_t):
-            panic("Write of unimplemented PCI config. register: %x\n", offset);
+            if (offset == IDEConfig)
+                ideConfig = pkt->get<uint32_t>();
+            else
+                panic("Write of unimplemented PCI config. register: %x\n", offset);
             break;
           default:
             panic("invalid access size(?) for PCI configspace!\n");
@@ -312,6 +318,7 @@ IdeController::writeConfig(PacketPtr pkt)
         break;
 
       case PCI_COMMAND:
+        DPRINTF(IdeCtrl, "Writing to PCI Command val: %#x\n", config.command);
         ioEnabled = (config.command & htole(PCI_CMD_IOSE));
         bmEnabled = (config.command & htole(PCI_CMD_BME));
         break;

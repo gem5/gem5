@@ -46,10 +46,11 @@
 
 class ChunkGenerator;
 
-#define DMA_BACKOFF_PERIOD 200
+#define DMA_BACKOFF_PERIOD      200
 
-#define MAX_DMA_SIZE    (131072)  // 128K
-#define MAX_MULTSECT    (128)
+#define MAX_DMA_SIZE            0x20000  // 128K
+#define MAX_SINGLE_DMA_SIZE     0x10000
+#define MAX_MULTSECT            (128)
 
 #define PRD_BASE_MASK  0xfffffffe
 #define PRD_COUNT_MASK 0xfffe
@@ -72,7 +73,7 @@ class PrdTableEntry {
 
     uint32_t getByteCount()
     {
-        return ((entry.byteCount == 0) ? MAX_DMA_SIZE :
+        return ((entry.byteCount == 0) ? MAX_SINGLE_DMA_SIZE :
                 (entry.byteCount & PRD_COUNT_MASK));
     }
 

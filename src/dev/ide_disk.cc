@@ -334,6 +334,7 @@ IdeDisk::doDmaTransfer()
 void
 IdeDisk::dmaPrdReadDone()
 {
+
     DPRINTF(IdeDisk,
             "PRD: baseAddr:%#x (%#x) byteCount:%d (%d) eot:%#x sector:%d\n",
             curPrd.getBaseAddr(), pciToDma(curPrd.getBaseAddr()),
@@ -465,6 +466,8 @@ IdeDisk::doDmaDataWrite()
         bytesRead += SectorSize;
         cmdBytesLeft -= SectorSize;
     }
+    DPRINTF(IdeDisk, "doDmaWrite, bytesRead: %d cmdBytesLeft: %d\n",
+            bytesRead, cmdBytesLeft);
 
     schedule(dmaWriteWaitEvent, curTick() + totalDiskDelay);
 }
@@ -472,7 +475,7 @@ IdeDisk::doDmaDataWrite()
 void
 IdeDisk::doDmaWrite()
 {
-
+    DPRINTF(IdeDisk, "doDmaWrite: rescheduling\n");
     if (!dmaWriteCG) {
         // clear out the data buffer
         dmaWriteCG = new ChunkGenerator(curPrd.getBaseAddr(),
@@ -480,17 +483,22 @@ IdeDisk::doDmaWrite()
     }
     if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
         schedule(dmaWriteWaitEvent, curTick() + DMA_BACKOFF_PERIOD);
+        DPRINTF(IdeDisk, "doDmaWrite: rescheduling\n");
         return;
     } else if (!dmaWriteCG->done()) {
         assert(dmaWriteCG->complete() < MAX_DMA_SIZE);
         ctrl->dmaWrite(pciToDma(dmaWriteCG->addr()), dmaWriteCG->size(),
                 &dmaWriteWaitEvent, dataBuffer + dmaWriteCG->complete());
+        DPRINTF(IdeDisk, "doDmaWrite: not done curPrd byte count %d, eot %#x\n",
+                curPrd.getByteCount(), curPrd.getEOT());
         dmaWriteBytes += dmaWriteCG->size();
         dmaWriteTxs++;
         if (dmaWriteCG->size() == TheISA::PageBytes)
             dmaWriteFullPages++;
         dmaWriteCG->next();
     } else {
+        DPRINTF(IdeDisk, "doDmaWrite: done curPrd byte count %d, eot %#x\n",
+                curPrd.getByteCount(), curPrd.getEOT());
         assert(dmaWriteCG->done());
         delete dmaWriteCG;
         dmaWriteCG = NULL;
@@ -501,6 +509,8 @@ IdeDisk::doDmaWrite()
 void
 IdeDisk::dmaWriteDone()
 {
+    DPRINTF(IdeDisk, "doWriteDone: curPrd byte count %d, eot %#x cmd bytes left:%d\n",
+                curPrd.getByteCount(), curPrd.getEOT(), cmdBytesLeft);
     // check for the EOT
     if (curPrd.getEOT()) {
         assert(cmdBytesLeft == 0);
@@ -636,7 +646,7 @@ IdeDisk::startCommand()
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
             cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
-
+        DPRINTF(IdeDisk, "Setting cmdBytesLeft to %d\n", cmdBytesLeft);
         curSector = getLBABase();
 
         devState = Prepare_Data_Out;
@@ -654,6 +664,7 @@ IdeDisk::startCommand()
             cmdBytes = cmdBytesLeft = (256 * SectorSize);
         else
             cmdBytes = cmdBytesLeft = (cmdReg.sec_count * SectorSize);
+        DPRINTF(IdeDisk, "Setting cmdBytesLeft to %d in readdma\n", cmdBytesLeft);
 
         curSector = getLBABase();
 
