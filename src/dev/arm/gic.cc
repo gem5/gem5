@@ -679,6 +679,8 @@ Gic::sendInt(uint32_t num)
 void
 Gic::sendPPInt(uint32_t num, uint32_t cpu)
 {
+    DPRINTF(Interrupt, "Received Interrupt number %d, cpuTarget %#x: \n",
+            num, cpu);
     cpuPpiPending[cpu] |= 1 << (num - SGI_MAX);
     updateIntState(intNumToWord(num));
 }

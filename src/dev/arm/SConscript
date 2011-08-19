@@ -52,6 +52,7 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'arm':
     Source('timer_sp804.cc')
     Source('rv_ctrl.cc')
     Source('realview.cc')
+    Source('timer_cpulocal.cc')
 
     DebugFlag('AMBA')
     DebugFlag('PL111')

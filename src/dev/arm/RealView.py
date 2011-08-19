@@ -108,6 +108,13 @@ class Sp804(AmbaDevice):
     clock1 = Param.Clock('1MHz', "Clock speed of the input")
     amba_id = 0x00141804
 
+class CpuLocalTimer(BasicPioDevice):
+    type = 'CpuLocalTimer'
+    gic = Param.Gic(Parent.any, "Gic to use for interrupting")
+    int_num_timer = Param.UInt32("Interrrupt number used per-cpu to GIC")
+    int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
+    clock = Param.Clock('1GHz', "Clock speed at which the timer counts")
+
 class Pl050(AmbaIntDevice):
     type = 'Pl050'
     vnc = Param.VncServer(Parent.any, "Vnc server for remote frame buffer display")
@@ -134,6 +141,7 @@ class RealViewPBX(RealView):
     gic = Gic()
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
+    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x1f000600)
     clcd = Pl111(pio_addr=0x10020000, int_num=55)
     kmi0   = Pl050(pio_addr=0x10006000, int_num=52)
     kmi1   = Pl050(pio_addr=0x10007000, int_num=53, is_mouse=True)
@@ -170,6 +178,7 @@ class RealViewPBX(RealView):
        self.gic.pio = bus.port
        self.l2x0_fake.pio = bus.port
        self.a9scu.pio = bus.port
+       self.local_cpu_timer.pio = bus.port
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
