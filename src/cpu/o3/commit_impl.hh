@@ -1189,8 +1189,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         }
     }
 #endif
-    DPRINTF(Commit, "Committing instruction with [sn:%lli]\n",
-            head_inst->seqNum);
+    DPRINTF(Commit, "Committing instruction with [sn:%lli] PC %s\n",
+            head_inst->seqNum, head_inst->pcState());
     if (head_inst->traceData) {
         head_inst->traceData->setFetchSeq(head_inst->seqNum);
         head_inst->traceData->setCPSeq(thread[tid]->numInst);

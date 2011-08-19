@@ -285,7 +285,8 @@ MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
         loadBarrierSN = barr_sn;
         storeBarrier = true;
         storeBarrierSN = barr_sn;
-        DPRINTF(MemDepUnit, "Inserted a memory barrier\n");
+        DPRINTF(MemDepUnit, "Inserted a memory barrier %s SN:%lli\n",
+                barr_inst->pcState(),barr_sn);
     } else if (barr_inst->isWriteBarrier()) {
         storeBarrier = true;
         storeBarrierSN = barr_sn;

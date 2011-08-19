@@ -169,7 +169,7 @@ class MemDepUnit
             ++memdep_count;
 
             DPRINTF(MemDepUnit, "Memory dependency entry created.  "
-                    "memdep_count=%i\n", memdep_count);
+                    "memdep_count=%i %s\n", memdep_count, inst->pcState());
 #endif
         }
 
@@ -183,7 +183,7 @@ class MemDepUnit
             --memdep_count;
 
             DPRINTF(MemDepUnit, "Memory dependency entry deleted.  "
-                    "memdep_count=%i\n", memdep_count);
+                    "memdep_count=%i %s\n", memdep_count, inst->pcState());
 #endif
         }
 
