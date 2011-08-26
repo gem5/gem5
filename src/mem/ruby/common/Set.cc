@@ -300,8 +300,7 @@ void
 Set::setSize(int size)
 {
     m_nSize = size;
-
-    m_nArrayLen = m_nSize / LONG_BITS + ((m_nSize % LONG_BITS == 0) ? 0 : 1 );
+    m_nArrayLen = (m_nSize + LONG_BITS - 1) / LONG_BITS;
 
     // decide whether to use dynamic or static alloction
     if (m_nArrayLen <= NUMBER_WORDS_PER_SET) {
