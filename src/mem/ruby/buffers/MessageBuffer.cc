@@ -161,16 +161,12 @@ MessageBuffer::enqueue(MsgPtr message, Time delta)
     }
     m_msgs_this_cycle++;
 
-    //  assert(m_max_size == -1 || m_size <= m_max_size + 1);
-    // the plus one is a kluge because of a SLICC issue
-
     if (!m_ordering_set) {
         panic("Ordering property of %s has not been set", m_name);
     }
 
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
-    //printf ("delta %i \n", delta);
     assert(delta>0);
     Time current_time = g_eventQueue_ptr->getTime();
     Time arrival_time = 0;

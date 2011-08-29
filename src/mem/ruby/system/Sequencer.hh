@@ -112,9 +112,6 @@ class Sequencer : public RubyPort, public Consumer
     void removeRequest(SequencerRequest* request);
 
   private:
-    bool tryCacheAccess(const Address& addr, RubyRequestType type,
-                        const Address& pc, RubyAccessMode access_mode,
-                        int size, DataBlock*& data_ptr);
     void issueRequest(const RubyRequest& request);
 
     void hitCallback(SequencerRequest* request, 

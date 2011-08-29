@@ -36,7 +36,6 @@
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/protocol/GenericRequestType.hh"
-#include "mem/protocol/MachineType.hh"
 #include "mem/protocol/RubyRequest.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"

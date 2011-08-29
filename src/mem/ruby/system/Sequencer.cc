@@ -504,11 +504,6 @@ Sequencer::hitCallback(SequencerRequest* srequest,
                  success ? "Done" : "SC_Failed", "", "",
                  ruby_request.m_PhysicalAddress, miss_latency);
     }
-#if 0
-    if (request.getPrefetch() == PrefetchBit_Yes) {
-        return; // Ignore the prefetch
-    }
-#endif
 
     // update the data
     if (ruby_request.data != NULL) {
@@ -701,19 +696,6 @@ Sequencer::issueRequest(const RubyRequest& request)
     assert(m_mandatory_q_ptr != NULL);
     m_mandatory_q_ptr->enqueue(msg, latency);
 }
-
-#if 0
-bool
-Sequencer::tryCacheAccess(const Address& addr, RubyRequestType type,
-                          RubyAccessMode access_mode,
-                          int size, DataBlock*& data_ptr)
-{
-    CacheMemory *cache =
-        (type == RubyRequestType_IFETCH) ? m_instCache_ptr : m_dataCache_ptr;
-
-    return cache->tryCacheAccess(line_address(addr), type, data_ptr);
-}
-#endif
 
 template <class KEY, class VALUE>
 std::ostream &

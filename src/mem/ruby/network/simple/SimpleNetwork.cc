@@ -30,7 +30,6 @@
 #include <numeric>
 
 #include "base/stl_helpers.hh"
-#include "mem/protocol/MachineType.hh"
 #include "mem/protocol/TopologyType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/NetDest.hh"
@@ -45,18 +44,6 @@
 
 using namespace std;
 using m5::stl_helpers::deletePointers;
-
-#if 0
-// ***BIG HACK*** - This is actually code that _should_ be in Network.cc
-
-// Note: Moved to Princeton Network
-// calls new to abstract away from the network
-Network*
-Network::createNetwork(int nodes)
-{
-    return new SimpleNetwork(nodes);
-}
-#endif
 
 SimpleNetwork::SimpleNetwork(const Params *p)
     : Network(p)
