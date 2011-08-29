@@ -56,4 +56,4 @@ class FormalParamAST(AST):
 
             return type, "%s* %s" % (type.c_ident, param)
         else:
-            return type, "%s %s" % (type.c_ident, param)
+            return type, "const %s& %s" % (type.c_ident, param)

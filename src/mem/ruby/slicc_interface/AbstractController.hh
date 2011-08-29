@@ -63,8 +63,8 @@ class AbstractController : public SimObject, public Consumer
     virtual void blockOnQueue(Address, MessageBuffer*) = 0;
     virtual void unblock(Address) = 0;
     virtual void initNetworkPtr(Network* net_ptr) = 0;
-    virtual AccessPermission getAccessPermission(Address addr) = 0;
-    virtual DataBlock& getDataBlock(Address addr) = 0;
+    virtual AccessPermission getAccessPermission(const Address& addr) = 0;
+    virtual DataBlock& getDataBlock(const Address& addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
     virtual void printStats(std::ostream & out) const = 0;
