@@ -138,7 +138,7 @@ BasePrefetcher::getPacket()
         return NULL;
     }
 
-    PacketPtr pkt;
+    PacketPtr pkt = *pf.begin();
     while (!pf.empty()) {
         pkt = *pf.begin();
         pf.pop_front();
