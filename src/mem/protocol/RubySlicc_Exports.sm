@@ -63,6 +63,14 @@ enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent")
   // writes should update the block because a dataless PUT request may
   // revalidate the block's data.
   Maybe_Stale, desc="block can be stale or revalidated by a dataless PUT";
+  // In Broadcast/Snoop protocols, memory has no idea if it is exclusive owner
+  // or not of a block, making it hard to make the logic of having only one
+  // read_write block in the system impossible. This is to allow the memory to
+  // say, "I have the block" and for the RubyPort logic to know that this is a
+  // last-resort block if there are no writable copies in the caching hierarchy.
+  // This is not supposed to be used in directory or token protocols where
+  // memory/NB has an idea of what is going on in the whole system.
+  Backing_Store, desc="for memory in Broadcast/Snoop protocols";
 
   // Invalid data
   Invalid,    desc="block is in an Invalid base state";
