@@ -618,8 +618,22 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 TlbEntry newEntry;
                 bool success = p->pTable->lookup(vaddr, newEntry);
                 if (!success && mode != Execute) {
-                    p->checkAndAllocNextPage(vaddr);
-                    success = p->pTable->lookup(vaddr, newEntry);
+                    // This may fail because for some reason the requested
+                    // address is not allocatable on the stack.  If it's a stack
+                    // address, then it's because the address fell outside of
+                    // max stack range and user should increase max size of
+                    // stack.  Otherwise, it could be a random address that was
+                    // not in the page table and not on the stack.  Either way,
+                    // you'll end up with a page fault.
+                    if (p->checkAndAllocNextPage(vaddr))
+                        // Might as well not check this if you failed to
+                        // allocate.  Partially nested this just so code
+                        // maintainers can understand this is a separate and
+                        // necessary step not sufficient just by reading return
+                        // value of checkAndAlloc call because there is a side
+                        // effect.  This call will populate (it's called by 
+                        // reference).
+                        success = p->pTable->lookup(vaddr, newEntry);
                 }
                 if (!success) {
                     return new PageFault(vaddr, true, mode, true, false);

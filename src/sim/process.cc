@@ -351,6 +351,7 @@ Process::checkAndAllocNextPage(Addr vaddr)
         };
         return true;
     }
+    warn("Not increasing stack: requested vaddr is outside of stack range.");
     return false;
 }
 
