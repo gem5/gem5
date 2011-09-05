@@ -539,13 +539,14 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
     int seg = flags & SegmentFlagMask;
     bool storeCheck = flags & (StoreCheck << FlagShift);
 
+    delayedResponse = false;
+
     // If this is true, we're dealing with a request to a non-memory address
     // space.
     if (seg == SEGMENT_REG_MS) {
         return translateInt(req, tc);
     }
 
-    delayedResponse = false;
     Addr vaddr = req->getVaddr();
     DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
 
