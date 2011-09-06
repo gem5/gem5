@@ -100,7 +100,15 @@ namespace X86ISA
             X86ISA::X86StaticInst(mnem, _machInst, __opClass),
             instMnem(_instMnem)
         {
-            flags |= setFlags;
+            const int ChunkSize = sizeof(unsigned long);
+            const int Chunks = sizeof(setFlags) / ChunkSize;
+
+            // Since the bitset constructor can only handle unsigned long
+            // sized chunks, feed it those one at a time while oring them in.
+            for (int i = 0; i < Chunks; i++) {
+                unsigned shift = i * ChunkSize * 8;
+                flags |= (std::bitset<NumFlags>(setFlags >> shift) << shift);
+            }
         }
 
         std::string generateDisassembly(Addr pc,
