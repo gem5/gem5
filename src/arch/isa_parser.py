@@ -856,7 +856,8 @@ class SubOperandList(OperandList):
 
 # Regular expression object to match C++ comments
 # (used in findOperands())
-commentRE = re.compile(r'//.*\n')
+commentRE = re.compile(r'(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',
+        re.DOTALL | re.MULTILINE)
 
 # Regular expression object to match assignment statements
 # (used in findOperands())
