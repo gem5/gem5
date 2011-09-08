@@ -687,8 +687,9 @@ class OperandList(object):
     def __init__(self, parser, code):
         self.items = []
         self.bases = {}
-        # delete comments so we don't match on reg specifiers inside
-        code = commentRE.sub('', code)
+        # delete strings and comments so we don't match on operands inside
+        for regEx in (stringRE, commentRE):
+            code = regEx.sub('', code)
         # search for operands
         next_pos = 0
         while 1:
@@ -802,8 +803,9 @@ class SubOperandList(OperandList):
     def __init__(self, parser, code, master_list):
         self.items = []
         self.bases = {}
-        # delete comments so we don't match on reg specifiers inside
-        code = commentRE.sub('', code)
+        # delete strings and comments so we don't match on operands inside
+        for regEx in (stringRE, commentRE):
+            code = regEx.sub('', code)
         # search for operands
         next_pos = 0
         while 1:
@@ -853,6 +855,9 @@ class SubOperandList(OperandList):
                 if self.memOperand:
                     error("Code block has more than one memory operand.")
                 self.memOperand = op_desc
+
+# Regular expression object to match C++ strings
+stringRE = re.compile(r'"([^"\\]|\\.)*"')
 
 # Regular expression object to match C++ comments
 # (used in findOperands())
