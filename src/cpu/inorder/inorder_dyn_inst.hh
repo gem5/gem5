@@ -71,7 +71,6 @@
  */
 
 // Forward declaration.
-class StaticInstPtr;
 class ResourceRequest;
 class Packet;
 

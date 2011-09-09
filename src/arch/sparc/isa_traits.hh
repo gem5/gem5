@@ -36,8 +36,7 @@
 #include "arch/sparc/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
-
-class StaticInstPtr;
+#include "cpu/static_inst_fwd.hh"
 
 namespace BigEndianGuest {}
 

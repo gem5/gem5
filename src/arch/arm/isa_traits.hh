@@ -47,12 +47,11 @@
 
 #include "arch/arm/types.hh"
 #include "base/types.hh"
+#include "cpu/static_inst_fwd.hh"
 
 namespace LittleEndianGuest {}
 
 #define TARGET_ARM
-
-class StaticInstPtr;
 
 namespace ArmISA
 {

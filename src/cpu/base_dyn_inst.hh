@@ -71,9 +71,6 @@
  * Defines a dynamic instruction context.
  */
 
-// Forward declaration.
-class StaticInstPtr;
-
 template <class Impl>
 class BaseDynInst : public FastAlloc, public RefCounted
 {

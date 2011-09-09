@@ -41,6 +41,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/op_class.hh"
+#include "cpu/static_inst_fwd.hh"
 #include "sim/fault_fwd.hh"
 
 // forward declarations
@@ -76,9 +77,18 @@ namespace Trace {
  * solely on these flags can process instructions without being
  * recompiled for multiple ISAs.
  */
-class StaticInstBase : public RefCounted
+class StaticInst : public RefCounted
 {
   public:
+    /// Binary extended machine instruction type.
+    typedef TheISA::ExtMachInst ExtMachInst;
+    /// Logical register index type.
+    typedef TheISA::RegIndex RegIndex;
+
+    enum {
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,      //< Max dest regs
+    };
 
     /// Set of boolean static instruction properties.
     ///
@@ -179,17 +189,6 @@ class StaticInstBase : public RefCounted
     int8_t _numIntDestRegs;
     //@}
 
-    /// Constructor.
-    /// It's important to initialize everything here to a sane
-    /// default, since the decoder generally only overrides
-    /// the fields that are meaningful for the particular
-    /// instruction.
-    StaticInstBase(OpClass __opClass)
-        : _opClass(__opClass), _numSrcRegs(0), _numDestRegs(0),
-          _numFPDestRegs(0), _numIntDestRegs(0)
-    {
-    }
-
   public:
 
     /// @name Register information.
@@ -210,7 +209,7 @@ class StaticInstBase : public RefCounted
 
     /// @name Flag accessors.
     /// These functions are used to access the values of the various
-    /// instruction property flags.  See StaticInstBase::Flags for descriptions
+    /// instruction property flags.  See StaticInst::Flags for descriptions
     /// of the individual flags.
     //@{
 
@@ -266,31 +265,6 @@ class StaticInstBase : public RefCounted
 
     /// Operation class.  Used to select appropriate function unit in issue.
     OpClass opClass()     const { return _opClass; }
-};
-
-
-// forward declaration
-class StaticInstPtr;
-
-/**
- * Generic yet ISA-dependent static instruction class.
- *
- * This class builds on StaticInstBase, defining fields and interfaces
- * that are generic across all ISAs but that differ in details
- * according to the specific ISA being used.
- */
-class StaticInst : public StaticInstBase
-{
-  public:
-    /// Binary extended machine instruction type.
-    typedef TheISA::ExtMachInst ExtMachInst;
-    /// Logical register index type.
-    typedef TheISA::RegIndex RegIndex;
-
-    enum {
-        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,      //< Max dest regs
-    };
 
 
     /// Return logical index (architectural reg num) of i'th destination reg.
@@ -355,8 +329,13 @@ class StaticInst : public StaticInstBase
     generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
 
     /// Constructor.
+    /// It's important to initialize everything here to a sane
+    /// default, since the decoder generally only overrides
+    /// the fields that are meaningful for the particular
+    /// instruction.
     StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
-        : StaticInstBase(__opClass),
+        : _opClass(__opClass), _numSrcRegs(0), _numDestRegs(0),
+          _numFPDestRegs(0), _numIntDestRegs(0),
           machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
     { }
 
@@ -412,39 +391,6 @@ class StaticInst : public StaticInstBase
 
     /// Return name of machine instruction
     std::string getName() { return mnemonic; }
-};
-
-typedef RefCountingPtr<StaticInstBase> StaticInstBasePtr;
-
-/// Reference-counted pointer to a StaticInst object.
-/// This type should be used instead of "StaticInst *" so that
-/// StaticInst objects can be properly reference-counted.
-class StaticInstPtr : public RefCountingPtr<StaticInst>
-{
-  public:
-    /// Constructor.
-    StaticInstPtr()
-        : RefCountingPtr<StaticInst>()
-    {
-    }
-
-    /// Conversion from "StaticInst *".
-    StaticInstPtr(StaticInst *p)
-        : RefCountingPtr<StaticInst>(p)
-    {
-    }
-
-    /// Copy constructor.
-    StaticInstPtr(const StaticInstPtr &r)
-        : RefCountingPtr<StaticInst>(r)
-    {
-    }
-
-    /// Convert to pointer to StaticInstBase class.
-    operator const StaticInstBasePtr()
-    {
-        return this->get();
-    }
 };
 
 #endif // __CPU_STATIC_INST_HH__

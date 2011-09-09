@@ -40,7 +40,7 @@
 #ifndef __ARCH_X86_INSTS_BADMICROOP_HH__
 #define __ARCH_X86_INSTS_BADMICROOP_HH__
 
-class StaticInstPtr;
+#include "cpu/static_inst_fwd.hh"
 
 namespace X86ISA
 {

@@ -140,12 +140,12 @@ MacroMemOp::MacroMemOp(const char *mnem, ExtMachInst machInst,
         } else if (load) {
             *++uop = new MicroUopRegMov(machInst, regIdx, INTREG_UREG1);
             if (reg == INTREG_PC) {
-                (*uop)->setFlag(StaticInstBase::IsControl);
-                (*uop)->setFlag(StaticInstBase::IsCondControl);
-                (*uop)->setFlag(StaticInstBase::IsIndirectControl);
+                (*uop)->setFlag(StaticInst::IsControl);
+                (*uop)->setFlag(StaticInst::IsCondControl);
+                (*uop)->setFlag(StaticInst::IsIndirectControl);
                 // This is created as a RAS POP
                 if (rn == INTREG_SP)
-                    (*uop)->setFlag(StaticInstBase::IsReturn);
+                    (*uop)->setFlag(StaticInst::IsReturn);
 
             }
         }

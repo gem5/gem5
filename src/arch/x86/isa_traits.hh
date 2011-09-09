@@ -43,8 +43,7 @@
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/types.hh"
-
-class StaticInstPtr;
+#include "cpu/static_inst_fwd.hh"
 
 namespace LittleEndianGuest {}
 
