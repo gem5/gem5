@@ -78,6 +78,8 @@ class InOrderThreadContext : public ThreadContext
     /** @TODO: PERF: Should we bind this to a pointer in constructor? */
     TheISA::TLB *getDTBPtr() { return cpu->getDTBPtr(); }
 
+    Decoder *getDecoderPtr() { return cpu->getDecoderPtr(); }
+
     System *getSystemPtr() { return cpu->system; }
 
     /** Returns a pointer to this CPU. */

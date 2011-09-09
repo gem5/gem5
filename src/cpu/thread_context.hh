@@ -48,6 +48,7 @@ namespace TheISA
 }
 class BaseCPU;
 class Checkpoint;
+class Decoder;
 class EndQuiesceEvent;
 class TranslatingPort;
 class FunctionalPort;
@@ -119,6 +120,8 @@ class ThreadContext
     virtual TheISA::TLB *getITBPtr() = 0;
 
     virtual TheISA::TLB *getDTBPtr() = 0;
+
+    virtual Decoder *getDecoderPtr() = 0;
 
     virtual System *getSystemPtr() = 0;
 
@@ -286,6 +289,8 @@ class ProxyThreadContext : public ThreadContext
     TheISA::TLB *getITBPtr() { return actualTC->getITBPtr(); }
 
     TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
+
+    Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
 
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 

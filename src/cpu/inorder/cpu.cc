@@ -1766,6 +1766,14 @@ InOrderCPU::getDTBPtr()
     return dtb_res->tlb();
 }
 
+Decoder *
+InOrderCPU::getDecoderPtr()
+{
+    FetchUnit *fetch_res =
+        dynamic_cast<FetchUnit*>(resPool->getResource(fetchPortIdx));
+    return &fetch_res->decoder;
+}
+
 Fault
 InOrderCPU::read(DynInstPtr inst, Addr addr,
                  uint8_t *data, unsigned size, unsigned flags)

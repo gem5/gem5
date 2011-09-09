@@ -38,6 +38,7 @@
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
+#include "cpu/decode.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2011 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,70 +25,35 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Nathan Binkert
+ * Authors: Gabe Black
  */
 
-#include <iostream>
+#ifndef __CPU_DECODE_HH__
+#define __CPU_DECODE_HH__
 
+#include "arch/isa_traits.hh"
+#include "arch/types.hh"
+#include "config/the_isa.hh"
+#include "cpu/decode_cache.hh"
 #include "cpu/static_inst.hh"
-#include "sim/core.hh"
 
-StaticInstPtr StaticInst::nullStaticInstPtr;
-
-using namespace std;
-
-StaticInst::~StaticInst()
+/// The decoder class. This class doesn't do much of anything now, but in the
+/// future it will be redefinable per ISA and allow more interesting behavior.
+class Decoder
 {
-    if (cachedDisassembly)
-        delete cachedDisassembly;
-}
+  protected:
+    /// A cache of decoded instruction objects.
+    static DecodeCache<TheISA::decodeInst> cache;
 
-bool
-StaticInst::hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
-                            TheISA::PCState &tgt) const
-{
-    if (isDirectCtrl()) {
-        tgt = branchTarget(pc);
-        return true;
+  public:
+    /// Decode a machine instruction.
+    /// @param mach_inst The binary instruction to decode.
+    /// @retval A pointer to the corresponding StaticInst object.
+    StaticInstPtr
+    decode(TheISA::ExtMachInst mach_inst, Addr addr)
+    {
+        return cache.decode(mach_inst, addr);
     }
+};
 
-    if (isIndirectCtrl()) {
-        tgt = branchTarget(tc);
-        return true;
-    }
-
-    return false;
-}
-
-StaticInstPtr
-StaticInst::fetchMicroop(MicroPC upc) const
-{
-    panic("StaticInst::fetchMicroop() called on instruction "
-          "that is not microcoded.");
-}
-
-TheISA::PCState
-StaticInst::branchTarget(const TheISA::PCState &pc) const
-{
-    panic("StaticInst::branchTarget() called on instruction "
-          "that is not a PC-relative branch.");
-    M5_DUMMY_RETURN;
-}
-
-TheISA::PCState
-StaticInst::branchTarget(ThreadContext *tc) const
-{
-    panic("StaticInst::branchTarget() called on instruction "
-          "that is not an indirect branch.");
-    M5_DUMMY_RETURN;
-}
-
-const string &
-StaticInst::disassemble(Addr pc, const SymbolTable *symtab) const
-{
-    if (!cachedDisassembly)
-        cachedDisassembly = new string(generateDisassembly(pc, symtab));
-
-    return *cachedDisassembly;
-}
+#endif // __CPU_DECODE_HH__

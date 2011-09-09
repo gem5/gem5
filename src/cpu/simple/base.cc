@@ -383,7 +383,7 @@ BaseSimpleCPU::preExecute()
             stayAtPC = false;
             ExtMachInst machInst = predecoder.getExtMachInst(pcState);
             thread->pcState(pcState);
-            instPtr = StaticInst::decode(machInst, pcState.instAddr());
+            instPtr = thread->decoder.decode(machInst, pcState.instAddr());
         } else {
             stayAtPC = true;
             fetchOffset += sizeof(MachInst);

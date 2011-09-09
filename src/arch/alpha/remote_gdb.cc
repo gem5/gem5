@@ -134,6 +134,7 @@
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
+#include "cpu/decode.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "debug/GDBAcc.hh"
@@ -282,7 +283,7 @@ RemoteGDB::setSingleStep()
     // User was stopped at pc, e.g. the instruction at pc was not
     // executed.
     MachInst inst = read<MachInst>(pc.pc());
-    StaticInstPtr si(inst, pc.pc());
+    StaticInstPtr si = context->getDecoderPtr()->decode(inst, pc.pc());
     if (si->hasBranchTarget(pc, context, bpc)) {
         // Don't bother setting a breakpoint on the taken branch if it
         // is the same as the next pc

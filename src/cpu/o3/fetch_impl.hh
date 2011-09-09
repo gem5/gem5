@@ -725,7 +725,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         DPRINTF(Fetch, "[tid:%i]: Translation faulted, building noop.\n", tid);
         // We will use a nop in ordier to carry the fault.
         DynInstPtr instruction = buildInst(tid,
-                StaticInstPtr(TheISA::NoopMachInst, fetchPC.instAddr()),
+                decoder.decode(TheISA::NoopMachInst, fetchPC.instAddr()),
                 NULL, fetchPC, fetchPC, false);
 
         instruction->setPredTarg(fetchPC);
@@ -1287,11 +1287,10 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         do {
             if (!(curMacroop || inRom)) {
                 if (predecoder.extMachInstReady()) {
-                    ExtMachInst extMachInst;
-
-                    extMachInst = predecoder.getExtMachInst(thisPC);
-                    staticInst = StaticInstPtr(extMachInst,
-                                               thisPC.instAddr());
+                    ExtMachInst extMachInst =
+                        predecoder.getExtMachInst(thisPC);
+                    staticInst =
+                        decoder.decode(extMachInst, thisPC.instAddr());
 
                     // Increment stat of fetched instructions.
                     ++fetchedInsts;

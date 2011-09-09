@@ -117,7 +117,7 @@ FetchUnit::createMachInst(std::list<FetchBlock*>::iterator fetch_it,
     ext_inst = predecoder[tid]->getExtMachInst(instPC);
 
     inst->pcState(instPC);
-    inst->setMachInst(ext_inst);
+    inst->setStaticInst(decoder.decode(ext_inst, instPC.instAddr()));
 }
 
 void

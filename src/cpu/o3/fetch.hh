@@ -48,6 +48,7 @@
 #include "arch/utility.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "cpu/decode.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/timebuf.hh"
 #include "cpu/translation.hh"
@@ -379,6 +380,9 @@ class DefaultFetch
     {
         return (addr & ~(cacheBlkMask));
     }
+
+    /** The decoder. */
+    Decoder decoder;
 
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,

@@ -94,9 +94,9 @@ InOrderDynInst::cpuId()
 }
 
 void
-InOrderDynInst::setMachInst(ExtMachInst machInst)
+InOrderDynInst::setStaticInst(StaticInstPtr si)
 {
-    staticInst = StaticInst::decode(machInst, pc.instAddr());
+    staticInst = si;
 
     for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
         _destRegIdx[i] = this->staticInst->destRegIdx(i);

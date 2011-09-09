@@ -324,7 +324,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     std::string instName()
     { return (staticInst) ? staticInst->getName() : "undecoded-inst"; }
 
-    void setMachInst(ExtMachInst inst);
+    void setStaticInst(StaticInstPtr si);
 
     ExtMachInst getMachInst() { return staticInst->machInst; }
 

@@ -52,6 +52,7 @@
 #include "arch/sparc/utility.hh"
 #include "base/socket.hh"
 #include "cpu/base.hh"
+#include "cpu/decode.hh"
 #include "cpu/legiontrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
@@ -438,8 +439,8 @@ Trace::LegionTraceRecord::dump()
 
                     PCState tempPC = pc;
                     StaticInstPtr legionInst =
-                        StaticInst::decode(predecoder.getExtMachInst(tempPC),
-                                           lgnPc);
+                        thread->getDecoderPtr()->decode(
+                                predecoder.getExtMachInst(tempPC), lgnPc);
                     outs << setfill(' ') << setw(15)
                          << " Legion Inst: "
                          << "0x" << setw(8) << setfill('0') << hex

@@ -39,6 +39,7 @@
 #include "arch/predecoder.hh"
 #include "arch/tlb.hh"
 #include "config/the_isa.hh"
+#include "cpu/decode.hh"
 #include "cpu/inorder/resources/cache_unit.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
@@ -87,6 +88,8 @@ class FetchUnit : public CacheUnit
     void execute(int slot_num);
 
     void trap(Fault fault, ThreadID tid, DynInstPtr inst);
+
+    Decoder decoder;
 
   private:
     void squashCacheRequest(CacheReqPtr req_ptr);

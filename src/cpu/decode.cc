@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2011 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,70 +25,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Nathan Binkert
+ * Authors: Gabe Black
  */
 
-#include <iostream>
+#include "cpu/decode.hh"
 
-#include "cpu/static_inst.hh"
-#include "sim/core.hh"
-
-StaticInstPtr StaticInst::nullStaticInstPtr;
-
-using namespace std;
-
-StaticInst::~StaticInst()
-{
-    if (cachedDisassembly)
-        delete cachedDisassembly;
-}
-
-bool
-StaticInst::hasBranchTarget(const TheISA::PCState &pc, ThreadContext *tc,
-                            TheISA::PCState &tgt) const
-{
-    if (isDirectCtrl()) {
-        tgt = branchTarget(pc);
-        return true;
-    }
-
-    if (isIndirectCtrl()) {
-        tgt = branchTarget(tc);
-        return true;
-    }
-
-    return false;
-}
-
-StaticInstPtr
-StaticInst::fetchMicroop(MicroPC upc) const
-{
-    panic("StaticInst::fetchMicroop() called on instruction "
-          "that is not microcoded.");
-}
-
-TheISA::PCState
-StaticInst::branchTarget(const TheISA::PCState &pc) const
-{
-    panic("StaticInst::branchTarget() called on instruction "
-          "that is not a PC-relative branch.");
-    M5_DUMMY_RETURN;
-}
-
-TheISA::PCState
-StaticInst::branchTarget(ThreadContext *tc) const
-{
-    panic("StaticInst::branchTarget() called on instruction "
-          "that is not an indirect branch.");
-    M5_DUMMY_RETURN;
-}
-
-const string &
-StaticInst::disassemble(Addr pc, const SymbolTable *symtab) const
-{
-    if (!cachedDisassembly)
-        cachedDisassembly = new string(generateDisassembly(pc, symtab));
-
-    return *cachedDisassembly;
-}
+DecodeCache<TheISA::decodeInst> Decoder::cache;

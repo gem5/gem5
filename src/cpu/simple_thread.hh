@@ -40,6 +40,7 @@
 #include "base/types.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
+#include "cpu/decode.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 #include "debug/FloatRegs.hh"
@@ -129,6 +130,8 @@ class SimpleThread : public ThreadState
     TheISA::TLB *itb;
     TheISA::TLB *dtb;
 
+    Decoder decoder;
+
     // constructor: initialize SimpleThread from given process structure
 #if FULL_SYSTEM
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
@@ -199,6 +202,8 @@ class SimpleThread : public ThreadState
     TheISA::TLB *getITBPtr() { return itb; }
 
     TheISA::TLB *getDTBPtr() { return dtb; }
+
+    Decoder *getDecoderPtr() { return &decoder; }
 
     System *getSystemPtr() { return system; }
 

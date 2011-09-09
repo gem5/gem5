@@ -73,6 +73,8 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to the DTB. */
     TheISA::TLB *getDTBPtr() { return cpu->dtb; }
 
+    Decoder *getDecoderPtr() { return &cpu->fetch.decoder; }
+
     /** Returns a pointer to this CPU. */
     virtual BaseCPU *getCpuPtr() { return cpu; }
 
