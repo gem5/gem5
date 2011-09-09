@@ -90,7 +90,7 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
                                  VMPageSize);
             } else if (allocating == NextPage) {
                 // check if we've accessed the next page on the stack
-                if (!process->checkAndAllocNextPage(gen.addr()))
+                if (!process->fixupStackFault(gen.addr()))
                     panic("Page table fault when accessing virtual address %#x "
                             "during functional write\n", gen.addr());
             } else {

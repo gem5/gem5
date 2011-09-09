@@ -329,29 +329,31 @@ Process::sim_fd_obj(int tgt_fd)
 }
 
 bool
-Process::checkAndAllocNextPage(Addr vaddr)
+Process::fixupStackFault(Addr vaddr)
 {
-    // if this is an initial write we might not have
+    // Check if this is already on the stack and there's just no page there
+    // yet.
     if (vaddr >= stack_min && vaddr < stack_base) {
         pTable->allocate(roundDown(vaddr, VMPageSize), VMPageSize);
         return true;
     }
 
-    // We've accessed the next page of the stack, so extend the stack
-    // to cover it.
+    // We've accessed the next page of the stack, so extend it to include
+    // this address.
     if (vaddr < stack_min && vaddr >= stack_base - max_stack_size) {
         while (vaddr < stack_min) {
             stack_min -= TheISA::PageBytes;
-            if(stack_base - stack_min > max_stack_size)
+            if (stack_base - stack_min > max_stack_size)
                 fatal("Maximum stack size exceeded\n");
-            if(stack_base - stack_min > 8*1024*1024)
+            if (stack_base - stack_min > 8 * 1024 * 1024)
                 fatal("Over max stack size for one thread\n");
             pTable->allocate(stack_min, TheISA::PageBytes);
             inform("Increasing stack size by one page.");
         };
         return true;
     }
-    warn("Not increasing stack: requested vaddr is outside of stack range.");
+    warn("Not extending stack: address %#x isn't at the end of the stack.",
+        vaddr);
     return false;
 }
 

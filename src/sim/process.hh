@@ -212,9 +212,9 @@ class Process : public SimObject
 
     virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
 
-    // check if the this addr is on the next available page and allocate it
-    // if it's not we'll panic
-    bool checkAndAllocNextPage(Addr vaddr);
+    /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
+    /// @return Whether the fault has been fixed.
+    bool fixupStackFault(Addr vaddr);
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);

@@ -643,8 +643,8 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
     TlbEntry entry;
     bool success = p->pTable->lookup(vaddr, entry);
     if (!success) {
-        p->checkAndAllocNextPage(vaddr);
-        success = p->pTable->lookup(vaddr, entry);
+        if (p->fixupStackFault(vaddr))
+            success = p->pTable->lookup(vaddr, entry);
     }
     if (!success) {
         panic("Tried to access unmapped address %#x.\n", vaddr);
