@@ -31,34 +31,63 @@
 #ifndef __ARCH_MIPS_REMOTE_GDB_HH__
 #define __ARCH_MIPS_REMOTE_GDB_HH__
 
+#include "arch/mips/registers.hh"
+#include "base/bitfield.hh"
 #include "base/remote_gdb.hh"
+
+class System;
+class ThreadContext;
+class PhysicalMemory;
 
 namespace MipsISA
 {
+
+    // The number of special regs depends on gdb.
+    // Two 32-bit regs are packed into one 64-bit reg.
+    const int GdbIntArchRegs = NumIntArchRegs / 2;
+    const int GdbIntSpecialRegs = 6 / 2;
+    const int GdbFloatArchRegs = NumFloatArchRegs / 2;
+    const int GdbFloatSpecialRegs = 2 / 2;
+
+    const int GdbIntRegs = GdbIntArchRegs + GdbIntSpecialRegs;
+    const int GdbFloatRegs = GdbFloatArchRegs + GdbFloatSpecialRegs;
+    const int GdbNumRegs = GdbIntRegs + GdbFloatRegs;
+
     class RemoteGDB : public BaseRemoteGDB
     {
+      protected:
+        Addr notTakenBkpt;
+        Addr takenBkpt;
+
       public:
-        //These needs to be written to suit MIPS
+        RemoteGDB(System *_system, ThreadContext *tc);
 
-        RemoteGDB(System *system, ThreadContext *context)
-            : BaseRemoteGDB(system, context, 1)
-        {}
+      protected:
+        bool acc(Addr addr, size_t len);
 
-        bool acc(Addr, size_t)
-        { panic("acc not implemented for MIPS!"); }
+        void getregs();
+        void setregs();
 
-        void getregs()
-        { panic("getregs not implemented for MIPS!"); }
+        void clearSingleStep();
+        void setSingleStep();
 
-        void setregs()
-        { panic("setregs not implemented for MIPS!"); }
-
-        void clearSingleStep()
-        { panic("clearSingleStep not implemented for MIPS!"); }
-
-        void setSingleStep()
-        { panic("setSingleStep not implemented for MIPS!"); }
+      private:
+        uint64_t
+        pack(uint32_t lo, uint32_t hi)
+        {
+            return static_cast<uint64_t>(hi) << 32 | lo;
+        }
+        uint32_t
+        unpackLo(uint64_t val)
+        {
+            return bits(val, 31, 0);
+        }
+        uint32_t
+        unpackHi(uint64_t val)
+        {
+            return bits(val, 63, 32);
+        }
     };
 }
 
-#endif /* __ARCH_ALPHA_REMOTE_GDB_H__ */
+#endif /* __ARCH_MIPS_REMOTE_GDB_H__ */
