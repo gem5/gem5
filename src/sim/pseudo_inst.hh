@@ -28,6 +28,9 @@
  * Authors: Nathan Binkert
  */
 
+#ifndef __SIM_PSEUDO_INST_HH__
+#define __SIM_PSEUDO_INST_HH__
+
 class ThreadContext;
 
 //We need the "Tick" and "Addr" data types from here
@@ -68,3 +71,5 @@ void workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 void workend(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 
 } // namespace PseudoInst
+
+#endif // __SIM_PSEUDO_INST_HH__
