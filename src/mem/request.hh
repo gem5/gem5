@@ -377,6 +377,13 @@ class Request : public FastAlloc
         return _asid;
     }
 
+    /** Accessor function for asid.*/
+    void
+    setAsid(int asid)
+    {
+        _asid = asid;
+    }
+
     /** Accessor function for asi.*/
     uint8_t
     getAsi()
