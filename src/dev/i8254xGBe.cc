@@ -1534,7 +1534,10 @@ IGbE::RxDescCache::unserialize(Checkpoint *cp, const std::string &section)
 IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
     : DescCache<TxDesc>(i,n, s), pktDone(false), isTcp(false),
       pktWaiting(false), completionAddress(0), completionEnabled(false),
-      useTso(false), pktEvent(this), headerEvent(this), nullEvent(this)
+      useTso(false), tsoHeaderLen(0), tsoMss(0), tsoTotalLen(0), tsoUsedLen(0),
+      tsoPrevSeq(0), tsoPktPayloadBytes(0), tsoLoadedHeader(false),
+      tsoPktHasHeader(false), tsoDescBytesUsed(0), tsoCopyBytes(0), tsoPkts(0),
+      pktEvent(this), headerEvent(this), nullEvent(this)
 {
     annSmFetch = "TX Desc Fetch";
     annSmWb = "TX Desc Writeback";
@@ -1582,7 +1585,7 @@ IGbE::TxDescCache::processContextDesc()
             tsoPrevSeq = 0;
             tsoPktHasHeader = false;
             tsoPkts = 0;
-
+            tsoCopyBytes = 0;
         }
 
         TxdOp::setDd(desc);
@@ -1666,19 +1669,20 @@ IGbE::TxDescCache::getPacketSize(EthPacketPtr p)
         DPRINTF(EthernetDesc, "TSO: use: %d hdrlen: %d mss: %d total: %d "
                 "used: %d loaded hdr: %d\n", useTso, tsoHeaderLen, tsoMss,
                 tsoTotalLen, tsoUsedLen, tsoLoadedHeader);
-        DPRINTF(EthernetDesc, "TSO: descBytesUsed: %d copyBytes: %d "
-                "this descLen: %d\n", 
-                tsoDescBytesUsed, tsoCopyBytes, TxdOp::getLen(desc));
-        DPRINTF(EthernetDesc, "TSO: pktHasHeader: %d\n", tsoPktHasHeader);
-     
+
         if (tsoPktHasHeader) 
             tsoCopyBytes =  std::min((tsoMss + tsoHeaderLen) - p->length,
-                                     TxdOp::getLen(desc) - tsoDescBytesUsed); 
+                                     TxdOp::getLen(desc) - tsoDescBytesUsed);
         else
             tsoCopyBytes =  std::min(tsoMss,
                                      TxdOp::getLen(desc) - tsoDescBytesUsed); 
         unsigned pkt_size =
             tsoCopyBytes + (tsoPktHasHeader ? 0 : tsoHeaderLen); 
+
+        DPRINTF(EthernetDesc, "TSO: descBytesUsed: %d copyBytes: %d "
+                "this descLen: %d\n",
+                tsoDescBytesUsed, tsoCopyBytes, TxdOp::getLen(desc));
+        DPRINTF(EthernetDesc, "TSO: pktHasHeader: %d\n", tsoPktHasHeader);
         DPRINTF(EthernetDesc, "TSO: Next packet is %d bytes\n", pkt_size);
         return pkt_size;
     }
@@ -1720,8 +1724,6 @@ IGbE::TxDescCache::getPacketData(EthPacketPtr p)
     }
   
     if (useTso) {
-        tsoDescBytesUsed += tsoCopyBytes;
-        assert(tsoDescBytesUsed <= TxdOp::getLen(desc));
         DPRINTF(EthernetDesc,
                 "Starting DMA of packet at offset %d length: %d\n",
                 p->length, tsoCopyBytes);
@@ -1729,6 +1731,8 @@ IGbE::TxDescCache::getPacketData(EthPacketPtr p)
                       + tsoDescBytesUsed,
                       tsoCopyBytes, &pktEvent, p->data + p->length,
                       igbe->txReadDelay);
+        tsoDescBytesUsed += tsoCopyBytes;
+        assert(tsoDescBytesUsed <= TxdOp::getLen(desc));
     } else {
         igbe->dmaRead(pciToDma(TxdOp::getBuf(desc)),
                       TxdOp::getLen(desc), &pktEvent, p->data + p->length,
@@ -1755,19 +1759,19 @@ IGbE::TxDescCache::pktComplete()
 
     DPRINTF(EthernetDesc, "TxDescriptor data d1: %#llx d2: %#llx\n",
             desc->d1, desc->d2);
-    DPRINTF(EthernetDesc, "TSO: use: %d hdrlen: %d mss: %d total: %d "
-            "used: %d loaded hdr: %d\n", useTso, tsoHeaderLen, tsoMss,
-            tsoTotalLen, tsoUsedLen, tsoLoadedHeader);
 
     // Set the length of the data in the EtherPacket
     if (useTso) {
+        DPRINTF(EthernetDesc, "TSO: use: %d hdrlen: %d mss: %d total: %d "
+            "used: %d loaded hdr: %d\n", useTso, tsoHeaderLen, tsoMss,
+            tsoTotalLen, tsoUsedLen, tsoLoadedHeader);
         pktPtr->length += tsoCopyBytes;
         tsoUsedLen += tsoCopyBytes;
+        DPRINTF(EthernetDesc, "TSO: descBytesUsed: %d copyBytes: %d\n",
+            tsoDescBytesUsed, tsoCopyBytes);
     } else
         pktPtr->length += TxdOp::getLen(desc);
     
-    DPRINTF(EthernetDesc, "TSO: descBytesUsed: %d copyBytes: %d\n", 
-            tsoDescBytesUsed, tsoCopyBytes);
 
 
     if ((!TxdOp::eop(desc) && !useTso) || 
