@@ -196,6 +196,7 @@ namespace ArmISA
         MISCREG_ISR,
         MISCREG_FCEIDR,
         MISCREG_L2LATENCY,
+        MISCREG_CRN15,
 
 
         MISCREG_CP15_END,
@@ -249,6 +250,7 @@ namespace ArmISA
         "dccmvau",
         "nsacr",
         "vbar", "mvbar", "isr", "fceidr", "l2latency",
+        "crn15",
         "nop", "raz"
     };
 

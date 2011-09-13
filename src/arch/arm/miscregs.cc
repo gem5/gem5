@@ -463,7 +463,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         break;
       case 15:
         // Implementation defined
-        break;
+        return MISCREG_CRN15;
     }
     // Unrecognized register
     return NUM_MISCREGS;
