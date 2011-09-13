@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul  8 2011 15:04:50
-gem5 started Jul  8 2011 15:22:23
+gem5 compiled Sep 13 2011 11:17:24
+gem5 started Sep 13 2011 11:17:29
 gem5 executing on u200439-lin.austin.arm.com
 command line: build/MIPS_SE/gem5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second

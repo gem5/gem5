@@ -3,11 +3,12 @@ Redirecting stderr to build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realvi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 18 2011 19:13:50
-gem5 started Aug 18 2011 19:17:05
-gem5 executing on nadc-0330
+gem5 compiled Aug 20 2011 15:41:18
+gem5 started Aug 20 2011 15:46:02
+gem5 executing on zizzer
 command line: build/ARM_FS/gem5.opt -d build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /arm/scratch/sysexplr/dist/binaries/vmlinux.arm
+info: kernel located at: /dist/m5/system/binaries/vmlinux.arm.smp.fb.2.6.38.8
+info: Using bootloader at address 0x80000000
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 2503824454500 because m5_exit instruction encountered
+Exiting @ tick 2503587516500 because m5_exit instruction encountered

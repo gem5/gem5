@@ -1,11 +1,9 @@
-Redirecting stdout to build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/o3-timing/simout
-Redirecting stderr to build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 18 2011 17:30:35
-gem5 started Aug 18 2011 18:30:12
-gem5 executing on nadc-0330
+gem5 compiled Sep 11 2011 21:12:14
+gem5 started Sep 11 2011 21:52:21
+gem5 executing on u200439-lin.austin.arm.com
 command line: build/ARM_SE/gem5.opt -d build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/long/40.perlbmk/arm/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -1387,4 +1385,4 @@ info: Increasing stack size by one page.
 2000: 760651391
 1000: 4031656975
 0: 2206428413
-Exiting @ tick 721574387500 because target called exit()
+Exiting @ tick 708531477500 because target called exit()

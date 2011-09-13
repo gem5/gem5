@@ -1,12 +1,10 @@
-Redirecting stdout to build/ALPHA_SE/tests/opt/long/40.perlbmk/alpha/tru64/o3-timing/simout
-Redirecting stderr to build/ALPHA_SE/tests/opt/long/40.perlbmk/alpha/tru64/o3-timing/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 17 2011 14:47:20
-gem5 started Aug 17 2011 14:48:53
-gem5 executing on nadc-0388
-command line: build/ALPHA_SE/gem5.opt -d build/ALPHA_SE/tests/opt/long/40.perlbmk/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/40.perlbmk/alpha/tru64/o3-timing
+gem5 compiled Aug 20 2011 16:10:02
+gem5 started Aug 20 2011 21:33:28
+gem5 executing on zizzer
+command line: ./build/ALPHA_SE/gem5.opt -d build/ALPHA_SE/tests/opt/long/40.perlbmk/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/40.perlbmk/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
@@ -1387,4 +1385,4 @@ info: Increasing stack size by one page.
 2000: 760651391
 1000: 4031656975
 0: 2206428413
-Exiting @ tick 643202937500 because target called exit()
+Exiting @ tick 643030478500 because target called exit()

@@ -3,10 +3,10 @@
 sim_seconds                                  0.000013                       # Number of seconds simulated
 sim_ticks                                    13202000                       # Number of ticks simulated
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  45146                       # Simulator instruction rate (inst/s)
-host_tick_rate                               46657266                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 244348                       # Number of bytes of host memory used
-host_seconds                                     0.28                       # Real time elapsed on the host
+host_inst_rate                                  58060                       # Simulator instruction rate (inst/s)
+host_tick_rate                               60004972                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 204840                       # Number of bytes of host memory used
+host_seconds                                     0.22                       # Real time elapsed on the host
 sim_insts                                       12773                       # Number of instructions simulated
 system.cpu.dtb.fetch_hits                           0                       # ITB hits
 system.cpu.dtb.fetch_misses                         0                       # ITB misses
@@ -298,7 +298,7 @@ system.cpu.iew.lsq.thread0.forwLoads               48                       # Nu
 system.cpu.iew.lsq.thread0.invAddrLoads             0                       # Number of loads ignored due to an invalid address
 system.cpu.iew.lsq.thread0.squashedLoads         1123                       # Number of loads squashed
 system.cpu.iew.lsq.thread0.ignoredResponses            2                       # Number of memory responses ignored because the instruction is squashed
-system.cpu.iew.lsq.thread0.memOrderViolation           15                       # Number of memory ordering violations
+system.cpu.iew.lsq.thread0.memOrderViolation           13                       # Number of memory ordering violations
 system.cpu.iew.lsq.thread0.squashedStores          325                       # Number of stores squashed
 system.cpu.iew.lsq.thread0.invAddrSwpfs             0                       # Number of software prefetches ignored due to an invalid address
 system.cpu.iew.lsq.thread0.blockedLoads             0                       # Number of blocked loads due to partial load-store forwarding
@@ -308,7 +308,7 @@ system.cpu.iew.lsq.thread1.forwLoads               61                       # Nu
 system.cpu.iew.lsq.thread1.invAddrLoads             0                       # Number of loads ignored due to an invalid address
 system.cpu.iew.lsq.thread1.squashedLoads         1134                       # Number of loads squashed
 system.cpu.iew.lsq.thread1.ignoredResponses            5                       # Number of memory responses ignored because the instruction is squashed
-system.cpu.iew.lsq.thread1.memOrderViolation           16                       # Number of memory ordering violations
+system.cpu.iew.lsq.thread1.memOrderViolation           14                       # Number of memory ordering violations
 system.cpu.iew.lsq.thread1.squashedStores          316                       # Number of stores squashed
 system.cpu.iew.lsq.thread1.invAddrSwpfs             0                       # Number of software prefetches ignored due to an invalid address
 system.cpu.iew.lsq.thread1.blockedLoads             0                       # Number of blocked loads due to partial load-store forwarding
@@ -325,7 +325,7 @@ system.cpu.iew.iewDispStoreInsts                 2371                       # Nu
 system.cpu.iew.iewDispNonSpecInsts                 49                       # Number of dispatched non-speculative instructions
 system.cpu.iew.iewIQFullEvents                     38                       # Number of times the IQ has become full, causing a stall
 system.cpu.iew.iewLSQFullEvents                     1                       # Number of times the LSQ has become full, causing a stall
-system.cpu.iew.memOrderViolationEvents             31                       # Number of memory order violations
+system.cpu.iew.memOrderViolationEvents             27                       # Number of memory order violations
 system.cpu.iew.predictedTakenIncorrect            218                       # Number of branches that were predicted taken incorrectly
 system.cpu.iew.predictedNotTakenIncorrect          882                       # Number of branches that were predicted not taken incorrectly
 system.cpu.iew.branchMispredicts                 1100                       # Number of branch mispredicts detected at execute

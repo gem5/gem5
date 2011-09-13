@@ -3,10 +3,12 @@ Redirecting stderr to build/ALPHA_SE/tests/opt/long/70.twolf/alpha/tru64/o3-timi
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 17 2011 14:47:20
-gem5 started Aug 17 2011 14:49:49
-gem5 executing on nadc-0388
+gem5 compiled Aug 20 2011 16:10:02
+gem5 started Aug 20 2011 16:10:09
+gem5 executing on zizzer
 command line: build/ALPHA_SE/gem5.opt -d build/ALPHA_SE/tests/opt/long/70.twolf/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/70.twolf/alpha/tru64/o3-timing
+Couldn't unlink  build/ALPHA_SE/tests/opt/long/70.twolf/alpha/tru64/o3-timing/smred.sav
+Couldn't unlink  build/ALPHA_SE/tests/opt/long/70.twolf/alpha/tru64/o3-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
@@ -23,4 +25,4 @@ Authors: Carl Sechen, Bill Swartz
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 30278595500 because target called exit()
+122 123 124 Exiting @ tick 29167093500 because target called exit()

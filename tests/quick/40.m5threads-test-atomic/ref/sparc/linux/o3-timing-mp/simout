@@ -1,9 +1,11 @@
+Redirecting stdout to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simout
+Redirecting stderr to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 18 2011 17:36:58
-gem5 started Jul 18 2011 17:37:01
-gem5 executing on u200439-lin.austin.arm.com
+gem5 compiled Aug 20 2011 13:07:22
+gem5 started Aug 20 2011 13:07:32
+gem5 executing on zizzer
 command line: build/SPARC_SE/gem5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -79,4 +81,4 @@ Iteration 9 completed
 [Iteration 10, Thread 1] Critical section done, previously next=3, now next=1
 Iteration 10 completed
 PASSED :-)
-Exiting @ tick 104314500 because target called exit()
+Exiting @ tick 104317500 because target called exit()
