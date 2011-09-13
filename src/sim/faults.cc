@@ -56,6 +56,12 @@ void UnimpFault::invoke(ThreadContext * tc, StaticInstPtr inst)
     panic("Unimpfault: %s\n", panicStr.c_str());
 }
 
+void ReExec::invoke(ThreadContext *tc, StaticInstPtr inst)
+{
+    tc->pcState(tc->pcState());
+}
+
+
 #if !FULL_SYSTEM
 void GenericPageTableFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {

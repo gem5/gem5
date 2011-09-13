@@ -115,11 +115,19 @@ class LSQUnit {
     /** Inserts a store instruction. */
     void insertStore(DynInstPtr &store_inst);
 
-    /** Check for ordering violations in the LSQ
+    /** Check for ordering violations in the LSQ. For a store squash if we
+     * ever find a conflicting load. For a load, only squash if we
+     * an external snoop invalidate has been seen for that load address
      * @param load_idx index to start checking at
      * @param inst the instruction to check
      */
     Fault checkViolations(int load_idx, DynInstPtr &inst);
+
+    /** Check if an incoming invalidate hits in the lsq on a load
+     * that might have issued out of order wrt another load beacuse
+     * of the intermediate invalidate.
+     */
+    void checkSnoop(PacketPtr pkt);
 
     /** Executes a load instruction. */
     Fault executeLoad(DynInstPtr &inst);
@@ -416,6 +424,9 @@ class LSQUnit {
     bool switchedOut;
 
     //list<InstSeqNum> mshrSeqNums;
+
+    /** Address Mask for a cache block (e.g. ~(cache_block_size-1)) */
+    Addr cacheBlockMask;
 
     /** Wire to read information from the issue stage time queue. */
     typename TimeBuffer<IssueStruct>::wire fromIssue;

@@ -146,6 +146,19 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** True if the DTB address translation has completed. */
     bool translationCompleted;
 
+    /** True if this address was found to match a previous load and they issued
+     * out of order. If that happend, then it's only a problem if an incoming
+     * snoop invalidate modifies the line, in which case we need to squash.
+     * If nothing modified the line the order doesn't matter.
+     */
+    bool possibleLoadViolation;
+
+    /** True if the address hit a external snoop while sitting in the LSQ.
+     * If this is true and a older instruction sees it, this instruction must
+     * reexecute
+     */
+    bool hitExternalSnoop;
+
     /**
      * Returns true if the DTB address translation is being delayed due to a hw
      * page table walk.

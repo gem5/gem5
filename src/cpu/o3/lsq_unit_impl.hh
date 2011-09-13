@@ -135,7 +135,7 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 
 template <class Impl>
 LSQUnit<Impl>::LSQUnit()
-    : loads(0), stores(0), storesToWB(0), stalled(false),
+    : loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
       isStoreBlocked(false), isLoadBlocked(false),
       loadBlockedHandled(false), hasPendingPkt(false)
 {
@@ -153,6 +153,8 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
     DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
 
     switchedOut = false;
+
+    cacheBlockMask = 0;
 
     lsq = lsq_ptr;
 
@@ -297,6 +299,9 @@ LSQUnit<Impl>::takeOverFrom()
     stalled = false;
     isLoadBlocked = false;
     loadBlockedHandled = false;
+
+    // Just incase the memory system changed out from under us
+    cacheBlockMask = 0;
 }
 
 template<class Impl>
@@ -443,6 +448,60 @@ LSQUnit<Impl>::numLoadsReady()
 }
 
 template <class Impl>
+void
+LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
+{
+    int load_idx = loadHead;
+
+    if (!cacheBlockMask) {
+        assert(dcachePort);
+        Addr bs = dcachePort->peerBlockSize();
+
+        // Make sure we actually got a size
+        assert(bs != 0);
+
+        cacheBlockMask = ~(bs - 1);
+    }
+
+    // If this is the only load in the LSQ we don't care
+    if (load_idx == loadTail)
+        return;
+    incrLdIdx(load_idx);
+
+    DPRINTF(LSQUnit, "Got snoop for address %#x\n", pkt->getAddr());
+    Addr invalidate_addr = pkt->getAddr() & cacheBlockMask;
+    while (load_idx != loadTail) {
+        DynInstPtr ld_inst = loadQueue[load_idx];
+
+        if (!ld_inst->effAddrValid || ld_inst->uncacheable()) {
+            incrLdIdx(load_idx);
+            continue;
+        }
+
+        Addr load_addr = ld_inst->physEffAddr & cacheBlockMask;
+        DPRINTF(LSQUnit, "-- inst [sn:%lli] load_addr: %#x to pktAddr:%#x\n",
+                    ld_inst->seqNum, load_addr, invalidate_addr);
+
+        if (load_addr == invalidate_addr) {
+            if (ld_inst->possibleLoadViolation) {
+                DPRINTF(LSQUnit, "Conflicting load at addr %#x [sn:%lli]\n",
+                        ld_inst->physEffAddr, pkt->getAddr(), ld_inst->seqNum);
+
+                // Mark the load for re-execution
+                ld_inst->fault = new ReExec;
+            } else {
+                // If a older load checks this and it's true
+                // then we might have missed the snoop
+                // in which case we need to invalidate to be sure
+                ld_inst->hitExternalSnoop = true;
+            }
+        }
+        incrLdIdx(load_idx);
+    }
+    return;
+}
+
+template <class Impl>
 Fault
 LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
 {
@@ -466,20 +525,46 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
             (ld_inst->effAddr + ld_inst->effSize - 1) >> depCheckShift;
 
         if (inst_eff_addr2 >= ld_eff_addr1 && inst_eff_addr1 <= ld_eff_addr2) {
-            // A load/store incorrectly passed this load/store.
-            // Check if we already have a violator, or if it's newer
-            // squash and refetch.
-            if (memDepViolator && ld_inst->seqNum > memDepViolator->seqNum)
-                break;
+            if (inst->isLoad()) {
+                // If this load is to the same block as an external snoop
+                // invalidate that we've observed then the load needs to be
+                // squashed as it could have newer data
+                if (ld_inst->hitExternalSnoop) {
+                    if (!memDepViolator ||
+                            ld_inst->seqNum < memDepViolator->seqNum) {
+                        DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] "
+                                " and [sn:%lli] at address %#x\n", inst->seqNum,
+                                ld_inst->seqNum, ld_eff_addr1);
+                        memDepViolator = ld_inst;
 
-            DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] and [sn:%lli]"
-                    " at address %#x\n", inst->seqNum, ld_inst->seqNum,
-                    ld_eff_addr1);
-            memDepViolator = ld_inst;
+                        ++lsqMemOrderViolation;
 
-            ++lsqMemOrderViolation;
+                        return TheISA::genMachineCheckFault();
+                    }
+                }
 
-            return TheISA::genMachineCheckFault();
+                // Otherwise, mark the load has a possible load violation
+                // and if we see a snoop before it's commited, we need to squash
+                ld_inst->possibleLoadViolation = true;
+                DPRINTF(LSQUnit, "Found possible load violaiton at addr: %#x"
+                        " between instructions [sn:%lli] and [sn:%lli]\n",
+                        inst_eff_addr1, inst->seqNum, ld_inst->seqNum);
+            } else {
+                // A load/store incorrectly passed this store.
+                // Check if we already have a violator, or if it's newer
+                // squash and refetch.
+                if (memDepViolator && ld_inst->seqNum > memDepViolator->seqNum)
+                    break;
+
+                DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] and [sn:%lli]"
+                        " at address %#x\n", inst->seqNum, ld_inst->seqNum,
+                        ld_eff_addr1);
+                memDepViolator = ld_inst;
+
+                ++lsqMemOrderViolation;
+
+                return TheISA::genMachineCheckFault();
+            }
         }
 
         incrLdIdx(load_idx);

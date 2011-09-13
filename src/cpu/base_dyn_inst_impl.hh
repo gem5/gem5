@@ -110,6 +110,8 @@ BaseDynInst<Impl>::initVars()
 
     translationStarted = false;
     translationCompleted = false;
+    possibleLoadViolation = false;
+    hitExternalSnoop  = false;
 
     isUncacheable = false;
     reqMade = false;

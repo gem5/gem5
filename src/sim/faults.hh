@@ -75,6 +75,16 @@ class UnimpFault : public FaultBase
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
+class ReExec : public FaultBase
+{
+  public:
+    virtual FaultName name() const { return "Re-execution fault";}
+    ReExec() {}
+    void invoke(ThreadContext *tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+};
+
+
 #if !FULL_SYSTEM
 class GenericPageTableFault : public FaultBase
 {

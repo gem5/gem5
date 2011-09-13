@@ -90,11 +90,17 @@ LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
         DPRINTF(LSQ, "Got error packet back for address: %#X\n", pkt->getAddr());
     if (pkt->isResponse()) {
         lsq->thread[pkt->req->threadId()].completeDataAccess(pkt);
-    }
-    else {
-        // must be a snoop
+    } else {
+        DPRINTF(LSQ, "received pkt for addr:%#x %s\n", pkt->getAddr(),
+                pkt->cmdString());
 
-        // @TODO someday may need to process invalidations in LSQ here
+        // must be a snoop
+        if (pkt->isInvalidate()) {
+            DPRINTF(LSQ, "received invalidation for addr:%#x\n", pkt->getAddr());
+            for (ThreadID tid = 0; tid < lsq->numThreads; tid++) {
+                lsq->thread[tid].checkSnoop(pkt);
+            }
+        }
         // to provide stronger consistency model
     }
     return true;

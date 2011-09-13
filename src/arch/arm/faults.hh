@@ -242,16 +242,6 @@ class FlushPipe : public ArmFaultVals<FlushPipe>
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-// A fault that flushes the pipe, including the faulting instructions
-class ReExec : public ArmFaultVals<ReExec>
-{
-  public:
-    ReExec() {}
-    void invoke(ThreadContext *tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-
 static inline Fault genMachineCheckFault()
 {
     return new Reset();
