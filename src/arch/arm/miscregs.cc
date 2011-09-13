@@ -382,7 +382,19 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                 }
             }
         } else if (opc1 == 1) {
-            return MISCREG_L2LATENCY;
+            switch (crm) {
+              case 0:
+                switch (opc2) {
+                  case 2: // L2CTLR, L2 Control Register
+                    return MISCREG_L2CTLR;
+                  default:
+                    warn("Uknown miscregs: crn:%d crm:%d opc1:%d opc2:%d\n",
+                         crn,crm, opc1,opc2);
+                    break;
+                }
+              default:
+                return MISCREG_L2LATENCY;
+            }
         }
         //Reserved for Branch Predictor, Cache and TCM operations
         break;

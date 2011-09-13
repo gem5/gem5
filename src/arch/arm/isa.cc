@@ -227,6 +227,12 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrQcMask;
       case MISCREG_FPSCR_EXC:
         return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrExcMask;
+      case MISCREG_L2CTLR:
+        // mostly unimplemented, just set NumCPUs field from sim and return
+        L2CTLR l2ctlr = 0;
+        // b00:1CPU to b11:4CPUs
+        l2ctlr.numCPUs = tc->getSystemPtr()->numContexts() - 1;
+        return l2ctlr;
     }
     return readMiscRegNoEffect(misc_reg);
 }
@@ -537,6 +543,9 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             // see all of the registers for the copy.
             updateRegMap(val);
             return;
+          case MISCREG_L2CTLR:
+            warn("miscreg L2CTLR (%s) written with %#x. ignored...\n",
+                 miscRegName[misc_reg], uint32_t(val));
         }
     }
     setMiscRegNoEffect(misc_reg, newVal);

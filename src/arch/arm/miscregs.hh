@@ -177,6 +177,7 @@ namespace ArmISA
         MISCREG_LOCKFLAG,
         MISCREG_LOCKADDR,
         MISCREG_ID_PFR1,
+        MISCREG_L2CTLR,
         MISCREG_CP15_UNIMP_START,
         MISCREG_TCMTR = MISCREG_CP15_UNIMP_START,
         MISCREG_ID_DFR0,
@@ -238,6 +239,7 @@ namespace ArmISA
         "pmuserenr", "pmintenset", "pmintenclr",
         "id_isar0", "id_isar1", "id_isar2", "id_isar3", "id_isar4", "id_isar5",
         "cpsr_mode", "lockflag", "lockaddr", "id_pfr1",
+        "l2ctlr",
          // Unimplemented below
         "tcmtr",
         "id_dfr0", "id_afr0",
@@ -431,6 +433,23 @@ namespace ArmISA
        Bitfield<29,28> or6;
        Bitfield<31,30> or7;
    EndBitUnion(NMRR)
+
+   BitUnion32(L2CTLR)
+      Bitfield<2,0>   sataRAMLatency;
+      Bitfield<4,3>   reserved_4_3;
+      Bitfield<5>     dataRAMSetup;
+      Bitfield<8,6>   tagRAMLatency;
+      Bitfield<9>     tagRAMSetup;
+      Bitfield<11,10> dataRAMSlice;
+      Bitfield<12>    tagRAMSlice;
+      Bitfield<20,13> reserved_20_13;
+      Bitfield<21>    eccandParityEnable;
+      Bitfield<22>    reserved_22;
+      Bitfield<23>    interptCtrlPresent;
+      Bitfield<25,24> numCPUs;
+      Bitfield<30,26> reserved_30_26;
+      Bitfield<31>    l2rstDISABLE_monitor;
+   EndBitUnion(L2CTLR)
 
 };
 
