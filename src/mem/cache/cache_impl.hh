@@ -1437,7 +1437,8 @@ Cache<TagStore>::getNextMSHR()
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
             Addr pf_addr = blockAlign(pkt->getAddr());
-            if (!tags->findBlock(pf_addr) && !mshrQueue.findMatch(pf_addr)) {
+            if (!tags->findBlock(pf_addr) && !mshrQueue.findMatch(pf_addr) &&
+                                             !writeBuffer.findMatch(pf_addr)) {
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
                 mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
