@@ -467,6 +467,8 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     bool is_write = (mode == Write);
     bool is_priv = isPriv && !(flags & UserMode);
 
+    req->setAsid(contextId.asid);
+
     DPRINTF(TLBVerbose, "CPSR is priv:%d UserMode:%d\n",
             isPriv, flags & UserMode);
     // If this is a clrex instruction, provide a PA of 0 with no fault

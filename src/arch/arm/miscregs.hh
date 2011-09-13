@@ -436,6 +436,11 @@ namespace ArmISA
        Bitfield<31,30> or7;
    EndBitUnion(NMRR)
 
+   BitUnion32(CONTEXTIDR)
+      Bitfield<7,0>  asid;
+      Bitfield<31,8> procid;
+   EndBitUnion(CONTEXTIDR)
+
    BitUnion32(L2CTLR)
       Bitfield<2,0>   sataRAMLatency;
       Bitfield<4,3>   reserved_4_3;

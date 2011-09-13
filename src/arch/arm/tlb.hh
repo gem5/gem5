@@ -222,7 +222,7 @@ class TLB : public BaseTLB
 protected:
     SCTLR sctlr;
     bool isPriv;
-    uint32_t contextId;
+    CONTEXTIDR contextId;
     PRRR prrr;
     NMRR nmrr;
     uint32_t dacr;
