@@ -47,8 +47,16 @@ CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 
-CFLAGS=-O2 
+JC=javac
+JH=javah
+JR=jar
+### JDK_PATH must be set to build gem5OpJni
+#JDK_PATH=/path/to/jdk/version_number
+
+CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux
+
 OBJS=m5.o m5op_arm.o
+JNI_OBJS=m5op_arm.o jni_gem5Op.o
 
 all: m5
 
@@ -61,5 +69,13 @@ all: m5
 m5: $(OBJS)
 	$(CC) -o $@ $(OBJS)
 
+gem5OpJni: gem5OpJni.jar $(JNI_OBJS)
+	$(CC) --shared -o lib$@.so $(JNI_OBJS)
+
+gem5OpJni.jar:
+	$(JC) jni/gem5Op.java; \
+	$(JH) jni.gem5Op; \
+	$(JR) cvf $@ jni/*.class
+
 clean:
-	rm -f *.o m5
+	rm -f *.o m5 libgemOpJni.so gem5OpJni.jar jni/*.class
