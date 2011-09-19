@@ -68,7 +68,6 @@ class MachineCheckFault : public AlphaFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-    bool isMachineCheckFault() const {return true;}
 };
 
 class AlignmentFault : public AlphaFault

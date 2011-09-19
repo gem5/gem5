@@ -83,12 +83,6 @@ class AlignmentFault : public PowerFault
         : PowerFault("Alignment")
     {
     }
-
-    bool
-    isAlignmentFault() const
-    {
-        return true;
-    }
 };
 
 

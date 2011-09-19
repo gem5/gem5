@@ -57,8 +57,6 @@ class FaultBase : public RefCounted
     virtual FaultName name() const = 0;
     virtual void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-    virtual bool isMachineCheckFault() const {return false;}
-    virtual bool isAlignmentFault() const {return false;}
 };
 
 class UnimpFault : public FaultBase

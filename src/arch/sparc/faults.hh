@@ -139,11 +139,7 @@ class CleanWindow : public SparcFault<CleanWindow> {};
 class DivisionByZero : public SparcFault<DivisionByZero> {};
 
 class InternalProcessorError :
-    public SparcFault<InternalProcessorError>
-{
-  public:
-    bool isMachineCheckFault() const { return true; }
-};
+    public SparcFault<InternalProcessorError> {};
 
 class InstructionInvalidTSBEntry :
     public SparcFault<InstructionInvalidTSBEntry> {};
@@ -159,11 +155,7 @@ class DataAccessError : public SparcFault<DataAccessError> {};
 class DataAccessProtection : public SparcFault<DataAccessProtection> {};
 
 class MemAddressNotAligned :
-    public SparcFault<MemAddressNotAligned>
-{
-  public:
-    bool isAlignmentFault() const { return true; }
-};
+    public SparcFault<MemAddressNotAligned> {};
 
 class LDDFMemAddressNotAligned : public SparcFault<LDDFMemAddressNotAligned> {};
 
