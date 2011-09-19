@@ -85,6 +85,11 @@ class MachineCheckFault : public MipsFault<MachineCheckFault>
     bool isMachineCheckFault() {return true;}
 };
 
+static inline Fault genMachineCheckFault()
+{
+    return new MachineCheckFault;
+}
+
 class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
 {
   public:
@@ -105,11 +110,6 @@ class AddressErrorFault : public MipsFault<AddressErrorFault>
 #endif
 
 };
-
-static inline Fault genMachineCheckFault()
-{
-    return new MachineCheckFault;
-}
 
 class ResetFault : public MipsFault<ResetFault>
 {
