@@ -193,50 +193,51 @@ output exec {{
     CP0Unimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-#if  FULL_SYSTEM
-      if (!isCoprocessorEnabled(xc, 0)) {
-        return new CoprocessorUnusableFault(0);
-      }
-      return new ReservedInstructionFault;
-#else
-        panic("attempt to execute unimplemented instruction '%s' "
-              "(inst 0x%08x, opcode 0x%x, binary:%s)", mnemonic, machInst, OPCODE,
-              inst2string(machInst));
-        return new UnimplementedOpcodeFault;
-#endif
+        if (FULL_SYSTEM) {
+            if (!isCoprocessorEnabled(xc, 0))
+                return new CoprocessorUnusableFault(0);
+            else
+                return new ReservedInstructionFault;
+        } else {
+            panic("attempt to execute unimplemented instruction '%s' "
+                    "(inst %#08x, opcode %#x, binary:%s)",
+                    mnemonic, machInst, OPCODE, inst2string(machInst));
+            return new UnimplementedOpcodeFault;
+        }
     }
 
     Fault
     CP1Unimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-#if  FULL_SYSTEM
-      if (!isCoprocessorEnabled(xc, 1)) {
-        return new CoprocessorUnusableFault(1);
-      }
-      return new ReservedInstructionFault;
-#else
-        panic("attempt to execute unimplemented instruction '%s' "
-              "(inst 0x%08x, opcode 0x%x, binary:%s)", mnemonic, machInst, OPCODE,
-              inst2string(machInst));
-        return new UnimplementedOpcodeFault;
-#endif
+        if (FULL_SYSTEM) {
+            if (!isCoprocessorEnabled(xc, 1))
+                return new CoprocessorUnusableFault(1);
+            else
+                return new ReservedInstructionFault;
+        } else {
+            panic("attempt to execute unimplemented instruction '%s' "
+                    "(inst %#08x, opcode %#x, binary:%s)",
+                    mnemonic, machInst, OPCODE, inst2string(machInst));
+            return new UnimplementedOpcodeFault;
+        }
     }
+
     Fault
     CP2Unimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-#if  FULL_SYSTEM
-      if (!isCoprocessorEnabled(xc, 2)) {
-        return new CoprocessorUnusableFault(2);
-      }
-      return new ReservedInstructionFault;
-#else
-        panic("attempt to execute unimplemented instruction '%s' "
-              "(inst 0x%08x, opcode 0x%x, binary:%s)", mnemonic, machInst, OPCODE,
-              inst2string(machInst));
-        return new UnimplementedOpcodeFault;
-#endif
+        if (FULL_SYSTEM) {
+            if (!isCoprocessorEnabled(xc, 2))
+                return new CoprocessorUnusableFault(2);
+            else
+                return new ReservedInstructionFault;
+        } else {
+            panic("attempt to execute unimplemented instruction '%s' "
+                    "(inst %#08x, opcode %#x, binary:%s)",
+                    mnemonic, machInst, OPCODE, inst2string(machInst));
+            return new UnimplementedOpcodeFault;
+        }
     }
 
     Fault

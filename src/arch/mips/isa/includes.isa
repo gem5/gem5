@@ -75,12 +75,15 @@ output exec {{
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/mt.hh"
 #include "arch/mips/mt_constants.hh"
+#include "arch/mips/pagetable.hh"
 #include "arch/mips/pra_constants.hh"
+#include "arch/mips/tlb.hh"
 #include "arch/mips/utility.hh"
 #if defined(linux)
 #include <fenv.h>
 #endif
 
+#include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "debug/MipsPRA.hh"

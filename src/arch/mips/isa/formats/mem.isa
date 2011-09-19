@@ -542,12 +542,13 @@ def format StoreFPIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
 
 def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; }},
                      mem_flags = [], inst_flags = []) {{
-    decl_code = 'uint32_t mem_word = Mem.uw;\n'
-    decl_code += 'uint32_t unalign_addr = Rs + disp;\n'
-    decl_code += 'uint32_t byte_offset = unalign_addr & 3;\n'
-    decl_code += '#if BYTE_ORDER == BIG_ENDIAN\n'
-    decl_code += '\tbyte_offset ^= 3;\n'
-    decl_code += '#endif\n'
+    decl_code = '''
+        uint32_t mem_word = Mem.uw;
+        uint32_t unalign_addr = Rs + disp;
+        uint32_t byte_offset = unalign_addr & 3;
+        if (GuestByteOrder == BigEndianByteOrder)
+            byte_offset ^= 3;
+    '''
 
     memacc_code = decl_code + memacc_code
 
@@ -563,9 +564,8 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
         uint32_t mem_word = 0;
         uint32_t unaligned_addr = Rs + disp;
         uint32_t byte_offset = unaligned_addr & 3;
-        #if BYTE_ORDER == BIG_ENDIAN
+        if (GuestByteOrder == BigEndianByteOrder)
             byte_offset ^= 3;
-        #endif
         fault = readMemAtomic(xc, traceData, EA, mem_word, memAccessFlags);
     '''
     memacc_code = decl_code + memacc_code + '\nMem = mem_word;\n'

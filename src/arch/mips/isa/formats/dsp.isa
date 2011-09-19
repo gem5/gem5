@@ -140,28 +140,18 @@ output decoder {{
 }};
 
 output exec {{
-    bool isDspEnabled(%(CPU_exec_context)s *xc)
+    bool
+    isDspEnabled(%(CPU_exec_context)s *xc)
     {
-#if FULL_SYSTEM
-        if( bits( xc->readMiscReg(MISCREG_STATUS), 24, 24 ) == 0 )
-            return false;
-#else
-        //printf("Syscall Emulation Mode: isDspEnabled() check defaults to TRUE\n");
-#endif
-        return true;
+        return !FULL_SYSTEM || bits(xc->readMiscReg(MISCREG_STATUS), 24);
     }
 }};
 
 output exec {{
-    bool isDspPresent(%(CPU_exec_context)s *xc)
+    bool
+    isDspPresent(%(CPU_exec_context)s *xc)
     {
-#if FULL_SYSTEM
-        if( bits( xc->readMiscReg(MISCREG_CONFIG3), 10, 10 ) == 0 )
-            return false;
-#else
-        //printf("Syscall Emulation Mode: isDspPresent() check defaults to TRUE\n");
-#endif
-        return true;
+        return !FULL_SYSTEM || bits(xc->readMiscReg(MISCREG_CONFIG3), 10);
     }
 }};
 

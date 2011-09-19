@@ -163,12 +163,11 @@ decode OPCODE_HI default Unknown::unknown() {
                 format BasicOp {
                     0x2: movz({{ Rd = (Rt == 0) ? Rs : Rd; }});
                     0x3: movn({{ Rd = (Rt != 0) ? Rs : Rd; }});
-#if FULL_SYSTEM
-                    0x4: syscall({{ fault = new SystemCallFault(); }});
-#else
-                    0x4: syscall({{ xc->syscall(R2); }},
-                                 IsSerializeAfter, IsNonSpeculative);
-#endif
+                    0x4: decode FULL_SYSTEM {
+                        0: syscall_se({{ xc->syscall(R2); }},
+                                IsSerializeAfter, IsNonSpeculative);
+                        default: syscall({{ fault = new SystemCallFault(); }});
+                    }
                     0x7: sync({{ ; }}, IsMemBarrier);
                     0x5: break({{fault = new BreakpointFault();}});
                 }
@@ -211,44 +210,21 @@ decode OPCODE_HI default Unknown::unknown() {
                 0x0: decode FUNCTION_LO {
                     format IntOp {
                         0x0: add({{
-                            /* More complicated since an ADD can cause 
-                               an arithmetic overflow exception */
-                            int64_t Src1 = Rs.sw;
-                            int64_t Src2 = Rt.sw;
-                            int64_t temp_result;
-#if FULL_SYSTEM
-                            if (((Src1 >> 31) & 1) == 1)
-                                Src1 |= 0x100000000LL;
-#endif
-                            temp_result = Src1 + Src2;
-#if FULL_SYSTEM
-                            if (bits(temp_result, 31) ==
-                                bits(temp_result, 32)) {
-#endif
-                                Rd.sw = temp_result;
-#if FULL_SYSTEM
-                            } else {
+                            IntReg result;
+                            Rd = result = Rs + Rt;
+                            if (FULL_SYSTEM &&
+                                    findOverflow(32, result, Rs, Rt)) {
                                 fault = new ArithmeticFault();
                             }
-#endif
                         }});
                         0x1: addu({{ Rd.sw = Rs.sw + Rt.sw;}});
                         0x2: sub({{
-                            /* More complicated since an SUB can cause
-                               an arithmetic overflow exception */
-                            int64_t Src1 = Rs.sw;
-                            int64_t Src2 = Rt.sw;
-                            int64_t temp_result = Src1 - Src2;
-#if  FULL_SYSTEM
-                            if (bits(temp_result, 31) == 
-                                bits(temp_result, 32)) {
-#endif
-                                Rd.sw = temp_result;
-#if  FULL_SYSTEM
-                            } else {
+                            IntReg result;
+                            Rd = result = Rs - Rt;
+                            if (FULL_SYSTEM &&
+                                    findOverflow(32, result, Rs, ~Rt)) {
                                 fault = new ArithmeticFault();
                             }
-#endif
                         }});
                         0x3: subu({{ Rd.sw = Rs.sw - Rt.sw; }});
                         0x4: and({{ Rd = Rs & Rt; }});
@@ -347,23 +323,12 @@ decode OPCODE_HI default Unknown::unknown() {
     0x1: decode OPCODE_LO {
         format IntImmOp {
             0x0: addi({{
-                int64_t Src1 = Rs.sw;
-                int64_t Src2 = imm;
-                int64_t temp_result;
-#if  FULL_SYSTEM
-                if (((Src1 >> 31) & 1) == 1)
-                    Src1 |= 0x100000000LL;
-#endif
-                temp_result = Src1 + Src2;
-#if  FULL_SYSTEM
-                if (bits(temp_result, 31) == bits(temp_result, 32)) {
-#endif
-                    Rt.sw = temp_result;
-#if  FULL_SYSTEM
-                } else {
+                IntReg result;
+                Rt = result = Rs + imm;
+                if (FULL_SYSTEM &&
+                        findOverflow(32, result, Rs, imm)) {
                     fault = new ArithmeticFault();
                 }
-#endif
             }});
             0x1: addiu({{ Rt.sw = Rs.sw + imm; }});
             0x2: slti({{ Rt.sw = (Rs.sw < imm) ? 1 : 0 }});
@@ -1516,11 +1481,10 @@ decode OPCODE_HI default Unknown::unknown() {
                     if (Rs<2:0> == 0) {
                         Fd.ud = Fs.ud;
                     } else if (Rs<2:0> == 4) {
-#if BYTE_ORDER == BIG_ENDIAN
-                        Fd.ud = Fs.ud<31:0> << 32 | Ft.ud<63:32>;
-#elif BYTE_ORDER == LITTLE_ENDIAN
-                        Fd.ud = Ft.ud<31:0> << 32 | Fs.ud<63:32>;
-#endif
+                        if (GuestByteOrder == BigEndianByteOrder)
+                            Fd.ud = Fs.ud<31:0> << 32 | Ft.ud<63:32>;
+                        else
+                            Fd.ud = Ft.ud<31:0> << 32 | Fs.ud<63:32>;
                     } else {
                         Fd.ud = Fd.ud;
                     }
@@ -2468,14 +2432,12 @@ decode OPCODE_HI default Unknown::unknown() {
                         }
                     }
                 }
-                0x3: decode OP {
-#if FULL_SYSTEM
-                    0x0: FailUnimpl::rdhwr();
-#else
-                    0x0: decode RD {
-                        29: BasicOp::rdhwr({{ Rt = TpValue; }});
+                0x3: decode OP default FailUnimpl::rdhwr() {
+                    0x0: decode FULL_SYSTEM {
+                        0: decode RD {
+                            29: BasicOp::rdhwr_se({{ Rt = TpValue; }});
+                        }
                     }
-#endif
                 }
             }
         }

@@ -124,30 +124,28 @@ def template CP1Execute {{
 def template ControlTLBExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
-                Fault fault = NoFault;
-                %(op_decl)s;
-                %(op_rd)s;
+            Fault fault = NoFault;
+            %(op_decl)s;
+            %(op_rd)s;
 
-#if FULL_SYSTEM
+            if (FULL_SYSTEM) {
                 if (isCoprocessor0Enabled(xc)) {
-                  if(isMMUTLB(xc)){
-                      %(code)s;
-                  } else {
-                    fault = new ReservedInstructionFault();
-                  }
+                    if(isMMUTLB(xc)){
+                        %(code)s;
+                    } else {
+                        fault = new ReservedInstructionFault();
+                    }
                 } else {
-                  fault = new CoprocessorUnusableFault(0);
+                    fault = new CoprocessorUnusableFault(0);
                 }
-#else // Syscall Emulation Mode - No TLB Instructions
+            } else { // Syscall Emulation Mode - No TLB Instructions
                 fault = new ReservedInstructionFault();
-#endif
+            }
 
-                if(fault == NoFault)
-                {
-                    %(op_wb)s;
-                }
-                return fault;
-
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+            return fault;
         }
 }};
 
@@ -175,67 +173,49 @@ output decoder {{
 }};
 
 output exec {{
-        bool isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num)
+        bool
+        isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num)
         {
-#if !FULL_SYSTEM
-            return true;
-#else
-          MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
-          switch(cop_num)
-            {
-            case 0:
-              {
-                  MiscReg Dbg = xc->readMiscReg(MISCREG_DEBUG);
-                  if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
-                     && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
-                     && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
-                      // Unable to use Status_CU0, etc directly, using bitfields & masks
-                      return false;
-                  }
+            if (!FULL_SYSTEM)
+                return true;
 
-              }
-              break;
-            case 1:
-              if((Stat & 0x20000000) == 0) // CU1 is reset
-                return false;
-              break;
-            case 2:
-              if((Stat & 0x40000000) == 0) // CU2 is reset
-                return false;
-              break;
-            case 3:
-              if((Stat & 0x80000000) == 0) // CU3 is reset
-                return false;
-              break;
-            default: panic("Invalid Coprocessor Number Specified");
-              break;
+            MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
+            if (cop_num == 0) {
+                MiscReg Dbg = xc->readMiscReg(MISCREG_DEBUG);
+                // In Stat, EXL, ERL or CU0 set, CP0 accessible
+                // In Dbg, DM bit set, CP0 accessible
+                // In Stat, KSU = 0, kernel mode is base mode
+                return (Stat & 0x10000006) ||
+                       (Dbg & 0x40000000) ||
+                       !(Stat & 0x00000018);
+            } else if (cop_num < 4) {
+                return Stat & (0x10000000 << cop_num); // CU is reset
+            } else {
+                panic("Invalid Coprocessor Number Specified");
             }
-            return true;
-#endif
         }
-        bool inline isCoprocessor0Enabled(%(CPU_exec_context)s *xc)
+
+        bool inline
+        isCoprocessor0Enabled(%(CPU_exec_context)s *xc)
         {
-#if FULL_SYSTEM
-          MiscReg Stat = xc->readMiscRegNoEffect(MISCREG_STATUS);
-          MiscReg Dbg = xc->readMiscRegNoEffect(MISCREG_DEBUG);
-          if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
-                 && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
-                 && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
-                // Unable to use Status_CU0, etc directly, using bitfields & masks
-                  return false;
-              }
-#else
-              //printf("Syscall Emulation Mode: CP0 Enable Check defaults to TRUE\n");
-#endif
-            return true;
+            if (FULL_SYSTEM) {
+                MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
+                MiscReg Dbg = xc->readMiscReg(MISCREG_DEBUG);
+                // In Stat, EXL, ERL or CU0 set, CP0 accessible
+                // In Dbg, DM bit set, CP0 accessible
+                // In Stat KSU = 0, kernel mode is base mode
+                return (Stat & 0x10000006) || (Dbg & 0x40000000) ||
+                    !(Stat & 0x00000018);
+            } else {
+                return true;
+            }
         }
-        bool isMMUTLB(%(CPU_exec_context)s *xc)
+
+        bool
+        isMMUTLB(%(CPU_exec_context)s *xc)
         {
-#if FULL_SYSTEM
-          if((xc->readMiscRegNoEffect(MISCREG_CONFIG) & 0x00000380)==0x80)
-            return true;
-#endif
-          return false;
+            MiscReg Config = xc->readMiscReg(MISCREG_CONFIG);
+            return FULL_SYSTEM && (Config & 0x380) == 0x80;
         }
 }};
 
