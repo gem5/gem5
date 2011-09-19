@@ -186,7 +186,7 @@ output exec {{
         panic("attempt to execute unimplemented instruction '%s' "
               "(inst 0x%08x, opcode 0x%x, binary:%s)", mnemonic, machInst, OPCODE,
               inst2string(machInst));
-        return new UnimplementedOpcodeFault;
+        return NoFault;
     }
 
     Fault
@@ -202,7 +202,7 @@ output exec {{
             panic("attempt to execute unimplemented instruction '%s' "
                     "(inst %#08x, opcode %#x, binary:%s)",
                     mnemonic, machInst, OPCODE, inst2string(machInst));
-            return new UnimplementedOpcodeFault;
+            return NoFault;
         }
     }
 
@@ -219,7 +219,7 @@ output exec {{
             panic("attempt to execute unimplemented instruction '%s' "
                     "(inst %#08x, opcode %#x, binary:%s)",
                     mnemonic, machInst, OPCODE, inst2string(machInst));
-            return new UnimplementedOpcodeFault;
+            return NoFault;
         }
     }
 
@@ -236,7 +236,7 @@ output exec {{
             panic("attempt to execute unimplemented instruction '%s' "
                     "(inst %#08x, opcode %#x, binary:%s)",
                     mnemonic, machInst, OPCODE, inst2string(machInst));
-            return new UnimplementedOpcodeFault;
+            return NoFault;
         }
     }
 

@@ -51,9 +51,6 @@ typedef MipsFaultBase::FaultVals FaultVals;
 template <> FaultVals MipsFault<MachineCheckFault>::vals =
     { "Machine Check", 0x0401 };
 
-template <> FaultVals MipsFault<AlignmentFault>::vals =
-    { "Alignment", 0x0301 };
-
 template <> FaultVals MipsFault<ResetFault>::vals =
 #if  FULL_SYSTEM
     { "Reset Fault", 0xBFC00000};
@@ -79,11 +76,8 @@ template <> FaultVals MipsFault<ReservedInstructionFault>::vals =
 template <> FaultVals MipsFault<ThreadFault>::vals =
     { "Thread Fault", 0x00F1 };
 
-template <> FaultVals MipsFault<ArithmeticFault>::vals =
-    { "Arithmetic Overflow Exception", 0x180 };
-
-template <> FaultVals MipsFault<UnimplementedOpcodeFault>::vals =
-    { "opdec", 0x0481 };
+template <> FaultVals MipsFault<IntegerOverflowFault>::vals =
+    { "Integer Overflow Exception", 0x180 };
 
 template <> FaultVals MipsFault<InterruptFault>::vals =
     { "interrupt", 0x0180 };
@@ -97,29 +91,8 @@ template <> FaultVals MipsFault<BreakpointFault>::vals =
 template <> FaultVals MipsFault<ItbInvalidFault>::vals =
     { "Invalid TLB Entry Exception (I-Fetch/LW)", 0x0180 };
 
-template <> FaultVals MipsFault<ItbPageFault>::vals =
-    { "itbmiss", 0x0181 };
-
-template <> FaultVals MipsFault<ItbMissFault>::vals =
-    { "itbmiss", 0x0181 };
-
-template <> FaultVals MipsFault<ItbAcvFault>::vals =
-    { "iaccvio", 0x0081 };
-
 template <> FaultVals MipsFault<ItbRefillFault>::vals =
     { "TLB Refill Exception (I-Fetch/LW)", 0x0180 };
-
-template <> FaultVals MipsFault<NDtbMissFault>::vals =
-    { "dtb_miss_single", 0x0201 };
-
-template <> FaultVals MipsFault<PDtbMissFault>::vals =
-    { "dtb_miss_double", 0x0281 };
-
-template <> FaultVals MipsFault<DtbPageFault>::vals =
-    { "dfault", 0x0381 };
-
-template <> FaultVals MipsFault<DtbAcvFault>::vals =
-    { "dfault", 0x0381 };
 
 template <> FaultVals MipsFault<DtbInvalidFault>::vals =
     { "Invalid TLB Entry Exception (Store)", 0x0180 };
@@ -129,12 +102,6 @@ template <> FaultVals MipsFault<DtbRefillFault>::vals =
 
 template <> FaultVals MipsFault<TLBModifiedFault>::vals =
     { "TLB Modified Exception", 0x0180 };
-
-template <> FaultVals MipsFault<FloatEnableFault>::vals =
-    { "float_enable_fault", 0x0581 };
-
-template <> FaultVals MipsFault<IntegerOverflowFault>::vals =
-    { "Integer Overflow Fault", 0x0501 };
 
 template <> FaultVals MipsFault<DspStateDisabledFault>::vals =
     { "DSP Disabled Fault", 0x001a };
@@ -190,7 +157,7 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
 }
 
 void
-ArithmeticFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+IntegerOverflowFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0xC);

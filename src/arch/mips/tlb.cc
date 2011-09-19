@@ -387,7 +387,10 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     if (req->getVaddr() & (req->getSize() - 1)) {
         DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->getVaddr(),
                 req->getSize());
-        return new AlignmentFault();
+        if (write)
+            return new StoreAddressErrorFault(req->getVaddr());
+        else
+            return new AddressErrorFault(req->getVaddr());
     }
 
 

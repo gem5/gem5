@@ -91,12 +91,6 @@ class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
     bool isNonMaskableInterrupt() {return true;}
 };
 
-class AlignmentFault : public MipsFault<AlignmentFault>
-{
-  public:
-    bool isAlignmentFault() {return true;}
-};
-
 class AddressErrorFault : public MipsFault<AddressErrorFault>
 {
   public:
@@ -118,35 +112,9 @@ class StoreAddressErrorFault : public MipsFault<StoreAddressErrorFault>
 #endif
 };
 
-class UnimplementedOpcodeFault : public MipsFault<UnimplementedOpcodeFault> {};
-
-class TLBRefillIFetchFault : public MipsFault<TLBRefillIFetchFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class TLBInvalidIFetchFault : public MipsFault<TLBInvalidIFetchFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class NDtbMissFault : public MipsFault<NDtbMissFault> {};
-class PDtbMissFault : public MipsFault<PDtbMissFault> {};
-class DtbPageFault : public MipsFault<DtbPageFault> {};
-class DtbAcvFault : public MipsFault<DtbAcvFault> {};
-
 static inline Fault genMachineCheckFault()
 {
     return new MachineCheckFault;
-}
-
-static inline Fault genAlignmentFault()
-{
-    return new AlignmentFault;
 }
 
 class ResetFault : public MipsFault<ResetFault>
@@ -167,20 +135,6 @@ class SystemCallFault : public MipsFault<SystemCallFault>
 };
 
 class SoftResetFault : public MipsFault<SoftResetFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class DebugSingleStep : public MipsFault<DebugSingleStep>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class DebugInterrupt : public MipsFault<DebugInterrupt>
 {
   public:
     void invoke(ThreadContext * tc,
@@ -213,7 +167,7 @@ class ThreadFault : public MipsFault<ThreadFault>
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class ArithmeticFault : public MipsFault<ArithmeticFault>
+class IntegerOverflowFault : public MipsFault<IntegerOverflowFault>
 {
   protected:
     bool skipFaultingInstruction() {return true;}
@@ -287,15 +241,6 @@ class DtbRefillFault : public MipsFault<DtbRefillFault>
 #endif
 };
 
-class ItbPageFault : public MipsFault<ItbPageFault>
-{
-  public:
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
-
 class ItbInvalidFault : public MipsFault<ItbInvalidFault>
 {
   public:
@@ -346,11 +291,6 @@ class DtbInvalidFault : public MipsFault<DtbInvalidFault>
             StaticInst::StaticInstPtr inst = nullStaticInstPtr);
 #endif
 };
-
-class FloatEnableFault : public MipsFault<FloatEnableFault> {};
-class ItbMissFault : public MipsFault<ItbMissFault> {};
-class ItbAcvFault : public MipsFault<ItbAcvFault> {};
-class IntegerOverflowFault : public MipsFault<IntegerOverflowFault> {};
 
 class DspStateDisabledFault : public MipsFault<DspStateDisabledFault>
 {
