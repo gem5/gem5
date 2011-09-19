@@ -203,7 +203,7 @@ let {{
 
     initparamCode = '''
 #if FULL_SYSTEM
-    Rt = xc->tcBase()->getCpuPtr()->system->init_param;
+    Rt = PseudoInst::initParam(xc->tcBase());
 #endif
     '''
 

@@ -260,6 +260,12 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
     debugSymbolTable->insert(addr,symbol);
 }
 
+uint64_t
+initParam(ThreadContext *tc)
+{
+    return tc->getCpuPtr()->system->init_param;
+}
+
 #endif
 
 

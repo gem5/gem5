@@ -985,7 +985,7 @@ decode OPCODE default Unknown::unknown() {
                 PseudoInst::loadsymbol(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x30: initparam({{
-                Ra = xc->tcBase()->getCpuPtr()->system->init_param;
+                Ra = PseudoInst::initParam(xc->tcBase());
             }});
 #endif
             0x40: resetstats({{

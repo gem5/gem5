@@ -161,8 +161,7 @@
                         }}, IsNonSpeculative);
 #if FULL_SYSTEM
                         0x30: m5initparam({{
-                            Rax = xc->tcBase()->getCpuPtr()->
-                                      system->init_param;
+                            Rax = PseudoInst::initParam(xc->tcBase());
                         }}, IsNonSpeculative);
                         0x31: m5loadsymbol({{
                             PseudoInst::loadsymbol(xc->tcBase());

@@ -56,6 +56,7 @@ uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len,
     uint64_t offset);
 void loadsymbol(ThreadContext *xc);
 void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
+uint64_t initParam(ThreadContext *xc);
 #endif
 
 uint64_t rpns(ThreadContext *tc);
