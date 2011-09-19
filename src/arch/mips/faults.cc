@@ -91,7 +91,7 @@ template <> FaultVals MipsFault<TlbInvalidFault>::vals =
 template <> FaultVals MipsFault<TlbRefillFault>::vals =
     { "TLB Refill Exception", 0x0180 };
 
-template <> FaultVals MipsFault<TLBModifiedFault>::vals =
+template <> FaultVals MipsFault<TlbModifiedFault>::vals =
     { "TLB Modified Exception", 0x0180 };
 
 template <> FaultVals MipsFault<DspStateDisabledFault>::vals =
@@ -184,30 +184,6 @@ BreakpointFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-TlbInvalidFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, store ? 0x3 : 0x2);
-
-    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
-    entryHi.asid = entryHiAsid;
-    entryHi.vpn2 = entryHiVPN2;
-    entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
-
-    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
-    context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
-
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
-}
-
-void
 AddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
@@ -222,24 +198,24 @@ AddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
+TlbInvalidFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+{
+    setTlbExceptionState(tc, store ? 0x3 : 0x2);
+    // Set new PC
+    Addr HandlerBase;
+    // Offset 0x180 - General Exception Vector
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
+    setHandlerPC(HandlerBase, tc);
+}
+
+void
 TlbRefillFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    DPRINTF(MipsPRA, "%s encountered (%x).\n", name(), MISCREG_BADVADDR);
-    setExceptionState(tc, store ? 0x3 : 0x2);
-
-    Addr HandlerBase;
-    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
-    entryHi.asid = entryHiAsid;
-    entryHi.vpn2 = entryHiVPN2;
-    entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
-    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
-    context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
-
-    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
     // Since handler depends on EXL bit, must check EXL bit before setting it!!
+    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
+
+    setTlbExceptionState(tc, store ? 0x3 : 0x2);
+
     // See MIPS ARM Vol 3, Revision 2, Page 38
     if (status.exl == 1) {
         // Offset 0x180 - General Exception Vector
@@ -252,27 +228,15 @@ TlbRefillFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-TLBModifiedFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+TlbModifiedFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
-    entryHi.asid = entryHiAsid;
-    entryHi.vpn2 = entryHiVPN2;
-    entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
-
-    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
-    context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
+    setTlbExceptionState(tc, 0x1);
 
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
     HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setExceptionState(tc, 0x1);
     setHandlerPC(HandlerBase, tc);
-
 }
 
 void

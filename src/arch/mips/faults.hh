@@ -34,6 +34,9 @@
 #ifndef __MIPS_FAULTS_HH__
 #define __MIPS_FAULTS_HH__
 
+#include "arch/mips/pra_constants.hh"
+#include "cpu/thread_context.hh"
+#include "debug/MipsPRA.hh"
 #include "sim/faults.hh"
 
 namespace MipsISA
@@ -53,11 +56,6 @@ class MipsFaultBase : public FaultBase
         const FaultVect vect;
     };
 
-    Addr badVAddr;
-    Addr entryHiAsid;
-    Addr entryHiVPN2;
-    Addr entryHiVPN2X;
-    Addr contextBadVPN2;
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInst::StaticInstPtr inst = StaticInst::nullStaticInstPtr)
@@ -77,6 +75,47 @@ class MipsFault : public MipsFaultBase
     FaultVect vect() const { return vals.vect; }
 };
 
+template <typename T>
+class AddressFault : public MipsFault<T>
+{
+  protected:
+    Addr vaddr;
+    bool store;
+
+    AddressFault(Addr _vaddr, bool _store) : vaddr(_vaddr), store(_store)
+    {}
+};
+
+template <typename T>
+class TlbFault : public AddressFault<T>
+{
+  protected:
+    Addr asid;
+    Addr vpn;
+
+    TlbFault(Addr _asid, Addr _vaddr, Addr _vpn, bool _store) :
+        AddressFault<T>(_vaddr, _store), asid(_asid), vpn(_vpn)
+    {}
+
+    void
+    setTlbExceptionState(ThreadContext *tc, uint8_t excCode)
+    {
+        DPRINTF(MipsPRA, "%s encountered.\n", name());
+        this->setExceptionState(tc, excCode);
+
+        tc->setMiscRegNoEffect(MISCREG_BADVADDR, this->vaddr);
+        EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
+        entryHi.asid = this->asid;
+        entryHi.vpn2 = this->vpn >> 2;
+        entryHi.vpn2x = this->vpn & 0x3;
+        tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
+
+        ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
+        context.badVPN2 = this->vpn >> 2;
+        tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
+    }
+};
+
 class MachineCheckFault : public MipsFault<MachineCheckFault>
 {
   public:
@@ -94,13 +133,11 @@ class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
     bool isNonMaskableInterrupt() {return true;}
 };
 
-class AddressErrorFault : public MipsFault<AddressErrorFault>
+class AddressErrorFault : public AddressFault<AddressErrorFault>
 {
-  protected:
-    Addr vaddr;
-    bool store;
   public:
-    AddressErrorFault(Addr _vaddr, bool _store) : vaddr(_vaddr), store(_store)
+    AddressErrorFault(Addr _vaddr, bool _store) :
+        AddressFault<AddressErrorFault>(_vaddr, _store)
     {}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
@@ -199,57 +236,36 @@ class BreakpointFault : public MipsFault<BreakpointFault>
 #endif
 };
 
-class TlbRefillFault : public MipsFault<TlbRefillFault>
+class TlbRefillFault : public TlbFault<TlbRefillFault>
 {
-  protected:
-    bool store;
   public:
-    TlbRefillFault(Addr asid, Addr vaddr, Addr vpn, bool _store) :
-        store(_store)
-    {
-        entryHiAsid = asid;
-        entryHiVPN2 = vpn >> 2;
-        entryHiVPN2X = vpn & 0x3;
-        badVAddr = vaddr;
-        contextBadVPN2 = vpn >> 2;
-    }
+    TlbRefillFault(Addr asid, Addr vaddr, Addr vpn, bool store) :
+        TlbFault<TlbRefillFault>(asid, vaddr, vpn, store)
+    {}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class TlbInvalidFault : public MipsFault<TlbInvalidFault>
+class TlbInvalidFault : public TlbFault<TlbInvalidFault>
 {
-  protected:
-    bool store;
   public:
-    TlbInvalidFault(Addr asid, Addr vaddr, Addr vpn, bool _store) :
-        store(_store)
-    {
-        entryHiAsid = asid;
-        entryHiVPN2 = vpn >> 2;
-        entryHiVPN2X = vpn & 0x3;
-        badVAddr = vaddr;
-        contextBadVPN2 = vpn >> 2;
-    }
+    TlbInvalidFault(Addr asid, Addr vaddr, Addr vpn, bool store) :
+        TlbFault<TlbInvalidFault>(asid, vaddr, vpn, store)
+    {}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class TLBModifiedFault : public MipsFault<TLBModifiedFault>
+class TlbModifiedFault : public TlbFault<TlbModifiedFault>
 {
   public:
-    TLBModifiedFault(Addr asid, Addr vaddr, Addr vpn)
-    {
-        entryHiAsid = asid;
-        entryHiVPN2 = vpn >> 2;
-        entryHiVPN2X = vpn & 0x3;
-        badVAddr = vaddr;
-        contextBadVPN2 = vpn >> 2;
-    }
+    TlbModifiedFault(Addr asid, Addr vaddr, Addr vpn) :
+        TlbFault<TlbModifiedFault>(asid, vaddr, vpn, false)
+    {}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);

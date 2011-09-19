@@ -451,7 +451,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             } else {
                 // Ok, this is really a match, set paddr
                 if (!Dirty) {
-                    return new TLBModifiedFault(Asid, vaddr, VPN);
+                    return new TlbModifiedFault(Asid, vaddr, VPN);
                 }
                 Addr PAddr;
                 if (EvenOdd == 0) {
