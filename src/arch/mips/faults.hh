@@ -62,9 +62,9 @@ class MipsFaultBase : public FaultBase
     void invoke(ThreadContext * tc,
             StaticInst::StaticInstPtr inst = StaticInst::nullStaticInstPtr)
     {}
-    void setExceptionState(ThreadContext *, uint8_t);
     void setHandlerPC(Addr, ThreadContext *);
 #endif
+    void setExceptionState(ThreadContext *, uint8_t);
 };
 
 template <typename T>

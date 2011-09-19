@@ -97,15 +97,6 @@ template <> FaultVals MipsFault<TLBModifiedFault>::vals =
 template <> FaultVals MipsFault<DspStateDisabledFault>::vals =
     { "DSP Disabled Fault", 0x001a };
 
-#if FULL_SYSTEM
-void
-MipsFaultBase::setHandlerPC(Addr HandlerBase, ThreadContext *tc)
-{
-    tc->setPC(HandlerBase);
-    tc->setNextPC(HandlerBase + sizeof(MachInst));
-    tc->setNextNPC(HandlerBase + 2 * sizeof(MachInst));
-}
-
 void
 MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
 {
@@ -124,27 +115,27 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
     tc->setMiscRegNoEffect(MISCREG_STATUS, status);
 
     // write EPC
-    // CHECK ME  or FIXME or FIX ME or POSSIBLE HACK
-    // Check to see if the exception occurred in the branch delay slot
-    DPRINTF(MipsPRA, "PC: %x, NextPC: %x, NNPC: %x\n",
-            tc->readPC(), tc->readNextPC(), tc->readNextNPC());
-    int bd = 0;
-    if (tc->readPC() + sizeof(MachInst) != tc->readNextPC()) {
-        tc->setMiscRegNoEffect(MISCREG_EPC, tc->readPC() - sizeof(MachInst));
-        // In the branch delay slot? set CAUSE_31
-        bd = 1;
-    } else {
-        tc->setMiscRegNoEffect(MISCREG_EPC, tc->readPC());
-        // In the branch delay slot? reset CAUSE_31
-        bd = 0;
-    }
+    PCState pc = tc->pcState();
+    DPRINTF(MipsPRA, "PC: %s\n", pc);
+    bool delay_slot = pc.pc() + sizeof(MachInst) != pc.npc();
+    tc->setMiscRegNoEffect(MISCREG_EPC,
+            pc.pc() - delay_slot ? sizeof(MachInst) : 0);
 
     // Set Cause_EXCCODE field
     CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
     cause.excCode = excCode;
-    cause.bd = bd;
+    cause.bd = delay_slot ? 1 : 0;
     cause.ce = 0;
     tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
+}
+
+#if FULL_SYSTEM
+void
+MipsFaultBase::setHandlerPC(Addr HandlerBase, ThreadContext *tc)
+{
+    tc->setPC(HandlerBase);
+    tc->setNextPC(HandlerBase + sizeof(MachInst));
+    tc->setNextNPC(HandlerBase + 2 * sizeof(MachInst));
 }
 
 void
