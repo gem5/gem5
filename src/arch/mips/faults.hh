@@ -262,8 +262,10 @@ class SystemCallFault : public MipsFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
+#if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+#endif
 };
 
 class SoftResetFault : public MipsFault
