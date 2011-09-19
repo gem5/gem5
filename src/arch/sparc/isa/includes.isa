@@ -63,10 +63,6 @@ using namespace SparcISA;
 output exec {{
 #include "base/fenv.hh"
 
-#if FULL_SYSTEM
-#include "sim/pseudo_inst.hh"
-#endif
-
 #include <cmath>
 #include <limits>
 
@@ -78,6 +74,7 @@ output exec {{
 #include "debug/Sparc.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/sim_exit.hh"
 
 using namespace SparcISA;

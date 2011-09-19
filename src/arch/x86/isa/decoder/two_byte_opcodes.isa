@@ -136,7 +136,6 @@
                 //0x04: loadall_or_reset_or_hang();
                 0x4: decode IMMEDIATE {
                     format BasicOperate {
-#if FULL_SYSTEM
                         0x00: m5arm({{
                             PseudoInst::arm(xc->tcBase());
                         }}, IsNonSpeculative);
@@ -152,21 +151,18 @@
                         0x04: m5quiesceTime({{
                             Rax = PseudoInst::quiesceTime(xc->tcBase());
                         }}, IsNonSpeculative);
-#endif
                         0x07: m5rpns({{
                             Rax = PseudoInst::rpns(xc->tcBase());
                         }}, IsNonSpeculative);
                         0x21: m5exit({{
                             PseudoInst::m5exit(xc->tcBase(), Rdi);
                         }}, IsNonSpeculative);
-#if FULL_SYSTEM
                         0x30: m5initparam({{
                             Rax = PseudoInst::initParam(xc->tcBase());
                         }}, IsNonSpeculative);
                         0x31: m5loadsymbol({{
                             PseudoInst::loadsymbol(xc->tcBase());
                         }}, IsNonSpeculative);
-#endif
                         0x40: m5resetstats({{
                             PseudoInst::resetstats(xc->tcBase(), Rdi, Rsi);
                         }}, IsNonSpeculative);
@@ -179,23 +175,19 @@
                         0x43: m5checkpoint({{
                             PseudoInst::m5checkpoint(xc->tcBase(), Rdi, Rsi);
                         }}, IsNonSpeculative);
-#if FULL_SYSTEM
                         0x50: m5readfile({{
                             Rax = PseudoInst::readfile(
                                 xc->tcBase(), Rdi, Rsi, Rdx);
                         }}, IsNonSpeculative);
-#endif
                         0x51: m5debugbreak({{
                             PseudoInst::debugbreak(xc->tcBase());
                         }}, IsNonSpeculative);
                         0x52: m5switchcpu({{
                             PseudoInst::switchcpu(xc->tcBase());
                         }}, IsNonSpeculative);
-#if FULL_SYSTEM
                         0x53: m5addsymbol({{
                             PseudoInst::addsymbol(xc->tcBase(), Rdi, Rsi);
                         }}, IsNonSpeculative);
-#endif
                         0x54: m5panic({{
                             panic("M5 panic instruction called at pc = %#x.\n",
                                   RIP);

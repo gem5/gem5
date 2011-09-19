@@ -196,9 +196,7 @@ def template QuiescePredOpExecute {{
             }
         } else {
             xc->setPredicate(false);
-#if FULL_SYSTEM
             PseudoInst::quiesceSkip(xc->tcBase());
-#endif
         }
 
         return fault;
@@ -224,9 +222,7 @@ def template QuiescePredOpExecuteWithFixup {{
         } else {
             xc->setPredicate(false);
             %(pred_fixup)s;
-#if FULL_SYSTEM
             PseudoInst::quiesceSkip(xc->tcBase());
-#endif
         }
 
         return fault;
