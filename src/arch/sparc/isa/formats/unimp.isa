@@ -103,11 +103,7 @@ output decoder {{
     WarnUnimplemented::generateDisassembly(Addr pc,
                                            const SymbolTable *symtab) const
     {
-#ifdef SS_COMPATIBLE_DISASSEMBLY
-        return csprintf("%-10s", mnemonic);
-#else
         return csprintf("%-10s (unimplemented)", mnemonic);
-#endif
     }
 }};
 
