@@ -51,7 +51,6 @@ class MipsFaultBase : public FaultBase
     {
         const FaultName name;
         const FaultVect vect;
-        FaultStat count;
     };
 
     Addr badVAddr;
@@ -76,7 +75,6 @@ class MipsFault : public MipsFaultBase
   public:
     FaultName name() const { return vals.name; }
     FaultVect vect() const { return vals.vect; }
-    FaultStat & countStat() { return vals.count; }
 };
 
 class MachineCheckFault : public MipsFault<MachineCheckFault>
