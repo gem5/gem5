@@ -167,7 +167,7 @@ template <typename T> inline T betoh(T value) {return swap_byte(value);}
 
 namespace BigEndianGuest
 {
-    const bool ByteOrderDiffers = (HostByteOrder != BigEndianByteOrder);
+    const ByteOrder GuestByteOrder = BigEndianByteOrder;
     template <typename T>
     inline T gtole(T value) {return betole(value);}
     template <typename T>
@@ -184,7 +184,7 @@ namespace BigEndianGuest
 
 namespace LittleEndianGuest
 {
-    const bool ByteOrderDiffers = (HostByteOrder != LittleEndianByteOrder);
+    const ByteOrder GuestByteOrder = LittleEndianByteOrder;
     template <typename T>
     inline T gtole(T value) {return value;}
     template <typename T>
