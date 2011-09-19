@@ -44,21 +44,63 @@ namespace MipsISA
 
 typedef const Addr FaultVect;
 
+enum ExcCode {
+    // A dummy value to use when the code isn't defined or doesn't matter.
+    ExcCodeDummy = 0,
+
+    ExcCodeInt = 0,
+    ExcCodeMod = 1,
+    ExcCodeTlbL = 2,
+    ExcCodeTlbS = 3,
+    ExcCodeAdEL = 4,
+    ExcCodeAdES = 5,
+    ExcCodeIBE = 6,
+    ExcCodeDBE = 7,
+    ExcCodeSys = 8,
+    ExcCodeBp = 9,
+    ExcCodeRI = 10,
+    ExcCodeCpU = 11,
+    ExcCodeOv = 12,
+    ExcCodeTr = 13,
+    ExcCodeC2E = 18,
+    ExcCodeMDMX = 22,
+    ExcCodeWatch = 23,
+    ExcCodeMCheck = 24,
+    ExcCodeThread = 25,
+    ExcCodeCacheErr = 30
+};
+
 class MipsFaultBase : public FaultBase
 {
   public:
     struct FaultVals
     {
         const FaultName name;
-        const FaultVect vect;
+        const FaultVect offset;
+        const ExcCode code;
     };
 
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInst::StaticInstPtr inst = StaticInst::nullStaticInstPtr)
-    {}
-#endif
     void setExceptionState(ThreadContext *, uint8_t);
+
+    virtual FaultVect offset(ThreadContext *tc) const = 0;
+    virtual ExcCode code() const = 0;
+    virtual FaultVect base(ThreadContext *tc) const
+    {
+        StatusReg status = tc->readMiscReg(MISCREG_STATUS);
+        if (status.bev)
+            return tc->readMiscReg(MISCREG_EBASE);
+        else
+            return 0xbfc00200;
+    }
+
+    FaultVect
+    vect(ThreadContext *tc) const
+    {
+        return base(tc) + offset(tc);
+    }
+
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
 template <typename T>
@@ -68,7 +110,81 @@ class MipsFault : public MipsFaultBase
     static FaultVals vals;
   public:
     FaultName name() const { return vals.name; }
-    FaultVect vect() const { return vals.vect; }
+    FaultVect offset(ThreadContext *tc) const { return vals.offset; }
+    ExcCode code() const { return vals.code; }
+};
+
+class SystemCallFault : public MipsFault<SystemCallFault> {};
+class ReservedInstructionFault : public MipsFault<ReservedInstructionFault> {};
+class ThreadFault : public MipsFault<ThreadFault> {};
+class IntegerOverflowFault : public MipsFault<IntegerOverflowFault> {};
+class TrapFault : public MipsFault<TrapFault> {};
+class BreakpointFault : public MipsFault<BreakpointFault> {};
+class DspStateDisabledFault : public MipsFault<DspStateDisabledFault> {};
+
+class MachineCheckFault : public MipsFault<MachineCheckFault>
+{
+  public:
+    bool isMachineCheckFault() { return true; }
+};
+
+static inline Fault genMachineCheckFault()
+{
+    return new MachineCheckFault;
+}
+
+class ResetFault : public MipsFault<ResetFault>
+{
+  public:
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+
+};
+
+class SoftResetFault : public MipsFault<SoftResetFault>
+{
+  public:
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+};
+
+class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
+{
+  public:
+    void invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+};
+
+class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
+{
+  protected:
+    int coProcID;
+  public:
+    CoprocessorUnusableFault(int _procid) : coProcID(_procid)
+    {}
+
+    void
+    invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    {
+        MipsFault<CoprocessorUnusableFault>::invoke(tc, inst);
+        if (FULL_SYSTEM) {
+            CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
+            cause.ce = coProcID;
+            tc->setMiscReg(MISCREG_CAUSE, cause);
+        }
+    }
+};
+
+class InterruptFault : public MipsFault<InterruptFault>
+{
+  public:
+    FaultVect
+    offset(ThreadContext *tc) const
+    {
+        CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
+        return cause.iv ? 0x200 : 0x000;
+    }
 };
 
 template <typename T>
@@ -80,6 +196,30 @@ class AddressFault : public MipsFault<T>
 
     AddressFault(Addr _vaddr, bool _store) : vaddr(_vaddr), store(_store)
     {}
+
+    void
+    invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    {
+        MipsFault<T>::invoke(tc, inst);
+        if (FULL_SYSTEM)
+            tc->setMiscRegNoEffect(MISCREG_BADVADDR, vaddr);
+    }
+};
+
+class AddressErrorFault : public AddressFault<AddressErrorFault>
+{
+  public:
+    AddressErrorFault(Addr _vaddr, bool _store) :
+        AddressFault<AddressErrorFault>(_vaddr, _store)
+    {}
+
+    ExcCode
+    code() const
+    {
+        return store ? ExcCodeAdES : ExcCodeAdEL;
+    }
+
 };
 
 template <typename T>
@@ -96,7 +236,6 @@ class TlbFault : public AddressFault<T>
     void
     setTlbExceptionState(ThreadContext *tc, uint8_t excCode)
     {
-        DPRINTF(MipsPRA, "%s encountered.\n", name());
         this->setExceptionState(tc, excCode);
 
         tc->setMiscRegNoEffect(MISCREG_BADVADDR, this->vaddr);
@@ -110,122 +249,25 @@ class TlbFault : public AddressFault<T>
         context.badVPN2 = this->vpn >> 2;
         tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
     }
-};
 
-class MachineCheckFault : public MipsFault<MachineCheckFault>
-{
-  public:
-    bool isMachineCheckFault() {return true;}
-};
+    void
+    invoke(ThreadContext * tc,
+            StaticInstPtr inst = StaticInst::nullStaticInstPtr)
+    {
+        if (FULL_SYSTEM) {
+            DPRINTF(MipsPRA, "Fault %s encountered.\n", name());
+            tc->pcState(this->vect(tc));
+            setTlbExceptionState(tc, this->code());
+        } else {
+            AddressFault<T>::invoke(tc, inst);
+        }
+    }
 
-static inline Fault genMachineCheckFault()
-{
-    return new MachineCheckFault;
-}
-
-class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
-{
-  public:
-    bool isNonMaskableInterrupt() {return true;}
-};
-
-class AddressErrorFault : public AddressFault<AddressErrorFault>
-{
-  public:
-    AddressErrorFault(Addr _vaddr, bool _store) :
-        AddressFault<AddressErrorFault>(_vaddr, _store)
-    {}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-
-};
-
-class ResetFault : public MipsFault<ResetFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-
-};
-
-class SystemCallFault : public MipsFault<SystemCallFault>
-{
-  public:
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
-
-class SoftResetFault : public MipsFault<SoftResetFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
-{
-  protected:
-    int coProcID;
-  public:
-    CoprocessorUnusableFault(int _procid) : coProcID(_procid)
-    {}
-
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class ReservedInstructionFault : public MipsFault<ReservedInstructionFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class ThreadFault : public MipsFault<ThreadFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-};
-
-class IntegerOverflowFault : public MipsFault<IntegerOverflowFault>
-{
-  public:
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
-
-class InterruptFault : public MipsFault<InterruptFault>
-{
-  public:
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
-
-class TrapFault : public MipsFault<TrapFault>
-{
-  public:
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
-
-class BreakpointFault : public MipsFault<BreakpointFault>
-{
-  public:
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
+    ExcCode
+    code() const
+    {
+        return this->store ? ExcCodeTlbS : ExcCodeTlbL;
+    }
 };
 
 class TlbRefillFault : public TlbFault<TlbRefillFault>
@@ -234,10 +276,13 @@ class TlbRefillFault : public TlbFault<TlbRefillFault>
     TlbRefillFault(Addr asid, Addr vaddr, Addr vpn, bool store) :
         TlbFault<TlbRefillFault>(asid, vaddr, vpn, store)
     {}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
+
+    FaultVect
+    offset(ThreadContext *tc) const
+    {
+        StatusReg status = tc->readMiscReg(MISCREG_STATUS);
+        return status.exl ? 0x180 : 0x000;
+    }
 };
 
 class TlbInvalidFault : public TlbFault<TlbInvalidFault>
@@ -246,10 +291,6 @@ class TlbInvalidFault : public TlbFault<TlbInvalidFault>
     TlbInvalidFault(Addr asid, Addr vaddr, Addr vpn, bool store) :
         TlbFault<TlbInvalidFault>(asid, vaddr, vpn, store)
     {}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 class TlbModifiedFault : public TlbFault<TlbModifiedFault>
@@ -258,17 +299,8 @@ class TlbModifiedFault : public TlbFault<TlbModifiedFault>
     TlbModifiedFault(Addr asid, Addr vaddr, Addr vpn) :
         TlbFault<TlbModifiedFault>(asid, vaddr, vpn, false)
     {}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
 
-class DspStateDisabledFault : public MipsFault<DspStateDisabledFault>
-{
-  public:
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
+    ExcCode code() const { return vals.code; }
 };
 
 } // namespace MipsISA

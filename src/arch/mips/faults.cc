@@ -48,54 +48,56 @@ namespace MipsISA
 
 typedef MipsFaultBase::FaultVals FaultVals;
 
-template <> FaultVals MipsFault<MachineCheckFault>::vals =
-    { "Machine Check", 0x0401 };
-
-template <> FaultVals MipsFault<ResetFault>::vals =
-#if  FULL_SYSTEM
-    { "Reset Fault", 0xBFC00000};
-#else
-    { "Reset Fault", 0x001};
-#endif
-
-template <> FaultVals MipsFault<AddressErrorFault>::vals =
-    { "Address Error", 0x0180 };
-
 template <> FaultVals MipsFault<SystemCallFault>::vals =
-    { "Syscall", 0x0180 };
-
-template <> FaultVals MipsFault<CoprocessorUnusableFault>::vals =
-    { "Coprocessor Unusable Fault", 0x180 };
+    { "Syscall", 0x180, ExcCodeSys };
 
 template <> FaultVals MipsFault<ReservedInstructionFault>::vals =
-    { "Reserved Instruction Fault", 0x0180 };
+    { "Reserved Instruction Fault", 0x180, ExcCodeRI };
 
 template <> FaultVals MipsFault<ThreadFault>::vals =
-    { "Thread Fault", 0x00F1 };
+    { "Thread Fault", 0x180, ExcCodeDummy };
 
 template <> FaultVals MipsFault<IntegerOverflowFault>::vals =
-    { "Integer Overflow Exception", 0x180 };
-
-template <> FaultVals MipsFault<InterruptFault>::vals =
-    { "interrupt", 0x0180 };
+    { "Integer Overflow Exception", 0x180, ExcCodeOv };
 
 template <> FaultVals MipsFault<TrapFault>::vals =
-    { "Trap", 0x0180 };
+    { "Trap", 0x180, ExcCodeTr };
 
 template <> FaultVals MipsFault<BreakpointFault>::vals =
-    { "Breakpoint", 0x0180 };
-
-template <> FaultVals MipsFault<TlbInvalidFault>::vals =
-    { "Invalid TLB Entry Exception", 0x0180 };
-
-template <> FaultVals MipsFault<TlbRefillFault>::vals =
-    { "TLB Refill Exception", 0x0180 };
-
-template <> FaultVals MipsFault<TlbModifiedFault>::vals =
-    { "TLB Modified Exception", 0x0180 };
+    { "Breakpoint", 0x180, ExcCodeBp };
 
 template <> FaultVals MipsFault<DspStateDisabledFault>::vals =
-    { "DSP Disabled Fault", 0x001a };
+    { "DSP Disabled Fault", 0x180, ExcCodeDummy };
+
+template <> FaultVals MipsFault<MachineCheckFault>::vals =
+    { "Machine Check", 0x180, ExcCodeMCheck };
+
+template <> FaultVals MipsFault<ResetFault>::vals =
+    { "Reset Fault", 0x000, ExcCodeDummy };
+
+template <> FaultVals MipsFault<SoftResetFault>::vals =
+    { "Soft Reset Fault", 0x000, ExcCodeDummy };
+
+template <> FaultVals MipsFault<NonMaskableInterrupt>::vals =
+    { "Non Maskable Interrupt", 0x000, ExcCodeDummy };
+
+template <> FaultVals MipsFault<CoprocessorUnusableFault>::vals =
+    { "Coprocessor Unusable Fault", 0x180, ExcCodeCpU };
+
+template <> FaultVals MipsFault<InterruptFault>::vals =
+    { "Interrupt", 0x000, ExcCodeInt };
+
+template <> FaultVals MipsFault<AddressErrorFault>::vals =
+    { "Address Error", 0x180, ExcCodeDummy };
+
+template <> FaultVals MipsFault<TlbInvalidFault>::vals =
+    { "Invalid TLB Entry Exception", 0x180, ExcCodeDummy };
+
+template <> FaultVals MipsFault<TlbRefillFault>::vals =
+    { "TLB Refill Exception", 0x180, ExcCodeDummy };
+
+template <> FaultVals MipsFault<TlbModifiedFault>::vals =
+    { "TLB Modified Exception", 0x180, ExcCodeMod };
 
 void
 MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
@@ -129,118 +131,28 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
     tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
 }
 
-#if FULL_SYSTEM
-
 void
-IntegerOverflowFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+MipsFaultBase::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0xC);
-
-    // Set new PC
-    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
-    if (!status.bev) {
-        // See MIPS ARM Vol 3, Revision 2, Page 38
-        tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
+    if (FULL_SYSTEM) {
+        DPRINTF(MipsPRA, "Fault %s encountered.\n", name());
+        setExceptionState(tc, code());
+        tc->pcState(vect(tc));
     } else {
-        tc->pcState(0xBFC00200);
+        panic("Fault %s encountered.\n", name());
     }
 }
-
-void
-TrapFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0xD);
-
-    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-}
-
-void
-BreakpointFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    setExceptionState(tc, 0x9);
-
-    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-}
-
-void
-AddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, store ? 0x5 : 0x4);
-    tc->setMiscRegNoEffect(MISCREG_BADVADDR, vaddr);
-
-    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-}
-
-void
-TlbInvalidFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    setTlbExceptionState(tc, store ? 0x3 : 0x2);
-    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-}
-
-void
-TlbRefillFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    // Since handler depends on EXL bit, must check EXL bit before setting it!!
-    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
-
-    setTlbExceptionState(tc, store ? 0x3 : 0x2);
-
-    // See MIPS ARM Vol 3, Revision 2, Page 38
-    if (status.exl == 1) {
-        tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-    } else {
-        tc->pcState(tc->readMiscReg(MISCREG_EBASE));
-    }
-}
-
-void
-TlbModifiedFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    setTlbExceptionState(tc, 0x1);
-
-    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-}
-
-void
-SystemCallFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0x8);
-
-    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-}
-
-void
-InterruptFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0x0A);
-
-    CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
-    if (cause.iv) {
-        // Offset 200 for release 2
-        tc->pcState(0x20 + vect() + tc->readMiscRegNoEffect(MISCREG_EBASE));
-    } else {
-        //Ofset at 180 for release 1
-        tc->pcState(vect() + tc->readMiscRegNoEffect(MISCREG_EBASE));
-    }
-}
-
-#endif // FULL_SYSTEM
 
 void
 ResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if FULL_SYSTEM
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    /* All reset activity must be invoked from here */
-    tc->pcState(vect());
-    DPRINTF(MipsPRA, "ResetFault::invoke : PC set to %x", tc->readPC());
-#endif
+    if (FULL_SYSTEM) {
+        DPRINTF(MipsPRA, "%s encountered.\n", name());
+        /* All reset activity must be invoked from here */
+        Addr handler = vect(tc);
+        tc->pcState(handler);
+        DPRINTF(MipsPRA, "ResetFault::invoke : PC set to %x", handler);
+    }
 
     // Set Coprocessor 1 (Floating Point) To Usable
     StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
@@ -249,46 +161,15 @@ ResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-ReservedInstructionFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+SoftResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if  FULL_SYSTEM
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0x0A);
-    tc->pcState(vect() + tc->readMiscRegNoEffect(MISCREG_EBASE));
-#else
-    panic("%s encountered.\n", name());
-#endif
+    panic("Soft reset not implemented.\n");
 }
 
 void
-ThreadFault::invoke(ThreadContext *tc, StaticInstPtr inst)
+NonMaskableInterrupt::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    panic("%s encountered.\n", name());
-}
-
-void
-DspStateDisabledFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    panic("%s encountered.\n", name());
-}
-
-void
-CoprocessorUnusableFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-#if FULL_SYSTEM
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0xb);
-    // The ID of the coprocessor causing the exception is stored in
-    // CoprocessorUnusableFault::coProcID
-    CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
-    cause.ce = coProcID;
-    tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
-    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
-#else
-    warn("%s (CP%d) encountered.\n", name(), coProcID);
-#endif
+    panic("Non maskable interrupt not implemented.\n");
 }
 
 } // namespace MipsISA
