@@ -46,9 +46,6 @@ typedef const Addr FaultVect;
 
 class MipsFaultBase : public FaultBase
 {
-  protected:
-    virtual bool skipFaultingInstruction() {return false;}
-    virtual bool setRestartAddress() {return true;}
   public:
     struct FaultVals
     {
@@ -198,8 +195,6 @@ class ThreadFault : public MipsFault<ThreadFault>
 
 class IntegerOverflowFault : public MipsFault<IntegerOverflowFault>
 {
-  protected:
-    bool skipFaultingInstruction() {return true;}
   public:
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
@@ -209,8 +204,6 @@ class IntegerOverflowFault : public MipsFault<IntegerOverflowFault>
 
 class InterruptFault : public MipsFault<InterruptFault>
 {
-  protected:
-    bool setRestartAddress() {return false;}
   public:
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
