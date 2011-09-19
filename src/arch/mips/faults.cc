@@ -46,130 +46,102 @@
 namespace MipsISA
 {
 
-FaultName MachineCheckFault::_name = "Machine Check";
-FaultVect MachineCheckFault::_vect = 0x0401;
-FaultStat MachineCheckFault::_count;
+typedef MipsFaultBase::FaultVals FaultVals;
 
-FaultName AlignmentFault::_name = "Alignment";
-FaultVect AlignmentFault::_vect = 0x0301;
-FaultStat AlignmentFault::_count;
+template <> FaultVals MipsFault<MachineCheckFault>::vals =
+    { "Machine Check", 0x0401 };
 
-FaultName ResetFault::_name = "Reset Fault";
+template <> FaultVals MipsFault<AlignmentFault>::vals =
+    { "Alignment", 0x0301 };
+
+template <> FaultVals MipsFault<ResetFault>::vals =
 #if  FULL_SYSTEM
-FaultVect ResetFault::_vect = 0xBFC00000;
+    { "Reset Fault", 0xBFC00000};
 #else
-FaultVect ResetFault::_vect = 0x001;
+    { "Reset Fault", 0x001};
 #endif
-FaultStat ResetFault::_count;
 
-FaultName AddressErrorFault::_name = "Address Error";
-FaultVect AddressErrorFault::_vect = 0x0180;
-FaultStat AddressErrorFault::_count;
+template <> FaultVals MipsFault<AddressErrorFault>::vals =
+    { "Address Error", 0x0180 };
 
-FaultName StoreAddressErrorFault::_name = "Store Address Error";
-FaultVect StoreAddressErrorFault::_vect = 0x0180;
-FaultStat StoreAddressErrorFault::_count;
+template <> FaultVals MipsFault<StoreAddressErrorFault>::vals =
+    { "Store Address Error", 0x0180 };
 
+template <> FaultVals MipsFault<SystemCallFault>::vals =
+    { "Syscall", 0x0180 };
 
-FaultName SystemCallFault::_name = "Syscall";
-FaultVect SystemCallFault::_vect = 0x0180;
-FaultStat SystemCallFault::_count;
+template <> FaultVals MipsFault<CoprocessorUnusableFault>::vals =
+    { "Coprocessor Unusable Fault", 0x180 };
 
-FaultName CoprocessorUnusableFault::_name = "Coprocessor Unusable Fault";
-FaultVect CoprocessorUnusableFault::_vect = 0x180;
-FaultStat CoprocessorUnusableFault::_count;
+template <> FaultVals MipsFault<ReservedInstructionFault>::vals =
+    { "Reserved Instruction Fault", 0x0180 };
 
-FaultName ReservedInstructionFault::_name = "Reserved Instruction Fault";
-FaultVect ReservedInstructionFault::_vect = 0x0180;
-FaultStat ReservedInstructionFault::_count;
+template <> FaultVals MipsFault<ThreadFault>::vals =
+    { "Thread Fault", 0x00F1 };
 
-FaultName ThreadFault::_name = "Thread Fault";
-FaultVect ThreadFault::_vect = 0x00F1;
-FaultStat ThreadFault::_count;
+template <> FaultVals MipsFault<ArithmeticFault>::vals =
+    { "Arithmetic Overflow Exception", 0x180 };
 
-FaultName ArithmeticFault::_name = "Arithmetic Overflow Exception";
-FaultVect ArithmeticFault::_vect = 0x180;
-FaultStat ArithmeticFault::_count;
+template <> FaultVals MipsFault<UnimplementedOpcodeFault>::vals =
+    { "opdec", 0x0481 };
 
-FaultName UnimplementedOpcodeFault::_name = "opdec";
-FaultVect UnimplementedOpcodeFault::_vect = 0x0481;
-FaultStat UnimplementedOpcodeFault::_count;
+template <> FaultVals MipsFault<InterruptFault>::vals =
+    { "interrupt", 0x0180 };
 
-FaultName InterruptFault::_name = "interrupt";
-FaultVect InterruptFault::_vect = 0x0180;
-FaultStat InterruptFault::_count;
+template <> FaultVals MipsFault<TrapFault>::vals =
+    { "Trap", 0x0180 };
 
-FaultName TrapFault::_name = "Trap";
-FaultVect TrapFault::_vect = 0x0180;
-FaultStat TrapFault::_count;
+template <> FaultVals MipsFault<BreakpointFault>::vals =
+    { "Breakpoint", 0x0180 };
 
-FaultName BreakpointFault::_name = "Breakpoint";
-FaultVect BreakpointFault::_vect = 0x0180;
-FaultStat BreakpointFault::_count;
+template <> FaultVals MipsFault<ItbInvalidFault>::vals =
+    { "Invalid TLB Entry Exception (I-Fetch/LW)", 0x0180 };
 
-FaultName ItbInvalidFault::_name = "Invalid TLB Entry Exception (I-Fetch/LW)";
-FaultVect ItbInvalidFault::_vect = 0x0180;
-FaultStat ItbInvalidFault::_count;
+template <> FaultVals MipsFault<ItbPageFault>::vals =
+    { "itbmiss", 0x0181 };
 
-FaultName ItbPageFault::_name = "itbmiss";
-FaultVect ItbPageFault::_vect = 0x0181;
-FaultStat ItbPageFault::_count;
+template <> FaultVals MipsFault<ItbMissFault>::vals =
+    { "itbmiss", 0x0181 };
 
-FaultName ItbMissFault::_name = "itbmiss";
-FaultVect ItbMissFault::_vect = 0x0181;
-FaultStat ItbMissFault::_count;
+template <> FaultVals MipsFault<ItbAcvFault>::vals =
+    { "iaccvio", 0x0081 };
 
-FaultName ItbAcvFault::_name = "iaccvio";
-FaultVect ItbAcvFault::_vect = 0x0081;
-FaultStat ItbAcvFault::_count;
+template <> FaultVals MipsFault<ItbRefillFault>::vals =
+    { "TLB Refill Exception (I-Fetch/LW)", 0x0180 };
 
-FaultName ItbRefillFault::_name = "TLB Refill Exception (I-Fetch/LW)";
-FaultVect ItbRefillFault::_vect = 0x0180;
-FaultStat ItbRefillFault::_count;
+template <> FaultVals MipsFault<NDtbMissFault>::vals =
+    { "dtb_miss_single", 0x0201 };
 
-FaultName NDtbMissFault::_name = "dtb_miss_single";
-FaultVect NDtbMissFault::_vect = 0x0201;
-FaultStat NDtbMissFault::_count;
+template <> FaultVals MipsFault<PDtbMissFault>::vals =
+    { "dtb_miss_double", 0x0281 };
 
-FaultName PDtbMissFault::_name = "dtb_miss_double";
-FaultVect PDtbMissFault::_vect = 0x0281;
-FaultStat PDtbMissFault::_count;
+template <> FaultVals MipsFault<DtbPageFault>::vals =
+    { "dfault", 0x0381 };
 
-FaultName DtbPageFault::_name = "dfault";
-FaultVect DtbPageFault::_vect = 0x0381;
-FaultStat DtbPageFault::_count;
+template <> FaultVals MipsFault<DtbAcvFault>::vals =
+    { "dfault", 0x0381 };
 
-FaultName DtbAcvFault::_name = "dfault";
-FaultVect DtbAcvFault::_vect = 0x0381;
-FaultStat DtbAcvFault::_count;
+template <> FaultVals MipsFault<DtbInvalidFault>::vals =
+    { "Invalid TLB Entry Exception (Store)", 0x0180 };
 
-FaultName DtbInvalidFault::_name = "Invalid TLB Entry Exception (Store)";
-FaultVect DtbInvalidFault::_vect = 0x0180;
-FaultStat DtbInvalidFault::_count;
+template <> FaultVals MipsFault<DtbRefillFault>::vals =
+    { "TLB Refill Exception (Store)", 0x0180 };
 
-FaultName DtbRefillFault::_name = "TLB Refill Exception (Store)";
-FaultVect DtbRefillFault::_vect = 0x0180;
-FaultStat DtbRefillFault::_count;
+template <> FaultVals MipsFault<TLBModifiedFault>::vals =
+    { "TLB Modified Exception", 0x0180 };
 
-FaultName TLBModifiedFault::_name = "TLB Modified Exception";
-FaultVect TLBModifiedFault::_vect = 0x0180;
-FaultStat TLBModifiedFault::_count;
+template <> FaultVals MipsFault<FloatEnableFault>::vals =
+    { "float_enable_fault", 0x0581 };
 
-FaultName FloatEnableFault::_name = "float_enable_fault";
-FaultVect FloatEnableFault::_vect = 0x0581;
-FaultStat FloatEnableFault::_count;
+template <> FaultVals MipsFault<IntegerOverflowFault>::vals =
+    { "Integer Overflow Fault", 0x0501 };
 
-FaultName IntegerOverflowFault::_name = "Integer Overflow Fault";
-FaultVect IntegerOverflowFault::_vect = 0x0501;
-FaultStat IntegerOverflowFault::_count;
-
-FaultName DspStateDisabledFault::_name = "DSP Disabled Fault";
-FaultVect DspStateDisabledFault::_vect = 0x001a;
-FaultStat DspStateDisabledFault::_count;
+template <> FaultVals MipsFault<DspStateDisabledFault>::vals =
+    { "DSP Disabled Fault", 0x001a };
 
 #if FULL_SYSTEM
 void
-MipsFault::setHandlerPC(Addr HandlerBase, ThreadContext *tc)
+MipsFaultBase::setHandlerPC(Addr HandlerBase, ThreadContext *tc)
 {
     tc->setPC(HandlerBase);
     tc->setNextPC(HandlerBase + sizeof(MachInst));
@@ -177,7 +149,7 @@ MipsFault::setHandlerPC(Addr HandlerBase, ThreadContext *tc)
 }
 
 void
-MipsFault::setExceptionState(ThreadContext *tc, uint8_t excCode)
+MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
 {
     // modify SRS Ctl - Save CSS, put ESS into CSS
     StatusReg status = tc->readMiscReg(MISCREG_STATUS);

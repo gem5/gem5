@@ -41,12 +41,19 @@ namespace MipsISA
 
 typedef const Addr FaultVect;
 
-class MipsFault : public FaultBase
+class MipsFaultBase : public FaultBase
 {
   protected:
     virtual bool skipFaultingInstruction() {return false;}
     virtual bool setRestartAddress() {return true;}
   public:
+    struct FaultVals
+    {
+        const FaultName name;
+        const FaultVect vect;
+        FaultStat count;
+    };
+
     Addr badVAddr;
     Addr entryHiAsid;
     Addr entryHiVPN2;
@@ -59,59 +66,40 @@ class MipsFault : public FaultBase
     void setExceptionState(ThreadContext *, uint8_t);
     void setHandlerPC(Addr, ThreadContext *);
 #endif
-    virtual FaultVect vect() = 0;
-    virtual FaultStat & countStat() = 0;
 };
 
-class MachineCheckFault : public MipsFault
+template <typename T>
+class MipsFault : public MipsFaultBase
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
+  protected:
+    static FaultVals vals;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
+    FaultName name() const { return vals.name; }
+    FaultVect vect() const { return vals.vect; }
+    FaultStat & countStat() { return vals.count; }
+};
+
+class MachineCheckFault : public MipsFault<MachineCheckFault>
+{
+  public:
     bool isMachineCheckFault() {return true;}
 };
 
-class NonMaskableInterrupt : public MipsFault
+class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     bool isNonMaskableInterrupt() {return true;}
 };
 
-class AlignmentFault : public MipsFault
+class AlignmentFault : public MipsFault<AlignmentFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     bool isAlignmentFault() {return true;}
 };
 
-class AddressErrorFault : public MipsFault
+class AddressErrorFault : public MipsFault<AddressErrorFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -119,113 +107,35 @@ class AddressErrorFault : public MipsFault
 
 };
 
-class StoreAddressErrorFault : public MipsFault
+class StoreAddressErrorFault : public MipsFault<StoreAddressErrorFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class UnimplementedOpcodeFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
+class UnimplementedOpcodeFault : public MipsFault<UnimplementedOpcodeFault> {};
 
-
-class TLBRefillIFetchFault : public MipsFault
+class TLBRefillIFetchFault : public MipsFault<TLBRefillIFetchFault>
 {
-  private:
-    Addr vaddr;
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class TLBInvalidIFetchFault : public MipsFault
+class TLBInvalidIFetchFault : public MipsFault<TLBInvalidIFetchFault>
 {
-  private:
-    Addr vaddr;
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class NDtbMissFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class PDtbMissFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class DtbPageFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class DtbAcvFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
+class NDtbMissFault : public MipsFault<NDtbMissFault> {};
+class PDtbMissFault : public MipsFault<PDtbMissFault> {};
+class DtbPageFault : public MipsFault<DtbPageFault> {};
+class DtbAcvFault : public MipsFault<DtbAcvFault> {};
 
 static inline Fault genMachineCheckFault()
 {
@@ -237,346 +147,172 @@ static inline Fault genAlignmentFault()
     return new AlignmentFault;
 }
 
-class ResetFault : public MipsFault
+class ResetFault : public MipsFault<ResetFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 
 };
 
-class SystemCallFault : public MipsFault
+class SystemCallFault : public MipsFault<SystemCallFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class SoftResetFault : public MipsFault
+class SoftResetFault : public MipsFault<SoftResetFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class DebugSingleStep : public MipsFault
+class DebugSingleStep : public MipsFault<DebugSingleStep>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class DebugInterrupt : public MipsFault
+class DebugInterrupt : public MipsFault<DebugInterrupt>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class CoprocessorUnusableFault : public MipsFault
+class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
+  protected:
     int coProcID;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
+    CoprocessorUnusableFault(int _procid) : coProcID(_procid)
+    {}
+
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-    CoprocessorUnusableFault(int _procid){ coProcID = _procid;}
 };
 
-class ReservedInstructionFault : public MipsFault
+class ReservedInstructionFault : public MipsFault<ReservedInstructionFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class ThreadFault : public MipsFault
+class ThreadFault : public MipsFault<ThreadFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-class ArithmeticFault : public MipsFault
+class ArithmeticFault : public MipsFault<ArithmeticFault>
 {
   protected:
     bool skipFaultingInstruction() {return true;}
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class InterruptFault : public MipsFault
+class InterruptFault : public MipsFault<InterruptFault>
 {
   protected:
     bool setRestartAddress() {return false;}
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class TrapFault : public MipsFault
+class TrapFault : public MipsFault<TrapFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class BreakpointFault : public MipsFault
+class BreakpointFault : public MipsFault<BreakpointFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class ItbRefillFault : public MipsFault
+class ItbRefillFault : public MipsFault<ItbRefillFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class DtbRefillFault : public MipsFault
+class DtbRefillFault : public MipsFault<DtbRefillFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class ItbPageFault : public MipsFault
+class ItbPageFault : public MipsFault<ItbPageFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class ItbInvalidFault : public MipsFault
+class ItbInvalidFault : public MipsFault<ItbInvalidFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class TLBModifiedFault : public MipsFault
+class TLBModifiedFault : public MipsFault<TLBModifiedFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 };
 
-class DtbInvalidFault : public MipsFault
+class DtbInvalidFault : public MipsFault<DtbInvalidFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInst::StaticInstPtr inst = nullStaticInstPtr);
 #endif
 };
 
-class FloatEnableFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
+class FloatEnableFault : public MipsFault<FloatEnableFault> {};
+class ItbMissFault : public MipsFault<ItbMissFault> {};
+class ItbAcvFault : public MipsFault<ItbAcvFault> {};
+class IntegerOverflowFault : public MipsFault<IntegerOverflowFault> {};
 
-class ItbMissFault : public MipsFault
+class DspStateDisabledFault : public MipsFault<DspStateDisabledFault>
 {
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class ItbAcvFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class IntegerOverflowFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class DspStateDisabledFault : public MipsFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
