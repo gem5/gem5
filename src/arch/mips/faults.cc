@@ -130,13 +130,6 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
 }
 
 #if FULL_SYSTEM
-void
-MipsFaultBase::setHandlerPC(Addr HandlerBase, ThreadContext *tc)
-{
-    tc->setPC(HandlerBase);
-    tc->setNextPC(HandlerBase + sizeof(MachInst));
-    tc->setNextNPC(HandlerBase + 2 * sizeof(MachInst));
-}
 
 void
 IntegerOverflowFault::invoke(ThreadContext *tc, StaticInstPtr inst)
@@ -145,17 +138,13 @@ IntegerOverflowFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     setExceptionState(tc, 0xC);
 
     // Set new PC
-    Addr HandlerBase;
     StatusReg status = tc->readMiscReg(MISCREG_STATUS);
-    // Here, the handler is dependent on BEV, which is not modified by
-    // setExceptionState()
     if (!status.bev) {
         // See MIPS ARM Vol 3, Revision 2, Page 38
-        HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
+        tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
     } else {
-        HandlerBase = 0xBFC00200;
+        tc->pcState(0xBFC00200);
     }
-    setHandlerPC(HandlerBase, tc);
 }
 
 void
@@ -164,11 +153,7 @@ TrapFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0xD);
 
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
+    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
 }
 
 void
@@ -176,11 +161,7 @@ BreakpointFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     setExceptionState(tc, 0x9);
 
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
+    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
 }
 
 void
@@ -190,22 +171,14 @@ AddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     setExceptionState(tc, store ? 0x5 : 0x4);
     tc->setMiscRegNoEffect(MISCREG_BADVADDR, vaddr);
 
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
+    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
 }
 
 void
 TlbInvalidFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     setTlbExceptionState(tc, store ? 0x3 : 0x2);
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
+    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
 }
 
 void
@@ -218,13 +191,10 @@ TlbRefillFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 
     // See MIPS ARM Vol 3, Revision 2, Page 38
     if (status.exl == 1) {
-        // Offset 0x180 - General Exception Vector
-        HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
+        tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
     } else {
-        // Offset 0x000
-        HandlerBase = tc->readMiscReg(MISCREG_EBASE);
+        tc->pcState(tc->readMiscReg(MISCREG_EBASE));
     }
-    setHandlerPC(HandlerBase, tc);
 }
 
 void
@@ -232,11 +202,7 @@ TlbModifiedFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     setTlbExceptionState(tc, 0x1);
 
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
+    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
 }
 
 void
@@ -245,32 +211,23 @@ SystemCallFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x8);
 
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
+    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
 }
 
 void
 InterruptFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if  FULL_SYSTEM
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x0A);
-    Addr HandlerBase;
 
     CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
     if (cause.iv) {
         // Offset 200 for release 2
-        HandlerBase = 0x20 + vect() + tc->readMiscRegNoEffect(MISCREG_EBASE);
+        tc->pcState(0x20 + vect() + tc->readMiscRegNoEffect(MISCREG_EBASE));
     } else {
         //Ofset at 180 for release 1
-        HandlerBase = vect() + tc->readMiscRegNoEffect(MISCREG_EBASE);
+        tc->pcState(vect() + tc->readMiscRegNoEffect(MISCREG_EBASE));
     }
-
-    setHandlerPC(HandlerBase, tc);
-#endif
 }
 
 #endif // FULL_SYSTEM
@@ -281,9 +238,7 @@ ResetFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 #if FULL_SYSTEM
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     /* All reset activity must be invoked from here */
-    tc->setPC(vect());
-    tc->setNextPC(vect() + sizeof(MachInst));
-    tc->setNextNPC(vect() + sizeof(MachInst) + sizeof(MachInst));
+    tc->pcState(vect());
     DPRINTF(MipsPRA, "ResetFault::invoke : PC set to %x", tc->readPC());
 #endif
 
@@ -299,10 +254,7 @@ ReservedInstructionFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 #if  FULL_SYSTEM
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x0A);
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscRegNoEffect(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
+    tc->pcState(vect() + tc->readMiscRegNoEffect(MISCREG_EBASE));
 #else
     panic("%s encountered.\n", name());
 #endif
@@ -333,12 +285,7 @@ CoprocessorUnusableFault::invoke(ThreadContext *tc, StaticInstPtr inst)
     CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
     cause.ce = coProcID;
     tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
-
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
-
+    tc->pcState(vect() + tc->readMiscReg(MISCREG_EBASE));
 #else
     warn("%s (CP%d) encountered.\n", name(), coProcID);
 #endif
