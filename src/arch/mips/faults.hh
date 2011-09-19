@@ -100,6 +100,7 @@ class AlignmentFault : public MipsFault<AlignmentFault>
 class AddressErrorFault : public MipsFault<AddressErrorFault>
 {
   public:
+    AddressErrorFault(Addr vaddr) { badVAddr = vaddr; }
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -110,6 +111,7 @@ class AddressErrorFault : public MipsFault<AddressErrorFault>
 class StoreAddressErrorFault : public MipsFault<StoreAddressErrorFault>
 {
   public:
+    StoreAddressErrorFault(Addr vaddr) { badVAddr = vaddr; }
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -254,6 +256,14 @@ class BreakpointFault : public MipsFault<BreakpointFault>
 class ItbRefillFault : public MipsFault<ItbRefillFault>
 {
   public:
+    ItbRefillFault(Addr asid, Addr vaddr, Addr vpn)
+    {
+        entryHiAsid = asid;
+        entryHiVPN2 = vpn >> 2;
+        entryHiVPN2X = vpn & 0x3;
+        badVAddr = vaddr;
+        contextBadVPN2 = vpn >> 2;
+    }
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -263,6 +273,14 @@ class ItbRefillFault : public MipsFault<ItbRefillFault>
 class DtbRefillFault : public MipsFault<DtbRefillFault>
 {
   public:
+    DtbRefillFault(Addr asid, Addr vaddr, Addr vpn)
+    {
+        entryHiAsid = asid;
+        entryHiVPN2 = vpn >> 2;
+        entryHiVPN2X = vpn & 0x3;
+        badVAddr = vaddr;
+        contextBadVPN2 = vpn >> 2;
+    }
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -281,6 +299,14 @@ class ItbPageFault : public MipsFault<ItbPageFault>
 class ItbInvalidFault : public MipsFault<ItbInvalidFault>
 {
   public:
+    ItbInvalidFault(Addr asid, Addr vaddr, Addr vpn)
+    {
+        entryHiAsid = asid;
+        entryHiVPN2 = vpn >> 2;
+        entryHiVPN2X = vpn & 0x3;
+        badVAddr = vaddr;
+        contextBadVPN2 = vpn >> 2;
+    }
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -290,6 +316,14 @@ class ItbInvalidFault : public MipsFault<ItbInvalidFault>
 class TLBModifiedFault : public MipsFault<TLBModifiedFault>
 {
   public:
+    TLBModifiedFault(Addr asid, Addr vaddr, Addr vpn)
+    {
+        entryHiAsid = asid;
+        entryHiVPN2 = vpn >> 2;
+        entryHiVPN2X = vpn & 0x3;
+        badVAddr = vaddr;
+        contextBadVPN2 = vpn >> 2;
+    }
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
@@ -299,6 +333,14 @@ class TLBModifiedFault : public MipsFault<TLBModifiedFault>
 class DtbInvalidFault : public MipsFault<DtbInvalidFault>
 {
   public:
+    DtbInvalidFault(Addr asid, Addr vaddr, Addr vpn)
+    {
+        entryHiAsid = asid;
+        entryHiVPN2 = vpn >> 2;
+        entryHiVPN2X = vpn & 0x3;
+        badVAddr = vaddr;
+        contextBadVPN2 = vpn >> 2;
+    }
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInst::StaticInstPtr inst = nullStaticInstPtr);
