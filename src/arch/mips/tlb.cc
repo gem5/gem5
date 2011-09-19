@@ -313,7 +313,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
         req->setPaddr(KSeg02Phys(vaddr));
         if (getOperatingMode(tc->readMiscReg(MISCREG_STATUS)) != mode_kernel ||
                 misaligned) {
-            return new AddressErrorFault(vaddr);
+            return new AddressErrorFault(vaddr, false);
         }
     } else if(IsKSeg1(vaddr)) {
         // Address will not be translated through TLB, set response, and go!
@@ -333,7 +333,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
       uint8_t Asid = req->getAsid();
       if (misaligned) {
           // Unaligned address!
-          return new AddressErrorFault(vaddr);
+          return new AddressErrorFault(vaddr, false);
       }
       PTE *pte = lookup(VPN,Asid);
       if (pte != NULL) {
@@ -387,10 +387,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     if (req->getVaddr() & (req->getSize() - 1)) {
         DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->getVaddr(),
                 req->getSize());
-        if (write)
-            return new StoreAddressErrorFault(req->getVaddr());
-        else
-            return new AddressErrorFault(req->getVaddr());
+        return new AddressErrorFault(req->getVaddr(), write);
     }
 
 
@@ -411,7 +408,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         req->setPaddr(KSeg02Phys(vaddr));
         if (getOperatingMode(tc->readMiscReg(MISCREG_STATUS)) != mode_kernel ||
                 misaligned) {
-            return new StoreAddressErrorFault(vaddr);
+            return new AddressErrorFault(vaddr, true);
         }
     } else if(IsKSeg1(vaddr)) {
       // Address will not be translated through TLB, set response, and go!
@@ -429,7 +426,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         uint8_t Asid = req->getAsid();
         PTE *pte = lookup(VPN, Asid);
         if (misaligned) {
-            return new StoreAddressErrorFault(vaddr);
+            return new AddressErrorFault(vaddr, true);
         }
         if (pte != NULL) {
             // Ok, found something

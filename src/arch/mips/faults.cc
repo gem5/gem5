@@ -61,9 +61,6 @@ template <> FaultVals MipsFault<ResetFault>::vals =
 template <> FaultVals MipsFault<AddressErrorFault>::vals =
     { "Address Error", 0x0180 };
 
-template <> FaultVals MipsFault<StoreAddressErrorFault>::vals =
-    { "Store Address Error", 0x0180 };
-
 template <> FaultVals MipsFault<SystemCallFault>::vals =
     { "Syscall", 0x0180 };
 
@@ -177,20 +174,6 @@ IntegerOverflowFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 }
 
 void
-StoreAddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
-{
-    DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0x5);
-    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
-
-    // Set new PC
-    Addr HandlerBase;
-    // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
-    setHandlerPC(HandlerBase, tc);
-}
-
-void
 TrapFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
@@ -244,8 +227,8 @@ void
 AddressErrorFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
-    setExceptionState(tc, 0x4);
-    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
+    setExceptionState(tc, store ? 0x5 : 0x4);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, vaddr);
 
     // Set new PC
     Addr HandlerBase;

@@ -93,23 +93,17 @@ class NonMaskableInterrupt : public MipsFault<NonMaskableInterrupt>
 
 class AddressErrorFault : public MipsFault<AddressErrorFault>
 {
+  protected:
+    Addr vaddr;
+    bool store;
   public:
-    AddressErrorFault(Addr vaddr) { badVAddr = vaddr; }
+    AddressErrorFault(Addr _vaddr, bool _store) : vaddr(_vaddr), store(_store)
+    {}
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 #endif
 
-};
-
-class StoreAddressErrorFault : public MipsFault<StoreAddressErrorFault>
-{
-  public:
-    StoreAddressErrorFault(Addr vaddr) { badVAddr = vaddr; }
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 static inline Fault genMachineCheckFault()
