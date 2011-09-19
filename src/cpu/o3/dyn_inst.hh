@@ -205,10 +205,10 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Traps to handle specified fault. */
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
-#else
-    /** Calls a syscall. */
-    void syscall(int64_t callnum);
 #endif
+
+    /** Emulates a syscall. */
+    void syscall(int64_t callnum);
 
   public:
 

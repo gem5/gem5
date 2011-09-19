@@ -402,9 +402,17 @@ class BaseSimpleCPU : public BaseCPU
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
-#else
-    void syscall(int64_t callnum) { thread->syscall(callnum); }
 #endif
+
+    void
+    syscall(int64_t callnum)
+    {
+#if FULL_SYSTEM
+        panic("Syscall emulation isn't available in FS mode.\n");
+#else
+        thread->syscall(callnum);
+#endif
+    }
 
     bool misspeculating() { return thread->misspeculating(); }
     ThreadContext *tcBase() { return tc; }

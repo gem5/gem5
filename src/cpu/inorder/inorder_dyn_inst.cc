@@ -311,14 +311,18 @@ InOrderDynInst::simPalCheck(int palFunc)
 #endif
     return this->cpu->simPalCheck(palFunc, this->threadNumber);
 }
-#else
+#endif
+
 void
 InOrderDynInst::syscall(int64_t callnum)
 {
+#if FULL_SYSTEM
+    panic("Syscall emulation isn't available in FS mode.\n");
+#else
     syscallNum = callnum;
     cpu->syscallContext(NoFault, this->threadNumber, this);
-}
 #endif
+}
 
 void
 InOrderDynInst::setSquashInfo(unsigned stage_num)

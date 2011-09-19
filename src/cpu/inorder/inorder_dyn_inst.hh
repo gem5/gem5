@@ -525,10 +525,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     bool simPalCheck(int palFunc);
 #else
     short syscallNum;
-
-    /** Calls a syscall. */
-    void syscall(int64_t callnum);
 #endif
+
+    /** Emulates a syscall. */
+    void syscall(int64_t callnum);
 
     ////////////////////////////////////////////////////////////
     //

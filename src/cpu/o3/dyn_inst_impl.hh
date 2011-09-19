@@ -188,11 +188,15 @@ BaseO3DynInst<Impl>::simPalCheck(int palFunc)
 #endif
     return this->cpu->simPalCheck(palFunc, this->threadNumber);
 }
-#else
+#endif
+
 template <class Impl>
 void
 BaseO3DynInst<Impl>::syscall(int64_t callnum)
 {
+#if FULL_SYSTEM
+    panic("Syscall emulation isn't available in FS mode.\n");
+#else
     // HACK: check CPU's nextPC before and after syscall. If it
     // changes, update this instruction's nextPC because the syscall
     // must have changed the nextPC.
@@ -202,6 +206,6 @@ BaseO3DynInst<Impl>::syscall(int64_t callnum)
     if (!(curPC == newPC)) {
         this->pcState(newPC);
     }
-}
 #endif
+}
 
