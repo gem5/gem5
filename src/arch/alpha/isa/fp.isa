@@ -42,21 +42,14 @@ output exec {{
     /// instruction in full-system mode.
     /// @retval Full-system mode: NoFault if FP is enabled, FenFault
     /// if not.  Non-full-system mode: always returns NoFault.
-#if FULL_SYSTEM
     inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
         Fault fault = NoFault;  // dummy... this ipr access should not fault
-        if (!ICSR_FPE(xc->readMiscReg(IPR_ICSR))) {
+        if (FULL_SYSTEM && !ICSR_FPE(xc->readMiscReg(IPR_ICSR))) {
             fault = new FloatEnableFault;
         }
         return fault;
     }
-#else
-    inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
-    {
-        return NoFault;
-    }
-#endif
 }};
 
 output header {{
