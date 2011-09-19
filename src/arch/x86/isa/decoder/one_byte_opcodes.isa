@@ -394,19 +394,15 @@
                     default: Inst::RET_FAR();
                 }
                 0x4: int3();
-#if FULL_SYSTEM
-                0x5: int_Ib();
-#else
-                // Really only the LSB matters, but the predecoder will sign
-                // extend it, and there's no easy way to specify only checking
-                // the first byte.
-                0x5: decode IMMEDIATE {
-                    -0x80:
-                         SyscallInst::int80('xc->syscall(Rax)',
-                                 IsSyscall, IsNonSpeculative, IsSerializeAfter);
-                    default: int_Ib();
+                0x5: decode FULL_SYSTEM default int_Ib() {
+                    0: decode IMMEDIATE {
+                        // Really only the LSB matters, but the predecoder
+                        // will sign extend it, and there's no easy way to
+                        // specify only checking the first byte.
+                        -0x80: SyscallInst::int80('xc->syscall(Rax)',
+                            IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                    }
                 }
-#endif
                 0x6: decode MODE_SUBMODE {
                     0x0: Inst::UD2();
                     default: into();

@@ -216,18 +216,17 @@
                         default: Inst::UD2();
                     }
                 }
-#if FULL_SYSTEM
-                0x05: decode MODE_MODE {
-                    0x0: decode MODE_SUBMODE {
-                        0x0: Inst::SYSCALL_64();
-                        0x1: Inst::SYSCALL_COMPAT();
+                0x05: decode FULL_SYSTEM {
+                    0: SyscallInst::syscall('xc->syscall(Rax)',
+                            IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                    default: decode MODE_MODE {
+                        0x0: decode MODE_SUBMODE {
+                            0x0: Inst::SYSCALL_64();
+                            0x1: Inst::SYSCALL_COMPAT();
+                        }
+                        0x1: Inst::SYSCALL_LEGACY();
                     }
-                    0x1: Inst::SYSCALL_LEGACY();
                 }
-#else
-                0x05: SyscallInst::syscall('xc->syscall(Rax)',
-                              IsSyscall, IsNonSpeculative, IsSerializeAfter);
-#endif
                 0x06: Inst::CLTS();
                 0x07: decode MODE_SUBMODE {
                     0x0: decode OPSIZE {
@@ -399,12 +398,11 @@
                 0x1: Inst::RDTSC();
                 0x2: Inst::RDMSR();
                 0x3: rdpmc();
-#if FULL_SYSTEM
-                0x4: sysenter();
-#else
-                0x4: SyscallInst::sysenter('xc->syscall(Rax)',
-                             IsSyscall, IsNonSpeculative, IsSerializeAfter);
-#endif
+                0x4: decode FULL_SYSTEM {
+                    0: SyscallInst::sysenter('xc->syscall(Rax)',
+                            IsSyscall, IsNonSpeculative, IsSerializeAfter);
+                    default: sysenter();
+                }
                 0x5: sysexit();
                 0x6: Inst::UD2();
                 0x7: getsec();
