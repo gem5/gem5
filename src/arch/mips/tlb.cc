@@ -352,7 +352,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
           }
 
           if (Valid == false) {
-              return new ItbInvalidFault(Asid, vaddr, vpn);
+              return new InvalidFault(Asid, vaddr, vpn, false);
           } else {
               // Ok, this is really a match, set paddr
               Addr PAddr;
@@ -368,7 +368,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
             }
         } else {
             // Didn't find any match, return a TLB Refill Exception
-            return new ItbRefillFault(Asid, vaddr, vpn);
+            return new RefillFault(Asid, vaddr, vpn, false);
         }
     }
     return checkCacheability(req);
@@ -447,7 +447,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             }
 
             if (Valid == false) {
-                return new DtbInvalidFault(Asid, vaddr, VPN);
+                return new InvalidFault(Asid, vaddr, VPN, true);
             } else {
                 // Ok, this is really a match, set paddr
                 if (!Dirty) {
@@ -466,7 +466,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             }
         } else {
             // Didn't find any match, return a TLB Refill Exception
-            return new DtbRefillFault(Asid, vaddr, VPN);
+            return new RefillFault(Asid, vaddr, VPN, true);
         }
     }
     return checkCacheability(req);

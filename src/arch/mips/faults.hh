@@ -199,10 +199,13 @@ class BreakpointFault : public MipsFault<BreakpointFault>
 #endif
 };
 
-class ItbRefillFault : public MipsFault<ItbRefillFault>
+class TlbRefillFault : public MipsFault<TlbRefillFault>
 {
+  protected:
+    bool store;
   public:
-    ItbRefillFault(Addr asid, Addr vaddr, Addr vpn)
+    TlbRefillFault(Addr asid, Addr vaddr, Addr vpn, bool _store) :
+        store(_store)
     {
         entryHiAsid = asid;
         entryHiVPN2 = vpn >> 2;
@@ -216,27 +219,13 @@ class ItbRefillFault : public MipsFault<ItbRefillFault>
 #endif
 };
 
-class DtbRefillFault : public MipsFault<DtbRefillFault>
+class TlbInvalidFault : public MipsFault<TlbInvalidFault>
 {
+  protected:
+    bool store;
   public:
-    DtbRefillFault(Addr asid, Addr vaddr, Addr vpn)
-    {
-        entryHiAsid = asid;
-        entryHiVPN2 = vpn >> 2;
-        entryHiVPN2X = vpn & 0x3;
-        badVAddr = vaddr;
-        contextBadVPN2 = vpn >> 2;
-    }
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
-
-class ItbInvalidFault : public MipsFault<ItbInvalidFault>
-{
-  public:
-    ItbInvalidFault(Addr asid, Addr vaddr, Addr vpn)
+    TlbInvalidFault(Addr asid, Addr vaddr, Addr vpn, bool _store) :
+        store(_store)
     {
         entryHiAsid = asid;
         entryHiVPN2 = vpn >> 2;
@@ -264,23 +253,6 @@ class TLBModifiedFault : public MipsFault<TLBModifiedFault>
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
-};
-
-class DtbInvalidFault : public MipsFault<DtbInvalidFault>
-{
-  public:
-    DtbInvalidFault(Addr asid, Addr vaddr, Addr vpn)
-    {
-        entryHiAsid = asid;
-        entryHiVPN2 = vpn >> 2;
-        entryHiVPN2X = vpn & 0x3;
-        badVAddr = vaddr;
-        contextBadVPN2 = vpn >> 2;
-    }
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc,
-            StaticInst::StaticInstPtr inst = nullStaticInstPtr);
 #endif
 };
 
