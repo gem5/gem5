@@ -11,6 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2011 Advanced Micro Devices, Inc.
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -381,6 +382,7 @@ workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 {
     tc->getCpuPtr()->workItemBegin();
     System *sys = tc->getSystemPtr();
+    const System::Params *params = sys->params();
 
     DPRINTF(WorkItems, "Work Begin workid: %d, threadid %d\n", workid, 
             threadid);
@@ -389,46 +391,39 @@ workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     // If specified, determine if this is the specific work item the user
     // identified
     //
-    if (sys->params()->work_item_id == -1 || 
-        sys->params()->work_item_id == workid) {
+    if (params->work_item_id == -1 || params->work_item_id == workid) {
 
         uint64_t systemWorkBeginCount = sys->incWorkItemsBegin();
         int cpuId = tc->getCpuPtr()->cpuId();
 
-        if (sys->params()->work_cpus_ckpt_count != 0 &&
-            sys->markWorkItem(cpuId) >= sys->params()->work_cpus_ckpt_count) {
+        if (params->work_cpus_ckpt_count != 0 &&
+            sys->markWorkItem(cpuId) >= params->work_cpus_ckpt_count) {
             //
             // If active cpus equals checkpoint count, create checkpoint
             //
-            Event *event = new SimLoopExitEvent("checkpoint", 0);
-            mainEventQueue.schedule(event, curTick());
+            exitSimLoop("checkpoint");
         }
 
-        if (systemWorkBeginCount == sys->params()->work_begin_ckpt_count) {
+        if (systemWorkBeginCount == params->work_begin_ckpt_count) {
             //
             // Note: the string specified as the cause of the exit event must
             // exactly equal "checkpoint" inorder to create a checkpoint
             //
-            Event *event = new SimLoopExitEvent("checkpoint", 0);
-            mainEventQueue.schedule(event, curTick());
+            exitSimLoop("checkpoint");
         }
 
-        if (systemWorkBeginCount == sys->params()->work_begin_exit_count) {
+        if (systemWorkBeginCount == params->work_begin_exit_count) {
             //
             // If a certain number of work items started, exit simulation
             //
-            Event *event = new SimLoopExitEvent("work started count reach", 0);
-            mainEventQueue.schedule(event, curTick());
+            exitSimLoop("work started count reach");
         }
 
-        if (tc->getCpuPtr()->cpuId() == sys->params()->work_begin_cpu_id_exit) {
+        if (cpuId == params->work_begin_cpu_id_exit) {
             //
-            // If work started on the specific cpu id specified, exit simulation
+            // If work started on the cpu id specified, exit simulation
             //
-            Event *event = new SimLoopExitEvent("work started on specific cpu",
-                                                0);
-
-            mainEventQueue.schedule(event, curTick() + 1);
+            exitSimLoop("work started on specific cpu");
         }
     }
 }
@@ -443,6 +438,7 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
 {
     tc->getCpuPtr()->workItemEnd();
     System *sys = tc->getSystemPtr();
+    const System::Params *params = sys->params();
 
     DPRINTF(WorkItems, "Work End workid: %d, threadid %d\n", workid, threadid);
 
@@ -450,40 +446,34 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     // If specified, determine if this is the specific work item the user
     // identified
     //
-    if (sys->params()->work_item_id == -1 || 
-        sys->params()->work_item_id == workid) {
+    if (params->work_item_id == -1 || params->work_item_id == workid) {
 
         uint64_t systemWorkEndCount = sys->incWorkItemsEnd();
         int cpuId = tc->getCpuPtr()->cpuId();
 
-        if (sys->params()->work_cpus_ckpt_count != 0 &&
-            sys->markWorkItem(cpuId) >= sys->params()->work_cpus_ckpt_count) {
+        if (params->work_cpus_ckpt_count != 0 &&
+            sys->markWorkItem(cpuId) >= params->work_cpus_ckpt_count) {
             //
             // If active cpus equals checkpoint count, create checkpoint
             //
-            Event *event = new SimLoopExitEvent("checkpoint", 0);
-            mainEventQueue.schedule(event, curTick());
+            exitSimLoop("checkpoint");
         }
 
-        if (sys->params()->work_end_ckpt_count != 0 &&
-            systemWorkEndCount == sys->params()->work_end_ckpt_count) {
+        if (params->work_end_ckpt_count != 0 &&
+            systemWorkEndCount == params->work_end_ckpt_count) {
             //
             // If total work items completed equals checkpoint count, create
             // checkpoint
             //
-            Event *event = new SimLoopExitEvent("checkpoint", 0);
-            mainEventQueue.schedule(event, curTick());
+            exitSimLoop("checkpoint");
         }
 
-        if (sys->params()->work_end_exit_count != 0 &&
-            systemWorkEndCount == sys->params()->work_end_exit_count) {
+        if (params->work_end_exit_count != 0 &&
+            systemWorkEndCount == params->work_end_exit_count) {
             //
             // If total work items completed equals exit count, exit simulation
             //
-            Event *event = new SimLoopExitEvent("work items exit count reached",
-                                                0);
-
-            mainEventQueue.schedule(event, curTick());
+            exitSimLoop("work items exit count reached");
         }
     }
 }
