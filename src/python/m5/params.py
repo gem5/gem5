@@ -1,5 +1,5 @@
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
-# Copyright (c) 2010 Advanced Micro Devices, Inc.
+# Copyright (c) 2010-2011 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -698,6 +698,24 @@ class IpAddress(ParamValue):
                 self.ip = long(value)
         self.verifyIp()
 
+    def __str__(self):
+        tup = [(self.ip >> i)  & 0xff for i in (24, 16, 8, 0)]
+        return '%d.%d.%d.%d' % tuple(tup)
+
+    def __eq__(self, other):
+        if isinstance(other, IpAddress):
+            return self.ip == other.ip
+        elif isinstance(other, str):
+            try:
+                return self.ip == convert.toIpAddress(other)
+            except:
+                return False
+        else:
+            return self.ip == other
+
+    def __ne__(self, other):
+        return not (self == other)
+
     def verifyIp(self):
         if self.ip < 0 or self.ip >= (1 << 32):
             raise TypeError, "invalid ip address %#08x" % self.ip
@@ -705,9 +723,6 @@ class IpAddress(ParamValue):
     def getValue(self):
         from m5.internal.params import IpAddress
         return IpAddress(self.ip)
-
-    def ini_str(self):
-        return self.ip
 
 # When initializing an IpNetmask, pass in an existing IpNetmask, a string of
 # the form "a.b.c.d/n" or "a.b.c.d/e.f.g.h", or an ip and netmask as
@@ -759,6 +774,20 @@ class IpNetmask(IpAddress):
 
         self.verify()
 
+    def __str__(self):
+        return "%s/%d" % (super(IpNetmask, self).__str__(), self.netmask)
+
+    def __eq__(self, other):
+        if isinstance(other, IpNetmask):
+            return self.ip == other.ip and self.netmask == other.netmask
+        elif isinstance(other, str):
+            try:
+                return (self.ip, self.netmask) == convert.toIpNetmask(other)
+            except:
+                return False
+        else:
+            return False
+
     def verify(self):
         self.verifyIp()
         if self.netmask < 0 or self.netmask > 32:
@@ -767,9 +796,6 @@ class IpNetmask(IpAddress):
     def getValue(self):
         from m5.internal.params import IpNetmask
         return IpNetmask(self.ip, self.netmask)
-
-    def ini_str(self):
-        return "%08x/%d" % (self.ip, self.netmask)
 
 # When initializing an IpWithPort, pass in an existing IpWithPort, a string of
 # the form "a.b.c.d:p", or an ip and port as positional or keyword arguments.
@@ -820,6 +846,20 @@ class IpWithPort(IpAddress):
 
         self.verify()
 
+    def __str__(self):
+        return "%s:%d" % (super(IpWithPort, self).__str__(), self.port)
+
+    def __eq__(self, other):
+        if isinstance(other, IpWithPort):
+            return self.ip == other.ip and self.port == other.port
+        elif isinstance(other, str):
+            try:
+                return (self.ip, self.port) == convert.toIpWithPort(other)
+            except:
+                return False
+        else:
+            return False
+
     def verify(self):
         self.verifyIp()
         if self.port < 0 or self.port > 0xffff:
@@ -828,9 +868,6 @@ class IpWithPort(IpAddress):
     def getValue(self):
         from m5.internal.params import IpWithPort
         return IpWithPort(self.ip, self.port)
-
-    def ini_str(self):
-        return "%08x:%d" % (self.ip, self.port)
 
 time_formats = [ "%a %b %d %H:%M:%S %Z %Y",
                  "%a %b %d %H:%M:%S %Z %Y",
