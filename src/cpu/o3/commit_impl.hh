@@ -71,9 +71,8 @@ using namespace std;
 template <class Impl>
 DefaultCommit<Impl>::TrapEvent::TrapEvent(DefaultCommit<Impl> *_commit,
                                           ThreadID _tid)
-    : Event(CPU_Tick_Pri), commit(_commit), tid(_tid)
+    : Event(CPU_Tick_Pri, AutoDelete), commit(_commit), tid(_tid)
 {
-    this->setFlags(AutoDelete);
 }
 
 template <class Impl>

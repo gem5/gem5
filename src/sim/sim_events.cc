@@ -40,9 +40,8 @@
 using namespace std;
 
 SimLoopExitEvent::SimLoopExitEvent(const std::string &_cause, int c, Tick r)
-    : Event(Sim_Exit_Pri), cause(_cause), code(c), repeat(r)
+    : Event(Sim_Exit_Pri, IsExitEvent), cause(_cause), code(c), repeat(r)
 {
-    setFlags(IsExitEvent);
 }
 
 
@@ -55,7 +54,7 @@ SimLoopExitEvent::process()
     // if this got scheduled on a different queue (e.g. the committed
     // instruction queue) then make a corresponding event on the main
     // queue.
-    if (!getFlags(IsMainQueue)) {
+    if (!isFlagSet(IsMainQueue)) {
         exitSimLoop(cause, code);
         delete this;
     }
@@ -65,7 +64,7 @@ SimLoopExitEvent::process()
 
     // but if you are doing this on intervals, don't forget to make another
     if (repeat) {
-        assert(getFlags(IsMainQueue));
+        assert(isFlagSet(IsMainQueue));
         mainEventQueue.schedule(this, curTick() + repeat);
     }
 }

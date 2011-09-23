@@ -39,9 +39,9 @@ class RubyEventQueueNode : public Event
 {
   public:
     RubyEventQueueNode(Consumer* _consumer, RubyEventQueue* _eventq)
-        : m_consumer_ptr(_consumer), m_eventq_ptr(_eventq)
+        : Event(Default_Pri, AutoDelete),
+          m_consumer_ptr(_consumer), m_eventq_ptr(_eventq)
     {
-        setFlags(AutoDelete);
     }
 
     void print(std::ostream& out) const;

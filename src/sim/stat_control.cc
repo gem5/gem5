@@ -175,9 +175,9 @@ class StatEvent : public Event
 
   public:
     StatEvent(bool _dump, bool _reset, Tick _repeat)
-        : Event(Stat_Event_Pri), dump(_dump), reset(_reset), repeat(_repeat)
+        : Event(Stat_Event_Pri, AutoDelete),
+          dump(_dump), reset(_reset), repeat(_repeat)
     {
-        setFlags(AutoDelete);
     }
 
     virtual void

@@ -60,9 +60,9 @@
 template<class Impl>
 LSQUnit<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,
                                               LSQUnit *lsq_ptr)
-    : inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
+    : Event(Default_Pri, AutoDelete),
+      inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
 {
-    this->setFlags(Event::AutoDelete);
 }
 
 template<class Impl>

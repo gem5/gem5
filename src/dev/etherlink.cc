@@ -228,17 +228,13 @@ EtherLink::Link::unserialize(const string &base, Checkpoint *cp,
 }
 
 LinkDelayEvent::LinkDelayEvent()
-    : link(NULL)
+    : Event(Default_Pri, AutoSerialize | AutoDelete), link(NULL)
 {
-    setFlags(AutoSerialize);
-    setFlags(AutoDelete);
 }
 
 LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, EthPacketPtr p)
-    : link(l), packet(p)
+    : Event(Default_Pri, AutoSerialize | AutoDelete), link(l), packet(p)
 {
-    setFlags(AutoSerialize);
-    setFlags(AutoDelete);
 }
 
 void

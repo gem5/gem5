@@ -149,18 +149,11 @@ class Event : public Serializable, public FastAlloc
         return flags & PublicRead;
     }
 
-    Flags
-    getFlags(Flags _flags) const
+    bool
+    isFlagSet(Flags _flags) const
     {
         assert(_flags.noneSet(~PublicRead));
         return flags.isSet(_flags);
-    }
-
-    Flags
-    allFlags(Flags _flags) const
-    {
-        assert(_flags.noneSet(~PublicRead));
-        return flags.allSet(_flags);
     }
 
     /// Accessor for flags.
@@ -247,9 +240,11 @@ class Event : public Serializable, public FastAlloc
      * Event constructor
      * @param queue that the event gets scheduled on
      */
-    Event(Priority p = Default_Pri)
-        : nextBin(NULL), nextInBin(NULL), _priority(p), flags(Initialized)
+    Event(Priority p = Default_Pri, Flags f = 0)
+        : nextBin(NULL), nextInBin(NULL), _priority(p),
+          flags(Initialized | f)
     {
+        assert(f.noneSet(~PublicWrite));
 #ifndef NDEBUG
         instance = ++instanceCounter;
         queue = NULL;
@@ -406,15 +401,10 @@ class EventQueue : public Serializable
         }
     }
 
-    // default: process all events up to 'now' (curTick())
-    void serviceEvents() { serviceEvents(curTick()); }
-
     // return true if no events are queued
     bool empty() const { return head == NULL; }
 
     void dump() const;
-
-    Tick nextEventTime() { return empty() ? curTick() : head->when(); }
 
     bool debugVerify() const;
 
@@ -559,8 +549,8 @@ DelayFunction(EventQueue *eventq, Tick when, T *object)
 
       public:
         DelayEvent(T *o)
-            : object(o)
-        { this->setFlags(AutoDelete); }
+            : Event(Default_Pri, AutoDelete), object(o)
+        { }
         void process() { (object->*F)(); }
         const char *description() const { return "delay"; }
     };

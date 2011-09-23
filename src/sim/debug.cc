@@ -57,9 +57,8 @@ struct DebugBreakEvent : public Event
 // constructor: schedule at specified time
 //
 DebugBreakEvent::DebugBreakEvent()
-    : Event(Debug_Break_Pri)
+    : Event(Debug_Break_Pri, AutoDelete)
 {
-    setFlags(AutoDelete);
 }
 
 //

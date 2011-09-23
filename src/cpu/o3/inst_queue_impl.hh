@@ -56,10 +56,9 @@ using namespace std;
 template <class Impl>
 InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
     int fu_idx, InstructionQueue<Impl> *iq_ptr)
-    : Event(Stat_Event_Pri), inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr),
-      freeFU(false)
+    : Event(Stat_Event_Pri, AutoDelete),
+      inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr), freeFU(false)
 {
-    this->setFlags(Event::AutoDelete);
 }
 
 template <class Impl>
