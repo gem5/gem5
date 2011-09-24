@@ -233,6 +233,9 @@ class SortedIncludes(Verifier):
         old = ''.join(line + '\n' for line in lines)
         f.close()
 
+        if len(lines) == 0:
+            return 0
+
         language = lang_type(filename, lines[0])
         sort_lines = list(self.sort_includes(lines, filename, language))
         new = ''.join(line + '\n' for line in sort_lines)
