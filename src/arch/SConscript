@@ -121,6 +121,7 @@ def isa_desc_action_func(target, source, env):
     sys.path[0:0] = [ ARCH_DIR.srcnode().abspath ]
     import isa_parser
 
+    # Skip over the ISA description itself and the parser to the CPU models.
     models = [ s.get_contents() for s in source[2:] ]
     cpu_models = [CpuModel.dict[cpu] for cpu in models]
     parser = isa_parser.ISAParser(target[0].dir.abspath, cpu_models)
