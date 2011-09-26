@@ -1191,10 +1191,10 @@ LSQUnit<Impl>::recvRetry()
         DPRINTF(LSQUnit, "Receiving retry: store blocked\n");
         assert(retryPkt != NULL);
 
-        if (dcachePort->sendTiming(retryPkt)) {
-            LSQSenderState *state =
-                dynamic_cast<LSQSenderState *>(retryPkt->senderState);
+        LSQSenderState *state =
+            dynamic_cast<LSQSenderState *>(retryPkt->senderState);
 
+        if (dcachePort->sendTiming(retryPkt)) {
             // Don't finish the store unless this is the last packet.
             if (!TheISA::HasUnalignedMemAcc || !state->pktToSend ||
                     state->pendingPacket == retryPkt) {
