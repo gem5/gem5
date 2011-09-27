@@ -534,8 +534,8 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
                     if (!memDepViolator ||
                             ld_inst->seqNum < memDepViolator->seqNum) {
                         DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] "
-                                " and [sn:%lli] at address %#x\n", inst->seqNum,
-                                ld_inst->seqNum, ld_eff_addr1);
+                                "and [sn:%lli] at address %#x\n",
+                                inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
                         memDepViolator = ld_inst;
 
                         ++lsqMemOrderViolation;
@@ -560,9 +560,9 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
                 if (memDepViolator && ld_inst->seqNum > memDepViolator->seqNum)
                     break;
 
-                DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] and [sn:%lli]"
-                        " at address %#x\n", inst->seqNum, ld_inst->seqNum,
-                        ld_eff_addr1);
+                DPRINTF(LSQUnit, "Detected fault with inst [sn:%lli] and "
+                        "[sn:%lli] at address %#x\n",
+                        inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
                 memDepViolator = ld_inst;
 
                 ++lsqMemOrderViolation;
