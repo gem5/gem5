@@ -363,11 +363,6 @@ namespace X86ISA
         {}
     };
 
-    static inline Fault genMachineCheckFault()
-    {
-        return new MachineCheck;
-    }
-
     class SIMDFloatingPointFault : public X86Fault
     {
       public:

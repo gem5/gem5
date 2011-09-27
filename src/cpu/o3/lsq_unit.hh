@@ -38,6 +38,7 @@
 #include <queue>
 
 #include "arch/faults.hh"
+#include "arch/generic/debugfaults.hh"
 #include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
 #include "arch/mmapped_ipr.hh"
@@ -568,7 +569,9 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             delete sreqLow;
             delete sreqHigh;
         }
-        return TheISA::genMachineCheckFault();
+        return new GenericISA::M5PanicFault(
+                "Uncachable load [sn:%llx] PC %s\n",
+                load_inst->seqNum, load_inst->pcState());
     }
 
     // Check the SQ for any previous stores that might lead to forwarding

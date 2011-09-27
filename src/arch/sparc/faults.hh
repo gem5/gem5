@@ -287,13 +287,6 @@ class TrapInstruction : public EnumeratedFault<TrapInstruction>
 #endif
 };
 
-static inline Fault
-genMachineCheckFault()
-{
-    return new InternalProcessorError;
-}
-
-
 } // namespace SparcISA
 
 #endif // __SPARC_FAULTS_HH__

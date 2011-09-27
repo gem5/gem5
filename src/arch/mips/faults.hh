@@ -128,11 +128,6 @@ class MachineCheckFault : public MipsFault<MachineCheckFault>
     bool isMachineCheckFault() { return true; }
 };
 
-static inline Fault genMachineCheckFault()
-{
-    return new MachineCheckFault;
-}
-
 class ResetFault : public MipsFault<ResetFault>
 {
   public:

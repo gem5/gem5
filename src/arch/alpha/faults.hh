@@ -84,11 +84,6 @@ class AlignmentFault : public AlphaFault
     bool isAlignmentFault() const {return true;}
 };
 
-static inline Fault genMachineCheckFault()
-{
-    return new MachineCheckFault;
-}
-
 class ResetFault : public AlphaFault
 {
   private:

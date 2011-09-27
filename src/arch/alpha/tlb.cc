@@ -36,6 +36,7 @@
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/pagetable.hh"
 #include "arch/alpha/tlb.hh"
+#include "arch/generic/debugfaults.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
@@ -434,8 +435,9 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     }
 
     // check that the physical address is ok (catch bad physical addresses)
-    if (req->getPaddr() & ~PAddrImplMask)
-        return genMachineCheckFault();
+    if (req->getPaddr() & ~PAddrImplMask) {
+        return new MachineCheckFault();
+    }
 
     return checkCacheability(req, true);
 
@@ -562,8 +564,9 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     }
 
     // check that the physical address is ok (catch bad physical addresses)
-    if (req->getPaddr() & ~PAddrImplMask)
-        return genMachineCheckFault();
+    if (req->getPaddr() & ~PAddrImplMask) {
+        return new MachineCheckFault();
+    }
 
     return checkCacheability(req);
 }

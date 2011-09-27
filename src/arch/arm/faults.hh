@@ -242,11 +242,6 @@ class FlushPipe : public ArmFaultVals<FlushPipe>
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-static inline Fault genMachineCheckFault()
-{
-    return new Reset();
-}
-
 // A fault that flushes the pipe, excluding the faulting instructions
 class ArmSev : public ArmFaultVals<ArmSev>
 {

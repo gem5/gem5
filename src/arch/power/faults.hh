@@ -85,13 +85,6 @@ class AlignmentFault : public PowerFault
     }
 };
 
-
-static inline Fault
-genMachineCheckFault()
-{
-    return new MachineCheckFault();
-}
-
 } // namespace PowerISA
 
 #endif // __ARCH_POWER_FAULTS_HH__

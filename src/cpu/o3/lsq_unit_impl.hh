@@ -41,6 +41,7 @@
  *          Korey Sewell
  */
 
+#include "arch/generic/debugfaults.hh"
 #include "arch/locked_mem.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
@@ -539,7 +540,10 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
 
                         ++lsqMemOrderViolation;
 
-                        return TheISA::genMachineCheckFault();
+                        return new GenericISA::M5PanicFault(
+                                "Detected fault with inst [sn:%lli] and "
+                                "[sn:%lli] at address %#x\n",
+                                inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
                     }
                 }
 
@@ -563,7 +567,9 @@ LSQUnit<Impl>::checkViolations(int load_idx, DynInstPtr &inst)
 
                 ++lsqMemOrderViolation;
 
-                return TheISA::genMachineCheckFault();
+                return new GenericISA::M5PanicFault("Detected fault with "
+                        "inst [sn:%lli] and [sn:%lli] at address %#x\n",
+                        inst->seqNum, ld_inst->seqNum, ld_eff_addr1);
             }
         }
 
