@@ -46,7 +46,7 @@ decode OPCODE default Unknown::unknown() {
             }});
         11: cmpi({{
             Xer xer = XER;
-            uint32_t cr = makeCRField(Ra.sw, (int32_t)imm, xer.so);
+            uint32_t cr = makeCRField(Ra_sw, (int32_t)imm, xer.so);
             CR = insertCRField(CR, BF, cr);
             }});
     }
@@ -88,15 +88,15 @@ decode OPCODE default Unknown::unknown() {
         // Arithmetic instructions all use source registers Ra and Rb,
         // with destination register Rt.
         format IntArithOp {
-            75: mulhw({{ int64_t prod = Ra.sq * Rb.sq; Rt = prod >> 32; }});
-            11: mulhwu({{ uint64_t prod = Ra.uq * Rb.uq; Rt = prod >> 32; }});
-            235: mullw({{ int64_t prod = Ra.sq * Rb.sq; Rt = prod; }});
-            747: mullwo({{ int64_t src1 = Ra.sq; int64_t src2 = Rb; int64_t prod = src1 * src2; Rt = prod; }},
+            75: mulhw({{ int64_t prod = Ra_sq * Rb_sq; Rt = prod >> 32; }});
+            11: mulhwu({{ uint64_t prod = Ra_uq * Rb_uq; Rt = prod >> 32; }});
+            235: mullw({{ int64_t prod = Ra_sq * Rb_sq; Rt = prod; }});
+            747: mullwo({{ int64_t src1 = Ra_sq; int64_t src2 = Rb; int64_t prod = src1 * src2; Rt = prod; }},
                         true);
 
             491: divw({{
-                int32_t src1 = Ra.sw;
-                int32_t src2 = Rb.sw;
+                int32_t src1 = Ra_sw;
+                int32_t src2 = Rb_sw;
                 if ((src1 != 0x80000000 || src2 != 0xffffffff)
                     && src2 != 0) {
                     Rt = src1 / src2;
@@ -106,8 +106,8 @@ decode OPCODE default Unknown::unknown() {
             }});
 
             1003: divwo({{
-                int32_t src1 = Ra.sw;
-                int32_t src2 = Rb.sw;
+                int32_t src1 = Ra_sw;
+                int32_t src2 = Rb_sw;
                 if ((src1 != 0x80000000 || src2 != 0xffffffff)
                     && src2 != 0) {
                     Rt = src1 / src2;
@@ -119,8 +119,8 @@ decode OPCODE default Unknown::unknown() {
             true);
 
             459: divwu({{
-                uint32_t src1 = Ra.sw;
-                uint32_t src2 = Rb.sw;
+                uint32_t src1 = Ra_sw;
+                uint32_t src2 = Rb_sw;
                 if (src2 != 0) {
                     Rt = src1 / src2;
                 } else {
@@ -129,8 +129,8 @@ decode OPCODE default Unknown::unknown() {
             }});
 
             971: divwuo({{
-              uint32_t src1 = Ra.sw;
-              uint32_t src2 = Rb.sw;
+              uint32_t src1 = Ra_sw;
+              uint32_t src2 = Rb_sw;
               if (src2 != 0) {
                   Rt = src1 / src2;
               } else {
@@ -247,7 +247,7 @@ decode OPCODE default Unknown::unknown() {
         format IntOp {
             0: cmp({{
                 Xer xer = XER;
-                uint32_t cr = makeCRField(Ra.sw, Rb.sw, xer.so);
+                uint32_t cr = makeCRField(Ra_sw, Rb_sw, xer.so);
                 CR = insertCRField(CR, BF, cr);
                 }});
             32: cmpl({{
@@ -282,30 +282,30 @@ decode OPCODE default Unknown::unknown() {
         // R0. Others update Ra with the effective address. In all cases,
         // Ra and Rb are source registers, Rt is the destintation.
         format LoadIndexOp {
-            87: lbzx({{ Rt = Mem.ub; }});
-            279: lhzx({{ Rt = Mem.uh; }});
-            343: lhax({{ Rt = Mem.sh; }});
+            87: lbzx({{ Rt = Mem_ub; }});
+            279: lhzx({{ Rt = Mem_uh; }});
+            343: lhax({{ Rt = Mem_sh; }});
             23: lwzx({{ Rt = Mem; }});
-            341: lwax({{ Rt = Mem.sw; }});
-            20: lwarx({{ Rt = Mem.sw; Rsv = 1; RsvLen = 4; RsvAddr = EA; }});
-            535: lfsx({{ Ft.sf = Mem.sf; }});
-            599: lfdx({{ Ft = Mem.df; }});
-            855: lfiwax({{ Ft.uw = Mem; }});
+            341: lwax({{ Rt = Mem_sw; }});
+            20: lwarx({{ Rt = Mem_sw; Rsv = 1; RsvLen = 4; RsvAddr = EA; }});
+            535: lfsx({{ Ft_sf = Mem_sf; }});
+            599: lfdx({{ Ft = Mem_df; }});
+            855: lfiwax({{ Ft_uw = Mem; }});
         }
 
         format LoadIndexUpdateOp {
-            119: lbzux({{ Rt = Mem.ub; }});
-            311: lhzux({{ Rt = Mem.uh; }});
-            375: lhaux({{ Rt = Mem.sh; }});
+            119: lbzux({{ Rt = Mem_ub; }});
+            311: lhzux({{ Rt = Mem_uh; }});
+            375: lhaux({{ Rt = Mem_sh; }});
             55: lwzux({{ Rt = Mem; }});
-            373: lwaux({{ Rt = Mem.sw; }});
-            567: lfsux({{ Ft.sf = Mem.sf; }});
-            631: lfdux({{ Ft = Mem.df; }});
+            373: lwaux({{ Rt = Mem_sw; }});
+            567: lfsux({{ Ft_sf = Mem_sf; }});
+            631: lfdux({{ Ft = Mem_df; }});
         }
 
         format StoreIndexOp {
-            215: stbx({{ Mem.ub = Rs.ub; }});
-            407: sthx({{ Mem.uh = Rs.uh; }});
+            215: stbx({{ Mem_ub = Rs_ub; }});
+            407: sthx({{ Mem_uh = Rs_uh; }});
             151: stwx({{ Mem = Rs; }});
             150: stwcx({{
                 bool store_performed = false;
@@ -323,17 +323,17 @@ decode OPCODE default Unknown::unknown() {
                 CR = cr;
                 Rsv = 0;
             }});
-            663: stfsx({{ Mem.sf = Fs.sf; }});
-            727: stfdx({{ Mem.df = Fs; }});
-            983: stfiwx({{ Mem = Fs.uw; }});
+            663: stfsx({{ Mem_sf = Fs_sf; }});
+            727: stfdx({{ Mem_df = Fs; }});
+            983: stfiwx({{ Mem = Fs_uw; }});
         }
 
         format StoreIndexUpdateOp {
-            247: stbux({{ Mem.ub = Rs.ub; }});
-            439: sthux({{ Mem.uh = Rs.uh; }});
+            247: stbux({{ Mem_ub = Rs_ub; }});
+            439: sthux({{ Mem_uh = Rs_uh; }});
             183: stwux({{ Mem = Rs; }});
-            695: stfsux({{ Mem.sf = Fs.sf; }});
-            759: stfdux({{ Mem.df = Fs; }});
+            695: stfsux({{ Mem_sf = Fs_sf; }});
+            759: stfdux({{ Mem_df = Fs; }});
         }
 
         // These instructions all provide data cache hints
@@ -360,7 +360,7 @@ decode OPCODE default Unknown::unknown() {
         8: subfic({{ int32_t src = ~Ra; Rt = src + imm + 1; }},
                   [computeCA]);
         7: mulli({{
-            int32_t src = Ra.sw;
+            int32_t src = Ra_sw;
             int64_t prod = src * imm;
             Rt = (uint32_t)prod;
         }});
@@ -476,40 +476,40 @@ decode OPCODE default Unknown::unknown() {
     }
 
     format LoadDispOp {
-        34: lbz({{ Rt = Mem.ub; }});
-        40: lhz({{ Rt = Mem.uh; }});
-        42: lha({{ Rt = Mem.sh; }});
+        34: lbz({{ Rt = Mem_ub; }});
+        40: lhz({{ Rt = Mem_uh; }});
+        42: lha({{ Rt = Mem_sh; }});
         32: lwz({{ Rt = Mem; }});
-        58: lwa({{ Rt = Mem.sw; }},
+        58: lwa({{ Rt = Mem_sw; }},
                 {{ EA = Ra + (disp & 0xfffffffc); }},
                 {{ EA = disp & 0xfffffffc; }});
-        48: lfs({{ Ft.sf = Mem.sf; }});
-        50: lfd({{ Ft = Mem.df; }});
+        48: lfs({{ Ft_sf = Mem_sf; }});
+        50: lfd({{ Ft = Mem_df; }});
     }
 
     format LoadDispUpdateOp {
-        35: lbzu({{ Rt = Mem.ub; }});
-        41: lhzu({{ Rt = Mem.uh; }});
-        43: lhau({{ Rt = Mem.sh; }});
+        35: lbzu({{ Rt = Mem_ub; }});
+        41: lhzu({{ Rt = Mem_uh; }});
+        43: lhau({{ Rt = Mem_sh; }});
         33: lwzu({{ Rt = Mem; }});
-        49: lfsu({{ Ft.sf = Mem.sf; }});
-        51: lfdu({{ Ft = Mem.df; }});
+        49: lfsu({{ Ft_sf = Mem_sf; }});
+        51: lfdu({{ Ft = Mem_df; }});
     }
 
     format StoreDispOp {
-        38: stb({{ Mem.ub = Rs.ub; }});
-        44: sth({{ Mem.uh = Rs.uh; }});
+        38: stb({{ Mem_ub = Rs_ub; }});
+        44: sth({{ Mem_uh = Rs_uh; }});
         36: stw({{ Mem = Rs; }});
-        52: stfs({{ Mem.sf = Fs.sf; }});
-        54: stfd({{ Mem.df = Fs; }});
+        52: stfs({{ Mem_sf = Fs_sf; }});
+        54: stfd({{ Mem_df = Fs; }});
     }
 
     format StoreDispUpdateOp {
-        39: stbu({{ Mem.ub = Rs.ub; }});
-        45: sthu({{ Mem.uh = Rs.uh; }});
+        39: stbu({{ Mem_ub = Rs_ub; }});
+        45: sthu({{ Mem_uh = Rs_uh; }});
         37: stwu({{ Mem = Rs; }});
-        53: stfsu({{ Mem.sf = Fs.sf; }});
-        55: stfdu({{ Mem.df = Fs; }});
+        53: stfsu({{ Mem_sf = Fs_sf; }});
+        55: stfdu({{ Mem_df = Fs; }});
     }
 
     17: IntOp::sc({{ xc->syscall(R0); }},
@@ -542,8 +542,8 @@ decode OPCODE default Unknown::unknown() {
 
         default: decode XO_XO {
             format FloatConvertOp {
-                12: frsp({{ Ft.sf = Fb; }});
-                15: fctiwz({{ Ft.sw = (int32_t)trunc(Fb); }});
+                12: frsp({{ Ft_sf = Fb; }});
+                15: fctiwz({{ Ft_sw = (int32_t)trunc(Fb); }});
             }
 
             format FloatOp {
@@ -559,28 +559,28 @@ decode OPCODE default Unknown::unknown() {
             format FloatRCCheckOp {
                 72: fmr({{ Ft = Fb; }});
                 264: fabs({{
-                    Ft.uq = Fb.uq;
-                    Ft.uq = insertBits(Ft.uq, 63, 0); }});
+                    Ft_uq = Fb_uq;
+                    Ft_uq = insertBits(Ft_uq, 63, 0); }});
                 136: fnabs({{
-                    Ft.uq = Fb.uq;
-                    Ft.uq = insertBits(Ft.uq, 63, 1); }});
+                    Ft_uq = Fb_uq;
+                    Ft_uq = insertBits(Ft_uq, 63, 1); }});
                 40: fneg({{ Ft = -Fb; }});
                 8: fcpsgn({{
-                    Ft.uq = Fb.uq;
-                    Ft.uq = insertBits(Ft.uq, 63, Fa.uq<63:63>);
+                    Ft_uq = Fb_uq;
+                    Ft_uq = insertBits(Ft_uq, 63, Fa_uq<63:63>);
                 }});
-                583: mffs({{ Ft.uq = FPSCR; }});
+                583: mffs({{ Ft_uq = FPSCR; }});
                 134: mtfsfi({{
                     FPSCR = insertCRField(FPSCR, BF + (8 * (1 - W)), U_FIELD);
                 }});
                 711: mtfsf({{
-                    if (L == 1) { FPSCR = Fb.uq; }
+                    if (L == 1) { FPSCR = Fb_uq; }
                     else {
                         for (int i = 0; i < 8; ++i) {
                             if (bits(FLM, i) == 1) {
                                 int k = 4 * (i + (8 * (1 - W)));
                                 FPSCR = insertBits(FPSCR, k, k + 3,
-                                                   bits(Fb.uq, k, k + 3));
+                                                   bits(Fb_uq, k, k + 3));
                             }
                         }
                     }

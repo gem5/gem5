@@ -176,7 +176,7 @@ def operand_types {{
 def operands {{
     # Int regs default to unsigned, but code should not count on this.
     # For clarity, descriptions that depend on unsigned behavior should
-    # explicitly specify '.uq'.
+    # explicitly specify '_uq'.
     'Ra': ('IntReg', 'uq', 'PALMODE ? reg_redir[RA] : RA',
            'IsInteger', 1),
     'Rb': ('IntReg', 'uq', 'PALMODE ? reg_redir[RB] : RB',

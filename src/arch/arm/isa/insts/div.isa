@@ -39,7 +39,7 @@
 
 let {{
     sdivCode = '''
-    if (Op2.sw == 0) {
+    if (Op2_sw == 0) {
         if (((SCTLR)Sctlr).dz) {
 #if FULL_SYSTEM
             return new UndefinedInstruction;
@@ -47,11 +47,11 @@ let {{
             return new UndefinedInstruction(false, mnemonic);
 #endif
         }
-        Dest.sw = 0;
-    } else if (Op1.sw == INT_MIN && Op2.sw == -1) {
-        Dest.sw = INT_MIN;
+        Dest_sw = 0;
+    } else if (Op1_sw == INT_MIN && Op2_sw == -1) {
+        Dest_sw = INT_MIN;
     } else {
-        Dest.sw = Op1.sw / Op2.sw;
+        Dest_sw = Op1_sw / Op2_sw;
     }
     '''
     sdivIop = InstObjParams("sdiv", "Sdiv", "RegRegRegOp",
@@ -63,7 +63,7 @@ let {{
     exec_output = PredOpExecute.subst(sdivIop)
 
     udivCode = '''
-    if (Op2.uw == 0) {
+    if (Op2_uw == 0) {
         if (((SCTLR)Sctlr).dz) {
 #if FULL_SYSTEM
             return new UndefinedInstruction;
@@ -71,9 +71,9 @@ let {{
             return new UndefinedInstruction(false, mnemonic);
 #endif
         }
-        Dest.uw = 0;
+        Dest_uw = 0;
     } else {
-        Dest.uw = Op1.uw / Op2.uw;
+        Dest_uw = Op1_uw / Op2_uw;
     }
     '''
     udivIop = InstObjParams("udiv", "Udiv", "RegRegRegOp",

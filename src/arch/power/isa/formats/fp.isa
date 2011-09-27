@@ -84,7 +84,7 @@ def format FloatRCCheckOp(code, inst_flags = []) {{
 // Floating point elementary arithmetic operations. Besides having two
 // versions of each instruction for when Rc is set or not, we also have
 // to alter lots of special registers depending on the result of the
-// operation. The result is always in Ft.sf.
+// operation. The result is always in Ft_sf.
 def format FloatArithOp(code, inst_flags = []) {{
 
     # Code when Rc is set
@@ -109,7 +109,7 @@ def format FloatArithOp(code, inst_flags = []) {{
 // Floating point rounding and conversion operations. Besides having two
 // versions of each instruction for when Rc is set or not, we also have
 // to alter lots of special registers depending on the result of the
-// operation. The result is always in Ft.sf.
+// operation. The result is always in Ft_sf.
 def format FloatConvertOp(code, inst_flags = []) {{
 
     # Code when Rc is set

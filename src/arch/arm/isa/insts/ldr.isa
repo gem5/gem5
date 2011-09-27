@@ -111,8 +111,8 @@ let {{
             cpsr.v = CondCodesV;
             cpsr.ge = CondCodesGE;
             URc = cpsr;
-            URa = cSwap<uint32_t>(Mem.ud, cpsr.e);
-            URb = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
+            URa = cSwap<uint32_t>(Mem_ud, cpsr.e);
+            URb = cSwap<uint32_t>(Mem_ud >> 32, cpsr.e);
             '''
             self.codeBlobs["memacc_code"] = accCode
 
@@ -196,7 +196,7 @@ let {{
             if self.flavor == "dprefetch" or self.flavor == "iprefetch":
                 accCode = 'uint64_t temp = Mem%s; temp = temp;'
             elif self.flavor == "fp":
-                accCode = "FpDest.uw = cSwap(Mem%s, ((CPSR)Cpsr).e);\n"
+                accCode = "FpDest_uw = cSwap(Mem%s, ((CPSR)Cpsr).e);\n"
             else:
                 accCode = "IWDest = cSwap(Mem%s, ((CPSR)Cpsr).e);"
             accCode = accCode % buildMemSuffix(self.sign, self.size)
@@ -260,14 +260,14 @@ let {{
             if self.flavor != "fp":
                 accCode = '''
                 CPSR cpsr = Cpsr;
-                Dest = cSwap<uint32_t>(Mem.ud, cpsr.e);
-                Dest2 = cSwap<uint32_t>(Mem.ud >> 32, cpsr.e);
+                Dest = cSwap<uint32_t>(Mem_ud, cpsr.e);
+                Dest2 = cSwap<uint32_t>(Mem_ud >> 32, cpsr.e);
                 '''
             else:
                 accCode = '''
-                uint64_t swappedMem = cSwap(Mem.ud, ((CPSR)Cpsr).e);
-                FpDest.uw = (uint32_t)swappedMem;
-                FpDest2.uw = (uint32_t)(swappedMem >> 32);
+                uint64_t swappedMem = cSwap(Mem_ud, ((CPSR)Cpsr).e);
+                FpDest_uw = (uint32_t)swappedMem;
+                FpDest2_uw = (uint32_t)(swappedMem >> 32);
                 '''
 
             self.codeBlobs["memacc_code"] = accCode

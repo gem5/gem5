@@ -110,8 +110,8 @@ let {{
                 wbDiff = 8
             accCode = '''
             CPSR cpsr = Cpsr;
-            Mem.ud = (uint64_t)cSwap(LR.uw, cpsr.e) |
-                     ((uint64_t)cSwap(Spsr.uw, cpsr.e) << 32);
+            Mem_ud = (uint64_t)cSwap(LR_uw, cpsr.e) |
+                     ((uint64_t)cSwap(Spsr_uw, cpsr.e) << 32);
             '''
 
             global header_output, decoder_output, exec_output
@@ -198,7 +198,7 @@ let {{
 
             # Code that actually handles the access
             if self.flavor == "fp":
-                accCode = 'Mem%(suffix)s = cSwap(FpDest.uw, ((CPSR)Cpsr).e);'
+                accCode = 'Mem%(suffix)s = cSwap(FpDest_uw, ((CPSR)Cpsr).e);'
             else:
                 accCode = \
                     'Mem%(suffix)s = cSwap(Dest%(suffix)s, ((CPSR)Cpsr).e);'
@@ -273,15 +273,15 @@ let {{
             # Code that actually handles the access
             if self.flavor == "fp":
                 accCode = '''
-                uint64_t swappedMem  = (uint64_t)FpDest.uw |
-                                       ((uint64_t)FpDest2.uw << 32);
-                Mem.ud = cSwap(swappedMem, ((CPSR)Cpsr).e);
+                uint64_t swappedMem  = (uint64_t)FpDest_uw |
+                                       ((uint64_t)FpDest2_uw << 32);
+                Mem_ud = cSwap(swappedMem, ((CPSR)Cpsr).e);
                 '''
             else:
                 accCode = '''
                 CPSR cpsr = Cpsr;
-                Mem.ud = (uint64_t)cSwap(Dest.uw, cpsr.e) |
-                         ((uint64_t)cSwap(Dest2.uw, cpsr.e) << 32);
+                Mem_ud = (uint64_t)cSwap(Dest_uw, cpsr.e) |
+                         ((uint64_t)cSwap(Dest2_uw, cpsr.e) << 32);
                 '''
 
             self.codeBlobs["memacc_code"] = accCode

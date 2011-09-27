@@ -410,7 +410,7 @@ let {{
     defineMicroLoadOp('Ldstl', 'Data = merge(Data, Mem, dataSize);',
                                'Data = Mem & mask(dataSize * 8);',
                       '(StoreCheck << FlagShift) | Request::LOCKED')
-    defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;', big = False)
+    defineMicroLoadOp('Ldfp', 'FpData_uqw = Mem;', big = False)
 
     def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0"):
         global header_output
@@ -447,7 +447,7 @@ let {{
     defineMicroStoreOp('St', 'Mem = pick(Data, 2, dataSize);')
     defineMicroStoreOp('Stul', 'Mem = pick(Data, 2, dataSize);',
             mem_flags="Request::LOCKED")
-    defineMicroStoreOp('Stfp', 'Mem = FpData.uqw;')
+    defineMicroStoreOp('Stfp', 'Mem = FpData_uqw;')
     defineMicroStoreOp('Cda', 'Mem = 0;', mem_flags="Request::NO_ACCESS")
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',

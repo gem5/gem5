@@ -1851,21 +1851,21 @@ StaticInstPtr
 
         # Define operand variables.
         operands = user_dict.keys()
+        extensions = self.operandTypeMap.keys()
 
-        operandsREString = (r'''
-        (?<![\w\.])      # neg. lookbehind assertion: prevent partial matches
-        ((%s)(?:\.(\w+))?)   # match: operand with optional '.' then suffix
-        (?![\w\.])       # neg. lookahead assertion: prevent partial matches
-        '''
-                            % string.join(operands, '|'))
+        operandsREString = r'''
+        (?<!\w)      # neg. lookbehind assertion: prevent partial matches
+        ((%s)(?:_(%s))?)   # match: operand with optional '_' then suffix
+        (?!\w)       # neg. lookahead assertion: prevent partial matches
+        ''' % (string.join(operands, '|'), string.join(extensions, '|'))
 
         self.operandsRE = re.compile(operandsREString, re.MULTILINE|re.VERBOSE)
 
         # Same as operandsREString, but extension is mandatory, and only two
         # groups are returned (base and ext, not full name as above).
         # Used for subtituting '_' for '.' to make C++ identifiers.
-        operandsWithExtREString = (r'(?<![\w\.])(%s)\.(\w+)(?![\w\.])'
-                                   % string.join(operands, '|'))
+        operandsWithExtREString = r'(?<!\w)(%s)_(%s)(?!\w)' \
+            % (string.join(operands, '|'), string.join(extensions, '|'))
 
         self.operandsWithExtRE = \
             re.compile(operandsWithExtREString, re.MULTILINE)

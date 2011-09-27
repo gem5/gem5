@@ -180,14 +180,14 @@ let {{
             memSuffix = ''
         elif size == 2:
             if sign:
-                memSuffix = '.sh'
+                memSuffix = '_sh'
             else:
-                memSuffix = '.uh'
+                memSuffix = '_uh'
         elif size == 1:
             if sign:
-                memSuffix = '.sb'
+                memSuffix = '_sb'
             else:
-                memSuffix = '.ub'
+                memSuffix = '_ub'
         else:
             raise Exception, "Unrecognized size for access %d" % size
 

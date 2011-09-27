@@ -357,9 +357,9 @@ def format HiLoRdSelOp(code, *opt_flags) {{
 
 def format HiLoRdSelValOp(code, *opt_flags) {{
 
-    if '.sd' in code:
+    if '_sd' in code:
         code = 'int64_t ' + code
-    elif '.ud' in code:
+    elif '_ud' in code:
         code = 'uint64_t ' + code
 
     code += 'HI_RD_SEL = val<63:32>;\n'

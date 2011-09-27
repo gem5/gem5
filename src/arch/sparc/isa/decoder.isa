@@ -82,16 +82,16 @@ decode OP default Unknown::unknown()
         {
             format BranchSplit
             {
-                0x1: bpreq(test={{Rs1.sdw == 0}});
-                0x2: bprle(test={{Rs1.sdw <= 0}});
-                0x3: bprl(test={{Rs1.sdw < 0}});
-                0x5: bprne(test={{Rs1.sdw != 0}});
-                0x6: bprg(test={{Rs1.sdw > 0}});
-                0x7: bprge(test={{Rs1.sdw >= 0}});
+                0x1: bpreq(test={{Rs1_sdw == 0}});
+                0x2: bprle(test={{Rs1_sdw <= 0}});
+                0x3: bprl(test={{Rs1_sdw < 0}});
+                0x5: bprne(test={{Rs1_sdw != 0}});
+                0x6: bprg(test={{Rs1_sdw > 0}});
+                0x7: bprge(test={{Rs1_sdw >= 0}});
             }
         }
         // SETHI (or NOP if rd == 0 and imm == 0)
-        0x4: SetHi::sethi({{Rd.udw = imm;}});
+        0x4: SetHi::sethi({{Rd_udw = imm;}});
         // fbpfcc
         0x5: decode COND2 {
             format BranchN {
@@ -144,52 +144,52 @@ decode OP default Unknown::unknown()
     }},None, None, IsIndirectControl, IsCall);
     0x2: decode OP3 {
         format IntOp {
-            0x00: add({{Rd = Rs1.sdw + Rs2_or_imm13;}});
-            0x01: and({{Rd = Rs1.sdw & Rs2_or_imm13;}});
-            0x02: or({{Rd = Rs1.sdw | Rs2_or_imm13;}});
-            0x03: xor({{Rd = Rs1.sdw ^ Rs2_or_imm13;}});
-            0x04: sub({{Rd = Rs1.sdw - Rs2_or_imm13;}});
-            0x05: andn({{Rd = Rs1.sdw & ~Rs2_or_imm13;}});
-            0x06: orn({{Rd = Rs1.sdw | ~Rs2_or_imm13;}});
-            0x07: xnor({{Rd = ~(Rs1.sdw ^ Rs2_or_imm13);}});
-            0x08: addc({{Rd = Rs1.sdw + Rs2_or_imm13 + Ccr<0:0>;}});
-            0x09: mulx({{Rd = Rs1.sdw * Rs2_or_imm13;}});
+            0x00: add({{Rd = Rs1_sdw + Rs2_or_imm13;}});
+            0x01: and({{Rd = Rs1_sdw & Rs2_or_imm13;}});
+            0x02: or({{Rd = Rs1_sdw | Rs2_or_imm13;}});
+            0x03: xor({{Rd = Rs1_sdw ^ Rs2_or_imm13;}});
+            0x04: sub({{Rd = Rs1_sdw - Rs2_or_imm13;}});
+            0x05: andn({{Rd = Rs1_sdw & ~Rs2_or_imm13;}});
+            0x06: orn({{Rd = Rs1_sdw | ~Rs2_or_imm13;}});
+            0x07: xnor({{Rd = ~(Rs1_sdw ^ Rs2_or_imm13);}});
+            0x08: addc({{Rd = Rs1_sdw + Rs2_or_imm13 + Ccr<0:0>;}});
+            0x09: mulx({{Rd = Rs1_sdw * Rs2_or_imm13;}});
             0x0A: umul({{
-                Rd = Rs1.udw<31:0> * Rs2_or_imm13<31:0>;
+                Rd = Rs1_udw<31:0> * Rs2_or_imm13<31:0>;
                 Y = Rd<63:32>;
             }});
             0x0B: smul({{
-                Rd.sdw = sext<32>(Rs1.sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
-                Y = Rd.sdw<63:32>;
+                Rd_sdw = sext<32>(Rs1_sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
+                Y = Rd_sdw<63:32>;
             }});
-            0x0C: subc({{Rd.sdw = Rs1.sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
+            0x0C: subc({{Rd_sdw = Rs1_sdw + (~Rs2_or_imm13) + 1 - Ccr<0:0>}});
             0x0D: udivx({{
                 if (Rs2_or_imm13 == 0)
                     fault = new DivisionByZero;
                 else
-                    Rd.udw = Rs1.udw / Rs2_or_imm13;
+                    Rd_udw = Rs1_udw / Rs2_or_imm13;
             }});
             0x0E: udiv({{
                 if (Rs2_or_imm13 == 0) {
                     fault = new DivisionByZero;
                 } else {
-                    Rd.udw = ((Y << 32) | Rs1.udw<31:0>) / Rs2_or_imm13;
-                    if (Rd.udw >> 32 != 0)
-                        Rd.udw = 0xFFFFFFFF;
+                    Rd_udw = ((Y << 32) | Rs1_udw<31:0>) / Rs2_or_imm13;
+                    if (Rd_udw >> 32 != 0)
+                        Rd_udw = 0xFFFFFFFF;
                 }
             }});
             0x0F: sdiv({{
-                if (Rs2_or_imm13.sdw == 0) {
+                if (Rs2_or_imm13_sdw == 0) {
                     fault = new DivisionByZero;
                 } else {
-                    Rd.udw = ((int64_t)((Y << 32) |
-                            Rs1.sdw<31:0>)) / Rs2_or_imm13.sdw;
-                    if ((int64_t)Rd.udw >=
+                    Rd_udw = ((int64_t)((Y << 32) |
+                            Rs1_sdw<31:0>)) / Rs2_or_imm13_sdw;
+                    if ((int64_t)Rd_udw >=
                         std::numeric_limits<int32_t>::max()) {
-                        Rd.udw = 0x7FFFFFFF;
-                    } else if ((int64_t)Rd.udw <=
+                        Rd_udw = 0x7FFFFFFF;
+                    } else if ((int64_t)Rd_udw <=
                         std::numeric_limits<int32_t>::min()) {
-                        Rd.udw = ULL(0xFFFFFFFF80000000);
+                        Rd_udw = ULL(0xFFFFFFFF80000000);
                     }
                 }
             }});
@@ -215,29 +215,29 @@ decode OP default Unknown::unknown()
                 }});
             0x1A: IntOpCcRes::umulcc({{
                 uint64_t resTemp;
-                Rd = resTemp = Rs1.udw<31:0> * Rs2_or_imm13.udw<31:0>;
+                Rd = resTemp = Rs1_udw<31:0> * Rs2_or_imm13_udw<31:0>;
                 Y = resTemp<63:32>;}});
             0x1B: IntOpCcRes::smulcc({{
                 int64_t resTemp;
-                Rd = resTemp = sext<32>(Rs1.sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
+                Rd = resTemp = sext<32>(Rs1_sdw<31:0>) * sext<32>(Rs2_or_imm13<31:0>);
                 Y = resTemp<63:32>;}});
             0x1C: subccc({{
                     int64_t res, op1 = Rs1, op2 = Rs2_or_imm13;
                     Rd = res = op1 - op2 - Ccr<0:>;
                 }}, sub=True);
             0x1D: IntOpCcRes::udivxcc({{
-                if (Rs2_or_imm13.udw == 0)
+                if (Rs2_or_imm13_udw == 0)
                     fault = new DivisionByZero;
                 else
-                    Rd = Rs1.udw / Rs2_or_imm13.udw;}});
+                    Rd = Rs1_udw / Rs2_or_imm13_udw;}});
             0x1E: IntOpCcRes::udivcc({{
                     uint64_t resTemp;
-                    uint32_t val2 = Rs2_or_imm13.udw;
+                    uint32_t val2 = Rs2_or_imm13_udw;
                     int32_t overflow = 0;
                     if (val2 == 0) {
                         fault = new DivisionByZero;
                     } else {
-                        resTemp = (uint64_t)((Y << 32) | Rs1.udw<31:0>) / val2;
+                        resTemp = (uint64_t)((Y << 32) | Rs1_udw<31:0>) / val2;
                         overflow = (resTemp<63:32> != 0);
                         if (overflow)
                             Rd = resTemp = 0xFFFFFFFF;
@@ -246,12 +246,12 @@ decode OP default Unknown::unknown()
                     }
                 }}, iv={{overflow}});
             0x1F: IntOpCcRes::sdivcc({{
-                    int64_t val2 = Rs2_or_imm13.sdw<31:0>;
+                    int64_t val2 = Rs2_or_imm13_sdw<31:0>;
                     bool overflow = false, underflow = false;
                     if (val2 == 0) {
                         fault = new DivisionByZero;
                     } else {
-                        Rd = (int64_t)((Y << 32) | Rs1.sdw<31:0>) / val2;
+                        Rd = (int64_t)((Y << 32) | Rs1_sdw<31:0>) / val2;
                         overflow = ((int64_t)Rd >= std::numeric_limits<int32_t>::max());
                         underflow = ((int64_t)Rd <= std::numeric_limits<int32_t>::min());
                         if (overflow)
@@ -313,12 +313,12 @@ decode OP default Unknown::unknown()
                 0x1: sllx({{Rd = Rs1 << (I ? SHCNT64 : Rs2<5:0>);}});
             }
             0x26: decode X {
-                0x0: srl({{Rd = Rs1.uw >> (I ? SHCNT32 : Rs2<4:0>);}});
-                0x1: srlx({{Rd = Rs1.udw >> (I ? SHCNT64 : Rs2<5:0>);}});
+                0x0: srl({{Rd = Rs1_uw >> (I ? SHCNT32 : Rs2<4:0>);}});
+                0x1: srlx({{Rd = Rs1_udw >> (I ? SHCNT64 : Rs2<5:0>);}});
             }
             0x27: decode X {
-                0x0: sra({{Rd = Rs1.sw >> (I ? SHCNT32 : Rs2<4:0>);}});
-                0x1: srax({{Rd = Rs1.sdw >> (I ? SHCNT64 : Rs2<5:0>);}});
+                0x0: sra({{Rd = Rs1_sw >> (I ? SHCNT32 : Rs2<4:0>);}});
+                0x1: srax({{Rd = Rs1_sdw >> (I ? SHCNT64 : Rs2<5:0>);}});
             }
             0x28: decode RS1 {
                 0x00: NoPriv::rdy({{Rd = Y<31:0>;}});
@@ -450,20 +450,20 @@ decode OP default Unknown::unknown()
                 }
             }
             0x2D: sdivx({{
-                if (Rs2_or_imm13.sdw == 0)
+                if (Rs2_or_imm13_sdw == 0)
                     fault = new DivisionByZero;
                 else
-                    Rd.sdw = Rs1.sdw / Rs2_or_imm13.sdw;
+                    Rd_sdw = Rs1_sdw / Rs2_or_imm13_sdw;
             }});
             0x2E: Trap::popc({{fault = new IllegalInstruction;}});
             0x2F: decode RCOND3
             {
-                0x1: movreq({{Rd = (Rs1.sdw == 0) ? Rs2_or_imm10 : Rd;}});
-                0x2: movrle({{Rd = (Rs1.sdw <= 0) ? Rs2_or_imm10 : Rd;}});
-                0x3: movrl({{Rd = (Rs1.sdw < 0) ? Rs2_or_imm10 : Rd;}});
-                0x5: movrne({{Rd = (Rs1.sdw != 0) ? Rs2_or_imm10 : Rd;}});
-                0x6: movrg({{Rd = (Rs1.sdw > 0) ? Rs2_or_imm10 : Rd;}});
-                0x7: movrge({{Rd = (Rs1.sdw >= 0) ? Rs2_or_imm10 : Rd;}});
+                0x1: movreq({{Rd = (Rs1_sdw == 0) ? Rs2_or_imm10 : Rd;}});
+                0x2: movrle({{Rd = (Rs1_sdw <= 0) ? Rs2_or_imm10 : Rd;}});
+                0x3: movrl({{Rd = (Rs1_sdw < 0) ? Rs2_or_imm10 : Rd;}});
+                0x5: movrne({{Rd = (Rs1_sdw != 0) ? Rs2_or_imm10 : Rd;}});
+                0x6: movrg({{Rd = (Rs1_sdw > 0) ? Rs2_or_imm10 : Rd;}});
+                0x7: movrge({{Rd = (Rs1_sdw >= 0) ? Rs2_or_imm10 : Rd;}});
             }
             0x30: decode RD {
                 0x00: NoPriv::wry({{Y = (Rs1 ^ Rs2_or_imm13)<31:0>;}});
@@ -570,57 +570,57 @@ decode OP default Unknown::unknown()
             }
             0x34: decode OPF{
                 format FpBasic{
-                    0x01: fmovs({{Frds.uw = Frs2s.uw;}});
-                    0x02: fmovd({{Frd.udw = Frs2.udw;}});
+                    0x01: fmovs({{Frds_uw = Frs2s_uw;}});
+                    0x02: fmovd({{Frd_udw = Frs2_udw;}});
                     0x03: FpUnimpl::fmovq();
-                    0x05: fnegs({{Frds.uw = Frs2s.uw ^ (1UL << 31);}});
-                    0x06: fnegd({{Frd.udw = Frs2.udw ^ (1ULL << 63);}});
+                    0x05: fnegs({{Frds_uw = Frs2s_uw ^ (1UL << 31);}});
+                    0x06: fnegd({{Frd_udw = Frs2_udw ^ (1ULL << 63);}});
                     0x07: FpUnimpl::fnegq();
-                    0x09: fabss({{Frds.uw = ((1UL << 31) - 1) & Frs2s.uw;}});
-                    0x0A: fabsd({{Frd.udw = ((1ULL << 63) - 1) & Frs2.udw;}});
+                    0x09: fabss({{Frds_uw = ((1UL << 31) - 1) & Frs2s_uw;}});
+                    0x0A: fabsd({{Frd_udw = ((1ULL << 63) - 1) & Frs2_udw;}});
                     0x0B: FpUnimpl::fabsq();
-                    0x29: fsqrts({{Frds.sf = std::sqrt(Frs2s.sf);}});
-                    0x2A: fsqrtd({{Frd.df = std::sqrt(Frs2.df);}});
+                    0x29: fsqrts({{Frds_sf = std::sqrt(Frs2s_sf);}});
+                    0x2A: fsqrtd({{Frd_df = std::sqrt(Frs2_df);}});
                     0x2B: FpUnimpl::fsqrtq();
-                    0x41: fadds({{Frds.sf = Frs1s.sf + Frs2s.sf;}});
-                    0x42: faddd({{Frd.df = Frs1.df + Frs2.df;}});
+                    0x41: fadds({{Frds_sf = Frs1s_sf + Frs2s_sf;}});
+                    0x42: faddd({{Frd_df = Frs1_df + Frs2_df;}});
                     0x43: FpUnimpl::faddq();
-                    0x45: fsubs({{Frds.sf = Frs1s.sf - Frs2s.sf;}});
-                    0x46: fsubd({{Frd.df = Frs1.df - Frs2.df; }});
+                    0x45: fsubs({{Frds_sf = Frs1s_sf - Frs2s_sf;}});
+                    0x46: fsubd({{Frd_df = Frs1_df - Frs2_df; }});
                     0x47: FpUnimpl::fsubq();
-                    0x49: fmuls({{Frds.sf = Frs1s.sf * Frs2s.sf;}});
-                    0x4A: fmuld({{Frd.df = Frs1.df * Frs2.df;}});
+                    0x49: fmuls({{Frds_sf = Frs1s_sf * Frs2s_sf;}});
+                    0x4A: fmuld({{Frd_df = Frs1_df * Frs2_df;}});
                     0x4B: FpUnimpl::fmulq();
-                    0x4D: fdivs({{Frds.sf = Frs1s.sf / Frs2s.sf;}});
-                    0x4E: fdivd({{Frd.df = Frs1.df / Frs2.df;}});
+                    0x4D: fdivs({{Frds_sf = Frs1s_sf / Frs2s_sf;}});
+                    0x4E: fdivd({{Frd_df = Frs1_df / Frs2_df;}});
                     0x4F: FpUnimpl::fdivq();
-                    0x69: fsmuld({{Frd.df = Frs1s.sf * Frs2s.sf;}});
+                    0x69: fsmuld({{Frd_df = Frs1s_sf * Frs2s_sf;}});
                     0x6E: FpUnimpl::fdmulq();
-                    0x81: fstox({{Frd.sdw = static_cast<int64_t>(Frs2s.sf);}});
-                    0x82: fdtox({{Frd.sdw = static_cast<int64_t>(Frs2.df);}});
+                    0x81: fstox({{Frd_sdw = static_cast<int64_t>(Frs2s_sf);}});
+                    0x82: fdtox({{Frd_sdw = static_cast<int64_t>(Frs2_df);}});
                     0x83: FpUnimpl::fqtox();
-                    0x84: fxtos({{Frds.sf = static_cast<float>(Frs2.sdw);}});
-                    0x88: fxtod({{Frd.df = static_cast<double>(Frs2.sdw);}});
+                    0x84: fxtos({{Frds_sf = static_cast<float>(Frs2_sdw);}});
+                    0x88: fxtod({{Frd_df = static_cast<double>(Frs2_sdw);}});
                     0x8C: FpUnimpl::fxtoq();
-                    0xC4: fitos({{Frds.sf = static_cast<float>(Frs2s.sw);}});
-                    0xC6: fdtos({{Frds.sf = Frs2.df;}});
+                    0xC4: fitos({{Frds_sf = static_cast<float>(Frs2s_sw);}});
+                    0xC6: fdtos({{Frds_sf = Frs2_df;}});
                     0xC7: FpUnimpl::fqtos();
-                    0xC8: fitod({{Frd.df = static_cast<double>(Frs2s.sw);}});
-                    0xC9: fstod({{Frd.df = Frs2s.sf;}});
+                    0xC8: fitod({{Frd_df = static_cast<double>(Frs2s_sw);}});
+                    0xC9: fstod({{Frd_df = Frs2s_sf;}});
                     0xCB: FpUnimpl::fqtod();
                     0xCC: FpUnimpl::fitoq();
                     0xCD: FpUnimpl::fstoq();
                     0xCE: FpUnimpl::fdtoq();
                     0xD1: fstoi({{
-                            Frds.sw = static_cast<int32_t>(Frs2s.sf);
-                            float t = Frds.sw;
-                            if (t != Frs2s.sf)
+                            Frds_sw = static_cast<int32_t>(Frs2s_sf);
+                            float t = Frds_sw;
+                            if (t != Frs2s_sf)
                                Fsr = insertBits(Fsr, 4,0, 0x01);
                     }});
                     0xD2: fdtoi({{
-                            Frds.sw = static_cast<int32_t>(Frs2.df);
-                            double t = Frds.sw;
-                            if (t != Frs2.df)
+                            Frds_sw = static_cast<int32_t>(Frs2_df);
+                            double t = Frds_sw;
+                            if (t != Frs2_df)
                                Fsr = insertBits(Fsr, 4,0, 0x01);
                     }});
                     0xD3: FpUnimpl::fqtoi();
@@ -895,8 +895,8 @@ decode OP default Unknown::unknown()
                 0x3D: Trap::fpackfix({{fault = new IllegalInstruction;}});
                 0x3E: Trap::pdist({{fault = new IllegalInstruction;}});
                 0x48: BasicOperate::faligndata({{
-                        uint64_t msbX = Frs1.udw;
-                        uint64_t lsbX = Frs2.udw;
+                        uint64_t msbX = Frs1_udw;
+                        uint64_t lsbX = Frs2_udw;
                         // Some special cases need to be split out, first
                         // because they're the most likely to be used, and
                         // second because otherwise, we end up shifting by
@@ -905,17 +905,17 @@ decode OP default Unknown::unknown()
                         // according to the C standard.
                         switch (Gsr<2:0>) {
                           case 0:
-                            Frd.udw = msbX;
+                            Frd_udw = msbX;
                             break;
                           case 8:
-                            Frd.udw = lsbX;
+                            Frd_udw = lsbX;
                             break;
                           default:
                             uint64_t msbShift = Gsr<2:0> * 8;
                             uint64_t lsbShift = (8 - Gsr<2:0>) * 8;
                             uint64_t msbMask = ((uint64_t)(-1)) >> msbShift;
                             uint64_t lsbMask = ((uint64_t)(-1)) << lsbShift;
-                            Frd.udw = ((msbX & msbMask) << msbShift) |
+                            Frd_udw = ((msbX & msbMask) << msbShift) |
                                       ((lsbX & lsbMask) >> lsbShift);
                         }
                 }});
@@ -930,25 +930,25 @@ decode OP default Unknown::unknown()
                 0x55: FailUnimpl::fpsub16s();
                 0x56: FailUnimpl::fpsub32();
                 0x57: FailUnimpl::fpsub32s();
-                0x60: FpBasic::fzero({{Frd.df = 0;}});
-                0x61: FpBasic::fzeros({{Frds.sf = 0;}});
+                0x60: FpBasic::fzero({{Frd_df = 0;}});
+                0x61: FpBasic::fzeros({{Frds_sf = 0;}});
                 0x62: FailUnimpl::fnor();
                 0x63: FailUnimpl::fnors();
                 0x64: FailUnimpl::fandnot2();
                 0x65: FailUnimpl::fandnot2s();
                 0x66: FpBasic::fnot2({{
-                        Frd.df = (double)(~((uint64_t)Frs2.df));
+                        Frd_df = (double)(~((uint64_t)Frs2_df));
                 }});
                 0x67: FpBasic::fnot2s({{
-                        Frds.sf = (float)(~((uint32_t)Frs2s.sf));
+                        Frds_sf = (float)(~((uint32_t)Frs2s_sf));
                 }});
                 0x68: FailUnimpl::fandnot1();
                 0x69: FailUnimpl::fandnot1s();
                 0x6A: FpBasic::fnot1({{
-                        Frd.df = (double)(~((uint64_t)Frs1.df));
+                        Frd_df = (double)(~((uint64_t)Frs1_df));
                 }});
                 0x6B: FpBasic::fnot1s({{
-                        Frds.sf = (float)(~((uint32_t)Frs1s.sf));
+                        Frds_sf = (float)(~((uint32_t)Frs1s_sf));
                 }});
                 0x6C: FailUnimpl::fxor();
                 0x6D: FailUnimpl::fxors();
@@ -958,18 +958,18 @@ decode OP default Unknown::unknown()
                 0x71: FailUnimpl::fands();
                 0x72: FailUnimpl::fxnor();
                 0x73: FailUnimpl::fxnors();
-                0x74: FpBasic::fsrc1({{Frd.udw = Frs1.udw;}});
-                0x75: FpBasic::fsrc1s({{Frds.uw = Frs1s.uw;}});
+                0x74: FpBasic::fsrc1({{Frd_udw = Frs1_udw;}});
+                0x75: FpBasic::fsrc1s({{Frds_uw = Frs1s_uw;}});
                 0x76: FailUnimpl::fornot2();
                 0x77: FailUnimpl::fornot2s();
-                0x78: FpBasic::fsrc2({{Frd.udw = Frs2.udw;}});
-                0x79: FpBasic::fsrc2s({{Frds.uw = Frs2s.uw;}});
+                0x78: FpBasic::fsrc2({{Frd_udw = Frs2_udw;}});
+                0x79: FpBasic::fsrc2s({{Frds_uw = Frs2s_uw;}});
                 0x7A: FailUnimpl::fornot1();
                 0x7B: FailUnimpl::fornot1s();
                 0x7C: FailUnimpl::for();
                 0x7D: FailUnimpl::fors();
-                0x7E: FpBasic::fone({{Frd.udw = std::numeric_limits<uint64_t>::max();}});
-                0x7F: FpBasic::fones({{Frds.uw = std::numeric_limits<uint32_t>::max();}});
+                0x7E: FpBasic::fone({{Frd_udw = std::numeric_limits<uint64_t>::max();}});
+                0x7F: FpBasic::fones({{Frds_uw = std::numeric_limits<uint32_t>::max();}});
                 0x80: Trap::shutdown({{fault = new IllegalInstruction;}});
                 0x81: FailUnimpl::siam();
             }
@@ -1099,18 +1099,18 @@ decode OP default Unknown::unknown()
     }
     0x3: decode OP3 {
         format Load {
-            0x00: lduw({{Rd = Mem.uw;}});
-            0x01: ldub({{Rd = Mem.ub;}});
-            0x02: lduh({{Rd = Mem.uhw;}});
+            0x00: lduw({{Rd = Mem_uw;}});
+            0x01: ldub({{Rd = Mem_ub;}});
+            0x02: lduh({{Rd = Mem_uhw;}});
             0x03: ldtw({{
-                        RdLow = (Mem.tuw).a;
-                        RdHigh = (Mem.tuw).b;
+                        RdLow = (Mem_tuw).a;
+                        RdHigh = (Mem_tuw).b;
             }});
         }
         format Store {
-            0x04: stw({{Mem.uw = Rd.sw;}});
-            0x05: stb({{Mem.ub = Rd.sb;}});
-            0x06: sth({{Mem.uhw = Rd.shw;}});
+            0x04: stw({{Mem_uw = Rd_sw;}});
+            0x05: stb({{Mem_ub = Rd_sb;}});
+            0x06: sth({{Mem_uhw = Rd_shw;}});
             0x07: sttw({{
                       // This temporary needs to be here so that the parser
                       // will correctly identify this instruction as a store.
@@ -1119,96 +1119,96 @@ decode OP default Unknown::unknown()
                       Twin32_t temp;
                       temp.a = RdLow<31:0>;
                       temp.b = RdHigh<31:0>;
-                      Mem.tuw = temp;
+                      Mem_tuw = temp;
                   }});
         }
         format Load {
-            0x08: ldsw({{Rd = Mem.sw;}});
-            0x09: ldsb({{Rd = Mem.sb;}});
-            0x0A: ldsh({{Rd = Mem.shw;}});
-            0x0B: ldx({{Rd = Mem.sdw;}});
+            0x08: ldsw({{Rd = Mem_sw;}});
+            0x09: ldsb({{Rd = Mem_sb;}});
+            0x0A: ldsh({{Rd = Mem_shw;}});
+            0x0B: ldx({{Rd = Mem_sdw;}});
         }
-        0x0D: Swap::ldstub({{Mem.ub = 0xFF;}},
+        0x0D: Swap::ldstub({{Mem_ub = 0xFF;}},
                            {{
                                uint8_t tmp = mem_data;
-                               Rd.ub = tmp;
+                               Rd_ub = tmp;
                            }}, MEM_SWAP);
-        0x0E: Store::stx({{Mem.udw = Rd}});
-        0x0F: Swap::swap({{Mem.uw = Rd.uw}},
+        0x0E: Store::stx({{Mem_udw = Rd}});
+        0x0F: Swap::swap({{Mem_uw = Rd_uw}},
                          {{
                                uint32_t tmp = mem_data;
-                               Rd.uw = tmp;
+                               Rd_uw = tmp;
                          }}, MEM_SWAP);
         format LoadAlt {
-            0x10: lduwa({{Rd = Mem.uw;}});
-            0x11: lduba({{Rd = Mem.ub;}});
-            0x12: lduha({{Rd = Mem.uhw;}});
+            0x10: lduwa({{Rd = Mem_uw;}});
+            0x11: lduba({{Rd = Mem_ub;}});
+            0x12: lduha({{Rd = Mem_uhw;}});
             0x13: decode EXT_ASI {
                 // ASI_LDTD_AIUP
                 0x22: TwinLoad::ldtx_aiup(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTD_AIUS
                 0x23: TwinLoad::ldtx_aius(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_QUAD_LDD
                 0x24: TwinLoad::ldtx_quad_ldd(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_REAL
                 0x26: TwinLoad::ldtx_real(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_N
                 0x27: TwinLoad::ldtx_n(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_AIUP_L
                 0x2A: TwinLoad::ldtx_aiup_l(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_AIUS_L
                 0x2B: TwinLoad::ldtx_aius_l(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_L
                 0x2C: TwinLoad::ldtx_l(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_REAL_L
                 0x2E: TwinLoad::ldtx_real_l(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_N_L
                 0x2F: TwinLoad::ldtx_n_l(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_P
                 0xE2: TwinLoad::ldtx_p(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_S
                 0xE3: TwinLoad::ldtx_s(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_PL
                 0xEA: TwinLoad::ldtx_pl(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 // ASI_LDTX_SL
                 0xEB: TwinLoad::ldtx_sl(
-                    {{RdLow.udw = (Mem.tudw).a;
-                      RdHigh.udw = (Mem.tudw).b;}});
+                    {{RdLow_udw = (Mem_tudw).a;
+                      RdHigh_udw = (Mem_tudw).b;}});
                 default: ldtwa({{
-                        RdLow = (Mem.tuw).a;
-                        RdHigh = (Mem.tuw).b;}});
+                        RdLow = (Mem_tuw).a;
+                        RdHigh = (Mem_tuw).b;}});
             }
         }
         format StoreAlt {
-            0x14: stwa({{Mem.uw = Rd;}});
-            0x15: stba({{Mem.ub = Rd;}});
-            0x16: stha({{Mem.uhw = Rd;}});
+            0x14: stwa({{Mem_uw = Rd;}});
+            0x15: stba({{Mem_ub = Rd;}});
+            0x16: stha({{Mem_uhw = Rd;}});
             0x17: sttwa({{
                       // This temporary needs to be here so that the parser
                       // will correctly identify this instruction as a store.
@@ -1217,58 +1217,58 @@ decode OP default Unknown::unknown()
                       Twin32_t temp;
                       temp.a = RdLow<31:0>;
                       temp.b = RdHigh<31:0>;
-                      Mem.tuw = temp;
+                      Mem_tuw = temp;
                   }});
         }
         format LoadAlt {
-            0x18: ldswa({{Rd = Mem.sw;}});
-            0x19: ldsba({{Rd = Mem.sb;}});
-            0x1A: ldsha({{Rd = Mem.shw;}});
-            0x1B: ldxa({{Rd = Mem.sdw;}});
+            0x18: ldswa({{Rd = Mem_sw;}});
+            0x19: ldsba({{Rd = Mem_sb;}});
+            0x1A: ldsha({{Rd = Mem_shw;}});
+            0x1B: ldxa({{Rd = Mem_sdw;}});
         }
-        0x1D: SwapAlt::ldstuba({{Mem.ub = 0xFF;}},
+        0x1D: SwapAlt::ldstuba({{Mem_ub = 0xFF;}},
                            {{
                                uint8_t tmp = mem_data;
-                               Rd.ub = tmp;
+                               Rd_ub = tmp;
                            }}, MEM_SWAP);
-        0x1E: StoreAlt::stxa({{Mem.udw = Rd}});
-        0x1F: SwapAlt::swapa({{Mem.uw = Rd.uw}},
+        0x1E: StoreAlt::stxa({{Mem_udw = Rd}});
+        0x1F: SwapAlt::swapa({{Mem_uw = Rd_uw}},
                          {{
                                uint32_t tmp = mem_data;
-                               Rd.uw = tmp;
+                               Rd_uw = tmp;
                          }}, MEM_SWAP);
 
         format Trap {
-            0x20: Load::ldf({{Frds.uw = Mem.uw;}});
+            0x20: Load::ldf({{Frds_uw = Mem_uw;}});
             0x21: decode RD {
                 0x0: Load::ldfsr({{fault = checkFpEnableFault(xc);
                                      if (fault)
                                          return fault;
-                                   Fsr = Mem.uw | Fsr<63:32>;}});
+                                   Fsr = Mem_uw | Fsr<63:32>;}});
                 0x1: Load::ldxfsr({{fault = checkFpEnableFault(xc);
                                      if (fault)
                                          return fault;
-                                    Fsr = Mem.udw;}});
+                                    Fsr = Mem_udw;}});
                 default: FailUnimpl::ldfsrOther();
             }
             0x22: ldqf({{fault = new FpDisabled;}});
-            0x23: Load::lddf({{Frd.udw = Mem.udw;}});
-            0x24: Store::stf({{Mem.uw = Frds.uw;}});
+            0x23: Load::lddf({{Frd_udw = Mem_udw;}});
+            0x24: Store::stf({{Mem_uw = Frds_uw;}});
             0x25: decode RD {
                 0x0: StoreFsr::stfsr({{fault = checkFpEnableFault(xc);
                                        if (fault)
                                            return fault;
-                                       Mem.uw = Fsr<31:0>;}});
+                                       Mem_uw = Fsr<31:0>;}});
                 0x1: StoreFsr::stxfsr({{fault = checkFpEnableFault(xc);
                                         if (fault)
                                             return fault;
-                                        Mem.udw = Fsr;}});
+                                        Mem_udw = Fsr;}});
                 default: FailUnimpl::stfsrOther();
             }
             0x26: stqf({{fault = new FpDisabled;}});
-            0x27: Store::stdf({{Mem.udw = Frd.udw;}});
+            0x27: Store::stdf({{Mem_udw = Frd_udw;}});
             0x2D: Nop::prefetch({{ }});
-            0x30: LoadAlt::ldfa({{Frds.uw = Mem.uw;}});
+            0x30: LoadAlt::ldfa({{Frds_uw = Mem_uw;}});
             0x32: ldqfa({{fault = new FpDisabled;}});
             format LoadAlt {
                 0x33: decode EXT_ASI {
@@ -1320,7 +1320,7 @@ decode OP default Unknown::unknown()
                         // ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::ldblockf_aiusl();
                         // ASI_BLOCK_PRIMARY
-                        0xF0: ldblockf_p({{Frd_N.udw = Mem.udw;}});
+                        0xF0: ldblockf_p({{Frd_N_udw = Mem_udw;}});
                         // ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::ldblockf_s();
                         // ASI_BLOCK_PRIMARY_LITTLE
@@ -1351,7 +1351,7 @@ decode OP default Unknown::unknown()
                         {{fault = new DataAccessException;}});
                 }
             }
-            0x34: Store::stfa({{Mem.uw = Frds.uw;}});
+            0x34: Store::stfa({{Mem_uw = Frds_uw;}});
             0x36: stqfa({{fault = new FpDisabled;}});
             format StoreAlt {
                 0x37: decode EXT_ASI {
@@ -1403,7 +1403,7 @@ decode OP default Unknown::unknown()
                         // ASI_BLOCK_AS_IF_USER_SECONDARY_LITTLE
                         0x1F: FailUnimpl::stblockf_aiusl();
                         // ASI_BLOCK_PRIMARY
-                        0xF0: stblockf_p({{Mem.udw = Frd_N.udw;}});
+                        0xF0: stblockf_p({{Mem_udw = Frd_N_udw;}});
                         // ASI_BLOCK_SECONDARY
                         0xF1: FailUnimpl::stblockf_s();
                         // ASI_BLOCK_PRIMARY_LITTLE
@@ -1435,16 +1435,16 @@ decode OP default Unknown::unknown()
                 }
             }
             0x3C: CasAlt::casa({{
-                               mem_data = htog(Rs2.uw);
-                               Mem.uw = Rd.uw;}},
+                               mem_data = htog(Rs2_uw);
+                               Mem_uw = Rd_uw;}},
                          {{
                                uint32_t tmp = mem_data;
-                               Rd.uw = tmp;
+                               Rd_uw = tmp;
                          }}, MEM_SWAP_COND);
             0x3D: Nop::prefetcha({{ }});
             0x3E: CasAlt::casxa({{mem_data = gtoh(Rs2);
-                                Mem.udw = Rd.udw; }},
-                         {{ Rd.udw = mem_data; }}, MEM_SWAP_COND);
+                                Mem_udw = Rd_udw; }},
+                         {{ Rd_udw = mem_data; }}, MEM_SWAP_COND);
         }
     }
 }

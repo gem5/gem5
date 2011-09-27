@@ -172,7 +172,7 @@ let {{
                                       ArmISA::TLB::MustBeOne;
             EA = Op1 + Op2 * 2
             '''
-            accCode = 'NPC = PC + 2 * (Mem.uh);\n'
+            accCode = 'NPC = PC + 2 * (Mem_uh);\n'
             mnem = "tbh"
         else:
             eaCode = '''
@@ -181,7 +181,7 @@ let {{
                                       ArmISA::TLB::MustBeOne;
             EA = Op1 + Op2
             '''
-            accCode = 'NPC = PC + 2 * (Mem.ub)'
+            accCode = 'NPC = PC + 2 * (Mem_ub)'
             mnem = "tbb"
         iop = InstObjParams(mnem, mnem.capitalize(), "BranchRegReg",
                             {'ea_code': eaCode,

@@ -181,9 +181,9 @@ let {{
         for opName in ("Frd", "Frs1", "Frs2", "Frd_N"):
             next_pos = 0
             operandsREString = (r'''
-            (?<![\w\.])             # neg. lookbehind assertion: prevent partial matches
-            ((%s)(?:\.(\w+))?)   # match: operand with optional '.' then suffix
-            (?![\w\.])             # neg. lookahead assertion: prevent partial matches
+            (?<!\w)             # neg. lookbehind assertion: prevent partial matches
+            ((%s)(?:_([^\W_]+))?)   # match: operand with optional '.' then suffix
+            (?!\w)             # neg. lookahead assertion: prevent partial matches
             ''' % opName)
             operandsRE = re.compile(operandsREString, re.MULTILINE|re.VERBOSE)
             is_src = False
@@ -229,7 +229,7 @@ let {{
 
 let {{
     def splitOutImm(code):
-        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)(?P<typeQual>\.\w+)?')
+        matcher = re.compile(r'Rs(?P<rNum>\d)_or_imm(?P<iNum>\d+)(?P<typeQual>_[^\W_]+)?')
         rOrImmMatch = matcher.search(code)
         if (rOrImmMatch == None):
             return (False, code, '', '', '')

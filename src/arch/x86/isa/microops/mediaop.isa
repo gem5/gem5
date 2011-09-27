@@ -126,7 +126,7 @@ let {{
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
-            matcher = re.compile("(?<!\\w)(?P<prefix>s?)op2(?P<typeQual>\\.\\w+)?")
+            matcher = re.compile(r"(?<!\w)(?P<prefix>s?)op2(?P<typeQual>_[^\W_]+)?")
             match = matcher.search(code)
             if match:
                 typeQual = ""
@@ -182,7 +182,7 @@ let {{
 
                 # If op2 is used anywhere, make register and immediate versions
                 # of this code.
-                matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
+                matcher = re.compile(r"op2(?P<typeQual>_[^\W_]+)?")
                 if matcher.search(code):
                     microopClasses[name + 'i'] = cls
             return cls
@@ -242,7 +242,7 @@ let {{
                 offset -= items;
             if (offset >= 0 && offset < items) {
                 uint64_t fpSrcReg1 =
-                    bits(FpSrcReg1.uqw,
+                    bits(FpSrcReg1_uqw,
                             (offset + 1) * srcSize * 8 - 1,
                             (offset + 0) * srcSize * 8);
                 DestReg = merge(0, fpSrcReg1, destSize);
@@ -263,12 +263,12 @@ let {{
                 offset -= items;
             if (offset >= 0 && offset < items) {
                 uint64_t srcReg1 = pick(SrcReg1, 0, srcSize);
-                FpDestReg.uqw =
-                    insertBits(FpDestReg.uqw,
+                FpDestReg_uqw =
+                    insertBits(FpDestReg_uqw,
                             (offset + 1) * destSize * 8 - 1,
                             (offset + 0) * destSize * 8, srcReg1);
             } else {
-                FpDestReg.uqw = FpDestReg.uqw;
+                FpDestReg_uqw = FpDestReg_uqw;
             }
         '''
 
@@ -283,7 +283,7 @@ let {{
             int offset = (ext & 0x1) ? items : 0;
             for (int i = 0; i < items; i++) {
                 uint64_t picked =
-                    bits(FpSrcReg1.uqw, (i + 1) * 8 * srcSize - 1);
+                    bits(FpSrcReg1_uqw, (i + 1) * 8 * srcSize - 1);
                 result = insertBits(result, i + offset, i + offset, picked);
             }
             DestReg = DestReg | result;
@@ -295,16 +295,16 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                if (bits(FpSrcReg2.uqw, hiIndex))
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                if (bits(FpSrcReg2_uqw, hiIndex))
                     result = insertBits(result, hiIndex, loIndex, arg1Bits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class shuffle(MediaOp):
@@ -331,11 +331,11 @@ let {{
                 uint8_t lsel = sel & mask(optionBits);
                 if (lsel * size >= sizeof(FloatRegBits)) {
                     lsel -= options / 2;
-                    resBits = bits(FpSrcReg2.uqw,
+                    resBits = bits(FpSrcReg2_uqw,
                             (lsel + 1) * sizeBits - 1,
                             (lsel + 0) * sizeBits);
                 }  else {
-                    resBits = bits(FpSrcReg1.uqw,
+                    resBits = bits(FpSrcReg1_uqw,
                             (lsel + 1) * sizeBits - 1,
                             (lsel + 0) * sizeBits);
                 }
@@ -346,7 +346,7 @@ let {{
                 int loIndex = (i + 0) * sizeBits;
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Unpack(MediaOp):
@@ -358,21 +358,21 @@ let {{
             uint64_t result = 0;
             for (int i = 0; i < items; i++) {
                 uint64_t pickedLow =
-                    bits(FpSrcReg1.uqw, (i + offset + 1) * 8 * size - 1,
+                    bits(FpSrcReg1_uqw, (i + offset + 1) * 8 * size - 1,
                                         (i + offset) * 8 * size);
                 result = insertBits(result,
                                     (2 * i + 1) * 8 * size - 1,
                                     (2 * i + 0) * 8 * size,
                                     pickedLow);
                 uint64_t pickedHigh =
-                    bits(FpSrcReg2.uqw, (i + offset + 1) * 8 * size - 1,
+                    bits(FpSrcReg2_uqw, (i + offset + 1) * 8 * size - 1,
                                         (i + offset) * 8 * size);
                 result = insertBits(result,
                                     (2 * i + 2) * 8 * size - 1,
                                     (2 * i + 1) * 8 * size,
                                     pickedHigh);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Pack(MediaOp):
@@ -385,7 +385,7 @@ let {{
             int i;
             for (i = 0; i < items / 2; i++) {
                 uint64_t picked =
-                    bits(FpSrcReg1.uqw, (i + 1) * srcBits - 1,
+                    bits(FpSrcReg1_uqw, (i + 1) * srcBits - 1,
                                         (i + 0) * srcBits);
                 unsigned signBit = bits(picked, srcBits - 1);
                 uint64_t overflow = bits(picked, srcBits - 1, destBits - 1);
@@ -413,7 +413,7 @@ let {{
             }
             for (;i < items; i++) {
                 uint64_t picked =
-                    bits(FpSrcReg2.uqw, (i - items + 1) * srcBits - 1,
+                    bits(FpSrcReg2_uqw, (i - items + 1) * srcBits - 1,
                                         (i - items + 0) * srcBits);
                 unsigned signBit = bits(picked, srcBits - 1);
                 uint64_t overflow = bits(picked, srcBits - 1, destBits - 1);
@@ -439,35 +439,35 @@ let {{
                                     (i + 0) * destBits,
                                     picked);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mxor(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mxor, self).__init__(dest, src1, src2, 1)
         code = '''
-            FpDestReg.uqw = FpSrcReg1.uqw ^ FpSrcReg2.uqw;
+            FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;
         '''
 
     class Mor(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mor, self).__init__(dest, src1, src2, 1)
         code = '''
-            FpDestReg.uqw = FpSrcReg1.uqw | FpSrcReg2.uqw;
+            FpDestReg_uqw = FpSrcReg1_uqw | FpSrcReg2_uqw;
         '''
 
     class Mand(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mand, self).__init__(dest, src1, src2, 1)
         code = '''
-            FpDestReg.uqw = FpSrcReg1.uqw & FpSrcReg2.uqw;
+            FpDestReg_uqw = FpSrcReg1_uqw & FpSrcReg2_uqw;
         '''
 
     class Mandn(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mandn, self).__init__(dest, src1, src2, 1)
         code = '''
-            FpDestReg.uqw = ~FpSrcReg1.uqw & FpSrcReg2.uqw;
+            FpDestReg_uqw = ~FpSrcReg1_uqw & FpSrcReg2_uqw;
         '''
 
     class Mminf(MediaOp):
@@ -488,14 +488,14 @@ let {{
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 double arg1, arg2;
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
 
                 if (size == 4) {
                     floatInt fi;
@@ -517,7 +517,7 @@ let {{
                     result = insertBits(result, hiIndex, loIndex, arg2Bits);
                 }
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mmaxf(MediaOp):
@@ -538,14 +538,14 @@ let {{
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 double arg1, arg2;
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
 
                 if (size == 4) {
                     floatInt fi;
@@ -567,7 +567,7 @@ let {{
                     result = insertBits(result, hiIndex, loIndex, arg2Bits);
                 }
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mmini(MediaOp):
@@ -577,15 +577,15 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 int64_t arg1 = arg1Bits |
                     (0 - (arg1Bits & (ULL(1) << (sizeBits - 1))));
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 int64_t arg2 = arg2Bits |
                     (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t resBits;
@@ -605,7 +605,7 @@ let {{
                 }
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mmaxi(MediaOp):
@@ -615,15 +615,15 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 int64_t arg1 = arg1Bits |
                     (0 - (arg1Bits & (ULL(1) << (sizeBits - 1))));
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 int64_t arg2 = arg2Bits |
                     (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t resBits;
@@ -643,7 +643,7 @@ let {{
                 }
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Msqrt(MediaOp):
@@ -668,12 +668,12 @@ let {{
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t argBits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t argBits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
 
                 if (size == 4) {
                     floatInt fi;
@@ -688,7 +688,7 @@ let {{
                 }
                 result = insertBits(result, hiIndex, loIndex, argBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Maddf(MediaOp):
@@ -709,13 +709,13 @@ let {{
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits;
 
                 if (size == 4) {
@@ -734,7 +734,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Msubf(MediaOp):
@@ -755,13 +755,13 @@ let {{
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits;
 
                 if (size == 4) {
@@ -780,7 +780,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mmulf(MediaOp):
@@ -801,13 +801,13 @@ let {{
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits;
 
                 if (size == 4) {
@@ -826,7 +826,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mdivf(MediaOp):
@@ -847,13 +847,13 @@ let {{
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits;
 
                 if (size == 4) {
@@ -872,7 +872,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Maddi(MediaOp):
@@ -881,13 +881,13 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits = arg1Bits + arg2Bits;
                 
                 if (ext & 0x2) {
@@ -909,7 +909,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Msubi(MediaOp):
@@ -918,13 +918,13 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits = arg1Bits - arg2Bits;
                 
                 if (ext & 0x2) {
@@ -950,7 +950,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mmuli(MediaOp):
@@ -960,7 +960,7 @@ let {{
             assert(destBits <= 64);
             assert(destSize >= srcSize);
             int items = numItems(destSize);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int offset = 0;
@@ -972,8 +972,8 @@ let {{
                 }
                 int srcHiIndex = (i + 1) * srcBits - 1 + offset;
                 int srcLoIndex = (i + 0) * srcBits + offset;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, srcHiIndex, srcLoIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, srcHiIndex, srcLoIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, srcHiIndex, srcLoIndex);
                 uint64_t resBits;
 
                 if (signedOp()) {
@@ -996,7 +996,7 @@ let {{
                 int destLoIndex = (i + 0) * destBits;
                 result = insertBits(result, destHiIndex, destLoIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mavg(MediaOp):
@@ -1005,18 +1005,18 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 uint64_t resBits = (arg1Bits + arg2Bits + 1) / 2;
                 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Msad(MediaOp):
@@ -1028,14 +1028,14 @@ let {{
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * srcBits - 1;
                 int loIndex = (i + 0) * srcBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 int64_t resBits = arg1Bits - arg2Bits;
                 if (resBits < 0)
                     resBits = -resBits;
                 sum += resBits;
             }
-            FpDestReg.uqw = sum & mask(destSize * 8);
+            FpDestReg_uqw = sum & mask(destSize * 8);
         '''
 
     class Msrl(MediaOp):
@@ -1045,13 +1045,13 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t shiftAmt = op2.uqw;
-            uint64_t result = FpDestReg.uqw;
+            uint64_t shiftAmt = op2_uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 uint64_t resBits;
                 if (shiftAmt >= sizeBits) {
                     resBits = 0;
@@ -1062,7 +1062,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Msra(MediaOp):
@@ -1072,13 +1072,13 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t shiftAmt = op2.uqw;
-            uint64_t result = FpDestReg.uqw;
+            uint64_t shiftAmt = op2_uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 uint64_t resBits;
                 if (shiftAmt >= sizeBits) {
                     if (bits(arg1Bits, sizeBits - 1))
@@ -1093,7 +1093,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Msll(MediaOp):
@@ -1103,13 +1103,13 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t shiftAmt = op2.uqw;
-            uint64_t result = FpDestReg.uqw;
+            uint64_t shiftAmt = op2_uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 uint64_t resBits;
                 if (shiftAmt >= sizeBits) {
                     resBits = 0;
@@ -1119,7 +1119,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Cvtf2i(MediaOp):
@@ -1157,12 +1157,12 @@ let {{
             } else {
                 items = numItems(destSize);
             }
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int srcHiIndex = srcStart + (i + 1) * srcSizeBits - 1;
                 int srcLoIndex = srcStart + (i + 0) * srcSizeBits;
-                uint64_t argBits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
+                uint64_t argBits = bits(FpSrcReg1_uqw, srcHiIndex, srcLoIndex);
                 double arg;
 
                 if (srcSize == 4) {
@@ -1191,7 +1191,7 @@ let {{
                 int destLoIndex = destStart + (i + 0) * destSizeBits;
                 result = insertBits(result, destHiIndex, destLoIndex, argBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Cvti2f(MediaOp):
@@ -1229,12 +1229,12 @@ let {{
             } else {
                 items = numItems(destSize);
             }
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int srcHiIndex = srcStart + (i + 1) * srcSizeBits - 1;
                 int srcLoIndex = srcStart + (i + 0) * srcSizeBits;
-                uint64_t argBits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
+                uint64_t argBits = bits(FpSrcReg1_uqw, srcHiIndex, srcLoIndex);
 
                 int64_t sArg = argBits |
                     (0 - (argBits & (ULL(1) << (srcSizeBits - 1))));
@@ -1253,7 +1253,7 @@ let {{
                 int destLoIndex = destStart + (i + 0) * destSizeBits;
                 result = insertBits(result, destHiIndex, destLoIndex, argBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Cvtf2f(MediaOp):
@@ -1291,12 +1291,12 @@ let {{
             } else {
                 items = numItems(destSize);
             }
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int srcHiIndex = srcStart + (i + 1) * srcSizeBits - 1;
                 int srcLoIndex = srcStart + (i + 0) * srcSizeBits;
-                uint64_t argBits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
+                uint64_t argBits = bits(FpSrcReg1_uqw, srcHiIndex, srcLoIndex);
                 double arg;
 
                 if (srcSize == 4) {
@@ -1321,7 +1321,7 @@ let {{
                 int destLoIndex = destStart + (i + 0) * destSizeBits;
                 result = insertBits(result, destHiIndex, destLoIndex, argBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mcmpi2r(MediaOp):
@@ -1341,15 +1341,15 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
                 int64_t arg1 = arg1Bits |
                     (0 - (arg1Bits & (ULL(1) << (sizeBits - 1))));
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 int64_t arg2 = arg2Bits |
                     (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
 
@@ -1360,7 +1360,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mcmpf2r(MediaOp):
@@ -1380,13 +1380,13 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             int items = numItems(size);
-            uint64_t result = FpDestReg.uqw;
+            uint64_t result = FpDestReg_uqw;
 
             for (int i = 0; i < items; i++) {
                 int hiIndex = (i + 1) * sizeBits - 1;
                 int loIndex = (i + 0) * sizeBits;
-                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
-                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t arg1Bits = bits(FpSrcReg1_uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2_uqw, hiIndex, loIndex);
                 double arg1, arg2;
 
                 if (size == 4) {
@@ -1442,7 +1442,7 @@ let {{
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
             }
-            FpDestReg.uqw = result;
+            FpDestReg_uqw = result;
         '''
 
     class Mcmpf2rf(MediaOp):
@@ -1468,8 +1468,8 @@ let {{
             int sizeBits = size * 8;
 
             double arg1, arg2;
-            uint64_t arg1Bits = bits(FpSrcReg1.uqw, sizeBits - 1, 0);
-            uint64_t arg2Bits = bits(FpSrcReg2.uqw, sizeBits - 1, 0);
+            uint64_t arg1Bits = bits(FpSrcReg1_uqw, sizeBits - 1, 0);
+            uint64_t arg2Bits = bits(FpSrcReg2_uqw, sizeBits - 1, 0);
             if (size == 4) {
                 floatInt fi;
                 fi.i = arg1Bits;

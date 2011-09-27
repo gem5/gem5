@@ -244,7 +244,7 @@ let {{
 
             # If op2 is used anywhere, make register and immediate versions
             # of this code.
-            matcher = re.compile("(?<!\\w)(?P<prefix>s?)op2(?P<typeQual>\\.\\w+)?")
+            matcher = re.compile(r"(?<!\w)(?P<prefix>s?)op2(?P<typeQual>_[^\W_]+)?")
             match = matcher.search(allCode + allBigCode)
             if match:
                 typeQual = ""
@@ -364,7 +364,7 @@ let {{
 
                 # If op2 is used anywhere, make register and immediate versions
                 # of this code.
-                matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
+                matcher = re.compile(r"op2(?P<typeQual>_[^\W_]+)?")
                 if matcher.search(allCode):
                     microopClasses[name + 'i'] = cls
             return cls

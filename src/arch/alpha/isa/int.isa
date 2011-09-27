@@ -110,7 +110,7 @@ def format IntegerOperate(code, *opt_flags) {{
         # generate immediate version by substituting 'imm'
         # note that imm takes no extenstion, so we extend
         # the regexp to replace any extension as well
-        imm_code = re.sub(r'Rb_or_imm(\.\w+)?', 'imm', orig_code)
+        imm_code = re.sub(r'Rb_or_imm(_\w+)?', 'imm', orig_code)
 
     # generate declaration for register version
     iop = InstObjParams(name, Name, 'AlphaStaticInst', code, opt_flags)

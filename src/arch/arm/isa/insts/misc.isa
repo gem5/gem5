@@ -287,7 +287,7 @@ let {{
 
     sxtbIop = InstObjParams("sxtb", "Sxtb", "RegImmRegOp",
                             { "code":
-                              "Dest = sext<8>((uint8_t)(Op1.ud >> imm));",
+                              "Dest = sext<8>((uint8_t)(Op1_ud >> imm));",
                               "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(sxtbIop)
     decoder_output += RegImmRegOpConstructor.subst(sxtbIop)
@@ -296,7 +296,7 @@ let {{
     sxtabIop = InstObjParams("sxtab", "Sxtab", "RegRegRegImmOp",
                              { "code":
                                '''
-                                   Dest = sext<8>((uint8_t)(Op2.ud >> imm)) +
+                                   Dest = sext<8>((uint8_t)(Op2_ud >> imm)) +
                                           Op1;
                                ''',
                                "predicate_test": predicateTest }, [])
@@ -359,7 +359,7 @@ let {{
     exec_output += PredOpExecute.subst(sxtahIop)
 
     uxtbIop = InstObjParams("uxtb", "Uxtb", "RegImmRegOp",
-                            { "code": "Dest = (uint8_t)(Op1.ud >> imm);",
+                            { "code": "Dest = (uint8_t)(Op1_ud >> imm);",
                               "predicate_test": predicateTest }, [])
     header_output += RegImmRegOpDeclare.subst(uxtbIop)
     decoder_output += RegImmRegOpConstructor.subst(uxtbIop)
@@ -367,7 +367,7 @@ let {{
 
     uxtabIop = InstObjParams("uxtab", "Uxtab", "RegRegRegImmOp",
                              { "code":
-                               "Dest = (uint8_t)(Op2.ud >> imm) + Op1;",
+                               "Dest = (uint8_t)(Op2_ud >> imm) + Op1;",
                                "predicate_test": predicateTest }, [])
     header_output += RegRegRegImmOpDeclare.subst(uxtabIop)
     decoder_output += RegRegRegImmOpConstructor.subst(uxtabIop)

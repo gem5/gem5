@@ -217,20 +217,20 @@ def format FloatCompareOp(cond_code, *flags) {{
     import sys
 
     code = 'bool cond;\n'
-    if '.sf' in cond_code or 'SinglePrecision' in flags:
+    if '_sf' in cond_code or 'SinglePrecision' in flags:
         if 'QnanException' in flags:
-            code += 'if (isQnan(&Fs.sf, 32) || isQnan(&Ft.sf, 32)) {\n'
+            code += 'if (isQnan(&Fs_sf, 32) || isQnan(&Ft_sf, 32)) {\n'
             code += '\tFCSR = genInvalidVector(FCSR);\n'
             code += '\treturn NoFault;'
             code += '}\n else '
-        code += 'if (isNan(&Fs.sf, 32) || isNan(&Ft.sf, 32)) {\n'
-    elif '.df' in cond_code or 'DoublePrecision' in flags:
+        code += 'if (isNan(&Fs_sf, 32) || isNan(&Ft_sf, 32)) {\n'
+    elif '_df' in cond_code or 'DoublePrecision' in flags:
         if 'QnanException' in flags:
-            code += 'if (isQnan(&Fs.df, 64) || isQnan(&Ft.df, 64)) {\n'
+            code += 'if (isQnan(&Fs_df, 64) || isQnan(&Ft_df, 64)) {\n'
             code += '\tFCSR = genInvalidVector(FCSR);\n'
             code += '\treturn NoFault;'
             code += '}\n else '
-        code += 'if (isNan(&Fs.df, 64) || isNan(&Ft.df, 64)) {\n'
+        code += 'if (isNan(&Fs_df, 64) || isNan(&Ft_df, 64)) {\n'
     else:
        sys.exit('Decoder Failed: Can\'t Determine Operand Type\n')
 
@@ -257,16 +257,16 @@ def format FloatConvertOp(code, *flags) {{
 
     #Determine Source Type
     convert = 'fpConvert('
-    if '.sf' in code:
+    if '_sf' in code:
         code = 'float ' + code + '\n'
         convert += 'SINGLE_TO_'
-    elif '.df' in code:
+    elif '_df' in code:
         code = 'double ' + code + '\n'
         convert += 'DOUBLE_TO_'
-    elif '.uw' in code:
+    elif '_uw' in code:
         code = 'uint32_t ' + code + '\n'
         convert += 'WORD_TO_'
-    elif '.ud' in code:
+    elif '_ud' in code:
         code = 'uint64_t ' + code + '\n'
         convert += 'LONG_TO_'
     else:
@@ -274,13 +274,13 @@ def format FloatConvertOp(code, *flags) {{
 
     #Determine Destination Type
     if 'ToSingle' in flags:
-        code += 'Fd.uw = ' + convert + 'SINGLE, '
+        code += 'Fd_uw = ' + convert + 'SINGLE, '
     elif 'ToDouble' in flags:
-        code += 'Fd.ud = ' + convert + 'DOUBLE, '
+        code += 'Fd_ud = ' + convert + 'DOUBLE, '
     elif 'ToWord' in flags:
-        code += 'Fd.uw = ' + convert + 'WORD, '
+        code += 'Fd_uw = ' + convert + 'WORD, '
     elif 'ToLong' in flags:
-        code += 'Fd.ud = ' + convert + 'LONG, '
+        code += 'Fd_ud = ' + convert + 'LONG, '
     else:
         sys.exit("Error Determining Destination Type for Conversion")
 
@@ -328,17 +328,17 @@ def format FloatPSCompareOp(cond_code1, cond_code2, *flags) {{
     code += 'code_block1 = code_block2 = true;\n'
 
     if 'QnanException' in flags:
-        code += 'if (isQnan(&Fs1.sf, 32) || isQnan(&Ft1.sf, 32)) {\n'
+        code += 'if (isQnan(&Fs1_sf, 32) || isQnan(&Ft1_sf, 32)) {\n'
         code += '\tFCSR = genInvalidVector(FCSR);\n'
         code += 'code_block1 = false;'
         code += '}\n'
-        code += 'if (isQnan(&Fs2.sf, 32) || isQnan(&Ft2.sf, 32)) {\n'
+        code += 'if (isQnan(&Fs2_sf, 32) || isQnan(&Ft2_sf, 32)) {\n'
         code += '\tFCSR = genInvalidVector(FCSR);\n'
         code += 'code_block2 = false;'
         code += '}\n'
 
     code += 'if (code_block1) {'
-    code += '\tif (isNan(&Fs1.sf, 32) || isNan(&Ft1.sf, 32)) {\n'
+    code += '\tif (isNan(&Fs1_sf, 32) || isNan(&Ft1_sf, 32)) {\n'
     if 'UnorderedTrue' in flags:
        code += 'cond1 = 1;\n'
     elif 'UnorderedFalse' in flags:
@@ -350,7 +350,7 @@ def format FloatPSCompareOp(cond_code1, cond_code2, *flags) {{
     code += 'FCSR = genCCVector(FCSR, CC, cond1);}\n}\n'
 
     code += 'if (code_block2) {'
-    code += '\tif (isNan(&Fs2.sf, 32) || isNan(&Ft2.sf, 32)) {\n'
+    code += '\tif (isNan(&Fs2_sf, 32) || isNan(&Ft2_sf, 32)) {\n'
     if 'UnorderedTrue' in flags:
        code += 'cond2 = 1;\n'
     elif 'UnorderedFalse' in flags:

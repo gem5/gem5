@@ -135,29 +135,29 @@ let {{
     buildMult3Inst    ("mul", "Reg0 = resTemp = Reg1 * Reg2;")
     buildMult4InstCc  ("smlabb", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 15, 0)) *
-                                        sext<16>(bits(Reg2.sw, 15, 0)) +
-                                        Reg3.sw;
+                                        sext<16>(bits(Reg2_sw, 15, 0)) +
+                                        Reg3_sw;
                                  resTemp = bits(resTemp, 32) !=
                                            bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlabt", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 15, 0)) *
-                                        sext<16>(bits(Reg2.sw, 31, 16)) +
-                                        Reg3.sw;
+                                        sext<16>(bits(Reg2_sw, 31, 16)) +
+                                        Reg3_sw;
                                  resTemp = bits(resTemp, 32) !=
                                            bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlatb", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 31, 16)) *
-                                        sext<16>(bits(Reg2.sw, 15, 0)) +
-                                        Reg3.sw;
+                                        sext<16>(bits(Reg2_sw, 15, 0)) +
+                                        Reg3_sw;
                                  resTemp = bits(resTemp, 32) !=
                                            bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlatt", '''Reg0 = resTemp =
                                         sext<16>(bits(Reg1, 31, 16)) *
-                                        sext<16>(bits(Reg2.sw, 31, 16)) +
-                                        Reg3.sw;
+                                        sext<16>(bits(Reg2_sw, 31, 16)) +
+                                        Reg3_sw;
                                  resTemp = bits(resTemp, 32) !=
                                            bits(resTemp, 31);
                                  ''', "overflow")
@@ -166,7 +166,7 @@ let {{
                                         sext<16>(bits(Reg2, 31, 16)) +
                                         sext<16>(bits(Reg1, 15, 0)) *
                                         sext<16>(bits(Reg2, 15, 0)) +
-                                        Reg3.sw;
+                                        Reg3_sw;
                                     resTemp = bits(resTemp, 32) !=
                                               bits(resTemp, 31);
                                 ''', "overflow")
@@ -175,74 +175,74 @@ let {{
                                          sext<16>(bits(Reg2, 15, 0)) +
                                          sext<16>(bits(Reg1, 15, 0)) *
                                          sext<16>(bits(Reg2, 31, 16)) +
-                                         Reg3.sw;
+                                         Reg3_sw;
                                     resTemp = bits(resTemp, 32) !=
                                               bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4Inst    ("smlal", '''resTemp = sext<32>(Reg2) * sext<32>(Reg3) +
-                                       (int64_t)((Reg1.ud << 32) | Reg0.ud);
-                                   Reg0.ud = (uint32_t)resTemp;
-                                   Reg1.ud = (uint32_t)(resTemp >> 32);
+                                       (int64_t)((Reg1_ud << 32) | Reg0_ud);
+                                   Reg0_ud = (uint32_t)resTemp;
+                                   Reg1_ud = (uint32_t)(resTemp >> 32);
                                 ''', "llbit")
     buildMult4InstUnCc("smlalbb", '''resTemp = sext<16>(bits(Reg2, 15, 0)) *
                                                sext<16>(bits(Reg3, 15, 0)) +
-                                               (int64_t)((Reg1.ud << 32) |
-                                                         Reg0.ud);
-                                     Reg0.ud = (uint32_t)resTemp;
-                                     Reg1.ud = (uint32_t)(resTemp >> 32);
+                                               (int64_t)((Reg1_ud << 32) |
+                                                         Reg0_ud);
+                                     Reg0_ud = (uint32_t)resTemp;
+                                     Reg1_ud = (uint32_t)(resTemp >> 32);
                                   ''')
     buildMult4InstUnCc("smlalbt", '''resTemp = sext<16>(bits(Reg2, 15, 0)) *
                                                sext<16>(bits(Reg3, 31, 16)) +
-                                               (int64_t)((Reg1.ud << 32) |
-                                                         Reg0.ud);
-                                     Reg0.ud = (uint32_t)resTemp;
-                                     Reg1.ud = (uint32_t)(resTemp >> 32);
+                                               (int64_t)((Reg1_ud << 32) |
+                                                         Reg0_ud);
+                                     Reg0_ud = (uint32_t)resTemp;
+                                     Reg1_ud = (uint32_t)(resTemp >> 32);
                                   ''')
     buildMult4InstUnCc("smlaltb", '''resTemp = sext<16>(bits(Reg2, 31, 16)) *
                                                sext<16>(bits(Reg3, 15, 0)) +
-                                               (int64_t)((Reg1.ud << 32) |
-                                                         Reg0.ud);
-                                     Reg0.ud = (uint32_t)resTemp;
-                                     Reg1.ud = (uint32_t)(resTemp >> 32);
+                                               (int64_t)((Reg1_ud << 32) |
+                                                         Reg0_ud);
+                                     Reg0_ud = (uint32_t)resTemp;
+                                     Reg1_ud = (uint32_t)(resTemp >> 32);
                                   ''')
     buildMult4InstUnCc("smlaltt", '''resTemp = sext<16>(bits(Reg2, 31, 16)) *
                                                sext<16>(bits(Reg3, 31, 16)) +
-                                               (int64_t)((Reg1.ud << 32) |
-                                                         Reg0.ud);
-                                     Reg0.ud = (uint32_t)resTemp;
-                                     Reg1.ud = (uint32_t)(resTemp >> 32);
+                                               (int64_t)((Reg1_ud << 32) |
+                                                         Reg0_ud);
+                                     Reg0_ud = (uint32_t)resTemp;
+                                     Reg1_ud = (uint32_t)(resTemp >> 32);
                                   ''')
     buildMult4InstUnCc("smlald", '''resTemp =
                                         sext<16>(bits(Reg2, 31, 16)) *
                                         sext<16>(bits(Reg3, 31, 16)) +
                                         sext<16>(bits(Reg2, 15, 0)) *
                                         sext<16>(bits(Reg3, 15, 0)) +
-                                        (int64_t)((Reg1.ud << 32) |
-                                                  Reg0.ud);
-                                    Reg0.ud = (uint32_t)resTemp;
-                                    Reg1.ud = (uint32_t)(resTemp >> 32);
+                                        (int64_t)((Reg1_ud << 32) |
+                                                  Reg0_ud);
+                                    Reg0_ud = (uint32_t)resTemp;
+                                    Reg1_ud = (uint32_t)(resTemp >> 32);
                                  ''')
     buildMult4InstUnCc("smlaldx", '''resTemp =
                                          sext<16>(bits(Reg2, 31, 16)) *
                                          sext<16>(bits(Reg3, 15, 0)) +
                                          sext<16>(bits(Reg2, 15, 0)) *
                                          sext<16>(bits(Reg3, 31, 16)) +
-                                         (int64_t)((Reg1.ud << 32) |
-                                                   Reg0.ud);
-                                     Reg0.ud = (uint32_t)resTemp;
-                                     Reg1.ud = (uint32_t)(resTemp >> 32);
+                                         (int64_t)((Reg1_ud << 32) |
+                                                   Reg0_ud);
+                                     Reg0_ud = (uint32_t)resTemp;
+                                     Reg1_ud = (uint32_t)(resTemp >> 32);
                                   ''')
     buildMult4InstCc  ("smlawb", '''Reg0 = resTemp =
-                                        (Reg1.sw *
+                                        (Reg1_sw *
                                          sext<16>(bits(Reg2, 15, 0)) +
-                                         ((int64_t)Reg3.sw << 16)) >> 16;
+                                         ((int64_t)Reg3_sw << 16)) >> 16;
                                     resTemp = bits(resTemp, 32) !=
                                               bits(resTemp, 31);
                                  ''', "overflow")
     buildMult4InstCc  ("smlawt", '''Reg0 = resTemp =
-                                        (Reg1.sw *
+                                        (Reg1_sw *
                                          sext<16>(bits(Reg2, 31, 16)) +
-                                         ((int64_t)Reg3.sw << 16)) >> 16;
+                                         ((int64_t)Reg3_sw << 16)) >> 16;
                                     resTemp = bits(resTemp, 32) !=
                                               bits(resTemp, 31);
                                  ''', "overflow")
@@ -251,7 +251,7 @@ let {{
                                        sext<16>(bits(Reg2, 15, 0)) -
                                        sext<16>(bits(Reg1, 31, 16)) *
                                        sext<16>(bits(Reg2, 31, 16)) +
-                                       Reg3.sw;
+                                       Reg3_sw;
                                     resTemp = bits(resTemp, 32) !=
                                               bits(resTemp, 31);
                                 ''', "overflow")
@@ -260,7 +260,7 @@ let {{
                                         sext<16>(bits(Reg2, 31, 16)) -
                                         sext<16>(bits(Reg1, 31, 16)) *
                                         sext<16>(bits(Reg2, 15, 0)) +
-                                        Reg3.sw;
+                                        Reg3_sw;
                                     resTemp = bits(resTemp, 32) !=
                                               bits(resTemp, 31);
                                  ''', "overflow")
@@ -269,50 +269,50 @@ let {{
                                         sext<16>(bits(Reg3, 15, 0)) -
                                         sext<16>(bits(Reg2, 31, 16)) *
                                         sext<16>(bits(Reg3, 31, 16)) +
-                                        (int64_t)((Reg1.ud << 32) |
-                                                  Reg0.ud);
-                                    Reg0.ud = (uint32_t)resTemp;
-                                    Reg1.ud = (uint32_t)(resTemp >> 32);
+                                        (int64_t)((Reg1_ud << 32) |
+                                                  Reg0_ud);
+                                    Reg0_ud = (uint32_t)resTemp;
+                                    Reg1_ud = (uint32_t)(resTemp >> 32);
                                  ''')
     buildMult4InstUnCc("smlsldx", '''resTemp =
                                          sext<16>(bits(Reg2, 15, 0)) *
                                          sext<16>(bits(Reg3, 31, 16)) -
                                          sext<16>(bits(Reg2, 31, 16)) *
                                          sext<16>(bits(Reg3, 15, 0)) +
-                                         (int64_t)((Reg1.ud << 32) |
-                                                   Reg0.ud);
-                                     Reg0.ud = (uint32_t)resTemp;
-                                     Reg1.ud = (uint32_t)(resTemp >> 32);
+                                         (int64_t)((Reg1_ud << 32) |
+                                                   Reg0_ud);
+                                     Reg0_ud = (uint32_t)resTemp;
+                                     Reg1_ud = (uint32_t)(resTemp >> 32);
                                   ''')
     buildMult4InstUnCc("smmla", '''Reg0 = resTemp =
-                                       ((int64_t)(Reg3.ud << 32) +
-                                        (int64_t)Reg1.sw *
-                                        (int64_t)Reg2.sw) >> 32;
+                                       ((int64_t)(Reg3_ud << 32) +
+                                        (int64_t)Reg1_sw *
+                                        (int64_t)Reg2_sw) >> 32;
                                 ''')
     buildMult4InstUnCc("smmlar", '''Reg0 = resTemp =
-                                        ((int64_t)(Reg3.ud << 32) +
-                                         (int64_t)Reg1.sw *
-                                         (int64_t)Reg2.sw +
+                                        ((int64_t)(Reg3_ud << 32) +
+                                         (int64_t)Reg1_sw *
+                                         (int64_t)Reg2_sw +
                                          ULL(0x80000000)) >> 32;
                                  ''')
     buildMult4InstUnCc("smmls", '''Reg0 = resTemp =
-                                       ((int64_t)(Reg3.ud << 32) -
-                                        (int64_t)Reg1.sw *
-                                        (int64_t)Reg2.sw) >> 32;
+                                       ((int64_t)(Reg3_ud << 32) -
+                                        (int64_t)Reg1_sw *
+                                        (int64_t)Reg2_sw) >> 32;
                                 ''')
     buildMult4InstUnCc("smmlsr", '''Reg0 = resTemp =
-                                        ((int64_t)(Reg3.ud << 32) -
-                                         (int64_t)Reg1.sw *
-                                         (int64_t)Reg2.sw +
+                                        ((int64_t)(Reg3_ud << 32) -
+                                         (int64_t)Reg1_sw *
+                                         (int64_t)Reg2_sw +
                                          ULL(0x80000000)) >> 32;
                                  ''')
     buildMult3InstUnCc("smmul", '''Reg0 = resTemp =
-                                       ((int64_t)Reg1.sw *
-                                        (int64_t)Reg2.sw) >> 32;
+                                       ((int64_t)Reg1_sw *
+                                        (int64_t)Reg2_sw) >> 32;
                                 ''')
     buildMult3InstUnCc("smmulr", '''Reg0 = resTemp =
-                                        ((int64_t)Reg1.sw *
-                                         (int64_t)Reg2.sw +
+                                        ((int64_t)Reg1_sw *
+                                         (int64_t)Reg2_sw +
                                          ULL(0x80000000)) >> 32;
                                  ''')
     buildMult3InstCc  ("smuad", '''Reg0 = resTemp =
@@ -347,17 +347,17 @@ let {{
                                          sext<16>(bits(Reg1, 31, 16)) *
                                          sext<16>(bits(Reg2, 31, 16));
                                  ''')
-    buildMult4Inst    ("smull", '''resTemp = (int64_t)Reg2.sw *
-                                             (int64_t)Reg3.sw;
+    buildMult4Inst    ("smull", '''resTemp = (int64_t)Reg2_sw *
+                                             (int64_t)Reg3_sw;
                                    Reg1 = (int32_t)(resTemp >> 32);
                                    Reg0 = (int32_t)resTemp;
                                 ''', "llbit")
     buildMult3InstUnCc("smulwb", '''Reg0 = resTemp =
-                                        (Reg1.sw *
+                                        (Reg1_sw *
                                          sext<16>(bits(Reg2, 15, 0))) >> 16;
                                  ''')
     buildMult3InstUnCc("smulwt", '''Reg0 = resTemp =
-                                        (Reg1.sw *
+                                        (Reg1_sw *
                                          sext<16>(bits(Reg2, 31, 16))) >> 16;
                                  ''')
     buildMult3InstUnCc("smusd", '''Reg0 = resTemp =
@@ -372,17 +372,17 @@ let {{
                                         sext<16>(bits(Reg1, 31, 16)) *
                                         sext<16>(bits(Reg2, 15, 0));
                                  ''')
-    buildMult4InstUnCc("umaal", '''resTemp = Reg2.ud * Reg3.ud +
-                                             Reg0.ud + Reg1.ud;
-                                   Reg1.ud = (uint32_t)(resTemp >> 32);
-                                   Reg0.ud = (uint32_t)resTemp;
+    buildMult4InstUnCc("umaal", '''resTemp = Reg2_ud * Reg3_ud +
+                                             Reg0_ud + Reg1_ud;
+                                   Reg1_ud = (uint32_t)(resTemp >> 32);
+                                   Reg0_ud = (uint32_t)resTemp;
                                 ''')
-    buildMult4Inst    ("umlal", '''resTemp = Reg2.ud * Reg3.ud + Reg0.ud +
-                                             (Reg1.ud << 32);
-                                   Reg1.ud = (uint32_t)(resTemp >> 32);
-                                   Reg0.ud = (uint32_t)resTemp;
+    buildMult4Inst    ("umlal", '''resTemp = Reg2_ud * Reg3_ud + Reg0_ud +
+                                             (Reg1_ud << 32);
+                                   Reg1_ud = (uint32_t)(resTemp >> 32);
+                                   Reg0_ud = (uint32_t)resTemp;
                                 ''', "llbit")
-    buildMult4Inst    ("umull", '''resTemp = Reg2.ud * Reg3.ud;
+    buildMult4Inst    ("umull", '''resTemp = Reg2_ud * Reg3_ud;
                                    Reg1 = (uint32_t)(resTemp >> 32);
                                    Reg0 = (uint32_t)resTemp;
                                 ''', "llbit")

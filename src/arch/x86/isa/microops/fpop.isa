@@ -213,12 +213,12 @@ let {{
                 SetStatus=False, dataSize="env.dataSize"):
             super(Movfp, self).__init__(dest, src1, "InstRegIndex(0)", \
                     spm, SetStatus, dataSize)
-        code = 'FpDestReg.uqw = FpSrcReg1.uqw;'
-        else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
+        code = 'FpDestReg_uqw = FpSrcReg1_uqw;'
+        else_code = 'FpDestReg_uqw = FpDestReg_uqw;'
         cond_check = "checkCondition(ccFlagBits, src2)"
 
     class Xorfp(FpOp):
-        code = 'FpDestReg.uqw = FpSrcReg1.uqw ^ FpSrcReg2.uqw;'
+        code = 'FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;'
 
     class Sqrtfp(FpOp):
         code = 'FpDestReg = sqrt(FpSrcReg2);'

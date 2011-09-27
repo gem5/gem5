@@ -171,7 +171,7 @@ let {{
         exec_output += MicroLimmOpExecute.subst(iop)
 
     iop = InstObjParams("lfpimm", "Lfpimm", 'X86MicroopBase',
-            {"code" : "FpDestReg.uqw = imm"})
+            {"code" : "FpDestReg_uqw = imm"})
     header_output += MicroLimmOpDeclare.subst(iop)
     decoder_output += MicroLimmOpConstructor.subst(iop)
     decoder_output += MicroLimmOpDisassembly.subst(iop)

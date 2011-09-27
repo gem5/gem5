@@ -543,7 +543,7 @@ def format StoreFPIndexedMemory(memacc_code, ea_code = {{ EA = Rs + Rt; }},
 def format LoadUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3; }},
                      mem_flags = [], inst_flags = []) {{
     decl_code = '''
-        uint32_t mem_word = Mem.uw;
+        uint32_t mem_word = Mem_uw;
         uint32_t unalign_addr = Rs + disp;
         uint32_t byte_offset = unalign_addr & 3;
         if (GuestByteOrder == BigEndianByteOrder)

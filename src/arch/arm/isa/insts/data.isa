@@ -302,7 +302,7 @@ let {{
 
     buildRegDataInst("qadd", '''
             int32_t midRes;
-            resTemp = saturateOp<32>(midRes, Op1.sw, Op2.sw);
+            resTemp = saturateOp<32>(midRes, Op1_sw, Op2_sw);
                                      Dest = midRes;
         ''', flagType="saturate", buildNonCc=False)
     buildRegDataInst("qadd16", '''
@@ -310,8 +310,8 @@ let {{
             for (unsigned i = 0; i < 2; i++) {
                 int high = (i + 1) * 16 - 1;
                 int low = i * 16;
-                int64_t arg1 = sext<16>(bits(Op1.sw, high, low));
-                int64_t arg2 = sext<16>(bits(Op2.sw, high, low));
+                int64_t arg1 = sext<16>(bits(Op1_sw, high, low));
+                int64_t arg2 = sext<16>(bits(Op2_sw, high, low));
                 saturateOp<16>(midRes, arg1, arg2);
                 replaceBits(resTemp, high, low, midRes);
             }
@@ -322,8 +322,8 @@ let {{
             for (unsigned i = 0; i < 4; i++) {
                 int high = (i + 1) * 8 - 1;
                 int low = i * 8;
-                int64_t arg1 = sext<8>(bits(Op1.sw, high, low));
-                int64_t arg2 = sext<8>(bits(Op2.sw, high, low));
+                int64_t arg1 = sext<8>(bits(Op1_sw, high, low));
+                int64_t arg2 = sext<8>(bits(Op2_sw, high, low));
                 saturateOp<8>(midRes, arg1, arg2);
                 replaceBits(resTemp, high, low, midRes);
             }
@@ -331,13 +331,13 @@ let {{
         ''', flagType="none", buildCc=False)
     buildRegDataInst("qdadd", '''
             int32_t midRes;
-            resTemp = saturateOp<32>(midRes, Op2.sw, Op2.sw) |
-                      saturateOp<32>(midRes, Op1.sw, midRes);
+            resTemp = saturateOp<32>(midRes, Op2_sw, Op2_sw) |
+                      saturateOp<32>(midRes, Op1_sw, midRes);
             Dest = midRes;
         ''', flagType="saturate", buildNonCc=False)
     buildRegDataInst("qsub", '''
             int32_t midRes;
-            resTemp = saturateOp<32>(midRes, Op1.sw, Op2.sw, true);
+            resTemp = saturateOp<32>(midRes, Op1_sw, Op2_sw, true);
             Dest = midRes;
         ''', flagType="saturate")
     buildRegDataInst("qsub16", '''
@@ -345,8 +345,8 @@ let {{
             for (unsigned i = 0; i < 2; i++) {
                  int high = (i + 1) * 16 - 1;
                  int low = i * 16;
-                 int64_t arg1 = sext<16>(bits(Op1.sw, high, low));
-                 int64_t arg2 = sext<16>(bits(Op2.sw, high, low));
+                 int64_t arg1 = sext<16>(bits(Op1_sw, high, low));
+                 int64_t arg2 = sext<16>(bits(Op2_sw, high, low));
                  saturateOp<16>(midRes, arg1, arg2, true);
                  replaceBits(resTemp, high, low, midRes);
             }
@@ -357,8 +357,8 @@ let {{
             for (unsigned i = 0; i < 4; i++) {
                  int high = (i + 1) * 8 - 1;
                  int low = i * 8;
-                 int64_t arg1 = sext<8>(bits(Op1.sw, high, low));
-                 int64_t arg2 = sext<8>(bits(Op2.sw, high, low));
+                 int64_t arg1 = sext<8>(bits(Op1_sw, high, low));
+                 int64_t arg2 = sext<8>(bits(Op2_sw, high, low));
                  saturateOp<8>(midRes, arg1, arg2, true);
                  replaceBits(resTemp, high, low, midRes);
             }
@@ -366,16 +366,16 @@ let {{
         ''', flagType="none", buildCc=False)
     buildRegDataInst("qdsub", '''
             int32_t midRes;
-            resTemp = saturateOp<32>(midRes, Op2.sw, Op2.sw) |
-                      saturateOp<32>(midRes, Op1.sw, midRes, true);
+            resTemp = saturateOp<32>(midRes, Op2_sw, Op2_sw) |
+                      saturateOp<32>(midRes, Op1_sw, midRes, true);
             Dest = midRes;
         ''', flagType="saturate", buildNonCc=False)
     buildRegDataInst("qasx", '''
             int32_t midRes;
-            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
-            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
-            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
-            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            int64_t arg1Low = sext<16>(bits(Op1_sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1_sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2_sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2_sw, 31, 16));
             saturateOp<16>(midRes, arg1Low, arg2High, true);
             replaceBits(resTemp, 15, 0, midRes);
             saturateOp<16>(midRes, arg1High, arg2Low);
@@ -384,10 +384,10 @@ let {{
         ''', flagType="none", buildCc=False)
     buildRegDataInst("qsax", '''
             int32_t midRes;
-            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
-            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
-            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
-            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            int64_t arg1Low = sext<16>(bits(Op1_sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1_sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2_sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2_sw, 31, 16));
             saturateOp<16>(midRes, arg1Low, arg2High);
             replaceBits(resTemp, 15, 0, midRes);
             saturateOp<16>(midRes, arg1High, arg2Low, true);
@@ -401,8 +401,8 @@ let {{
             for (unsigned i = 0; i < 4; i++) {
                 int high = (i + 1) * 8 - 1;
                 int low = i * 8;
-                int32_t midRes = sext<8>(bits(Op1.sw, high, low)) +
-                                 sext<8>(bits(Op2.sw, high, low));
+                int32_t midRes = sext<8>(bits(Op1_sw, high, low)) +
+                                 sext<8>(bits(Op2_sw, high, low));
                 replaceBits(resTemp, high, low, midRes);
                 if (midRes >= 0) {
                     geBits = geBits | (1 << i);
@@ -417,8 +417,8 @@ let {{
             for (unsigned i = 0; i < 2; i++) {
                 int high = (i + 1) * 16 - 1;
                 int low = i * 16;
-                int32_t midRes = sext<16>(bits(Op1.sw, high, low)) +
-                                 sext<16>(bits(Op2.sw, high, low));
+                int32_t midRes = sext<16>(bits(Op1_sw, high, low)) +
+                                 sext<16>(bits(Op2_sw, high, low));
                 replaceBits(resTemp, high, low, midRes);
                 if (midRes >= 0) {
                     geBits = geBits | (0x3 << (i * 2));
@@ -434,8 +434,8 @@ let {{
             for (unsigned i = 0; i < 4; i++) {
                 int high = (i + 1) * 8 - 1;
                 int low = i * 8;
-                int32_t midRes = sext<8>(bits(Op1.sw, high, low)) -
-                                 sext<8>(bits(Op2.sw, high, low));
+                int32_t midRes = sext<8>(bits(Op1_sw, high, low)) -
+                                 sext<8>(bits(Op2_sw, high, low));
                 replaceBits(resTemp, high, low, midRes);
                 if (midRes >= 0) {
                     geBits = geBits | (1 << i);
@@ -450,8 +450,8 @@ let {{
             for (unsigned i = 0; i < 2; i++) {
                 int high = (i + 1) * 16 - 1;
                 int low = i * 16;
-                int32_t midRes = sext<16>(bits(Op1.sw, high, low)) -
-                                 sext<16>(bits(Op2.sw, high, low));
+                int32_t midRes = sext<16>(bits(Op1_sw, high, low)) -
+                                 sext<16>(bits(Op2_sw, high, low));
                 replaceBits(resTemp, high, low, midRes);
                 if (midRes >= 0) {
                     geBits = geBits | (0x3 << (i * 2));
@@ -463,10 +463,10 @@ let {{
     buildRegDataInst("sasx", '''
             int32_t midRes, geBits = 0;
             resTemp = 0;
-            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
-            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
-            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
-            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            int64_t arg1Low = sext<16>(bits(Op1_sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1_sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2_sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2_sw, 31, 16));
             midRes = arg1Low - arg2High;
             if (midRes >= 0) {
                 geBits = geBits | 0x3;
@@ -483,10 +483,10 @@ let {{
     buildRegDataInst("ssax", '''
             int32_t midRes, geBits = 0;
             resTemp = 0;
-            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
-            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
-            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
-            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            int64_t arg1Low = sext<16>(bits(Op1_sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1_sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2_sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2_sw, 31, 16));
             midRes = arg1Low + arg2High;
             if (midRes >= 0) {
                 geBits = geBits | 0x3;
@@ -507,8 +507,8 @@ let {{
                 int high = (i + 1) * 8 - 1;
                 int low = i * 8;
                 int32_t midRes =
-                    (uint64_t)(sext<8>(bits(Op1.sw, high, low)) +
-                               sext<8>(bits(Op2.sw, high, low))) >> 1;
+                    (uint64_t)(sext<8>(bits(Op1_sw, high, low)) +
+                               sext<8>(bits(Op2_sw, high, low))) >> 1;
                 replaceBits(resTemp, high, low, midRes);
             }
             Dest = resTemp;
@@ -519,8 +519,8 @@ let {{
                 int high = (i + 1) * 16 - 1;
                 int low = i * 16;
                 int32_t midRes =
-                    (uint64_t)(sext<16>(bits(Op1.sw, high, low)) +
-                               sext<16>(bits(Op2.sw, high, low))) >> 1;
+                    (uint64_t)(sext<16>(bits(Op1_sw, high, low)) +
+                               sext<16>(bits(Op2_sw, high, low))) >> 1;
                 replaceBits(resTemp, high, low, midRes);
             }
             Dest = resTemp;
@@ -531,8 +531,8 @@ let {{
                 int high = (i + 1) * 8 - 1;
                 int low = i * 8;
                 int32_t midRes =
-                    (uint64_t)(sext<8>(bits(Op1.sw, high, low)) -
-                               sext<8>(bits(Op2.sw, high, low))) >> 1;
+                    (uint64_t)(sext<8>(bits(Op1_sw, high, low)) -
+                               sext<8>(bits(Op2_sw, high, low))) >> 1;
                 replaceBits(resTemp, high, low, midRes);
             }
             Dest = resTemp;
@@ -543,8 +543,8 @@ let {{
                 int high = (i + 1) * 16 - 1;
                 int low = i * 16;
                 int32_t midRes =
-                    (uint64_t)(sext<16>(bits(Op1.sw, high, low)) -
-                               sext<16>(bits(Op2.sw, high, low))) >> 1;
+                    (uint64_t)(sext<16>(bits(Op1_sw, high, low)) -
+                               sext<16>(bits(Op2_sw, high, low))) >> 1;
                 replaceBits(resTemp, high, low, midRes);
             }
             Dest = resTemp;
@@ -552,10 +552,10 @@ let {{
     buildRegDataInst("shasx", '''
             int32_t midRes;
             resTemp = 0;
-            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
-            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
-            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
-            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            int64_t arg1Low = sext<16>(bits(Op1_sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1_sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2_sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2_sw, 31, 16));
             midRes = (uint64_t)(arg1Low - arg2High) >> 1;
             replaceBits(resTemp, 15, 0, midRes);
             midRes = (arg1High + arg2Low) >> 1;
@@ -565,10 +565,10 @@ let {{
     buildRegDataInst("shsax", '''
             int32_t midRes;
             resTemp = 0;
-            int64_t arg1Low = sext<16>(bits(Op1.sw, 15, 0));
-            int64_t arg1High = sext<16>(bits(Op1.sw, 31, 16));
-            int64_t arg2Low = sext<16>(bits(Op2.sw, 15, 0));
-            int64_t arg2High = sext<16>(bits(Op2.sw, 31, 16));
+            int64_t arg1Low = sext<16>(bits(Op1_sw, 15, 0));
+            int64_t arg1High = sext<16>(bits(Op1_sw, 31, 16));
+            int64_t arg2Low = sext<16>(bits(Op2_sw, 15, 0));
+            int64_t arg2High = sext<16>(bits(Op2_sw, 31, 16));
             midRes = (uint64_t)(arg1Low + arg2High) >> 1;
             replaceBits(resTemp, 15, 0, midRes);
             midRes = (uint64_t)(arg1High - arg2Low) >> 1;
@@ -626,10 +626,10 @@ let {{
         ''', flagType="none", buildCc=False)
     buildRegDataInst("uqasx", '''
             uint32_t midRes;
-            uint64_t arg1Low = bits(Op1.sw, 15, 0);
-            uint64_t arg1High = bits(Op1.sw, 31, 16);
-            uint64_t arg2Low = bits(Op2.sw, 15, 0);
-            uint64_t arg2High = bits(Op2.sw, 31, 16);
+            uint64_t arg1Low = bits(Op1_sw, 15, 0);
+            uint64_t arg1High = bits(Op1_sw, 31, 16);
+            uint64_t arg2Low = bits(Op2_sw, 15, 0);
+            uint64_t arg2High = bits(Op2_sw, 31, 16);
             uSaturateOp<16>(midRes, arg1Low, arg2High, true);
             replaceBits(resTemp, 15, 0, midRes);
             uSaturateOp<16>(midRes, arg1High, arg2Low);
@@ -638,10 +638,10 @@ let {{
         ''', flagType="none", buildCc=False)
     buildRegDataInst("uqsax", '''
             uint32_t midRes;
-            uint64_t arg1Low = bits(Op1.sw, 15, 0);
-            uint64_t arg1High = bits(Op1.sw, 31, 16);
-            uint64_t arg2Low = bits(Op2.sw, 15, 0);
-            uint64_t arg2High = bits(Op2.sw, 31, 16);
+            uint64_t arg1Low = bits(Op1_sw, 15, 0);
+            uint64_t arg1High = bits(Op1_sw, 31, 16);
+            uint64_t arg2Low = bits(Op2_sw, 15, 0);
+            uint64_t arg2High = bits(Op2_sw, 31, 16);
             uSaturateOp<16>(midRes, arg1Low, arg2High);
             replaceBits(resTemp, 15, 0, midRes);
             uSaturateOp<16>(midRes, arg1High, arg2Low, true);
@@ -716,10 +716,10 @@ let {{
     buildRegDataInst("uasx", '''
             int32_t midRes, geBits = 0;
             resTemp = 0;
-            int64_t arg1Low = bits(Op1.sw, 15, 0);
-            int64_t arg1High = bits(Op1.sw, 31, 16);
-            int64_t arg2Low = bits(Op2.sw, 15, 0);
-            int64_t arg2High = bits(Op2.sw, 31, 16);
+            int64_t arg1Low = bits(Op1_sw, 15, 0);
+            int64_t arg1High = bits(Op1_sw, 31, 16);
+            int64_t arg2Low = bits(Op2_sw, 15, 0);
+            int64_t arg2High = bits(Op2_sw, 31, 16);
             midRes = arg1Low - arg2High;
             if (midRes >= 0) {
                 geBits = geBits | 0x3;
@@ -736,10 +736,10 @@ let {{
     buildRegDataInst("usax", '''
             int32_t midRes, geBits = 0;
             resTemp = 0;
-            int64_t arg1Low = bits(Op1.sw, 15, 0);
-            int64_t arg1High = bits(Op1.sw, 31, 16);
-            int64_t arg2Low = bits(Op2.sw, 15, 0);
-            int64_t arg2High = bits(Op2.sw, 31, 16);
+            int64_t arg1Low = bits(Op1_sw, 15, 0);
+            int64_t arg1High = bits(Op1_sw, 31, 16);
+            int64_t arg2Low = bits(Op2_sw, 15, 0);
+            int64_t arg2High = bits(Op2_sw, 31, 16);
             midRes = arg1Low + arg2High;
             if (midRes >= 0x10000) {
                 geBits = geBits | 0x3;
@@ -801,10 +801,10 @@ let {{
     buildRegDataInst("uhasx", '''
             int32_t midRes;
             resTemp = 0;
-            int64_t arg1Low = bits(Op1.sw, 15, 0);
-            int64_t arg1High = bits(Op1.sw, 31, 16);
-            int64_t arg2Low = bits(Op2.sw, 15, 0);
-            int64_t arg2High = bits(Op2.sw, 31, 16);
+            int64_t arg1Low = bits(Op1_sw, 15, 0);
+            int64_t arg1High = bits(Op1_sw, 31, 16);
+            int64_t arg2Low = bits(Op2_sw, 15, 0);
+            int64_t arg2High = bits(Op2_sw, 31, 16);
             midRes = (arg1Low - arg2High) >> 1;
             replaceBits(resTemp, 15, 0, midRes);
             midRes = (arg1High + arg2Low) >> 1;
@@ -814,10 +814,10 @@ let {{
     buildRegDataInst("uhsax", '''
             int32_t midRes;
             resTemp = 0;
-            int64_t arg1Low = bits(Op1.sw, 15, 0);
-            int64_t arg1High = bits(Op1.sw, 31, 16);
-            int64_t arg2Low = bits(Op2.sw, 15, 0);
-            int64_t arg2High = bits(Op2.sw, 31, 16);
+            int64_t arg1Low = bits(Op1_sw, 15, 0);
+            int64_t arg1High = bits(Op1_sw, 31, 16);
+            int64_t arg2Low = bits(Op2_sw, 15, 0);
+            int64_t arg2High = bits(Op2_sw, 31, 16);
             midRes = (arg1Low + arg2High) >> 1;
             replaceBits(resTemp, 15, 0, midRes);
             midRes = (arg1High - arg2Low) >> 1;
