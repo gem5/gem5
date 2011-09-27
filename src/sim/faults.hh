@@ -82,8 +82,6 @@ class ReExec : public FaultBase
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
 
-
-#if !FULL_SYSTEM
 class GenericPageTableFault : public FaultBase
 {
   private:
@@ -105,6 +103,5 @@ class GenericAlignmentFault : public FaultBase
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
-#endif
 
 #endif // __FAULTS_HH__

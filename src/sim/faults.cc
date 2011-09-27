@@ -38,18 +38,15 @@
 #include "sim/faults.hh"
 #include "sim/process.hh"
 
-#if !FULL_SYSTEM
 void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
-    panic("fault (%s) detected @ PC %s", name(), tc->pcState());
+    if (FULL_SYSTEM) {
+        DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
+        assert(!tc->misspeculating());
+    } else {
+        panic("fault (%s) detected @ PC %s", name(), tc->pcState());
+    }
 }
-#else
-void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
-{
-    DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
-    assert(!tc->misspeculating());
-}
-#endif
 
 void UnimpFault::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
@@ -61,13 +58,15 @@ void ReExec::invoke(ThreadContext *tc, StaticInstPtr inst)
     tc->pcState(tc->pcState());
 }
 
-
-#if !FULL_SYSTEM
 void GenericPageTableFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
+    bool handled = false;
+#if !FULL_SYSTEM
     Process *p = tc->getProcessPtr();
 
-    if (!p->fixupStackFault(vaddr))
+    handled = p->fixupStackFault(vaddr);
+#endif
+    if (!handled)
         panic("Page table fault when accessing virtual address %#x\n", vaddr);
 
 }
@@ -76,4 +75,3 @@ void GenericAlignmentFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     panic("Alignment fault when accessing virtual address %#x\n", vaddr);
 }
-#endif
