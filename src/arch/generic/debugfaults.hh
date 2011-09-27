@@ -47,6 +47,7 @@
 
 namespace GenericISA
 {
+
 class M5DebugFault : public FaultBase
 {
   public:
@@ -106,6 +107,21 @@ class M5DebugFault : public FaultBase
         }
     }
 };
+
+template <int func>
+class M5VarArgsFault : public M5DebugFault
+{
+  public:
+    M5VarArgsFault(const std::string &format, CPRINTF_DECLARATION) :
+        M5DebugFault((DebugFunc)func, csprintf(format, VARARGS_ALLARGS))
+    {}
+};
+
+typedef M5VarArgsFault<M5DebugFault::PanicFunc> M5PanicFault;
+typedef M5VarArgsFault<M5DebugFault::FatalFunc> M5FatalFault;
+typedef M5VarArgsFault<M5DebugFault::WarnFunc> M5WarnFault;
+typedef M5VarArgsFault<M5DebugFault::WarnOnceFunc> M5WarnOnceFault;
+
 } // namespace GenericISA
 
 #endif // __ARCH_GENERIC_DEBUGFAULTS_HH__
