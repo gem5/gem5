@@ -143,7 +143,7 @@ output exec {{
     bool
     isDspEnabled(%(CPU_exec_context)s *xc)
     {
-        return !FULL_SYSTEM || bits(xc->readMiscReg(MISCREG_STATUS), 24);
+        return !FullSystem || bits(xc->readMiscReg(MISCREG_STATUS), 24);
     }
 }};
 
@@ -151,7 +151,7 @@ output exec {{
     bool
     isDspPresent(%(CPU_exec_context)s *xc)
     {
-        return !FULL_SYSTEM || bits(xc->readMiscReg(MISCREG_CONFIG3), 10);
+        return !FullSystem || bits(xc->readMiscReg(MISCREG_CONFIG3), 10);
     }
 }};
 

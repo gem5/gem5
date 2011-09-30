@@ -45,7 +45,7 @@ output exec {{
     inline Fault checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
         Fault fault = NoFault;  // dummy... this ipr access should not fault
-        if (FULL_SYSTEM && !ICSR_FPE(xc->readMiscReg(IPR_ICSR))) {
+        if (FullSystem && !ICSR_FPE(xc->readMiscReg(IPR_ICSR))) {
             fault = new FloatEnableFault;
         }
         return fault;

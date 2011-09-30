@@ -84,6 +84,7 @@ output decoder {{
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
+#include "sim/full_system.hh"
 
 #if defined(linux) || defined(__APPLE__)
 #include <fenv.h>

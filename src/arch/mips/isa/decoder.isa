@@ -163,7 +163,7 @@ decode OPCODE_HI default Unknown::unknown() {
                 format BasicOp {
                     0x2: movz({{ Rd = (Rt == 0) ? Rs : Rd; }});
                     0x3: movn({{ Rd = (Rt != 0) ? Rs : Rd; }});
-                    0x4: decode FULL_SYSTEM {
+                    0x4: decode FullSystem {
                         0: syscall_se({{ xc->syscall(R2); }},
                                 IsSerializeAfter, IsNonSpeculative);
                         default: syscall({{ fault = new SystemCallFault(); }});
@@ -212,7 +212,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: add({{
                             IntReg result;
                             Rd = result = Rs + Rt;
-                            if (FULL_SYSTEM &&
+                            if (FullSystem &&
                                     findOverflow(32, result, Rs, Rt)) {
                                 fault = new IntegerOverflowFault();
                             }
@@ -221,7 +221,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x2: sub({{
                             IntReg result;
                             Rd = result = Rs - Rt;
-                            if (FULL_SYSTEM &&
+                            if (FullSystem &&
                                     findOverflow(32, result, Rs, ~Rt)) {
                                 fault = new IntegerOverflowFault();
                             }
@@ -325,7 +325,7 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: addi({{
                 IntReg result;
                 Rt = result = Rs + imm;
-                if (FULL_SYSTEM &&
+                if (FullSystem &&
                         findOverflow(32, result, Rs, imm)) {
                     fault = new IntegerOverflowFault();
                 }
@@ -2433,7 +2433,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     }
                 }
                 0x3: decode OP default FailUnimpl::rdhwr() {
-                    0x0: decode FULL_SYSTEM {
+                    0x0: decode FullSystem {
                         0: decode RD {
                             29: BasicOp::rdhwr_se({{ Rt = TpValue; }});
                         }

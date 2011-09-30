@@ -174,7 +174,7 @@ def template FloatingPointExecute {{
 
                 //When is the right time to reset cause bits?
                 //start of every instruction or every cycle?
-                if (FULL_SYSTEM)
+                if (FullSystem)
                     fpResetCauseBits(xc);
                 %(op_decl)s;
                 %(op_rd)s;
@@ -191,7 +191,7 @@ def template FloatingPointExecute {{
                     //Check for IEEE 754 FP Exceptions
                     //fault = fpNanOperands((FPOp*)this, xc, Fd, traceData);
                     bool invalid_op = false;
-                    if (FULL_SYSTEM) {
+                    if (FullSystem) {
                         invalid_op =
                             fpInvalidOp((FPOp*)this, xc, Fd, traceData);
                     }

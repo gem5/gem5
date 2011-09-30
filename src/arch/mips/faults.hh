@@ -38,6 +38,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/MipsPRA.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
 
 namespace MipsISA
 {
@@ -163,7 +164,7 @@ class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
             StaticInstPtr inst = StaticInst::nullStaticInstPtr)
     {
         MipsFault<CoprocessorUnusableFault>::invoke(tc, inst);
-        if (FULL_SYSTEM) {
+        if (FullSystem) {
             CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
             cause.ce = coProcID;
             tc->setMiscReg(MISCREG_CAUSE, cause);
@@ -197,7 +198,7 @@ class AddressFault : public MipsFault<T>
             StaticInstPtr inst = StaticInst::nullStaticInstPtr)
     {
         MipsFault<T>::invoke(tc, inst);
-        if (FULL_SYSTEM)
+        if (FullSystem)
             tc->setMiscRegNoEffect(MISCREG_BADVADDR, vaddr);
     }
 };
@@ -249,7 +250,7 @@ class TlbFault : public AddressFault<T>
     invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr)
     {
-        if (FULL_SYSTEM) {
+        if (FullSystem) {
             DPRINTF(MipsPRA, "Fault %s encountered.\n", name());
             tc->pcState(this->vect(tc));
             setTlbExceptionState(tc, this->code());

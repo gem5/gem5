@@ -566,7 +566,7 @@ output exec {{
     static inline Fault
     checkFpEnableFault(%(CPU_exec_context)s *xc)
     {
-        if (FULL_SYSTEM) {
+        if (FullSystem) {
             if (xc->readMiscReg(MISCREG_PSTATE) & PSTATE::pef &&
                 xc->readMiscReg(MISCREG_FPRS) & 0x4) {
                 return NoFault;

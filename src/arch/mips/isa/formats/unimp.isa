@@ -193,7 +193,7 @@ output exec {{
     CP0Unimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-        if (FULL_SYSTEM) {
+        if (FullSystem) {
             if (!isCoprocessorEnabled(xc, 0))
                 return new CoprocessorUnusableFault(0);
             else
@@ -210,7 +210,7 @@ output exec {{
     CP1Unimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-        if (FULL_SYSTEM) {
+        if (FullSystem) {
             if (!isCoprocessorEnabled(xc, 1))
                 return new CoprocessorUnusableFault(1);
             else
@@ -227,7 +227,7 @@ output exec {{
     CP2Unimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-        if (FULL_SYSTEM) {
+        if (FullSystem) {
             if (!isCoprocessorEnabled(xc, 2))
                 return new CoprocessorUnusableFault(2);
             else

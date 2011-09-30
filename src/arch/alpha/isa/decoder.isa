@@ -202,8 +202,8 @@ decode OPCODE default Unknown::unknown() {
             0x6c: decode RA {
                 31: decode IMM {
                     1: decode INTIMM {
-                        // return EV5 for FULL_SYSTEM and EV6 otherwise
-                        1: implver({{ Rc = FULL_SYSTEM ? 1 : 2 }});
+                        // return EV5 for FullSystem and EV6 otherwise
+                        1: implver({{ Rc = FullSystem ? 1 : 2 }});
                     }
                 }
             }
@@ -780,7 +780,7 @@ decode OPCODE default Unknown::unknown() {
                  * the parser to understand that.
                  */
                 uint64_t unused_var M5_VAR_USED = Rb;
-                Ra = FULL_SYSTEM ? xc->readMiscReg(IPR_CC) : curTick();
+                Ra = FullSystem ? xc->readMiscReg(IPR_CC) : curTick();
             }}, IsUnverifiable);
 
             // All of the barrier instructions below do nothing in
@@ -805,14 +805,14 @@ decode OPCODE default Unknown::unknown() {
             0x4400: wmb({{ }}, IsWriteBarrier, MemWriteOp);
         }
 
-        0xe000: decode FULL_SYSTEM {
+        0xe000: decode FullSystem {
             0: FailUnimpl::rc_se();
             default: BasicOperate::rc({{
                 Ra = IntrFlag;
                 IntrFlag = 0;
             }}, IsNonSpeculative, IsUnverifiable);
         }
-        0xf000: decode FULL_SYSTEM {
+        0xf000: decode FullSystem {
             0: FailUnimpl::rs_se();
             default: BasicOperate::rs({{
                 Ra = IntrFlag;

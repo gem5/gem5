@@ -128,7 +128,7 @@ def template ControlTLBExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            if (FULL_SYSTEM) {
+            if (FullSystem) {
                 if (isCoprocessor0Enabled(xc)) {
                     if(isMMUTLB(xc)){
                         %(code)s;
@@ -176,7 +176,7 @@ output exec {{
         bool
         isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num)
         {
-            if (!FULL_SYSTEM)
+            if (!FullSystem)
                 return true;
 
             MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
@@ -198,7 +198,7 @@ output exec {{
         bool inline
         isCoprocessor0Enabled(%(CPU_exec_context)s *xc)
         {
-            if (FULL_SYSTEM) {
+            if (FullSystem) {
                 MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
                 MiscReg Dbg = xc->readMiscReg(MISCREG_DEBUG);
                 // In Stat, EXL, ERL or CU0 set, CP0 accessible
@@ -215,7 +215,7 @@ output exec {{
         isMMUTLB(%(CPU_exec_context)s *xc)
         {
             MiscReg Config = xc->readMiscReg(MISCREG_CONFIG);
-            return FULL_SYSTEM && (Config & 0x380) == 0x80;
+            return FullSystem && (Config & 0x380) == 0x80;
         }
 }};
 

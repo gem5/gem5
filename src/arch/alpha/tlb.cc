@@ -42,6 +42,7 @@
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/TLB.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 
@@ -370,7 +371,7 @@ Fault
 TLB::translateInst(RequestPtr req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
-    if (FULL_SYSTEM && PcPAL(req->getPC()))
+    if (FullSystem && PcPAL(req->getPC()))
         req->setFlags(Request::PHYSICAL);
 
     if (PcPAL(req->getPC())) {
