@@ -31,7 +31,7 @@
 
 Import('*')
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'alpha':
+if env['TARGET_ISA'] == 'alpha':
     SimObject('AlphaBackdoor.py')
     SimObject('Tsunami.py')
 

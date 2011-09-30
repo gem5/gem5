@@ -70,7 +70,9 @@ SimpleDisk::read(Addr addr, baddr_t block, int count) const
     for (int i = 0, j = 0; i < count; i += SectorSize, j++)
         image->read(data + i, block + j);
 
+#if FULL_SYSTEM //XXX No functional port in SE mode.
     system->functionalPort->writeBlob(addr, data, count);
+#endif
 
     DPRINTF(SimpleDisk, "read  block=%#x len=%d\n", (uint64_t)block, count);
     DDUMP(SimpleDiskData, data, count);

@@ -92,8 +92,10 @@ class AlphaBackdoor : public BasicPioDevice
     /** the system console (the terminal) is accessable from the console */
     Terminal *terminal;
 
+#if FULL_SYSTEM //XXX No AlphaSystem defined in SE mode.
     /** a pointer to the system we are running in */
     AlphaSystem *system;
+#endif
 
     /** a pointer to the CPU boot cpu */
     BaseCPU *cpu;

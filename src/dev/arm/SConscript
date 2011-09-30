@@ -39,7 +39,7 @@
 
 Import('*')
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'arm':
+if env['TARGET_ISA'] == 'arm':
     SimObject('RealView.py')
 
     Source('a9scu.cc')

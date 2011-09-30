@@ -45,6 +45,7 @@
 #include "debug/Checkpoint.hh"
 #include "debug/GIC.hh"
 #include "debug/IPI.hh"
+#include "debug/Interrupt.hh"
 #include "dev/arm/gic.hh"
 #include "dev/arm/realview.hh"
 #include "dev/terminal.hh"

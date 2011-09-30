@@ -52,8 +52,10 @@ using namespace TheISA;
 Tsunami::Tsunami(const Params *p)
     : Platform(p), system(p->system)
 {
+#if FULL_SYSTEM //XXX No platform pointer in SE mode.
     // set the back pointer from the system to myself
     system->platform = this;
+#endif
 
     for (int i = 0; i < Tsunami::Max_CPUs; i++)
         intr_sum_type[i] = 0;

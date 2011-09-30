@@ -38,7 +38,11 @@
 #include <cstddef>
 #include <string>
 
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM //XXX No AlphaSystem in SE mode.
 #include "arch/alpha/system.hh"
+#endif
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
@@ -60,7 +64,10 @@ using namespace AlphaISA;
 
 AlphaBackdoor::AlphaBackdoor(const Params *p)
     : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
-      system(p->system), cpu(p->cpu)
+#if FULL_SYSTEM //XXX No system pointer in SE mode.
+      system(p->system),
+#endif
+      cpu(p->cpu)
 {
 
     pioSize = sizeof(struct AlphaAccess);
@@ -84,6 +91,7 @@ AlphaBackdoor::AlphaBackdoor(const Params *p)
 void
 AlphaBackdoor::startup()
 {
+#if FULL_SYSTEM //XXX No system pointer in SE mode.
     system->setAlphaAccess(pioAddr);
     alphaAccess->numCPUs = system->numContexts();
     alphaAccess->kernStart = system->getKernelStart();
@@ -92,6 +100,7 @@ AlphaBackdoor::startup()
     alphaAccess->mem_size = system->physmem->size();
     alphaAccess->cpuClock = cpu->frequency() / 1000000; // In MHz
     alphaAccess->intrClockFrequency = params()->platform->intrFrequency();
+#endif
 }
 
 Tick

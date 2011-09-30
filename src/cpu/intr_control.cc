@@ -48,19 +48,27 @@ IntrControl::IntrControl(const Params *p)
 void
 IntrControl::post(int cpu_id, int int_num, int index)
 {
+#if FULL_SYSTEM
     DPRINTF(IntrControl, "post  %d:%d (cpu %d)\n", int_num, index, cpu_id);
     std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *cpu = tcvec[cpu_id]->getCpuPtr();
     cpu->postInterrupt(int_num, index);
+#else
+    panic("Called IntrControl::post in SE mode.\n");
+#endif
 }
 
 void
 IntrControl::clear(int cpu_id, int int_num, int index)
 {
+#if FULL_SYSTEM
     DPRINTF(IntrControl, "clear %d:%d (cpu %d)\n", int_num, index, cpu_id);
     std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *cpu = tcvec[cpu_id]->getCpuPtr();
     cpu->clearInterrupt(int_num, index);
+#else
+    panic("Called IntrControl::clear in SE mode.\n");
+#endif
 }
 
 IntrControl *

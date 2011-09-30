@@ -31,7 +31,7 @@
 
 Import('*')
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'sparc':
+if env['TARGET_ISA'] == 'sparc':
     SimObject('T1000.py')
 
     Source('dtod.cc')

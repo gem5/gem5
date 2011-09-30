@@ -42,6 +42,7 @@
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Malta.hh"
 #include "dev/mips/malta.hh"
 #include "dev/mips/malta_cchip.hh"
 #include "dev/mips/maltareg.h"

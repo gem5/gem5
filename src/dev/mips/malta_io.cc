@@ -43,6 +43,7 @@
 #include "base/time.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "debug/Malta.hh"
 #include "dev/mips/malta.hh"
 #include "dev/mips/malta_cchip.hh"
 #include "dev/mips/malta_io.hh"

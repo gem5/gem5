@@ -28,7 +28,12 @@
  * Authors: Gabe Black
  */
 
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM
 #include "arch/x86/interrupts.hh"
+#endif
+
 #include "arch/x86/intmessage.hh"
 #include "debug/I82094AA.hh"
 #include "dev/x86/i82094aa.hh"
@@ -167,6 +172,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         DPRINTF(I82094AA, "Entry was masked.\n");
         return;
     } else {
+#if FULL_SYSTEM //XXX No interrupt controller in SE mode.
         TriggerIntMessage message = 0;
         message.destination = entry.dest;
         if (entry.deliveryMode == DeliveryMode::ExtInt) {
@@ -225,6 +231,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         }
         intPort->sendMessage(apics, message,
                 sys->getMemoryMode() == Enums::timing);
+#endif
     }
 }
 

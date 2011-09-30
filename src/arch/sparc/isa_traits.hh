@@ -35,7 +35,6 @@
 #include "arch/sparc/sparc_traits.hh"
 #include "arch/sparc/types.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "cpu/static_inst_fwd.hh"
 
 namespace BigEndianGuest {}
@@ -78,7 +77,6 @@ const Addr VAddrAMask = ULL(0xFFFFFFFF);
 const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
 const Addr BytesInPageMask = ULL(0x1FFF);
 
-#if FULL_SYSTEM
 enum InterruptTypes
 {
     IT_TRAP_LEVEL_ZERO,
@@ -90,8 +88,6 @@ enum InterruptTypes
     IT_SOFT_INT,
     NumInterruptTypes
 };
-
-#endif
 
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;

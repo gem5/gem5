@@ -56,7 +56,9 @@ Pc::Pc(const Params *p)
 {
     southBridge = NULL;
     // set the back pointer from the system to myself
+#if FULL_SYSTEM //XXX No platform pointer in SE mode.
     system->platform = this;
+#endif
 }
 
 void

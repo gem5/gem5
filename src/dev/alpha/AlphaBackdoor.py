@@ -26,6 +26,7 @@
 #
 # Authors: Nathan Binkert
 
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice
@@ -35,4 +36,5 @@ class AlphaBackdoor(BasicPioDevice):
     cpu = Param.BaseCPU(Parent.cpu[0], "Processor")
     disk = Param.SimpleDisk("Simple Disk")
     terminal = Param.Terminal(Parent.any, "The console terminal")
-    system = Param.AlphaSystem(Parent.any, "system object")
+    if buildEnv['FULL_SYSTEM']: # No AlphaSystem in SE mode.
+        system = Param.AlphaSystem(Parent.any, "system object")

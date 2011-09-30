@@ -30,7 +30,7 @@
 
 Import('*')
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
+if env['TARGET_ISA'] == 'x86':
     SimObject('Pc.py')
     Source('pc.cc')
 

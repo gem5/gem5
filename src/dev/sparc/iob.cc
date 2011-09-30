@@ -42,6 +42,7 @@
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "cpu/intr_control.hh"
+#include "cpu/thread_context.hh"
 #include "debug/Iob.hh"
 #include "dev/sparc/iob.hh"
 #include "dev/platform.hh"

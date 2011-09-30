@@ -31,7 +31,7 @@
 
 Import('*')
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'mips':
+if env['TARGET_ISA'] == 'mips':
     SimObject('Malta.py')
 
     DebugFlag('Malta')
