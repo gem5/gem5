@@ -48,19 +48,7 @@ using namespace TheISA;
 
 T1000::T1000(const Params *p)
     : Platform(p), system(p->system)
-{
-#if FULL_SYSTEM //XXX No platform pointer on system objects in SE mode.
-    // set the back pointer from the system to myself
-    system->platform = this;
-#endif
-}
-
-Tick
-T1000::intrFrequency()
-{
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
-}
+{}
 
 void
 T1000::postConsoleInt()

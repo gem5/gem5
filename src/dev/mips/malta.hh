@@ -92,12 +92,6 @@ class Malta : public Platform
     Malta(const Params *p);
 
     /**
-     * Return the interrupting frequency to MipsAccess
-     * @return frequency of RTC interrupts
-     */
-    virtual Tick intrFrequency();
-
-    /**
      * Cause the cpu to post a serial interrupt to the CPU.
      */
     virtual void postConsoleInt();

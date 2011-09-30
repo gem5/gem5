@@ -60,19 +60,7 @@ using namespace TheISA;
 
 RealView::RealView(const Params *p)
     : Platform(p), system(p->system)
-{
-#if FULL_SYSTEM //XXX No platform pointer on the system object in SE mode.
-    // set the back pointer from the system to myself
-    system->platform = this;
-#endif
-}
-
-Tick
-RealView::intrFrequency()
-{
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
-}
+{}
 
 void
 RealView::postConsoleInt()

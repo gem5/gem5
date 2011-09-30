@@ -54,19 +54,8 @@ using namespace TheISA;
 Malta::Malta(const Params *p)
     : Platform(p), system(p->system)
 {
-#if FULL_SYSTEM //XXX No platform pointer on the system object in SE mode.
-    // set the back pointer from the system to myself
-    system->platform = this;
-#endif
-
     for (int i = 0; i < Malta::Max_CPUs; i++)
         intr_sum_type[i] = 0;
-}
-
-Tick
-Malta::intrFrequency()
-{
-    return io->frequency();
 }
 
 void

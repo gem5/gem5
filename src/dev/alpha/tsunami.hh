@@ -80,15 +80,11 @@ class Tsunami : public Platform
     int intr_sum_type[Tsunami::Max_CPUs];
     int ipi_pending[Tsunami::Max_CPUs];
 
+    void init();
+
   public:
     typedef TsunamiParams Params;
     Tsunami(const Params *p);
-
-    /**
-     * Return the interrupting frequency to AlphaAccess
-     * @return frequency of RTC interrupts
-     */
-    virtual Tick intrFrequency();
 
     /**
      * Cause the cpu to post a serial interrupt to the CPU.

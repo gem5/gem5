@@ -36,6 +36,12 @@
 #include <string>
 #include <vector>
 
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM //XXX AlphaSystem doesn't build in SE mode yet.
+#include "arch/alpha/system.hh"
+#endif
+
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "dev/alpha/tsunami.hh"
@@ -43,7 +49,6 @@
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunami_pchip.hh"
 #include "dev/terminal.hh"
-#include "sim/system.hh"
 
 using namespace std;
 //Should this be AlphaISA?
@@ -52,19 +57,18 @@ using namespace TheISA;
 Tsunami::Tsunami(const Params *p)
     : Platform(p), system(p->system)
 {
-#if FULL_SYSTEM //XXX No platform pointer in SE mode.
-    // set the back pointer from the system to myself
-    system->platform = this;
-#endif
-
     for (int i = 0; i < Tsunami::Max_CPUs; i++)
         intr_sum_type[i] = 0;
 }
 
-Tick
-Tsunami::intrFrequency()
+void
+Tsunami::init()
 {
-    return io->frequency();
+#if FULL_SYSTEM //XXX AlphaSystem doesn't build in SE mode yet.
+    AlphaSystem *alphaSystem = dynamic_cast<AlphaSystem *>(system);
+    assert(alphaSystem);
+    alphaSystem->setIntrFreq(io->frequency());
+#endif
 }
 
 void

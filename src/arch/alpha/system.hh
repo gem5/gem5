@@ -79,6 +79,8 @@ class AlphaSystem : public System
 #endif
 
   protected:
+    Tick intrFreq;
+
     const Params *params() const { return (const Params *)_params; }
 
     /** Add a function-based event to PALcode. */
@@ -98,6 +100,9 @@ class AlphaSystem : public System
     }
 
     virtual Addr fixFuncEventAddr(Addr addr);
+
+  public:
+    void setIntrFreq(Tick freq) { intrFreq = freq; }
 };
 
 #endif // __ARCH_ALPHA_SYSTEM_HH__

@@ -82,12 +82,6 @@ class RealView : public Platform
     void setGic(Gic *_gic) { gic = _gic; }
 
     /**
-     * Return the interrupting frequency to AlphaAccess
-     * @return frequency of RTC interrupts
-     */
-    virtual Tick intrFrequency();
-
-    /**
      * Cause the cpu to post a serial interrupt to the CPU.
      */
     virtual void postConsoleInt();

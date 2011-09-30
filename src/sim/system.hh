@@ -114,7 +114,6 @@ class System : public SimObject
     bool isMemory(const Addr addr) const;
 
 #if FULL_SYSTEM
-    Platform *platform;
     uint64_t init_param;
 
     /** Port to physical memory used for writing object files into ram at

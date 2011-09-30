@@ -50,6 +50,9 @@
 #include "cpu/thread_context.hh"
 #include "debug/AlphaBackdoor.hh"
 #include "dev/alpha/backdoor.hh"
+#include "dev/alpha/tsunami.hh"
+#include "dev/alpha/tsunami_cchip.hh"
+#include "dev/alpha/tsunami_io.hh"
 #include "dev/platform.hh"
 #include "dev/simple_disk.hh"
 #include "dev/terminal.hh"
@@ -99,7 +102,9 @@ AlphaBackdoor::startup()
     alphaAccess->entryPoint = system->getKernelEntry();
     alphaAccess->mem_size = system->physmem->size();
     alphaAccess->cpuClock = cpu->frequency() / 1000000; // In MHz
-    alphaAccess->intrClockFrequency = params()->platform->intrFrequency();
+    Tsunami *tsunami = dynamic_cast<Tsunami *>(params()->platform);
+    assert(tsunami);
+    alphaAccess->intrClockFrequency = tsunami->io->frequency();
 #endif
 }
 

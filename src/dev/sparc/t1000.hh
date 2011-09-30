@@ -60,12 +60,6 @@ class T1000 : public Platform
     T1000(const Params *p);
 
     /**
-     * Return the interrupting frequency to AlphaAccess
-     * @return frequency of RTC interrupts
-     */
-    virtual Tick intrFrequency();
-
-    /**
      * Cause the cpu to post a serial interrupt to the CPU.
      */
     virtual void postConsoleInt();

@@ -64,7 +64,6 @@ class Platform : public SimObject
     virtual ~Platform();
     virtual void postConsoleInt() = 0;
     virtual void clearConsoleInt() = 0;
-    virtual Tick intrFrequency() = 0;
     virtual void postPciInt(int line);
     virtual void clearPciInt(int line);
     virtual Addr pciToDma(Addr pciAddr) const;

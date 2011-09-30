@@ -153,15 +153,7 @@ LinuxMipsSystem::~LinuxMipsSystem()
 void
 LinuxMipsSystem::setDelayLoop(ThreadContext *tc)
 {
-    Addr addr = 0;
-    if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
-        Tick cpuFreq = tc->getCpuPtr()->frequency();
-        Tick intrFreq = platform->intrFrequency();
-        VirtualPort *vp;
-
-        vp = tc->getVirtPort();
-        vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
-    }
+    panic("setDelayLoop not implemented.\n");
 }
 
 
