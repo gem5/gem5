@@ -42,56 +42,53 @@
 
 #include "arch/x86/decoder.hh"
 #include "arch/x86/faults.hh"
-#include "base/trace.hh"
-#include "config/full_system.hh"
-#include "cpu/thread_context.hh"
-
-#if !FULL_SYSTEM
 #include "arch/x86/isa_traits.hh"
-#include "mem/page_table.hh"
-#include "sim/process.hh"
-#else
-#include "arch/x86/tlb.hh"
+#include "base/trace.hh"
+#include "cpu/thread_context.hh"
 #include "debug/Faults.hh"
-#endif
+#include "sim/full_system.hh"
 
 namespace X86ISA
 {
-#if FULL_SYSTEM
     void X86FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
-        PCState pcState = tc->pcState();
-        Addr pc = pcState.pc();
-        DPRINTF(Faults, "RIP %#x: vector %d: %s\n", pc, vector, describe());
-        using namespace X86ISAInst::RomLabels;
-        HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-        MicroPC entry;
-        if (m5reg.mode == LongMode) {
-            if (isSoft()) {
-                entry = extern_label_longModeSoftInterrupt;
-            } else {
-                entry = extern_label_longModeInterrupt;
-            }
-        } else {
-            entry = extern_label_legacyModeInterrupt;
-        }
-        tc->setIntReg(INTREG_MICRO(1), vector);
-        tc->setIntReg(INTREG_MICRO(7), pc);
-        if (errorCode != (uint64_t)(-1)) {
+        if (FullSystem) {
+            PCState pcState = tc->pcState();
+            Addr pc = pcState.pc();
+            DPRINTF(Faults, "RIP %#x: vector %d: %s\n",
+                    pc, vector, describe());
+            using namespace X86ISAInst::RomLabels;
+            HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+            MicroPC entry;
             if (m5reg.mode == LongMode) {
-                entry = extern_label_longModeInterruptWithError;
+                if (isSoft()) {
+                    entry = extern_label_longModeSoftInterrupt;
+                } else {
+                    entry = extern_label_longModeInterrupt;
+                }
             } else {
-                panic("Legacy mode interrupts with error codes "
-                        "aren't implementde.\n");
+                entry = extern_label_legacyModeInterrupt;
             }
-            // Software interrupts shouldn't have error codes. If one does,
-            // there would need to be microcode to set it up.
-            assert(!isSoft());
-            tc->setIntReg(INTREG_MICRO(15), errorCode);
+            tc->setIntReg(INTREG_MICRO(1), vector);
+            tc->setIntReg(INTREG_MICRO(7), pc);
+            if (errorCode != (uint64_t)(-1)) {
+                if (m5reg.mode == LongMode) {
+                    entry = extern_label_longModeInterruptWithError;
+                } else {
+                    panic("Legacy mode interrupts with error codes "
+                            "aren't implementde.\n");
+                }
+                // Software interrupts shouldn't have error codes. If one
+                // does, there would need to be microcode to set it up.
+                assert(!isSoft());
+                tc->setIntReg(INTREG_MICRO(15), errorCode);
+            }
+            pcState.upc(romMicroPC(entry));
+            pcState.nupc(romMicroPC(entry) + 1);
+            tc->pcState(pcState);
+        } else {
+            FaultBase::invoke(tc, inst);
         }
-        pcState.upc(romMicroPC(entry));
-        pcState.nupc(romMicroPC(entry) + 1);
-        tc->pcState(pcState);
     }
 
     std::string
@@ -109,9 +106,12 @@ namespace X86ISA
     void X86Trap::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         X86FaultBase::invoke(tc);
-        // This is the same as a fault, but it happens -after- the instruction.
-        PCState pc = tc->pcState();
-        pc.uEnd();
+        if (FullSystem) {
+            // This is the same as a fault, but it happens -after- the
+            // instruction.
+            PCState pc = tc->pcState();
+            pc.uEnd();
+        }
     }
 
     void X86Abort::invoke(ThreadContext * tc, StaticInstPtr inst)
@@ -119,19 +119,43 @@ namespace X86ISA
         panic("Abort exception!");
     }
 
+    void
+    InvalidOpcode::invoke(ThreadContext * tc, StaticInstPtr inst)
+    {
+        if (FullSystem) {
+            X86Fault::invoke(tc, inst);
+        } else {
+            panic("Unrecognized/invalid instruction executed:\n %s",
+                    inst->machInst);
+        }
+    }
+
     void PageFault::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
-        HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-        X86FaultBase::invoke(tc);
-        /*
-         * If something bad happens while trying to enter the page fault
-         * handler, I'm pretty sure that's a double fault and then all bets are
-         * off. That means it should be safe to update this state now.
-         */
-        if (m5reg.mode == LongMode) {
-            tc->setMiscReg(MISCREG_CR2, addr);
+        if (FullSystem) {
+            HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+            X86FaultBase::invoke(tc);
+            /*
+             * If something bad happens while trying to enter the page fault
+             * handler, I'm pretty sure that's a double fault and then all
+             * bets are off. That means it should be safe to update this
+             * state now.
+             */
+            if (m5reg.mode == LongMode) {
+                tc->setMiscReg(MISCREG_CR2, addr);
+            } else {
+                tc->setMiscReg(MISCREG_CR2, (uint32_t)addr);
+            }
         } else {
-            tc->setMiscReg(MISCREG_CR2, (uint32_t)addr);
+            PageFaultErrorCode code = errorCode;
+            const char *modeStr = "";
+            if (code.fetch)
+                modeStr = "execute";
+            else if (code.write)
+                modeStr = "write";
+            else
+                modeStr = "read";
+            panic("Tried to %s unmapped address %#x.\n", modeStr, addr);
         }
     }
 
@@ -268,30 +292,5 @@ namespace X86ISA
 
         tc->pcState(tc->readMiscReg(MISCREG_CS_BASE));
     }
-
-#else
-
-    void
-    InvalidOpcode::invoke(ThreadContext * tc, StaticInstPtr inst)
-    {
-        panic("Unrecognized/invalid instruction executed:\n %s",
-                inst->machInst);
-    }
-
-    void
-    PageFault::invoke(ThreadContext * tc, StaticInstPtr inst)
-    {
-        PageFaultErrorCode code = errorCode;
-        const char *modeStr = "";
-        if (code.fetch)
-            modeStr = "execute";
-        else if (code.write)
-            modeStr = "write";
-        else
-            modeStr = "read";
-        panic("Tried to %s unmapped address %#x.\n", modeStr, addr);
-    }
-
-#endif
 } // namespace X86ISA
 

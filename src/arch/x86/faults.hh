@@ -85,12 +85,10 @@ namespace X86ISA
             return false;
         }
 
-#if FULL_SYSTEM
         void invoke(ThreadContext * tc,
                 StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 
         virtual std::string describe() const;
-#endif
     };
 
     // Base class for x86 faults which behave as if the underlying instruction
@@ -114,10 +112,8 @@ namespace X86ISA
             : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
-#if FULL_SYSTEM
         void invoke(ThreadContext * tc,
                 StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
     };
 
     // Base class for x86 aborts which seem to be catastrophic failures.
@@ -129,10 +125,8 @@ namespace X86ISA
             : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
-#if FULL_SYSTEM
         void invoke(ThreadContext * tc,
                 StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
     };
 
     // Base class for x86 interrupts.
@@ -246,10 +240,8 @@ namespace X86ISA
             X86Fault("Invalid-Opcode", "#UD", 6)
         {}
 
-#if !FULL_SYSTEM
         void invoke(ThreadContext * tc,
                 StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
     };
 
     class DeviceNotAvailable : public X86Fault
@@ -334,9 +326,7 @@ namespace X86ISA
         void invoke(ThreadContext * tc,
                 StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 
-#if FULL_SYSTEM
         virtual std::string describe() const;
-#endif
     };
 
     class X87FpExceptionPending : public X86Fault
