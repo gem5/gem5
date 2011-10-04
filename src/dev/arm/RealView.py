@@ -83,6 +83,7 @@ class RealViewCtrl(BasicPioDevice):
 
 class Gic(PioDevice):
     type = 'Gic'
+    platform = Param.Platform(Parent.any, "Platform this device is part of.")
     dist_addr = Param.Addr(0x1f001000, "Address for distributor")
     cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
     dist_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to distributor")

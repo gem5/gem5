@@ -58,7 +58,7 @@ PioPort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 
 
 PioDevice::PioDevice(const Params *p)
-    : MemObject(p), platform(p->platform), sys(p->system), pioPort(NULL)
+    : MemObject(p), sys(p->system), pioPort(NULL)
 {}
 
 PioDevice::~PioDevice()

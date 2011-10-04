@@ -149,7 +149,7 @@ class PciDev : public DmaDevice
     }
 
   protected:
-    Platform *plat;
+    Platform *platform;
     Tick pioDelay;
     Tick configDelay;
     PciConfigPort *configPort;
@@ -173,15 +173,15 @@ class PciDev : public DmaDevice
 
   public:
     Addr pciToDma(Addr pciAddr) const
-    { return plat->pciToDma(pciAddr); }
+    { return platform->pciToDma(pciAddr); }
 
     void
     intrPost()
-    { plat->postPciInt(letoh(config.interruptLine)); }
+    { platform->postPciInt(letoh(config.interruptLine)); }
 
     void
     intrClear()
-    { plat->clearPciInt(letoh(config.interruptLine)); }
+    { platform->clearPciInt(letoh(config.interruptLine)); }
 
     uint8_t
     interruptLine()

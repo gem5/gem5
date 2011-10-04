@@ -83,7 +83,7 @@ PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
 
 
 PciDev::PciDev(const Params *p)
-    : DmaDevice(p), plat(p->platform), pioDelay(p->pio_latency),
+    : DmaDevice(p), platform(p->platform), pioDelay(p->pio_latency),
       configDelay(p->config_latency), configPort(NULL)
 {
     config.vendor = htole(p->VendorID);
@@ -143,7 +143,7 @@ PciDev::PciDev(const Params *p)
         }
     }
 
-    plat->registerPciDevice(p->pci_bus, p->pci_dev, p->pci_func,
+    platform->registerPciDevice(p->pci_bus, p->pci_dev, p->pci_func,
             letoh(config.interruptLine));
 }
 

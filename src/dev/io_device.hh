@@ -42,7 +42,6 @@
 #include "sim/sim_object.hh"
 
 class Event;
-class Platform;
 class PioDevice;
 class DmaDevice;
 class System;
@@ -173,11 +172,6 @@ class DmaPort : public Port
 class PioDevice : public MemObject
 {
   protected:
-
-    /** The platform we are in. This is used to decide what type of memory
-     * transaction we should perform. */
-    Platform *platform;
-
     System *sys;
 
     /** The pioPort that handles the requests for us and provides us requests

@@ -39,7 +39,6 @@
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "dev/baddev.hh"
-#include "dev/platform.hh"
 #include "mem/port.hh"
 #include "params/BadDevice.hh"
 #include "sim/system.hh"

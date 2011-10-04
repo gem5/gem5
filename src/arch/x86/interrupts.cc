@@ -302,10 +302,11 @@ X86ISA::Interrupts::init()
     //
     BasicPioDevice::init();
     IntDev::init();
-
+#if FULL_SYSTEM
     Pc * pc = dynamic_cast<Pc *>(platform);
     assert(pc);
     pc->southBridge->ioApic->registerLocalApic(initialApicId, this);
+#endif
 }
 
 
@@ -613,6 +614,9 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingStartup(false), startupVector(0),
     startedUp(false), pendingUnmaskableInt(false),
     pendingIPIs(0), cpu(NULL)
+#if FULL_SYSTEM
+    , platform(p->platform)
+#endif
 {
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));

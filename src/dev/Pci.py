@@ -33,6 +33,7 @@ from Device import BasicPioDevice, DmaDevice, PioDevice
 
 class PciConfigAll(PioDevice):
     type = 'PciConfigAll'
+    platform = Param.Platform(Parent.any, "Platform this device is part of.")
     pio_latency = Param.Tick(1, "Programmed IO latency in simticks")
     bus = Param.UInt8(0x00, "PCI bus to act as config space for")
     size = Param.MemorySize32('16MB', "Size of config space")
@@ -41,6 +42,7 @@ class PciConfigAll(PioDevice):
 class PciDevice(DmaDevice):
     type = 'PciDevice'
     abstract = True
+    platform = Param.Platform(Parent.any, "Platform this device is part of.")
     config = Port(Self.pio.peerObj.port, "PCI configuration space port")
     pci_bus = Param.Int("PCI bus")
     pci_dev = Param.Int("PCI device number")

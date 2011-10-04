@@ -62,9 +62,6 @@ Iob::Iob(const Params *p)
 
     pioDelay = p->pio_latency;
 
-    // Get the interrupt controller from the platform
-    ic = platform->intrctrl;
-
     for (int x = 0; x < NumDeviceIds; ++x) {
         intMan[x].cpu = 0;
         intMan[x].vector = 0;

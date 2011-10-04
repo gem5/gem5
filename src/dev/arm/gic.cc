@@ -53,9 +53,10 @@
 #include "mem/packet_access.hh"
 
 Gic::Gic(const Params *p)
-    : PioDevice(p),distAddr(p->dist_addr), cpuAddr(p->cpu_addr),
-      distPioDelay(p->dist_pio_delay), cpuPioDelay(p->cpu_pio_delay),
-      intLatency(p->int_latency), enabled(false), itLines(p->it_lines)
+    : PioDevice(p), platform(p->platform), distAddr(p->dist_addr),
+      cpuAddr(p->cpu_addr), distPioDelay(p->dist_pio_delay),
+      cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),
+      enabled(false), itLines(p->it_lines)
 {
     itLinesLog2 = ceilLog2(itLines);
 

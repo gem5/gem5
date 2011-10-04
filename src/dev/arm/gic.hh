@@ -124,6 +124,8 @@ class Gic : public PioDevice
         Bitfield<12,10> cpu_id;
     EndBitUnion(IAR)
 
+    Platform *platform;
+
     /** Distributor address GIC listens at */
     Addr distAddr;
 
