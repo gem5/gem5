@@ -82,8 +82,7 @@ assert(len(system.ruby._cpu_ruby_ports) == 1)
 # Tie the cpu cache ports to the ruby cpu ports and
 # physmem, respectively
 #
-cpu.icache_port = system.ruby._cpu_ruby_ports[0].port
-cpu.dcache_port = system.ruby._cpu_ruby_ports[0].port
+cpu.connectAllPorts(system.ruby._cpu_ruby_ports[0])
 
 # -----------------------
 # run simulation
