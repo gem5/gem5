@@ -176,11 +176,10 @@ class Interrupts : public BasicPioDevice, IntDev
 
     int initialApicId;
 
-#if FULL_SYSTEM
-    Platform *platform;
-#endif
-
   public:
+
+    int getInitialApicId() { return initialApicId; }
+
     /*
      * Params stuff.
      */

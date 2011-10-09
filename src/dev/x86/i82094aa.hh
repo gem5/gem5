@@ -70,8 +70,6 @@ class I82094AA : public PioDevice, public IntDev
 
     I8259 * extIntPic;
 
-    std::map<int, Interrupts *> localApics;
-
     uint8_t regSel;
     uint8_t initialApicId;
     uint8_t id;
@@ -131,7 +129,6 @@ class I82094AA : public PioDevice, public IntDev
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);
-    void registerLocalApic(int id, Interrupts *localApic);
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

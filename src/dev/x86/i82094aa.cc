@@ -30,11 +30,9 @@
 
 #include "config/full_system.hh"
 
-#if FULL_SYSTEM
 #include "arch/x86/interrupts.hh"
-#endif
-
 #include "arch/x86/intmessage.hh"
+#include "cpu/base.hh"
 #include "debug/I82094AA.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8259.hh"
@@ -172,7 +170,6 @@ X86ISA::I82094AA::signalInterrupt(int line)
         DPRINTF(I82094AA, "Entry was masked.\n");
         return;
     } else {
-#if FULL_SYSTEM //XXX No interrupt controller in SE mode.
         TriggerIntMessage message = 0;
         message.destination = entry.dest;
         if (entry.deliveryMode == DeliveryMode::ExtInt) {
@@ -202,13 +199,11 @@ X86ISA::I82094AA::signalInterrupt(int line)
             }
         } else {
             for (int i = 0; i < numContexts; i++) {
-                std::map<int, Interrupts *>::iterator localApicIt =
-                    localApics.find(i);
-                assert(localApicIt != localApics.end());
-                Interrupts *localApic = localApicIt->second;
+                Interrupts *localApic = sys->getThreadContext(i)->
+                    getCpuPtr()->getInterruptController();
                 if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &
                         message.destination) {
-                    apics.push_back(localApicIt->first);
+                    apics.push_back(localApic->getInitialApicId());
                 }
             }
             if (message.deliveryMode == DeliveryMode::LowestPriority &&
@@ -231,7 +226,6 @@ X86ISA::I82094AA::signalInterrupt(int line)
         }
         intPort->sendMessage(apics, message,
                 sys->getMemoryMode() == Enums::timing);
-#endif
     }
 }
 
@@ -249,13 +243,6 @@ X86ISA::I82094AA::lowerInterruptPin(int number)
 {
     assert(number < TableSize);
     pinStates[number] = false;
-}
-
-void
-X86ISA::I82094AA::registerLocalApic(int initialId, Interrupts *localApic)
-{
-    assert(localApic);
-    localApics[initialId] = localApic;
 }
 
 void

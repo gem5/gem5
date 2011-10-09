@@ -38,6 +38,3 @@ class X86LocalApic(BasicPioDevice):
     int_port = Port("Port for sending and receiving interrupt messages")
     int_latency = Param.Latency('1ns', \
             "Latency for an interrupt to propagate through this device.")
-    if buildEnv['FULL_SYSTEM']: # No platform in SE mode.
-        platform = Param.Platform(Parent.any,
-                "Platform this device is part of.")
