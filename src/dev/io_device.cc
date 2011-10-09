@@ -71,7 +71,7 @@ void
 PioDevice::init()
 {
     if (!pioPort)
-        panic("Pio port not connected to anything!");
+        panic("Pio port %s not connected to anything!", name());
     pioPort->sendStatusChange(Port::RangeChange);
 }
 
