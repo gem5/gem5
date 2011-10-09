@@ -273,8 +273,10 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
             pendingUnmaskableInt = pendingStartup = true;
             startupVector = vector;
         }
-    } 
+    }
+#if FULL_SYSTEM //XXX CPU has no wakeup method in SE mode.
     cpu->wakeup();
+#endif
 }
 
 

@@ -100,18 +100,11 @@ CPUProgressEvent::description() const
     return "CPU Progress";
 }
 
-#if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
     : MemObject(p), clock(p->clock), instCnt(0), _cpuId(p->cpu_id),
       interrupts(p->interrupts),
       numThreads(p->numThreads), system(p->system),
       phase(p->phase)
-#else
-BaseCPU::BaseCPU(Params *p)
-    : MemObject(p), clock(p->clock), _cpuId(p->cpu_id),
-      numThreads(p->numThreads), system(p->system),
-      phase(p->phase)
-#endif
 {
 //    currentTick = curTick();
 
@@ -202,9 +195,9 @@ BaseCPU::BaseCPU(Params *p)
             schedule(event, p->function_trace_start);
         }
     }
-#if FULL_SYSTEM
     interrupts->setCPU(this);
 
+#if FULL_SYSTEM
     profileEvent = NULL;
     if (params()->profile)
         profileEvent = new ProfileEvent(this, params()->profile);
@@ -395,10 +388,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
         }
     }
 
-#if FULL_SYSTEM
     interrupts = oldCPU->interrupts;
     interrupts->setCPU(this);
 
+#if FULL_SYSTEM
     for (ThreadID i = 0; i < size; ++i)
         threadContexts[i]->profileClear();
 
@@ -440,6 +433,8 @@ BaseCPU::ProfileEvent::process()
     cpu->schedule(this, curTick() + interval);
 }
 
+#endif // FULL_SYSTEM
+
 void
 BaseCPU::serialize(std::ostream &os)
 {
@@ -453,8 +448,6 @@ BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(instCnt);
     interrupts->unserialize(cp, section);
 }
-
-#endif // FULL_SYSTEM
 
 void
 BaseCPU::traceFunctionsInternal(Addr pc)

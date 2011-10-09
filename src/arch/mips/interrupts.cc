@@ -36,6 +36,7 @@
 #include "arch/mips/pra_constants.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Interrupt.hh"
 
 namespace MipsISA
 {

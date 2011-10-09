@@ -40,11 +40,14 @@ if env['TARGET_ISA'] == 'power':
     Source('insts/floating.cc')
     Source('insts/condition.cc')
     Source('insts/static_inst.cc')
+    Source('interrupts.cc')
     Source('pagetable.cc')
     Source('tlb.cc')
     Source('utility.cc')
 
+    SimObject('PowerInterrupts.py')
     SimObject('PowerTLB.py')
+
     DebugFlag('Power')
 
     if not env['FULL_SYSTEM']:

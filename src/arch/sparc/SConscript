@@ -34,6 +34,7 @@ Import('*')
 if env['TARGET_ISA'] == 'sparc':
     Source('asi.cc')
     Source('faults.cc')
+    Source('interrupts.cc')
     Source('isa.cc')
     Source('nativetrace.cc')
     Source('pagetable.cc')
@@ -41,17 +42,16 @@ if env['TARGET_ISA'] == 'sparc':
     Source('tlb.cc')
     Source('utility.cc')
 
+    SimObject('SparcInterrupts.py')
     SimObject('SparcNativeTrace.py')
-
     SimObject('SparcTLB.py')
+
     DebugFlag('Sparc', "Generic SPARC ISA stuff")
     DebugFlag('RegisterWindows', "Register window manipulation")
 
     if env['FULL_SYSTEM']:
         SimObject('SparcSystem.py')
-        SimObject('SparcInterrupts.py')
 
-        Source('interrupts.cc')
         Source('system.cc')
         Source('ua2005.cc')
         Source('vtophys.cc')

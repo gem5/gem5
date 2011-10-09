@@ -53,6 +53,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('insts/microop.cc')
     Source('insts/microregop.cc')
     Source('insts/static_inst.cc')
+    Source('interrupts.cc')
     Source('isa.cc')
     Source('nativetrace.cc')
     Source('pagetable.cc')
@@ -63,23 +64,22 @@ if env['TARGET_ISA'] == 'x86':
     Source('types.cc')
     Source('utility.cc')
 
+    SimObject('X86LocalApic.py')
     SimObject('X86NativeTrace.py')
     SimObject('X86TLB.py')
 
     DebugFlag('Faults', "Trace all faults/exceptions/traps")
+    DebugFlag('LocalApic', "Local APIC debugging")
     DebugFlag('Predecoder', "Predecoder debug output")
     DebugFlag('X86', "Generic X86 ISA debugging")
 
     if env['FULL_SYSTEM']:
-        DebugFlag('LocalApic', "Local APIC debugging")
         DebugFlag('PageTableWalker', \
                   "Page table walker state machine debugging")
 
-        SimObject('X86LocalApic.py')
         SimObject('X86System.py')
 
         # Full-system sources
-        Source('interrupts.cc')
         Source('linux/system.cc')
         Source('pagetable_walker.cc')
         Source('system.cc')

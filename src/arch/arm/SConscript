@@ -54,6 +54,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/pred_inst.cc')
     Source('insts/static_inst.cc')
     Source('insts/vfp.cc')
+    Source('interrupts.cc')
     Source('isa.cc')
     Source('miscregs.cc')
     Source('predecoder.cc')
@@ -62,6 +63,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('utility.cc')
     Source('remote_gdb.cc')
 
+    SimObject('ArmInterrupts.py')
     SimObject('ArmNativeTrace.py')
     SimObject('ArmTLB.py')
 
@@ -70,14 +72,12 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('Faults', "Trace Exceptions, interrupts, svc/swi")
     DebugFlag('Predecoder', "Instructions returned by the predecoder")
     if env['FULL_SYSTEM']:
-        Source('interrupts.cc')
         Source('stacktrace.cc')
         Source('system.cc')
         Source('vtophys.cc')
         Source('linux/system.cc')
         Source('table_walker.cc')
         
-        SimObject('ArmInterrupts.py')
         SimObject('ArmSystem.py')
     else:
         Source('process.cc')

@@ -43,28 +43,22 @@ default_tracer = ExeTracer()
 
 if buildEnv['TARGET_ISA'] == 'alpha':
     from AlphaTLB import AlphaDTB, AlphaITB
-    if buildEnv['FULL_SYSTEM']:
-        from AlphaInterrupts import AlphaInterrupts
+    from AlphaInterrupts import AlphaInterrupts
 elif buildEnv['TARGET_ISA'] == 'sparc':
     from SparcTLB import SparcTLB
-    if buildEnv['FULL_SYSTEM']:
-        from SparcInterrupts import SparcInterrupts
+    from SparcInterrupts import SparcInterrupts
 elif buildEnv['TARGET_ISA'] == 'x86':
     from X86TLB import X86TLB
-    if buildEnv['FULL_SYSTEM']:
-        from X86LocalApic import X86LocalApic
+    from X86LocalApic import X86LocalApic
 elif buildEnv['TARGET_ISA'] == 'mips':
     from MipsTLB import MipsTLB
-    if buildEnv['FULL_SYSTEM']:
-        from MipsInterrupts import MipsInterrupts
+    from MipsInterrupts import MipsInterrupts
 elif buildEnv['TARGET_ISA'] == 'arm':
     from ArmTLB import ArmTLB
-    if buildEnv['FULL_SYSTEM']:
-        from ArmInterrupts import ArmInterrupts
+    from ArmInterrupts import ArmInterrupts
 elif buildEnv['TARGET_ISA'] == 'power':
     from PowerTLB import PowerTLB
-    if buildEnv['FULL_SYSTEM']:
-        from PowerInterrupts import PowerInterrupts
+    from PowerInterrupts import PowerInterrupts
 
 class BaseCPU(MemObject):
     type = 'BaseCPU'
@@ -93,41 +87,34 @@ class BaseCPU(MemObject):
     if buildEnv['TARGET_ISA'] == 'sparc':
         dtb = Param.SparcTLB(SparcTLB(), "Data TLB")
         itb = Param.SparcTLB(SparcTLB(), "Instruction TLB")
-        if buildEnv['FULL_SYSTEM']:
-            interrupts = Param.SparcInterrupts(
+        interrupts = Param.SparcInterrupts(
                 SparcInterrupts(), "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'alpha':
         dtb = Param.AlphaTLB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaTLB(AlphaITB(), "Instruction TLB")
-        if buildEnv['FULL_SYSTEM']:
-            interrupts = Param.AlphaInterrupts(
+        interrupts = Param.AlphaInterrupts(
                 AlphaInterrupts(), "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'x86':
         dtb = Param.X86TLB(X86TLB(), "Data TLB")
         itb = Param.X86TLB(X86TLB(), "Instruction TLB")
-        if buildEnv['FULL_SYSTEM']:
-            _localApic = X86LocalApic(pio_addr=0x2000000000000000)
-            interrupts = \
-                Param.X86LocalApic(_localApic, "Interrupt Controller")
+        _localApic = X86LocalApic(pio_addr=0x2000000000000000)
+        interrupts = Param.X86LocalApic(_localApic, "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'mips':
         dtb = Param.MipsTLB(MipsTLB(), "Data TLB")
         itb = Param.MipsTLB(MipsTLB(), "Instruction TLB")
-        if buildEnv['FULL_SYSTEM']:
-            interrupts = Param.MipsInterrupts(
-                    MipsInterrupts(), "Interrupt Controller")
+        interrupts = Param.MipsInterrupts(
+                MipsInterrupts(), "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'arm':
         dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
         itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
-        if buildEnv['FULL_SYSTEM']:
-            interrupts = Param.ArmInterrupts(
-                    ArmInterrupts(), "Interrupt Controller")
+        interrupts = Param.ArmInterrupts(
+                ArmInterrupts(), "Interrupt Controller")
     elif buildEnv['TARGET_ISA'] == 'power':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.PowerTLB(PowerTLB(), "Data TLB")
         itb = Param.PowerTLB(PowerTLB(), "Instruction TLB")
-        if buildEnv['FULL_SYSTEM']:
-            interrupts = Param.PowerInterrupts(
-                    PowerInterrupts(), "Interrupt Controller")
+        interrupts = Param.PowerInterrupts(
+                PowerInterrupts(), "Interrupt Controller")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             buildEnv['TARGET_ISA']
@@ -157,7 +144,7 @@ class BaseCPU(MemObject):
         _cached_ports = ["itb.walker.port", "dtb.walker.port"]
 
     _uncached_ports = []
-    if buildEnv['TARGET_ISA'] == 'x86' and buildEnv['FULL_SYSTEM']:
+    if buildEnv['TARGET_ISA'] == 'x86':
         _uncached_ports = ["interrupts.pio", "interrupts.int_port"]
 
     def connectCachedPorts(self, bus):
