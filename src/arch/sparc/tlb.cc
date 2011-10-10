@@ -840,8 +840,6 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
     translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
-#if FULL_SYSTEM
-
 Tick
 TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
@@ -1279,8 +1277,6 @@ doMmuWriteError:
     pkt->makeAtomicResponse();
     return tc->getCpuPtr()->ticks(1);
 }
-
-#endif
 
 void
 TLB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
