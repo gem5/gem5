@@ -136,12 +136,10 @@ ISA::clear()
     nres_error_head = 0;
     nres_error_tail = 0;
 
-#if FULL_SYSTEM
     // If one of these events is active, it's not obvious to me how to get
     // rid of it cleanly. For now we'll just assert that they're not.
     if (tickCompare != NULL && sTickCompare != NULL && hSTickCompare != NULL)
         panic("Tick comparison event active when clearing the ISA object.\n");
-#endif
 }
 
 MiscReg
@@ -346,20 +344,8 @@ ISA::readMiscReg(int miscReg, ThreadContext * tc)
       case MISCREG_QUEUE_RES_ERROR_TAIL:
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
-#if FULL_SYSTEM
       case MISCREG_HPSTATE:
         return readFSReg(miscReg, tc);
-#else
-      case MISCREG_HPSTATE:
-        // HPSTATE is special because because sometimes in privilege
-        // checks for instructions it will read HPSTATE to make sure
-        // the priv. level is ok So, we'll just have to tell it it
-        // isn't, instead of panicing.
-        return 0;
-
-      panic("Accessing Fullsystem register %d in SE mode\n", miscReg);
-#endif
-
     }
     return readMiscRegNoEffect(miscReg);
 }
@@ -569,12 +555,10 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
         return;
       case MISCREG_TL:
         tl = val;
-#if FULL_SYSTEM
         if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
             tc->getCpuPtr()->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
         else
             tc->getCpuPtr()->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
-#endif
         return;
       case MISCREG_CWP:
         new_val = val >= NWindows ? NWindows - 1 : val;
@@ -610,18 +594,9 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
       case MISCREG_QUEUE_RES_ERROR_TAIL:
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
-#if FULL_SYSTEM
       case MISCREG_HPSTATE:
         setFSReg(miscReg, val, tc);
         return;
-#else
-      case MISCREG_HPSTATE:
-        // HPSTATE is special because normal trap processing saves HPSTATE when
-        // it goes into a trap, and restores it when it returns.
-        return;
-      panic("Accessing Fullsystem register %d to %#x in SE mode\n",
-              miscReg, val);
-#endif
     }
     setMiscRegNoEffect(miscReg, new_val);
 }
@@ -667,7 +642,6 @@ ISA::serialize(EventManager *em, std::ostream &os)
     SERIALIZE_SCALAR(res_error_tail);
     SERIALIZE_SCALAR(nres_error_head);
     SERIALIZE_SCALAR(nres_error_tail);
-#if FULL_SYSTEM
     Tick tick_cmp = 0, stick_cmp = 0, hstick_cmp = 0;
     ThreadContext *tc = NULL;
     BaseCPU *cpu = NULL;
@@ -701,7 +675,6 @@ ISA::serialize(EventManager *em, std::ostream &os)
         SERIALIZE_SCALAR(stick_cmp);
         SERIALIZE_SCALAR(hstick_cmp);
     }
-#endif
 }
 
 void
@@ -747,7 +720,6 @@ ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(nres_error_head);
     UNSERIALIZE_SCALAR(nres_error_tail);
 
-#if FULL_SYSTEM
     Tick tick_cmp = 0, stick_cmp = 0, hstick_cmp = 0;
     ThreadContext *tc = NULL;
     BaseCPU *cpu = NULL;
@@ -778,7 +750,6 @@ ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
         }
     }
 
- #endif
 }
 
 }

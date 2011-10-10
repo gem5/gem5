@@ -40,6 +40,7 @@ if env['TARGET_ISA'] == 'sparc':
     Source('pagetable.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
+    Source('ua2005.cc')
     Source('utility.cc')
 
     SimObject('SparcInterrupts.py')
@@ -53,7 +54,6 @@ if env['TARGET_ISA'] == 'sparc':
         SimObject('SparcSystem.py')
 
         Source('system.cc')
-        Source('ua2005.cc')
         Source('vtophys.cc')
     else:
         Source('process.cc')
