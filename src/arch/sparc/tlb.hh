@@ -48,11 +48,9 @@ namespace SparcISA
 
 class TLB : public BaseTLB
 {
-#if !FULL_SYSTEM
     // These faults need to be able to populate the tlb in SE mode.
     friend class FastInstructionAccessMMUMiss;
     friend class FastDataAccessMMUMiss;
-#endif
 
     // TLB state
   protected:
