@@ -85,15 +85,11 @@ namespace X86ISA
 
         EntryList::iterator lookupIt(Addr va, bool update_lru = true);
 
-#if FULL_SYSTEM
-      protected:
-
         Walker * walker;
+
       public:
         Walker *getWalker();
-#endif
 
-      public:
         void invalidateAll();
 
         void invalidateNonGlobal();

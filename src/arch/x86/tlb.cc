@@ -44,6 +44,7 @@
 #include "arch/x86/regs/msr.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/pagetable.hh"
+#include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/tlb.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
@@ -55,12 +56,12 @@
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
 
-#if FULL_SYSTEM
-#include "arch/x86/pagetable_walker.hh"
-#else
+#if !FULL_SYSTEM
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #endif
+
+#include "sim/full_system.hh"
 
 namespace X86ISA {
 
@@ -72,10 +73,8 @@ TLB::TLB(const Params *p) : BaseTLB(p), configAddress(0), size(p->size)
     for (int x = 0; x < size; x++)
         freeList.push_back(&tlb[x]);
 
-#if FULL_SYSTEM
     walker = p->walker;
     walker->setTLB(this);
-#endif
 }
 
 TlbEntry *
@@ -293,40 +292,42 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             // The vaddr already has the segment base applied.
             TlbEntry *entry = lookup(vaddr);
             if (!entry) {
-#if FULL_SYSTEM
-                Fault fault = walker->start(tc, translation, req, mode);
-                if (timing || fault != NoFault) {
-                    // This gets ignored in atomic mode.
-                    delayedResponse = true;
-                    return fault;
-                }
-                entry = lookup(vaddr);
-                assert(entry);
-#else
-                DPRINTF(TLB, "Handling a TLB miss for "
-                        "address %#x at pc %#x.\n",
-                        vaddr, tc->instAddr());
-
-                Process *p = tc->getProcessPtr();
-                TlbEntry newEntry;
-                bool success = p->pTable->lookup(vaddr, newEntry);
-                if (!success && mode != Execute) {
-                    // Check if we just need to grow the stack.
-                    if (p->fixupStackFault(vaddr)) {
-                        // If we did, lookup the entry for the new page.
-                        success = p->pTable->lookup(vaddr, newEntry);
+                if (FullSystem) {
+                    Fault fault = walker->start(tc, translation, req, mode);
+                    if (timing || fault != NoFault) {
+                        // This gets ignored in atomic mode.
+                        delayedResponse = true;
+                        return fault;
                     }
-                }
-                if (!success) {
-                    return new PageFault(vaddr, true, mode, true, false);
+                    entry = lookup(vaddr);
+                    assert(entry);
                 } else {
-                    Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-                    DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
-                            newEntry.pageStart());
-                    entry = insert(alignedVaddr, newEntry);
-                }
-                DPRINTF(TLB, "Miss was serviced.\n");
+#if !FULL_SYSTEM
+                    DPRINTF(TLB, "Handling a TLB miss for "
+                            "address %#x at pc %#x.\n",
+                            vaddr, tc->instAddr());
+
+                    Process *p = tc->getProcessPtr();
+                    TlbEntry newEntry;
+                    bool success = p->pTable->lookup(vaddr, newEntry);
+                    if (!success && mode != Execute) {
+                        // Check if we just need to grow the stack.
+                        if (p->fixupStackFault(vaddr)) {
+                            // If we did, lookup the entry for the new page.
+                            success = p->pTable->lookup(vaddr, newEntry);
+                        }
+                    }
+                    if (!success) {
+                        return new PageFault(vaddr, true, mode, true, false);
+                    } else {
+                        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+                        DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
+                                newEntry.pageStart());
+                        entry = insert(alignedVaddr, newEntry);
+                    }
+                    DPRINTF(TLB, "Miss was serviced.\n");
 #endif
+                }
             }
             // Do paging protection checks.
             bool inUser = (m5Reg.cpl == 3 &&

@@ -57,6 +57,7 @@ if env['TARGET_ISA'] == 'x86':
     Source('isa.cc')
     Source('nativetrace.cc')
     Source('pagetable.cc')
+    Source('pagetable_walker.cc')
     Source('predecoder.cc')
     Source('predecoder_tables.cc')
     Source('remote_gdb.cc')
@@ -70,18 +71,17 @@ if env['TARGET_ISA'] == 'x86':
 
     DebugFlag('Faults', "Trace all faults/exceptions/traps")
     DebugFlag('LocalApic', "Local APIC debugging")
+    DebugFlag('PageTableWalker', \
+              "Page table walker state machine debugging")
     DebugFlag('Predecoder', "Predecoder debug output")
     DebugFlag('X86', "Generic X86 ISA debugging")
 
     if env['FULL_SYSTEM']:
-        DebugFlag('PageTableWalker', \
-                  "Page table walker state machine debugging")
 
         SimObject('X86System.py')
 
         # Full-system sources
         Source('linux/system.cc')
-        Source('pagetable_walker.cc')
         Source('system.cc')
         Source('stacktrace.cc')
         Source('vtophys.cc')

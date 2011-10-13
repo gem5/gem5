@@ -35,24 +35,21 @@
 #
 # Authors: Gabe Black
 
-from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
 from BaseTLB import BaseTLB
 from MemObject import MemObject
 
-if buildEnv['FULL_SYSTEM']:
-    class X86PagetableWalker(MemObject):
-        type = 'X86PagetableWalker'
-        cxx_class = 'X86ISA::Walker'
-        port = Port("Port for the hardware table walker")
-        system = Param.System(Parent.any, "system object")
+class X86PagetableWalker(MemObject):
+    type = 'X86PagetableWalker'
+    cxx_class = 'X86ISA::Walker'
+    port = Port("Port for the hardware table walker")
+    system = Param.System(Parent.any, "system object")
 
 class X86TLB(BaseTLB):
     type = 'X86TLB'
     cxx_class = 'X86ISA::TLB'
     size = Param.Int(64, "TLB size")
-    if buildEnv['FULL_SYSTEM']:
-        walker = Param.X86PagetableWalker(\
-                X86PagetableWalker(), "page table walker")
+    walker = Param.X86PagetableWalker(\
+            X86PagetableWalker(), "page table walker")

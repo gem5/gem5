@@ -140,7 +140,8 @@ class BaseCPU(MemObject):
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
     _cached_ports = []
-    if buildEnv['TARGET_ISA'] in ['x86', 'arm'] and buildEnv['FULL_SYSTEM']:
+    if buildEnv['TARGET_ISA'] == 'x86' or \
+        (buildEnv['TARGET_ISA'] == 'arm' and buildEnv['FULL_SYSTEM']):
         _cached_ports = ["itb.walker.port", "dtb.walker.port"]
 
     _uncached_ports = []
