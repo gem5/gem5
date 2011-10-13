@@ -34,7 +34,6 @@
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/tlb_map.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
 #include "mem/request.hh"
 #include "params/SparcTLB.hh"
 #include "sim/fault_fwd.hh"

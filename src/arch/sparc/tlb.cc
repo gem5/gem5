@@ -42,6 +42,7 @@
 #include "debug/TLB.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
 
 /* @todo remove some of the magic constants.  -- ali
@@ -497,14 +498,14 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 
     if (e == NULL || !e->valid) {
         writeTagAccess(vaddr, context);
-        if (real)
+        if (real) {
             return new InstructionRealTranslationMiss;
-        else
-#if FULL_SYSTEM
-            return new FastInstructionAccessMMUMiss;
-#else
-            return new FastInstructionAccessMMUMiss(req->getVaddr());
-#endif
+        } else {
+            if (FullSystem)
+                return new FastInstructionAccessMMUMiss;
+            else
+                return new FastInstructionAccessMMUMiss(req->getVaddr());
+        }
     }
 
     // were not priviledged accesing priv page
@@ -709,14 +710,14 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     if (e == NULL || !e->valid) {
         writeTagAccess(vaddr, context);
         DPRINTF(TLB, "TLB: DTB Failed to find matching TLB entry\n");
-        if (real)
+        if (real) {
             return new DataRealTranslationMiss;
-        else
-#if FULL_SYSTEM
-            return new FastDataAccessMMUMiss;
-#else
-            return new FastDataAccessMMUMiss(req->getVaddr());
-#endif
+        } else {
+            if (FullSystem)
+                return new FastDataAccessMMUMiss;
+            else
+                return new FastDataAccessMMUMiss(req->getVaddr());
+        }
 
     }
 
