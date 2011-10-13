@@ -36,7 +36,7 @@
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
+#include "sim/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #if !FULL_SYSTEM
@@ -44,6 +44,7 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #endif
+#include "sim/full_system.hh"
 
 using namespace std;
 
@@ -494,12 +495,13 @@ getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, MiscReg TT, MiscReg TL)
     NPC = PC + sizeof(MachInst);
 }
 
-#if FULL_SYSTEM
-
 void
 SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
     FaultBase::invoke(tc);
+    if (!FullSystem)
+        return;
+
     countStat()++;
 
     // We can refer to this to see what the trap level -was-, but something
@@ -619,11 +621,10 @@ PowerOnReset::invoke(ThreadContext *tc, StaticInstPtr inst)
     */
 }
 
-#else // !FULL_SYSTEM
-
 void
 FastInstructionAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
+#if !FULL_SYSTEM
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
     bool success = p->pTable->lookup(vaddr, entry);
@@ -634,11 +635,15 @@ FastInstructionAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
         tc->getITBPtr()->insert(alignedVaddr, 0 /*partition id*/,
                 p->M5_pid /*context id*/, false, entry.pte);
     }
+#else
+    SparcFaultBase::invoke(tc, inst);
+#endif
 }
 
 void
 FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
+#if !FULL_SYSTEM
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
     bool success = p->pTable->lookup(vaddr, entry);
@@ -653,11 +658,15 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
         tc->getDTBPtr()->insert(alignedVaddr, 0 /*partition id*/,
                 p->M5_pid /*context id*/, false, entry.pte);
     }
+#else
+    SparcFaultBase::invoke(tc, inst);
+#endif
 }
 
 void
 SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
+#if !FULL_SYSTEM
     doNormalFault(tc, trapType(), false);
 
     Process *p = tc->getProcessPtr();
@@ -668,11 +677,15 @@ SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 
     // Then adjust the PC and NPC
     tc->pcState(lp->readSpillStart());
+#else
+    SparcFaultBase::invoke(tc, inst);
+#endif
 }
 
 void
 FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
+#if !FULL_SYSTEM
     doNormalFault(tc, trapType(), false);
 
     Process *p = tc->getProcessPtr();
@@ -683,11 +696,15 @@ FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 
     // Then adjust the PC and NPC
     tc->pcState(lp->readFillStart());
+#else
+    SparcFaultBase::invoke(tc, inst);
+#endif
 }
 
 void
 TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
+#if !FULL_SYSTEM
     // In SE, this mechanism is how the process requests a service from the
     // operating system. We'll get the process object from the thread context
     // and let it service the request.
@@ -704,9 +721,10 @@ TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
     PCState pc = tc->pcState();
     pc.advance();
     tc->pcState(pc);
-}
-
+#else
+    SparcFaultBase::invoke(tc, inst);
 #endif
+}
 
 } // namespace SparcISA
 
