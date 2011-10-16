@@ -128,8 +128,6 @@ class ThreadContext
 #if FULL_SYSTEM
     virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
-    virtual FunctionalPort *getPhysPort() = 0;
-
     virtual VirtualPort *getVirtPort() = 0;
 
     virtual void connectMemPorts(ThreadContext *tc) = 0;
@@ -138,6 +136,8 @@ class ThreadContext
 
     virtual Process *getProcessPtr() = 0;
 #endif
+
+    virtual FunctionalPort *getPhysPort() = 0;
 
     virtual Status status() const = 0;
 
@@ -298,8 +298,6 @@ class ProxyThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 
-    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
-
     VirtualPort *getVirtPort() { return actualTC->getVirtPort(); }
 
     void connectMemPorts(ThreadContext *tc) { actualTC->connectMemPorts(tc); }
@@ -308,6 +306,8 @@ class ProxyThreadContext : public ThreadContext
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
+
+    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
     Status status() const { return actualTC->status(); }
 

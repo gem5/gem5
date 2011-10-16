@@ -124,8 +124,6 @@ class OzoneCPU : public BaseCPU
         TheISA::Kernel::Statistics *getKernelStats()
         { return thread->getKernelStats(); }
 
-        FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
-
         VirtualPort *getVirtPort()
         { return thread->getVirtPort(); }
 #else
@@ -133,6 +131,8 @@ class OzoneCPU : public BaseCPU
 
         Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
+
+        FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
         Status status() const { return thread->status(); }
 

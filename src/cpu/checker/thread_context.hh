@@ -97,8 +97,6 @@ class CheckerThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 
-    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
-
     VirtualPort *getVirtPort()
     { return actualTC->getVirtPort(); }
 #else
@@ -106,6 +104,8 @@ class CheckerThreadContext : public ThreadContext
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
+
+    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
     Status status() const { return actualTC->status(); }
 

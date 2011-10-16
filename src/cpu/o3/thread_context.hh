@@ -97,8 +97,6 @@ class O3ThreadContext : public ThreadContext
     virtual TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
-    virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
-
     virtual VirtualPort *getVirtPort();
 
     virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
@@ -108,6 +106,9 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to this thread's process. */
     virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
+
+    virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
+
     /** Returns this thread's status. */
     virtual Status status() const { return thread->status(); }
 

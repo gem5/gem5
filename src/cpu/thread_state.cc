@@ -51,11 +51,11 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
 #if FULL_SYSTEM
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      kernelStats(NULL), physPort(NULL), virtPort(NULL),
+      kernelStats(NULL), virtPort(NULL),
 #else
       port(NULL), process(_process),
 #endif
-      funcExeInst(0), storeCondFailures(0)
+      physPort(NULL), funcExeInst(0), storeCondFailures(0)
 {
 }
 
@@ -104,14 +104,6 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 #endif
 }
 
-#if FULL_SYSTEM
-void
-ThreadState::connectMemPorts(ThreadContext *tc)
-{
-    connectPhysPort();
-    connectVirtPort(tc);
-}
-
 void
 ThreadState::connectPhysPort()
 {
@@ -124,6 +116,14 @@ ThreadState::connectPhysPort()
         physPort = new FunctionalPort(csprintf("%s-%d-funcport",
                                            baseCpu->name(), _threadId));
     connectToMemFunc(physPort);
+}
+
+#if FULL_SYSTEM
+void
+ThreadState::connectMemPorts(ThreadContext *tc)
+{
+    connectPhysPort();
+    connectVirtPort(tc);
 }
 
 void

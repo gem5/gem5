@@ -117,8 +117,8 @@ SimpleThread::SimpleThread()
 
 SimpleThread::~SimpleThread()
 {
-#if FULL_SYSTEM
     delete physPort;
+#if FULL_SYSTEM
     delete virtPort;
 #endif
     delete tc;

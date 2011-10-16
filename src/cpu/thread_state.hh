@@ -92,10 +92,10 @@ struct ThreadState {
 
     Tick readLastSuspend() { return lastSuspend; }
 
+    void connectPhysPort();
+
 #if FULL_SYSTEM
     void connectMemPorts(ThreadContext *tc);
-
-    void connectPhysPort();
 
     void connectVirtPort(ThreadContext *tc);
 
@@ -109,10 +109,6 @@ struct ThreadState {
 
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
 
-    FunctionalPort *getPhysPort() { return physPort; }
-
-    void setPhysPort(FunctionalPort *port) { physPort = port; }
-
     VirtualPort *getVirtPort() { return virtPort; }
 #else
     Process *getProcessPtr() { return process; }
@@ -121,6 +117,10 @@ struct ThreadState {
 
     void setMemPort(TranslatingPort *_port) { port = _port; }
 #endif
+
+    FunctionalPort *getPhysPort() { return physPort; }
+
+    void setPhysPort(FunctionalPort *port) { physPort = port; }
 
     /** Reads the number of instructions functionally executed and
      * committed.
@@ -186,10 +186,6 @@ struct ThreadState {
 
     TheISA::Kernel::Statistics *kernelStats;
   protected:
-    /** A functional port outgoing only for functional accesses to physical
-     * addresses.*/
-    FunctionalPort *physPort;
-
     /** A functional port, outgoing only, for functional accesse to virtual
      * addresses. */
     VirtualPort *virtPort;
@@ -198,6 +194,10 @@ struct ThreadState {
 
     Process *process;
 #endif
+
+    /** A functional port outgoing only for functional accesses to physical
+     * addresses.*/
+    FunctionalPort *physPort;
 
   public:
     /*

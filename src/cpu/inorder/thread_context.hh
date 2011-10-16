@@ -118,8 +118,6 @@ class InOrderThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
-    FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
-
     VirtualPort *getVirtPort();
 
     void connectMemPorts(ThreadContext *tc)
@@ -152,6 +150,8 @@ class InOrderThreadContext : public ThreadContext
     /** Returns a pointer to this thread's process. */
     Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
+
+    FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
     /** Returns this thread's status. */
     Status status() const { return thread->status(); }
