@@ -65,14 +65,12 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : SimObject(p), physmem(p->physmem), _numContexts(0),
+    : SimObject(p), physmem(p->physmem), _numContexts(0), pagePtr(0),
 #if FULL_SYSTEM
       init_param(p->init_param),
       loadAddrMask(p->load_addr_mask),
-#else
-      pagePtr(0),
-      nextPID(0),
 #endif
+      nextPID(0),
       memoryMode(p->mem_mode),
       workItemsBegin(0),
       workItemsEnd(0),
@@ -273,7 +271,6 @@ System::replaceThreadContext(ThreadContext *tc, int context_id)
         remoteGDB[context_id]->replaceThreadContext(tc);
 }
 
-#if !FULL_SYSTEM
 Addr
 System::new_page()
 {
@@ -295,8 +292,6 @@ System::freeMemSize()
 {
    return physmem->size() - (pagePtr << LogVMPageSize);
 }
-
-#endif
 
 bool
 System::isMemory(const Addr addr) const
@@ -321,10 +316,9 @@ System::serialize(ostream &os)
 {
 #if FULL_SYSTEM
     kernelSymtab->serialize("kernel_symtab", os);
-#else // !FULL_SYSTEM
+#endif
     SERIALIZE_SCALAR(pagePtr);
     SERIALIZE_SCALAR(nextPID);
-#endif
 }
 
 
@@ -333,10 +327,9 @@ System::unserialize(Checkpoint *cp, const string &section)
 {
 #if FULL_SYSTEM
     kernelSymtab->unserialize("kernel_symtab", cp, section);
-#else // !FULL_SYSTEM
+#endif
     UNSERIALIZE_SCALAR(pagePtr);
     UNSERIALIZE_SCALAR(nextPID);
-#endif
 }
 
 void

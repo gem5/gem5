@@ -113,6 +113,8 @@ class System : public SimObject
      */
     bool isMemory(const Addr addr) const;
 
+    Addr pagePtr;
+
 #if FULL_SYSTEM
     uint64_t init_param;
 
@@ -144,9 +146,7 @@ class System : public SimObject
      */
     Addr loadAddrMask;
 
-#else
-
-    Addr pagePtr;
+#endif // FULL_SYSTEM
 
   protected:
     uint64_t nextPID;
@@ -162,9 +162,6 @@ class System : public SimObject
 
     /** Amount of physical memory that exists */
     Addr memSize();
-
-
-#endif // FULL_SYSTEM
 
   protected:
     Enums::MemoryMode memoryMode;
@@ -284,11 +281,9 @@ class System : public SimObject
      */
     Addr getKernelEntry() const { return kernelEntry; }
 
-#else
+#endif
 
     Addr new_page();
-
-#endif // FULL_SYSTEM
 
     int registerThreadContext(ThreadContext *tc, int assigned=-1);
     void replaceThreadContext(ThreadContext *tc, int context_id);
