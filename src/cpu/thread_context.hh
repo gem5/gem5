@@ -130,10 +130,10 @@ class ThreadContext
 
     virtual void connectMemPorts(ThreadContext *tc) = 0;
 #else
-    virtual TranslatingPort *getMemPort() = 0;
-
     virtual Process *getProcessPtr() = 0;
 #endif
+
+    virtual TranslatingPort *getMemPort() = 0;
 
     virtual VirtualPort *getVirtPort() = 0;
 
@@ -300,10 +300,10 @@ class ProxyThreadContext : public ThreadContext
 
     void connectMemPorts(ThreadContext *tc) { actualTC->connectMemPorts(tc); }
 #else
-    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
-
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
+
+    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 
     VirtualPort *getVirtPort() { return actualTC->getVirtPort(); }
 

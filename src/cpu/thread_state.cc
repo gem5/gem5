@@ -53,9 +53,10 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL),
 #else
-      port(NULL), process(_process),
+      process(_process),
 #endif
-      virtPort(NULL), physPort(NULL), funcExeInst(0), storeCondFailures(0)
+      port(NULL), virtPort(NULL), physPort(NULL), funcExeInst(0),
+      storeCondFailures(0)
 {
 }
 
@@ -153,8 +154,8 @@ ThreadState::profileSample()
     if (profile)
         profile->sample(profileNode, profilePC);
 }
+#endif
 
-#else
 TranslatingPort *
 ThreadState::getMemPort()
 {
@@ -162,14 +163,17 @@ ThreadState::getMemPort()
         return port;
 
     /* Use this port to for syscall emulation writes to memory. */
-    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(), _threadId),
-                               process, TranslatingPort::NextPage);
+    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(),
+                               _threadId),
+#if !FULL_SYSTEM
+                               process,
+#endif
+                               TranslatingPort::NextPage);
 
     connectToMemFunc(port);
 
     return port;
 }
-#endif
 
 void
 ThreadState::connectToMemFunc(Port *port)

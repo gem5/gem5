@@ -110,11 +110,11 @@ struct ThreadState {
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
 #else
     Process *getProcessPtr() { return process; }
+#endif
 
     TranslatingPort *getMemPort();
 
     void setMemPort(TranslatingPort *_port) { port = _port; }
-#endif
 
     VirtualPort *getVirtPort() { return virtPort; }
 
@@ -187,10 +187,10 @@ struct ThreadState {
     TheISA::Kernel::Statistics *kernelStats;
   protected:
 #else
-    TranslatingPort *port;
-
     Process *process;
 #endif
+
+    TranslatingPort *port;
 
     /** A functional port, outgoing only, for functional accesse to virtual
      * addresses. */
