@@ -44,6 +44,7 @@ if env['TARGET_ISA'] == 'power':
     Source('pagetable.cc')
     Source('tlb.cc')
     Source('utility.cc')
+    Source('vtophys.cc')
 
     SimObject('PowerInterrupts.py')
     SimObject('PowerTLB.py')

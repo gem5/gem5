@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * Copyright (c) 2007-2008 The Florida State University
- * Copyright (c) 2009 The University of Edinburgh
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,31 +28,22 @@
  *
  * Authors: Ali Saidi
  *          Nathan Binkert
- *          Stephen Hines
- *          Timothy M. Jones
+ *          Jaidev Patwardhan
  */
 
-#ifndef __ARCH_POWER_VTOPHYS_HH__
-#define __ARCH_POWER_VTOPHYS_HH__
+#include "arch/power/vtophys.hh"
 
-#include "arch/power/isa_traits.hh"
-#include "arch/power/utility.hh"
+using namespace std;
 
-class ThreadContext;
-class FunctionalPort;
-
-namespace PowerISA {
-
-Addr vtophys(Addr vaddr);
-Addr vtophys(ThreadContext *tc, Addr vaddr);
-
-inline Addr
-PteAddr(Addr a)
+Addr
+PowerISA::vtophys(Addr vaddr)
 {
-    return (a & PteMask) << PteShift;
+    fatal("VTOPHYS: Unimplemented on POWER\n");
 }
 
-} // namespace PowerISA
-
-#endif // __ARCH_POWER_VTOPHYS_HH__
+Addr
+PowerISA::vtophys(ThreadContext *tc, Addr addr)
+{
+    fatal("VTOPHYS: Unimplemented on POWER\n");
+}
 
