@@ -35,8 +35,8 @@
 #include "config/full_system.hh"
 #include "mem/port.hh"
 
-#if !FULL_SYSTEM
 class PageTable;
+#if !FULL_SYSTEM
 class Process;
 #endif
 
@@ -50,8 +50,8 @@ class TranslatingPort : public FunctionalPort
     };
 
   private:
-#if !FULL_SYSTEM
     PageTable *pTable;
+#if !FULL_SYSTEM
     Process *process;
 #endif
     AllocType allocating;

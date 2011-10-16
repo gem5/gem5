@@ -34,34 +34,14 @@
 #ifndef __ARCH_MIPS_PAGETABLE_H__
 #define __ARCH_MIPS_PAGETABLE_H__
 
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/utility.hh"
-#include "arch/mips/vtophys.hh"
-#include "config/full_system.hh"
+#include "base/misc.hh"
+#include "base/types.hh"
+#include "sim/serialize.hh"
 
 namespace MipsISA {
 
 struct VAddr
 {
-    static const int ImplBits = 43;
-    static const Addr ImplMask = (ULL(1) << ImplBits) - 1;
-    static const Addr UnImplMask = ~ImplMask;
-
-    VAddr(Addr a) : addr(a) {}
-    Addr addr;
-    operator Addr() const { return addr; }
-    const VAddr &operator=(Addr a) { addr = a; return *this; }
-
-    Addr vpn() const { return (addr & ImplMask) >> PageShift; }
-    Addr page() const { return addr & Page_Mask; }
-    Addr offset() const { return addr & PageOffset; }
-
-    Addr level3() const
-    { return MipsISA::PteAddr(addr >> PageShift); }
-    Addr level2() const
-    { return MipsISA::PteAddr(addr >> (NPtePageShift + PageShift)); }
-    Addr level1() const
-    { return MipsISA::PteAddr(addr >> (2 * NPtePageShift + PageShift)); }
 };
 
 // ITB/DTB page table entry
@@ -96,6 +76,33 @@ struct PTE
     bool Valid() { return (V0 | V1); };
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+// WARN: This particular TLB entry is not necessarily conformed to MIPS ISA
+struct TlbEntry
+{
+    Addr _pageStart;
+    TlbEntry() {}
+    TlbEntry(Addr asn, Addr vaddr, Addr paddr) : _pageStart(paddr) {}
+
+    Addr pageStart()
+    {
+        return _pageStart;
+    }
+
+    void
+    updateVaddr(Addr new_vaddr) {}
+
+    void serialize(std::ostream &os)
+    {
+        SERIALIZE_SCALAR(_pageStart);
+    }
+
+    void unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_SCALAR(_pageStart);
+    }
+
 };
 
 };

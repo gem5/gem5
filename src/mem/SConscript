@@ -46,11 +46,9 @@ Source('vport.cc')
 if env['TARGET_ISA'] != 'no':
     SimObject('PhysicalMemory.py')
     Source('dram.cc')
+    Source('page_table.cc')
     Source('physical.cc')
     Source('translating_port.cc')
-
-if not env['FULL_SYSTEM'] and env['TARGET_ISA'] != 'no':
-    Source('page_table.cc')
 
 DebugFlag('Bus')
 DebugFlag('BusAddrRanges')

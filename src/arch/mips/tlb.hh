@@ -55,33 +55,6 @@ class ThreadContext;
    simply create an ITLB and DTLB that will point to the real TLB */
 namespace MipsISA {
 
-// WARN: This particular TLB entry is not necessarily conformed to MIPS ISA
-struct TlbEntry
-{
-    Addr _pageStart;
-    TlbEntry() {}
-    TlbEntry(Addr asn, Addr vaddr, Addr paddr) : _pageStart(paddr) {}
-
-    Addr pageStart()
-    {
-        return _pageStart;
-    }
-
-    void
-    updateVaddr(Addr new_vaddr) {}
-    
-    void serialize(std::ostream &os)
-    {
-        SERIALIZE_SCALAR(_pageStart);
-    }
-
-    void unserialize(Checkpoint *cp, const std::string &section)
-    {
-        UNSERIALIZE_SCALAR(_pageStart);
-    }
-
-};
-
 class TLB : public BaseTLB
 {
   protected:

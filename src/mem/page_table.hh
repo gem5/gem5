@@ -42,11 +42,14 @@
 #include "arch/tlb.hh"
 #include "base/hashmap.hh"
 #include "base/types.hh"
+#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "mem/request.hh"
 #include "sim/serialize.hh"
 
+#if !FULL_SYSTEM
 class Process;
+#endif
 
 /**
  * Page Table Declaration.
@@ -68,11 +71,17 @@ class PageTable
     const Addr pageSize;
     const Addr offsetMask;
 
+#if !FULL_SYSTEM
     Process *process;
+#endif
 
   public:
 
-    PageTable(Process *_process, Addr _pageSize = TheISA::VMPageSize);
+    PageTable(
+#if !FULL_SYSTEM
+            Process *_process,
+#endif
+            Addr _pageSize = TheISA::VMPageSize);
 
     ~PageTable();
 

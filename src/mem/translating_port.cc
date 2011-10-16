@@ -35,9 +35,7 @@
 #include "base/chunk_generator.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
-#if !FULL_SYSTEM
 #include "mem/page_table.hh"
-#endif
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #if !FULL_SYSTEM
@@ -67,14 +65,12 @@ TranslatingPort::tryReadBlob(Addr addr, uint8_t *p, int size)
     int prevSize = 0;
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
-#if !FULL_SYSTEM
         Addr paddr;
 
         if (!pTable->translate(gen.addr(),paddr))
             return false;
 
         Port::readBlob(paddr, p + prevSize, gen.size());
-#endif
         prevSize += gen.size();
     }
 
@@ -95,7 +91,6 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
     int prevSize = 0;
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
-#if !FULL_SYSTEM
         Addr paddr;
 
         if (!pTable->translate(gen.addr(), paddr)) {
@@ -104,9 +99,11 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
                                  VMPageSize);
             } else if (allocating == NextPage) {
                 // check if we've accessed the next page on the stack
+#if !FULL_SYSTEM
                 if (!process->fixupStackFault(gen.addr()))
                     panic("Page table fault when accessing virtual address %#x "
                             "during functional write\n", gen.addr());
+#endif
             } else {
                 return false;
             }
@@ -114,7 +111,6 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
         }
 
         Port::writeBlob(paddr, p + prevSize, gen.size());
-#endif
         prevSize += gen.size();
     }
 
@@ -133,7 +129,6 @@ bool
 TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
 {
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
-#if !FULL_SYSTEM
         Addr paddr;
 
         if (!pTable->translate(gen.addr(), paddr)) {
@@ -146,7 +141,6 @@ TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
             }
         }
         Port::memsetBlob(paddr, val, gen.size());
-#endif
     }
 
     return true;
@@ -163,7 +157,6 @@ TranslatingPort::memsetBlob(Addr addr, uint8_t val, int size)
 bool
 TranslatingPort::tryWriteString(Addr addr, const char *str)
 {
-#if !FULL_SYSTEM
     uint8_t c;
 
     Addr vaddr = addr;
@@ -178,7 +171,6 @@ TranslatingPort::tryWriteString(Addr addr, const char *str)
         Port::writeBlob(paddr, &c, 1);
     } while (c);
 
-#endif
     return true;
 }
 
@@ -192,7 +184,6 @@ TranslatingPort::writeString(Addr addr, const char *str)
 bool
 TranslatingPort::tryReadString(std::string &str, Addr addr)
 {
-#if !FULL_SYSTEM
     uint8_t c;
 
     Addr vaddr = addr;
@@ -207,7 +198,6 @@ TranslatingPort::tryReadString(std::string &str, Addr addr)
         str += c;
     } while (c);
 
-#endif
     return true;
 }
 

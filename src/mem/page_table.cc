@@ -52,9 +52,15 @@
 using namespace std;
 using namespace TheISA;
 
-PageTable::PageTable(Process *_process, Addr _pageSize)
-    : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
-      process(_process)
+PageTable::PageTable(
+#if !FULL_SYSTEM
+        Process *_process,
+#endif
+        Addr _pageSize)
+    : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize)))
+#if !FULL_SYSTEM
+      , process(_process)
+#endif
 {
     assert(isPowerOf2(pageSize));
     pTableCache[0].vaddr = 0;
@@ -83,9 +89,11 @@ PageTable::allocate(Addr vaddr, int64_t size)
                     vaddr);
         }
 
+#if !FULL_SYSTEM
         pTable[vaddr] = TheISA::TlbEntry(process->M5_pid, vaddr,
                 process->system->new_page());
         updateCache(vaddr, pTable[vaddr]);
+#endif
     }
 }
 
@@ -196,7 +204,9 @@ PageTable::serialize(std::ostream &os)
     PTableItr iter = pTable.begin();
     PTableItr end = pTable.end();
     while (iter != end) {
+#if !FULL_SYSTEM
         os << "\n[" << csprintf("%s.Entry%d", process->name(), count) << "]\n";
+#endif
 
         paramOut(os, "vaddr", iter->first);
         iter->second.serialize(os);
@@ -212,17 +222,20 @@ PageTable::unserialize(Checkpoint *cp, const std::string &section)
 {
     int i = 0, count;
     paramIn(cp, section, "ptable.size", count);
-    Addr vaddr;
-    TheISA::TlbEntry *entry;
 
     pTable.clear();
 
-    while(i < count) {
+    while (i < count) {
+#if !FULL_SYSTEM
+        TheISA::TlbEntry *entry;
+        Addr vaddr;
+
         paramIn(cp, csprintf("%s.Entry%d", process->name(), i), "vaddr", vaddr);
         entry = new TheISA::TlbEntry();
         entry->unserialize(cp, csprintf("%s.Entry%d", process->name(), i));
         pTable[vaddr] = *entry;
         ++i;
+#endif
     }
 }
 
