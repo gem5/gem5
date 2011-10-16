@@ -41,24 +41,6 @@ class ThreadContext;
 class FunctionalPort;
 
 namespace MipsISA {
-    inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
-
-    // User Virtual
-    inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
-
-    inline bool IsKSeg0(Addr a) { return KSeg0Base <= a && a <= KSeg0End; }
-
-    inline Addr KSeg02Phys(Addr addr) { return addr & KSeg0Mask; }
-
-    inline Addr KSeg12Phys(Addr addr) { return addr & KSeg1Mask; }
-
-    inline bool IsKSeg1(Addr a) { return KSeg1Base <= a && a <= KSeg1End; }
-
-    inline bool IsKSSeg(Addr a) { return KSSegBase <= a && a <= KSSegEnd; }
-
-    inline bool IsKSeg3(Addr a) { return KSeg3Base <= a && a <= KSeg3End; }
-
-
     Addr vtophys(Addr vaddr);
     Addr vtophys(ThreadContext *tc, Addr vaddr);
 

@@ -37,6 +37,7 @@
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "debug/VtoPhys.hh"
 #include "mem/vport.hh"
 
 using namespace std;
@@ -45,25 +46,13 @@ using namespace MipsISA;
 Addr
 MipsISA::vtophys(Addr vaddr)
 {
-    Addr paddr = 0;
-    if (MipsISA::IsUSeg(vaddr))
-        DPRINTF(VtoPhys, "vtophys: invalid vaddr %#x", vaddr);
-    else if (MipsISA::IsKSeg0(vaddr))
-        paddr = MipsISA::KSeg02Phys(vaddr);
-    else if(MipsISA::IsKSeg1(vaddr))
-        paddr = MipsISA::KSeg12Phys(vaddr);
-    else
-        panic("vtophys: ptbr is not set on "
-                "virtual lookup for vaddr %#x", vaddr);
-
-    DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
-
-    return paddr;
+    fatal("VTOPHYS: Unimplemented on MIPS\n");
+    return 0;
 }
 
 Addr
 MipsISA::vtophys(ThreadContext *tc, Addr addr)
 {
-  fatal("VTOPHYS: Unimplemented on MIPS\n");
+    fatal("VTOPHYS: Unimplemented on MIPS\n");
 }
 
