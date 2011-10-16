@@ -31,18 +31,30 @@
 
 #include <string>
 
+#include "arch/isa_traits.hh"
 #include "base/chunk_generator.hh"
+#include "config/full_system.hh"
 #include "config/the_isa.hh"
+#if !FULL_SYSTEM
 #include "mem/page_table.hh"
+#endif
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
+#if !FULL_SYSTEM
 #include "sim/process.hh"
+#endif
 
 using namespace TheISA;
 
 TranslatingPort::TranslatingPort(const std::string &_name,
-                                 Process *p, AllocType alloc)
-    : FunctionalPort(_name), pTable(p->pTable), process(p),
+#if !FULL_SYSTEM
+                                 Process *p,
+#endif
+                                 AllocType alloc)
+    : FunctionalPort(_name),
+#if !FULL_SYSTEM
+      pTable(p->pTable), process(p),
+#endif
       allocating(alloc)
 { }
 
@@ -52,15 +64,17 @@ TranslatingPort::~TranslatingPort()
 bool
 TranslatingPort::tryReadBlob(Addr addr, uint8_t *p, int size)
 {
-    Addr paddr;
     int prevSize = 0;
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
+#if !FULL_SYSTEM
+        Addr paddr;
 
         if (!pTable->translate(gen.addr(),paddr))
             return false;
 
         Port::readBlob(paddr, p + prevSize, gen.size());
+#endif
         prevSize += gen.size();
     }
 
@@ -78,11 +92,11 @@ TranslatingPort::readBlob(Addr addr, uint8_t *p, int size)
 bool
 TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
 {
-
-    Addr paddr;
     int prevSize = 0;
 
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
+#if !FULL_SYSTEM
+        Addr paddr;
 
         if (!pTable->translate(gen.addr(), paddr)) {
             if (allocating == Always) {
@@ -100,6 +114,7 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
         }
 
         Port::writeBlob(paddr, p + prevSize, gen.size());
+#endif
         prevSize += gen.size();
     }
 
@@ -117,9 +132,9 @@ TranslatingPort::writeBlob(Addr addr, uint8_t *p, int size)
 bool
 TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
 {
-    Addr paddr;
-
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
+#if !FULL_SYSTEM
+        Addr paddr;
 
         if (!pTable->translate(gen.addr(), paddr)) {
             if (allocating == Always) {
@@ -130,8 +145,8 @@ TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
                 return false;
             }
         }
-
         Port::memsetBlob(paddr, val, gen.size());
+#endif
     }
 
     return true;
@@ -148,19 +163,22 @@ TranslatingPort::memsetBlob(Addr addr, uint8_t val, int size)
 bool
 TranslatingPort::tryWriteString(Addr addr, const char *str)
 {
-    Addr paddr,vaddr;
+#if !FULL_SYSTEM
     uint8_t c;
 
-    vaddr = addr;
+    Addr vaddr = addr;
 
     do {
         c = *str++;
-        if (!pTable->translate(vaddr++,paddr))
+        Addr paddr;
+
+        if (!pTable->translate(vaddr++, paddr))
             return false;
 
         Port::writeBlob(paddr, &c, 1);
     } while (c);
 
+#endif
     return true;
 }
 
@@ -174,19 +192,22 @@ TranslatingPort::writeString(Addr addr, const char *str)
 bool
 TranslatingPort::tryReadString(std::string &str, Addr addr)
 {
-    Addr paddr,vaddr;
+#if !FULL_SYSTEM
     uint8_t c;
 
-    vaddr = addr;
+    Addr vaddr = addr;
 
     do {
-        if (!pTable->translate(vaddr++,paddr))
+        Addr paddr;
+
+        if (!pTable->translate(vaddr++, paddr))
             return false;
 
         Port::readBlob(paddr, &c, 1);
         str += c;
     } while (c);
 
+#endif
     return true;
 }
 
