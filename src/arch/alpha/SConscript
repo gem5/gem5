@@ -42,6 +42,7 @@ if env['TARGET_ISA'] == 'alpha':
     Source('remote_gdb.cc')
     Source('tlb.cc')
     Source('utility.cc')
+    Source('vtophys.cc')
 
     SimObject('AlphaInterrupts.py')
     SimObject('AlphaTLB.py')
@@ -54,7 +55,6 @@ if env['TARGET_ISA'] == 'alpha':
         Source('osfpal.cc')
         Source('stacktrace.cc')
         Source('system.cc')
-        Source('vtophys.cc')
 
         Source('freebsd/system.cc')
         Source('linux/system.cc')
