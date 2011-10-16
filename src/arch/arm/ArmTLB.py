@@ -37,26 +37,22 @@
 #
 # Authors: Ali Saidi
 
-from m5.defines import buildEnv
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
+from MemObject import MemObject
 
-if buildEnv['FULL_SYSTEM']:
-    from MemObject import MemObject
-
-    class ArmTableWalker(MemObject):
-        type = 'ArmTableWalker'
-        cxx_class = 'ArmISA::TableWalker'
-        port = Port("Port for TableWalker to do walk the translation with")
-        sys = Param.System(Parent.any, "system object parameter")
-        min_backoff = Param.Tick(0, "Minimum backoff delay after failed send")
-        max_backoff = Param.Tick(100000, "Minimum backoff delay after failed send")
+class ArmTableWalker(MemObject):
+    type = 'ArmTableWalker'
+    cxx_class = 'ArmISA::TableWalker'
+    port = Port("Port for TableWalker to do walk the translation with")
+    sys = Param.System(Parent.any, "system object parameter")
+    min_backoff = Param.Tick(0, "Minimum backoff delay after failed send")
+    max_backoff = Param.Tick(100000, "Minimum backoff delay after failed send")
 
 
 class ArmTLB(SimObject):
     type = 'ArmTLB'
     cxx_class = 'ArmISA::TLB'
     size = Param.Int(64, "TLB size")
-    if buildEnv['FULL_SYSTEM']:
-       walker = Param.ArmTableWalker(ArmTableWalker(), "HW Table walker")
+    walker = Param.ArmTableWalker(ArmTableWalker(), "HW Table walker")

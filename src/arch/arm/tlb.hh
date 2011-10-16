@@ -89,9 +89,7 @@ class TLB : public BaseTLB
 
     uint32_t _attr;     // Memory attributes for last accessed TLB entry
 
-#if FULL_SYSTEM
     TableWalker *tableWalker;
-#endif
 
     /** Lookup an entry in the TLB
      * @param vpn virtual address
@@ -195,13 +193,10 @@ class TLB : public BaseTLB
         return _attr;
     }
 
-#if FULL_SYSTEM
     Fault translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             Translation *translation, bool &delay, bool timing);
-#else
     Fault translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
             Translation *translation, bool &delay, bool timing);
-#endif
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     Fault translateTiming(RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode);

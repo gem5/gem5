@@ -47,6 +47,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/pagetable.hh"
+#include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/utility.hh"
 #include "base/inifile.hh"
@@ -58,29 +59,24 @@
 #include "debug/TLBVerbose.hh"
 #include "mem/page_table.hh"
 #include "params/ArmTLB.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 
 #if FULL_SYSTEM
 #include "arch/arm/system.hh"
-#include "arch/arm/table_walker.hh"
 #endif
 
 using namespace std;
 using namespace ArmISA;
 
 TLB::TLB(const Params *p)
-    : BaseTLB(p), size(p->size)
-#if FULL_SYSTEM
-      , tableWalker(p->walker)
-#endif
-    , rangeMRU(1), bootUncacheability(false), miscRegValid(false)
+    : BaseTLB(p), size(p->size) , tableWalker(p->walker),
+    rangeMRU(1), bootUncacheability(false), miscRegValid(false)
 {
     table = new TlbEntry[size];
     memset(table, 0, sizeof(TlbEntry) * size);
 
-#if FULL_SYSTEM
     tableWalker->setTlb(this);
-#endif
 }
 
 TLB::~TLB()
@@ -404,7 +400,6 @@ TLB::regStats()
     accesses = readAccesses + writeAccesses + instAccesses;
 }
 
-#if !FULL_SYSTEM
 Fault
 TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         Translation *translation, bool &delay, bool timing)
@@ -426,17 +421,17 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
+#if !FULL_SYSTEM
     Addr paddr;
     Process *p = tc->getProcessPtr();
 
     if (!p->pTable->translate(vaddr, paddr))
         return Fault(new GenericPageTableFault(vaddr));
     req->setPaddr(paddr);
+#endif
 
     return NoFault;
 }
-
-#else // FULL_SYSTEM
 
 Fault
 TLB::trickBoxCheck(RequestPtr req, Mode mode, uint8_t domain, bool sNp)
@@ -578,10 +573,11 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
-
+#if FULL_SYSTEM
     if (!bootUncacheability &&
             ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(vaddr))
         req->setFlags(Request::UNCACHEABLE);
+#endif
 
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:
@@ -684,18 +680,15 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
     return NoFault;
 }
 
-#endif
-
 Fault
 TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 {
     bool delay = false;
     Fault fault;
-#if FULL_SYSTEM
-    fault = translateFs(req, tc, mode, NULL, delay, false);
-#else
-    fault = translateSe(req, tc, mode, NULL, delay, false);
-#endif
+    if (FullSystem)
+        fault = translateFs(req, tc, mode, NULL, delay, false);
+    else
+        fault = translateSe(req, tc, mode, NULL, delay, false);
     assert(!delay);
     return fault;
 }
@@ -707,11 +700,10 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
     assert(translation);
     bool delay = false;
     Fault fault;
-#if FULL_SYSTEM
-    fault = translateFs(req, tc, mode, translation, delay, true);
-#else
-    fault = translateSe(req, tc, mode, translation, delay, true);
-#endif
+    if (FullSystem)
+        fault = translateFs(req, tc, mode, translation, delay, true);
+    else
+        fault = translateSe(req, tc, mode, translation, delay, true);
     DPRINTF(TLBVerbose, "Translation returning delay=%d fault=%d\n", delay, fault !=
             NoFault);
     if (!delay)
@@ -724,11 +716,7 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 Port*
 TLB::getPort()
 {
-#if FULL_SYSTEM
     return tableWalker->getPort("port");
-#else
-    return NULL;
-#endif
 }
 
 

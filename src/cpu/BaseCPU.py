@@ -140,8 +140,7 @@ class BaseCPU(MemObject):
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
     _cached_ports = []
-    if buildEnv['TARGET_ISA'] == 'x86' or \
-        (buildEnv['TARGET_ISA'] == 'arm' and buildEnv['FULL_SYSTEM']):
+    if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
         _cached_ports = ["itb.walker.port", "dtb.walker.port"]
 
     _uncached_ports = []
@@ -169,16 +168,15 @@ class BaseCPU(MemObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._cached_ports = ['icache.mem_side', 'dcache.mem_side']
-        if buildEnv['FULL_SYSTEM']:
-            if buildEnv['TARGET_ISA'] == 'x86':
-                self.itb_walker_cache = iwc
-                self.dtb_walker_cache = dwc
-                self.itb.walker.port = iwc.cpu_side
-                self.dtb.walker.port = dwc.cpu_side
-                self._cached_ports += ["itb_walker_cache.mem_side", \
-                                       "dtb_walker_cache.mem_side"]
-            elif buildEnv['TARGET_ISA'] == 'arm':
-                self._cached_ports += ["itb.walker.port", "dtb.walker.port"]
+        if buildEnv['TARGET_ISA'] == 'x86' and iwc and dwc:
+            self.itb_walker_cache = iwc
+            self.dtb_walker_cache = dwc
+            self.itb.walker.port = iwc.cpu_side
+            self.dtb.walker.port = dwc.cpu_side
+            self._cached_ports += ["itb_walker_cache.mem_side", \
+                                   "dtb_walker_cache.mem_side"]
+        elif buildEnv['TARGET_ISA'] == 'arm':
+            self._cached_ports += ["itb.walker.port", "dtb.walker.port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
