@@ -39,6 +39,7 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
+#include "mem/vport.hh"
 #include "params/BaseCPU.hh"
 
 #if FULL_SYSTEM
@@ -50,7 +51,6 @@
 #include "base/trace.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
-#include "mem/vport.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #else
@@ -118,9 +118,7 @@ SimpleThread::SimpleThread()
 SimpleThread::~SimpleThread()
 {
     delete physPort;
-#if FULL_SYSTEM
     delete virtPort;
-#endif
     delete tc;
 }
 

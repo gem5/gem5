@@ -34,12 +34,12 @@
 #include "cpu/thread_state.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
+#include "mem/vport.hh"
 #include "sim/serialize.hh"
 
 #if FULL_SYSTEM
 #include "arch/kernel_stats.hh"
 #include "cpu/quiesce_event.hh"
-#include "mem/vport.hh"
 #endif
 
 #if FULL_SYSTEM
@@ -51,11 +51,11 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
 #if FULL_SYSTEM
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      kernelStats(NULL), virtPort(NULL),
+      kernelStats(NULL),
 #else
       port(NULL), process(_process),
 #endif
-      physPort(NULL), funcExeInst(0), storeCondFailures(0)
+      virtPort(NULL), physPort(NULL), funcExeInst(0), storeCondFailures(0)
 {
 }
 
@@ -118,14 +118,6 @@ ThreadState::connectPhysPort()
     connectToMemFunc(physPort);
 }
 
-#if FULL_SYSTEM
-void
-ThreadState::connectMemPorts(ThreadContext *tc)
-{
-    connectPhysPort();
-    connectVirtPort(tc);
-}
-
 void
 ThreadState::connectVirtPort(ThreadContext *tc)
 {
@@ -138,6 +130,14 @@ ThreadState::connectVirtPort(ThreadContext *tc)
         virtPort = new VirtualPort(csprintf("%s-%d-vport",
                                         baseCpu->name(), _threadId), tc);
     connectToMemFunc(virtPort);
+}
+
+#if FULL_SYSTEM
+void
+ThreadState::connectMemPorts(ThreadContext *tc)
+{
+    connectPhysPort();
+    connectVirtPort(tc);
 }
 
 void

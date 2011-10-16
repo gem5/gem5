@@ -37,14 +37,13 @@
 
 using namespace TheISA;
 
-#if FULL_SYSTEM
-
 VirtualPort *
 InOrderThreadContext::getVirtPort()
 {
     return thread->getVirtPort();
 }
 
+#if FULL_SYSTEM
 
 void
 InOrderThreadContext::dumpFuncProfile()

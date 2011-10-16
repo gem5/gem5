@@ -207,15 +207,13 @@ class SimpleThread : public ThreadState
 
     System *getSystemPtr() { return system; }
 
-#if FULL_SYSTEM
+    FunctionalPort *getPhysPort() { return physPort; }
+
     /** Return a virtual port. This port cannot be cached locally in an object.
      * After a CPU switch it may point to the wrong memory object which could
      * mean stale data.
      */
     VirtualPort *getVirtPort() { return virtPort; }
-#endif
-
-    FunctionalPort *getPhysPort() { return physPort; }
 
     Status status() const { return _status; }
 

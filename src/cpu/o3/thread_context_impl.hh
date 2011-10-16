@@ -47,7 +47,6 @@
 #include "cpu/quiesce_event.hh"
 #include "debug/O3CPU.hh"
 
-#if FULL_SYSTEM
 template <class Impl>
 VirtualPort *
 O3ThreadContext<Impl>::getVirtPort()
@@ -55,6 +54,7 @@ O3ThreadContext<Impl>::getVirtPort()
     return thread->getVirtPort();
 }
 
+#if FULL_SYSTEM
 template <class Impl>
 void
 O3ThreadContext<Impl>::dumpFuncProfile()

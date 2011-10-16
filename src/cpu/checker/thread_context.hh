@@ -96,14 +96,14 @@ class CheckerThreadContext : public ThreadContext
 
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
-
-    VirtualPort *getVirtPort()
-    { return actualTC->getVirtPort(); }
 #else
     TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
+
+    VirtualPort *getVirtPort()
+    { return actualTC->getVirtPort(); }
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 

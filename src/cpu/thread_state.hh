@@ -94,10 +94,10 @@ struct ThreadState {
 
     void connectPhysPort();
 
+    void connectVirtPort(ThreadContext *tc);
+
 #if FULL_SYSTEM
     void connectMemPorts(ThreadContext *tc);
-
-    void connectVirtPort(ThreadContext *tc);
 
     void dumpFuncProfile();
 
@@ -108,8 +108,6 @@ struct ThreadState {
     void profileSample();
 
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
-
-    VirtualPort *getVirtPort() { return virtPort; }
 #else
     Process *getProcessPtr() { return process; }
 
@@ -117,6 +115,8 @@ struct ThreadState {
 
     void setMemPort(TranslatingPort *_port) { port = _port; }
 #endif
+
+    VirtualPort *getVirtPort() { return virtPort; }
 
     FunctionalPort *getPhysPort() { return physPort; }
 
@@ -186,14 +186,15 @@ struct ThreadState {
 
     TheISA::Kernel::Statistics *kernelStats;
   protected:
-    /** A functional port, outgoing only, for functional accesse to virtual
-     * addresses. */
-    VirtualPort *virtPort;
 #else
     TranslatingPort *port;
 
     Process *process;
 #endif
+
+    /** A functional port, outgoing only, for functional accesse to virtual
+     * addresses. */
+    VirtualPort *virtPort;
 
     /** A functional port outgoing only for functional accesses to physical
      * addresses.*/
