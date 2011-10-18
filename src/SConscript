@@ -904,9 +904,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
         return obj
 
-    sources = Source.get(main=False, skip_lib=False)
-    static_objs = [ make_obj(s, True) for s in sources ]
-    shared_objs = [ make_obj(s, False) for s in sources ]
+    static_objs = \
+        [ make_obj(s, True) for s in Source.get(main=False, skip_lib=False) ]
+    shared_objs = \
+        [ make_obj(s, False) for s in Source.get(main=False, skip_lib=False) ]
 
     static_date = make_obj(date_source, static=True, extra_deps=static_objs)
     static_objs.append(static_date)
