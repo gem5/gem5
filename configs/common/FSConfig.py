@@ -253,7 +253,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
         if mdesc.disk().count('android'):
-            boot_flags += "init=/init "
+            boot_flags += " init=/init "
         self.boot_osflags = boot_flags
 
     self.physmem.port = self.membus.port
