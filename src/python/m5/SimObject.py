@@ -190,6 +190,20 @@ class MetaSimObject(type):
 
             cls._value_dict['cxx_type'] = '%s *' % cls._value_dict['cxx_class']
 
+        # Export methods are automatically inherited via C++, so we
+        # don't want the method declarations to get inherited on the
+        # python side (and thus end up getting repeated in the wrapped
+        # versions of derived classes).  The code below basicallly
+        # suppresses inheritance by substituting in the base (null)
+        # versions of these methods unless a different version is
+        # explicitly supplied.
+        for method_name in ('export_methods', 'export_method_cxx_predecls',
+                            'export_method_swig_predecls'):
+            if method_name not in cls.__dict__:
+                base_method = getattr(MetaSimObject, method_name)
+                m = MethodType(base_method, cls, MetaSimObject)
+                setattr(cls, method_name, m)
+
         # Now process the _value_dict items.  They could be defining
         # new (or overriding existing) parameters or ports, setting
         # class keywords (e.g., 'abstract'), or setting parameter
@@ -340,6 +354,27 @@ class MetaSimObject(type):
     def swig_predecls(cls, code):
         code('%import "python/m5/internal/param_$cls.i"')
 
+    # Hook for exporting additional C++ methods to Python via SWIG.
+    # Default is none, override using @classmethod in class definition.
+    def export_methods(cls, code):
+        pass
+
+    # Generate the code needed as a prerequisite for the C++ methods
+    # exported via export_methods() to be compiled in the _wrap.cc
+    # file.  Typically generates one or more #include statements.  If
+    # any methods are exported, typically at least the C++ header
+    # declaring the relevant SimObject class must be included.
+    def export_method_cxx_predecls(cls, code):
+        pass
+
+    # Generate the code needed as a prerequisite for the C++ methods
+    # exported via export_methods() to be processed by SWIG.
+    # Typically generates one or more %include or %import statements.
+    # If any methods are exported, typically at least the C++ header
+    # declaring the relevant SimObject class must be included.
+    def export_method_swig_predecls(cls, code):
+        pass
+
     # Generate the declaration for this object for wrapping with SWIG.
     # Generates code that goes into a SWIG .i file.  Called from
     # src/SConscript.
@@ -360,11 +395,13 @@ class MetaSimObject(type):
         code('#include "params/$cls.hh"')
         for param in params:
             param.cxx_predecls(code)
+        cls.export_method_cxx_predecls(code)
         code('%}')
         code()
 
         for param in params:
             param.swig_predecls(code)
+        cls.export_method_swig_predecls(code)
 
         code()
         if cls._base:
@@ -380,16 +417,16 @@ class MetaSimObject(type):
             flat_name = sep_string.join(class_path)
             code('%rename($flat_name) $classname;')
 
-        if cls == SimObject:
-            code('%include "python/swig/sim_object.i"')
-        else:
-            code()
-            code('// stop swig from creating/wrapping default ctor/dtor')
-            code('%nodefault $classname;')
-            code('class $classname')
-            if cls._base:
-                code('    : public ${{cls._base.cxx_class}}')
-            code('{};')
+        code()
+        code('// stop swig from creating/wrapping default ctor/dtor')
+        code('%nodefault $classname;')
+        code('class $classname')
+        if cls._base:
+            code('    : public ${{cls._base.cxx_class}}')
+        code('{')
+        code('  public:')
+        cls.export_methods(code)
+        code('};')
 
         for ns in reversed(namespaces):
             code('} // namespace $ns')
@@ -430,6 +467,20 @@ class MetaSimObject(type):
             code('} // namespace $ns')
         code()
 
+        # The base SimObject has a couple of params that get
+        # automatically set from Python without being declared through
+        # the normal Param mechanism; we slip them in here (needed
+        # predecls now, actual declarations below)
+        if cls == SimObject:
+            code('''
+#ifndef PY_VERSION
+struct PyObject;
+#endif
+
+#include <string>
+
+struct EventQueue;
+''')
         for param in params:
             param.cxx_predecls(code)
         code()
@@ -444,22 +495,32 @@ class MetaSimObject(type):
                 code()
 
         # now generate the actual param struct
-        if cls == SimObject:
-            code('#include "sim/sim_object_params.hh"')
-        else:
-            code("struct ${cls}Params")
-            if cls._base:
-                code("    : public ${{cls._base.type}}Params")
-            code("{")
-            if not hasattr(cls, 'abstract') or not cls.abstract:
-                if 'type' in cls.__dict__:
-                    code("    ${{cls.cxx_type}} create();")
+        code("struct ${cls}Params")
+        if cls._base:
+            code("    : public ${{cls._base.type}}Params")
+        code("{")
+        if not hasattr(cls, 'abstract') or not cls.abstract:
+            if 'type' in cls.__dict__:
+                code("    ${{cls.cxx_type}} create();")
 
-            code.indent()
-            for param in params:
-                param.cxx_decl(code)
-            code.dedent()
-            code('};')
+        code.indent()
+        if cls == SimObject:
+            code('''
+    SimObjectParams()
+    {
+        extern EventQueue mainEventQueue;
+        eventq = &mainEventQueue;
+    }
+    virtual ~SimObjectParams() {}
+
+    std::string name;
+    PyObject *pyobj;
+    EventQueue *eventq;
+            ''')
+        for param in params:
+            param.cxx_decl(code)
+        code.dedent()
+        code('};')
 
         code()
         code('#endif // __PARAMS__${cls}__')
@@ -476,6 +537,44 @@ class SimObject(object):
     __metaclass__ = MetaSimObject
     type = 'SimObject'
     abstract = True
+
+    @classmethod
+    def export_method_cxx_predecls(cls, code):
+        code('''
+#include <Python.h>
+
+#include "sim/serialize.hh"
+#include "sim/sim_object.hh"
+''')
+
+    @classmethod
+    def export_method_swig_predecls(cls, code):
+        code('''
+%include <std_string.i>
+''')
+
+    @classmethod
+    def export_methods(cls, code):
+        code('''
+    enum State {
+      Running,
+      Draining,
+      Drained
+    };
+
+    void init();
+    void loadState(Checkpoint *cp);
+    void initState();
+    void regStats();
+    void regFormulas();
+    void resetStats();
+    void startup();
+
+    unsigned int drain(Event *drain_event);
+    void resume();
+    void switchOut();
+    void takeOverFrom(BaseCPU *cpu);
+''')
 
     # Initialize new instance.  For objects with SimObject-valued
     # children, we need to recursively clone the classes represented

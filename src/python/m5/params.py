@@ -1382,7 +1382,7 @@ class PortRef(object):
 
     # Call C++ to create corresponding port connection between C++ objects
     def ccConnect(self):
-        from m5.internal.params import connectPorts
+        from m5.internal.pyobject import connectPorts
 
         if self.ccConnected: # already done this
             return

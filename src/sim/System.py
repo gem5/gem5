@@ -40,11 +40,16 @@ class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 class System(SimObject):
     type = 'System'
 
-    # This method is temporarily obsolete.  Its functionality will be
-    # restored in a future changeset.
     @classmethod
-    def swig_objdecls(cls, code):
-        code('%include "python/swig/system.i"')
+    def export_method_cxx_predecls(cls, code):
+        code('#include "sim/system.hh"')
+
+    @classmethod
+    def export_methods(cls, code):
+        code('''
+      Enums::MemoryMode getMemoryMode();
+      void setMemoryMode(Enums::MemoryMode mode);
+''')
 
     physmem = Param.PhysicalMemory("Physical Memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
