@@ -40,6 +40,8 @@ class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 class System(SimObject):
     type = 'System'
 
+    # This method is temporarily obsolete.  Its functionality will be
+    # restored in a future changeset.
     @classmethod
     def swig_objdecls(cls, code):
         code('%include "python/swig/system.i"')
