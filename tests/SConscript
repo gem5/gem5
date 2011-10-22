@@ -123,7 +123,9 @@ def run_test(target, source, env):
             nap += 1
 
         outdiff = os.path.join(tgt_dir, 'outdiff')
-        diffcmd = 'diff -ubrs %s ${SOURCES[2].dir} %s > %s' \
+        # tack 'true' on the end so scons doesn't report diff's
+        # non-zero exit code as a build error
+        diffcmd = 'diff -ubrs %s ${SOURCES[2].dir} %s > %s; true' \
                   % (output_ignore_args, tgt_dir, outdiff)
         env.Execute(env.subst(diffcmd, target=target, source=source))
         print "===== Output differences ====="
