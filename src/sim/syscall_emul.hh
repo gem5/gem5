@@ -1027,20 +1027,45 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         return -EINVAL;
     }
 
-    if (start != 0) {
-        warn("mmap: ignoring suggested map address 0x%x, using 0x%x",
-             start, p->mmap_end);
+    // are we ok with clobbering existing mappings?  only set this to
+    // true if the user has been warned.
+    bool clobber = false;
+
+    // try to use the caller-provided address if there is one
+    bool use_provided_address = (start != 0);
+
+    if (use_provided_address) {
+        // check to see if the desired address is already in use
+        if (!p->pTable->isUnmapped(start, length)) {
+            // there are existing mappings in the desired range
+            // whether we clobber them or not depends on whether the caller
+            // specified MAP_FIXED
+            if (flags & OS::TGT_MAP_FIXED) {
+                // MAP_FIXED specified: clobber existing mappings
+                warn("mmap: MAP_FIXED at 0x%x overwrites existing mappings\n",
+                     start);
+                clobber = true;
+            } else {
+                // MAP_FIXED not specified: ignore suggested start address
+                warn("mmap: ignoring suggested map address 0x%x\n", start);
+                use_provided_address = false;
+            }
+        }
     }
 
-    // pick next address from our "mmap region"
-    if (OS::mmapGrowsDown()) {
-        start = p->mmap_end - length;
-        p->mmap_end = start;
-    } else {
-        start = p->mmap_end;
-        p->mmap_end += length;
+    if (!use_provided_address) {
+        // no address provided, or provided address unusable:
+        // pick next address from our "mmap region"
+        if (OS::mmapGrowsDown()) {
+            start = p->mmap_end - length;
+            p->mmap_end = start;
+        } else {
+            start = p->mmap_end;
+            p->mmap_end += length;
+        }
     }
-    p->pTable->allocate(start, length);
+
+    p->pTable->allocate(start, length, clobber);
 
     return start;
 }

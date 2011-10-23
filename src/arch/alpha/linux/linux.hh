@@ -69,6 +69,7 @@ class AlphaLinux : public Linux
 
     /// For mmap().
     static const unsigned TGT_MAP_ANONYMOUS = 0x10;
+    static const unsigned TGT_MAP_FIXED     = 0x100;
 
     //@{
     /// For getsysinfo().

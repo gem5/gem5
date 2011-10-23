@@ -77,6 +77,7 @@ class SparcLinux : public Linux
     static const int NUM_OPEN_FLAGS;
 
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
+    static const unsigned TGT_MAP_FIXED     = 0x10;
    
     typedef struct {   
         int64_t  uptime;    /* Seconds since boot */

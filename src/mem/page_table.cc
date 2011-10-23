@@ -67,7 +67,7 @@ PageTable::~PageTable()
 }
 
 void
-PageTable::allocate(Addr vaddr, int64_t size)
+PageTable::allocate(Addr vaddr, int64_t size, bool clobber)
 {
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
@@ -75,16 +75,13 @@ PageTable::allocate(Addr vaddr, int64_t size)
     DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr+ size);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
-        PTableItr iter = pTable.find(vaddr);
-
-        if (iter != pTable.end()) {
+        if (!clobber && (pTable.find(vaddr) != pTable.end())) {
             // already mapped
-            fatal("PageTable::allocate: address 0x%x already mapped",
-                    vaddr);
+            fatal("PageTable::allocate: address 0x%x already mapped", vaddr);
         }
 
         pTable[vaddr] = TheISA::TlbEntry(process->M5_pid, vaddr,
-                process->system->new_page());
+                                         process->system->new_page());
         updateCache(vaddr, pTable[vaddr]);
     }
 }
@@ -125,6 +122,21 @@ PageTable::deallocate(Addr vaddr, int64_t size)
         pTable.erase(vaddr);
     }
 
+}
+
+bool
+PageTable::isUnmapped(Addr vaddr, int64_t size)
+{
+    // starting address must be page aligned
+    assert(pageOffset(vaddr) == 0);
+
+    for (; size > 0; size -= pageSize, vaddr += pageSize) {
+        if (pTable.find(vaddr) != pTable.end()) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool

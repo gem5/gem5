@@ -79,9 +79,17 @@ class PageTable
     Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
-    void allocate(Addr vaddr, int64_t size);
+    void allocate(Addr vaddr, int64_t size, bool clobber = false);
     void remap(Addr vaddr, int64_t size, Addr new_vaddr);
     void deallocate(Addr vaddr, int64_t size);
+
+    /**
+     * Check if any pages in a region are already allocated
+     * @param vaddr The starting virtual address of the region.
+     * @param size The length of the region.
+     * @return True if no pages in the region are mapped.
+     */
+    bool isUnmapped(Addr vaddr, int64_t size);
 
     /**
      * Lookup function

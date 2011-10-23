@@ -59,6 +59,7 @@ class SparcSolaris : public Solaris
     static const int NUM_OPEN_FLAGS;
 
     static const unsigned TGT_MAP_ANONYMOUS = 0x100;
+    static const unsigned TGT_MAP_FIXED     = 0x10;
 };
 
 #endif
