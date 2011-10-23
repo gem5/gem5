@@ -503,7 +503,7 @@ void
 ArmLinuxProcess::initState()
 {
     ArmLiveProcess::initState();
-    pTable->allocate(commPage, PageBytes);
+    allocateMem(commPage, PageBytes);
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
     uint8_t swiNeg1[] = {

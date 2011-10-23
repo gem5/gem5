@@ -45,16 +45,14 @@
 #include "debug/MMU.hh"
 #include "mem/page_table.hh"
 #include "sim/faults.hh"
-#include "sim/process.hh"
 #include "sim/sim_object.hh"
-#include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
 
-PageTable::PageTable(Process *_process, Addr _pageSize)
+PageTable::PageTable(const std::string &__name, uint64_t _pid, Addr _pageSize)
     : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
-      process(_process)
+      pid(_pid), _name(__name)
 {
     assert(isPowerOf2(pageSize));
     pTableCache[0].vaddr = 0;
@@ -67,21 +65,20 @@ PageTable::~PageTable()
 }
 
 void
-PageTable::allocate(Addr vaddr, int64_t size, bool clobber)
+PageTable::map(Addr vaddr, Addr paddr, int64_t size, bool clobber)
 {
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
     DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr+ size);
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize) {
+    for (; size > 0; size -= pageSize, vaddr += pageSize, paddr += pageSize) {
         if (!clobber && (pTable.find(vaddr) != pTable.end())) {
             // already mapped
             fatal("PageTable::allocate: address 0x%x already mapped", vaddr);
         }
 
-        pTable[vaddr] = TheISA::TlbEntry(process->M5_pid, vaddr,
-                                         process->system->new_page());
+        pTable[vaddr] = TheISA::TlbEntry(pid, vaddr, paddr);
         updateCache(vaddr, pTable[vaddr]);
     }
 }
@@ -108,11 +105,11 @@ PageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 }
 
 void
-PageTable::deallocate(Addr vaddr, int64_t size)
+PageTable::unmap(Addr vaddr, int64_t size)
 {
     assert(pageOffset(vaddr) == 0);
 
-    DPRINTF(MMU, "Deallocating page: %#x-%#x\n", vaddr, vaddr+ size);
+    DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr+ size);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
         PTableItr iter = pTable.find(vaddr);
@@ -208,7 +205,7 @@ PageTable::serialize(std::ostream &os)
     PTableItr iter = pTable.begin();
     PTableItr end = pTable.end();
     while (iter != end) {
-        os << "\n[" << csprintf("%s.Entry%d", process->name(), count) << "]\n";
+        os << "\n[" << csprintf("%s.Entry%d", name(), count) << "]\n";
 
         paramOut(os, "vaddr", iter->first);
         iter->second.serialize(os);
@@ -230,9 +227,9 @@ PageTable::unserialize(Checkpoint *cp, const std::string &section)
     pTable.clear();
 
     while(i < count) {
-        paramIn(cp, csprintf("%s.Entry%d", process->name(), i), "vaddr", vaddr);
+        paramIn(cp, csprintf("%s.Entry%d", name(), i), "vaddr", vaddr);
         entry = new TheISA::TlbEntry();
-        entry->unserialize(cp, csprintf("%s.Entry%d", process->name(), i));
+        entry->unserialize(cp, csprintf("%s.Entry%d", name(), i));
         pTable[vaddr] = *entry;
         ++i;
     }

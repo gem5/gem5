@@ -287,7 +287,9 @@ class System : public SimObject
 
 #else
 
-    Addr new_page();
+    /// Allocate npages contiguous unused physical pages
+    /// @return Starting address of first page
+    Addr allocPhysPages(int npages);
 
 #endif // FULL_SYSTEM
 

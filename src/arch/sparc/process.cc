@@ -316,8 +316,7 @@ SparcLiveProcess::argsInit(int pageSize)
     stack_size = stack_base - stack_min;
 
     // Allocate space for the stack
-    pTable->allocate(roundDown(stack_min, pageSize),
-                     roundUp(stack_size, pageSize));
+    allocateMem(roundDown(stack_min, pageSize), roundUp(stack_size, pageSize));
 
     // map out initial stack contents
     IntType sentry_base = stack_base - sentry_size;

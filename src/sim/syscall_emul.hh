@@ -677,7 +677,7 @@ mremapFunc(SyscallDesc *desc, int callnum, LiveProcess *process, ThreadContext *
     if (new_length > old_length) {
         if ((start + old_length) == process->mmap_end) {
             uint64_t diff = new_length - old_length;
-            process->pTable->allocate(process->mmap_end, diff);
+            process->allocateMem(process->mmap_end, diff);
             process->mmap_end += diff;
             return start;
         } else {
@@ -691,15 +691,15 @@ mremapFunc(SyscallDesc *desc, int callnum, LiveProcess *process, ThreadContext *
                         process->mmap_end, process->mmap_end + new_length, new_length);
                 start = process->mmap_end;
                 // add on the remaining unallocated pages
-                process->pTable->allocate(start + old_length, new_length - old_length);
+                process->allocateMem(start + old_length,
+                                     new_length - old_length);
                 process->mmap_end += new_length;
                 warn("returning %08p as start\n", start);
                 return start;
             }
         }
     } else {
-        process->pTable->deallocate(start + new_length, old_length -
-                new_length);
+        process->pTable->unmap(start + new_length, old_length - new_length);
         return start;
     }
 }
@@ -1065,7 +1065,7 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         }
     }
 
-    p->pTable->allocate(start, length, clobber);
+    p->allocateMem(start, length, clobber);
 
     return start;
 }

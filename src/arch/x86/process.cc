@@ -167,7 +167,7 @@ X86_64LiveProcess::initState()
     argsInit(sizeof(uint64_t), VMPageSize);
 
        // Set up the vsyscall page for this process.
-    pTable->allocate(vsyscallPage.base, vsyscallPage.size);
+    allocateMem(vsyscallPage.base, vsyscallPage.size);
     uint8_t vtimeBlob[] = {
         0x48,0xc7,0xc0,0xc9,0x00,0x00,0x00,    // mov    $0xc9,%rax
         0x0f,0x05,                             // syscall
@@ -265,7 +265,7 @@ I386LiveProcess::initState()
      * Set up a GDT for this process. The whole GDT wouldn't really be for
      * this process, but the only parts we care about are.
      */
-    pTable->allocate(_gdtStart, _gdtSize);
+    allocateMem(_gdtStart, _gdtSize);
     uint64_t zero = 0;
     assert(_gdtSize % sizeof(zero) == 0);
     for (Addr gdtCurrent = _gdtStart;
@@ -274,7 +274,7 @@ I386LiveProcess::initState()
     }
 
     // Set up the vsyscall page for this process.
-    pTable->allocate(vsyscallPage.base, vsyscallPage.size);
+    allocateMem(vsyscallPage.base, vsyscallPage.size);
     uint8_t vsyscallBlob[] = {
         0x51,       // push %ecx
         0x52,       // push %edp
@@ -577,8 +577,7 @@ X86LiveProcess::argsInit(int pageSize,
     stack_size = stack_base - stack_min;
 
     // map memory
-    pTable->allocate(roundDown(stack_min, pageSize),
-                     roundUp(stack_size, pageSize));
+    allocateMem(roundDown(stack_min, pageSize), roundUp(stack_size, pageSize));
 
     // map out initial stack contents
     IntType sentry_base = stack_base - sentry_size;

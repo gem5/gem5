@@ -46,8 +46,6 @@
 #include "mem/request.hh"
 #include "sim/serialize.hh"
 
-class Process;
-
 /**
  * Page Table Declaration.
  */
@@ -68,20 +66,25 @@ class PageTable
     const Addr pageSize;
     const Addr offsetMask;
 
-    Process *process;
+    const uint64_t pid;
+    const std::string _name;
 
   public:
 
-    PageTable(Process *_process, Addr _pageSize = TheISA::VMPageSize);
+    PageTable(const std::string &__name, uint64_t _pid,
+              Addr _pageSize = TheISA::VMPageSize);
 
     ~PageTable();
+
+    // for DPRINTF compatibility
+    const std::string name() const { return _name; }
 
     Addr pageAlign(Addr a)  { return (a & ~offsetMask); }
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
-    void allocate(Addr vaddr, int64_t size, bool clobber = false);
+    void map(Addr vaddr, Addr paddr, int64_t size, bool clobber = false);
     void remap(Addr vaddr, int64_t size, Addr new_vaddr);
-    void deallocate(Addr vaddr, int64_t size);
+    void unmap(Addr vaddr, int64_t size);
 
     /**
      * Check if any pages in a region are already allocated
