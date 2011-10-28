@@ -215,17 +215,8 @@ class PioDevice : public MemObject
 
     virtual unsigned int drain(Event *de);
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1)
-    {
-        if (if_name == "pio") {
-            if (pioPort != NULL)
-                fatal("%s: pio port already connected to %s",
-                      name(), pioPort->getPeer()->name());
-            pioPort = new PioPort(this, sys);
-            return pioPort;
-        } else
-            return NULL;
-    }
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
+
     friend class PioPort;
 
 };
@@ -291,24 +282,7 @@ class DmaDevice : public PioDevice
 
     unsigned cacheBlockSize() const { return dmaPort->cacheBlockSize(); }
 
-    virtual Port *getPort(const std::string &if_name, int idx = -1)
-    {
-        if (if_name == "pio") {
-            if (pioPort != NULL)
-                fatal("%s: pio port already connected to %s",
-                      name(), pioPort->getPeer()->name());
-            pioPort = new PioPort(this, sys);
-            return pioPort;
-        } else if (if_name == "dma") {
-            if (dmaPort != NULL)
-                fatal("%s: dma port already connected to %s",
-                      name(), dmaPort->getPeer()->name());
-            dmaPort = new DmaPort(this, sys, params()->min_backoff_delay,
-                    params()->max_backoff_delay);
-            return dmaPort;
-        } else
-            return NULL;
-    }
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     friend class DmaPort;
 };

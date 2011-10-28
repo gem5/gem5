@@ -41,8 +41,15 @@ class System(SimObject):
     type = 'System'
 
     @classmethod
-    def swig_objdecls(cls, code):
-        code('%include "python/swig/system.i"')
+    def export_method_cxx_predecls(cls, code):
+        code('#include "sim/system.hh"')
+
+    @classmethod
+    def export_methods(cls, code):
+        code('''
+      Enums::MemoryMode getMemoryMode();
+      void setMemoryMode(Enums::MemoryMode mode);
+''')
 
     physmem = Param.PhysicalMemory("Physical Memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")

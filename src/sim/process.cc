@@ -169,7 +169,7 @@ Process::Process(ProcessParams * params)
 
     mmap_start = mmap_end = 0;
     nxm_start = nxm_end = 0;
-    pTable = new PageTable(this);
+    pTable = new PageTable(name(), M5_pid);
     // other parameters will be initialized when the program is loaded
 }
 
@@ -328,13 +328,21 @@ Process::sim_fd_obj(int tgt_fd)
     return &fd_map[tgt_fd];
 }
 
+void
+Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
+{
+    int npages = divCeil(size, (int64_t)VMPageSize);
+    Addr paddr = system->allocPhysPages(npages);
+    pTable->map(vaddr, paddr, size, clobber);
+}
+
 bool
 Process::fixupStackFault(Addr vaddr)
 {
     // Check if this is already on the stack and there's just no page there
     // yet.
     if (vaddr >= stack_min && vaddr < stack_base) {
-        pTable->allocate(roundDown(vaddr, VMPageSize), VMPageSize);
+        allocateMem(roundDown(vaddr, VMPageSize), VMPageSize);
         return true;
     }
 
@@ -347,7 +355,7 @@ Process::fixupStackFault(Addr vaddr)
                 fatal("Maximum stack size exceeded\n");
             if (stack_base - stack_min > 8 * 1024 * 1024)
                 fatal("Over max stack size for one thread\n");
-            pTable->allocate(stack_min, TheISA::PageBytes);
+            allocateMem(stack_min, TheISA::PageBytes);
             inform("Increasing stack size by one page.");
         };
         return true;

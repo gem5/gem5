@@ -136,7 +136,7 @@ MipsLiveProcess::argsInit(int pageSize)
     stack_min = roundDown(stack_min, pageSize);
     stack_size = stack_base - stack_min;
     // map memory
-    pTable->allocate(stack_min, roundUp(stack_size, pageSize));
+    allocateMem(stack_min, roundUp(stack_size, pageSize));
 
     // map out initial stack contents
     IntType argv_array_base = stack_min + intSize; // room for argc
