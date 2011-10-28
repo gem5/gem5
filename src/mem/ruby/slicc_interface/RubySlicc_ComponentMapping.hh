@@ -29,7 +29,6 @@
 #ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_COMPONENTMAPPINGS_HH__
 #define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_COMPONENTMAPPINGS_HH__
 
-#include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
@@ -37,30 +36,6 @@
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/system/MachineID.hh"
 #include "mem/ruby/system/NodeID.hh"
-
-#ifdef MACHINETYPE_L1Cache
-#define MACHINETYPE_L1CACHE_ENUM MachineType_L1Cache
-#else
-#define MACHINETYPE_L1CACHE_ENUM MachineType_NUM
-#endif
-
-#ifdef MACHINETYPE_L2Cache
-#define MACHINETYPE_L2CACHE_ENUM MachineType_L2Cache
-#else
-#define MACHINETYPE_L2CACHE_ENUM MachineType_NUM
-#endif
-
-#ifdef MACHINETYPE_L3Cache
-#define MACHINETYPE_L3CACHE_ENUM MachineType_L3Cache
-#else
-#define MACHINETYPE_L3CACHE_ENUM MachineType_NUM
-#endif
-
-#ifdef MACHINETYPE_DMA
-#define MACHINETYPE_DMA_ENUM MachineType_DMA
-#else
-#define MACHINETYPE_DMA_ENUM MachineType_NUM
-#endif
 
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
@@ -78,13 +53,6 @@ map_Address_to_Directory(const Address &addr)
     MachineID mach =
         {MachineType_Directory, map_Address_to_DirectoryNode(addr)};
     return mach;
-}
-
-inline MachineID
-map_Address_to_DMA(const Address & addr)
-{
-    MachineID dma = {MACHINETYPE_DMA_ENUM, 0};
-    return dma;
 }
 
 inline NetDest
@@ -119,41 +87,6 @@ inline MachineType
 machineIDToMachineType(MachineID machID)
 {
     return machID.type;
-}
-
-inline NodeID
-L1CacheMachIDToProcessorNum(MachineID machID)
-{
-    assert(machID.type == MACHINETYPE_L1CACHE_ENUM);
-    return machID.num;
-}
-
-inline MachineID
-getL1MachineID(NodeID L1RubyNode)
-{
-    MachineID mach = {MACHINETYPE_L1CACHE_ENUM, L1RubyNode};
-    return mach;
-}
-
-inline GenericMachineType
-ConvertMachToGenericMach(MachineType machType)
-{
-    if (machType == MACHINETYPE_L1CACHE_ENUM)
-        return GenericMachineType_L1Cache;
-
-    if (machType == MACHINETYPE_L2CACHE_ENUM)
-        return GenericMachineType_L2Cache;
-
-    if (machType == MACHINETYPE_L3CACHE_ENUM)
-        return GenericMachineType_L3Cache;
-
-    if (machType == MachineType_Directory)
-        return GenericMachineType_Directory;
-
-    if (machType == MACHINETYPE_DMA_ENUM)
-        return GenericMachineType_DMA;
-
-    panic("cannot convert to a GenericMachineType");
 }
 
 inline int
