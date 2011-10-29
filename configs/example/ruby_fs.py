@@ -30,18 +30,18 @@
 # Full system configuraiton for ruby
 #
 
-import os
 import optparse
+import os
 import sys
 from os.path import join as joinpath
 
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.util import addToPath, panic
+from m5.util import addToPath, fatal
 
 if not buildEnv['FULL_SYSTEM']:
-    panic("This script requires full-system mode (*_FS).")
+    fatal("This script requires full-system mode (*_FS).")
 
 addToPath('../common')
 addToPath('../ruby')
@@ -60,7 +60,9 @@ config_root = os.path.dirname(config_path)
 m5_root = os.path.dirname(config_root)
 
 parser = optparse.OptionParser()
-
+# System options
+parser.add_option("--kernel", action="store", type="string")
+parser.add_option("--script", action="store", type="string")
 # Benchmark options
 parser.add_option("-b", "--benchmark", action="store", type="string",
                   dest="benchmark",
@@ -117,9 +119,15 @@ elif buildEnv['TARGET_ISA'] == "x86":
 else:
     fatal("incapable of building non-alpha or non-x86 full system!")
 
-Ruby.create_system(options, system, system.piobus, system._dma_devices)
+if options.kernel is not None:
+    system.kernel = binary(options.kernel)
+
+if options.script is not None:
+    system.readfile = options.script
 
 system.cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)]
+Ruby.create_system(options, system, system.piobus, system._dma_devices)
+
 
 for (i, cpu) in enumerate(system.cpu):
     #
