@@ -32,13 +32,10 @@
 #ifndef __MEM_TRANSLATING_PROT_HH__
 #define __MEM_TRANSLATING_PROT_HH__
 
-#include "config/full_system.hh"
 #include "mem/port.hh"
 
 class PageTable;
-#if !FULL_SYSTEM
 class Process;
-#endif
 
 class TranslatingPort : public FunctionalPort
 {
@@ -51,17 +48,11 @@ class TranslatingPort : public FunctionalPort
 
   private:
     PageTable *pTable;
-#if !FULL_SYSTEM
     Process *process;
-#endif
     AllocType allocating;
 
   public:
-    TranslatingPort(const std::string &_name,
-#if !FULL_SYSTEM
-                    Process *p,
-#endif
-                    AllocType alloc);
+    TranslatingPort(const std::string &_name, Process *p, AllocType alloc);
     virtual ~TranslatingPort();
 
     bool tryReadBlob(Addr addr, uint8_t *p, int size);

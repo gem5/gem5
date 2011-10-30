@@ -42,32 +42,24 @@
 #include "cpu/quiesce_event.hh"
 #endif
 
-#if FULL_SYSTEM
-ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid)
-#else
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
-#endif
     : numInst(0), numLoad(0), _status(ThreadContext::Halted),
       baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
 #if FULL_SYSTEM
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL),
-#else
-      process(_process),
 #endif
-      port(NULL), virtPort(NULL), physPort(NULL), funcExeInst(0),
-      storeCondFailures(0)
+      process(_process), port(NULL), virtPort(NULL), physPort(NULL),
+      funcExeInst(0), storeCondFailures(0)
 {
 }
 
 ThreadState::~ThreadState()
 {
-#if !FULL_SYSTEM
     if (port) {
         delete port->getPeer();
         delete port;
     }
-#endif
 }
 
 void
@@ -164,11 +156,7 @@ ThreadState::getMemPort()
 
     /* Use this port to for syscall emulation writes to memory. */
     port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(),
-                               _threadId),
-#if !FULL_SYSTEM
-                               process,
-#endif
-                               TranslatingPort::NextPage);
+                               _threadId), process, TranslatingPort::NextPage);
 
     connectToMemFunc(port);
 

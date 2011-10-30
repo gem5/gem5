@@ -33,27 +33,17 @@
 
 #include "arch/isa_traits.hh"
 #include "base/chunk_generator.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "mem/page_table.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
-#if !FULL_SYSTEM
 #include "sim/process.hh"
-#endif
 
 using namespace TheISA;
 
-TranslatingPort::TranslatingPort(const std::string &_name,
-#if !FULL_SYSTEM
-                                 Process *p,
-#endif
+TranslatingPort::TranslatingPort(const std::string &_name, Process *p,
                                  AllocType alloc)
-    : FunctionalPort(_name),
-#if !FULL_SYSTEM
-      pTable(p->pTable), process(p),
-#endif
-      allocating(alloc)
+    : FunctionalPort(_name), pTable(p->pTable), process(p), allocating(alloc)
 { }
 
 TranslatingPort::~TranslatingPort()
@@ -99,11 +89,9 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
                                  VMPageSize);
             } else if (allocating == NextPage) {
                 // check if we've accessed the next page on the stack
-#if !FULL_SYSTEM
                 if (!process->fixupStackFault(gen.addr()))
                     panic("Page table fault when accessing virtual address %#x "
                             "during functional write\n", gen.addr());
-#endif
             } else {
                 return false;
             }

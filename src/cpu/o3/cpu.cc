@@ -357,7 +357,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 #if FULL_SYSTEM
         // SMT is not supported in FS mode yet.
         assert(this->numThreads == 1);
-        this->thread[tid] = new Thread(this, 0);
+        this->thread[tid] = new Thread(this, 0, NULL);
 #else
         if (tid < params->workload.size()) {
             DPRINTF(O3CPU, "Workload[%i] process is %#x",

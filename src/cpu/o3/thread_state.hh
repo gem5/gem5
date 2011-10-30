@@ -75,11 +75,11 @@ struct O3ThreadState : public ThreadState {
      */
     bool trapPending;
 
-#if FULL_SYSTEM
-    O3ThreadState(O3CPU *_cpu, int _thread_num)
-        : ThreadState(_cpu, _thread_num),
+    O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
+        : ThreadState(_cpu, _thread_num, _process),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
+#if FULL_SYSTEM
         if (cpu->params()->profile) {
             profile = new FunctionProfile(cpu->params()->system->kernelSymtab);
             Callback *cb =
@@ -93,13 +93,8 @@ struct O3ThreadState : public ThreadState {
         static ProfileNode dummyNode;
         profileNode = &dummyNode;
         profilePC = 3;
-    }
-#else
-    O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
-        : ThreadState(_cpu, _thread_num, _process),
-          cpu(_cpu), inSyscall(0), trapPending(0)
-    { }
 #endif
+    }
 
     /** Pointer to the ThreadContext of this thread. */
     ThreadContext *tc;

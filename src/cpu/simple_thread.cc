@@ -62,11 +62,20 @@
 using namespace std;
 
 // constructor
-#if FULL_SYSTEM
+#if !FULL_SYSTEM
+SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
+                           TheISA::TLB *_itb, TheISA::TLB *_dtb)
+    : ThreadState(_cpu, _thread_num, _process),
+      cpu(_cpu), itb(_itb), dtb(_dtb)
+{
+    clearArchRegs();
+    tc = new ProxyThreadContext<SimpleThread>(this);
+}
+#else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb,
                            bool use_kernel_stats)
-    : ThreadState(_cpu, _thread_num),
+    : ThreadState(_cpu, _thread_num, NULL),
       cpu(_cpu), system(_sys), itb(_itb), dtb(_dtb)
 
 {
@@ -93,24 +102,10 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     if (use_kernel_stats)
         kernelStats = new TheISA::Kernel::Statistics(system);
 }
-#else
-SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                           TheISA::TLB *_itb, TheISA::TLB *_dtb)
-    : ThreadState(_cpu, _thread_num, _process),
-      cpu(_cpu), itb(_itb), dtb(_dtb)
-{
-    clearArchRegs();
-    tc = new ProxyThreadContext<SimpleThread>(this);
-}
-
 #endif
 
 SimpleThread::SimpleThread()
-#if FULL_SYSTEM
-    : ThreadState(NULL, -1)
-#else
     : ThreadState(NULL, -1, NULL)
-#endif
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
 }

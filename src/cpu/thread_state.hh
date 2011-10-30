@@ -36,11 +36,8 @@
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
-
-#if !FULL_SYSTEM
 #include "mem/mem_object.hh"
 #include "sim/process.hh"
-#endif
 
 #if FULL_SYSTEM
 class EndQuiesceEvent;
@@ -66,11 +63,7 @@ class TranslatingPort;
 struct ThreadState {
     typedef ThreadContext::Status Status;
 
-#if FULL_SYSTEM
-    ThreadState(BaseCPU *cpu, ThreadID _tid);
-#else
     ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process);
-#endif
 
     ~ThreadState();
 
@@ -185,10 +178,9 @@ struct ThreadState {
     EndQuiesceEvent *quiesceEvent;
 
     TheISA::Kernel::Statistics *kernelStats;
-  protected:
-#else
-    Process *process;
 #endif
+  protected:
+    Process *process;
 
     TranslatingPort *port;
 

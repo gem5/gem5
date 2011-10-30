@@ -32,15 +32,6 @@
 #ifndef __SIM_PROCESS_IMPL_HH__
 #define __SIM_PROCESS_IMPL_HH__
 
-//
-// The purpose of this code is to fake the loader & syscall mechanism
-// when there's no OS: thus there's no reason to use it in FULL_SYSTEM
-// mode when we do have an OS.
-//
-#include "config/full_system.hh"
-
-#if !FULL_SYSTEM
-
 #include <string>
 #include <vector>
 
@@ -68,8 +59,5 @@ copyStringArray(std::vector<std::string> &strings,
 
     memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(AddrType));
 }
-
-
-#endif // !FULL_SYSTEM
 
 #endif

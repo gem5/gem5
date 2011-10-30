@@ -47,9 +47,7 @@
 #include "mem/request.hh"
 #include "sim/serialize.hh"
 
-#if !FULL_SYSTEM
 class Process;
-#endif
 
 /**
  * Page Table Declaration.
@@ -71,17 +69,11 @@ class PageTable
     const Addr pageSize;
     const Addr offsetMask;
 
-#if !FULL_SYSTEM
     Process *process;
-#endif
 
   public:
 
-    PageTable(
-#if !FULL_SYSTEM
-            Process *_process,
-#endif
-            Addr _pageSize = TheISA::VMPageSize);
+    PageTable(Process *_process, Addr _pageSize = TheISA::VMPageSize);
 
     ~PageTable();
 

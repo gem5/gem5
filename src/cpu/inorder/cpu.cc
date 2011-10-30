@@ -267,7 +267,7 @@ InOrderCPU::InOrderCPU(Params *params)
 #if FULL_SYSTEM
         // SMT is not supported in FS mode yet.
         assert(numThreads == 1);
-        thread[tid] = new Thread(this, 0);
+        thread[tid] = new Thread(this, 0, NULL);
 #else
         if (tid < (ThreadID)params->workload.size()) {
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",

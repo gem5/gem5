@@ -32,15 +32,6 @@
 #ifndef __PROCESS_HH__
 #define __PROCESS_HH__
 
-//
-// The purpose of this code is to fake the loader & syscall mechanism
-// when there's no OS: thus there's no reason to use it in FULL_SYSTEM
-// mode when we do have an OS.
-//
-#include "config/full_system.hh"
-
-#if !FULL_SYSTEM
-
 #include <string>
 #include <vector>
 
@@ -316,7 +307,5 @@ class LiveProcess : public Process
     static LiveProcess *create(LiveProcessParams *params);
 };
 
-
-#endif // !FULL_SYSTEM
 
 #endif // __PROCESS_HH__
