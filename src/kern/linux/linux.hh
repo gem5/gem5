@@ -34,12 +34,6 @@
 #include "base/types.hh"
 #include "config/full_system.hh"
 
-#if FULL_SYSTEM
-
-class Linux {};
-
-#else //!FULL_SYSTEM
-
 #include <string>
 
 #include "kern/operatingsystem.hh"
@@ -179,8 +173,5 @@ class Linux : public OperatingSystem
     static std::string procMeminfo(LiveProcess *process, ThreadContext *tc);
 
 };  // class Linux
-
-
-#endif // FULL_SYSTEM
 
 #endif // __LINUX_HH__

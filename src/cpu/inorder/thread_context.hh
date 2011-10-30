@@ -142,10 +142,9 @@ class InOrderThreadContext : public ThreadContext
     {
         return this->thread->quiesceEvent;
     }
-#else
+#endif
     /** Returns a pointer to this thread's process. */
     Process *getProcessPtr() { return thread->getProcessPtr(); }
-#endif
 
     TranslatingPort *getMemPort() { return thread->getMemPort(); }
 

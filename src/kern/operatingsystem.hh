@@ -32,13 +32,7 @@
 #define __KERN_OPERATINGSYSTEM_HH__
 
 #include "base/types.hh"
-#include "config/full_system.hh"
 
-#if FULL_SYSTEM
-
-class OperatingSystem {};
-
-#else //!FULL_SYSTEM
 #include <string>
 
 class LiveProcess;
@@ -127,8 +121,5 @@ class OperatingSystem {
     static bool mmapGrowsDown() { return false; }
 
 };  // class OperatingSystem
-
-
-#endif // FULL_SYSTEM
 
 #endif // __OPERATINGSYSTEM_HH__

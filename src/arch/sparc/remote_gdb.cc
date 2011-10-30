@@ -135,6 +135,7 @@
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
 
@@ -156,18 +157,18 @@ RemoteGDB::acc(Addr va, size_t len)
     //@Todo In NetBSD, this function checks if all addresses
     // from va to va + len have valid page map entries. Not
     // sure how this will work for other OSes or in general.
-#if FULL_SYSTEM
-    if (va)
-        return true;
-    return false;
-#else
-    TlbEntry entry;
-    // Check to make sure the first byte is mapped into the processes address
-    // space.
-    if (context->getProcessPtr()->pTable->lookup(va, entry))
-        return true;
-    return false;
-#endif
+    if (FullSystem) {
+        if (va)
+            return true;
+        return false;
+    } else {
+        TlbEntry entry;
+        // Check to make sure the first byte is mapped into the processes
+        // address space.
+        if (context->getProcessPtr()->pTable->lookup(va, entry))
+            return true;
+        return false;
+    }
 }
 
 ///////////////////////////////////////////////////////////

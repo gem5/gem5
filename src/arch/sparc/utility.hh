@@ -39,6 +39,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/fault_fwd.hh"
+#include "sim/full_system.hh"
 
 namespace SparcISA
 {
@@ -73,13 +74,9 @@ void initCPU(ThreadContext *tc, int cpuId);
 inline void
 startupCPU(ThreadContext *tc, int cpuId)
 {
-#if FULL_SYSTEM
     // Other CPUs will get activated by IPIs
-    if (cpuId == 0)
+    if (cpuId == 0 || !FullSystem)
         tc->activate(0);
-#else
-    tc->activate(0);
-#endif
 }
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);

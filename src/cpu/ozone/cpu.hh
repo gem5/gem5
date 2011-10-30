@@ -123,9 +123,8 @@ class OzoneCPU : public BaseCPU
 
         TheISA::Kernel::Statistics *getKernelStats()
         { return thread->getKernelStats(); }
-#else
-        Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif
+        Process *getProcessPtr() { return thread->getProcessPtr(); }
 
         TranslatingPort *getMemPort() { return thread->getMemPort(); }
 

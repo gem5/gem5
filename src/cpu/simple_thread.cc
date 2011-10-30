@@ -41,6 +41,7 @@
 #include "cpu/thread_context.hh"
 #include "mem/vport.hh"
 #include "params/BaseCPU.hh"
+#include "sim/process.hh"
 
 #if FULL_SYSTEM
 #include "arch/kernel_stats.hh"
@@ -55,7 +56,6 @@
 #include "sim/sim_exit.hh"
 #else
 #include "mem/translating_port.hh"
-#include "sim/process.hh"
 #include "sim/system.hh"
 #endif
 
@@ -123,9 +123,8 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
     // some things should already be set up
 #if FULL_SYSTEM
     assert(system == oldContext->getSystemPtr());
-#else
-    assert(process == oldContext->getProcessPtr());
 #endif
+    assert(process == oldContext->getProcessPtr());
 
     copyState(oldContext);
 #if FULL_SYSTEM

@@ -41,9 +41,9 @@
 #include "cpu/thread_context.hh"
 #if !FULL_SYSTEM
 #include "arch/sparc/process.hh"
+#endif
 #include "mem/page_table.hh"
 #include "sim/process.hh"
-#endif
 #include "sim/full_system.hh"
 
 using namespace std;
@@ -624,43 +624,43 @@ PowerOnReset::invoke(ThreadContext *tc, StaticInstPtr inst)
 void
 FastInstructionAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if !FULL_SYSTEM
-    Process *p = tc->getProcessPtr();
-    TlbEntry entry;
-    bool success = p->pTable->lookup(vaddr, entry);
-    if (!success) {
-        panic("Tried to execute unmapped address %#x.\n", vaddr);
+    if (FullSystem) {
+        SparcFaultBase::invoke(tc, inst);
     } else {
-        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-        tc->getITBPtr()->insert(alignedVaddr, 0 /*partition id*/,
-                p->M5_pid /*context id*/, false, entry.pte);
+        Process *p = tc->getProcessPtr();
+        TlbEntry entry;
+        bool success = p->pTable->lookup(vaddr, entry);
+        if (!success) {
+            panic("Tried to execute unmapped address %#x.\n", vaddr);
+        } else {
+            Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+            tc->getITBPtr()->insert(alignedVaddr, 0 /*partition id*/,
+                    p->M5_pid /*context id*/, false, entry.pte);
+        }
     }
-#else
-    SparcFaultBase::invoke(tc, inst);
-#endif
 }
 
 void
 FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if !FULL_SYSTEM
-    Process *p = tc->getProcessPtr();
-    TlbEntry entry;
-    bool success = p->pTable->lookup(vaddr, entry);
-    if (!success) {
-        if (p->fixupStackFault(vaddr))
-            success = p->pTable->lookup(vaddr, entry);
-    }
-    if (!success) {
-        panic("Tried to access unmapped address %#x.\n", vaddr);
+    if (FullSystem) {
+        SparcFaultBase::invoke(tc, inst);
     } else {
-        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-        tc->getDTBPtr()->insert(alignedVaddr, 0 /*partition id*/,
-                p->M5_pid /*context id*/, false, entry.pte);
+        Process *p = tc->getProcessPtr();
+        TlbEntry entry;
+        bool success = p->pTable->lookup(vaddr, entry);
+        if (!success) {
+            if (p->fixupStackFault(vaddr))
+                success = p->pTable->lookup(vaddr, entry);
+        }
+        if (!success) {
+            panic("Tried to access unmapped address %#x.\n", vaddr);
+        } else {
+            Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+            tc->getDTBPtr()->insert(alignedVaddr, 0 /*partition id*/,
+                    p->M5_pid /*context id*/, false, entry.pte);
+        }
     }
-#else
-    SparcFaultBase::invoke(tc, inst);
-#endif
 }
 
 void

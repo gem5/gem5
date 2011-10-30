@@ -129,9 +129,8 @@ class ThreadContext
     virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
     virtual void connectMemPorts(ThreadContext *tc) = 0;
-#else
-    virtual Process *getProcessPtr() = 0;
 #endif
+    virtual Process *getProcessPtr() = 0;
 
     virtual TranslatingPort *getMemPort() = 0;
 
@@ -299,9 +298,8 @@ class ProxyThreadContext : public ThreadContext
     { return actualTC->getKernelStats(); }
 
     void connectMemPorts(ThreadContext *tc) { actualTC->connectMemPorts(tc); }
-#else
-    Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif
+    Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 
     TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 

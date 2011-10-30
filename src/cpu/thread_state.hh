@@ -101,9 +101,8 @@ struct ThreadState {
     void profileSample();
 
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
-#else
-    Process *getProcessPtr() { return process; }
 #endif
+    Process *getProcessPtr() { return process; }
 
     TranslatingPort *getMemPort();
 

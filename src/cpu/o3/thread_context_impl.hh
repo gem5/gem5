@@ -70,9 +70,8 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
     // some things should already be set up
 #if FULL_SYSTEM
     assert(getSystemPtr() == old_context->getSystemPtr());
-#else
-    assert(getProcessPtr() == old_context->getProcessPtr());
 #endif
+    assert(getProcessPtr() == old_context->getProcessPtr());
 
     // copy over functional state
     setStatus(old_context->status());

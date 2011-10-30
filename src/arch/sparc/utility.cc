@@ -31,10 +31,8 @@
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/utility.hh"
-#if FULL_SYSTEM
 #include "arch/sparc/vtophys.hh"
 #include "mem/vport.hh"
-#endif
 
 namespace SparcISA {
 
@@ -48,21 +46,21 @@ namespace SparcISA {
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-#if FULL_SYSTEM
-    const int NumArgumentRegs = 6;
-    if (number < NumArgumentRegs) {
-        return tc->readIntReg(8 + number);
+    if (FullSystem) {
+        const int NumArgumentRegs = 6;
+        if (number < NumArgumentRegs) {
+            return tc->readIntReg(8 + number);
+        } else {
+            Addr sp = tc->readIntReg(StackPointerReg);
+            VirtualPort *vp = tc->getVirtPort();
+            uint64_t arg = vp->read<uint64_t>(sp + 92 +
+                                (number-NumArgumentRegs) * sizeof(uint64_t));
+            return arg;
+        }
     } else {
-        Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort();
-        uint64_t arg = vp->read<uint64_t>(sp + 92 +
-                            (number-NumArgumentRegs) * sizeof(uint64_t));
-        return arg;
+        panic("getArgument() only implemented for full system\n");
+        M5_DUMMY_RETURN
     }
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
-    M5_DUMMY_RETURN
-#endif
 }
 
 void

@@ -54,14 +54,10 @@
 #include "cpu/thread_context.hh"
 #include "debug/TLB.hh"
 #include "mem/packet_access.hh"
-#include "mem/request.hh"
-
-#if !FULL_SYSTEM
 #include "mem/page_table.hh"
-#include "sim/process.hh"
-#endif
-
+#include "mem/request.hh"
 #include "sim/full_system.hh"
+#include "sim/process.hh"
 
 namespace X86ISA {
 
@@ -302,7 +298,6 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                     entry = lookup(vaddr);
                     assert(entry);
                 } else {
-#if !FULL_SYSTEM
                     DPRINTF(TLB, "Handling a TLB miss for "
                             "address %#x at pc %#x.\n",
                             vaddr, tc->instAddr());
@@ -326,7 +321,6 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                         entry = insert(alignedVaddr, newEntry);
                     }
                     DPRINTF(TLB, "Miss was serviced.\n");
-#endif
                 }
             }
             // Do paging protection checks.
@@ -367,27 +361,29 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
         req->setPaddr(vaddr);
     }
     // Check for an access to the local APIC
-#if FULL_SYSTEM
-    LocalApicBase localApicBase = tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
-    Addr baseAddr = localApicBase.base * PageBytes;
-    Addr paddr = req->getPaddr();
-    if (baseAddr <= paddr && baseAddr + PageBytes > paddr) {
-        // The Intel developer's manuals say the below restrictions apply,
-        // but the linux kernel, because of a compiler optimization, breaks
-        // them.
-        /*
-        // Check alignment
-        if (paddr & ((32/8) - 1))
-            return new GeneralProtection(0);
-        // Check access size
-        if (req->getSize() != (32/8))
-            return new GeneralProtection(0);
-        */
-        // Force the access to be uncacheable.
-        req->setFlags(Request::UNCACHEABLE);
-        req->setPaddr(x86LocalAPICAddress(tc->contextId(), paddr - baseAddr));
+    if (FullSystem) {
+        LocalApicBase localApicBase =
+            tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
+        Addr baseAddr = localApicBase.base * PageBytes;
+        Addr paddr = req->getPaddr();
+        if (baseAddr <= paddr && baseAddr + PageBytes > paddr) {
+            // The Intel developer's manuals say the below restrictions apply,
+            // but the linux kernel, because of a compiler optimization, breaks
+            // them.
+            /*
+            // Check alignment
+            if (paddr & ((32/8) - 1))
+                return new GeneralProtection(0);
+            // Check access size
+            if (req->getSize() != (32/8))
+                return new GeneralProtection(0);
+            */
+            // Force the access to be uncacheable.
+            req->setFlags(Request::UNCACHEABLE);
+            req->setPaddr(x86LocalAPICAddress(tc->contextId(),
+                        paddr - baseAddr));
+        }
     }
-#endif
     return NoFault;
 };
 

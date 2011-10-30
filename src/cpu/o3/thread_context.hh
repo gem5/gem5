@@ -98,10 +98,9 @@ class O3ThreadContext : public ThreadContext
     { return thread->kernelStats; }
 
     virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
-#else
+#endif
     /** Returns a pointer to this thread's process. */
     virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
-#endif
 
     virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
