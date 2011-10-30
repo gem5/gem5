@@ -33,6 +33,9 @@ Import('*')
 if env['TARGET_ISA'] == 'no':
     Return()
 
+Source('linux/linux.cc')
+Source('operatingsystem.cc')
+
 if env['FULL_SYSTEM']:
     Source('kernel_stats.cc')
     Source('system_events.cc')
@@ -50,6 +53,3 @@ if env['FULL_SYSTEM']:
         Source('tru64/tru64_events.cc')
         Source('tru64/tru64_syscalls.cc')
         DebugFlag('BADADDR')
-else:
-    Source('linux/linux.cc')
-    Source('operatingsystem.cc')

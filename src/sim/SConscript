@@ -46,6 +46,7 @@ Source('sim_events.cc')
 Source('sim_object.cc')
 Source('simulate.cc')
 Source('stat_control.cc')
+Source('syscall_emul.cc')
 
 if env['TARGET_ISA'] != 'no':
     SimObject('Process.py')
@@ -59,8 +60,6 @@ if env['FULL_SYSTEM']:
     Source('arguments.cc')
 elif env['TARGET_ISA'] != 'no':
     Source('tlb.cc')
-
-    Source('syscall_emul.cc')
 
 DebugFlag('Checkpoint')
 DebugFlag('Config')
