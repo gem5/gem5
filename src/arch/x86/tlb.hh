@@ -46,7 +46,6 @@
 
 #include "arch/x86/regs/segment.hh"
 #include "arch/x86/pagetable.hh"
-#include "config/full_system.hh"
 #include "mem/mem_object.hh"
 #include "mem/request.hh"
 #include "params/X86TLB.hh"
@@ -115,11 +114,6 @@ namespace X86ISA
         Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
         void translateTiming(RequestPtr req, ThreadContext *tc,
                 Translation *translation, Mode mode);
-
-#if FULL_SYSTEM
-        Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
-        Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
-#endif
 
         TlbEntry * insert(Addr vpn, TlbEntry &entry);
 

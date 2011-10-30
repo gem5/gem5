@@ -47,7 +47,6 @@
  */
 
 #include "arch/x86/regs/misc.hh"
-#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
@@ -57,25 +56,18 @@ namespace X86ISA
     inline Tick
     handleIprRead(ThreadContext *xc, Packet *pkt)
     {
-#if !FULL_SYSTEM
-        panic("Shouldn't have a memory mapped register in SE\n");
-#else
         Addr offset = pkt->getAddr() & mask(3);
         MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
         MiscReg data = htog(xc->readMiscReg(index));
         // Make sure we don't trot off the end of data.
         assert(offset + pkt->getSize() <= sizeof(MiscReg));
         pkt->setData(((uint8_t *)&data) + offset);
-#endif
         return xc->getCpuPtr()->ticks(1);
     }
 
     inline Tick
     handleIprWrite(ThreadContext *xc, Packet *pkt)
     {
-#if !FULL_SYSTEM
-        panic("Shouldn't have a memory mapped register in SE\n");
-#else
         Addr offset = pkt->getAddr() & mask(3);
         MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
         MiscReg data;
@@ -84,7 +76,6 @@ namespace X86ISA
         assert(offset + pkt->getSize() <= sizeof(MiscReg));
         pkt->writeData(((uint8_t *)&data) + offset);
         xc->setMiscReg(index, gtoh(data));
-#endif
         return xc->getCpuPtr()->ticks(1);
     }
 };

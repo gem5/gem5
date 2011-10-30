@@ -43,7 +43,6 @@
 #include "arch/x86/tlb.hh"
 #include "arch/x86/vtophys.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "debug/VtoPhys.hh"
 #include "sim/fault_fwd.hh"
@@ -55,16 +54,12 @@ namespace X86ISA
     Addr
     vtophys(Addr vaddr)
     {
-#if FULL_SYSTEM
         panic("Need access to page tables\n");
-#endif
-        return vaddr;
     }
 
     Addr
     vtophys(ThreadContext *tc, Addr vaddr)
     {
-#if FULL_SYSTEM
         Walker *walker = tc->getDTBPtr()->getWalker();
         Addr size;
         Addr addr = vaddr;
@@ -75,7 +70,5 @@ namespace X86ISA
         Addr paddr = addr | masked_addr;
         DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
         return paddr;
-#endif
-        return vaddr;
     }
 }

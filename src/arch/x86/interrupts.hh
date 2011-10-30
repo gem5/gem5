@@ -44,7 +44,6 @@
 #include "arch/x86/faults.hh"
 #include "arch/x86/intmessage.hh"
 #include "base/bitfield.hh"
-#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "dev/x86/intdev.hh"
 #include "dev/io_device.hh"

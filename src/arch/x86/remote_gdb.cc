@@ -47,7 +47,6 @@
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 
 using namespace std;

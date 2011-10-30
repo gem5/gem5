@@ -49,7 +49,6 @@
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/TLB.hh"
@@ -406,27 +405,11 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
         translation->finish(fault, req, tc, mode);
 }
 
-#if FULL_SYSTEM
-
-Tick
-TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
-{
-    return tc->getCpuPtr()->ticks(1);
-}
-
-Tick
-TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
-{
-    return tc->getCpuPtr()->ticks(1);
-}
-
 Walker *
 TLB::getWalker()
 {
     return walker;
 }
-
-#endif
 
 void
 TLB::serialize(std::ostream &os)

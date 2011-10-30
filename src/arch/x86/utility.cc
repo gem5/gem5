@@ -38,11 +38,7 @@
  * Authors: Gabe Black
  */
 
-#include "config/full_system.hh"
-
-#if FULL_SYSTEM
 #include "arch/x86/interrupts.hh"
-#endif
 #include "arch/x86/registers.hh"
 #include "arch/x86/tlb.hh"
 #include "arch/x86/utility.hh"
@@ -55,15 +51,10 @@ namespace X86ISA {
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-#if FULL_SYSTEM
     panic("getArgument() not implemented for x86!\n");
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
     M5_DUMMY_RETURN
-#endif
 }
 
-# if FULL_SYSTEM
 void initCPU(ThreadContext *tc, int cpuId)
 {
     // This function is essentially performing a reset. The actual INIT
@@ -193,12 +184,9 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setMiscReg(MISCREG_VM_HSAVE_PA, 0);
 }
 
-#endif
-
 void startupCPU(ThreadContext *tc, int cpuId)
 {
-#if FULL_SYSTEM
-    if (cpuId == 0) {
+    if (cpuId == 0 || !FullSystem) {
         tc->activate(0);
     } else {
         // This is an application processor (AP). It should be initialized to
@@ -206,9 +194,6 @@ void startupCPU(ThreadContext *tc, int cpuId)
         // a halted state.
         tc->suspend(0);
     }
-#else
-    tc->activate(0);
-#endif
 }
 
 void

@@ -45,9 +45,9 @@
 #include "base/hashmap.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "sim/full_system.hh"
 
 class ThreadContext;
 
@@ -68,12 +68,12 @@ namespace X86ISA
     static inline bool
     inUserMode(ThreadContext *tc)
     {
-#if FULL_SYSTEM
-        HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-        return m5reg.cpl == 3;
-#else
-        return true;
-#endif
+        if (!FullSystem) {
+            return true;
+        } else {
+            HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+            return m5reg.cpl == 3;
+        }
     }
 
     /**
@@ -83,11 +83,7 @@ namespace X86ISA
     template <class TC>
     void zeroRegisters(TC *tc);
 
-#if FULL_SYSTEM
-
     void initCPU(ThreadContext *tc, int cpuId);
-
-#endif
 
     void startupCPU(ThreadContext *tc, int cpuId);
 
