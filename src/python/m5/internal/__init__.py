@@ -29,6 +29,5 @@
 import core
 import debug
 import event
-import random
 import stats
 import trace
