@@ -50,6 +50,7 @@
 #include "debug/TLB.hh"
 #include "mem/page_table.hh"
 #include "params/PowerTLB.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 
 using namespace std;
@@ -310,14 +311,14 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 Fault
 TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 {
-#if !FULL_SYSTEM
-    if (mode == Execute)
-        return translateInst(req, tc);
-    else
-        return translateData(req, tc, mode == Write);
-#else
-  fatal("translate atomic not yet implemented\n");
-#endif
+    if (FullSystem) {
+        fatal("translate atomic not yet implemented in full system mode.\n");
+    } else {
+        if (mode == Execute)
+            return translateInst(req, tc);
+        else
+            return translateData(req, tc, mode == Write);
+    }
 }
 
 void
