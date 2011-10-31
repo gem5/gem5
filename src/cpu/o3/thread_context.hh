@@ -92,13 +92,13 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to the system. */
     virtual System *getSystemPtr() { return cpu->system; }
 
-#if FULL_SYSTEM
     /** Returns a pointer to this thread's kernel statistics. */
     virtual TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
-    virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
-#endif
+    virtual void connectMemPorts(ThreadContext *tc)
+    { thread->connectMemPorts(tc); }
+
     /** Returns a pointer to this thread's process. */
     virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
 
@@ -125,12 +125,11 @@ class O3ThreadContext : public ThreadContext
     /** Set the status to Halted. */
     virtual void halt(int delay = 0);
 
-#if FULL_SYSTEM
     /** Dumps the function profiling information.
      * @todo: Implement.
      */
     virtual void dumpFuncProfile();
-#endif
+
     /** Takes over execution of a thread from another CPU. */
     virtual void takeOverFrom(ThreadContext *old_context);
 
@@ -142,7 +141,6 @@ class O3ThreadContext : public ThreadContext
     /** Unserializes state. */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-#if FULL_SYSTEM
     /** Reads the last tick that this thread was activated on. */
     virtual Tick readLastActivate();
     /** Reads the last tick that this thread was suspended on. */
@@ -152,7 +150,6 @@ class O3ThreadContext : public ThreadContext
     virtual void profileClear();
     /** Samples the function profiling information. */
     virtual void profileSample();
-#endif
 
     /** Copies the architectural registers from another TC into this TC. */
     virtual void copyArchRegs(ThreadContext *tc);
@@ -229,20 +226,18 @@ class O3ThreadContext : public ThreadContext
      * misspeculating, this is set as false. */
     virtual bool misspeculating() { return false; }
 
-#if !FULL_SYSTEM
     /** Executes a syscall in SE mode. */
     virtual void syscall(int64_t callnum)
     { return cpu->syscall(callnum, thread->threadId()); }
 
     /** Reads the funcExeInst counter. */
     virtual Counter readFuncExeInst() { return thread->funcExeInst; }
-#else
+
     /** Returns pointer to the quiesce event. */
     virtual EndQuiesceEvent *getQuiesceEvent()
     {
         return this->thread->quiesceEvent;
     }
-#endif
 
 };
 

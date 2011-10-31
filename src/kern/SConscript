@@ -33,6 +33,7 @@ Import('*')
 if env['TARGET_ISA'] == 'no':
     Return()
 
+Source('kernel_stats.cc')
 Source('linux/events.cc')
 Source('linux/linux.cc')
 Source('linux/printk.cc')
@@ -50,7 +51,6 @@ DebugFlag('DebugPrintf')
 DebugFlag('Printf')
 
 if env['FULL_SYSTEM']:
-    Source('kernel_stats.cc')
     Source('linux/linux_syscalls.cc')
     
     if env['TARGET_ISA'] == 'alpha':

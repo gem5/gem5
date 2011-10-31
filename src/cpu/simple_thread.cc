@@ -34,30 +34,26 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
-#include "arch/utility.hh"
-#include "config/the_isa.hh"
-#include "cpu/base.hh"
-#include "cpu/simple_thread.hh"
-#include "cpu/thread_context.hh"
-#include "mem/vport.hh"
-#include "params/BaseCPU.hh"
-#include "sim/process.hh"
-
-#if FULL_SYSTEM
 #include "arch/kernel_stats.hh"
 #include "arch/stacktrace.hh"
+#include "arch/utility.hh"
 #include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
+#include "cpu/simple_thread.hh"
+#include "cpu/thread_context.hh"
+#include "mem/translating_port.hh"
+#include "mem/vport.hh"
+#include "params/BaseCPU.hh"
+#include "sim/process.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
-#else
-#include "mem/translating_port.hh"
 #include "sim/system.hh"
-#endif
 
 using namespace std;
 
@@ -211,14 +207,12 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     isa.unserialize(cpu, cp, section);
 }
 
-#if FULL_SYSTEM
 void
 SimpleThread::dumpFuncProfile()
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
     profile->dump(tc, *os);
 }
-#endif
 
 void
 SimpleThread::activate(int delay)

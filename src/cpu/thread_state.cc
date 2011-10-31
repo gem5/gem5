@@ -125,7 +125,6 @@ ThreadState::connectVirtPort(ThreadContext *tc)
     connectToMemFunc(virtPort);
 }
 
-#if FULL_SYSTEM
 void
 ThreadState::connectMemPorts(ThreadContext *tc)
 {
@@ -146,7 +145,6 @@ ThreadState::profileSample()
     if (profile)
         profile->sample(profileNode, profilePC);
 }
-#endif
 
 TranslatingPort *
 ThreadState::getMemPort()

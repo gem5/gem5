@@ -86,9 +86,7 @@ class InOrderThreadState : public ThreadState {
     /** Handles the syscall. */
     void syscall(int64_t callnum) { process->syscall(callnum, tc); }
 
-#if FULL_SYSTEM
     void dumpFuncProfile();    
-#endif
 
     /** Pointer to the ThreadContext of this thread. */
     ThreadContext *tc;

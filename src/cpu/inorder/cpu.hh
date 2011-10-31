@@ -413,7 +413,6 @@ class InOrderCPU : public BaseCPU
     /** Get a Memory Port */
     Port* getPort(const std::string &if_name, int idx = 0);
 
-#if FULL_SYSTEM
     /** HW return from error interrupt. */
     Fault hwrei(ThreadID tid);
 
@@ -439,14 +438,13 @@ class InOrderCPU : public BaseCPU
 
     /** Check if this address is a valid data address. */
     bool validDataAddr(Addr addr) { return true; }
-#else
+
     /** Schedule a syscall on the CPU */
     void syscallContext(Fault fault, ThreadID tid, DynInstPtr inst,
                         int delay = 0);
 
     /** Executes a syscall.*/
     void syscall(int64_t callnum, ThreadID tid);
-#endif
 
     /** Schedule a trap on the CPU */
     void trapContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay = 0);

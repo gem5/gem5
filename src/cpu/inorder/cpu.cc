@@ -46,6 +46,7 @@
 #include "cpu/activity.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/quiesce_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Activity.hh"
@@ -57,11 +58,7 @@
 #include "params/InOrderCPU.hh"
 #include "sim/process.hh"
 #include "sim/stat_control.hh"
-
-#if FULL_SYSTEM
-#include "cpu/quiesce_event.hh"
 #include "sim/system.hh"
-#endif
 
 #if THE_ISA == ALPHA_ISA
 #include "arch/alpha/osfpal.hh"
@@ -786,7 +783,6 @@ InOrderCPU::getPort(const std::string &if_name, int idx)
     return resPool->getPort(if_name, idx);
 }
 
-#if FULL_SYSTEM
 Fault
 InOrderCPU::hwrei(ThreadID tid)
 {
@@ -891,7 +887,6 @@ InOrderCPU::processInterrupts(Fault interrupt)
     trap(interrupt, threadContexts[0]->contextId(), dummyBufferInst);
 }
 
-
 void
 InOrderCPU::updateMemPorts()
 {
@@ -901,7 +896,6 @@ InOrderCPU::updateMemPorts()
     for (ThreadID i = 0; i < size; ++i)
         thread[i]->connectMemPorts(thread[i]->getTC());
 }
-#endif
 
 void
 InOrderCPU::trapContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
@@ -1709,7 +1703,6 @@ InOrderCPU::wakeup()
 }
 #endif
 
-#if !FULL_SYSTEM
 void
 InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)
 {
@@ -1747,7 +1740,6 @@ InOrderCPU::syscall(int64_t callnum, ThreadID tid)
     // Clear Non-Speculative Block Variable
     nonSpecInstActive[tid] = false;
 }
-#endif
 
 TheISA::TLB*
 InOrderCPU::getITBPtr()

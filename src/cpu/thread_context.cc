@@ -56,7 +56,6 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
             panic("Float reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
     }
-#if FULL_SYSTEM
     for (int i = 0; i < TheISA::NumMiscRegs; ++i) {
         TheISA::MiscReg t1 = one->readMiscRegNoEffect(i);
         TheISA::MiscReg t2 = two->readMiscRegNoEffect(i);
@@ -64,7 +63,6 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
             panic("Misc reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
     }
-#endif
 
     if (!(one->pcState() == two->pcState()))
         panic("PC state doesn't match.");

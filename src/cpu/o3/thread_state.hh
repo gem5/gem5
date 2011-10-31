@@ -37,17 +37,12 @@
 #include "cpu/thread_state.hh"
 #include "sim/sim_exit.hh"
 
-class Event;
-class Process;
-
-#if FULL_SYSTEM
 class EndQuiesceEvent;
-class FunctionProfile;
-class ProfileNode;
-#else
+class Event;
 class FunctionalMemory;
+class FunctionProfile;
 class Process;
-#endif
+class ProfileNode;
 
 /**
  * Class that has various thread state, such as the status, the
@@ -102,18 +97,14 @@ struct O3ThreadState : public ThreadState {
     /** Returns a pointer to the TC of this thread. */
     ThreadContext *getTC() { return tc; }
 
-#if !FULL_SYSTEM
     /** Handles the syscall. */
     void syscall(int64_t callnum) { process->syscall(callnum, tc); }
-#endif
 
-#if FULL_SYSTEM
     void dumpFuncProfile()
     {
         std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
         profile->dump(tc, *os);
     }
-#endif
 };
 
 #endif // __CPU_O3_THREAD_STATE_HH__

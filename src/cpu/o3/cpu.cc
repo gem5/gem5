@@ -983,8 +983,6 @@ FullO3CPU<Impl>::trap(Fault fault, ThreadID tid, StaticInstPtr inst)
     fault->invoke(this->threadContexts[tid], inst);
 }
 
-#if !FULL_SYSTEM
-
 template <class Impl>
 void
 FullO3CPU<Impl>::syscall(int64_t callnum, ThreadID tid)
@@ -1004,8 +1002,6 @@ FullO3CPU<Impl>::syscall(int64_t callnum, ThreadID tid)
     // incrementing it.
     --(this->thread[tid]->funcExeInst);
 }
-
-#endif
 
 template <class Impl>
 void

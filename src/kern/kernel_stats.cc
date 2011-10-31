@@ -33,8 +33,10 @@
 
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "kern/tru64/tru64_syscalls.hh"
 #include "kern/kernel_stats.hh"
+#if THE_ISA == ALPHA_ISA
+#include "kern/tru64/tru64_syscalls.hh"
+#endif
 #include "sim/system.hh"
 
 using namespace std;
@@ -90,13 +92,14 @@ Statistics::regStats(const string &_name)
         ;
 
     _iplUsed = _iplGood / _iplCount;
-
+#if THE_ISA == ALPHA_ISA
     _syscall
         .init(SystemCalls<Tru64>::Number)
         .name(name() + ".syscall")
         .desc("number of syscalls executed")
         .flags(total | pdf | nozero | nonan)
         ;
+#endif
 
     //@todo This needs to get the names of syscalls from an appropriate place.
 #if 0

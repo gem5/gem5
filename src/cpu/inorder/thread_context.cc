@@ -43,8 +43,6 @@ InOrderThreadContext::getVirtPort()
     return thread->getVirtPort();
 }
 
-#if FULL_SYSTEM
-
 void
 InOrderThreadContext::dumpFuncProfile()
 {
@@ -78,7 +76,6 @@ InOrderThreadContext::profileSample()
 {
     thread->profileSample();
 }
-#endif
 
 void
 InOrderThreadContext::takeOverFrom(ThreadContext *old_context)

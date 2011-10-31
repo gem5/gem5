@@ -36,12 +36,9 @@
 
 using namespace TheISA;
 
-#if FULL_SYSTEM
 void 
 InOrderThreadState::dumpFuncProfile()    
 {
     std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
     profile->dump(tc, *os);
 }
-#endif
-

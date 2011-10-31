@@ -350,12 +350,10 @@ class FullO3CPU : public BaseO3CPU
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
   public:
-#if !FULL_SYSTEM
     /** Executes a syscall.
      * @todo: Determine if this needs to be virtual.
      */
     void syscall(int64_t callnum, ThreadID tid);
-#endif
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */

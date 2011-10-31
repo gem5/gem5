@@ -39,7 +39,6 @@
 #include "mem/mem_object.hh"
 #include "sim/process.hh"
 
-#if FULL_SYSTEM
 class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
@@ -48,7 +47,6 @@ namespace TheISA {
         class Statistics;
     };
 };
-#endif
 
 class Checkpoint;
 class Port;
@@ -89,7 +87,6 @@ struct ThreadState {
 
     void connectVirtPort(ThreadContext *tc);
 
-#if FULL_SYSTEM
     void connectMemPorts(ThreadContext *tc);
 
     void dumpFuncProfile();
@@ -101,7 +98,7 @@ struct ThreadState {
     void profileSample();
 
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
-#endif
+
     Process *getProcessPtr() { return process; }
 
     TranslatingPort *getMemPort();
@@ -169,7 +166,6 @@ struct ThreadState {
     /** Last time suspend was called on this thread. */
     Tick lastSuspend;
 
-#if FULL_SYSTEM
   public:
     FunctionProfile *profile;
     ProfileNode *profileNode;
@@ -177,7 +173,7 @@ struct ThreadState {
     EndQuiesceEvent *quiesceEvent;
 
     TheISA::Kernel::Statistics *kernelStats;
-#endif
+
   protected:
     Process *process;
 

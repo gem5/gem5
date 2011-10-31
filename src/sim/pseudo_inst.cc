@@ -48,6 +48,7 @@
 #include <fstream>
 #include <string>
 
+#include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "base/debug.hh"
 #include "config/full_system.hh"
@@ -66,11 +67,7 @@
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
-
-#if FULL_SYSTEM
-#include "arch/kernel_stats.hh"
 #include "sim/vptr.hh"
-#endif
 
 using namespace std;
 

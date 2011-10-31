@@ -54,14 +54,12 @@ O3ThreadContext<Impl>::getVirtPort()
     return thread->getVirtPort();
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 void
 O3ThreadContext<Impl>::dumpFuncProfile()
 {
     thread->dumpFuncProfile();
 }
-#endif
 
 template <class Impl>
 void
@@ -197,7 +195,6 @@ O3ThreadContext<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 Tick
 O3ThreadContext<Impl>::readLastActivate()
@@ -225,7 +222,6 @@ O3ThreadContext<Impl>::profileSample()
 {
     thread->profileSample();
 }
-#endif
 
 template <class Impl>
 void

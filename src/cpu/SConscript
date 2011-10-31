@@ -122,6 +122,7 @@ Source('inteltrace.cc')
 Source('intr_control.cc')
 Source('nativetrace.cc')
 Source('pc_event.cc')
+Source('profile.cc')
 Source('quiesce_event.cc')
 Source('static_inst.cc')
 Source('simple_thread.cc')
@@ -129,8 +130,6 @@ Source('thread_context.cc')
 Source('thread_state.cc')
 
 if env['FULL_SYSTEM']:
-    Source('profile.cc')
-
     if env['TARGET_ISA'] == 'sparc':
         SimObject('LegionTrace.py')
         Source('legiontrace.cc')

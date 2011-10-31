@@ -113,6 +113,7 @@ class InOrderThreadContext : public ThreadContext
     /** Returns a pointer to physical memory. */
     PhysicalMemory *getPhysMemPtr()
     { assert(0); return 0; /*return cpu->physmem;*/ }
+#endif
 
     /** Returns a pointer to this thread's kernel statistics. */
     TheISA::Kernel::Statistics *getKernelStats()
@@ -142,7 +143,7 @@ class InOrderThreadContext : public ThreadContext
     {
         return this->thread->quiesceEvent;
     }
-#endif
+
     /** Returns a pointer to this thread's process. */
     Process *getProcessPtr() { return thread->getProcessPtr(); }
 
@@ -271,11 +272,9 @@ class InOrderThreadContext : public ThreadContext
      * misspeculating, this is set as false. */
     bool misspeculating() { return false; }
 
-#if !FULL_SYSTEM
     /** Executes a syscall in SE mode. */
     void syscall(int64_t callnum)
     { return cpu->syscall(callnum, thread->threadId()); }
-#endif
 
     /** Reads the funcExeInst counter. */
     Counter readFuncExeInst() { return thread->funcExeInst; }

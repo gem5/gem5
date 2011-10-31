@@ -60,6 +60,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('nativetrace.cc')
     Source('predecoder.cc')
     Source('remote_gdb.cc')
+    Source('stacktrace.cc')
     Source('table_walker.cc')
     Source('tlb.cc')
     Source('utility.cc')
@@ -74,7 +75,6 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('Faults', "Trace Exceptions, interrupts, svc/swi")
     DebugFlag('Predecoder', "Instructions returned by the predecoder")
     if env['FULL_SYSTEM']:
-        Source('stacktrace.cc')
         Source('system.cc')
         Source('linux/system.cc')
         
