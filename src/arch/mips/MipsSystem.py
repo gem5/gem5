@@ -49,6 +49,9 @@ if buildEnv['FULL_SYSTEM']:
         system_type = 34
         system_rev = 1 << 10
 
+        boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
+                                             "boot processor frequency")
+
     class BareIronMipsSystem(MipsSystem):
         type = 'BareIronMipsSystem'
         bare_iron = True

@@ -27,6 +27,7 @@
 # Authors: Nathan Binkert
 
 from m5.params import *
+from m5.proxy import *
 from System import System
 
 class AlphaSystem(System):
@@ -41,6 +42,9 @@ class LinuxAlphaSystem(AlphaSystem):
     type = 'LinuxAlphaSystem'
     system_type = 34
     system_rev = 1 << 10
+
+    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
+                                         "boot processor frequency")
 
 class FreebsdAlphaSystem(AlphaSystem):
     type = 'FreebsdAlphaSystem'

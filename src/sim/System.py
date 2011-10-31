@@ -62,8 +62,6 @@ class System(SimObject):
     work_cpus_ckpt_count = Param.Counter(0,
         "create checkpoint when active cpu count value is reached")
 
-    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
-                                         "boot processor frequency")
     init_param = Param.UInt64(0, "numerical value to pass into simulator")
     boot_osflags = Param.String("a", "boot flags to pass to the kernel")
     kernel = Param.String("", "file that contains the kernel code")
