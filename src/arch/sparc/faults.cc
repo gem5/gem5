@@ -33,15 +33,13 @@
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/process.hh"
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "sim/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#if !FULL_SYSTEM
-#include "arch/sparc/process.hh"
-#endif
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #include "sim/full_system.hh"
@@ -666,64 +664,64 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 void
 SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if !FULL_SYSTEM
-    doNormalFault(tc, trapType(), false);
+    if (FullSystem) {
+        SparcFaultBase::invoke(tc, inst);
+    } else {
+        doNormalFault(tc, trapType(), false);
 
-    Process *p = tc->getProcessPtr();
+        Process *p = tc->getProcessPtr();
 
-    //XXX This will only work in faults from a SparcLiveProcess
-    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-    assert(lp);
+        //XXX This will only work in faults from a SparcLiveProcess
+        SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+        assert(lp);
 
-    // Then adjust the PC and NPC
-    tc->pcState(lp->readSpillStart());
-#else
-    SparcFaultBase::invoke(tc, inst);
-#endif
+        // Then adjust the PC and NPC
+        tc->pcState(lp->readSpillStart());
+    }
 }
 
 void
 FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if !FULL_SYSTEM
-    doNormalFault(tc, trapType(), false);
+    if (FullSystem) {
+        SparcFaultBase::invoke(tc, inst);
+    } else {
+        doNormalFault(tc, trapType(), false);
 
-    Process *p = tc->getProcessPtr();
+        Process *p = tc->getProcessPtr();
 
-    //XXX This will only work in faults from a SparcLiveProcess
-    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-    assert(lp);
+        //XXX This will only work in faults from a SparcLiveProcess
+        SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+        assert(lp);
 
-    // Then adjust the PC and NPC
-    tc->pcState(lp->readFillStart());
-#else
-    SparcFaultBase::invoke(tc, inst);
-#endif
+        // Then adjust the PC and NPC
+        tc->pcState(lp->readFillStart());
+    }
 }
 
 void
 TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-#if !FULL_SYSTEM
-    // In SE, this mechanism is how the process requests a service from the
-    // operating system. We'll get the process object from the thread context
-    // and let it service the request.
+    if (FullSystem) {
+        SparcFaultBase::invoke(tc, inst);
+    } else {
+        // In SE, this mechanism is how the process requests a service from
+        // the operating system. We'll get the process object from the thread
+        // context and let it service the request.
 
-    Process *p = tc->getProcessPtr();
+        Process *p = tc->getProcessPtr();
 
-    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-    assert(lp);
+        SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+        assert(lp);
 
-    lp->handleTrap(_n, tc);
+        lp->handleTrap(_n, tc);
 
-    // We need to explicitly advance the pc, since that's not done for us
-    // on a faulting instruction
-    PCState pc = tc->pcState();
-    pc.advance();
-    tc->pcState(pc);
-#else
-    SparcFaultBase::invoke(tc, inst);
-#endif
+        // We need to explicitly advance the pc, since that's not done for us
+        // on a faulting instruction
+        PCState pc = tc->pcState();
+        pc.advance();
+        tc->pcState(pc);
+    }
 }
 
 } // namespace SparcISA

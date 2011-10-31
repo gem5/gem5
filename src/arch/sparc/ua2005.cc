@@ -36,6 +36,7 @@
 #include "debug/Quiesce.hh"
 #include "debug/Timer.hh"
 #include "sim/system.hh"
+#include "sim/full_system.hh"
 
 using namespace SparcISA;
 using namespace std;
@@ -224,10 +225,8 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             DPRINTF(Quiesce, "Cpu executed quiescing instruction\n");
             // Time to go to sleep
             tc->suspend();
-#if FULL_SYSTEM
-            if (tc->getKernelStats())
+            if (FullSystem && tc->getKernelStats())
                 tc->getKernelStats()->quiesce();
-#endif
         }
         break;
 
