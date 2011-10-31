@@ -33,23 +33,25 @@ Import('*')
 if env['TARGET_ISA'] == 'no':
     Return()
 
+Source('linux/events.cc')
 Source('linux/linux.cc')
+Source('linux/printk.cc')
 Source('operatingsystem.cc')
+Source('system_events.cc')
+
+if env['TARGET_ISA'] == 'alpha':
+    Source('tru64/dump_mbuf.cc')
+    Source('tru64/printf.cc')
+    Source('tru64/tru64_events.cc')
+
+    DebugFlag('BADADDR')
+
+DebugFlag('DebugPrintf')
+DebugFlag('Printf')
 
 if env['FULL_SYSTEM']:
     Source('kernel_stats.cc')
-    Source('system_events.cc')
-
-    DebugFlag('DebugPrintf')
-    DebugFlag('Printf')
-
-    Source('linux/events.cc')
     Source('linux/linux_syscalls.cc')
-    Source('linux/printk.cc')
     
     if env['TARGET_ISA'] == 'alpha':
-        Source('tru64/dump_mbuf.cc')
-        Source('tru64/printf.cc')
-        Source('tru64/tru64_events.cc')
         Source('tru64/tru64_syscalls.cc')
-        DebugFlag('BADADDR')

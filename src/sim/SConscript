@@ -34,6 +34,7 @@ SimObject('BaseTLB.py')
 SimObject('Root.py')
 SimObject('InstTracer.py')
 
+Source('arguments.cc')
 Source('async.cc')
 Source('core.cc')
 Source('debug.cc')
@@ -56,9 +57,7 @@ if env['TARGET_ISA'] != 'no':
     Source('pseudo_inst.cc')
     Source('system.cc')
 
-if env['FULL_SYSTEM']:
-    Source('arguments.cc')
-elif env['TARGET_ISA'] != 'no':
+if not env['FULL_SYSTEM'] and env['TARGET_ISA'] != 'no':
     Source('tlb.cc')
 
 DebugFlag('Checkpoint')
