@@ -167,7 +167,7 @@ Trace::LegionTraceRecord::dump()
     bool diffTnpc = false;
     bool diffTstate = false;
     bool diffTt = false;
-    bool diffTba = false;
+    bool diffTba M5_VAR_USED = false;
     bool diffHpstate = false;
     bool diffHtstate = false;
     bool diffHtba = false;

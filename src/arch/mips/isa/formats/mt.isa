@@ -107,7 +107,7 @@ def template ThreadRegisterExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
-            int64_t data;
+            int64_t data M5_VAR_USED;
             %(op_decl)s;
             %(op_rd)s;
 
@@ -126,17 +126,6 @@ def template ThreadRegisterExecute {{
                 } else if (vpeControl.targTC > mvpConf0.ptc) {
                     data = -1;
                 } else {
-                    int top_bit = 0;
-                    int bottom_bit = 0;
-
-                    if (MT_H == 1) {
-                        top_bit = 63;
-                        bottom_bit = 32;
-                    } else {
-                        top_bit = 31;
-                        bottom_bit = 0;
-                    }
-
                     %(code)s;
                 }
             } else {
@@ -203,10 +192,11 @@ def format MT_MFTR(code, *flags) {{
         flags += ('IsNonSpeculative', )
 #        code = 'std::cerr << curTick() << \": T\" << xc->tcBase()->threadId() << \": Executing MT INST: ' + name + '\" << endl;\n' + code
 
-        code += 'if (MT_H == 1) {\n'
-        code += 'data = bits(data, top_bit, bottom_bit);\n'
-        code += '}\n'
-        code += 'Rd = data;\n'
+        code += '''
+            if (MT_H)
+                data = bits(data, 63, 32);
+            Rd = data;
+        '''
 
         iop = InstObjParams(name, Name, 'MTOp', code, flags)
         header_output = BasicDeclare.subst(iop)

@@ -211,7 +211,6 @@ InOrderCPU::InOrderCPU(Params *params)
       lastRunningCycle(0),
       instsPerSwitch(0)
 {    
-    ThreadID active_threads;
     cpu_params = params;
 
     resPool = new ResourcePool(this, params);
@@ -219,10 +218,8 @@ InOrderCPU::InOrderCPU(Params *params)
     // Resize for Multithreading CPUs
     thread.resize(numThreads);
 
-#if FULL_SYSTEM
-    active_threads = 1;
-#else
-    active_threads = params->workload.size();
+#if !FULL_SYSTEM
+    ThreadID active_threads = params->workload.size();
 
     if (active_threads > MaxThreads) {
         panic("Workload Size too large. Increase the 'MaxThreads'"
@@ -1124,7 +1121,6 @@ InOrderCPU::updateThreadPriority()
         //DEFAULT TO ROUND ROBIN SCHEME
         //e.g. Move highest priority to end of thread list
         list<ThreadID>::iterator list_begin = activeThreads.begin();
-        list<ThreadID>::iterator list_end   = activeThreads.end();
 
         unsigned high_thread = *list_begin;
 

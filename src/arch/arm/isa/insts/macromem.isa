@@ -563,15 +563,16 @@ let {{
 
 let {{
     exec_output = ''
-    for type in ('uint8_t', 'uint16_t', 'uint32_t'):
+    for typeSize in (8, 16, 32):
         for sRegs in 1, 2:
-            for dRegs in range(sRegs, 5):
+            for dRegs in range(sRegs, min(sRegs * 64 / typeSize + 1, 5)):
                 for format in ("MicroUnpackNeon%(sRegs)dto%(dRegs)dUop",
                                "MicroUnpackAllNeon%(sRegs)dto%(dRegs)dUop",
                                "MicroPackNeon%(dRegs)dto%(sRegs)dUop"):
                     Name = format % { "sRegs" : sRegs * 2,
                                       "dRegs" : dRegs * 2 }
-                    substDict = { "class_name" : Name, "targs" : type }
+                    substDict = { "class_name" : Name,
+                                  "targs" : "uint%d_t" % typeSize }
                     exec_output += MicroNeonExecDeclare.subst(substDict)
 }};
 

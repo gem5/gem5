@@ -30,6 +30,7 @@
  *          Gabe Black
  */
 
+#include <cstddef>
 #include <cstdio>
 #include <sstream>
 #include <string>

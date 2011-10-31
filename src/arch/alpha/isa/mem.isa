@@ -388,7 +388,7 @@ def template MiscExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
     {
-        Addr EA;
+        Addr EA M5_VAR_USED;
         Fault fault = NoFault;
 
         %(fp_enable_check)s;

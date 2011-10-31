@@ -851,6 +851,8 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         swig_env.Append(CCFLAGS='-Wno-uninitialized')
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
         swig_env.Append(CCFLAGS='-Wno-parentheses')
+        swig_env.Append(CCFLAGS='-Wno-unused-label')
+        swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
 
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')

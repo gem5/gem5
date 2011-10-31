@@ -123,7 +123,7 @@ def template LoadCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        Addr EA;
+        Addr M5_VAR_USED EA;
         Fault fault = NoFault;
 
         %(op_decl)s;

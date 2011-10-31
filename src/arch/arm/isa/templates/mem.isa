@@ -1112,7 +1112,7 @@ def template LoadRegConstructor {{
                  (IntRegIndex)_index)
     {
         %(constructor)s;
-        bool conditional = false;
+        bool conditional M5_VAR_USED = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             conditional = true;
             for (int x = 0; x < _numDestRegs; x++) {
@@ -1166,7 +1166,7 @@ def template LoadImmConstructor {{
                  (IntRegIndex)_dest, (IntRegIndex)_base, _add, _imm)
     {
         %(constructor)s;
-        bool conditional = false;
+        bool conditional M5_VAR_USED = false;
         if (!(condCode == COND_AL || condCode == COND_UC)) {
             conditional = true;
             for (int x = 0; x < _numDestRegs; x++) {
