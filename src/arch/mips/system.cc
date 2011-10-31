@@ -38,6 +38,7 @@
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "mem/physical.hh"
+#include "mem/vport.hh"
 #include "params/MipsSystem.hh"
 #include "sim/byteswap.hh"
 
@@ -45,8 +46,6 @@ using namespace LittleEndianGuest;
 
 MipsSystem::MipsSystem(Params *p) : System(p)
 {
-
-#if FULL_SYSTEM
     if (p->bare_iron == true) {
         hexFile = new HexFile(params()->hex_file_name);
         if (!hexFile->loadSections(functionalPort))
@@ -108,14 +107,12 @@ MipsSystem::MipsSystem(Params *p) : System(p)
     } else {
         panic("could not find hwrpb\n");
     }
-#endif
 }
 
 MipsSystem::~MipsSystem()
 {
 }
 
-#if FULL_SYSTEM
 Addr
 MipsSystem::fixFuncEventAddr(Addr addr)
 {
@@ -125,8 +122,6 @@ MipsSystem::fixFuncEventAddr(Addr addr)
 void
 MipsSystem::setMipsAccess(Addr access)
 {}
-
-#endif
 
 bool
 MipsSystem::breakpoint()

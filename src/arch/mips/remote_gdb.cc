@@ -137,12 +137,12 @@
 
 #include "arch/mips/remote_gdb.hh"
 #include "arch/mips/vtophys.hh"
-#include "config/full_system.hh"
 #include "cpu/decode.hh"
 #include "cpu/thread_state.hh"
 #include "debug/GDBAcc.hh"
 #include "debug/GDBMisc.hh"
 #include "mem/page_table.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 using namespace MipsISA;
@@ -158,13 +158,13 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-#if FULL_SYSTEM
-    panic("acc not implemented for MIPS FS!");
-#endif
     TlbEntry entry;
     //Check to make sure the first byte is mapped into the processes address
     //space.
-    return context->getProcessPtr()->pTable->lookup(va, entry);
+    if (FullSystem)
+        panic("acc not implemented for MIPS FS!");
+    else
+        return context->getProcessPtr()->pTable->lookup(va, entry);
 }
 
 /*

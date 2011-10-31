@@ -32,10 +32,9 @@ from m5.defines import buildEnv
 
 from System import *
 
-if buildEnv['FULL_SYSTEM']:
-    class BareIronMipsSystem(MipsSystem):
-        type = 'BareIronMipsSystem'
-        system_type = 34
-        system_rev = 1 << 10
-        hex_file_name = Param.String('test.hex',"hex file that contains [address,data] pairs")
+class BareIronMipsSystem(MipsSystem):
+    type = 'BareIronMipsSystem'
+    system_type = 34
+    system_rev = 1 << 10
+    hex_file_name = Param.String('test.hex',"hex file that contains [address,data] pairs")
 

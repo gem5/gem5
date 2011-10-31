@@ -37,11 +37,8 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/MipsPRA.hh"
-
-#if !FULL_SYSTEM
 #include "mem/page_table.hh"
 #include "sim/process.hh"
-#endif
 
 namespace MipsISA
 {

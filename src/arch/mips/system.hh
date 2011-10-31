@@ -66,7 +66,6 @@ class MipsSystem : public System
      */
     void setMipsAccess(Addr access);
 
-#if FULL_SYSTEM
     /** console symbol table */
     SymbolTable *consoleSymtab;
 
@@ -75,7 +74,6 @@ class MipsSystem : public System
 
     /** Used by some Bare Iron Configurations */
     HexFile *hexFile;
-#endif
 
 #ifndef NDEBUG
   /** Event to halt the simulator if the console calls panic() */
@@ -85,9 +83,7 @@ class MipsSystem : public System
   protected:
     const Params *params() const { return (const Params *)_params; }
 
-
-#if FULL_SYSTEM
-  /** Add a function-based event to the console code. */
+    /** Add a function-based event to the console code. */
     template <class T>
     T *
     addConsoleFuncEvent(const char *lbl)
@@ -96,7 +92,6 @@ class MipsSystem : public System
     }
 
     virtual Addr fixFuncEventAddr(Addr addr);
-#endif
 
 };
 

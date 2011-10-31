@@ -34,7 +34,6 @@
 #ifndef __ARCH_MIPS_ISA_TRAITS_HH__
 #define __ARCH_MIPS_ISA_TRAITS_HH__
 
-#include "arch/mips/mips_core_specific.hh"
 #include "arch/mips/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"

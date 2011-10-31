@@ -39,11 +39,9 @@
 #include "cpu/thread_context.hh"
 #include "sim/serialize.hh"
 
-#if FULL_SYSTEM
 #include "arch/mips/registers.hh"
 #include "arch/mips/vtophys.hh"
 #include "mem/vport.hh"
-#endif
 
 
 using namespace MipsISA;
@@ -54,23 +52,8 @@ namespace MipsISA {
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-#if FULL_SYSTEM
-    if (number < 4) {
-        if (fp)
-            return tc->readFloatRegBits(FirstArgumentReg + number);
-        else
-            return tc->readIntReg(FirstArgumentReg + number);
-    } else {
-        Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort();
-        uint64_t arg = vp->read<uint64_t>(sp +
-                (number - 4) * sizeof(uint64_t));
-        return arg;
-    }
-#else
-    panic("getArgument() is Full system only\n");
+    panic("getArgument() not implemented\n");
     M5_DUMMY_RETURN
-#endif
 }
 
 uint64_t
@@ -252,6 +235,10 @@ startupCPU(ThreadContext *tc, int cpuId)
 {
     tc->activate(0/*tc->threadId()*/);
 }
+
+void
+initCPU(ThreadContext *tc, int cpuId)
+{}
 
 void
 copyRegs(ThreadContext *src, ThreadContext *dest)

@@ -43,19 +43,18 @@ class MipsSystem(System):
     system_rev = Param.UInt64("Revision of system we are emulating")
     load_addr_mask = 0xffffffffff
 
-if buildEnv['FULL_SYSTEM']:
-    class LinuxMipsSystem(MipsSystem):
-        type = 'LinuxMipsSystem'
-        system_type = 34
-        system_rev = 1 << 10
+class LinuxMipsSystem(MipsSystem):
+    type = 'LinuxMipsSystem'
+    system_type = 34
+    system_rev = 1 << 10
 
-        boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
-                                             "boot processor frequency")
+    boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
+                                         "boot processor frequency")
 
-    class BareIronMipsSystem(MipsSystem):
-        type = 'BareIronMipsSystem'
-        bare_iron = True
-        system_type = 34
-        system_rev = 1 << 10
-        hex_file_name = Param.String('test.hex',"hex file that contains [address,data] pairs")
+class BareIronMipsSystem(MipsSystem):
+    type = 'BareIronMipsSystem'
+    bare_iron = True
+    system_type = 34
+    system_rev = 1 << 10
+    hex_file_name = Param.String('test.hex',"hex file that contains [address,data] pairs")
 

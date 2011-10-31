@@ -37,7 +37,6 @@
 #include <string>
 #include <vector>
 
-#include "arch/mips/mips_core_specific.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
