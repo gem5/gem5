@@ -35,7 +35,6 @@
 
 #include "arch/predecoder.hh"
 #include "base/statistics.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/decode.hh"
@@ -46,30 +45,22 @@
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
 
 // forward declarations
-#if FULL_SYSTEM
-class Processor;
-namespace TheISA
-{
-    class ITB;
-    class DTB;
-}
+class Checkpoint;
 class MemObject;
-
-#else
-
 class Process;
-
-#endif // FULL_SYSTEM
+class Processor;
+class ThreadContext;
 
 namespace TheISA
 {
+    class DTB;
+    class ITB;
     class Predecoder;
 }
-class ThreadContext;
-class Checkpoint;
 
 namespace Trace {
     class InstRecord;
@@ -141,11 +132,9 @@ class BaseSimpleCPU : public BaseCPU
 
   public:
 
-#if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
 
     bool interval_stats;
-#endif
 
     // current instruction
     TheISA::MachInst inst;
@@ -399,19 +388,16 @@ class BaseSimpleCPU : public BaseCPU
 
     //Fault CacheOp(uint8_t Op, Addr EA);
 
-#if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
-#endif
 
     void
     syscall(int64_t callnum)
     {
-#if FULL_SYSTEM
-        panic("Syscall emulation isn't available in FS mode.\n");
-#else
-        thread->syscall(callnum);
-#endif
+        if (FullSystem)
+            panic("Syscall emulation isn't available in FS mode.\n");
+        else
+            thread->syscall(callnum);
     }
 
     bool misspeculating() { return thread->misspeculating(); }

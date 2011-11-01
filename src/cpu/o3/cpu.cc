@@ -31,6 +31,7 @@
  *          Rick Strong
  */
 
+#include "arch/kernel_stats.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
@@ -38,6 +39,7 @@
 #include "cpu/o3/isa_specific.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/activity.hh"
+#include "cpu/quiesce_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Activity.hh"
@@ -45,14 +47,9 @@
 #include "debug/Quiesce.hh"
 #include "enums/MemoryMode.hh"
 #include "sim/core.hh"
+#include "sim/process.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
-
-#if FULL_SYSTEM
-#include "cpu/quiesce_event.hh"
-#else
-#include "sim/process.hh"
-#endif
 
 #if USE_CHECKER
 #include "cpu/checker/cpu.hh"
@@ -896,7 +893,6 @@ FullO3CPU<Impl>::activateWhenReady(ThreadID tid)
     }
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 Fault
 FullO3CPU<Impl>::hwrei(ThreadID tid)
@@ -973,7 +969,6 @@ FullO3CPU<Impl>::updateMemPorts()
     for (ThreadID i = 0; i < size; ++i)
         thread[i]->connectMemPorts(thread[i]->getTC());
 }
-#endif
 
 template <class Impl>
 void
@@ -1594,7 +1589,6 @@ FullO3CPU<Impl>::wakeCPU()
     schedule(tickEvent, nextCycle());
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 void
 FullO3CPU<Impl>::wakeup()
@@ -1607,7 +1601,6 @@ FullO3CPU<Impl>::wakeup()
     DPRINTF(Quiesce, "Suspended Processor woken\n");
     this->threadContexts[0]->activate();
 }
-#endif
 
 template <class Impl>
 ThreadID

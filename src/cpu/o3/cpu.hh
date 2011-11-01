@@ -378,7 +378,6 @@ class FullO3CPU : public BaseO3CPU
     /** Traps to handle given fault. */
     void trap(Fault fault, ThreadID tid, StaticInstPtr inst);
 
-#if FULL_SYSTEM
     /** HW return from error interrupt. */
     Fault hwrei(ThreadID tid);
 
@@ -402,7 +401,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Check if this address is a valid data address. */
     bool validDataAddr(Addr addr) { return true; }
-#endif
 
     /** Register accessors.  Index refers to the physical register index. */
 
@@ -631,9 +629,7 @@ class FullO3CPU : public BaseO3CPU
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
 
-#if FULL_SYSTEM
     virtual void wakeup();
-#endif
 
     /** Gets a free thread id. Use if thread ids change across system. */
     ThreadID getFreeTid();

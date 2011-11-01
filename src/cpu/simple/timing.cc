@@ -54,6 +54,7 @@
 #include "mem/packet_access.hh"
 #include "params/TimingSimpleCPU.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -74,14 +75,15 @@ void
 TimingSimpleCPU::init()
 {
     BaseCPU::init();
+    if (FullSystem) {
+        for (int i = 0; i < threadContexts.size(); ++i) {
 #if FULL_SYSTEM
-    for (int i = 0; i < threadContexts.size(); ++i) {
-        ThreadContext *tc = threadContexts[i];
-
-        // initialize CPU, including PC
-        TheISA::initCPU(tc, _cpuId);
-    }
+            ThreadContext *tc = threadContexts[i];
+            // initialize CPU, including PC
+            TheISA::initCPU(tc, _cpuId);
 #endif
+        }
+    }
 }
 
 Tick
@@ -879,11 +881,11 @@ TimingSimpleCPU::DcachePort::setPeer(Port *port)
 {
     Port::setPeer(port);
 
-#if FULL_SYSTEM
-    // Update the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    cpu->tcBase()->connectMemPorts(cpu->tcBase());
-#endif
+    if (FullSystem) {
+        // Update the ThreadContext's memory ports (Functional/Virtual
+        // Ports)
+        cpu->tcBase()->connectMemPorts(cpu->tcBase());
+    }
 }
 
 bool
@@ -1008,7 +1010,7 @@ TimingSimpleCPUParams::create()
 {
     numThreads = 1;
 #if !FULL_SYSTEM
-    if (workload.size() != 1)
+    if (!FullSystem && workload.size() != 1)
         panic("only one workload allowed");
 #endif
     return new TimingSimpleCPU(this);

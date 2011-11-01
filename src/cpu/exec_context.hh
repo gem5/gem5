@@ -111,7 +111,6 @@ class ExecContext {
     Fault writeMem(uint8_t *data, unsigned size,
                    Addr addr, unsigned flags, uint64_t *res);
 
-#if FULL_SYSTEM
     /** Somewhat Alpha-specific function that handles returning from
      * an error or interrupt. */
     Fault hwrei();
@@ -121,10 +120,9 @@ class ExecContext {
      * return value is false, actual PAL call will be suppressed.
      */
     bool simPalCheck(int palFunc);
-#else
+
     /** Executes a syscall specified by the callnum. */
     void syscall(int64_t callnum);
-#endif
 
     /** Finish a DTB address translation. */
     void finishTranslation(WholeTranslationState *state);

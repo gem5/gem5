@@ -199,13 +199,11 @@ class BaseO3DynInst : public BaseDynInst<Impl>
                 this->setFloatRegOperandBits(this->staticInst.get(), idx, this->cpu->readFloatRegBits(prev_phys_reg));
         }
     }
-#if FULL_SYSTEM
     /** Calls hardware return from error interrupt. */
     Fault hwrei();
     /** Traps to handle specified fault. */
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
-#endif
 
     /** Emulates a syscall. */
     void syscall(int64_t callnum);

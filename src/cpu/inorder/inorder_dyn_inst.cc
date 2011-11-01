@@ -45,6 +45,7 @@
 #include "cpu/exetrace.hh"
 #include "debug/InOrderDynInst.hh"
 #include "mem/request.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -269,8 +270,6 @@ InOrderDynInst::memAccess()
 }
 
 
-#if FULL_SYSTEM
-
 Fault
 InOrderDynInst::hwrei()
 {
@@ -311,17 +310,16 @@ InOrderDynInst::simPalCheck(int palFunc)
 #endif
     return this->cpu->simPalCheck(palFunc, this->threadNumber);
 }
-#endif
 
 void
 InOrderDynInst::syscall(int64_t callnum)
 {
-#if FULL_SYSTEM
-    panic("Syscall emulation isn't available in FS mode.\n");
-#else
-    syscallNum = callnum;
-    cpu->syscallContext(NoFault, this->threadNumber, this);
-#endif
+    if (FullSystem) {
+        panic("Syscall emulation isn't available in FS mode.\n");
+    } else {
+        syscallNum = callnum;
+        cpu->syscallContext(NoFault, this->threadNumber, this);
+    }
 }
 
 void

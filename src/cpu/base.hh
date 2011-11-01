@@ -44,6 +44,7 @@
 #include "config/the_isa.hh"
 #include "mem/mem_object.hh"
 #include "sim/eventq.hh"
+#include "sim/full_system.hh"
 #include "sim/insttracer.hh"
 
 class BaseCPUParams;
@@ -132,17 +133,14 @@ class BaseCPU : public MemObject
         return interrupts;
     }
 
-#if FULL_SYSTEM
     virtual void wakeup() = 0;
-#endif
 
     void
     postInterrupt(int int_num, int index)
     {
         interrupts->post(int_num, index);
-#if FULL_SYSTEM
-        wakeup();
-#endif
+        if (FullSystem)
+            wakeup();
     }
 
     void

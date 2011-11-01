@@ -42,6 +42,7 @@
 
 #include "base/cp_annotate.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "sim/full_system.hh"
 
 template <class Impl>
 BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr staticInst,
@@ -143,7 +144,6 @@ BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
     return this->fault;
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 Fault
 BaseO3DynInst<Impl>::hwrei()
@@ -188,24 +188,23 @@ BaseO3DynInst<Impl>::simPalCheck(int palFunc)
 #endif
     return this->cpu->simPalCheck(palFunc, this->threadNumber);
 }
-#endif
 
 template <class Impl>
 void
 BaseO3DynInst<Impl>::syscall(int64_t callnum)
 {
-#if FULL_SYSTEM
-    panic("Syscall emulation isn't available in FS mode.\n");
-#else
-    // HACK: check CPU's nextPC before and after syscall. If it
-    // changes, update this instruction's nextPC because the syscall
-    // must have changed the nextPC.
-    TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
-    this->cpu->syscall(callnum, this->threadNumber);
-    TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
-    if (!(curPC == newPC)) {
-        this->pcState(newPC);
+    if (FullSystem) {
+        panic("Syscall emulation isn't available in FS mode.\n");
+    } else {
+        // HACK: check CPU's nextPC before and after syscall. If it
+        // changes, update this instruction's nextPC because the syscall
+        // must have changed the nextPC.
+        TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
+        this->cpu->syscall(callnum, this->threadNumber);
+        TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
+        if (!(curPC == newPC)) {
+            this->pcState(newPC);
+        }
     }
-#endif
 }
 

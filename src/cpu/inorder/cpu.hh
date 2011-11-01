@@ -751,9 +751,7 @@ class InOrderCPU : public BaseCPU
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
 
-#if FULL_SYSTEM
     virtual void wakeup();
-#endif
 
     /* LL/SC debug functionality
     unsigned stCondFails;

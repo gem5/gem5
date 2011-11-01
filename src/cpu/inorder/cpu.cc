@@ -1688,7 +1688,6 @@ InOrderCPU::wakeCPU()
     schedule(&tickEvent, nextCycle(curTick()));
 }
 
-#if FULL_SYSTEM
 // Lots of copied full system code...place into BaseCPU class?
 void
 InOrderCPU::wakeup()
@@ -1701,7 +1700,6 @@ InOrderCPU::wakeup()
     DPRINTF(Quiesce, "Suspended Processor woken\n");
     threadContexts[0]->activate();
 }
-#endif
 
 void
 InOrderCPU::syscallContext(Fault fault, ThreadID tid, DynInstPtr inst, int delay)

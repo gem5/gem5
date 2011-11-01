@@ -517,15 +517,12 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void setCurResSlot(unsigned slot_num) { curResSlot = slot_num; }
 
     /** Calls a syscall. */
-#if FULL_SYSTEM
     /** Calls hardware return from error interrupt. */
     Fault hwrei();
     /** Traps to handle specified fault. */
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
-#else
     short syscallNum;
-#endif
 
     /** Emulates a syscall. */
     void syscall(int64_t callnum);

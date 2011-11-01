@@ -41,7 +41,11 @@
  */
 
 #include "arch/faults.hh"
+#include "arch/kernel_stats.hh"
+#include "arch/stacktrace.hh"
+#include "arch/tlb.hh"
 #include "arch/utility.hh"
+#include "arch/vtophys.hh"
 #include "base/loader/symtab.hh"
 #include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
@@ -63,6 +67,7 @@
 #include "debug/Decode.hh"
 #include "debug/Fetch.hh"
 #include "debug/Quiesce.hh"
+#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "params/BaseSimpleCPU.hh"
@@ -72,15 +77,6 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
-
-#if FULL_SYSTEM
-#include "arch/kernel_stats.hh"
-#include "arch/stacktrace.hh"
-#include "arch/tlb.hh"
-#include "arch/vtophys.hh"
-#else // !FULL_SYSTEM
-#include "mem/mem_object.hh"
-#endif // FULL_SYSTEM
 
 using namespace std;
 using namespace TheISA;
@@ -290,15 +286,12 @@ change_thread_state(ThreadID tid, int activate, int priority)
 {
 }
 
-#if FULL_SYSTEM
 Addr
 BaseSimpleCPU::dbg_vtophys(Addr addr)
 {
     return vtophys(tc, addr);
 }
-#endif // FULL_SYSTEM
 
-#if FULL_SYSTEM
 void
 BaseSimpleCPU::wakeup()
 {
@@ -308,12 +301,10 @@ BaseSimpleCPU::wakeup()
     DPRINTF(Quiesce,"Suspended Processor awoke\n");
     thread->activate();
 }
-#endif // FULL_SYSTEM
 
 void
 BaseSimpleCPU::checkForInterrupts()
 {
-#if FULL_SYSTEM
     if (checkInterrupts(tc)) {
         Fault interrupt = interrupts->getInterrupt(tc);
 
@@ -324,7 +315,6 @@ BaseSimpleCPU::checkForInterrupts()
             predecoder.reset();
         }
     }
-#endif
 }
 
 
@@ -422,7 +412,6 @@ BaseSimpleCPU::postExecute()
 
     TheISA::PCState pc = tc->pcState();
     Addr instAddr = pc.instAddr();
-#if FULL_SYSTEM
     if (thread->profile) {
         bool usermode = TheISA::inUserMode(tc);
         thread->profilePC = usermode ? 1 : instAddr;
@@ -430,7 +419,6 @@ BaseSimpleCPU::postExecute()
         if (node)
             thread->profileNode = node;
     }
-#endif
 
     if (curStaticInst->isMemRef()) {
         numMemRefs++;

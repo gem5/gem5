@@ -47,6 +47,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"
 #include "params/BaseCPU.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
@@ -197,11 +198,13 @@ BaseCPU::BaseCPU(Params *p)
     }
     interrupts->setCPU(this);
 
+    if (FullSystem) {
 #if FULL_SYSTEM
-    profileEvent = NULL;
-    if (params()->profile)
-        profileEvent = new ProfileEvent(this, params()->profile);
+        profileEvent = NULL;
+        if (params()->profile)
+            profileEvent = new ProfileEvent(this, params()->profile);
 #endif
+    }
     tracer = params()->tracer;
 }
 
@@ -225,10 +228,10 @@ BaseCPU::init()
 void
 BaseCPU::startup()
 {
-#if FULL_SYSTEM
-    if (!params()->defer_registration && profileEvent)
-        schedule(profileEvent, curTick());
-#endif
+    if (FullSystem) {
+        if (!params()->defer_registration && profileEvent)
+            schedule(profileEvent, curTick());
+    }
 
     if (params()->progress_interval) {
         Tick num_ticks = ticks(params()->progress_interval);
@@ -268,9 +271,6 @@ BaseCPU::regStats()
         }
     } else if (size == 1)
         threadContexts[0]->regStats(name());
-
-#if FULL_SYSTEM
-#endif
 }
 
 Tick
@@ -312,9 +312,9 @@ BaseCPU::registerThreadContexts()
             tc->setContextId(system->registerThreadContext(tc, _cpuId));
         else
             tc->setContextId(system->registerThreadContext(tc));
-#if !FULL_SYSTEM
-        tc->getProcessPtr()->assignThreadContext(tc->contextId());
-#endif
+
+        if (!FullSystem)
+            tc->getProcessPtr()->assignThreadContext(tc->contextId());
     }
 }
 
@@ -333,11 +333,8 @@ BaseCPU::findContext(ThreadContext *tc)
 void
 BaseCPU::switchOut()
 {
-//    panic("This CPU doesn't support sampling!");
-#if FULL_SYSTEM
     if (profileEvent && profileEvent->scheduled())
         deschedule(profileEvent);
-#endif
 }
 
 void
@@ -391,13 +388,13 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
     interrupts = oldCPU->interrupts;
     interrupts->setCPU(this);
 
-#if FULL_SYSTEM
-    for (ThreadID i = 0; i < size; ++i)
-        threadContexts[i]->profileClear();
+    if (FullSystem) {
+        for (ThreadID i = 0; i < size; ++i)
+            threadContexts[i]->profileClear();
 
-    if (profileEvent)
-        schedule(profileEvent, curTick());
-#endif
+        if (profileEvent)
+            schedule(profileEvent, curTick());
+    }
 
     // Connect new CPU to old CPU's memory only if new CPU isn't
     // connected to anything.  Also connect old CPU's memory to new
@@ -416,7 +413,6 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 }
 
 
-#if FULL_SYSTEM
 BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, Tick _interval)
     : cpu(_cpu), interval(_interval)
 { }
@@ -432,8 +428,6 @@ BaseCPU::ProfileEvent::process()
 
     cpu->schedule(this, curTick() + interval);
 }
-
-#endif // FULL_SYSTEM
 
 void
 BaseCPU::serialize(std::ostream &os)
