@@ -34,7 +34,7 @@
 #include "arch/alpha/types.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
+#include "sim/full_system.hh"
 
 class ThreadContext;
 
@@ -83,9 +83,8 @@ class Predecoder
     {
         ext_inst = inst;
         emiIsReady = true;
-#if FULL_SYSTEM
-        ext_inst |= (static_cast<ExtMachInst>(pc.pc() & 0x1) << 32);
-#endif
+        if (FullSystem)
+            ext_inst |= (static_cast<ExtMachInst>(pc.pc() & 0x1) << 32);
     }
 
     bool

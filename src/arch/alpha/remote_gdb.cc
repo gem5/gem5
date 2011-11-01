@@ -121,15 +121,12 @@
 
 #include <string>
 
-#include "config/full_system.hh"
-#if FULL_SYSTEM
-#include "arch/alpha/vtophys.hh"
-#endif
 
 #include "arch/alpha/kgdb.h"
 #include "arch/alpha/regredir.hh"
 #include "arch/alpha/remote_gdb.hh"
 #include "arch/alpha/utility.hh"
+#include "arch/alpha/vtophys.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"
 #include "base/socket.hh"
@@ -142,6 +139,7 @@
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "sim/system.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 using namespace AlphaISA;
@@ -158,51 +156,51 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-#if !FULL_SYSTEM
-    panic("acc function needs to be rewritten for SE mode\n");
-#else
-    Addr last_va;
+    if (FullSystem) {
+        Addr last_va;
 
-    va = TruncPage(va);
-    last_va = RoundPage(va + len);
+        va = TruncPage(va);
+        last_va = RoundPage(va + len);
 
-    do  {
-        if (IsK0Seg(va)) {
-            if (va < (K0SegBase + pmem->size())) {
-                DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
-                        "%#x < K0SEG + size\n", va);
+        do  {
+            if (IsK0Seg(va)) {
+                if (va < (K0SegBase + pmem->size())) {
+                    DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
+                            "%#x < K0SEG + size\n", va);
+                    return true;
+                } else {
+                    DPRINTF(GDBAcc, "acc:   Mapping invalid %#x "
+                            "> K0SEG + size\n", va);
+                    return false;
+                }
+            }
+
+            /**
+             * This code says that all accesses to palcode (instruction
+             * and data) are valid since there isn't a va->pa mapping
+             * because palcode is accessed physically. At some point this
+             * should probably be cleaned up but there is no easy way to
+             * do it.
+             */
+
+            if (PcPAL(va) || va < 0x10000)
                 return true;
-            } else {
-                DPRINTF(GDBAcc, "acc:   Mapping invalid %#x > K0SEG + size\n",
-                        va);
+
+            Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
+            PageTableEntry pte =
+                kernel_pte_lookup(context->getPhysPort(), ptbr, va);
+            if (!pte.valid()) {
+                DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
                 return false;
             }
-        }
+            va += PageBytes;
+        } while (va < last_va);
 
-        /**
-         * This code says that all accesses to palcode (instruction
-         * and data) are valid since there isn't a va->pa mapping
-         * because palcode is accessed physically. At some point this
-         * should probably be cleaned up but there is no easy way to
-         * do it.
-         */
-
-        if (PcPAL(va) || va < 0x10000)
-            return true;
-
-        Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
-        PageTableEntry pte =
-            kernel_pte_lookup(context->getPhysPort(), ptbr, va);
-        if (!pte.valid()) {
-            DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
-            return false;
-        }
-        va += PageBytes;
-    } while (va < last_va);
-
-    DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
-    return true;
-#endif
+        DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
+        return true;
+    } else {
+        panic("acc function needs to be rewritten for SE mode\n");
+    }
 }
 
 /*

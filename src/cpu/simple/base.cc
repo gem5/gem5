@@ -412,7 +412,7 @@ BaseSimpleCPU::postExecute()
 
     TheISA::PCState pc = tc->pcState();
     Addr instAddr = pc.instAddr();
-    if (thread->profile) {
+    if (FullSystem && thread->profile) {
         bool usermode = TheISA::inUserMode(tc);
         thread->profilePC = usermode ? 1 : instAddr;
         ProfileNode *node = thread->profile->consume(tc, curStaticInst);
@@ -466,7 +466,8 @@ BaseSimpleCPU::postExecute()
     }
     /* End power model statistics */
 
-    traceFunctions(instAddr);
+    if (FullSystem)
+        traceFunctions(instAddr);
 
     if (traceData) {
         traceData->dump();

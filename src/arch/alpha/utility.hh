@@ -36,7 +36,6 @@
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/types.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "arch/alpha/ev5.hh"
@@ -96,9 +95,7 @@ RoundPage(Addr addr)
 { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
 void initIPRs(ThreadContext *tc, int cpuId);
-#if FULL_SYSTEM
 void initCPU(ThreadContext *tc, int cpuId);
-#endif
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 

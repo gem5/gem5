@@ -30,35 +30,33 @@
  */
 
 #include "arch/alpha/utility.hh"
-
-#if FULL_SYSTEM
 #include "arch/alpha/vtophys.hh"
 #include "mem/vport.hh"
-#endif
+#include "sim/full_system.hh"
 
 namespace AlphaISA {
 
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-#if FULL_SYSTEM
-    const int NumArgumentRegs = 6;
-    if (number < NumArgumentRegs) {
-        if (fp)
-            return tc->readFloatRegBits(16 + number);
-        else
-            return tc->readIntReg(16 + number);
+    if (FullSystem) {
+        const int NumArgumentRegs = 6;
+        if (number < NumArgumentRegs) {
+            if (fp)
+                return tc->readFloatRegBits(16 + number);
+            else
+                return tc->readIntReg(16 + number);
+        } else {
+            Addr sp = tc->readIntReg(StackPointerReg);
+            VirtualPort *vp = tc->getVirtPort();
+            uint64_t arg = vp->read<uint64_t>(sp +
+                               (number-NumArgumentRegs) * sizeof(uint64_t));
+            return arg;
+        }
     } else {
-        Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort();
-        uint64_t arg = vp->read<uint64_t>(sp +
-                           (number-NumArgumentRegs) * sizeof(uint64_t));
-        return arg;
+        panic("getArgument() is Full system only\n");
+        M5_DUMMY_RETURN;
     }
-#else
-    panic("getArgument() is Full system only\n");
-    M5_DUMMY_RETURN;
-#endif
 }
 
 void

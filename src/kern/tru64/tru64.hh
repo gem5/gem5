@@ -36,12 +36,6 @@
 #include "kern/operatingsystem.hh"
 #include "sim/byteswap.hh"
 
-#if FULL_SYSTEM
-
-class Tru64 {};
-
-#else //!FULL_SYSTEM
-
 #include <sys/stat.h>
 #include <sys/types.h>
 #if defined(__OpenBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
@@ -1224,7 +1218,5 @@ class Tru64_PreF64 : public Tru64
         Tru64::copyOutStatfsBuf<Tru64::pre_F64_statfs>(mem, addr, host);
     }
 };
-
-#endif // FULL_SYSTEM
 
 #endif // __TRU64_HH__

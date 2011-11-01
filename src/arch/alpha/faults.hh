@@ -33,7 +33,6 @@
 #define __ARCH_ALPHA_FAULTS_HH__
 
 #include "arch/alpha/pagetable.hh"
-#include "config/full_system.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
 
@@ -49,10 +48,8 @@ class AlphaFault : public FaultBase
     virtual bool skipFaultingInstruction() {return false;}
     virtual bool setRestartAddress() {return true;}
   public:
-#if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
     virtual FaultVect vect() = 0;
     virtual FaultStat & countStat() = 0;
 };
@@ -111,10 +108,8 @@ class ArithmeticFault : public AlphaFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 class InterruptFault : public AlphaFault
@@ -147,10 +142,8 @@ class DtbFault : public AlphaFault
     FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
-#if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 class NDtbMissFault : public DtbFault
@@ -167,10 +160,8 @@ class NDtbMissFault : public DtbFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-#if !FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 class PDtbMissFault : public DtbFault
@@ -247,10 +238,8 @@ class ItbFault : public AlphaFault
     FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
-#if FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 class ItbPageFault : public ItbFault
@@ -265,10 +254,8 @@ class ItbPageFault : public ItbFault
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
-#if !FULL_SYSTEM
     void invoke(ThreadContext * tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 class ItbAcvFault : public ItbFault

@@ -44,8 +44,6 @@
 
 namespace AlphaISA {
 
-#if FULL_SYSTEM
-
 ////////////////////////////////////////////////////////////////////////
 //
 //  Machine dependent functions
@@ -75,8 +73,6 @@ zeroRegisters(CPU *cpu)
     cpu->thread->setIntReg(ZeroReg, 0);
     cpu->thread->setFloatReg(ZeroReg, 0.0);
 }
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -201,10 +197,8 @@ ISA::readIpr(int idx, ThreadContext *tc)
     return retval;
 }
 
-#ifdef DEBUG
 // Cause the simulator to break when changing to the following IPL
 int break_ipl = -1;
-#endif
 
 void
 ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
@@ -264,10 +258,8 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
         // write entire quad w/ no side-effect
         old = ipr[idx];
         ipr[idx] = val;
-#if FULL_SYSTEM
         if (tc->getKernelStats())
             tc->getKernelStats()->context(old, val, tc);
-#endif
         break;
 
       case IPR_DTB_PTE:
@@ -294,14 +286,11 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
-#if FULL_SYSTEM
         if (tc->getKernelStats())
             tc->getKernelStats()->swpipl(ipr[idx]);
-#endif
         break;
 
       case IPR_DTB_CM:
-#if FULL_SYSTEM
         if (val & 0x18) {
             if (tc->getKernelStats())
                 tc->getKernelStats()->mode(Kernel::user, tc);
@@ -309,7 +298,6 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
             if (tc->getKernelStats())
                 tc->getKernelStats()->mode(Kernel::kernel, tc);
         }
-#endif
 
       case IPR_ICM:
         // only write two mode bits - processor mode
@@ -486,8 +474,6 @@ copyIprs(ThreadContext *src, ThreadContext *dest)
 
 } // namespace AlphaISA
 
-#if FULL_SYSTEM
-
 using namespace AlphaISA;
 
 Fault
@@ -537,5 +523,3 @@ SimpleThread::simPalCheck(int palFunc)
 
     return true;
 }
-
-#endif // FULL_SYSTEM
