@@ -40,7 +40,6 @@
 #include "arch/x86/regs/apic.hh"
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
-#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "debug/LocalApic.hh"
 #include "dev/x86/i82094aa.hh"
@@ -48,6 +47,7 @@
 #include "dev/x86/south_bridge.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
+#include "sim/full_system.hh"
 
 int
 divideFromConf(uint32_t conf)
@@ -275,9 +275,8 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
             startupVector = vector;
         }
     }
-#if FULL_SYSTEM //XXX CPU has no wakeup method in SE mode.
-    cpu->wakeup();
-#endif
+    if (FullSystem)
+        cpu->wakeup();
 }
 
 
