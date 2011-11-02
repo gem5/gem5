@@ -570,7 +570,6 @@ LiveProcess::LiveProcess(LiveProcessParams * params, ObjectFile *_objFile)
 void
 LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
 {
-#if !FULL_SYSTEM
     num_syscalls++;
 
     SyscallDesc *desc = getDesc(callnum);
@@ -578,7 +577,6 @@ LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
         fatal("Syscall %d out of range", callnum);
 
     desc->doSyscall(callnum, this, tc);
-#endif
 }
 
 IntReg
@@ -604,7 +602,6 @@ LiveProcess::create(LiveProcessParams * params)
              "executables are supported!\n       Please recompile your "
              "executable as a static binary and try again.\n");
 
-#if !FULL_SYSTEM
 #if THE_ISA == ALPHA_ISA
     if (objFile->getArch() != ObjectFile::Alpha)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
@@ -714,7 +711,6 @@ LiveProcess::create(LiveProcessParams * params)
     }
 #else
 #error "THE_ISA not set"
-#endif
 #endif
 
     if (process == NULL)

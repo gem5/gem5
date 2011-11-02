@@ -31,23 +31,23 @@
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/tlb.hh"
 
 Fault
 GenericTLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode)
 {
-#if FULL_SYSTEM
+    if (FullSystem)
         panic("Generic translation shouldn't be used in full system mode.\n");
-#else
-        Process * p = tc->getProcessPtr();
 
-        Fault fault = p->pTable->translate(req);
-        if(fault != NoFault)
-            return fault;
+    Process * p = tc->getProcessPtr();
 
-        return NoFault;
-#endif
+    Fault fault = p->pTable->translate(req);
+    if(fault != NoFault)
+        return fault;
+
+    return NoFault;
 }
 
 void

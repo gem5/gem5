@@ -60,6 +60,7 @@
 #include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
 #include "params/BaseCPU.hh"
+#include "sim/full_system.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_events.hh"
@@ -76,102 +77,129 @@ using namespace TheISA;
 
 namespace PseudoInst {
 
-#if FULL_SYSTEM
+static inline void
+panicFsOnlyPseudoInst(const char *name)
+{
+    panic("Pseudo inst \"%s\" is only available in Full System mode.");
+}
 
 void
 arm(ThreadContext *tc)
 {
-    if (tc->getKernelStats())
-        tc->getKernelStats()->arm();
+    if (FullSystem) {
+        if (tc->getKernelStats())
+            tc->getKernelStats()->arm();
+    } else {
+        panicFsOnlyPseudoInst("arm");
+    }
 }
 
 void
 quiesce(ThreadContext *tc)
 {
-    if (!tc->getCpuPtr()->params()->do_quiesce)
-        return;
+    if (FullSystem) {
+        if (!tc->getCpuPtr()->params()->do_quiesce)
+            return;
 
-    DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
+        DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
 
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+        tc->suspend();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->quiesce();
+    } else {
+        panicFsOnlyPseudoInst("quiesce");
+    }
 }
 
 void
 quiesceSkip(ThreadContext *tc)
 {
-    BaseCPU *cpu = tc->getCpuPtr();
+    if (FullSystem) {
+        BaseCPU *cpu = tc->getCpuPtr();
 
-    if (!cpu->params()->do_quiesce)
-        return;
+        if (!cpu->params()->do_quiesce)
+            return;
 
-    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
+        EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick() + 1;
+        Tick resume = curTick() + 1;
 
-    cpu->reschedule(quiesceEvent, resume, true);
+        cpu->reschedule(quiesceEvent, resume, true);
 
-    DPRINTF(Quiesce, "%s: quiesceSkip() until %d\n",
-            cpu->name(), resume);
+        DPRINTF(Quiesce, "%s: quiesceSkip() until %d\n",
+                cpu->name(), resume);
 
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+        tc->suspend();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->quiesce();
+    } else {
+        panicFsOnlyPseudoInst("quiesceSkip");
+    }
 }
 
 void
 quiesceNs(ThreadContext *tc, uint64_t ns)
 {
-    BaseCPU *cpu = tc->getCpuPtr();
+    if (FullSystem) {
+        BaseCPU *cpu = tc->getCpuPtr();
 
-    if (!cpu->params()->do_quiesce || ns == 0)
-        return;
+        if (!cpu->params()->do_quiesce || ns == 0)
+            return;
 
-    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
+        EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick() + SimClock::Int::ns * ns;
+        Tick resume = curTick() + SimClock::Int::ns * ns;
 
-    cpu->reschedule(quiesceEvent, resume, true);
+        cpu->reschedule(quiesceEvent, resume, true);
 
-    DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
-            cpu->name(), ns, resume);
+        DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
+                cpu->name(), ns, resume);
 
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+        tc->suspend();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->quiesce();
+    } else {
+        panicFsOnlyPseudoInst("quiesceNs");
+    }
 }
 
 void
 quiesceCycles(ThreadContext *tc, uint64_t cycles)
 {
-    BaseCPU *cpu = tc->getCpuPtr();
+    if (FullSystem) {
+        BaseCPU *cpu = tc->getCpuPtr();
 
-    if (!cpu->params()->do_quiesce || cycles == 0)
-        return;
+        if (!cpu->params()->do_quiesce || cycles == 0)
+            return;
 
-    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
+        EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
 
-    Tick resume = curTick() + cpu->ticks(cycles);
+        Tick resume = curTick() + cpu->ticks(cycles);
 
-    cpu->reschedule(quiesceEvent, resume, true);
+        cpu->reschedule(quiesceEvent, resume, true);
 
-    DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
-            cpu->name(), cycles, resume);
+        DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
+                cpu->name(), cycles, resume);
 
-    tc->suspend();
-    if (tc->getKernelStats())
-        tc->getKernelStats()->quiesce();
+        tc->suspend();
+        if (tc->getKernelStats())
+            tc->getKernelStats()->quiesce();
+    } else {
+        panicFsOnlyPseudoInst("quiesceCycles");
+    }
 }
 
 uint64_t
 quiesceTime(ThreadContext *tc)
 {
-    return (tc->readLastActivate() - tc->readLastSuspend()) /
-        SimClock::Int::ns;
+    if (FullSystem) {
+        return (tc->readLastActivate() - tc->readLastSuspend()) /
+            SimClock::Int::ns;
+    } else {
+        panicFsOnlyPseudoInst("quiesceTime");
+        return 0;
+    }
 }
-
-#endif
 
 uint64_t
 rpns(ThreadContext *tc)
@@ -195,76 +223,85 @@ m5exit(ThreadContext *tc, Tick delay)
     exitSimLoop("m5_exit instruction encountered", 0, when);
 }
 
-#if FULL_SYSTEM
-
 void
 loadsymbol(ThreadContext *tc)
 {
-    const string &filename = tc->getCpuPtr()->system->params()->symbolfile;
-    if (filename.empty()) {
-        return;
+    if (FullSystem) {
+        const string &filename = tc->getCpuPtr()->system->params()->symbolfile;
+        if (filename.empty()) {
+            return;
+        }
+
+        std::string buffer;
+        ifstream file(filename.c_str());
+
+        if (!file)
+            fatal("file error: Can't open symbol table file %s\n", filename);
+
+        while (!file.eof()) {
+            getline(file, buffer);
+
+            if (buffer.empty())
+                continue;
+
+            string::size_type idx = buffer.find(' ');
+            if (idx == string::npos)
+                continue;
+
+            string address = "0x" + buffer.substr(0, idx);
+            eat_white(address);
+            if (address.empty())
+                continue;
+
+            // Skip over letter and space
+            string symbol = buffer.substr(idx + 3);
+            eat_white(symbol);
+            if (symbol.empty())
+                continue;
+
+            Addr addr;
+            if (!to_number(address, addr))
+                continue;
+
+            if (!tc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
+                continue;
+
+
+            DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
+        }
+        file.close();
+    } else {
+        panicFsOnlyPseudoInst("loadsymbol");
     }
-
-    std::string buffer;
-    ifstream file(filename.c_str());
-
-    if (!file)
-        fatal("file error: Can't open symbol table file %s\n", filename);
-
-    while (!file.eof()) {
-        getline(file, buffer);
-
-        if (buffer.empty())
-            continue;
-
-        string::size_type idx = buffer.find(' ');
-        if (idx == string::npos)
-            continue;
-
-        string address = "0x" + buffer.substr(0, idx);
-        eat_white(address);
-        if (address.empty())
-            continue;
-
-        // Skip over letter and space
-        string symbol = buffer.substr(idx + 3);
-        eat_white(symbol);
-        if (symbol.empty())
-            continue;
-
-        Addr addr;
-        if (!to_number(address, addr))
-            continue;
-
-        if (!tc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
-            continue;
-
-
-        DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
-    }
-    file.close();
 }
 
 void
 addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 {
-    char symb[100];
-    CopyStringOut(tc, symb, symbolAddr, 100);
-    std::string symbol(symb);
+    if (FullSystem) {
+        char symb[100];
+        CopyStringOut(tc, symb, symbolAddr, 100);
+        std::string symbol(symb);
 
-    DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
+        DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
-    tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
-    debugSymbolTable->insert(addr,symbol);
+        tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
+        debugSymbolTable->insert(addr,symbol);
+    } else {
+        panicFsOnlyPseudoInst("addSymbol");
+    }
 }
 
 uint64_t
 initParam(ThreadContext *tc)
 {
-    return tc->getCpuPtr()->system->init_param;
+    if (FullSystem) {
+        return tc->getCpuPtr()->system->init_param;
+    } else {
+        panicFsOnlyPseudoInst("initParam");
+        return 0;
+    }
 }
-
-#endif
 
 
 void
@@ -318,44 +355,45 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     exitSimLoop("checkpoint", 0, when, repeat);
 }
 
-#if FULL_SYSTEM
-
 uint64_t
 readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
 {
-    const string &file = tc->getSystemPtr()->params()->readfile;
-    if (file.empty()) {
-        return ULL(0);
+    if (FullSystem) {
+        const string &file = tc->getSystemPtr()->params()->readfile;
+        if (file.empty()) {
+            return ULL(0);
+        }
+
+        uint64_t result = 0;
+
+        int fd = ::open(file.c_str(), O_RDONLY, 0);
+        if (fd < 0)
+            panic("could not open file %s\n", file);
+
+        if (::lseek(fd, offset, SEEK_SET) < 0)
+            panic("could not seek: %s", strerror(errno));
+
+        char *buf = new char[len];
+        char *p = buf;
+        while (len > 0) {
+            int bytes = ::read(fd, p, len);
+            if (bytes <= 0)
+                break;
+
+            p += bytes;
+            result += bytes;
+            len -= bytes;
+        }
+
+        close(fd);
+        CopyIn(tc, vaddr, buf, result);
+        delete [] buf;
+        return result;
+    } else {
+        panicFsOnlyPseudoInst("readfile");
+        return 0;
     }
-
-    uint64_t result = 0;
-
-    int fd = ::open(file.c_str(), O_RDONLY, 0);
-    if (fd < 0)
-        panic("could not open file %s\n", file);
-
-    if (::lseek(fd, offset, SEEK_SET) < 0)
-        panic("could not seek: %s", strerror(errno));
-
-    char *buf = new char[len];
-    char *p = buf;
-    while (len > 0) {
-        int bytes = ::read(fd, p, len);
-        if (bytes <= 0)
-            break;
-
-        p += bytes;
-        result += bytes;
-        len -= bytes;
-    }
-
-    close(fd);
-    CopyIn(tc, vaddr, buf, result);
-    delete [] buf;
-    return result;
 }
-
-#endif
 
 void
 debugbreak(ThreadContext *tc)

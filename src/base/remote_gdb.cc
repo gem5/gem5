@@ -134,6 +134,7 @@
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #include "mem/vport.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
 
 using namespace std;

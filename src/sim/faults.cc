@@ -36,11 +36,12 @@
 #include "debug/Fault.hh"
 #include "mem/page_table.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 
 void FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
 {
-    if (FULL_SYSTEM) {
+    if (FullSystem) {
         DPRINTF(Fault, "Fault %s at PC: %s\n", name(), tc->pcState());
         assert(!tc->misspeculating());
     } else {
@@ -61,11 +62,10 @@ void ReExec::invoke(ThreadContext *tc, StaticInstPtr inst)
 void GenericPageTableFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     bool handled = false;
-#if !FULL_SYSTEM
-    Process *p = tc->getProcessPtr();
-
-    handled = p->fixupStackFault(vaddr);
-#endif
+    if (!FullSystem) {
+        Process *p = tc->getProcessPtr();
+        handled = p->fixupStackFault(vaddr);
+    }
     if (!handled)
         panic("Page table fault when accessing virtual address %#x\n", vaddr);
 

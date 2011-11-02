@@ -57,7 +57,7 @@ if env['TARGET_ISA'] != 'no':
     Source('pseudo_inst.cc')
     Source('system.cc')
 
-if not env['FULL_SYSTEM'] and env['TARGET_ISA'] != 'no':
+if env['TARGET_ISA'] != 'no':
     Source('tlb.cc')
 
 DebugFlag('Checkpoint')

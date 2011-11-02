@@ -78,10 +78,10 @@ class BaseCPU(MemObject):
     do_statistics_insts = Param.Bool(True,
         "enable statistics pseudo instructions")
 
-    if buildEnv['FULL_SYSTEM']:
-        profile = Param.Latency('0ns', "trace the kernel stack")
-        do_quiesce = Param.Bool(True, "enable quiesce instructions")
-    else:
+    profile = Param.Latency('0ns', "trace the kernel stack")
+    do_quiesce = Param.Bool(True, "enable quiesce instructions")
+
+    if not buildEnv['FULL_SYSTEM']:
         workload = VectorParam.Process("processes to run")
 
     if buildEnv['TARGET_ISA'] == 'sparc':

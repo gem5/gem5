@@ -45,8 +45,6 @@ extern bool doStatisticsInsts;
 extern bool doCheckpointInsts;
 extern bool doQuiesce;
 
-#if FULL_SYSTEM
-
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
 void quiesceSkip(ThreadContext *tc);
@@ -58,71 +56,6 @@ uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len,
 void loadsymbol(ThreadContext *xc);
 void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
 uint64_t initParam(ThreadContext *xc);
-
-#else
-
-static inline void
-panicFsOnlyPseudoInst(const char *name)
-{
-    panic("Pseudo inst \"%s\" is only available in Full System mode.");
-}
-
-static inline void
-arm(ThreadContext *tc)
-{
-    panicFsOnlyPseudoInst("arm");
-}
-static inline void
-quiesce(ThreadContext *tc)
-{
-    panicFsOnlyPseudoInst("quiesce");
-}
-static inline void
-quiesceSkip(ThreadContext *tc)
-{
-    panicFsOnlyPseudoInst("quiesceSkip");
-}
-static inline void
-quiesceNs(ThreadContext *tc, uint64_t ns)
-{
-    panicFsOnlyPseudoInst("quiesceNs");
-}
-static inline void
-quiesceCycles(ThreadContext *tc, uint64_t cycles)
-{
-    panicFsOnlyPseudoInst("quiesceCycles");
-}
-static inline uint64_t
-quiesceTime(ThreadContext *tc)
-{
-    panicFsOnlyPseudoInst("quiesceTime");
-    return 0;
-}
-static inline uint64_t
-readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
-{
-    panicFsOnlyPseudoInst("readFile");
-    return 0;
-}
-static inline void
-loadsymbol(ThreadContext *xc)
-{
-    panicFsOnlyPseudoInst("loadSymbol");
-}
-static inline void
-addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
-{
-    panicFsOnlyPseudoInst("addSymbol");
-}
-static inline uint64_t
-initParam(ThreadContext *tc)
-{
-    panicFsOnlyPseudoInst("initParam");
-    return 0;
-}
-
-#endif
-
 uint64_t rpns(ThreadContext *tc);
 void wakeCPU(ThreadContext *tc, uint64_t cpuid);
 void m5exit(ThreadContext *tc, Tick delay);
