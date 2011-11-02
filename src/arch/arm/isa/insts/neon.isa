@@ -872,11 +872,10 @@ let {{
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-#if FULL_SYSTEM
-            fault = new UndefinedInstruction;
-#else
-            fault = new UndefinedInstruction(false, mnemonic);
-#endif
+            if (FullSystem)
+                fault = new UndefinedInstruction;
+            else
+                fault = new UndefinedInstruction(false, mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = gtoh(srcReg1.elements[i]);
@@ -927,11 +926,10 @@ let {{
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-#if FULL_SYSTEM
-            fault = new UndefinedInstruction;
-#else
-            fault = new UndefinedInstruction(false, mnemonic);
-#endif
+            if (FullSystem)
+                fault = new UndefinedInstruction;
+            else
+                fault = new UndefinedInstruction(false, mnemonic);
         } else {
             for (unsigned i = 0; i < eCount; i++) {
                 Element srcElem1 = gtoh(srcReg1.elements[i]);
@@ -980,11 +978,10 @@ let {{
             readDestCode = 'destReg = destRegs[i];'
         eWalkCode += '''
         if (imm < 0 && imm >= eCount) {
-#if FULL_SYSTEM
-            fault = new UndefinedInstruction;
-#else
-            fault = new UndefinedInstruction(false, mnemonic);
-#endif
+            if (FullSystem)
+                fault = new UndefinedInstruction;
+            else
+                fault = new UndefinedInstruction(false, mnemonic);
         } else {
             for (unsigned i = 0; i < rCount; i++) {
                 FloatReg srcReg1 = srcRegs1[i];
@@ -3298,14 +3295,14 @@ let {{
                 destReg.elements[i] = srcReg1.elements[index];
             } else {
                 index -= eCount;
-                if (index >= eCount)
-#if FULL_SYSTEM
-                    fault = new UndefinedInstruction;
-#else
-                    fault = new UndefinedInstruction(false, mnemonic);
-#endif
-                else
+                if (index >= eCount) {
+                    if (FullSystem)
+                        fault = new UndefinedInstruction;
+                    else
+                        fault = new UndefinedInstruction(false, mnemonic);
+                } else {
                     destReg.elements[i] = srcReg2.elements[index];
+                }
             }
         }
     '''

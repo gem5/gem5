@@ -40,11 +40,11 @@
 let {{
 
     svcCode = '''
-#if FULL_SYSTEM
-    fault = new SupervisorCall;
-#else
-    fault = new SupervisorCall(machInst);
-#endif
+    if (FullSystem) {
+        fault = new SupervisorCall;
+    } else {
+        fault = new SupervisorCall(machInst);
+    }
     '''
 
     svcIop = InstObjParams("svc", "Svc", "PredOp",
@@ -501,7 +501,6 @@ let {{
     exec_output += PredOpExecute.subst(yieldIop)
 
     wfeCode = '''
-#if FULL_SYSTEM
     // WFE Sleeps if SevMailbox==0 and no unmasked interrupts are pending
     if (SevMailbox == 1) {
         SevMailbox = 0;
@@ -511,14 +510,11 @@ let {{
     } else {
         PseudoInst::quiesce(xc->tcBase());
     }
-#endif
     '''
     wfePredFixUpCode = '''
-#if FULL_SYSTEM
     // WFE is predicated false, reset SevMailbox to reduce spurious sleeps
     // and SEV interrupts
     SevMailbox = 1;
-#endif
     '''
     wfeIop = InstObjParams("wfe", "WfeInst", "PredOp", \
             { "code" : wfeCode,
@@ -530,14 +526,12 @@ let {{
     exec_output += QuiescePredOpExecuteWithFixup.subst(wfeIop)
 
     wfiCode = '''
-#if FULL_SYSTEM
     // WFI doesn't sleep if interrupts are pending (masked or not)
     if (xc->tcBase()->getCpuPtr()->getInterruptController()->checkRaw()) {
         PseudoInst::quiesceSkip(xc->tcBase());
     } else {
         PseudoInst::quiesce(xc->tcBase());
     }
-#endif
     '''
     wfiIop = InstObjParams("wfi", "WfiInst", "PredOp", \
             { "code" : wfiCode, "predicate_test" : predicateTest },
@@ -547,7 +541,6 @@ let {{
     exec_output += QuiescePredOpExecute.subst(wfiIop)
 
     sevCode = '''
-#if FULL_SYSTEM
     SevMailbox = 1;
     System *sys = xc->tcBase()->getSystemPtr();
     for (int x = 0; x < sys->numContexts(); x++) {
@@ -560,7 +553,6 @@ let {{
             oc->getCpuPtr()->postInterrupt(INT_SEV, 0);
         }
     }
-#endif
     '''
     sevIop = InstObjParams("sev", "SevInst", "PredOp", \
             { "code" : sevCode, "predicate_test" : predicateTest },
@@ -577,11 +569,10 @@ let {{
     decoder_output += BasicConstructor.subst(itIop)
     exec_output += PredOpExecute.subst(itIop)
     unknownCode = '''
-#if FULL_SYSTEM
-            return new UndefinedInstruction;
-#else
-            return new UndefinedInstruction(machInst, true);
-#endif
+    if (FullSystem)
+        return new UndefinedInstruction;
+    else
+        return new UndefinedInstruction(machInst, true);
     '''
     unknownIop = InstObjParams("unknown", "Unknown", "UnknownOp", \
                                { "code": unknownCode,
@@ -634,12 +625,12 @@ let {{
 
     mrc15code = '''
     CPSR cpsr = Cpsr;
-    if (cpsr.mode == MODE_USER)
-#if FULL_SYSTEM
-        return new UndefinedInstruction;
-#else
-        return new UndefinedInstruction(false, mnemonic);
-#endif
+    if (cpsr.mode == MODE_USER) {
+        if (FullSystem)
+            return new UndefinedInstruction;
+        else
+            return new UndefinedInstruction(false, mnemonic);
+    }
     Dest = MiscOp1;
     '''
 
@@ -653,12 +644,12 @@ let {{
 
     mcr15code = '''
     CPSR cpsr = Cpsr;
-    if (cpsr.mode == MODE_USER)
-#if FULL_SYSTEM
-        return new UndefinedInstruction;
-#else
-        return new UndefinedInstruction(false, mnemonic);
-#endif
+    if (cpsr.mode == MODE_USER) {
+        if (FullSystem)
+            return new UndefinedInstruction;
+        else
+            return new UndefinedInstruction(false, mnemonic);
+    }
     MiscDest = Op1;
     '''
     mcr15Iop = InstObjParams("mcr", "Mcr15", "RegRegOp",

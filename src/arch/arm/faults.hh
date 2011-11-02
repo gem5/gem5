@@ -48,8 +48,8 @@
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
@@ -108,10 +108,8 @@ class ArmFault : public FaultBase
         FaultStat count;
     };
 
-#if FULL_SYSTEM
     void invoke(ThreadContext *tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
     virtual FaultStat& countStat() = 0;
     virtual FaultOffset offset() = 0;
     virtual OperatingMode nextMode() = 0;
@@ -139,19 +137,14 @@ class ArmFaultVals : public ArmFault
 };
 
 class Reset : public ArmFaultVals<Reset>
-#if FULL_SYSTEM
 {
   public:
     void invoke(ThreadContext *tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
 };
-#else
-{};
-#endif //FULL_SYSTEM
 
 class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
 {
-#if !FULL_SYSTEM
   protected:
     ExtMachInst machInst;
     bool unknown;
@@ -167,25 +160,27 @@ class UndefinedInstruction : public ArmFaultVals<UndefinedInstruction>
         mnemonic(_mnemonic), disabled(_disabled)
     {
     }
+    UndefinedInstruction() :
+        machInst(0), unknown(false), mnemonic("undefined"), disabled(false)
+    {}
 
     void invoke(ThreadContext *tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 class SupervisorCall : public ArmFaultVals<SupervisorCall>
 {
-#if !FULL_SYSTEM
   protected:
     ExtMachInst machInst;
 
   public:
     SupervisorCall(ExtMachInst _machInst) : machInst(_machInst)
     {}
+    SupervisorCall() : machInst(0)
+    {}
 
     void invoke(ThreadContext *tc,
             StaticInstPtr inst = StaticInst::nullStaticInstPtr);
-#endif
 };
 
 template <class T>

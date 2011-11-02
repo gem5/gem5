@@ -47,6 +47,7 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Faults.hh"
+#include "sim/full_system.hh"
 
 namespace ArmISA
 {
@@ -94,13 +95,13 @@ ArmFault::getVector(ThreadContext *tc)
 
 }
 
-#if FULL_SYSTEM
-
 void 
 ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     // ARM ARM B1.6.3
     FaultBase::invoke(tc);
+    if (!FullSystem)
+        return;
     countStat()++;
 
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
@@ -165,47 +166,53 @@ ArmFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 void
 Reset::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    tc->getCpuPtr()->clearInterrupts();
-    tc->clearArchRegs();
+    if (FullSystem) {
+        tc->getCpuPtr()->clearInterrupts();
+        tc->clearArchRegs();
+    }
     ArmFault::invoke(tc, inst);
 }
-
-#else
 
 void
 UndefinedInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    // If the mnemonic isn't defined this has to be an unknown instruction.
-    assert(unknown || mnemonic != NULL);
-    if (disabled) {
-        panic("Attempted to execute disabled instruction "
-                "'%s' (inst 0x%08x)", mnemonic, machInst);
-    } else if (unknown) {
-        panic("Attempted to execute unknown instruction (inst 0x%08x)",
-              machInst);
+    if (FullSystem) {
+        ArmFault::invoke(tc, inst);
     } else {
-        panic("Attempted to execute unimplemented instruction "
-                "'%s' (inst 0x%08x)", mnemonic, machInst);
+        // If the mnemonic isn't defined this has to be an unknown instruction.
+        assert(unknown || mnemonic != NULL);
+        if (disabled) {
+            panic("Attempted to execute disabled instruction "
+                    "'%s' (inst 0x%08x)", mnemonic, machInst);
+        } else if (unknown) {
+            panic("Attempted to execute unknown instruction (inst 0x%08x)",
+                  machInst);
+        } else {
+            panic("Attempted to execute unimplemented instruction "
+                    "'%s' (inst 0x%08x)", mnemonic, machInst);
+        }
     }
 }
 
 void
 SupervisorCall::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
-    // As of now, there isn't a 32 bit thumb version of this instruction.
-    assert(!machInst.bigThumb);
-    uint32_t callNum;
-    callNum = tc->readIntReg(INTREG_R7);
-    tc->syscall(callNum);
+    if (FullSystem) {
+        ArmFault::invoke(tc, inst);
+    } else {
+        // As of now, there isn't a 32 bit thumb version of this instruction.
+        assert(!machInst.bigThumb);
+        uint32_t callNum;
+        callNum = tc->readIntReg(INTREG_R7);
+        tc->syscall(callNum);
 
-    // Advance the PC since that won't happen automatically.
-    PCState pc = tc->pcState();
-    assert(inst);
-    inst->advancePC(pc);
-    tc->pcState(pc);
+        // Advance the PC since that won't happen automatically.
+        PCState pc = tc->pcState();
+        assert(inst);
+        inst->advancePC(pc);
+        tc->pcState(pc);
+    }
 }
-
-#endif // FULL_SYSTEM
 
 template<class T>
 void
@@ -245,13 +252,13 @@ template void AbortFault<DataAbort>::invoke(ThreadContext *tc,
 void
 ArmSev::invoke(ThreadContext *tc, StaticInstPtr inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
-#if FULL_SYSTEM
-    // Set sev_mailbox to 1, clear the pending interrupt from remote
-    // SEV execution and let pipeline continue as pcState is still
-    // valid.
-    tc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
-    tc->getCpuPtr()->clearInterrupt(INT_SEV, 0);
-#endif
+    if (FullSystem) {
+        // Set sev_mailbox to 1, clear the pending interrupt from remote
+        // SEV execution and let pipeline continue as pcState is still
+        // valid.
+        tc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
+        tc->getCpuPtr()->clearInterrupt(INT_SEV, 0);
+    }
 }
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm

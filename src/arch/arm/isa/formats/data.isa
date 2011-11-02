@@ -1103,7 +1103,6 @@ def format ArmMisc() {{
                 switch (IMM) {
                   case 0x0:
                     return new NopInst(machInst);
-#if FULL_SYSTEM
                   case 0x1:
                     return new YieldInst(machInst);
                   case 0x2:
@@ -1112,7 +1111,6 @@ def format ArmMisc() {{
                     return new WfiInst(machInst);
                   case 0x4:
                     return new SevInst(machInst);
-#endif
                   default:
                     return new Unknown(machInst);
                 }

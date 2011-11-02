@@ -147,11 +147,10 @@ output exec {{
     FailUnimplemented::execute(%(CPU_exec_context)s *xc,
                                Trace::InstRecord *traceData) const
     {
-#if FULL_SYSTEM
-        return new UndefinedInstruction;
-#else
-        return new UndefinedInstruction(machInst, false, mnemonic);
-#endif
+        if (FullSystem)
+            return new UndefinedInstruction;
+        else
+            return new UndefinedInstruction(machInst, false, mnemonic);
     }
 
     Fault

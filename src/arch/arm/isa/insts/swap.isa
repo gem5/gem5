@@ -73,11 +73,10 @@ let {{
 
     swpPreAccCode = '''
         if (!((SCTLR)Sctlr).sw) {
-#if FULL_SYSTEM
-            return new UndefinedInstruction;
-#else
-            return new UndefinedInstruction(false, mnemonic);
-#endif
+            if (FullSystem)
+                return new UndefinedInstruction;
+            else
+                return new UndefinedInstruction(false, mnemonic);
         }
     '''
 

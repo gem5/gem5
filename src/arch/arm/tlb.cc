@@ -47,6 +47,7 @@
 
 #include "arch/arm/faults.hh"
 #include "arch/arm/pagetable.hh"
+#include "arch/arm/system.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/utility.hh"
@@ -61,10 +62,6 @@
 #include "params/ArmTLB.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
-
-#if FULL_SYSTEM
-#include "arch/arm/system.hh"
-#endif
 
 using namespace std;
 using namespace ArmISA;
@@ -421,14 +418,14 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
-#if !FULL_SYSTEM
-    Addr paddr;
-    Process *p = tc->getProcessPtr();
+    if (!FullSystem) {
+        Addr paddr;
+        Process *p = tc->getProcessPtr();
 
-    if (!p->pTable->translate(vaddr, paddr))
-        return Fault(new GenericPageTableFault(vaddr));
-    req->setPaddr(paddr);
-#endif
+        if (!p->pTable->translate(vaddr, paddr))
+            return Fault(new GenericPageTableFault(vaddr));
+        req->setPaddr(paddr);
+    }
 
     return NoFault;
 }
@@ -573,11 +570,11 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
-#if FULL_SYSTEM
-    if (!bootUncacheability &&
-            ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(vaddr))
-        req->setFlags(Request::UNCACHEABLE);
-#endif
+    if (FullSystem) {
+        if (!bootUncacheability &&
+                ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(vaddr))
+            req->setFlags(Request::UNCACHEABLE);
+    }
 
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:

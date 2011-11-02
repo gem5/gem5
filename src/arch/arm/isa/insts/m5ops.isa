@@ -54,9 +54,7 @@ let {{
 
 
     armCode = '''
-#if FULL_SYSTEM
     PseudoInst::arm(xc->tcBase());
-#endif
     '''
     armIop = InstObjParams("arm", "Arm", "PredOp",
                            { "code": armCode,
@@ -67,9 +65,7 @@ let {{
     exec_output += PredOpExecute.subst(armIop)
 
     quiesceCode = '''
-#if FULL_SYSTEM
     PseudoInst::quiesce(xc->tcBase());
-#endif
     '''
     quiesceIop = InstObjParams("quiesce", "Quiesce", "PredOp",
                            { "code": quiesceCode,
@@ -80,9 +76,7 @@ let {{
     exec_output += QuiescePredOpExecute.subst(quiesceIop)
 
     quiesceNsCode = '''
-#if FULL_SYSTEM
     PseudoInst::quiesceNs(xc->tcBase(), join32to64(R1, R0));
-#endif
     '''
 
     quiesceNsIop = InstObjParams("quiesceNs", "QuiesceNs", "PredOp",
@@ -94,9 +88,7 @@ let {{
     exec_output += QuiescePredOpExecute.subst(quiesceNsIop)
 
     quiesceCyclesCode = '''
-#if FULL_SYSTEM
     PseudoInst::quiesceCycles(xc->tcBase(), join32to64(R1, R0));
-#endif
     '''
 
     quiesceCyclesIop = InstObjParams("quiesceCycles", "QuiesceCycles", "PredOp",
@@ -108,11 +100,9 @@ let {{
     exec_output += QuiescePredOpExecute.subst(quiesceCyclesIop)
 
     quiesceTimeCode = '''
-#if FULL_SYSTEM
     uint64_t qt_val = PseudoInst::quiesceTime(xc->tcBase());
     R0 = bits(qt_val, 31, 0);
     R1 = bits(qt_val, 63, 32);
-#endif
     '''
 
     quiesceTimeIop = InstObjParams("quiesceTime", "QuiesceTime", "PredOp",
@@ -188,9 +178,7 @@ let {{
     exec_output += PredOpExecute.subst(m5exitIop)
 
     loadsymbolCode = '''
-#if FULL_SYSTEM
     PseudoInst::loadsymbol(xc->tcBase());
-#endif
     '''
 
     loadsymbolIop = InstObjParams("loadsymbol", "Loadsymbol", "PredOp",
@@ -202,9 +190,7 @@ let {{
     exec_output += PredOpExecute.subst(loadsymbolIop)
 
     initparamCode = '''
-#if FULL_SYSTEM
     Rt = PseudoInst::initParam(xc->tcBase());
-#endif
     '''
 
     initparamIop = InstObjParams("initparam", "Initparam", "PredOp",
@@ -260,11 +246,9 @@ let {{
     exec_output += PredOpExecute.subst(m5checkpointIop)
 
     m5readfileCode = '''
-#if FULL_SYSTEM
     int n = 4;
     uint64_t offset = getArgument(xc->tcBase(), n, sizeof(uint64_t), false);
     R0 = PseudoInst::readfile(xc->tcBase(), R0, join32to64(R3,R2), offset);
-#endif
     '''
     m5readfileIop = InstObjParams("m5readfile", "M5readfile", "PredOp",
                            { "code": m5readfileCode,
@@ -291,9 +275,7 @@ let {{
     exec_output += PredOpExecute.subst(m5switchcpuIop)
 
     m5addsymbolCode = '''
-#if FULL_SYSTEM
     PseudoInst::addsymbol(xc->tcBase(), join32to64(R1, R0), R2);
-#endif
     '''
     m5addsymbolIop = InstObjParams("m5addsymbol", "M5addsymbol", "PredOp",
                            { "code": m5addsymbolCode,

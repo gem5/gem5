@@ -134,11 +134,6 @@
 
 #include <string>
 
-#include "config/full_system.hh"
-#if FULL_SYSTEM
-#include "arch/arm/vtophys.hh"
-#endif
-
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/registers.hh"
 #include "arch/arm/remote_gdb.hh"
@@ -157,6 +152,7 @@
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -173,28 +169,28 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-#if FULL_SYSTEM
-    Addr last_va;
-    va       = truncPage(va);
-    last_va  = roundPage(va + len);
+    if (FullSystem) {
+        Addr last_va;
+        va       = truncPage(va);
+        last_va  = roundPage(va + len);
 
-    do  {
-        if (virtvalid(context, va)) {
-            return true;
-        }
-        va += PageBytes;
-    } while (va < last_va);
+        do  {
+            if (virtvalid(context, va)) {
+                return true;
+            }
+            va += PageBytes;
+        } while (va < last_va);
 
-    DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
-    return true;
-#else
-    TlbEntry entry;
-    //Check to make sure the first byte is mapped into the processes address
-    //space.
-    if (context->getProcessPtr()->pTable->lookup(va, entry))
+        DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
         return true;
-    return false;
-#endif
+    } else {
+        TlbEntry entry;
+        //Check to make sure the first byte is mapped into the processes address
+        //space.
+        if (context->getProcessPtr()->pTable->lookup(va, entry))
+            return true;
+        return false;
+    }
 }
 
 /*

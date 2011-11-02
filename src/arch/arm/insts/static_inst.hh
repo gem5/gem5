@@ -46,6 +46,7 @@
 #include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "sim/full_system.hh"
 
 namespace ArmISA
 {
@@ -294,11 +295,11 @@ class ArmStaticInst : public StaticInst
     inline Fault
     disabledFault() const
     {
-#if FULL_SYSTEM
+        if (FullSystem) {
             return new UndefinedInstruction();
-#else
+        } else {
             return new UndefinedInstruction(machInst, false, mnemonic, true);
-#endif
+        }
     }
 };
 }
