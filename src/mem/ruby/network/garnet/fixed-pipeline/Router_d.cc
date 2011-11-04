@@ -189,6 +189,35 @@ Router_d::printConfig(ostream& out)
     out << "]" << endl;
 }
 
+void
+Router_d::printFaultVector(ostream& out)
+{
+    int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
+    int num_fault_types = m_network_ptr->fault_model->number_of_fault_types;
+    float fault_vector[num_fault_types];
+    get_fault_vector(temperature_celcius, fault_vector);
+    out << "Router-" << m_id << " fault vector: " << endl;
+    for (int fault_type_index = 0; fault_type_index < num_fault_types;
+         fault_type_index++){
+        out << " - probability of (";
+        out << 
+        m_network_ptr->fault_model->fault_type_to_string(fault_type_index);
+        out << ") = ";
+        out << fault_vector[fault_type_index] << endl;
+    }
+}
+
+void
+Router_d::printAggregateFaultProbability(std::ostream& out)
+{
+    int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
+    float aggregate_fault_prob;
+    get_aggregate_fault_probability(temperature_celcius, 
+                                    &aggregate_fault_prob);
+    out << "Router-" << m_id << " fault probability: ";
+    out << aggregate_fault_prob << endl;
+}
+
 Router_d *
 GarnetRouter_dParams::create()
 {

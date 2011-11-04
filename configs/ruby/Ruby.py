@@ -40,6 +40,8 @@ def define_options(parser):
                       help="the number of rows in the mesh topology")
     parser.add_option("--garnet-network", type="string", default=None,
                       help="'fixed'|'flexible'")
+    parser.add_option("--network-fault-model", action="store_true", default=False,
+                      help="enable network fault model: see src/mem/ruby/network/fault_model/")
 
     # ruby mapping options
     parser.add_option("--numa-high-bit", type="int", default=0,
@@ -109,7 +111,13 @@ def create_system(options, system, piobus = None, dma_devices = []):
         print "Error: could not create topology %s" % options.topology
         raise
 
-    network = NetworkClass(ruby_system = ruby, topology = net_topology)
+    if options.network_fault_model:
+        assert(options.garnet_network == "fixed")
+        fault_model = FaultModel()
+        network = NetworkClass(ruby_system = ruby, topology = net_topology,\
+                               enable_fault_model=True, fault_model = fault_model)
+    else:
+        network = NetworkClass(ruby_system = ruby, topology = net_topology)
 
     #
     # Loop through the directory controlers.

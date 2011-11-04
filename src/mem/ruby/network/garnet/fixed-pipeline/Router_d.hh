@@ -50,6 +50,7 @@ class RoutingUnit_d;
 class VCallocator_d;
 class SWallocator_d;
 class Switch_d;
+class FaultModel;
 
 class Router_d : public BasicRouter
 {
@@ -86,6 +87,8 @@ class Router_d : public BasicRouter
     void vcarb_req();
     void swarb_req();
     void printConfig(std::ostream& out);
+    void printFaultVector(std::ostream& out);
+    void printAggregateFaultProbability(std::ostream& out);
 
     double calculate_power();
     void calculate_performance_numbers();
@@ -93,6 +96,15 @@ class Router_d : public BasicRouter
     double get_dynamic_power(){return m_power_dyn;}
     double get_static_power(){return m_power_sta;}
     double get_clk_power(){return m_clk_power;}
+    bool get_fault_vector(int temperature, float fault_vector[]){ 
+        return m_network_ptr->fault_model->fault_vector(m_id, temperature, 
+                                                        fault_vector); 
+    }
+    bool get_aggregate_fault_probability(int temperature, 
+                                         float *aggregate_fault_prob){
+        return m_network_ptr->fault_model->fault_prob(m_id, temperature, 
+                                                      aggregate_fault_prob);
+    }
 
   private:
     int m_virtual_networks, m_num_vcs, m_vc_per_vnet;
