@@ -716,9 +716,25 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
+  GenericRequestType convertToGenericType(CoherenceRequestType type) {
+    if(type == CoherenceRequestType:GETS) {
+      return GenericRequestType:GETS;
+    } else if(type == CoherenceRequestType:GETX) {
+      return GenericRequestType:GETX;
+    } else if(type == CoherenceRequestType:GET_INSTR) {
+      return GenericRequestType:GET_INSTR;
+    } else if(type == CoherenceRequestType:UPGRADE) {
+      return GenericRequestType:UPGRADE;
+    } else {
+      DPRINTF(RubySlicc, "%s\n", type);
+      error("Invalid CoherenceRequestType\n");
+    }
+  }
+
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      //profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize), in_msg.Prefetch, L1CacheMachIDToProcessorNum(in_msg.Requestor));
+      L2cacheMemory.profileGenericRequest(convertToGenericType(in_msg.Type),
+                                       in_msg.AccessMode, in_msg.Prefetch);
     }
   }
 
