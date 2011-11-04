@@ -42,7 +42,6 @@
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
 
 class MessageBuffer;
 class NetDest;

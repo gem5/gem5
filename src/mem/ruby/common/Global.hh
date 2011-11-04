@@ -29,16 +29,7 @@
 #ifndef __MEM_RUBY_COMMON_GLOBAL_HH__
 #define __MEM_RUBY_COMMON_GLOBAL_HH__
 
-// external includes for all classes
-#include "mem/ruby/common/TypeDefines.hh"
-
-// simple type declarations
-typedef Time LogicalTime;
-typedef int64 Index;            // what the address bit ripper returns
-typedef int word;               // one word of a cache line
-typedef unsigned int uint;
-typedef int SwitchID;
-typedef int LinkID;
+#include "base/str.hh"
 
 class RubyEventQueue;
 extern RubyEventQueue* g_eventQueue_ptr;

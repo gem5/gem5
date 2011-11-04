@@ -439,7 +439,6 @@ ${{self.c_ident}}::print(ostream& out) const
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
 ''')
         if self.isStateDecl:
             code('#include "mem/protocol/AccessPermission.hh"')
@@ -448,7 +447,6 @@ ${{self.c_ident}}::print(ostream& out) const
             code('#include "base/misc.hh"')
             code('#include "mem/protocol/GenericMachineType.hh"')
             code('#include "mem/ruby/common/Address.hh"')
-            code('#include "mem/ruby/system/NodeID.hh"')
             code('struct MachineID;')
 
         code('''

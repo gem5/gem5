@@ -38,7 +38,6 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/profiler/AccessTraceForAddress.hh"
-#include "mem/ruby/system/NodeID.hh"
 
 class Set;
 

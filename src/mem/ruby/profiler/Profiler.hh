@@ -64,7 +64,6 @@
 #include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/MachineID.hh"
 #include "mem/ruby/system/MemoryControl.hh"
-#include "mem/ruby/system/NodeID.hh"
 #include "params/RubyProfiler.hh"
 #include "sim/sim_object.hh"
 

@@ -35,7 +35,6 @@
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/system/NodeID.hh"
 
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system

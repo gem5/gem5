@@ -36,7 +36,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Set.hh"
-#include "mem/ruby/system/NodeID.hh"
 
 class Histogram;
 

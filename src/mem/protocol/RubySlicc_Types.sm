@@ -48,7 +48,7 @@ structure(InPort, external = "yes", primitive="yes") {
   bool isEmpty();
 }
 
-external_type(NodeID, default="0");
+external_type(NodeID, default="0", primitive="yes");
 external_type(MachineID);
 
 MessageBuffer getMandatoryQueue(int core_id);

@@ -59,7 +59,7 @@
 #include <iostream>
 
 #include "config/no_vector_bounds_checks.hh"
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "sim/eventq.hh"
 
 class Consumer;

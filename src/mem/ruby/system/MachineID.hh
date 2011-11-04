@@ -34,7 +34,6 @@
 
 #include "base/cprintf.hh"
 #include "mem/protocol/MachineType.hh"
-#include "mem/ruby/common/Global.hh"
 
 struct MachineID
 {

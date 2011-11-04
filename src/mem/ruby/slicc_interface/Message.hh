@@ -33,6 +33,7 @@
 
 #include "base/refcnt.hh"
 #include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 class Message;

@@ -41,7 +41,6 @@
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/recorder/TraceRecord.hh"
-#include "mem/ruby/system/NodeID.hh"
 
 class Address;
 class TraceRecord;

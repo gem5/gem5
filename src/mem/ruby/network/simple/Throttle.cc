@@ -113,8 +113,8 @@ Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)
 
     // Set consumer and description
     m_in[m_vnets]->setConsumer(this);
-    string desc = "[Queue to Throttle " + NodeIDToString(m_sID) + " " +
-        NodeIDToString(m_node) + "]";
+    string desc = "[Queue to Throttle " + to_string(m_sID) + " " +
+        to_string(m_node) + "]";
     m_in[m_vnets]->setDescription(desc);
     m_vnets++;
 }

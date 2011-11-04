@@ -36,7 +36,6 @@
 #include <limits>
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/System.hh"
 
 class Set
