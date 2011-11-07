@@ -38,6 +38,7 @@
 #include "debug/Cache.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/mshr.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 
@@ -151,11 +152,7 @@ BaseCache::regStats()
         const string &cstr = cmd.toString();
 
         hits[access_idx]
-#if FULL_SYSTEM
-            .init(_numCpus + 1)
-#else
-            .init(_numCpus)
-#endif
+            .init(FullSystem ? (_numCpus + 1) : _numCpus)
             .name(name() + "." + cstr + "_hits")
             .desc("number of " + cstr + " hits")
             .flags(total | nozero | nonan)
@@ -192,11 +189,7 @@ BaseCache::regStats()
         const string &cstr = cmd.toString();
 
         misses[access_idx]
-#if FULL_SYSTEM
-            .init(_numCpus + 1)
-#else
-            .init(_numCpus)
-#endif
+            .init(FullSystem ? (_numCpus + 1) : _numCpus)
             .name(name() + "." + cstr + "_misses")
             .desc("number of " + cstr + " misses")
             .flags(total | nozero | nonan)
