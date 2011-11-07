@@ -34,16 +34,13 @@
 
 #include "base/inifile.hh"
 #include "base/output.hh"
-#include "config/full_system.hh"
-#include "mem/mem_object.hh"
-#include "mem/port.hh"
-#include "sim/sim_object.hh"
-
-#if FULL_SYSTEM
 #include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherobject.hh"
-#endif
+#include "mem/mem_object.hh"
+#include "mem/port.hh"
+#include "sim/full_system.hh"
+#include "sim/sim_object.hh"
 
 using namespace std;
 
@@ -65,8 +62,6 @@ lookupPort(SimObject *so, const std::string &name, int i)
     return p;
 }
 
-#if FULL_SYSTEM
-
 EtherInt *
 lookupEthPort(SimObject *so, const std::string &name, int i)
 {
@@ -84,7 +79,6 @@ lookupEthPort(SimObject *so, const std::string &name, int i)
         p = ed->getEthPort(name, i);
     return p;
 }
-#endif
 
 /**
  * Connect the described MemObject ports.  Called from Python via SWIG.
@@ -98,28 +92,28 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
     mo1 = dynamic_cast<MemObject*>(o1);
     mo2 = dynamic_cast<MemObject*>(o2);
 
-#if FULL_SYSTEM
-    EtherObject *eo1, *eo2;
-    EtherDevice *ed1, *ed2;
-    eo1 = dynamic_cast<EtherObject*>(o1);
-    ed1 = dynamic_cast<EtherDevice*>(o1);
+    if (FullSystem) {
+        EtherObject *eo1, *eo2;
+        EtherDevice *ed1, *ed2;
+        eo1 = dynamic_cast<EtherObject*>(o1);
+        ed1 = dynamic_cast<EtherDevice*>(o1);
 
-    eo2 = dynamic_cast<EtherObject*>(o2);
-    ed2 = dynamic_cast<EtherDevice*>(o2);
+        eo2 = dynamic_cast<EtherObject*>(o2);
+        ed2 = dynamic_cast<EtherDevice*>(o2);
 
-    if ((eo1 || ed1) && (eo2 || ed2)) {
-        EtherInt *p1 = lookupEthPort(o1, name1, i1);
-        EtherInt *p2 = lookupEthPort(o2, name2, i2);
+        if ((eo1 || ed1) && (eo2 || ed2)) {
+            EtherInt *p1 = lookupEthPort(o1, name1, i1);
+            EtherInt *p2 = lookupEthPort(o2, name2, i2);
 
-        if (p1 != NULL &&  p2 != NULL) {
+            if (p1 != NULL &&  p2 != NULL) {
 
-            p1->setPeer(p2);
-            p2->setPeer(p1);
+                p1->setPeer(p2);
+                p2->setPeer(p1);
 
-            return 1;
+                return 1;
+            }
         }
     }
-#endif
     Port *p1 = lookupPort(o1, name1, i1);
     Port *p2 = lookupPort(o2, name2, i2);
 
