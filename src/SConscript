@@ -51,7 +51,7 @@ Export('env')
 
 build_env = [(opt, env[opt]) for opt in export_vars]
 
-from m5.util import code_formatter
+from m5.util import code_formatter, compareVersions
 
 ########################################################################
 # Code for adding source files of various types
@@ -851,8 +851,9 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         swig_env.Append(CCFLAGS='-Wno-uninitialized')
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
         swig_env.Append(CCFLAGS='-Wno-parentheses')
-        swig_env.Append(CCFLAGS='-Wno-unused-label')
-        swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
+        if compareVersions(env['GCC_VERSION'], '4.6.0') != -1:
+            swig_env.Append(CCFLAGS='-Wno-unused-label')
+            swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
 
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')
