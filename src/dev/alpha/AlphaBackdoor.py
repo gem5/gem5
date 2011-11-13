@@ -37,5 +37,4 @@ class AlphaBackdoor(BasicPioDevice):
     disk = Param.SimpleDisk("Simple Disk")
     terminal = Param.Terminal(Parent.any, "The console terminal")
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    if buildEnv['FULL_SYSTEM']: # No AlphaSystem in SE mode.
-        system = Param.AlphaSystem(Parent.any, "system object")
+    system = Param.AlphaSystem(Parent.any, "system object")

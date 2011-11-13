@@ -36,12 +36,7 @@
 #include <string>
 #include <vector>
 
-#include "config/full_system.hh"
-
-#if FULL_SYSTEM //XXX AlphaSystem doesn't build in SE mode yet.
 #include "arch/alpha/system.hh"
-#endif
-
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "dev/alpha/tsunami.hh"
@@ -64,11 +59,9 @@ Tsunami::Tsunami(const Params *p)
 void
 Tsunami::init()
 {
-#if FULL_SYSTEM //XXX AlphaSystem doesn't build in SE mode yet.
     AlphaSystem *alphaSystem = dynamic_cast<AlphaSystem *>(system);
     assert(alphaSystem);
     alphaSystem->setIntrFreq(io->frequency());
-#endif
 }
 
 void

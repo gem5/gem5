@@ -38,11 +38,7 @@
 #include <cstddef>
 #include <string>
 
-#include "config/full_system.hh"
-
-#if FULL_SYSTEM //XXX No AlphaSystem in SE mode.
 #include "arch/alpha/system.hh"
-#endif
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
@@ -67,9 +63,7 @@ using namespace AlphaISA;
 
 AlphaBackdoor::AlphaBackdoor(const Params *p)
     : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
-#if FULL_SYSTEM //XXX No system pointer in SE mode.
       system(p->system),
-#endif
       cpu(p->cpu)
 {
 
@@ -94,7 +88,6 @@ AlphaBackdoor::AlphaBackdoor(const Params *p)
 void
 AlphaBackdoor::startup()
 {
-#if FULL_SYSTEM //XXX No system pointer in SE mode.
     system->setAlphaAccess(pioAddr);
     alphaAccess->numCPUs = system->numContexts();
     alphaAccess->kernStart = system->getKernelStart();
@@ -105,7 +98,6 @@ AlphaBackdoor::startup()
     Tsunami *tsunami = dynamic_cast<Tsunami *>(params()->platform);
     assert(tsunami);
     alphaAccess->intrClockFrequency = tsunami->io->frequency();
-#endif
 }
 
 Tick
