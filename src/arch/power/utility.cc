@@ -68,5 +68,11 @@ skipFunction(ThreadContext *tc)
     panic("Not Implemented for POWER");
 }
 
+void
+initCPU(ThreadContext *tc, int cpuId)
+{
+    panic("initCPU not implemented for POWER.\n");
+}
+
 
 } // namespace PowerISA

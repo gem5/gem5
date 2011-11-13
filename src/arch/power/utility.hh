@@ -92,6 +92,8 @@ getExecutingAsid(ThreadContext *tc)
     return 0;
 }
 
+void initCPU(ThreadContext *, int cpuId);
+
 } // namespace PowerISA
 
 
