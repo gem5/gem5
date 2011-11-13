@@ -45,6 +45,7 @@ if env['TARGET_ISA'] == 'power':
     Source('linux/process.cc')
     Source('pagetable.cc')
     Source('process.cc')
+    Source('stacktrace.cc')
     Source('tlb.cc')
     Source('utility.cc')
     Source('vtophys.cc')
