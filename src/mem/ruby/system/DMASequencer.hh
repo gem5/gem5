@@ -53,7 +53,7 @@ class DMASequencer : public RubyPort
     DMASequencer(const Params *);
     void init();
     /* external interface */
-    RequestStatus makeRequest(const RubyRequest & request);
+    RequestStatus makeRequest(PacketPtr pkt);
     bool busy() { return m_is_busy;}
 
     /* SLICC callback */

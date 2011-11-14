@@ -28,15 +28,21 @@
 
 #include "base/misc.hh"
 #include "base/str.hh"
+#include "config/the_isa.hh"
+#if THE_ISA == X86_ISA
+#include "arch/x86/insts/microldstop.hh"
+#endif // X86_ISA
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
+#include "debug/RubySequencer.hh"
+#include "mem/protocol/PrefetchBit.hh"
+#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/recorder/Tracer.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/Sequencer.hh"
@@ -62,7 +68,6 @@ Sequencer::Sequencer(const Params *p)
 
     m_outstanding_count = 0;
 
-    m_max_outstanding_requests = 0;
     m_deadlock_threshold = 0;
     m_instCache_ptr = NULL;
     m_dataCache_ptr = NULL;
@@ -103,7 +108,7 @@ Sequencer::wakeup()
         panic("Possible Deadlock detected. Aborting!\n"
              "version: %d request.paddr: 0x%x m_readRequestTable: %d "
              "current time: %u issue_time: %d difference: %d\n", m_version,
-             request->ruby_request.m_PhysicalAddress, m_readRequestTable.size(),
+             Address(request->pkt->getAddr()), m_readRequestTable.size(),
              current_time, request->issue_time,
              current_time - request->issue_time);
     }
@@ -118,7 +123,7 @@ Sequencer::wakeup()
         panic("Possible Deadlock detected. Aborting!\n"
              "version: %d request.paddr: 0x%x m_writeRequestTable: %d "
              "current time: %u issue_time: %d difference: %d\n", m_version,
-             request->ruby_request.m_PhysicalAddress, m_writeRequestTable.size(),
+             Address(request->pkt->getAddr()), m_writeRequestTable.size(),
              current_time, request->issue_time,
              current_time - request->issue_time);
     }
@@ -213,8 +218,8 @@ Sequencer::printConfig(ostream& out) const
 
 // Insert the request on the correct request table.  Return true if
 // the entry was already present.
-bool
-Sequencer::insertRequest(SequencerRequest* request)
+RequestStatus
+Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
 {
     int total_outstanding =
         m_writeRequestTable.size() + m_readRequestTable.size();
@@ -226,52 +231,64 @@ Sequencer::insertRequest(SequencerRequest* request)
         schedule(deadlockCheckEvent, m_deadlock_threshold + curTick());
     }
 
-    Address line_addr(request->ruby_request.m_PhysicalAddress);
+    Address line_addr(pkt->getAddr());
     line_addr.makeLineAddress();
-    if ((request->ruby_request.m_Type == RubyRequestType_ST) ||
-        (request->ruby_request.m_Type == RubyRequestType_ATOMIC) ||
-        (request->ruby_request.m_Type == RubyRequestType_RMW_Read) ||
-        (request->ruby_request.m_Type == RubyRequestType_RMW_Write) ||
-        (request->ruby_request.m_Type == RubyRequestType_Load_Linked) ||
-        (request->ruby_request.m_Type == RubyRequestType_Store_Conditional) ||
-        (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Read) ||
-        (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Write) ||
-        (request->ruby_request.m_Type == RubyRequestType_FLUSH)) {
+    if ((request_type == RubyRequestType_ST) ||
+        (request_type == RubyRequestType_RMW_Read) ||
+        (request_type == RubyRequestType_RMW_Write) ||
+        (request_type == RubyRequestType_Load_Linked) ||
+        (request_type == RubyRequestType_Store_Conditional) ||
+        (request_type == RubyRequestType_Locked_RMW_Read) ||
+        (request_type == RubyRequestType_Locked_RMW_Write) ||
+        (request_type == RubyRequestType_FLUSH)) {
+
+        // Check if there is any outstanding read request for the same
+        // cache line.
+        if (m_readRequestTable.count(line_addr) > 0) {
+            m_store_waiting_on_load_cycles++;
+            return RequestStatus_Aliased;
+        }
+
         pair<RequestTable::iterator, bool> r =
             m_writeRequestTable.insert(RequestTable::value_type(line_addr, 0));
-        bool success = r.second;
-        RequestTable::iterator i = r.first;
-        if (!success) {
-            i->second = request;
-            // return true;
-
-            // drh5: isn't this an error?  do you lose the initial request?
-            assert(0);
+        if (r.second) {
+            RequestTable::iterator i = r.first;
+            i->second = new SequencerRequest(pkt, request_type,
+                                             g_eventQueue_ptr->getTime());
+            m_outstanding_count++;
+        } else {
+          // There is an outstanding write request for the cache line
+          m_store_waiting_on_store_cycles++;
+          return RequestStatus_Aliased;
         }
-        i->second = request;
-        m_outstanding_count++;
     } else {
+        // Check if there is any outstanding write request for the same
+        // cache line.
+        if (m_writeRequestTable.count(line_addr) > 0) {
+            m_load_waiting_on_store_cycles++;
+            return RequestStatus_Aliased;
+        }
+
         pair<RequestTable::iterator, bool> r =
             m_readRequestTable.insert(RequestTable::value_type(line_addr, 0));
-        bool success = r.second;
-        RequestTable::iterator i = r.first;
-        if (!success) {
-            i->second = request;
-            // return true;
 
-            // drh5: isn't this an error?  do you lose the initial request?
-            assert(0);
+        if (r.second) {
+            RequestTable::iterator i = r.first;
+            i->second = new SequencerRequest(pkt, request_type,
+                                             g_eventQueue_ptr->getTime());
+            m_outstanding_count++;
+        } else {
+            // There is an outstanding read request for the cache line
+            m_load_waiting_on_load_cycles++;
+            return RequestStatus_Aliased;
         }
-        i->second = request;
-        m_outstanding_count++;
     }
 
     g_system_ptr->getProfiler()->sequencerRequests(m_outstanding_count);
-
     total_outstanding = m_writeRequestTable.size() + m_readRequestTable.size();
     assert(m_outstanding_count == total_outstanding);
 
-    return false;
+    return RequestStatus_Ready;
 }
 
 void
@@ -288,16 +305,15 @@ Sequencer::removeRequest(SequencerRequest* srequest)
     assert(m_outstanding_count ==
            m_writeRequestTable.size() + m_readRequestTable.size());
 
-    const RubyRequest & ruby_request = srequest->ruby_request;
-    Address line_addr(ruby_request.m_PhysicalAddress);
+    Address line_addr(srequest->pkt->getAddr());
     line_addr.makeLineAddress();
-    if ((ruby_request.m_Type == RubyRequestType_ST) ||
-        (ruby_request.m_Type == RubyRequestType_RMW_Read) ||
-        (ruby_request.m_Type == RubyRequestType_RMW_Write) ||
-        (ruby_request.m_Type == RubyRequestType_Load_Linked) ||
-        (ruby_request.m_Type == RubyRequestType_Store_Conditional) ||
-        (ruby_request.m_Type == RubyRequestType_Locked_RMW_Read) ||
-        (ruby_request.m_Type == RubyRequestType_Locked_RMW_Write)) {
+    if ((srequest->m_type == RubyRequestType_ST) ||
+        (srequest->m_type == RubyRequestType_RMW_Read) ||
+        (srequest->m_type == RubyRequestType_RMW_Write) ||
+        (srequest->m_type == RubyRequestType_Load_Linked) ||
+        (srequest->m_type == RubyRequestType_Store_Conditional) ||
+        (srequest->m_type == RubyRequestType_Locked_RMW_Read) ||
+        (srequest->m_type == RubyRequestType_Locked_RMW_Write)) {
         m_writeRequestTable.erase(line_addr);
     } else {
         m_readRequestTable.erase(line_addr);
@@ -315,32 +331,33 @@ Sequencer::handleLlsc(const Address& address, SequencerRequest* request)
     // longer locked.
     //
     bool success = true;
-    if (request->ruby_request.m_Type == RubyRequestType_Store_Conditional) {
+    if (request->m_type == RubyRequestType_Store_Conditional) {
         if (!m_dataCache_ptr->isLocked(address, m_version)) {
             //
             // For failed SC requests, indicate the failure to the cpu by
             // setting the extra data to zero.
             //
-            request->ruby_request.pkt->req->setExtraData(0);
+            request->pkt->req->setExtraData(0);
             success = false;
         } else {
             //
             // For successful SC requests, indicate the success to the cpu by
             // setting the extra data to one.  
             //
-            request->ruby_request.pkt->req->setExtraData(1);
+            request->pkt->req->setExtraData(1);
         }
         //
         // Independent of success, all SC operations must clear the lock
         //
         m_dataCache_ptr->clearLocked(address);
-    } else if (request->ruby_request.m_Type == RubyRequestType_Load_Linked) {
+    } else if (request->m_type == RubyRequestType_Load_Linked) {
         //
         // Note: To fully follow Alpha LLSC semantics, should the LL clear any
         // previously locked cache lines?
         //
         m_dataCache_ptr->setLocked(address, m_version);
-    } else if ((m_dataCache_ptr->isTagPresent(address)) && (m_dataCache_ptr->isLocked(address, m_version))) {
+    } else if ((m_dataCache_ptr->isTagPresent(address)) &&
+               (m_dataCache_ptr->isLocked(address, m_version))) {
         //
         // Normal writes should clear the locked address
         //
@@ -381,15 +398,15 @@ Sequencer::writeCallback(const Address& address,
     m_writeRequestTable.erase(i);
     markRemoved();
 
-    assert((request->ruby_request.m_Type == RubyRequestType_ST) ||
-           (request->ruby_request.m_Type == RubyRequestType_ATOMIC) ||
-           (request->ruby_request.m_Type == RubyRequestType_RMW_Read) ||
-           (request->ruby_request.m_Type == RubyRequestType_RMW_Write) ||
-           (request->ruby_request.m_Type == RubyRequestType_Load_Linked) ||
-           (request->ruby_request.m_Type == RubyRequestType_Store_Conditional) ||
-           (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Read) ||
-           (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Write) ||
-           (request->ruby_request.m_Type == RubyRequestType_FLUSH));
+    assert((request->m_type == RubyRequestType_ST) ||
+           (request->m_type == RubyRequestType_ATOMIC) ||
+           (request->m_type == RubyRequestType_RMW_Read) ||
+           (request->m_type == RubyRequestType_RMW_Write) ||
+           (request->m_type == RubyRequestType_Load_Linked) ||
+           (request->m_type == RubyRequestType_Store_Conditional) ||
+           (request->m_type == RubyRequestType_Locked_RMW_Read) ||
+           (request->m_type == RubyRequestType_Locked_RMW_Write) ||
+           (request->m_type == RubyRequestType_FLUSH));
 
 
     //
@@ -402,9 +419,9 @@ Sequencer::writeCallback(const Address& address,
     if(!m_usingNetworkTester)
         success = handleLlsc(address, request);
 
-    if (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Read) {
+    if (request->m_type == RubyRequestType_Locked_RMW_Read) {
         m_controller->blockOnQueue(address, m_mandatory_q_ptr);
-    } else if (request->ruby_request.m_Type == RubyRequestType_Locked_RMW_Write) {
+    } else if (request->m_type == RubyRequestType_Locked_RMW_Write) {
         m_controller->unblock(address);
     }
 
@@ -444,8 +461,8 @@ Sequencer::readCallback(const Address& address,
     m_readRequestTable.erase(i);
     markRemoved();
 
-    assert((request->ruby_request.m_Type == RubyRequestType_LD) ||
-           (request->ruby_request.m_Type == RubyRequestType_IFETCH));
+    assert((request->m_type == RubyRequestType_LD) ||
+           (request->m_type == RubyRequestType_IFETCH));
 
     hitCallback(request, mach, data, true, 
                 initialRequestTime, forwardRequestTime, firstResponseTime);
@@ -460,11 +477,11 @@ Sequencer::hitCallback(SequencerRequest* srequest,
                        Time forwardRequestTime,
                        Time firstResponseTime)
 {
-    const RubyRequest & ruby_request = srequest->ruby_request;
-    Address request_address(ruby_request.m_PhysicalAddress);
-    Address request_line_address(ruby_request.m_PhysicalAddress);
+    PacketPtr pkt = srequest->pkt;
+    Address request_address(pkt->getAddr());
+    Address request_line_address(pkt->getAddr());
     request_line_address.makeLineAddress();
-    RubyRequestType type = ruby_request.m_Type;
+    RubyRequestType type = srequest->m_type;
     Time issued_time = srequest->issue_time;
 
     // Set this cache entry to the most recently used
@@ -502,22 +519,22 @@ Sequencer::hitCallback(SequencerRequest* srequest,
         DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",
                  curTick(), m_version, "Seq",
                  success ? "Done" : "SC_Failed", "", "",
-                 ruby_request.m_PhysicalAddress, miss_latency);
+                 request_address, miss_latency);
     }
 
     // update the data
-    if (ruby_request.data != NULL) {
+    if (pkt->getPtr<uint8_t>(true) != NULL) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
             (type == RubyRequestType_Locked_RMW_Read) ||
             (type == RubyRequestType_Load_Linked)) {
-            memcpy(ruby_request.data,
-                   data.getData(request_address.getOffset(), ruby_request.m_Size),
-                   ruby_request.m_Size);
+            memcpy(pkt->getPtr<uint8_t>(true),
+                   data.getData(request_address.getOffset(), pkt->getSize()),
+                   pkt->getSize());
         } else {
-            data.setData(ruby_request.data, request_address.getOffset(),
-                         ruby_request.m_Size);
+            data.setData(pkt->getPtr<uint8_t>(true),
+                         request_address.getOffset(), pkt->getSize());
         }
     } else {
         DPRINTF(MemoryAccess,
@@ -532,48 +549,14 @@ Sequencer::hitCallback(SequencerRequest* srequest,
     // RubyTester.
     if (m_usingRubyTester) {
         RubyPort::SenderState *requestSenderState =
-            safe_cast<RubyPort::SenderState*>(ruby_request.pkt->senderState);
+            safe_cast<RubyPort::SenderState*>(pkt->senderState);
         RubyTester::SenderState* testerSenderState =
             safe_cast<RubyTester::SenderState*>(requestSenderState->saved);
         testerSenderState->subBlock->mergeFrom(data);
     }
 
-    ruby_hit_callback(ruby_request.pkt);
+    ruby_hit_callback(pkt);
     delete srequest;
-}
-
-// Returns true if the sequencer already has a load or store outstanding
-RequestStatus
-Sequencer::getRequestStatus(const RubyRequest& request)
-{
-    bool is_outstanding_store =
-        !!m_writeRequestTable.count(line_address(request.m_PhysicalAddress));
-    bool is_outstanding_load =
-        !!m_readRequestTable.count(line_address(request.m_PhysicalAddress));
-    if (is_outstanding_store) {
-        if ((request.m_Type == RubyRequestType_LD) ||
-            (request.m_Type == RubyRequestType_IFETCH) ||
-            (request.m_Type == RubyRequestType_RMW_Read)) {
-            m_store_waiting_on_load_cycles++;
-        } else {
-            m_store_waiting_on_store_cycles++;
-        }
-        return RequestStatus_Aliased;
-    } else if (is_outstanding_load) {
-        if ((request.m_Type == RubyRequestType_ST) ||
-            (request.m_Type == RubyRequestType_RMW_Write)) {
-            m_load_waiting_on_store_cycles++;
-        } else {
-            m_load_waiting_on_load_cycles++;
-        }
-        return RequestStatus_Aliased;
-    }
-
-    if (m_outstanding_count >= m_max_outstanding_requests) {
-        return RequestStatus_BufferFull;
-    }
-
-    return RequestStatus_Ready;
 }
 
 bool
@@ -583,109 +566,118 @@ Sequencer::empty() const
 }
 
 RequestStatus
-Sequencer::makeRequest(const RubyRequest &request)
+Sequencer::makeRequest(PacketPtr pkt)
 {
-    assert(request.m_PhysicalAddress.getOffset() + request.m_Size <=
-           RubySystem::getBlockSizeBytes());
-    RequestStatus status = getRequestStatus(request);
+    if (m_outstanding_count >= m_max_outstanding_requests) {
+        return RequestStatus_BufferFull;
+    }
+
+    RubyRequestType primary_type = RubyRequestType_NULL;
+    RubyRequestType secondary_type = RubyRequestType_NULL;
+
+    if (pkt->isLLSC()) {
+        //
+        // Alpha LL/SC instructions need to be handled carefully by the cache
+        // coherence protocol to ensure they follow the proper semantics. In
+        // particular, by identifying the operations as atomic, the protocol
+        // should understand that migratory sharing optimizations should not
+        // be performed (i.e. a load between the LL and SC should not steal
+        // away exclusive permission).
+        //
+        if (pkt->isWrite()) {
+            DPRINTF(RubySequencer, "Issuing SC\n");
+            primary_type = RubyRequestType_Store_Conditional;
+        } else {
+            DPRINTF(RubySequencer, "Issuing LL\n");
+            assert(pkt->isRead());
+            primary_type = RubyRequestType_Load_Linked;
+        }
+        secondary_type = RubyRequestType_ATOMIC;
+    } else if (pkt->req->isLocked()) {
+        //
+        // x86 locked instructions are translated to store cache coherence
+        // requests because these requests should always be treated as read
+        // exclusive operations and should leverage any migratory sharing
+        // optimization built into the protocol.
+        //
+        if (pkt->isWrite()) {
+            DPRINTF(RubySequencer, "Issuing Locked RMW Write\n");
+            primary_type = RubyRequestType_Locked_RMW_Write;
+        } else {
+            DPRINTF(RubySequencer, "Issuing Locked RMW Read\n");
+            assert(pkt->isRead());
+            primary_type = RubyRequestType_Locked_RMW_Read;
+        }
+        secondary_type = RubyRequestType_ST;
+    } else {
+        if (pkt->isRead()) {
+            if (pkt->req->isInstFetch()) {
+                primary_type = secondary_type = RubyRequestType_IFETCH;
+            } else {
+#if THE_ISA == X86_ISA
+                uint32_t flags = pkt->req->getFlags();
+                bool storeCheck = flags &
+                        (TheISA::StoreCheck << TheISA::FlagShift);
+#else
+                bool storeCheck = false;
+#endif // X86_ISA
+                if (storeCheck) {
+                    primary_type = RubyRequestType_RMW_Read;
+                    secondary_type = RubyRequestType_ST;
+                } else {
+                    primary_type = secondary_type = RubyRequestType_LD;
+                }
+            }
+        } else if (pkt->isWrite()) {
+            //
+            // Note: M5 packets do not differentiate ST from RMW_Write
+            //
+            primary_type = secondary_type = RubyRequestType_ST;
+        } else if (pkt->isFlush()) {
+          primary_type = secondary_type = RubyRequestType_FLUSH;
+        } else {
+            panic("Unsupported ruby packet type\n");
+        }
+    }
+
+    RequestStatus status = insertRequest(pkt, primary_type);
     if (status != RequestStatus_Ready)
         return status;
 
-    SequencerRequest *srequest =
-        new SequencerRequest(request, g_eventQueue_ptr->getTime());
-    bool found = insertRequest(srequest);
-    if (found) {
-        panic("Sequencer::makeRequest should never be called if the "
-              "request is already outstanding\n");
-        return RequestStatus_NULL;
-    }
-
-    issueRequest(request);
+    issueRequest(pkt, secondary_type);
 
     // TODO: issue hardware prefetches here
     return RequestStatus_Issued;
 }
 
 void
-Sequencer::issueRequest(const RubyRequest& request)
+Sequencer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
 {
-    // TODO: Eliminate RubyRequest being copied again.
-
-    RubyRequestType ctype = RubyRequestType_NUM;
-    switch(request.m_Type) {
-      case RubyRequestType_IFETCH:
-        ctype = RubyRequestType_IFETCH;
-        break;
-      case RubyRequestType_LD:
-        ctype = RubyRequestType_LD;
-        break;
-      case RubyRequestType_FLUSH:
-        ctype = RubyRequestType_FLUSH;
-        break;
-      case RubyRequestType_ST:
-      case RubyRequestType_RMW_Read:
-      case RubyRequestType_RMW_Write:
-      //
-      // x86 locked instructions are translated to store cache coherence
-      // requests because these requests should always be treated as read
-      // exclusive operations and should leverage any migratory sharing
-      // optimization built into the protocol.
-      //
-      case RubyRequestType_Locked_RMW_Read:
-      case RubyRequestType_Locked_RMW_Write:
-        ctype = RubyRequestType_ST;
-        break;
-      //
-      // Alpha LL/SC instructions need to be handled carefully by the cache
-      // coherence protocol to ensure they follow the proper semantics.  In 
-      // particular, by identifying the operations as atomic, the protocol
-      // should understand that migratory sharing optimizations should not be
-      // performed (i.e. a load between the LL and SC should not steal away
-      // exclusive permission).
-      //
-      case RubyRequestType_Load_Linked:
-      case RubyRequestType_Store_Conditional:
-      case RubyRequestType_ATOMIC:
-        ctype = RubyRequestType_ATOMIC;
-        break;
-      default:
-        assert(0);
-    }
-
-    RubyAccessMode amtype = RubyAccessMode_NUM;
-    switch(request.m_AccessMode){
-      case RubyAccessMode_User:
-        amtype = RubyAccessMode_User;
-        break;
-      case RubyAccessMode_Supervisor:
-        amtype = RubyAccessMode_Supervisor;
-        break;
-      case RubyAccessMode_Device:
-        amtype = RubyAccessMode_User;
-        break;
-      default:
-        assert(0);
-    }
-
-    Address line_addr(request.m_PhysicalAddress);
-    line_addr.makeLineAddress();
     int proc_id = -1;
-    if (request.pkt != NULL && request.pkt->req->hasContextId()) {
-        proc_id = request.pkt->req->contextId();
+    if (pkt != NULL && pkt->req->hasContextId()) {
+        proc_id = pkt->req->contextId();
     }
-    RubyRequest *msg = new RubyRequest(request.m_PhysicalAddress.getAddress(),
-                                       request.data, request.m_Size,
-                                       request.m_ProgramCounter.getAddress(),
-                                       ctype, amtype, request.pkt,
+
+    // If valid, copy the pc to the ruby request
+    Addr pc = 0;
+    if (pkt->req->hasPC()) {
+        pc = pkt->req->getPC();
+    }
+
+    RubyRequest *msg = new RubyRequest(pkt->getAddr(),
+                                       pkt->getPtr<uint8_t>(true),
+                                       pkt->getSize(), pc, secondary_type,
+                                       RubyAccessMode_Supervisor, pkt,
                                        PrefetchBit_No, proc_id);
 
     DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n",
             curTick(), m_version, "Seq", "Begin", "", "",
-            request.m_PhysicalAddress, RubyRequestType_to_string(request.m_Type));
+            msg->getPhysicalAddress(),
+            RubyRequestType_to_string(secondary_type));
 
     Time latency = 0;  // initialzed to an null value
 
-    if (request.m_Type == RubyRequestType_IFETCH)
+    if (secondary_type == RubyRequestType_IFETCH)
         latency = m_instCache_ptr->getLatency();
     else
         latency = m_dataCache_ptr->getLatency();
