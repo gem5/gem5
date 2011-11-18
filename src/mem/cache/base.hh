@@ -47,7 +47,6 @@
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"
 #include "mem/cache/mshr_queue.hh"

@@ -32,7 +32,6 @@
 #define __LINUX_HH__
 
 #include "base/types.hh"
-#include "config/full_system.hh"
 
 #include <string>
 

@@ -37,7 +37,6 @@
 
 #include "arch/types.hh"
 #include "base/statistics.hh"
-#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/pc_event.hh"

@@ -35,7 +35,6 @@
 
 #include "arch/alpha/tlb.hh"
 #include "base/statistics.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/ozone/rename_table.hh"
 #include "cpu/ozone/thread_state.hh"

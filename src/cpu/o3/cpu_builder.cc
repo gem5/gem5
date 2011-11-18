@@ -30,7 +30,6 @@
 
 #include <string>
 
-#include "config/full_system.hh"
 #include "config/use_checker.hh"
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/impl.hh"

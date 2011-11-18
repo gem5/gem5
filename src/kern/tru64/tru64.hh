@@ -32,7 +32,6 @@
 #ifndef __TRU64_HH__
 #define __TRU64_HH__
 
-#include "config/full_system.hh"
 #include "kern/operatingsystem.hh"
 #include "sim/byteswap.hh"
 

@@ -41,7 +41,6 @@
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
-#include "config/full_system.hh"
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "kern/system_events.hh"

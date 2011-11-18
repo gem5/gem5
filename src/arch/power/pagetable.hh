@@ -41,7 +41,6 @@
 #include "arch/power/isa_traits.hh"
 #include "arch/power/utility.hh"
 #include "arch/power/vtophys.hh"
-#include "config/full_system.hh"
 
 namespace PowerISA {
 

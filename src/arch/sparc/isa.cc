@@ -32,7 +32,6 @@
 #include "arch/sparc/isa.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/MiscRegs.hh"

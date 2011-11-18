@@ -40,7 +40,6 @@
 #include "base/loader/symtab.hh"
 #include "base/intmath.hh"
 #include "base/statistics.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"

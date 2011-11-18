@@ -38,7 +38,6 @@
 #include "arch/tlb.hh"
 #include "arch/types.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/decode.hh"
 #include "cpu/thread_context.hh"

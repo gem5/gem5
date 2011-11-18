@@ -34,7 +34,6 @@
 #include "arch/mips/utility.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/serialize.hh"

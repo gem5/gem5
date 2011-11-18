@@ -36,7 +36,6 @@
 
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
-#include "config/full_system.hh"
 #include "cpu/cpuevent.hh"
 
 class Checkpoint;

@@ -59,7 +59,6 @@
 #include "base/misc.hh"
 #include "base/random.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"

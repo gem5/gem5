@@ -39,7 +39,6 @@
 #define __MEM_VPORT_HH__
 
 #include "arch/vtophys.hh"
-#include "config/full_system.hh"
 #include "mem/port_impl.hh"
 
 /** A class that translates a virtual address to a physical address and then

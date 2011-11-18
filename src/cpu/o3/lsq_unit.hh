@@ -44,7 +44,6 @@
 #include "arch/mmapped_ipr.hh"
 #include "base/fast_alloc.hh"
 #include "base/hashmap.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/timebuf.hh"

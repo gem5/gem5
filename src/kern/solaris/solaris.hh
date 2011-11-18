@@ -32,7 +32,6 @@
 #define __SOLARIS_HH__
 
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "kern/operatingsystem.hh"
 
 class TranslatingPort;

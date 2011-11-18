@@ -42,7 +42,6 @@
 
 #include "arch/types.hh"
 #include "base/statistics.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
 #include "cpu/o3/comm.hh"

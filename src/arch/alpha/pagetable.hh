@@ -34,7 +34,6 @@
 
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/utility.hh"
-#include "config/full_system.hh"
 
 namespace AlphaISA {
 

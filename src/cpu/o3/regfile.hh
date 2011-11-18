@@ -38,7 +38,6 @@
 #include "arch/kernel_stats.hh"
 #include "arch/types.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "debug/IEW.hh"

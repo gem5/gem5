@@ -36,7 +36,6 @@
 #include "arch/sparc/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
 
 class Checkpoint;
 

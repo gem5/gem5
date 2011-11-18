@@ -34,7 +34,6 @@
 
 #include "base/refcnt.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "sim/fault_fwd.hh"
 #include "sim/stats.hh"

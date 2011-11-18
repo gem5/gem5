@@ -31,7 +31,6 @@
 
 #include <list>
 
-#include "config/full_system.hh"
 #include "cpu/o3/rob.hh"
 #include "debug/Fetch.hh"
 #include "debug/ROB.hh"

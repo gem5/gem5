@@ -36,7 +36,6 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/ozone/cpu.hh"   // MUST include this
 #include "cpu/ozone/ozone_impl.hh"

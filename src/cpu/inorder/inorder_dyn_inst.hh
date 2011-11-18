@@ -45,7 +45,6 @@
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/inorder_trace.hh"
 #include "cpu/inorder/pipeline_traits.hh"

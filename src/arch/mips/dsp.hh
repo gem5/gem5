@@ -35,7 +35,6 @@
 #include "arch/mips/types.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 
 class ThreadContext;
 

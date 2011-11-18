@@ -38,7 +38,6 @@
  */
 
 #include "arch/sparc/tlb.hh"
-#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
 

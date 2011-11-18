@@ -28,8 +28,6 @@
  * Authors: Gabe Black
  */
 
-#include "config/full_system.hh"
-
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
 #include "cpu/base.hh"

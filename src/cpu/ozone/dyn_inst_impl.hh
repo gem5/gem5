@@ -28,7 +28,6 @@
  * Authors: Kevin Lim
  */
 
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/ozone/dyn_inst.hh"
 #include "kern/kernel_stats.hh"

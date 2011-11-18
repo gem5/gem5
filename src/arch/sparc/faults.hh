@@ -32,7 +32,6 @@
 #ifndef __SPARC_FAULTS_HH__
 #define __SPARC_FAULTS_HH__
 
-#include "config/full_system.hh"
 #include "cpu/static_inst.hh"
 #include "sim/faults.hh"
 

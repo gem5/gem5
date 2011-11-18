@@ -36,7 +36,6 @@
 
 #include "arch/mips/types.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "cpu/static_inst_fwd.hh"
 
 namespace LittleEndianGuest {}

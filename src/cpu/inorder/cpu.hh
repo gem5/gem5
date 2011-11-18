@@ -43,7 +43,6 @@
 #include "arch/types.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_stage.hh"

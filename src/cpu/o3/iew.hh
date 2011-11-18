@@ -47,7 +47,6 @@
 #include <set>
 
 #include "base/statistics.hh"
-#include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/scoreboard.hh"
