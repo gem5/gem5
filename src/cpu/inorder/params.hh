@@ -50,10 +50,8 @@ class InOrderParams : public BaseCPU::Params
   public:
 
     // Workloads
-#if !FULL_SYSTEM
     std::vector<Process *> workload;
     Process *process;
-#endif // FULL_SYSTEM
 
     //
     // Memory System/Caches

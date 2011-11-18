@@ -30,13 +30,13 @@
 
 #include "arch/types.hh"
 #include "base/trace.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/decode.hh"
 #include "cpu/inst_seq.hh"
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
 #include "params/DerivO3CPU.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 
@@ -322,19 +322,18 @@ DefaultDecode<Impl>::squash(ThreadID tid)
 
     if (decodeStatus[tid] == Blocked ||
         decodeStatus[tid] == Unblocking) {
-#if !FULL_SYSTEM
-        // In syscall emulation, we can have both a block and a squash due
-        // to a syscall in the same cycle.  This would cause both signals to
-        // be high.  This shouldn't happen in full system.
-        // @todo: Determine if this still happens.
-        if (toFetch->decodeBlock[tid]) {
-            toFetch->decodeBlock[tid] = 0;
-        } else {
+        if (FullSystem) {
             toFetch->decodeUnblock[tid] = 1;
+        } else {
+            // In syscall emulation, we can have both a block and a squash due
+            // to a syscall in the same cycle.  This would cause both signals
+            // to be high.  This shouldn't happen in full system.
+            // @todo: Determine if this still happens.
+            if (toFetch->decodeBlock[tid])
+                toFetch->decodeBlock[tid] = 0;
+            else
+                toFetch->decodeUnblock[tid] = 1;
         }
-#else
-        toFetch->decodeUnblock[tid] = 1;
-#endif
     }
 
     // Set status to squashing.

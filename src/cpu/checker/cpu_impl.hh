@@ -31,6 +31,7 @@
 #include <list>
 #include <string>
 
+#include "arch/vtophys.hh"
 #include "base/refcnt.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
@@ -38,12 +39,9 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "sim/full_system.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
-
-#if FULL_SYSTEM
-#include "arch/vtophys.hh"
-#endif // FULL_SYSTEM
 
 using namespace std;
 //The CheckerCPU does alpha only
@@ -141,11 +139,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
 
         // Try to fetch the instruction
 
-#if FULL_SYSTEM
-#define IFETCH_FLAGS(pc)        ((pc) & 1) ? PHYSICAL : 0
-#else
-#define IFETCH_FLAGS(pc)        0
-#endif
+#define IFETCH_FLAGS(pc) (FullSystem ? 0 : ((pc) & 1) ? PHYSICAL : 0)
 
         uint64_t fetch_PC = thread->readPC() & ~3;
 
@@ -235,12 +229,10 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         }
 
         if (fault != NoFault) {
-#if FULL_SYSTEM
             fault->invoke(tc, curStaticInst);
             willChangePC = true;
             newPC = thread->readPC();
             DPRINTF(Checker, "Fault, PC is now %#x\n", newPC);
-#endif
         } else {
 #if THE_ISA != MIPS_ISA
             // go to the next instruction
@@ -255,23 +247,23 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
 
         }
 
-#if FULL_SYSTEM
-        // @todo: Determine if these should happen only if the
-        // instruction hasn't faulted.  In the SimpleCPU case this may
-        // not be true, but in the O3 or Ozone case this may be true.
-        Addr oldpc;
-        int count = 0;
-        do {
-            oldpc = thread->readPC();
-            system->pcEventQueue.service(tc);
-            count++;
-        } while (oldpc != thread->readPC());
-        if (count > 1) {
-            willChangePC = true;
-            newPC = thread->readPC();
-            DPRINTF(Checker, "PC Event, PC is now %#x\n", newPC);
+        if (FullSystem) {
+            // @todo: Determine if these should happen only if the
+            // instruction hasn't faulted.  In the SimpleCPU case this may
+            // not be true, but in the O3 or Ozone case this may be true.
+            Addr oldpc;
+            int count = 0;
+            do {
+                oldpc = thread->readPC();
+                system->pcEventQueue.service(tc);
+                count++;
+            } while (oldpc != thread->readPC());
+            if (count > 1) {
+                willChangePC = true;
+                newPC = thread->readPC();
+                DPRINTF(Checker, "PC Event, PC is now %#x\n", newPC);
+            }
         }
-#endif
 
         // @todo:  Optionally can check all registers. (Or just those
         // that have been modified).

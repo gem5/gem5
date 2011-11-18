@@ -60,20 +60,19 @@ SimpleOzoneCPUParams::create()
 {
     SimpleOzoneCPU *cpu;
 
-#if FULL_SYSTEM
-    // Full-system only supports a single thread for the moment.
-    ThreadID actual_num_threads = 1;
-#else
-    // In non-full-system mode, we infer the number of threads from
-    // the workload if it's not explicitly specified.
-    ThreadID actual_num_threads =
-        numThreads.isValid() ? numThreads : workload.size();
+    if (FullSystem) {
+        // Full-system only supports a single thread for the moment.
+        ThreadID actual_num_threads = 1;
+    } else {
+        // In non-full-system mode, we infer the number of threads from
+        // the workload if it's not explicitly specified.
+        ThreadID actual_num_threads =
+            numThreads.isValid() ? numThreads : workload.size();
 
-    if (workload.size() == 0) {
-        fatal("Must specify at least one workload!");
+        if (workload.size() == 0) {
+            fatal("Must specify at least one workload!");
+        }
     }
-
-#endif
 
     SimpleParams *params = new SimpleParams;
 
@@ -87,10 +86,7 @@ SimpleOzoneCPUParams::create()
 
     params->system = system;
     params->cpu_id = cpu_id;
-#if !FULL_SYSTEM
     params->workload = workload;
-//    params->pTable = page_table;
-#endif // FULL_SYSTEM
 
     params->mem = mem;
     params->checker = checker;

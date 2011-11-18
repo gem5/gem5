@@ -214,13 +214,10 @@ class OzoneDynInst : public BaseDynInst<Impl>
 
     void setMiscReg(int misc_reg, const MiscReg &val);
 
-#if FULL_SYSTEM
     Fault hwrei();
     void trap(Fault fault);
     bool simPalCheck(int palFunc);
-#else
     void syscall(uint64_t &callnum);
-#endif
 
     ListIt iqIt;
     bool iqItValid;

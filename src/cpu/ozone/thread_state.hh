@@ -45,14 +45,11 @@
 class Event;
 //class Process;
 
-#if FULL_SYSTEM
 class EndQuiesceEvent;
-class FunctionProfile;
-class ProfileNode;
-#else
-class Process;
 class FunctionalMemory;
-#endif
+class FunctionProfile;
+class Process;
+class ProfileNode;
 
 // Maybe this ozone thread state should only really have committed state?
 // I need to think about why I'm using this and what it's useful for.  Clearly
@@ -66,7 +63,6 @@ struct OzoneThreadState : public ThreadState {
     typedef typename Impl::CPUType CPUType;
     typedef TheISA::MiscReg MiscReg;
 
-#if FULL_SYSTEM
     OzoneThreadState(CPUType *_cpu, int _thread_num)
         : ThreadState(_cpu, -1, _thread_num),
           intrflag(0), cpu(_cpu), inSyscall(0), trapPending(0)
@@ -86,14 +82,13 @@ struct OzoneThreadState : public ThreadState {
         profilePC = 3;
         miscRegFile.clear();
     }
-#else
+
     OzoneThreadState(CPUType *_cpu, int _thread_num, Process *_process)
         : ThreadState(_cpu, -1, _thread_num, _process),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
         miscRegFile.clear();
     }
-#endif
 
     RenameTable<Impl> renameTable;
 
@@ -147,13 +142,11 @@ struct OzoneThreadState : public ThreadState {
     void setNextPC(uint64_t val)
     { nextPC = val; }
 
-#if FULL_SYSTEM
     void dumpFuncProfile()
     {
         std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
         profile->dump(tc, *os);
     }
-#endif
 };
 
 #endif // __CPU_OZONE_THREAD_STATE_HH__

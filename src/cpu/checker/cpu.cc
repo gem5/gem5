@@ -31,16 +31,13 @@
 #include <list>
 #include <string>
 
+#include "arch/kernel_stats.hh"
+#include "arch/vtophys.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
-
-#if FULL_SYSTEM
-#include "arch/kernel_stats.hh"
-#include "arch/vtophys.hh"
-#endif // FULL_SYSTEM
 
 using namespace std;
 //The CheckerCPU does alpha only
@@ -66,17 +63,14 @@ CheckerCPU::CheckerCPU(Params *p)
 
     exitOnError = p->exitOnError;
     warnOnlyOnLoadError = p->warnOnlyOnLoadError;
-#if FULL_SYSTEM
     itb = p->itb;
     dtb = p->dtb;
     systemPtr = NULL;
-#else
     process = p->process;
     thread = new SimpleThread(this, /* thread_num */ 0, process);
 
     tc = thread->getTC();
     threadContexts.push_back(tc);
-#endif
 
     result.integer = 0;
 }
@@ -88,7 +82,6 @@ CheckerCPU::~CheckerCPU()
 void
 CheckerCPU::setSystem(System *system)
 {
-#if FULL_SYSTEM
     systemPtr = system;
 
     thread = new SimpleThread(this, 0, systemPtr, itb, dtb, false);
@@ -97,7 +90,6 @@ CheckerCPU::setSystem(System *system)
     threadContexts.push_back(tc);
     delete thread->kernelStats;
     thread->kernelStats = NULL;
-#endif
 }
 
 void
@@ -301,13 +293,11 @@ CheckerCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 }
 
 
-#if FULL_SYSTEM
 Addr
 CheckerCPU::dbg_vtophys(Addr addr)
 {
     return vtophys(tc, addr);
 }
-#endif // FULL_SYSTEM
 
 bool
 CheckerCPU::checkFlags(Request *req)

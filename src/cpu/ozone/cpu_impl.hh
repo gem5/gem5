@@ -29,37 +29,33 @@
  *          Nathan Binkert
  */
 
-#include "arch/isa_traits.hh" // For MachInst
-#include "base/trace.hh"
-#include "config/full_system.hh"
-#include "config/the_isa.hh"
-#include "config/use_checker.hh"
-#include "cpu/ozone/cpu.hh"
-#include "cpu/base.hh"
-#include "cpu/exetrace.hh"
-#include "cpu/quiesce_event.hh"
-#include "cpu/simple_thread.hh"
-#include "cpu/static_inst.hh"
-#include "cpu/thread_context.hh"
-#include "sim/sim_object.hh"
-#include "sim/stats.hh"
-
-#if FULL_SYSTEM
 #include "arch/alpha/osfpal.hh"
 #include "arch/faults.hh"
+#include "arch/isa_traits.hh" // For MachInst
 #include "arch/kernel_stats.hh"
 #include "arch/tlb.hh"
 #include "arch/types.hh"
 #include "arch/vtophys.hh"
 #include "base/callback.hh"
+#include "base/trace.hh"
+#include "config/the_isa.hh"
+#include "config/use_checker.hh"
+#include "cpu/ozone/cpu.hh"
+#include "cpu/base.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
+#include "cpu/quiesce_event.hh"
+#include "cpu/simple_thread.hh"
+#include "cpu/static_inst.hh"
+#include "cpu/thread_context.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
+#include "sim/process.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
+#include "sim/sim_object.hh"
+#include "sim/stats.hh"
 #include "sim/system.hh"
-#else // !FULL_SYSTEM
-#include "sim/process.hh"
-#endif // FULL_SYSTEM
 
 #if USE_CHECKER
 #include "cpu/checker/thread_context.hh"
@@ -89,12 +85,8 @@ OzoneCPU<Impl>::TickEvent::description() const
 
 template <class Impl>
 OzoneCPU<Impl>::OzoneCPU(Params *p)
-#if FULL_SYSTEM
-    : BaseCPU(p), thread(this, 0), tickEvent(this, p->width),
-#else
-    : BaseCPU(p), thread(this, 0, p->workload[0], 0),
-      tickEvent(this, p->width),
-#endif
+    : BaseCPU(p), thread(this, 0, p->workload[0], 0), tickEvent(this,
+            p->width),
 #ifndef NDEBUG
       instcount(0),
 #endif
@@ -109,9 +101,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 #if USE_CHECKER
         BaseCPU *temp_checker = p->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
-#if FULL_SYSTEM
         checker->setSystem(p->system);
-#endif
         checkerTC = new CheckerThreadContext<OzoneTC>(&ozoneTC, checker);
         thread.tc = checkerTC;
         tc = checkerTC;
@@ -133,33 +123,35 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     itb = p->itb;
     dtb = p->dtb;
-#if FULL_SYSTEM
-    // Setup thread state stuff.
-    thread.cpu = this;
-    thread.setTid(0);
 
-    thread.quiesceEvent = new EndQuiesceEvent(tc);
+    if (FullSystem) {
+        // Setup thread state stuff.
+        thread.cpu = this;
+        thread.setTid(0);
 
-    system = p->system;
-    physmem = p->system->physmem;
+        thread.quiesceEvent = new EndQuiesceEvent(tc);
 
-    if (p->profile) {
-        thread.profile = new FunctionProfile(p->system->kernelSymtab);
-        // @todo: This might be better as an ThreadContext instead of OzoneTC
-        Callback *cb =
-            new MakeCallback<OzoneTC,
-            &OzoneTC::dumpFuncProfile>(&ozoneTC);
-        registerExitCallback(cb);
+        system = p->system;
+        physmem = p->system->physmem;
+
+        if (p->profile) {
+            thread.profile = new FunctionProfile(p->system->kernelSymtab);
+            // @todo: This might be better as an ThreadContext instead of
+            // OzoneTC
+            Callback *cb =
+                new MakeCallback<OzoneTC,
+                &OzoneTC::dumpFuncProfile>(&ozoneTC);
+            registerExitCallback(cb);
+        }
+
+        // let's fill with a dummy node for now so we don't get a segfault
+        // on the first cycle when there's no node available.
+        static ProfileNode dummyNode;
+        thread.profileNode = &dummyNode;
+        thread.profilePC = 3;
+    } else {
+        thread.cpu = this;
     }
-
-    // let's fill with a dummy node for now so we don't get a segfault
-    // on the first cycle when there's no node available.
-    static ProfileNode dummyNode;
-    thread.profileNode = &dummyNode;
-    thread.profilePC = 3;
-#else
-    thread.cpu = this;
-#endif // !FULL_SYSTEM
 
     numInst = 0;
     startNumInst = 0;
@@ -194,25 +186,25 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 
-#if FULL_SYSTEM
-    Port *mem_port;
-    FunctionalPort *phys_port;
-    VirtualPort *virt_port;
-    phys_port = new FunctionalPort(csprintf("%s-%d-funcport",
-                                            name(), 0));
-    mem_port = system->physmem->getPort("functional");
-    mem_port->setPeer(phys_port);
-    phys_port->setPeer(mem_port);
+    if (FullSystem) {
+        Port *mem_port;
+        FunctionalPort *phys_port;
+        VirtualPort *virt_port;
+        phys_port = new FunctionalPort(csprintf("%s-%d-funcport",
+                                                name(), 0));
+        mem_port = system->physmem->getPort("functional");
+        mem_port->setPeer(phys_port);
+        phys_port->setPeer(mem_port);
 
-    virt_port = new VirtualPort(csprintf("%s-%d-vport",
-                                         name(), 0));
-    mem_port = system->physmem->getPort("functional");
-    mem_port->setPeer(virt_port);
-    virt_port->setPeer(mem_port);
+        virt_port = new VirtualPort(csprintf("%s-%d-vport",
+                                             name(), 0));
+        mem_port = system->physmem->getPort("functional");
+        mem_port->setPeer(virt_port);
+        virt_port->setPeer(mem_port);
 
-    thread.setPhysPort(phys_port);
-    thread.setVirtPort(virt_port);
-#endif
+        thread.setPhysPort(phys_port);
+        thread.setVirtPort(virt_port);
+    }
 
     DPRINTF(OzoneCPU, "OzoneCPU: Created Ozone cpu object.\n");
 }
@@ -321,10 +313,8 @@ OzoneCPU<Impl>::activateContext(int thread_num, int delay)
     notIdleFraction++;
     scheduleTickEvent(delay);
     _status = Running;
-#if FULL_SYSTEM
     if (thread.quiesceEvent && thread.quiesceEvent->scheduled())
         thread.quiesceEvent->deschedule();
-#endif
     thread.setStatus(ThreadContext::Active);
     frontEnd->wakeFromQuiesce();
 }
@@ -414,14 +404,14 @@ OzoneCPU<Impl>::init()
 
     // Mark this as in syscall so it won't need to squash
     thread.inSyscall = true;
-#if FULL_SYSTEM
-    for (int i = 0; i < threadContexts.size(); ++i) {
-        ThreadContext *tc = threadContexts[i];
+    if (FullSystem) {
+        for (int i = 0; i < threadContexts.size(); ++i) {
+            ThreadContext *tc = threadContexts[i];
 
-        // initialize CPU, including PC
-        TheISA::initCPU(tc, tc->contextId());
+            // initialize CPU, including PC
+            TheISA::initCPU(tc, tc->contextId());
+        }
     }
-#endif
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 
@@ -480,29 +470,24 @@ OzoneCPU<Impl>::unserialize(Checkpoint *cp, const std::string &section)
     thread.getTC()->copyArchRegs(temp.getTC());
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 Addr
 OzoneCPU<Impl>::dbg_vtophys(Addr addr)
 {
     return vtophys(tc, addr);
 }
-#endif // FULL_SYSTEM
 
-#if FULL_SYSTEM
 template <class Impl>
 void
 OzoneCPU<Impl>::wakeup()
 {
     if (_status == Idle) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
-//      thread.activate();
         // Hack for now.  Otherwise might have to go through the tc, or
         // I need to figure out what's the right thing to call.
         activateContext(thread.threadId(), 1);
     }
 }
-#endif // FULL_SYSTEM
 
 /* start simulation, program loaded, processor precise state initialized */
 template <class Impl>
@@ -535,7 +520,6 @@ OzoneCPU<Impl>::squashFromTC()
     backEnd->generateTCEvent();
 }
 
-#if !FULL_SYSTEM
 template <class Impl>
 void
 OzoneCPU<Impl>::syscall(uint64_t &callnum)
@@ -558,7 +542,7 @@ OzoneCPU<Impl>::syscall(uint64_t &callnum)
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 }
-#else
+
 template <class Impl>
 Fault
 OzoneCPU<Impl>::hwrei()
@@ -616,7 +600,6 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 
     return true;
 }
-#endif
 
 template <class Impl>
 BaseCPU *
@@ -655,23 +638,19 @@ OzoneCPU<Impl>::OzoneTC::halt()
     cpu->haltContext(thread->threadId());
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::dumpFuncProfile()
 {
     thread->dumpFuncProfile();
 }
-#endif
 
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
-#if FULL_SYSTEM
     assert(getSystemPtr() == old_context->getSystemPtr());
-#endif
     assert(getProcessPtr() == old_context->getProcessPtr());
 
     // copy over functional state
@@ -680,9 +659,7 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
     setCpuId(old_context->cpuId());
     setContextId(old_context->contextId());
 
-#if !FULL_SYSTEM
     setFuncExeInst(old_context->readFuncExeInst());
-#else
     EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
     if (other_quiesce) {
         // Point the quiesce event's TC at this TC so that it wakes up
@@ -706,10 +683,10 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::regStats(const std::string &name)
 {
-#if FULL_SYSTEM
-    thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
-    thread->kernelStats->regStats(name + ".kern");
-#endif
+    if (FullSystem) {
+        thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
+        thread->kernelStats->regStats(name + ".kern");
+    }
 }
 
 template <class Impl>
@@ -726,7 +703,6 @@ void
 OzoneCPU<Impl>::OzoneTC::unserialize(Checkpoint *cp, const std::string &section)
 { }
 
-#if FULL_SYSTEM
 template <class Impl>
 EndQuiesceEvent *
 OzoneCPU<Impl>::OzoneTC::getQuiesceEvent()
@@ -761,7 +737,6 @@ OzoneCPU<Impl>::OzoneTC::profileSample()
 {
     thread->profileSample();
 }
-#endif
 
 template <class Impl>
 int
@@ -796,9 +771,7 @@ OzoneCPU<Impl>::OzoneTC::copyArchRegs(ThreadContext *tc)
         thread->renameTable[fp_idx]->setIntResult(tc->readFloatRegBits(i));
     }
 
-#if !FULL_SYSTEM
     thread->funcExeInst = tc->readFuncExeInst();
-#endif
 
     // Need to copy the TC values into the current rename table,
     // copy the misc regs.

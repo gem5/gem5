@@ -73,9 +73,7 @@ class InorderBackEnd
 
     void regStats() { }
 
-#if FULL_SYSTEM
     void checkInterrupts();
-#endif
 
     void tick();
     void executeInsts();

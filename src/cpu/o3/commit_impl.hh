@@ -47,7 +47,6 @@
 #include "arch/utility.hh"
 #include "base/loader/symtab.hh"
 #include "base/cp_annotate.hh"
-#include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
 #include "cpu/o3/commit.hh"
@@ -61,6 +60,7 @@
 #include "debug/O3PipeView.hh"
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
+#include "sim/full_system.hh"
 
 #if USE_CHECKER
 #include "cpu/checker/cpu.hh"
@@ -148,9 +148,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
         pc[tid].set(0);
         lastCommitedSeqNum[tid] = 0;
     }
-#if FULL_SYSTEM
     interrupt = NoFault;
-#endif
 }
 
 template <class Impl>
@@ -700,7 +698,6 @@ DefaultCommit<Impl>::tick()
     updateStatus();
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 void
 DefaultCommit<Impl>::handleInterrupt()
@@ -766,22 +763,20 @@ DefaultCommit<Impl>::propagateInterrupt()
         toIEW->commitInfo[0].interruptPending = true;
 }
 
-#endif // FULL_SYSTEM
-
 template <class Impl>
 void
 DefaultCommit<Impl>::commit()
 {
+    if (FullSystem) {
+        // Check for any interrupt that we've already squashed for and start
+        // processing it.
+        if (interrupt != NoFault)
+            handleInterrupt();
 
-#if FULL_SYSTEM
-    // Check for any interrupt that we've already squashed for and start processing it.
-    if (interrupt != NoFault)
-        handleInterrupt();
-
-    // Check if we have a interrupt and get read to handle it
-    if (cpu->checkInterrupts(cpu->tcBase(0)))
-        propagateInterrupt();
-#endif // FULL_SYSTEM
+        // Check if we have a interrupt and get read to handle it
+        if (cpu->checkInterrupts(cpu->tcBase(0)))
+            propagateInterrupt();
+    }
 
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
@@ -1173,22 +1168,22 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
     updateComInstStats(head_inst);
 
-#if FULL_SYSTEM
-    if (thread[tid]->profile) {
-        thread[tid]->profilePC = head_inst->instAddr();
-        ProfileNode *node = thread[tid]->profile->consume(thread[tid]->getTC(),
-                                                          head_inst->staticInst);
+    if (FullSystem) {
+        if (thread[tid]->profile) {
+            thread[tid]->profilePC = head_inst->instAddr();
+            ProfileNode *node = thread[tid]->profile->consume(
+                    thread[tid]->getTC(), head_inst->staticInst);
 
-        if (node)
-            thread[tid]->profileNode = node;
-    }
-    if (CPA::available()) {
-        if (head_inst->isControl()) {
-            ThreadContext *tc = thread[tid]->getTC();
-            CPA::cpa()->swAutoBegin(tc, head_inst->nextInstAddr());
+            if (node)
+                thread[tid]->profileNode = node;
+        }
+        if (CPA::available()) {
+            if (head_inst->isControl()) {
+                ThreadContext *tc = thread[tid]->getTC();
+                CPA::cpa()->swAutoBegin(tc, head_inst->nextInstAddr());
+            }
         }
     }
-#endif
     DPRINTF(Commit, "Committing instruction with [sn:%lli] PC %s\n",
             head_inst->seqNum, head_inst->pcState());
     if (head_inst->traceData) {

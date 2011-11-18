@@ -36,11 +36,6 @@
     #error Legion tracing only works with SPARC simulations!
 #endif
 
-#include "config/full_system.hh"
-#if !FULL_SYSTEM
-    #error Legion tracing only works in full system!
-#endif
-
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
@@ -50,17 +45,15 @@
 #include "arch/sparc/predecoder.hh"
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/utility.hh"
+#include "arch/tlb.hh"
 #include "base/socket.hh"
 #include "cpu/base.hh"
 #include "cpu/decode.hh"
 #include "cpu/legiontrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
-
-#if FULL_SYSTEM
-#include "arch/tlb.hh"
-#endif
 
 //XXX This is temporary
 #include "cpu/m5legion_interface.h"
@@ -68,10 +61,8 @@
 using namespace std;
 using namespace TheISA;
 
-#if FULL_SYSTEM
 static int diffcount = 0;
 static bool wasMicro = false;
-#endif
 
 namespace Trace {
 SharedData *shared_data = NULL;
@@ -597,5 +588,7 @@ Trace::LegionTraceRecord::dump()
 Trace::LegionTrace *
 LegionTraceParams::create()
 {
+    if (!FullSystem)
+        panic("Legion tracing only works in full system!");
     return new Trace::LegionTrace(this);
 };

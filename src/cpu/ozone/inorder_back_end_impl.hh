@@ -79,7 +79,6 @@ InorderBackEnd<Impl>::setThreadState(OzoneThreadState<Impl> *thread_ptr)
     thread->setFuncExeInst(0);
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 void
 InorderBackEnd<Impl>::checkInterrupts()
@@ -134,7 +133,6 @@ InorderBackEnd<Impl>::checkInterrupts()
         setSquashInfoFromXC();
     }
 }
-#endif
 
 template <class Impl>
 void
@@ -149,8 +147,7 @@ InorderBackEnd<Impl>::tick()
 
     // if (interrupt) then set thread PC, stall front end, record that
     // I'm waiting for it to drain.  (for now just squash)
-#if FULL_SYSTEM
-    if (interruptBlocked || cpu->checkInterrupts(tc)) {
+    if (FullSystem && (interruptBlocked || cpu->checkInterrupts(tc))) {
         if (!robEmpty()) {
             interruptBlocked = true;
         //AlphaDep
@@ -165,7 +162,6 @@ InorderBackEnd<Impl>::tick()
             return;
         }
     }
-#endif
 
     if (status != DcacheMissLoadStall &&
         status != DcacheMissStoreStall) {
@@ -180,15 +176,11 @@ InorderBackEnd<Impl>::tick()
             (*instsAdded)++;
         }
 
-#if FULL_SYSTEM
         if (faultFromFetch && robEmpty() && frontEnd->isEmpty()) {
             handleFault();
         } else {
             executeInsts();
         }
-#else
-        executeInsts();
-#endif
     }
 }
 
@@ -209,24 +201,24 @@ InorderBackEnd<Impl>::executeInsts()
         thread->setPC(commitPC);
         thread->setNextPC(inst->readNextPC());
 
-#if FULL_SYSTEM
-        int count = 0;
-        Addr oldpc;
-        do {
-            if (count == 0)
-                assert(!thread->inSyscall && !thread->trapPending);
-            oldpc = thread->readPC();
-            cpu->system->pcEventQueue.service(
-                thread->getXCProxy());
-            count++;
-        } while (oldpc != thread->readPC());
-        if (count > 1) {
-            DPRINTF(IBE, "PC skip function event, stopping commit\n");
-            completed_last_inst = false;
-            squashPending = true;
-            break;
+        if (FullSystem) {
+            int count = 0;
+            Addr oldpc;
+            do {
+                if (count == 0)
+                    assert(!thread->inSyscall && !thread->trapPending);
+                oldpc = thread->readPC();
+                cpu->system->pcEventQueue.service(
+                    thread->getXCProxy());
+                count++;
+            } while (oldpc != thread->readPC());
+            if (count > 1) {
+                DPRINTF(IBE, "PC skip function event, stopping commit\n");
+                completed_last_inst = false;
+                squashPending = true;
+                break;
+            }
         }
-#endif
 
         Fault inst_fault = NoFault;
 
@@ -296,7 +288,6 @@ InorderBackEnd<Impl>::executeInsts()
         }
 
         if (inst_fault != NoFault) {
-#if FULL_SYSTEM
             DPRINTF(IBE, "Inst [sn:%lli] PC %#x has a fault\n",
                     inst->seqNum, inst->readPC());
 
@@ -313,14 +304,8 @@ InorderBackEnd<Impl>::executeInsts()
 
             squashPending = true;
 
-            // Generate trap squash event.
-//            generateTrapEvent(tid);
             completed_last_inst = false;
             break;
-#else // !FULL_SYSTEM
-            panic("fault (%d) detected @ PC %08p", inst_fault,
-                  inst->PC);
-#endif // FULL_SYSTEM
         }
 
         for (int i = 0; i < inst->numDestRegs(); ++i) {

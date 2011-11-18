@@ -1456,7 +1456,6 @@ BackEnd<Impl>::commitInst(int inst_num)
 //        thread->funcExeInst--;
 
         if (inst->isNonSpeculative()) {
-#if !FULL_SYSTEM
             // Hack to make sure syscalls aren't executed until all stores
             // write back their data.  This direct communication shouldn't
             // be used for anything other than this.
@@ -1464,7 +1463,6 @@ BackEnd<Impl>::commitInst(int inst_num)
                 DPRINTF(BE, "Waiting for all stores to writeback.\n");
                 return false;
             }
-#endif
 
             DPRINTF(BE, "Encountered a store or non-speculative "
                     "instruction at the head of the ROB, PC %#x.\n",
@@ -1512,7 +1510,6 @@ BackEnd<Impl>::commitInst(int inst_num)
 
     if (inst_fault != NoFault) {
         if (!inst->isNop()) {
-#if FULL_SYSTEM
             DPRINTF(BE, "Inst [sn:%lli] PC %#x has a fault\n",
                     inst->seqNum, inst->readPC());
 
@@ -1533,10 +1530,6 @@ BackEnd<Impl>::commitInst(int inst_num)
 //            generateTrapEvent();
 
             return false;
-#else // !FULL_SYSTEM
-            panic("fault (%d) detected @ PC %08p", inst_fault,
-                  inst->PC);
-#endif // FULL_SYSTEM
         }
     }
 
@@ -1574,7 +1567,6 @@ BackEnd<Impl>::commitInst(int inst_num)
     // Write the done sequence number here.
     toIEW->doneSeqNum = inst->seqNum;
 
-#if FULL_SYSTEM
     int count = 0;
     Addr oldpc;
     do {
@@ -1591,7 +1583,6 @@ BackEnd<Impl>::commitInst(int inst_num)
 //        squashPending = true;
         return false;
     }
-#endif
     return true;
 }
 

@@ -73,6 +73,7 @@
 #include "params/BaseSimpleCPU.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
+#include "sim/full_system.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
@@ -84,12 +85,11 @@ using namespace TheISA;
 BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
     : BaseCPU(p), traceData(NULL), thread(NULL), predecoder(NULL)
 {
-#if FULL_SYSTEM
-    thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
-#else
-    thread = new SimpleThread(this, /* thread_num */ 0, p->workload[0],
-            p->itb, p->dtb);
-#endif // !FULL_SYSTEM
+    if (FullSystem)
+        thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
+    else
+        thread = new SimpleThread(this, /* thread_num */ 0, p->workload[0],
+                p->itb, p->dtb);
 
     thread->setStatus(ThreadContext::Halted);
 

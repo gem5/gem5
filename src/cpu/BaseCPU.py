@@ -81,8 +81,7 @@ class BaseCPU(MemObject):
     profile = Param.Latency('0ns', "trace the kernel stack")
     do_quiesce = Param.Bool(True, "enable quiesce instructions")
 
-    if not buildEnv['FULL_SYSTEM']:
-        workload = VectorParam.Process("processes to run")
+    workload = VectorParam.Process([], "processes to run")
 
     if buildEnv['TARGET_ISA'] == 'sparc':
         dtb = Param.SparcTLB(SparcTLB(), "Data TLB")

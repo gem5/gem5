@@ -56,9 +56,7 @@ class SimpleParams : public BaseCPU::Params
   public:
 
     TheISA::TLB *itb; TheISA::TLB *dtb;
-#if !FULL_SYSTEM
     std::vector<Process *> workload;
-#endif // FULL_SYSTEM
 
     //Page Table
     PageTable *pTable;

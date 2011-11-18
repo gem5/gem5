@@ -50,6 +50,7 @@
 #include "mem/translating_port.hh"
 #include "mem/vport.hh"
 #include "params/BaseCPU.hh"
+#include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
@@ -58,7 +59,6 @@
 using namespace std;
 
 // constructor
-#if !FULL_SYSTEM
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb)
     : ThreadState(_cpu, _thread_num, _process),
@@ -67,7 +67,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
     clearArchRegs();
     tc = new ProxyThreadContext<SimpleThread>(this);
 }
-#else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb,
                            bool use_kernel_stats)
@@ -98,7 +97,6 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     if (use_kernel_stats)
         kernelStats = new TheISA::Kernel::Statistics(system);
 }
-#endif
 
 SimpleThread::SimpleThread()
     : ThreadState(NULL, -1, NULL)
@@ -117,28 +115,27 @@ void
 SimpleThread::takeOverFrom(ThreadContext *oldContext)
 {
     // some things should already be set up
-#if FULL_SYSTEM
-    assert(system == oldContext->getSystemPtr());
-#endif
+    if (FullSystem)
+        assert(system == oldContext->getSystemPtr());
     assert(process == oldContext->getProcessPtr());
 
     copyState(oldContext);
-#if FULL_SYSTEM
-    EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
-    if (quiesce) {
-        // Point the quiesce event's TC at this TC so that it wakes up
-        // the proper CPU.
-        quiesce->tc = tc;
-    }
-    if (quiesceEvent) {
-        quiesceEvent->tc = tc;
-    }
+    if (FullSystem) {
+        EndQuiesceEvent *quiesce = oldContext->getQuiesceEvent();
+        if (quiesce) {
+            // Point the quiesce event's TC at this TC so that it wakes up
+            // the proper CPU.
+            quiesce->tc = tc;
+        }
+        if (quiesceEvent) {
+            quiesceEvent->tc = tc;
+        }
 
-    TheISA::Kernel::Statistics *stats = oldContext->getKernelStats();
-    if (stats) {
-        kernelStats = stats;
+        TheISA::Kernel::Statistics *stats = oldContext->getKernelStats();
+        if (stats) {
+            kernelStats = stats;
+        }
     }
-#endif
 
     storeCondFailures = 0;
 
@@ -150,16 +147,16 @@ SimpleThread::copyTC(ThreadContext *context)
 {
     copyState(context);
 
-#if FULL_SYSTEM
-    EndQuiesceEvent *quiesce = context->getQuiesceEvent();
-    if (quiesce) {
-        quiesceEvent = quiesce;
+    if (FullSystem) {
+        EndQuiesceEvent *quiesce = context->getQuiesceEvent();
+        if (quiesce) {
+            quiesceEvent = quiesce;
+        }
+        TheISA::Kernel::Statistics *stats = context->getKernelStats();
+        if (stats) {
+            kernelStats = stats;
+        }
     }
-    TheISA::Kernel::Statistics *stats = context->getKernelStats();
-    if (stats) {
-        kernelStats = stats;
-    }
-#endif
 }
 
 void
@@ -168,9 +165,8 @@ SimpleThread::copyState(ThreadContext *oldContext)
     // copy over functional state
     _status = oldContext->status();
     copyArchRegs(oldContext);
-#if !FULL_SYSTEM
-    funcExeInst = oldContext->readFuncExeInst();
-#endif
+    if (FullSystem)
+        funcExeInst = oldContext->readFuncExeInst();
 
     _threadId = oldContext->threadId();
     _contextId = oldContext->contextId();
@@ -241,15 +237,6 @@ SimpleThread::suspend()
 
     lastActivate = curTick();
     lastSuspend = curTick();
-/*
-#if FULL_SYSTEM
-    // Don't change the status from active if there are pending interrupts
-    if (cpu->checkInterrupts()) {
-        assert(status() == ThreadContext::Active);
-        return;
-    }
-#endif
-*/
     _status = ThreadContext::Suspended;
     cpu->suspendContext(_threadId);
 }
@@ -269,10 +256,8 @@ SimpleThread::halt()
 void
 SimpleThread::regStats(const string &name)
 {
-#if FULL_SYSTEM
-    if (kernelStats)
+    if (FullSystem && kernelStats)
         kernelStats->regStats(name + ".kern");
-#endif
 }
 
 void

@@ -41,6 +41,7 @@
  *          Korey Sewell
  */
 
+#include "arch/kernel_stats.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/thread_context.hh"
@@ -66,9 +67,7 @@ void
 O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
-#if FULL_SYSTEM
     assert(getSystemPtr() == old_context->getSystemPtr());
-#endif
     assert(getProcessPtr() == old_context->getProcessPtr());
 
     // copy over functional state
@@ -77,24 +76,23 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
     setContextId(old_context->contextId());
     setThreadId(old_context->threadId());
 
-#if !FULL_SYSTEM
-    thread->funcExeInst = old_context->readFuncExeInst();
-#else
-    EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
-    if (other_quiesce) {
-        // Point the quiesce event's TC at this TC so that it wakes up
-        // the proper CPU.
-        other_quiesce->tc = this;
-    }
-    if (thread->quiesceEvent) {
-        thread->quiesceEvent->tc = this;
-    }
+    if (FullSystem) {
+        EndQuiesceEvent *other_quiesce = old_context->getQuiesceEvent();
+        if (other_quiesce) {
+            // Point the quiesce event's TC at this TC so that it wakes up
+            // the proper CPU.
+            other_quiesce->tc = this;
+        }
+        if (thread->quiesceEvent) {
+            thread->quiesceEvent->tc = this;
+        }
 
-    // Transfer kernel stats from one CPU to the other.
-    thread->kernelStats = old_context->getKernelStats();
-//    storeCondFailures = 0;
-    cpu->lockFlag = false;
-#endif
+        // Transfer kernel stats from one CPU to the other.
+        thread->kernelStats = old_context->getKernelStats();
+        cpu->lockFlag = false;
+    } else {
+        thread->funcExeInst = old_context->readFuncExeInst();
+    }
 
     old_context->setStatus(ThreadContext::Halted);
 
@@ -112,10 +110,7 @@ O3ThreadContext<Impl>::activate(int delay)
     if (thread->status() == ThreadContext::Active)
         return;
 
-#if FULL_SYSTEM
     thread->lastActivate = curTick();
-#endif
-
     thread->setStatus(ThreadContext::Active);
 
     // status() == Suspended
@@ -132,19 +127,9 @@ O3ThreadContext<Impl>::suspend(int delay)
     if (thread->status() == ThreadContext::Suspended)
         return;
 
-#if FULL_SYSTEM
     thread->lastActivate = curTick();
     thread->lastSuspend = curTick();
-#endif
-/*
-#if FULL_SYSTEM
-    // Don't change the status from active if there are pending interrupts
-    if (cpu->checkInterrupts()) {
-        assert(status() == ThreadContext::Active);
-        return;
-    }
-#endif
-*/
+
     thread->setStatus(ThreadContext::Suspended);
     cpu->suspendContext(thread->threadId());
 }
@@ -167,32 +152,26 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::regStats(const std::string &name)
 {
-#if FULL_SYSTEM
-    thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
-    thread->kernelStats->regStats(name + ".kern");
-#endif
+    if (FullSystem) {
+        thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
+        thread->kernelStats->regStats(name + ".kern");
+    }
 }
 
 template <class Impl>
 void
 O3ThreadContext<Impl>::serialize(std::ostream &os)
 {
-#if FULL_SYSTEM
-    if (thread->kernelStats)
+    if (FullSystem && thread->kernelStats)
         thread->kernelStats->serialize(os);
-#endif
-
 }
 
 template <class Impl>
 void
 O3ThreadContext<Impl>::unserialize(Checkpoint *cp, const std::string &section)
 {
-#if FULL_SYSTEM
-    if (thread->kernelStats)
+    if (FullSystem && thread->kernelStats)
         thread->kernelStats->unserialize(cp, section);
-#endif
-
 }
 
 template <class Impl>
@@ -232,9 +211,8 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
     TheISA::copyRegs(tc, this);
     thread->inSyscall = false;
 
-#if !FULL_SYSTEM
-    this->thread->funcExeInst = tc->readFuncExeInst();
-#endif
+    if (!FullSystem)
+        this->thread->funcExeInst = tc->readFuncExeInst();
 }
 
 template <class Impl>

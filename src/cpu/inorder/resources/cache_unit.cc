@@ -150,14 +150,11 @@ CacheUnit::CachePort::setPeer(Port *port)
 {
     Port::setPeer(port);
 
-#if FULL_SYSTEM
     // Update the ThreadContext's memory ports (Functional/Virtual
     // Ports)
     if (cachePortUnit->resName == "dcache_port") {
         cachePortUnit->cpu->updateMemPorts();
     }
-
-#endif
 }
 
 Port *
@@ -454,13 +451,11 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
     }
 }
 
-#if !FULL_SYSTEM
 void
 CacheUnit::trap(Fault fault, ThreadID tid, DynInstPtr inst)
 {
     tlbBlocked[tid] = false;
 }
-#endif
 
 Fault
 CacheUnit::read(DynInstPtr inst, Addr addr,

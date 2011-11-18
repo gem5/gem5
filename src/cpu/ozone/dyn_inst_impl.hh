@@ -31,11 +31,8 @@
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/ozone/dyn_inst.hh"
-#include "sim/faults.hh"
-
-#if FULL_SYSTEM
 #include "kern/kernel_stats.hh"
-#endif
+#include "sim/faults.hh"
 
 template <class Impl>
 OzoneDynInst<Impl>::OzoneDynInst(OzoneCPU *cpu)
@@ -239,8 +236,6 @@ OzoneDynInst<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
     this->thread->setMiscReg(misc_reg, val);
 }
 
-#if FULL_SYSTEM
-
 template <class Impl>
 Fault
 OzoneDynInst<Impl>::hwrei()
@@ -269,11 +264,10 @@ OzoneDynInst<Impl>::simPalCheck(int palFunc)
 {
     return this->cpu->simPalCheck(palFunc);
 }
-#else
+
 template <class Impl>
 void
 OzoneDynInst<Impl>::syscall(uint64_t &callnum)
 {
     this->cpu->syscall(callnum);
 }
-#endif

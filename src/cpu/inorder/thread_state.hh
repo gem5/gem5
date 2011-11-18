@@ -39,17 +39,13 @@
 #include "cpu/thread_state.hh"
 #include "sim/sim_exit.hh"
 
-class Event;
-class InOrderCPU;
-
-#if FULL_SYSTEM
 class EndQuiesceEvent;
-class FunctionProfile;
-class ProfileNode;
-#else
+class Event;
 class FunctionalMemory;
-#endif
+class FunctionProfile;
+class InOrderCPU;
 class Process;
+class ProfileNode;
 
 /**
  * Class that has various thread state, such as the status, the

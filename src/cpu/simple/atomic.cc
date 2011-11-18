@@ -87,11 +87,9 @@ AtomicSimpleCPU::init()
     if (FullSystem) {
         ThreadID size = threadContexts.size();
         for (ThreadID i = 0; i < size; ++i) {
-#if FULL_SYSTEM
             ThreadContext *tc = threadContexts[i];
             // initialize CPU, including PC
             TheISA::initCPU(tc, tc->contextId());
-#endif
         }
     }
     if (hasPhysMemPort) {
@@ -618,9 +616,7 @@ AtomicSimpleCPU *
 AtomicSimpleCPUParams::create()
 {
     numThreads = 1;
-#if !FULL_SYSTEM
     if (!FullSystem && workload.size() != 1)
         panic("only one workload allowed");
-#endif
     return new AtomicSimpleCPU(this);
 }

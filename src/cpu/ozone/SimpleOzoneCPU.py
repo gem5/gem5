@@ -35,8 +35,7 @@ class SimpleOzoneCPU(BaseCPU):
 
     numThreads = Param.Unsigned("number of HW thread contexts")
 
-    if not buildEnv['FULL_SYSTEM']:
-        mem = Param.FunctionalMemory(NULL, "memory")
+    mem = Param.FunctionalMemory(NULL, "memory")
 
     width = Param.Unsigned("Width")
     frontEndWidth = Param.Unsigned("Front end width")

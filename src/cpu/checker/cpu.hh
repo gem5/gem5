@@ -46,25 +46,20 @@
 #include "sim/eventq.hh"
 
 // forward declarations
-#if FULL_SYSTEM
 namespace TheISA
 {
     class TLB;
 }
-class Processor;
-class PhysicalMemory;
 
-#else
-
-class Process;
-
-#endif // FULL_SYSTEM
 template <class>
 class BaseDynInst;
 class CheckerCPUParams;
-class ThreadContext;
-class MemInterface;
 class Checkpoint;
+class MemInterface;
+class PhysicalMemory;
+class Process;
+class Processor;
+class ThreadContext;
 class Request;
 
 /**
@@ -129,9 +124,7 @@ class CheckerCPU : public BaseCPU
     TheISA::TLB *itb;
     TheISA::TLB *dtb;
 
-#if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);
-#endif
 
     union Result {
         uint64_t integer;
@@ -273,14 +266,11 @@ class CheckerCPU : public BaseCPU
         this->dtb->demapPage(vaddr, asn);
     }
 
-#if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
-#else
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.
     void syscall(uint64_t callnum) { }
-#endif
 
     void handleError()
     {

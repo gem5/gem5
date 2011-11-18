@@ -83,10 +83,7 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
     std::string sym_str;
     Addr sym_addr;
     Addr cur_pc = pc.instAddr();
-    if (debugSymbolTable && Debug::ExecSymbol
-#if FULL_SYSTEM
-        && !inUserMode(thread)
-#endif
+    if (debugSymbolTable && Debug::ExecSymbol && !inUserMode(thread)
         && debugSymbolTable->findNearestSymbol(cur_pc, sym_str, sym_addr)) {
         if (cur_pc != sym_addr)
             sym_str += csprintf("+%d",cur_pc - sym_addr);

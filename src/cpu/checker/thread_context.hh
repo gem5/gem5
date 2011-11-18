@@ -89,14 +89,13 @@ class CheckerThreadContext : public ThreadContext
 
     TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-#if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
     PhysicalMemory *getPhysMemPtr() { return actualTC->getPhysMemPtr(); }
 
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
-#endif
+
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 
     TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
@@ -124,9 +123,7 @@ class CheckerThreadContext : public ThreadContext
     /// Set the status to Halted.
     void halt() { actualTC->halt(); }
 
-#if FULL_SYSTEM
     void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
-#endif
 
     void takeOverFrom(ThreadContext *oldContext)
     {
@@ -140,7 +137,6 @@ class CheckerThreadContext : public ThreadContext
     void unserialize(Checkpoint *cp, const std::string &section)
     { actualTC->unserialize(cp, section); }
 
-#if FULL_SYSTEM
     EndQuiesceEvent *getQuiesceEvent() { return actualTC->getQuiesceEvent(); }
 
     Tick readLastActivate() { return actualTC->readLastActivate(); }
@@ -148,7 +144,6 @@ class CheckerThreadContext : public ThreadContext
 
     void profileClear() { return actualTC->profileClear(); }
     void profileSample() { return actualTC->profileSample(); }
-#endif
 
     int threadId() { return actualTC->threadId(); }
 
@@ -252,9 +247,7 @@ class CheckerThreadContext : public ThreadContext
     // @todo: Fix this!
     bool misspeculating() { return actualTC->misspeculating(); }
 
-#if !FULL_SYSTEM
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
-#endif
 };
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

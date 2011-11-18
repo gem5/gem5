@@ -520,7 +520,6 @@ LWBackEnd<Impl>::setCommBuffer(TimeBuffer<CommStruct> *_comm)
     fromCommit = comm->getWire(-1);
 }
 
-#if FULL_SYSTEM
 template <class Impl>
 void
 LWBackEnd<Impl>::checkInterrupts()
@@ -557,7 +556,6 @@ LWBackEnd<Impl>::checkInterrupts()
         }
     }
 }
-#endif
 
 template <class Impl>
 void
@@ -604,9 +602,7 @@ LWBackEnd<Impl>::tick()
 
     wbCycle = 0;
 
-#if FULL_SYSTEM
     checkInterrupts();
-#endif
 
     if (trapSquash) {
         assert(!tcSquash);
@@ -1049,16 +1045,8 @@ LWBackEnd<Impl>::commitInst(int inst_num)
             (inst->isStoreConditional() && inst->getFault() == NoFault) ||
             inst->isMemBarrier() ||
             inst->isWriteBarrier()) {
-#if !FULL_SYSTEM
-            // Hack to make sure syscalls aren't executed until all stores
-            // write back their data.  This direct communication shouldn't
-            // be used for anything other than this.
-            if (inst_num > 0 || LSQ.hasStoresToWB())
-#else
             if ((inst->isMemBarrier() || inst->isWriteBarrier() ||
-                    inst->isQuiesce()) &&
-                LSQ.hasStoresToWB())
-#endif
+                    inst->isQuiesce()) && LSQ.hasStoresToWB())
             {
                 DPRINTF(BE, "Waiting for all stores to writeback.\n");
                 return false;
@@ -1184,11 +1172,7 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         ++freed_regs;
     }
 
-#if FULL_SYSTEM
-    if (thread->profile) {
-//        bool usermode =
-//            (xc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
-//        thread->profilePC = usermode ? 1 : inst->readPC();
+    if (FullSystem && thread->profile) {
         thread->profilePC = inst->readPC();
         ProfileNode *node = thread->profile->consume(thread->getTC(),
                                                      inst->staticInst);
@@ -1196,7 +1180,6 @@ LWBackEnd<Impl>::commitInst(int inst_num)
         if (node)
             thread->profileNode = node;
     }
-#endif
 
     if (inst->traceData) {
         inst->traceData->setFetchSeq(inst->seqNum);
@@ -1225,23 +1208,23 @@ LWBackEnd<Impl>::commitInst(int inst_num)
     toIEW->doneSeqNum = inst->seqNum;
     lastCommitCycle = curTick();
 
-#if FULL_SYSTEM
-    int count = 0;
-    Addr oldpc;
-    do {
-        if (count == 0)
-            assert(!thread->inSyscall && !thread->trapPending);
-        oldpc = thread->readPC();
-        cpu->system->pcEventQueue.service(
-            thread->getTC());
-        count++;
-    } while (oldpc != thread->readPC());
-    if (count > 1) {
-        DPRINTF(BE, "PC skip function event, stopping commit\n");
-        tcSquash = true;
-        return false;
+    if (FullSystem) {
+        int count = 0;
+        Addr oldpc;
+        do {
+            if (count == 0)
+                assert(!thread->inSyscall && !thread->trapPending);
+            oldpc = thread->readPC();
+            cpu->system->pcEventQueue.service(
+                thread->getTC());
+            count++;
+        } while (oldpc != thread->readPC());
+        if (count > 1) {
+            DPRINTF(BE, "PC skip function event, stopping commit\n");
+            tcSquash = true;
+            return false;
+        }
     }
-#endif
     return true;
 }
 

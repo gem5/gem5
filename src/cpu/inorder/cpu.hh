@@ -780,10 +780,8 @@ class InOrderCPU : public BaseCPU
         return total;
     }
 
-#if FULL_SYSTEM
     /** Pointer to the system. */
     System *system;
-#endif
 
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum[ThePipeline::MaxThreads];

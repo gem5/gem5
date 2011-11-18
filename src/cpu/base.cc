@@ -199,11 +199,9 @@ BaseCPU::BaseCPU(Params *p)
     interrupts->setCPU(this);
 
     if (FullSystem) {
-#if FULL_SYSTEM
         profileEvent = NULL;
         if (params()->profile)
             profileEvent = new ProfileEvent(this, params()->profile);
-#endif
     }
     tracer = params()->tracer;
 }

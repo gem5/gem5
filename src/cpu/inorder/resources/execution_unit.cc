@@ -38,6 +38,7 @@
 #include "debug/Fault.hh"
 #include "debug/InOrderExecute.hh"
 #include "debug/InOrderStall.hh"
+#include "sim/full_system.hh"
 
 using namespace std;
 using namespace ThePipeline;
@@ -219,14 +220,14 @@ ExecutionUnit::execute(int slot_num)
                                     seq_num, didx, inst->readIntResult(didx));
 #endif
 
-#if !FULL_SYSTEM
-                    // The Syscall might change the PC, so conservatively
-                    // squash everything behing it
-                    if (inst->isSyscall()) {
-                        inst->setSquashInfo(stage_num);
-                        setupSquash(inst, stage_num, tid);
+                    if (!FullSystem) {
+                        // The Syscall might change the PC, so conservatively
+                        // squash everything behing it
+                        if (inst->isSyscall()) {
+                            inst->setSquashInfo(stage_num);
+                            setupSquash(inst, stage_num, tid);
+                        }
                     }
-#endif
                 } else {
                     DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: had a %s "
                             "fault.\n", inst->readTid(), seq_num, fault->name());

@@ -40,15 +40,11 @@ class DerivO3CPU(BaseCPU):
     activity = Param.Unsigned(0, "Initial count")
 
     if buildEnv['USE_CHECKER']:
-        if not buildEnv['FULL_SYSTEM']:
-            checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
-                                              exitOnError=False,
-                                              updateOnError=True,
-                                              warnOnlyOnLoadError=False),
-                                    "checker")
-        else:
-            checker = Param.BaseCPU(O3Checker(exitOnError=False, updateOnError=True,
-                                              warnOnlyOnLoadError=False), "checker")
+        checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
+                                          exitOnError=False,
+                                          updateOnError=True,
+                                          warnOnlyOnLoadError=False),
+                                "checker")
         checker.itb = Parent.itb
         checker.dtb = Parent.dtb
 

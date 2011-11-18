@@ -35,16 +35,13 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
+#include "arch/kernel_stats.hh"
 #include "arch/types.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "debug/IEW.hh"
-
-#if FULL_SYSTEM
-#include "arch/kernel_stats.hh"
-#endif
 
 /**
  * Simple physical register file class.
@@ -174,10 +171,8 @@ class PhysRegFile
     /** Floating point register file. */
     PhysFloatReg *floatRegFile;
 
-#if FULL_SYSTEM
   private:
     int intrflag;                       // interrupt flag
-#endif
 
   private:
     /** CPU pointer. */

@@ -34,6 +34,7 @@
 #include "cpu/inorder/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "debug/InOrderCPU.hh"
+#include "sim/full_system.hh"
 
 using namespace TheISA;
 
@@ -88,9 +89,7 @@ InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
     setStatus(old_context->status());
     copyArchRegs(old_context);
 
-#if !FULL_SYSTEM
     thread->funcExeInst = old_context->readFuncExeInst();
-#endif
  
     old_context->setStatus(ThreadContext::Halted);
 
@@ -143,11 +142,10 @@ InOrderThreadContext::halt(int delay)
 void
 InOrderThreadContext::regStats(const std::string &name)
 {
-#if FULL_SYSTEM
-    thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
-    thread->kernelStats->regStats(name + ".kern");
-#endif
-    ;
+    if (FullSystem) {
+        thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
+        thread->kernelStats->regStats(name + ".kern");
+    }
 }
 
 

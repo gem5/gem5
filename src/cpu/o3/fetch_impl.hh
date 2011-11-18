@@ -45,7 +45,9 @@
 #include <cstring>
 
 #include "arch/isa_traits.hh"
+#include "arch/tlb.hh"
 #include "arch/utility.hh"
+#include "arch/vtophys.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
@@ -61,12 +63,8 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
-
-#if FULL_SYSTEM
-#include "arch/tlb.hh"
-#include "arch/vtophys.hh"
+#include "sim/full_system.hh"
 #include "sim/system.hh"
-#endif // FULL_SYSTEM
 
 using namespace std;
 
@@ -907,15 +905,15 @@ DefaultFetch<Impl>::tick()
 
     DPRINTF(Fetch, "Running stage.\n");
 
-    #if FULL_SYSTEM
-    if (fromCommit->commitInfo[0].interruptPending) {
-        interruptPending = true;
-    }
+    if (FullSystem) {
+        if (fromCommit->commitInfo[0].interruptPending) {
+            interruptPending = true;
+        }
 
-    if (fromCommit->commitInfo[0].clearInterrupt) {
-        interruptPending = false;
+        if (fromCommit->commitInfo[0].clearInterrupt) {
+            interruptPending = false;
+        }
     }
-#endif
 
     for (threadFetched = 0; threadFetched < numFetchingThreads;
          threadFetched++) {

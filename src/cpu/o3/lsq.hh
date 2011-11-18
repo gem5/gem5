@@ -334,10 +334,8 @@ class LSQ {
     /** D-cache port. */
     DcachePort dcachePort;
 
-#if FULL_SYSTEM
     /** Tell the CPU to update the Phys and Virt ports. */
     void updateMemPorts() { cpu->updateMemPorts(); }
-#endif
 
   protected:
     /** The LSQ policy for SMT mode. */

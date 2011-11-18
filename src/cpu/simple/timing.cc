@@ -77,11 +77,9 @@ TimingSimpleCPU::init()
     BaseCPU::init();
     if (FullSystem) {
         for (int i = 0; i < threadContexts.size(); ++i) {
-#if FULL_SYSTEM
             ThreadContext *tc = threadContexts[i];
             // initialize CPU, including PC
             TheISA::initCPU(tc, _cpuId);
-#endif
         }
     }
 }
@@ -1009,9 +1007,7 @@ TimingSimpleCPU *
 TimingSimpleCPUParams::create()
 {
     numThreads = 1;
-#if !FULL_SYSTEM
     if (!FullSystem && workload.size() != 1)
         panic("only one workload allowed");
-#endif
     return new TimingSimpleCPU(this);
 }

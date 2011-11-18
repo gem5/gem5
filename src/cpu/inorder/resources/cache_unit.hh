@@ -158,9 +158,8 @@ class CacheUnit : public Resource
 
     bool processSquash(CacheReqPacket *cache_pkt);
 
-#if !FULL_SYSTEM
     void trap(Fault fault, ThreadID tid, DynInstPtr inst);
-#endif
+
     void recvRetry();
 
     /** Returns a specific port. */

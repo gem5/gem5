@@ -35,6 +35,7 @@
 #include "base/output.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "sim/full_system.hh"
 #include "sim/sim_exit.hh"
 
 class EndQuiesceEvent;
@@ -74,21 +75,22 @@ struct O3ThreadState : public ThreadState {
         : ThreadState(_cpu, _thread_num, _process),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
-#if FULL_SYSTEM
-        if (cpu->params()->profile) {
-            profile = new FunctionProfile(cpu->params()->system->kernelSymtab);
-            Callback *cb =
-                new MakeCallback<O3ThreadState,
-                &O3ThreadState::dumpFuncProfile>(this);
-            registerExitCallback(cb);
-        }
+        if (FullSystem) {
+            if (cpu->params()->profile) {
+                profile = new FunctionProfile(
+                        cpu->params()->system->kernelSymtab);
+                Callback *cb =
+                    new MakeCallback<O3ThreadState,
+                    &O3ThreadState::dumpFuncProfile>(this);
+                registerExitCallback(cb);
+            }
 
-        // let's fill with a dummy node for now so we don't get a segfault
-        // on the first cycle when there's no node available.
-        static ProfileNode dummyNode;
-        profileNode = &dummyNode;
-        profilePC = 3;
-#endif
+            // let's fill with a dummy node for now so we don't get a segfault
+            // on the first cycle when there's no node available.
+            static ProfileNode dummyNode;
+            profileNode = &dummyNode;
+            profilePC = 3;
+        }
     }
 
     /** Pointer to the ThreadContext of this thread. */

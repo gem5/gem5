@@ -158,7 +158,7 @@ class BaseCPU : public MemObject
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        return interrupts->checkInterrupts(tc);
+        return FullSystem && interrupts->checkInterrupts(tc);
     }
 
     class ProfileEvent : public Event

@@ -267,13 +267,11 @@ class DefaultCommit
     void squashAfter(ThreadID tid, DynInstPtr &head_inst,
             uint64_t squash_after_seq_num);
 
-#if FULL_SYSTEM
     /** Handles processing an interrupt. */
     void handleInterrupt();
 
     /** Get fetch redirecting so we can handle an interrupt */
     void propagateInterrupt();
-#endif // FULL_SYSTEM
 
     /** Commits as many instructions as possible. */
     void commitInsts();

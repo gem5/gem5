@@ -47,22 +47,23 @@ class DerivO3CPU : public FullO3CPU<O3CPUImpl>
 DerivO3CPU *
 DerivO3CPUParams::create()
 {
-#if FULL_SYSTEM
-    // Full-system only supports a single thread for the moment.
-    ThreadID actual_num_threads = 1;
-#else
-    if (workload.size() > numThreads) {
-        fatal("Workload Size (%i) > Max Supported Threads (%i) on This CPU",
-              workload.size(), numThreads);
-    } else if (workload.size() == 0) {
-        fatal("Must specify at least one workload!");
+    ThreadID actual_num_threads;
+    if (FullSystem) {
+        // Full-system only supports a single thread for the moment.
+        actual_num_threads = 1;
+    } else {
+        if (workload.size() > numThreads) {
+            fatal("Workload Size (%i) > Max Supported Threads (%i) on This CPU",
+                  workload.size(), numThreads);
+        } else if (workload.size() == 0) {
+            fatal("Must specify at least one workload!");
+        }
+
+        // In non-full-system mode, we infer the number of threads from
+        // the workload if it's not explicitly specified.
+        actual_num_threads =
+            (numThreads >= workload.size()) ? numThreads : workload.size();
     }
-    
-    // In non-full-system mode, we infer the number of threads from
-    // the workload if it's not explicitly specified.
-    ThreadID actual_num_threads =
-        (numThreads >= workload.size()) ? numThreads : workload.size();
-#endif
 
     numThreads = actual_num_threads;
 

@@ -129,10 +129,9 @@ Source('simple_thread.cc')
 Source('thread_context.cc')
 Source('thread_state.cc')
 
-if env['FULL_SYSTEM']:
-    if env['TARGET_ISA'] == 'sparc':
-        SimObject('LegionTrace.py')
-        Source('legiontrace.cc')
+if env['TARGET_ISA'] == 'sparc':
+    SimObject('LegionTrace.py')
+    Source('legiontrace.cc')
 
 if env['USE_CHECKER']:
     Source('checker/cpu.cc')

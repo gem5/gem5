@@ -126,14 +126,13 @@ class SimpleThread : public ThreadState
     Decoder decoder;
 
     // constructor: initialize SimpleThread from given process structure
-#if FULL_SYSTEM
+    // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
                  TheISA::TLB *_itb, TheISA::TLB *_dtb,
                  bool use_kernel_stats = true);
-#else
+    // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
                  TheISA::TLB *_itb, TheISA::TLB *_dtb);
-#endif
 
     SimpleThread();
 
