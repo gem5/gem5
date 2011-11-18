@@ -3,13 +3,14 @@ Redirecting stderr to build/X86_FS/tests/opt/long/10.linux-boot/x86/linux/pc-o3-
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 20 2011 15:40:58
-gem5 started Aug 20 2011 15:42:13
-gem5 executing on zizzer
+gem5 compiled Nov 17 2011 18:36:33
+gem5 started Nov 17 2011 18:37:39
+gem5 executing on ribera.cs.wisc.edu
 command line: build/X86_FS/gem5.opt -d build/X86_FS/tests/opt/long/10.linux-boot/x86/linux/pc-o3-timing -re tests/run.py build/X86_FS/tests/opt/long/10.linux-boot/x86/linux/pc-o3-timing
+tests
 warning: add_child('terminal'): child 'terminal' already has parent
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/x86_64-vmlinux-2.6.22.9
+info: kernel located at: /scratch/nilay/GEM5/system/binaries/x86_64-vmlinux-2.6.22.9
       0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 5147601271500 because m5_exit instruction encountered
+Exiting @ tick 5145286546500 because m5_exit instruction encountered
