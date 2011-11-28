@@ -33,6 +33,11 @@ def template BasicExecDeclare {{
         Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
 }};
 
+def template DoFpOpDeclare {{
+        Fault doFpOp(%(CPU_exec_context)s *, Trace::InstRecord *)
+            const M5_NO_INLINE;
+}};
+
 // Definitions of execute methods that panic.
 def template BasicExecPanic {{
         Fault
@@ -54,6 +59,21 @@ def template BasicDeclare {{
             // Constructor.
             %(class_name)s(ExtMachInst machInst);
             %(BasicExecDeclare)s
+        };
+}};
+
+// Basic instruction class declaration template.
+def template FpBasicDeclare {{
+        /**
+         * Static instruction class for "%(mnemonic)s".
+         */
+        class %(class_name)s : public %(base_class)s
+        {
+          public:
+            // Constructor.
+            %(class_name)s(ExtMachInst machInst);
+            %(BasicExecDeclare)s
+            %(DoFpOpDeclare)s
         };
 }};
 
@@ -110,6 +130,22 @@ def template BasicExecute {{
         }
 }};
 
+def template DoFpOpExecute {{
+        Fault
+        %(class_name)s::doFpOp(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+            %(op_decl)s;
+            %(op_rd)s;
+            %(fp_code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+            return fault;
+        }
+}};
+
 // Basic decode template.
 def template BasicDecode {{
         return new %(class_name)s(machInst);
@@ -131,9 +167,9 @@ def format BasicOperate(code, *flags) {{
 }};
 
 def format FpBasic(code, *flags) {{
-        fp_code = """
+    exec_code = """
     Fsr |= bits(Fsr,4,0) << 5;
-    Fsr = insertBits(Fsr,4,0,0);
+    Fsr = insertBits(Fsr, 4, 0, 0);
     int newrnd = M5_FE_TONEAREST;
     switch (Fsr<31:30>) {
       case 0: newrnd = M5_FE_TONEAREST; break;
@@ -143,18 +179,18 @@ def format FpBasic(code, *flags) {{
     }
     int oldrnd = m5_fegetround();
     m5_fesetround(newrnd);
+    __asm__ __volatile__("" ::: "memory");
+    fault = doFpOp(xc, traceData);
+    __asm__ __volatile__("" ::: "memory");
+    m5_fesetround(oldrnd);
+    return fault;
 """
-
-        fp_code += code
-
-
-        fp_code += """
-   m5_fesetround(oldrnd);
-"""
-        fp_code = filterDoubles(fp_code)
-        iop = InstObjParams(name, Name, 'SparcStaticInst', fp_code, flags)
-        header_output = BasicDeclare.subst(iop)
-        decoder_output = BasicConstructor.subst(iop)
-        decode_block = BasicDecode.subst(iop)
-        exec_output = BasicExecute.subst(iop)
+    fp_code = filterDoubles(code)
+    iop = InstObjParams(name, Name, 'SparcStaticInst',
+            { "code" : exec_code, "fp_code" : fp_code }, flags)
+    header_output = FpBasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+    exec_output += DoFpOpExecute.subst(iop)
 }};
