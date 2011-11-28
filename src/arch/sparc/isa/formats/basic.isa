@@ -168,7 +168,7 @@ def format BasicOperate(code, *flags) {{
 
 def format FpBasic(code, *flags) {{
     exec_code = """
-    Fsr |= bits(Fsr,4,0) << 5;
+    Fsr |= bits(Fsr, 4, 0) << 5;
     Fsr = insertBits(Fsr, 4, 0, 0);
     int newrnd = M5_FE_TONEAREST;
     switch (Fsr<31:30>) {
