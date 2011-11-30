@@ -3,10 +3,10 @@
 sim_seconds                                  0.362431                       # Number of seconds simulated
 sim_ticks                                362430887000                       # Number of ticks simulated
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1087927                       # Simulator instruction rate (inst/s)
-host_tick_rate                             1617068836                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 361308                       # Number of bytes of host memory used
-host_seconds                                   224.13                       # Real time elapsed on the host
+host_inst_rate                                1940887                       # Simulator instruction rate (inst/s)
+host_tick_rate                             2884887520                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 337564                       # Number of bytes of host memory used
+host_seconds                                   125.63                       # Real time elapsed on the host
 sim_insts                                   243835278                       # Number of instructions simulated
 system.cpu.workload.num_syscalls                  443                       # Number of system calls
 system.cpu.numCycles                        724861774                       # number of cpu cycles simulated
@@ -20,7 +20,7 @@ system.cpu.num_conditional_control_insts     18619960                       # nu
 system.cpu.num_int_insts                    194726506                       # number of integer instructions
 system.cpu.num_fp_insts                         11630                       # number of float instructions
 system.cpu.num_int_register_reads           456819010                       # number of times the integer registers were read
-system.cpu.num_int_register_writes          215451608                       # number of times the integer registers were written
+system.cpu.num_int_register_writes          215451566                       # number of times the integer registers were written
 system.cpu.num_fp_register_reads                23256                       # number of times the floating registers were read
 system.cpu.num_fp_register_writes                  90                       # number of times the floating registers were written
 system.cpu.num_mem_refs                     105711442                       # number of memory refs
