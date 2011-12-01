@@ -49,7 +49,8 @@ let {{
 
     svcIop = InstObjParams("svc", "Svc", "PredOp",
                            { "code": svcCode,
-                             "predicate_test": predicateTest }, ["IsSyscall"])
+                             "predicate_test": predicateTest },
+                           ["IsSyscall", "IsNonSpeculative", "IsSerializeAfter"])
     header_output = BasicDeclare.subst(svcIop)
     decoder_output = BasicConstructor.subst(svcIop)
     exec_output = PredOpExecute.subst(svcIop)
