@@ -99,7 +99,7 @@ TableWalker::getPort(const std::string &if_name, int idx)
         System *sys = params()->sys;
         Tick minb = params()->min_backoff;
         Tick maxb = params()->max_backoff;
-        port = new DmaPort(this, sys, minb, maxb);
+        port = new DmaPort(this, sys, minb, maxb, true);
         return port;
     }
     return NULL;
