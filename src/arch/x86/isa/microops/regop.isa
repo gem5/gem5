@@ -1335,16 +1335,15 @@ let {{
                 if (selector.si || selector.ti) {
                     if (!desc.p) {
                         fault = new StackFault(selector);
-                    }
-                } else {
-                    if ((m5reg.submode != SixtyFourBitMode ||
-                                m5reg.cpl == 3) ||
-                            !(desc.s == 1 &&
-                            desc.type.codeOrData == 0 && desc.type.w) ||
+                    } else if (!(desc.s == 1 && desc.type.codeOrData == 0 &&
+                                desc.type.w) ||
                             (desc.dpl != m5reg.cpl) ||
                             (selector.rpl != m5reg.cpl)) {
                         fault = new GeneralProtection(selector);
                     }
+                } else if (m5reg.submode != SixtyFourBitMode ||
+                        m5reg.cpl == 3) {
+                    fault = new GeneralProtection(selector);
                 }
                 break;
               case SegIretCheck:
