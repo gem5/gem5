@@ -3,10 +3,10 @@
 sim_seconds                                  1.858874                       # Number of seconds simulated
 sim_ticks                                1858873594500                       # Number of ticks simulated
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 131543                       # Simulator instruction rate (inst/s)
-host_tick_rate                             4605131786                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 295252                       # Number of bytes of host memory used
-host_seconds                                   403.65                       # Real time elapsed on the host
+host_inst_rate                                 141632                       # Simulator instruction rate (inst/s)
+host_tick_rate                             4958330764                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 290572                       # Number of bytes of host memory used
+host_seconds                                   374.90                       # Real time elapsed on the host
 sim_insts                                    53097697                       # Number of instructions simulated
 system.l2c.replacements                        391354                       # number of replacements
 system.l2c.tagsinuse                     34898.086140                       # Cycle average of tags in use
@@ -542,6 +542,7 @@ system.cpu.rob.rob_reads                    143945413                       # Th
 system.cpu.rob.rob_writes                   132113260                       # The number of ROB writes
 system.cpu.timesIdled                         1256827                       # Number of times that the entire CPU went into an idle state and unscheduled itself
 system.cpu.idleCycles                        34118395                       # Total number of cycles that the CPU has spent unscheduled due to idling
+system.cpu.quiesceCycles                   3601447413                       # Total number of cycles that CPU has spent quiesced or waiting for an interrupt
 system.cpu.committedInsts                    53097697                       # Number of Instructions Simulated
 system.cpu.committedInsts_total              53097697                       # Number of Instructions Simulated
 system.cpu.cpi                               2.190177                       # CPI: Cycles Per Instruction
