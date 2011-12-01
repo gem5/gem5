@@ -674,7 +674,11 @@ initText(const string &filename, bool desc)
     static bool connected = false;
 
     if (!connected) {
-        text.open(*simout.find(filename));
+        ostream *os = simout.find(filename);
+        if (!os)
+            os = simout.create(filename);
+
+        text.open(*os);
         text.descriptions = desc;
         connected = true;
     }
