@@ -43,3 +43,4 @@ class VncServer(SimObject):
     type = 'VncServer'
     port = Param.TcpPort(5900, "listen port")
     number = Param.Int(0, "vnc client number")
+    frame_capture = Param.Bool(False, "capture changed frames to files")

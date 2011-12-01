@@ -44,6 +44,7 @@
 #ifndef __BASE_VNC_CONVERT_HH__
 #define __BASE_VNC_CONVERT_HH__
 
+#include <zlib.h>
 #include "base/bitunion.hh"
 
 class VideoConvert
@@ -107,12 +108,21 @@ class VideoConvert
      * @param fb the frame buffer to convert
      * @return the converted data (user must free)
      */
-    uint8_t* convert(uint8_t *fb);
+    uint8_t* convert(const uint8_t *fb) const;
 
     /** Return the number of pixels that this buffer specifies
      * @return number of pixels
      */
-    int area() { return width * height; }
+    int area() const { return width * height; }
+
+    /**
+     * Returns a hash on the raw data.
+     *
+     * @return hash of the buffer
+     */
+    inline uint64_t getHash(const uint8_t *fb) const {
+        return adler32(0UL, fb, width * height);
+    }
 
   private:
 
@@ -121,7 +131,7 @@ class VideoConvert
      * @param fb the data to convert
      * @return converted data
      */
-    uint8_t* bgr8888rgb8888(uint8_t *fb);
+    uint8_t* bgr8888rgb8888(const uint8_t *fb) const;
 
     /**
      * Convert a bgr565 or rgb565 input to rgb8888.
@@ -129,7 +139,7 @@ class VideoConvert
      * @param bgr true if the input data is bgr565
      * @return converted data
      */
-    uint8_t* m565rgb8888(uint8_t *fb, bool bgr);
+    uint8_t* m565rgb8888(const uint8_t *fb, bool bgr) const;
 
     Mode inputMode;
     Mode outputMode;

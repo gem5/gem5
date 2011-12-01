@@ -72,6 +72,10 @@ parser.add_option("--timesync", action="store_true",
 # System options
 parser.add_option("--kernel", action="store", type="string")
 parser.add_option("--script", action="store", type="string")
+parser.add_option("--frame-capture", action="store_true",
+        help="Stores changed frame buffers from the VNC server to compressed "\
+        "files in the gem5 output directory")
+
 if buildEnv['TARGET_ISA'] == "arm":
     parser.add_option("--bare-metal", action="store_true",
                help="Provide the raw system without the linux specific bits")
@@ -204,5 +208,8 @@ else:
 
 if options.timesync:
     root.time_sync_enable = True
+
+if options.frame_capture:
+    VncServer.frame_capture = True
 
 Simulation.run(options, root, test_sys, FutureClass)

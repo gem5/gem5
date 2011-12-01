@@ -67,7 +67,7 @@ VideoConvert::~VideoConvert()
 }
 
 uint8_t*
-VideoConvert::convert(uint8_t *fb)
+VideoConvert::convert(const uint8_t *fb) const
 {
     switch (inputMode) {
       case bgr565:
@@ -82,7 +82,7 @@ VideoConvert::convert(uint8_t *fb)
 }
 
 uint8_t*
-VideoConvert::m565rgb8888(uint8_t *fb, bool bgr)
+VideoConvert::m565rgb8888(const uint8_t *fb, bool bgr) const
 {
     uint8_t *out = new uint8_t[area() * sizeof(uint32_t)];
     uint32_t *out32 = (uint32_t*)out;
@@ -113,7 +113,7 @@ VideoConvert::m565rgb8888(uint8_t *fb, bool bgr)
 
 
 uint8_t*
-VideoConvert::bgr8888rgb8888(uint8_t *fb)
+VideoConvert::bgr8888rgb8888(const uint8_t *fb) const
 {
     uint8_t *out = new uint8_t[area() * sizeof(uint32_t)];
     uint32_t *out32 = (uint32_t*)out;
@@ -136,4 +136,21 @@ VideoConvert::bgr8888rgb8888(uint8_t *fb)
 
     return out;
 }
+/*
+uint64_t
+VideoConvert::getHash(const uint8_t *fb) const
+{
+    const uint8_t *fb_e = fb + area();
 
+    uint64_t hash = 1;
+    while (fb < fb_e - 8) {
+        hash += *((const uint64_t*)fb);
+        fb += 8;
+    }
+
+    while (fb < fb_e) {
+        hash += *(fb++);
+    }
+
+    return hash;
+}*/

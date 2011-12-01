@@ -48,12 +48,14 @@
 #include <iostream>
 
 #include "base/vnc/convert.hh"
+#include "base/bitmap.hh"
 #include "base/circlebuf.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
 #include "cpu/intr_control.hh"
 #include "params/VncServer.hh"
 #include "sim/sim_object.hh"
+
 
 /**
  * A device that expects to receive input from the vnc server should derrive
@@ -316,7 +318,25 @@ class VncServer : public SimObject
     /** The video converter that transforms data for us */
     VideoConvert *vc;
 
+    /** Flag indicating whether to capture snapshots of frame buffer or not */
+    bool captureEnabled;
+
+    /** Current frame number being captured to a file */
+    int captureCurrentFrame;
+
+    /** Directory to store captured frames to */
+    std::string captureOutputDirectory;
+
+    /** Computed hash of the last captured frame */
+    uint64_t captureLastHash;
+
+    /** Cached bitmap object for writing out frame buffers to file */
+    Bitmap *captureBitmap;
+
   protected:
+    /** Captures the current frame buffer to a file */
+    void captureFrameBuffer();
+
     /**
      * vnc client Interface
      */
@@ -449,6 +469,8 @@ class VncServer : public SimObject
     setDirty()
     {
         sendUpdate = true;
+        if (captureEnabled)
+            captureFrameBuffer();
         sendFrameBufferUpdate();
     }
 

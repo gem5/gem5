@@ -43,7 +43,10 @@
  */
 
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/termios.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <unistd.h>
 
@@ -52,11 +55,14 @@
 
 #include "base/vnc/vncserver.hh"
 #include "base/atomicio.hh"
+#include "base/bitmap.hh"
 #include "base/misc.hh"
+#include "base/output.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "debug/VNC.hh"
 #include "sim/byteswap.hh"
+#include "sim/core.hh"
 
 using namespace std;
 
@@ -98,13 +104,13 @@ VncServer::VncServer(const Params *p)
     : SimObject(p), listenEvent(NULL), dataEvent(NULL), number(p->number),
       dataFd(-1), _videoWidth(1), _videoHeight(1), clientRfb(0), keyboard(NULL),
       mouse(NULL), sendUpdate(false), videoMode(VideoConvert::UnknownMode),
-      vc(NULL)
+      vc(NULL), captureEnabled(p->frame_capture), captureCurrentFrame(0),
+      captureLastHash(0), captureBitmap(0)
 {
     if (p->port)
         listen(p->port);
 
     curState = WaitForProtocolVersion;
-
 
     // currently we only support this one pixel format
     // unpacked 32bit rgb (rgb888 + 8 bits of nothing/alpha)
@@ -121,6 +127,14 @@ VncServer::VncServer(const Params *p)
     pixelFormat.greenshift = 8;
     pixelFormat.blueshift = 0;
 
+    if (captureEnabled) {
+        // remove existing frame output directory if it exists, then create a
+        //   clean empty directory
+        const string FRAME_OUTPUT_SUBDIR = "frames_" + name();
+        simout.remove(FRAME_OUTPUT_SUBDIR, true);
+        captureOutputDirectory = simout.createSubdirectory(
+                                FRAME_OUTPUT_SUBDIR);
+    }
 
     DPRINTF(VNC, "Vnc server created at port %d\n", p->port);
 }
@@ -686,6 +700,16 @@ VncServer::setFrameBufferParams(VideoConvert::Mode mode, int width, int height)
         vc = new VideoConvert(mode, VideoConvert::rgb8888, videoWidth(),
                 videoHeight());
 
+        if (captureEnabled) {
+            // create bitmap of the frame with new attributes
+            if (captureBitmap)
+                delete captureBitmap;
+
+            assert(clientRfb);
+            captureBitmap = new Bitmap(videoMode, width, height, clientRfb);
+            assert(captureBitmap);
+        }
+
         if (dataFd > 0 && clientRfb && curState == NormalPhase) {
             if (supportsResizeEnc)
                 sendFrameBufferResized();
@@ -701,4 +725,30 @@ VncServer *
 VncServerParams::create()
 {
     return new VncServer(this);
+}
+
+void
+VncServer::captureFrameBuffer()
+{
+    assert(captureBitmap);
+
+    // skip identical frames
+    uint64_t new_hash = captureBitmap->getHash();
+    if (captureLastHash == new_hash)
+        return;
+    captureLastHash = new_hash;
+
+    // get the filename for the current frame
+    char frameFilenameBuffer[64];
+    snprintf(frameFilenameBuffer, 64, "fb.%06d.%lld.bmp.gz",
+            captureCurrentFrame, static_cast<long long int>(curTick()));
+    const string frameFilename(frameFilenameBuffer);
+
+    // create the compressed framebuffer file
+    ostream *fb_out = simout.create(captureOutputDirectory + frameFilename,
+                    true);
+    captureBitmap->write(fb_out);
+    simout.close(fb_out);
+
+    ++captureCurrentFrame;
 }
