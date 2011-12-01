@@ -58,13 +58,16 @@ def define_options(parser):
     parser.add_option("--random_seed", type="int", default=1234,
                       help="Used for seeding the random number generator")
 
+    parser.add_option("--ruby_stats", type="string", default="ruby.stats")
+
     protocol = buildEnv['PROTOCOL']
     exec "import %s" % protocol
     eval("%s.define_options(parser)" % protocol)
 
 def create_system(options, system, piobus = None, dma_devices = []):
 
-    system.ruby = RubySystem(clock = options.clock)
+    system.ruby = RubySystem(clock = options.clock,
+                             stats_filename = options.ruby_stats)
     ruby = system.ruby
 
     protocol = buildEnv['PROTOCOL']
