@@ -93,9 +93,7 @@ PageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
             new_vaddr, size);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize, new_vaddr += pageSize) {
-        PTableItr iter = pTable.find(vaddr);
-
-        assert(iter != pTable.end());
+        assert(pTable.find(vaddr) != pTable.end());
 
         pTable[new_vaddr] = pTable[vaddr];
         pTable.erase(vaddr);
@@ -112,9 +110,7 @@ PageTable::unmap(Addr vaddr, int64_t size)
     DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr+ size);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
-        PTableItr iter = pTable.find(vaddr);
-
-        assert(iter != pTable.end());
+        assert(pTable.find(vaddr) != pTable.end());
 
         pTable.erase(vaddr);
     }

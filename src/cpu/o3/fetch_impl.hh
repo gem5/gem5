@@ -1053,8 +1053,8 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
 
         if (fetchStatus[tid] != Squashing) {
 
-            TheISA::PCState nextPC = fromDecode->decodeInfo[tid].nextPC;
-            DPRINTF(Fetch, "Squashing from decode with PC = %s\n", nextPC);
+            DPRINTF(Fetch, "Squashing from decode with PC = %s\n",
+                fromDecode->decodeInfo[tid].nextPC);
             // Squash unless we're already squashing
             squashFromDecode(fromDecode->decodeInfo[tid].nextPC,
                              fromDecode->decodeInfo[tid].squashInst,

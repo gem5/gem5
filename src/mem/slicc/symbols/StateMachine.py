@@ -411,6 +411,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
 #include <sstream>
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/cprintf.hh"
 #include "debug/RubyGenerated.hh"
 #include "debug/RubySlicc.hh"

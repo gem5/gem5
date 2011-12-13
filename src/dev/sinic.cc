@@ -33,6 +33,7 @@
 #include <string>
 
 #include "arch/vtophys.hh"
+#include "base/compiler.hh"
 #include "base/debug.hh"
 #include "base/inet.hh"
 #include "base/types.hh"
@@ -404,7 +405,7 @@ Device::read(PacketPtr pkt)
 
     prepareRead(cpu, index);
 
-    uint64_t value = 0;
+    uint64_t value M5_VAR_USED = 0;
     if (pkt->getSize() == 4) {
         uint32_t reg = regData32(raddr);
         pkt->set(reg);
@@ -916,6 +917,7 @@ Device::rxKick()
                 VirtualReg *vn = &virtualRegs[i];
                 bool busy = Regs::get_RxDone_Busy(vn->RxDone);
                 if (vn->rxIndex != end) {
+#ifndef NDEBUG
                     bool dirty = vn->rxPacketOffset > 0;
                     const char *status;
 
@@ -933,6 +935,7 @@ Device::rxKick()
                             i, status, vn->rxUnique,
                             rxFifo.countPacketsBefore(vn->rxIndex),
                             vn->rxIndex->slack);
+#endif
                 } else if (busy) {
                     DPRINTF(EthernetSM, "vnic %d unmapped (rxunique %d)\n",
                             i, vn->rxUnique);

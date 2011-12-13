@@ -2118,11 +2118,12 @@ IGbE::txStateMachine()
     // iteration we'll get the rest of the data
     if (txPacket && txDescCache.packetAvailable()
         && !txDescCache.packetMultiDesc() && txPacket->length) {
-        bool success;
-
         anQ("TXS", "TX FIFO Q");
         DPRINTF(EthernetSM, "TXS: packet placed in TX FIFO\n");
-        success = txFifo.push(txPacket);
+#ifndef NDEBUG
+        bool success =
+#endif
+            txFifo.push(txPacket);
         txFifoTick = true && !drainEvent;
         assert(success);
         txPacket = NULL;

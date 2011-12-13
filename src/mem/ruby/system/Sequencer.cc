@@ -221,10 +221,8 @@ Sequencer::printConfig(ostream& out) const
 RequestStatus
 Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
 {
-    int total_outstanding =
-        m_writeRequestTable.size() + m_readRequestTable.size();
-
-    assert(m_outstanding_count == total_outstanding);
+    assert(m_outstanding_count ==
+        (m_writeRequestTable.size() + m_readRequestTable.size()));
 
     // See if we should schedule a deadlock check
     if (deadlockCheckEvent.scheduled() == false) {
@@ -285,8 +283,8 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType request_type)
     }
 
     g_system_ptr->getProfiler()->sequencerRequests(m_outstanding_count);
-    total_outstanding = m_writeRequestTable.size() + m_readRequestTable.size();
-    assert(m_outstanding_count == total_outstanding);
+    assert(m_outstanding_count ==
+        (m_writeRequestTable.size() + m_readRequestTable.size()));
 
     return RequestStatus_Ready;
 }

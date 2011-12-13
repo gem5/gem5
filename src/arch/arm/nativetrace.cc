@@ -156,18 +156,23 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     // Regular int regs
     for (int i = 0; i < STATE_NUMVALS; i++) {
         if (nState.changed[i] || mState.changed[i]) {
-            const char *vergence = "  ";
             bool oldMatch = (mState.oldState[i] == nState.oldState[i]);
             bool newMatch = (mState.newState[i] == nState.newState[i]);
             if (oldMatch && newMatch) {
                 // The more things change, the more they stay the same.
                 continue;
-            } else if (oldMatch && !newMatch) {
+            }
+
+            errorFound = true;
+
+#ifndef NDEBUG
+            const char *vergence = "  ";
+            if (oldMatch && !newMatch) {
                 vergence = "<>";
             } else if (!oldMatch && newMatch) {
                 vergence = "><";
             }
-            errorFound = true;
+
             if (!nState.changed[i]) {
                 DPRINTF(ExecRegDelta, "%s [%5s] "\
                                       "Native:         %#010x         "\
@@ -190,6 +195,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
                                       nState.oldState[i], nState.newState[i],
                                       mState.oldState[i], mState.newState[i]);
             }
+#endif
         }
     }
     if (errorFound) {

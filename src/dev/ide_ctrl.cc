@@ -490,6 +490,7 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
         panic("IDE controller access to invalid address: %#x\n", addr);
     }
 
+#ifndef NDEBUG
     uint32_t data;
     if (pkt->getSize() == 1)
         data = pkt->get<uint8_t>();
@@ -499,6 +500,7 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
         data = pkt->get<uint32_t>();
     DPRINTF(IdeCtrl, "%s from offset: %#x size: %#x data: %#x\n",
             read ? "Read" : "Write", pkt->getAddr(), pkt->getSize(), data);
+#endif
 
     pkt->makeAtomicResponse();
 }

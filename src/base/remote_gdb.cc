@@ -648,8 +648,7 @@ BaseRemoteGDB::trap(int type)
     bufferSize = gdbregs.bytes() * 2 + 256;
     buffer = (char*)malloc(bufferSize);
 
-    TheISA::PCState pc = context->pcState();
-    DPRINTF(GDBMisc, "trap: PC=%s\n", pc);
+    DPRINTF(GDBMisc, "trap: PC=%s\n", context->pcState());
 
     clearSingleStep();
 
