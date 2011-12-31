@@ -52,8 +52,9 @@ class FormalParamAST(AST):
                 self.pairs)
         self.symtab.newSymbol(v)
         if self.pointer or str(type) == "TBE" or (
-           "interface" in type and type["interface"] == "AbstractCacheEntry"):
-
+           "interface" in type and (
+               type["interface"] == "AbstractCacheEntry" or
+               type["interface"] == "AbstractEntry")):
             return type, "%s* %s" % (type.c_ident, param)
         else:
             return type, "const %s& %s" % (type.c_ident, param)

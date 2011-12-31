@@ -32,9 +32,9 @@
 #include <iostream>
 #include <string>
 
-#include "mem/protocol/Directory_Entry.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/AbstractEntry.hh"
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/SparseMemory.hh"
 #include "params/RubyDirectoryMemory.hh"
@@ -58,7 +58,9 @@ class DirectoryMemory : public SimObject
     void printConfig(std::ostream& out) const;
     static void printGlobalConfig(std::ostream & out);
     bool isPresent(PhysAddress address);
-    Directory_Entry& lookup(PhysAddress address);
+    AbstractEntry* lookup(PhysAddress address);
+    AbstractEntry* allocate(const PhysAddress& address,
+                            AbstractEntry* new_entry);
 
     void invalidateBlock(PhysAddress address);
 
@@ -72,7 +74,7 @@ class DirectoryMemory : public SimObject
 
   private:
     const std::string m_name;
-    Directory_Entry **m_entries;
+    AbstractEntry **m_entries;
     // int m_size;  // # of memory module blocks this directory is
                     // responsible for
     uint64 m_size_bytes;

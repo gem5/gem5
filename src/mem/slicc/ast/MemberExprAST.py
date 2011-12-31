@@ -41,7 +41,10 @@ class MemberExprAST(ExprAST):
         return_type, gcode = self.expr_ast.inline(True)
         fix = code.nofix()
 
-        if str(return_type) == "TBE" or ("interface" in return_type and return_type["interface"] == "AbstractCacheEntry"):
+        if str(return_type) == "TBE" \
+           or ("interface" in return_type and
+            (return_type["interface"] == "AbstractCacheEntry" or
+             return_type["interface"] == "AbstractEntry")):
             code("(*$gcode).m_${{self.field}}")
         else:
             code("($gcode).m_${{self.field}}")

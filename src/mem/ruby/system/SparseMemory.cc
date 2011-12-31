@@ -92,9 +92,7 @@ SparseMemory::recursivelyRemoveTables(SparseMapType* curTable, int curLevel)
             delete nextTable;
         } else {
             // If at the last level, delete the directory entry
-            Directory_Entry* dirEntry;
-            dirEntry = (Directory_Entry*)(entryStruct->entry);
-            delete dirEntry;
+            delete (AbstractEntry*)(entryStruct->entry);
         }
         entryStruct->entry = NULL;
     }
@@ -149,7 +147,7 @@ SparseMemory::exist(const Address& address) const
 
 // add an address to memory
 void
-SparseMemory::add(const Address& address)
+SparseMemory::add(const Address& address, AbstractEntry* entry)
 {
     assert(address == line_address(address));
     assert(!exist(address));
@@ -187,9 +185,8 @@ SparseMemory::add(const Address& address)
 
             // if the last level, add a directory entry.  Otherwise add a map.
             if (level == (m_number_of_levels - 1)) {
-                Directory_Entry* tempDirEntry = new Directory_Entry();
-                tempDirEntry->getDataBlk().clear();
-                newEntry = (void*)tempDirEntry;
+                entry->getDataBlk().clear();
+                newEntry = (void*)entry;
             } else {
                 SparseMapType* tempMap = new SparseMapType;
                 newEntry = (void*)(tempMap);
@@ -262,10 +259,8 @@ SparseMemory::recursivelyRemoveLevels(const Address& address,
         // if this is the last level, we have reached the Directory
         // Entry and thus we should delete it including the
         // SparseMemEntry container struct.
-        Directory_Entry* dirEntry;
-        dirEntry = (Directory_Entry*)(entryStruct->entry);
+        delete (AbstractEntry*)(entryStruct->entry);
         entryStruct->entry = NULL;
-        delete dirEntry;
         curInfo.curTable->erase(curAddress);
         m_removes_per_level[curInfo.level]++;
     }
@@ -303,17 +298,14 @@ SparseMemory::remove(const Address& address)
 }
 
 // looks an address up in memory
-Directory_Entry*
+AbstractEntry*
 SparseMemory::lookup(const Address& address)
 {
-    assert(exist(address));
     assert(address == line_address(address));
-
-    DPRINTF(RubyCache, "address: %s\n", address);
 
     Address curAddress;
     SparseMapType* curTable = m_map_head;
-    Directory_Entry* entry = NULL;
+    AbstractEntry* entry = NULL;
 
     // Initiallize the high bit to be the total number of bits plus
     // the block offset.  However the highest bit index is one less
@@ -336,13 +328,18 @@ SparseMemory::lookup(const Address& address)
         // Adjust the highBit value for the next level
         highBit -= m_number_of_bits_per_level[level];
 
-        // The entry should be in the table and valid
-        curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
-        assert(curTable != NULL);
+        // If the address is found, move on to the next level.
+        // Otherwise, return not found
+        if (curTable->count(curAddress) != 0) {
+            curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
+        } else {
+            DPRINTF(RubyCache, "Not found\n");
+            return NULL;
+        }
     }
 
     // The last entry actually points to the Directory entry not a table
-    entry = (Directory_Entry*)curTable;
+    entry = (AbstractEntry*)curTable;
 
     return entry;
 }

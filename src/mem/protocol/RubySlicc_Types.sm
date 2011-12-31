@@ -125,6 +125,7 @@ structure(AbstractEntry, primitive="yes", external = "yes") {
 }
 
 structure (DirectoryMemory, external = "yes") {
+  AbstractEntry allocate(Address, AbstractEntry);
   AbstractEntry lookup(Address);
   bool isPresent(Address);
   void invalidateBlock(Address);

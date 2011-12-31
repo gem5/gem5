@@ -32,7 +32,7 @@
 #include <iostream>
 
 #include "base/hashmap.hh"
-#include "mem/protocol/Directory_Entry.hh"
+#include "mem/ruby/slicc_interface/AbstractEntry.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 
@@ -60,10 +60,10 @@ class SparseMemory
     void printConfig(std::ostream& out) { }
 
     bool exist(const Address& address) const;
-    void add(const Address& address);
+    void add(const Address& address, AbstractEntry*);
     void remove(const Address& address);
 
-    Directory_Entry* lookup(const Address& address);
+    AbstractEntry* lookup(const Address& address);
 
     // Print cache contents
     void print(std::ostream& out) const;

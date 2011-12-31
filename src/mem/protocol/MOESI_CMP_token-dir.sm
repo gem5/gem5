@@ -165,8 +165,16 @@ machine(Directory, "Token protocol")
   void set_tbe(TBE b);
   void unset_tbe();
 
-  Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
-    return static_cast(Entry, directory[addr]);
+  Entry getDirectoryEntry(Address addr), return_by_pointer="yes" {
+    Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
+
+    if (is_valid(dir_entry)) {
+      return dir_entry;
+    }
+
+    dir_entry :=  static_cast(Entry, "pointer",
+                              directory.allocate(addr, new Entry));
+    return dir_entry;
   }
 
   DataBlock getDataBlock(Address addr), return_by_ref="yes" {
