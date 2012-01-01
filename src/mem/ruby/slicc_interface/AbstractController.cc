@@ -27,6 +27,7 @@
  */
 
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/System.hh"
 
 AbstractController::AbstractController(const Params *p) : SimObject(p)
 {

@@ -34,14 +34,11 @@
 #include <string>
 
 #include "mem/protocol/MemoryMsg.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/AbstractMemOrCache.hh"
 #include "mem/ruby/system/MemoryNode.hh"
-#include "mem/ruby/system/System.hh"
 #include "params/RubyMemoryControl.hh"
 #include "sim/sim_object.hh"
 

@@ -30,6 +30,7 @@
 
 #include <cassert>
 
+#include "base/cast.hh"
 #include "base/stl_helpers.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"

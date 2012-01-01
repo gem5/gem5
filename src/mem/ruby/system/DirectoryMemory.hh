@@ -33,7 +33,6 @@
 #include <string>
 
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/SparseMemory.hh"

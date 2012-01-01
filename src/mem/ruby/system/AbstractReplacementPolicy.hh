@@ -29,7 +29,7 @@
 #ifndef __MEM_RUBY_SYSTEM_ABSTRACTREPLACEMENTPOLICY_HH__
 #define __MEM_RUBY_SYSTEM_ABSTRACTREPLACEMENTPOLICY_HH__
 
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 
 class AbstractReplacementPolicy
 {

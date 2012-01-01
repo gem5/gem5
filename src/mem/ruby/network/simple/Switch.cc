@@ -28,6 +28,7 @@
 
 #include <numeric>
 
+#include "base/cast.hh"
 #include "base/stl_helpers.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"

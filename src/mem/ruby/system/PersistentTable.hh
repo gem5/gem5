@@ -34,7 +34,6 @@
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessType.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/system/MachineID.hh"
 

@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/cast.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/RoutingUnit_d.hh"

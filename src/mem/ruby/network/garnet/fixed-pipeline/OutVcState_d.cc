@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/OutVcState_d.hh"
 

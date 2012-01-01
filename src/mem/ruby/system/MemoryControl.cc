@@ -104,8 +104,8 @@
  *
  */
 
+#include "base/cast.hh"
 #include "base/cprintf.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/network/Network.hh"
@@ -113,7 +113,6 @@
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/MemoryControl.hh"
-#include "mem/ruby/system/System.hh"
 
 using namespace std;
 

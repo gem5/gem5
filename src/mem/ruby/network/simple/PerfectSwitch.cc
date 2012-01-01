@@ -28,6 +28,7 @@
 
 #include <algorithm>
 
+#include "base/cast.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
