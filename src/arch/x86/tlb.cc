@@ -328,6 +328,9 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 DPRINTF(TLB, "Miss was serviced.\n");
 #endif
             }
+
+            DPRINTF(TLB, "Entry found with paddr %#x, "
+                    "doing protection checks.\n", entry->paddr);
             // Do paging protection checks.
             bool inUser = (m5Reg.cpl == 3 &&
                     !(flags & (CPL0FlagBit << FlagShift)));
@@ -345,9 +348,6 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 return new PageFault(vaddr, true, Write, inUser, false);
             }
 
-
-            DPRINTF(TLB, "Entry found with paddr %#x, "
-                    "doing protection checks.\n", entry->paddr);
             Addr paddr = entry->paddr | (vaddr & (entry->size-1));
             DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
             req->setPaddr(paddr);
