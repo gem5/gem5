@@ -913,7 +913,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   transition(SS, {L1_GETS, L1_GET_INSTR}) {
     ds_sendSharedDataToRequestor;
     nn_addSharer;
-    uu_profileMiss;
     set_setMRU;
     jj_popL1RequestQueue;
   }
@@ -923,7 +922,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     d_sendDataToRequestor;
     // fw_sendFwdInvToSharers;
     fwm_sendFwdInvToSharersMinusRequestor;
-    uu_profileMiss;
     set_setMRU;
     jj_popL1RequestQueue;
   }
@@ -931,7 +929,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   transition(SS, L1_UPGRADE, SS_MB) {
     fwm_sendFwdInvToSharersMinusRequestor;
     ts_sendInvAckToUpgrader;
-    uu_profileMiss;
     set_setMRU;
     jj_popL1RequestQueue;
   }
@@ -951,7 +948,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   transition(M, L1_GETX, MT_MB) {
     d_sendDataToRequestor;
-    uu_profileMiss;
     set_setMRU;
     jj_popL1RequestQueue;
   }
@@ -959,14 +955,12 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   transition(M, L1_GET_INSTR, SS) {
     d_sendDataToRequestor;
     nn_addSharer;
-    uu_profileMiss;
     set_setMRU;
     jj_popL1RequestQueue;
   }
 
   transition(M, L1_GETS, MT_MB) {
     dd_sendExclusiveDataToRequestor;
-    uu_profileMiss;
     set_setMRU;
     jj_popL1RequestQueue;
   }
