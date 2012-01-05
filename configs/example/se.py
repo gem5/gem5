@@ -122,7 +122,7 @@ if options.errout != "":
 workloads = options.cmd
 numThreads = 1
 
-if options.detailed or options.inorder:
+if options.cpu_type == "detailed" or options.cpu_type == "inorder":
     #check for SMT workload
     workloads = options.cmd.split(';')
     if len(workloads) > 1:
@@ -154,10 +154,10 @@ if options.detailed or options.inorder:
     numThreads = len(workloads)
     
 if options.ruby:
-    if options.detailed:
+    if options.cpu_type == "detailed":
         print >> sys.stderr, "Ruby only works with TimingSimpleCPU!!"
         sys.exit(1)
-    elif not options.timing:
+    elif not options.cpu_type == "timing":
         print >> sys.stderr, "****WARN:  using Timing CPU since it's needed by Ruby"
 
     class CPUClass(TimingSimpleCPU): pass

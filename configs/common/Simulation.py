@@ -40,14 +40,14 @@ addToPath('../common')
 def setCPUClass(options):
 
     atomic = False
-    if options.timing:
+    if options.cpu_type == "timing":
         class TmpClass(TimingSimpleCPU): pass
-    elif options.detailed:
+    elif options.cpu_type == "detailed":
         if not options.caches:
             print "O3 CPU must be used with caches"
             sys.exit(1)
         class TmpClass(DerivO3CPU): pass
-    elif options.inorder:
+    elif options.cpu_type == "inorder":
         if not options.caches:
             print "InOrder CPU must be used with caches"
             sys.exit(1)
