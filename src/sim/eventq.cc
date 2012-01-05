@@ -373,6 +373,14 @@ EventQueue::debugVerify() const
     return true;
 }
 
+Event*
+EventQueue::replaceHead(Event* s)
+{
+    Event* t = head;
+    head = s;
+    return t;
+}
+
 void
 dumpMainQueue()
 {
