@@ -253,7 +253,6 @@ public:
     const int & getVersion() const;
     const std::string toString() const;
     const std::string getName() const;
-    const MachineType getMachineType() const;
     void stallBuffer(MessageBuffer* buf, Address addr);
     void wakeUpBuffers(Address addr);
     void wakeUpAllBuffers();
@@ -704,12 +703,6 @@ const string
 $c_ident::getName() const
 {
     return m_name;
-}
-
-const MachineType
-$c_ident::getMachineType() const
-{
-    return MachineType_${ident};
 }
 
 void
