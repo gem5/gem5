@@ -142,13 +142,9 @@ DmaPort::recvTiming(PacketPtr pkt)
 
         pkt->reinitNacked();
         queueDma(pkt, true);
+    } else if (pkt->isRequest() && recvSnoops) {
+        return true; 
     } else if (pkt->senderState) {
-        if (recvSnoops) {
-            if (pkt->isRequest()) {
-                return true;
-            }
-        }
-
         DmaReqState *state;
         backoffTime >>= 2;
 

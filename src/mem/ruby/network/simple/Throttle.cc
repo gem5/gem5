@@ -28,6 +28,7 @@
 
 #include <cassert>
 
+#include "base/cast.hh"
 #include "base/cprintf.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"

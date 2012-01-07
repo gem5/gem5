@@ -50,19 +50,6 @@ class Network;
 class Profiler;
 class Tracer;
 
-/*
- * This defines the number of longs (32-bits on 32 bit machines,
- * 64-bit on 64-bit AMD machines) to use to hold the set...
- * the default is 4, allowing 128 or 256 different members
- * of the set.
- *
- * This should never need to be changed for correctness reasons,
- * though increasing it will increase performance for larger
- * set sizes at the cost of a (much) larger memory footprint
- *
- */
-const int NUMBER_WORDS_PER_SET = 1;
-
 class RubySystem : public SimObject
 {
   public:

@@ -46,8 +46,7 @@
 
 #include "mem/protocol/LinkDirection.hh"
 #include "mem/protocol/MessageSizeType.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "params/RubyNetwork.hh"
 #include "sim/sim_object.hh"
 

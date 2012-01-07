@@ -88,7 +88,8 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
         #
         l1i_cache = L1Cache(size = options.l1i_size,
                             assoc = options.l1i_assoc,
-                            start_index_bit = block_size_bits)
+                            start_index_bit = block_size_bits,
+                            is_icache = True)
         l1d_cache = L1Cache(size = options.l1d_size,
                             assoc = options.l1d_assoc,
                             start_index_bit = block_size_bits)

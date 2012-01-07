@@ -30,6 +30,7 @@
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/Topology.hh"
+#include "mem/ruby/system/System.hh"
 
 Network::Network(const Params *p)
     : SimObject(p)

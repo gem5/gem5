@@ -28,6 +28,7 @@
  * Authors: Niket Agarwal
  */
 
+#include "base/cast.hh"
 #include "base/stl_helpers.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/InVcState.hh"

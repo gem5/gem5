@@ -60,7 +60,7 @@ class PeekStatementAST(StatementAST):
         code('''
 {
     // Declare message
-    const $mtid* in_msg_ptr;
+    const $mtid* in_msg_ptr M5_VAR_USED;
     in_msg_ptr = dynamic_cast<const $mtid *>(($qcode).${{self.method}}());
     assert(in_msg_ptr != NULL); // Check the cast result
 ''')

@@ -408,6 +408,16 @@ class EventQueue : public Serializable
 
     bool debugVerify() const;
 
+    /**
+     *  function for replacing the head of the event queue, so that a
+     *  different set of events can run without disturbing events that have
+     *  already been scheduled. Already scheduled events can be processed
+     *  by replacing the original head back.
+     *  USING THIS FUNCTION CAN BE DANGEROUS TO THE HEALTH OF THE SIMULATOR.
+     *  NOT RECOMMENDED FOR USE.
+     */
+    Event* replaceHead(Event* s);
+
 #ifndef SWIG
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);

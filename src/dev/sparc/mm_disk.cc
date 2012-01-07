@@ -56,7 +56,6 @@ MmDisk::read(PacketPtr pkt)
 {
     Addr accessAddr;
     off_t sector;
-    off_t bytes_read;
     uint16_t d16;
     uint32_t d32;
     uint64_t d64;
@@ -68,10 +67,16 @@ MmDisk::read(PacketPtr pkt)
 
     if (sector != curSector) {
         if (dirty) {
-            bytes_read = image->write(diskData, curSector);
-            assert(bytes_read == SectorSize);
+#ifndef NDEBUG
+            off_t bytes_written =
+#endif
+                image->write(diskData, curSector);
+            assert(bytes_written == SectorSize);
         }
-        bytes_read = image->read(diskData,  sector);
+#ifndef NDEBUG
+        off_t bytes_read =
+#endif
+            image->read(diskData, sector);
         assert(bytes_read == SectorSize);
         curSector = sector;
     }
@@ -109,7 +114,6 @@ MmDisk::write(PacketPtr pkt)
 {
     Addr accessAddr;
     off_t sector;
-    off_t bytes_read;
     uint16_t d16;
     uint32_t d32;
     uint64_t d64;
@@ -121,10 +125,16 @@ MmDisk::write(PacketPtr pkt)
 
     if (sector != curSector) {
         if (dirty) {
-            bytes_read = image->write(diskData, curSector);
-            assert(bytes_read == SectorSize);
+#ifndef NDEBUG
+            off_t bytes_written =
+#endif
+                image->write(diskData, curSector);
+            assert(bytes_written == SectorSize);
         }
-        bytes_read = image->read(diskData,  sector);
+#ifndef NDEBUG
+        off_t bytes_read =
+#endif
+            image->read(diskData,  sector);
         assert(bytes_read == SectorSize);
         curSector = sector;
     }
@@ -164,9 +174,11 @@ MmDisk::serialize(std::ostream &os)
 {
     // just write any dirty changes to the cow layer it will take care of
     // serialization
-    int bytes_read;
     if (dirty) {
-        bytes_read = image->write(diskData, curSector);
+#ifndef NDEBUG
+        int bytes_read =
+#endif
+            image->write(diskData, curSector);
         assert(bytes_read == SectorSize);
     }
 }

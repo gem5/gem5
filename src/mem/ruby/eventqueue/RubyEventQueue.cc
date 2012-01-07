@@ -31,7 +31,6 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
-#include "mem/ruby/system/System.hh"
 
 RubyEventQueue::RubyEventQueue(EventQueue* eventq, Tick _clock)
   : EventManager(eventq), m_clock(_clock)

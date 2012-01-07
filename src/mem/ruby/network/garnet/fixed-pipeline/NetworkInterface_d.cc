@@ -31,6 +31,7 @@
 #include <cassert>
 #include <cmath>
 
+#include "base/cast.hh"
 #include "base/stl_helpers.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"

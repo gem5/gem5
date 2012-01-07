@@ -37,7 +37,6 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/ruby/system/System.hh"
 
 using namespace std;
 

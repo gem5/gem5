@@ -162,8 +162,10 @@ class MemberMethodCallExprAST(MethodCallExprAST):
             prefix = "static_cast<%s &>" % return_type.c_ident
 
         if str(obj_type) == "AbstractCacheEntry" or \
-           ("interface" in obj_type and
-            obj_type["interface"] == "AbstractCacheEntry"):
+           str(obj_type) == "AbstractEntry" or \
+           ("interface" in obj_type and (
+            obj_type["interface"] == "AbstractCacheEntry" or
+            obj_type["interface"] == "AbstractEntry")):
             prefix = "%s((*(%s))." % (prefix, code)
         else:
             prefix = "%s((%s)." % (prefix, code)

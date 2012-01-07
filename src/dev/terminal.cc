@@ -259,17 +259,13 @@ Terminal::write(const uint8_t *buf, size_t len)
 uint8_t
 Terminal::in()
 {
-    bool empty;
     uint8_t c;
 
-    empty = rxbuf.empty();
-    assert(!empty);
+    assert(!rxbuf.empty());
     rxbuf.read((char *)&c, 1);
-    empty = rxbuf.empty();
-
 
     DPRINTF(TerminalVerbose, "in: \'%c\' %#02x more: %d\n",
-            isprint(c) ? c : ' ', c, !empty);
+            isprint(c) ? c : ' ', c, !rxbuf.empty());
 
     return c;
 }

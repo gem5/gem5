@@ -59,7 +59,7 @@ DirectoryMemory::init()
     if (m_use_map) {
         m_sparseMemory = new SparseMemory(m_map_levels);
     } else {
-        m_entries = new Directory_Entry*[m_num_entries];
+        m_entries = new AbstractEntry*[m_num_entries];
         for (int i = 0; i < m_num_entries; i++)
             m_entries[i] = NULL;
         m_ram = g_system_ptr->getMemoryVector();
@@ -150,38 +150,40 @@ DirectoryMemory::mapAddressToLocalIdx(PhysAddress address)
     return ret >> (RubySystem::getBlockSizeBits());
 }
 
-Directory_Entry&
+AbstractEntry*
 DirectoryMemory::lookup(PhysAddress address)
 {
     assert(isPresent(address));
-    Directory_Entry* entry;
+    DPRINTF(RubyCache, "Looking up address: %s\n", address);
+
+    if (m_use_map) {
+        return m_sparseMemory->lookup(address);
+    } else {
+        uint64_t idx = mapAddressToLocalIdx(address);
+        assert(idx < m_num_entries);
+        return m_entries[idx];
+    }
+}
+
+AbstractEntry*
+DirectoryMemory::allocate(const PhysAddress& address, AbstractEntry* entry)
+{
+    assert(isPresent(address));
     uint64 idx;
     DPRINTF(RubyCache, "Looking up address: %s\n", address);
 
     if (m_use_map) {
-        if (m_sparseMemory->exist(address)) {
-            entry = m_sparseMemory->lookup(address);
-            assert(entry != NULL);
-        } else {
-            // Note: SparseMemory internally creates a new Directory Entry
-            m_sparseMemory->add(address);
-            entry = m_sparseMemory->lookup(address);
-            entry->changePermission(AccessPermission_Read_Write);
-        }
+        m_sparseMemory->add(address, entry);
+        entry->changePermission(AccessPermission_Read_Write);
     } else {
         idx = mapAddressToLocalIdx(address);
         assert(idx < m_num_entries);
-        entry = m_entries[idx];
-
-        if (entry == NULL) {
-            entry = new Directory_Entry();
-            entry->getDataBlk().assign(m_ram->getBlockPtr(address));
-            entry->changePermission(AccessPermission_Read_Only);
-            m_entries[idx] = entry;
-        }
+        entry->getDataBlk().assign(m_ram->getBlockPtr(address));
+        entry->changePermission(AccessPermission_Read_Only);
+        m_entries[idx] = entry;
     }
 
-    return *entry;
+    return entry;
 }
 
 void

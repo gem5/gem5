@@ -30,7 +30,6 @@
 #include "mem/protocol/SequencerMsg.hh"
 #include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/DMASequencer.hh"
 #include "mem/ruby/system/System.hh"
 
