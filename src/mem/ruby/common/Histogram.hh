@@ -32,7 +32,7 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 
 class Histogram
 {

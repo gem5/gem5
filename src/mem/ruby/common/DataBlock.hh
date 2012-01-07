@@ -32,7 +32,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 
 class DataBlock
 {

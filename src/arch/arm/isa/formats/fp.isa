@@ -561,20 +561,22 @@ let {{
                 }
             }
           case 0xa:
+            if (q)
+                return new Unknown(machInst);
             if (b) {
-                return decodeNeonUSThreeReg<VpminD, VpminQ>(
-                        q, u, size, machInst, vd, vn, vm);
+                return decodeNeonUSThreeUSReg<VpminD>(
+                        u, size, machInst, vd, vn, vm);
             } else {
-                return decodeNeonUSThreeReg<VpmaxD, VpmaxQ>(
-                        q, u, size, machInst, vd, vn, vm);
+                return decodeNeonUSThreeUSReg<VpmaxD>(
+                        u, size, machInst, vd, vn, vm);
             }
           case 0xb:
             if (b) {
-                if (u) {
+                if (u || q) {
                     return new Unknown(machInst);
                 } else {
-                    return decodeNeonUThreeReg<NVpaddD, NVpaddQ>(
-                            q, size, machInst, vd, vn, vm);
+                    return decodeNeonUThreeUSReg<NVpaddD>(
+                            size, machInst, vd, vn, vm);
                 }
             } else {
                 if (u) {
@@ -1542,7 +1544,7 @@ let {{
                 else
                     return new NVswpD<uint64_t>(machInst, vd, vm);
               case 0x1:
-                return decodeNeonUTwoMiscReg<NVtrnD, NVtrnQ>(
+                return decodeNeonUTwoMiscSReg<NVtrnD, NVtrnQ>(
                         q, size, machInst, vd, vm);
               case 0x2:
                 return decodeNeonUTwoMiscReg<NVuzpD, NVuzpQ>(

@@ -203,6 +203,8 @@ class Process : public SimObject
 
     virtual void syscall(int64_t callnum, ThreadContext *tc) = 0;
 
+    void allocateMem(Addr vaddr, int64_t size, bool clobber = false);
+
     /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
     /// @return Whether the fault has been fixed.
     bool fixupStackFault(Addr vaddr);

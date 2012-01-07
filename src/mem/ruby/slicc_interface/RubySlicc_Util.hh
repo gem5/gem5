@@ -45,7 +45,6 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/System.hh"
 
 class Set;

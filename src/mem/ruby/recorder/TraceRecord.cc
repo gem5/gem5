@@ -73,17 +73,15 @@ void
 TraceRecord::issueRequest() const
 {
     assert(m_sequencer_ptr != NULL);
-
-    RubyRequest request(m_data_address.getAddress(), NULL,
-        RubySystem::getBlockSizeBytes(), m_pc_address.getAddress(),
-        m_type, RubyAccessMode_User, NULL);
+    Request req(m_data_address.getAddress(), 0, 0);
+    Packet *pkt = new Packet(&req, MemCmd(MemCmd::InvalidCmd), -1);
 
     // Clear out the sequencer
     while (!m_sequencer_ptr->empty()) {
         g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
     }
 
-    m_sequencer_ptr->makeRequest(request);
+    m_sequencer_ptr->makeRequest(pkt);
 
     // Clear out the sequencer
     while (!m_sequencer_ptr->empty()) {

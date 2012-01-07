@@ -679,6 +679,17 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     mandatoryQueue_in.recycle();
   }
 
+  action(uu_profileInstMiss, "\ui", desc="Profile the demand miss") {
+    peek(mandatoryQueue_in, RubyRequest) {
+        L1IcacheMemory.profileMiss(in_msg);
+    }
+  }
+
+  action(uu_profileDataMiss, "\ud", desc="Profile the demand miss") {
+    peek(mandatoryQueue_in, RubyRequest) {
+        L1DcacheMemory.profileMiss(in_msg);
+    }
+  }
 
   //*****************************************************
   // TRANSITIONS
@@ -698,6 +709,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     oo_allocateL1DCacheBlock;
     i_allocateTBE;
     a_issueGETS;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -705,6 +717,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     pp_allocateL1ICacheBlock;
     i_allocateTBE;
     ai_issueGETINSTR;
+    uu_profileInstMiss;
     k_popMandatoryQueue;
   }
 
@@ -712,6 +725,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     oo_allocateL1DCacheBlock;
     i_allocateTBE;
     b_issueGETX;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 
@@ -729,6 +743,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   transition(S, Store, SM) {
     i_allocateTBE;
     c_issueUPGRADE;
+    uu_profileDataMiss;
     k_popMandatoryQueue;
   }
 

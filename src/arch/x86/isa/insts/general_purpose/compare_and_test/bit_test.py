@@ -114,10 +114,12 @@ def macroop BTC_LOCKED_M_I {
     limm t1, imm, dataSize=asz
     limm t4, 1
     roli t4, t4, imm
+    mfence
     ldstl t1, seg, sib, disp
     sexti t0, t1, imm, flags=(CF,)
     xor t1, t1, t4
     stul t1, seg, sib, disp
+    mfence
 };
 
 def macroop BTC_LOCKED_P_I {
@@ -125,10 +127,12 @@ def macroop BTC_LOCKED_P_I {
     limm t1, imm, dataSize=asz
     limm t4, 1
     roli t4, t4, imm
+    mfence
     ldstl t1, seg, riprel, disp
     sexti t0, t1, imm, flags=(CF,)
     xor t1, t1, t4
     stul t1, seg, riprel, disp
+    mfence
 };
 
 def macroop BTC_R_R {
@@ -168,10 +172,12 @@ def macroop BTC_LOCKED_M_R {
     lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, 1
     rol t4, t4, reg
+    mfence
     ldstl t1, seg, [scale, index, t3], disp
     sext t0, t1, reg, flags=(CF,)
     xor t1, t1, t4
     stul t1, seg, [scale, index, t3], disp
+    mfence
 };
 
 def macroop BTC_LOCKED_P_R {
@@ -180,10 +186,12 @@ def macroop BTC_LOCKED_P_R {
     srai t3, t2, ldsz, dataSize=asz
     limm t4, 1
     rol t4, t4, reg
+    mfence
     ldstl t1, seg, [dsz, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
     xor t1, t1, t4
     stul t1, seg, [dsz, t3, t7], disp
+    mfence
 };
 
 def macroop BTR_R_I {
@@ -218,10 +226,12 @@ def macroop BTR_LOCKED_M_I {
     limm t1, imm, dataSize=asz
     limm t4, "(uint64_t(-(2ULL)))"
     roli t4, t4, imm
+    mfence
     ldstl t1, seg, sib, disp
     sexti t0, t1, imm, flags=(CF,)
     and t1, t1, t4
     stul t1, seg, sib, disp
+    mfence
 };
 
 def macroop BTR_LOCKED_P_I {
@@ -229,10 +239,12 @@ def macroop BTR_LOCKED_P_I {
     limm t1, imm, dataSize=asz
     limm t4, "(uint64_t(-(2ULL)))"
     roli t4, t4, imm
+    mfence
     ldstl t1, seg, riprel, disp
     sexti t0, t1, imm, flags=(CF,)
     and t1, t1, t4
     stul t1, seg, riprel, disp
+    mfence
 };
 
 def macroop BTR_R_R {
@@ -272,10 +284,12 @@ def macroop BTR_LOCKED_M_R {
     lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, "(uint64_t(-(2ULL)))"
     rol t4, t4, reg
+    mfence
     ldstl t1, seg, [scale, index, t3], disp
     sext t0, t1, reg, flags=(CF,)
     and t1, t1, t4
     stul t1, seg, [scale, index, t3], disp
+    mfence
 };
 
 def macroop BTR_LOCKED_P_R {
@@ -284,10 +298,12 @@ def macroop BTR_LOCKED_P_R {
     srai t3, t2, ldsz, dataSize=asz
     limm t4, "(uint64_t(-(2ULL)))"
     rol t4, t4, reg
+    mfence
     ldstl t1, seg, [dsz, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
     and t1, t1, t4
     stul t1, seg, [dsz, t3, t7], disp
+    mfence
 };
 
 def macroop BTS_R_I {
@@ -322,10 +338,12 @@ def macroop BTS_LOCKED_M_I {
     limm t1, imm, dataSize=asz
     limm t4, 1
     roli t4, t4, imm
+    mfence
     ldstl t1, seg, sib, disp
     sexti t0, t1, imm, flags=(CF,)
     or t1, t1, t4
     stul t1, seg, sib, disp
+    mfence
 };
 
 def macroop BTS_LOCKED_P_I {
@@ -333,10 +351,12 @@ def macroop BTS_LOCKED_P_I {
     limm t1, imm, dataSize=asz
     limm t4, 1
     roli t4, t4, imm
+    mfence
     ldstl t1, seg, riprel, disp
     sexti t0, t1, imm, flags=(CF,)
     or t1, t1, t4
     stul t1, seg, riprel, disp
+    mfence
 };
 
 def macroop BTS_R_R {
@@ -377,10 +397,12 @@ def macroop BTS_LOCKED_M_R {
     lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, 1
     rol t4, t4, reg
+    mfence
     ldstl t1, seg, [scale, index, t3], disp
     sext t0, t1, reg, flags=(CF,)
     or t1, t1, t4
     stul t1, seg, [scale, index, t3], disp
+    mfence
 };
 
 def macroop BTS_LOCKED_P_R {
@@ -390,9 +412,11 @@ def macroop BTS_LOCKED_P_R {
     lea t3, flatseg, [dsz, t3, base], dataSize=asz
     limm t4, 1
     rol t4, t4, reg
+    mfence
     ldstl t1, seg, [1, t3, t7], disp
     sext t0, t1, reg, flags=(CF,)
     or t1, t1, t4
     stul t1, seg, [1, t3, t7], disp
+    mfence
 };
 '''

@@ -97,6 +97,23 @@ GarnetNetwork_d::init()
         NetworkLink_d* net_link = safe_cast<NetworkLink_d*>(*i);
         net_link->init_net_ptr(this);
     }
+
+    // FaultModel: declare each router to the fault model
+    if(isFaultModelEnabled()){
+        for (vector<Router_d*>::const_iterator i= m_router_ptr_vector.begin();
+             i != m_router_ptr_vector.end(); ++i) {
+            Router_d* router = safe_cast<Router_d*>(*i);
+            int router_id=fault_model->declare_router(router->get_num_inports(),
+                                                      router->get_num_outports(),
+                                                      router->get_vc_per_vnet(),
+                                                      getBuffersPerDataVC(),
+                                                      getBuffersPerCtrlVC());
+            assert(router_id == router->get_id());
+            router->printAggregateFaultProbability(cout);
+            router->printFaultVector(cout);
+        }
+    }
+
 }
 
 GarnetNetwork_d::~GarnetNetwork_d()

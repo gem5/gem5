@@ -137,13 +137,10 @@ void Clock::init()
 
         double router_diagonal = m_orion_cfg_ptr->get<double>("ROUTER_DIAGONAL");
         double Clockwire = m_tech_param_ptr->get_ClockCap();
-        double Reswire = m_tech_param_ptr->get_Reswire();
 
         double htree_clockcap;
-        double htree_res;
         int k;
         double h;
-        double cap_clock_buf = 0;
 
         double BufferNMOSOffCurrent = m_tech_param_ptr->get_BufferNMOSOffCurrent();
         double BufferPMOSOffCurrent = m_tech_param_ptr->get_BufferPMOSOffCurrent();
@@ -151,7 +148,6 @@ void Clock::init()
         if (m_tech_param_ptr->is_trans_type_hvt() || m_tech_param_ptr->is_trans_type_nvt())
         {
             htree_clockcap = (4+4+2+2)*(router_diagonal*1e-6)*Clockwire;
-            htree_res = (4+4+2+2)*(router_diagonal*1e-6)*Reswire;
 
             wire.calc_opt_buffering(&k, &h, ((4+4+2+2)*router_diagonal*1e-6));
             i_static_nmos = BufferNMOSOffCurrent*h*k*15;
@@ -160,14 +156,11 @@ void Clock::init()
         else
         {
             htree_clockcap = (8+4+4+4+4)*(router_diagonal*1e-6)*Clockwire;
-            htree_res = (8+4+4+4+4)*(router_diagonal*1e-6)*Reswire;
 
             wire.calc_opt_buffering(&k, &h, ((4+4+2+2)*router_diagonal*1e-6));  
             i_static_nmos = BufferNMOSOffCurrent*h*k*29;
             i_static_pmos = BufferPMOSOffCurrent*h*k*15;
         }
-
-        cap_clock_buf = ((double)k)*cap_clock*h;
 
         m_e_htree = (htree_clockcap+cap_clock)*e_factor;
     }

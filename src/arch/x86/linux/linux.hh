@@ -88,6 +88,7 @@ class X86Linux64 : public Linux
     static const int NUM_OPEN_FLAGS;
 
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
+    static const unsigned TGT_MAP_FIXED     = 0x10;
 
     typedef struct {
         uint64_t iov_base; // void *
@@ -158,6 +159,7 @@ class X86Linux32 : public Linux
     static const int NUM_OPEN_FLAGS;
 
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
+    static const unsigned TGT_MAP_FIXED     = 0x10;
 
     typedef struct {
        int32_t  uptime;    /* Seconds since boot */

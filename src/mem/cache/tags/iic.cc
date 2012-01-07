@@ -393,10 +393,8 @@ IIC::freeReplacementBlock(PacketList & writebacks)
 unsigned long
 IIC::getFreeDataBlock(PacketList & writebacks)
 {
-    struct IICTag *tag_ptr;
     unsigned long data_ptr;
 
-    tag_ptr = NULL;
     /* find data block */
     while (blkFreelist.empty()) {
         freeReplacementBlock(writebacks);

@@ -1616,10 +1616,8 @@ let {{
     threeEqualRegInst("vadd", "NVaddD", "SimdAddOp", unsignedTypes, 2, vaddCode)
     threeEqualRegInst("vadd", "NVaddQ", "SimdAddOp", unsignedTypes, 4, vaddCode)
 
-    threeEqualRegInst("vpadd", "NVpaddD", "SimdAddOp", unsignedTypes,
+    threeEqualRegInst("vpadd", "NVpaddD", "SimdAddOp", smallUnsignedTypes,
                       2, vaddCode, pairwise=True)
-    threeEqualRegInst("vpadd", "NVpaddQ", "SimdAddOp", unsignedTypes,
-                      4, vaddCode, pairwise=True)
     vaddlwCode = '''
         destElem = (BigElement)srcElem1 + (BigElement)srcElem2;
     '''
@@ -2110,11 +2108,9 @@ let {{
     '''
     threeRegLongInst("vmull", "Vmullp", "SimdMultOp", smallUnsignedTypes, vmullpCode)
 
-    threeEqualRegInst("vpmax", "VpmaxD", "SimdCmpOp", allTypes, 2, vmaxCode, pairwise=True)
-    threeEqualRegInst("vpmax", "VpmaxQ", "SimdCmpOp", allTypes, 4, vmaxCode, pairwise=True)
+    threeEqualRegInst("vpmax", "VpmaxD", "SimdCmpOp", smallTypes, 2, vmaxCode, pairwise=True)
 
-    threeEqualRegInst("vpmin", "VpminD", "SimdCmpOp", allTypes, 2, vminCode, pairwise=True)
-    threeEqualRegInst("vpmin", "VpminQ", "SimdCmpOp", allTypes, 4, vminCode, pairwise=True)
+    threeEqualRegInst("vpmin", "VpminD", "SimdCmpOp", smallTypes, 2, vminCode, pairwise=True)
 
     vqdmulhCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
@@ -3137,8 +3133,10 @@ let {{
             destReg.elements[i + 1] = mid;
         }
     '''
-    twoRegMiscScramble("vtrn", "NVtrnD", "SimdAluOp", unsignedTypes, 2, vtrnCode)
-    twoRegMiscScramble("vtrn", "NVtrnQ", "SimdAluOp", unsignedTypes, 4, vtrnCode)
+    twoRegMiscScramble("vtrn", "NVtrnD", "SimdAluOp",
+            smallUnsignedTypes, 2, vtrnCode)
+    twoRegMiscScramble("vtrn", "NVtrnQ", "SimdAluOp",
+            smallUnsignedTypes, 4, vtrnCode)
 
     vuzpCode = '''
         Element mid[eCount];

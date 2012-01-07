@@ -71,8 +71,7 @@ PerfectSwitch::addInPort(const vector<MessageBuffer*>& in)
     for (int j = 0; j < m_virtual_networks; j++) {
         m_in[port][j]->setConsumer(this);
         string desc = csprintf("[Queue from port %s %s %s to PerfectSwitch]",
-            NodeIDToString(m_switch_id), NodeIDToString(port),
-            NodeIDToString(j));
+            to_string(m_switch_id), to_string(port), to_string(j));
         m_in[port][j]->setDescription(desc);
         m_in[port][j]->setIncomingLink(port);
         m_in[port][j]->setVnet(j);

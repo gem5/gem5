@@ -26,10 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config/the_isa.hh"
-#if THE_ISA == X86_ISA
-#include "arch/x86/insts/microldstop.hh"
-#endif // X86_ISA
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/Ruby.hh"
 #include "mem/protocol/AccessPermission.hh"
@@ -199,73 +195,11 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
         return ruby_port->pio_port->sendTiming(pkt);
     }
 
-    // For DMA and CPU requests, translate them to ruby requests before
-    // sending them to our assigned ruby port.
-    RubyRequestType type = RubyRequestType_NULL;
-
-    // If valid, copy the pc to the ruby request
-    Addr pc = 0;
-    if (pkt->req->hasPC()) {
-        pc = pkt->req->getPC();
-    }
-
-    if (pkt->isLLSC()) {
-        if (pkt->isWrite()) {
-            DPRINTF(RubyPort, "Issuing SC\n");
-            type = RubyRequestType_Store_Conditional;
-        } else {
-            DPRINTF(RubyPort, "Issuing LL\n");
-            assert(pkt->isRead());
-            type = RubyRequestType_Load_Linked;
-        }
-    } else if (pkt->req->isLocked()) {
-        if (pkt->isWrite()) {
-            DPRINTF(RubyPort, "Issuing Locked RMW Write\n");
-            type = RubyRequestType_Locked_RMW_Write;
-        } else {
-            DPRINTF(RubyPort, "Issuing Locked RMW Read\n");
-            assert(pkt->isRead());
-            type = RubyRequestType_Locked_RMW_Read;
-        }
-    } else {
-        if (pkt->isRead()) {
-            if (pkt->req->isInstFetch()) {
-                type = RubyRequestType_IFETCH;
-            } else {
-#if THE_ISA == X86_ISA
-                uint32_t flags = pkt->req->getFlags();
-                bool storeCheck = flags &
-                        (TheISA::StoreCheck << TheISA::FlagShift);
-#else
-                bool storeCheck = false;
-#endif // X86_ISA
-                if (storeCheck) {
-                    type = RubyRequestType_RMW_Read;
-                } else {
-                    type = RubyRequestType_LD;
-                }
-            }
-        } else if (pkt->isWrite()) {
-            //
-            // Note: M5 packets do not differentiate ST from RMW_Write
-            //
-            type = RubyRequestType_ST;
-        } else if (pkt->isFlush()) {
-            type = RubyRequestType_FLUSH;
-        } else {
-            panic("Unsupported ruby packet type\n");
-        }
-    }
-
-    RubyRequest ruby_request(pkt->getAddr(), pkt->getPtr<uint8_t>(true),
-                             pkt->getSize(), pc, type,
-                             RubyAccessMode_Supervisor, pkt);
-
-    assert(ruby_request.m_PhysicalAddress.getOffset() + ruby_request.m_Size <=
-        RubySystem::getBlockSizeBytes());
+    assert(Address(pkt->getAddr()).getOffset() + pkt->getSize() <=
+           RubySystem::getBlockSizeBytes());
 
     // Submit the ruby request
-    RequestStatus requestStatus = ruby_port->makeRequest(ruby_request);
+    RequestStatus requestStatus = ruby_port->makeRequest(pkt);
 
     // If the request successfully issued then we should return true.
     // Otherwise, we need to delete the senderStatus we just created and return

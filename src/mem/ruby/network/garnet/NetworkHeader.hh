@@ -31,9 +31,6 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_NETWORKHEADER_HH__
 #define __MEM_RUBY_NETWORK_GARNET_NETWORKHEADER_HH__
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
-
 enum flit_type {HEAD_, BODY_, TAIL_, HEAD_TAIL_, NUM_FLIT_TYPE_};
 enum VC_state_type {IDLE_, VC_AB_, ACTIVE_, NUM_VC_STATE_TYPE_};
 enum VNET_type {CTRL_VNET_, DATA_VNET_, NULL_VNET_, NUM_VNET_TYPE_};

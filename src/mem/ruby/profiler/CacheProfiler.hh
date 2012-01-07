@@ -39,7 +39,6 @@
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Histogram.hh"
-#include "mem/ruby/system/NodeID.hh"
 
 class CacheProfiler
 {

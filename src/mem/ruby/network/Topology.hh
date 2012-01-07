@@ -45,8 +45,7 @@
 #include <vector>
 
 #include "mem/protocol/LinkDirection.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 #include "params/Topology.hh"
 #include "sim/sim_object.hh"
 

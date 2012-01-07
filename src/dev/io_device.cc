@@ -75,6 +75,18 @@ PioDevice::init()
     pioPort->sendStatusChange(Port::RangeChange);
 }
 
+Port *
+PioDevice::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "pio") {
+        if (pioPort != NULL)
+            fatal("%s: pio port already connected to %s",
+                  name(), pioPort->getPeer()->name());
+        pioPort = new PioPort(this, sys);
+        return pioPort;
+    }
+    return NULL;
+}
 
 unsigned int
 PioDevice::drain(Event *de)
@@ -349,3 +361,19 @@ DmaDevice::~DmaDevice()
     if (dmaPort)
         delete dmaPort;
 }
+
+
+Port *
+DmaDevice::getPort(const std::string &if_name, int idx)
+{
+    if (if_name == "dma") {
+        if (dmaPort != NULL)
+            fatal("%s: dma port already connected to %s",
+                  name(), dmaPort->getPeer()->name());
+        dmaPort = new DmaPort(this, sys, params()->min_backoff_delay,
+                              params()->max_backoff_delay);
+        return dmaPort;
+    }
+    return PioDevice::getPort(if_name, idx);
+}
+

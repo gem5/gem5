@@ -48,27 +48,16 @@ DMASequencer::init()
 }
 
 RequestStatus
-DMASequencer::makeRequest(const RubyRequest &request)
+DMASequencer::makeRequest(PacketPtr pkt)
 {
     if (m_is_busy) {
         return RequestStatus_BufferFull;
     }
 
-    uint64_t paddr = request.m_PhysicalAddress.getAddress();
-    uint8_t* data = request.data;
-    int len = request.m_Size;
-    bool write = false;
-    switch(request.m_Type) {
-      case RubyRequestType_LD:
-        write = false;
-        break;
-      case RubyRequestType_ST:
-        write = true;
-        break;
-      default:
-        panic("DMASequencer::makeRequest does not support RubyRequestType");
-        return RequestStatus_NULL;
-    }
+    uint64_t paddr = pkt->getAddr();
+    uint8_t* data =  pkt->getPtr<uint8_t>(true);
+    int len = pkt->getSize();
+    bool write = pkt->isWrite();
 
     assert(!m_is_busy);  // only support one outstanding DMA request
     m_is_busy = true;
@@ -79,7 +68,7 @@ DMASequencer::makeRequest(const RubyRequest &request)
     active_request.len = len;
     active_request.bytes_completed = 0;
     active_request.bytes_issued = 0;
-    active_request.pkt = request.pkt;
+    active_request.pkt = pkt;
 
     SequencerMsg *msg = new SequencerMsg;
     msg->getPhysicalAddress() = Address(paddr);

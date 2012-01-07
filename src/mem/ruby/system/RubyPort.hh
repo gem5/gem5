@@ -114,7 +114,7 @@ class RubyPort : public MemObject
 
     Port *getPort(const std::string &if_name, int idx);
 
-    virtual RequestStatus makeRequest(const RubyRequest & request) = 0;
+    virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
 
     //
     // Called by the controller to give the sequencer a pointer.

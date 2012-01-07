@@ -261,10 +261,10 @@ System::replaceThreadContext(ThreadContext *tc, int context_id)
 }
 
 Addr
-System::new_page()
+System::allocPhysPages(int npages)
 {
     Addr return_addr = pagePtr << LogVMPageSize;
-    ++pagePtr;
+    pagePtr += npages;
     if (return_addr >= physmem->size())
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;

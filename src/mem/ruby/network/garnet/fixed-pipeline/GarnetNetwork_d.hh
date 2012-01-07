@@ -39,6 +39,7 @@
 #include "mem/ruby/network/Network.hh"
 #include "params/GarnetNetwork_d.hh"
 
+class FaultModel;
 class NetworkInterface_d;
 class MessageBuffer;
 class Router_d;

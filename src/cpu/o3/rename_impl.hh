@@ -1214,24 +1214,16 @@ template <class Impl>
 void
 DefaultRename<Impl>::readFreeEntries(ThreadID tid)
 {
-    bool updated = false;
-    if (fromIEW->iewInfo[tid].usedIQ) {
-        freeEntries[tid].iqEntries =
-            fromIEW->iewInfo[tid].freeIQEntries;
-        updated = true;
-    }
+    if (fromIEW->iewInfo[tid].usedIQ)
+        freeEntries[tid].iqEntries = fromIEW->iewInfo[tid].freeIQEntries;
 
-    if (fromIEW->iewInfo[tid].usedLSQ) {
-        freeEntries[tid].lsqEntries =
-            fromIEW->iewInfo[tid].freeLSQEntries;
-        updated = true;
-    }
+    if (fromIEW->iewInfo[tid].usedLSQ)
+        freeEntries[tid].lsqEntries = fromIEW->iewInfo[tid].freeLSQEntries;
 
     if (fromCommit->commitInfo[tid].usedROB) {
         freeEntries[tid].robEntries =
             fromCommit->commitInfo[tid].freeROBEntries;
         emptyROB[tid] = fromCommit->commitInfo[tid].emptyROB;
-        updated = true;
     }
 
     DPRINTF(Rename, "[tid:%i]: Free IQ: %i, Free ROB: %i, Free LSQ: %i\n",

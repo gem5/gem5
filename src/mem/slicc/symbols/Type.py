@@ -439,10 +439,15 @@ ${{self.c_ident}}::print(ostream& out) const
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
 ''')
         if self.isStateDecl:
             code('#include "mem/protocol/AccessPermission.hh"')
+
+        if self.isMachineType:
+            code('#include "base/misc.hh"')
+            code('#include "mem/protocol/GenericMachineType.hh"')
+            code('#include "mem/ruby/common/Address.hh"')
+            code('struct MachineID;')
 
         code('''
 
@@ -488,7 +493,29 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
 ''')
 
             for enum in self.enums.itervalues():
-                code('#define MACHINETYPE_${{enum.ident}} 1')
+                if enum.ident == "DMA":
+                    code('''
+MachineID map_Address_to_DMA(const Address &addr);
+''')
+                code('''
+
+MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
+''')
+
+            code('''
+inline GenericMachineType
+ConvertMachToGenericMach(MachineType machType)
+{
+''')
+            for enum in self.enums.itervalues():
+                code('''
+      if (machType == MachineType_${{enum.ident}})
+          return GenericMachineType_${{enum.ident}};
+''')
+            code('''
+      panic("cannot convert to a GenericMachineType");
+}
+''')
 
         if self.isStateDecl:
             code('''
@@ -550,6 +577,7 @@ AccessPermission ${{self.c_ident}}_to_permission(const ${{self.c_ident}}& obj)
         if self.isMachineType:
             for enum in self.enums.itervalues():
                 code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
+            code('#include "mem/ruby/system/MachineID.hh"')
 
         code('''
 // Code for output operator
@@ -720,6 +748,27 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
       default:
         panic("Invalid range for type ${{self.c_ident}}");
     }
+}
+''')
+
+            for enum in self.enums.itervalues():
+                if enum.ident == "DMA":
+                    code('''
+MachineID
+map_Address_to_DMA(const Address &addr)
+{
+      MachineID dma = {MachineType_DMA, 0};
+      return dma;
+}
+''')
+
+                code('''
+
+MachineID
+get${{enum.ident}}MachineID(NodeID RubyNode)
+{
+      MachineID mach = {MachineType_${{enum.ident}}, RubyNode};
+      return mach;
 }
 ''')
 

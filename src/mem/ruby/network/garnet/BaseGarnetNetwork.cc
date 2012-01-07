@@ -38,6 +38,9 @@ BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
 {
     m_ni_flit_size = p->ni_flit_size;
     m_vcs_per_vnet = p->vcs_per_vnet;
+    m_enable_fault_model = p->enable_fault_model;
+    if (m_enable_fault_model)
+        fault_model = p->fault_model;
 
     m_ruby_start = 0;
     m_flits_received = 0;

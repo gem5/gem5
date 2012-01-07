@@ -33,8 +33,7 @@
 #include <iomanip>
 
 #include "base/hashmap.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 
 const int ADDRESS_WIDTH = 64; // address width in bytes
 

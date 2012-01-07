@@ -234,8 +234,7 @@ BaseCPU::startup()
     if (params()->progress_interval) {
         Tick num_ticks = ticks(params()->progress_interval);
 
-        Event *event;
-        event = new CPUProgressEvent(this, num_ticks);
+        new CPUProgressEvent(this, num_ticks);
     }
 }
 

@@ -44,4 +44,9 @@ typedef long long integer_t;
 typedef int64 Time;
 typedef uint64 physical_address_t;
 
+typedef int64 Index;            // what the address bit ripper returns
+typedef int LinkID;
+typedef int NodeID;
+typedef int SwitchID;
+
 #endif

@@ -497,8 +497,8 @@ decode OPCODE_HI default Unknown::unknown() {
                             0x2: mttc1({{
                                 uint64_t data = xc->readRegOtherThread(RD +
                                                                        FP_Base_DepTag);
-                                data = insertBits(data, top_bit,
-                                                  bottom_bit, Rt);
+                                data = insertBits(data, MT_H ? 63 : 31,
+                                                  MT_H ? 32 : 0, Rt);
                                 xc->setRegOtherThread(RD + FP_Base_DepTag,
                                                       data);
                             }});
@@ -532,7 +532,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                     panic("FP Control Value (%d) "
                                             "Not Available. Ignoring "
                                             "Access to Floating Control "
-                                            "Status Register", FS);
+                                            "S""tatus Register", FS);
                                 }
                                 xc->setRegOtherThread(FLOATREG_FCSR + FP_Base_DepTag, data);
                             }});
@@ -776,7 +776,6 @@ decode OPCODE_HI default Unknown::unknown() {
                             bits(pageGrain, pageGrain.esp) == 1) {
                             SP = 1;
                         }
-                        IndexReg index = Index;
                         Ptr->insertAt(newEntry, Index & 0x7FFFFFFF, SP);
                     }});
                     0x06: tlbwr({{
@@ -842,7 +841,6 @@ decode OPCODE_HI default Unknown::unknown() {
                             bits(pageGrain, pageGrain.esp) == 1) {
                             SP = 1;
                         }
-                        IndexReg index = Index;
                         Ptr->insertAt(newEntry, Random, SP);
                     }});
 

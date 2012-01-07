@@ -51,7 +51,7 @@ Export('env')
 
 build_env = [(opt, env[opt]) for opt in export_vars]
 
-from m5.util import code_formatter
+from m5.util import code_formatter, compareVersions
 
 ########################################################################
 # Code for adding source files of various types
@@ -449,7 +449,13 @@ sys.meta_path.remove(importer)
 sim_objects = m5.SimObject.allClasses
 all_enums = m5.params.allEnums
 
-all_params = {}
+# Find param types that need to be explicitly wrapped with swig.
+# These will be recognized because the ParamDesc will have a
+# swig_decl() method.  Most param types are based on types that don't
+# need this, either because they're based on native types (like Int)
+# or because they're SimObjects (which get swigged independently).
+# For now the only things handled here are VectorParam types.
+params_to_swig = {}
 for name,obj in sorted(sim_objects.iteritems()):
     for param in obj._params.local.values():
         # load the ptype attribute now because it depends on the
@@ -461,8 +467,8 @@ for name,obj in sorted(sim_objects.iteritems()):
         if not hasattr(param, 'swig_decl'):
             continue
         pname = param.ptype_str
-        if pname not in all_params:
-            all_params[pname] = param
+        if pname not in params_to_swig:
+            params_to_swig[pname] = param
 
 ########################################################################
 #
@@ -523,24 +529,23 @@ PySource('m5', 'python/m5/info.py')
 # Create all of the SimObject param headers and enum headers
 #
 
-def createSimObjectParam(target, source, env):
+def createSimObjectParamStruct(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
     name = str(source[0].get_contents())
     obj = sim_objects[name]
 
     code = code_formatter()
-    obj.cxx_decl(code)
+    obj.cxx_param_decl(code)
     code.write(target[0].abspath)
 
-def createSwigParam(target, source, env):
+def createParamSwigWrapper(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
     name = str(source[0].get_contents())
-    param = all_params[name]
+    param = params_to_swig[name]
 
     code = code_formatter()
-    code('%module(package="m5.internal") $0_${name}', param.file_ext)
     param.swig_decl(code)
     code.write(target[0].abspath)
 
@@ -554,7 +559,7 @@ def createEnumStrings(target, source, env):
     obj.cxx_def(code)
     code.write(target[0].abspath)
 
-def createEnumParam(target, source, env):
+def createEnumDecls(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
     name = str(source[0].get_contents())
@@ -564,25 +569,25 @@ def createEnumParam(target, source, env):
     obj.cxx_decl(code)
     code.write(target[0].abspath)
 
-def createEnumSwig(target, source, env):
+def createEnumSwigWrapper(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
     name = str(source[0].get_contents())
     obj = all_enums[name]
 
     code = code_formatter()
-    code('''\
-%module(package="m5.internal") enum_$name
-
-%{
-#include "enums/$name.hh"
-%}
-
-%include "enums/$name.hh"
-''')
+    obj.swig_decl(code)
     code.write(target[0].abspath)
 
-# Generate all of the SimObject param struct header files
+def createSimObjectSwigWrapper(target, source, env):
+    name = source[0].get_contents()
+    obj = sim_objects[name]
+
+    code = code_formatter()
+    obj.swig_decl(code)
+    code.write(target[0].abspath)
+
+# Generate all of the SimObject param C++ struct header files
 params_hh_files = []
 for name,simobj in sorted(sim_objects.iteritems()):
     py_source = PySource.modules[simobj.__module__]
@@ -591,16 +596,16 @@ for name,simobj in sorted(sim_objects.iteritems()):
     hh_file = File('params/%s.hh' % name)
     params_hh_files.append(hh_file)
     env.Command(hh_file, Value(name),
-                MakeAction(createSimObjectParam, Transform("SO PARAM")))
+                MakeAction(createSimObjectParamStruct, Transform("SO PARAM")))
     env.Depends(hh_file, depends + extra_deps)
 
-# Generate any parameter header files needed
+# Generate any needed param SWIG wrapper files
 params_i_files = []
-for name,param in all_params.iteritems():
-    i_file = File('python/m5/internal/%s_%s.i' % (param.file_ext, name))
+for name,param in params_to_swig.iteritems():
+    i_file = File('python/m5/internal/%s.i' % (param.swig_module_name()))
     params_i_files.append(i_file)
     env.Command(i_file, Value(name),
-                MakeAction(createSwigParam, Transform("SW PARAM")))
+                MakeAction(createParamSwigWrapper, Transform("SW PARAM")))
     env.Depends(i_file, depends)
     SwigSource('m5.internal', i_file)
 
@@ -617,54 +622,22 @@ for name,enum in sorted(all_enums.iteritems()):
 
     hh_file = File('enums/%s.hh' % name)
     env.Command(hh_file, Value(name),
-                MakeAction(createEnumParam, Transform("EN PARAM")))
+                MakeAction(createEnumDecls, Transform("ENUMDECL")))
     env.Depends(hh_file, depends + extra_deps)
 
     i_file = File('python/m5/internal/enum_%s.i' % name)
     env.Command(i_file, Value(name),
-                MakeAction(createEnumSwig, Transform("ENUMSWIG")))
+                MakeAction(createEnumSwigWrapper, Transform("ENUMSWIG")))
     env.Depends(i_file, depends + extra_deps)
     SwigSource('m5.internal', i_file)
 
-def buildParam(target, source, env):
-    name = source[0].get_contents()
-    obj = sim_objects[name]
-    class_path = obj.cxx_class.split('::')
-    classname = class_path[-1]
-    namespaces = class_path[:-1]
-    params = obj._params.local.values()
-
-    code = code_formatter()
-
-    code('%module(package="m5.internal") param_$name')
-    code()
-    code('%{')
-    code('#include "params/$obj.hh"')
-    for param in params:
-        param.cxx_predecls(code)
-    code('%}')
-    code()
-
-    for param in params:
-        param.swig_predecls(code)
-
-    code()
-    if obj._base:
-        code('%import "python/m5/internal/param_${{obj._base}}.i"')
-    code()
-    obj.swig_objdecls(code)
-    code()
-
-    code('%include "params/$obj.hh"')
-
-    code.write(target[0].abspath)
-
+# Generate SimObject SWIG wrapper files
 for name in sim_objects.iterkeys():
-    params_file = File('python/m5/internal/param_%s.i' % name)
-    env.Command(params_file, Value(name),
-                MakeAction(buildParam, Transform("BLDPARAM")))
-    env.Depends(params_file, depends)
-    SwigSource('m5.internal', params_file)
+    i_file = File('python/m5/internal/param_%s.i' % name)
+    env.Command(i_file, Value(name),
+                MakeAction(createSimObjectSwigWrapper, Transform("SO SWIG")))
+    env.Depends(i_file, depends)
+    SwigSource('m5.internal', i_file)
 
 # Generate the main swig init file
 def makeEmbeddedSwigInit(target, source, env):
@@ -687,7 +660,7 @@ for swig in SwigSource.all:
                 MakeAction('$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
                 '-o ${TARGETS[0]} $SOURCES', Transform("SWIG")))
     cc_file = str(swig.tnode)
-    init_file = '%s/init_%s.cc' % (dirname(cc_file), basename(cc_file))
+    init_file = '%s/%s_init.cc' % (dirname(cc_file), basename(cc_file))
     env.Command(init_file, Value(swig.module),
                 MakeAction(makeEmbeddedSwigInit, Transform("EMBED SW")))
     Source(init_file, **swig.guards)
@@ -878,6 +851,9 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         swig_env.Append(CCFLAGS='-Wno-uninitialized')
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
         swig_env.Append(CCFLAGS='-Wno-parentheses')
+        if compareVersions(env['GCC_VERSION'], '4.6.0') != -1:
+            swig_env.Append(CCFLAGS='-Wno-unused-label')
+            swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
 
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')
@@ -904,9 +880,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
         return obj
 
-    sources = Source.get(main=False, skip_lib=False)
-    static_objs = [ make_obj(s, True) for s in sources ]
-    shared_objs = [ make_obj(s, False) for s in sources ]
+    static_objs = \
+        [ make_obj(s, True) for s in Source.get(main=False, skip_lib=False) ]
+    shared_objs = \
+        [ make_obj(s, False) for s in Source.get(main=False, skip_lib=False) ]
 
     static_date = make_obj(date_source, static=True, extra_deps=static_objs)
     static_objs.append(static_date)

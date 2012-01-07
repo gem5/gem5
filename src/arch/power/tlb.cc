@@ -119,7 +119,6 @@ int
 TLB::probeEntry(Addr vpn,uint8_t asn) const
 {
     // assume not found...
-    PowerISA::PTE *retval = NULL;
     int Ind = -1;
     PageTable::const_iterator i = lookupTable.find(vpn);
     if (i != lookupTable.end()) {
@@ -133,7 +132,6 @@ TLB::probeEntry(Addr vpn,uint8_t asn) const
                 && (pte->G  || (asn == pte->asid))) {
 
                 // We have a VPN + ASID Match
-                retval = pte;
                 Ind = index;
                 break;
             }

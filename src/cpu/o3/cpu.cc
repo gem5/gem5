@@ -1639,7 +1639,6 @@ FullO3CPU<Impl>::updateThreadPriority()
         //DEFAULT TO ROUND ROBIN SCHEME
         //e.g. Move highest priority to end of thread list
         list<ThreadID>::iterator list_begin = activeThreads.begin();
-        list<ThreadID>::iterator list_end   = activeThreads.end();
 
         unsigned high_thread = *list_begin;
 

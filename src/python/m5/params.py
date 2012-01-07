@@ -81,10 +81,17 @@ class MetaParamValue(type):
 class ParamValue(object):
     __metaclass__ = MetaParamValue
 
+
+    # Generate the code needed as a prerequisite for declaring a C++
+    # object of this type.  Typically generates one or more #include
+    # statements.  Used when declaring parameters of this type.
     @classmethod
     def cxx_predecls(cls, code):
         pass
 
+    # Generate the code needed as a prerequisite for including a
+    # reference to a C++ object of this type in a SWIG .i file.
+    # Typically generates one or more %import or %include statements.
     @classmethod
     def swig_predecls(cls, code):
         pass
@@ -101,8 +108,6 @@ class ParamValue(object):
 
 # Regular parameter description.
 class ParamDesc(object):
-    file_ext = 'ptype'
-
     def __init__(self, ptype_str, ptype, *args, **kwargs):
         self.ptype_str = ptype_str
         # remember ptype only if it is provided
@@ -159,6 +164,7 @@ class ParamDesc(object):
         return self.ptype(value)
 
     def cxx_predecls(self, code):
+        code('#include <cstddef>')
         self.ptype.cxx_predecls(code)
 
     def swig_predecls(self, code):
@@ -223,8 +229,6 @@ class SimObjectVector(VectorParamValue):
                 yield obj
 
 class VectorParamDesc(ParamDesc):
-    file_ext = 'vptype'
-
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
     def convert(self, value):
@@ -240,10 +244,14 @@ class VectorParamDesc(ParamDesc):
         else:
             return VectorParamValue(tmp_list)
 
+    def swig_module_name(self):
+        return "%s_vector" % self.ptype_str
+
     def swig_predecls(self, code):
-        code('%import "vptype_${{self.ptype_str}}.i"')
+        code('%import "${{self.swig_module_name()}}.i"')
 
     def swig_decl(self, code):
+        code('%module(package="m5.internal") ${{self.swig_module_name()}}')
         code('%{')
         self.ptype.cxx_predecls(code)
         code('%}')
@@ -1043,6 +1051,19 @@ namespace Enums {
 } // namespace Enums
 ''')
 
+    def swig_decl(cls, code):
+        name = cls.__name__
+        code('''\
+%module(package="m5.internal") enum_$name
+
+%{
+#include "enums/$name.hh"
+%}
+
+%include "enums/$name.hh"
+''')
+
+
 # Base class for enum types.
 class Enum(ParamValue):
     __metaclass__ = MetaEnum
@@ -1362,7 +1383,7 @@ class PortRef(object):
 
     # Call C++ to create corresponding port connection between C++ objects
     def ccConnect(self):
-        from m5.internal.params import connectPorts
+        from m5.internal.pyobject import connectPorts
 
         if self.ccConnected: # already done this
             return

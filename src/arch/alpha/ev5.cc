@@ -202,8 +202,6 @@ int break_ipl = -1;
 void
 ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 {
-    uint64_t old;
-
     if (tc->misspeculating())
         return;
 
@@ -255,10 +253,9 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 
       case IPR_PALtemp23:
         // write entire quad w/ no side-effect
-        old = ipr[idx];
-        ipr[idx] = val;
         if (tc->getKernelStats())
-            tc->getKernelStats()->context(old, val, tc);
+            tc->getKernelStats()->context(ipr[idx], val, tc);
+        ipr[idx] = val;
         break;
 
       case IPR_DTB_PTE:

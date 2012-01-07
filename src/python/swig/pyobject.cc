@@ -88,16 +88,11 @@ int
 connectPorts(SimObject *o1, const std::string &name1, int i1,
              SimObject *o2, const std::string &name2, int i2)
 {
-    MemObject *mo1, *mo2;
-    mo1 = dynamic_cast<MemObject*>(o1);
-    mo2 = dynamic_cast<MemObject*>(o2);
-
     if (FullSystem) {
         EtherObject *eo1, *eo2;
         EtherDevice *ed1, *ed2;
         eo1 = dynamic_cast<EtherObject*>(o1);
         ed1 = dynamic_cast<EtherDevice*>(o1);
-
         eo2 = dynamic_cast<EtherObject*>(o2);
         ed2 = dynamic_cast<EtherDevice*>(o2);
 

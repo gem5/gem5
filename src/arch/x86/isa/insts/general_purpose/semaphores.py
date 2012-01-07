@@ -62,21 +62,25 @@ def macroop CMPXCHG_P_R {
 };
 
 def macroop CMPXCHG_LOCKED_M_R {
+    mfence
     ldstl t1, seg, sib, disp
     sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
 
     mov t1, t1, reg, flags=(CZF,)
     stul t1, seg, sib, disp
+    mfence
     mov rax, rax, t1, flags=(nCZF,)
 };
 
 def macroop CMPXCHG_LOCKED_P_R {
     rdip t7
+    mfence
     ldstl t1, seg, riprel, disp
     sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
 
     mov t1, t1, reg, flags=(CZF,)
     stul t1, seg, riprel, disp
+    mfence
     mov rax, rax, t1, flags=(nCZF,)
 };
 
@@ -96,17 +100,21 @@ def macroop XADD_P_R {
 };
 
 def macroop XADD_LOCKED_M_R {
+    mfence
     ldstl t1, seg, sib, disp
     add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     stul t2, seg, sib, disp
+    mfence
     mov reg, reg, t1
 };
 
 def macroop XADD_LOCKED_P_R {
     rdip t7
+    mfence
     ldstl t1, seg, riprel, disp
     add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     stul t2, seg, riprel, disp
+    mfence
     mov reg, reg, t1
 };
 

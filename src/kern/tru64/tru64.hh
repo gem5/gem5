@@ -557,7 +557,7 @@ class Tru64 : public OperatingSystem
                 stack_base, stack_size);
 
         // map memory
-        process->pTable->allocate(rounded_stack_base, rounded_stack_size);
+        process->allocateMem(rounded_stack_base, rounded_stack_size);
 
         argp->address = gtoh(rounded_stack_base);
         argp.copyOut(tc->getMemPort());
@@ -676,7 +676,7 @@ class Tru64 : public OperatingSystem
         // Register this as a valid address range with the process
         base_addr = roundDown(base_addr, VMPageSize);
         int size = cur_addr - base_addr;
-        process->pTable->allocate(base_addr, roundUp(size, VMPageSize));
+        process->allocateMem(base_addr, roundUp(size, VMPageSize));
 
         config.copyOut(tc->getMemPort());
         slot_state.copyOut(tc->getMemPort());

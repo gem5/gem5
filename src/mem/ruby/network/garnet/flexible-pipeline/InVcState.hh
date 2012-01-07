@@ -31,6 +31,7 @@
 #ifndef __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__
 #define __MEM_RUBY_NETWORK_GARNET_FLEXIBLE_PIPELINE_IN_VC_STATE_HH__
 
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 
 class InVcState

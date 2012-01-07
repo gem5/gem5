@@ -1355,7 +1355,7 @@ ${ident}_ProfileDumper::dumpStats(std::ostream& out) const
 
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/${ident}_State.hh"
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 
 class ${ident}_Profiler
 {

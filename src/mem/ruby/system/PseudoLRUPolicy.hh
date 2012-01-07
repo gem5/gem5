@@ -64,8 +64,6 @@ inline
 PseudoLRUPolicy::PseudoLRUPolicy(Index num_sets, Index assoc)
     : AbstractReplacementPolicy(num_sets, assoc)
 {
-    int num_tree_nodes;
-
     // associativity cannot exceed capacity of tree representation
     assert(num_sets > 0 && assoc > 1 && assoc <= (Index) sizeof(uint64)*4);
 
@@ -84,7 +82,6 @@ PseudoLRUPolicy::PseudoLRUPolicy(Index num_sets, Index assoc)
         m_num_levels++;
     }
     assert(m_num_levels < sizeof(unsigned int)*4);
-    num_tree_nodes = (1 << m_num_levels) - 1;
     m_trees = new uint64[m_num_sets];
     for (unsigned i = 0; i < m_num_sets; i++) {
         m_trees[i] = 0;

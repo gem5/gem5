@@ -33,12 +33,9 @@
 
 #include "base/hashmap.hh"
 #include "mem/protocol/GenericMachineType.hh"
-#include "mem/protocol/PrefetchBit.hh"
-#include "mem/protocol/RubyAccessMode.hh"
 #include "mem/protocol/RubyRequestType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/RubyPort.hh"
 
 class DataBlock;
@@ -50,11 +47,12 @@ class RubySequencerParams;
 
 struct SequencerRequest
 {
-    RubyRequest ruby_request;
+    PacketPtr pkt;
+    RubyRequestType m_type;
     Time issue_time;
 
-    SequencerRequest(const RubyRequest & _ruby_request, Time _issue_time)
-        : ruby_request(_ruby_request), issue_time(_issue_time)
+    SequencerRequest(PacketPtr _pkt, RubyRequestType _m_type, Time _issue_time)
+        : pkt(_pkt), m_type(_m_type), issue_time(_issue_time)
     {}
 };
 
@@ -100,8 +98,7 @@ class Sequencer : public RubyPort, public Consumer
                       Time forwardRequestTime,
                       Time firstResponseTime);
 
-    RequestStatus makeRequest(const RubyRequest & request);
-    RequestStatus getRequestStatus(const RubyRequest& request);
+    RequestStatus makeRequest(PacketPtr pkt);
     bool empty() const;
 
     void print(std::ostream& out) const;
@@ -112,7 +109,7 @@ class Sequencer : public RubyPort, public Consumer
     void removeRequest(SequencerRequest* request);
 
   private:
-    void issueRequest(const RubyRequest& request);
+    void issueRequest(PacketPtr pkt, RubyRequestType type);
 
     void hitCallback(SequencerRequest* request, 
                      GenericMachineType mach,
@@ -122,7 +119,7 @@ class Sequencer : public RubyPort, public Consumer
                      Time forwardRequestTime,
                      Time firstResponseTime);
 
-    bool insertRequest(SequencerRequest* request);
+    RequestStatus insertRequest(PacketPtr pkt, RubyRequestType request_type);
 
     bool handleLlsc(const Address& address, SequencerRequest* request);
 

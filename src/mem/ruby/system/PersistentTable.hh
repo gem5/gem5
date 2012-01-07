@@ -41,6 +41,7 @@
 class PersistentTableEntry
 {
   public:
+    PersistentTableEntry() {}
     void print(std::ostream& out) const {}
 
     NetDest m_starving;

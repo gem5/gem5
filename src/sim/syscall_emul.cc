@@ -166,8 +166,7 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         for (ChunkGenerator gen(p->brk_point, new_brk - p->brk_point,
                                 VMPageSize); !gen.done(); gen.next()) {
             if (!p->pTable->translate(gen.addr()))
-                p->pTable->allocate(roundDown(gen.addr(), VMPageSize),
-                                    VMPageSize);
+                p->allocateMem(roundDown(gen.addr(), VMPageSize), VMPageSize);
 
             // if the address is already there, zero it out
             else {

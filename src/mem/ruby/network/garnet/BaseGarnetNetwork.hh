@@ -38,6 +38,7 @@
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/ruby/network/Network.hh"
+#include "mem/ruby/network/fault_model/FaultModel.hh"
 #include "params/BaseGarnetNetwork.hh"
 #include "math.h"
 
@@ -50,10 +51,13 @@ class BaseGarnetNetwork : public Network
     void init();
     int getNiFlitSize() {return m_ni_flit_size; }
     int getVCsPerVnet() {return m_vcs_per_vnet; }
+    bool isFaultModelEnabled() {return m_enable_fault_model;}
+    FaultModel* fault_model;
 
   protected:
     int m_ni_flit_size;
     int m_vcs_per_vnet;
+    bool m_enable_fault_model;
 
     int m_flits_received;
     int m_flits_injected;

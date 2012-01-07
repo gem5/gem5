@@ -271,7 +271,9 @@ class System : public SimObject
      */
     Addr getKernelEntry() const { return kernelEntry; }
 
-    Addr new_page();
+    /// Allocate npages contiguous unused physical pages
+    /// @return Starting address of first page
+    Addr allocPhysPages(int npages);
 
     int registerThreadContext(ThreadContext *tc, int assigned=-1);
     void replaceThreadContext(ThreadContext *tc, int context_id);

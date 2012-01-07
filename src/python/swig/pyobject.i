@@ -28,6 +28,8 @@
  * Authors: Nathan Binkert
  */
 
+%module(package="m5.internal") pyobject
+
 %{
 #include "python/swig/pyobject.hh"
 %}
@@ -35,34 +37,6 @@
 // import these files for SWIG to wrap
 %include <std_string.i>
 %include <stdint.i>
-
-%include "base/types.hh"
-%include "sim/sim_object_params.hh"
-
-class BaseCPU;
-
-class SimObject {
-  public:
-    enum State {
-      Running,
-      Draining,
-      Drained
-    };
-
-    void init();
-    void loadState(Checkpoint *cp);
-    void initState();
-    void regStats();
-    void regFormulas();
-    void resetStats();
-    void startup();
-
-    unsigned int drain(Event *drain_event);
-    void resume();
-    void switchOut();
-    void takeOverFrom(BaseCPU *cpu);
-    SimObject(const SimObjectParams *p);
-};
 
 int connectPorts(SimObject *o1, const std::string &name1, int i1,
                  SimObject *o2, const std::string &name2, int i2);

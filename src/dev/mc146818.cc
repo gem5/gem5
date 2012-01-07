@@ -217,7 +217,7 @@ MC146818::serialize(const string &base, ostream &os)
     //
     Tick rtcTimerInterruptTickOffset = event.when() - curTick();
     SERIALIZE_SCALAR(rtcTimerInterruptTickOffset);
-    Tick rtcClockTickOffset = event.when() - curTick();
+    Tick rtcClockTickOffset = tickEvent.when() - curTick();
     SERIALIZE_SCALAR(rtcClockTickOffset);
 }
 

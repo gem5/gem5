@@ -85,8 +85,8 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
 
         if (!pTable->translate(gen.addr(), paddr)) {
             if (allocating == Always) {
-                pTable->allocate(roundDown(gen.addr(), VMPageSize),
-                                 VMPageSize);
+                process->allocateMem(roundDown(gen.addr(), VMPageSize),
+                                     VMPageSize);
             } else if (allocating == NextPage) {
                 // check if we've accessed the next page on the stack
                 if (!process->fixupStackFault(gen.addr()))
@@ -121,8 +121,8 @@ TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
 
         if (!pTable->translate(gen.addr(), paddr)) {
             if (allocating == Always) {
-                pTable->allocate(roundDown(gen.addr(), VMPageSize),
-                                 VMPageSize);
+                process->allocateMem(roundDown(gen.addr(), VMPageSize),
+                                     VMPageSize);
                 pTable->translate(gen.addr(), paddr);
             } else {
                 return false;

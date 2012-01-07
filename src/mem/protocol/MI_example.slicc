@@ -4,4 +4,3 @@ include "MI_example-msg.sm";
 include "MI_example-cache.sm";
 include "MI_example-dir.sm";
 include "MI_example-dma.sm";
-include "standard_1level_CMP-protocol.sm";

@@ -42,7 +42,6 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/system/NodeID.hh"
 
 class NetDest
 {
