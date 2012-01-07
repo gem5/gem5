@@ -36,6 +36,7 @@
  *
  * Authors: William Wang
  *          Ali Saidi
+ *          Chris Emmons
  */
 #ifndef __BASE_BITMAP_HH__
 #define __BASE_BITMAP_HH__
@@ -62,6 +63,9 @@ class  Bitmap
      */
     Bitmap(VideoConvert::Mode mode, uint16_t w, uint16_t h, uint8_t *d);
 
+    /** Destructor */
+    ~Bitmap();
+
     /** Provide the converter with the data that should be output. It will be
      * converted into rgb8888 and write out when write() is called.
      * @param d the data
@@ -71,7 +75,13 @@ class  Bitmap
     /** Write the provided data into the fstream provided
      * @param bmp stream to write to
      */
-    void write(std::ostream *bmp);
+    void write(std::ostream *bmp) const;
+
+    /** Gets a hash over the bitmap for quick comparisons to other bitmaps.
+     * @return hash of the bitmap
+     */
+    uint64_t getHash() const { return vc.getHash(data); }
+
 
   private:
     VideoConvert::Mode mode;
@@ -80,6 +90,9 @@ class  Bitmap
     uint8_t *data;
 
     VideoConvert vc;
+
+    mutable char *headerBuffer;
+    static const size_t sizeofHeaderBuffer;
 
     struct Magic
     {

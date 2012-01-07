@@ -3,10 +3,10 @@
 sim_seconds                                  0.408816                       # Number of seconds simulated
 sim_ticks                                408816360000                       # Number of ticks simulated
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 166907                       # Simulator instruction rate (inst/s)
-host_tick_rate                               48544601                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 212296                       # Number of bytes of host memory used
-host_seconds                                  8421.46                       # Real time elapsed on the host
+host_inst_rate                                 252046                       # Simulator instruction rate (inst/s)
+host_tick_rate                               73306837                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 206388                       # Number of bytes of host memory used
+host_seconds                                  5576.78                       # Real time elapsed on the host
 sim_insts                                  1405604152                       # Number of instructions simulated
 system.cpu.workload.num_syscalls                   49                       # Number of system calls
 system.cpu.numCycles                        817632721                       # number of cpu cycles simulated
@@ -273,7 +273,7 @@ system.cpu.int_regfile_writes              1303867666                       # nu
 system.cpu.fp_regfile_reads                  16986540                       # number of floating regfile reads
 system.cpu.fp_regfile_writes                 10452290                       # number of floating regfile writes
 system.cpu.misc_regfile_reads               605383822                       # number of misc regfile reads
-system.cpu.misc_regfile_writes                2258933                       # number of misc regfile writes
+system.cpu.misc_regfile_writes                2190883                       # number of misc regfile writes
 system.cpu.icache.replacements                    166                       # number of replacements
 system.cpu.icache.tagsinuse               1031.400456                       # Cycle average of tags in use
 system.cpu.icache.total_refs                170772098                       # Total number of references to valid blocks.

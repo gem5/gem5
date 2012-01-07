@@ -33,7 +33,7 @@ class L1Cache(BaseCache):
     block_size = 64
     latency = '1ns'
     mshrs = 10
-    tgts_per_mshr = 5
+    tgts_per_mshr = 20
     is_top_level = True
 
 class L2Cache(BaseCache):

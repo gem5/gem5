@@ -1,11 +1,9 @@
-Redirecting stdout to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simout
-Redirecting stderr to build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 20 2011 13:07:22
-gem5 started Aug 20 2011 13:07:32
-gem5 executing on zizzer
+gem5 compiled Nov 21 2011 16:13:49
+gem5 started Nov 21 2011 20:51:35
+gem5 executing on u200540-lin
 command line: build/SPARC_SE/gem5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/o3-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

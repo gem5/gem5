@@ -713,6 +713,9 @@ class FullO3CPU : public BaseO3CPU
     Stats::Scalar timesIdled;
     /** Stat for total number of cycles the CPU spends descheduled. */
     Stats::Scalar idleCycles;
+    /** Stat for total number of cycles the CPU spends descheduled due to a
+     * quiesce operation or waiting for an interrupt. */
+    Stats::Scalar quiesceCycles;
     /** Stat for the number of committed instructions per thread. */
     Stats::Vector committedInsts;
     /** Stat for the total number of committed instructions. */

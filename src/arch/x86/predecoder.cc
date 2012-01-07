@@ -186,7 +186,7 @@ namespace X86ISA
             DPRINTF(Predecoder, "Found two byte opcode.\n");
             emi.opcode.prefixA = nextByte;
         }
-        else if(emi.opcode.num == 2 && (nextByte == 0x38 || nextByte == 0x3F))
+        else if(emi.opcode.num == 2 && (nextByte == 0x38 || nextByte == 0x3A))
         {
             nextState = OpcodeState;
             DPRINTF(Predecoder, "Found three byte opcode.\n");

@@ -62,6 +62,13 @@ machine(L1Cache, "AMD Hammer-like protocol")
     M, AccessPermission:Read_Only, desc="Modified (dirty)";
     MM, AccessPermission:Read_Write, desc="Modified (dirty and locally modified)";
 
+    // Base states, locked and ready to service the mandatory queue
+    IR, AccessPermission:Invalid, desc="Idle";
+    SR, AccessPermission:Read_Only, desc="Shared";
+    OR, AccessPermission:Read_Only, desc="Owned";
+    MR, AccessPermission:Read_Only, desc="Modified (dirty)";
+    MMR, AccessPermission:Read_Write, desc="Modified (dirty and locally modified)";
+
     // Transient States
     IM, AccessPermission:Busy, "IM", desc="Issued GetX";
     SM, AccessPermission:Read_Only, "SM", desc="Issued GetX, we still have a valid copy of the line";
@@ -1217,6 +1224,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
     stall_and_wait(mandatoryQueue_in, address);    
   }
 
+  action(z_stall, "z", desc="stall") {
+    // do nothing and the special z_stall action will return a protocol stall
+    // so that the next port is checked
+  }
+
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
     wakeUpBuffers(address);
   }
@@ -1246,7 +1258,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     zz_stallAndWaitMandatoryQueue;
   }
 
-  transition({IM, SM, ISM, OM, IS, SS, MM_W, M_W, OI, MI, II, IT, ST, OT, MT, MMT, IM_F, SM_F, ISM_F, OM_F, MM_WF, MI_F, MM_F}, L1_to_L2) {
+  transition({IM, SM, ISM, OM, IS, SS, MM_W, M_W, OI, MI, II, IT, ST, OT, MT, MMT, IM_F, SM_F, ISM_F, OM_F, MM_WF, MI_F, MM_F, IR, SR, OR, MR, MMR}, L1_to_L2) {
     zz_stallAndWaitMandatoryQueue;
   }
 
@@ -1259,7 +1271,11 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   transition({IT, ST, OT, MT, MMT}, {Other_GETX, NC_DMA_GETS, Other_GETS, Merged_GETS, Other_GETS_No_Mig, Invalidate, Flush_line}) {
-    // stall
+    z_stall;
+  }
+
+  transition({IR, SR, OR, MR, MMR}, {Other_GETX, NC_DMA_GETS, Other_GETS, Merged_GETS, Other_GETS_No_Mig, Invalidate}) {
+    z_stall;
   }
 
   // Transitions moving data between the L1 and L2 caches
@@ -1382,33 +1398,33 @@ machine(L1Cache, "AMD Hammer-like protocol")
     ll_L2toL1Transfer;
   }
 
-  transition(IT, Complete_L2_to_L1, I) {
+  transition(IT, Complete_L2_to_L1, IR) {
     j_popTriggerQueue;
     kd_wakeUpDependents;
   }
 
-  transition(ST, Complete_L2_to_L1, S) {
+  transition(ST, Complete_L2_to_L1, SR) {
     j_popTriggerQueue;
     kd_wakeUpDependents;
   }
 
-  transition(OT, Complete_L2_to_L1, O) {
+  transition(OT, Complete_L2_to_L1, OR) {
     j_popTriggerQueue;
     kd_wakeUpDependents;
   }
 
-  transition(MT, Complete_L2_to_L1, M) {
+  transition(MT, Complete_L2_to_L1, MR) {
     j_popTriggerQueue;
     kd_wakeUpDependents;
   }
 
-  transition(MMT, Complete_L2_to_L1, MM) {
+  transition(MMT, Complete_L2_to_L1, MMR) {
     j_popTriggerQueue;
     kd_wakeUpDependents;
   }
 
   // Transitions from Idle
-  transition(I, Load, IS) {
+  transition({I, IR}, Load, IS) {
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     a_issueGETS;
@@ -1416,7 +1432,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     k_popMandatoryQueue;
   }
 
-  transition(I, Ifetch, IS) {
+  transition({I, IR}, Ifetch, IS) {
     jj_allocateL1ICacheBlock;
     i_allocateTBE;
     a_issueGETS;
@@ -1424,7 +1440,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     k_popMandatoryQueue;
   }
 
-  transition(I, Store, IM) {
+  transition({I, IR}, Store, IM) {
     ii_allocateL1DCacheBlock;
     i_allocateTBE;
     b_issueGETX;
@@ -1432,7 +1448,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     k_popMandatoryQueue;
   }
 
-  transition(I, Flush_line, IM_F) {
+  transition({I, IR}, Flush_line, IM_F) {
     it_allocateTBE;
     bf_issueGETF;
     uu_profileMiss;
@@ -1455,14 +1471,19 @@ machine(L1Cache, "AMD Hammer-like protocol")
     k_popMandatoryQueue;
   }
 
-  transition(S, Store, SM) {
+  transition(SR, {Load, Ifetch}, S) {
+    h_load_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition({S, SR}, Store, SM) {
     i_allocateTBE;
     b_issueGETX;
     uu_profileMiss;
     k_popMandatoryQueue;
   }
 
-  transition(S, Flush_line, SM_F) {
+  transition({S, SR}, Flush_line, SM_F) {
     i_allocateTBE;
     bf_issueGETF;
     uu_profileMiss;
@@ -1491,14 +1512,19 @@ machine(L1Cache, "AMD Hammer-like protocol")
     k_popMandatoryQueue;
   }
 
-  transition(O, Store, OM) {
+  transition(OR, {Load, Ifetch}, O) {
+    h_load_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition({O, OR}, Store, OM) {
     i_allocateTBE;
     b_issueGETX;
     p_decrementNumberOfMessagesByOne;
     uu_profileMiss;
     k_popMandatoryQueue;
   }
-  transition(O, Flush_line, OM_F) {
+  transition({O, OR}, Flush_line, OM_F) {
     i_allocateTBE;
     bf_issueGETF;
     p_decrementNumberOfMessagesByOne;
@@ -1530,17 +1556,17 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   // Transitions from Modified
-  transition(MM, {Load, Ifetch}) {
+  transition({MM, MMR}, {Load, Ifetch}, MM) {
     h_load_hit;
     k_popMandatoryQueue;
   }
 
-  transition(MM, Store) {
+  transition({MM, MMR}, Store, MM) {
     hh_store_hit;
     k_popMandatoryQueue;
   }
 
-  transition({MM, M}, Flush_line, MM_F) {
+  transition({MM, M, MMR}, Flush_line, MM_F) {
     i_allocateTBE;
     bf_issueGETF;
     p_decrementNumberOfMessagesByOne;
@@ -1587,12 +1613,12 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
  
   // Transitions from Dirty Exclusive
-  transition(M, {Load, Ifetch}) {
+  transition({M, MR}, {Load, Ifetch}, M) {
     h_load_hit;
     k_popMandatoryQueue;
   }
 
-  transition(M, Store, MM) {
+  transition({M, MR}, Store, MM) {
     hh_store_hit;
     k_popMandatoryQueue;
   }

@@ -83,7 +83,7 @@ MmDisk::read(PacketPtr pkt)
         break;
       case sizeof(uint16_t):
         memcpy(&d16, diskData + (accessAddr % SectorSize), 2);
-        pkt->set(htobe(d32));
+        pkt->set(htobe(d16));
         DPRINTF(IdeDisk, "reading word %#x value= %#x\n", accessAddr, d16);
         break;
       case sizeof(uint32_t):

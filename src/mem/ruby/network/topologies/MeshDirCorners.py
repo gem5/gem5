@@ -99,7 +99,7 @@ def makeTopology(nodes, options, IntLink, ExtLink, Router):
     # Connect the dma nodes to router 0.  These should only be DMA nodes.
     for (i, node) in enumerate(dma_nodes):
         assert(node.type == 'DMA_Controller')
-        ext_links.append(ExtLink(ext_node=node, int_node=mesh.routers[0]))
+        ext_links.append(ExtLink(link_id=link_count, ext_node=node, int_node=mesh.routers[0]))
 
     # Create the mesh links.  First row (east-west) links then column
     # (north-south) links

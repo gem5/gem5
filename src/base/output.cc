@@ -26,11 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Chris Emmons
  */
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
 
+#include <cassert>
 #include <cerrno>
 #include <climits>
 #include <cstdlib>
@@ -46,7 +49,7 @@ using namespace std;
 OutputDirectory simout;
 
 /**
- *
+ * @file This file manages creating / deleting output files for the simulator.
  */
 OutputDirectory::OutputDirectory()
 {}
@@ -73,23 +76,51 @@ OutputDirectory::checkForStdio(const string &name) const
 
 ostream *
 OutputDirectory::openFile(const string &filename,
-                          ios_base::openmode mode) const
+                          ios_base::openmode mode)
 {
     if (filename.find(".gz", filename.length()-3) < filename.length()) {
         ogzstream *file = new ogzstream(filename.c_str(), mode);
-
         if (!file->is_open())
             fatal("Cannot open file %s", filename);
-
+        assert(files.find(filename) == files.end());
+        files[filename] = file;
         return file;
     } else {
         ofstream *file = new ofstream(filename.c_str(), mode);
-
         if (!file->is_open())
             fatal("Cannot open file %s", filename);
-
+        assert(files.find(filename) == files.end());
+        files[filename] = file;
         return file;
     }
+}
+
+void
+OutputDirectory::close(ostream *openStream) {
+    map_t::iterator i;
+    for (i = files.begin(); i != files.end(); i++) {
+        if (i->second != openStream)
+            continue;
+
+        ofstream *fs = dynamic_cast<ofstream*>(i->second);
+        if (fs) {
+            fs->close();
+            delete i->second;
+            break;
+        } else {
+            ogzstream *gfs = dynamic_cast<ogzstream*>(i->second);
+            if (gfs) {
+                gfs->close();
+                delete i->second;
+                break;
+            }
+        }
+    }
+
+    if (i == files.end())
+        fatal("Attempted to close an unregistred file stream");
+
+    files.erase(i);
 }
 
 void
@@ -100,9 +131,9 @@ OutputDirectory::setDirectory(const string &d)
 
     dir = d;
 
-    // guarantee that directory ends with a '/'
-    if (dir[dir.size() - 1] != '/')
-        dir += "/";
+    // guarantee that directory ends with a path separator
+    if (dir[dir.size() - 1] != PATH_SEPARATOR)
+        dir += PATH_SEPARATOR;
 }
 
 const string &
@@ -117,7 +148,7 @@ OutputDirectory::directory() const
 inline string
 OutputDirectory::resolve(const string &name) const
 {
-    return (name[0] != '/') ? dir + name : name;
+    return (name[0] != PATH_SEPARATOR) ? dir + name : name;
 }
 
 ostream *
@@ -136,24 +167,101 @@ OutputDirectory::create(const string &name, bool binary)
 }
 
 ostream *
-OutputDirectory::find(const string &name)
+OutputDirectory::find(const string &name) const
 {
     ostream *file = checkForStdio(name);
     if (file)
         return file;
 
-    string filename = resolve(name);
-    map_t::iterator i = files.find(filename);
+    const string filename = resolve(name);
+    map_t::const_iterator i = files.find(filename);
     if (i != files.end())
         return (*i).second;
 
-    file = openFile(filename);
-    files[filename] = file;
-    return file;
+    return NULL;
 }
 
 bool
 OutputDirectory::isFile(const std::ostream *os)
 {
     return os && os != &cerr && os != &cout;
+}
+
+bool
+OutputDirectory::isFile(const string &name) const
+{
+    // definitely a file if in our data structure
+    if (find(name) != NULL) return true;
+
+    struct stat st_buf;
+    int st = stat(name.c_str(), &st_buf);
+    return (st == 0) && S_ISREG(st_buf.st_mode);
+}
+
+string
+OutputDirectory::createSubdirectory(const string &name) const
+{
+    const string new_dir = resolve(name);
+    if (new_dir.find(directory()) == string::npos)
+        fatal("Attempting to create subdirectory not in m5 output dir\n");
+
+    // if it already exists, that's ok; otherwise, fail if we couldn't create
+    if ((mkdir(new_dir.c_str(), 0755) != 0) && (errno != EEXIST))
+        fatal("Failed to create new output subdirectory '%s'\n", new_dir);
+
+    return name + PATH_SEPARATOR;
+}
+
+void
+OutputDirectory::remove(const string &name, bool recursive)
+{
+    const string fname = resolve(name);
+
+    if (fname.find(directory()) == string::npos)
+        fatal("Attempting to remove file/dir not in output dir\n");
+
+    if (isFile(fname)) {
+        // close and release file if we have it open
+        map_t::iterator itr = files.find(fname);
+        if (itr != files.end()) {
+            delete itr->second;
+            files.erase(itr);
+        }
+
+        if (::remove(fname.c_str()) != 0)
+            fatal("Could not erase file '%s'\n", fname);
+    } else {
+        // assume 'name' is a directory
+        if (recursive) {
+            DIR *dir = opendir(fname.c_str());
+
+            // silently ignore removal request for non-existent directory
+            if ((!dir) && (errno == ENOENT))
+                return;
+
+            // fail on other errors
+            if (!dir) {
+                perror("opendir");
+                fatal("Error opening directory for recursive removal '%s'\n",
+                    fname);
+            }
+
+            struct dirent *de = readdir(dir);
+            while (de != NULL) {
+                // ignore files starting with a '.'; user must delete those
+                //   manually if they really want to
+                if (de->d_name[0] != '.')
+                    remove(name + PATH_SEPARATOR + de->d_name, recursive);
+
+                de = readdir(dir);
+            }
+        }
+
+        // try to force recognition that we deleted the files in the directory
+        sync();
+
+        if (::remove(fname.c_str()) != 0) {
+            perror("Warning!  'remove' failed.  Could not erase directory.");
+        }
+    }
 }

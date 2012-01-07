@@ -36,6 +36,7 @@
  *
  * Authors: William Wang
  *          Ali Saidi
+ *          Chris Emmons
  */
 
 #include <cassert>
@@ -43,29 +44,50 @@
 #include "base/bitmap.hh"
 #include "base/misc.hh"
 
+const size_t Bitmap::sizeofHeaderBuffer = sizeof(Magic) + sizeof(Header) +
+                                        sizeof(Info);
+
 // bitmap class ctor
 Bitmap::Bitmap(VideoConvert::Mode _mode, uint16_t w, uint16_t h, uint8_t *d)
     : mode(_mode), height(h), width(w), data(d),
-    vc(mode, VideoConvert::rgb8888, width, height)
+    vc(mode, VideoConvert::rgb8888, width, height), headerBuffer(0)
 {
 }
 
+Bitmap::~Bitmap() {
+    if (headerBuffer)
+        delete [] headerBuffer;
+}
+
 void
-Bitmap::write(std::ostream *bmp)
+Bitmap::write(std::ostream *bmp) const
 {
     assert(data);
 
-    // For further information see: http://en.wikipedia.org/wiki/BMP_file_format
-    Magic  magic = {{'B','M'}};
-    Header header = {sizeof(VideoConvert::Rgb8888) * width * height , 0, 0, 54};
-    Info   info = {sizeof(Info), width, height, 1,
-                   sizeof(VideoConvert::Rgb8888) * 8, 0,
-                   sizeof(VideoConvert::Rgb8888) * width * height, 1, 1, 0, 0};
+    // header is always the same for a bitmap object; compute the info once per
+    //   bitmap object
+    if (!headerBuffer) {
+        // For further information see:
+        //   http://en.wikipedia.org/wiki/BMP_file_format
+        Magic magic = {{'B','M'}};
+        Header header = {sizeof(VideoConvert::Rgb8888) * width * height,
+                                0, 0, 54};
+        Info info = {sizeof(Info), width, height, 1,
+                    sizeof(VideoConvert::Rgb8888) * 8, 0,
+                    sizeof(VideoConvert::Rgb8888) * width * height, 1, 1, 0, 0};
 
-    bmp->write(reinterpret_cast<char*>(&magic),  sizeof(magic));
-    bmp->write(reinterpret_cast<char*>(&header), sizeof(header));
-    bmp->write(reinterpret_cast<char*>(&info),   sizeof(info));
+        char *p = headerBuffer = new char[sizeofHeaderBuffer];
+        memcpy(p, &magic, sizeof(Magic));
+        p += sizeof(Magic);
+        memcpy(p, &header, sizeof(Header));
+        p += sizeof(Header);
+        memcpy(p, &info,   sizeof(Info));
+    }
 
+    // 1.  write the header
+    bmp->write(headerBuffer, sizeofHeaderBuffer);
+
+    // 2.  write the bitmap data
     uint8_t *tmp = vc.convert(data);
     uint32_t *tmp32 = (uint32_t*)tmp;
 

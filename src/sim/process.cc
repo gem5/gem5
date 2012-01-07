@@ -350,8 +350,6 @@ Process::fixupStackFault(Addr vaddr)
         };
         return true;
     }
-    warn("Not extending stack: address %#x isn't at the end of the stack.",
-        vaddr);
     return false;
 }
 

@@ -102,6 +102,9 @@ Terminal::Terminal(const Params *p)
 {
     if (p->output) {
         outfile = simout.find(p->name);
+        if (!outfile)
+            outfile = simout.create(p->name);
+
         outfile->setf(ios::unitbuf);
     }
 

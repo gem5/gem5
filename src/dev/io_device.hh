@@ -129,20 +129,45 @@ class DmaPort : public Port
      * it is that it's sending. */
     bool inRetry;
 
+    /** Port accesses a cache which requires snooping */
+    bool recvSnoops;
+
+    /** Records snoop response so we only reply once to a status change */
+    bool snoopRangeSent;
+
     virtual bool recvTiming(PacketPtr pkt);
     virtual Tick recvAtomic(PacketPtr pkt)
-    { panic("dma port shouldn't be used for pio access."); M5_DUMMY_RETURN }
+    {
+        if (recvSnoops) return 0;
+
+        panic("dma port shouldn't be used for pio access."); M5_DUMMY_RETURN
+    }
     virtual void recvFunctional(PacketPtr pkt)
-    { panic("dma port shouldn't be used for pio access."); }
+    {
+        if (recvSnoops) return;
+
+        panic("dma port shouldn't be used for pio access.");
+    }
 
     virtual void recvStatusChange(Status status)
-    { ; }
+    {
+        if (recvSnoops) {
+            if (status == RangeChange) {
+                if (!snoopRangeSent) {
+                    snoopRangeSent = true;
+                    sendStatusChange(Port::RangeChange);
+                }
+                return;
+            }
+            panic("Unexpected recvStatusChange\n");
+        }
+    }
 
     virtual void recvRetry() ;
 
     virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                         bool &snoop)
-    { resp.clear(); snoop = false; }
+    { resp.clear(); snoop = recvSnoops; }
 
     void queueDma(PacketPtr pkt, bool front = false);
     void sendDma();
@@ -151,7 +176,8 @@ class DmaPort : public Port
     EventWrapper<DmaPort, &DmaPort::sendDma> backoffEvent;
 
   public:
-    DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff);
+    DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
+            bool recv_snoops = false);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag = 0);

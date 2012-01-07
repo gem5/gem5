@@ -115,11 +115,13 @@ BasicPioDevice::addressRanges(AddrRangeList &range_list)
 }
 
 
-DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff)
+DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
+                 bool recv_snoops)
     : Port(dev->name() + "-dmaport", dev), device(dev), sys(s),
       pendingCount(0), actionInProgress(0), drainEvent(NULL),
       backoffTime(0), minBackoffDelay(min_backoff),
-      maxBackoffDelay(max_backoff), inRetry(false), backoffEvent(this)
+      maxBackoffDelay(max_backoff), inRetry(false), recvSnoops(recv_snoops),
+      snoopRangeSent(false), backoffEvent(this)
 { }
 
 bool
@@ -141,6 +143,12 @@ DmaPort::recvTiming(PacketPtr pkt)
         pkt->reinitNacked();
         queueDma(pkt, true);
     } else if (pkt->senderState) {
+        if (recvSnoops) {
+            if (pkt->isRequest()) {
+                return true;
+            }
+        }
+
         DmaReqState *state;
         backoffTime >>= 2;
 

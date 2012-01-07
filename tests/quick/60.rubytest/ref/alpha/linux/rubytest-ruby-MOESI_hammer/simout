@@ -1,14 +1,10 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Apr 28 2011 15:11:39
-M5 started Apr 28 2011 15:12:18
-M5 executing on SC2B0617
-command line: build/ALPHA_SE_MOESI_hammer/m5.opt -d build/ALPHA_SE_MOESI_hammer/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer
+gem5 compiled Dec  1 2011 11:03:29
+gem5 started Dec  1 2011 11:03:42
+gem5 executing on SC2B0612
+command line: build/ALPHA_SE_MOESI_hammer/gem5.opt -d build/ALPHA_SE_MOESI_hammer/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 218861 because Ruby Tester completed
+Exiting @ tick 208411 because Ruby Tester completed

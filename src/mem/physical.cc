@@ -556,7 +556,8 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
 
     UNSERIALIZE_SCALAR(_size);
     if (size() > params()->range.size())
-        fatal("Memory size has changed!\n");
+        fatal("Memory size has changed! size %lld, param size %lld\n",
+              size(), params()->range.size());
 
     pmemAddr = (uint8_t *)mmap(NULL, size(),
         PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);

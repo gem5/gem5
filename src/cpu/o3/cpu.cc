@@ -438,6 +438,12 @@ FullO3CPU<Impl>::regStats()
               "to idling")
         .prereq(idleCycles);
 
+    quiesceCycles
+        .name(name() + ".quiesceCycles")
+        .desc("Total number of cycles that CPU has spent quiesced or waiting "
+              "for an interrupt")
+        .prereq(quiesceCycles);
+
     // Number of Instructions simulated
     // --------------------------------
     // Should probably be in Base CPU but need templated
@@ -682,6 +688,8 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
         activityRec.activity();
         fetch.wakeFromQuiesce();
 
+        quiesceCycles += tickToCycles((curTick() - 1) - lastRunningCycle);
+
         lastActivatedCycle = curTick();
 
         _status = Running;
@@ -716,6 +724,9 @@ FullO3CPU<Impl>::suspendContext(ThreadID tid)
     if ((activeThreads.size() == 1 && !deallocated) ||
         activeThreads.size() == 0)
         unscheduleTickEvent();
+
+    DPRINTF(Quiesce, "Suspending Context\n");
+    lastRunningCycle = curTick();
     _status = Idle;
 }
 
@@ -1193,6 +1204,8 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
     }
     if (!tickEvent.scheduled())
         schedule(tickEvent, nextCycle());
+
+    lastRunningCycle = curTick();
 }
 
 template <class Impl>

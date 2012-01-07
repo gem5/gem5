@@ -39,6 +39,7 @@ class MyCache(BaseCache):
 
 class MyL1Cache(MyCache):
     is_top_level = True
+    tgts_per_mshr = 20
 
 cpu = DerivO3CPU(cpu_id=0)
 cpu.addTwoLevelCacheHierarchy(MyL1Cache(size = '128kB'),
