@@ -55,6 +55,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_policy = p->replacement_policy;
     m_profiler_ptr = new CacheProfiler(name());
     m_start_index_bit = p->start_index_bit;
+    m_is_instruction_only_cache = p->is_icache;
 }
 
 void
