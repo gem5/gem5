@@ -731,7 +731,7 @@ class vpr_route(vpr):
              '-first_iter_pres_fac', '4', '-initial_pres_fac', '8' ]
     output = 'route_log.out'
 
-all = [ ammp, applu, apsi, art110, art470, equake, facerec, fma3d, galgel,
+all = [ ammp, applu, apsi, art, art110, art470, equake, facerec, fma3d, galgel,
         lucas, mesa, mgrid, sixtrack, swim, wupwise, bzip2_source,
         bzip2_graphic, bzip2_program, crafty, eon_kajiya, eon_cook,
         eon_rushmeier, gap, gcc_166, gcc_200, gcc_expr, gcc_integrate,
