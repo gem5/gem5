@@ -36,11 +36,7 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 
-struct SparseMemEntry
-{
-    void* entry;
-};
-
+typedef void* SparseMemEntry;
 typedef m5::hash_map<Address, SparseMemEntry> SparseMapType;
 
 struct CurNextInfo
@@ -94,13 +90,5 @@ class SparseMemory
     uint64_t* m_adds_per_level;
     uint64_t* m_removes_per_level;
 };
-
-inline std::ostream&
-operator<<(std::ostream& out, const SparseMemEntry& obj)
-{
-    out << "SparseMemEntry";
-    out << std::flush;
-    return out;
-}
 
 #endif // __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
