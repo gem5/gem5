@@ -483,6 +483,15 @@ def makeDualRoot(testSystem, driveSystem, dumpfile):
     self.etherlink.int0 = Parent.testsys.tsunami.ethernet.interface
     self.etherlink.int1 = Parent.drivesys.tsunami.ethernet.interface
 
+    if hasattr(testSystem, 'realview'):
+        self.etherlink.int0 = Parent.testsys.realview.ethernet.interface
+        self.etherlink.int1 = Parent.drivesys.realview.ethernet.interface
+    elif hasattr(testSystem, 'tsunami'):
+        self.etherlink.int0 = Parent.testsys.tsunami.ethernet.interface
+        self.etherlink.int1 = Parent.drivesys.tsunami.ethernet.interface
+    else:
+        fatal("Don't know how to connect these system together")
+
     if dumpfile:
         self.etherdump = EtherDump(file=dumpfile)
         self.etherlink.dump = Parent.etherdump
