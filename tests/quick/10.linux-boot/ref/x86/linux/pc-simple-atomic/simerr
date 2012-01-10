@@ -1,17 +1,9 @@
 warn: Sockets disabled, not accepting terminal connections
-For more information see: http://www.m5sim.org/warn/8742226b
 warn: Reading current count from inactive timer.
-For more information see: http://www.m5sim.org/warn/1ea2be46
 warn: Sockets disabled, not accepting gdb connections
-For more information see: http://www.m5sim.org/warn/d946bea6
 warn: Don't know what interrupt to clear for console.
-For more information see: http://www.m5sim.org/warn/7fe1004f
 warn: instruction 'fxsave' unimplemented
-For more information see: http://www.m5sim.org/warn/437d5238
 warn: Tried to clear PCI interrupt 14
-For more information see: http://www.m5sim.org/warn/77378d57
 warn: Unknown mouse command 0xe1.
-For more information see: http://www.m5sim.org/warn/2447512a
 warn: instruction 'wbinvd' unimplemented
-For more information see: http://www.m5sim.org/warn/437d5238
 hack: be nice to actually delete the event here
