@@ -31,7 +31,6 @@
 import atexit
 import os
 import sys
-import json
 
 # import the SWIG-wrapped main C++ functions
 import internal
@@ -74,10 +73,14 @@ def instantiate(ckpt_dir=None):
         ini_file.close()
 
     if options.json_config:
-        json_file = file(os.path.join(options.outdir, options.json_config), 'w')
-        d = root.get_config_as_dict()
-        json.dump(d, json_file, indent=4)
-        json_file.close()
+        try:
+            import json
+            json_file = file(os.path.join(options.outdir, options.json_config), 'w')
+            d = root.get_config_as_dict()
+            json.dump(d, json_file, indent=4)
+            json_file.close()
+        except ImportError:
+            pass
 
 
     # Initialize the global statistics
