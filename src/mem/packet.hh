@@ -299,6 +299,13 @@ class Packet : public FastAlloc, public Printable
      */
     MemCmd origCmd;
 
+    /**
+     * These values specify the range of bytes found that satisfy a
+     * functional read.
+     */
+    uint16_t bytesValidStart;
+    uint16_t bytesValidEnd;
+
   public:
     /// Used to calculate latencies for each packet.
     Tick time;
@@ -507,7 +514,8 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest)
         :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           dest(_dest), time(curTick()), senderState(NULL)
+           dest(_dest), bytesValidStart(0), bytesValidEnd(0),
+           time(curTick()), senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr();
@@ -526,7 +534,8 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest, int _blkSize)
         :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           dest(_dest), time(curTick()), senderState(NULL)
+           dest(_dest), bytesValidStart(0), bytesValidEnd(0),
+           time(curTick()), senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
@@ -547,6 +556,7 @@ class Packet : public FastAlloc, public Printable
         :  cmd(pkt->cmd), req(pkt->req),
            data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
            addr(pkt->addr), size(pkt->size), src(pkt->src), dest(pkt->dest),
+           bytesValidStart(pkt->bytesValidStart), bytesValidEnd(pkt->bytesValidEnd),
            time(curTick()), senderState(pkt->senderState)
     {
         if (!clearFlags)
@@ -554,6 +564,7 @@ class Packet : public FastAlloc, public Printable
 
         flags.set(pkt->flags & (VALID_ADDR|VALID_SIZE|VALID_SRC|VALID_DST));
         flags.set(pkt->flags & STATIC_DATA);
+
     }
 
     /**

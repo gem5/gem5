@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * Copyright (c) 2010 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -192,14 +204,99 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
             memcpy(getPtr<uint8_t>(), data + offset, getSize());
             return true;
         } else {
-            // In this case the timing packet only partially satisfies
-            // the request, so we would need more information to make
-            // this work.  Like bytes valid in the packet or
-            // something, so the request could continue and get this
-            // bit of possibly newer data along with the older data
-            // not written to yet.
-            panic("Memory value only partially satisfies the functional "
-                  "request. Now what?");
+            // Offsets and sizes to copy in case of partial overlap
+            int func_offset;
+            int val_offset;
+            int overlap_size;
+
+            // calculate offsets and copy sizes for the two byte arrays
+            if (val_start < func_start && val_end <= func_end) {
+                val_offset = func_start - val_start;
+                func_offset = 0;
+                overlap_size = val_end - func_start;
+            } else if (val_start >= func_start && val_end > func_end) {
+                val_offset = 0;
+                func_offset = val_start - func_start;
+                overlap_size = func_end - val_start;
+            } else if (val_start >= func_start && val_end <= func_end) {
+                val_offset = 0;
+                func_offset = val_start - func_start;
+                overlap_size = size;
+            } else {
+                panic("BUG: Missed a case for a partial functional request");
+            }
+
+            // Figure out how much of the partial overlap should be copied
+            // into the packet and not overwrite previously found bytes.
+            if (bytesValidStart == 0 && bytesValidEnd == 0) {
+                // No bytes have been copied yet, just set indices
+                // to found range
+                bytesValidStart = func_offset;
+                bytesValidEnd = func_offset + overlap_size;
+            } else {
+                // Some bytes have already been copied. Use bytesValid
+                // indices and offset values to figure out how much data
+                // to copy and where to copy it to.
+
+                // Indice overlap conditions to check
+                int a = func_offset - bytesValidStart;
+                int b = (func_offset + overlap_size) - bytesValidEnd;
+                int c = func_offset - bytesValidEnd;
+                int d = (func_offset + overlap_size) - bytesValidStart;
+
+                if (a >= 0 && b <= 0) {
+                    // bytes already in pkt data array are superset of
+                    // found bytes, will not copy any bytes
+                    overlap_size = 0;
+                } else if (a < 0 && d >= 0 && b <= 0) {
+                    // found bytes will move bytesValidStart towards 0
+                    overlap_size = bytesValidStart - func_offset;
+                    bytesValidStart = func_offset;
+                } else if (b > 0 && c <= 0 && a >= 0) {
+                    // found bytes will move bytesValidEnd
+                    // towards end of pkt data array
+                    overlap_size =
+                        (func_offset + overlap_size) - bytesValidEnd;
+                    val_offset += bytesValidEnd - func_offset;
+                    func_offset = bytesValidEnd;
+                    bytesValidEnd += overlap_size;
+                } else if (a < 0 && b > 0) {
+                    // Found bytes are superset of copied range. Will move
+                    // bytesValidStart towards 0 and bytesValidEnd towards
+                    // end of pkt data array.  Need to break copy into two
+                    // pieces so as to not overwrite previously found data.
+
+                    // copy the first half
+                    uint8_t *dest = getPtr<uint8_t>() + func_offset;
+                    uint8_t *src = data + val_offset;
+                    memcpy(dest, src, (bytesValidStart - func_offset));
+
+                    // re-calc the offsets and indices to do the copy
+                    // required for the second half
+                    val_offset += (bytesValidEnd - func_offset);
+                    bytesValidStart = func_offset;
+                    overlap_size =
+                        (func_offset + overlap_size) - bytesValidEnd;
+                    func_offset = bytesValidEnd;
+                    bytesValidEnd += overlap_size;
+                } else if ((c > 0 && b > 0)
+                           || (a < 0 && d < 0)) {
+                    // region to be copied is discontiguous! Not supported.
+                    panic("BUG: Discontiguous bytes found"
+                          "for functional copying!");
+                }
+            }
+
+            assert((bytesValidStart >= 0) && (bytesValidEnd <= getSize()));
+
+            // copy partial data into the packet's data array
+            uint8_t *dest = getPtr<uint8_t>() + func_offset;
+            uint8_t *src = data + val_offset;
+            memcpy(dest, src, overlap_size);
+
+            // check if we're done filling the functional access
+            bool done = (bytesValidStart == 0) && (bytesValidEnd == getSize());
+            return done;
         }
     } else if (isWrite()) {
         if (offset >= 0) {
