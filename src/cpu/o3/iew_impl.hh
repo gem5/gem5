@@ -1340,10 +1340,10 @@ DefaultIEW<Impl>::executeInsts()
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
-                DPRINTF(IEW, "Predicted target was PC:%#x, NPC:%#x.\n",
-                        inst->predInstAddr(), inst->predNextInstAddr());
+                DPRINTF(IEW, "Predicted target was PC: %s.\n",
+                        inst->readPredTarg());
                 DPRINTF(IEW, "Execute: Redirecting fetch to PC: %s.\n",
-                        inst->pcState(), inst->nextInstAddr());
+                        inst->pcState());
                 // If incorrect, then signal the ROB that it must be squashed.
                 squashDueToBranch(inst, tid);
 
