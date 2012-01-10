@@ -123,7 +123,6 @@ def parse_options():
         execfile(options_file, scope)
 
     arguments = options.parse_args()
-
     return options,arguments
 
 def interact(scope):

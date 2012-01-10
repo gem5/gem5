@@ -183,6 +183,7 @@ struct DistData
     VCounter cvec;
     Counter sum;
     Counter squares;
+    Counter logs;
     Counter samples;
 };
 

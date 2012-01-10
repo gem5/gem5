@@ -171,14 +171,16 @@ class System : public SimObject
     Enums::MemoryMode memoryMode;
     uint64_t workItemsBegin;
     uint64_t workItemsEnd;
+    uint32_t numWorkIds;
     std::vector<bool> activeCpus;
 
   public:
+    virtual void regStats();
     /**
      * Called by pseudo_inst to track the number of work items started by this
      * system.
      */
-    uint64_t 
+    uint64_t
     incWorkItemsBegin()
     {
         return ++workItemsBegin;
@@ -211,6 +213,14 @@ class System : public SimObject
         }
         return count;
     }
+
+    inline void workItemBegin(uint32_t tid, uint32_t workid)
+    {
+        std::pair<uint32_t,uint32_t> p(tid, workid);
+        lastWorkItemStarted[p] = curTick();
+    }
+
+    void workItemEnd(uint32_t tid, uint32_t workid);
 
 #if FULL_SYSTEM
     /**
@@ -303,6 +313,8 @@ class System : public SimObject
   public:
     Counter totalNumInsts;
     EventQueue instEventQueue;
+    std::map<std::pair<uint32_t,uint32_t>, Tick>  lastWorkItemStarted;
+    std::map<uint32_t, Stats::Histogram*> workItemStats;
 
     ////////////////////////////////////////////
     //

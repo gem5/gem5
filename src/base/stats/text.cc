@@ -367,6 +367,12 @@ DistPrint::operator()(ostream &stream) const
     print.value = data.samples ? data.sum / data.samples : NAN;
     print(stream);
 
+    if (data.type == Hist) {
+        print.name = base + "gmean";
+        print.value = data.samples ? exp(data.logs / data.samples) : NAN;
+        print(stream);
+    }
+
     Result stdev = NAN;
     if (data.samples)
         stdev = sqrt((data.samples * data.squares - data.sum * data.sum) /

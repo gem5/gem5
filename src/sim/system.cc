@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
@@ -43,6 +55,7 @@
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
+#include "debug/WorkItems.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "sim/byteswap.hh"
@@ -76,8 +89,9 @@ System::System(Params *p)
       memoryMode(p->mem_mode),
       workItemsBegin(0),
       workItemsEnd(0),
+      numWorkIds(p->num_work_ids),
       _params(p),
-      totalNumInsts(0), 
+      totalNumInsts(0),
       instEventQueue("system instruction-based event queue")
 {
     // add self to global system list
@@ -171,6 +185,9 @@ System::~System()
     panic("System::fixFuncEventAddr needs to be rewritten "
           "to work with syscall emulation");
 #endif // FULL_SYSTEM}
+
+    for (uint32_t j = 0; j < numWorkIds; j++)
+        delete workItemStats[j];
 }
 
 void
@@ -337,6 +354,37 @@ System::unserialize(Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(pagePtr);
     UNSERIALIZE_SCALAR(nextPID);
 #endif
+}
+
+void
+System::regStats()
+{
+    for (uint32_t j = 0; j < numWorkIds ; j++) {
+        workItemStats[j] = new Stats::Histogram();
+        stringstream namestr;
+        ccprintf(namestr, "work_item_type%d", j);
+        workItemStats[j]->init(20)
+                         .name(name() + "." + namestr.str())
+                         .desc("Run time stat for" + namestr.str())
+                         .prereq(*workItemStats[j]);
+    }
+}
+
+void
+System::workItemEnd(uint32_t tid, uint32_t workid)
+{
+    std::pair<uint32_t,uint32_t> p(tid, workid);
+    if (!lastWorkItemStarted.count(p))
+        return;
+
+    Tick samp = curTick() - lastWorkItemStarted[p];
+    DPRINTF(WorkItems, "Work item end: %d\t%d\t%lld\n", tid, workid, samp);
+
+    if (workid >= numWorkIds)
+        fatal("Got workid greater than specified in system configuration\n");
+
+    workItemStats[workid]->sample(samp);
+    lastWorkItemStarted.erase(p);
 }
 
 void
