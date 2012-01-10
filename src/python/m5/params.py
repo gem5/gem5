@@ -256,6 +256,9 @@ class VectorParamDesc(ParamDesc):
         self.ptype.cxx_predecls(code)
         code('%}')
         code()
+        # Make sure the SWIGPY_SLICE_ARG is defined through this inclusion
+        code('%include "std_container.i"')
+        code()
         self.ptype.swig_predecls(code)
         code()
         code('%include "std_vector.i"')
