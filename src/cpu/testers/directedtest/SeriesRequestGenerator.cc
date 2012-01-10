@@ -89,7 +89,7 @@ SeriesRequestGenerator::initiate()
 }
 
 void 
-SeriesRequestGenerator::performCallback(uint proc, Addr address)
+SeriesRequestGenerator::performCallback(uint32_t proc, Addr address)
 {
     assert(m_active_node == proc);
     assert(m_address == address);  

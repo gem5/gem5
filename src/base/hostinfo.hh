@@ -39,7 +39,11 @@ std::string &hostname();
 
 uint64_t procInfo(const char *filename, const char *target);
 
-inline uint64_t memUsage()
-{ return procInfo("/proc/self/status", "VmSize:"); }
+/**
+ * Determine the simulator process' total virtual memory usage.
+ *
+ * @return virtual memory usage in kilobytes
+ */
+uint64_t memUsage();
 
 #endif // __HOSTINFO_HH__

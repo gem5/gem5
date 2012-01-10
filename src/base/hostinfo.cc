@@ -30,6 +30,12 @@
 
 #include <unistd.h>
 
+#ifdef __APPLE__
+#include <mach/mach_init.h>
+#include <mach/shared_region.h>
+#include <mach/task.h>
+#endif
+
 #include <cctype>
 #include <cerrno>
 #include <cmath>
@@ -82,7 +88,31 @@ procInfo(const char *filename, const char *target)
     }
 
     if (fp)
-      fclose(fp);
+        fclose(fp);
 
     return 0;
+}
+
+uint64_t
+memUsage()
+{
+// For the Mach-based Darwin kernel, use the task_info of the self task
+#ifdef __APPLE__
+    struct task_basic_info t_info;
+    mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
+
+    if (KERN_SUCCESS != task_info(mach_task_self(),
+                                  TASK_BASIC_INFO, (task_info_t)&t_info,
+                                  &t_info_count)) {
+        return 0;
+    }
+
+    // Mimic Darwin's implementation of top and subtract
+    // SHARED_REGION_SIZE from the tasks virtual size to account for the
+    // shared memory submap that is incorporated into every process.
+    return (t_info.virtual_size - SHARED_REGION_SIZE) / 1024;
+#else
+    // Linux implementation
+    return procInfo("/proc/self/status", "VmSize:");
+#endif
 }
