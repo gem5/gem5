@@ -31,6 +31,7 @@
 import atexit
 import os
 import sys
+import json
 
 # import the SWIG-wrapped main C++ functions
 import internal
@@ -40,6 +41,7 @@ import SimObject
 import ticks
 import objects
 from util import fatal
+from util import attrdict
 
 # define a MaxTick parameter
 MaxTick = 2**63 - 1
@@ -70,6 +72,13 @@ def instantiate(ckpt_dir=None):
         for obj in sorted(root.descendants(), key=lambda o: o.path()):
             obj.print_ini(ini_file)
         ini_file.close()
+
+    if options.json_config:
+        json_file = file(os.path.join(options.outdir, options.json_config), 'w')
+        d = root.get_config_as_dict()
+        json.dump(d, json_file, indent=4)
+        json_file.close()
+
 
     # Initialize the global statistics
     stats.initSimStats()
