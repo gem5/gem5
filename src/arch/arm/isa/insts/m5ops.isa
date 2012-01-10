@@ -191,16 +191,18 @@ let {{
 
     initparamCode = '''
 #if FULL_SYSTEM
-    Rt = PseudoInst::initParam(xc->tcBase());
+    uint64_t ip_val  = PseudoInst::initParam(xc->tcBase());
+    R0 = bits(ip_val, 31, 0);
+    R1 = bits(ip_val, 63, 32);
 #else
     PseudoInst::panicFsOnlyPseudoInst("initparam");
-    Rt = 0;
 #endif
     '''
 
     initparamIop = InstObjParams("initparam", "Initparam", "PredOp",
                            { "code": initparamCode,
-                             "predicate_test": predicateTest })
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
     header_output += BasicDeclare.subst(initparamIop)
     decoder_output += BasicConstructor.subst(initparamIop)
     exec_output += PredOpExecute.subst(initparamIop)

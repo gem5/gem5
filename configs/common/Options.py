@@ -63,7 +63,8 @@ parser.add_option("--work-end-exit-count", action="store", type="int",
                   help="exit at specified work end count")
 parser.add_option("--work-begin-exit-count", action="store", type="int",
                   help="exit at specified work begin count")
-
+parser.add_option("--init-param", action="store", type="int", default=0,
+                  help="Parameter available in simulation with m5 initparam")
 
 # Checkpointing options
 ###Note that performing checkpointing via python script files will override
