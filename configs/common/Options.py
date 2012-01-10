@@ -27,7 +27,7 @@
 # Authors: Lisa Hsu
 
 # system options
-parser.add_option("-c", "--cpu-type", type="choice", default="atomic",
+parser.add_option("--cpu-type", type="choice", default="atomic",
                   choices = ["atomic", "timing", "detailed", "inorder"],
                   help = "type of cpu to run with")
 parser.add_option("-n", "--num-cpus", type="int", default=1)
