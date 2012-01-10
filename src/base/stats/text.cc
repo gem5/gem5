@@ -513,7 +513,14 @@ Text::visit(const Vector2dInfo &info)
     bool havesub = false;
     VectorPrint print;
 
-    print.subnames = info.y_subnames;
+    if (!info.y_subnames.empty()) {
+        for (off_type i = 0; i < info.y; ++i) {
+            if (!info.y_subnames[i].empty()) {
+                print.subnames = info.y_subnames;
+            }
+            break;
+        }
+    }
     print.flags = info.flags;
     print.separatorString = info.separatorString;
     print.descriptions = descriptions;
