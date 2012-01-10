@@ -767,10 +767,6 @@ void
 DefaultRename<Impl>::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
-#ifdef DEBUG
-    for (ThreadID tid = 0; tid < numThreads; tid++)
-        assert(insts[tid].empty());
-#endif
     for (int i = 0; i < insts_from_decode; ++i) {
         DynInstPtr inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
