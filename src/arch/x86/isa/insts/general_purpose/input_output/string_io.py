@@ -45,9 +45,11 @@ def macroop INS_M_R {
 
     zexti t2, reg, 15, dataSize=8
 
+    mfence
     ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
         nonSpec=True
     st t6, es, [1, t0, rdi]
+    mfence
 
     add rdi, rdi, t3, dataSize=asz
 };
@@ -63,6 +65,7 @@ def macroop INS_E_M_R {
 
     zexti t2, reg, 15, dataSize=8
 
+    mfence
 topOfLoop:
     ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
         nonSpec=True
@@ -72,6 +75,7 @@ topOfLoop:
     add rdi, rdi, t3, dataSize=asz
     br label("topOfLoop"), flags=(nCEZF,)
 end:
+    mfence
     fault "NoFault"
 };
 
@@ -84,9 +88,11 @@ def macroop OUTS_R_M {
 
     zexti t2, reg, 15, dataSize=8
 
+    mfence
     ld t6, ds, [1, t0, rsi]
     st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
         nonSpec=True
+    mfence
 
     add rsi, rsi, t3, dataSize=asz
 };
@@ -102,6 +108,7 @@ def macroop OUTS_E_R_M {
 
     zexti t2, reg, 15, dataSize=8
 
+    mfence
 topOfLoop:
     ld t6, ds, [1, t0, rsi]
     st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
@@ -111,6 +118,7 @@ topOfLoop:
     add rsi, rsi, t3, dataSize=asz
     br label("topOfLoop"), flags=(nCEZF,)
 end:
+    mfence
     fault "NoFault"
 };
 '''

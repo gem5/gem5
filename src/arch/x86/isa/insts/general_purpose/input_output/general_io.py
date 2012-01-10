@@ -42,26 +42,34 @@ microcode = '''
     def macroop IN_R_I {
         .adjust_imm trimImm(8)
         limm t1, imm, dataSize=asz
+        mfence
         ld reg, intseg, [1, t1, t0], "IntAddrPrefixIO << 3", addressSize=8, \
             nonSpec=True
+        mfence
     };
 
     def macroop IN_R_R {
         zexti t2, regm, 15, dataSize=8
+        mfence
         ld reg, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
             nonSpec=True
+        mfence
     };
 
     def macroop OUT_I_R {
         .adjust_imm trimImm(8)
         limm t1, imm, dataSize=8
+        mfence
         st reg, intseg, [1, t1, t0], "IntAddrPrefixIO << 3", addressSize=8, \
             nonSpec=True
+        mfence
     };
 
     def macroop OUT_R_R {
         zexti t2, reg, 15, dataSize=8
+        mfence
         st regm, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8, \
             nonSpec=True
+        mfence
     };
 '''
