@@ -29,6 +29,7 @@
  *          Ali Saidi
  */
 
+#include <limits>
 #include "base/fenv.hh"
 #include "base/intmath.hh"
 #include "base/misc.hh"
@@ -67,7 +68,10 @@ Random::genrand(uint32_t max)
 {
     if (max == 0)
         return 0;
-    int log = ceilLog2(max) + 1;
+    if (max == std::numeric_limits<uint32_t>::max())
+        return genrand();
+
+    int log = ceilLog2(max + 1);
     int shift = (sizeof(uint32_t) * 8 - log);
     uint32_t random;
 
@@ -83,7 +87,10 @@ Random::genrand(uint64_t max)
 {
     if (max == 0)
         return 0;
-    int log = ceilLog2(max) + 1;
+    if (max == std::numeric_limits<uint64_t>::max())
+        return genrand();
+
+    int log = ceilLog2(max + 1);
     int shift = (sizeof(uint64_t) * 8 - log);
     uint64_t random;
 
