@@ -447,13 +447,6 @@ Bus::recvAtomic(PacketPtr pkt)
 void
 Bus::recvFunctional(PacketPtr pkt)
 {
-    if (!pkt->isPrint()) {
-        // don't do DPRINTFs on PrintReq as it clutters up the output
-        DPRINTF(Bus,
-                "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
-                pkt->getSrc(), pkt->getDest(), pkt->getAddr(),
-                pkt->cmdString());
-    }
     assert(pkt->getDest() == Packet::Broadcast);
 
     int port_id = findPort(pkt->getAddr());
@@ -461,6 +454,14 @@ Bus::recvFunctional(PacketPtr pkt)
     // The packet may be changed by another bus on snoops, restore the
     // id after each
     int src_id = pkt->getSrc();
+
+    if (!pkt->isPrint()) {
+        // don't do DPRINTFs on PrintReq as it clutters up the output
+        DPRINTF(Bus,
+                "recvFunctional: packet src %d dest %d addr 0x%x cmd %s\n",
+                src_id, port_id, pkt->getAddr(),
+                pkt->cmdString());
+    }
 
     assert(pkt->isRequest()); // hasn't already been satisfied
 
