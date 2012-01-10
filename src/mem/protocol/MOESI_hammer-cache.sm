@@ -1285,7 +1285,6 @@ machine(L1Cache, "AMD Hammer-like protocol")
     vv_allocateL2CacheBlock;
     hp_copyFromTBEToL2;
     s_deallocateTBE;
-    ka_wakeUpAllDependents;
   }
 
   transition(I, Trigger_L2_to_L1D, IT) {
@@ -1566,7 +1565,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
     k_popMandatoryQueue;
   }
 
-  transition({MM, M, MMR}, Flush_line, MM_F) {
+  transition({MM, M, MMR, MR}, Flush_line, MM_F) {
     i_allocateTBE;
     bf_issueGETF;
     p_decrementNumberOfMessagesByOne;
