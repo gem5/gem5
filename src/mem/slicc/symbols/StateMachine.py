@@ -264,6 +264,8 @@ public:
     void clearStats();
     void blockOnQueue(Address addr, MessageBuffer* port);
     void unblock(Address addr);
+    void recordCacheTrace(int cntrl, CacheRecorder* tr);
+    Sequencer* getSequencer() const;
 
 private:
 ''')
@@ -674,6 +676,12 @@ $vid->setDescription("[Version " + to_string(m_version) + ", ${ident}, name=${{v
         else:
             mq_ident = "NULL"
 
+        seq_ident = "NULL"
+        for param in self.config_parameters:
+            if param.name == "sequencer":
+                assert(param.pointer)
+                seq_ident = "m_%s_ptr" % param.name
+
         code('''
 int
 $c_ident::getNumControllers()
@@ -685,6 +693,12 @@ MessageBuffer*
 $c_ident::getMandatoryQueue() const
 {
     return $mq_ident;
+}
+
+Sequencer*
+$c_ident::getSequencer() const
+{
+    return $seq_ident;
 }
 
 const int &
@@ -874,6 +888,23 @@ $c_ident::unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr)
 ''')
 
         code('''
+
+void
+$c_ident::recordCacheTrace(int cntrl, CacheRecorder* tr)
+{
+''')
+        #
+        # Record cache contents for all associated caches.
+        #
+        code.indent()
+        for param in self.config_parameters:
+            if param.type_ast.type.ident == "CacheMemory":
+                assert(param.pointer)
+                code('m_${{param.ident}}_ptr->recordCacheContents(cntrl, tr);')
+
+        code.dedent()
+        code('''
+}
 
 // Actions
 ''')

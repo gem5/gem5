@@ -34,4 +34,3 @@ if env['PROTOCOL'] == 'None':
     Return()
 
 Source('CacheRecorder.cc')
-Source('TraceRecord.cc', Werror=False)

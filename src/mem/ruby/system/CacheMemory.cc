@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,9 @@
 
 #include "base/intmath.hh"
 #include "debug/RubyCache.hh"
+#include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/system/CacheMemory.hh"
+#include "mem/ruby/system/System.hh"
 
 using namespace std;
 
@@ -364,31 +366,42 @@ CacheMemory::profileGenericRequest(GenericRequestType requestType,
 }
 
 void
-CacheMemory::recordCacheContents(CacheRecorder& tr) const
+CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 {
+    uint64 warmedUpBlocks = 0;
+    uint64 totalBlocks M5_VAR_USED = (uint64)m_cache_num_sets
+                                                  * (uint64)m_cache_assoc;
+
     for (int i = 0; i < m_cache_num_sets; i++) {
         for (int j = 0; j < m_cache_assoc; j++) {
-            AccessPermission perm = m_cache[i][j]->m_Permission;
-            RubyRequestType request_type = RubyRequestType_NULL;
-            if (perm == AccessPermission_Read_Only) {
-                if (m_is_instruction_only_cache) {
-                    request_type = RubyRequestType_IFETCH;
-                } else {
-                    request_type = RubyRequestType_LD;
+            if (m_cache[i][j] != NULL) {
+                AccessPermission perm = m_cache[i][j]->m_Permission;
+                RubyRequestType request_type = RubyRequestType_NULL;
+                if (perm == AccessPermission_Read_Only) {
+                    if (m_is_instruction_only_cache) {
+                        request_type = RubyRequestType_IFETCH;
+                    } else {
+                        request_type = RubyRequestType_LD;
+                    }
+                } else if (perm == AccessPermission_Read_Write) {
+                    request_type = RubyRequestType_ST;
                 }
-            } else if (perm == AccessPermission_Read_Write) {
-                request_type = RubyRequestType_ST;
-            }
 
-            if (request_type != RubyRequestType_NULL) {
-#if 0
-                tr.addRecord(m_chip_ptr->getID(), m_cache[i][j].m_Address,
-                             Address(0), request_type,
-                             m_replacementPolicy_ptr->getLastAccess(i, j));
-#endif
+                if (request_type != RubyRequestType_NULL) {
+                    tr->addRecord(cntrl, m_cache[i][j]->m_Address.getAddress(),
+                                  0, request_type,
+                                  m_replacementPolicy_ptr->getLastAccess(i, j),
+                                  m_cache[i][j]->getDataBlk());
+                    warmedUpBlocks++;
+                }
             }
         }
     }
+
+    DPRINTF(RubyCache, "%s: %lli blocks of %lli total blocks"
+            "recorded %.2f%% \n", name().c_str(), warmedUpBlocks,
+            (uint64)m_cache_num_sets * (uint64)m_cache_assoc,
+            (float(warmedUpBlocks)/float(totalBlocks))*100.0);
 }
 
 void

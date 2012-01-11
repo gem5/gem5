@@ -62,6 +62,7 @@ DebugFlag('MemoryAccess')
 
 DebugFlag('ProtocolTrace')
 DebugFlag('RubyCache')
+DebugFlag('RubyCacheTrace')
 DebugFlag('RubyDma')
 DebugFlag('RubyGenerated')
 DebugFlag('RubyMemory')
@@ -75,4 +76,4 @@ DebugFlag('RubyTester')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubyStorebuffer', 'RubyCache',
-    'RubyMemory', 'RubyDma', 'RubyPort', 'RubySequencer'])
+    'RubyMemory', 'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace'])
