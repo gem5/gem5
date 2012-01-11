@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <queue>
 
 #include "debug/RubyCache.hh"
 #include "mem/ruby/system/SparseMemory.hh"
@@ -339,6 +342,70 @@ SparseMemory::lookup(const Address& address)
     entry = (AbstractEntry*)curTable;
 
     return entry;
+}
+
+void
+SparseMemory::recordBlocks(int cntrl_id, CacheRecorder* tr) const
+{
+    queue<SparseMapType*> unexplored_nodes[2];
+    queue<physical_address_t> address_of_nodes[2];
+
+    unexplored_nodes[0].push(m_map_head);
+    address_of_nodes[0].push(0);
+
+    int parity_of_level = 0;
+    physical_address_t address, temp_address;
+    Address curAddress;
+
+    // Initiallize the high bit to be the total number of bits plus
+    // the block offset.  However the highest bit index is one less
+    // than this value.
+    int highBit = m_total_number_of_bits + RubySystem::getBlockSizeBits();
+    int lowBit;
+
+    for (int cur_level = 0; cur_level < m_number_of_levels; cur_level++) {
+
+        // create the appropriate address for this level
+        // Note: that set Address is inclusive of the specified range,
+        // thus the high bit is one less than the total number of bits
+        // used to create the address.
+        lowBit = highBit - m_number_of_bits_per_level[cur_level];
+
+        while (!unexplored_nodes[parity_of_level].empty()) {
+
+            SparseMapType* node = unexplored_nodes[parity_of_level].front();
+            unexplored_nodes[parity_of_level].pop();
+
+            address = address_of_nodes[parity_of_level].front();
+            address_of_nodes[parity_of_level].pop();
+
+            SparseMapType::iterator iter;
+
+            for (iter = node->begin(); iter != node->end(); iter++) {
+                SparseMemEntry entry = (*iter).second;
+                curAddress = (*iter).first;
+
+                if (cur_level != (m_number_of_levels - 1)) {
+                    // If not at the last level, put this node in the queue
+                    unexplored_nodes[1 - parity_of_level].push(
+                                                     (SparseMapType*)(entry));
+                    address_of_nodes[1 - parity_of_level].push(address |
+                                         (curAddress.getAddress() << lowBit));
+                } else {
+                    // If at the last level, add a trace record
+                    temp_address = address | (curAddress.getAddress()
+                                                                   << lowBit);
+                    DataBlock block = ((AbstractEntry*)entry)->getDataBlk();
+                    tr->addRecord(cntrl_id, temp_address, 0, RubyRequestType_ST, 0,
+                                  block);
+                }
+            }
+        }
+
+        // Adjust the highBit value for the next level
+        highBit -= m_number_of_bits_per_level[cur_level];
+        parity_of_level = 1 - parity_of_level;
+    }
 }
 
 void

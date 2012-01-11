@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,9 +33,9 @@
 #include <iostream>
 
 #include "base/hashmap.hh"
-#include "mem/ruby/slicc_interface/AbstractEntry.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/recorder/CacheRecorder.hh"
+#include "mem/ruby/slicc_interface/AbstractEntry.hh"
 
 typedef void* SparseMemEntry;
 typedef m5::hash_map<Address, SparseMemEntry> SparseMapType;
@@ -58,6 +59,14 @@ class SparseMemory
     bool exist(const Address& address) const;
     void add(const Address& address, AbstractEntry*);
     void remove(const Address& address);
+
+    /*!
+     * Function for recording the contents of memory. This function walks
+     * through all the levels of the sparse memory in a breadth first
+     * fashion. This might need more memory than a depth first approach.
+     * But breadth first seems easier to me than a depth first approach.
+     */
+    void recordBlocks(int cntrl_id, CacheRecorder *) const;
 
     AbstractEntry* lookup(const Address& address);
 
