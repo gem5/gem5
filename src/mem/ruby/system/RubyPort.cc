@@ -66,8 +66,10 @@ Port *
 RubyPort::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "port") {
-        return new M5Port(csprintf("%s-port%d", name(), idx), this,
-                          ruby_system, access_phys_mem);
+        M5Port* cpuPort = new M5Port(csprintf("%s-port%d", name(), idx),
+                                     this, ruby_system, access_phys_mem);
+        cpu_ports.push_back(cpuPort);
+        return cpuPort;
     }
 
     if (if_name == "pio_port") {

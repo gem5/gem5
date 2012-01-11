@@ -148,6 +148,10 @@ class RubyPort : public MemObject
 
     M5Port* physMemPort;
 
+    /*! Vector of CPU Port attached to this Ruby port. */
+    typedef std::vector<M5Port*>::iterator CpuPortIter;
+    std::vector<M5Port*> cpu_ports;
+
     PhysicalMemory* physmem;
     RubySystem* ruby_system;
 
