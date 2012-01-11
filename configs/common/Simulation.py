@@ -60,7 +60,15 @@ def setCPUClass(options):
     test_mem_mode = 'atomic'
 
     if not atomic:
-        if options.checkpoint_restore != None or options.fast_forward:
+        if options.checkpoint_restore != None:
+            if options.restore_with_cpu != options.cpu_type:
+                CPUClass = TmpClass
+                class TmpClass(AtomicSimpleCPU): pass
+            else:
+                if options.restore_with_cpu != "atomic":
+                    test_mem_mode = 'timing'
+
+        elif options.fast_forward:
             CPUClass = TmpClass
             class TmpClass(AtomicSimpleCPU): pass
         else:

@@ -85,6 +85,10 @@ parser.add_option("--work-end-checkpoint-count", action="store", type="int",
                   help="checkpoint at specified work end count")
 parser.add_option("--work-cpus-checkpoint-count", action="store", type="int",
                   help="checkpoint and exit when active cpu count is reached")
+parser.add_option("--restore-with-cpu", action="store", type="choice",
+                  default="atomic", choices = ["atomic", "timing",
+                                               "detailed", "inorder"],
+                  help = "cpu type for restoring from a checkpoint")
 
 
 # CPU Switching - default switch model goes from a checkpoint
