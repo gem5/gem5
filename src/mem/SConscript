@@ -71,9 +71,9 @@ DebugFlag('RubyPort')
 DebugFlag('RubyQueue')
 DebugFlag('RubySequencer')
 DebugFlag('RubySlicc')
-DebugFlag('RubyStorebuffer')
+DebugFlag('RubySystem')
 DebugFlag('RubyTester')
 
 CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
-    'RubyGenerated', 'RubySlicc', 'RubyStorebuffer', 'RubyCache',
+    'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',
     'RubyMemory', 'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace'])
