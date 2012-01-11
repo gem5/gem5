@@ -58,7 +58,6 @@
 
 #include <iostream>
 
-#include "config/no_vector_bounds_checks.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "sim/eventq.hh"
 
@@ -76,9 +75,6 @@ class RubyEventQueue : public EventManager
     void scheduleEvent(Consumer* consumer, Time timeDelta);
     void scheduleEventAbsolute(Consumer* consumer, Time timeAbs);
     void print(std::ostream& out) const;
-
-    void triggerEvents(Time t) { assert(0); }
-    void triggerAllEvents() { assert(0); }
 
   private:
     // Private copy constructor and assignment operator
