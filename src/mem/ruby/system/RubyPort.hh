@@ -33,7 +33,6 @@
 #include <string>
 
 #include "mem/protocol/RequestStatus.hh"
-#include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
@@ -115,17 +114,23 @@ class RubyPort : public MemObject
     Port *getPort(const std::string &if_name, int idx);
 
     virtual RequestStatus makeRequest(PacketPtr pkt) = 0;
+    virtual int outstandingCount() const = 0;
+    virtual bool isDeadlockEventScheduled() const = 0;
+    virtual void descheduleDeadlockEvent() = 0;
 
     //
     // Called by the controller to give the sequencer a pointer.
     // A pointer to the controller is needed for atomic support.
     //
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
+    int getId() { return m_version; }
+    unsigned int drain(Event *de);
 
   protected:
     const std::string m_name;
     void ruby_hit_callback(PacketPtr pkt);
     void hit(PacketPtr pkt);
+    void testDrainComplete();
 
     int m_version;
     AbstractController* m_controller;
@@ -143,6 +148,8 @@ class RubyPort : public MemObject
         }
     }
 
+    unsigned int getDrainCount(Event *de);
+
     uint16_t m_port_id;
     uint64_t m_request_cnt;
 
@@ -151,6 +158,8 @@ class RubyPort : public MemObject
     /*! Vector of CPU Port attached to this Ruby port. */
     typedef std::vector<M5Port*>::iterator CpuPortIter;
     std::vector<M5Port*> cpu_ports;
+
+    Event *drainEvent;
 
     PhysicalMemory* physmem;
     RubySystem* ruby_system;

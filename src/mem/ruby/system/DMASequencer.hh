@@ -55,6 +55,9 @@ class DMASequencer : public RubyPort
     /* external interface */
     RequestStatus makeRequest(PacketPtr pkt);
     bool busy() { return m_is_busy;}
+    int outstandingCount() const { return (m_is_busy ? 1 : 0); }
+    bool isDeadlockEventScheduled() const { return false; }
+    void descheduleDeadlockEvent() {}
 
     /* SLICC callback */
     void dataCallback(const DataBlock & dblk);

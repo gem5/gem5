@@ -39,8 +39,6 @@
 #include "mem/ruby/system/RubyPort.hh"
 
 class DataBlock;
-class CacheMsg;
-class MachineID;
 class CacheMemory;
 
 class RubySequencerParams;
@@ -100,6 +98,18 @@ class Sequencer : public RubyPort, public Consumer
 
     RequestStatus makeRequest(PacketPtr pkt);
     bool empty() const;
+    int outstandingCount() const { return m_outstanding_count; }
+    bool
+    isDeadlockEventScheduled() const
+    {
+        return deadlockCheckEvent.scheduled();
+    }
+
+    void
+    descheduleDeadlockEvent()
+    {
+        deschedule(deadlockCheckEvent);
+    }
 
     void print(std::ostream& out) const;
     void printStats(std::ostream& out) const;

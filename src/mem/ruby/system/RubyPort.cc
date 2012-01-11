@@ -27,11 +27,11 @@
  */
 
 #include "cpu/testers/rubytest/RubyTester.hh"
+#include "debug/Config.hh"
 #include "debug/Ruby.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/RubyPort.hh"
-#include "mem/physical.hh"
 
 RubyPort::RubyPort(const Params *p)
     : MemObject(p)
@@ -50,6 +50,8 @@ RubyPort::RubyPort(const Params *p)
 
     m_usingRubyTester = p->using_ruby_tester;
     access_phys_mem = p->access_phys_mem;
+
+    drainEvent = NULL;
 
     ruby_system = p->ruby_system;
     waitingOnSequencer = false;
@@ -510,6 +512,82 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
             (*i)->sendRetry();
         }
     }
+
+    testDrainComplete();
+}
+
+void
+RubyPort::testDrainComplete()
+{
+    //If we weren't able to drain before, we might be able to now.
+    if (drainEvent != NULL) {
+        unsigned int drainCount = getDrainCount(drainEvent);
+        DPRINTF(Config, "Drain count: %u\n", drainCount);
+        if (drainCount == 0) {
+            drainEvent->process();
+            // Clear the drain event once we're done with it.
+            drainEvent = NULL;
+        }
+    }
+}
+
+unsigned int
+RubyPort::getDrainCount(Event *de)
+{
+    int count = 0;
+    //
+    // If the sequencer is not empty, then requests need to drain.
+    // The outstandingCount is the number of requests outstanding and thus the
+    // number of times M5's timing port will process the drain event.
+    //
+    count += outstandingCount();
+
+    DPRINTF(Config, "outstanding count %d\n", outstandingCount());
+
+    // To simplify the draining process, the sequencer's deadlock detection
+    // event should have been descheduled.
+    assert(isDeadlockEventScheduled() == false);
+
+    if (pio_port != NULL) {
+        count += pio_port->drain(de);
+        DPRINTF(Config, "count after pio check %d\n", count);
+    }
+    if (physMemPort != NULL) {
+        count += physMemPort->drain(de);
+        DPRINTF(Config, "count after physmem check %d\n", count);
+    }
+
+    for (CpuPortIter p_iter = cpu_ports.begin(); p_iter != cpu_ports.end();
+         p_iter++) {
+        M5Port* cpu_port = *p_iter;
+        count += cpu_port->drain(de);
+        DPRINTF(Config, "count after cpu port check %d\n", count);
+    }
+
+    DPRINTF(Config, "final count %d\n", count);
+
+    return count;
+}
+
+unsigned int
+RubyPort::drain(Event *de)
+{
+    if (isDeadlockEventScheduled()) {
+        descheduleDeadlockEvent();
+    }
+
+    int count = getDrainCount(de);
+
+    // Set status
+    if (count != 0) {
+        drainEvent = de;
+
+        changeState(SimObject::Draining);
+        return count;
+    }
+
+    changeState(SimObject::Drained);
+    return 0;
 }
 
 void

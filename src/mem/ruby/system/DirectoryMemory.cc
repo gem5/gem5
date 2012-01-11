@@ -58,6 +58,7 @@ DirectoryMemory::init()
 
     if (m_use_map) {
         m_sparseMemory = new SparseMemory(m_map_levels);
+        g_system_ptr->registerSparseMemory(m_sparseMemory);
     } else {
         m_entries = new AbstractEntry*[m_num_entries];
         for (int i = 0; i < m_num_entries; i++)

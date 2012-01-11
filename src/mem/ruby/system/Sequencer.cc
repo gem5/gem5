@@ -519,7 +519,11 @@ Sequencer::hitCallback(SequencerRequest* srequest,
     }
 
     // update the data
-    if (pkt->getPtr<uint8_t>(true) != NULL) {
+    if (g_system_ptr->m_warmup_enabled) {
+        assert(pkt->getPtr<uint8_t>(false) != NULL);
+        data.setData(pkt->getPtr<uint8_t>(false),
+                     request_address.getOffset(), pkt->getSize());
+    } else if (pkt->getPtr<uint8_t>(true) != NULL) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
@@ -551,8 +555,17 @@ Sequencer::hitCallback(SequencerRequest* srequest,
         testerSenderState->subBlock->mergeFrom(data);
     }
 
-    ruby_hit_callback(pkt);
     delete srequest;
+
+    if (g_system_ptr->m_warmup_enabled) {
+        delete pkt;
+        g_system_ptr->m_cache_recorder->enqueueNextFetchRequest();
+    } else if (g_system_ptr->m_cooldown_enabled) {
+        delete pkt;
+        g_system_ptr->m_cache_recorder->enqueueNextFlushRequest();
+    } else {
+        ruby_hit_callback(pkt);
+    }
 }
 
 bool
