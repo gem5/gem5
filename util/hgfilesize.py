@@ -23,6 +23,8 @@ def limit_file_size(ui, repo, node=None, **kwargs):
     for rev in xrange(existing_tip, new_tip + 1):
         ctx = context.changectx(repo, rev)
         for f in ctx.files():
+            if f not in ctx:
+                continue
             fctx = ctx.filectx(f)
             if fctx.size() > limit:
                 ui.write(_('file %s of %s is too large: %d > %d\n') % \
