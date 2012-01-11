@@ -29,6 +29,7 @@
 #ifndef __MEM_RUBY_SYSTEM_MEMORYVECTOR_HH__
 #define __MEM_RUBY_SYSTEM_MEMORYVECTOR_HH__
 
+#include "base/trace.hh"
 #include "mem/ruby/common/Address.hh"
 
 class DirectoryMemory;
@@ -48,6 +49,8 @@ class MemoryVector
 
     void write(const Address & paddr, uint8* data, int len);
     uint8* read(const Address & paddr, uint8* data, int len);
+    uint32 collatePages(uint8* &raw_data);
+    void populatePages(uint8* raw_data);
 
   private:
     uint8* getBlockPtr(const PhysAddress & addr);
@@ -56,6 +59,7 @@ class MemoryVector
     uint8** m_pages;
     uint32 m_num_pages;
     const uint32 m_page_offset_mask;
+    static const uint32 PAGE_SIZE = 4096;
 };
 
 inline
@@ -97,7 +101,7 @@ MemoryVector::resize(uint32 size)
         delete [] m_pages;
     }
     m_size = size;
-    assert(size%4096 == 0);
+    assert(size%PAGE_SIZE == 0);
     m_num_pages = size >> 12;
     m_pages = new uint8*[m_num_pages];
     memset(m_pages, 0, m_num_pages * sizeof(uint8*));
@@ -118,8 +122,8 @@ MemoryVector::write(const Address & paddr, uint8* data, int len)
         }
         if (all_zeros)
             return;
-        m_pages[page_num] = new uint8[4096];
-        memset(m_pages[page_num], 0, 4096);
+        m_pages[page_num] = new uint8[PAGE_SIZE];
+        memset(m_pages[page_num], 0, PAGE_SIZE);
         uint32 offset = paddr.getAddress() & m_page_offset_mask;
         memcpy(&m_pages[page_num][offset], data, len);
     } else {
@@ -147,10 +151,82 @@ MemoryVector::getBlockPtr(const PhysAddress & paddr)
 {
     uint32 page_num = paddr.getAddress() >> 12;
     if (m_pages[page_num] == 0) {
-        m_pages[page_num] = new uint8[4096];
-        memset(m_pages[page_num], 0, 4096);
+        m_pages[page_num] = new uint8[PAGE_SIZE];
+        memset(m_pages[page_num], 0, PAGE_SIZE);
     }
     return &m_pages[page_num][paddr.getAddress()&m_page_offset_mask];
+}
+
+/*!
+ * Function for collating all the pages of the physical memory together.
+ * In case a pointer for a page is NULL, this page needs only a single byte
+ * to represent that the pointer is NULL. Otherwise, it needs 1 + PAGE_SIZE
+ * bytes. The first represents that the page pointer is not NULL, and rest of
+ * the bytes represent the data on the page.
+ */
+
+inline uint32
+MemoryVector::collatePages(uint8* &raw_data)
+{
+    uint32 num_zero_pages = 0;
+    uint32 data_size = 0;
+
+    for (uint32 i = 0;i < m_num_pages; ++i)
+    {
+        if (m_pages[i] == 0) num_zero_pages++;
+    }
+
+    raw_data = new uint8[  sizeof(uint32) /* number of pages*/
+                         + m_num_pages /* whether the page is all zeros */
+                         + PAGE_SIZE * (m_num_pages - num_zero_pages)];
+
+    /* Write the number of pages to be stored. */
+    memcpy(raw_data, &m_num_pages, sizeof(uint32));
+    data_size = sizeof(uint32);
+
+    for (uint32 i = 0;i < m_num_pages; ++i)
+    {
+        if (m_pages[i] == 0) {
+            raw_data[data_size] = 0;
+        } else {
+            raw_data[data_size] = 1;
+            memcpy(raw_data + data_size + 1, m_pages[i], PAGE_SIZE);
+            data_size += PAGE_SIZE;
+        }
+        data_size += 1;
+    }
+
+    return data_size;
+}
+
+/*!
+ * Function for populating the pages of the memory using the available raw
+ * data. Each page has a byte associate with it, which represents whether the
+ * page was NULL or not, when all the pages were collated. The function assumes
+ * that the number of pages in the memory are same as those that were recorded
+ * in the checkpoint.
+ */
+inline void
+MemoryVector::populatePages(uint8* raw_data)
+{
+    uint32 data_size = 0;
+    uint32 num_pages = 0;
+
+    /* Read the number of pages that were stored. */
+    memcpy(&num_pages, raw_data, sizeof(uint32));
+    data_size = sizeof(uint32);
+    assert(num_pages == m_num_pages);
+
+    for (uint32 i = 0;i < m_num_pages; ++i)
+    {
+        assert(m_pages[i] == 0);
+        if (raw_data[data_size] != 0) {
+            m_pages[i] = new uint8[PAGE_SIZE];
+            memcpy(m_pages[i], raw_data + data_size + 1, PAGE_SIZE);
+            data_size += PAGE_SIZE;
+        }
+        data_size += 1;
+    }
 }
 
 #endif // __MEM_RUBY_SYSTEM_MEMORYVECTOR_HH__
