@@ -67,7 +67,8 @@ def define_options(parser):
 def create_system(options, system, piobus = None, dma_devices = []):
 
     system.ruby = RubySystem(clock = options.clock,
-                             stats_filename = options.ruby_stats)
+                             stats_filename = options.ruby_stats,
+                             no_mem_vec = options.use_map)
     ruby = system.ruby
 
     protocol = buildEnv['PROTOCOL']
