@@ -48,7 +48,6 @@ class CacheRecorder;
 class MemoryVector;
 class Network;
 class Profiler;
-class Tracer;
 
 class RubySystem : public SimObject
 {
@@ -86,13 +85,6 @@ class RubySystem : public SimObject
         return m_profiler_ptr;
     }
 
-    static Tracer*
-    getTracer()
-    {
-        assert(m_tracer_ptr != NULL);
-        return m_tracer_ptr;
-    }
-
     static MemoryVector*
     getMemoryVector()
     {
@@ -119,7 +111,6 @@ class RubySystem : public SimObject
 
     void registerNetwork(Network*);
     void registerProfiler(Profiler*);
-    void registerTracer(Tracer*);
     void registerAbstractController(AbstractController*);
 
   private:
@@ -145,7 +136,6 @@ class RubySystem : public SimObject
 
   public:
     static Profiler* m_profiler_ptr;
-    static Tracer* m_tracer_ptr;
     static MemoryVector* m_mem_vec_ptr;
     std::vector<AbstractController*> m_abs_cntrl_vec;
 };

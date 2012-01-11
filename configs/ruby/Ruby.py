@@ -154,11 +154,8 @@ def create_system(options, system, piobus = None, dma_devices = []):
 
     ruby_profiler = RubyProfiler(ruby_system = ruby,
                                  num_of_sequencers = len(cpu_sequencers))
-    ruby_tracer   = RubyTracer(ruby_system = ruby)
-    
     ruby.network = network
     ruby.profiler = ruby_profiler
-    ruby.tracer = ruby_tracer
     ruby.mem_size = total_mem_size
     ruby._cpu_ruby_ports = cpu_sequencers
     ruby.random_seed    = options.random_seed

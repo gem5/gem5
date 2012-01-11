@@ -32,7 +32,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/recorder/Tracer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/System.hh"
@@ -49,7 +48,6 @@ int RubySystem::m_memory_size_bits;
 
 Network* RubySystem::m_network_ptr;
 Profiler* RubySystem::m_profiler_ptr;
-Tracer* RubySystem::m_tracer_ptr;
 MemoryVector* RubySystem::m_mem_vec_ptr;
 
 RubySystem::RubySystem(const Params *p)
@@ -109,12 +107,6 @@ RubySystem::registerProfiler(Profiler* profiler_ptr)
 }
 
 void
-RubySystem::registerTracer(Tracer* tracer_ptr)
-{
-  m_tracer_ptr = tracer_ptr;
-}
-
-void
 RubySystem::registerAbstractController(AbstractController* cntrl)
 {
   m_abs_cntrl_vec.push_back(cntrl);
@@ -124,7 +116,6 @@ RubySystem::~RubySystem()
 {
     delete m_network_ptr;
     delete m_profiler_ptr;
-    delete m_tracer_ptr;
     if (m_mem_vec_ptr)
         delete m_mem_vec_ptr;
 }
