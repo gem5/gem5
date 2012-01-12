@@ -1253,7 +1253,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     //When rs=L1
                     //Note: "1. Format type L is legal only if 64-bit
                     //floating point operations are enabled."
-                    0x5: decode FUNCTION_HI {
+                    0x5: decode FUNCTION {
                         format FloatConvertOp {
                             0x20: cvt_s_l({{ val = Fs_ud; }}, ToSingle);
                             0x21: cvt_d_l({{ val = Fs_ud; }}, ToDouble);
