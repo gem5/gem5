@@ -29,6 +29,8 @@
  * Authors: Gabe Black
  *          Korey Sewell
  *          Jaidev Patwardhan
+ *          Zhengxing Li
+ *          Deyuan Guo
  */
 
 #ifndef __MIPS_FAULTS_HH__
@@ -87,7 +89,7 @@ class MipsFaultBase : public FaultBase
     virtual FaultVect base(ThreadContext *tc) const
     {
         StatusReg status = tc->readMiscReg(MISCREG_STATUS);
-        if (status.bev)
+        if (!status.bev)
             return tc->readMiscReg(MISCREG_EBASE);
         else
             return 0xbfc00200;
@@ -166,7 +168,7 @@ class CoprocessorUnusableFault : public MipsFault<CoprocessorUnusableFault>
         if (FULL_SYSTEM) {
             CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
             cause.ce = coProcID;
-            tc->setMiscReg(MISCREG_CAUSE, cause);
+            tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
         }
     }
 };
@@ -178,7 +180,8 @@ class InterruptFault : public MipsFault<InterruptFault>
     offset(ThreadContext *tc) const
     {
         CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
-        return cause.iv ? 0x200 : 0x000;
+        // offset 0x200 for release 2, 0x180 for release 1.
+        return cause.iv ? 0x200 : 0x180;
     }
 };
 
@@ -250,9 +253,10 @@ class TlbFault : public AddressFault<T>
             StaticInstPtr inst = StaticInst::nullStaticInstPtr)
     {
         if (FULL_SYSTEM) {
-            DPRINTF(MipsPRA, "Fault %s encountered.\n", name());
-            tc->pcState(this->vect(tc));
+            DPRINTF(MipsPRA, "Fault %s encountered.\n", this->name());
+            Addr vect = this->vect(tc);
             setTlbExceptionState(tc, this->code());
+            tc->pcState(vect);
         } else {
             AddressFault<T>::invoke(tc, inst);
         }

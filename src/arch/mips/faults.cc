@@ -29,6 +29,8 @@
  * Authors: Gabe Black
  *          Korey Sewell
  *          Jaidev Patwardhan
+ *          Zhengxing Li
+ *          Deyuan Guo
  */
 
 #include "arch/mips/faults.hh"
@@ -121,7 +123,7 @@ MipsFaultBase::setExceptionState(ThreadContext *tc, uint8_t excCode)
     DPRINTF(MipsPRA, "PC: %s\n", pc);
     bool delay_slot = pc.pc() + sizeof(MachInst) != pc.npc();
     tc->setMiscRegNoEffect(MISCREG_EPC,
-            pc.pc() - delay_slot ? sizeof(MachInst) : 0);
+            pc.pc() - (delay_slot ? sizeof(MachInst) : 0));
 
     // Set Cause_EXCCODE field
     CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);

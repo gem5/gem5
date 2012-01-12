@@ -29,6 +29,8 @@
  * Authors: Nathan Binkert
  *          Steve Reinhardt
  *          Jaidev Patwardhan
+ *          Zhengxing Li
+ *          Deyuan Guo
  */
 
 #include <string>
@@ -350,7 +352,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
           }
 
           if (Valid == false) {
-              return new InvalidFault(Asid, vaddr, vpn, false);
+              return new TlbInvalidFault(Asid, vaddr, VPN, false);
           } else {
               // Ok, this is really a match, set paddr
               Addr PAddr;
@@ -366,7 +368,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
             }
         } else {
             // Didn't find any match, return a TLB Refill Exception
-            return new RefillFault(Asid, vaddr, vpn, false);
+            return new TlbRefillFault(Asid, vaddr, VPN, false);
         }
     }
     return checkCacheability(req);
@@ -445,10 +447,10 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             }
 
             if (Valid == false) {
-                return new InvalidFault(Asid, vaddr, VPN, true);
+                return new TlbInvalidFault(Asid, vaddr, VPN, write);
             } else {
                 // Ok, this is really a match, set paddr
-                if (!Dirty) {
+                if (!Dirty && write) {
                     return new TlbModifiedFault(Asid, vaddr, VPN);
                 }
                 Addr PAddr;
@@ -464,7 +466,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             }
         } else {
             // Didn't find any match, return a TLB Refill Exception
-            return new RefillFault(Asid, vaddr, VPN, true);
+            return new TlbRefillFault(Asid, vaddr, VPN, write);
         }
     }
     return checkCacheability(req);
