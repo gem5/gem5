@@ -287,8 +287,6 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
                 }
             }
 
-            assert((bytesValidStart >= 0) && (bytesValidEnd <= getSize()));
-
             // copy partial data into the packet's data array
             uint8_t *dest = getPtr<uint8_t>() + func_offset;
             uint8_t *src = data + val_offset;
