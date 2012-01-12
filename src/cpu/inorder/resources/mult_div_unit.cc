@@ -299,6 +299,7 @@ MultDivUnit::exeMulDiv(int slot_num)
     }    
 
     mult_div_req->setProcessing(false);
+    cpu->wakeCPU();
 }
 
 void
