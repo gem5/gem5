@@ -32,7 +32,6 @@
 #include "base/hashmap.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Global.hh"
 
 template<class ENTRY>
 struct PerfectCacheLineState
@@ -56,10 +55,6 @@ class PerfectCacheMemory
     PerfectCacheMemory();
 
     static void printConfig(std::ostream& out);
-
-    // perform a cache access and see if we hit or not.  Return true
-    // on a hit.
-    bool tryCacheAccess(const CacheMsg& msg, bool& block_stc, ENTRY*& entry);
 
     // tests to see if an address is present in the cache
     bool isTagPresent(const Address& address) const;
@@ -116,15 +111,6 @@ template<class ENTRY>
 inline void
 PerfectCacheMemory<ENTRY>::printConfig(std::ostream& out)
 {
-}
-
-template<class ENTRY>
-inline bool
-PerfectCacheMemory<ENTRY>::tryCacheAccess(const CacheMsg& msg,
-                                          bool& block_stc, ENTRY*& entry)
-{
-    panic("not implemented");
-    return true;
 }
 
 // tests to see if an address is present in the cache
