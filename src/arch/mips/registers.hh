@@ -55,7 +55,7 @@ const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;        //HI & LO Regs
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
 
 const uint32_t MIPS32_QNAN = 0x7fbfffff;
-const uint64_t MIPS64_QNAN = ULL(0x7fbfffffffffffff);
+const uint64_t MIPS64_QNAN = ULL(0x7ff7ffffffffffff);
 
 enum FPControlRegNums {
    FLOATREG_FIR = NumFloatArchRegs,
