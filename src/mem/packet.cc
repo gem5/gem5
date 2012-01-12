@@ -286,6 +286,7 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
                           "for functional copying!");
                 }
             }
+            assert(bytesValidEnd <= getSize());
 
             // copy partial data into the packet's data array
             uint8_t *dest = getPtr<uint8_t>() + func_offset;
