@@ -138,15 +138,19 @@ CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
 void
 CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 {
-    int len = 0;
     char *start = dst;
     FSTranslatingPortProxy* vp = tc->getVirtProxy();
 
-    do {
-        vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
-    } while (len < maxlen && start[len++] != 0 );
+    bool foundNull = false;
+    while ((dst - start + 1) < maxlen && !foundNull) {
+        vp->readBlob(vaddr++, (uint8_t*)dst, 1);
+        if (dst == '\0')
+            foundNull = true;
+        dst++;
+    }
 
-    dst[len] = 0;
+    if (!foundNull)
+        *dst = '\0';
 }
 
 void
