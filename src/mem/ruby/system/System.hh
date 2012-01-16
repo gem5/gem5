@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,21 +38,34 @@
 #include "base/callback.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/ruby/system/RubyPort.hh"
+#include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/MemoryVector.hh"
+#include "mem/ruby/system/SparseMemory.hh"
 #include "params/RubySystem.hh"
 #include "sim/sim_object.hh"
 
-class AbstractController;
-class CacheRecorder;
-class MemoryVector;
 class Network;
 class Profiler;
-class Tracer;
 
 class RubySystem : public SimObject
 {
   public:
+    class RubyEvent : public Event
+    {
+      public:
+        RubyEvent(RubySystem* _ruby_system)
+        {
+            ruby_system = _ruby_system;
+        }
+      private:
+        void process();
+
+        RubySystem* ruby_system;
+    };
+
+    friend class RubyEvent;
+
     typedef RubySystemParams Params;
     RubySystem(const Params *p);
     ~RubySystem();
@@ -86,13 +99,6 @@ class RubySystem : public SimObject
         return m_profiler_ptr;
     }
 
-    static Tracer*
-    getTracer()
-    {
-        assert(m_tracer_ptr != NULL);
-        return m_tracer_ptr;
-    }
-
     static MemoryVector*
     getMemoryVector()
     {
@@ -100,7 +106,6 @@ class RubySystem : public SimObject
         return m_mem_vec_ptr;
     }
 
-    void recordCacheContents(CacheRecorder& tr) const;
     static void printConfig(std::ostream& out);
     static void printStats(std::ostream& out);
     void clearStats() const;
@@ -114,13 +119,15 @@ class RubySystem : public SimObject
 
     void print(std::ostream& out) const;
 
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+    void process();
+    void startup();
 
     void registerNetwork(Network*);
     void registerProfiler(Profiler*);
-    void registerTracer(Tracer*);
     void registerAbstractController(AbstractController*);
+    void registerSparseMemory(SparseMemory*);
 
   private:
     // Private copy constructor and assignment operator
@@ -130,6 +137,11 @@ class RubySystem : public SimObject
     void init();
 
     static void printSystemConfig(std::ostream& out);
+    void readCompressedTrace(std::string filename,
+                             uint8*& raw_data,
+                             uint64& uncompressed_trace_size);
+    void writeCompressedTrace(uint8* raw_data, std::string file,
+                              uint64 uncompressed_trace_size);
 
   private:
     // configuration parameters
@@ -140,14 +152,16 @@ class RubySystem : public SimObject
     static int m_block_size_bits;
     static uint64 m_memory_size_bytes;
     static int m_memory_size_bits;
-
     static Network* m_network_ptr;
 
   public:
     static Profiler* m_profiler_ptr;
-    static Tracer* m_tracer_ptr;
     static MemoryVector* m_mem_vec_ptr;
     std::vector<AbstractController*> m_abs_cntrl_vec;
+    bool m_warmup_enabled;
+    bool m_cooldown_enabled;
+    CacheRecorder* m_cache_recorder;
+    std::vector<SparseMemory*> m_sparse_memory_vector;
 };
 
 inline std::ostream&

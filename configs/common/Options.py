@@ -27,7 +27,7 @@
 # Authors: Lisa Hsu
 
 # system options
-parser.add_option("-c", "--cpu-type", type="choice", default="atomic",
+parser.add_option("--cpu-type", type="choice", default="atomic",
                   choices = ["atomic", "timing", "detailed", "inorder"],
                   help = "type of cpu to run with")
 parser.add_option("-n", "--num-cpus", type="int", default=1)
@@ -63,7 +63,8 @@ parser.add_option("--work-end-exit-count", action="store", type="int",
                   help="exit at specified work end count")
 parser.add_option("--work-begin-exit-count", action="store", type="int",
                   help="exit at specified work begin count")
-
+parser.add_option("--init-param", action="store", type="int", default=0,
+                  help="Parameter available in simulation with m5 initparam")
 
 # Checkpointing options
 ###Note that performing checkpointing via python script files will override
@@ -84,6 +85,10 @@ parser.add_option("--work-end-checkpoint-count", action="store", type="int",
                   help="checkpoint at specified work end count")
 parser.add_option("--work-cpus-checkpoint-count", action="store", type="int",
                   help="checkpoint and exit when active cpu count is reached")
+parser.add_option("--restore-with-cpu", action="store", type="choice",
+                  default="atomic", choices = ["atomic", "timing",
+                                               "detailed", "inorder"],
+                  help = "cpu type for restoring from a checkpoint")
 
 
 # CPU Switching - default switch model goes from a checkpoint

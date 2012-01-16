@@ -3,11 +3,11 @@
 sim_seconds                                  5.195470                       # Number of seconds simulated
 sim_ticks                                5195470393000                       # Number of ticks simulated
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                1914891                       # Simulator instruction rate (inst/s)
-host_tick_rate                            37635937594                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 372104                       # Number of bytes of host memory used
-host_seconds                                   138.05                       # Real time elapsed on the host
-sim_insts                                   264342001                       # Number of instructions simulated
+host_inst_rate                                1858401                       # Simulator instruction rate (inst/s)
+host_tick_rate                            36414646229                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 372180                       # Number of bytes of host memory used
+host_seconds                                   142.68                       # Real time elapsed on the host
+sim_insts                                   265147881                       # Number of instructions simulated
 system.l2c.replacements                        136133                       # number of replacements
 system.l2c.tagsinuse                     31389.895470                       # Cycle average of tags in use
 system.l2c.total_refs                         3363370                       # Total number of references to valid blocks.
@@ -257,7 +257,7 @@ system.pc.south_bridge.ide.disks1.dma_write_txs            1                    
 system.cpu.numCycles                      10390940786                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.num_insts                        264342001                       # Number of instructions executed
+system.cpu.num_insts                        265147881                       # Number of instructions executed
 system.cpu.num_int_alu_accesses             249556386                       # Number of integer alu accesses
 system.cpu.num_fp_alu_accesses                      0                       # Number of float alu accesses
 system.cpu.num_func_calls                           0                       # number of times a function call or return occured

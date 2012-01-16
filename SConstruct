@@ -663,10 +663,14 @@ if not py_getvar('Py_ENABLE_SHARED'):
 
 py_libs = []
 for lib in py_getvar('LIBS').split() + py_getvar('SYSLIBS').split():
-    assert lib.startswith('-l')
-    lib = lib[2:]   
-    if lib not in py_libs:
-        py_libs.append(lib)
+    if not lib.startswith('-l'):
+        # Python requires some special flags to link (e.g. -framework
+        # common on OS X systems), assume appending preserves order
+        main.Append(LINKFLAGS=[lib])
+    else:
+        lib = lib[2:]
+        if lib not in py_libs:
+            py_libs.append(lib)
 py_libs.append(py_version)
 
 main.Append(CPPPATH=py_includes)

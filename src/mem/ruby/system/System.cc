@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2011 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <fcntl.h>
+#include <zlib.h>
+
+#include <cstdio>
+
 #include "base/intmath.hh"
 #include "base/output.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "debug/RubySystem.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/recorder/Tracer.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/System.hh"
+#include "sim/simulate.hh"
 
 using namespace std;
 
@@ -49,7 +52,6 @@ int RubySystem::m_memory_size_bits;
 
 Network* RubySystem::m_network_ptr;
 Profiler* RubySystem::m_profiler_ptr;
-Tracer* RubySystem::m_tracer_ptr;
 MemoryVector* RubySystem::m_mem_vec_ptr;
 
 RubySystem::RubySystem(const Params *p)
@@ -88,6 +90,8 @@ RubySystem::RubySystem(const Params *p)
     //
     RubyExitCallback* rubyExitCB = new RubyExitCallback(p->stats_filename);
     registerExitCallback(rubyExitCB);
+    m_warmup_enabled = false;
+    m_cooldown_enabled = false;
 }
 
 void
@@ -109,22 +113,21 @@ RubySystem::registerProfiler(Profiler* profiler_ptr)
 }
 
 void
-RubySystem::registerTracer(Tracer* tracer_ptr)
-{
-  m_tracer_ptr = tracer_ptr;
-}
-
-void
 RubySystem::registerAbstractController(AbstractController* cntrl)
 {
   m_abs_cntrl_vec.push_back(cntrl);
+}
+
+void
+RubySystem::registerSparseMemory(SparseMemory* s)
+{
+    m_sparse_memory_vector.push_back(s);
 }
 
 RubySystem::~RubySystem()
 {
     delete m_network_ptr;
     delete m_profiler_ptr;
-    delete m_tracer_ptr;
     if (m_mem_vec_ptr)
         delete m_mem_vec_ptr;
 }
@@ -167,9 +170,143 @@ RubySystem::printStats(ostream& out)
 }
 
 void
+RubySystem::writeCompressedTrace(uint8* raw_data, string filename,
+                                 uint64 uncompressed_trace_size)
+{
+    // Create the checkpoint file for the memory
+    string thefile = Checkpoint::dir() + "/" + filename.c_str();
+
+    int fd = creat(thefile.c_str(), 0664);
+    if (fd < 0) {
+        perror("creat");
+        fatal("Can't open memory trace file '%s'\n", filename);
+    }
+
+    gzFile compressedMemory = gzdopen(fd, "wb");
+    if (compressedMemory == NULL)
+        fatal("Insufficient memory to allocate compression state for %s\n",
+              filename);
+
+    if (gzwrite(compressedMemory, raw_data, uncompressed_trace_size) !=
+        uncompressed_trace_size) {
+        fatal("Write failed on memory trace file '%s'\n", filename);
+    }
+
+    if (gzclose(compressedMemory)) {
+        fatal("Close failed on memory trace file '%s'\n", filename);
+    }
+    delete raw_data;
+}
+
+void
 RubySystem::serialize(std::ostream &os)
 {
+    m_cooldown_enabled = true;
 
+    vector<Sequencer*> sequencer_map;
+    Sequencer* sequencer_ptr = NULL;
+    int cntrl_id = -1;
+
+
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getSequencer());
+        if (sequencer_ptr == NULL) {
+            sequencer_ptr = sequencer_map[cntrl];
+            cntrl_id = cntrl;
+        }
+    }
+
+    assert(sequencer_ptr != NULL);
+
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        if (sequencer_map[cntrl] == NULL) {
+            sequencer_map[cntrl] = sequencer_ptr;
+        }
+    }
+
+    // Create the CacheRecorder and record the cache trace
+    m_cache_recorder = new CacheRecorder(NULL, 0, sequencer_map);
+
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        m_abs_cntrl_vec[cntrl]->recordCacheTrace(cntrl, m_cache_recorder);
+    }
+
+    // save the current tick value
+    Tick curtick_original = curTick();
+    // save the event queue head
+    Event* eventq_head = eventq->replaceHead(NULL);
+
+    // Schedule an event to start cache cooldown
+    RubyEvent* e = new RubyEvent(this);
+    schedule(e,curTick());
+    simulate();
+
+    // Restore eventq head
+    eventq_head = eventq->replaceHead(eventq_head);
+    // Restore curTick
+    curTick(curtick_original);
+
+    uint8* raw_data = NULL;
+
+    if (m_mem_vec_ptr != NULL) {
+        uint64 memory_trace_size = m_mem_vec_ptr->collatePages(raw_data);
+
+        string memory_trace_file = name() + ".memory.gz";
+        writeCompressedTrace(raw_data, memory_trace_file,
+                             memory_trace_size);
+
+        SERIALIZE_SCALAR(memory_trace_file);
+        SERIALIZE_SCALAR(memory_trace_size);
+
+    } else {
+        for (int i = 0; i < m_sparse_memory_vector.size(); ++i) {
+            m_sparse_memory_vector[i]->recordBlocks(cntrl_id,
+                                                    m_cache_recorder);
+        }
+    }
+
+    // Aggergate the trace entries together into a single array
+    raw_data = new uint8_t[4096];
+    uint64 cache_trace_size = m_cache_recorder->aggregateRecords(&raw_data,
+                                                                 4096);
+    string cache_trace_file = name() + ".cache.gz";
+    writeCompressedTrace(raw_data, cache_trace_file, cache_trace_size);
+
+    SERIALIZE_SCALAR(cache_trace_file);
+    SERIALIZE_SCALAR(cache_trace_size);
+
+    m_cooldown_enabled = false;
+}
+
+void
+RubySystem::readCompressedTrace(string filename, uint8*& raw_data,
+                                uint64& uncompressed_trace_size)
+{
+    // Read the trace file
+    gzFile compressedTrace;
+
+    // trace file
+    int fd = open(filename.c_str(), O_RDONLY);
+    if (fd < 0) {
+        perror("open");
+        fatal("Unable to open trace file %s", filename);
+    }
+
+    compressedTrace = gzdopen(fd, "rb");
+    if (compressedTrace == NULL) {
+        fatal("Insufficient memory to allocate compression state for %s\n",
+              filename);
+    }
+
+    raw_data = new uint8_t[uncompressed_trace_size];
+    if (gzread(compressedTrace, raw_data, uncompressed_trace_size) <
+            uncompressed_trace_size) {
+        fatal("Unable to read complete trace from file %s\n", filename);
+    }
+
+    if (gzclose(compressedTrace)) {
+        fatal("Failed to close cache trace file '%s'\n", filename);
+    }
 }
 
 void
@@ -181,6 +318,88 @@ RubySystem::unserialize(Checkpoint *cp, const string &section)
     // value of curTick()
     //
     clearStats();
+    uint8* uncompressed_trace = NULL;
+
+    if (m_mem_vec_ptr != NULL) {
+        string memory_trace_file;
+        uint64 memory_trace_size = 0;
+
+        UNSERIALIZE_SCALAR(memory_trace_file);
+        UNSERIALIZE_SCALAR(memory_trace_size);
+        memory_trace_file = cp->cptDir + "/" + memory_trace_file;
+
+        readCompressedTrace(memory_trace_file, uncompressed_trace,
+                            memory_trace_size);
+        m_mem_vec_ptr->populatePages(uncompressed_trace);
+
+        delete uncompressed_trace;
+        uncompressed_trace = NULL;
+    }
+
+    string cache_trace_file;
+    uint64 cache_trace_size = 0;
+
+    UNSERIALIZE_SCALAR(cache_trace_file);
+    UNSERIALIZE_SCALAR(cache_trace_size);
+    cache_trace_file = cp->cptDir + "/" + cache_trace_file;
+
+    readCompressedTrace(cache_trace_file, uncompressed_trace,
+                        cache_trace_size);
+    m_warmup_enabled = true;
+
+    vector<Sequencer*> sequencer_map;
+    Sequencer* t = NULL;
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        sequencer_map.push_back(m_abs_cntrl_vec[cntrl]->getSequencer());
+        if(t == NULL) t = sequencer_map[cntrl];
+    }
+
+    assert(t != NULL);
+
+    for (int cntrl = 0; cntrl < m_abs_cntrl_vec.size(); cntrl++) {
+        if (sequencer_map[cntrl] == NULL) {
+            sequencer_map[cntrl] = t;
+        }
+    }
+
+    m_cache_recorder = new CacheRecorder(uncompressed_trace, cache_trace_size,
+                                         sequencer_map);
+}
+
+void
+RubySystem::startup()
+{
+    if (m_warmup_enabled) {
+        // save the current tick value
+        Tick curtick_original = curTick();
+        // save the event queue head
+        Event* eventq_head = eventq->replaceHead(NULL);
+        // set curTick to 0
+        curTick(0);
+
+        // Schedule an event to start cache warmup
+        RubyEvent* e = new RubyEvent(this);
+        schedule(e,curTick());
+        simulate();
+
+        delete m_cache_recorder;
+        m_cache_recorder = NULL;
+        m_warmup_enabled = false;
+        // Restore eventq head
+        eventq_head = eventq->replaceHead(eventq_head);
+        // Restore curTick
+        curTick(curtick_original);
+    }
+}
+
+void
+RubySystem::RubyEvent::process()
+{
+    if (ruby_system->m_warmup_enabled) {
+        ruby_system->m_cache_recorder->enqueueNextFetchRequest();
+    }  else if (ruby_system->m_cooldown_enabled) {
+        ruby_system->m_cache_recorder->enqueueNextFlushRequest();
+    }
 }
 
 void
@@ -188,11 +407,6 @@ RubySystem::clearStats() const
 {
     m_profiler_ptr->clearStats();
     m_network_ptr->clearStats();
-}
-
-void
-RubySystem::recordCacheContents(CacheRecorder& tr) const
-{
 }
 
 #ifdef CHECK_COHERENCE

@@ -228,6 +228,12 @@ class SimObjectVector(VectorParamValue):
             for obj in v.descendants():
                 yield obj
 
+    def get_config_as_dict(self):
+        a = []
+        for v in self:
+            a.append(v.get_config_as_dict())
+        return a
+
 class VectorParamDesc(ParamDesc):
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
@@ -255,6 +261,9 @@ class VectorParamDesc(ParamDesc):
         code('%{')
         self.ptype.cxx_predecls(code)
         code('%}')
+        code()
+        # Make sure the SWIGPY_SLICE_ARG is defined through this inclusion
+        code('%include "std_container.i"')
         code()
         self.ptype.swig_predecls(code)
         code()
@@ -959,6 +968,9 @@ class Time(ParamValue):
         return time.asctime(self.value)
 
     def ini_str(self):
+        return str(self)
+
+    def get_config_as_dict(self):
         return str(self)
 
 # Enumerated types are a little more complex.  The user specifies the

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <queue>
 
 #include "debug/RubyCache.hh"
 #include "mem/ruby/system/SparseMemory.hh"
@@ -82,19 +85,19 @@ SparseMemory::recursivelyRemoveTables(SparseMapType* curTable, int curLevel)
     SparseMapType::iterator iter;
 
     for (iter = curTable->begin(); iter != curTable->end(); iter++) {
-        SparseMemEntry* entryStruct = &((*iter).second);
+        SparseMemEntry entry = (*iter).second;
 
         if (curLevel != (m_number_of_levels - 1)) {
             // If the not at the last level, analyze those lower level
             // tables first, then delete those next tables
-            SparseMapType* nextTable = (SparseMapType*)(entryStruct->entry);
+            SparseMapType* nextTable = (SparseMapType*)(entry);
             recursivelyRemoveTables(nextTable, (curLevel + 1));
             delete nextTable;
         } else {
             // If at the last level, delete the directory entry
-            delete (AbstractEntry*)(entryStruct->entry);
+            delete (AbstractEntry*)(entry);
         }
-        entryStruct->entry = NULL;
+        entry = NULL;
     }
 
     // Once all entries have been deleted, erase the entries
@@ -134,7 +137,7 @@ SparseMemory::exist(const Address& address) const
         // If the address is found, move on to the next level.
         // Otherwise, return not found
         if (curTable->count(curAddress) != 0) {
-            curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
+            curTable = (SparseMapType*)((*curTable)[curAddress]);
         } else {
             DPRINTF(RubyCache, "Not found\n");
             return false;
@@ -156,7 +159,6 @@ SparseMemory::add(const Address& address, AbstractEntry* entry)
 
     Address curAddress;
     SparseMapType* curTable = m_map_head;
-    SparseMemEntry* entryStruct = NULL;
 
     // Initiallize the high bit to be the total number of bits plus
     // the block offset.  However the highest bit index is one less
@@ -179,7 +181,7 @@ SparseMemory::add(const Address& address, AbstractEntry* entry)
         // if the address exists in the cur table, move on.  Otherwise
         // create a new table.
         if (curTable->count(curAddress) != 0) {
-            curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
+            curTable = (SparseMapType*)((*curTable)[curAddress]);
         } else {
             m_adds_per_level[level]++;
 
@@ -194,9 +196,7 @@ SparseMemory::add(const Address& address, AbstractEntry* entry)
 
             // Create the pointer container SparseMemEntry and add it
             // to the table.
-            entryStruct = new SparseMemEntry;
-            entryStruct->entry = newEntry;
-            (*curTable)[curAddress] = *entryStruct;
+            (*curTable)[curAddress] = newEntry;
 
             // Move to the next level of the heirarchy
             curTable = (SparseMapType*)newEntry;
@@ -215,7 +215,7 @@ SparseMemory::recursivelyRemoveLevels(const Address& address,
 {
     Address curAddress;
     CurNextInfo nextInfo;
-    SparseMemEntry* entryStruct;
+    SparseMemEntry entry;
 
     // create the appropriate address for this level
     // Note: that set Address is inclusive of the specified range,
@@ -231,11 +231,11 @@ SparseMemory::recursivelyRemoveLevels(const Address& address,
 
     assert(curInfo.curTable->count(curAddress) != 0);
 
-    entryStruct = &((*(curInfo.curTable))[curAddress]);
+    entry = (*(curInfo.curTable))[curAddress];
 
     if (curInfo.level < (m_number_of_levels - 1)) {
         // set up next level's info
-        nextInfo.curTable = (SparseMapType*)(entryStruct->entry);
+        nextInfo.curTable = (SparseMapType*)(entry);
         nextInfo.level = curInfo.level + 1;
 
         nextInfo.highBit = curInfo.highBit -
@@ -252,15 +252,15 @@ SparseMemory::recursivelyRemoveLevels(const Address& address,
         if (tableSize == 0) {
             m_removes_per_level[curInfo.level]++;
             delete nextInfo.curTable;
-            entryStruct->entry = NULL;
+            entry = NULL;
             curInfo.curTable->erase(curAddress);
         }
     } else {
         // if this is the last level, we have reached the Directory
         // Entry and thus we should delete it including the
         // SparseMemEntry container struct.
-        delete (AbstractEntry*)(entryStruct->entry);
-        entryStruct->entry = NULL;
+        delete (AbstractEntry*)(entry);
+        entry = NULL;
         curInfo.curTable->erase(curAddress);
         m_removes_per_level[curInfo.level]++;
     }
@@ -331,7 +331,7 @@ SparseMemory::lookup(const Address& address)
         // If the address is found, move on to the next level.
         // Otherwise, return not found
         if (curTable->count(curAddress) != 0) {
-            curTable = (SparseMapType*)(((*curTable)[curAddress]).entry);
+            curTable = (SparseMapType*)((*curTable)[curAddress]);
         } else {
             DPRINTF(RubyCache, "Not found\n");
             return NULL;
@@ -342,6 +342,70 @@ SparseMemory::lookup(const Address& address)
     entry = (AbstractEntry*)curTable;
 
     return entry;
+}
+
+void
+SparseMemory::recordBlocks(int cntrl_id, CacheRecorder* tr) const
+{
+    queue<SparseMapType*> unexplored_nodes[2];
+    queue<physical_address_t> address_of_nodes[2];
+
+    unexplored_nodes[0].push(m_map_head);
+    address_of_nodes[0].push(0);
+
+    int parity_of_level = 0;
+    physical_address_t address, temp_address;
+    Address curAddress;
+
+    // Initiallize the high bit to be the total number of bits plus
+    // the block offset.  However the highest bit index is one less
+    // than this value.
+    int highBit = m_total_number_of_bits + RubySystem::getBlockSizeBits();
+    int lowBit;
+
+    for (int cur_level = 0; cur_level < m_number_of_levels; cur_level++) {
+
+        // create the appropriate address for this level
+        // Note: that set Address is inclusive of the specified range,
+        // thus the high bit is one less than the total number of bits
+        // used to create the address.
+        lowBit = highBit - m_number_of_bits_per_level[cur_level];
+
+        while (!unexplored_nodes[parity_of_level].empty()) {
+
+            SparseMapType* node = unexplored_nodes[parity_of_level].front();
+            unexplored_nodes[parity_of_level].pop();
+
+            address = address_of_nodes[parity_of_level].front();
+            address_of_nodes[parity_of_level].pop();
+
+            SparseMapType::iterator iter;
+
+            for (iter = node->begin(); iter != node->end(); iter++) {
+                SparseMemEntry entry = (*iter).second;
+                curAddress = (*iter).first;
+
+                if (cur_level != (m_number_of_levels - 1)) {
+                    // If not at the last level, put this node in the queue
+                    unexplored_nodes[1 - parity_of_level].push(
+                                                     (SparseMapType*)(entry));
+                    address_of_nodes[1 - parity_of_level].push(address |
+                                         (curAddress.getAddress() << lowBit));
+                } else {
+                    // If at the last level, add a trace record
+                    temp_address = address | (curAddress.getAddress()
+                                                                   << lowBit);
+                    DataBlock block = ((AbstractEntry*)entry)->getDataBlk();
+                    tr->addRecord(cntrl_id, temp_address, 0, RubyRequestType_ST, 0,
+                                  block);
+                }
+            }
+        }
+
+        // Adjust the highBit value for the next level
+        highBit -= m_number_of_bits_per_level[cur_level];
+        parity_of_level = 1 - parity_of_level;
+    }
 }
 
 void

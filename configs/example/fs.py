@@ -151,6 +151,8 @@ if options.kernel is not None:
 if options.script is not None:
     test_sys.readfile = options.script
 
+test_sys.init_param = options.init_param
+
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
 CacheConfig.config_cache(options, test_sys)
@@ -190,8 +192,8 @@ if len(bm) == 2:
     elif buildEnv['TARGET_ISA'] == 'x86':
         drive_sys = makeX86System(drive_mem_mode, np, bm[1])
     elif buildEnv['TARGET_ISA'] == 'arm':
-        drive_sys = makeArmSystem(drive_mem_mode,
-                machine_options.machine_type, bm[1])
+        drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, bm[1])
+
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.fastmem:
@@ -199,6 +201,7 @@ if len(bm) == 2:
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
 
+    drive_sys.init_param = options.init_param
     root = makeDualRoot(test_sys, drive_sys, options.etherdump)
 elif len(bm) == 1:
     root = Root(system=test_sys)

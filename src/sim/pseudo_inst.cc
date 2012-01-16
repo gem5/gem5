@@ -417,6 +417,7 @@ workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     tc->getCpuPtr()->workItemBegin();
     System *sys = tc->getSystemPtr();
     const System::Params *params = sys->params();
+    sys->workItemBegin(threadid, workid);
 
     DPRINTF(WorkItems, "Work Begin workid: %d, threadid %d\n", workid, 
             threadid);
@@ -473,6 +474,7 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     tc->getCpuPtr()->workItemEnd();
     System *sys = tc->getSystemPtr();
     const System::Params *params = sys->params();
+    sys->workItemEnd(threadid, workid);
 
     DPRINTF(WorkItems, "Work End workid: %d, threadid %d\n", workid, threadid);
 

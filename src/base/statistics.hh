@@ -1477,6 +1477,8 @@ class HistStor
 
     /** The current sum. */
     Counter sum;
+    /** The sum of logarithm of each sample, used to compute geometric mean. */
+    Counter logs;
     /** The sum of squares. */
     Counter squares;
     /** The number of samples. */
@@ -1528,6 +1530,7 @@ class HistStor
 
         sum += val * number;
         squares += val * val * number;
+        logs += log(val) * number;
         samples += number;
     }
 
@@ -1567,6 +1570,7 @@ class HistStor
             data.cvec[i] = cvec[i];
 
         data.sum = sum;
+        data.logs = logs;
         data.squares = squares;
         data.samples = samples;
     }
@@ -1589,6 +1593,7 @@ class HistStor
         sum = Counter();
         squares = Counter();
         samples = Counter();
+        logs = Counter();
     }
 };
 

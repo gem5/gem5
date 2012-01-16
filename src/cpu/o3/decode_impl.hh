@@ -446,10 +446,6 @@ void
 DefaultDecode<Impl>::sortInsts()
 {
     int insts_from_fetch = fromFetch->size;
-#ifdef DEBUG
-    for (ThreadID tid = 0; tid < numThreads; tid++)
-        assert(insts[tid].empty());
-#endif
     for (int i = 0; i < insts_from_fetch; ++i) {
         insts[fromFetch->insts[i]->threadNumber].push(fromFetch->insts[i]);
     }

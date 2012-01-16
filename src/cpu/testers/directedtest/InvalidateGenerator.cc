@@ -103,7 +103,7 @@ InvalidateGenerator::initiate()
 }
 
 void 
-InvalidateGenerator::performCallback(uint proc, Addr address)
+InvalidateGenerator::performCallback(uint32_t proc, Addr address)
 {
     assert(m_address == address);  
 

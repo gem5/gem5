@@ -33,8 +33,4 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
-SimObject('Tracer.py')
-
 Source('CacheRecorder.cc')
-Source('Tracer.cc')
-Source('TraceRecord.cc', Werror=False)

@@ -54,8 +54,8 @@ class System(SimObject):
     physmem = Param.PhysicalMemory("Physical Memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
     memories = VectorParam.PhysicalMemory(Self.all, "All memories is the system")
-
     work_item_id = Param.Int(-1, "specific work item id")
+    num_work_ids = Param.Int(16, "Number of distinct work item types")
     work_begin_cpu_id_exit = Param.Int(-1,
         "work started on specific id, now exit simulation")
     work_begin_ckpt_count = Param.Counter(0,

@@ -49,14 +49,14 @@ class InvalidateGenerator : public DirectedGenerator
     ~InvalidateGenerator();
     
     bool initiate();
-    void performCallback(uint proc, Addr address);
+    void performCallback(uint32_t proc, Addr address);
     
   private:
     InvalidateGeneratorStatus m_status;
     Addr m_address;
-    uint m_active_read_node;
-    uint m_active_inv_node;
-    uint m_addr_increment_size;
+    uint32_t m_active_read_node;
+    uint32_t m_active_inv_node;
+    uint32_t m_addr_increment_size;
 };
 
 #endif //__CPU_DIRECTEDTEST_INVALIDATEGENERATOR_HH__

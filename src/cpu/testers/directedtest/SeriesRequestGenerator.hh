@@ -49,13 +49,13 @@ class SeriesRequestGenerator : public DirectedGenerator
     ~SeriesRequestGenerator();
     
     bool initiate();
-    void performCallback(uint proc, Addr address);
+    void performCallback(uint32_t proc, Addr address);
     
   private:
     SeriesRequestGeneratorStatus m_status;
     Addr m_address;
-    uint m_active_node;
-    uint m_addr_increment_size;
+    uint32_t m_active_node;
+    uint32_t m_addr_increment_size;
     bool m_issue_writes;
 };
 

@@ -67,7 +67,7 @@ Pl111::Pl111(const Params *p)
 {
     pioSize = 0xFFFF;
 
-    pic = simout.create("framebuffer.bmp", true);
+    pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
     dmaBuffer = new uint8_t[LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t)];
 

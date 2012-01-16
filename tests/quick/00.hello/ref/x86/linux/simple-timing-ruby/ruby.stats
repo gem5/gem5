@@ -34,7 +34,7 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/19/2011 12:26:55
+Real time: Jan/09/2012 14:28:32
 
 Profiler Stats
 --------------
@@ -43,18 +43,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.17
-Virtual_time_in_minutes: 0.00283333
-Virtual_time_in_hours:   4.72222e-05
-Virtual_time_in_days:    1.96759e-06
+Virtual_time_in_seconds: 0.31
+Virtual_time_in_minutes: 0.00516667
+Virtual_time_in_hours:   8.61111e-05
+Virtual_time_in_days:    3.58796e-06
 
 Ruby_current_time: 276484
 Ruby_start_time: 0
 Ruby_cycles: 276484
 
-mbytes_resident: 39.5938
-mbytes_total: 212.965
-resident_ratio: 0.185935
+mbytes_resident: 40.0625
+mbytes_total: 241.918
+resident_ratio: 0.165652
 
 ruby_cycles_executed: [ 276485 ]
 
@@ -125,11 +125,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 10428
-page_faults: 0
+page_reclaims: 11175
+page_faults: 4
 swaps: 0
 block_inputs: 0
-block_outputs: 64
+block_outputs: 0
 
 Network Stats
 -------------
@@ -142,9 +142,9 @@ total_msgs: 16500 total_bytes: 660000
 
 switch_0_inlinks: 2
 switch_0_outlinks: 2
-links_utilized_percent_switch_0: 0.155303
-  links_utilized_percent_switch_0_link_0: 0.0622369 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 0.248369 bw: 160000 base_latency: 1
+links_utilized_percent_switch_0: 2.48658
+  links_utilized_percent_switch_0_link_0: 2.48947 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_0_link_1: 2.48369 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_0_link_0_Response_Data: 1377 99144 [ 0 0 0 0 1377 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_0_link_0_Writeback_Control: 1373 10984 [ 0 0 0 1373 0 0 0 0 0 0 ] base_latency: 1
@@ -153,9 +153,9 @@ links_utilized_percent_switch_0: 0.155303
 
 switch_1_inlinks: 2
 switch_1_outlinks: 2
-links_utilized_percent_switch_1: 0.15552
-  links_utilized_percent_switch_1_link_0: 0.0620922 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 0.248947 bw: 160000 base_latency: 1
+links_utilized_percent_switch_1: 2.48658
+  links_utilized_percent_switch_1_link_0: 2.48369 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_1_link_1: 2.48947 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_1_link_0_Control: 1377 11016 [ 0 0 1377 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_1_link_0_Data: 1373 98856 [ 0 0 1373 0 0 0 0 0 0 0 ] base_latency: 1
@@ -164,27 +164,27 @@ links_utilized_percent_switch_1: 0.15552
 
 switch_2_inlinks: 2
 switch_2_outlinks: 2
-links_utilized_percent_switch_2: 0.248658
-  links_utilized_percent_switch_2_link_0: 0.248947 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 0.248369 bw: 160000 base_latency: 1
+links_utilized_percent_switch_2: 2.48658
+  links_utilized_percent_switch_2_link_0: 2.48947 bw: 16000 base_latency: 1
+  links_utilized_percent_switch_2_link_1: 2.48369 bw: 16000 base_latency: 1
 
   outgoing_messages_switch_2_link_0_Response_Data: 1377 99144 [ 0 0 0 0 1377 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_0_Writeback_Control: 1373 10984 [ 0 0 0 1373 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Control: 1377 11016 [ 0 0 1377 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Data: 1373 98856 [ 0 0 1373 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.cpu_ruby_ports.dcache
-  system.ruby.cpu_ruby_ports.dcache_total_misses: 1377
-  system.ruby.cpu_ruby_ports.dcache_total_demand_misses: 1377
-  system.ruby.cpu_ruby_ports.dcache_total_prefetches: 0
-  system.ruby.cpu_ruby_ports.dcache_total_sw_prefetches: 0
-  system.ruby.cpu_ruby_ports.dcache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.cacheMemory
+  system.l1_cntrl0.cacheMemory_total_misses: 1377
+  system.l1_cntrl0.cacheMemory_total_demand_misses: 1377
+  system.l1_cntrl0.cacheMemory_total_prefetches: 0
+  system.l1_cntrl0.cacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.cacheMemory_total_hw_prefetches: 0
 
-  system.ruby.cpu_ruby_ports.dcache_request_type_LD:   36.2382%
-  system.ruby.cpu_ruby_ports.dcache_request_type_ST:   18.5185%
-  system.ruby.cpu_ruby_ports.dcache_request_type_IFETCH:   45.2433%
+  system.l1_cntrl0.cacheMemory_request_type_LD:   36.2382%
+  system.l1_cntrl0.cacheMemory_request_type_ST:   18.5185%
+  system.l1_cntrl0.cacheMemory_request_type_IFETCH:   45.2433%
 
-  system.ruby.cpu_ruby_ports.dcache_access_mode_type_Supervisor:   1377    100%
+  system.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   1377    100%
 
  --- L1Cache ---
  - Event Counts -
@@ -230,9 +230,9 @@ Memory controller: system.dir_cntrl0.memBuffer:
   memory_reads: 1377
   memory_writes: 1373
   memory_refreshes: 576
-  memory_total_request_delays: 3664
-  memory_delays_per_request: 1.33236
-  memory_delays_in_input_queue: 1372
+  memory_total_request_delays: 3035
+  memory_delays_per_request: 1.10364
+  memory_delays_in_input_queue: 743
   memory_delays_behind_head_of_bank_queue: 6
   memory_delays_stalled_at_head_of_bank_queue: 2286
   memory_stalls_for_bank_busy: 791
@@ -310,4 +310,5 @@ ID_W  PUTX [0 ] 0
 ID_W  PUTX_NotOwner [0 ] 0
 ID_W  DMA_READ [0 ] 0
 ID_W  DMA_WRITE [0 ] 0
-ID_W  Memory_Ack
+ID_W  Memory_Ack [0 ] 0
+

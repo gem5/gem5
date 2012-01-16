@@ -55,7 +55,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename,"m5.eecs.umich.edu");
-    strcpy(name->release, "2.4.20");
+    strcpy(name->release, "2.6.35");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "mips");
 

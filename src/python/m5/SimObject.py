@@ -874,28 +874,61 @@ class SimObject(object):
         if hasattr(self, 'type'):
             print >>ini_file, 'type=%s' % self.type
 
-        child_names = self._children.keys()
-        child_names.sort()
-        if len(child_names):
+        if len(self._children.keys()):
             print >>ini_file, 'children=%s' % \
-                  ' '.join(self._children[n].get_name() for n in child_names)
+                  ' '.join(self._children[n].get_name() \
+                  for n in sorted(self._children.keys()))
 
-        param_names = self._params.keys()
-        param_names.sort()
-        for param in param_names:
+        for param in sorted(self._params.keys()):
             value = self._values.get(param)
             if value != None:
                 print >>ini_file, '%s=%s' % (param,
                                              self._values[param].ini_str())
 
-        port_names = self._ports.keys()
-        port_names.sort()
-        for port_name in port_names:
+        for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
             if port != None:
                 print >>ini_file, '%s=%s' % (port_name, port.ini_str())
 
         print >>ini_file        # blank line between objects
+
+    # generate a tree of dictionaries expressing all the parameters in the
+    # instantiated system for use by scripts that want to do power, thermal
+    # visualization, and other similar tasks
+    def get_config_as_dict(self):
+        d = attrdict()
+        if hasattr(self, 'type'):
+            d.type = self.type
+        if hasattr(self, 'cxx_class'):
+            d.cxx_class = self.cxx_class
+
+        for param in sorted(self._params.keys()):
+            value = self._values.get(param)
+            try:
+                # Use native type for those supported by JSON and 
+                # strings for everything else. skipkeys=True seems
+                # to not work as well as one would hope
+                if type(self._values[param].value) in \
+                        [str, unicode, int, long, float, bool, None]:
+                    d[param] = self._values[param].value
+                else:
+                    d[param] = str(self._values[param])
+
+            except AttributeError:
+                pass
+
+        for n in sorted(self._children.keys()):
+            d[self._children[n].get_name()] =  self._children[n].get_config_as_dict()
+
+        for port_name in sorted(self._ports.keys()):
+            port = self._port_refs.get(port_name, None)
+            if port != None:
+                # Might want to actually make this reference the object
+                # in the future, although execing the string problem would
+                # get some of the way there
+                d[port_name] = port.ini_str()
+
+        return d
 
     def getCCParams(self):
         if self._ccParams:

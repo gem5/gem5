@@ -29,6 +29,8 @@
  * Authors: Nathan Binkert
  *          Steve Reinhardt
  *          Jaidev Patwardhan
+ *          Zhengxing Li
+ *          Deyuan Guo
  */
 
 #include <string>
@@ -310,18 +312,6 @@ Fault
 TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 {
     if (!FullSystem) {
-        //@TODO: This should actually use TLB instead of going directly
-        //       to the page table in syscall mode.
-        /**
-         * Check for alignment faults
-         */
-        if (req->getVaddr() & (req->getSize() - 1)) {
-            DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->getVaddr(),
-                    req->getSize());
-            return new AddressErrorFault(req->getVaddr(), write);
-        }
-
-
         Process * p = tc->getProcessPtr();
 
         Fault fault = p->pTable->translate(req);

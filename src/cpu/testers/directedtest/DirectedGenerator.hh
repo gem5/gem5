@@ -43,7 +43,7 @@ class DirectedGenerator : public SimObject
     virtual ~DirectedGenerator() {}
     
     virtual bool initiate() = 0;
-    virtual void performCallback(uint proc, Addr address) = 0;
+    virtual void performCallback(uint32_t proc, Addr address) = 0;
     
     void setDirectedTester(RubyDirectedTester* directed_tester);
     

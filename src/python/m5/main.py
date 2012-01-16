@@ -87,6 +87,8 @@ def parse_options():
     group("Configuration Options")
     option("--dump-config", metavar="FILE", default="config.ini",
         help="Dump configuration output file [Default: %default]")
+    option("--json-config", metavar="FILE", default="config.json",
+        help="Create JSON output of the configuration [Default: %default]")
 
     # Debugging options
     group("Debugging Options")
@@ -121,7 +123,6 @@ def parse_options():
         execfile(options_file, scope)
 
     arguments = options.parse_args()
-
     return options,arguments
 
 def interact(scope):

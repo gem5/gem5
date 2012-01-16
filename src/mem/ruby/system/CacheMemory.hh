@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,21 +34,15 @@
 #include <vector>
 
 #include "base/hashmap.hh"
-#include "mem/protocol/AccessPermission.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/RubyRequest.hh"
-#include "mem/protocol/RubyRequestType.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/CacheProfiler.hh"
 #include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/LRUPolicy.hh"
 #include "mem/ruby/system/PseudoLRUPolicy.hh"
-#include "mem/ruby/system/System.hh"
 #include "params/RubyCache.hh"
 #include "sim/sim_object.hh"
 
@@ -100,12 +94,7 @@ class CacheMemory : public SimObject
     int getLatency() const { return m_latency; }
 
     // Hook for checkpointing the contents of the cache
-    void recordCacheContents(CacheRecorder& tr) const;
-    void
-    setAsInstructionCache(bool is_icache)
-    {
-        m_is_instruction_only_cache = is_icache;
-    }
+    void recordCacheContents(int cntrl, CacheRecorder* tr) const;
 
     // Set this address to most recently used
     void setMRU(const Address& address);
@@ -146,7 +135,6 @@ class CacheMemory : public SimObject
 
     // Data Members (m_prefix)
     bool m_is_instruction_only_cache;
-    bool m_is_data_only_cache;
 
     // The first index is the # of cache lines.
     // The second index is the the amount associativity.

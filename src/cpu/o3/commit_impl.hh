@@ -51,6 +51,7 @@
 #include "config/use_checker.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
+#include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
@@ -986,6 +987,8 @@ DefaultCommit<Impl>::commitInsts()
 
                 // Updates misc. registers.
                 head_inst->updateMiscRegs();
+
+                cpu->traceFunctions(pc[tid].instAddr());
 
                 TheISA::advancePC(pc[tid], head_inst->staticInst);
 

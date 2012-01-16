@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/28/2011 15:12:18
+Real time: Jan/10/2012 12:41:50
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 0
-Elapsed_time_in_minutes: 0
-Elapsed_time_in_hours: 0
-Elapsed_time_in_days: 0
+Elapsed_time_in_seconds: 1
+Elapsed_time_in_minutes: 0.0166667
+Elapsed_time_in_hours: 0.000277778
+Elapsed_time_in_days: 1.15741e-05
 
-Virtual_time_in_seconds: 0.46
-Virtual_time_in_minutes: 0.00766667
-Virtual_time_in_hours:   0.000127778
-Virtual_time_in_days:    5.32407e-06
+Virtual_time_in_seconds: 0.28
+Virtual_time_in_minutes: 0.00466667
+Virtual_time_in_hours:   7.77778e-05
+Virtual_time_in_days:    3.24074e-06
 
 Ruby_current_time: 208400
 Ruby_start_time: 0
 Ruby_cycles: 208400
 
-mbytes_resident: 39.1133
-mbytes_total: 221.852
-resident_ratio: 0.176357
+mbytes_resident: 39.0547
+mbytes_total: 234.742
+resident_ratio: 0.166439
 
 ruby_cycles_executed: [ 208401 ]
 
@@ -126,8 +126,8 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 11228
-page_faults: 0
+page_reclaims: 10898
+page_faults: 53
 swaps: 0
 block_inputs: 0
 block_outputs: 0
@@ -181,28 +181,28 @@ links_utilized_percent_switch_2: 2.15187
   outgoing_messages_switch_2_link_1_Writeback_Control: 2066 16528 [ 0 0 1143 0 0 923 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Unblock_Control: 1159 9272 [ 0 0 0 0 0 1159 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.cpu_ruby_ports.icache
-  system.ruby.cpu_ruby_ports.icache_total_misses: 646
-  system.ruby.cpu_ruby_ports.icache_total_demand_misses: 646
-  system.ruby.cpu_ruby_ports.icache_total_prefetches: 0
-  system.ruby.cpu_ruby_ports.icache_total_sw_prefetches: 0
-  system.ruby.cpu_ruby_ports.icache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1IcacheMemory
+  system.l1_cntrl0.L1IcacheMemory_total_misses: 646
+  system.l1_cntrl0.L1IcacheMemory_total_demand_misses: 646
+  system.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
 
-  system.ruby.cpu_ruby_ports.icache_request_type_IFETCH:   100%
+  system.l1_cntrl0.L1IcacheMemory_request_type_IFETCH:   100%
 
-  system.ruby.cpu_ruby_ports.icache_access_mode_type_Supervisor:   646    100%
+  system.l1_cntrl0.L1IcacheMemory_access_mode_type_Supervisor:   646    100%
 
-Cache Stats: system.ruby.cpu_ruby_ports.dcache
-  system.ruby.cpu_ruby_ports.dcache_total_misses: 716
-  system.ruby.cpu_ruby_ports.dcache_total_demand_misses: 716
-  system.ruby.cpu_ruby_ports.dcache_total_prefetches: 0
-  system.ruby.cpu_ruby_ports.dcache_total_sw_prefetches: 0
-  system.ruby.cpu_ruby_ports.dcache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.L1DcacheMemory
+  system.l1_cntrl0.L1DcacheMemory_total_misses: 716
+  system.l1_cntrl0.L1DcacheMemory_total_demand_misses: 716
+  system.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
 
-  system.ruby.cpu_ruby_ports.dcache_request_type_LD:   73.324%
-  system.ruby.cpu_ruby_ports.dcache_request_type_ST:   26.676%
+  system.l1_cntrl0.L1DcacheMemory_request_type_LD:   73.324%
+  system.l1_cntrl0.L1DcacheMemory_request_type_ST:   26.676%
 
-  system.ruby.cpu_ruby_ports.dcache_access_mode_type_Supervisor:   716    100%
+  system.l1_cntrl0.L1DcacheMemory_access_mode_type_Supervisor:   716    100%
 
 Cache Stats: system.l1_cntrl0.L2cacheMemory
   system.l1_cntrl0.L2cacheMemory_total_misses: 1362
@@ -289,9 +289,9 @@ O  NC_DMA_GETS [0 ] 0
 O  Invalidate [0 ] 0
 O  Flush_line [0 ] 0
 
-M  Load [368 ] 368
-M  Ifetch [5833 ] 5833
-M  Store [66 ] 66
+M  Load [306 ] 306
+M  Ifetch [5768 ] 5768
+M  Store [60 ] 60
 M  L2_Replacement [923 ] 923
 M  L1_to_L2 [1061 ] 1061
 M  Trigger_L2_to_L1D [68 ] 68
@@ -304,9 +304,9 @@ M  NC_DMA_GETS [0 ] 0
 M  Invalidate [0 ] 0
 M  Flush_line [0 ] 0
 
-MM  Load [397 ] 397
+MM  Load [354 ] 354
 MM  Ifetch [0 ] 0
-MM  Store [641 ] 641
+MM  Store [614 ] 614
 MM  L2_Replacement [220 ] 220
 MM  L1_to_L2 [293 ] 293
 MM  Trigger_L2_to_L1D [70 ] 70
@@ -318,6 +318,36 @@ MM  Other_GETS_No_Mig [0 ] 0
 MM  NC_DMA_GETS [0 ] 0
 MM  Invalidate [0 ] 0
 MM  Flush_line [0 ] 0
+
+IR  Load [0 ] 0
+IR  Ifetch [0 ] 0
+IR  Store [0 ] 0
+IR  L1_to_L2 [0 ] 0
+IR  Flush_line [0 ] 0
+
+SR  Load [0 ] 0
+SR  Ifetch [0 ] 0
+SR  Store [0 ] 0
+SR  L1_to_L2 [0 ] 0
+SR  Flush_line [0 ] 0
+
+OR  Load [0 ] 0
+OR  Ifetch [0 ] 0
+OR  Store [0 ] 0
+OR  L1_to_L2 [0 ] 0
+OR  Flush_line [0 ] 0
+
+MR  Load [62 ] 62
+MR  Ifetch [65 ] 65
+MR  Store [6 ] 6
+MR  L1_to_L2 [0 ] 0
+MR  Flush_line [0 ] 0
+
+MMR  Load [43 ] 43
+MMR  Ifetch [0 ] 0
+MMR  Store [27 ] 27
+MMR  L1_to_L2 [0 ] 0
+MMR  Flush_line [0 ] 0
 
 IM  Load [0 ] 0
 IM  Ifetch [0 ] 0
@@ -468,13 +498,6 @@ IT  Store [0 ] 0
 IT  L2_Replacement [0 ] 0
 IT  L1_to_L2 [0 ] 0
 IT  Complete_L2_to_L1 [0 ] 0
-IT  Other_GETX [0 ] 0
-IT  Other_GETS [0 ] 0
-IT  Merged_GETS [0 ] 0
-IT  Other_GETS_No_Mig [0 ] 0
-IT  NC_DMA_GETS [0 ] 0
-IT  Invalidate [0 ] 0
-IT  Flush_line [0 ] 0
 
 ST  Load [0 ] 0
 ST  Ifetch [0 ] 0
@@ -482,13 +505,6 @@ ST  Store [0 ] 0
 ST  L2_Replacement [0 ] 0
 ST  L1_to_L2 [0 ] 0
 ST  Complete_L2_to_L1 [0 ] 0
-ST  Other_GETX [0 ] 0
-ST  Other_GETS [0 ] 0
-ST  Merged_GETS [0 ] 0
-ST  Other_GETS_No_Mig [0 ] 0
-ST  NC_DMA_GETS [0 ] 0
-ST  Invalidate [0 ] 0
-ST  Flush_line [0 ] 0
 
 OT  Load [0 ] 0
 OT  Ifetch [0 ] 0
@@ -496,13 +512,6 @@ OT  Store [0 ] 0
 OT  L2_Replacement [0 ] 0
 OT  L1_to_L2 [0 ] 0
 OT  Complete_L2_to_L1 [0 ] 0
-OT  Other_GETX [0 ] 0
-OT  Other_GETS [0 ] 0
-OT  Merged_GETS [0 ] 0
-OT  Other_GETS_No_Mig [0 ] 0
-OT  NC_DMA_GETS [0 ] 0
-OT  Invalidate [0 ] 0
-OT  Flush_line [0 ] 0
 
 MT  Load [0 ] 0
 MT  Ifetch [0 ] 0
@@ -510,13 +519,6 @@ MT  Store [0 ] 0
 MT  L2_Replacement [0 ] 0
 MT  L1_to_L2 [0 ] 0
 MT  Complete_L2_to_L1 [133 ] 133
-MT  Other_GETX [0 ] 0
-MT  Other_GETS [0 ] 0
-MT  Merged_GETS [0 ] 0
-MT  Other_GETS_No_Mig [0 ] 0
-MT  NC_DMA_GETS [0 ] 0
-MT  Invalidate [0 ] 0
-MT  Flush_line [0 ] 0
 
 MMT  Load [0 ] 0
 MMT  Ifetch [0 ] 0
@@ -524,13 +526,6 @@ MMT  Store [0 ] 0
 MMT  L2_Replacement [0 ] 0
 MMT  L1_to_L2 [0 ] 0
 MMT  Complete_L2_to_L1 [70 ] 70
-MMT  Other_GETX [0 ] 0
-MMT  Other_GETS [0 ] 0
-MMT  Merged_GETS [0 ] 0
-MMT  Other_GETS_No_Mig [0 ] 0
-MMT  NC_DMA_GETS [0 ] 0
-MMT  Invalidate [0 ] 0
-MMT  Flush_line [0 ] 0
 
 MI_F  Load [0 ] 0
 MI_F  Ifetch [0 ] 0
@@ -974,4 +969,5 @@ NO_F_W  Pf_Replacement [0 ] 0
 NO_F_W  DMA_READ [0 ] 0
 NO_F_W  DMA_WRITE [0 ] 0
 NO_F_W  Memory_Data [0 ] 0
-NO_F_W  GETF
+NO_F_W  GETF [0 ] 0
+

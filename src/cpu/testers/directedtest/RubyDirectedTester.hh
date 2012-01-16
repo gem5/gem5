@@ -53,11 +53,11 @@ class RubyDirectedTester : public MemObject
         RubyDirectedTester *tester;
 
       public:
-        CpuPort(const std::string &_name, RubyDirectedTester *_tester, uint _idx)
+        CpuPort(const std::string &_name, RubyDirectedTester *_tester, uint32_t _idx)
             : SimpleTimingPort(_name, _tester), tester(_tester), idx(_idx)
         {}
 
-        uint idx;
+        uint32_t idx;
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);

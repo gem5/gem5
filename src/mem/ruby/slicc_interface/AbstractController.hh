@@ -33,12 +33,11 @@
 #include <string>
 
 #include "mem/protocol/AccessPermission.hh"
-#include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/recorder/CacheRecorder.hh"
 #include "params/RubyController.hh"
 #include "sim/sim_object.hh"
 
@@ -68,6 +67,8 @@ class AbstractController : public SimObject, public Consumer
     virtual void wakeup() = 0;
     //  virtual void dumpStats(std::ostream & out) = 0;
     virtual void clearStats() = 0;
+    virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
+    virtual Sequencer* getSequencer() const = 0;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

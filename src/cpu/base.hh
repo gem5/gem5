@@ -284,17 +284,16 @@ class BaseCPU : public MemObject
     void enableFunctionTrace();
     void traceFunctionsInternal(Addr pc);
 
-  protected:
+  private:
+    static std::vector<BaseCPU *> cpuList;   //!< Static global cpu list
+
+  public:
     void traceFunctions(Addr pc)
     {
         if (functionTracingEnabled)
             traceFunctionsInternal(pc);
     }
 
-  private:
-    static std::vector<BaseCPU *> cpuList;   //!< Static global cpu list
-
-  public:
     static int numSimulatedCPUs() { return cpuList.size(); }
     static Counter numSimulatedInstructions()
     {
