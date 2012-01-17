@@ -216,7 +216,6 @@ class Cache : public BaseCache
     Cache(const Params *p, TagStore *tags, BasePrefetcher *prefetcher);
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
-    virtual void deletePortRefs(Port *p);
 
     void regStats();
 

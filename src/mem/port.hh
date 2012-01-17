@@ -123,10 +123,6 @@ class Port
     /** Function to return the owner of this port. */
     MemObject *getOwner() { return owner; }
 
-    /** Inform the peer port to delete itself and notify it's owner about it's
-     * demise. */
-    void removeConn();
-
     bool isConnected() { return peer != NULL; }
 
   protected:

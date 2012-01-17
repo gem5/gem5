@@ -34,9 +34,3 @@ MemObject::MemObject(const Params *params)
     : SimObject(params)
 {
 }
-
-void
-MemObject::deletePortRefs(Port *p)
-{
-    panic("This object does not support port deletion\n");
-}

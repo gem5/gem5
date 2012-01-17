@@ -367,7 +367,6 @@ class Bus : public MemObject
 
     /** A function used to return the port associated with this bus object. */
     virtual Port *getPort(const std::string &if_name, int idx = -1);
-    virtual void deletePortRefs(Port *p);
 
     virtual void init();
     virtual void startup();

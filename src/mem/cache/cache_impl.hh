@@ -116,17 +116,6 @@ Cache<TagStore>::getPort(const std::string &if_name, int idx)
 
 template<class TagStore>
 void
-Cache<TagStore>::deletePortRefs(Port *p)
-{
-    if (cpuSidePort == p || memSidePort == p)
-        panic("Can only delete functional ports\n");
-
-    delete p;
-}
-
-
-template<class TagStore>
-void
 Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
 {
     uint64_t overwrite_val;

@@ -64,14 +64,6 @@ Port::setOwner(MemObject *_owner)
 }
 
 void
-Port::removeConn()
-{
-    if (peer != NULL)
-        peer->getOwner()->deletePortRefs(peer);
-    peer = NULL;
-}
-
-void
 Port::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd)
 {
     Request req;
