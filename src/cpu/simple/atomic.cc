@@ -96,9 +96,7 @@ AtomicSimpleCPU::init()
     tcBase()->initMemProxies(tcBase());
 #endif
     if (hasPhysMemPort) {
-        bool snoop = false;
-        AddrRangeList pmAddrList;
-        physmemPort.getPeerAddressRanges(pmAddrList, snoop);
+        AddrRangeList pmAddrList = physmemPort.getPeer()->getAddrRanges();
         physMemAddr = *pmAddrList.begin();
     }
     // Atomic doesn't do MT right now, so contextId == threadId

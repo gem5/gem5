@@ -51,7 +51,7 @@ class System;
  * The PioPort class is a programmed i/o port that all devices that are
  * sensitive to an address range use. The port takes all the memory
  * access types and roles them into one read() and write() call that the device
- * must respond to. The device must also provide the addressRanges() function
+ * must respond to. The device must also provide getAddrRanges() function
  * with which it returns the address ranges it is interested in.
  */
 class PioPort : public SimpleTimingPort
@@ -62,8 +62,7 @@ class PioPort : public SimpleTimingPort
 
     virtual Tick recvAtomic(PacketPtr pkt);
 
-    virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                        bool &snoop);
+    virtual AddrRangeList getAddrRanges();
 
   public:
 
@@ -133,9 +132,6 @@ class DmaPort : public Port
     /** Port accesses a cache which requires snooping */
     bool recvSnoops;
 
-    /** Records snoop response so we only reply once to a status change */
-    bool snoopRangeSent;
-
     virtual bool recvTiming(PacketPtr pkt);
     virtual Tick recvAtomic(PacketPtr pkt)
     {
@@ -150,25 +146,16 @@ class DmaPort : public Port
         panic("dma port shouldn't be used for pio access.");
     }
 
-    virtual void recvStatusChange(Status status)
+    virtual void recvRangeChange()
     {
-        if (recvSnoops) {
-            if (status == RangeChange) {
-                if (!snoopRangeSent) {
-                    snoopRangeSent = true;
-                    sendStatusChange(Port::RangeChange);
-                }
-                return;
-            }
-            panic("Unexpected recvStatusChange\n");
-        }
+        // DMA port is a master with a single slave so there is no choice and
+        // thus no need to worry about any address changes
     }
 
     virtual void recvRetry() ;
 
-    virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                        bool &snoop)
-    { resp.clear(); snoop = recvSnoops; }
+    virtual bool isSnooping()
+    { return recvSnoops; }
 
     void queueDma(PacketPtr pkt, bool front = false);
     void sendDma();
@@ -192,7 +179,7 @@ class DmaPort : public Port
 /**
  * This device is the base class which all devices senstive to an address range
  * inherit from. There are three pure virtual functions which all devices must
- * implement addressRanges(), read(), and write(). The magic do choose which
+ * implement getAddrRanges(), read(), and write(). The magic do choose which
  * mode we are in, etc is handled by the PioPort so the device doesn't have to
  * bother.
  */
@@ -210,7 +197,13 @@ class PioDevice : public MemObject
      * that it sees. */
     PioPort *pioPort;
 
-    virtual void addressRanges(AddrRangeList &range_list) = 0;
+    /**
+     * Every PIO device is obliged to provide an implementation that
+     * returns the address ranges the device responds to.
+     *
+     * @return a list of non-overlapping address ranges
+     */
+    virtual AddrRangeList getAddrRanges() = 0;
 
     /** Pure virtual function that the device must implement. Called
      * when a read command is recieved by the port.
@@ -269,10 +262,12 @@ class BasicPioDevice : public PioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    /** return the address ranges that this device responds to.
-     * @param range_list range list to populate with ranges
+    /**
+     * Determine the address ranges that this device responds to.
+     *
+     * @return a list of non-overlapping address ranges
      */
-    void addressRanges(AddrRangeList &range_list);
+    virtual AddrRangeList getAddrRanges();
 
 };
 

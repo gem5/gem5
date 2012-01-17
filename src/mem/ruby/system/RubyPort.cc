@@ -671,9 +671,8 @@ RubyPort::PioPort::sendTiming(PacketPtr pkt)
 bool
 RubyPort::M5Port::isPhysMemAddress(Addr addr)
 {
-    AddrRangeList physMemAddrList;
-    bool snoop = false;
-    ruby_port->physMemPort->getPeerAddressRanges(physMemAddrList, snoop);
+    AddrRangeList physMemAddrList =
+        ruby_port->physMemPort->getPeer()->getAddrRanges();
     for (AddrRangeIter iter = physMemAddrList.begin();
          iter != physMemAddrList.end();
          iter++) {

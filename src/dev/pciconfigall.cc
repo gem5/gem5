@@ -86,11 +86,12 @@ PciConfigAll::write(PacketPtr pkt)
 }
 
 
-void
-PciConfigAll::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+PciConfigAll::getAddrRanges()
 {
-    range_list.clear();
-    range_list.push_back(RangeSize(pioAddr, params()->size));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(pioAddr, params()->size));
+    return ranges;
 }
 
 

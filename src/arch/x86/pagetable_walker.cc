@@ -154,17 +154,8 @@ Walker::WalkerPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-Walker::WalkerPort::recvStatusChange(Status status)
+Walker::WalkerPort::recvRangeChange()
 {
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("Unexpected recvStatusChange.\n");
 }
 
 void

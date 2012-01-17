@@ -64,12 +64,8 @@ FrontEnd<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
 
 template<class Impl>
 void
-FrontEnd<Impl>::IcachePort::recvStatusChange(Status status)
+FrontEnd<Impl>::IcachePort::recvRangeChange()
 {
-    if (status == RangeChange)
-        return;
-
-    panic("FrontEnd doesn't expect recvStatusChange callback!");
 }
 
 template<class Impl>

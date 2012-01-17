@@ -1554,14 +1554,15 @@ Cache<TagStore>::nextMSHRReadyTime()
 ///////////////
 
 template<class TagStore>
-void
+AddrRangeList
 Cache<TagStore>::CpuSidePort::
-getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+getAddrRanges()
 {
     // CPU side port doesn't snoop; it's a target only.  It can
     // potentially respond to any address.
-    snoop = false;
-    resp.push_back(myCache()->getAddrRange());
+    AddrRangeList ranges;
+    ranges.push_back(myCache()->getAddrRange());
+    return ranges;
 }
 
 
@@ -1612,14 +1613,13 @@ CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
 ///////////////
 
 template<class TagStore>
-void
-Cache<TagStore>::MemSidePort::
-getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+bool
+Cache<TagStore>::MemSidePort::isSnooping()
 {
     // Memory-side port always snoops, but never passes requests
     // through to targets on the cpu side (so we don't add anything to
     // the address range list).
-    snoop = true;
+    return true;
 }
 
 

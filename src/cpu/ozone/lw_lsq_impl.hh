@@ -77,12 +77,8 @@ OzoneLWLSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
 
 template <class Impl>
 void
-OzoneLWLSQ<Impl>::DcachePort::recvStatusChange(Status status)
+OzoneLWLSQ<Impl>::DcachePort::recvRangeChange()
 {
-    if (status == RangeChange)
-        return;
-
-    panic("O3CPU doesn't expect recvStatusChange callback!");
 }
 
 template <class Impl>

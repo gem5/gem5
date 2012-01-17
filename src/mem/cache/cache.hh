@@ -90,8 +90,7 @@ class Cache : public BaseCache
             return static_cast<Cache<TagStore> *>(cache);
         }
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        virtual AddrRangeList getAddrRanges();
 
         virtual bool recvTiming(PacketPtr pkt);
 
@@ -118,8 +117,7 @@ class Cache : public BaseCache
 
         void processSendEvent();
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        virtual bool isSnooping();
 
         virtual bool recvTiming(PacketPtr pkt);
 

@@ -186,12 +186,10 @@ class FullO3CPU : public BaseO3CPU
          * As this CPU requires snooping to maintain the load store queue
          * change the behaviour from the base CPU port.
          *
-         * @param resp list of ranges this port responds to
-         * @param snoop indicating if the port snoops or not
+         * @return true since we have to snoop
          */
-        virtual void getDeviceAddressRanges(AddrRangeList& resp,
-                                            bool& snoop)
-        { resp.clear(); snoop = true; }
+        virtual bool isSnooping()
+        { return true; }
     };
 
     class TickEvent : public Event

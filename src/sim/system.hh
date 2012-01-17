@@ -102,7 +102,13 @@ class System : public MemObject
         { panic("SystemPort does not receive atomic!\n"); return 0; }
         void recvFunctional(PacketPtr pkt)
         { panic("SystemPort does not receive functional!\n"); }
-        void recvStatusChange(Status status) { }
+
+        /**
+         * The system port is a master port connected to a single
+         * slave and thus do not care about what ranges the slave
+         * covers (as there is nothing to choose from).
+         */
+        void recvRangeChange() { }
 
     };
 

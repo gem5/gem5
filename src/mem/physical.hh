@@ -65,10 +65,9 @@ class PhysicalMemory : public MemObject
 
         virtual void recvFunctional(PacketPtr pkt);
 
-        virtual void recvStatusChange(Status status);
+        virtual void recvRangeChange();
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        virtual AddrRangeList getAddrRanges();
 
         virtual unsigned deviceBlockSize() const;
     };
@@ -172,7 +171,7 @@ class PhysicalMemory : public MemObject
 
   public:
     unsigned deviceBlockSize() const;
-    void getAddressRanges(AddrRangeList &resp, bool &snoop);
+    AddrRangeList getAddrRanges();
     virtual Port *getPort(const std::string &if_name, int idx = -1);
     void virtual init();
     unsigned int drain(Event *de);
@@ -181,7 +180,6 @@ class PhysicalMemory : public MemObject
     Tick doAtomicAccess(PacketPtr pkt);
     void doFunctionalAccess(PacketPtr pkt);
     virtual Tick calculateLatency(PacketPtr pkt);
-    void recvStatusChange(Port::Status status);
 
   public:
     virtual void serialize(std::ostream &os);

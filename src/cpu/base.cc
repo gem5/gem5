@@ -527,23 +527,6 @@ BaseCPU::CpuPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-BaseCPU::CpuPort::recvStatusChange(Status status)
+BaseCPU::CpuPort::recvRangeChange()
 {
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("BaseCPU doesn't expect recvStatusChange callback!");
-}
-
-void
-BaseCPU::CpuPort::getDeviceAddressRanges(AddrRangeList& resp,
-                                         bool& snoop)
-{
-    resp.clear();
-    snoop = false;
 }

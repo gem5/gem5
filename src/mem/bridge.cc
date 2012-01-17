@@ -338,21 +338,19 @@ Bridge::BridgePort::recvFunctional(PacketPtr pkt)
     otherPort->sendFunctional(pkt);
 }
 
-/** Function called by the port when the bus is receiving a status change.*/
+/** Function called by the port when the bridge is receiving a range change.*/
 void
-Bridge::BridgePort::recvStatusChange(Port::Status status)
+Bridge::BridgePort::recvRangeChange()
 {
-    otherPort->sendStatusChange(status);
+    otherPort->sendRangeChange();
 }
 
-void
-Bridge::BridgePort::getDeviceAddressRanges(AddrRangeList &resp,
-                                           bool &snoop)
+AddrRangeList
+Bridge::BridgePort::getAddrRanges()
 {
-    otherPort->getPeerAddressRanges(resp, snoop);
-    FilterRangeList(filterRanges, resp);
-    // we don't allow snooping across bridges
-    snoop = false;
+    AddrRangeList ranges = otherPort->getPeer()->getAddrRanges();
+    FilterRangeList(filterRanges, ranges);
+    return ranges;
 }
 
 Bridge *

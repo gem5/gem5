@@ -286,15 +286,13 @@ Uart8250::dataAvailable()
 
 }
 
-void
-Uart8250::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+Uart8250::getAddrRanges()
 {
-    assert(pioSize != 0);
-    range_list.clear();
-    range_list.push_back(RangeSize(pioAddr, pioSize));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(pioAddr, pioSize));
+    return ranges;
 }
-
-
 
 void
 Uart8250::serialize(ostream &os)

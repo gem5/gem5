@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -48,8 +60,7 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
-/** This typedef is used to clean up the parameter list of
- * getDeviceAddressRanges() and getPeerAddressRanges().  It's declared
+/** This typedef is used to clean up getAddrRanges(). It's declared
  * outside the Port object since it's also used by some mem objects.
  * Eventually we should move this typedef to wherever Addr is
  * defined.
@@ -101,13 +112,6 @@ class Port
 
     virtual ~Port();
 
-    // mey be better to use subclasses & RTTI?
-    /** Holds the ports status.  Currently just that a range recomputation needs
-     * to be done. */
-    enum Status {
-        RangeChange
-    };
-
     void setName(const std::string &name)
     { portName = name; }
 
@@ -139,8 +143,8 @@ class Port
     /** Called to recive a functional call from the peer port. */
     virtual void recvFunctional(PacketPtr pkt) = 0;
 
-    /** Called to recieve a status change from the peer port. */
-    virtual void recvStatusChange(Status status) = 0;
+    /** Called to recieve an address range change from the peer port. */
+    virtual void recvRangeChange() = 0;
 
     /** Called by a peer port if the send was unsuccesful, and had to
         wait.  This shouldn't be valid for response paths (IO Devices).
@@ -155,16 +159,30 @@ class Port
     */
     virtual unsigned deviceBlockSize() const { return 0; }
 
-    /** The peer port is requesting us to reply with a list of the ranges we
-        are responsible for.
-        @param resp is a list of ranges responded to
-        @param snoop is a list of ranges snooped
-    */
-    virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                        bool &snoop)
-    { panic("??"); }
-
   public:
+
+    /**
+     * Get a list of the non-overlapping address ranges we are
+     * responsible for. The default implementation returns an empty
+     * list and thus no address ranges. Any slave port must override
+     * this function and return a populated list with at least one
+     * item.
+     *
+     * @return a list of ranges responded to
+     */
+    virtual AddrRangeList getAddrRanges()
+    { AddrRangeList ranges; return ranges; }
+
+    /**
+     * Determine if this port is snooping or not. The default
+     * implementation returns false and thus tells the neighbour we
+     * are not snooping. Any port that is to snoop (e.g. a cache
+     * connected to a bus) has to override this function.
+     *
+     * @return true if the port should be considered a snooper
+     */
+    virtual bool isSnooping()
+    { return false; }
 
     /** Function called by associated memory device (cache, memory, iodevice)
         in order to send a timing request to the port.  Simply calls the peer
@@ -193,10 +211,11 @@ class Port
     void sendFunctional(PacketPtr pkt)
         { return peer->recvFunctional(pkt); }
 
-    /** Called by the associated device to send a status change to the device
-        connected to the peer interface.
-    */
-    void sendStatusChange(Status status) {peer->recvStatusChange(status); }
+    /**
+     * Called by the associated device to send a status range to the
+     * peer interface.
+     */
+    void sendRangeChange() const { peer->recvRangeChange(); }
 
     /** When a timing access doesn't return a success, some time later the
         Retry will be sent.
@@ -207,12 +226,6 @@ class Port
         of the device on attached to the peer port.
     */
     unsigned peerBlockSize() const { return peer->deviceBlockSize(); }
-
-    /** Called by the associated device if it wishes to find out the address
-        ranges connected to the peer ports devices.
-    */
-    void getPeerAddressRanges(AddrRangeList &resp, bool &snoop)
-    { peer->getDeviceAddressRanges(resp, snoop); }
 
     /** This function is a wrapper around sendFunctional()
         that breaks a larger, arbitrarily aligned access into

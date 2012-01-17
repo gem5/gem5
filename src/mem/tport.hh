@@ -139,10 +139,13 @@ class SimpleTimingPort : public Port
     bool recvTiming(PacketPtr pkt);
 
     /**
-     * Simple ports generally don't care about any status
-     * changes... can always override this in cases where that's not
-     * true. */
-    virtual void recvStatusChange(Status status) { }
+     * Simple ports are generally used as slave ports (i.e. the
+     * respond to requests) and thus do not expect to receive any
+     * range changes (as the neighbouring port has a master role and
+     * do not have any address ranges. A subclass can override the
+     * default behaviuor if needed.
+     */
+    virtual void recvRangeChange() { }
 
 
   public:

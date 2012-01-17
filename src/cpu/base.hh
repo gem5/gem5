@@ -126,7 +126,7 @@ class BaseCPU : public MemObject
          * @param _name structural owner of this port
          */
         CpuPort(const std::string& _name, MemObject* _owner) :
-            Port(_name, _owner), snoopRangeSent(false)
+            Port(_name, _owner)
         { }
 
       protected:
@@ -139,22 +139,7 @@ class BaseCPU : public MemObject
 
         void recvFunctional(PacketPtr pkt);
 
-        void recvStatusChange(Status status);
-
-        /**
-         * Add CPU ports are master ports and do not respond to any
-         * address ranges. Note that the LSQ snoops for specific ISAs
-         * and thus has to override this method.
-         *
-         * @param resp list of ranges this port responds to
-         * @param snoop indicating if the port snoops or not
-         */
-        virtual void getDeviceAddressRanges(AddrRangeList& resp,
-                                            bool& snoop);
-
-      private:
-
-        bool snoopRangeSent;
+        void recvRangeChange();
 
     };
 

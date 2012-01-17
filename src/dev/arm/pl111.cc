@@ -735,11 +735,12 @@ Pl111::generateInterrupt()
     }
 }
 
-void
-Pl111::addressRanges(AddrRangeList& range_list)
+AddrRangeList
+Pl111::getAddrRanges()
 {
-    range_list.clear();
-    range_list.push_back(RangeSize(pioAddr, pioSize));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(pioAddr, pioSize));
+    return ranges;
 }
 
 Pl111 *

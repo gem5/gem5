@@ -105,7 +105,7 @@ class BaseCache : public MemObject
         CachePort(const std::string &_name, BaseCache *_cache,
                   const std::string &_label);
 
-        virtual void recvStatusChange(Status status);
+        virtual void recvRangeChange() const;
 
         virtual unsigned deviceBlockSize() const;
 

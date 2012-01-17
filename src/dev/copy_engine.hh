@@ -85,7 +85,6 @@ class CopyEngine : public PciDev
         void init();
 
         std::string name() { assert(ce); return ce->name() + csprintf("-chan%d", channelId); }
-        virtual void addressRanges(AddrRangeList &range_list) { range_list.clear(); }
         virtual Tick read(PacketPtr pkt)
                         { panic("CopyEngineChannel has no I/O access\n");}
         virtual Tick write(PacketPtr pkt)

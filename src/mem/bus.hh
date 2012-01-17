@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -81,6 +93,15 @@ class Bus : public MemObject
 
         int getId() { return id; }
 
+        /**
+         * Determine if this port should be considered a snooper. This
+         * is determined by the bus.
+         *
+         * @return a boolean that is true if this port is snooping
+         */
+        virtual bool isSnooping()
+        { return bus->isSnooping(id); }
+
       protected:
 
         /** When reciving a timing request from the peer port (at id),
@@ -98,10 +119,10 @@ class Bus : public MemObject
         virtual void recvFunctional(PacketPtr pkt)
         { pkt->setSrc(id); bus->recvFunctional(pkt); }
 
-        /** When reciving a status changefrom the peer port (at id),
+        /** When reciving a range change from the peer port (at id),
             pass it to the bus. */
-        virtual void recvStatusChange(Status status)
-        { bus->recvStatusChange(status, id); }
+        virtual void recvRangeChange()
+        { bus->recvRangeChange(id); }
 
         /** When reciving a retry from the peer port (at id),
             pass it to the bus. */
@@ -112,9 +133,8 @@ class Bus : public MemObject
         // downstream from this bus, yes?  That is, the union of all
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { bus->addressRanges(resp, snoop, id); }
+        virtual AddrRangeList getAddrRanges()
+        { return bus->getAddrRanges(id); }
 
         // Ask the bus to ask everyone on the bus what their block size is and
         // take the max of it. This might need to be changed a bit if we ever
@@ -174,8 +194,8 @@ class Bus : public MemObject
      * requests. */
     void recvRetry(int id);
 
-    /** Function called by the port when the bus is recieving a status change.*/
-    void recvStatusChange(Port::Status status, int id);
+    /** Function called by the port when the bus is recieving a range change.*/
+    void recvRangeChange(int id);
 
     /** Find which port connected to this bus (if any) should be given a packet
      * with this address.
@@ -238,12 +258,23 @@ class Bus : public MemObject
         portCache[0].valid = false;
     }
 
-    /** Process address range request.
-     * @param resp addresses that we can respond to
-     * @param snoop addresses that we would like to snoop
-     * @param id ide of the busport that made the request.
+    /**
+     * Return the address ranges this port is responsible for.
+     *
+     * @param id id of the bus port that made the request
+     *
+     * @return a list of non-overlapping address ranges
      */
-    void addressRanges(AddrRangeList &resp, bool &snoop, int id);
+    AddrRangeList getAddrRanges(int id);
+
+    /**
+     * Determine if the bus port is snooping or not.
+     *
+     * @param id id of the bus port that made the request
+     *
+     * @return a boolean indicating if this port is snooping or not
+     */
+    bool isSnooping(int id);
 
     /** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.
@@ -264,7 +295,7 @@ class Bus : public MemObject
     BusFreeEvent busIdle;
 
     bool inRetry;
-    std::set<int> inRecvStatusChange;
+    std::set<int> inRecvRangeChange;
 
     /** max number of bus ids we've handed out so far */
     short maxId;

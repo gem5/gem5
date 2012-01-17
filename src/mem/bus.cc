@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -94,14 +106,21 @@ Bus::getPort(const std::string &if_name, int idx)
     return bp;
 }
 
-/** Get the ranges of anyone other buses that we are connected to. */
 void
 Bus::init()
 {
     m5::hash_map<short,BusPort*>::iterator intIter;
 
-    for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
-        intIter->second->sendStatusChange(Port::RangeChange);
+    // iterate over our interfaces and determine which of our neighbours
+    // are snooping and add them as snoopers
+    for (intIter = interfaces.begin(); intIter != interfaces.end();
+         intIter++) {
+        if (intIter->second->getPeer()->isSnooping()) {
+            DPRINTF(BusAddrRanges, "Adding snooping neighbour %s\n",
+                    intIter->second->getPeer()->name());
+            snoopPorts.push_back(intIter->second);
+        }
+    }
 }
 
 Bus::BusFreeEvent::BusFreeEvent(Bus *_bus)
@@ -468,20 +487,16 @@ Bus::recvFunctional(PacketPtr pkt)
     }
 }
 
-/** Function called by the port when the bus is receiving a status change.*/
+/** Function called by the port when the bus is receiving a range change.*/
 void
-Bus::recvStatusChange(Port::Status status, int id)
+Bus::recvRangeChange(int id)
 {
     AddrRangeList ranges;
-    bool snoops;
     AddrRangeIter iter;
 
-    if (inRecvStatusChange.count(id))
+    if (inRecvRangeChange.count(id))
         return;
-    inRecvStatusChange.insert(id);
-
-    assert(status == Port::RangeChange &&
-           "The other statuses need to be implemented.");
+    inRecvRangeChange.insert(id);
 
     DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
@@ -490,8 +505,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.
         if (useDefaultRange) {
-            defaultPort->getPeerAddressRanges(ranges, snoops);
-            assert(snoops == false);
+            AddrRangeList ranges = defaultPort->getPeer()->getAddrRanges();
             for(iter = ranges.begin(); iter != ranges.end(); iter++) {
                 defaultRange.push_back(*iter);
                 DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
@@ -512,20 +526,7 @@ Bus::recvStatusChange(Port::Status status, int id)
                 portIter++;
         }
 
-        for (SnoopIter s_iter = snoopPorts.begin();
-             s_iter != snoopPorts.end(); ) {
-            if ((*s_iter)->getId() == id)
-                s_iter = snoopPorts.erase(s_iter);
-            else
-                s_iter++;
-        }
-
-        port->getPeerAddressRanges(ranges, snoops);
-
-        if (snoops) {
-            DPRINTF(BusAddrRanges, "Adding id %d to snoop list\n", id);
-            snoopPorts.push_back(port);
-        }
+        ranges = port->getPeer()->getAddrRanges();
 
         for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
@@ -546,24 +547,23 @@ Bus::recvStatusChange(Port::Status status, int id)
 
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
         if (intIter->first != id && intIter->first != funcPortId)
-            intIter->second->sendStatusChange(Port::RangeChange);
+            intIter->second->sendRangeChange();
 
     if (id != defaultId && defaultPort)
-        defaultPort->sendStatusChange(Port::RangeChange);
-    inRecvStatusChange.erase(id);
+        defaultPort->sendRangeChange();
+    inRecvRangeChange.erase(id);
 }
 
-void
-Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
+AddrRangeList
+Bus::getAddrRanges(int id)
 {
-    resp.clear();
-    snoop = false;
+    AddrRangeList ranges;
 
     DPRINTF(BusAddrRanges, "received address range request, returning:\n");
 
     for (AddrRangeIter dflt_iter = defaultRange.begin();
          dflt_iter != defaultRange.end(); dflt_iter++) {
-        resp.push_back(*dflt_iter);
+        ranges.push_back(*dflt_iter);
         DPRINTF(BusAddrRanges, "  -- Dflt: %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
@@ -586,12 +586,21 @@ Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
             }
         }
         if (portIter->second != id && !subset) {
-            resp.push_back(portIter->first);
+            ranges.push_back(portIter->first);
             DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
                     portIter->first.start, portIter->first.end);
         }
     }
 
+    return ranges;
+}
+
+bool
+Bus::isSnooping(int id)
+{
+    // in essence, answer the question if there are other snooping
+    // ports rather than the port that is asking
+    bool snoop = false;
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != snoopPorts.end();
          s_iter++) {
         if ((*s_iter)->getId() != id) {
@@ -599,6 +608,7 @@ Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
             break;
         }
     }
+    return snoop;
 }
 
 unsigned

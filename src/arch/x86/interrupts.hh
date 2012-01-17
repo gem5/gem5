@@ -217,8 +217,8 @@ class Interrupts : public BasicPioDevice, IntDev
         return entry.periodic;
     }
 
-    void addressRanges(AddrRangeList &range_list);
-    void getIntAddrRange(AddrRangeList &range_list);
+    AddrRangeList getAddrRanges();
+    AddrRangeList getIntAddrRange();
 
     Port *getPort(const std::string &if_name, int idx = -1)
     {

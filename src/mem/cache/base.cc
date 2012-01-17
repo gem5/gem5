@@ -70,11 +70,9 @@ BaseCache::BaseCache(const Params *p)
 }
 
 void
-BaseCache::CachePort::recvStatusChange(Port::Status status)
+BaseCache::CachePort::recvRangeChange() const
 {
-    if (status == Port::RangeChange) {
-        otherPort->sendStatusChange(Port::RangeChange);
-    }
+    otherPort->sendRangeChange();
 }
 
 
@@ -136,7 +134,7 @@ BaseCache::init()
 {
     if (!cpuSidePort || !memSidePort)
         panic("Cache not hooked up on both sides\n");
-    cpuSidePort->sendStatusChange(Port::RangeChange);
+    cpuSidePort->sendRangeChange();
 }
 
 

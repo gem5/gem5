@@ -82,17 +82,8 @@ CacheUnit::CachePort::recvFunctional(PacketPtr pkt)
 }
 
 void
-CacheUnit::CachePort::recvStatusChange(Status status)
+CacheUnit::CachePort::recvRangeChange()
 {
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("CacheUnit::CachePort doesn't expect recvStatusChange callback!");
 }
 
 bool

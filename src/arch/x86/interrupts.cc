@@ -353,25 +353,27 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 }
 
 
-void
-X86ISA::Interrupts::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+X86ISA::Interrupts::getAddrRanges()
 {
-    range_list.clear();
+    AddrRangeList ranges;
     Range<Addr> range = RangeEx(x86LocalAPICAddress(initialApicId, 0),
                                 x86LocalAPICAddress(initialApicId, 0) + 
                                 PageBytes);
-    range_list.push_back(range);
+    ranges.push_back(range);
     pioAddr = range.start;
+    return ranges;
 }
 
 
-void
-X86ISA::Interrupts::getIntAddrRange(AddrRangeList &range_list)
+AddrRangeList
+X86ISA::Interrupts::getIntAddrRange()
 {
-    range_list.clear();
-    range_list.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
-                x86InterruptAddress(initialApicId, 0) +
-                PhysAddrAPICRangeSize));
+    AddrRangeList ranges;
+    ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
+                             x86InterruptAddress(initialApicId, 0) +
+                             PhysAddrAPICRangeSize));
+    return ranges;
 }
 
 

@@ -178,14 +178,14 @@ class Bridge : public MemObject
             pass it to the bridge. */
         virtual void recvFunctional(PacketPtr pkt);
 
-        /** When receiving a status changefrom the peer port,
-            pass it to the bridge. */
-        virtual void recvStatusChange(Status status);
+        /**
+         * When receiving a range change, pass it through the bridge.
+         */
+        virtual void recvRangeChange();
 
         /** When receiving a address range request the peer port,
             pass it to the bridge. */
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        virtual AddrRangeList getAddrRanges();
     };
 
     BridgePort portA, portB;

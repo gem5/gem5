@@ -54,7 +54,7 @@ X86ISA::IntDev::init()
     if (!intPort) {
         panic("Int port not connected to anything!");
     }
-    intPort->sendStatusChange(Port::RangeChange);
+    intPort->sendRangeChange();
 }
 
 X86ISA::IntSourcePin *

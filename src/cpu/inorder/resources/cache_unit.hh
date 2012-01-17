@@ -90,10 +90,8 @@ class CacheUnit : public Resource
         CachePort(CacheUnit *_cachePortUnit)
           : Port(_cachePortUnit->name() + "-cache-port",
                  (MemObject*)_cachePortUnit->cpu),
-            cachePortUnit(_cachePortUnit), snoopRangeSent(false)
+            cachePortUnit(_cachePortUnit)
         { }
-
-        bool snoopRangeSent;
 
       protected:
         /** Atomic version of receive.  Panics. */
@@ -102,13 +100,8 @@ class CacheUnit : public Resource
         /** Functional version of receive.*/
         void recvFunctional(PacketPtr pkt);
 
-        /** Receives status change.  Other than range changing, panics. */
-        void recvStatusChange(Status status);
-
-        /** Returns the address ranges of this device. */
-        void getDeviceAddressRanges(AddrRangeList &resp,
-                                    bool &snoop)
-        {  resp.clear(); snoop = true; }
+        /** Receives range changes. */
+        void recvRangeChange();
 
         /** Timing version of receive */
         bool recvTiming(PacketPtr pkt);

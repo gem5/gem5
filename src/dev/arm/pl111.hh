@@ -325,10 +325,12 @@ class Pl111: public AmbaDmaDevice
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    /** return the address ranges that this device responds to.
-     * @param range_list range list to populate with ranges
+    /**
+     * Determine the address ranges that this device responds to.
+     *
+     * @return a list of non-overlapping address ranges
      */
-    void addressRanges(AddrRangeList &range_list);
+    AddrRangeList getAddrRanges();
 };
 
 #endif

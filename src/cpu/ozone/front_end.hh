@@ -87,13 +87,8 @@ class FrontEnd
         /** Functional version of receive.  Panics. */
         virtual void recvFunctional(PacketPtr pkt);
 
-        /** Receives status change.  Other than range changing, panics. */
-        virtual void recvStatusChange(Status status);
-
-        /** Returns the address ranges of this device. */
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { resp.clear(); snoop = true; }
+        /** Receives range change. */
+        virtual void recvRangeChange();
 
         /** Timing version of receive.  Handles setting fetch to the
          * proper status to start fetching. */

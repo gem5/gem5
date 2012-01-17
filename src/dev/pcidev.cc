@@ -72,13 +72,13 @@ PciDev::PciConfigPort::recvAtomic(PacketPtr pkt)
     return pkt->isRead() ? device->readConfig(pkt) : device->writeConfig(pkt);
 }
 
-void
-PciDev::PciConfigPort::getDeviceAddressRanges(AddrRangeList &resp,
-                                              bool &snoop)
+AddrRangeList
+PciDev::PciConfigPort::getAddrRanges()
 {
-    snoop = false;;
+    AddrRangeList ranges;
     if (configAddr != ULL(-1))
-        resp.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
+        ranges.push_back(RangeSize(configAddr, PCI_CONFIG_SIZE+1));
+    return ranges;
 }
 
 
@@ -152,7 +152,7 @@ PciDev::init()
 {
     if (!configPort)
         panic("pci config port not connected to anything!");
-   configPort->sendStatusChange(Port::RangeChange);
+   configPort->sendRangeChange();
    PioDevice::init();
 }
 
@@ -207,14 +207,15 @@ PciDev::readConfig(PacketPtr pkt)
 
 }
 
-void
-PciDev::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+PciDev::getAddrRanges()
 {
+    AddrRangeList ranges;
     int x = 0;
-    range_list.clear();
     for (x = 0; x < 6; x++)
         if (BARAddrs[x] != 0)
-            range_list.push_back(RangeSize(BARAddrs[x],BARSize[x]));
+            ranges.push_back(RangeSize(BARAddrs[x],BARSize[x]));
+    return ranges;
 }
 
 Tick
@@ -301,7 +302,7 @@ PciDev::writeConfig(PacketPtr pkt)
                             BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
                                 platform->calcPciIOAddr(he_new_bar) :
                                 platform->calcPciMemAddr(he_new_bar);
-                            pioPort->sendStatusChange(Port::RangeChange);
+                            pioPort->sendRangeChange();
                         }
                     }
                     config.baseAddr[barnum] = htole((he_new_bar & ~bar_mask) |
@@ -354,7 +355,7 @@ PciDev::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));
     UNSERIALIZE_ARRAY(config.data,
                       sizeof(config.data) / sizeof(config.data[0]));
-    pioPort->sendStatusChange(Port::RangeChange);
+    pioPort->sendRangeChange();
 
 }
 

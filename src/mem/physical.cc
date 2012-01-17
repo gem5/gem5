@@ -116,7 +116,7 @@ PhysicalMemory::init()
 
     for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
         if (*pi)
-            (*pi)->sendStatusChange(Port::RangeChange);
+            (*pi)->sendRangeChange();
     }
 }
 
@@ -398,36 +398,30 @@ PhysicalMemory::getPort(const std::string &if_name, int idx)
     return port;
 }
 
-
-void
-PhysicalMemory::recvStatusChange(Port::Status status)
-{
-}
-
 PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
                                        PhysicalMemory *_memory)
     : SimpleTimingPort(_name, _memory), memory(_memory)
 { }
 
 void
-PhysicalMemory::MemoryPort::recvStatusChange(Port::Status status)
+PhysicalMemory::MemoryPort::recvRangeChange()
 {
-    memory->recvStatusChange(status);
+    // memory is a slave and thus should never have to worry about its
+    // neighbours address ranges
 }
 
-void
-PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &resp,
-                                                   bool &snoop)
+AddrRangeList
+PhysicalMemory::MemoryPort::getAddrRanges()
 {
-    memory->getAddressRanges(resp, snoop);
+    return memory->getAddrRanges();
 }
 
-void
-PhysicalMemory::getAddressRanges(AddrRangeList &resp, bool &snoop)
+AddrRangeList
+PhysicalMemory::getAddrRanges()
 {
-    snoop = false;
-    resp.clear();
-    resp.push_back(RangeSize(start(), size()));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(start(), size()));
+    return ranges;
 }
 
 unsigned
