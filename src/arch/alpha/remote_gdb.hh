@@ -63,6 +63,8 @@ class RemoteGDB : public BaseRemoteGDB
     bool acc(Addr addr, size_t len);
     bool write(Addr addr, size_t size, const char *data);
 
+    virtual bool insertHardBreak(Addr addr, size_t len);
+
   public:
     RemoteGDB(System *system, ThreadContext *context);
 };

@@ -216,7 +216,7 @@ class BaseRemoteGDB
 
     bool insertSoftBreak(Addr addr, size_t len);
     bool removeSoftBreak(Addr addr, size_t len);
-    bool insertHardBreak(Addr addr, size_t len);
+    virtual bool insertHardBreak(Addr addr, size_t len);
     bool removeHardBreak(Addr addr, size_t len);
 
   protected:
