@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -768,9 +768,7 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
 
 template<class TagStore>
 void
-Cache<TagStore>::functionalAccess(PacketPtr pkt,
-                                  CachePort *incomingPort,
-                                  CachePort *otherSidePort)
+Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 {
     Addr blk_addr = blockAlign(pkt->getAddr());
     BlkType *blk = tags->findBlock(pkt->getAddr());
@@ -796,10 +794,10 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
                       (mshr && mshr->inService && mshr->isPendingDirty()));
 
     bool done = have_dirty
-        || incomingPort->checkFunctional(pkt)
+        || cpuSidePort->checkFunctional(pkt)
         || mshrQueue.checkFunctional(pkt, blk_addr)
         || writeBuffer.checkFunctional(pkt, blk_addr)
-        || otherSidePort->checkFunctional(pkt);
+        || memSidePort->checkFunctional(pkt);
 
     DPRINTF(Cache, "functional %s %x %s%s%s\n",
             pkt->cmdString(), pkt->getAddr(),
@@ -812,7 +810,15 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
     if (done) {
         pkt->makeResponse();
     } else {
-        otherSidePort->sendFunctional(pkt);
+        // if it came as a request from the CPU side then make sure it
+        // continues towards the memory side
+        if (fromCpuSide) {
+            memSidePort->sendFunctional(pkt);
+        } else if (forwardSnoops) {
+            // if it came from the memory side, it must be a snoop request
+            // and we should only forward it if we are forwarding snoops
+            cpuSidePort->sendFunctional(pkt);
+        }
     }
 }
 
@@ -1598,7 +1604,7 @@ template<class TagStore>
 void
 Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
-    myCache()->functionalAccess(pkt, this, otherPort);
+    myCache()->functionalAccess(pkt, true);
 }
 
 
@@ -1670,7 +1676,7 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
-    myCache()->functionalAccess(pkt, this, otherPort);
+    myCache()->functionalAccess(pkt, false);
 }
 
 
