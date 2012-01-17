@@ -50,6 +50,12 @@ class AlphaSystem : public System
     ~AlphaSystem();
 
   public:
+
+    /**
+     * Initialise the state of the system.
+     */
+    virtual void initState();
+
     /**
      * Serialization stuff
      */

@@ -41,7 +41,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/Stack.hh"
 #include "mem/page_table.hh"
-#include "mem/translating_port.hh"
 #include "sim/process_impl.hh"
 #include "sim/system.hh"
 
@@ -448,7 +447,7 @@ void Sparc32LiveProcess::flushWindows(ThreadContext *tc)
             for (int index = 16; index < 32; index++) {
                 uint32_t regVal = tc->readIntReg(index);
                 regVal = htog(regVal);
-                if (!tc->getMemPort()->tryWriteBlob(
+                if (!tc->getMemProxy()->tryWriteBlob(
                         sp + (index - 16) * 4, (uint8_t *)&regVal, 4)) {
                     warn("Failed to save register to the stack when "
                             "flushing windows.\n");
@@ -483,7 +482,7 @@ Sparc64LiveProcess::flushWindows(ThreadContext *tc)
             for (int index = 16; index < 32; index++) {
                 IntReg regVal = tc->readIntReg(index);
                 regVal = htog(regVal);
-                if (!tc->getMemPort()->tryWriteBlob(
+                if (!tc->getMemProxy()->tryWriteBlob(
                         sp + 2047 + (index - 16) * 8, (uint8_t *)&regVal, 8)) {
                     warn("Failed to save register to the stack when "
                             "flushing windows.\n");

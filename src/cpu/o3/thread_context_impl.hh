@@ -49,10 +49,10 @@
 
 #if FULL_SYSTEM
 template <class Impl>
-VirtualPort *
-O3ThreadContext<Impl>::getVirtPort()
+FSTranslatingPortProxy*
+O3ThreadContext<Impl>::getVirtProxy()
 {
-    return thread->getVirtPort();
+    return thread->getVirtProxy();
 }
 
 template <class Impl>

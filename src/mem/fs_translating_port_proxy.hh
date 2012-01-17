@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,45 +38,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Hansson
  */
 
 /**
  * @file
- * Virtual Port Object Declaration. These ports incorporate some translation
- * into their access methods. Thus you can use one to read and write data
- * to/from virtual addresses.
+ * TranslatingPortProxy Object Declaration for FS.
+ *
+ * Port proxies are used when non structural entities need access to
+ * the memory system. Proxy objects replace the previous
+ * FunctionalPort, TranslatingPort and VirtualPort objects, which
+ * provided the same functionality as the proxies, but were instances
+ * of ports not corresponding to real structural ports of the
+ * simulated system. Via the port proxies all the accesses go through
+ * an actual port and thus are transparent to a potentially
+ * distributed memory and automatically adhere to the memory map of
+ * the system.
  */
 
-#ifndef __MEM_VPORT_HH__
-#define __MEM_VPORT_HH__
+#ifndef __MEM_FS_PORT_PROXY_HH__
+#define __MEM_FS_PORT_PROXY_HH__
 
 #include "arch/vtophys.hh"
-#include "config/full_system.hh"
-#include "mem/port_impl.hh"
+#include "mem/port_proxy.hh"
 
-/** A class that translates a virtual address to a physical address and then
- * calls the above read/write functions. If a thread context is provided the
- * address can alway be translated, If not it can only be translated if it is a
- * simple address masking operation (such as alpha super page accesses).
+/**
+ * A TranslatingPortProxy in FS mode translates a virtual address to a
+ * physical address and then calls the read/write functions of the
+ * port. If a thread context is provided the address can alway be
+ * translated, If not it can only be translated if it is a simple
+ * address masking operation (such as alpha super page accesses).
  */
-
-
-class VirtualPort  : public FunctionalPort
+class FSTranslatingPortProxy : public PortProxy
 {
   private:
-    ThreadContext *tc;
+    ThreadContext* _tc;
 
   public:
-    VirtualPort(const std::string &_name, ThreadContext *_tc = NULL)
-        : FunctionalPort(_name), tc(_tc)
-    {}
 
-    /** Return true if we have an thread context. This is used to
-     * prevent someone from accidently deleting the cpus statically
-     * allocated vport.
-     * @return true if a thread context isn't valid
-     */
-    bool nullThreadContext() { return tc != NULL; }
+    FSTranslatingPortProxy(ThreadContext* tc);
+
+    FSTranslatingPortProxy(Port &port);
+
+    virtual ~FSTranslatingPortProxy();
 
     /** Version of readblob that translates virt->phys and deals
       * with page boundries. */
@@ -73,13 +89,16 @@ class VirtualPort  : public FunctionalPort
     /** Version of writeBlob that translates virt->phys and deals
       * with page boundries. */
     virtual void writeBlob(Addr addr, uint8_t *p, int size);
-};
 
+    /**
+     * Fill size bytes starting at addr with byte value val.
+     */
+    virtual void memsetBlob(Addr address, uint8_t  v, int size);
+};
 
 void CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen);
 void CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen);
 void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
 void CopyStringIn(ThreadContext *tc, char *src, Addr vaddr);
 
-#endif //__MEM_VPORT_HH__
-
+#endif //__MEM_FS_PORT_PROXY_HH__

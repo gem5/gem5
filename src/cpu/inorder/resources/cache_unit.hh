@@ -95,8 +95,6 @@ class CacheUnit : public Resource
 
         bool snoopRangeSent;
 
-        void setPeer(Port *port);
-
       protected:
         /** Atomic version of receive.  Panics. */
         Tick recvAtomic(PacketPtr pkt);

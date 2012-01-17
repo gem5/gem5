@@ -81,6 +81,9 @@ TimingSimpleCPU::init()
         // initialize CPU, including PC
         TheISA::initCPU(tc, _cpuId);
     }
+
+    // Initialise the ThreadContext's memory proxies
+    tcBase()->initMemProxies(tcBase());
 #endif
 }
 
@@ -872,18 +875,6 @@ TimingSimpleCPU::completeDrain()
     DPRINTF(Config, "Done draining\n");
     changeState(SimObject::Drained);
     drainEvent->process();
-}
-
-void
-TimingSimpleCPU::DcachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-#if FULL_SYSTEM
-    // Update the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    cpu->tcBase()->connectMemPorts(cpu->tcBase());
-#endif
 }
 
 bool

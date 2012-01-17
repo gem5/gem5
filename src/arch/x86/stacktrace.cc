@@ -37,7 +37,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -48,9 +48,9 @@ namespace X86ISA
     {
         Addr addr = 0;
 
-        VirtualPort *vp;
+        FSTranslatingPortProxy* vp;
 
-        vp = tc->getVirtPort();
+        vp = tc->getVirtProxy();
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
             panic("thread info not compiled into kernel\n");
@@ -82,9 +82,9 @@ namespace X86ISA
 
         Addr tsk;
 
-        VirtualPort *vp;
+        FSTranslatingPortProxy* vp;
 
-        vp = tc->getVirtPort();
+        vp = tc->getVirtProxy();
         tsk = vp->readGtoH<Addr>(base + task_off);
 
         return tsk;
@@ -99,9 +99,9 @@ namespace X86ISA
 
         uint16_t pd;
 
-        VirtualPort *vp;
+        FSTranslatingPortProxy* vp;
 
-        vp = tc->getVirtPort();
+        vp = tc->getVirtProxy();
         pd = vp->readGtoH<uint16_t>(task + pid_off);
 
         return pd;

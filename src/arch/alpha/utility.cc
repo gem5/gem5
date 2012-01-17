@@ -33,7 +33,7 @@
 
 #if FULL_SYSTEM
 #include "arch/alpha/vtophys.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #endif
 
 namespace AlphaISA {
@@ -50,7 +50,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
             return tc->readIntReg(16 + number);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort();
+        FSTranslatingPortProxy* vp = tc->getVirtProxy();
         uint64_t arg = vp->read<uint64_t>(sp +
                            (number-NumArgumentRegs) * sizeof(uint64_t));
         return arg;

@@ -145,21 +145,6 @@ CacheUnit::tlb()
 
 }
 
-void
-CacheUnit::CachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-#if FULL_SYSTEM
-    // Update the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    if (cachePortUnit->resName == "dcache_port") {
-        cachePortUnit->cpu->updateMemPorts();
-    }
-
-#endif
-}
-
 Port *
 CacheUnit::getPort(const string &if_name, int idx)
 {

@@ -109,6 +109,10 @@ for (i, ruby_port) in enumerate(system.ruby._cpu_ruby_ports):
      #
      ruby_port.access_phys_mem = False
 
+
+# Connect the system port for loading of binaries etc
+system.system_port = system.ruby._sys_port_proxy.port
+
 # -----------------------
 # run simulation
 # -----------------------

@@ -55,7 +55,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     strcpy(name->version, "732");
     strcpy(name->machine, "alpha");
 
-    name.copyOut(tc->getMemPort());
+    name.copyOut(tc->getMemProxy());
     return 0;
 }
 
@@ -74,21 +74,21 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
       case AlphaTru64::GSI_MAX_CPU: {
           TypedBufferArg<uint32_t> max_cpu(bufPtr);
           *max_cpu = htog((uint32_t)process->numCpus());
-          max_cpu.copyOut(tc->getMemPort());
+          max_cpu.copyOut(tc->getMemProxy());
           return 1;
       }
 
       case AlphaTru64::GSI_CPUS_IN_BOX: {
           TypedBufferArg<uint32_t> cpus_in_box(bufPtr);
           *cpus_in_box = htog((uint32_t)process->numCpus());
-          cpus_in_box.copyOut(tc->getMemPort());
+          cpus_in_box.copyOut(tc->getMemProxy());
           return 1;
       }
 
       case AlphaTru64::GSI_PHYSMEM: {
           TypedBufferArg<uint64_t> physmem(bufPtr);
           *physmem = htog((uint64_t)1024 * 1024);  // physical memory in KB
-          physmem.copyOut(tc->getMemPort());
+          physmem.copyOut(tc->getMemProxy());
           return 1;
       }
 
@@ -105,14 +105,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           infop->cpu_ex_binding = htog(0);
           infop->mhz = htog(667);
 
-          infop.copyOut(tc->getMemPort());
+          infop.copyOut(tc->getMemProxy());
           return 1;
       }
 
       case AlphaTru64::GSI_PROC_TYPE: {
           TypedBufferArg<uint64_t> proc_type(bufPtr);
           *proc_type = htog((uint64_t)11);
-          proc_type.copyOut(tc->getMemPort());
+          proc_type.copyOut(tc->getMemProxy());
           return 1;
       }
 
@@ -121,14 +121,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           strncpy((char *)bufArg.bufferPtr(),
                   "COMPAQ Professional Workstation XP1000",
                   nbytes);
-          bufArg.copyOut(tc->getMemPort());
+          bufArg.copyOut(tc->getMemProxy());
           return 1;
       }
 
       case AlphaTru64::GSI_CLK_TCK: {
           TypedBufferArg<uint64_t> clk_hz(bufPtr);
           *clk_hz = htog((uint64_t)1024);
-          clk_hz.copyOut(tc->getMemPort());
+          clk_hz.copyOut(tc->getMemProxy());
           return 1;
       }
 
@@ -193,7 +193,7 @@ tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           elp->si_phz = htog(clk_hz);
           elp->si_boottime = htog(seconds_since_epoch); // seconds since epoch?
           elp->si_max_procs = htog(process->numCpus());
-          elp.copyOut(tc->getMemPort());
+          elp.copyOut(tc->getMemProxy());
           return 0;
       }
 

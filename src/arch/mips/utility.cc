@@ -42,7 +42,7 @@
 #if FULL_SYSTEM
 #include "arch/mips/registers.hh"
 #include "arch/mips/vtophys.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #endif
 
 
@@ -62,7 +62,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
             return tc->readIntReg(FirstArgumentReg + number);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort();
+        FSTranslatingPortProxy* vp = tc->getVirtProxy();
         uint64_t arg = vp->read<uint64_t>(sp +
                 (number - 4) * sizeof(uint64_t));
         return arg;

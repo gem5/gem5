@@ -91,6 +91,9 @@ AtomicSimpleCPU::init()
         // initialize CPU, including PC
         TheISA::initCPU(tc, tc->contextId());
     }
+
+    // Initialise the ThreadContext's memory proxies
+    tcBase()->initMemProxies(tcBase());
 #endif
     if (hasPhysMemPort) {
         bool snoop = false;
@@ -143,18 +146,6 @@ void
 AtomicSimpleCPU::CpuPort::recvRetry()
 {
     panic("AtomicSimpleCPU doesn't expect recvRetry callback!");
-}
-
-void
-AtomicSimpleCPU::DcachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-#if FULL_SYSTEM
-    // Update the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    cpu->tcBase()->connectMemPorts(cpu->tcBase());
-#endif
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)

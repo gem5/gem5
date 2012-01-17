@@ -40,10 +40,7 @@
 using namespace BigEndianGuest;
 
 SparcSystem::SparcSystem(Params *p)
-    : System(p), sysTick(0),funcRomPort(p->name + "-fromport"),
-    funcNvramPort(p->name + "-fnvramport"),
-    funcHypDescPort(p->name + "-fhypdescport"),
-    funcPartDescPort(p->name + "-fpartdescport")
+    : System(p), sysTick(0)
 {
     resetSymtab = new SymbolTable;
     hypervisorSymtab = new SymbolTable;
@@ -51,23 +48,13 @@ SparcSystem::SparcSystem(Params *p)
     nvramSymtab = new SymbolTable;
     hypervisorDescSymtab = new SymbolTable;
     partitionDescSymtab = new SymbolTable;
+}
 
-    Port *rom_port;
-    rom_port = params()->rom->getPort("functional");
-    funcRomPort.setPeer(rom_port);
-    rom_port->setPeer(&funcRomPort);
-
-    rom_port = params()->nvram->getPort("functional");
-    funcNvramPort.setPeer(rom_port);
-    rom_port->setPeer(&funcNvramPort);
-
-    rom_port = params()->hypervisor_desc->getPort("functional");
-    funcHypDescPort.setPeer(rom_port);
-    rom_port->setPeer(&funcHypDescPort);
-
-    rom_port = params()->partition_desc->getPort("functional");
-    funcPartDescPort.setPeer(rom_port);
-    rom_port->setPeer(&funcPartDescPort);
+void
+SparcSystem::initState()
+{
+    // Call the initialisation of the super class
+    System::initState();
 
     /**
      * Load the boot code, and hypervisor into memory.
@@ -107,22 +94,22 @@ SparcSystem::SparcSystem(Params *p)
 
     // Load reset binary into memory
     reset->setTextBase(params()->reset_addr);
-    reset->loadSections(&funcRomPort);
+    reset->loadSections(physProxy);
     // Load the openboot binary
     openboot->setTextBase(params()->openboot_addr);
-    openboot->loadSections(&funcRomPort);
+    openboot->loadSections(physProxy);
     // Load the hypervisor binary
     hypervisor->setTextBase(params()->hypervisor_addr);
-    hypervisor->loadSections(&funcRomPort);
+    hypervisor->loadSections(physProxy);
     // Load the nvram image
     nvram->setTextBase(params()->nvram_addr);
-    nvram->loadSections(&funcNvramPort);
+    nvram->loadSections(physProxy);
     // Load the hypervisor description image
     hypervisor_desc->setTextBase(params()->hypervisor_desc_addr);
-    hypervisor_desc->loadSections(&funcHypDescPort);
+    hypervisor_desc->loadSections(physProxy);
     // Load the partition description image
     partition_desc->setTextBase(params()->partition_desc_addr);
-    partition_desc->loadSections(&funcPartDescPort);
+    partition_desc->loadSections(physProxy);
 
     // load symbols
     if (!reset->loadGlobalSymbols(resetSymtab))

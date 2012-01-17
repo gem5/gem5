@@ -124,12 +124,12 @@ class OzoneCPU : public BaseCPU
         TheISA::Kernel::Statistics *getKernelStats()
         { return thread->getKernelStats(); }
 
-        FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
+        PortProxy* getPhysProxy() { return thread->getPhysProxy(); }
 
-        VirtualPort *getVirtPort()
-        { return thread->getVirtPort(); }
+        FSTranslatingPortProxy* getVirtProxy()
+        { return thread->getVirtProxy(); }
 #else
-        TranslatingPort *getMemPort() { return thread->getMemPort(); }
+        SETranslatingPortProxy* getMemProxy() { return thread->getMemProxy(); }
 
         Process *getProcessPtr() { return thread->getProcessPtr(); }
 #endif

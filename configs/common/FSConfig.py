@@ -1,4 +1,4 @@
-# Copyright (c) 2010 ARM Limited
+# Copyright (c) 2010-2012 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -90,6 +90,8 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.pal = binary('ts_osfpal')
     self.console = binary('console')
     self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
+
+    self.system_port = self.membus.port
 
     return self
 
@@ -183,6 +185,8 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.hypervisor_desc_bin = binary('1up-hv.bin')
     self.partition_desc_bin = binary('1up-md.bin')
 
+    self.system_port = self.membus.port
+
     return self
 
 def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
@@ -263,6 +267,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     self.terminal = Terminal()
     self.vncserver = VncServer()
 
+    self.system_port = self.membus.port
+
     return self
 
 
@@ -301,6 +307,8 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.console = binary('mips/console')
     self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
 
+    self.system_port = self.membus.port
+
     return self
 
 def x86IOAddress(port):
@@ -319,6 +327,8 @@ def connectX86ClassicSystem(x86_sys):
 
     # connect the io bus
     x86_sys.pc.attachIO(x86_sys.iobus)
+
+    x86_sys.system_port = x86_sys.membus.port
 
 def connectX86RubySystem(x86_sys):
     # North Bridge

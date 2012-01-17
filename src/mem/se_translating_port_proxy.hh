@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
+ * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,68 +37,63 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Ron Dreslinski
+ *          Ali Saidi
+ *          Andreas Hansson
  */
 
-#ifndef __ARCH_ARM_SYSTEM_HH__
-#define __ARCH_ARM_SYSTEM_HH__
+#ifndef __MEM_SE_TRANSLATING_PORT_PROXY_HH__
+#define __MEM_SE_TRANSLATING_PORT_PROXY_HH__
 
-#include <string>
-#include <vector>
+#include "mem/page_table.hh"
+#include "mem/port_proxy.hh"
+#include "sim/process.hh"
 
-#include "kern/linux/events.hh"
-#include "params/ArmSystem.hh"
-#include "sim/sim_object.hh"
-#include "sim/system.hh"
-
-class ArmSystem : public System
+/**
+ * @file
+ * TranslatingPortProxy Object Declaration for SE.
+ *
+ * Port proxies are used when non structural entities need access to
+ * the memory system. Proxy objects replace the previous
+ * FunctionalPort, TranslatingPort and VirtualPort objects, which
+ * provided the same functionality as the proxies, but were instances
+ * of ports not corresponding to real structural ports of the
+ * simulated system. Via the port proxies all the accesses go through
+ * an actual port and thus are transparent to a potentially
+ * distributed memory and automatically adhere to the memory map of
+ * the system.
+ */
+class SETranslatingPortProxy : public PortProxy
 {
-  protected:
-    /**
-     * PC based event to skip the dprink() call and emulate its
-     * functionality
-     */
-    Linux::DebugPrintkEvent *debugPrintkEvent;
-
-    /**
-     * Pointer to the bootloader object
-     */
-    ObjectFile *bootldr;
 
   public:
-    typedef ArmSystemParams Params;
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
+    enum AllocType {
+        Always,
+        Never,
+        NextPage
+    };
 
-    ArmSystem(Params *p);
-    ~ArmSystem();
+  private:
+    PageTable *pTable;
+    Process *process;
+    AllocType allocating;
 
-    /**
-     * Initialise the system
-     */
-    virtual void initState();
+  public:
+    SETranslatingPortProxy(Port& port, Process* p, AllocType alloc);
+    virtual ~SETranslatingPortProxy();
 
-    /** Check if an address should be uncacheable until all caches are enabled.
-     * This exits because coherence on some addresses at boot is maintained via
-     * sw coherence until the caches are enbaled. Since we don't support sw
-     * coherence operations in gem5, this is a method that allows a system
-     * type to designate certain addresses that should remain uncachebale
-     * for a while.
-     */
-    virtual bool adderBootUncacheable(Addr a) { return false; }
+    bool tryReadBlob(Addr addr, uint8_t *p, int size);
+    bool tryWriteBlob(Addr addr, uint8_t *p, int size);
+    bool tryMemsetBlob(Addr addr, uint8_t val, int size);
+    bool tryWriteString(Addr addr, const char *str);
+    bool tryReadString(std::string &str, Addr addr);
 
-    virtual Addr fixFuncEventAddr(Addr addr)
-    {
-        // Remove the low bit that thumb symbols have set
-        // but that aren't actually odd aligned
-        if (addr & 0x1)
-            return addr & ~1;
-        return addr;
-    }
+    virtual void readBlob(Addr addr, uint8_t *p, int size);
+    virtual void writeBlob(Addr addr, uint8_t *p, int size);
+    virtual void memsetBlob(Addr addr, uint8_t val, int size);
+
+    void writeString(Addr addr, const char *str);
+    void readString(std::string &str, Addr addr);
 };
 
-#endif
-
+#endif // __MEM_SE_TRANSLATING_PORT_PROXY_HH__

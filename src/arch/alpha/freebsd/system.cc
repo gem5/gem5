@@ -41,9 +41,7 @@
 #include "arch/vtophys.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
-#include "mem/physical.hh"
-#include "mem/port.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "sim/byteswap.hh"
 
 #define TIMER_FREQUENCY 1193180
@@ -78,8 +76,8 @@ FreebsdAlphaSystem::doCalibrateClocks(ThreadContext *tc)
     ppc_vaddr = (Addr)tc->readIntReg(17);
     timer_vaddr = (Addr)tc->readIntReg(18);
 
-    virtPort->write(ppc_vaddr, (uint32_t)SimClock::Frequency);
-    virtPort->write(timer_vaddr, (uint32_t)TIMER_FREQUENCY);
+    virtProxy->write(ppc_vaddr, (uint32_t)SimClock::Frequency);
+    virtProxy->write(timer_vaddr, (uint32_t)TIMER_FREQUENCY);
 }
 
 void

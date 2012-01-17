@@ -70,7 +70,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "armv7l");
 
-    name.copyOut(tc->getMemPort());
+    name.copyOut(tc->getMemProxy());
     return 0;
 }
 
@@ -452,7 +452,7 @@ setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int index = 0;
     uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
-    tc->getMemPort()->writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
+    tc->getMemProxy()->writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
                                 (uint8_t *)&tlsPtr, sizeof(tlsPtr));
     tc->setMiscReg(MISCREG_TPIDRURO,tlsPtr);
     return 0;
@@ -512,7 +512,7 @@ ArmLinuxProcess::initState()
 
     // Fill this page with swi -1 so we'll no if we land in it somewhere.
     for (Addr addr = 0; addr < PageBytes; addr += sizeof(swiNeg1)) {
-        tc->getMemPort()->writeBlob(commPage + addr,
+        tc->getMemProxy()->writeBlob(commPage + addr,
                                     swiNeg1, sizeof(swiNeg1));
     }
 
@@ -521,7 +521,7 @@ ArmLinuxProcess::initState()
         0x5f, 0xf0, 0x7f, 0xf5, // dmb
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
-    tc->getMemPort()->writeBlob(commPage + 0x0fa0, memory_barrier,
+    tc->getMemProxy()->writeBlob(commPage + 0x0fa0, memory_barrier,
                                 sizeof(memory_barrier));
 
     uint8_t cmpxchg[] =
@@ -535,7 +535,7 @@ ArmLinuxProcess::initState()
         0x5f, 0xf0, 0x7f, 0xf5,  // dmb
         0x0e, 0xf0, 0xa0, 0xe1   // return
     };
-    tc->getMemPort()->writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
+    tc->getMemProxy()->writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
 
     uint8_t get_tls[] =
     {
@@ -543,7 +543,7 @@ ArmLinuxProcess::initState()
         0x70, 0x0f, 0x1d, 0xee, // mrc p15, 0, r0, c13, c0, 3
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
-    tc->getMemPort()->writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
+    tc->getMemProxy()->writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
 }
 
 ArmISA::IntReg

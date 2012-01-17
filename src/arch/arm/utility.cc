@@ -45,7 +45,7 @@
 
 #if FULL_SYSTEM
 #include "arch/arm/vtophys.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #endif
 
 #include "arch/arm/tlb.hh"
@@ -89,7 +89,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
         }
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort();
+        FSTranslatingPortProxy* vp = tc->getVirtProxy();
         uint64_t arg;
         if (size == sizeof(uint64_t)) {
             // If the argument is even it must be aligned

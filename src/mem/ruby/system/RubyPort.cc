@@ -464,8 +464,11 @@ RubyPort::M5Port::recvFunctional(PacketPtr pkt)
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
         pkt->setFunctionalResponseStatus(accessSucceeded);
-        DPRINTF(RubyPort, "Sending packet back over port\n");
-        sendFunctional(pkt);
+
+        // @todo There should not be a reverse call since the response is
+        // communicated through the packet pointer
+        // DPRINTF(RubyPort, "Sending packet back over port\n");
+        // sendFunctional(pkt);
     }
     DPRINTF(RubyPort, "Functional access %s!\n",
             accessSucceeded ? "successful":"failed");

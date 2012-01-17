@@ -36,7 +36,7 @@
 #include "base/loader/hex_file.hh"
 #include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
-#include "mem/translating_port.hh"
+#include "mem/port_proxy.hh"
 
 using namespace std;
 /*
@@ -59,7 +59,7 @@ HexFile::~HexFile()
 }
 
 bool
-HexFile::loadSections(Port *memPort)
+HexFile::loadSections(PortProxy* memProxy)
 {
     char Line[64];
     Addr MemAddr;
@@ -71,7 +71,7 @@ HexFile::loadSections(Port *memPort)
         parseLine(Line, &MemAddr, &Data);
         if (MemAddr != 0) {
             // Now, write to memory
-            memPort->writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data));
+            memProxy->writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data));
         }
     }
     return true;

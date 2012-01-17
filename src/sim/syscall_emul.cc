@@ -171,7 +171,7 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
             // if the address is already there, zero it out
             else {
                 uint8_t zero  = 0;
-                TranslatingPort *tp = tc->getMemPort();
+                SETranslatingPortProxy *tp = tc->getMemProxy();
 
                 // split non-page aligned accesses
                 Addr next_page = roundUp(gen.addr(), VMPageSize);
@@ -221,7 +221,7 @@ readFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int bytes_read = read(fd, bufArg.bufferPtr(), nbytes);
 
     if (bytes_read != -1)
-        bufArg.copyOut(tc->getMemPort());
+        bufArg.copyOut(tc->getMemProxy());
 
     return bytes_read;
 }
@@ -235,7 +235,7 @@ writeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int nbytes = p->getSyscallArg(tc, index);
     BufferArg bufArg(bufPtr, nbytes);
 
-    bufArg.copyIn(tc->getMemPort());
+    bufArg.copyIn(tc->getMemProxy());
 
     int bytes_written = write(fd, bufArg.bufferPtr(), nbytes);
 
@@ -284,7 +284,7 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         // target platform
         BufferArg result_buf(result_ptr, sizeof(result));
         memcpy(result_buf.bufferPtr(), &result, sizeof(result));
-        result_buf.copyOut(tc->getMemPort());
+        result_buf.copyOut(tc->getMemProxy());
         return 0;
     }
 
@@ -313,7 +313,7 @@ gethostnameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
     strncpy((char *)name.bufferPtr(), hostname, name_len);
 
-    name.copyOut(tc->getMemPort());
+    name.copyOut(tc->getMemProxy());
 
     return 0;
 }
@@ -346,7 +346,7 @@ getcwdFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         }
     }
 
-    buf.copyOut(tc->getMemPort());
+    buf.copyOut(tc->getMemProxy());
 
     return (result == -1) ? -errno : result;
 }
@@ -358,7 +358,7 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemPort()->tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(path, p->getSyscallArg(tc, index)))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -371,7 +371,7 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
     int result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
 
-    buf.copyOut(tc->getMemPort());
+    buf.copyOut(tc->getMemProxy());
 
     return (result == -1) ? -errno : result;
 }
@@ -382,7 +382,7 @@ unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemPort()->tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(path, p->getSyscallArg(tc, index)))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -399,7 +399,7 @@ mkdirFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemPort()->tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(path, p->getSyscallArg(tc, index)))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -417,12 +417,12 @@ renameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string old_name;
 
     int index = 0;
-    if (!tc->getMemPort()->tryReadString(old_name, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(old_name, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
     string new_name;
 
-    if (!tc->getMemPort()->tryReadString(new_name, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(new_name, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
     // Adjust path for current working directory
@@ -439,7 +439,7 @@ truncateFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemPort()->tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
     off_t length = p->getSyscallArg(tc, index);
@@ -474,7 +474,7 @@ truncate64Func(SyscallDesc *desc, int num,
     int index = 0;
     string path;
 
-    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(path, process->getSyscallArg(tc, index)))
        return -EFAULT;
 
     int64_t length = process->getSyscallArg(tc, index, 64);
@@ -527,7 +527,7 @@ chownFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemPort()->tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy()->tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
     /* XXX endianess */

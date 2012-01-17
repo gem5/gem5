@@ -59,7 +59,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "mips");
 
-    name.copyOut(tc->getMemPort());
+    name.copyOut(tc->getMemProxy());
     return 0;
 }
 
@@ -82,7 +82,7 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             TypedBufferArg<uint64_t> fpcr(bufPtr);
             // I don't think this exactly matches the HW FPCR
             *fpcr = 0;
-            fpcr.copyOut(tc->getMemPort());
+            fpcr.copyOut(tc->getMemProxy());
             return 0;
         }
       default:
@@ -111,7 +111,7 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             // SSI_IEEE_FP_CONTROL
             TypedBufferArg<uint64_t> fpcr(bufPtr);
             // I don't think this exactly matches the HW FPCR
-            fpcr.copyIn(tc->getMemPort());
+            fpcr.copyIn(tc->getMemProxy());
             DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
             return 0;

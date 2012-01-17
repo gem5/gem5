@@ -50,9 +50,9 @@ class BaseCPU;
 class Checkpoint;
 class Decoder;
 class EndQuiesceEvent;
-class TranslatingPort;
-class FunctionalPort;
-class VirtualPort;
+class SETranslatingPortProxy;
+class FSTranslatingPortProxy;
+class PortProxy;
 class Process;
 class System;
 namespace TheISA {
@@ -128,13 +128,19 @@ class ThreadContext
 #if FULL_SYSTEM
     virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
-    virtual FunctionalPort *getPhysPort() = 0;
+    virtual PortProxy* getPhysProxy() = 0;
 
-    virtual VirtualPort *getVirtPort() = 0;
+    virtual FSTranslatingPortProxy* getVirtProxy() = 0;
 
-    virtual void connectMemPorts(ThreadContext *tc) = 0;
+    /**
+     * Initialise the physical and virtual port proxies and tie them to
+     * the data port of the CPU.
+     *
+     * tc ThreadContext for the virtual-to-physical translation
+     */
+    virtual void initMemProxies(ThreadContext *tc) = 0;
 #else
-    virtual TranslatingPort *getMemPort() = 0;
+    virtual SETranslatingPortProxy *getMemProxy() = 0;
 
     virtual Process *getProcessPtr() = 0;
 #endif
@@ -298,13 +304,13 @@ class ProxyThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 
-    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
+    PortProxy* getPhysProxy() { return actualTC->getPhysProxy(); }
 
-    VirtualPort *getVirtPort() { return actualTC->getVirtPort(); }
+    FSTranslatingPortProxy* getVirtProxy() { return actualTC->getVirtProxy(); }
 
-    void connectMemPorts(ThreadContext *tc) { actualTC->connectMemPorts(tc); }
+    void initMemProxies(ThreadContext *tc) { actualTC->initMemProxies(tc); }
 #else
-    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
+    SETranslatingPortProxy* getMemProxy() { return actualTC->getMemProxy(); }
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif

@@ -65,7 +65,7 @@
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
 #include "kern/kernel_stats.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #else
 #include "params/System.hh"
 #endif
@@ -114,68 +114,12 @@ System::System(Params *p)
     if (!debugSymbolTable)
         debugSymbolTable = new SymbolTable;
 
-
     /**
-     * Get a functional port to memory
+     * Get a port proxy to memory
      */
-    Port *mem_port;
-    functionalPort = new FunctionalPort(name() + "-fport");
-    mem_port = physmem->getPort("functional");
-    functionalPort->setPeer(mem_port);
-    mem_port->setPeer(functionalPort);
-
-    virtPort = new VirtualPort(name() + "-fport");
-    mem_port = physmem->getPort("functional");
-    virtPort->setPeer(mem_port);
-    mem_port->setPeer(virtPort);
-
-
-    /**
-     * Load the kernel code into memory
-     */
-    if (params()->kernel == "") {
-        inform("No kernel set for full system simulation. Assuming you know what"
-                " you're doing...\n");
-    } else {
-        // Load kernel code
-        kernel = createObjectFile(params()->kernel);
-        inform("kernel located at: %s", params()->kernel);
-
-        if (kernel == NULL)
-            fatal("Could not load kernel file %s", params()->kernel);
-
-        // Load program sections into memory
-        kernel->loadSections(functionalPort, loadAddrMask);
-
-        // setup entry points
-        kernelStart = kernel->textBase();
-        kernelEnd = kernel->bssBase() + kernel->bssSize();
-        kernelEntry = kernel->entryPoint();
-
-        // load symbols
-        if (!kernel->loadGlobalSymbols(kernelSymtab))
-            fatal("could not load kernel symbols\n");
-
-        if (!kernel->loadLocalSymbols(kernelSymtab))
-            fatal("could not load kernel local symbols\n");
-
-        if (!kernel->loadGlobalSymbols(debugSymbolTable))
-            fatal("could not load kernel symbols\n");
-
-        if (!kernel->loadLocalSymbols(debugSymbolTable))
-            fatal("could not load kernel local symbols\n");
-
-        DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
-        DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
-        DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
-        DPRINTF(Loader, "Kernel loaded...\n");
-    }
-#endif // FULL_SYSTEM
-
-    // increment the number of running systms
-    numSystemsRunning++;
-
-    activeCpus.clear();
+    physProxy = new PortProxy(*getSystemPort());
+    virtProxy = new FSTranslatingPortProxy(*getSystemPort());
+#endif
 }
 
 System::~System()
@@ -190,6 +134,14 @@ System::~System()
 
     for (uint32_t j = 0; j < numWorkIds; j++)
         delete workItemStats[j];
+}
+
+void
+System::init()
+{
+    // check that the system port is connected
+    if (!_systemPort.isConnected())
+        panic("System port on %s is not connected.\n", name());
 }
 
 Port*
@@ -279,6 +231,56 @@ System::numRunningContexts()
 void
 System::initState()
 {
+    // Moved from the constructor to here since it relies on the
+    // address map being resolved in the interconnect
+#if FULL_SYSTEM
+    /**
+     * Load the kernel code into memory
+     */
+    if (params()->kernel == "") {
+        inform("No kernel set for full system simulation. Assuming you know what"
+                " you're doing...\n");
+    } else {
+        // Load kernel code
+        kernel = createObjectFile(params()->kernel);
+        inform("kernel located at: %s", params()->kernel);
+
+        if (kernel == NULL)
+            fatal("Could not load kernel file %s", params()->kernel);
+
+        // Load program sections into memory
+        kernel->loadSections(physProxy, loadAddrMask);
+
+        // setup entry points
+        kernelStart = kernel->textBase();
+        kernelEnd = kernel->bssBase() + kernel->bssSize();
+        kernelEntry = kernel->entryPoint();
+
+        // load symbols
+        if (!kernel->loadGlobalSymbols(kernelSymtab))
+            fatal("could not load kernel symbols\n");
+
+        if (!kernel->loadLocalSymbols(kernelSymtab))
+            fatal("could not load kernel local symbols\n");
+
+        if (!kernel->loadGlobalSymbols(debugSymbolTable))
+            fatal("could not load kernel symbols\n");
+
+        if (!kernel->loadLocalSymbols(debugSymbolTable))
+            fatal("could not load kernel local symbols\n");
+
+        DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
+        DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
+        DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
+        DPRINTF(Loader, "Kernel loaded...\n");
+    }
+#endif // FULL_SYSTEM
+
+    // increment the number of running systms
+    numSystemsRunning++;
+
+    activeCpus.clear();
+
 #if FULL_SYSTEM
     int i;
     for (i = 0; i < threadContexts.size(); i++)

@@ -71,8 +71,8 @@ class PhysicalMemory;
 
 #if FULL_SYSTEM
 class Platform;
-class FunctionalPort;
-class VirtualPort;
+class PortProxy;
+class FSTranslatingPortProxy;
 #endif
 class GDBListener;
 class BaseRemoteGDB;
@@ -109,6 +109,12 @@ class System : public MemObject
     SystemPort _systemPort;
 
   public:
+
+    /**
+     * After all objects have been created and all ports are
+     * connected, check that the system port is connected.
+     */
+    virtual void init();
 
     /**
      * Get a pointer to the system port that can be used by
@@ -175,8 +181,8 @@ class System : public MemObject
 
     /** Port to physical memory used for writing object files into ram at
      * boot.*/
-    FunctionalPort *functionalPort;
-    VirtualPort *virtPort;
+    PortProxy* physProxy;
+    FSTranslatingPortProxy* virtProxy;
 
     /** kernel symbol table */
     SymbolTable *kernelSymtab;

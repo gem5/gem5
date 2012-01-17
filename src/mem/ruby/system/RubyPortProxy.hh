@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,68 +34,81 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Andreas Hansson
  */
 
-#ifndef __ARCH_ARM_SYSTEM_HH__
-#define __ARCH_ARM_SYSTEM_HH__
+/**
+ * @file
+ * RobyPortProxy for connecting system port to Ruby
+ *
+ * A trivial wrapper that allows the system port to connect to Ruby
+ * and use nothing but functional accesses.
+ */
 
-#include <string>
-#include <vector>
+#ifndef __MEM_RUBY_SYSTEM_RUBYPORTPROXY_HH__
+#define __MEM_RUBY_SYSTEM_RUBYPORTPROXY_HH__
 
-#include "kern/linux/events.hh"
-#include "params/ArmSystem.hh"
-#include "sim/sim_object.hh"
-#include "sim/system.hh"
+#include "mem/ruby/system/RubyPort.hh"
+#include "params/RubyPortProxy.hh"
 
-class ArmSystem : public System
+class RubyPortProxy : public RubyPort
 {
-  protected:
-    /**
-     * PC based event to skip the dprink() call and emulate its
-     * functionality
-     */
-    Linux::DebugPrintkEvent *debugPrintkEvent;
-
-    /**
-     * Pointer to the bootloader object
-     */
-    ObjectFile *bootldr;
 
   public:
-    typedef ArmSystemParams Params;
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
-    ArmSystem(Params *p);
-    ~ArmSystem();
 
     /**
-     * Initialise the system
+     * Create a new RubyPortProxy.
+     *
+     * @param p Parameters inherited from the RubyPort
      */
-    virtual void initState();
+    RubyPortProxy(const RubyPortProxyParams* p);
 
-    /** Check if an address should be uncacheable until all caches are enabled.
-     * This exits because coherence on some addresses at boot is maintained via
-     * sw coherence until the caches are enbaled. Since we don't support sw
-     * coherence operations in gem5, this is a method that allows a system
-     * type to designate certain addresses that should remain uncachebale
-     * for a while.
+    /**
+     * Destruct a RubyPortProxy.
      */
-    virtual bool adderBootUncacheable(Addr a) { return false; }
+    virtual ~RubyPortProxy();
 
-    virtual Addr fixFuncEventAddr(Addr addr)
-    {
-        // Remove the low bit that thumb symbols have set
-        // but that aren't actually odd aligned
-        if (addr & 0x1)
-            return addr & ~1;
-        return addr;
-    }
+    /**
+     * Initialise a RubyPortProxy by doing nothing and avoid
+     * involving the super class.
+     */
+    void init();
+
+    /**
+     * Pure virtual member in the super class that we are forced to
+     * implement even if it is never used (since there are only
+     * functional accesses).
+     *
+     * @param pkt The packet to serve to Ruby
+     * @returns always a NULL status
+     */
+    RequestStatus makeRequest(PacketPtr pkt);
+
+    /**
+     * Pure virtual member in the super class that we are forced to
+     * implement even if it is never used (since there are only
+     * functional accesses).
+     *
+     * @returns always 0
+     */
+    int outstandingCount() const { return 0; }
+
+    /**
+     * Pure virtual member in the super class that we are forced to
+     * implement even if it is never used (since there are only
+     * functional accesses).
+     *
+     * @returns always false
+     */
+    bool isDeadlockEventScheduled() const { return false; }
+
+    /**
+     * Pure virtual member in the super class that we are forced to
+     * implement even if it is never used (since there are only
+     * functional accesses).
+     */
+    void descheduleDeadlockEvent() { }
+
 };
 
-#endif
-
+#endif // __MEM_RUBY_SYSTEM_RUBYPORTPROXY_HH__

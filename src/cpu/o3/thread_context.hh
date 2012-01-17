@@ -97,13 +97,15 @@ class O3ThreadContext : public ThreadContext
     virtual TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
-    virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
+    virtual PortProxy* getPhysProxy() { return thread->getPhysProxy(); }
 
-    virtual VirtualPort *getVirtPort();
+    virtual FSTranslatingPortProxy* getVirtProxy();
 
-    virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
+    virtual void initMemProxies(ThreadContext *tc)
+    { thread->initMemProxies(tc); }
 #else
-    virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
+    virtual SETranslatingPortProxy* getMemProxy()
+    { return thread->getMemProxy(); }
 
     /** Returns a pointer to this thread's process. */
     virtual Process *getProcessPtr() { return thread->getProcessPtr(); }

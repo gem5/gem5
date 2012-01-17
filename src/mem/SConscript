@@ -48,10 +48,10 @@ if env['TARGET_ISA'] != 'no':
     Source('physical.cc')
 
 if env['FULL_SYSTEM']:
-    Source('vport.cc')
+    Source('fs_translating_port_proxy.cc')
 elif env['TARGET_ISA'] != 'no':
     Source('page_table.cc')
-    Source('translating_port.cc')
+    Source('se_translating_port_proxy.cc')
 
 DebugFlag('Bus')
 DebugFlag('BusAddrRanges')

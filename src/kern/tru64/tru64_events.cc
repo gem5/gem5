@@ -62,7 +62,9 @@ BadAddrEvent::process(ThreadContext *tc)
     AddrRangeIter iter;
     bool found = false;
 
-    tc->getPhysPort()->getPeerAddressRanges(resp, snoop);
+    Port* dataPort = tc->getCpuPtr()->getPort("dcache_port");
+
+    dataPort->getPeerAddressRanges(resp, snoop);
     for (iter = resp.begin(); iter != resp.end(); iter++) {
         if (*iter == (K0Seg2Phys(a0) & PAddrImplMask))
             found = true;

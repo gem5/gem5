@@ -37,7 +37,7 @@
 
 #include "base/types.hh"
 
-class Port;
+class PortProxy;
 
 class HexFile
 {
@@ -52,7 +52,7 @@ class HexFile
     virtual ~HexFile();
 
     void close();
-    bool loadSections(Port *memPort);
+    bool loadSections(PortProxy* memProxy);
 };
 
 #endif // __BASE_LOADER_HEX_FILE_HH__

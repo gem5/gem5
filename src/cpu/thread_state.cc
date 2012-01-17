@@ -32,14 +32,15 @@
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_state.hh"
-#include "mem/port.hh"
-#include "mem/translating_port.hh"
+#include "mem/port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/serialize.hh"
+#include "sim/system.hh"
 
 #if FULL_SYSTEM
 #include "arch/kernel_stats.hh"
 #include "cpu/quiesce_event.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #endif
 
 #if FULL_SYSTEM
@@ -51,9 +52,9 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
 #if FULL_SYSTEM
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      kernelStats(NULL), physPort(NULL), virtPort(NULL),
+      kernelStats(NULL), physProxy(NULL), virtProxy(NULL),
 #else
-      port(NULL), process(_process),
+      proxy(NULL), process(_process),
 #endif
       funcExeInst(0), storeCondFailures(0)
 {
@@ -61,10 +62,16 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
 
 ThreadState::~ThreadState()
 {
-#if !FULL_SYSTEM
-    if (port) {
-        delete port->getPeer();
-        delete port;
+#if FULL_SYSTEM
+    if (physProxy != NULL) {
+        delete physProxy;
+    }
+    if (virtProxy != NULL) {
+        delete virtProxy;
+    }
+#else
+    if (proxy != NULL) {
+        delete proxy;
     }
 #endif
 }
@@ -106,38 +113,16 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 
 #if FULL_SYSTEM
 void
-ThreadState::connectMemPorts(ThreadContext *tc)
+ThreadState::initMemProxies(ThreadContext *tc)
 {
-    connectPhysPort();
-    connectVirtPort(tc);
-}
-
-void
-ThreadState::connectPhysPort()
-{
-    // @todo: For now this disregards any older port that may have
-    // already existed.  Fix this memory leak once the bus port IDs
-    // for functional ports is resolved.
-    if (physPort)
-        physPort->removeConn();
-    else
-        physPort = new FunctionalPort(csprintf("%s-%d-funcport",
-                                           baseCpu->name(), _threadId));
-    connectToMemFunc(physPort);
-}
-
-void
-ThreadState::connectVirtPort(ThreadContext *tc)
-{
-    // @todo: For now this disregards any older port that may have
-    // already existed.  Fix this memory leak once the bus port IDs
-    // for functional ports is resolved.
-    if (virtPort)
-        virtPort->removeConn();
-    else
-        virtPort = new VirtualPort(csprintf("%s-%d-vport",
-                                        baseCpu->name(), _threadId), tc);
-    connectToMemFunc(virtPort);
+    // Note that this only refers to the port on the CPU side and can
+    // safely be done at init() time even if the CPU is not connected
+    // (i.e. due to restoring from a checkpoint and later switching
+    // in.
+    if (physProxy == NULL)
+        physProxy = new PortProxy(*baseCpu->getPort("dcache_port"));
+    if (virtProxy == NULL)
+        virtProxy = new FSTranslatingPortProxy(tc);
 }
 
 void
@@ -155,36 +140,17 @@ ThreadState::profileSample()
 }
 
 #else
-TranslatingPort *
-ThreadState::getMemPort()
+SETranslatingPortProxy *
+ThreadState::getMemProxy()
 {
-    if (port != NULL)
-        return port;
+    if (proxy != NULL)
+        return proxy;
 
-    /* Use this port to for syscall emulation writes to memory. */
-    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(), _threadId),
-                               process, TranslatingPort::NextPage);
+    /* Use this port proxy to for syscall emulation writes to memory. */
+    proxy = new SETranslatingPortProxy(*process->system->getSystemPort(),
+                                       process,
+                                       SETranslatingPortProxy::NextPage);
 
-    connectToMemFunc(port);
-
-    return port;
+    return proxy;
 }
 #endif
-
-void
-ThreadState::connectToMemFunc(Port *port)
-{
-    Port *dcache_port, *func_mem_port;
-
-    dcache_port = baseCpu->getPort("dcache_port");
-    assert(dcache_port != NULL);
-
-    MemObject *mem_object = dcache_port->getPeer()->getOwner();
-    assert(mem_object != NULL);
-
-    func_mem_port = mem_object->getPort("functional");
-    assert(func_mem_port != NULL);
-
-    func_mem_port->setPeer(port);
-    port->setPeer(func_mem_port);
-}

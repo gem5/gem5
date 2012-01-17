@@ -157,9 +157,9 @@ LinuxMipsSystem::setDelayLoop(ThreadContext *tc)
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
         Tick cpuFreq = tc->getCpuPtr()->frequency();
         Tick intrFreq = platform->intrFrequency();
-        VirtualPort *vp;
+        FSTranslatingPortProxy* vp;
 
-        vp = tc->getVirtPort();
+        vp = tc->getVirtProxy();
         vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
     }
 }

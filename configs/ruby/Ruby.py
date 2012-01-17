@@ -1,3 +1,15 @@
+# Copyright (c) 2012 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -82,6 +94,17 @@ def create_system(options, system, piobus = None, dma_devices = []):
         print "Error: could not create sytem for ruby protocol %s" % protocol
         raise
 
+    # Create a port proxy for connecting the system port. This is
+    # independent of the protocol and kept in the protocol-agnostic
+    # part (i.e. here).
+    sys_port_proxy = RubyPortProxy(version = 0,
+                                   physMemPort = system.physmem.port,
+                                   physmem = system.physmem,
+                                   ruby_system = ruby)
+    # Give the system port proxy a SimObject parent without creating a
+    # full-fledged controller
+    system.sys_port_proxy = sys_port_proxy
+
     #
     # Set the network classes based on the command line options
     #
@@ -159,4 +182,5 @@ def create_system(options, system, piobus = None, dma_devices = []):
     ruby.profiler = ruby_profiler
     ruby.mem_size = total_mem_size
     ruby._cpu_ruby_ports = cpu_sequencers
+    ruby._sys_port_proxy = sys_port_proxy
     ruby.random_seed    = options.random_seed

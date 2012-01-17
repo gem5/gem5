@@ -59,7 +59,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "x86_64");
 
-    name.copyOut(tc->getMemPort());
+    name.copyOut(tc->getMemProxy());
 
     return 0;
 }
@@ -81,7 +81,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     int code = process->getSyscallArg(tc, index);
     uint64_t addr = process->getSyscallArg(tc, index);
     uint64_t fsBase, gsBase;
-    TranslatingPort *p = tc->getMemPort();
+    SETranslatingPortProxy* p = tc->getMemProxy();
     switch(code)
     {
       //Each of these valid options should actually check addr.
@@ -149,10 +149,10 @@ setThreadArea32Func(SyscallDesc *desc, int callnum,
         gdt(x86lp->gdtStart() + minTLSEntry * sizeof(uint64_t),
                 numTLSEntries * sizeof(uint64_t));
 
-    if (!userDesc.copyIn(tc->getMemPort()))
+    if (!userDesc.copyIn(tc->getMemProxy()))
         return -EFAULT;
 
-    if (!gdt.copyIn(tc->getMemPort()))
+    if (!gdt.copyIn(tc->getMemProxy()))
         panic("Failed to copy in GDT for %s.\n", desc->name);
 
     if (userDesc->entry_number == (uint32_t)(-1)) {
@@ -204,9 +204,9 @@ setThreadArea32Func(SyscallDesc *desc, int callnum,
 
     gdt[index] = (uint64_t)segDesc;
 
-    if (!userDesc.copyOut(tc->getMemPort()))
+    if (!userDesc.copyOut(tc->getMemProxy()))
         return -EFAULT;
-    if (!gdt.copyOut(tc->getMemPort()))
+    if (!gdt.copyOut(tc->getMemProxy()))
         panic("Failed to copy out GDT for %s.\n", desc->name);
 
     return 0;

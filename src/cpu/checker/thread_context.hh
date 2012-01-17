@@ -97,12 +97,12 @@ class CheckerThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 
-    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
+    PortProxy* getPhysProxy() { return actualTC->getPhysProxy(); }
 
-    VirtualPort *getVirtPort()
-    { return actualTC->getVirtPort(); }
+    FSTranslatingPortProxy* getVirtProxy()
+    { return actualTC->getVirtProxy(); }
 #else
-    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
+    SETranslatingPortProxy* getMemProxy() { return actualTC->getMemProxy(); }
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 #endif

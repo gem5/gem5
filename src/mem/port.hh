@@ -255,48 +255,4 @@ class Port : public EventManager
     void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd);
 };
 
-/** A simple functional port that is only meant for one way communication to
- * physical memory. It is only meant to be used to load data into memory before
- * the simulation begins.
- */
-
-class FunctionalPort : public Port
-{
-  public:
-    FunctionalPort(const std::string &_name, MemObject *_owner = NULL)
-        : Port(_name, _owner)
-    {}
-
-  protected:
-    virtual bool recvTiming(PacketPtr pkt) { panic("FuncPort is UniDir");
-        M5_DUMMY_RETURN }
-    virtual Tick recvAtomic(PacketPtr pkt) { panic("FuncPort is UniDir");
-        M5_DUMMY_RETURN }
-    virtual void recvFunctional(PacketPtr pkt) { panic("FuncPort is UniDir"); }
-    virtual void recvStatusChange(Status status) {}
-
-  public:
-    /** a write function that also does an endian conversion. */
-    template <typename T>
-    inline void writeHtoG(Addr addr, T d);
-
-    /** a read function that also does an endian conversion. */
-    template <typename T>
-    inline T readGtoH(Addr addr);
-
-    template <typename T>
-    inline void write(Addr addr, T d)
-    {
-        writeBlob(addr, (uint8_t*)&d, sizeof(T));
-    }
-
-    template <typename T>
-    inline T read(Addr addr)
-    {
-        T d;
-        readBlob(addr, (uint8_t*)&d, sizeof(T));
-        return d;
-    }
-};
-
 #endif //__MEM_PORT_HH__

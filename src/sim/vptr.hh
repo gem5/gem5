@@ -33,7 +33,7 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/vtophys.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 
 class ThreadContext;
 
@@ -71,8 +71,8 @@ class VPtr
         if (!ptr)
             return;
 
-        VirtualPort *port = tc->getVirtPort();
-        port->readBlob(ptr, buffer, sizeof(T));
+        FSTranslatingPortProxy* proxy = tc->getVirtProxy();
+        proxy->readBlob(ptr, buffer, sizeof(T));
     }
 
     bool

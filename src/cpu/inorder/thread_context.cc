@@ -39,10 +39,10 @@ using namespace TheISA;
 
 #if FULL_SYSTEM
 
-VirtualPort *
-InOrderThreadContext::getVirtPort()
+FSTranslatingPortProxy*
+InOrderThreadContext::getVirtProxy()
 {
-    return thread->getVirtPort();
+    return thread->getVirtProxy();
 }
 
 

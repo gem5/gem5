@@ -50,11 +50,11 @@
 #include "base/trace.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #else
-#include "mem/translating_port.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
 #endif
@@ -117,10 +117,6 @@ SimpleThread::SimpleThread()
 
 SimpleThread::~SimpleThread()
 {
-#if FULL_SYSTEM
-    delete physPort;
-    delete virtPort;
-#endif
     delete tc;
 }
 

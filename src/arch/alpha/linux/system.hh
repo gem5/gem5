@@ -128,6 +128,11 @@ class LinuxAlphaSystem : public AlphaSystem
     LinuxAlphaSystem(Params *p);
     ~LinuxAlphaSystem();
 
+    /**
+     * Initialise the system
+     */
+    virtual void initState();
+
     void setDelayLoop(ThreadContext *tc);
 };
 

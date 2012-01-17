@@ -610,6 +610,8 @@ FullO3CPU<Impl>::init()
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         ThreadContext *src_tc = threadContexts[tid];
         TheISA::initCPU(src_tc, src_tc->contextId());
+        // Initialise the ThreadContext's memory proxies
+        thread[tid]->initMemProxies(thread[tid]->getTC());
     }
 #endif
 
@@ -974,16 +976,6 @@ FullO3CPU<Impl>::processInterrupts(Fault interrupt)
     this->trap(interrupt, 0, NULL);
 }
 
-template <class Impl>
-void
-FullO3CPU<Impl>::updateMemPorts()
-{
-    // Update all ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    ThreadID size = thread.size();
-    for (ThreadID i = 0; i < size; ++i)
-        thread[i]->connectMemPorts(thread[i]->getTC());
-}
 #endif
 
 template <class Impl>

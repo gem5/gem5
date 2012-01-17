@@ -192,7 +192,7 @@ RemoteGDB::acc(Addr va, size_t len)
 
         Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
         PageTableEntry pte =
-            kernel_pte_lookup(context->getPhysPort(), ptbr, va);
+            kernel_pte_lookup(context->getPhysProxy(), ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;

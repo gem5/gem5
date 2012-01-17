@@ -95,16 +95,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     };
     CpuPort icachePort;
 
-    class DcachePort : public CpuPort
-    {
-      public:
-        DcachePort(const std::string &_name, AtomicSimpleCPU *_cpu)
-            : CpuPort(_name, _cpu)
-        { }
-
-        virtual void setPeer(Port *port);
-    };
-    DcachePort dcachePort;
+    CpuPort dcachePort;
 
     CpuPort physmemPort;
     bool hasPhysMemPort;

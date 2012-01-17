@@ -49,6 +49,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "kern/linux/events.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 
 using namespace ArmISA;
@@ -57,6 +58,27 @@ using namespace Linux;
 LinuxArmSystem::LinuxArmSystem(Params *p)
     : ArmSystem(p)
 {
+}
+
+bool
+LinuxArmSystem::adderBootUncacheable(Addr a)
+{
+    Addr block = a & ~ULL(0x7F);
+    if (block == secDataPtrAddr || block == secDataAddr ||
+            block == penReleaseAddr)
+        return true;
+    return false;
+}
+
+void
+LinuxArmSystem::initState()
+{
+    // Moved from the constructor to here since it relies on the
+    // address map being resolved in the interconnect
+
+    // Call the initialisation of the super class
+    ArmSystem::initState();
+
     // Load symbols at physical address, we might not want
     // to do this perminately, for but early bootup work
     // it is helpfulp.
@@ -92,7 +114,7 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
     DDUMP(Loader, boot_data, size << 2);
 
-    functionalPort->writeBlob(ParamsList, boot_data, size << 2);
+    physProxy->writeBlob(ParamsList, boot_data, size << 2);
 
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
@@ -128,22 +150,6 @@ LinuxArmSystem::LinuxArmSystem(Params *p)
     secDataPtrAddr &= ~ULL(0x7F);
     secDataAddr &= ~ULL(0x7F);
     penReleaseAddr &= ~ULL(0x7F);
-}
-
-bool
-LinuxArmSystem::adderBootUncacheable(Addr a)
-{
-    Addr block = a & ~ULL(0x7F);
-    if (block == secDataPtrAddr || block == secDataAddr ||
-            block == penReleaseAddr)
-        return true;
-    return false;
-}
-
-void
-LinuxArmSystem::initState()
-{
-    ArmSystem::initState();
 
     for (int i = 0; i < threadContexts.size(); i++) {
         threadContexts[i]->setIntReg(0, 0);

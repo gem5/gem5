@@ -45,7 +45,7 @@
 #include "base/loader/raw_object.hh"
 #include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
-#include "mem/translating_port.hh"
+#include "mem/port_proxy.hh"
 
 using namespace std;
 
@@ -65,16 +65,16 @@ ObjectFile::~ObjectFile()
 
 
 bool
-ObjectFile::loadSection(Section *sec, Port *memPort, Addr addrMask)
+ObjectFile::loadSection(Section *sec, PortProxy* memProxy, Addr addrMask)
 {
     if (sec->size != 0) {
         Addr addr = sec->baseAddr & addrMask;
         if (sec->fileImage) {
-            memPort->writeBlob(addr, sec->fileImage, sec->size);
+            memProxy->writeBlob(addr, sec->fileImage, sec->size);
         }
         else {
             // no image: must be bss
-            memPort->memsetBlob(addr, 0, sec->size);
+            memProxy->memsetBlob(addr, 0, sec->size);
         }
     }
     return true;
@@ -82,11 +82,11 @@ ObjectFile::loadSection(Section *sec, Port *memPort, Addr addrMask)
 
 
 bool
-ObjectFile::loadSections(Port *memPort, Addr addrMask)
+ObjectFile::loadSections(PortProxy* memProxy, Addr addrMask)
 {
-    return (loadSection(&text, memPort, addrMask)
-            && loadSection(&data, memPort, addrMask)
-            && loadSection(&bss, memPort, addrMask));
+    return (loadSection(&text, memProxy, addrMask)
+            && loadSection(&data, memProxy, addrMask)
+            && loadSection(&bss, memProxy, addrMask));
 }
 
 

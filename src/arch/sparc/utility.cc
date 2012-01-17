@@ -33,7 +33,7 @@
 #include "arch/sparc/utility.hh"
 #if FULL_SYSTEM
 #include "arch/sparc/vtophys.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #endif
 
 namespace SparcISA {
@@ -54,7 +54,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
         return tc->readIntReg(8 + number);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort();
+        FSTranslatingPortProxy* vp = tc->getVirtProxy();
         uint64_t arg = vp->read<uint64_t>(sp + 92 +
                             (number-NumArgumentRegs) * sizeof(uint64_t));
         return arg;
