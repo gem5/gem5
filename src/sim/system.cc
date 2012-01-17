@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -78,7 +78,9 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : SimObject(p), physmem(p->physmem), _numContexts(0),
+    : MemObject(p), _systemPort("system_port", this),
+      physmem(p->physmem),
+      _numContexts(0),
 #if FULL_SYSTEM
       init_param(p->init_param),
       loadAddrMask(p->load_addr_mask),
@@ -188,6 +190,13 @@ System::~System()
 
     for (uint32_t j = 0; j < numWorkIds; j++)
         delete workItemStats[j];
+}
+
+Port*
+System::getPort(const std::string &if_name, int idx)
+{
+    // no need to distinguish at the moment (besides checking)
+    return &_systemPort;
 }
 
 void

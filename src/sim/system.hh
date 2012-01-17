@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
@@ -44,9 +56,9 @@
 #include "config/full_system.hh"
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
+#include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "params/System.hh"
-#include "sim/sim_object.hh"
 
 #if FULL_SYSTEM
 #include "kern/system_events.hh"
@@ -65,9 +77,53 @@ class VirtualPort;
 class GDBListener;
 class BaseRemoteGDB;
 
-class System : public SimObject
+class System : public MemObject
 {
+  private:
+
+    /**
+     * Private class for the system port which is only used as a
+     * master for debug access and for non-structural entities that do
+     * not have a port of their own.
+     */
+    class SystemPort : public Port
+    {
+      public:
+
+        /**
+         * Create a system port with a name and an owner.
+         */
+        SystemPort(const std::string &_name, MemObject *_owner)
+            : Port(_name, _owner)
+        { }
+        bool recvTiming(PacketPtr pkt)
+        { panic("SystemPort does not receive timing!\n"); return false; }
+        Tick recvAtomic(PacketPtr pkt)
+        { panic("SystemPort does not receive atomic!\n"); return 0; }
+        void recvFunctional(PacketPtr pkt)
+        { panic("SystemPort does not receive functional!\n"); }
+        void recvStatusChange(Status status) { }
+
+    };
+
+    SystemPort _systemPort;
+
   public:
+
+    /**
+     * Get a pointer to the system port that can be used by
+     * non-structural simulation objects like processes or threads, or
+     * external entities like loaders and debuggers, etc, to access
+     * the memory system.
+     *
+     * @return a pointer to the system port we own
+     */
+    Port* getSystemPort() { return &_systemPort; }
+
+    /**
+     * Additional function to return the Port of a memory object.
+     */
+    Port *getPort(const std::string &if_name, int idx = -1);
 
     static const char *MemoryModeStrings[3];
 

@@ -37,8 +37,9 @@ from PhysicalMemory import *
 
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
 
-class System(SimObject):
+class System(MemObject):
     type = 'System'
+    system_port = Port("System port")
 
     @classmethod
     def export_method_cxx_predecls(cls, code):
