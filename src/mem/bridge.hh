@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,11 +39,13 @@
  *
  * Authors: Ali Saidi
  *          Steve Reinhardt
+ *          Andreas Hansson
  */
 
 /**
  * @file
- * Declaration of a simple bus bridge object with no buffering
+ * Declaration of a memory-mapped bus bridge that connects a master
+ * and a slave through a request and response queue.
  */
 
 #ifndef __MEM_BRIDGE_HH__
@@ -49,90 +63,232 @@
 #include "params/Bridge.hh"
 #include "sim/eventq.hh"
 
+/**
+ * A bridge is used to interface two different busses (or in general a
+ * memory-mapped master and slave), with buffering for requests and
+ * responses. The bridge has a fixed delay for packets passing through
+ * it and responds to a fixed set of address ranges.
+ *
+ * The bridge comprises a slave port and a master port, that buffer
+ * outgoing responses and requests respectively. Buffer space is
+ * reserved when a request arrives, also reserving response space
+ * before forwarding the request. An incoming request is always
+ * accepted (recvTiming returns true), but is potentially NACKed if
+ * there is no request space or response space.
+ */
 class Bridge : public MemObject
 {
   protected:
-    /** Declaration of the buses port type, one will be instantiated for each
-        of the interfaces connecting to the bus. */
-    class BridgePort : public Port
+
+    /**
+     * A packet buffer stores packets along with their sender state
+     * and scheduled time for transmission.
+     */
+    class PacketBuffer : public Packet::SenderState, public FastAlloc {
+
+      public:
+        Tick ready;
+        PacketPtr pkt;
+        bool nackedHere;
+        Packet::SenderState *origSenderState;
+        short origSrc;
+        bool expectResponse;
+
+        PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
+            : ready(t), pkt(_pkt), nackedHere(nack),
+              origSenderState(_pkt->senderState),
+              origSrc(nack ? _pkt->getDest() : _pkt->getSrc() ),
+              expectResponse(_pkt->needsResponse() && !nack)
+
+        {
+            if (!pkt->isResponse() && !nack)
+                pkt->senderState = this;
+        }
+
+        void fixResponse(PacketPtr pkt)
+        {
+            assert(pkt->senderState == this);
+            pkt->setDest(origSrc);
+            pkt->senderState = origSenderState;
+        }
+    };
+
+    // Forward declaration to allow the slave port to have a pointer
+    class BridgeMasterPort;
+
+    /**
+     * The port on the side that receives requests and sends
+     * responses. The slave port has a set of address ranges that it
+     * is responsible for. The slave port also has a buffer for the
+     * responses not yet sent.
+     */
+    class BridgeSlavePort : public Port
     {
+
+      private:
+
         /** A pointer to the bridge to which this port belongs. */
         Bridge *bridge;
 
         /**
-         * Pointer to the port on the other side of the bridge
+         * Pointer to the master port on the other side of the bridge
          * (connected to the other bus).
          */
-        BridgePort *otherPort;
+        BridgeMasterPort* masterPort;
+
+        /** Minimum request delay though this bridge. */
+        Tick delay;
+
+        /** Min delay to respond with a nack. */
+        Tick nackDelay;
+
+        /** Address ranges to pass through the bridge */
+        AddrRangeList ranges;
+
+        /**
+         * Response packet queue. Response packets are held in this
+         * queue for a specified delay to model the processing delay
+         * of the bridge.
+         */
+        std::list<PacketBuffer*> responseQueue;
+
+        /** Counter to track the outstanding responses. */
+        unsigned int outstandingResponses;
+
+        /** If we're waiting for a retry to happen. */
+        bool inRetry;
+
+        /** Max queue size for reserved responses. */
+        unsigned int respQueueLimit;
+
+        /**
+         * Is this side blocked from accepting new response packets.
+         *
+         * @return true if the reserved space has reached the set limit
+         */
+        bool respQueueFull();
+
+        /**
+         * Turn the request packet into a NACK response and put it in
+         * the response queue and schedule its transmission.
+         *
+         * @param pkt the request packet to NACK
+         */
+        void nackRequest(PacketPtr pkt);
+
+        /**
+         * Handle send event, scheduled when the packet at the head of
+         * the response queue is ready to transmit (for timing
+         * accesses only).
+         */
+        void trySend();
+
+        /**
+         * Private class for scheduling sending of responses from the
+         * response queue.
+         */
+        class SendEvent : public Event
+        {
+            BridgeSlavePort *port;
+
+          public:
+            SendEvent(BridgeSlavePort *p) : port(p) {}
+            virtual void process() { port->trySend(); }
+            virtual const char *description() const { return "bridge send"; }
+        };
+
+        /** Send event for the response queue. */
+        SendEvent sendEvent;
+
+      public:
+
+        /**
+         * Constructor for the BridgeSlavePort.
+         *
+         * @param _name the port name including the owner
+         * @param _bridge the structural owner
+         * @param _masterPort the master port on the other side of the bridge
+         * @param _delay the delay from seeing a response to sending it
+         * @param _nack_delay the delay from a NACK to sending the response
+         * @param _resp_limit the size of the response queue
+         * @param _ranges a number of address ranges to forward
+         */
+        BridgeSlavePort(const std::string &_name, Bridge *_bridge,
+                        BridgeMasterPort* _masterPort, int _delay,
+                        int _nack_delay, int _resp_limit,
+                        std::vector<Range<Addr> > _ranges);
+
+        /**
+         * Queue a response packet to be sent out later and also schedule
+         * a send if necessary.
+         *
+         * @param pkt a response to send out after a delay
+         */
+        void queueForSendTiming(PacketPtr pkt);
+
+      protected:
+
+        /** When receiving a timing request from the peer port,
+            pass it to the bridge. */
+        virtual bool recvTiming(PacketPtr pkt);
+
+        /** When receiving a retry request from the peer port,
+            pass it to the bridge. */
+        virtual void recvRetry();
+
+        /** When receiving a Atomic requestfrom the peer port,
+            pass it to the bridge. */
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        /** When receiving a Functional request from the peer port,
+            pass it to the bridge. */
+        virtual void recvFunctional(PacketPtr pkt);
+
+        /**
+         * When receiving a range change on the slave side do nothing.
+         */
+        virtual void recvRangeChange();
+
+        /** When receiving a address range request the peer port,
+            pass it to the bridge. */
+        virtual AddrRangeList getAddrRanges();
+    };
+
+
+    /**
+     * Port on the side that forwards requests and receives
+     * responses. The master port has a buffer for the requests not
+     * yet sent.
+     */
+    class BridgeMasterPort : public Port
+    {
+
+      private:
+
+        /** A pointer to the bridge to which this port belongs. */
+        Bridge* bridge;
+
+        /**
+         * Pointer to the slave port on the other side of the bridge
+         * (connected to the other bus).
+         */
+        BridgeSlavePort* slavePort;
 
         /** Minimum delay though this bridge. */
         Tick delay;
 
-        /** Min delay to respond to a nack. */
-        Tick nackDelay;
-
-        /** Pass ranges from one side of the bridge to the other? */
-        std::vector<Range<Addr> > filterRanges;
-
-        class PacketBuffer : public Packet::SenderState, public FastAlloc {
-
-          public:
-            Tick ready;
-            PacketPtr pkt;
-            bool nackedHere;
-            Packet::SenderState *origSenderState;
-            short origSrc;
-            bool expectResponse;
-
-            PacketBuffer(PacketPtr _pkt, Tick t, bool nack = false)
-                : ready(t), pkt(_pkt), nackedHere(nack),
-                  origSenderState(_pkt->senderState),
-                  origSrc(nack ? _pkt->getDest() : _pkt->getSrc() ),
-                  expectResponse(_pkt->needsResponse() && !nack)
-
-            {
-                if (!pkt->isResponse() && !nack)
-                    pkt->senderState = this;
-            }
-
-            void fixResponse(PacketPtr pkt)
-            {
-                assert(pkt->senderState == this);
-                pkt->setDest(origSrc);
-                pkt->senderState = origSenderState;
-            }
-        };
-
         /**
-         * Outbound packet queue.  Packets are held in this queue for a
-         * specified delay to model the processing delay of the
-         * bridge.
+         * Request packet queue. Request packets are held in this
+         * queue for a specified delay to model the processing delay
+         * of the bridge.
          */
-        std::list<PacketBuffer*> sendQueue;
+        std::list<PacketBuffer*> requestQueue;
 
-        int outstandingResponses;
-        int queuedRequests;
-
-        /** If we're waiting for a retry to happen.*/
+        /** If we're waiting for a retry to happen. */
         bool inRetry;
 
-        /** Max queue size for outbound packets */
-        int reqQueueLimit;
-
-        /** Max queue size for reserved responses. */
-        int respQueueLimit;
-
-        /**
-         * Is this side blocked from accepting outbound packets?
-         */
-        bool respQueueFull();
-        bool reqQueueFull();
-
-        void queueForSendTiming(PacketPtr pkt);
-
-        void finishSend(PacketBuffer *buf);
-
-        void nackRequest(PacketPtr pkt);
+        /** Max queue size for request packets */
+        unsigned int reqQueueLimit;
 
         /**
          * Handle send event, scheduled when the packet at the head of
@@ -141,24 +297,62 @@ class Bridge : public MemObject
          */
         void trySend();
 
+        /**
+         * Private class for scheduling sending of requests from the
+         * request queue.
+         */
         class SendEvent : public Event
         {
-            BridgePort *port;
+            BridgeMasterPort *port;
 
           public:
-            SendEvent(BridgePort *p) : port(p) {}
+            SendEvent(BridgeMasterPort *p) : port(p) {}
             virtual void process() { port->trySend(); }
             virtual const char *description() const { return "bridge send"; }
         };
 
+        /** Send event for the request queue. */
         SendEvent sendEvent;
 
       public:
-        /** Constructor for the BusPort.*/
-        BridgePort(const std::string &_name, Bridge *_bridge,
-                BridgePort *_otherPort, int _delay, int _nack_delay,
-                int _req_limit, int _resp_limit,
-                std::vector<Range<Addr> > filter_ranges);
+
+        /**
+         * Constructor for the BridgeMasterPort.
+         *
+         * @param _name the port name including the owner
+         * @param _bridge the structural owner
+         * @param _slavePort the slave port on the other side of the bridge
+         * @param _delay the delay from seeing a request to sending it
+         * @param _req_limit the size of the request queue
+         */
+        BridgeMasterPort(const std::string &_name, Bridge *_bridge,
+                         BridgeSlavePort* _slavePort, int _delay,
+                         int _req_limit);
+
+        /**
+         * Is this side blocked from accepting new request packets.
+         *
+         * @return true if the occupied space has reached the set limit
+         */
+        bool reqQueueFull();
+
+        /**
+         * Queue a request packet to be sent out later and also schedule
+         * a send if necessary.
+         *
+         * @param pkt a request to send out after a delay
+         */
+        void queueForSendTiming(PacketPtr pkt);
+
+        /**
+         * Check a functional request against the packets in our
+         * request queue.
+         *
+         * @param pkt packet to check against
+         *
+         * @return true if we find a match
+         */
+        bool checkFunctional(PacketPtr pkt);
 
       protected:
 
@@ -182,13 +376,13 @@ class Bridge : public MemObject
          * When receiving a range change, pass it through the bridge.
          */
         virtual void recvRangeChange();
-
-        /** When receiving a address range request the peer port,
-            pass it to the bridge. */
-        virtual AddrRangeList getAddrRanges();
     };
 
-    BridgePort portA, portB;
+    /** Slave port of the bridge. */
+    BridgeSlavePort slavePort;
+
+    /** Master port of the bridge. */
+    BridgeMasterPort masterPort;
 
     /** If this bridge should acknowledge writes. */
     bool ackWrites;

@@ -1,4 +1,4 @@
-# Copyright (c) 2009 ARM Limited
+# Copyright (c) 2009-2011 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -177,12 +177,18 @@ class RealViewPBX(RealView):
     rtc_fake      = AmbaFake(pio_addr=0x10017000, amba_id=0x41031)
 
 
-    # Attach I/O devices that are on chip
-    def attachOnChipIO(self, bus):
+    # Attach I/O devices that are on chip and also set the appropriate
+    # ranges for the bridge
+    def attachOnChipIO(self, bus, bridge):
        self.gic.pio = bus.port
        self.l2x0_fake.pio = bus.port
        self.a9scu.pio = bus.port
        self.local_cpu_timer.pio = bus.port
+       # Bridge ranges based on excluding what is part of on-chip I/O
+       # (gic, l2x0, a9scu, local_cpu_timer)
+       bridge.ranges = [AddrRange(self.realview_io.pio_addr,
+                                  self.a9scu.pio_addr - 1),
+                        AddrRange(self.flash_fake.pio_addr, Addr.max)]
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
@@ -248,10 +254,16 @@ class RealViewEB(RealView):
 
 
 
-    # Attach I/O devices that are on chip
-    def attachOnChipIO(self, bus):
+    # Attach I/O devices that are on chip and also set the appropriate
+    # ranges for the bridge
+    def attachOnChipIO(self, bus, bridge):
        self.gic.pio = bus.port
        self.l2x0_fake.pio = bus.port
+       # Bridge ranges based on excluding what is part of on-chip I/O
+       # (gic, l2x0)
+       bridge.ranges = [AddrRange(self.realview_io.pio_addr,
+                                  self.gic.cpu_addr - 1),
+                        AddrRange(self.flash_fake.pio_addr, Addr.max)]
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
@@ -329,10 +341,15 @@ class VExpress_ELT(RealView):
     usb_fake       = IsaFake(pio_addr=0xFB000000, pio_size=0x1ffff)
 
 
-    # Attach I/O devices that are on chip
-    def attachOnChipIO(self, bus):
+    # Attach I/O devices that are on chip and also set the appropriate
+    # ranges for the bridge
+    def attachOnChipIO(self, bus, bridge):
        self.gic.pio = bus.port
        self.a9scu.pio = bus.port
+       # Bridge ranges based on excluding what is part of on-chip I/O
+       # (gic, a9scu)
+       bridge.ranges = [AddrRange(self.pci_cfg_base, self.a9scu.pio_addr - 1),
+                        AddrRange(self.local_cpu_timer.pio_addr, Addr.max)]
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the

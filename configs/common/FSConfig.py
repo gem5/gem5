@@ -56,6 +56,7 @@ class MemBus(Bus):
 
 
 def makeLinuxAlphaSystem(mem_mode, mdesc = None):
+    IO_address_space_base = 0x80000000000
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
@@ -68,10 +69,13 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
     self.membus = MemBus(bus_id=1)
-    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    # By default the bridge responds to all addresses above the I/O
+    # base address (including the PCI config space)
+    self.bridge = Bridge(delay='50ns', nack_delay='4ns',
+                         ranges = [AddrRange(IO_address_space_base, Addr.max)])
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
-    self.bridge.side_a = self.iobus.port
-    self.bridge.side_b = self.membus.port
+    self.bridge.master = self.iobus.port
+    self.bridge.slave = self.membus.port
     self.physmem.port = self.membus.port
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
@@ -146,6 +150,10 @@ def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     return self
 
 def makeSparcSystem(mem_mode, mdesc = None):
+    # Constants from iob.cc and uart8250.cc
+    iob_man_addr = 0x9800000000
+    uart_pio_size = 8
+
     class CowMmDisk(MmDisk):
         image = CowDiskImage(child=RawDiskImage(read_only=True),
                              read_only=False)
@@ -166,8 +174,8 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.t1000.attachIO(self.iobus)
     self.physmem = PhysicalMemory(range = AddrRange(Addr('1MB'), size = '64MB'), zero = True)
     self.physmem2 = PhysicalMemory(range = AddrRange(Addr('2GB'), size ='256MB'), zero = True)
-    self.bridge.side_a = self.iobus.port
-    self.bridge.side_b = self.membus.port
+    self.bridge.master = self.iobus.port
+    self.bridge.slave = self.membus.port
     self.physmem.port = self.membus.port
     self.physmem2.port = self.membus.port
     self.rom.port = self.membus.port
@@ -178,6 +186,25 @@ def makeSparcSystem(mem_mode, mdesc = None):
     self.disk0 = CowMmDisk()
     self.disk0.childImage(disk('disk.s10hw2'))
     self.disk0.pio = self.iobus.port
+
+    # The puart0 and hvuart are placed on the IO bus, so create ranges
+    # for them. The remaining IO range is rather fragmented, so poke
+    # holes for the iob and partition descriptors etc.
+    self.bridge.ranges = \
+        [
+        AddrRange(self.t1000.puart0.pio_addr,
+                  self.t1000.puart0.pio_addr + uart_pio_size - 1),
+        AddrRange(self.disk0.pio_addr,
+                  self.t1000.fake_jbi.pio_addr +
+                  self.t1000.fake_jbi.pio_size - 1),
+        AddrRange(self.t1000.fake_clk.pio_addr,
+                  iob_man_addr - 1),
+        AddrRange(self.t1000.fake_l2_1.pio_addr,
+                  self.t1000.fake_ssi.pio_addr +
+                  self.t1000.fake_ssi.pio_size - 1),
+        AddrRange(self.t1000.hvuart.pio_addr,
+                  self.t1000.hvuart.pio_addr + uart_pio_size - 1)
+        ]
     self.reset_bin = binary('reset_new.bin')
     self.hypervisor_bin = binary('q_new.bin')
     self.openboot_bin = binary('openboot_new.bin')
@@ -206,8 +233,8 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
     self.membus = MemBus(bus_id=1)
     self.membus.badaddr_responder.warn_access = "warn"
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    self.bridge.side_a = self.iobus.port
-    self.bridge.side_b = self.membus.port
+    self.bridge.master = self.iobus.port
+    self.bridge.slave = self.membus.port
 
     self.mem_mode = mem_mode
 
@@ -261,7 +288,7 @@ def makeArmSystem(mem_mode, machine_type, mdesc = None, bare_metal=False):
         self.boot_osflags = boot_flags
 
     self.physmem.port = self.membus.port
-    self.realview.attachOnChipIO(self.membus)
+    self.realview.attachOnChipIO(self.membus, self.bridge)
     self.realview.attachIO(self.iobus)
     self.intrctrl = IntrControl()
     self.terminal = Terminal()
@@ -287,8 +314,8 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     self.membus = MemBus(bus_id=1)
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.physmem = PhysicalMemory(range = AddrRange('1GB'))
-    self.bridge.side_a = self.iobus.port
-    self.bridge.side_b = self.membus.port
+    self.bridge.master = self.iobus.port
+    self.bridge.slave = self.membus.port
     self.physmem.port = self.membus.port
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
@@ -316,14 +343,42 @@ def x86IOAddress(port):
     return IO_address_space_base + port
 
 def connectX86ClassicSystem(x86_sys):
+    # Constants similar to x86_traits.hh
+    IO_address_space_base = 0x8000000000000000
+    pci_config_address_space_base = 0xc000000000000000
+    interrupts_address_space_base = 0xa000000000000000
+    APIC_range_size = 1 << 12;
+
     x86_sys.membus = MemBus(bus_id=1)
     x86_sys.physmem.port = x86_sys.membus.port
 
     # North Bridge
     x86_sys.iobus = Bus(bus_id=0)
     x86_sys.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    x86_sys.bridge.side_a = x86_sys.iobus.port
-    x86_sys.bridge.side_b = x86_sys.membus.port
+    x86_sys.bridge.master = x86_sys.iobus.port
+    x86_sys.bridge.slave = x86_sys.membus.port
+    # Allow the bridge to pass through the IO APIC (two pages),
+    # everything in the IO address range up to the local APIC, and
+    # then the entire PCI address space and beyond
+    x86_sys.bridge.ranges = \
+        [
+        AddrRange(x86_sys.pc.south_bridge.io_apic.pio_addr,
+                  x86_sys.pc.south_bridge.io_apic.pio_addr +
+                  APIC_range_size - 1),
+        AddrRange(IO_address_space_base,
+                  interrupts_address_space_base - 1),
+        AddrRange(pci_config_address_space_base,
+                  Addr.max)
+        ]
+
+    # Create a bridge from the IO bus to the memory bus to allow access to
+    # the local APIC (two pages)
+    x86_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns')
+    x86_sys.iobridge.slave = x86_sys.iobus.port
+    x86_sys.iobridge.master = x86_sys.membus.port
+    x86_sys.iobridge.ranges = [AddrRange(interrupts_address_space_base,
+                                         interrupts_address_space_base +
+                                         APIC_range_size - 1)]
 
     # connect the io bus
     x86_sys.pc.attachIO(x86_sys.iobus)
