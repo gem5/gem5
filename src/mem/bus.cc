@@ -38,15 +38,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Hansson
  */
 
 /**
  * @file
  * Definition of a bus object.
  */
-
-#include <algorithm>
-#include <limits>
 
 #include "base/misc.hh"
 #include "base/trace.hh"
@@ -58,8 +56,7 @@
 Bus::Bus(const BusParams *p)
     : MemObject(p), busId(p->bus_id), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
-      drainEvent(NULL), busIdle(this), inRetry(false), maxId(0),
-      defaultPort(NULL),
+      drainEvent(NULL), busIdle(this), inRetry(false), defaultPortId(-1),
       useDefaultRange(p->use_default_range), defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
 {
@@ -70,28 +67,25 @@ Bus::Bus(const BusParams *p)
         fatal("Bus clock period must be positive\n");
     if (headerCycles <= 0)
         fatal("Number of header cycles must be positive\n");
-    clearBusCache();
     clearPortCache();
 }
 
 Port *
 Bus::getPort(const std::string &if_name, int idx)
 {
+    std::string portName;
+    int id = interfaces.size();
     if (if_name == "default") {
-        if (defaultPort == NULL) {
-            defaultPort = new BusPort(csprintf("%s-default",name()), this,
-                                      defaultId);
-            cachedBlockSizeValid = false;
-            return defaultPort;
+        if (defaultPortId == -1) {
+            defaultPortId = id;
+            portName = csprintf("%s-default", name());
         } else
-            fatal("Default port already set\n");
+            fatal("Default port already set on %s\n", name());
+    } else {
+        portName = csprintf("%s-p%d", name(), id);
     }
-    int id;
-    // if_name ignored?  forced to be empty?
-    id = maxId++;
-    assert(maxId < std::numeric_limits<typeof(maxId)>::max());
-    BusPort *bp = new BusPort(csprintf("%s-p%d", name(), id), this, id);
-    interfaces[id] = bp;
+    BusPort *bp = new BusPort(portName, this, id);
+    interfaces.push_back(bp);
     cachedBlockSizeValid = false;
     return bp;
 }
@@ -99,16 +93,16 @@ Bus::getPort(const std::string &if_name, int idx)
 void
 Bus::init()
 {
-    m5::hash_map<short,BusPort*>::iterator intIter;
+    std::vector<BusPort*>::iterator intIter;
 
     // iterate over our interfaces and determine which of our neighbours
     // are snooping and add them as snoopers
     for (intIter = interfaces.begin(); intIter != interfaces.end();
          intIter++) {
-        if (intIter->second->getPeer()->isSnooping()) {
+        if ((*intIter)->getPeer()->isSnooping()) {
             DPRINTF(BusAddrRanges, "Adding snooping neighbour %s\n",
-                    intIter->second->getPeer()->name());
-            snoopPorts.push_back(intIter->second);
+                    (*intIter)->getPeer()->name());
+            snoopPorts.push_back(*intIter);
         }
     }
 }
@@ -188,16 +182,7 @@ Bus::recvTiming(PacketPtr pkt)
 {
     short src = pkt->getSrc();
 
-    BusPort *src_port;
-    if (src == defaultId)
-        src_port = defaultPort;
-    else {
-        src_port = checkBusCache(src);
-        if (src_port == NULL) {
-            src_port = interfaces[src];
-            updateBusCache(src, src_port);
-        }
-    }
+    BusPort *src_port = interfaces[src];
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
@@ -223,8 +208,7 @@ Bus::recvTiming(PacketPtr pkt)
 
     if (dest == Packet::Broadcast) {
         dest_port_id = findPort(pkt->getAddr());
-        dest_port = (dest_port_id == defaultId) ?
-            defaultPort : interfaces[dest_port_id];
+        dest_port = interfaces[dest_port_id];
         SnoopIter s_end = snoopPorts.end();
         for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
             BusPort *p = *s_iter;
@@ -235,20 +219,10 @@ Bus::recvTiming(PacketPtr pkt)
             }
         }
     } else {
-        assert(dest < maxId);
+        assert(dest < interfaces.size());
         assert(dest != src); // catch infinite loops
         dest_port_id = dest;
-        if (dest_port_id == defaultId)
-            dest_port = defaultPort;
-        else {
-            dest_port = checkBusCache(dest);
-            if (dest_port == NULL) {
-                dest_port = interfaces[dest_port_id];
-            // updateBusCache(dest_port_id, dest_port);
-            }
-        }
-        dest_port = (dest_port_id == defaultId) ?
-            defaultPort : interfaces[dest_port_id];
+        dest_port = interfaces[dest_port_id];
     }
 
     if (dest_port_id == src) {
@@ -346,7 +320,7 @@ Bus::findPort(Addr addr)
         for (AddrRangeIter i = defaultRange.begin(); i != a_end; i++) {
             if (*i == addr) {
                 DPRINTF(Bus, "  found addr %#llx on default\n", addr);
-                return defaultId;
+                return defaultPortId;
             }
         }
 
@@ -355,7 +329,7 @@ Bus::findPort(Addr addr)
 
     DPRINTF(Bus, "Unable to find destination for addr %#llx, "
             "will use default port\n", addr);
-    return defaultId;
+    return defaultPortId;
 }
 
 
@@ -379,16 +353,7 @@ Bus::recvAtomic(PacketPtr pkt)
     int orig_src = pkt->getSrc();
 
     int target_port_id = findPort(pkt->getAddr());
-    BusPort *target_port;
-    if (target_port_id == defaultId)
-        target_port = defaultPort;
-    else {
-      target_port = checkBusCache(target_port_id);
-      if (target_port == NULL) {
-          target_port = interfaces[target_port_id];
-          updateBusCache(target_port_id, target_port);
-      }
-    }
+    BusPort *target_port = interfaces[target_port_id];
 
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
@@ -444,7 +409,7 @@ Bus::recvFunctional(PacketPtr pkt)
     assert(pkt->getDest() == Packet::Broadcast);
 
     int port_id = findPort(pkt->getAddr());
-    Port *port = (port_id == defaultId) ? defaultPort : interfaces[port_id];
+    Port *port = interfaces[port_id];
     // The packet may be changed by another bus on snoops, restore the
     // id after each
     int src_id = pkt->getSrc();
@@ -491,11 +456,11 @@ Bus::recvRangeChange(int id)
     DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
     clearPortCache();
-    if (id == defaultId) {
+    if (id == defaultPortId) {
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.
         if (useDefaultRange) {
-            AddrRangeList ranges = defaultPort->getPeer()->getAddrRanges();
+            AddrRangeList ranges = interfaces[id]->getPeer()->getAddrRanges();
             for(iter = ranges.begin(); iter != ranges.end(); iter++) {
                 defaultRange.push_back(*iter);
                 DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
@@ -504,7 +469,7 @@ Bus::recvRangeChange(int id)
         }
     } else {
 
-        assert((id < maxId && id >= 0) || id == defaultId);
+        assert(id < interfaces.size() && id >= 0);
         BusPort *port = interfaces[id];
 
         // Clean out any previously existent ids
@@ -533,14 +498,12 @@ Bus::recvRangeChange(int id)
 
     // tell all our peers that our address range has changed.
     // Don't tell the device that caused this change, it already knows
-    m5::hash_map<short,BusPort*>::iterator intIter;
+    std::vector<BusPort*>::const_iterator intIter;
 
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
-        if (intIter->first != id)
-            intIter->second->sendRangeChange();
+        if ((*intIter)->getId() != id)
+            (*intIter)->sendRangeChange();
 
-    if (id != defaultId && defaultPort)
-        defaultPort->sendRangeChange();
     inRecvRangeChange.erase(id);
 }
 

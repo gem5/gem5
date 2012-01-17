@@ -39,6 +39,7 @@
  *
  * Authors: Ron Dreslinski
  *          Ali Saidi
+ *          Andreas Hansson
  */
 
 /**
@@ -91,7 +92,7 @@ class Bus : public MemObject
         void onRetryList(bool newVal)
         { _onRetryList = newVal; }
 
-        int getId() { return id; }
+        int getId() const { return id; }
 
         /**
          * Determine if this port should be considered a snooper. This
@@ -166,9 +167,6 @@ class Bus : public MemObject
     Tick tickNextIdle;
 
     Event * drainEvent;
-
-
-    static const int defaultId = -3; //Make it unique from Broadcast
 
     typedef range_map<Addr,int>::iterator PortIter;
     range_map<Addr, int> portMap;
@@ -297,12 +295,9 @@ class Bus : public MemObject
     bool inRetry;
     std::set<int> inRecvRangeChange;
 
-    /** max number of bus ids we've handed out so far */
-    short maxId;
-
-    /** An array of pointers to the peer port interfaces
+    /** An ordered vector of pointers to the peer port interfaces
         connected to this bus.*/
-    m5::hash_map<short,BusPort*> interfaces;
+    std::vector<BusPort*> interfaces;
 
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
@@ -331,7 +326,7 @@ class Bus : public MemObject
     }
 
     /** Port that handles requests that don't match any of the interfaces.*/
-    BusPort *defaultPort;
+    short defaultPortId;
 
     /** If true, use address range provided by default device.  Any
        address not handled by another port and not in default device's
@@ -342,54 +337,6 @@ class Bus : public MemObject
     unsigned defaultBlockSize;
     unsigned cachedBlockSize;
     bool cachedBlockSizeValid;
-
-   // Cache for the peer port interfaces
-    struct BusCache {
-        bool  valid;
-        short id;
-        BusPort  *port;
-    };
-
-    BusCache busCache[3];
-
-    // Checks the peer port interfaces cache for the port id and returns
-    // a pointer to the matching port
-    inline BusPort* checkBusCache(short id) {
-        if (busCache[0].valid && id == busCache[0].id) {
-            return busCache[0].port;
-        }
-        if (busCache[1].valid && id == busCache[1].id) {
-            return busCache[1].port;
-        }
-        if (busCache[2].valid && id == busCache[2].id) {
-            return busCache[2].port;
-        }
-
-        return NULL;
-    }
-
-    // Replaces the earliest entry in the cache with a new entry
-    inline void updateBusCache(short id, BusPort *port) {
-        busCache[2].valid = busCache[1].valid;
-        busCache[2].id    = busCache[1].id;
-        busCache[2].port  = busCache[1].port;
-
-        busCache[1].valid = busCache[0].valid;
-        busCache[1].id    = busCache[0].id;
-        busCache[1].port  = busCache[0].port;
-
-        busCache[0].valid = true;
-        busCache[0].id    = id;
-        busCache[0].port  = port;
-    }
-
-    // Invalidates the cache. Needs to be called in constructor.
-    inline void clearBusCache() {
-        busCache[2].valid = false;
-        busCache[1].valid = false;
-        busCache[0].valid = false;
-    }
-
 
   public:
 
