@@ -333,9 +333,6 @@ class Bus : public MemObject
     /** Port that handles requests that don't match any of the interfaces.*/
     BusPort *defaultPort;
 
-    BusPort *funcPort;
-    int funcPortId;
-
     /** If true, use address range provided by default device.  Any
        address not handled by another port and not in default device's
        range will cause a fatal error.  If false, just send all

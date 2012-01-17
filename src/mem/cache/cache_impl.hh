@@ -103,13 +103,7 @@ Cache<TagStore>::getPort(const std::string &if_name, int idx)
         return cpuSidePort;
     } else if (if_name == "mem_side") {
         return memSidePort;
-    } else if (if_name == "functional") {
-        CpuSidePort *funcPort =
-            new CpuSidePort(name() + "-cpu_side_funcport", this,
-                            "CpuSideFuncPort");
-        funcPort->setOtherPort(memSidePort);
-        return funcPort;
-    } else {
+    }  else {
         panic("Port name %s unrecognized\n", if_name);
     }
 }

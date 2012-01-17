@@ -59,7 +59,7 @@ Bus::Bus(const BusParams *p)
     : MemObject(p), busId(p->bus_id), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
       drainEvent(NULL), busIdle(this), inRetry(false), maxId(0),
-      defaultPort(NULL), funcPort(NULL), funcPortId(-4),
+      defaultPort(NULL),
       useDefaultRange(p->use_default_range), defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
 {
@@ -87,16 +87,6 @@ Bus::getPort(const std::string &if_name, int idx)
             fatal("Default port already set\n");
     }
     int id;
-    if (if_name == "functional") {
-        if (!funcPort) {
-            id = maxId++;
-            funcPort = new BusPort(csprintf("%s-p%d-func", name(), id), this, id);
-            funcPortId = id;
-            interfaces[id] = funcPort;
-        }
-        return funcPort;
-    }
-
     // if_name ignored?  forced to be empty?
     id = maxId++;
     assert(maxId < std::numeric_limits<typeof(maxId)>::max());
@@ -546,7 +536,7 @@ Bus::recvRangeChange(int id)
     m5::hash_map<short,BusPort*>::iterator intIter;
 
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
-        if (intIter->first != id && intIter->first != funcPortId)
+        if (intIter->first != id)
             intIter->second->sendRangeChange();
 
     if (id != defaultId && defaultPort)

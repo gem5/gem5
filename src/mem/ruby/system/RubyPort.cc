@@ -93,14 +93,6 @@ RubyPort::getPort(const std::string &if_name, int idx)
         return physMemPort;
     }
 
-    if (if_name == "functional") {
-        // Calls for the functional port only want to access
-        // functional memory.  Therefore, directly pass these calls
-        // ports to physmem.
-        assert(physmem != NULL);
-        return physmem->getPort(if_name, idx);
-    }
-
     return NULL;
 }
 
