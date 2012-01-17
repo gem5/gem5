@@ -127,9 +127,7 @@ class Port
      * demise. */
     void removeConn();
 
-    virtual bool isDefaultPort() const { return false; }
-
-    bool isConnected() { return peer && !peer->isDefaultPort(); }
+    bool isConnected() { return peer != NULL; }
 
   protected:
 

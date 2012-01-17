@@ -40,60 +40,8 @@
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 
-class DefaultPeerPort : public Port
-{
-  protected:
-    void blowUp() const
-    {
-        fatal("%s: Unconnected port!", peer->name());
-    }
-
-  public:
-    DefaultPeerPort()
-        : Port("default_port", NULL)
-    { }
-
-    bool recvTiming(PacketPtr)
-    {
-        blowUp();
-        return false;
-    }
-
-    Tick recvAtomic(PacketPtr)
-    {
-        blowUp();
-        return 0;
-    }
-
-    void recvFunctional(PacketPtr)
-    {
-        blowUp();
-    }
-
-    void recvStatusChange(Status)
-    {
-        blowUp();
-    }
-
-    unsigned
-    deviceBlockSize() const
-    {
-        blowUp();
-        return 0;
-    }
-
-    void getDeviceAddressRanges(AddrRangeList &, bool &)
-    {
-        blowUp();
-    }
-
-    bool isDefaultPort() const { return true; }
-};
-
-DefaultPeerPort defaultPeerPort;
-
 Port::Port(const std::string &_name, MemObject *_owner)
-    : portName(_name), peer(&defaultPeerPort), owner(_owner)
+    : portName(_name), peer(NULL), owner(_owner)
 {
 }
 
@@ -118,7 +66,7 @@ Port::setOwner(MemObject *_owner)
 void
 Port::removeConn()
 {
-    if (peer->getOwner())
+    if (peer != NULL)
         peer->getOwner()->deletePortRefs(peer);
     peer = NULL;
 }
