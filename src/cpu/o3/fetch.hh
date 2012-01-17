@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -84,48 +84,6 @@ class DefaultFetch
     /** Typedefs from ISA. */
     typedef TheISA::MachInst MachInst;
     typedef TheISA::ExtMachInst ExtMachInst;
-
-    /** IcachePort class for DefaultFetch.  Handles doing the
-     * communication with the cache/memory.
-     */
-    class IcachePort : public Port
-    {
-      protected:
-        /** Pointer to fetch. */
-        DefaultFetch<Impl> *fetch;
-
-      public:
-        /** Default constructor. */
-        IcachePort(DefaultFetch<Impl> *_fetch)
-            : Port(_fetch->name() + "-iport", _fetch->cpu), fetch(_fetch)
-        { }
-
-        bool snoopRangeSent;
-
-        virtual void setPeer(Port *port);
-
-      protected:
-        /** Atomic version of receive.  Panics. */
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        /** Functional version of receive.  Panics. */
-        virtual void recvFunctional(PacketPtr pkt);
-
-        /** Receives status change.  Other than range changing, panics. */
-        virtual void recvStatusChange(Status status);
-
-        /** Returns the address ranges of this device. */
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { resp.clear(); snoop = true; }
-
-        /** Timing version of receive.  Handles setting fetch to the
-         * proper status to start fetching. */
-        virtual bool recvTiming(PacketPtr pkt);
-
-        /** Handles doing a retry of a failed fetch. */
-        virtual void recvRetry();
-    };
 
     class FetchTranslation : public BaseTLB::Translation
     {
@@ -248,9 +206,6 @@ class DefaultFetch
     /** Registers statistics. */
     void regStats();
 
-    /** Returns the icache port. */
-    Port *getIcachePort() { return icachePort; }
-
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
 
@@ -265,6 +220,9 @@ class DefaultFetch
 
     /** Tells the fetch stage that the Icache is set. */
     void setIcache();
+
+    /** Handles retrying the fetch access. */
+    void recvRetry();
 
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);
@@ -389,9 +347,6 @@ class DefaultFetch
                          StaticInstPtr curMacroop, TheISA::PCState thisPC,
                          TheISA::PCState nextPC, bool trace);
 
-    /** Handles retrying the fetch access. */
-    void recvRetry();
-
     /** Returns the appropriate thread to fetch, given the fetch policy. */
     ThreadID getFetchingThread(FetchPriority &fetch_priority);
 
@@ -439,9 +394,6 @@ class DefaultFetch
     //Might be annoying how this name is different than the queue.
     /** Wire used to write any information heading to decode. */
     typename TimeBuffer<FetchStruct>::wire toDecode;
-
-    /** Icache interface. */
-    IcachePort *icachePort;
 
     /** BPredUnit. */
     BPredUnit branchPred;

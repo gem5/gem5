@@ -107,47 +107,6 @@ AtomicSimpleCPU::init()
     data_write_req.setThreadContext(_cpuId, 0); // Add thread ID here too
 }
 
-bool
-AtomicSimpleCPU::CpuPort::recvTiming(PacketPtr pkt)
-{
-    panic("AtomicSimpleCPU doesn't expect recvTiming callback!");
-    return true;
-}
-
-Tick
-AtomicSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    //Snooping a coherence request, just return
-    return 0;
-}
-
-void
-AtomicSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
-{
-    //No internal storage to update, just return
-    return;
-}
-
-void
-AtomicSimpleCPU::CpuPort::recvStatusChange(Status status)
-{
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("AtomicSimpleCPU doesn't expect recvStatusChange callback!");
-}
-
-void
-AtomicSimpleCPU::CpuPort::recvRetry()
-{
-    panic("AtomicSimpleCPU doesn't expect recvRetry callback!");
-}
-
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
     : BaseSimpleCPU(p), tickEvent(this), width(p->width), locked(false),
       simulate_data_stalls(p->simulate_data_stalls),
@@ -156,10 +115,6 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       physmemPort(name() + "-iport", this), hasPhysMemPort(false)
 {
     _status = Idle;
-
-    icachePort.snoopRangeSent = false;
-    dcachePort.snoopRangeSent = false;
-
 }
 
 

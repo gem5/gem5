@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
@@ -77,6 +89,42 @@ void
 BaseO3CPU::regStats()
 {
     BaseCPU::regStats();
+}
+
+template<class Impl>
+bool
+FullO3CPU<Impl>::IcachePort::recvTiming(PacketPtr pkt)
+{
+    DPRINTF(O3CPU, "Fetch unit received timing\n");
+    if (pkt->isResponse()) {
+        // We shouldn't ever get a block in ownership state
+        assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
+
+        fetch->processCacheCompletion(pkt);
+    }
+    //else Snooped a coherence request, just return
+    return true;
+}
+
+template<class Impl>
+void
+FullO3CPU<Impl>::IcachePort::recvRetry()
+{
+    fetch->recvRetry();
+}
+
+template <class Impl>
+bool
+FullO3CPU<Impl>::DcachePort::recvTiming(PacketPtr pkt)
+{
+    return lsq->recvTiming(pkt);
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::DcachePort::recvRetry()
+{
+    lsq->recvRetry();
 }
 
 template <class Impl>
@@ -194,6 +242,9 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
                  TheISA::NumMiscRegs * numThreads,
                  TheISA::ZeroReg),
 
+      icachePort(&fetch, this),
+      dcachePort(&iew.ldstQueue, this),
+
       timeBuffer(params->backComSize, params->forwardComSize),
       fetchQueue(params->backComSize, params->forwardComSize),
       decodeQueue(params->backComSize, params->forwardComSize),
@@ -218,6 +269,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     if (params->checker) {
         BaseCPU *temp_checker = params->checker;
         checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
+        checker->setIcachePort(&icachePort);
 #if FULL_SYSTEM
         checker->setSystem(params->system);
 #endif
@@ -528,9 +580,9 @@ Port *
 FullO3CPU<Impl>::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "dcache_port")
-        return iew.getDcachePort();
+        return &dcachePort;
     else if (if_name == "icache_port")
-        return fetch.getIcachePort();
+        return &icachePort;
     else
         panic("No Such Port\n");
 }
@@ -605,6 +657,13 @@ FullO3CPU<Impl>::init()
     // setting up registers.
     for (ThreadID tid = 0; tid < numThreads; ++tid)
         thread[tid]->inSyscall = true;
+
+    // this CPU could still be unconnected if we are restoring from a
+    // checkpoint and this CPU is to be switched in, thus we can only
+    // do this here if the instruction port is actually connected, if
+    // not we have to do it as part of takeOverFrom
+    if (icachePort.isConnected())
+        fetch.setIcache();
 
 #if FULL_SYSTEM
     for (ThreadID tid = 0; tid < numThreads; tid++) {
@@ -1170,7 +1229,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     activityRec.reset();
 
-    BaseCPU::takeOverFrom(oldCPU, fetch.getIcachePort(), iew.getDcachePort());
+    BaseCPU::takeOverFrom(oldCPU, &icachePort, &dcachePort);
 
     fetch.takeOverFrom();
     decode.takeOverFrom();

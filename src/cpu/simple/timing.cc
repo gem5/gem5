@@ -87,50 +87,18 @@ TimingSimpleCPU::init()
 #endif
 }
 
-Tick
-TimingSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    panic("TimingSimpleCPU doesn't expect recvAtomic callback!");
-    return curTick();
-}
-
 void
-TimingSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
-{
-    //No internal storage to update, jusst return
-    return;
-}
-
-void
-TimingSimpleCPU::CpuPort::recvStatusChange(Status status)
-{
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("TimingSimpleCPU doesn't expect recvStatusChange callback!");
-}
-
-
-void
-TimingSimpleCPU::CpuPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
+TimingSimpleCPU::TimingCPUPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 {
     pkt = _pkt;
     cpu->schedule(this, t);
 }
 
 TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
-    : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this, p->clock),
-    dcachePort(this, p->clock), fetchEvent(this)
+    : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this),
+    dcachePort(this), fetchEvent(this)
 {
     _status = Idle;
-
-    icachePort.snoopRangeSent = false;
-    dcachePort.snoopRangeSent = false;
 
     ifetch_pkt = dcache_pkt = NULL;
     drainEvent = NULL;

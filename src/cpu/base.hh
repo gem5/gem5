@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
@@ -94,6 +106,57 @@ class BaseCPU : public MemObject
     // takeover (which should be done from within the BaseCPU anyway,
     // therefore no setCpuId() method is provided
     int _cpuId;
+
+    /**
+     * Define a base class for the CPU ports (instruction and data)
+     * that is refined in the subclasses. This class handles the
+     * common cases, i.e. the functional accesses and the status
+     * changes and address range queries. The default behaviour for
+     * both atomic and timing access is to panic and the corresponding
+     * subclasses have to override these methods.
+     */
+    class CpuPort : public Port
+    {
+      public:
+
+        /**
+         * Create a CPU port with a name and a structural owner.
+         *
+         * @param _name port name including the owner
+         * @param _name structural owner of this port
+         */
+        CpuPort(const std::string& _name, MemObject* _owner) :
+            Port(_name, _owner), snoopRangeSent(false)
+        { }
+
+      protected:
+
+        virtual bool recvTiming(PacketPtr pkt);
+
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+        virtual void recvRetry();
+
+        void recvFunctional(PacketPtr pkt);
+
+        void recvStatusChange(Status status);
+
+        /**
+         * Add CPU ports are master ports and do not respond to any
+         * address ranges. Note that the LSQ snoops for specific ISAs
+         * and thus has to override this method.
+         *
+         * @param resp list of ranges this port responds to
+         * @param snoop indicating if the port snoops or not
+         */
+        virtual void getDeviceAddressRanges(AddrRangeList& resp,
+                                            bool& snoop);
+
+      private:
+
+        bool snoopRangeSent;
+
+    };
 
   public:
     /** Reads this CPU's ID. */
