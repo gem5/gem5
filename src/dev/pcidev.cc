@@ -150,8 +150,8 @@ PciDev::PciDev(const Params *p)
 void
 PciDev::init()
 {
-    if (!configPort)
-        panic("pci config port not connected to anything!");
+    if (!configPort && !configPort->isConnected())
+        panic("PCI config port on %s not connected to anything!\n", name());
    configPort->sendRangeChange();
    PioDevice::init();
 }

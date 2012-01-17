@@ -199,9 +199,12 @@ class RealViewPBX(RealView):
        self.timer0.pio        = bus.port
        self.timer1.pio        = bus.port
        self.clcd.pio          = bus.port
+       self.clcd.dma          = bus.port
        self.kmi0.pio          = bus.port
        self.kmi1.pio          = bus.port
        self.cf_ctrl.pio       = bus.port
+       self.cf_ctrl.config    = bus.port
+       self.cf_ctrl.dma       = bus.port
        self.dmac_fake.pio     = bus.port
        self.uart1_fake.pio    = bus.port
        self.uart2_fake.pio    = bus.port
@@ -274,6 +277,7 @@ class RealViewEB(RealView):
        self.timer0.pio        = bus.port
        self.timer1.pio        = bus.port
        self.clcd.pio          = bus.port
+       self.clcd.dma          = bus.port
        self.kmi0.pio          = bus.port
        self.kmi1.pio          = bus.port
        self.dmac_fake.pio     = bus.port
@@ -364,13 +368,20 @@ class VExpress_ELT(RealView):
        self.elba_timer0.pio     = bus.port
        self.elba_timer1.pio     = bus.port
        self.clcd.pio            = bus.port
+       self.clcd.dma            = bus.port
        self.kmi0.pio            = bus.port
        self.kmi1.pio            = bus.port
        self.elba_kmi0.pio       = bus.port
        self.elba_kmi1.pio       = bus.port
        self.cf_ctrl.pio         = bus.port
+       self.cf_ctrl.config      = bus.port
+       self.cf_ctrl.dma         = bus.port
        self.ide.pio             = bus.port
+       self.ide.config          = bus.port
+       self.ide.dma             = bus.port
        self.ethernet.pio        = bus.port
+       self.ethernet.config     = bus.port
+       self.ethernet.dma        = bus.port
        self.pciconfig.pio       = bus.default
        bus.use_default_range    = True
 

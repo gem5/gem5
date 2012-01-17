@@ -105,6 +105,8 @@ class SouthBridge(SimObject):
         self.cmos.pio = bus.port
         self.dma1.pio = bus.port
         self.ide.pio = bus.port
+        self.ide.config = bus.port
+        self.ide.dma = bus.port
         self.keyboard.pio = bus.port
         self.pic1.pio = bus.port
         self.pic2.pio = bus.port

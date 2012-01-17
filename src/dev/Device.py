@@ -46,7 +46,7 @@ class BasicPioDevice(PioDevice):
 class DmaDevice(PioDevice):
     type = 'DmaDevice'
     abstract = True
-    dma = Port(Self.pio.peerObj.port, "DMA port")
+    dma = Port("DMA port")
     min_backoff_delay = Param.Latency('4ns',
       "min time between a nack packet being received and the next request made by the device")
     max_backoff_delay = Param.Latency('10us',
