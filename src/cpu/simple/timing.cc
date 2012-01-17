@@ -862,7 +862,7 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
                 // faster than a CPU we could get two responses before
                 // next_tick expires
                 if (!retryEvent.scheduled())
-                    schedule(retryEvent, next_tick);
+                    cpu->schedule(retryEvent, next_tick);
                 return false;
             }
         }

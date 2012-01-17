@@ -47,7 +47,6 @@
 #include "base/types.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
-#include "sim/eventq.hh"
 
 /** This typedef is used to clean up the parameter list of
  * getDeviceAddressRanges() and getPeerAddressRanges().  It's declared
@@ -59,7 +58,6 @@
 typedef std::list<Range<Addr> > AddrRangeList;
 typedef std::list<Range<Addr> >::iterator AddrRangeIter;
 
-class EventQueue;
 class MemObject;
 
 /**
@@ -73,7 +71,7 @@ class MemObject;
  * Send accessor functions are being called from the device the port is
  * associated with, and it will call the peer recv. accessor function.
  */
-class Port : public EventManager
+class Port
 {
   protected:
     /** Descriptive name (for DPRINTF output) */

@@ -93,8 +93,7 @@ class DefaultPeerPort : public Port
 DefaultPeerPort defaultPeerPort;
 
 Port::Port(const std::string &_name, MemObject *_owner)
-    : EventManager(_owner), portName(_name), peer(&defaultPeerPort),
-      owner(_owner)
+    : portName(_name), peer(&defaultPeerPort), owner(_owner)
 {
 }
 
@@ -113,7 +112,6 @@ Port::setPeer(Port *port)
 void
 Port::setOwner(MemObject *_owner)
 {
-    eventq = _owner->queue();
     owner = _owner;
 }
 

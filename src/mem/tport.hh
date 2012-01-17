@@ -106,21 +106,14 @@ class SimpleTimingPort : public Port
     Tick deferredPacketReadyTime()
     { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
 
-    void
-    schedSendEvent(Tick when)
-    {
-        if (waitingOnRetry) {
-            assert(!sendEvent->scheduled());
-            return;
-        }
-
-        if (!sendEvent->scheduled()) {
-            schedule(sendEvent, when);
-        } else if (sendEvent->when() > when) {
-            reschedule(sendEvent, when);
-        }
-    }
-
+    /**
+     * Schedule a send even if not already waiting for a retry. If the
+     * requested time is before an already scheduled send event it
+     * will be rescheduled.
+     *
+     * @param when
+     */
+    void schedSendEvent(Tick when);
 
     /** Schedule a sendTiming() event to be called in the future.
      * @param pkt packet to send

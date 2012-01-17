@@ -165,7 +165,7 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
     // nothing on the list, add it and we're done
     if (sendQueue.empty()) {
         assert(!sendEvent.scheduled());
-        schedule(sendEvent, readyTime);
+        bridge->schedule(sendEvent, readyTime);
         sendQueue.push_back(buf);
         return;
     }
@@ -187,7 +187,7 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
     while (i != end && !done) {
         if (readyTime < (*i)->ready) {
             if (i == begin)
-                reschedule(sendEvent, readyTime);
+                bridge->reschedule(sendEvent, readyTime);
             sendQueue.insert(i,buf);
             done = true;
         }
@@ -230,7 +230,7 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
     // should already be an event scheduled for sending the head
     // packet.
     if (sendQueue.empty()) {
-        schedule(sendEvent, readyTime);
+        bridge->schedule(sendEvent, readyTime);
     }
     sendQueue.push_back(buf);
 }
@@ -284,7 +284,7 @@ Bridge::BridgePort::trySend()
         if (!sendQueue.empty()) {
             buf = sendQueue.front();
             DPRINTF(BusBridge, "Scheduling next send\n");
-            schedule(sendEvent, std::max(buf->ready, curTick() + 1));
+            bridge->schedule(sendEvent, std::max(buf->ready, curTick() + 1));
         }
     } else {
         DPRINTF(BusBridge, "  unsuccessful\n");
@@ -305,7 +305,7 @@ Bridge::BridgePort::recvRetry()
     if (nextReady <= curTick())
         trySend();
     else
-        schedule(sendEvent, nextReady);
+        bridge->schedule(sendEvent, nextReady);
 }
 
 /** Function called by the port when the bus is receiving a Atomic

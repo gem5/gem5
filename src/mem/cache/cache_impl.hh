@@ -1729,7 +1729,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
         // @TODO: need to facotr in prefetch requests here somehow
         if (nextReady != MaxTick) {
             DPRINTF(CachePort, "more packets to send @ %d\n", nextReady);
-            schedule(sendEvent, std::max(nextReady, curTick() + 1));
+            cache->schedule(sendEvent, std::max(nextReady, curTick() + 1));
         } else {
             // no more to send right now: if we're draining, we may be done
             if (drainEvent && !sendEvent->scheduled()) {
