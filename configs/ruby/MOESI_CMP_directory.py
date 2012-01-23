@@ -89,6 +89,8 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
                                       L1IcacheMemory = l1i_cache,
                                       L1DcacheMemory = l1d_cache,
                                       l2_select_num_bits = l2_bits,
+                                      send_evictions = (
+                                          options.cpu_type == "detailed"),
                                       ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,

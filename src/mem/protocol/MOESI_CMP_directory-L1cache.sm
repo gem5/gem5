@@ -37,7 +37,8 @@ machine(L1Cache, "Directory protocol")
    CacheMemory * L1IcacheMemory,
    CacheMemory * L1DcacheMemory,
    int l2_select_num_bits,
-   int request_latency = 2
+   int request_latency = 2,
+   bool send_evictions
 {
 
   // NODE L1 CACHE
@@ -530,7 +531,6 @@ machine(L1Cache, "Directory protocol")
     }
   }
 
-
   action(ee_sendDataExclusive, "\e", desc="Send data from cache to requestor, don't keep a shared copy") {
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
@@ -689,7 +689,6 @@ machine(L1Cache, "Directory protocol")
     useTimerTable.set(address, 50);
   }
 
-
   action(ub_dmaUnblockL2Cache, "ub", desc="Send dma ack to l2 cache") {
     peek(requestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
@@ -775,7 +774,6 @@ machine(L1Cache, "Directory protocol")
     }
   }
 
-
   // L2 will usually request data for a writeback
   action(qq_sendWBDataFromTBEToL2, "\q", desc="Send data from TBE to L2") {
     enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
@@ -811,7 +809,6 @@ machine(L1Cache, "Directory protocol")
         //assert(in_msg.Dirty == false);
       }
     }
-
   }
 
   action(v_writeDataToCacheVerify, "v", desc="Write data to cache, assert it was same as before") {
@@ -844,7 +841,12 @@ machine(L1Cache, "Directory protocol")
     }
   }
 
-
+  action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      sequencer.evictionCallback(address);
+    }
+  }
 
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(mandatoryQueue_in, RubyRequest) {
@@ -931,11 +933,13 @@ machine(L1Cache, "Directory protocol")
   transition(S, L1_Replacement, SI) {
     i_allocateTBE;
     dd_issuePUTS;
+    forward_eviction_to_cpu;
     kk_deallocateL1CacheBlock;
   }
 
   transition(S, Inv, I) {
     f_sendAck;
+    forward_eviction_to_cpu;
     l_popForwardQueue;
   }
 
@@ -966,11 +970,13 @@ machine(L1Cache, "Directory protocol")
   transition(O, L1_Replacement, OI) {
     i_allocateTBE;
     dd_issuePUTO;
+    forward_eviction_to_cpu;
     kk_deallocateL1CacheBlock;
   }
 
   transition(O, Fwd_GETX, I) {
     ee_sendDataExclusive;
+    forward_eviction_to_cpu;
     l_popForwardQueue;
   }
 
@@ -999,16 +1005,19 @@ machine(L1Cache, "Directory protocol")
   transition(MM, L1_Replacement, MI) {
     i_allocateTBE;
     d_issuePUTX;
+    forward_eviction_to_cpu;
     kk_deallocateL1CacheBlock;
   }
 
   transition(MM, Fwd_GETX, I) {
     ee_sendDataExclusive;
+    forward_eviction_to_cpu;
     l_popForwardQueue;
   }
 
   transition(MM, Fwd_GETS, I) {
     ee_sendDataExclusive;
+    forward_eviction_to_cpu;
     l_popForwardQueue;
   }
 
@@ -1037,12 +1046,14 @@ machine(L1Cache, "Directory protocol")
   transition(M, L1_Replacement, MI) {
     i_allocateTBE;
     d_issuePUTX;
+    forward_eviction_to_cpu;
     kk_deallocateL1CacheBlock;
   }
 
   transition(M, Fwd_GETX, I) {
     // e_sendData;
     ee_sendDataExclusive;
+    forward_eviction_to_cpu;
     l_popForwardQueue;
   }
 
@@ -1080,6 +1091,7 @@ machine(L1Cache, "Directory protocol")
   // Transitions from SM
   transition(SM, Inv, IM) {
     f_sendAck;
+    forward_eviction_to_cpu;
     l_popForwardQueue;
   }
 

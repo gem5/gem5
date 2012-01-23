@@ -3,7 +3,8 @@ machine(L1Cache, "MI Example L1 Cache")
 : Sequencer * sequencer,
   CacheMemory * cacheMemory,
   int cache_response_latency = 12,
-  int issue_latency = 2
+  int issue_latency = 2,
+  bool send_evictions
 {
 
   // NETWORK BUFFERS
@@ -54,7 +55,6 @@ machine(L1Cache, "MI Example L1 Cache")
     DataBlock DataBlk,       desc="Data in the block";
   }
 
-
   // TBE fields
   structure(TBE, desc="...") {
     State TBEState,          desc="Transient state";
@@ -70,7 +70,6 @@ machine(L1Cache, "MI Example L1 Cache")
 
 
   // STRUCTURES
-
   TBETable TBEs, template_hack="<L1Cache_TBE>";
 
   // PROTOTYPES
@@ -249,7 +248,6 @@ machine(L1Cache, "MI Example L1 Cache")
     }
   }
 
-
   action(e_sendData, "e", desc="Send data from cache to requestor") {
     peek(forwardRequestNetwork_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, latency=cache_response_latency) {
@@ -353,12 +351,17 @@ machine(L1Cache, "MI Example L1 Cache")
     }
   }
 
+  action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      sequencer.evictionCallback(address);
+    }
+  }
 
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     TBEs.allocate(address);
     set_tbe(TBEs[address]);
   }
-
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {
     TBEs.deallocate(address);
@@ -435,6 +438,7 @@ machine(L1Cache, "MI Example L1 Cache")
 
   transition(M, Fwd_GETX, I) {
     e_sendData;
+    forward_eviction_to_cpu;
     o_popForwardedRequestQueue;
   }
 
@@ -446,6 +450,7 @@ machine(L1Cache, "MI Example L1 Cache")
      v_allocateTBE;
      b_issuePUT;
      x_copyDataFromCacheToTBE;
+     forward_eviction_to_cpu;
      h_deallocateL1CacheBlock;
   }
 
@@ -474,4 +479,3 @@ machine(L1Cache, "MI Example L1 Cache")
     o_popForwardedRequestQueue;
   }
 }
-

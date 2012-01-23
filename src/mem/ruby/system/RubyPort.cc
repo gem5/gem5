@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2011 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -681,4 +682,15 @@ unsigned
 RubyPort::M5Port::deviceBlockSize() const
 {
     return (unsigned) RubySystem::getBlockSizeBytes();
+}
+
+void
+RubyPort::ruby_eviction_callback(const Address& address)
+{
+    DPRINTF(RubyPort, "Sending invalidations.\n");
+    Request req(address.getAddress(), 0, 0);
+    for (CpuPortIter it = cpu_ports.begin(); it != cpu_ports.end(); it++) {
+        Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1);
+        (*it)->sendTiming(pkt);
+    }
 }

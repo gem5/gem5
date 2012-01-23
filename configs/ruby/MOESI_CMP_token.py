@@ -111,6 +111,8 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
                                         not options.disable_dyn_timeouts,
                                       no_mig_atomic = not \
                                         options.allow_atomic_migration,
+                                      send_evictions = (
+                                          options.cpu_type == "detailed"),
                                       ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,
