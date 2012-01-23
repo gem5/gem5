@@ -43,7 +43,7 @@ def setCPUClass(options):
     if options.cpu_type == "timing":
         class TmpClass(TimingSimpleCPU): pass
     elif options.cpu_type == "detailed":
-        if not options.caches:
+        if not options.caches and not options.ruby:
             print "O3 CPU must be used with caches"
             sys.exit(1)
         class TmpClass(DerivO3CPU): pass

@@ -164,20 +164,13 @@ if options.cpu_type == "detailed" or options.cpu_type == "inorder":
             process += [smt_process, ]
             smt_idx += 1
     numThreads = len(workloads)
-    
+
 if options.ruby:
-    if options.cpu_type == "detailed":
-        print >> sys.stderr, "Ruby only works with TimingSimpleCPU!!"
+    if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
+        print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
         sys.exit(1)
-    elif not options.cpu_type == "timing":
-        print >> sys.stderr, "****WARN:  using Timing CPU since it's needed by Ruby"
 
-    class CPUClass(TimingSimpleCPU): pass
-    test_mem_mode = 'timing'
-    FutureClass = None
-else:
-    (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
-
+(CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 CPUClass.clock = '2GHz'
 CPUClass.numThreads = numThreads;
 
