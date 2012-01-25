@@ -38,11 +38,13 @@
 #include <string>
 
 #include "base/range.hh"
+#include "base/statistics.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/tport.hh"
 #include "params/PhysicalMemory.hh"
 #include "sim/eventq.hh"
+#include "sim/stats.hh"
 
 //
 // Functional model for a contiguous block of physical memory. (i.e. RAM)
@@ -154,6 +156,28 @@ class PhysicalMemory : public MemObject
 
     uint64_t _size;
     uint64_t _start;
+
+    /** Number of total bytes read from this memory */
+    Stats::Scalar bytesRead;
+    /** Number of instruction bytes read from this memory */
+    Stats::Scalar bytesInstRead;
+    /** Number of bytes written to this memory */
+    Stats::Scalar bytesWritten;
+    /** Number of read requests */
+    Stats::Scalar numReads;
+    /** Number of write requests */
+    Stats::Scalar numWrites;
+    /** Number of other requests */
+    Stats::Scalar numOther;
+    /** Read bandwidth from this memory */
+    Stats::Formula bwRead;
+    /** Read bandwidth from this memory */
+    Stats::Formula bwInstRead;
+    /** Write bandwidth from this memory */
+    Stats::Formula bwWrite;
+    /** Total bandwidth from this memory */
+    Stats::Formula bwTotal;
+
   public:
     uint64_t size() { return _size; }
     uint64_t start() { return _start; }
@@ -182,6 +206,11 @@ class PhysicalMemory : public MemObject
     virtual Tick calculateLatency(PacketPtr pkt);
 
   public:
+     /**
+     * Register Statistics
+     */
+    void regStats();
+
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
