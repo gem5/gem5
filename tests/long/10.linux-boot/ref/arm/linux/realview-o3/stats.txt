@@ -2,12 +2,32 @@
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  2.503566                       # Number of seconds simulated
 sim_ticks                                2503566110500                       # Number of ticks simulated
+final_tick                               2503566110500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  72389                       # Simulator instruction rate (inst/s)
-host_tick_rate                             2360079964                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 384076                       # Number of bytes of host memory used
-host_seconds                                  1060.80                       # Real time elapsed on the host
+host_inst_rate                                  76624                       # Simulator instruction rate (inst/s)
+host_tick_rate                             2498140220                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 386188                       # Number of bytes of host memory used
+host_seconds                                  1002.17                       # Real time elapsed on the host
 sim_insts                                    76790007                       # Number of instructions simulated
+system.nvmem.bytes_read                            64                       # Number of bytes read from this memory
+system.nvmem.bytes_inst_read                       64                       # Number of instructions bytes read from this memory
+system.nvmem.bytes_written                          0                       # Number of bytes written to this memory
+system.nvmem.num_reads                              1                       # Number of read requests responded to by this memory
+system.nvmem.num_writes                             0                       # Number of write requests responded to by this memory
+system.nvmem.num_other                              0                       # Number of other requests responded to by this memory
+system.nvmem.bw_read                               26                       # Total read bandwidth from this memory (bytes/s)
+system.nvmem.bw_inst_read                          26                       # Instruction read bandwidth from this memory (bytes/s)
+system.nvmem.bw_total                              26                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem.bytes_read                   130731152                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read                1101568                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written                  9585992                       # Number of bytes written to this memory
+system.physmem.num_reads                     15117140                       # Number of read requests responded to by this memory
+system.physmem.num_writes                      856673                       # Number of write requests responded to by this memory
+system.physmem.num_other                            0                       # Number of other requests responded to by this memory
+system.physmem.bw_read                       52217975                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read                    440000                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write                       3828935                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total                      56046910                       # Total bandwidth to/from this memory (bytes/s)
 system.l2c.replacements                        119509                       # number of replacements
 system.l2c.tagsinuse                     25929.897253                       # Cycle average of tags in use
 system.l2c.total_refs                         1795434                       # Total number of references to valid blocks.

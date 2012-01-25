@@ -34,7 +34,7 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/28/2011 14:27:56
+Real time: Jan/23/2012 04:58:59
 
 Profiler Stats
 --------------
@@ -43,18 +43,18 @@ Elapsed_time_in_minutes: 0
 Elapsed_time_in_hours: 0
 Elapsed_time_in_days: 0
 
-Virtual_time_in_seconds: 0.44
-Virtual_time_in_minutes: 0.00733333
-Virtual_time_in_hours:   0.000122222
-Virtual_time_in_days:    5.09259e-06
+Virtual_time_in_seconds: 0.3
+Virtual_time_in_minutes: 0.005
+Virtual_time_in_hours:   8.33333e-05
+Virtual_time_in_days:    3.47222e-06
 
 Ruby_current_time: 342698
 Ruby_start_time: 0
 Ruby_cycles: 342698
 
-mbytes_resident: 38.9805
-mbytes_total: 221.645
-resident_ratio: 0.175922
+mbytes_resident: 44.5703
+mbytes_total: 213.352
+resident_ratio: 0.208905
 
 ruby_cycles_executed: [ 342699 ]
 
@@ -122,11 +122,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 11208
-page_faults: 3
+page_reclaims: 11770
+page_faults: 1
 swaps: 0
-block_inputs: 1184
-block_outputs: 0
+block_inputs: 8
+block_outputs: 88
 
 Network Stats
 -------------
@@ -170,18 +170,18 @@ links_utilized_percent_switch_2: 2.52117
   outgoing_messages_switch_2_link_1_Control: 1730 13840 [ 0 0 1730 0 0 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_2_link_1_Data: 1726 124272 [ 0 0 1726 0 0 0 0 0 0 0 ] base_latency: 1
 
-Cache Stats: system.ruby.cpu_ruby_ports.dcache
-  system.ruby.cpu_ruby_ports.dcache_total_misses: 1730
-  system.ruby.cpu_ruby_ports.dcache_total_demand_misses: 1730
-  system.ruby.cpu_ruby_ports.dcache_total_prefetches: 0
-  system.ruby.cpu_ruby_ports.dcache_total_sw_prefetches: 0
-  system.ruby.cpu_ruby_ports.dcache_total_hw_prefetches: 0
+Cache Stats: system.l1_cntrl0.cacheMemory
+  system.l1_cntrl0.cacheMemory_total_misses: 1730
+  system.l1_cntrl0.cacheMemory_total_demand_misses: 1730
+  system.l1_cntrl0.cacheMemory_total_prefetches: 0
+  system.l1_cntrl0.cacheMemory_total_sw_prefetches: 0
+  system.l1_cntrl0.cacheMemory_total_hw_prefetches: 0
 
-  system.ruby.cpu_ruby_ports.dcache_request_type_LD:   42.0231%
-  system.ruby.cpu_ruby_ports.dcache_request_type_ST:   15.7803%
-  system.ruby.cpu_ruby_ports.dcache_request_type_IFETCH:   42.1965%
+  system.l1_cntrl0.cacheMemory_request_type_LD:   42.0231%
+  system.l1_cntrl0.cacheMemory_request_type_ST:   15.7803%
+  system.l1_cntrl0.cacheMemory_request_type_IFETCH:   42.1965%
 
-  system.ruby.cpu_ruby_ports.dcache_access_mode_type_Supervisor:   1730    100%
+  system.l1_cntrl0.cacheMemory_access_mode_type_Supervisor:   1730    100%
 
  --- L1Cache ---
  - Event Counts -
@@ -307,4 +307,5 @@ ID_W  PUTX [0 ] 0
 ID_W  PUTX_NotOwner [0 ] 0
 ID_W  DMA_READ [0 ] 0
 ID_W  DMA_WRITE [0 ] 0
-ID_W  Memory_Ack
+ID_W  Memory_Ack [0 ] 0
+

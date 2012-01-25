@@ -2,10 +2,23 @@
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.019401                       # Number of seconds simulated
 sim_ticks                                    19400856                       # Number of ticks simulated
+final_tick                                   19400856                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   1000000000                       # Frequency of simulated ticks
-host_tick_rate                                  55434                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 359424                       # Number of bytes of host memory used
-host_seconds                                   349.98                       # Real time elapsed on the host
+host_tick_rate                                  83409                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 348008                       # Number of bytes of host memory used
+host_seconds                                   232.60                       # Real time elapsed on the host
+system.physmem.bytes_read                           0                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read                      0                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written                        0                       # Number of bytes written to this memory
+system.physmem.num_reads                            0                       # Number of read requests responded to by this memory
+system.physmem.num_writes                           0                       # Number of write requests responded to by this memory
+system.physmem.num_other                            0                       # Number of other requests responded to by this memory
+system.funcmem.bytes_read                           0                       # Number of bytes read from this memory
+system.funcmem.bytes_inst_read                      0                       # Number of instructions bytes read from this memory
+system.funcmem.bytes_written                        0                       # Number of bytes written to this memory
+system.funcmem.num_reads                            0                       # Number of read requests responded to by this memory
+system.funcmem.num_writes                           0                       # Number of write requests responded to by this memory
+system.funcmem.num_other                            0                       # Number of other requests responded to by this memory
 system.cpu0.num_reads                           98844                       # number of read accesses completed
 system.cpu0.num_writes                          53478                       # number of write accesses completed
 system.cpu0.num_copies                              0                       # number of copy accesses completed

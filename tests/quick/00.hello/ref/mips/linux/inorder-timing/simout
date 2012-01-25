@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Sep 17 2011 12:31:33
-gem5 started Sep 17 2011 12:31:39
+gem5 compiled Jan 23 2012 03:56:13
+gem5 started Jan 23 2012 04:23:29
 gem5 executing on zizzer
 command line: build/MIPS_SE/gem5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second

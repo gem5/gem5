@@ -1,10 +1,8 @@
-Redirecting stdout to build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3/simout
-Redirecting stderr to build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan  8 2012 22:12:58
-gem5 started Jan  9 2012 03:32:35
+gem5 compiled Jan 23 2012 04:21:22
+gem5 started Jan 23 2012 09:54:06
 gem5 executing on zizzer
 command line: build/ARM_FS/gem5.opt -d build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM_FS/tests/opt/long/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second

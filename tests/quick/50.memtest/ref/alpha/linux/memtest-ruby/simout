@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jun 30 2011 15:04:55
-gem5 started Jun 30 2011 15:05:23
-gem5 executing on SC2B0622
+gem5 compiled Jan 23 2012 04:48:33
+gem5 started Jan 23 2012 04:59:28
+gem5 executing on zizzer
 command line: build/ALPHA_SE/gem5.opt -d build/ALPHA_SE/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby -re tests/run.py build/ALPHA_SE/tests/opt/quick/50.memtest/alpha/linux/memtest-ruby
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

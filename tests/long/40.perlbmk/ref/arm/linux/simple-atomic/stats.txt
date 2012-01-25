@@ -1,76 +1,87 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1799997                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 258316                       # Number of bytes of host memory used
-host_seconds                                  1047.41                       # Real time elapsed on the host
-host_tick_rate                              902810159                       # Simulator tick rate (ticks/s)
-sim_freq                                 1000000000000                       # Frequency of simulated ticks
-sim_insts                                  1885336367                       # Number of instructions simulated
 sim_seconds                                  0.945613                       # Number of seconds simulated
 sim_ticks                                945613131000                       # Number of ticks simulated
-system.cpu.dtb.accesses                             0                       # DTB accesses
-system.cpu.dtb.align_faults                         0                       # Number of TLB faults due to alignment restrictions
-system.cpu.dtb.domain_faults                        0                       # Number of TLB faults due to domain restrictions
-system.cpu.dtb.flush_entries                        0                       # Number of entries that have been flushed from TLB
-system.cpu.dtb.flush_tlb                            0                       # Number of times complete TLB was flushed
-system.cpu.dtb.flush_tlb_asid                       0                       # Number of times TLB was flushed by ASID
-system.cpu.dtb.flush_tlb_mva                        0                       # Number of times TLB was flushed by MVA
-system.cpu.dtb.flush_tlb_mva_asid                   0                       # Number of times TLB was flushed by MVA & ASID
-system.cpu.dtb.hits                                 0                       # DTB hits
-system.cpu.dtb.inst_accesses                        0                       # ITB inst accesses
+final_tick                               945613131000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
+sim_freq                                 1000000000000                       # Frequency of simulated ticks
+host_inst_rate                                2997522                       # Simulator instruction rate (inst/s)
+host_tick_rate                             1503443037                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 215364                       # Number of bytes of host memory used
+host_seconds                                   628.97                       # Real time elapsed on the host
+sim_insts                                  1885336367                       # Number of instructions simulated
+system.physmem.bytes_read                  8025491315                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read             5561086040                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written               1123958396                       # Number of bytes written to this memory
+system.physmem.num_reads                   2010616909                       # Number of read requests responded to by this memory
+system.physmem.num_writes                   276945663                       # Number of write requests responded to by this memory
+system.physmem.num_other                            0                       # Number of other requests responded to by this memory
+system.physmem.bw_read                     8487076852                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read                5880931491                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_write                    1188602780                       # Write bandwidth from this memory (bytes/s)
+system.physmem.bw_total                    9675679632                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu.dtb.inst_hits                            0                       # ITB inst hits
 system.cpu.dtb.inst_misses                          0                       # ITB inst misses
-system.cpu.dtb.misses                               0                       # DTB misses
-system.cpu.dtb.perms_faults                         0                       # Number of TLB faults due to permissions restrictions
-system.cpu.dtb.prefetch_faults                      0                       # Number of TLB faults due to prefetch
-system.cpu.dtb.read_accesses                        0                       # DTB read accesses
 system.cpu.dtb.read_hits                            0                       # DTB read hits
 system.cpu.dtb.read_misses                          0                       # DTB read misses
-system.cpu.dtb.write_accesses                       0                       # DTB write accesses
 system.cpu.dtb.write_hits                           0                       # DTB write hits
 system.cpu.dtb.write_misses                         0                       # DTB write misses
-system.cpu.idle_fraction                            0                       # Percentage of idle cycles
-system.cpu.itb.accesses                             0                       # DTB accesses
-system.cpu.itb.align_faults                         0                       # Number of TLB faults due to alignment restrictions
-system.cpu.itb.domain_faults                        0                       # Number of TLB faults due to domain restrictions
-system.cpu.itb.flush_entries                        0                       # Number of entries that have been flushed from TLB
-system.cpu.itb.flush_tlb                            0                       # Number of times complete TLB was flushed
-system.cpu.itb.flush_tlb_asid                       0                       # Number of times TLB was flushed by ASID
-system.cpu.itb.flush_tlb_mva                        0                       # Number of times TLB was flushed by MVA
-system.cpu.itb.flush_tlb_mva_asid                   0                       # Number of times TLB was flushed by MVA & ASID
-system.cpu.itb.hits                                 0                       # DTB hits
-system.cpu.itb.inst_accesses                        0                       # ITB inst accesses
+system.cpu.dtb.flush_tlb                            0                       # Number of times complete TLB was flushed
+system.cpu.dtb.flush_tlb_mva                        0                       # Number of times TLB was flushed by MVA
+system.cpu.dtb.flush_tlb_mva_asid                   0                       # Number of times TLB was flushed by MVA & ASID
+system.cpu.dtb.flush_tlb_asid                       0                       # Number of times TLB was flushed by ASID
+system.cpu.dtb.flush_entries                        0                       # Number of entries that have been flushed from TLB
+system.cpu.dtb.align_faults                         0                       # Number of TLB faults due to alignment restrictions
+system.cpu.dtb.prefetch_faults                      0                       # Number of TLB faults due to prefetch
+system.cpu.dtb.domain_faults                        0                       # Number of TLB faults due to domain restrictions
+system.cpu.dtb.perms_faults                         0                       # Number of TLB faults due to permissions restrictions
+system.cpu.dtb.read_accesses                        0                       # DTB read accesses
+system.cpu.dtb.write_accesses                       0                       # DTB write accesses
+system.cpu.dtb.inst_accesses                        0                       # ITB inst accesses
+system.cpu.dtb.hits                                 0                       # DTB hits
+system.cpu.dtb.misses                               0                       # DTB misses
+system.cpu.dtb.accesses                             0                       # DTB accesses
 system.cpu.itb.inst_hits                            0                       # ITB inst hits
 system.cpu.itb.inst_misses                          0                       # ITB inst misses
-system.cpu.itb.misses                               0                       # DTB misses
-system.cpu.itb.perms_faults                         0                       # Number of TLB faults due to permissions restrictions
-system.cpu.itb.prefetch_faults                      0                       # Number of TLB faults due to prefetch
-system.cpu.itb.read_accesses                        0                       # DTB read accesses
 system.cpu.itb.read_hits                            0                       # DTB read hits
 system.cpu.itb.read_misses                          0                       # DTB read misses
-system.cpu.itb.write_accesses                       0                       # DTB write accesses
 system.cpu.itb.write_hits                           0                       # DTB write hits
 system.cpu.itb.write_misses                         0                       # DTB write misses
-system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
+system.cpu.itb.flush_tlb                            0                       # Number of times complete TLB was flushed
+system.cpu.itb.flush_tlb_mva                        0                       # Number of times TLB was flushed by MVA
+system.cpu.itb.flush_tlb_mva_asid                   0                       # Number of times TLB was flushed by MVA & ASID
+system.cpu.itb.flush_tlb_asid                       0                       # Number of times TLB was flushed by ASID
+system.cpu.itb.flush_entries                        0                       # Number of entries that have been flushed from TLB
+system.cpu.itb.align_faults                         0                       # Number of TLB faults due to alignment restrictions
+system.cpu.itb.prefetch_faults                      0                       # Number of TLB faults due to prefetch
+system.cpu.itb.domain_faults                        0                       # Number of TLB faults due to domain restrictions
+system.cpu.itb.perms_faults                         0                       # Number of TLB faults due to permissions restrictions
+system.cpu.itb.read_accesses                        0                       # DTB read accesses
+system.cpu.itb.write_accesses                       0                       # DTB write accesses
+system.cpu.itb.inst_accesses                        0                       # ITB inst accesses
+system.cpu.itb.hits                                 0                       # DTB hits
+system.cpu.itb.misses                               0                       # DTB misses
+system.cpu.itb.accesses                             0                       # DTB accesses
+system.cpu.workload.num_syscalls                 1411                       # Number of system calls
 system.cpu.numCycles                       1891226263                       # number of cpu cycles simulated
-system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
-system.cpu.num_busy_cycles                 1891226263                       # Number of busy cycles
-system.cpu.num_conditional_control_insts    223625914                       # number of instructions that are conditional controls
-system.cpu.num_fp_alu_accesses               52289415                       # Number of float alu accesses
-system.cpu.num_fp_insts                      52289415                       # number of float instructions
-system.cpu.num_fp_register_reads             60540850                       # number of times the floating registers were read
-system.cpu.num_fp_register_writes            46777010                       # number of times the floating registers were written
-system.cpu.num_func_calls                    80344203                       # number of times a function call or return occured
-system.cpu.num_idle_cycles                          0                       # Number of idle cycles
+system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
 system.cpu.num_insts                       1885336367                       # Number of instructions executed
 system.cpu.num_int_alu_accesses            1653698876                       # Number of integer alu accesses
+system.cpu.num_fp_alu_accesses               52289415                       # Number of float alu accesses
+system.cpu.num_func_calls                    80344203                       # number of times a function call or return occured
+system.cpu.num_conditional_control_insts    223625914                       # number of instructions that are conditional controls
 system.cpu.num_int_insts                   1653698876                       # number of integer instructions
+system.cpu.num_fp_insts                      52289415                       # number of float instructions
 system.cpu.num_int_register_reads          8601515950                       # number of times the integer registers were read
 system.cpu.num_int_register_writes         1874331406                       # number of times the integer registers were written
-system.cpu.num_load_insts                   631387182                       # Number of load instructions
+system.cpu.num_fp_register_reads             60540850                       # number of times the floating registers were read
+system.cpu.num_fp_register_writes            46777010                       # number of times the floating registers were written
 system.cpu.num_mem_refs                     908382480                       # number of memory refs
+system.cpu.num_load_insts                   631387182                       # Number of load instructions
 system.cpu.num_store_insts                  276995298                       # Number of store instructions
-system.cpu.workload.num_syscalls                 1411                       # Number of system calls
+system.cpu.num_idle_cycles                          0                       # Number of idle cycles
+system.cpu.num_busy_cycles                 1891226263                       # Number of busy cycles
+system.cpu.not_idle_fraction                        1                       # Percentage of non-idle cycles
+system.cpu.idle_fraction                            0                       # Percentage of idle cycles
 
 ---------- End Simulation Statistics   ----------

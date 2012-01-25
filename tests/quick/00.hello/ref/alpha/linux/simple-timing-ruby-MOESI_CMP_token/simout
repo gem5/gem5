@@ -1,14 +1,10 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Apr 28 2011 15:03:17
-M5 started Apr 28 2011 15:03:52
-M5 executing on SC2B0617
-command line: build/ALPHA_SE_MOESI_CMP_token/m5.opt -d build/ALPHA_SE_MOESI_CMP_token/tests/opt/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_SE_MOESI_CMP_token/tests/opt/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token
+gem5 compiled Jan 23 2012 03:50:16
+gem5 started Jan 23 2012 04:22:25
+gem5 executing on zizzer
+command line: build/ALPHA_SE_MOESI_CMP_token/gem5.opt -d build/ALPHA_SE_MOESI_CMP_token/tests/opt/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token -re tests/run.py build/ALPHA_SE_MOESI_CMP_token/tests/opt/quick/00.hello/alpha/linux/simple-timing-ruby-MOESI_CMP_token
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.

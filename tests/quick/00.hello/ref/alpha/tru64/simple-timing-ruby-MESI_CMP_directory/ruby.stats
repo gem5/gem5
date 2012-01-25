@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/28/2011 14:32:56
+Real time: Jan/23/2012 04:21:58
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 0
-Elapsed_time_in_minutes: 0
-Elapsed_time_in_hours: 0
-Elapsed_time_in_days: 0
+Elapsed_time_in_seconds: 2
+Elapsed_time_in_minutes: 0.0333333
+Elapsed_time_in_hours: 0.000555556
+Elapsed_time_in_days: 2.31481e-05
 
-Virtual_time_in_seconds: 0.44
-Virtual_time_in_minutes: 0.00733333
-Virtual_time_in_hours:   0.000122222
-Virtual_time_in_days:    5.09259e-06
+Virtual_time_in_seconds: 0.26
+Virtual_time_in_minutes: 0.00433333
+Virtual_time_in_hours:   7.22222e-05
+Virtual_time_in_days:    3.00926e-06
 
 Ruby_current_time: 104867
 Ruby_start_time: 0
 Ruby_cycles: 104867
 
-mbytes_resident: 38.1289
-mbytes_total: 221.148
-resident_ratio: 0.172449
+mbytes_resident: 43.0078
+mbytes_total: 212.113
+resident_ratio: 0.202759
 
 ruby_cycles_executed: [ 104868 ]
 
@@ -119,11 +119,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 10981
+page_reclaims: 11317
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 0
+block_outputs: 88
 
 Network Stats
 -------------
@@ -198,20 +198,27 @@ links_utilized_percent_switch_3: 2.43896
   outgoing_messages_switch_3_link_2_Response_Control: 436 3488 [ 0 436 0 0 0 0 0 0 0 0 ] base_latency: 1
 
 Cache Stats: system.l1_cntrl0.L1IcacheMemory
-  system.l1_cntrl0.L1IcacheMemory_total_misses: 0
-  system.l1_cntrl0.L1IcacheMemory_total_demand_misses: 0
+  system.l1_cntrl0.L1IcacheMemory_total_misses: 300
+  system.l1_cntrl0.L1IcacheMemory_total_demand_misses: 300
   system.l1_cntrl0.L1IcacheMemory_total_prefetches: 0
   system.l1_cntrl0.L1IcacheMemory_total_sw_prefetches: 0
   system.l1_cntrl0.L1IcacheMemory_total_hw_prefetches: 0
 
+  system.l1_cntrl0.L1IcacheMemory_request_type_IFETCH:   100%
+
+  system.l1_cntrl0.L1IcacheMemory_access_mode_type_Supervisor:   300    100%
 
 Cache Stats: system.l1_cntrl0.L1DcacheMemory
-  system.l1_cntrl0.L1DcacheMemory_total_misses: 0
-  system.l1_cntrl0.L1DcacheMemory_total_demand_misses: 0
+  system.l1_cntrl0.L1DcacheMemory_total_misses: 272
+  system.l1_cntrl0.L1DcacheMemory_total_demand_misses: 272
   system.l1_cntrl0.L1DcacheMemory_total_prefetches: 0
   system.l1_cntrl0.L1DcacheMemory_total_sw_prefetches: 0
   system.l1_cntrl0.L1DcacheMemory_total_hw_prefetches: 0
 
+  system.l1_cntrl0.L1DcacheMemory_request_type_LD:   75%
+  system.l1_cntrl0.L1DcacheMemory_request_type_ST:   25%
+
+  system.l1_cntrl0.L1DcacheMemory_access_mode_type_Supervisor:   272    100%
 
  --- L1Cache ---
  - Event Counts -
@@ -326,12 +333,17 @@ SINK_WB_ACK  L1_Replacement [0 ] 0
 SINK_WB_ACK  WB_Ack [0 ] 0
 
 Cache Stats: system.l2_cntrl0.L2cacheMemory
-  system.l2_cntrl0.L2cacheMemory_total_misses: 0
-  system.l2_cntrl0.L2cacheMemory_total_demand_misses: 0
+  system.l2_cntrl0.L2cacheMemory_total_misses: 547
+  system.l2_cntrl0.L2cacheMemory_total_demand_misses: 547
   system.l2_cntrl0.L2cacheMemory_total_prefetches: 0
   system.l2_cntrl0.L2cacheMemory_total_sw_prefetches: 0
   system.l2_cntrl0.L2cacheMemory_total_hw_prefetches: 0
 
+  system.l2_cntrl0.L2cacheMemory_request_type_GETS:   35.1005%
+  system.l2_cntrl0.L2cacheMemory_request_type_GET_INSTR:   53.1993%
+  system.l2_cntrl0.L2cacheMemory_request_type_GETX:   11.7002%
+
+  system.l2_cntrl0.L2cacheMemory_access_mode_type_Supervisor:   547    100%
 
  --- L2Cache ---
  - Event Counts -
@@ -625,4 +637,5 @@ M_DWRI  Fetch [0 ] 0
 M_DWRI  Data [0 ] 0
 M_DWRI  Memory_Ack [0 ] 0
 M_DWRI  DMA_READ [0 ] 0
-M_DWRI  DMA_WRITE
+M_DWRI  DMA_WRITE [0 ] 0
+

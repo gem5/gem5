@@ -34,27 +34,27 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Apr/28/2011 15:03:52
+Real time: Jan/23/2012 04:22:26
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 0
-Elapsed_time_in_minutes: 0
-Elapsed_time_in_hours: 0
-Elapsed_time_in_days: 0
+Elapsed_time_in_seconds: 1
+Elapsed_time_in_minutes: 0.0166667
+Elapsed_time_in_hours: 0.000277778
+Elapsed_time_in_days: 1.15741e-05
 
-Virtual_time_in_seconds: 0.43
-Virtual_time_in_minutes: 0.00716667
-Virtual_time_in_hours:   0.000119444
-Virtual_time_in_days:    4.97685e-06
+Virtual_time_in_seconds: 0.22
+Virtual_time_in_minutes: 0.00366667
+Virtual_time_in_hours:   6.11111e-05
+Virtual_time_in_days:    2.5463e-06
 
 Ruby_current_time: 87899
 Ruby_start_time: 0
 Ruby_cycles: 87899
 
-mbytes_resident: 38.1484
-mbytes_total: 221.172
-resident_ratio: 0.172536
+mbytes_resident: 42.2227
+mbytes_total: 211.34
+resident_ratio: 0.199786
 
 ruby_cycles_executed: [ 87900 ]
 
@@ -127,11 +127,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 10978
-page_faults: 0
+page_reclaims: 11088
+page_faults: 5
 swaps: 0
-block_inputs: 0
-block_outputs: 0
+block_inputs: 1064
+block_outputs: 104
 
 Network Stats
 -------------
@@ -1032,4 +1032,5 @@ DR_L  Tokens [0 ] 0
 DR_L  Request_Timeout [0 ] 0
 DR_L  DMA_READ [0 ] 0
 DR_L  DMA_WRITE [0 ] 0
-DR_L  DMA_WRITE_All_Tokens
+DR_L  DMA_WRITE_All_Tokens [0 ] 0
+

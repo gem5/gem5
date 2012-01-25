@@ -2,12 +2,22 @@
 ---------- Begin Simulation Statistics ----------
 sim_seconds                                  0.000028                       # Number of seconds simulated
 sim_ticks                                    28206000                       # Number of ticks simulated
+final_tick                                   28206000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                 272526                       # Simulator instruction rate (inst/s)
-host_tick_rate                             1437682899                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 225224                       # Number of bytes of host memory used
-host_seconds                                     0.02                       # Real time elapsed on the host
+host_inst_rate                                 103151                       # Simulator instruction rate (inst/s)
+host_tick_rate                              544654705                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 212680                       # Number of bytes of host memory used
+host_seconds                                     0.05                       # Real time elapsed on the host
 sim_insts                                        5340                       # Number of instructions simulated
+system.physmem.bytes_read                       24896                       # Number of bytes read from this memory
+system.physmem.bytes_inst_read                  16320                       # Number of instructions bytes read from this memory
+system.physmem.bytes_written                        0                       # Number of bytes written to this memory
+system.physmem.num_reads                          389                       # Number of read requests responded to by this memory
+system.physmem.num_writes                           0                       # Number of write requests responded to by this memory
+system.physmem.num_other                            0                       # Number of other requests responded to by this memory
+system.physmem.bw_read                      882649082                       # Total read bandwidth from this memory (bytes/s)
+system.physmem.bw_inst_read                 578600298                       # Instruction read bandwidth from this memory (bytes/s)
+system.physmem.bw_total                     882649082                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu.workload.num_syscalls                   11                       # Number of system calls
 system.cpu.numCycles                            56412                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
