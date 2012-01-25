@@ -167,7 +167,7 @@ if options.caches or options.l2cache:
     test_sys.iocache.mem_side = test_sys.membus.port
 else:
     test_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
-                               ranges = [AddrRange(0, mem_size)])
+                               ranges = [AddrRange(mem_size)])
     test_sys.iobridge.slave = test_sys.iobus.port
     test_sys.iobridge.master = test_sys.membus.port
 
