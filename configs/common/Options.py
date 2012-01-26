@@ -28,7 +28,8 @@
 
 # system options
 parser.add_option("--cpu-type", type="choice", default="atomic",
-                  choices = ["atomic", "timing", "detailed", "inorder"],
+                  choices = ["atomic", "timing", "detailed", "inorder",
+                             "arm_detailed"],
                   help = "type of cpu to run with")
 parser.add_option("-n", "--num-cpus", type="int", default=1)
 parser.add_option("--caches", action="store_true")
