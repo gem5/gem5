@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -40,96 +52,14 @@
 
 using namespace std;
 
-template<class Impl>
-void
-LSQ<Impl>::DcachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-    // Update the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    lsq->updateMemPorts();
-}
-
-template <class Impl>
-Tick
-LSQ<Impl>::DcachePort::recvAtomic(PacketPtr pkt)
-{
-    panic("O3CPU model does not work with atomic mode!");
-    return curTick();
-}
-
-template <class Impl>
-void
-LSQ<Impl>::DcachePort::recvFunctional(PacketPtr pkt)
-{
-    DPRINTF(LSQ, "LSQ doesn't update things on a recvFunctional.\n");
-}
-
-template <class Impl>
-void
-LSQ<Impl>::DcachePort::recvStatusChange(Status status)
-{
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-    panic("O3CPU doesn't expect recvStatusChange callback!");
-}
-
-template <class Impl>
-bool
-LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
-{
-    if (pkt->isError())
-        DPRINTF(LSQ, "Got error packet back for address: %#X\n", pkt->getAddr());
-    if (pkt->isResponse()) {
-        lsq->thread[pkt->req->threadId()].completeDataAccess(pkt);
-    } else {
-        DPRINTF(LSQ, "received pkt for addr:%#x %s\n", pkt->getAddr(),
-                pkt->cmdString());
-
-        // must be a snoop
-        if (pkt->isInvalidate()) {
-            DPRINTF(LSQ, "received invalidation for addr:%#x\n", pkt->getAddr());
-            for (ThreadID tid = 0; tid < lsq->numThreads; tid++) {
-                lsq->thread[tid].checkSnoop(pkt);
-            }
-        }
-        // to provide stronger consistency model
-    }
-    return true;
-}
-
-template <class Impl>
-void
-LSQ<Impl>::DcachePort::recvRetry()
-{
-    if (lsq->retryTid == -1)
-    {
-        //Squashed, so drop it
-        return;
-    }
-    int curr_retry_tid = lsq->retryTid;
-    // Speculatively clear the retry Tid.  This will get set again if
-    // the LSQUnit was unable to complete its access.
-    lsq->retryTid = -1;
-    lsq->thread[curr_retry_tid].recvRetry();
-}
-
 template <class Impl>
 LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
-    : cpu(cpu_ptr), iewStage(iew_ptr), dcachePort(this),
+    : cpu(cpu_ptr), iewStage(iew_ptr),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
       numThreads(params->numThreads),
       retryTid(-1)
 {
-    dcachePort.snoopRangeSent = false;
-
     //**********************************************/
     //************ Handle SMT Parameters ***********/
     //**********************************************/
@@ -181,7 +111,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         thread[tid].init(cpu, iew_ptr, params, this,
                          maxLQEntries, maxSQEntries, tid);
-        thread[tid].setDcachePort(&dcachePort);
+        thread[tid].setDcachePort(cpu_ptr->getDcachePort());
     }
 }
 
@@ -369,6 +299,48 @@ LSQ<Impl>::violation()
     }
 
     return false;
+}
+
+template <class Impl>
+void
+LSQ<Impl>::recvRetry()
+{
+    if (retryTid == InvalidThreadID)
+    {
+        //Squashed, so drop it
+        return;
+    }
+    int curr_retry_tid = retryTid;
+    // Speculatively clear the retry Tid.  This will get set again if
+    // the LSQUnit was unable to complete its access.
+    retryTid = -1;
+    thread[curr_retry_tid].recvRetry();
+}
+
+template <class Impl>
+bool
+LSQ<Impl>::recvTiming(PacketPtr pkt)
+{
+    if (pkt->isError())
+        DPRINTF(LSQ, "Got error packet back for address: %#X\n",
+                pkt->getAddr());
+    if (pkt->isResponse()) {
+        thread[pkt->req->threadId()].completeDataAccess(pkt);
+    } else {
+        DPRINTF(LSQ, "received pkt for addr:%#x %s\n", pkt->getAddr(),
+                pkt->cmdString());
+
+        // must be a snoop
+        if (pkt->isInvalidate()) {
+            DPRINTF(LSQ, "received invalidation for addr:%#x\n",
+                    pkt->getAddr());
+            for (ThreadID tid = 0; tid < numThreads; tid++) {
+                thread[tid].checkSnoop(pkt);
+            }
+        }
+        // to provide stronger consistency model
+    }
+    return true;
 }
 
 template<class Impl>

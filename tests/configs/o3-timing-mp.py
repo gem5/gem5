@@ -79,6 +79,8 @@ for cpu in cpus:
 # connect memory to membus
 system.physmem.port = system.membus.port
 
+# connect system port to membus
+system.system_port = system.membus.port
 
 # -----------------------
 # run simulation

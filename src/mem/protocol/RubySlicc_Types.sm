@@ -107,6 +107,7 @@ structure (Sequencer, external = "yes") {
   void writeCallback(Address, GenericMachineType, DataBlock, Time, Time, Time);
   void checkCoherence(Address);
   void profileNack(Address, int, int, uint64);
+  void evictionCallback(Address);
 }
 
 structure(RubyRequest, desc="...", interface="Message", external="yes") {

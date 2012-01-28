@@ -93,8 +93,6 @@ class MemTest : public MemObject
             : Port(_name, _memtest), memtest(_memtest)
         { }
 
-        bool snoopRangeSent;
-
       protected:
 
         virtual bool recvTiming(PacketPtr pkt);
@@ -103,19 +101,13 @@ class MemTest : public MemObject
 
         virtual void recvFunctional(PacketPtr pkt);
 
-        virtual void recvStatusChange(Status status);
+        virtual void recvRangeChange();
 
         virtual void recvRetry();
-
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { resp.clear(); snoop = false; }
     };
 
     CpuPort cachePort;
     CpuPort funcPort;
-
-    bool snoopRangeSent;
 
     class MemTestSenderState : public Packet::SenderState, public FastAlloc
     {

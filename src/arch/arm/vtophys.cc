@@ -51,7 +51,7 @@
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 
 using namespace std;
 using namespace ArmISA;
@@ -101,7 +101,7 @@ ArmISA::vtophys(ThreadContext *tc, Addr addr)
         N = 0;
     }
 
-    FunctionalPort *port = tc->getPhysPort();
+    PortProxy* port = tc->getPhysProxy();
     Addr l1desc_addr = mbits(ttbr, 31, 14-N) | (bits(addr,31-N,20) << 2);
 
     TableWalker::L1Descriptor l1desc;

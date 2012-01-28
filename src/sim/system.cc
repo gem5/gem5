@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -57,9 +57,9 @@
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"
 #include "kern/kernel_stats.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "mem/mem_object.hh"
 #include "mem/physical.hh"
-#include "mem/vport.hh"
 #include "params/System.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
@@ -74,7 +74,9 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : SimObject(p), physmem(p->physmem), _numContexts(0), pagePtr(0),
+    : MemObject(p), _systemPort("system_port", this),
+      physmem(p->physmem),
+      _numContexts(0),
       init_param(p->init_param),
       loadAddrMask(p->load_addr_mask),
       nextPID(0),
@@ -104,68 +106,12 @@ System::System(Params *p)
         if (!debugSymbolTable)
             debugSymbolTable = new SymbolTable;
 
-
         /**
-         * Get a functional port to memory
+         * Get a port proxy to memory
          */
-        Port *mem_port;
-        functionalPort = new FunctionalPort(name() + "-fport");
-        mem_port = physmem->getPort("functional");
-        functionalPort->setPeer(mem_port);
-        mem_port->setPeer(functionalPort);
-
-        virtPort = new VirtualPort(name() + "-fport");
-        mem_port = physmem->getPort("functional");
-        virtPort->setPeer(mem_port);
-        mem_port->setPeer(virtPort);
-
-
-        /**
-         * Load the kernel code into memory
-         */
-        if (params()->kernel == "") {
-            inform("No kernel set for full system simulation. "
-                    "Assuming you know what you're doing...\n");
-        } else {
-            // Load kernel code
-            kernel = createObjectFile(params()->kernel);
-            inform("kernel located at: %s", params()->kernel);
-
-            if (kernel == NULL)
-                fatal("Could not load kernel file %s", params()->kernel);
-
-            // Load program sections into memory
-            kernel->loadSections(functionalPort, loadAddrMask);
-
-            // setup entry points
-            kernelStart = kernel->textBase();
-            kernelEnd = kernel->bssBase() + kernel->bssSize();
-            kernelEntry = kernel->entryPoint();
-
-            // load symbols
-            if (!kernel->loadGlobalSymbols(kernelSymtab))
-                fatal("could not load kernel symbols\n");
-
-            if (!kernel->loadLocalSymbols(kernelSymtab))
-                fatal("could not load kernel local symbols\n");
-
-            if (!kernel->loadGlobalSymbols(debugSymbolTable))
-                fatal("could not load kernel symbols\n");
-
-            if (!kernel->loadLocalSymbols(debugSymbolTable))
-                fatal("could not load kernel local symbols\n");
-
-            DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
-            DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
-            DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
-            DPRINTF(Loader, "Kernel loaded...\n");
-        }
+        physProxy = new PortProxy(*getSystemPort());
+        virtProxy = new FSTranslatingPortProxy(*getSystemPort());
     }
-
-    // increment the number of running systms
-    numSystemsRunning++;
-
-    activeCpus.clear();
 }
 
 System::~System()
@@ -175,6 +121,21 @@ System::~System()
 
     for (uint32_t j = 0; j < numWorkIds; j++)
         delete workItemStats[j];
+}
+
+void
+System::init()
+{
+    // check that the system port is connected
+    if (!_systemPort.isConnected())
+        panic("System port on %s is not connected.\n", name());
+}
+
+Port*
+System::getPort(const std::string &if_name, int idx)
+{
+    // no need to distinguish at the moment (besides checking)
+    return &_systemPort;
 }
 
 void
@@ -257,6 +218,59 @@ System::numRunningContexts()
 void
 System::initState()
 {
+    if (FullSystem) {
+        int i;
+        for (i = 0; i < threadContexts.size(); i++)
+            TheISA::startupCPU(threadContexts[i], i);
+        // Moved from the constructor to here since it relies on the
+        // address map being resolved in the interconnect
+        /**
+         * Load the kernel code into memory
+         */
+        if (params()->kernel == "") {
+            inform("No kernel set for full system simulation. "
+                    "Assuming you know what you're doing...\n");
+        } else {
+            // Load kernel code
+            kernel = createObjectFile(params()->kernel);
+            inform("kernel located at: %s", params()->kernel);
+
+            if (kernel == NULL)
+                fatal("Could not load kernel file %s", params()->kernel);
+
+            // Load program sections into memory
+            kernel->loadSections(physProxy, loadAddrMask);
+
+            // setup entry points
+            kernelStart = kernel->textBase();
+            kernelEnd = kernel->bssBase() + kernel->bssSize();
+            kernelEntry = kernel->entryPoint();
+
+            // load symbols
+            if (!kernel->loadGlobalSymbols(kernelSymtab))
+                fatal("could not load kernel symbols\n");
+
+            if (!kernel->loadLocalSymbols(kernelSymtab))
+                fatal("could not load kernel local symbols\n");
+
+            if (!kernel->loadGlobalSymbols(debugSymbolTable))
+                fatal("could not load kernel symbols\n");
+
+            if (!kernel->loadLocalSymbols(debugSymbolTable))
+                fatal("could not load kernel local symbols\n");
+
+            DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
+            DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
+            DPRINTF(Loader, "Kernel entry = %#x\n", kernelEntry);
+            DPRINTF(Loader, "Kernel loaded...\n");
+        }
+    }
+
+    // increment the number of running systms
+    numSystemsRunning++;
+
+    activeCpus.clear();
+
     if (FullSystem) {
         int i;
         for (i = 0; i < threadContexts.size(); i++)

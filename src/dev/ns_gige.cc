@@ -465,16 +465,16 @@ NSGigE::write(PacketPtr pkt)
                 reg & CFGR_DUPSTS ||
                 reg & CFGR_RESERVED ||
                 reg & CFGR_T64ADDR ||
-                reg & CFGR_PCI64_DET)
-
-            // First clear all writable bits
-            regs.config &= CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
-                                   CFGR_RESERVED | CFGR_T64ADDR |
-                                   CFGR_PCI64_DET;
-            // Now set the appropriate writable bits
-            regs.config |= reg & ~(CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
-                                   CFGR_RESERVED | CFGR_T64ADDR |
-                                   CFGR_PCI64_DET);
+                reg & CFGR_PCI64_DET) {
+                // First clear all writable bits
+                regs.config &= CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
+                    CFGR_RESERVED | CFGR_T64ADDR |
+                    CFGR_PCI64_DET;
+                // Now set the appropriate writable bits
+                regs.config |= reg & ~(CFGR_LNKSTS | CFGR_SPDSTS | CFGR_DUPSTS |
+                                       CFGR_RESERVED | CFGR_T64ADDR |
+                                       CFGR_PCI64_DET);
+            }
 
 // all these #if 0's are because i don't THINK the kernel needs to
 // have these implemented. if there is a problem relating to one of

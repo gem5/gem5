@@ -38,10 +38,10 @@
 
 using namespace TheISA;
 
-VirtualPort *
-InOrderThreadContext::getVirtPort()
+FSTranslatingPortProxy*
+InOrderThreadContext::getVirtProxy()
 {
-    return thread->getVirtPort();
+    return thread->getVirtProxy();
 }
 
 void

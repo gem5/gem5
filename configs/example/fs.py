@@ -1,4 +1,4 @@
-# Copyright (c) 2010 ARM Limited
+# Copyright (c) 2010-2011 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -157,23 +157,19 @@ test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
 CacheConfig.config_cache(options, test_sys)
 
+if bm[0]:
+    mem_size = bm[0].mem()
+else:
+    mem_size = SysConfig().mem()
 if options.caches or options.l2cache:
-    if bm[0]:
-        mem_size = bm[0].mem()
-    else:
-        mem_size = SysConfig().mem()
-    # For x86, we need to poke a hole for interrupt messages to get back to the
-    # CPU. These use a portion of the physical address space which has a
-    # non-zero prefix in the top nibble. Normal memory accesses have a 0
-    # prefix.
-    if buildEnv['TARGET_ISA'] == 'x86':
-        test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max >> 4)]
-    else:
-        test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
-    test_sys.bridge.filter_ranges_b=[AddrRange(mem_size)]
     test_sys.iocache = IOCache(addr_range=mem_size)
     test_sys.iocache.cpu_side = test_sys.iobus.port
     test_sys.iocache.mem_side = test_sys.membus.port
+else:
+    test_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
+                               ranges = [AddrRange(mem_size)])
+    test_sys.iobridge.slave = test_sys.iobus.port
+    test_sys.iobridge.master = test_sys.membus.port
 
 for i in xrange(np):
     if options.fastmem:

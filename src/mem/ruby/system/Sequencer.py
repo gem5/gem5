@@ -44,6 +44,9 @@ class RubyPort(MemObject):
     access_phys_mem = Param.Bool(True,
         "should the rubyport atomically update phys_mem")
     ruby_system = Param.RubySystem("")
+
+class RubyPortProxy(RubyPort):
+    type = 'RubyPortProxy'
     
 class RubySequencer(RubyPort):
     type = 'RubySequencer'

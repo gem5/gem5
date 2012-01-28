@@ -34,6 +34,7 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import *
+from O3_ARM_v7a import *
 
 addToPath('../common')
 
@@ -42,11 +43,14 @@ def setCPUClass(options):
     atomic = False
     if options.cpu_type == "timing":
         class TmpClass(TimingSimpleCPU): pass
-    elif options.cpu_type == "detailed":
-        if not options.caches:
+    elif options.cpu_type == "detailed" or options.cpu_type == "arm_detailed":
+        if not options.caches and not options.ruby:
             print "O3 CPU must be used with caches"
             sys.exit(1)
-        class TmpClass(DerivO3CPU): pass
+        if options.cpu_type == "arm_detailed":
+            class TmpClass(O3_ARM_v7a_3): pass
+        else:
+            class TmpClass(DerivO3CPU): pass
     elif options.cpu_type == "inorder":
         if not options.caches:
             print "InOrder CPU must be used with caches"

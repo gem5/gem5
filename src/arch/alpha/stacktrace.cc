@@ -37,7 +37,7 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -48,7 +48,7 @@ ProcessInfo::ProcessInfo(ThreadContext *_tc)
     : tc(_tc)
 {
     Addr addr = 0;
-    VirtualPort *vp = tc->getVirtPort();
+    FSTranslatingPortProxy* vp = tc->getVirtProxy();
     SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
 
     if (!symtab->findAddress("thread_info_size", addr))
@@ -81,9 +81,9 @@ ProcessInfo::task(Addr ksp) const
 
     Addr tsk;
 
-    VirtualPort *vp;
+    FSTranslatingPortProxy* vp;
 
-    vp = tc->getVirtPort();
+    vp = tc->getVirtProxy();
     tsk = vp->readGtoH<Addr>(base + task_off);
 
     return tsk;
@@ -98,9 +98,9 @@ ProcessInfo::pid(Addr ksp) const
 
     uint16_t pd;
 
-    VirtualPort *vp;
+    FSTranslatingPortProxy* vp;
 
-    vp = tc->getVirtPort();
+    vp = tc->getVirtProxy();
     pd = vp->readGtoH<uint16_t>(task + pid_off);
 
     return pd;

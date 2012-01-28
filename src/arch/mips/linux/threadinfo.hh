@@ -79,7 +79,7 @@ class ThreadInfo
         if (!addr)
             addr = tc->readMiscRegNoEffect(0/*MipsISA::IPR_PALtemp23*/);
 
-        FunctionalPort *p = tc->getPhysPort();
+        PortProxy* p = tc->getPhysProxy();
         p->readBlob(addr, (uint8_t *)&sp, sizeof(Addr));
 
         return sp & ~ULL(0x3fff);

@@ -46,7 +46,7 @@
 #include "debug/SimpleDiskData.hh"
 #include "dev/disk_image.hh"
 #include "dev/simple_disk.hh"
-#include "mem/port.hh"
+#include "mem/port_proxy.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -70,7 +70,7 @@ SimpleDisk::read(Addr addr, baddr_t block, int count) const
     for (int i = 0, j = 0; i < count; i += SectorSize, j++)
         image->read(data + i, block + j);
 
-    system->functionalPort->writeBlob(addr, data, count);
+    system->physProxy->writeBlob(addr, data, count);
 
     DPRINTF(SimpleDisk, "read  block=%#x len=%d\n", (uint64_t)block, count);
     DDUMP(SimpleDiskData, data, count);

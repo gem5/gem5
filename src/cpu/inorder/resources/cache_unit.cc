@@ -82,17 +82,8 @@ CacheUnit::CachePort::recvFunctional(PacketPtr pkt)
 }
 
 void
-CacheUnit::CachePort::recvStatusChange(Status status)
+CacheUnit::CachePort::recvRangeChange()
 {
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("CacheUnit::CachePort doesn't expect recvStatusChange callback!");
 }
 
 bool
@@ -143,18 +134,6 @@ CacheUnit::tlb()
 {
     return _tlb;
 
-}
-
-void
-CacheUnit::CachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-    // Update the ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    if (cachePortUnit->resName == "dcache_port") {
-        cachePortUnit->cpu->updateMemPorts();
-    }
 }
 
 Port *

@@ -76,8 +76,6 @@ system = FSConfig.makeLinuxAlphaSystem('timing')
 system.cpu = cpus
 #create the l1/l2 bus
 system.toL2Bus = Bus()
-system.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
-system.bridge.filter_ranges_b=[AddrRange(0, size='8GB')]
 system.iocache = IOCache()
 system.iocache.cpu_side = system.iobus.port
 system.iocache.mem_side = system.membus.port

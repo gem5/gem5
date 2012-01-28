@@ -48,7 +48,7 @@ class LiveProcessParams;
 class SyscallDesc;
 class System;
 class ThreadContext;
-class TranslatingPort;
+class SETranslatingPortProxy;
 
 template<class IntType>
 struct AuxVector
@@ -123,7 +123,7 @@ class Process : public SimObject
 
   protected:
     /// Memory object for initialization (image loading)
-    TranslatingPort *initVirtMem;
+    SETranslatingPortProxy *initVirtMem;
 
   public:
     PageTable *pTable;

@@ -76,6 +76,8 @@ for cpu in cpus:
     cpu.l1c.mem_side = system.toL2Bus.port
     system.funcmem.port = cpu.functional
 
+system.system_port = system.membus.port
+
 # connect memory to membus
 system.physmem.port = system.membus.port
 

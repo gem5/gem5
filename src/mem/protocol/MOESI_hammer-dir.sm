@@ -87,7 +87,7 @@ machine(Directory, "AMD Hammer-like protocol")
     O_DR_B, AccessPermission:Busy, desc="Owner, Dma Read waiting for cache responses";
     WB, AccessPermission:Busy, desc="Blocked on a writeback";
     WB_O_W, AccessPermission:Busy, desc="Blocked on memory write, will go to O";
-    WB_E_W, AccessPermission:Busy, desc="Blocked on memory write, will go to E";
+    WB_E_W, AccessPermission:Read_Write, desc="Blocked on memory write, will go to E";
 
     NO_F,  AccessPermission:Busy, desc="Blocked on a flush";
     NO_F_W, AccessPermission:Busy, desc="Not Owner, Blocked, waiting for Dram";

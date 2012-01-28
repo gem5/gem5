@@ -1,14 +1,10 @@
-M5 Simulator System
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
 
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled May  1 2011 16:25:10
-M5 started May  1 2011 16:26:16
-M5 executing on u200439-lin.austin.arm.com
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp -re tests/run.py build/SPARC_SE/tests/fast/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp
+gem5 compiled Jan 23 2012 04:02:00
+gem5 started Jan 23 2012 04:24:33
+gem5 executing on zizzer
+command line: build/SPARC_SE/gem5.opt -d build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp -re tests/run.py build/SPARC_SE/tests/opt/quick/40.m5threads-test-atomic/sparc/linux/simple-timing-mp
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Init done

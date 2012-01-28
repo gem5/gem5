@@ -34,8 +34,4 @@ class AtomicSimpleCPU(BaseSimpleCPU):
     width = Param.Int(1, "CPU width")
     simulate_data_stalls = Param.Bool(False, "Simulate dcache stall cycles")
     simulate_inst_stalls = Param.Bool(False, "Simulate icache stall cycles")
-    icache_port = Port("Instruction Port")
-    dcache_port = Port("Data Port")
     physmem_port = Port("Physical Memory Port")
-    _cached_ports = BaseSimpleCPU._cached_ports + \
-                    ['icache_port', 'dcache_port']

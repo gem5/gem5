@@ -47,6 +47,7 @@
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 #include "mem/physical.hh"
+#include "mem/fs_translating_port_proxy.hh"
 
 using namespace std;
 using namespace Linux;
@@ -55,6 +56,18 @@ ArmSystem::ArmSystem(Params *p)
     : System(p), bootldr(NULL)
 {
     debugPrintkEvent = addKernelFuncEvent<DebugPrintkEvent>("dprintk");
+}
+
+void
+ArmSystem::initState()
+{
+    // Moved from the constructor to here since it relies on the
+    // address map being resolved in the interconnect
+
+    // Call the initialisation of the super class
+    System::initState();
+
+    const Params* p = params();
 
     if ((p->boot_loader == "") != (p->boot_loader_mem == NULL))
         fatal("If boot_loader is specifed, memory to load it must be also.\n");
@@ -65,29 +78,18 @@ ArmSystem::ArmSystem(Params *p)
         if (!bootldr)
             fatal("Could not read bootloader: %s\n", p->boot_loader);
 
-        Port *mem_port;
-        FunctionalPort fp(name() + "-fport");
-        mem_port = p->boot_loader_mem->getPort("functional");
-        fp.setPeer(mem_port);
-        mem_port->setPeer(&fp);
-
-        bootldr->loadSections(&fp);
+        bootldr->loadSections(physProxy);
         bootldr->loadGlobalSymbols(debugSymbolTable);
 
         uint8_t jump_to_bl[] =
         {
             0x07, 0xf0, 0xa0, 0xe1  // branch to r7
         };
-        functionalPort->writeBlob(0x0, jump_to_bl, sizeof(jump_to_bl));
+        physProxy->writeBlob(0x0, jump_to_bl, sizeof(jump_to_bl));
 
         inform("Using bootloader at address %#x\n", bootldr->entryPoint());
     }
-}
 
-void
-ArmSystem::initState()
-{
-    System::initState();
     if (bootldr) {
         // Put the address of the boot loader into r7 so we know
         // where to branch to after the reset fault
@@ -98,16 +100,16 @@ ArmSystem::initState()
             threadContexts[i]->setIntReg(5, params()->flags_addr);
             threadContexts[i]->setIntReg(7, bootldr->entryPoint());
         }
-        if (!params()->gic_cpu_addr || !params()->flags_addr)
+        if (!p->gic_cpu_addr || !p->flags_addr)
             fatal("gic_cpu_addr && flags_addr must be set with bootloader\n");
     } else {
         // Set the initial PC to be at start of the kernel code
         threadContexts[0]->pcState(kernelEntry & loadAddrMask);
     }
     for (int i = 0; i < threadContexts.size(); i++) {
-        if (params()->midr_regval) {
+        if (p->midr_regval) {
             threadContexts[i]->setMiscReg(ArmISA::MISCREG_MIDR,
-                    params()->midr_regval);
+                                          p->midr_regval);
         }
     }
 

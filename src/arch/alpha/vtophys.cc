@@ -38,14 +38,14 @@
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/VtoPhys.hh"
-#include "mem/vport.hh"
+#include "mem/port_proxy.hh"
 
 using namespace std;
 
 namespace AlphaISA {
 
 PageTableEntry
-kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, VAddr vaddr)
+kernel_pte_lookup(PortProxy* mem, Addr ptbr, VAddr vaddr)
 {
     Addr level1_pte = ptbr + vaddr.level1();
     PageTableEntry level1 = mem->read<uint64_t>(level1_pte);
@@ -103,7 +103,7 @@ vtophys(ThreadContext *tc, Addr addr)
             paddr = vaddr;
         } else {
             PageTableEntry pte =
-                kernel_pte_lookup(tc->getPhysPort(), ptbr, vaddr);
+                kernel_pte_lookup(tc->getPhysProxy(), ptbr, vaddr);
             if (pte.valid())
                 paddr = pte.paddr() | vaddr.offset();
         }

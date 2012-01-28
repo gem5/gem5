@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,6 +39,7 @@
  *
  * Authors: Ron Dreslinski
  *          Steve Reinhardt
+ *          Andreas Hansson
  */
 
 #include <string>
@@ -35,22 +48,22 @@
 #include "base/chunk_generator.hh"
 #include "config/the_isa.hh"
 #include "mem/page_table.hh"
-#include "mem/port.hh"
-#include "mem/translating_port.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/process.hh"
 
 using namespace TheISA;
 
-TranslatingPort::TranslatingPort(const std::string &_name, Process *p,
-                                 AllocType alloc)
-    : FunctionalPort(_name), pTable(p->pTable), process(p), allocating(alloc)
+SETranslatingPortProxy::SETranslatingPortProxy(Port& port, Process *p,
+                                           AllocType alloc)
+    : PortProxy(port), pTable(p->pTable), process(p),
+      allocating(alloc)
 { }
 
-TranslatingPort::~TranslatingPort()
+SETranslatingPortProxy::~SETranslatingPortProxy()
 { }
 
 bool
-TranslatingPort::tryReadBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size)
 {
     int prevSize = 0;
 
@@ -60,7 +73,7 @@ TranslatingPort::tryReadBlob(Addr addr, uint8_t *p, int size)
         if (!pTable->translate(gen.addr(),paddr))
             return false;
 
-        Port::readBlob(paddr, p + prevSize, gen.size());
+        PortProxy::readBlob(paddr, p + prevSize, gen.size());
         prevSize += gen.size();
     }
 
@@ -68,7 +81,7 @@ TranslatingPort::tryReadBlob(Addr addr, uint8_t *p, int size)
 }
 
 void
-TranslatingPort::readBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size)
 {
     if (!tryReadBlob(addr, p, size))
         fatal("readBlob(0x%x, ...) failed", addr);
@@ -76,7 +89,7 @@ TranslatingPort::readBlob(Addr addr, uint8_t *p, int size)
 
 
 bool
-TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::tryWriteBlob(Addr addr, uint8_t *p, int size)
 {
     int prevSize = 0;
 
@@ -98,7 +111,7 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
             pTable->translate(gen.addr(), paddr);
         }
 
-        Port::writeBlob(paddr, p + prevSize, gen.size());
+        PortProxy::writeBlob(paddr, p + prevSize, gen.size());
         prevSize += gen.size();
     }
 
@@ -107,14 +120,14 @@ TranslatingPort::tryWriteBlob(Addr addr, uint8_t *p, int size)
 
 
 void
-TranslatingPort::writeBlob(Addr addr, uint8_t *p, int size)
+SETranslatingPortProxy::writeBlob(Addr addr, uint8_t *p, int size)
 {
     if (!tryWriteBlob(addr, p, size))
         fatal("writeBlob(0x%x, ...) failed", addr);
 }
 
 bool
-TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
+SETranslatingPortProxy::tryMemsetBlob(Addr addr, uint8_t val, int size)
 {
     for (ChunkGenerator gen(addr, size, VMPageSize); !gen.done(); gen.next()) {
         Addr paddr;
@@ -128,14 +141,15 @@ TranslatingPort::tryMemsetBlob(Addr addr, uint8_t val, int size)
                 return false;
             }
         }
-        Port::memsetBlob(paddr, val, gen.size());
+
+        PortProxy::memsetBlob(paddr, val, gen.size());
     }
 
     return true;
 }
 
 void
-TranslatingPort::memsetBlob(Addr addr, uint8_t val, int size)
+SETranslatingPortProxy::memsetBlob(Addr addr, uint8_t val, int size)
 {
     if (!tryMemsetBlob(addr, val, size))
         fatal("memsetBlob(0x%x, ...) failed", addr);
@@ -143,7 +157,7 @@ TranslatingPort::memsetBlob(Addr addr, uint8_t val, int size)
 
 
 bool
-TranslatingPort::tryWriteString(Addr addr, const char *str)
+SETranslatingPortProxy::tryWriteString(Addr addr, const char *str)
 {
     uint8_t c;
 
@@ -156,21 +170,21 @@ TranslatingPort::tryWriteString(Addr addr, const char *str)
         if (!pTable->translate(vaddr++, paddr))
             return false;
 
-        Port::writeBlob(paddr, &c, 1);
+        PortProxy::writeBlob(paddr, &c, 1);
     } while (c);
 
     return true;
 }
 
 void
-TranslatingPort::writeString(Addr addr, const char *str)
+SETranslatingPortProxy::writeString(Addr addr, const char *str)
 {
     if (!tryWriteString(addr, str))
         fatal("writeString(0x%x, ...) failed", addr);
 }
 
 bool
-TranslatingPort::tryReadString(std::string &str, Addr addr)
+SETranslatingPortProxy::tryReadString(std::string &str, Addr addr)
 {
     uint8_t c;
 
@@ -182,7 +196,7 @@ TranslatingPort::tryReadString(std::string &str, Addr addr)
         if (!pTable->translate(vaddr++, paddr))
             return false;
 
-        Port::readBlob(paddr, &c, 1);
+        PortProxy::readBlob(paddr, &c, 1);
         str += c;
     } while (c);
 
@@ -190,7 +204,7 @@ TranslatingPort::tryReadString(std::string &str, Addr addr)
 }
 
 void
-TranslatingPort::readString(std::string &str, Addr addr)
+SETranslatingPortProxy::readString(std::string &str, Addr addr)
 {
     if (!tryReadString(str, addr))
         fatal("readString(0x%x, ...) failed", addr);

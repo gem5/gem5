@@ -71,11 +71,9 @@ BaseCache::BaseCache(const Params *p)
 }
 
 void
-BaseCache::CachePort::recvStatusChange(Port::Status status)
+BaseCache::CachePort::recvRangeChange() const
 {
-    if (status == Port::RangeChange) {
-        otherPort->sendStatusChange(Port::RangeChange);
-    }
+    otherPort->sendRangeChange();
 }
 
 
@@ -127,7 +125,7 @@ BaseCache::CachePort::clearBlocked()
         mustSendRetry = false;
         SendRetryEvent *ev = new SendRetryEvent(this, true);
         // @TODO: need to find a better time (next bus cycle?)
-        schedule(ev, curTick() + 1);
+        cache->schedule(ev, curTick() + 1);
     }
 }
 
@@ -137,7 +135,7 @@ BaseCache::init()
 {
     if (!cpuSidePort || !memSidePort)
         panic("Cache not hooked up on both sides\n");
-    cpuSidePort->sendStatusChange(Port::RangeChange);
+    cpuSidePort->sendRangeChange();
 }
 
 

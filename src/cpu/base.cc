@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
@@ -469,4 +481,37 @@ BaseCPU::traceFunctionsInternal(Addr pc)
                  curTick() - functionEntryTick, curTick(), sym_str);
         functionEntryTick = curTick();
     }
+}
+
+bool
+BaseCPU::CpuPort::recvTiming(PacketPtr pkt)
+{
+    panic("BaseCPU doesn't expect recvTiming callback!");
+    return true;
+}
+
+void
+BaseCPU::CpuPort::recvRetry()
+{
+    panic("BaseCPU doesn't expect recvRetry callback!");
+}
+
+Tick
+BaseCPU::CpuPort::recvAtomic(PacketPtr pkt)
+{
+    panic("BaseCPU doesn't expect recvAtomic callback!");
+    return curTick();
+}
+
+void
+BaseCPU::CpuPort::recvFunctional(PacketPtr pkt)
+{
+    // No internal storage to update (in the general case). In the
+    // long term this should never be called, but that assumed a split
+    // into master/slave and request/response.
+}
+
+void
+BaseCPU::CpuPort::recvRangeChange()
+{
 }

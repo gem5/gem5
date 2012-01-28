@@ -414,15 +414,15 @@ ElfObject::loadLocalSymbols(SymbolTable *symtab, Addr addrMask)
 }
 
 bool
-ElfObject::loadSections(Port *memPort, Addr addrMask)
+ElfObject::loadSections(PortProxy* memProxy, Addr addrMask)
 {
-    if (!ObjectFile::loadSections(memPort, addrMask))
+    if (!ObjectFile::loadSections(memProxy, addrMask))
         return false;
 
     vector<Segment>::iterator extraIt;
     for (extraIt = extraSegments.begin();
             extraIt != extraSegments.end(); extraIt++) {
-        if (!loadSection(&(*extraIt), memPort, addrMask)) {
+        if (!loadSection(&(*extraIt), memProxy, addrMask)) {
             return false;
         }
     }

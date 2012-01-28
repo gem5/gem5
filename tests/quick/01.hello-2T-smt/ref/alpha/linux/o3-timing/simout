@@ -1,8 +1,8 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Aug 20 2011 15:52:45
-gem5 started Aug 20 2011 15:52:54
+gem5 compiled Jan 23 2012 04:48:33
+gem5 started Jan 23 2012 04:59:27
 gem5 executing on zizzer
 command line: build/ALPHA_SE/gem5.opt -d build/ALPHA_SE/tests/opt/quick/01.hello-2T-smt/alpha/linux/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/quick/01.hello-2T-smt/alpha/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second

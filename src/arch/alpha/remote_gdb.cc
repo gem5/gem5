@@ -188,7 +188,7 @@ RemoteGDB::acc(Addr va, size_t len)
 
             Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
             PageTableEntry pte =
-                kernel_pte_lookup(context->getPhysPort(), ptbr, va);
+                kernel_pte_lookup(context->getPhysProxy(), ptbr, va);
             if (!pte.valid()) {
                 DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
                 return false;
@@ -312,3 +312,11 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
     }
 }
 
+
+bool
+RemoteGDB::insertHardBreak(Addr addr, size_t len)
+{
+    warn_once("Breakpoints do not work in Alpha PAL mode.\n"
+              "      See PCEventQueue::doService() in cpu/pc_event.cc.\n");
+    return BaseRemoteGDB::insertHardBreak(addr, len);
+}

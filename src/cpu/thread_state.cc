@@ -34,27 +34,31 @@
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
 #include "cpu/thread_state.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "mem/port.hh"
-#include "mem/translating_port.hh"
-#include "mem/vport.hh"
+#include "mem/port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/serialize.hh"
+#include "sim/system.hh"
 
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
     : numInst(0), numLoad(0), _status(ThreadContext::Halted),
       baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      kernelStats(NULL), process(_process), port(NULL), virtPort(NULL),
-      physPort(NULL), funcExeInst(0), storeCondFailures(0)
+      kernelStats(NULL), process(_process), physProxy(NULL), virtProxy(NULL),
+      proxy(NULL), funcExeInst(0), storeCondFailures(0)
 {
 }
 
 ThreadState::~ThreadState()
 {
-    if (port) {
-        delete port->getPeer();
-        delete port;
-    }
+    if (physProxy != NULL)
+        delete physProxy;
+    if (virtProxy != NULL)
+        delete virtProxy;
+    if (proxy != NULL)
+        delete proxy;
 }
 
 void
@@ -93,38 +97,16 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-ThreadState::connectPhysPort()
+ThreadState::initMemProxies(ThreadContext *tc)
 {
-    // @todo: For now this disregards any older port that may have
-    // already existed.  Fix this memory leak once the bus port IDs
-    // for functional ports is resolved.
-    if (physPort)
-        physPort->removeConn();
-    else
-        physPort = new FunctionalPort(csprintf("%s-%d-funcport",
-                                           baseCpu->name(), _threadId));
-    connectToMemFunc(physPort);
-}
-
-void
-ThreadState::connectVirtPort(ThreadContext *tc)
-{
-    // @todo: For now this disregards any older port that may have
-    // already existed.  Fix this memory leak once the bus port IDs
-    // for functional ports is resolved.
-    if (virtPort)
-        virtPort->removeConn();
-    else
-        virtPort = new VirtualPort(csprintf("%s-%d-vport",
-                                        baseCpu->name(), _threadId), tc);
-    connectToMemFunc(virtPort);
-}
-
-void
-ThreadState::connectMemPorts(ThreadContext *tc)
-{
-    connectPhysPort();
-    connectVirtPort(tc);
+    // Note that this only refers to the port on the CPU side and can
+    // safely be done at init() time even if the CPU is not connected
+    // (i.e. due to restoring from a checkpoint and later switching
+    // in.
+    if (physProxy == NULL)
+        physProxy = new PortProxy(*baseCpu->getPort("dcache_port"));
+    if (virtProxy == NULL)
+        virtProxy = new FSTranslatingPortProxy(tc);
 }
 
 void
@@ -141,35 +123,16 @@ ThreadState::profileSample()
         profile->sample(profileNode, profilePC);
 }
 
-TranslatingPort *
-ThreadState::getMemPort()
+SETranslatingPortProxy *
+ThreadState::getMemProxy()
 {
-    if (port != NULL)
-        return port;
+    if (proxy != NULL)
+        return proxy;
 
-    /* Use this port to for syscall emulation writes to memory. */
-    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(),
-                               _threadId), process, TranslatingPort::NextPage);
+    /* Use this port proxy to for syscall emulation writes to memory. */
+    proxy = new SETranslatingPortProxy(*process->system->getSystemPort(),
+                                       process,
+                                       SETranslatingPortProxy::NextPage);
 
-    connectToMemFunc(port);
-
-    return port;
-}
-
-void
-ThreadState::connectToMemFunc(Port *port)
-{
-    Port *dcache_port, *func_mem_port;
-
-    dcache_port = baseCpu->getPort("dcache_port");
-    assert(dcache_port != NULL);
-
-    MemObject *mem_object = dcache_port->getPeer()->getOwner();
-    assert(mem_object != NULL);
-
-    func_mem_port = mem_object->getPort("functional");
-    assert(func_mem_port != NULL);
-
-    func_mem_port->setPeer(port);
-    port->setPeer(func_mem_port);
+    return proxy;
 }

@@ -71,8 +71,6 @@ class IOCache(BaseCache):
 cpu = AtomicSimpleCPU(cpu_id=0)
 #the system
 system = FSConfig.makeLinuxAlphaSystem('atomic')
-system.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
-system.bridge.filter_ranges_b=[AddrRange(0, size='8GB')]
 system.iocache = IOCache()
 system.iocache.cpu_side = system.iobus.port
 system.iocache.mem_side = system.membus.port

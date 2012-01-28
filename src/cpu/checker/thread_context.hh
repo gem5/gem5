@@ -98,12 +98,12 @@ class CheckerThreadContext : public ThreadContext
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
 
-    TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
+    PortProxy* getPhysProxy() { return actualTC->getPhysProxy(); }
 
-    VirtualPort *getVirtPort()
-    { return actualTC->getVirtPort(); }
+    FSTranslatingPortProxy* getVirtProxy()
+    { return actualTC->getVirtProxy(); }
 
-    FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
+    SETranslatingPortProxy* getMemProxy() { return actualTC->getMemProxy(); }
 
     Status status() const { return actualTC->status(); }
 

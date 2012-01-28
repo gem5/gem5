@@ -44,7 +44,7 @@
 #include "arch/arm/utility.hh"
 #include "arch/arm/vtophys.hh"
 #include "cpu/thread_context.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 #include "sim/full_system.hh"
 
 namespace ArmISA {
@@ -86,7 +86,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
             }
         } else {
             Addr sp = tc->readIntReg(StackPointerReg);
-            VirtualPort *vp = tc->getVirtPort();
+            FSTranslatingPortProxy* vp = tc->getVirtProxy();
             uint64_t arg;
             if (size == sizeof(uint64_t)) {
                 // If the argument is even it must be aligned

@@ -48,6 +48,8 @@ class SparcSystem : public System
     SparcSystem(Params *p);
     ~SparcSystem();
 
+    virtual void initState();
+
 /**
  * Serialization stuff
  */
@@ -93,18 +95,6 @@ class SparcSystem : public System
 
     /** System Tick for syncronized tick across all cpus. */
     Tick sysTick;
-
-    /** functional port to ROM */
-    FunctionalPort funcRomPort;
-
-    /** functional port to nvram */
-    FunctionalPort funcNvramPort;
-
-    /** functional port to hypervisor description */
-    FunctionalPort funcHypDescPort;
-
-    /** functional port to partition description */
-    FunctionalPort funcPartDescPort;
 
   protected:
     const Params *params() const { return (const Params *)_params; }

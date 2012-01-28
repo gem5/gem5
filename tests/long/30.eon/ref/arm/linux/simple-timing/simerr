@@ -1,5 +1,4 @@
 warn: Sockets disabled, not accepting gdb connections
-For more information see: http://www.m5sim.org/warn/d946bea6
 getting pixel output filename pixels_out.cook
 opening control file chair.control.cook
 opening camera file chair.camera

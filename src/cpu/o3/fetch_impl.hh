@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -69,68 +69,6 @@
 using namespace std;
 
 template<class Impl>
-void
-DefaultFetch<Impl>::IcachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-    fetch->setIcache();
-}
-
-template<class Impl>
-Tick
-DefaultFetch<Impl>::IcachePort::recvAtomic(PacketPtr pkt)
-{
-    panic("DefaultFetch doesn't expect recvAtomic callback!");
-    return curTick();
-}
-
-template<class Impl>
-void
-DefaultFetch<Impl>::IcachePort::recvFunctional(PacketPtr pkt)
-{
-    DPRINTF(Fetch, "DefaultFetch doesn't update its state from a "
-            "functional call.\n");
-}
-
-template<class Impl>
-void
-DefaultFetch<Impl>::IcachePort::recvStatusChange(Status status)
-{
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("DefaultFetch doesn't expect recvStatusChange callback!");
-}
-
-template<class Impl>
-bool
-DefaultFetch<Impl>::IcachePort::recvTiming(PacketPtr pkt)
-{
-    DPRINTF(Fetch, "Received timing\n");
-    if (pkt->isResponse()) {
-        // We shouldn't ever get a block in ownership state
-        assert(!(pkt->memInhibitAsserted() && !pkt->sharedAsserted()));
-
-        fetch->processCacheCompletion(pkt);
-    }
-    //else Snooped a coherence request, just return
-    return true;
-}
-
-template<class Impl>
-void
-DefaultFetch<Impl>::IcachePort::recvRetry()
-{
-    fetch->recvRetry();
-}
-
-template<class Impl>
 DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       branchPred(params),
@@ -189,17 +127,6 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
 
     // Get the size of an instruction.
     instSize = sizeof(TheISA::MachInst);
-
-    // Name is finally available, so create the port.
-    icachePort = new IcachePort(this);
-
-    icachePort->snoopRangeSent = false;
-
-#if USE_CHECKER
-    if (cpu->checker) {
-        cpu->checker->setIcachePort(icachePort);
-    }
-#endif
 }
 
 template <class Impl>
@@ -402,8 +329,10 @@ template<class Impl>
 void
 DefaultFetch<Impl>::setIcache()
 {
+    assert(cpu->getIcachePort()->isConnected());
+
     // Size of cache block.
-    cacheBlkSize = icachePort->peerBlockSize();
+    cacheBlkSize = cpu->getIcachePort()->peerBlockSize();
 
     // Create mask to get rid of offset bits.
     cacheBlkMask = (cacheBlkSize - 1);
@@ -494,6 +423,10 @@ template <class Impl>
 void
 DefaultFetch<Impl>::takeOverFrom()
 {
+    // the instruction port is now connected so we can get the block
+    // size
+    setIcache();
+
     // Reset all state
     for (ThreadID i = 0; i < Impl::MaxThreads; ++i) {
         stalls[i].decode = 0;
@@ -684,7 +617,7 @@ DefaultFetch<Impl>::finishTranslation(Fault fault, RequestPtr mem_req)
         fetchedCacheLines++;
 
         // Access the cache.
-        if (!icachePort->sendTiming(data_pkt)) {
+        if (!cpu->getIcachePort()->sendTiming(data_pkt)) {
             assert(retryPkt == NULL);
             assert(retryTid == InvalidThreadID);
             DPRINTF(Fetch, "[tid:%i] Out of MSHRs!\n", tid);
@@ -1403,7 +1336,7 @@ DefaultFetch<Impl>::recvRetry()
         assert(retryTid != InvalidThreadID);
         assert(fetchStatus[retryTid] == IcacheWaitRetry);
 
-        if (icachePort->sendTiming(retryPkt)) {
+        if (cpu->getIcachePort()->sendTiming(retryPkt)) {
             fetchStatus[retryTid] = IcacheWaitResponse;
             retryPkt = NULL;
             retryTid = InvalidThreadID;

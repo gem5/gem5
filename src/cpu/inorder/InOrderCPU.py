@@ -44,9 +44,6 @@ class InOrderCPU(BaseCPU):
 
     fetchMemPort = Param.String("icache_port" , "Name of Memory Port to get instructions from")
     dataMemPort = Param.String("dcache_port" , "Name of Memory Port to get data from")
-    icache_port = Port("Instruction Port")
-    dcache_port = Port("Data Port")
-    _cached_ports = ['icache_port', 'dcache_port']
 
     fetchBuffSize = Param.Unsigned(4, "Fetch Buffer Size (Number of Cache Blocks Stored)")
     memBlockSize = Param.Unsigned(64, "Memory Block Size")

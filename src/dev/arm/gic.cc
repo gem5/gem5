@@ -705,12 +705,13 @@ Gic::postInt(uint32_t cpu, Tick when)
         eventq->schedule(postIntEvent[cpu], when);
 }
 
-void
-Gic::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+Gic::getAddrRanges()
 {
-    range_list.clear();
-    range_list.push_back(RangeSize(distAddr, DIST_SIZE));
-    range_list.push_back(RangeSize(cpuAddr, CPU_SIZE));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(distAddr, DIST_SIZE));
+    ranges.push_back(RangeSize(cpuAddr, CPU_SIZE));
+    return ranges;
 }
 
 

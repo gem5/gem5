@@ -38,7 +38,6 @@
 #include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "mem/physical.hh"
-#include "mem/vport.hh"
 #include "params/MipsSystem.hh"
 #include "sim/byteswap.hh"
 
@@ -46,67 +45,6 @@ using namespace LittleEndianGuest;
 
 MipsSystem::MipsSystem(Params *p) : System(p)
 {
-    if (p->bare_iron == true) {
-        hexFile = new HexFile(params()->hex_file_name);
-        if (!hexFile->loadSections(functionalPort))
-            panic("Could not load hex file\n");
-    }
-
-    Addr addr = 0;
-
-    consoleSymtab = new SymbolTable;
-
-
-    /**
-     * Load the console code into memory
-     */
-    //    Load Console Code
-    console = createObjectFile(params()->console);
-
-    warn("console code is located at: %s\n", params()->console);
-
-    if (console == NULL)
-        fatal("Could not load console file %s", params()->console);
-    //Load program sections into memory
-    console->loadSections(functionalPort, loadAddrMask);
-
-    //load symbols
-    if (!console->loadGlobalSymbols(consoleSymtab))
-        panic("could not load console symbols\n");
-
-    if (!console->loadGlobalSymbols(debugSymbolTable))
-        panic("could not load console symbols\n");
-
-
-#ifndef NDEBUG
-    consolePanicEvent = addConsoleFuncEvent<BreakPCEvent>("panic");
-#endif
-
-    /**
-     * Copy the osflags (kernel arguments) into the consoles
-     * memory. (Presently Linux does not use the console service
-     * routine to get these command line arguments, but Tru64 and
-     * others do.)
-     */
-    if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
-        warn("writing addr starting from %#x", addr);
-        virtPort->writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
-                strlen(params()->boot_osflags.c_str()));
-    }
-
-    /**
-     * Set the hardware reset parameter block system type and revision
-     * information to Tsunami.
-     */
-    if (consoleSymtab->findAddress("m5_rpb", addr)) {
-        uint64_t data;
-        data = htog(params()->system_type);
-        virtPort->write(addr + 0x50, data);
-        data = htog(params()->system_rev);
-        virtPort->write(addr + 0x58, data);
-    } else {
-        panic("could not find hwrpb\n");
-    }
 }
 
 MipsSystem::~MipsSystem()

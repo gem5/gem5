@@ -84,17 +84,8 @@ MemTest::CpuPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-MemTest::CpuPort::recvStatusChange(Status status)
+MemTest::CpuPort::recvRangeChange()
 {
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("MemTest doesn't expect recvStatusChange callback!");
 }
 
 void
@@ -149,9 +140,6 @@ MemTest::MemTest(const Params *p)
       atomic(p->atomic),
       suppress_func_warnings(p->suppress_func_warnings)
 {
-    cachePort.snoopRangeSent = false;
-    funcPort.snoopRangeSent = true;
-
     id = TESTER_ALLOCATOR++;
 
     // Needs to be masked off once we know the block size.

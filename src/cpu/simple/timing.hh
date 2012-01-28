@@ -137,31 +137,23 @@ class TimingSimpleCPU : public BaseSimpleCPU
     // This function always implicitly uses dcache_pkt.
     bool handleWritePacket();
 
-    class CpuPort : public Port
+    /**
+     * A TimingCPUPort overrides the default behaviour of the
+     * recvTiming and recvRetry and implements events for the
+     * scheduling of handling of incoming packets in the following
+     * cycle.
+     */
+    class TimingCPUPort : public CpuPort
     {
-      protected:
-        TimingSimpleCPU *cpu;
-        Tick lat;
-
       public:
 
-        CpuPort(const std::string &_name, TimingSimpleCPU *_cpu, Tick _lat)
-            : Port(_name, _cpu), cpu(_cpu), lat(_lat), retryEvent(this)
+        TimingCPUPort(const std::string& _name, TimingSimpleCPU* _cpu)
+            : CpuPort(_name, _cpu), cpu(_cpu), retryEvent(this)
         { }
-
-        bool snoopRangeSent;
 
       protected:
 
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        virtual void recvFunctional(PacketPtr pkt);
-
-        virtual void recvStatusChange(Status status);
-
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { resp.clear(); snoop = false; }
+        TimingSimpleCPU* cpu;
 
         struct TickEvent : public Event
         {
@@ -169,7 +161,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
             TimingSimpleCPU *cpu;
             CpuPort *port;
 
-            TickEvent(TimingSimpleCPU *_cpu) : cpu(_cpu) {}
+            TickEvent(TimingSimpleCPU *_cpu) : pkt(NULL), cpu(_cpu) {}
             const char *description() const { return "Timing CPU tick"; }
             void schedule(PacketPtr _pkt, Tick t);
         };
@@ -177,12 +169,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
         EventWrapper<Port, &Port::sendRetry> retryEvent;
     };
 
-    class IcachePort : public CpuPort
+    class IcachePort : public TimingCPUPort
     {
       public:
 
-        IcachePort(TimingSimpleCPU *_cpu, Tick _lat)
-            : CpuPort(_cpu->name() + "-iport", _cpu, _lat), tickEvent(_cpu)
+        IcachePort(TimingSimpleCPU *_cpu)
+            : TimingCPUPort(_cpu->name() + "-iport", _cpu),
+              tickEvent(_cpu)
         { }
 
       protected:
@@ -204,15 +197,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
     };
 
-    class DcachePort : public CpuPort
+    class DcachePort : public TimingCPUPort
     {
       public:
 
-        DcachePort(TimingSimpleCPU *_cpu, Tick _lat)
-            : CpuPort(_cpu->name() + "-dport", _cpu, _lat), tickEvent(_cpu)
+        DcachePort(TimingSimpleCPU *_cpu)
+            : TimingCPUPort(_cpu->name() + "-dport", _cpu), tickEvent(_cpu)
         { }
-
-        virtual void setPeer(Port *port);
 
       protected:
 

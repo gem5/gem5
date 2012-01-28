@@ -134,7 +134,7 @@ struct AllFlags : public Flag
         FlagsMap::iterator end = allFlags().end();
         for (; i != end; ++i)
             if (i->second != this)
-                i->second->enable();
+                i->second->disable();
     }
 };
 

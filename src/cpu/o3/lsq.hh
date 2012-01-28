@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -64,13 +76,6 @@ class LSQ {
 
     /** Registers statistics of each LSQ unit. */
     void regStats();
-
-    /** Returns dcache port.
-     *  @todo: Dcache port needs to be moved up to this level for SMT
-     *  to work.  For now it just returns the port from one of the
-     *  threads.
-     */
-    Port *getDcachePort() { return &dcachePort; }
 
     /** Sets the pointer to the list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
@@ -281,60 +286,24 @@ class LSQ {
     Fault write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
                 uint8_t *data, int store_idx);
 
+    /**
+     * Retry the previous send that failed.
+     */
+    void recvRetry();
+
+    /**
+     * Handles writing back and completing the load or store that has
+     * returned from memory.
+     *
+     * @param pkt Response packet from the memory sub-system
+     */
+    bool recvTiming(PacketPtr pkt);
+
     /** The CPU pointer. */
     O3CPU *cpu;
 
     /** The IEW stage pointer. */
     IEW *iewStage;
-
-    /** DcachePort class for this LSQ.  Handles doing the
-     * communication with the cache/memory.
-     */
-    class DcachePort : public Port
-    {
-      protected:
-        /** Pointer to LSQ. */
-        LSQ *lsq;
-
-      public:
-        /** Default constructor. */
-        DcachePort(LSQ *_lsq)
-            : Port(_lsq->name() + "-dport", _lsq->cpu), lsq(_lsq)
-        { }
-
-        bool snoopRangeSent;
-
-        virtual void setPeer(Port *port);
-
-      protected:
-        /** Atomic version of receive.  Panics. */
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        /** Functional version of receive.  Panics. */
-        virtual void recvFunctional(PacketPtr pkt);
-
-        /** Receives status change.  Other than range changing, panics. */
-        virtual void recvStatusChange(Status status);
-
-        /** Returns the address ranges of this device. */
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { resp.clear(); snoop = true; }
-
-        /** Timing version of receive.  Handles writing back and
-         * completing the load or store that has returned from
-         * memory. */
-        virtual bool recvTiming(PacketPtr pkt);
-
-        /** Handles doing a retry of the previous send. */
-        virtual void recvRetry();
-    };
-
-    /** D-cache port. */
-    DcachePort dcachePort;
-
-    /** Tell the CPU to update the Phys and Virt ports. */
-    void updateMemPorts() { cpu->updateMemPorts(); }
 
   protected:
     /** The LSQ policy for SMT mode. */

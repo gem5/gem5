@@ -273,8 +273,6 @@ class MetaSimObject(type):
         assert(not hasattr(port, 'name'))
         port.name = name
         cls._ports[name] = port
-        if hasattr(port, 'default'):
-            cls._cls_get_port_ref(name).connect(port.default)
 
     # same as _get_port_ref, effectively, but for classes
     def _cls_get_port_ref(cls, attr):

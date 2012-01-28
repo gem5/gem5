@@ -428,10 +428,6 @@ class InOrderCPU : public BaseCPU
     /** Halts the CPU. */
     void halt() { panic("Halt not implemented!\n"); }
 
-    /** Update the Virt and Phys ports of all ThreadContexts to
-     * reflect change in memory connections. */
-    void updateMemPorts();
-
     /** Check if this address is a valid instruction address. */
     bool validInstAddr(Addr addr) { return true; }
 

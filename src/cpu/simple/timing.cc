@@ -82,52 +82,23 @@ TimingSimpleCPU::init()
             TheISA::initCPU(tc, _cpuId);
         }
     }
-}
 
-Tick
-TimingSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    panic("TimingSimpleCPU doesn't expect recvAtomic callback!");
-    return curTick();
+    // Initialise the ThreadContext's memory proxies
+    tcBase()->initMemProxies(tcBase());
 }
 
 void
-TimingSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
-{
-    //No internal storage to update, jusst return
-    return;
-}
-
-void
-TimingSimpleCPU::CpuPort::recvStatusChange(Status status)
-{
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("TimingSimpleCPU doesn't expect recvStatusChange callback!");
-}
-
-
-void
-TimingSimpleCPU::CpuPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
+TimingSimpleCPU::TimingCPUPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 {
     pkt = _pkt;
     cpu->schedule(this, t);
 }
 
 TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
-    : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this, p->clock),
-    dcachePort(this, p->clock), fetchEvent(this)
+    : BaseSimpleCPU(p), fetchTranslation(this), icachePort(this),
+    dcachePort(this), fetchEvent(this)
 {
     _status = Idle;
-
-    icachePort.snoopRangeSent = false;
-    dcachePort.snoopRangeSent = false;
 
     ifetch_pkt = dcache_pkt = NULL;
     drainEvent = NULL;
@@ -874,18 +845,6 @@ TimingSimpleCPU::completeDrain()
     drainEvent->process();
 }
 
-void
-TimingSimpleCPU::DcachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-    if (FullSystem) {
-        // Update the ThreadContext's memory ports (Functional/Virtual
-        // Ports)
-        cpu->tcBase()->connectMemPorts(cpu->tcBase());
-    }
-}
-
 bool
 TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
 {
@@ -903,7 +862,7 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
                 // faster than a CPU we could get two responses before
                 // next_tick expires
                 if (!retryEvent.scheduled())
-                    schedule(retryEvent, next_tick);
+                    cpu->schedule(retryEvent, next_tick);
                 return false;
             }
         }

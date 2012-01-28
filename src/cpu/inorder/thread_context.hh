@@ -117,8 +117,12 @@ class InOrderThreadContext : public ThreadContext
     TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
 
-    void connectMemPorts(ThreadContext *tc)
-    { thread->connectMemPorts(tc); }
+    PortProxy* getPhysProxy() { return thread->getPhysProxy(); }
+
+    FSTranslatingPortProxy* getVirtProxy();
+
+    void initMemProxies(ThreadContext *tc)
+    { thread->initMemProxies(tc); }
 
     /** Dumps the function profiling information.
      * @todo: Implement.
@@ -142,13 +146,10 @@ class InOrderThreadContext : public ThreadContext
         return this->thread->quiesceEvent;
     }
 
+    SETranslatingPortProxy* getMemProxy() { return thread->getMemProxy(); }
+
     /** Returns a pointer to this thread's process. */
     Process *getProcessPtr() { return thread->getProcessPtr(); }
-
-    TranslatingPort *getMemPort() { return thread->getMemPort(); }
-
-    VirtualPort *getVirtPort();
-    FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
     /** Returns this thread's status. */
     Status status() const { return thread->status(); }

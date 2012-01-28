@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
@@ -44,23 +56,80 @@
 #include "cpu/pc_event.hh"
 #include "enums/MemoryMode.hh"
 #include "kern/system_events.hh"
+#include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "params/System.hh"
-#include "sim/sim_object.hh"
 
 class BaseCPU;
 class BaseRemoteGDB;
-class FunctionalPort;
+class FSTranslatingPortProxy;
 class GDBListener;
 class ObjectFile;
 class PhysicalMemory;
 class Platform;
+class PortProxy;
 class ThreadContext;
 class VirtualPort;
 
-class System : public SimObject
+class System : public MemObject
 {
+  private:
+
+    /**
+     * Private class for the system port which is only used as a
+     * master for debug access and for non-structural entities that do
+     * not have a port of their own.
+     */
+    class SystemPort : public Port
+    {
+      public:
+
+        /**
+         * Create a system port with a name and an owner.
+         */
+        SystemPort(const std::string &_name, MemObject *_owner)
+            : Port(_name, _owner)
+        { }
+        bool recvTiming(PacketPtr pkt)
+        { panic("SystemPort does not receive timing!\n"); return false; }
+        Tick recvAtomic(PacketPtr pkt)
+        { panic("SystemPort does not receive atomic!\n"); return 0; }
+        void recvFunctional(PacketPtr pkt)
+        { panic("SystemPort does not receive functional!\n"); }
+
+        /**
+         * The system port is a master port connected to a single
+         * slave and thus do not care about what ranges the slave
+         * covers (as there is nothing to choose from).
+         */
+        void recvRangeChange() { }
+
+    };
+
+    SystemPort _systemPort;
+
   public:
+
+    /**
+     * After all objects have been created and all ports are
+     * connected, check that the system port is connected.
+     */
+    virtual void init();
+
+    /**
+     * Get a pointer to the system port that can be used by
+     * non-structural simulation objects like processes or threads, or
+     * external entities like loaders and debuggers, etc, to access
+     * the memory system.
+     *
+     * @return a pointer to the system port we own
+     */
+    Port* getSystemPort() { return &_systemPort; }
+
+    /**
+     * Additional function to return the Port of a memory object.
+     */
+    Port *getPort(const std::string &if_name, int idx = -1);
 
     static const char *MemoryModeStrings[3];
 
@@ -112,8 +181,8 @@ class System : public SimObject
 
     /** Port to physical memory used for writing object files into ram at
      * boot.*/
-    FunctionalPort *functionalPort;
-    VirtualPort *virtPort;
+    PortProxy* physProxy;
+    FSTranslatingPortProxy* virtProxy;
 
     /** kernel symbol table */
     SymbolTable *kernelSymtab;

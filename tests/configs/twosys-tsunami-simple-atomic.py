@@ -36,11 +36,22 @@ test_sys = makeLinuxAlphaSystem('atomic',
                                  SysConfig('netperf-stream-client.rcS'))
 test_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 test_sys.cpu.connectAllPorts(test_sys.membus)
+# In contrast to the other (one-system) Tsunami configurations we do
+# not have an IO cache but instead rely on an IO bridge for accesses
+# from masters on the IO bus to the memory bus
+test_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
+                           ranges = [AddrRange(0, '8GB')])
+test_sys.iobridge.slave = test_sys.iobus.port
+test_sys.iobridge.master = test_sys.membus.port
 
 drive_sys = makeLinuxAlphaSystem('atomic',
                                  SysConfig('netperf-server.rcS'))
 drive_sys.cpu = AtomicSimpleCPU(cpu_id=0)
 drive_sys.cpu.connectAllPorts(drive_sys.membus)
+drive_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
+                            ranges = [AddrRange(0, '8GB')])
+drive_sys.iobridge.slave = drive_sys.iobus.port
+drive_sys.iobridge.master = drive_sys.membus.port
 
 root = makeDualRoot(test_sys, drive_sys, "ethertrace")
 

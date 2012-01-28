@@ -733,3 +733,9 @@ Sequencer::checkCoherence(const Address& addr)
     g_system_ptr->checkGlobalCoherenceInvariant(addr);
 #endif
 }
+
+void
+Sequencer::evictionCallback(const Address& address)
+{
+    ruby_eviction_callback(address);
+}

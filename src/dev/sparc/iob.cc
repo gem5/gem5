@@ -323,12 +323,13 @@ Iob::receiveJBusInterrupt(int cpu_id, int source, uint64_t d0, uint64_t d1)
     return true;
 }
 
-void
-Iob::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+Iob::getAddrRanges()
 {
-    range_list.clear();
-    range_list.push_back(RangeSize(iobManAddr, iobManSize));
-    range_list.push_back(RangeSize(iobJBusAddr, iobJBusSize));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(iobManAddr, iobManSize));
+    ranges.push_back(RangeSize(iobJBusAddr, iobJBusSize));
+    return ranges;
 }
 
 

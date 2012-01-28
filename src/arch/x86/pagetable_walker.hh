@@ -63,26 +63,18 @@ namespace X86ISA
         {
           public:
             WalkerPort(const std::string &_name, Walker * _walker) :
-                  Port(_name, _walker), walker(_walker),
-                  snoopRangeSent(false)
+                  Port(_name, _walker), walker(_walker)
             {}
 
           protected:
             Walker * walker;
 
-            bool snoopRangeSent;
-
             bool recvTiming(PacketPtr pkt);
             Tick recvAtomic(PacketPtr pkt);
             void recvFunctional(PacketPtr pkt);
-            void recvStatusChange(Status status);
+            void recvRangeChange();
             void recvRetry();
-            void getDeviceAddressRanges(AddrRangeList &resp,
-                    bool &snoop)
-            {
-                resp.clear();
-                snoop = true;
-            }
+            bool isSnooping() { return true; }
         };
 
         friend class WalkerPort;

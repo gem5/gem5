@@ -92,69 +92,18 @@ AtomicSimpleCPU::init()
             TheISA::initCPU(tc, tc->contextId());
         }
     }
+
+    // Initialise the ThreadContext's memory proxies
+    tcBase()->initMemProxies(tcBase());
+
     if (hasPhysMemPort) {
-        bool snoop = false;
-        AddrRangeList pmAddrList;
-        physmemPort.getPeerAddressRanges(pmAddrList, snoop);
+        AddrRangeList pmAddrList = physmemPort.getPeer()->getAddrRanges();
         physMemAddr = *pmAddrList.begin();
     }
     // Atomic doesn't do MT right now, so contextId == threadId
     ifetch_req.setThreadContext(_cpuId, 0); // Add thread ID if we add MT
     data_read_req.setThreadContext(_cpuId, 0); // Add thread ID here too
     data_write_req.setThreadContext(_cpuId, 0); // Add thread ID here too
-}
-
-bool
-AtomicSimpleCPU::CpuPort::recvTiming(PacketPtr pkt)
-{
-    panic("AtomicSimpleCPU doesn't expect recvTiming callback!");
-    return true;
-}
-
-Tick
-AtomicSimpleCPU::CpuPort::recvAtomic(PacketPtr pkt)
-{
-    //Snooping a coherence request, just return
-    return 0;
-}
-
-void
-AtomicSimpleCPU::CpuPort::recvFunctional(PacketPtr pkt)
-{
-    //No internal storage to update, just return
-    return;
-}
-
-void
-AtomicSimpleCPU::CpuPort::recvStatusChange(Status status)
-{
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("AtomicSimpleCPU doesn't expect recvStatusChange callback!");
-}
-
-void
-AtomicSimpleCPU::CpuPort::recvRetry()
-{
-    panic("AtomicSimpleCPU doesn't expect recvRetry callback!");
-}
-
-void
-AtomicSimpleCPU::DcachePort::setPeer(Port *port)
-{
-    Port::setPeer(port);
-
-    if (FullSystem) {
-        // Update the ThreadContext's memory ports (Functional/Virtual
-        // Ports)
-        cpu->tcBase()->connectMemPorts(cpu->tcBase());
-    }
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
@@ -165,10 +114,6 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       physmemPort(name() + "-iport", this), hasPhysMemPort(false)
 {
     _status = Idle;
-
-    icachePort.snoopRangeSent = false;
-    dcachePort.snoopRangeSent = false;
-
 }
 
 

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,15 +38,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Hansson
  */
 
 /**
  * @file
  * Definition of a bus object.
  */
-
-#include <algorithm>
-#include <limits>
 
 #include "base/misc.hh"
 #include "base/trace.hh"
@@ -46,8 +56,7 @@
 Bus::Bus(const BusParams *p)
     : MemObject(p), busId(p->bus_id), clock(p->clock),
       headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
-      drainEvent(NULL), busIdle(this), inRetry(false), maxId(0),
-      defaultPort(NULL), funcPort(NULL), funcPortId(-4),
+      drainEvent(NULL), busIdle(this), inRetry(false), defaultPortId(-1),
       useDefaultRange(p->use_default_range), defaultBlockSize(p->block_size),
       cachedBlockSize(0), cachedBlockSizeValid(false)
 {
@@ -58,65 +67,44 @@ Bus::Bus(const BusParams *p)
         fatal("Bus clock period must be positive\n");
     if (headerCycles <= 0)
         fatal("Number of header cycles must be positive\n");
-    clearBusCache();
     clearPortCache();
 }
 
 Port *
 Bus::getPort(const std::string &if_name, int idx)
 {
+    std::string portName;
+    int id = interfaces.size();
     if (if_name == "default") {
-        if (defaultPort == NULL) {
-            defaultPort = new BusPort(csprintf("%s-default",name()), this,
-                                      defaultId);
-            cachedBlockSizeValid = false;
-            return defaultPort;
+        if (defaultPortId == -1) {
+            defaultPortId = id;
+            portName = csprintf("%s-default", name());
         } else
-            fatal("Default port already set\n");
+            fatal("Default port already set on %s\n", name());
+    } else {
+        portName = csprintf("%s-p%d", name(), id);
     }
-    int id;
-    if (if_name == "functional") {
-        if (!funcPort) {
-            id = maxId++;
-            funcPort = new BusPort(csprintf("%s-p%d-func", name(), id), this, id);
-            funcPortId = id;
-            interfaces[id] = funcPort;
-        }
-        return funcPort;
-    }
-
-    // if_name ignored?  forced to be empty?
-    id = maxId++;
-    assert(maxId < std::numeric_limits<typeof(maxId)>::max());
-    BusPort *bp = new BusPort(csprintf("%s-p%d", name(), id), this, id);
-    interfaces[id] = bp;
+    BusPort *bp = new BusPort(portName, this, id);
+    interfaces.push_back(bp);
     cachedBlockSizeValid = false;
     return bp;
 }
 
 void
-Bus::deletePortRefs(Port *p)
-{
-
-    BusPort *bp =  dynamic_cast<BusPort*>(p);
-    if (bp == NULL)
-        panic("Couldn't convert Port* to BusPort*\n");
-    // If this is our one functional port
-    if (funcPort == bp)
-        return;
-    interfaces.erase(bp->getId());
-    clearBusCache();
-    delete bp;
-}
-
-/** Get the ranges of anyone other buses that we are connected to. */
-void
 Bus::init()
 {
-    m5::hash_map<short,BusPort*>::iterator intIter;
+    std::vector<BusPort*>::iterator intIter;
 
-    for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
-        intIter->second->sendStatusChange(Port::RangeChange);
+    // iterate over our interfaces and determine which of our neighbours
+    // are snooping and add them as snoopers
+    for (intIter = interfaces.begin(); intIter != interfaces.end();
+         intIter++) {
+        if ((*intIter)->getPeer()->isSnooping()) {
+            DPRINTF(BusAddrRanges, "Adding snooping neighbour %s\n",
+                    (*intIter)->getPeer()->name());
+            snoopPorts.push_back(*intIter);
+        }
+    }
 }
 
 Bus::BusFreeEvent::BusFreeEvent(Bus *_bus)
@@ -194,16 +182,7 @@ Bus::recvTiming(PacketPtr pkt)
 {
     short src = pkt->getSrc();
 
-    BusPort *src_port;
-    if (src == defaultId)
-        src_port = defaultPort;
-    else {
-        src_port = checkBusCache(src);
-        if (src_port == NULL) {
-            src_port = interfaces[src];
-            updateBusCache(src, src_port);
-        }
-    }
+    BusPort *src_port = interfaces[src];
 
     // If the bus is busy, or other devices are in line ahead of the current
     // one, put this device on the retry list.
@@ -229,8 +208,7 @@ Bus::recvTiming(PacketPtr pkt)
 
     if (dest == Packet::Broadcast) {
         dest_port_id = findPort(pkt->getAddr());
-        dest_port = (dest_port_id == defaultId) ?
-            defaultPort : interfaces[dest_port_id];
+        dest_port = interfaces[dest_port_id];
         SnoopIter s_end = snoopPorts.end();
         for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
             BusPort *p = *s_iter;
@@ -241,20 +219,10 @@ Bus::recvTiming(PacketPtr pkt)
             }
         }
     } else {
-        assert(dest < maxId);
+        assert(dest < interfaces.size());
         assert(dest != src); // catch infinite loops
         dest_port_id = dest;
-        if (dest_port_id == defaultId)
-            dest_port = defaultPort;
-        else {
-            dest_port = checkBusCache(dest);
-            if (dest_port == NULL) {
-                dest_port = interfaces[dest_port_id];
-            // updateBusCache(dest_port_id, dest_port);
-            }
-        }
-        dest_port = (dest_port_id == defaultId) ?
-            defaultPort : interfaces[dest_port_id];
+        dest_port = interfaces[dest_port_id];
     }
 
     if (dest_port_id == src) {
@@ -352,7 +320,7 @@ Bus::findPort(Addr addr)
         for (AddrRangeIter i = defaultRange.begin(); i != a_end; i++) {
             if (*i == addr) {
                 DPRINTF(Bus, "  found addr %#llx on default\n", addr);
-                return defaultId;
+                return defaultPortId;
             }
         }
 
@@ -361,7 +329,7 @@ Bus::findPort(Addr addr)
 
     DPRINTF(Bus, "Unable to find destination for addr %#llx, "
             "will use default port\n", addr);
-    return defaultId;
+    return defaultPortId;
 }
 
 
@@ -385,16 +353,7 @@ Bus::recvAtomic(PacketPtr pkt)
     int orig_src = pkt->getSrc();
 
     int target_port_id = findPort(pkt->getAddr());
-    BusPort *target_port;
-    if (target_port_id == defaultId)
-        target_port = defaultPort;
-    else {
-      target_port = checkBusCache(target_port_id);
-      if (target_port == NULL) {
-          target_port = interfaces[target_port_id];
-          updateBusCache(target_port_id, target_port);
-      }
-    }
+    BusPort *target_port = interfaces[target_port_id];
 
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
@@ -450,7 +409,7 @@ Bus::recvFunctional(PacketPtr pkt)
     assert(pkt->getDest() == Packet::Broadcast);
 
     int port_id = findPort(pkt->getAddr());
-    Port *port = (port_id == defaultId) ? defaultPort : interfaces[port_id];
+    Port *port = interfaces[port_id];
     // The packet may be changed by another bus on snoops, restore the
     // id after each
     int src_id = pkt->getSrc();
@@ -483,30 +442,25 @@ Bus::recvFunctional(PacketPtr pkt)
     }
 }
 
-/** Function called by the port when the bus is receiving a status change.*/
+/** Function called by the port when the bus is receiving a range change.*/
 void
-Bus::recvStatusChange(Port::Status status, int id)
+Bus::recvRangeChange(int id)
 {
     AddrRangeList ranges;
-    bool snoops;
     AddrRangeIter iter;
 
-    if (inRecvStatusChange.count(id))
+    if (inRecvRangeChange.count(id))
         return;
-    inRecvStatusChange.insert(id);
-
-    assert(status == Port::RangeChange &&
-           "The other statuses need to be implemented.");
+    inRecvRangeChange.insert(id);
 
     DPRINTF(BusAddrRanges, "received RangeChange from device id %d\n", id);
 
     clearPortCache();
-    if (id == defaultId) {
+    if (id == defaultPortId) {
         defaultRange.clear();
         // Only try to update these ranges if the user set a default responder.
         if (useDefaultRange) {
-            defaultPort->getPeerAddressRanges(ranges, snoops);
-            assert(snoops == false);
+            AddrRangeList ranges = interfaces[id]->getPeer()->getAddrRanges();
             for(iter = ranges.begin(); iter != ranges.end(); iter++) {
                 defaultRange.push_back(*iter);
                 DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for default range\n",
@@ -515,7 +469,7 @@ Bus::recvStatusChange(Port::Status status, int id)
         }
     } else {
 
-        assert((id < maxId && id >= 0) || id == defaultId);
+        assert(id < interfaces.size() && id >= 0);
         BusPort *port = interfaces[id];
 
         // Clean out any previously existent ids
@@ -527,20 +481,7 @@ Bus::recvStatusChange(Port::Status status, int id)
                 portIter++;
         }
 
-        for (SnoopIter s_iter = snoopPorts.begin();
-             s_iter != snoopPorts.end(); ) {
-            if ((*s_iter)->getId() == id)
-                s_iter = snoopPorts.erase(s_iter);
-            else
-                s_iter++;
-        }
-
-        port->getPeerAddressRanges(ranges, snoops);
-
-        if (snoops) {
-            DPRINTF(BusAddrRanges, "Adding id %d to snoop list\n", id);
-            snoopPorts.push_back(port);
-        }
+        ranges = port->getPeer()->getAddrRanges();
 
         for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
@@ -557,28 +498,25 @@ Bus::recvStatusChange(Port::Status status, int id)
 
     // tell all our peers that our address range has changed.
     // Don't tell the device that caused this change, it already knows
-    m5::hash_map<short,BusPort*>::iterator intIter;
+    std::vector<BusPort*>::const_iterator intIter;
 
     for (intIter = interfaces.begin(); intIter != interfaces.end(); intIter++)
-        if (intIter->first != id && intIter->first != funcPortId)
-            intIter->second->sendStatusChange(Port::RangeChange);
+        if ((*intIter)->getId() != id)
+            (*intIter)->sendRangeChange();
 
-    if (id != defaultId && defaultPort)
-        defaultPort->sendStatusChange(Port::RangeChange);
-    inRecvStatusChange.erase(id);
+    inRecvRangeChange.erase(id);
 }
 
-void
-Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
+AddrRangeList
+Bus::getAddrRanges(int id)
 {
-    resp.clear();
-    snoop = false;
+    AddrRangeList ranges;
 
     DPRINTF(BusAddrRanges, "received address range request, returning:\n");
 
     for (AddrRangeIter dflt_iter = defaultRange.begin();
          dflt_iter != defaultRange.end(); dflt_iter++) {
-        resp.push_back(*dflt_iter);
+        ranges.push_back(*dflt_iter);
         DPRINTF(BusAddrRanges, "  -- Dflt: %#llx : %#llx\n",dflt_iter->start,
                 dflt_iter->end);
     }
@@ -601,12 +539,21 @@ Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
             }
         }
         if (portIter->second != id && !subset) {
-            resp.push_back(portIter->first);
+            ranges.push_back(portIter->first);
             DPRINTF(BusAddrRanges, "  -- %#llx : %#llx\n",
                     portIter->first.start, portIter->first.end);
         }
     }
 
+    return ranges;
+}
+
+bool
+Bus::isSnooping(int id)
+{
+    // in essence, answer the question if there are other snooping
+    // ports rather than the port that is asking
+    bool snoop = false;
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != snoopPorts.end();
          s_iter++) {
         if ((*s_iter)->getId() != id) {
@@ -614,6 +561,7 @@ Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
             break;
         }
     }
+    return snoop;
 }
 
 unsigned

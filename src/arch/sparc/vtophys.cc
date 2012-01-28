@@ -37,7 +37,7 @@
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/VtoPhys.hh"
-#include "mem/vport.hh"
+#include "mem/port_proxy.hh"
 
 using namespace std;
 
@@ -81,7 +81,7 @@ vtophys(ThreadContext *tc, Addr addr)
     int pri_context = bits(tlbdata,47,32);
     // int sec_context = bits(tlbdata,63,48);
 
-    FunctionalPort *mem = tc->getPhysPort();
+    PortProxy* mem = tc->getPhysProxy();
     TLB* itb = tc->getITBPtr();
     TLB* dtb = tc->getDTBPtr();
     TlbEntry* tbe;

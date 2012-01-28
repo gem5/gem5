@@ -43,7 +43,7 @@
 #include "arch/vtophys.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "mem/physical.hh"
+#include "mem/port_proxy.hh"
 #include "params/LinuxX86System.hh"
 #include "sim/byteswap.hh"
 
@@ -67,8 +67,8 @@ LinuxX86System::initState()
     // The location of the real mode data structure.
     const Addr realModeData = 0x90200;
 
-    // A port to write to memory.
-    FunctionalPort * physPort = threadContexts[0]->getPhysPort();
+    // A port proxy to write to memory.
+    PortProxy* physProxy = threadContexts[0]->getPhysProxy();
 
     /*
      * Deal with the command line stuff.
@@ -82,14 +82,14 @@ LinuxX86System::initState()
     if (commandLine.length() + 1 > realModeData - commandLineBuff)
         panic("Command line \"%s\" is longer than %d characters.\n",
                 commandLine, realModeData - commandLineBuff - 1);
-    physPort->writeBlob(commandLineBuff,
+    physProxy->writeBlob(commandLineBuff,
             (uint8_t *)commandLine.c_str(), commandLine.length() + 1);
 
     // Generate a pointer of the right size and endianness to put into
     // commandLinePointer.
     uint32_t guestCommandLineBuff =
         X86ISA::htog((uint32_t)commandLineBuff);
-    physPort->writeBlob(commandLinePointer,
+    physProxy->writeBlob(commandLinePointer,
             (uint8_t *)&guestCommandLineBuff, sizeof(guestCommandLineBuff));
 
     /*
@@ -127,7 +127,7 @@ LinuxX86System::initState()
     // A pointer to the buffer for E820 entries.
     const Addr e820MapPointer = realModeData + 0x2d0;
 
-    e820Table->writeTo(physPort, e820MapNrPointer, e820MapPointer);
+    e820Table->writeTo(getSystemPort(), e820MapNrPointer, e820MapPointer);
 
     /*
      * Pass the location of the real mode data structure to the kernel

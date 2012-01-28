@@ -117,6 +117,7 @@ class Sequencer : public RubyPort, public Consumer
 
     void markRemoved();
     void removeRequest(SequencerRequest* request);
+    void evictionCallback(const Address& address);
 
   private:
     void issueRequest(PacketPtr pkt, RubyRequestType type);
@@ -181,4 +182,3 @@ operator<<(std::ostream& out, const Sequencer& obj)
 }
 
 #endif // __MEM_RUBY_SYSTEM_SEQUENCER_HH__
-

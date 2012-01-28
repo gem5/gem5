@@ -132,8 +132,8 @@
 #include "cpu/thread_context.hh"
 #include "debug/GDBAll.hh"
 #include "mem/port.hh"
-#include "mem/translating_port.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
 
@@ -461,10 +461,10 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
     if (FullSystem) {
-        VirtualPort *port = context->getVirtPort();
+        FSTranslatingPortProxy *port = context->getVirtProxy();
         port->readBlob(vaddr, (uint8_t*)data, size);
     } else {
-        TranslatingPort *port = context->getMemPort();
+        SETranslatingPortProxy *port = context->getMemProxy();
         port->readBlob(vaddr, (uint8_t*)data, size);
     }
 
@@ -504,10 +504,10 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
             DPRINTFNR("\n");
     }
     if (FullSystem) {
-        VirtualPort *port = context->getVirtPort();
+        FSTranslatingPortProxy *port = context->getVirtProxy();
         port->writeBlob(vaddr, (uint8_t*)data, size);
     } else {
-        TranslatingPort *port = context->getMemPort();
+        SETranslatingPortProxy *port = context->getMemProxy();
         port->writeBlob(vaddr, (uint8_t*)data, size);
         delete port;
     }

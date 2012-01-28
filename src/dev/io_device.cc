@@ -47,13 +47,10 @@ PioPort::recvAtomic(PacketPtr pkt)
     return pkt->isRead() ? device->read(pkt) : device->write(pkt);
 }
 
-void
-PioPort::getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+AddrRangeList
+PioPort::getAddrRanges()
 {
-    snoop = false;
-    device->addressRanges(resp);
-    for (AddrRangeIter i = resp.begin(); i != resp.end(); i++)
-         DPRINTF(BusAddrRanges, "Adding Range %#x-%#x\n", i->start, i->end);
+    return device->getAddrRanges();
 }
 
 
@@ -72,7 +69,7 @@ PioDevice::init()
 {
     if (!pioPort)
         panic("Pio port of %s not connected to anything!", name());
-    pioPort->sendStatusChange(Port::RangeChange);
+    pioPort->sendRangeChange();
 }
 
 Port *
@@ -105,13 +102,14 @@ BasicPioDevice::BasicPioDevice(const Params *p)
       pioDelay(p->pio_latency)
 {}
 
-void
-BasicPioDevice::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+BasicPioDevice::getAddrRanges()
 {
     assert(pioSize != 0);
-    range_list.clear();
+    AddrRangeList ranges;
     DPRINTF(BusAddrRanges, "registering range: %#x-%#x\n", pioAddr, pioSize);
-    range_list.push_back(RangeSize(pioAddr, pioSize));
+    ranges.push_back(RangeSize(pioAddr, pioSize));
+    return ranges;
 }
 
 
@@ -121,7 +119,7 @@ DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
       pendingCount(0), actionInProgress(0), drainEvent(NULL),
       backoffTime(0), minBackoffDelay(min_backoff),
       maxBackoffDelay(max_backoff), inRetry(false), recvSnoops(recv_snoops),
-      snoopRangeSent(false), backoffEvent(this)
+      backoffEvent(this)
 { }
 
 bool
@@ -136,7 +134,7 @@ DmaPort::recvTiming(PacketPtr pkt)
         else if (backoffTime < maxBackoffDelay)
             backoffTime <<= 1;
 
-        reschedule(backoffEvent, curTick() + backoffTime, true);
+        device->reschedule(backoffEvent, curTick() + backoffTime, true);
 
         DPRINTF(DMA, "Backoff time set to %d ticks\n", backoffTime);
 
@@ -164,7 +162,8 @@ DmaPort::recvTiming(PacketPtr pkt)
         if (state->totBytes == state->numBytes) {
             if (state->completionEvent) {
                 if (state->delay)
-                    schedule(state->completionEvent, curTick() + state->delay);
+                    device->schedule(state->completionEvent,
+                                     curTick() + state->delay);
                 else
                     state->completionEvent->process();
             }
@@ -234,7 +233,7 @@ DmaPort::recvRetry()
     if (transmitList.size() && backoffTime && !inRetry) {
         DPRINTF(DMA, "Scheduling backoff for %d\n", curTick()+backoffTime);
         if (!backoffEvent.scheduled())
-            schedule(backoffEvent, backoffTime + curTick());
+            device->schedule(backoffEvent, backoffTime + curTick());
     }
     DPRINTF(DMA, "TransmitList: %d, backoffTime: %d inRetry: %d es: %d\n",
             transmitList.size(), backoffTime, inRetry,
@@ -320,7 +319,7 @@ DmaPort::sendDma()
                 !backoffEvent.scheduled()) {
             DPRINTF(DMA, "-- Scheduling backoff timer for %d\n",
                     backoffTime+curTick());
-            schedule(backoffEvent, backoffTime + curTick());
+            device->schedule(backoffEvent, backoffTime + curTick());
         }
     } else if (state == Enums::atomic) {
         transmitList.pop_front();
@@ -342,7 +341,8 @@ DmaPort::sendDma()
         if (state->totBytes == state->numBytes) {
             if (state->completionEvent) {
                 assert(!state->completionEvent->scheduled());
-                schedule(state->completionEvent, curTick() + lat + state->delay);
+                device->schedule(state->completionEvent,
+                                 curTick() + lat + state->delay);
             }
             delete state;
             delete pkt->req;

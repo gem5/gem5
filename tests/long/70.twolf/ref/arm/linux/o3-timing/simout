@@ -1,9 +1,9 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 21 2011 16:28:02
-gem5 started Nov 22 2011 18:53:02
-gem5 executing on u200540-lin
+gem5 compiled Jan 23 2012 04:16:21
+gem5 started Jan 23 2012 09:47:07
+gem5 executing on zizzer
 command line: build/ARM_SE/gem5.opt -d build/ARM_SE/tests/opt/long/70.twolf/arm/linux/o3-timing -re tests/run.py build/ARM_SE/tests/opt/long/70.twolf/arm/linux/o3-timing
 Couldn't unlink  build/ARM_SE/tests/opt/long/70.twolf/arm/linux/o3-timing/smred.sav
 Couldn't unlink  build/ARM_SE/tests/opt/long/70.twolf/arm/linux/o3-timing/smred.sv2

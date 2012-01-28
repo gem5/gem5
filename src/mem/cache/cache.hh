@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2012 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -78,8 +90,7 @@ class Cache : public BaseCache
             return static_cast<Cache<TagStore> *>(cache);
         }
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        virtual AddrRangeList getAddrRanges();
 
         virtual bool recvTiming(PacketPtr pkt);
 
@@ -106,8 +117,7 @@ class Cache : public BaseCache
 
         void processSendEvent();
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        virtual bool isSnooping();
 
         virtual bool recvTiming(PacketPtr pkt);
 
@@ -204,7 +214,6 @@ class Cache : public BaseCache
     Cache(const Params *p, TagStore *tags, BasePrefetcher *prefetcher);
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
-    virtual void deletePortRefs(Port *p);
 
     void regStats();
 
@@ -225,10 +234,9 @@ class Cache : public BaseCache
     /**
      * Performs the access specified by the request.
      * @param pkt The request to perform.
-     * @return The result of the access.
+     * @param fromCpuSide from the CPU side port or the memory side port
      */
-    void functionalAccess(PacketPtr pkt, CachePort *incomingPort,
-                          CachePort *otherSidePort);
+    void functionalAccess(PacketPtr pkt, bool fromCpuSide);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.

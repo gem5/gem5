@@ -75,6 +75,8 @@ for cpu in cpus:
     cpu.connectAllPorts(system.toL2Bus, system.membus)
     cpu.clock = '2GHz'
 
+system.system_port = system.membus.port
+
 # connect memory to membus
 system.physmem.port = system.membus.port
 

@@ -168,6 +168,9 @@ MemCmd::commandInfo[] =
     { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" },
     /* Flush Request */
     { SET3(IsRequest, IsFlush, NeedsExclusive), InvalidCmd, "FlushReq" },
+    /* Invalidation Request */
+    { SET3(NeedsExclusive, IsInvalidate, IsRequest),
+      InvalidCmd, "InvalidationReq" },
 };
 
 bool

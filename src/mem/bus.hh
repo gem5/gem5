@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -27,6 +39,7 @@
  *
  * Authors: Ron Dreslinski
  *          Ali Saidi
+ *          Andreas Hansson
  */
 
 /**
@@ -79,7 +92,16 @@ class Bus : public MemObject
         void onRetryList(bool newVal)
         { _onRetryList = newVal; }
 
-        int getId() { return id; }
+        int getId() const { return id; }
+
+        /**
+         * Determine if this port should be considered a snooper. This
+         * is determined by the bus.
+         *
+         * @return a boolean that is true if this port is snooping
+         */
+        virtual bool isSnooping()
+        { return bus->isSnooping(id); }
 
       protected:
 
@@ -98,10 +120,10 @@ class Bus : public MemObject
         virtual void recvFunctional(PacketPtr pkt)
         { pkt->setSrc(id); bus->recvFunctional(pkt); }
 
-        /** When reciving a status changefrom the peer port (at id),
+        /** When reciving a range change from the peer port (at id),
             pass it to the bus. */
-        virtual void recvStatusChange(Status status)
-        { bus->recvStatusChange(status, id); }
+        virtual void recvRangeChange()
+        { bus->recvRangeChange(id); }
 
         /** When reciving a retry from the peer port (at id),
             pass it to the bus. */
@@ -112,9 +134,8 @@ class Bus : public MemObject
         // downstream from this bus, yes?  That is, the union of all
         // the 'owned' address ranges of all the other interfaces on
         // this bus...
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { bus->addressRanges(resp, snoop, id); }
+        virtual AddrRangeList getAddrRanges()
+        { return bus->getAddrRanges(id); }
 
         // Ask the bus to ask everyone on the bus what their block size is and
         // take the max of it. This might need to be changed a bit if we ever
@@ -147,9 +168,6 @@ class Bus : public MemObject
 
     Event * drainEvent;
 
-
-    static const int defaultId = -3; //Make it unique from Broadcast
-
     typedef range_map<Addr,int>::iterator PortIter;
     range_map<Addr, int> portMap;
 
@@ -174,8 +192,8 @@ class Bus : public MemObject
      * requests. */
     void recvRetry(int id);
 
-    /** Function called by the port when the bus is recieving a status change.*/
-    void recvStatusChange(Port::Status status, int id);
+    /** Function called by the port when the bus is recieving a range change.*/
+    void recvRangeChange(int id);
 
     /** Find which port connected to this bus (if any) should be given a packet
      * with this address.
@@ -238,12 +256,23 @@ class Bus : public MemObject
         portCache[0].valid = false;
     }
 
-    /** Process address range request.
-     * @param resp addresses that we can respond to
-     * @param snoop addresses that we would like to snoop
-     * @param id ide of the busport that made the request.
+    /**
+     * Return the address ranges this port is responsible for.
+     *
+     * @param id id of the bus port that made the request
+     *
+     * @return a list of non-overlapping address ranges
      */
-    void addressRanges(AddrRangeList &resp, bool &snoop, int id);
+    AddrRangeList getAddrRanges(int id);
+
+    /**
+     * Determine if the bus port is snooping or not.
+     *
+     * @param id id of the bus port that made the request
+     *
+     * @return a boolean indicating if this port is snooping or not
+     */
+    bool isSnooping(int id);
 
     /** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.
@@ -264,14 +293,11 @@ class Bus : public MemObject
     BusFreeEvent busIdle;
 
     bool inRetry;
-    std::set<int> inRecvStatusChange;
+    std::set<int> inRecvRangeChange;
 
-    /** max number of bus ids we've handed out so far */
-    short maxId;
-
-    /** An array of pointers to the peer port interfaces
+    /** An ordered vector of pointers to the peer port interfaces
         connected to this bus.*/
-    m5::hash_map<short,BusPort*> interfaces;
+    std::vector<BusPort*> interfaces;
 
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
@@ -300,10 +326,7 @@ class Bus : public MemObject
     }
 
     /** Port that handles requests that don't match any of the interfaces.*/
-    BusPort *defaultPort;
-
-    BusPort *funcPort;
-    int funcPortId;
+    short defaultPortId;
 
     /** If true, use address range provided by default device.  Any
        address not handled by another port and not in default device's
@@ -315,59 +338,10 @@ class Bus : public MemObject
     unsigned cachedBlockSize;
     bool cachedBlockSizeValid;
 
-   // Cache for the peer port interfaces
-    struct BusCache {
-        bool  valid;
-        short id;
-        BusPort  *port;
-    };
-
-    BusCache busCache[3];
-
-    // Checks the peer port interfaces cache for the port id and returns
-    // a pointer to the matching port
-    inline BusPort* checkBusCache(short id) {
-        if (busCache[0].valid && id == busCache[0].id) {
-            return busCache[0].port;
-        }
-        if (busCache[1].valid && id == busCache[1].id) {
-            return busCache[1].port;
-        }
-        if (busCache[2].valid && id == busCache[2].id) {
-            return busCache[2].port;
-        }
-
-        return NULL;
-    }
-
-    // Replaces the earliest entry in the cache with a new entry
-    inline void updateBusCache(short id, BusPort *port) {
-        busCache[2].valid = busCache[1].valid;
-        busCache[2].id    = busCache[1].id;
-        busCache[2].port  = busCache[1].port;
-
-        busCache[1].valid = busCache[0].valid;
-        busCache[1].id    = busCache[0].id;
-        busCache[1].port  = busCache[0].port;
-
-        busCache[0].valid = true;
-        busCache[0].id    = id;
-        busCache[0].port  = port;
-    }
-
-    // Invalidates the cache. Needs to be called in constructor.
-    inline void clearBusCache() {
-        busCache[2].valid = false;
-        busCache[1].valid = false;
-        busCache[0].valid = false;
-    }
-
-
   public:
 
     /** A function used to return the port associated with this bus object. */
     virtual Port *getPort(const std::string &if_name, int idx = -1);
-    virtual void deletePortRefs(Port *p);
 
     virtual void init();
     virtual void startup();

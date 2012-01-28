@@ -63,10 +63,9 @@ class IntDev
         {
         }
 
-        void getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+        AddrRangeList getAddrRanges()
         {
-            snoop = false;
-            device->getIntAddrRange(resp);
+            return device->getIntAddrRange();
         }
 
         Tick recvMessage(PacketPtr pkt)
@@ -134,8 +133,8 @@ class IntDev
         return 0;
     }
 
-    virtual void
-    getIntAddrRange(AddrRangeList &range_list)
+    virtual AddrRangeList
+    getIntAddrRange()
     {
         panic("intAddrRange not implemented.\n");
     }

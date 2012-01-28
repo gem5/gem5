@@ -91,8 +91,6 @@ system.kernel = FSConfig.binary('x86_64-vmlinux-2.6.22.9')
 system.cpu = cpu
 #create the l1/l2 bus
 system.toL2Bus = Bus()
-system.bridge.filter_ranges_a = [AddrRange(0, Addr.max >> 4)]
-system.bridge.filter_ranges_b = [AddrRange(0, size=mem_size)]
 system.iocache = IOCache(addr_range=mem_size)
 system.iocache.cpu_side = system.iobus.port
 system.iocache.mem_side = system.membus.port

@@ -63,6 +63,17 @@ using namespace Linux;
 LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
     : AlphaSystem(p)
 {
+}
+
+void
+LinuxAlphaSystem::initState()
+{
+    // Moved from the constructor to here since it relies on the
+    // address map being resolved in the interconnect
+
+    // Call the initialisation of the super class
+    AlphaSystem::initState();
+
     Addr addr = 0;
 
     /**
@@ -77,8 +88,9 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
      * Since we aren't using a bootloader, we have to copy the
      * kernel arguments directly into the kernel's memory.
      */
-    virtPort->writeBlob(CommandLine(), (uint8_t*)params()->boot_osflags.c_str(),
-                params()->boot_osflags.length()+1);
+    virtProxy->writeBlob(CommandLine(),
+                         (uint8_t*)params()->boot_osflags.c_str(),
+                         params()->boot_osflags.length()+1);
 
     /**
      * find the address of the est_cycle_freq variable and insert it
@@ -86,8 +98,8 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
      * calculated it by using the PIT, RTC, etc.
      */
     if (kernelSymtab->findAddress("est_cycle_freq", addr))
-        virtPort->write(addr, (uint64_t)(SimClock::Frequency /
-                    p->boot_cpu_frequency));
+        virtProxy->write(addr, (uint64_t)(SimClock::Frequency /
+                                          params()->boot_cpu_frequency));
 
 
     /**
@@ -97,7 +109,7 @@ LinuxAlphaSystem::LinuxAlphaSystem(Params *p)
      * 255 ASNs.
      */
     if (kernelSymtab->findAddress("dp264_mv", addr))
-        virtPort->write(addr + 0x18, LittleEndianGuest::htog((uint32_t)127));
+        virtProxy->write(addr + 0x18, LittleEndianGuest::htog((uint32_t)127));
     else
         panic("could not find dp264_mv\n");
 
@@ -164,9 +176,9 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
         Tick cpuFreq = tc->getCpuPtr()->frequency();
         assert(intrFreq);
-        VirtualPort *vp;
+        FSTranslatingPortProxy* vp;
 
-        vp = tc->getVirtPort();
+        vp = tc->getVirtProxy();
         vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
     }
 }

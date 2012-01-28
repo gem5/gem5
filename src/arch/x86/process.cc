@@ -53,7 +53,6 @@
 #include "cpu/thread_context.hh"
 #include "debug/Stack.hh"
 #include "mem/page_table.hh"
-#include "mem/translating_port.hh"
 #include "sim/process_impl.hh"
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"

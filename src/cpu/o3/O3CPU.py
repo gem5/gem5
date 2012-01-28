@@ -49,9 +49,6 @@ class DerivO3CPU(BaseCPU):
         checker.dtb = Parent.dtb
 
     cachePorts = Param.Unsigned(200, "Cache Ports")
-    icache_port = Port("Instruction Port")
-    dcache_port = Port("Data Port")
-    _cached_ports = BaseCPU._cached_ports + ['icache_port', 'dcache_port']
 
     decodeToFetchDelay = Param.Unsigned(1, "Decode to fetch delay")
     renameToFetchDelay = Param.Unsigned(1 ,"Rename to fetch delay")

@@ -55,7 +55,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     strcpy(name->version, "Generic_118558-21");
     strcpy(name->machine, "sun4u");
 
-    name.copyOut(tc->getMemPort());
+    name.copyOut(tc->getMemProxy());
 
     return 0;
 }

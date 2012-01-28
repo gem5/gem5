@@ -128,7 +128,14 @@ class LinuxAlphaSystem : public AlphaSystem
     LinuxAlphaSystem(Params *p);
     ~LinuxAlphaSystem();
 
+    /**
+     * Initialise the system
+     */
+    virtual void initState();
+
     void setDelayLoop(ThreadContext *tc);
+
+    const Params *params() const { return (const Params *)_params; }
 };
 
 #endif // __ARCH_ALPHA_LINUX_SYSTEM_HH__

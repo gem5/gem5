@@ -37,11 +37,11 @@
 #include "arch/alpha/utility.hh"
 
 class ThreadContext;
-class FunctionalPort;
+class PortProxy;
 
 namespace AlphaISA {
 
-PageTableEntry kernel_pte_lookup(FunctionalPort *mem, Addr ptbr,
+PageTableEntry kernel_pte_lookup(PortProxy* mem, Addr ptbr,
                                  VAddr vaddr);
 
 Addr vtophys(Addr vaddr);

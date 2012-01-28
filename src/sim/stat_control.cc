@@ -53,6 +53,7 @@ using namespace std;
 
 Stats::Formula simSeconds;
 Stats::Value simTicks;
+Stats::Value finalTick;
 Stats::Value simFreq;
 
 namespace Stats {
@@ -83,6 +84,12 @@ Tick
 statElapsedTicks()
 {
     return curTick() - startTick;
+}
+
+Tick
+statFinalTick()
+{
+    return curTick();
 }
 
 SimTicksReset simTicksReset;
@@ -124,6 +131,13 @@ Global::Global()
         .functor(statElapsedTicks)
         .name("sim_ticks")
         .desc("Number of ticks simulated")
+        ;
+
+    finalTick
+        .functor(statFinalTick)
+        .name("final_tick")
+        .desc("Number of ticks from beginning of simulation \
+(restored from checkpoints and never reset)")
         ;
 
     hostInstRate

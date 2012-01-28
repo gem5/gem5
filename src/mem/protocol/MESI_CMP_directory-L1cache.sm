@@ -27,14 +27,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-machine(L1Cache, "MSI Directory L1 Cache CMP")
+machine(L1Cache, "MESI Directory L1 Cache CMP")
  : Sequencer * sequencer,
    CacheMemory * L1IcacheMemory,
    CacheMemory * L1DcacheMemory,
    int l2_select_num_bits,
    int l1_request_latency = 2,
    int l1_response_latency = 2,
-   int to_l2_latency = 1
+   int to_l2_latency = 1,
+   bool send_evictions
 {
   // NODE L1 CACHE
   // From this node's L1 cache TO the network
@@ -67,7 +68,6 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     IS_I, AccessPermission:Busy, desc="L1 idle, issued GETS, saw Inv before data because directory doesn't block on GETS hit";
 
     M_I, AccessPermission:Busy, desc="L1 replacing, waiting for ACK";
-    E_I, AccessPermission:Busy, desc="L1 replacing, waiting for ACK";
     SINK_WB_ACK, AccessPermission:Busy, desc="This is to sink WB_Acks from L2";
 
   }
@@ -544,6 +544,12 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     }
   }
 
+  action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      sequencer.evictionCallback(address);
+    }
+  }
 
   action(g_issuePUTX, "g", desc="send data to the L2 cache") {
     enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_response_latency) {
@@ -696,7 +702,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({IS, IM, IS_I, M_I, E_I, SM}, {Load, Ifetch, Store, L1_Replacement}) {
+  transition({IS, IM, IS_I, M_I, SM}, {Load, Ifetch, Store, L1_Replacement}) {
     z_recycleMandatoryQueue;
   }
 
@@ -748,10 +754,12 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   }
 
   transition(S, L1_Replacement, I) {
+    forward_eviction_to_cpu;
     ff_deallocateL1CacheBlock;
   }
 
   transition(S, Inv, I) {
+    forward_eviction_to_cpu;
     fi_sendInvAck;
     l_popRequestQueue;
   }
@@ -770,6 +778,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   transition(E, L1_Replacement, M_I) {
     // silent E replacement??
+    forward_eviction_to_cpu;
     i_allocateTBE;
     g_issuePUTX;   // send data, but hold in case forwarded request
     ff_deallocateL1CacheBlock;
@@ -777,11 +786,13 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   transition(E, Inv, I) {
     // don't send data
+    forward_eviction_to_cpu;
     fi_sendInvAck;
     l_popRequestQueue;
   }
 
   transition(E, Fwd_GETX, I) {
+    forward_eviction_to_cpu;
     d_sendDataToRequestor;
     l_popRequestQueue;
   }
@@ -804,6 +815,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   }
 
   transition(M, L1_Replacement, M_I) {
+    forward_eviction_to_cpu;
     i_allocateTBE;
     g_issuePUTX;   // send data, but hold in case forwarded request
     ff_deallocateL1CacheBlock;
@@ -815,6 +827,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   }
 
   transition(M, Inv, I) {
+    forward_eviction_to_cpu;
     f_sendDataToL2;
     l_popRequestQueue;
   }
@@ -825,6 +838,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   }
 
   transition(M, Fwd_GETX, I) {
+    forward_eviction_to_cpu;
     d_sendDataToRequestor;
     l_popRequestQueue;
   }
@@ -865,7 +879,6 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     s_deallocateTBE;
     o_popIncomingResponseQueue;
   }
-
 
   transition(IS, DataS_fromL1, S) {
     u_writeDataToL1Cache;
@@ -935,7 +948,6 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   transition(SINK_WB_ACK, {Load, Store, Ifetch, L1_Replacement}){
       z_recycleMandatoryQueue;
-
   }
 
   transition(SINK_WB_ACK, Inv){
@@ -948,6 +960,3 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     o_popIncomingResponseQueue;
   }
 }
-
-
-

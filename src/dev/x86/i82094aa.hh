@@ -101,19 +101,21 @@ class I82094AA : public PioDevice, public IntDev
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
 
-    void addressRanges(AddrRangeList &range_list)
+    AddrRangeList getAddrRanges()
     {
-        range_list.clear();
-        range_list.push_back(RangeEx(pioAddr, pioAddr + 4));
-        range_list.push_back(RangeEx(pioAddr + 16, pioAddr + 20));
+        AddrRangeList ranges;
+        ranges.push_back(RangeEx(pioAddr, pioAddr + 4));
+        ranges.push_back(RangeEx(pioAddr + 16, pioAddr + 20));
+        return ranges;
     }
 
-    void getIntAddrRange(AddrRangeList &range_list)
+    AddrRangeList getIntAddrRange()
     {
-        range_list.clear();
-        range_list.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
-                    x86InterruptAddress(initialApicId, 0) +
-                    PhysAddrAPICRangeSize));
+        AddrRangeList ranges;
+        ranges.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
+                                 x86InterruptAddress(initialApicId, 0) +
+                                 PhysAddrAPICRangeSize));
+        return ranges;
     }
 
     void writeReg(uint8_t offset, uint32_t value);

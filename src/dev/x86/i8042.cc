@@ -43,12 +43,13 @@ const uint8_t CommandAck = 0xfa;
 const uint8_t CommandNack = 0xfe;
 const uint8_t BatSuccessful = 0xaa;
 
-void
-X86ISA::I8042::addressRanges(AddrRangeList &range_list)
+AddrRangeList
+X86ISA::I8042::getAddrRanges()
 {
-    range_list.clear();
-    range_list.push_back(RangeSize(dataPort, 1));
-    range_list.push_back(RangeSize(commandPort, 1));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(dataPort, 1));
+    ranges.push_back(RangeSize(commandPort, 1));
+    return ranges;
 }
 
 void

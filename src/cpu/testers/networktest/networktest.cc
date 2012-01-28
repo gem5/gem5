@@ -81,17 +81,8 @@ NetworkTest::CpuPort::recvFunctional(PacketPtr pkt)
 }
 
 void
-NetworkTest::CpuPort::recvStatusChange(Status status)
+NetworkTest::CpuPort::recvRangeChange()
 {
-    if (status == RangeChange) {
-        if (!snoopRangeSent) {
-            snoopRangeSent = true;
-            sendStatusChange(Port::RangeChange);
-        }
-        return;
-    }
-
-    panic("NetworkTest doesn't expect recvStatusChange callback!");
 }
 
 void
@@ -124,8 +115,6 @@ NetworkTest::NetworkTest(const Params *p)
       injRate(p->inj_rate),
       precision(p->precision)
 {
-    cachePort.snoopRangeSent = false;
-
     // set up counters
     noResponseCycles = 0;
     schedule(tickEvent, 0);

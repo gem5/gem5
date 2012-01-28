@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * Copyright (c) 2011 Regents of the University of California
  * All rights reserved.
@@ -117,6 +129,68 @@ class FullO3CPU : public BaseO3CPU
     Status _threadStatus[Impl::MaxThreads];
 
   private:
+
+    /**
+     * IcachePort class for instruction fetch.
+     */
+    class IcachePort : public CpuPort
+    {
+      protected:
+        /** Pointer to fetch. */
+        DefaultFetch<Impl> *fetch;
+
+      public:
+        /** Default constructor. */
+        IcachePort(DefaultFetch<Impl> *_fetch, FullO3CPU<Impl>* _cpu)
+            : CpuPort(_fetch->name() + "-iport", _cpu), fetch(_fetch)
+        { }
+
+      protected:
+
+        /** Timing version of receive.  Handles setting fetch to the
+         * proper status to start fetching. */
+        virtual bool recvTiming(PacketPtr pkt);
+
+        /** Handles doing a retry of a failed fetch. */
+        virtual void recvRetry();
+    };
+
+    /**
+     * DcachePort class for the load/store queue.
+     */
+    class DcachePort : public CpuPort
+    {
+      protected:
+
+        /** Pointer to LSQ. */
+        LSQ<Impl> *lsq;
+
+      public:
+        /** Default constructor. */
+        DcachePort(LSQ<Impl> *_lsq, FullO3CPU<Impl>* _cpu)
+            : CpuPort(_lsq->name() + "-dport", _cpu), lsq(_lsq)
+        { }
+
+      protected:
+
+        /** Timing version of receive.  Handles writing back and
+         * completing the load or store that has returned from
+         * memory. */
+        virtual bool recvTiming(PacketPtr pkt);
+
+        /** Handles doing a retry of the previous send. */
+        virtual void recvRetry();
+
+        /**
+         * As this CPU requires snooping to maintain the load store queue
+         * change the behaviour from the base CPU port.
+         *
+         * @return true since we have to snoop
+         */
+        virtual bool isSnooping()
+        { return true; }
+    };
+
     class TickEvent : public Event
     {
       private:
@@ -391,10 +465,6 @@ class FullO3CPU : public BaseO3CPU
     /** Halts the CPU. */
     void halt() { panic("Halt not implemented!\n"); }
 
-    /** Update the Virt and Phys ports of all ThreadContexts to
-     * reflect change in memory connections. */
-    void updateMemPorts();
-
     /** Check if this address is a valid instruction address. */
     bool validInstAddr(Addr addr) { return true; }
 
@@ -565,6 +635,12 @@ class FullO3CPU : public BaseO3CPU
 
     TheISA::ISA isa[Impl::MaxThreads];
 
+    /** Instruction port. Note that it has to appear after the fetch stage. */
+    IcachePort icachePort;
+
+    /** Data port. Note that it has to appear after the iew stages */
+    DcachePort dcachePort;
+
   public:
     /** Enum to give each stage a specific index, so when calling
      *  activateStage() or deactivateStage(), they can specify which stage
@@ -701,8 +777,11 @@ class FullO3CPU : public BaseO3CPU
                                          data, store_idx);
     }
 
+    /** Used by the fetch unit to get a hold of the instruction port. */
+    Port* getIcachePort() { return &icachePort; }
+
     /** Get the dcache port (used to find block size for translations). */
-    Port *getDcachePort() { return this->iew.ldstQueue.getDcachePort(); }
+    Port* getDcachePort() { return &dcachePort; }
 
     Addr lockAddr;
 

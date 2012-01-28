@@ -1,6 +1,15 @@
 /*
- * Copyright (c) 2001-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,48 +34,37 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ron Dreslinski
- *          Ali Saidi
+ * Authors: Andreas Hansson
  */
 
-#ifndef __MEM_TRANSLATING_PROT_HH__
-#define __MEM_TRANSLATING_PROT_HH__
+#include "mem/ruby/system/RubyPortProxy.hh"
 
-#include "mem/port.hh"
+RubyPortProxy::RubyPortProxy(const RubyPortProxyParams* p) :
+    RubyPort(p) {
+}
 
-class PageTable;
-class Process;
-
-class TranslatingPort : public FunctionalPort
+RubyPortProxy::~RubyPortProxy()
 {
-  public:
-    enum AllocType {
-        Always,
-        Never,
-        NextPage
-    };
+}
 
-  private:
-    PageTable *pTable;
-    Process *process;
-    AllocType allocating;
+void
+RubyPortProxy::init()
+{
+    // Merely override to not care about the m_controller being NULL
+}
 
-  public:
-    TranslatingPort(const std::string &_name, Process *p, AllocType alloc);
-    virtual ~TranslatingPort();
+RequestStatus
+RubyPortProxy::makeRequest(PacketPtr pkt)
+{
+    // This sequencer should only be used through the functional
+    // accesses made by the system port and so simply fail if this
+    // happens.
+    panic("RubyPortProxy::makeRequest should not be called");
+    return RequestStatus_NULL;
+}
 
-    bool tryReadBlob(Addr addr, uint8_t *p, int size);
-    bool tryWriteBlob(Addr addr, uint8_t *p, int size);
-    bool tryMemsetBlob(Addr addr, uint8_t val, int size);
-    bool tryWriteString(Addr addr, const char *str);
-    bool tryReadString(std::string &str, Addr addr);
-
-    virtual void readBlob(Addr addr, uint8_t *p, int size);
-    virtual void writeBlob(Addr addr, uint8_t *p, int size);
-    virtual void memsetBlob(Addr addr, uint8_t val, int size);
-
-    void writeString(Addr addr, const char *str);
-    void readString(std::string &str, Addr addr);
-};
-
-#endif
+RubyPortProxy*
+RubyPortProxyParams::create()
+{
+    return new RubyPortProxy(this);
+}

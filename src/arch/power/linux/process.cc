@@ -59,7 +59,7 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "power");
 
-    name.copyOut(tc->getMemPort());
+    name.copyOut(tc->getMemProxy());
     return 0;
 }
 

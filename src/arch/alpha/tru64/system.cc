@@ -38,9 +38,7 @@
 #include "cpu/thread_context.hh"
 #include "kern/tru64/tru64_events.hh"
 #include "kern/system_events.hh"
-#include "mem/physical.hh"
-#include "mem/port.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
 
 using namespace std;
 
@@ -49,7 +47,7 @@ Tru64AlphaSystem::Tru64AlphaSystem(Tru64AlphaSystem::Params *p)
 {
     Addr addr = 0;
     if (kernelSymtab->findAddress("enable_async_printf", addr)) {
-        virtPort->write(addr, (uint32_t)0);
+        virtProxy->write(addr, (uint32_t)0);
     }
 
 #ifdef DEBUG

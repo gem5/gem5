@@ -100,7 +100,7 @@ class Uart8250 : public Uart
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
-    virtual void addressRanges(AddrRangeList &range_list);
+    virtual AddrRangeList getAddrRanges();
 
     /**
      * Inform the uart that there is data available.

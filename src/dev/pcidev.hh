@@ -65,8 +65,7 @@ class PciDev : public DmaDevice
 
         virtual Tick recvAtomic(PacketPtr pkt);
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop);
+        virtual AddrRangeList getAddrRanges();
 
         Platform *platform;
 
@@ -187,10 +186,12 @@ class PciDev : public DmaDevice
     interruptLine()
     { return letoh(config.interruptLine); }
 
-    /** return the address ranges that this device responds to.
-     * @params range_list range list to populate with ranges
+    /**
+     * Determine the address ranges that this device responds to.
+     *
+     * @return a list of non-overlapping address ranges
      */
-    void addressRanges(AddrRangeList &range_list);
+    AddrRangeList getAddrRanges();
 
     /**
      * Constructor for PCI Dev. This function copies data from the

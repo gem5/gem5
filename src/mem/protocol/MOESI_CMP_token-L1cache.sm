@@ -43,7 +43,8 @@ machine(L1Cache, "Token protocol")
    int retry_threshold = 1,
    int fixed_timeout_latency = 100,
    bool dynamic_timeout_enabled = true,
-   bool no_mig_atomic = true
+   bool no_mig_atomic = true,
+   bool send_evictions
 {
 
   // From this node's L1 cache TO the network
@@ -1398,7 +1399,6 @@ machine(L1Cache, "Token protocol")
     }
   }
 
-
   action(q_updateTokensFromResponse, "q", desc="Update the token count based on the incoming response message") {
     peek(responseNetwork_in, ResponseMsg) {
       assert(is_valid(cache_entry));
@@ -1522,6 +1522,13 @@ machine(L1Cache, "Token protocol")
     }
   }
 
+  action(forward_eviction_to_cpu, "\cc", desc="sends eviction information to the processor") {
+    if (send_evictions) {
+      DPRINTF(RubySlicc, "Sending invalidation for %s to the CPU\n", address);
+      sequencer.evictionCallback(address);
+    }
+  }
+
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(mandatoryQueue_in, RubyRequest) {
       if (L1DcacheMemory.isTagPresent(address)) {
@@ -1571,7 +1578,6 @@ machine(L1Cache, "Token protocol")
   transition({IM, IS, IM_L, IS_L}, {Load, Ifetch}) {
     zz_stallAndWaitMandatoryQueue;
   }
-
 
   // Lockdowns
   transition({NP, I, S, O, M, MM, M_W, MM_W, IM, SM, OM, IS}, Own_Lock_or_Unlock) {
@@ -1702,6 +1708,7 @@ machine(L1Cache, "Token protocol")
   transition(S, L1_Replacement, I) {
     ta_traceStalledAddress;
     cc_sharedReplacement; // Only needed in some cases
+    forward_eviction_to_cpu;
     gg_deallocateL1CacheBlock;
     ka_wakeUpAllDependents;
   }
@@ -1709,6 +1716,7 @@ machine(L1Cache, "Token protocol")
   transition(S, {Transient_GETX, Transient_Local_GETX}, I) {
     t_sendAckWithCollectedTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     m_popRequestQueue;
   }
 
@@ -1729,6 +1737,7 @@ machine(L1Cache, "Token protocol")
   transition({S, S_L}, Persistent_GETX, I_L) {
     e_sendAckWithCollectedTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     l_popPersistentQueue;
   }
 
@@ -1780,6 +1789,7 @@ machine(L1Cache, "Token protocol")
   transition(O, L1_Replacement, I) {
     ta_traceStalledAddress;
     c_ownedReplacement;
+    forward_eviction_to_cpu
     gg_deallocateL1CacheBlock;
     ka_wakeUpAllDependents;
   }
@@ -1787,12 +1797,14 @@ machine(L1Cache, "Token protocol")
   transition(O, {Transient_GETX, Transient_Local_GETX}, I) {
     dd_sendDataWithAllTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     m_popRequestQueue;
   }
 
   transition(O, Persistent_GETX, I_L) {
     ee_sendDataWithAllTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     l_popPersistentQueue;
   }
 
@@ -1803,6 +1815,7 @@ machine(L1Cache, "Token protocol")
 
   transition(O, Persistent_GETS_Last_Token, I_L) {
     fo_sendDataWithOwnerToken;
+    forward_eviction_to_cpu
     l_popPersistentQueue;
   }
 
@@ -1867,6 +1880,7 @@ machine(L1Cache, "Token protocol")
   transition(MM, L1_Replacement, I) {
     ta_traceStalledAddress;
     c_ownedReplacement;
+    forward_eviction_to_cpu
     gg_deallocateL1CacheBlock;
     ka_wakeUpAllDependents;
   }
@@ -1874,6 +1888,7 @@ machine(L1Cache, "Token protocol")
   transition(MM, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_Local_GETS}, I) {
     dd_sendDataWithAllTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     m_popRequestQueue;
   }
 
@@ -1885,6 +1900,7 @@ machine(L1Cache, "Token protocol")
   transition(MM, {Persistent_GETX, Persistent_GETS}, I_L) {
     ee_sendDataWithAllTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     l_popPersistentQueue;
   }
 
@@ -1934,6 +1950,7 @@ machine(L1Cache, "Token protocol")
   transition(M, L1_Replacement, I) {
     ta_traceStalledAddress;
     c_ownedReplacement;
+    forward_eviction_to_cpu
     gg_deallocateL1CacheBlock;
     ka_wakeUpAllDependents;
   }
@@ -1941,6 +1958,7 @@ machine(L1Cache, "Token protocol")
   transition(M, {Transient_GETX, Transient_Local_GETX}, I) {
     dd_sendDataWithAllTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     m_popRequestQueue;
   }
 
@@ -1961,6 +1979,7 @@ machine(L1Cache, "Token protocol")
   transition(M, Persistent_GETX, I_L) {
     ee_sendDataWithAllTokens;
     p_informL2AboutTokenLoss;
+    forward_eviction_to_cpu
     l_popPersistentQueue;
   }
 
@@ -1990,21 +2009,20 @@ machine(L1Cache, "Token protocol")
   transition(M_W, Use_TimeoutStarverX, I_L) {
     s_deallocateTBE;
     ee_sendDataWithAllTokens;
+    forward_eviction_to_cpu;
     p_informL2AboutTokenLoss;
     jj_unsetUseTimer;
   }
-
-
 
   // migratory
   transition(MM_W, {Use_TimeoutStarverX, Use_TimeoutStarverS}, I_L) {
     s_deallocateTBE;
     ee_sendDataWithAllTokens;
+    forward_eviction_to_cpu;
     p_informL2AboutTokenLoss;
     jj_unsetUseTimer;
 
   }
-
 
   // Transient_GETX and Transient_GETS in transient states
   transition(OM, {Transient_GETX, Transient_Local_GETX, Transient_GETS, Transient_GETS_Last_Token, Transient_Local_GETS_Last_Token, Transient_Local_GETS}) {
@@ -2040,6 +2058,7 @@ machine(L1Cache, "Token protocol")
 
   transition({SM, SM_L}, Persistent_GETX, IM_L) {
     e_sendAckWithCollectedTokens;
+    forward_eviction_to_cpu
     l_popPersistentQueue;
   }
 
@@ -2054,6 +2073,7 @@ machine(L1Cache, "Token protocol")
 
   transition(OM, Persistent_GETX, IM_L) {
     ee_sendDataWithAllTokens;
+    forward_eviction_to_cpu
     l_popPersistentQueue;
   }
 
@@ -2120,6 +2140,7 @@ machine(L1Cache, "Token protocol")
 
   transition({IM, SM}, {Transient_GETX, Transient_Local_GETX}, IM) { // We don't have the data yet, but we might have collected some tokens.  We give them up here to avoid livelock
     t_sendAckWithCollectedTokens;
+    forward_eviction_to_cpu;
     m_popRequestQueue;
   }
 
@@ -2336,7 +2357,6 @@ machine(L1Cache, "Token protocol")
     kd_wakeUpDependents;
   }
 
-
   // Own_Lock_or_Unlock
 
   transition(I_L, Own_Lock_or_Unlock, I) {
@@ -2364,4 +2384,3 @@ machine(L1Cache, "Token protocol")
     kd_wakeUpDependents;
   }
 }
-

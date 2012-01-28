@@ -88,6 +88,9 @@ for (i, cpu) in enumerate(system.cpu):
     cpu.icache_port = system.ruby._cpu_ruby_ports[i].port
     cpu.dcache_port = system.ruby._cpu_ruby_ports[i].port
 
+# Connect the system port for loading of binaries etc
+system.system_port = system.ruby._sys_port_proxy.port
+
 # -----------------------
 # run simulation
 # -----------------------

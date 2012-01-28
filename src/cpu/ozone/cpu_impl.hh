@@ -186,25 +186,7 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 
-    if (FullSystem) {
-        Port *mem_port;
-        FunctionalPort *phys_port;
-        VirtualPort *virt_port;
-        phys_port = new FunctionalPort(csprintf("%s-%d-funcport",
-                                                name(), 0));
-        mem_port = system->physmem->getPort("functional");
-        mem_port->setPeer(phys_port);
-        phys_port->setPeer(mem_port);
-
-        virt_port = new VirtualPort(csprintf("%s-%d-vport",
-                                             name(), 0));
-        mem_port = system->physmem->getPort("functional");
-        mem_port->setPeer(virt_port);
-        virt_port->setPeer(mem_port);
-
-        thread.setPhysPort(phys_port);
-        thread.setVirtPort(virt_port);
-    }
+    thread.connectMemPorts(tc);
 
     DPRINTF(OzoneCPU, "OzoneCPU: Created Ozone cpu object.\n");
 }

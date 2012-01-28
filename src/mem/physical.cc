@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -115,7 +115,7 @@ PhysicalMemory::init()
 
     for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
         if (*pi)
-            (*pi)->sendStatusChange(Port::RangeChange);
+            (*pi)->sendRangeChange();
     }
 }
 
@@ -123,6 +123,65 @@ PhysicalMemory::~PhysicalMemory()
 {
     if (pmemAddr)
         munmap((char*)pmemAddr, size());
+}
+
+void
+PhysicalMemory::regStats()
+{
+    using namespace Stats;
+
+    bytesRead
+        .name(name() + ".bytes_read")
+        .desc("Number of bytes read from this memory")
+        ;
+    bytesInstRead
+        .name(name() + ".bytes_inst_read")
+        .desc("Number of instructions bytes read from this memory")
+        ;
+    bytesWritten
+        .name(name() + ".bytes_written")
+        .desc("Number of bytes written to this memory")
+        ;
+    numReads
+        .name(name() + ".num_reads")
+        .desc("Number of read requests responded to by this memory")
+        ;
+    numWrites
+        .name(name() + ".num_writes")
+        .desc("Number of write requests responded to by this memory")
+        ;
+    numOther
+        .name(name() + ".num_other")
+        .desc("Number of other requests responded to by this memory")
+        ;
+    bwRead
+        .name(name() + ".bw_read")
+        .desc("Total read bandwidth from this memory (bytes/s)")
+        .precision(0)
+        .prereq(bytesRead)
+        ;
+    bwInstRead
+        .name(name() + ".bw_inst_read")
+        .desc("Instruction read bandwidth from this memory (bytes/s)")
+        .precision(0)
+        .prereq(bytesInstRead)
+        ;
+    bwWrite
+        .name(name() + ".bw_write")
+        .desc("Write bandwidth from this memory (bytes/s)")
+        .precision(0)
+        .prereq(bytesWritten)
+        ;
+    bwTotal
+        .name(name() + ".bw_total")
+        .desc("Total bandwidth to/from this memory (bytes/s)")
+        .precision(0)
+        .prereq(bwTotal)
+        ;
+    bwRead = bytesRead / simSeconds;
+    bwInstRead = bytesInstRead / simSeconds;
+    bwWrite = bytesWritten / simSeconds;
+    bwTotal = (bytesRead + bytesWritten) / simSeconds;
 }
 
 unsigned
@@ -303,6 +362,7 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
 
         assert(!pkt->req->isInstFetch());
         TRACE_PACKET("Read/Write");
+        numOther++;
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
         if (pkt->isLLSC()) {
@@ -311,12 +371,18 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         if (pmemAddr)
             memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
+        numReads++;
+        bytesRead += pkt->getSize();
+        if (pkt->req->isInstFetch())
+            bytesInstRead += pkt->getSize();
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
             if (pmemAddr)
                 memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
+            numWrites++;
+            bytesWritten += pkt->getSize();
         }
     } else if (pkt->isInvalidate()) {
         //upgrade or invalidate
@@ -371,13 +437,6 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
 Port *
 PhysicalMemory::getPort(const std::string &if_name, int idx)
 {
-    // Accept request for "functional" port for backwards compatibility
-    // with places where this function is called from C++.  I'd prefer
-    // to move all these into Python someday.
-    if (if_name == "functional") {
-        return new MemoryPort(csprintf("%s-functional", name()), this);
-    }
-
     if (if_name != "port") {
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
@@ -397,36 +456,30 @@ PhysicalMemory::getPort(const std::string &if_name, int idx)
     return port;
 }
 
-
-void
-PhysicalMemory::recvStatusChange(Port::Status status)
-{
-}
-
 PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
                                        PhysicalMemory *_memory)
     : SimpleTimingPort(_name, _memory), memory(_memory)
 { }
 
 void
-PhysicalMemory::MemoryPort::recvStatusChange(Port::Status status)
+PhysicalMemory::MemoryPort::recvRangeChange()
 {
-    memory->recvStatusChange(status);
+    // memory is a slave and thus should never have to worry about its
+    // neighbours address ranges
 }
 
-void
-PhysicalMemory::MemoryPort::getDeviceAddressRanges(AddrRangeList &resp,
-                                                   bool &snoop)
+AddrRangeList
+PhysicalMemory::MemoryPort::getAddrRanges()
 {
-    memory->getAddressRanges(resp, snoop);
+    return memory->getAddrRanges();
 }
 
-void
-PhysicalMemory::getAddressRanges(AddrRangeList &resp, bool &snoop)
+AddrRangeList
+PhysicalMemory::getAddrRanges()
 {
-    snoop = false;
-    resp.clear();
-    resp.push_back(RangeSize(start(), size()));
+    AddrRangeList ranges;
+    ranges.push_back(RangeSize(start(), size()));
+    return ranges;
 }
 
 unsigned

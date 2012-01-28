@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2011 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,6 +59,7 @@ class RubyPort : public MemObject
                RubySystem*_system, bool _access_phys_mem);
         bool sendTiming(PacketPtr pkt);
         void hitCallback(PacketPtr pkt);
+        void evictionCallback(const Address& address);
         unsigned deviceBlockSize() const;
         
         bool onRetryList() 
@@ -129,8 +131,8 @@ class RubyPort : public MemObject
   protected:
     const std::string m_name;
     void ruby_hit_callback(PacketPtr pkt);
-    void hit(PacketPtr pkt);
     void testDrainComplete();
+    void ruby_eviction_callback(const Address& address);
 
     int m_version;
     AbstractController* m_controller;

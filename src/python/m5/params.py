@@ -1488,13 +1488,10 @@ class VectorPortRef(object):
 # logical port in the SimObject class, not a particular port on a
 # SimObject instance.  The latter are represented by PortRef objects.
 class Port(object):
-    # Port("description") or Port(default, "description")
+    # Port("description")
     def __init__(self, *args):
         if len(args) == 1:
             self.desc = args[0]
-        elif len(args) == 2:
-            self.default = args[0]
-            self.desc = args[1]
         else:
             raise TypeError, 'wrong number of arguments'
         # self.name is set by SimObject class on assignment

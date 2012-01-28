@@ -44,7 +44,7 @@
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
-#include "mem/translating_port.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "params/LiveProcess.hh"
 #include "params/Process.hh"
 #include "sim/debug.hh"
@@ -234,12 +234,8 @@ Process::initState()
     // mark this context as active so it will start ticking.
     tc->activate(0);
 
-    Port *mem_port;
-    mem_port = system->physmem->getPort("functional");
-    initVirtMem = new TranslatingPort("process init port", this,
-            TranslatingPort::Always);
-    mem_port->setPeer(initVirtMem);
-    initVirtMem->setPeer(mem_port);
+    initVirtMem = new SETranslatingPortProxy(*system->getSystemPort(), this,
+                                             SETranslatingPortProxy::Always);
 }
 
 // map simulator fd sim_fd to target fd tgt_fd

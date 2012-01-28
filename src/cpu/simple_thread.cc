@@ -47,13 +47,14 @@
 #include "cpu/quiesce_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
-#include "mem/translating_port.hh"
-#include "mem/vport.hh"
 #include "params/BaseCPU.hh"
+#include "mem/fs_translating_port_proxy.hh"
+#include "mem/se_translating_port_proxy.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
+#include "sim/process.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -106,8 +107,6 @@ SimpleThread::SimpleThread()
 
 SimpleThread::~SimpleThread()
 {
-    delete physPort;
-    delete virtPort;
     delete tc;
 }
 

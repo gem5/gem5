@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2012 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -103,27 +103,10 @@ Cache<TagStore>::getPort(const std::string &if_name, int idx)
         return cpuSidePort;
     } else if (if_name == "mem_side") {
         return memSidePort;
-    } else if (if_name == "functional") {
-        CpuSidePort *funcPort =
-            new CpuSidePort(name() + "-cpu_side_funcport", this,
-                            "CpuSideFuncPort");
-        funcPort->setOtherPort(memSidePort);
-        return funcPort;
-    } else {
+    }  else {
         panic("Port name %s unrecognized\n", if_name);
     }
 }
-
-template<class TagStore>
-void
-Cache<TagStore>::deletePortRefs(Port *p)
-{
-    if (cpuSidePort == p || memSidePort == p)
-        panic("Can only delete functional ports\n");
-
-    delete p;
-}
-
 
 template<class TagStore>
 void
@@ -768,9 +751,7 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
 
 template<class TagStore>
 void
-Cache<TagStore>::functionalAccess(PacketPtr pkt,
-                                  CachePort *incomingPort,
-                                  CachePort *otherSidePort)
+Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 {
     Addr blk_addr = blockAlign(pkt->getAddr());
     BlkType *blk = tags->findBlock(pkt->getAddr());
@@ -796,10 +777,10 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
                       (mshr && mshr->inService && mshr->isPendingDirty()));
 
     bool done = have_dirty
-        || incomingPort->checkFunctional(pkt)
+        || cpuSidePort->checkFunctional(pkt)
         || mshrQueue.checkFunctional(pkt, blk_addr)
         || writeBuffer.checkFunctional(pkt, blk_addr)
-        || otherSidePort->checkFunctional(pkt);
+        || memSidePort->checkFunctional(pkt);
 
     DPRINTF(Cache, "functional %s %x %s%s%s\n",
             pkt->cmdString(), pkt->getAddr(),
@@ -812,7 +793,15 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
     if (done) {
         pkt->makeResponse();
     } else {
-        otherSidePort->sendFunctional(pkt);
+        // if it came as a request from the CPU side then make sure it
+        // continues towards the memory side
+        if (fromCpuSide) {
+            memSidePort->sendFunctional(pkt);
+        } else if (forwardSnoops) {
+            // if it came from the memory side, it must be a snoop request
+            // and we should only forward it if we are forwarding snoops
+            cpuSidePort->sendFunctional(pkt);
+        }
     }
 }
 
@@ -1559,14 +1548,15 @@ Cache<TagStore>::nextMSHRReadyTime()
 ///////////////
 
 template<class TagStore>
-void
+AddrRangeList
 Cache<TagStore>::CpuSidePort::
-getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+getAddrRanges()
 {
     // CPU side port doesn't snoop; it's a target only.  It can
     // potentially respond to any address.
-    snoop = false;
-    resp.push_back(myCache()->getAddrRange());
+    AddrRangeList ranges;
+    ranges.push_back(myCache()->getAddrRange());
+    return ranges;
 }
 
 
@@ -1598,7 +1588,7 @@ template<class TagStore>
 void
 Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
-    myCache()->functionalAccess(pkt, this, otherPort);
+    myCache()->functionalAccess(pkt, true);
 }
 
 
@@ -1617,14 +1607,13 @@ CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
 ///////////////
 
 template<class TagStore>
-void
-Cache<TagStore>::MemSidePort::
-getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+bool
+Cache<TagStore>::MemSidePort::isSnooping()
 {
     // Memory-side port always snoops, but never passes requests
     // through to targets on the cpu side (so we don't add anything to
     // the address range list).
-    snoop = true;
+    return true;
 }
 
 
@@ -1670,7 +1659,7 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePort::recvFunctional(PacketPtr pkt)
 {
-    myCache()->functionalAccess(pkt, this, otherPort);
+    myCache()->functionalAccess(pkt, false);
 }
 
 
@@ -1723,7 +1712,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
         // @TODO: need to facotr in prefetch requests here somehow
         if (nextReady != MaxTick) {
             DPRINTF(CachePort, "more packets to send @ %d\n", nextReady);
-            schedule(sendEvent, std::max(nextReady, curTick() + 1));
+            cache->schedule(sendEvent, std::max(nextReady, curTick() + 1));
         } else {
             // no more to send right now: if we're draining, we may be done
             if (drainEvent && !sendEvent->scheduled()) {

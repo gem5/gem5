@@ -81,6 +81,8 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
         l1_cntrl = L1Cache_Controller(version = i,
                                       cntrl_id = cntrl_count,
                                       cacheMemory = cache,
+                                      send_evictions = (
+                                          options.cpu_type == "detailed"),
                                       ruby_system = ruby_system)
 
         cpu_seq = RubySequencer(version = i,

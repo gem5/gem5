@@ -64,47 +64,31 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     // main simulation loop (one cycle)
     void tick();
 
-    class CpuPort : public Port
+    /**
+     * An AtomicCPUPort overrides the default behaviour of the
+     * recvAtomic and ignores the packet instead of panicking.
+     */
+    class AtomicCPUPort : public CpuPort
     {
+
       public:
 
-        CpuPort(const std::string &_name, AtomicSimpleCPU *_cpu)
-            : Port(_name, _cpu), cpu(_cpu)
-        { }
-
-        bool snoopRangeSent;
-
-      protected:
-
-        AtomicSimpleCPU *cpu;
-
-        virtual bool recvTiming(PacketPtr pkt);
-
-        virtual Tick recvAtomic(PacketPtr pkt);
-
-        virtual void recvFunctional(PacketPtr pkt);
-
-        virtual void recvStatusChange(Status status);
-
-        virtual void recvRetry();
-
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-            bool &snoop)
-        { resp.clear(); snoop = true; }
-
-    };
-    CpuPort icachePort;
-
-    class DcachePort : public CpuPort
-    {
-      public:
-        DcachePort(const std::string &_name, AtomicSimpleCPU *_cpu)
+        AtomicCPUPort(const std::string &_name, BaseCPU* _cpu)
             : CpuPort(_name, _cpu)
         { }
 
-        virtual void setPeer(Port *port);
+      protected:
+
+        virtual Tick recvAtomic(PacketPtr pkt)
+        {
+            // Snooping a coherence request, just return
+            return 0;
+        }
+
     };
-    DcachePort dcachePort;
+
+    AtomicCPUPort icachePort;
+    AtomicCPUPort dcachePort;
 
     CpuPort physmemPort;
     bool hasPhysMemPort;

@@ -29,12 +29,13 @@
  */
 
 #include "debug/Bus.hh"
+#include "mem/mem_object.hh"
 #include "mem/tport.hh"
 
 using namespace std;
 
 SimpleTimingPort::SimpleTimingPort(string pname, MemObject *_owner)
-    : Port(pname, _owner), sendEvent(0), drainEvent(NULL),
+    : Port(pname, _owner), sendEvent(NULL), drainEvent(NULL),
       waitingOnRetry(false)
 {
     sendEvent =  new EventWrapper<SimpleTimingPort,
@@ -104,6 +105,20 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     return true;
 }
 
+void
+SimpleTimingPort::schedSendEvent(Tick when)
+{
+    if (waitingOnRetry) {
+        assert(!sendEvent->scheduled());
+        return;
+    }
+
+    if (!sendEvent->scheduled()) {
+        owner->schedule(sendEvent, when);
+    } else if (sendEvent->when() > when) {
+        owner->reschedule(sendEvent, when);
+    }
+}
 
 void
 SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
@@ -153,7 +168,7 @@ SimpleTimingPort::sendDeferredPacket()
     if (success) {
         if (!transmitList.empty() && !sendEvent->scheduled()) {
             Tick time = transmitList.front().tick;
-            schedule(sendEvent, time <= curTick() ? curTick()+1 : time);
+            owner->schedule(sendEvent, time <= curTick() ? curTick()+1 : time);
         }
 
         if (transmitList.empty() && drainEvent && !sendEvent->scheduled()) {

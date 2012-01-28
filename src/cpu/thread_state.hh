@@ -49,8 +49,9 @@ namespace TheISA {
 };
 
 class Checkpoint;
-class Port;
-class TranslatingPort;
+class PortProxy;
+class SETranslatingPort;
+class FSTranslatingPort;
 
 /**
  *  Struct for holding general thread state that is needed across CPU
@@ -83,11 +84,13 @@ struct ThreadState {
 
     Tick readLastSuspend() { return lastSuspend; }
 
-    void connectPhysPort();
-
-    void connectVirtPort(ThreadContext *tc);
-
-    void connectMemPorts(ThreadContext *tc);
+    /**
+     * Initialise the physical and virtual port proxies and tie them to
+     * the data port of the CPU.
+     *
+     * tc ThreadContext for the virtual-to-physical translation
+     */
+    void initMemProxies(ThreadContext *tc);
 
     void dumpFuncProfile();
 
@@ -99,17 +102,13 @@ struct ThreadState {
 
     TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
 
+    PortProxy* getPhysProxy() { return physProxy; }
+
+    FSTranslatingPortProxy* getVirtProxy() { return virtProxy; }
+
     Process *getProcessPtr() { return process; }
 
-    TranslatingPort *getMemPort();
-
-    void setMemPort(TranslatingPort *_port) { port = _port; }
-
-    VirtualPort *getVirtPort() { return virtPort; }
-
-    FunctionalPort *getPhysPort() { return physPort; }
-
-    void setPhysPort(FunctionalPort *port) { physPort = port; }
+    SETranslatingPortProxy* getMemProxy();
 
     /** Reads the number of instructions functionally executed and
      * committed.
@@ -128,9 +127,6 @@ struct ThreadState {
     void setStatus(Status new_status) { _status = new_status; }
 
   public:
-    /** Connects port to the functional port of the memory object
-     * below the CPU. */
-    void connectToMemFunc(Port *port);
 
     /** Number of instructions committed. */
     Counter numInst;
@@ -177,15 +173,14 @@ struct ThreadState {
   protected:
     Process *process;
 
-    TranslatingPort *port;
-
-    /** A functional port, outgoing only, for functional accesse to virtual
-     * addresses. */
-    VirtualPort *virtPort;
-
-    /** A functional port outgoing only for functional accesses to physical
+    /** A port proxy outgoing only for functional accesses to physical
      * addresses.*/
-    FunctionalPort *physPort;
+    PortProxy *physProxy;
+
+    /** A translating port proxy, outgoing only, for functional
+     * accesse to virtual addresses. */
+    FSTranslatingPortProxy* virtProxy;
+    SETranslatingPortProxy* proxy;
 
   public:
     /*

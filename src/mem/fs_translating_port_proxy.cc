@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ali Saidi
+ *          Andreas Hansson
  */
 
 /**
@@ -34,41 +47,73 @@
  */
 
 #include "base/chunk_generator.hh"
-#include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "mem/vport.hh"
+#include "mem/fs_translating_port_proxy.hh"
+
+using namespace TheISA;
+
+FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
+    : PortProxy(*(tc->getCpuPtr()->getPort("dcache_port"))), _tc(tc)
+{
+}
+
+FSTranslatingPortProxy::FSTranslatingPortProxy(Port &port)
+    : PortProxy(port), _tc(NULL)
+{
+}
+
+FSTranslatingPortProxy::~FSTranslatingPortProxy()
+{
+}
 
 void
-VirtualPort::readBlob(Addr addr, uint8_t *p, int size)
+FSTranslatingPortProxy::readBlob(Addr addr, uint8_t *p, int size)
 {
     Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
-            gen.next())
+         gen.next())
     {
-        if (tc)
-            paddr = TheISA::vtophys(tc,gen.addr());
+        if (_tc)
+            paddr = TheISA::vtophys(_tc,gen.addr());
         else
             paddr = TheISA::vtophys(gen.addr());
 
-        FunctionalPort::readBlob(paddr, p, gen.size());
+        PortProxy::readBlob(paddr, p, gen.size());
         p += gen.size();
     }
 }
 
 void
-VirtualPort::writeBlob(Addr addr, uint8_t *p, int size)
+FSTranslatingPortProxy::writeBlob(Addr addr, uint8_t *p, int size)
 {
     Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
-            gen.next())
+         gen.next())
     {
-        if (tc)
-            paddr = TheISA::vtophys(tc,gen.addr());
+        if (_tc)
+            paddr = TheISA::vtophys(_tc,gen.addr());
         else
             paddr = TheISA::vtophys(gen.addr());
 
-        FunctionalPort::writeBlob(paddr, p, gen.size());
+        PortProxy::writeBlob(paddr, p, gen.size());
         p += gen.size();
+    }
+}
+
+void
+FSTranslatingPortProxy::memsetBlob(Addr address, uint8_t v, int size)
+{
+    Addr paddr;
+    for (ChunkGenerator gen(address, size, TheISA::PageBytes); !gen.done();
+         gen.next())
+    {
+        if (_tc)
+            paddr = TheISA::vtophys(_tc,gen.addr());
+        else
+            paddr = TheISA::vtophys(gen.addr());
+
+        PortProxy::memsetBlob(paddr, v, gen.size());
     }
 }
 
@@ -76,7 +121,7 @@ void
 CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
 {
     uint8_t *dst = (uint8_t *)dest;
-    VirtualPort *vp = tc->getVirtPort();
+    FSTranslatingPortProxy* vp = tc->getVirtProxy();
 
     vp->readBlob(src, dst, cplen);
 }
@@ -85,7 +130,7 @@ void
 CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
 {
     uint8_t *src = (uint8_t *)source;
-    VirtualPort *vp = tc->getVirtPort();
+    FSTranslatingPortProxy* vp = tc->getVirtProxy();
 
     vp->writeBlob(dest, src, cplen);
 }
@@ -93,21 +138,25 @@ CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
 void
 CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 {
-    int len = 0;
     char *start = dst;
-    VirtualPort *vp = tc->getVirtPort();
+    FSTranslatingPortProxy* vp = tc->getVirtProxy();
 
-    do {
-        vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
-    } while (len < maxlen && start[len++] != 0 );
+    bool foundNull = false;
+    while ((dst - start + 1) < maxlen && !foundNull) {
+        vp->readBlob(vaddr++, (uint8_t*)dst, 1);
+        if (dst == '\0')
+            foundNull = true;
+        dst++;
+    }
 
-    dst[len] = 0;
+    if (!foundNull)
+        *dst = '\0';
 }
 
 void
 CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
 {
-    VirtualPort *vp = tc->getVirtPort();
+    FSTranslatingPortProxy* vp = tc->getVirtProxy();
     for (ChunkGenerator gen(vaddr, strlen(src), TheISA::PageBytes); !gen.done();
             gen.next())
     {

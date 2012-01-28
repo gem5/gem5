@@ -54,7 +54,6 @@
 #include "debug/RefCount.hh"
 #include "debug/SkedCache.hh"
 #include "debug/Quiesce.hh"
-#include "mem/translating_port.hh"
 #include "params/InOrderCPU.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
@@ -758,6 +757,8 @@ InOrderCPU::init()
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             ThreadContext *src_tc = threadContexts[tid];
             TheISA::initCPU(src_tc, src_tc->contextId());
+            // Initialise the ThreadContext's memory proxies
+            thread[tid]->initMemProxies(thread[tid]->getTC());
         }
     }
 
@@ -860,7 +861,6 @@ InOrderCPU::getInterrupts()
     return interrupts->getInterrupt(threadContexts[0]);
 }
 
-
 void
 InOrderCPU::processInterrupts(Fault interrupt)
 {
@@ -877,16 +877,6 @@ InOrderCPU::processInterrupts(Fault interrupt)
 
     // Note: Context ID ok here? Impl. of FS mode needs to revisit this
     trap(interrupt, threadContexts[0]->contextId(), dummyBufferInst);
-}
-
-void
-InOrderCPU::updateMemPorts()
-{
-    // Update all ThreadContext's memory ports (Functional/Virtual
-    // Ports)
-    ThreadID size = thread.size();
-    for (ThreadID i = 0; i < size; ++i)
-        thread[i]->connectMemPorts(thread[i]->getTC());
 }
 
 void

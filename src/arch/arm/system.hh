@@ -76,7 +76,10 @@ class ArmSystem : public System
     ArmSystem(Params *p);
     ~ArmSystem();
 
-    void initState();
+    /**
+     * Initialise the system
+     */
+    virtual void initState();
 
     /** Check if an address should be uncacheable until all caches are enabled.
      * This exits because coherence on some addresses at boot is maintained via

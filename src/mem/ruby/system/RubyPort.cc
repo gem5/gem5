@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * Copyright (c) 2011 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -91,14 +92,6 @@ RubyPort::getPort(const std::string &if_name, int idx)
                                  ruby_system, access_phys_mem);
 
         return physMemPort;
-    }
-
-    if (if_name == "functional") {
-        // Calls for the functional port only want to access
-        // functional memory.  Therefore, directly pass these calls
-        // ports to physmem.
-        assert(physmem != NULL);
-        return physmem->getPort(if_name, idx);
     }
 
     return NULL;
@@ -464,8 +457,11 @@ RubyPort::M5Port::recvFunctional(PacketPtr pkt)
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
         pkt->setFunctionalResponseStatus(accessSucceeded);
-        DPRINTF(RubyPort, "Sending packet back over port\n");
-        sendFunctional(pkt);
+
+        // @todo There should not be a reverse call since the response is
+        // communicated through the packet pointer
+        // DPRINTF(RubyPort, "Sending packet back over port\n");
+        // sendFunctional(pkt);
     }
     DPRINTF(RubyPort, "Functional access %s!\n",
             accessSucceeded ? "successful":"failed");
@@ -668,9 +664,8 @@ RubyPort::PioPort::sendTiming(PacketPtr pkt)
 bool
 RubyPort::M5Port::isPhysMemAddress(Addr addr)
 {
-    AddrRangeList physMemAddrList;
-    bool snoop = false;
-    ruby_port->physMemPort->getPeerAddressRanges(physMemAddrList, snoop);
+    AddrRangeList physMemAddrList =
+        ruby_port->physMemPort->getPeer()->getAddrRanges();
     for (AddrRangeIter iter = physMemAddrList.begin();
          iter != physMemAddrList.end();
          iter++) {
@@ -687,4 +682,15 @@ unsigned
 RubyPort::M5Port::deviceBlockSize() const
 {
     return (unsigned) RubySystem::getBlockSizeBytes();
+}
+
+void
+RubyPort::ruby_eviction_callback(const Address& address)
+{
+    DPRINTF(RubyPort, "Sending invalidations.\n");
+    Request req(address.getAddress(), 0, 0);
+    for (CpuPortIter it = cpu_ports.begin(); it != cpu_ports.end(); it++) {
+        Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1);
+        (*it)->sendTiming(pkt);
+    }
 }

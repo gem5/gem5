@@ -37,7 +37,7 @@
 
 #include "base/types.hh"
 
-class Port;
+class PortProxy;
 class SymbolTable;
 
 class ObjectFile
@@ -83,7 +83,7 @@ class ObjectFile
 
     void close();
 
-    virtual bool loadSections(Port *memPort, Addr addrMask =
+    virtual bool loadSections(PortProxy *memProxy, Addr addrMask =
             std::numeric_limits<Addr>::max());
     virtual bool loadGlobalSymbols(SymbolTable *symtab, Addr addrMask =
             std::numeric_limits<Addr>::max()) = 0;
@@ -111,7 +111,7 @@ class ObjectFile
     Section data;
     Section bss;
 
-    bool loadSection(Section *sec, Port *memPort, Addr addrMask);
+    bool loadSection(Section *sec, PortProxy* memProxy, Addr addrMask);
     void setGlobalPointer(Addr global_ptr) { globalPtr = global_ptr; }
 
   public:

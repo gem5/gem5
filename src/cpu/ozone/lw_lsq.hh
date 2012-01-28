@@ -255,11 +255,13 @@ class OzoneLWLSQ {
 
         virtual void recvFunctional(PacketPtr pkt);
 
-        virtual void recvStatusChange(Status status);
+        virtual void recvRangeChange();
 
-        virtual void getDeviceAddressRanges(AddrRangeList &resp,
-                                            bool &snoop)
-        { resp.clear(); snoop = true; }
+        /**
+         * Is a snooper due to LSQ maintenance
+         */
+        virtual bool isSnooping()
+        { return true; }
 
         virtual bool recvTiming(PacketPtr pkt);
 
