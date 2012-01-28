@@ -124,8 +124,7 @@ def run(options, root, testsys, cpu_class):
             if options.fast_forward:
                 testsys.cpu[i].max_insts_any_thread = int(options.fast_forward)
             switch_cpus[i].system =  testsys
-            if not buildEnv['FULL_SYSTEM']:
-                switch_cpus[i].workload = testsys.cpu[i].workload
+            switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
             # simulation period
             if options.maxinsts:
@@ -148,9 +147,8 @@ def run(options, root, testsys, cpu_class):
         for i in xrange(np):
             switch_cpus[i].system =  testsys
             switch_cpus_1[i].system =  testsys
-            if not buildEnv['FULL_SYSTEM']:
-                switch_cpus[i].workload = testsys.cpu[i].workload
-                switch_cpus_1[i].workload = testsys.cpu[i].workload
+            switch_cpus[i].workload = testsys.cpu[i].workload
+            switch_cpus_1[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
             switch_cpus_1[i].clock = testsys.cpu[0].clock
 

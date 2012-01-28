@@ -40,9 +40,6 @@ from m5.defines import buildEnv
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-if not buildEnv['FULL_SYSTEM']:
-    fatal("This script requires full-system mode (*_FS).")
-
 addToPath('../common')
 addToPath('../ruby')
 

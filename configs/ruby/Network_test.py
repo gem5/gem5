@@ -51,8 +51,6 @@ def create_system(options, system, piobus, dma_devices, ruby_system):
     #
     # The Garnet tester protocol does not support fs nor dma
     #
-    if buildEnv['FULL_SYSTEM']:
-        panic("This script requires system-emulation mode (*_SE).")
     assert(piobus == None)
     assert(dma_devices == [])
     
