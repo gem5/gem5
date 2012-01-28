@@ -794,7 +794,6 @@ all_isa_list.sort()
 
 sticky_vars.AddVariables(
     EnumVariable('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
-    BoolVariable('FULL_SYSTEM', 'Full-system support', False),
     ListVariable('CPU_MODELS', 'CPU models',
                  sorted(n for n,m in CpuModel.dict.iteritems() if m.default),
                  sorted(CpuModel.list)),
@@ -818,10 +817,9 @@ sticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-export_vars += ['FULL_SYSTEM', 'USE_FENV',
-                'NO_FAST_ALLOC', 'FORCE_FAST_ALLOC', 'FAST_ALLOC_STATS',
-                'SS_COMPATIBLE_FP', 'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE',
-                'USE_POSIX_CLOCK' ]
+export_vars += ['USE_FENV', 'NO_FAST_ALLOC', 'FORCE_FAST_ALLOC',
+                'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP', 'USE_CHECKER',
+                'TARGET_ISA', 'CP_ANNOTATE', 'USE_POSIX_CLOCK' ]
 
 ###################################################
 #
