@@ -1,4 +1,4 @@
-FULL_SYSTEM = 0
+TARGET_ISA = 'alpha'
 SS_COMPATIBLE_FP = 1
 CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU,InOrderCPU'
-PROTOCOL = 'Network_test'
+PROTOCOL = 'MI_example'

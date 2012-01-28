@@ -1,4 +1,0 @@
-TARGET_ISA = 'sparc'
-CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU'
-FULL_SYSTEM = 1
-PROTOCOL = 'MI_example'
