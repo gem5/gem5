@@ -108,6 +108,6 @@ cpu.addPrivateSplitL1Caches(L1(size = '32kB', assoc = 1),
 cpu.connectAllPorts(system.toL2Bus, system.membus)
 cpu.clock = '2GHz'
 
-root = Root(system=system)
+root = Root(full_system=True, system=system)
 m5.ticks.setGlobalFrequency('1THz')
 

@@ -31,8 +31,6 @@
 #ifndef __SIM_FULL_SYSTEM_HH__
 #define __SIM_FULL_SYSTEM_HH__
 
-#include "config/full_system.hh"
-
-static const bool FullSystem = FULL_SYSTEM;
+extern bool FullSystem;
 
 #endif // __SIM_FULL_SYSTEM_HH__

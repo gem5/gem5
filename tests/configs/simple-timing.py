@@ -51,4 +51,4 @@ system.physmem.port = system.membus.port
 cpu.connectAllPorts(system.membus)
 cpu.clock = '2GHz'
 
-root = Root(system = system)
+root = Root(full_system=False, system = system)

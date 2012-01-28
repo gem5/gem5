@@ -131,7 +131,7 @@ for ruby_port in system.ruby._cpu_ruby_ports:
 # run simulation
 # -----------------------
 
-root = Root( system = system )
+root = Root( full_system = False, system = system )
 root.system.mem_mode = 'timing'
 
 # Not much point in this being higher than the L1 latency

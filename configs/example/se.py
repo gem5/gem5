@@ -200,6 +200,6 @@ for i in xrange(np):
     if options.fastmem:
         system.cpu[0].physmem_port = system.physmem.port
 
-root = Root(system = system)
+root = Root(full_system = False, system = system)
 
 Simulation.run(options, root, system, FutureClass)

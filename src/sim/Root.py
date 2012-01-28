@@ -28,6 +28,7 @@
 # Authors: Nathan Binkert
 
 from m5.SimObject import SimObject
+from m5.defines import buildEnv
 from m5.params import *
 from m5.util import fatal
 
@@ -57,6 +58,8 @@ class Root(SimObject):
         return 'root'
 
     type = 'Root'
+
+    full_system = Param.Bool("if this is a full system simulation")
 
     # Time syncing prevents the simulation from running faster than real time.
     time_sync_enable = Param.Bool(False, "whether time syncing is enabled")

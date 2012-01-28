@@ -53,6 +53,6 @@ drive_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns',
 drive_sys.iobridge.slave = drive_sys.iobus.port
 drive_sys.iobridge.master = drive_sys.membus.port
 
-root = makeDualRoot(test_sys, drive_sys, "ethertrace")
+root = makeDualRoot(True, test_sys, drive_sys, "ethertrace")
 
 maxtick = 199999999

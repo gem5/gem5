@@ -141,6 +141,6 @@ for (i, cpu) in enumerate(system.cpu):
         cpu.interrupts.pio = system.piobus.port
         cpu.interrupts.int_port = system.piobus.port
 
-root = Root(system = system)
+root = Root(full_system = True, system = system)
 
 Simulation.run(options, root, system, FutureClass)

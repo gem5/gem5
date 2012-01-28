@@ -239,7 +239,7 @@ for cluster in clusters:
 # Define the root
 # ----------------------
 
-root = Root(system = system)
+root = Root(full_system = False, system = system)
 
 # --------------------
 # Pick the correct Splash2 Benchmarks

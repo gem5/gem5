@@ -552,8 +552,8 @@ def makeLinuxX86System(mem_mode, numCPUs = 1, mdesc = None, Ruby = False):
     return self
 
 
-def makeDualRoot(testSystem, driveSystem, dumpfile):
-    self = Root()
+def makeDualRoot(full_system, testSystem, driveSystem, dumpfile):
+    self = Root(full_system = full_system)
     self.testsys = testSystem
     self.drivesys = driveSystem
     self.etherlink = EtherLink()

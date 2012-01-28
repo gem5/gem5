@@ -33,6 +33,7 @@
 
 #include "base/misc.hh"
 #include "debug/TimeSync.hh"
+#include "sim/full_system.hh"
 #include "sim/root.hh"
 
 Root *Root::_root = NULL;
@@ -123,6 +124,8 @@ Root::loadState(Checkpoint *cp)
     timeSyncEnable(params()->time_sync_enable);
 }
 
+bool FullSystem;
+
 Root *
 RootParams::create()
 {
@@ -131,6 +134,8 @@ RootParams::create()
         panic("only one root object allowed!");
 
     created = true;
+
+    FullSystem = full_system;
 
     return new Root(this);
 }

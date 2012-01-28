@@ -172,7 +172,7 @@ make_level(treespec, prototypes, system.physmem, "port")
 # run simulation
 # -----------------------
 
-root = Root( system = system )
+root = Root( full_system = False, system = system )
 if options.atomic:
     root.system.mem_mode = 'atomic'
 else:

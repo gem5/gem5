@@ -93,7 +93,7 @@ for c in cpus:
     c.connectAllPorts(system.toL2Bus, system.membus)
     c.clock = '2GHz'
 
-root = Root(system=system)
+root = Root(full_system=True, system=system)
 m5.ticks.setGlobalFrequency('1THz')
 
 

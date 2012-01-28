@@ -54,4 +54,4 @@ system.system_port = system.membus.port
 system.physmem.port = system.membus.port
 cpu.connectAllPorts(system.membus)
 
-root = Root(system = system)
+root = Root(full_system = False, system = system)

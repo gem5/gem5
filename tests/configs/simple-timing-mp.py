@@ -85,5 +85,5 @@ system.physmem.port = system.membus.port
 # run simulation
 # -----------------------
 
-root = Root( system = system )
+root = Root( full_system = False, system = system )
 root.system.mem_mode = 'timing'
