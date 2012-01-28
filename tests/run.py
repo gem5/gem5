@@ -39,7 +39,7 @@ import m5
 m5.disableAllListeners()
 
 # single "path" arg encodes everything we need to know about test
-(category, name, isa, opsys, config) = sys.argv[1].split('/')[-5:]
+(category, mode, name, isa, opsys, config) = sys.argv[1].split('/')[-6:]
 
 # find path to directory containing this file
 tests_root = os.path.dirname(__file__)
@@ -74,8 +74,8 @@ execfile(joinpath(tests_root, 'configs', test_filename + '.py'))
 maxtick = m5.MaxTick
 
 # tweak configuration for specific test
-sys.path.append(joinpath(tests_root, category, name))
-execfile(joinpath(tests_root, category, name, 'test.py'))
+sys.path.append(joinpath(tests_root, category, mode, name))
+execfile(joinpath(tests_root, category, mode, name, 'test.py'))
 
 # instantiate configuration
 m5.instantiate()

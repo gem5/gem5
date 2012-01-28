@@ -233,12 +233,12 @@ updateAction = env.Action(update_test, update_test_string)
 def test_builder(env, ref_dir):
     """Define a test."""
 
-    (category, name, _ref, isa, opsys, config) = ref_dir.split('/')
+    (category, mode, name, _ref, isa, opsys, config) = ref_dir.split('/')
     assert(_ref == 'ref')
 
     # target path (where test output goes) is the same except without
     # the 'ref' component
-    tgt_dir = os.path.join(category, name, isa, opsys, config)
+    tgt_dir = os.path.join(category, mode, name, isa, opsys, config)
 
     # prepend file name with tgt_dir
     def tgt(f):
@@ -265,34 +265,32 @@ def test_builder(env, ref_dir):
 
 # Figure out applicable configs based on build type
 configs = []
-if env['FULL_SYSTEM']:
-    if env['TARGET_ISA'] == 'alpha':
-        configs += ['tsunami-simple-atomic',
-                    'tsunami-simple-timing',
-                    'tsunami-simple-atomic-dual',
-                    'tsunami-simple-timing-dual',
-                    'twosys-tsunami-simple-atomic',
-                    'tsunami-o3', 'tsunami-o3-dual',
-                    'tsunami-inorder']
-    if env['TARGET_ISA'] == 'sparc':
-        configs += ['t1000-simple-atomic',
-                    't1000-simple-timing']
-    if env['TARGET_ISA'] == 'arm':
-        configs += ['realview-simple-atomic',
-                    'realview-simple-atomic-dual',
-                    'realview-simple-timing',
-                    'realview-simple-timing-dual',
-                    'realview-o3',
-                    'realview-o3-dual']
-    if env['TARGET_ISA'] == 'x86':
-        configs += ['pc-simple-atomic',
-                    'pc-simple-timing',
-                    'pc-o3-timing']
+if env['TARGET_ISA'] == 'alpha':
+    configs += ['tsunami-simple-atomic',
+                'tsunami-simple-timing',
+                'tsunami-simple-atomic-dual',
+                'tsunami-simple-timing-dual',
+                'twosys-tsunami-simple-atomic',
+                'tsunami-o3', 'tsunami-o3-dual',
+                'tsunami-inorder']
+if env['TARGET_ISA'] == 'sparc':
+    configs += ['t1000-simple-atomic',
+                't1000-simple-timing']
+if env['TARGET_ISA'] == 'arm':
+    configs += ['realview-simple-atomic',
+                'realview-simple-atomic-dual',
+                'realview-simple-timing',
+                'realview-simple-timing-dual',
+                'realview-o3',
+                'realview-o3-dual']
+if env['TARGET_ISA'] == 'x86':
+    configs += ['pc-simple-atomic',
+                'pc-simple-timing',
+                'pc-o3-timing']
 
-else:
-    configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
-                'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp',
-                'inorder-timing', 'rubytest']
+configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
+            'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp',
+            'inorder-timing', 'rubytest']
 
 if env['PROTOCOL'] != 'None':
     if env['PROTOCOL'] == 'MI_example':
@@ -303,7 +301,7 @@ if env['PROTOCOL'] != 'None':
 cwd = os.getcwd()
 os.chdir(str(Dir('.').srcdir))
 for config in configs:
-    dirs = glob.glob('*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
+    dirs = glob.glob('*/*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
     for d in dirs:
         if not os.path.exists(os.path.join(d, 'skip')):
             test_builder(env, d)
