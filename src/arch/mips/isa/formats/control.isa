@@ -88,13 +88,13 @@ def template CP0Execute {{
 
                 if (isCoprocessorEnabled(xc, 0)) {
                     %(code)s;
+
+                    if(fault == NoFault)
+                    {
+                        %(op_wb)s;
+                    }
                 } else {
                     fault = new CoprocessorUnusableFault(0);
-                }
-
-                if(fault == NoFault)
-                {
-                    %(op_wb)s;
                 }
                 return fault;
         }
