@@ -138,7 +138,7 @@ template <class Impl>
 LSQUnit<Impl>::LSQUnit()
     : loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
       isStoreBlocked(false), isLoadBlocked(false),
-      loadBlockedHandled(false), hasPendingPkt(false)
+      loadBlockedHandled(false), storeInFlight(false), hasPendingPkt(false)
 {
 }
 
@@ -182,6 +182,7 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
     memDepViolator = NULL;
 
     blockedLoadSeqNum = 0;
+    needsTSO = params->needsTSO;
 }
 
 template<class Impl>
@@ -770,6 +771,7 @@ LSQUnit<Impl>::writebackStores()
            storeWBIdx != storeTail &&
            storeQueue[storeWBIdx].inst &&
            storeQueue[storeWBIdx].canWB &&
+           ((!needsTSO) || (!storeInFlight)) &&
            usedPorts < cachePorts) {
 
         if (isStoreBlocked || lsq->cacheBlocked()) {
@@ -1090,6 +1092,10 @@ LSQUnit<Impl>::storePostSend(PacketPtr pkt)
 #endif
     }
 
+    if (needsTSO) {
+        storeInFlight = true;
+    }
+
     incrStIdx(storeWBIdx);
 }
 
@@ -1162,6 +1168,10 @@ LSQUnit<Impl>::completeStore(int store_idx)
     }
 
     storeQueue[store_idx].inst->setCompleted();
+
+    if (needsTSO) {
+        storeInFlight = false;
+    }
 
     // Tell the checker we've completed this instruction.  Some stores
     // may get reported twice to the checker, but the checker can

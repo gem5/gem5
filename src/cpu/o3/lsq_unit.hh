@@ -453,6 +453,9 @@ class LSQUnit {
     /** Has the blocked load been handled. */
     bool loadBlockedHandled;
 
+    /** Whether or not a store is in flight. */
+    bool storeInFlight;
+
     /** The sequence number of the blocked load. */
     InstSeqNum blockedLoadSeqNum;
 
@@ -465,6 +468,9 @@ class LSQUnit {
 
     /** The packet that is pending free cache ports. */
     PacketPtr pendingPkt;
+
+    /** Flag for memory model. */
+    bool needsTSO;
 
     // Will also need how many read/write ports the Dcache has.  Or keep track
     // of that in stage that is one level up, and only call executeLoad/Store
