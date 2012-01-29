@@ -79,6 +79,7 @@ Ruby.define_options(parser)
 execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
+options.ruby = True
 
 if args:
     print "Error: script doesn't take any positional arguments"
@@ -94,17 +95,11 @@ if options.benchmark:
 else:
     bm = [SysConfig()]
 
-#
-# currently ruby fs only works in simple timing mode because ruby does not
-# support atomic accesses by devices.  Also ruby_fs currently assumes
-# that is running a checkpoints that were created by ALPHA_FS under atomic
-# mode.  Since switch cpus are not defined in these checkpoints, we don't
-# fast forward with the atomic cpu and instead set the FutureClass to None.
-# Therefore the cpus resolve to the correct names and unserialize correctly.
-#
-class CPUClass(TimingSimpleCPU): pass
-test_mem_mode = 'timing'
-FutureClass = None
+# Check for timing mode because ruby does not support atomic accesses
+if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
+    print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
+    sys.exit(1)
+(CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
 CPUClass.clock = options.clock
 
