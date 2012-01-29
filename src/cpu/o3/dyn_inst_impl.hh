@@ -193,18 +193,17 @@ template <class Impl>
 void
 BaseO3DynInst<Impl>::syscall(int64_t callnum)
 {
-    if (FullSystem) {
+    if (FullSystem)
         panic("Syscall emulation isn't available in FS mode.\n");
-    } else {
-        // HACK: check CPU's nextPC before and after syscall. If it
-        // changes, update this instruction's nextPC because the syscall
-        // must have changed the nextPC.
-        TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
-        this->cpu->syscall(callnum, this->threadNumber);
-        TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
-        if (!(curPC == newPC)) {
-            this->pcState(newPC);
-        }
+
+    // HACK: check CPU's nextPC before and after syscall. If it
+    // changes, update this instruction's nextPC because the syscall
+    // must have changed the nextPC.
+    TheISA::PCState curPC = this->cpu->pcState(this->threadNumber);
+    this->cpu->syscall(callnum, this->threadNumber);
+    TheISA::PCState newPC = this->cpu->pcState(this->threadNumber);
+    if (!(curPC == newPC)) {
+        this->pcState(newPC);
     }
 }
 

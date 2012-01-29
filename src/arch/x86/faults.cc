@@ -52,43 +52,44 @@ namespace X86ISA
 {
     void X86FaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
-        if (FullSystem) {
-            PCState pcState = tc->pcState();
-            Addr pc = pcState.pc();
-            DPRINTF(Faults, "RIP %#x: vector %d: %s\n",
-                    pc, vector, describe());
-            using namespace X86ISAInst::RomLabels;
-            HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-            MicroPC entry;
-            if (m5reg.mode == LongMode) {
-                if (isSoft()) {
-                    entry = extern_label_longModeSoftInterrupt;
-                } else {
-                    entry = extern_label_longModeInterrupt;
-                }
-            } else {
-                entry = extern_label_legacyModeInterrupt;
-            }
-            tc->setIntReg(INTREG_MICRO(1), vector);
-            tc->setIntReg(INTREG_MICRO(7), pc);
-            if (errorCode != (uint64_t)(-1)) {
-                if (m5reg.mode == LongMode) {
-                    entry = extern_label_longModeInterruptWithError;
-                } else {
-                    panic("Legacy mode interrupts with error codes "
-                            "aren't implementde.\n");
-                }
-                // Software interrupts shouldn't have error codes. If one
-                // does, there would need to be microcode to set it up.
-                assert(!isSoft());
-                tc->setIntReg(INTREG_MICRO(15), errorCode);
-            }
-            pcState.upc(romMicroPC(entry));
-            pcState.nupc(romMicroPC(entry) + 1);
-            tc->pcState(pcState);
-        } else {
+        if (!FullSystem) {
             FaultBase::invoke(tc, inst);
+            return;
         }
+
+        PCState pcState = tc->pcState();
+        Addr pc = pcState.pc();
+        DPRINTF(Faults, "RIP %#x: vector %d: %s\n",
+                pc, vector, describe());
+        using namespace X86ISAInst::RomLabels;
+        HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+        MicroPC entry;
+        if (m5reg.mode == LongMode) {
+            if (isSoft()) {
+                entry = extern_label_longModeSoftInterrupt;
+            } else {
+                entry = extern_label_longModeInterrupt;
+            }
+        } else {
+            entry = extern_label_legacyModeInterrupt;
+        }
+        tc->setIntReg(INTREG_MICRO(1), vector);
+        tc->setIntReg(INTREG_MICRO(7), pc);
+        if (errorCode != (uint64_t)(-1)) {
+            if (m5reg.mode == LongMode) {
+                entry = extern_label_longModeInterruptWithError;
+            } else {
+                panic("Legacy mode interrupts with error codes "
+                        "aren't implementde.\n");
+            }
+            // Software interrupts shouldn't have error codes. If one
+            // does, there would need to be microcode to set it up.
+            assert(!isSoft());
+            tc->setIntReg(INTREG_MICRO(15), errorCode);
+        }
+        pcState.upc(romMicroPC(entry));
+        pcState.nupc(romMicroPC(entry) + 1);
+        tc->pcState(pcState);
     }
 
     std::string
@@ -106,12 +107,13 @@ namespace X86ISA
     void X86Trap::invoke(ThreadContext * tc, StaticInstPtr inst)
     {
         X86FaultBase::invoke(tc);
-        if (FullSystem) {
-            // This is the same as a fault, but it happens -after- the
-            // instruction.
-            PCState pc = tc->pcState();
-            pc.uEnd();
-        }
+        if (!FullSystem)
+            return;
+
+        // This is the same as a fault, but it happens -after- the
+        // instruction.
+        PCState pc = tc->pcState();
+        pc.uEnd();
     }
 
     void X86Abort::invoke(ThreadContext * tc, StaticInstPtr inst)

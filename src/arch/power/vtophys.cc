@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2012 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
- *          Nathan Binkert
- *          Jaidev Patwardhan
+ * Authors: Gabe Black
  */
 
 #include "arch/power/vtophys.hh"
@@ -38,12 +35,12 @@ using namespace std;
 Addr
 PowerISA::vtophys(Addr vaddr)
 {
-    fatal("VTOPHYS: Unimplemented on POWER\n");
+    fatal("vtophys: Unimplemented on POWER\n");
 }
 
 Addr
 PowerISA::vtophys(ThreadContext *tc, Addr addr)
 {
-    fatal("VTOPHYS: Unimplemented on POWER\n");
+    fatal("vtophys: Unimplemented on POWER\n");
 }
 

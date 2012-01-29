@@ -295,33 +295,31 @@ TLB::regStats()
 Fault
 TLB::translateInst(RequestPtr req, ThreadContext *tc)
 {
-    if (!FullSystem) {
-        Process * p = tc->getProcessPtr();
-
-        Fault fault = p->pTable->translate(req);
-        if (fault != NoFault)
-            return fault;
-
-        return NoFault;
-    } else {
+    if (FullSystem)
         panic("translateInst not implemented in MIPS.\n");
-    }
+
+    Process * p = tc->getProcessPtr();
+
+    Fault fault = p->pTable->translate(req);
+    if (fault != NoFault)
+        return fault;
+
+    return NoFault;
 }
 
 Fault
 TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 {
-    if (!FullSystem) {
-        Process * p = tc->getProcessPtr();
-
-        Fault fault = p->pTable->translate(req);
-        if (fault != NoFault)
-            return fault;
-
-        return NoFault;
-    } else {
+    if (FullSystem)
         panic("translateData not implemented in MIPS.\n");
-    }
+
+    Process * p = tc->getProcessPtr();
+
+    Fault fault = p->pTable->translate(req);
+    if (fault != NoFault)
+        return fault;
+
+    return NoFault;
 }
 
 Fault

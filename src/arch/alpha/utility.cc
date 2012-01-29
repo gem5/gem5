@@ -39,23 +39,23 @@ namespace AlphaISA {
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-    if (FullSystem) {
-        const int NumArgumentRegs = 6;
-        if (number < NumArgumentRegs) {
-            if (fp)
-                return tc->readFloatRegBits(16 + number);
-            else
-                return tc->readIntReg(16 + number);
-        } else {
-            Addr sp = tc->readIntReg(StackPointerReg);
-            FSTranslatingPortProxy* vp = tc->getVirtProxy();
-            uint64_t arg = vp->read<uint64_t>(sp +
-                               (number-NumArgumentRegs) * sizeof(uint64_t));
-            return arg;
-        }
-    } else {
+    if (!FullSystem) {
         panic("getArgument() is Full system only\n");
         M5_DUMMY_RETURN;
+    }
+
+    const int NumArgumentRegs = 6;
+    if (number < NumArgumentRegs) {
+        if (fp)
+            return tc->readFloatRegBits(16 + number);
+        else
+            return tc->readIntReg(16 + number);
+    } else {
+        Addr sp = tc->readIntReg(StackPointerReg);
+        FSTranslatingPortProxy* vp = tc->getVirtProxy();
+        uint64_t arg = vp->read<uint64_t>(sp +
+                           (number-NumArgumentRegs) * sizeof(uint64_t));
+        return arg;
     }
 }
 

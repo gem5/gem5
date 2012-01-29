@@ -218,8 +218,8 @@ System::numRunningContexts()
 void
 System::initState()
 {
+    int i;
     if (FullSystem) {
-        int i;
         for (i = 0; i < threadContexts.size(); i++)
             TheISA::startupCPU(threadContexts[i], i);
         // Moved from the constructor to here since it relies on the
@@ -271,11 +271,11 @@ System::initState()
 
     activeCpus.clear();
 
-    if (FullSystem) {
-        int i;
-        for (i = 0; i < threadContexts.size(); i++)
-            TheISA::startupCPU(threadContexts[i], i);
-    }
+    if (!FullSystem)
+        return;
+
+    for (i = 0; i < threadContexts.size(); i++)
+        TheISA::startupCPU(threadContexts[i], i);
 }
 
 void

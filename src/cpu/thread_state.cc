@@ -68,14 +68,15 @@ ThreadState::serialize(std::ostream &os)
     // thread_num and cpu_id are deterministic from the config
     SERIALIZE_SCALAR(funcExeInst);
 
-    if (FullSystem) {
-        Tick quiesceEndTick = 0;
-        if (quiesceEvent->scheduled())
-            quiesceEndTick = quiesceEvent->when();
-        SERIALIZE_SCALAR(quiesceEndTick);
-        if (kernelStats)
-            kernelStats->serialize(os);
-    }
+    if (!FullSystem)
+        return;
+
+    Tick quiesceEndTick = 0;
+    if (quiesceEvent->scheduled())
+        quiesceEndTick = quiesceEvent->when();
+    SERIALIZE_SCALAR(quiesceEndTick);
+    if (kernelStats)
+        kernelStats->serialize(os);
 }
 
 void
@@ -86,14 +87,15 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
     // thread_num and cpu_id are deterministic from the config
     UNSERIALIZE_SCALAR(funcExeInst);
 
-    if (FullSystem) {
-        Tick quiesceEndTick;
-        UNSERIALIZE_SCALAR(quiesceEndTick);
-        if (quiesceEndTick)
-            baseCpu->schedule(quiesceEvent, quiesceEndTick);
-        if (kernelStats)
-            kernelStats->unserialize(cp, section);
-    }
+    if (!FullSystem)
+        return;
+
+    Tick quiesceEndTick;
+    UNSERIALIZE_SCALAR(quiesceEndTick);
+    if (quiesceEndTick)
+        baseCpu->schedule(quiesceEvent, quiesceEndTick);
+    if (kernelStats)
+        kernelStats->unserialize(cp, section);
 }
 
 void

@@ -418,14 +418,12 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
-    if (!FullSystem) {
-        Addr paddr;
-        Process *p = tc->getProcessPtr();
+    Addr paddr;
+    Process *p = tc->getProcessPtr();
 
-        if (!p->pTable->translate(vaddr, paddr))
-            return Fault(new GenericPageTableFault(vaddr));
-        req->setPaddr(paddr);
-    }
+    if (!p->pTable->translate(vaddr, paddr))
+        return Fault(new GenericPageTableFault(vaddr));
+    req->setPaddr(paddr);
 
     return NoFault;
 }
@@ -570,11 +568,9 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         }
     }
 
-    if (FullSystem) {
-        if (!bootUncacheability &&
-                ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(vaddr))
-            req->setFlags(Request::UNCACHEABLE);
-    }
+    if (!bootUncacheability &&
+            ((ArmSystem*)tc->getSystemPtr())->adderBootUncacheable(vaddr))
+        req->setFlags(Request::UNCACHEABLE);
 
     switch ( (dacr >> (te->domain * 2)) & 0x3) {
       case 0:

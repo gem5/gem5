@@ -63,8 +63,7 @@ using namespace AlphaISA;
 
 AlphaBackdoor::AlphaBackdoor(const Params *p)
     : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
-      system(p->system),
-      cpu(p->cpu)
+      system(p->system), cpu(p->cpu)
 {
 
     pioSize = sizeof(struct AlphaAccess);
@@ -96,7 +95,8 @@ AlphaBackdoor::startup()
     alphaAccess->mem_size = system->physmem->size();
     alphaAccess->cpuClock = cpu->frequency() / 1000000; // In MHz
     Tsunami *tsunami = dynamic_cast<Tsunami *>(params()->platform);
-    assert(tsunami);
+    if (!tsunami)
+        fatal("Platform is not Tsunami.\n");
     alphaAccess->intrClockFrequency = tsunami->io->frequency();
 }
 

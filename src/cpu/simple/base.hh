@@ -396,8 +396,8 @@ class BaseSimpleCPU : public BaseCPU
     {
         if (FullSystem)
             panic("Syscall emulation isn't available in FS mode.\n");
-        else
-            thread->syscall(callnum);
+
+        thread->syscall(callnum);
     }
 
     bool misspeculating() { return thread->misspeculating(); }

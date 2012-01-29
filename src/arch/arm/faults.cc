@@ -178,19 +178,20 @@ UndefinedInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         ArmFault::invoke(tc, inst);
+        return;
+    }
+
+    // If the mnemonic isn't defined this has to be an unknown instruction.
+    assert(unknown || mnemonic != NULL);
+    if (disabled) {
+        panic("Attempted to execute disabled instruction "
+                "'%s' (inst 0x%08x)", mnemonic, machInst);
+    } else if (unknown) {
+        panic("Attempted to execute unknown instruction (inst 0x%08x)",
+              machInst);
     } else {
-        // If the mnemonic isn't defined this has to be an unknown instruction.
-        assert(unknown || mnemonic != NULL);
-        if (disabled) {
-            panic("Attempted to execute disabled instruction "
-                    "'%s' (inst 0x%08x)", mnemonic, machInst);
-        } else if (unknown) {
-            panic("Attempted to execute unknown instruction (inst 0x%08x)",
-                  machInst);
-        } else {
-            panic("Attempted to execute unimplemented instruction "
-                    "'%s' (inst 0x%08x)", mnemonic, machInst);
-        }
+        panic("Attempted to execute unimplemented instruction "
+                "'%s' (inst 0x%08x)", mnemonic, machInst);
     }
 }
 
@@ -199,19 +200,20 @@ SupervisorCall::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         ArmFault::invoke(tc, inst);
-    } else {
-        // As of now, there isn't a 32 bit thumb version of this instruction.
-        assert(!machInst.bigThumb);
-        uint32_t callNum;
-        callNum = tc->readIntReg(INTREG_R7);
-        tc->syscall(callNum);
-
-        // Advance the PC since that won't happen automatically.
-        PCState pc = tc->pcState();
-        assert(inst);
-        inst->advancePC(pc);
-        tc->pcState(pc);
+        return;
     }
+
+    // As of now, there isn't a 32 bit thumb version of this instruction.
+    assert(!machInst.bigThumb);
+    uint32_t callNum;
+    callNum = tc->readIntReg(INTREG_R7);
+    tc->syscall(callNum);
+
+    // Advance the PC since that won't happen automatically.
+    PCState pc = tc->pcState();
+    assert(inst);
+    inst->advancePC(pc);
+    tc->pcState(pc);
 }
 
 template<class T>
@@ -252,13 +254,14 @@ template void AbortFault<DataAbort>::invoke(ThreadContext *tc,
 void
 ArmSev::invoke(ThreadContext *tc, StaticInstPtr inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
-    if (FullSystem) {
-        // Set sev_mailbox to 1, clear the pending interrupt from remote
-        // SEV execution and let pipeline continue as pcState is still
-        // valid.
-        tc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
-        tc->getCpuPtr()->clearInterrupt(INT_SEV, 0);
-    }
+    if (!FullSystem)
+        return;
+
+    // Set sev_mailbox to 1, clear the pending interrupt from remote
+    // SEV execution and let pipeline continue as pcState is still
+    // valid.
+    tc->setMiscReg(MISCREG_SEV_MAILBOX, 1);
+    tc->getCpuPtr()->clearInterrupt(INT_SEV, 0);
 }
 
 // return via SUBS pc, lr, xxx; rfe, movs, ldm

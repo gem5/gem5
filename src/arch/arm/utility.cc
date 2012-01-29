@@ -63,48 +63,48 @@ initCPU(ThreadContext *tc, int cpuId)
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-    if (FullSystem) {
-        if (size == (uint16_t)(-1))
-            size = ArmISA::MachineBytes;
-        if (fp)
-            panic("getArgument(): Floating point arguments not implemented\n");
-
-        if (number < NumArgumentRegs) {
-            // If the argument is 64 bits, it must be in an even regiser
-            // number. Increment the number here if it isn't even.
-            if (size == sizeof(uint64_t)) {
-                if ((number % 2) != 0)
-                    number++;
-                // Read the two halves of the data. Number is inc here to
-                // get the second half of the 64 bit reg.
-                uint64_t tmp;
-                tmp = tc->readIntReg(number++);
-                tmp |= tc->readIntReg(number) << 32;
-                return tmp;
-            } else {
-               return tc->readIntReg(number);
-            }
-        } else {
-            Addr sp = tc->readIntReg(StackPointerReg);
-            FSTranslatingPortProxy* vp = tc->getVirtProxy();
-            uint64_t arg;
-            if (size == sizeof(uint64_t)) {
-                // If the argument is even it must be aligned
-                if ((number % 2) != 0)
-                    number++;
-                arg = vp->read<uint64_t>(sp +
-                        (number-NumArgumentRegs) * sizeof(uint32_t));
-                // since two 32 bit args == 1 64 bit arg, increment number
-                number++;
-            } else {
-                arg = vp->read<uint32_t>(sp +
-                               (number-NumArgumentRegs) * sizeof(uint32_t));
-            }
-            return arg;
-        }
-    } else {
+    if (!FullSystem) {
         panic("getArgument() only implemented for full system mode.\n");
         M5_DUMMY_RETURN
+    }
+
+    if (size == (uint16_t)(-1))
+        size = ArmISA::MachineBytes;
+    if (fp)
+        panic("getArgument(): Floating point arguments not implemented\n");
+
+    if (number < NumArgumentRegs) {
+        // If the argument is 64 bits, it must be in an even regiser
+        // number. Increment the number here if it isn't even.
+        if (size == sizeof(uint64_t)) {
+            if ((number % 2) != 0)
+                number++;
+            // Read the two halves of the data. Number is inc here to
+            // get the second half of the 64 bit reg.
+            uint64_t tmp;
+            tmp = tc->readIntReg(number++);
+            tmp |= tc->readIntReg(number) << 32;
+            return tmp;
+        } else {
+           return tc->readIntReg(number);
+        }
+    } else {
+        Addr sp = tc->readIntReg(StackPointerReg);
+        FSTranslatingPortProxy* vp = tc->getVirtProxy();
+        uint64_t arg;
+        if (size == sizeof(uint64_t)) {
+            // If the argument is even it must be aligned
+            if ((number % 2) != 0)
+                number++;
+            arg = vp->read<uint64_t>(sp +
+                    (number-NumArgumentRegs) * sizeof(uint32_t));
+            // since two 32 bit args == 1 64 bit arg, increment number
+            number++;
+        } else {
+            arg = vp->read<uint32_t>(sp +
+                           (number-NumArgumentRegs) * sizeof(uint32_t));
+        }
+        return arg;
     }
 }
 

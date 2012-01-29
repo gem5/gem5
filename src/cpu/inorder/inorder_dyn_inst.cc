@@ -314,12 +314,11 @@ InOrderDynInst::simPalCheck(int palFunc)
 void
 InOrderDynInst::syscall(int64_t callnum)
 {
-    if (FullSystem) {
+    if (FullSystem)
         panic("Syscall emulation isn't available in FS mode.\n");
-    } else {
-        syscallNum = callnum;
-        cpu->syscallContext(NoFault, this->threadNumber, this);
-    }
+
+    syscallNum = callnum;
+    cpu->syscallContext(NoFault, this->threadNumber, this);
 }
 
 void

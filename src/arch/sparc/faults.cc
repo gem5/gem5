@@ -624,17 +624,18 @@ FastInstructionAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
+        return;
+    }
+
+    Process *p = tc->getProcessPtr();
+    TlbEntry entry;
+    bool success = p->pTable->lookup(vaddr, entry);
+    if (!success) {
+        panic("Tried to execute unmapped address %#x.\n", vaddr);
     } else {
-        Process *p = tc->getProcessPtr();
-        TlbEntry entry;
-        bool success = p->pTable->lookup(vaddr, entry);
-        if (!success) {
-            panic("Tried to execute unmapped address %#x.\n", vaddr);
-        } else {
-            Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-            tc->getITBPtr()->insert(alignedVaddr, 0 /*partition id*/,
-                    p->M5_pid /*context id*/, false, entry.pte);
-        }
+        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+        tc->getITBPtr()->insert(alignedVaddr, 0 /*partition id*/,
+                p->M5_pid /*context id*/, false, entry.pte);
     }
 }
 
@@ -643,21 +644,22 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
+        return;
+    }
+
+    Process *p = tc->getProcessPtr();
+    TlbEntry entry;
+    bool success = p->pTable->lookup(vaddr, entry);
+    if (!success) {
+        if (p->fixupStackFault(vaddr))
+            success = p->pTable->lookup(vaddr, entry);
+    }
+    if (!success) {
+        panic("Tried to access unmapped address %#x.\n", vaddr);
     } else {
-        Process *p = tc->getProcessPtr();
-        TlbEntry entry;
-        bool success = p->pTable->lookup(vaddr, entry);
-        if (!success) {
-            if (p->fixupStackFault(vaddr))
-                success = p->pTable->lookup(vaddr, entry);
-        }
-        if (!success) {
-            panic("Tried to access unmapped address %#x.\n", vaddr);
-        } else {
-            Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-            tc->getDTBPtr()->insert(alignedVaddr, 0 /*partition id*/,
-                    p->M5_pid /*context id*/, false, entry.pte);
-        }
+        Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+        tc->getDTBPtr()->insert(alignedVaddr, 0 /*partition id*/,
+                p->M5_pid /*context id*/, false, entry.pte);
     }
 }
 
@@ -666,18 +668,19 @@ SpillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
-    } else {
-        doNormalFault(tc, trapType(), false);
-
-        Process *p = tc->getProcessPtr();
-
-        //XXX This will only work in faults from a SparcLiveProcess
-        SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-        assert(lp);
-
-        // Then adjust the PC and NPC
-        tc->pcState(lp->readSpillStart());
+        return;
     }
+
+    doNormalFault(tc, trapType(), false);
+
+    Process *p = tc->getProcessPtr();
+
+    //XXX This will only work in faults from a SparcLiveProcess
+    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+    assert(lp);
+
+    // Then adjust the PC and NPC
+    tc->pcState(lp->readSpillStart());
 }
 
 void
@@ -685,18 +688,19 @@ FillNNormal::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
-    } else {
-        doNormalFault(tc, trapType(), false);
-
-        Process *p = tc->getProcessPtr();
-
-        //XXX This will only work in faults from a SparcLiveProcess
-        SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-        assert(lp);
-
-        // Then adjust the PC and NPC
-        tc->pcState(lp->readFillStart());
+        return;
     }
+
+    doNormalFault(tc, trapType(), false);
+
+    Process *p = tc->getProcessPtr();
+
+    //XXX This will only work in faults from a SparcLiveProcess
+    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+    assert(lp);
+
+    // Then adjust the PC and NPC
+    tc->pcState(lp->readFillStart());
 }
 
 void
@@ -704,24 +708,25 @@ TrapInstruction::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         SparcFaultBase::invoke(tc, inst);
-    } else {
-        // In SE, this mechanism is how the process requests a service from
-        // the operating system. We'll get the process object from the thread
-        // context and let it service the request.
-
-        Process *p = tc->getProcessPtr();
-
-        SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
-        assert(lp);
-
-        lp->handleTrap(_n, tc);
-
-        // We need to explicitly advance the pc, since that's not done for us
-        // on a faulting instruction
-        PCState pc = tc->pcState();
-        pc.advance();
-        tc->pcState(pc);
+        return;
     }
+
+    // In SE, this mechanism is how the process requests a service from
+    // the operating system. We'll get the process object from the thread
+    // context and let it service the request.
+
+    Process *p = tc->getProcessPtr();
+
+    SparcLiveProcess *lp = dynamic_cast<SparcLiveProcess *>(p);
+    assert(lp);
+
+    lp->handleTrap(_n, tc);
+
+    // We need to explicitly advance the pc, since that's not done for us
+    // on a faulting instruction
+    PCState pc = tc->pcState();
+    pc.advance();
+    tc->pcState(pc);
 }
 
 } // namespace SparcISA

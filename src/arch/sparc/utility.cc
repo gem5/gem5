@@ -46,20 +46,20 @@ namespace SparcISA {
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-    if (FullSystem) {
-        const int NumArgumentRegs = 6;
-        if (number < NumArgumentRegs) {
-            return tc->readIntReg(8 + number);
-        } else {
-            Addr sp = tc->readIntReg(StackPointerReg);
-            FSTranslatingPortProxy* vp = tc->getVirtProxy();
-            uint64_t arg = vp->read<uint64_t>(sp + 92 +
-                                (number-NumArgumentRegs) * sizeof(uint64_t));
-            return arg;
-        }
-    } else {
+    if (!FullSystem) {
         panic("getArgument() only implemented for full system\n");
         M5_DUMMY_RETURN
+    }
+
+    const int NumArgumentRegs = 6;
+    if (number < NumArgumentRegs) {
+        return tc->readIntReg(8 + number);
+    } else {
+        Addr sp = tc->readIntReg(StackPointerReg);
+        FSTranslatingPortProxy* vp = tc->getVirtProxy();
+        uint64_t arg = vp->read<uint64_t>(sp + 92 +
+                            (number-NumArgumentRegs) * sizeof(uint64_t));
+        return arg;
     }
 }
 

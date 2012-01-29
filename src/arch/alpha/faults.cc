@@ -187,16 +187,17 @@ ItbPageFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         ItbFault::invoke(tc);
+        return;
+    }
+
+    Process *p = tc->getProcessPtr();
+    TlbEntry entry;
+    bool success = p->pTable->lookup(pc, entry);
+    if (!success) {
+        panic("Tried to execute unmapped address %#x.\n", pc);
     } else {
-        Process *p = tc->getProcessPtr();
-        TlbEntry entry;
-        bool success = p->pTable->lookup(pc, entry);
-        if (!success) {
-            panic("Tried to execute unmapped address %#x.\n", pc);
-        } else {
-            VAddr vaddr(pc);
-            tc->getITBPtr()->insert(vaddr.page(), entry);
-        }
+        VAddr vaddr(pc);
+        tc->getITBPtr()->insert(vaddr.page(), entry);
     }
 }
 
@@ -205,19 +206,20 @@ NDtbMissFault::invoke(ThreadContext *tc, StaticInstPtr inst)
 {
     if (FullSystem) {
         DtbFault::invoke(tc, inst);
+        return;
+    }
+
+    Process *p = tc->getProcessPtr();
+    TlbEntry entry;
+    bool success = p->pTable->lookup(vaddr, entry);
+    if (!success) {
+        if (p->fixupStackFault(vaddr))
+            success = p->pTable->lookup(vaddr, entry);
+    }
+    if (!success) {
+        panic("Tried to access unmapped address %#x.\n", (Addr)vaddr);
     } else {
-        Process *p = tc->getProcessPtr();
-        TlbEntry entry;
-        bool success = p->pTable->lookup(vaddr, entry);
-        if (!success) {
-            if (p->fixupStackFault(vaddr))
-                success = p->pTable->lookup(vaddr, entry);
-        }
-        if (!success) {
-            panic("Tried to access unmapped address %#x.\n", (Addr)vaddr);
-        } else {
-            tc->getDTBPtr()->insert(vaddr.page(), entry);
-        }
+        tc->getDTBPtr()->insert(vaddr.page(), entry);
     }
 }
 
