@@ -42,8 +42,6 @@ class Solaris {};
 
 #include "kern/operatingsystem.hh"
 
-class TranslatingPort;
-
 ///
 /// This class encapsulates the types, structures, constants,
 /// functions, and syscall-number mappings specific to the Solaris

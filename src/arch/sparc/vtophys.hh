@@ -36,12 +36,8 @@
 #include "arch/sparc/pagetable.hh"
 
 class ThreadContext;
-class FunctionalPort;
 
 namespace SparcISA {
-
-PageTableEntry
-kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, SparcISA::VAddr vaddr);
 
 Addr vtophys(Addr vaddr);
 Addr vtophys(ThreadContext *tc, Addr vaddr);

@@ -58,8 +58,6 @@ class BaseCPU;
 
 class FunctionProfile;
 class ProfileNode;
-class FunctionalPort;
-class PhysicalPort;
 
 namespace TheISA {
     namespace Kernel {
@@ -71,7 +69,6 @@ namespace TheISA {
 
 #include "mem/page_table.hh"
 #include "sim/process.hh"
-class TranslatingPort;
 
 #endif // FULL_SYSTEM
 

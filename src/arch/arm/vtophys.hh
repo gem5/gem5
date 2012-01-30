@@ -38,7 +38,6 @@
 #include "arch/arm/utility.hh"
 
 class ThreadContext;
-class FunctionalPort;
 
 namespace ArmISA {
     inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
