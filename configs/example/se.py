@@ -184,7 +184,6 @@ if options.ruby:
     options.use_map = True
     Ruby.create_system(options, system)
     assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
-    system.system_port = system.ruby._sys_port_proxy.port
 else:
     system.system_port = system.membus.port
     system.physmem.port = system.membus.port
