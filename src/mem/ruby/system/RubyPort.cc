@@ -88,8 +88,7 @@ RubyPort::getPort(const std::string &if_name, int idx)
         // RubyPort should only have one port to physical memory
         assert (physMemPort == NULL);
 
-        physMemPort = new M5Port(csprintf("%s-physMemPort", name()), this,
-                                 ruby_system, access_phys_mem);
+        physMemPort = new PioPort(csprintf("%s-physMemPort", name()), this);
 
         return physMemPort;
     }

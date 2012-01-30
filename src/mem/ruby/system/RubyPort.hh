@@ -155,7 +155,7 @@ class RubyPort : public MemObject
     uint16_t m_port_id;
     uint64_t m_request_cnt;
 
-    M5Port* physMemPort;
+    PioPort* physMemPort;
 
     /*! Vector of CPU Port attached to this Ruby port. */
     typedef std::vector<M5Port*>::iterator CpuPortIter;
