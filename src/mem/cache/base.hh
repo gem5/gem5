@@ -105,8 +105,6 @@ class BaseCache : public MemObject
         CachePort(const std::string &_name, BaseCache *_cache,
                   const std::string &_label);
 
-        virtual void recvRangeChange() const;
-
         virtual unsigned deviceBlockSize() const;
 
         bool recvRetryCommon();
@@ -117,15 +115,11 @@ class BaseCache : public MemObject
         const std::string label;
 
       public:
-        void setOtherPort(CachePort *_otherPort) { otherPort = _otherPort; }
-
         void setBlocked();
 
         void clearBlocked();
 
         bool checkFunctional(PacketPtr pkt);
-
-        CachePort *otherPort;
 
         bool blocked;
 

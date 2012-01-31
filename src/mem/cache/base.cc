@@ -44,8 +44,7 @@ using namespace std;
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
                                 const std::string &_label)
     : SimpleTimingPort(_name, _cache), cache(_cache),
-      label(_label), otherPort(NULL),
-      blocked(false), mustSendRetry(false)
+      label(_label), blocked(false), mustSendRetry(false)
 {
 }
 
@@ -67,12 +66,6 @@ BaseCache::BaseCache(const Params *p)
       addrRange(p->addr_range),
       _numCpus(p->num_cpus)
 {
-}
-
-void
-BaseCache::CachePort::recvRangeChange() const
-{
-    otherPort->sendRangeChange();
 }
 
 

@@ -77,8 +77,6 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
                                   "CpuSidePort");
     memSidePort = new MemSidePort(p->name + "-mem_side_port", this,
                                   "MemSidePort");
-    cpuSidePort->setOtherPort(memSidePort);
-    memSidePort->setOtherPort(cpuSidePort);
 
     tags->setCache(this);
     if (prefetcher)
