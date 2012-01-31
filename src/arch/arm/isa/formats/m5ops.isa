@@ -64,6 +64,7 @@ def format M5ops() {{
             case 0x42: return new Dumpresetstats(machInst);
             case 0x43: return new M5checkpoint(machInst);
 #if FULL_SYSTEM
+            case 0x4F: return new M5writefile(machInst);
             case 0x50: return new M5readfile(machInst);
 #endif
             case 0x51: return new M5break(machInst);

@@ -73,6 +73,13 @@ class OutputDirectory
      */
     std::ostream *checkForStdio(const std::string &name) const;
 
+  public:
+    /** Constructor. */
+    OutputDirectory();
+
+    /** Destructor. */
+    ~OutputDirectory();
+
     /** Opens a file (optionally compressed).
      *
      * Will open a file as a compressed stream if filename ends in .gz.
@@ -83,13 +90,6 @@ class OutputDirectory
      */
     std::ostream *openFile(const std::string &filename,
                         std::ios_base::openmode mode = std::ios::trunc);
-
-  public:
-    /** Constructor. */
-    OutputDirectory();
-
-    /** Destructor. */
-    ~OutputDirectory();
 
     /**
      * Sets name of this directory.

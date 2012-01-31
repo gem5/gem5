@@ -265,6 +265,24 @@ let {{
     decoder_output += BasicConstructor.subst(m5readfileIop)
     exec_output += PredOpExecute.subst(m5readfileIop)
 
+    m5writefileCode = '''
+#if FULL_SYSTEM
+    int n = 4;
+    uint64_t offset = getArgument(xc->tcBase(), n, sizeof(uint64_t), false);
+    n = 6;
+    Addr filenameAddr = getArgument(xc->tcBase(), n, sizeof(Addr), false);
+    R0 = PseudoInst::writefile(xc->tcBase(), R0, join32to64(R3,R2), offset,
+                                filenameAddr);
+#endif
+    '''
+    m5writefileIop = InstObjParams("m5writefile", "M5writefile", "PredOp",
+                           { "code": m5writefileCode,
+                             "predicate_test": predicateTest },
+                             ["IsNonSpeculative"])
+    header_output += BasicDeclare.subst(m5writefileIop)
+    decoder_output += BasicConstructor.subst(m5writefileIop)
+    exec_output += PredOpExecute.subst(m5writefileIop)
+
     m5breakIop = InstObjParams("m5break", "M5break", "PredOp",
                            { "code": "PseudoInst::debugbreak(xc->tcBase());",
                              "predicate_test": predicateTest },

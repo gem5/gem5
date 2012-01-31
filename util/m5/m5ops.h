@@ -46,6 +46,7 @@
 #define dumpstats_func          0x41
 #define dumprststats_func       0x42
 #define ckpt_func               0x43
+#define writefile_func          0x4F
 #define readfile_func           0x50
 #define debugbreak_func         0x51
 #define switchcpu_func          0x52
