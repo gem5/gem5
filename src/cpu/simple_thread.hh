@@ -57,8 +57,6 @@ class BaseCPU;
 
 class FunctionProfile;
 class ProfileNode;
-class PhysicalPort;
-class TranslatingPort;
 
 namespace TheISA {
     namespace Kernel {

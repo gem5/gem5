@@ -38,7 +38,6 @@
 #include "arch/mips/utility.hh"
 
 class ThreadContext;
-class FunctionalPort;
 
 namespace MipsISA {
     Addr vtophys(Addr vaddr);

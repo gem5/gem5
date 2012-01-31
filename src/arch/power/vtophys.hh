@@ -40,7 +40,6 @@
 #include "arch/power/utility.hh"
 
 class ThreadContext;
-class FunctionalPort;
 
 namespace PowerISA {
 

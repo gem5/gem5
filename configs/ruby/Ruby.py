@@ -105,6 +105,10 @@ def create_system(options, system, piobus = None, dma_devices = []):
     # full-fledged controller
     system.sys_port_proxy = sys_port_proxy
 
+    # Connect the system port for loading of binaries etc
+    system.system_port = system.sys_port_proxy.port
+
+
     #
     # Set the network classes based on the command line options
     #
@@ -182,5 +186,4 @@ def create_system(options, system, piobus = None, dma_devices = []):
     ruby.profiler = ruby_profiler
     ruby.mem_size = total_mem_size
     ruby._cpu_ruby_ports = cpu_sequencers
-    ruby._sys_port_proxy = sys_port_proxy
     ruby.random_seed    = options.random_seed

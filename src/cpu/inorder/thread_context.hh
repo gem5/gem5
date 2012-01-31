@@ -44,8 +44,6 @@ namespace Kernel {
     class Statistics;
 };
 
-class TranslatingPort;
-
 /**
  * Derived ThreadContext class for use with the InOrderCPU.  It
  * provides the interface for any external objects to access a

@@ -43,4 +43,7 @@ system = System(cpu = cpu,
 system.physmem.port = system.membus.port
 cpu.connectAllPorts(system.membus)
 
+# Connect the system port for loading of binaries etc
+system.system_port = system.membus.port
+
 root = Root(full_system = False, system = system)
