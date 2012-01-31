@@ -73,7 +73,7 @@ struct ThreadState {
     ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process);
 #endif
 
-    ~ThreadState();
+    virtual ~ThreadState();
 
     void serialize(std::ostream &os);
 

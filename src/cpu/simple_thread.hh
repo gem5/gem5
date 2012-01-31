@@ -127,11 +127,8 @@ class SimpleThread : public ThreadState
   public:
     std::string name() const
     {
-        return csprintf("%s.[tid:%i]", cpu->name(), tc->threadId());
+        return csprintf("%s.[tid:%i]", baseCpu->name(), tc->threadId());
     }
-
-    // pointer to CPU associated with this SimpleThread
-    BaseCPU *cpu;
 
     ProxyThreadContext<SimpleThread> *tc;
 
@@ -207,7 +204,7 @@ class SimpleThread : public ThreadState
      * ThreadContext interface functions.
      ******************************************/
 
-    BaseCPU *getCpuPtr() { return cpu; }
+    BaseCPU *getCpuPtr() { return baseCpu; }
 
     TheISA::TLB *getITBPtr() { return itb; }
 

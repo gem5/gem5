@@ -67,7 +67,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb,
                            bool use_kernel_stats)
     : ThreadState(_cpu, _thread_num),
-      cpu(_cpu), system(_sys), itb(_itb), dtb(_dtb)
+      system(_sys), itb(_itb), dtb(_dtb)
 
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -76,7 +76,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 
     clearArchRegs();
 
-    if (cpu->params()->profile) {
+    if (baseCpu->params()->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
         Callback *cb =
             new MakeCallback<SimpleThread,
@@ -97,7 +97,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb)
     : ThreadState(_cpu, _thread_num, _process),
-      cpu(_cpu), itb(_itb), dtb(_dtb)
+      itb(_itb), dtb(_dtb)
 {
     clearArchRegs();
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -196,7 +196,7 @@ SimpleThread::serialize(ostream &os)
     // 
     // Now must serialize all the ISA dependent state
     //
-    isa.serialize(cpu, os);
+    isa.serialize(baseCpu, os);
 }
 
 
@@ -212,14 +212,15 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     // 
     // Now must unserialize all the ISA dependent state
     //
-    isa.unserialize(cpu, cp, section);
+    isa.unserialize(baseCpu, cp, section);
 }
 
 #if FULL_SYSTEM
 void
 SimpleThread::dumpFuncProfile()
 {
-    std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
+    std::ostream *os = simout.create(csprintf("profile.%s.dat",
+                                              baseCpu->name()));
     profile->dump(tc, *os);
 }
 #endif
@@ -240,7 +241,7 @@ SimpleThread::activate(int delay)
     _status = ThreadContext::Active;
 
     // status() == Suspended
-    cpu->activateContext(_threadId, delay);
+    baseCpu->activateContext(_threadId, delay);
 }
 
 void
@@ -261,7 +262,7 @@ SimpleThread::suspend()
 #endif
 */
     _status = ThreadContext::Suspended;
-    cpu->suspendContext(_threadId);
+    baseCpu->suspendContext(_threadId);
 }
 
 
@@ -272,7 +273,7 @@ SimpleThread::halt()
         return;
 
     _status = ThreadContext::Halted;
-    cpu->haltContext(_threadId);
+    baseCpu->haltContext(_threadId);
 }
 
 
