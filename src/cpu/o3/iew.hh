@@ -54,7 +54,7 @@
 #include "cpu/timebuf.hh"
 #include "debug/IEW.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 class FUPool;
 
 /**
@@ -93,9 +93,6 @@ class DefaultIEW
     typedef typename CPUPol::IEWStruct IEWStruct;
     typedef typename CPUPol::RenameStruct RenameStruct;
     typedef typename CPUPol::IssueStruct IssueStruct;
-
-    friend class Impl::O3CPU;
-    friend class CPUPol::IQ;
 
   public:
     /** Overall IEW stage status. Used to determine if the CPU can

@@ -56,7 +56,7 @@ copyStringArray(std::vector<std::string> &strings,
 {
     AddrType data_ptr_swap;
     for (std::vector<std::string>::size_type i = 0; i < strings.size(); ++i) {
-        data_ptr_swap = htog(data_ptr);
+        data_ptr_swap = TheISA::htog(data_ptr);
         memProxy->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
                 sizeof(AddrType));
         memProxy->writeString(data_ptr, strings[i].c_str());

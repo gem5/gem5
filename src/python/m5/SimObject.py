@@ -477,7 +477,7 @@ struct PyObject;
 
 #include <string>
 
-struct EventQueue;
+class EventQueue;
 ''')
         for param in params:
             param.cxx_predecls(code)

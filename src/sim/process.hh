@@ -52,8 +52,8 @@
 #include "sim/syscallreturn.hh"
 
 class PageTable;
-class ProcessParams;
-class LiveProcessParams;
+struct ProcessParams;
+struct LiveProcessParams;
 class SyscallDesc;
 class System;
 class ThreadContext;

@@ -54,24 +54,24 @@
 class PortProxy;
 
 // Config entry types
-class X86IntelMPBaseConfigEntryParams;
-class X86IntelMPExtConfigEntryParams;
+struct X86IntelMPBaseConfigEntryParams;
+struct X86IntelMPExtConfigEntryParams;
 
 // General table structures
-class X86IntelMPConfigTableParams;
-class X86IntelMPFloatingPointerParams;
+struct X86IntelMPConfigTableParams;
+struct X86IntelMPFloatingPointerParams;
 
 // Base entry types
-class X86IntelMPBusParams;
-class X86IntelMPIOAPICParams;
-class X86IntelMPIOIntAssignmentParams;
-class X86IntelMPLocalIntAssignmentParams;
-class X86IntelMPProcessorParams;
+struct X86IntelMPBusParams;
+struct X86IntelMPIOAPICParams;
+struct X86IntelMPIOIntAssignmentParams;
+struct X86IntelMPLocalIntAssignmentParams;
+struct X86IntelMPProcessorParams;
 
 // Extended entry types
-class X86IntelMPAddrSpaceMappingParams;
-class X86IntelMPBusHierarchyParams;
-class X86IntelMPCompatAddrSpaceModParams;
+struct X86IntelMPAddrSpaceMappingParams;
+struct X86IntelMPBusHierarchyParams;
+struct X86IntelMPCompatAddrSpaceModParams;
 
 namespace X86ISA
 {

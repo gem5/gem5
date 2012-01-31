@@ -169,7 +169,7 @@ SimObject::resume()
 }
 
 void
-SimObject::setMemoryMode(State new_mode)
+SimObject::setMemoryMode(Enums::MemoryMode new_mode)
 {
     panic("setMemoryMode() should only be called on systems");
 }

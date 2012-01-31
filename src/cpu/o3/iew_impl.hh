@@ -412,7 +412,7 @@ DefaultIEW<Impl>::takeOverFrom()
 
     instQueue.takeOverFrom();
     ldstQueue.takeOverFrom();
-    fuPool->takeOverFrom();
+    fuPool->takeOver();
 
     initStage();
     cpu->activityThisCycle();

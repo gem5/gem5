@@ -411,7 +411,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         }
         break;
       case 11:
-        if (opc1 >= 0 && opc1 <=7) {
+        if (opc1 <=7) {
             switch (crm) {
               case 0:
               case 1:

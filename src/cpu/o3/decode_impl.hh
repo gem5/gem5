@@ -38,7 +38,9 @@
 #include "debug/Decode.hh"
 #include "params/DerivO3CPU.hh"
 
-using namespace std;
+// clang complains about std::set being overloaded with Packet::set if
+// we open up the entire namespace std
+using std::list;
 
 template<class Impl>
 DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)

@@ -52,7 +52,7 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 /**
  * Class that implements the actual LQ and SQ for each specific

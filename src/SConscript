@@ -854,6 +854,9 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
         swig_env.Append(CCFLAGS='-Wno-unused-label')
         if compareVersions(env['GCC_VERSION'], '4.6.0') != -1:
             swig_env.Append(CCFLAGS='-Wno-unused-but-set-variable')
+    if env['CLANG']:
+        swig_env.Append(CCFLAGS=['-Wno-unused-label'])
+
 
     werror_env = new_env.Clone()
     werror_env.Append(CCFLAGS='-Werror')
@@ -928,7 +931,7 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
 # Debug binary
 ccflags = {}
-if env['GCC']:
+if env['GCC'] or env['CLANG']:
     if sys.platform == 'sunos5':
         ccflags['debug'] = '-gstabs+'
     else:

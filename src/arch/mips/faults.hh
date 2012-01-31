@@ -299,7 +299,7 @@ class TlbModifiedFault : public TlbFault<TlbModifiedFault>
         TlbFault<TlbModifiedFault>(asid, vaddr, vpn, false)
     {}
 
-    ExcCode code() const { return vals.code; }
+    ExcCode code() const { return MipsFault<TlbModifiedFault>::code(); }
 };
 
 } // namespace MipsISA

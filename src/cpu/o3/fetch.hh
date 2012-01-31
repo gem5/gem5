@@ -56,7 +56,7 @@
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its

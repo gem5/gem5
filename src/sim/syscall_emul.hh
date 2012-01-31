@@ -400,41 +400,41 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
         tgt->st_dev = 0xA;
     else
         tgt->st_dev = host->st_dev;
-    tgt->st_dev = htog(tgt->st_dev);
+    tgt->st_dev = TheISA::htog(tgt->st_dev);
     tgt->st_ino = host->st_ino;
-    tgt->st_ino = htog(tgt->st_ino);
+    tgt->st_ino = TheISA::htog(tgt->st_ino);
     tgt->st_mode = host->st_mode;
     if (fakeTTY) {
         // Claim to be a character device
         tgt->st_mode &= ~S_IFMT;    // Clear S_IFMT
         tgt->st_mode |= S_IFCHR;    // Set S_IFCHR
     }
-    tgt->st_mode = htog(tgt->st_mode);
+    tgt->st_mode = TheISA::htog(tgt->st_mode);
     tgt->st_nlink = host->st_nlink;
-    tgt->st_nlink = htog(tgt->st_nlink);
+    tgt->st_nlink = TheISA::htog(tgt->st_nlink);
     tgt->st_uid = host->st_uid;
-    tgt->st_uid = htog(tgt->st_uid);
+    tgt->st_uid = TheISA::htog(tgt->st_uid);
     tgt->st_gid = host->st_gid;
-    tgt->st_gid = htog(tgt->st_gid);
+    tgt->st_gid = TheISA::htog(tgt->st_gid);
     if (fakeTTY)
         tgt->st_rdev = 0x880d;
     else
         tgt->st_rdev = host->st_rdev;
-    tgt->st_rdev = htog(tgt->st_rdev);
+    tgt->st_rdev = TheISA::htog(tgt->st_rdev);
     tgt->st_size = host->st_size;
-    tgt->st_size = htog(tgt->st_size);
+    tgt->st_size = TheISA::htog(tgt->st_size);
     tgt->st_atimeX = host->st_atime;
-    tgt->st_atimeX = htog(tgt->st_atimeX);
+    tgt->st_atimeX = TheISA::htog(tgt->st_atimeX);
     tgt->st_mtimeX = host->st_mtime;
-    tgt->st_mtimeX = htog(tgt->st_mtimeX);
+    tgt->st_mtimeX = TheISA::htog(tgt->st_mtimeX);
     tgt->st_ctimeX = host->st_ctime;
-    tgt->st_ctimeX = htog(tgt->st_ctimeX);
+    tgt->st_ctimeX = TheISA::htog(tgt->st_ctimeX);
     // Force the block size to be 8k. This helps to ensure buffered io works
     // consistently across different hosts.
     tgt->st_blksize = 0x2000;
-    tgt->st_blksize = htog(tgt->st_blksize);
+    tgt->st_blksize = TheISA::htog(tgt->st_blksize);
     tgt->st_blocks = host->st_blocks;
-    tgt->st_blocks = htog(tgt->st_blocks);
+    tgt->st_blocks = TheISA::htog(tgt->st_blocks);
 }
 
 // Same for stat64
@@ -448,11 +448,11 @@ convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
     convertStatBuf<target_stat, host_stat64>(tgt, host, fakeTTY);
 #if defined(STAT_HAVE_NSEC)
     tgt->st_atime_nsec = host->st_atime_nsec;
-    tgt->st_atime_nsec = htog(tgt->st_atime_nsec);
+    tgt->st_atime_nsec = TheISA::htog(tgt->st_atime_nsec);
     tgt->st_mtime_nsec = host->st_mtime_nsec;
-    tgt->st_mtime_nsec = htog(tgt->st_mtime_nsec);
+    tgt->st_mtime_nsec = TheISA::htog(tgt->st_mtime_nsec);
     tgt->st_ctime_nsec = host->st_ctime_nsec;
-    tgt->st_ctime_nsec = htog(tgt->st_ctime_nsec);
+    tgt->st_ctime_nsec = TheISA::htog(tgt->st_ctime_nsec);
 #else
     tgt->st_atime_nsec = 0;
     tgt->st_mtime_nsec = 0;
@@ -966,9 +966,9 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
         p->readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
                     (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
-        hiov[i].iov_len = gtoh(tiov.iov_len);
+        hiov[i].iov_len = TheISA::gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
-        p->readBlob(gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
+        p->readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
                     hiov[i].iov_len);
     }
 
@@ -1084,15 +1084,15 @@ getrlimitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         case OS::TGT_RLIMIT_STACK:
             // max stack size in bytes: make up a number (8MB for now)
             rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
-            rlp->rlim_cur = htog(rlp->rlim_cur);
-            rlp->rlim_max = htog(rlp->rlim_max);
+            rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
+            rlp->rlim_max = TheISA::htog(rlp->rlim_max);
             break;
 
         case OS::TGT_RLIMIT_DATA:
             // max data segment size in bytes: make up a number
             rlp->rlim_cur = rlp->rlim_max = 256 * 1024 * 1024;
-            rlp->rlim_cur = htog(rlp->rlim_cur);
-            rlp->rlim_max = htog(rlp->rlim_max);
+            rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
+            rlp->rlim_max = TheISA::htog(rlp->rlim_max);
             break;
 
         default:
@@ -1147,8 +1147,8 @@ utimesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     struct timeval hostTimeval[2];
     for (int i = 0; i < 2; ++i)
     {
-        hostTimeval[i].tv_sec = gtoh((*tp)[i].tv_sec);
-        hostTimeval[i].tv_usec = gtoh((*tp)[i].tv_usec);
+        hostTimeval[i].tv_sec = TheISA::gtoh((*tp)[i].tv_sec);
+        hostTimeval[i].tv_usec = TheISA::gtoh((*tp)[i].tv_usec);
     }
 
     // Adjust path for current working directory
@@ -1193,8 +1193,8 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     switch (who) {
       case OS::TGT_RUSAGE_SELF:
         getElapsedTime(rup->ru_utime.tv_sec, rup->ru_utime.tv_usec);
-        rup->ru_utime.tv_sec = htog(rup->ru_utime.tv_sec);
-        rup->ru_utime.tv_usec = htog(rup->ru_utime.tv_usec);
+        rup->ru_utime.tv_sec = TheISA::htog(rup->ru_utime.tv_sec);
+        rup->ru_utime.tv_usec = TheISA::htog(rup->ru_utime.tv_usec);
         break;
 
       case OS::TGT_RUSAGE_CHILDREN:
@@ -1230,7 +1230,7 @@ timesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     bufp->tms_cstime = 0;
 
     // Convert to host endianness
-    bufp->tms_utime = htog(bufp->tms_utime);
+    bufp->tms_utime = TheISA::htog(bufp->tms_utime);
 
     // Write back
     bufp.copyOut(tc->getMemProxy());
@@ -1253,7 +1253,7 @@ timeFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     Addr taddr = (Addr)process->getSyscallArg(tc, index);
     if(taddr != 0) {
         typename OS::time_t t = sec;
-        t = htog(t);
+        t = TheISA::htog(t);
         SETranslatingPortProxy *p = tc->getMemProxy();
         p->writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t));
     }

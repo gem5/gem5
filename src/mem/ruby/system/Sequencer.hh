@@ -41,7 +41,7 @@
 class DataBlock;
 class CacheMemory;
 
-class RubySequencerParams;
+struct RubySequencerParams;
 
 struct SequencerRequest
 {

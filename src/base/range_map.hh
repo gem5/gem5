@@ -215,7 +215,7 @@ class range_multimap
     {
         std::pair<iterator,iterator> p;
         p = find(r);
-        if (p.first->first.start == r.start && p.first->first.end == r.end ||
+        if ((p.first->first.start == r.start && p.first->first.end == r.end) ||
                 p.first == tree.end())
             return tree.insert(std::make_pair<Range<T>,V>(r, d));
         else

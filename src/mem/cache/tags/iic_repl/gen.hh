@@ -209,7 +209,7 @@ class GenRepl : public Repl
      * Register statistics.
      * @param name The name to prepend to statistic descriptions.
      */
-    virtual void regStats(const std::string name);
+    virtual void regStatsWithSuffix(const std::string name);
 
     /**
      * Update the tag pointer to when the tag moves.

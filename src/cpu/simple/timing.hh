@@ -244,8 +244,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
 
-    virtual void activateContext(int thread_num, int delay);
-    virtual void suspendContext(int thread_num);
+    virtual void activateContext(ThreadID thread_num, int delay);
+    virtual void suspendContext(ThreadID thread_num);
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
 

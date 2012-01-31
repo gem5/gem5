@@ -61,7 +61,7 @@
 #include "arch/interrupts.hh"
 #endif
 
-class BaseCPUParams;
+struct BaseCPUParams;
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;
@@ -241,16 +241,16 @@ class BaseCPU : public MemObject
     /// Notify the CPU that the indicated context is now active.  The
     /// delay parameter indicates the number of ticks to wait before
     /// executing (typically 0 or 1).
-    virtual void activateContext(int thread_num, int delay) {}
+    virtual void activateContext(ThreadID thread_num, int delay) {}
 
     /// Notify the CPU that the indicated context is now suspended.
-    virtual void suspendContext(int thread_num) {}
+    virtual void suspendContext(ThreadID thread_num) {}
 
     /// Notify the CPU that the indicated context is now deallocated.
-    virtual void deallocateContext(int thread_num) {}
+    virtual void deallocateContext(ThreadID thread_num) {}
 
     /// Notify the CPU that the indicated context is now halted.
-    virtual void haltContext(int thread_num) {}
+    virtual void haltContext(ThreadID thread_num) {}
 
    /// Given a Thread Context pointer return the thread num
    int findContext(ThreadContext *tc);
@@ -279,7 +279,7 @@ class BaseCPU : public MemObject
 
     /// Take over execution from the given CPU.  Used for warm-up and
     /// sampling.
-    virtual void takeOverFrom(BaseCPU *, Port *ic, Port *dc);
+    virtual void takeOverFrom(BaseCPU *);
 
     /**
      *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).

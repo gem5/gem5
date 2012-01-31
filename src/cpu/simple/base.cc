@@ -139,7 +139,7 @@ BaseSimpleCPU::~BaseSimpleCPU()
 }
 
 void
-BaseSimpleCPU::deallocateContext(int thread_num)
+BaseSimpleCPU::deallocateContext(ThreadID thread_num)
 {
     // for now, these are equivalent
     suspendContext(thread_num);
@@ -147,7 +147,7 @@ BaseSimpleCPU::deallocateContext(int thread_num)
 
 
 void
-BaseSimpleCPU::haltContext(int thread_num)
+BaseSimpleCPU::haltContext(ThreadID thread_num)
 {
     // for now, these are equivalent
     suspendContext(thread_num);

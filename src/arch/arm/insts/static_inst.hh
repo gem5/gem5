@@ -46,6 +46,7 @@
 #include "arch/arm/utility.hh"
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
+#include "sim/byteswap.hh"
 
 namespace ArmISA
 {

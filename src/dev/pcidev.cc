@@ -52,8 +52,6 @@
 #include "sim/byteswap.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 
 PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
         int funcid, Platform *p)
@@ -341,7 +339,7 @@ PciDev::writeConfig(PacketPtr pkt)
 }
 
 void
-PciDev::serialize(ostream &os)
+PciDev::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(BARSize, sizeof(BARSize) / sizeof(BARSize[0]));
     SERIALIZE_ARRAY(BARAddrs, sizeof(BARAddrs) / sizeof(BARAddrs[0]));

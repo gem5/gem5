@@ -170,12 +170,12 @@ CowDiskImage::CowDiskImage(const Params *p)
     : DiskImage(p), filename(p->image_file), child(p->child), table(NULL)
 {
     if (filename.empty()) {
-        init(p->table_size);
+        initSectorTable(p->table_size);
     } else {
         if (!open(filename)) {
             if (p->read_only)
                 fatal("could not open read-only file");
-            init(p->table_size);
+            initSectorTable(p->table_size);
         }
 
         if (!p->read_only)
@@ -270,7 +270,7 @@ CowDiskImage::open(const string &file)
 }
 
 void
-CowDiskImage::init(int hash_size)
+CowDiskImage::initSectorTable(int hash_size)
 {
     table = new SectorTable(hash_size);
 

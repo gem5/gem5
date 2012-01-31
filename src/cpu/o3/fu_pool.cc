@@ -252,7 +252,7 @@ FUPool::switchOut()
 }
 
 void
-FUPool::takeOverFrom()
+FUPool::takeOver()
 {
     for (int i = 0; i < numFU; i++) {
         unitBusy[i] = false;

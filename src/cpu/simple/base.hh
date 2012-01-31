@@ -92,7 +92,7 @@ namespace Trace {
     class InstRecord;
 }
 
-class BaseSimpleCPUParams;
+struct BaseSimpleCPUParams;
 
 
 class BaseSimpleCPU : public BaseCPU
@@ -189,8 +189,8 @@ class BaseSimpleCPU : public BaseCPU
     void postExecute();
     void advancePC(Fault fault);
 
-    virtual void deallocateContext(int thread_num);
-    virtual void haltContext(int thread_num);
+    virtual void deallocateContext(ThreadID thread_num);
+    virtual void haltContext(ThreadID thread_num);
 
     // statistics
     virtual void regStats();

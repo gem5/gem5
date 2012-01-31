@@ -131,7 +131,7 @@ InOrderThreadContext::suspend(int delay)
         return;
 
     thread->setStatus(ThreadContext::Suspended);
-    cpu->suspendContext(thread->threadId(), delay);
+    cpu->suspendContext(thread->threadId());
 }
 
 void
@@ -144,7 +144,7 @@ InOrderThreadContext::halt(int delay)
         return;
 
     thread->setStatus(ThreadContext::Halted);
-    cpu->haltContext(thread->threadId(), delay);
+    cpu->haltContext(thread->threadId());
 }
 
 

@@ -76,7 +76,7 @@
 #include "debug/Activity.hh"
 #endif
 
-class BaseCPUParams;
+struct BaseCPUParams;
 
 using namespace TheISA;
 using namespace std;
@@ -766,7 +766,8 @@ FullO3CPU<Impl>::activateContext(ThreadID tid, int delay)
 
 template <class Impl>
 bool
-FullO3CPU<Impl>::deallocateContext(ThreadID tid, bool remove, int delay)
+FullO3CPU<Impl>::scheduleDeallocateContext(ThreadID tid, bool remove,
+                                           int delay)
 {
     // Schedule removal of thread data from CPU
     if (delay){
@@ -787,7 +788,7 @@ void
 FullO3CPU<Impl>::suspendContext(ThreadID tid)
 {
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
-    bool deallocated = deallocateContext(tid, false, 1);
+    bool deallocated = scheduleDeallocateContext(tid, false, 1);
     // If this was the last thread then unschedule the tick event.
     if ((activeThreads.size() == 1 && !deallocated) ||
         activeThreads.size() == 0)
@@ -804,7 +805,7 @@ FullO3CPU<Impl>::haltContext(ThreadID tid)
 {
     //For now, this is the same as deallocate
     DPRINTF(O3CPU,"[tid:%i]: Halt Context called. Deallocating", tid);
-    deallocateContext(tid, true, 1);
+    scheduleDeallocateContext(tid, true, 1);
 }
 
 template <class Impl>
@@ -1230,7 +1231,7 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
     activityRec.reset();
 
-    BaseCPU::takeOverFrom(oldCPU, &icachePort, &dcachePort);
+    BaseCPU::takeOverFrom(oldCPU);
 
     fetch.takeOverFrom();
     decode.takeOverFrom();

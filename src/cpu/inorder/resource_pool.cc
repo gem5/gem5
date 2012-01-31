@@ -485,7 +485,7 @@ ResourcePool::ResPoolEvent::process()
 
 
 const char *
-ResourcePool::ResPoolEvent::description()
+ResourcePool::ResPoolEvent::description() const
 {
     return "Resource Pool event";
 }

@@ -79,7 +79,7 @@ class Checkpoint;
 class MemObject;
 class Process;
 
-class BaseCPUParams;
+struct BaseCPUParams;
 
 class BaseO3CPU : public BaseCPU
 {
@@ -401,7 +401,7 @@ class FullO3CPU : public BaseO3CPU
     /** Remove Thread from Active Threads List &&
      *  Possibly Remove Thread Context from CPU.
      */
-    bool deallocateContext(ThreadID tid, bool remove, int delay = 1);
+    bool scheduleDeallocateContext(ThreadID tid, bool remove, int delay = 1);
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.

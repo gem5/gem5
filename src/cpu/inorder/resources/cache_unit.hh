@@ -49,9 +49,6 @@
 #include "params/InOrderCPU.hh"
 #include "sim/sim_object.hh"
 
-class CacheRequest;
-typedef CacheRequest* CacheReqPtr;
-
 class CacheReqPacket;
 typedef CacheReqPacket* CacheReqPktPtr;
 

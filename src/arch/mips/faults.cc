@@ -98,7 +98,7 @@ template <> FaultVals MipsFault<TlbInvalidFault>::vals =
 template <> FaultVals MipsFault<TlbRefillFault>::vals =
     { "TLB Refill Exception", 0x180, ExcCodeDummy };
 
-template <> FaultVals MipsFault<TlbModifiedFault>::vals =
+template <> MipsFaultBase::FaultVals MipsFault<TlbModifiedFault>::vals =
     { "TLB Modified Exception", 0x180, ExcCodeMod };
 
 void

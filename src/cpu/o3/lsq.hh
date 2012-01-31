@@ -52,7 +52,7 @@
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 template <class Impl>
 class LSQ {

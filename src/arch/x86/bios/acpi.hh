@@ -48,11 +48,11 @@
 
 class Port;
 
-class X86ACPIRSDPParams;
+struct X86ACPIRSDPParams;
 
-class X86ACPISysDescTableParams;
-class X86ACPIRSDTParams;
-class X86ACPIXSDTParams;
+struct X86ACPISysDescTableParams;
+struct X86ACPIRSDTParams;
+struct X86ACPIXSDTParams;
 
 namespace X86ISA
 {

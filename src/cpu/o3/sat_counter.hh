@@ -65,7 +65,8 @@ class SatCounter
      * @param initial_val Starting value for each counter.
      */
     SatCounter(unsigned bits, uint8_t initial_val)
-        : initialVal(initialVal), maxVal((1 << bits) - 1), counter(initial_val)
+        : initialVal(initial_val), maxVal((1 << bits) - 1),
+          counter(initial_val)
     {
         // Check to make sure initial value doesn't exceed the max
         // counter value.

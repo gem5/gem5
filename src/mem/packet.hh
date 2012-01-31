@@ -53,7 +53,7 @@
 #include "mem/request.hh"
 #include "sim/core.hh"
 
-struct Packet;
+class Packet;
 typedef Packet *PacketPtr;
 typedef uint8_t* PacketDataPtr;
 typedef std::list<PacketPtr> PacketList;

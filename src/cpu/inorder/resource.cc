@@ -512,7 +512,7 @@ ResourceEvent::process()
 }
 
 const char *
-ResourceEvent::description()
+ResourceEvent::description() const
 {
     string desc = resource->name() + "-event:slot[" + to_string(slotIdx)
         + "]";

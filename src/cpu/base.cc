@@ -371,8 +371,10 @@ BaseCPU::switchOut()
 }
 
 void
-BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
+BaseCPU::takeOverFrom(BaseCPU *oldCPU)
 {
+    Port *ic = getPort("icache_port");
+    Port *dc = getPort("dcache_port");
     assert(threadContexts.size() == oldCPU->threadContexts.size());
 
     _cpuId = oldCPU->cpuId();

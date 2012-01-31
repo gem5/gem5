@@ -32,7 +32,6 @@
 
 #include <string>
 
-#include "base/trace.hh"
 #include "cpu/intr_control.hh"
 #include "debug/IdeCtrl.hh"
 #include "dev/ide_ctrl.hh"
@@ -42,7 +41,9 @@
 #include "params/IdeController.hh"
 #include "sim/byteswap.hh"
 
-using namespace std;
+// clang complains about std::set being overloaded with Packet::set if
+// we open up the entire namespace std
+using std::string;
 
 // Bus master IDE registers
 enum BMIRegOffset {

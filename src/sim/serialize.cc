@@ -438,7 +438,7 @@ class Globals : public Serializable
   public:
     const string name() const;
     void serialize(ostream &os);
-    void unserialize(Checkpoint *cp);
+    void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 /// The one and only instance of the Globals class.
@@ -461,9 +461,8 @@ Globals::serialize(ostream &os)
 }
 
 void
-Globals::unserialize(Checkpoint *cp)
+Globals::unserialize(Checkpoint *cp, const std::string &section)
 {
-    const string &section = name();
     Tick tick;
     paramIn(cp, section, "curTick", tick);
     curTick(tick);
@@ -510,7 +509,7 @@ Serializable::serializeAll(const string &cpt_dir)
 void
 Serializable::unserializeGlobals(Checkpoint *cp)
 {
-    globals.unserialize(cp);
+  globals.unserialize(cp, globals.name());
 }
 
 void

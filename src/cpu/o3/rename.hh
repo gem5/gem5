@@ -37,7 +37,7 @@
 #include "config/the_isa.hh"
 #include "cpu/timebuf.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 /**
  * DefaultRename handles both single threaded and SMT rename. Its

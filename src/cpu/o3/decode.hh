@@ -36,7 +36,7 @@
 #include "base/statistics.hh"
 #include "cpu/timebuf.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 /**
  * DefaultDecode class handles both single threaded and SMT

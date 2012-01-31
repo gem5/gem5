@@ -73,6 +73,7 @@ class BaseCache : public MemObject
         MSHRQueue_WriteBuffer
     };
 
+  public:
     /**
      * Reasons for caches to be blocked.
      */
@@ -83,7 +84,6 @@ class BaseCache : public MemObject
         NUM_BLOCKED_CAUSES
     };
 
-  public:
     /**
      * Reasons for cache to request a bus.
      */
@@ -94,7 +94,7 @@ class BaseCache : public MemObject
         NUM_REQUEST_CAUSES
     };
 
-  private:
+  protected:
 
     class CachePort : public SimpleTimingPort
     {
@@ -138,7 +138,6 @@ class BaseCache : public MemObject
         }
     };
 
-  public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
     CachePort *memSidePort;
 

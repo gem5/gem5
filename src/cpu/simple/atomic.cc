@@ -174,7 +174,7 @@ AtomicSimpleCPU::switchOut()
 void
 AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    BaseCPU::takeOverFrom(oldCPU, &icachePort, &dcachePort);
+    BaseCPU::takeOverFrom(oldCPU);
 
     assert(!tickEvent.scheduled());
 
@@ -200,7 +200,7 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 
 
 void
-AtomicSimpleCPU::activateContext(int thread_num, int delay)
+AtomicSimpleCPU::activateContext(ThreadID thread_num, int delay)
 {
     DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
 
@@ -220,7 +220,7 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
 
 
 void
-AtomicSimpleCPU::suspendContext(int thread_num)
+AtomicSimpleCPU::suspendContext(ThreadID thread_num)
 {
     DPRINTF(SimpleCPU, "SuspendContext %d\n", thread_num);
 

@@ -36,8 +36,9 @@
 class ThreadContext;
 
 /** Event for timing out quiesce instruction */
-struct EndQuiesceEvent : public Event
+class EndQuiesceEvent : public Event
 {
+  public:
     /** A pointer to the thread context that is quiesced */
     ThreadContext *tc;
 

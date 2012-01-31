@@ -54,7 +54,11 @@
 #include "mem/port.hh"
 #include "sim/system.hh"
 
-using namespace std;
+// clang complains about std::set being overloaded with Packet::set if
+// we open up the entire namespace std
+using std::string;
+using std::ostream;
+
 //Should this be AlphaISA?
 using namespace TheISA;
 
