@@ -453,8 +453,11 @@ TLB::walkTrickBoxCheck(Addr pa, Addr va, Addr sz, bool is_exec,
 
 Fault
 TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
-        Translation *translation, bool &delay, bool timing)
+        Translation *translation, bool &delay, bool timing, bool functional)
 {
+    // No such thing as a functional timing access
+    assert(!(timing && functional));
+
     if (!miscRegValid) {
         updateMiscReg(tc);
         DPRINTF(TLBVerbose, "TLB variables changed!\n");
@@ -541,7 +544,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
         DPRINTF(TLB, "TLB Miss: Starting hardware table walker for %#x(%d)\n",
                 vaddr, contextId);
         fault = tableWalker->walk(req, tc, contextId, mode, translation,
-                timing);
+                                  timing, functional);
         if (timing && fault == NoFault) {
             delay = true;
             // for timing mode, return and wait for table walk
@@ -693,6 +696,20 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
     Fault fault;
 #if FULL_SYSTEM
     fault = translateFs(req, tc, mode, NULL, delay, false);
+#else
+    fault = translateSe(req, tc, mode, NULL, delay, false);
+#endif
+    assert(!delay);
+    return fault;
+}
+
+Fault
+TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
+{
+    bool delay = false;
+    Fault fault;
+#if FULL_SYSTEM
+    fault = translateFs(req, tc, mode, NULL, delay, false, true);
 #else
     fault = translateSe(req, tc, mode, NULL, delay, false);
 #endif

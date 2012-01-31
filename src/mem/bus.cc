@@ -436,7 +436,8 @@ Bus::recvFunctional(PacketPtr pkt)
         pkt->setSrc(src_id);
     }
 
-    // If the snooping hasn't found what we were looking for, keep going.
+    // If the snooping hasn't found what we were looking for and it is not
+    // a forwarded snoop from below, keep going.
     if (!pkt->isResponse() && port_id != pkt->getSrc()) {
         port->sendFunctional(pkt);
     }

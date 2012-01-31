@@ -48,6 +48,7 @@
 #include "base/cprintf.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/exetrace.hh"
 #include "debug/DynInst.hh"
@@ -117,7 +118,6 @@ BaseDynInst<Impl>::initVars()
     reqMade = false;
     readyRegs = 0;
 
-    instResult.integer = 0;
     recordResult = true;
 
     status.reset();
@@ -157,6 +157,10 @@ BaseDynInst<Impl>::initVars()
 #ifdef DEBUG
     cpu->snList.insert(seqNum);
 #endif
+
+#if USE_CHECKER
+    reqToVerify = NULL;
+#endif
 }
 
 template <class Impl>
@@ -182,6 +186,11 @@ BaseDynInst<Impl>::~BaseDynInst()
 #ifdef DEBUG
     cpu->snList.erase(seqNum);
 #endif
+
+#if USE_CHECKER
+    if (reqToVerify)
+        delete reqToVerify;
+#endif // USE_CHECKER
 }
 
 #ifdef DEBUG

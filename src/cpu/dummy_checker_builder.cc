@@ -11,9 +11,6 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2006 The Regents of The University of Michigan
- * All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -37,54 +34,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
+ * Authors: Geoffrey Blake
  */
 
 #include <string>
 
-#include "cpu/checker/cpu_impl.hh"
-#include "cpu/o3/dyn_inst.hh"
-#include "cpu/o3/impl.hh"
+#include "cpu/checker/cpu.hh"
 #include "cpu/inst_seq.hh"
-#include "params/O3Checker.hh"
+#include "params/DummyChecker.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"
 
 class MemObject;
 
-template
-class Checker<O3CPUImpl>;
-
 /**
  * Specific non-templated derived class used for SimObject configuration.
  */
-class O3Checker : public Checker<O3CPUImpl>
+class DummyChecker : public CheckerCPU
 {
   public:
-    O3Checker(Params *p)
-          : Checker<O3CPUImpl>(p)
+    DummyChecker(Params *p)
+          : CheckerCPU(p)
     { }
 };
 
 ////////////////////////////////////////////////////////////////////////
 //
-//  CheckerCPU Simulation Object
+//  DummyChecker Simulation Object
 //
-O3Checker *
-O3CheckerParams::create()
+DummyChecker *
+DummyCheckerParams::create()
 {
-    O3Checker::Params *params = new O3Checker::Params();
+    DummyChecker::Params *params = new DummyChecker::Params();
     params->name = name;
     params->numThreads = numThreads;
     params->max_insts_any_thread = 0;
     params->max_insts_all_threads = 0;
     params->max_loads_any_thread = 0;
     params->max_loads_all_threads = 0;
-    params->exitOnError = exitOnError;
-    params->updateOnError = updateOnError;
-    params->warnOnlyOnLoadError = warnOnlyOnLoadError;
     params->clock = clock;
-    params->tracer = tracer;
     // Hack to touch all parameters.  Consider not deriving Checker
     // from BaseCPU..it's not really a CPU in the end.
     Counter temp;
@@ -107,6 +95,6 @@ O3CheckerParams::create()
     params->workload = workload;
 #endif
 
-    O3Checker *cpu = new O3Checker(params);
+    DummyChecker *cpu = new DummyChecker(params);
     return cpu;
 }

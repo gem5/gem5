@@ -53,6 +53,7 @@
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "config/use_checker.hh"
 #include "cpu/base.hh"
 #include "cpu/cpuevent.hh"
 #include "cpu/profile.hh"
@@ -63,6 +64,10 @@
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 // Hack
 #include "sim/stat_control.hh"
@@ -219,7 +224,10 @@ BaseCPU::BaseCPU(Params *p)
         }
     }
 #if FULL_SYSTEM
-    interrupts->setCPU(this);
+    // Check if CPU model has interrupts connected. The CheckerCPU
+    // cannot take interrupts directly for example.
+    if (interrupts)
+        interrupts->setCPU(this);
 
     profileEvent = NULL;
     if (params()->profile)
@@ -408,6 +416,35 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
             new_dtb_port->setPeer(peer);
             peer->setPeer(new_dtb_port);
         }
+
+#if USE_CHECKER
+        Port *old_checker_itb_port, *old_checker_dtb_port;
+        Port *new_checker_itb_port, *new_checker_dtb_port;
+
+        CheckerCPU *oldChecker =
+            dynamic_cast<CheckerCPU*>(oldTC->getCheckerCpuPtr());
+        CheckerCPU *newChecker =
+            dynamic_cast<CheckerCPU*>(newTC->getCheckerCpuPtr());
+        old_checker_itb_port = oldChecker->getITBPtr()->getPort();
+        old_checker_dtb_port = oldChecker->getDTBPtr()->getPort();
+        new_checker_itb_port = newChecker->getITBPtr()->getPort();
+        new_checker_dtb_port = newChecker->getDTBPtr()->getPort();
+
+        // Move over any table walker ports if they exist for checker
+        if (new_checker_itb_port && !new_checker_itb_port->isConnected()) {
+            assert(old_checker_itb_port);
+            Port *peer = old_checker_itb_port->getPeer();;
+            new_checker_itb_port->setPeer(peer);
+            peer->setPeer(new_checker_itb_port);
+        }
+        if (new_checker_dtb_port && !new_checker_dtb_port->isConnected()) {
+            assert(old_checker_dtb_port);
+            Port *peer = old_checker_dtb_port->getPeer();;
+            new_checker_dtb_port->setPeer(peer);
+            peer->setPeer(new_checker_dtb_port);
+        }
+#endif
+
     }
 
 #if FULL_SYSTEM

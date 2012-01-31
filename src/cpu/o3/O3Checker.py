@@ -34,7 +34,7 @@ class O3Checker(BaseCPU):
     exitOnError = Param.Bool(False, "Exit on an error")
     updateOnError = Param.Bool(False,
         "Update the checker with the main CPU's state on an error")
-    warnOnlyOnLoadError = Param.Bool(False,
+    warnOnlyOnLoadError = Param.Bool(True,
         "If a load result is incorrect, only print a warning and do not exit")
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Cycle to start function trace")

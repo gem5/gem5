@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@
 
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 #include "debug/O3CPU.hh"
@@ -322,6 +323,20 @@ O3ThreadContext<Impl>::pcState(const TheISA::PCState &val)
         cpu->squashFromTC(thread->threadId());
     }
 }
+
+#if USE_CHECKER
+template <class Impl>
+void
+O3ThreadContext<Impl>::pcStateNoRecord(const TheISA::PCState &val)
+{
+    cpu->pcState(val, thread->threadId());
+
+    // Squash if we're not already in a state update mode.
+    if (!thread->trapPending && !thread->inSyscall) {
+        cpu->squashFromTC(thread->threadId());
+    }
+}
+#endif
 
 template <class Impl>
 int

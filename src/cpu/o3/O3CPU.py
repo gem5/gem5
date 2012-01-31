@@ -41,14 +41,20 @@ class DerivO3CPU(BaseCPU):
 
     if buildEnv['USE_CHECKER']:
         if not buildEnv['FULL_SYSTEM']:
-            checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
+            # FIXME: Shouldn't need to derefernce Parent.workload
+            #        Somewhere in the param parsing code
+            #        src/python/m5/params.py is and error that
+            #        has trouble converting the workload parameter properly.
+            checker = Param.BaseCPU(O3Checker(workload=Parent.workload[0],
                                               exitOnError=False,
                                               updateOnError=True,
-                                              warnOnlyOnLoadError=False),
-                                    "checker")
+                                              warnOnlyOnLoadError=True),
+                                              "checker")
         else:
-            checker = Param.BaseCPU(O3Checker(exitOnError=False, updateOnError=True,
-                                              warnOnlyOnLoadError=False), "checker")
+            checker = Param.BaseCPU(O3Checker(exitOnError=False,
+                                              updateOnError=True,
+                                              warnOnlyOnLoadError=True),
+                                              "checker")
         checker.itb = Parent.itb
         checker.dtb = Parent.dtb
 

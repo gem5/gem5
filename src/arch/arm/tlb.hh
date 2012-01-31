@@ -182,6 +182,12 @@ class TLB : public BaseTLB
      */
     bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
 
+    /**
+     * Do a functional lookup on the TLB (for checker cpu) that
+     * behaves like a normal lookup without modifying any page table state.
+     */
+    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+
     /** Accessor functions for memory attributes for last accessed TLB entry
      */
     void
@@ -197,7 +203,8 @@ class TLB : public BaseTLB
 
 #if FULL_SYSTEM
     Fault translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
-            Translation *translation, bool &delay, bool timing);
+            Translation *translation, bool &delay,
+            bool timing, bool functional = false);
 #else
     Fault translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
             Translation *translation, bool &delay, bool timing);

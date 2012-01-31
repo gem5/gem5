@@ -68,6 +68,7 @@
 
 #if USE_CHECKER
 #include "cpu/checker/cpu.hh"
+#include "cpu/checker/thread_context.hh"
 #endif
 
 #if THE_ISA == ALPHA_ISA
@@ -268,7 +269,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 #if USE_CHECKER
     if (params->checker) {
         BaseCPU *temp_checker = params->checker;
-        checker = dynamic_cast<Checker<DynInstPtr> *>(temp_checker);
+        checker = dynamic_cast<Checker<Impl> *>(temp_checker);
         checker->setIcachePort(&icachePort);
 #if FULL_SYSTEM
         checker->setSystem(params->system);

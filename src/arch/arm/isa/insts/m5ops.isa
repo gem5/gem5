@@ -247,7 +247,7 @@ let {{
     m5checkpointIop = InstObjParams("m5checkpoint", "M5checkpoint", "PredOp",
                            { "code": m5checkpoint_code,
                              "predicate_test": predicateTest },
-                             ["IsNonSpeculative"])
+                             ["IsNonSpeculative", "IsUnverifiable"])
     header_output += BasicDeclare.subst(m5checkpointIop)
     decoder_output += BasicConstructor.subst(m5checkpointIop)
     exec_output += PredOpExecute.subst(m5checkpointIop)
@@ -260,7 +260,7 @@ let {{
     m5readfileIop = InstObjParams("m5readfile", "M5readfile", "PredOp",
                            { "code": m5readfileCode,
                              "predicate_test": predicateTest },
-                             ["IsNonSpeculative"])
+                             ["IsNonSpeculative", "IsUnverifiable"])
     header_output += BasicDeclare.subst(m5readfileIop)
     decoder_output += BasicConstructor.subst(m5readfileIop)
     exec_output += PredOpExecute.subst(m5readfileIop)

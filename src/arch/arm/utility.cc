@@ -41,6 +41,7 @@
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
+#include "config/use_checker.hh"
 #include "cpu/thread_context.hh"
 
 #if FULL_SYSTEM
@@ -116,7 +117,11 @@ skipFunction(ThreadContext *tc)
 {
     TheISA::PCState newPC = tc->pcState();
     newPC.set(tc->readIntReg(ReturnAddressReg) & ~ULL(1));
+#if USE_CHECKER
+    tc->pcStateNoRecord(newPC);
+#else
     tc->pcState(newPC);
+#endif
 }
 
 void

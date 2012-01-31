@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,6 +52,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/simple/base.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
@@ -82,6 +83,11 @@
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
 
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#include "cpu/checker/thread_context.hh"
+#endif
+
 using namespace std;
 using namespace TheISA;
 
@@ -98,6 +104,21 @@ BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
     thread->setStatus(ThreadContext::Halted);
 
     tc = thread->getTC();
+
+#if USE_CHECKER
+    if (p->checker) {
+        BaseCPU *temp_checker = p->checker;
+        checker = dynamic_cast<CheckerCPU *>(temp_checker);
+#if FULL_SYSTEM
+        checker->setSystem(p->system);
+#endif
+        // Manipulate thread context
+        ThreadContext *cpu_tc = tc;
+        tc = new CheckerThreadContext<ThreadContext>(cpu_tc, this->checker);
+    } else {
+        checker = NULL;
+    }
+#endif
 
     numInst = 0;
     startNumInst = 0;

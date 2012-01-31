@@ -26,9 +26,18 @@
 #
 # Authors: Gabe Black
 
+from m5.defines import buildEnv
 from m5.params import *
 from BaseCPU import BaseCPU
+
+if buildEnv['USE_CHECKER']:
+    from DummyChecker import DummyChecker
 
 class BaseSimpleCPU(BaseCPU):
     type = 'BaseSimpleCPU'
     abstract = True
+
+    if buildEnv['USE_CHECKER']:
+        checker = Param.BaseCPU(DummyChecker(), "checker")
+        checker.itb = BaseCPU.itb
+        checker.dtb = BaseCPU.dtb

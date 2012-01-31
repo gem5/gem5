@@ -525,7 +525,8 @@ let {{
             { "code" : wfeCode,
               "pred_fixup" : wfePredFixUpCode,
               "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
+            ["IsNonSpeculative", "IsQuiesce",
+             "IsSerializeAfter", "IsUnverifiable"])
     header_output += BasicDeclare.subst(wfeIop)
     decoder_output += BasicConstructor.subst(wfeIop)
     exec_output += QuiescePredOpExecuteWithFixup.subst(wfeIop)
@@ -542,7 +543,8 @@ let {{
     '''
     wfiIop = InstObjParams("wfi", "WfiInst", "PredOp", \
             { "code" : wfiCode, "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsQuiesce", "IsSerializeAfter"])
+            ["IsNonSpeculative", "IsQuiesce",
+             "IsSerializeAfter", "IsUnverifiable"])
     header_output += BasicDeclare.subst(wfiIop)
     decoder_output += BasicConstructor.subst(wfiIop)
     exec_output += QuiescePredOpExecute.subst(wfiIop)
@@ -565,7 +567,7 @@ let {{
     '''
     sevIop = InstObjParams("sev", "SevInst", "PredOp", \
             { "code" : sevCode, "predicate_test" : predicateTest },
-            ["IsNonSpeculative", "IsSquashAfter"])
+            ["IsNonSpeculative", "IsSquashAfter", "IsUnverifiable"])
     header_output += BasicDeclare.subst(sevIop)
     decoder_output += BasicConstructor.subst(sevIop)
     exec_output += PredOpExecute.subst(sevIop)

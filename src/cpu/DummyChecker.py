@@ -1,5 +1,14 @@
-# Copyright (c) 2007 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright (c) 2010-2011 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,18 +33,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Geoffrey Blake
 
 from m5.params import *
 from BaseCPU import BaseCPU
 
-class CheckerCPU(BaseCPU):
-    type = 'CheckerCPU'
-    abstract = True
-    exitOnError = Param.Bool(False, "Exit on an error")
-    updateOnError = Param.Bool(False,
-        "Update the checker with the main CPU's state on an error")
-    warnOnlyOnLoadError = Param.Bool(True,
-        "If a load result is incorrect, only print a warning and do not exit")
-    function_trace = Param.Bool(False, "Enable function trace")
-    function_trace_start = Param.Tick(0, "Cycle to start function trace")
+class DummyChecker(BaseCPU):
+    type = 'DummyChecker'

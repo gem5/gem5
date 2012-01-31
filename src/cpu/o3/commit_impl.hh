@@ -728,6 +728,12 @@ DefaultCommit<Impl>::handleInterrupt()
         assert(!thread[0]->inSyscall);
         thread[0]->inSyscall = true;
 
+#if USE_CHECKER
+        if (cpu->checker) {
+            cpu->checker->handlePendingInt();
+        }
+#endif
+
         // CPU will handle interrupt.
         cpu->processInterrupts(interrupt);
 
@@ -775,7 +781,8 @@ DefaultCommit<Impl>::commit()
 {
 
 #if FULL_SYSTEM
-    // Check for any interrupt that we've already squashed for and start processing it.
+    // Check for any interrupt that we've already squashed for and
+    // start processing it.
     if (interrupt != NoFault)
         handleInterrupt();
 
@@ -1133,7 +1140,8 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         head_inst->setCompleted();
 
 #if USE_CHECKER
-        if (cpu->checker && head_inst->isStore()) {
+        if (cpu->checker) {
+            // Need to check the instruction before its fault is processed
             cpu->checker->verify(head_inst);
         }
 #endif

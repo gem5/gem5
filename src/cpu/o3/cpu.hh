@@ -732,7 +732,7 @@ class FullO3CPU : public BaseO3CPU
      * instruction results at run time.  This can be set to NULL if it
      * is not being used.
      */
-    Checker<DynInstPtr> *checker;
+    Checker<Impl> *checker;
 #endif
 
     /** Pointer to the system. */
