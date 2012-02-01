@@ -351,10 +351,11 @@ class VExpress_ELT(RealView):
     def attachOnChipIO(self, bus, bridge):
        self.gic.pio = bus.port
        self.a9scu.pio = bus.port
+       self.local_cpu_timer.pio = bus.port
        # Bridge ranges based on excluding what is part of on-chip I/O
        # (gic, a9scu)
        bridge.ranges = [AddrRange(self.pci_cfg_base, self.a9scu.pio_addr - 1),
-                        AddrRange(self.local_cpu_timer.pio_addr, Addr.max)]
+                        AddrRange(self.l2x0_fake.pio_addr, Addr.max)]
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
@@ -363,7 +364,6 @@ class VExpress_ELT(RealView):
        self.elba_uart.pio       = bus.port
        self.uart.pio            = bus.port
        self.realview_io.pio     = bus.port
-       self.local_cpu_timer.pio = bus.port
        self.v2m_timer0.pio      = bus.port
        self.v2m_timer1.pio      = bus.port
        self.elba_timer0.pio     = bus.port
