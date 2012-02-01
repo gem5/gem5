@@ -81,7 +81,7 @@ InOrderCPU::TickEvent::process()
 
 
 const char *
-InOrderCPU::TickEvent::description()
+InOrderCPU::TickEvent::description() const
 {
     return "InOrderCPU tick event";
 }
@@ -165,7 +165,7 @@ InOrderCPU::CPUEvent::process()
     
 
 const char *
-InOrderCPU::CPUEvent::description()
+InOrderCPU::CPUEvent::description() const
 {
     return "InOrderCPU event";
 }
@@ -1156,11 +1156,11 @@ InOrderCPU::activateNextReadyContext(int delay)
 }
 
 void
-InOrderCPU::haltContext(ThreadID tid, int delay)
+InOrderCPU::haltContext(ThreadID tid)
 {
     DPRINTF(InOrderCPU, "[tid:%i]: Calling Halt Context...\n", tid);
 
-    scheduleCpuEvent(HaltThread, NoFault, tid, dummyInst[tid], delay);
+    scheduleCpuEvent(HaltThread, NoFault, tid, dummyInst[tid]);
 
     activityRec.activity();
 }
@@ -1181,9 +1181,9 @@ InOrderCPU::haltThread(ThreadID tid)
 }
 
 void
-InOrderCPU::suspendContext(ThreadID tid, int delay)
+InOrderCPU::suspendContext(ThreadID tid)
 {
-    scheduleCpuEvent(SuspendThread, NoFault, tid, dummyInst[tid], delay);
+    scheduleCpuEvent(SuspendThread, NoFault, tid, dummyInst[tid]);
 }
 
 void

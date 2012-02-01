@@ -64,7 +64,7 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, MemT &mem,
     memset(&mem, 0, sizeof(mem));
     Fault fault = readMemTiming(xc, traceData, addr, mem, flags);
     if (fault == NoFault) {
-        mem = gtoh(mem);
+        mem = TheISA::gtoh(mem);
         if (traceData)
             traceData->setData(mem);
     }
@@ -92,7 +92,7 @@ writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
 {
     Fault fault = writeMemTiming(xc, traceData, mem, addr, flags, res);
     if (fault == NoFault && res != NULL) {
-        *res = gtoh((MemT)*res);
+        *res = TheISA::gtoh((MemT)*res);
     }
     return fault;
 }

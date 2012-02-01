@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,6 +41,7 @@
  */
 
 #include "base/cp_annotate.hh"
+#include "config/use_checker.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "sim/full_system.hh"
 
@@ -137,6 +138,11 @@ BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
     bool in_syscall = this->thread->inSyscall;
     this->thread->inSyscall = true;
 
+#if USE_CHECKER
+    if (this->isStoreConditional()) {
+       this->reqToVerify->setExtraData(pkt->req->getExtraData());
+    }
+#endif
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 
     this->thread->inSyscall = in_syscall;

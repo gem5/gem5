@@ -95,7 +95,7 @@ void setClockFrequency(Tick ticksPerSecond);
 
 void setOutputDir(const std::string &dir);
 
-struct Callback;
+class Callback;
 void registerExitCallback(Callback *callback);
 void doExitCleanup();
 

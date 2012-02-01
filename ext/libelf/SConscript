@@ -94,6 +94,8 @@ if m4env['GCC']:
     major,minor,dot = [int(x) for x in m4env['GCC_VERSION'].split('.')]
     if major >= 4:
         m4env.Append(CCFLAGS=['-Wno-pointer-sign'])
+if m4env['CLANG']:
+    m4env.Append(CCFLAGS=['-Wno-initializer-overrides', '-Wno-pointer-sign'])
 m4env.Append(CCFLAGS=['-Wno-implicit'])
 del m4env['CPPPATH']
 

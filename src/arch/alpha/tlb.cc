@@ -64,7 +64,7 @@ TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), nlu(0)
 {
     table = new TlbEntry[size];
-    memset(table, 0, sizeof(TlbEntry[size]));
+    memset(table, 0, sizeof(TlbEntry) * size);
     flushCache();
 }
 
@@ -280,7 +280,7 @@ void
 TLB::flushAll()
 {
     DPRINTF(TLB, "flushAll\n");
-    memset(table, 0, sizeof(TlbEntry[size]));
+    memset(table, 0, sizeof(TlbEntry) * size);
     flushCache();
     lookupTable.clear();
     nlu = 0;

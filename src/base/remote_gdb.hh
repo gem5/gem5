@@ -204,7 +204,7 @@ class BaseRemoteGDB
 
       public:
         HardBreakpoint(BaseRemoteGDB *_gdb, Addr addr);
-        std::string name() { return gdb->name() + ".hwbkpt"; }
+        const std::string name() const { return gdb->name() + ".hwbkpt"; }
 
         virtual void process(ThreadContext *tc);
     };

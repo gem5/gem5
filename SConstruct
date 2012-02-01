@@ -473,7 +473,8 @@ CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
 main['SUNCC'] = CXX_V and CXX_V.find('Sun C++') >= 0
 main['ICC'] = CXX_V and CXX_V.find('Intel') >= 0
-if main['GCC'] + main['SUNCC'] + main['ICC'] > 1:
+main['CLANG'] = CXX_V and CXX_V.find('clang') >= 0
+if main['GCC'] + main['SUNCC'] + main['ICC'] + main['CLANG'] > 1:
     print 'Error: How can we have two at the same time?'
     Exit(1)
 
@@ -501,6 +502,24 @@ elif main['SUNCC']:
     main.Append(CCFLAGS=['-library=stlport4'])
     main.Append(CCFLAGS=['-xar'])
     #main.Append(CCFLAGS=['-instances=semiexplicit'])
+elif main['CLANG']:
+    clang_version_re = re.compile(".* version (\d+\.\d+)")
+    clang_version_match = clang_version_re.match(CXX_version)
+    if (clang_version_match):
+        clang_version = clang_version_match.groups()[0]
+        if compareVersions(clang_version, "2.9") < 0:
+            print 'Error: clang version 2.9 or newer required.'
+            print '       Installed version:', clang_version
+            Exit(1)
+    else:
+        print 'Error: Unable to determine clang version.'
+        Exit(1)
+
+    main.Append(CCFLAGS=['-pipe'])
+    main.Append(CCFLAGS=['-fno-strict-aliasing'])
+    main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
+    main.Append(CCFLAGS=['-Wno-tautological-compare'])
+    main.Append(CCFLAGS=['-Wno-self-assign'])
 else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
     print '       Please fix SConstruct and src/SConscript and try again.'

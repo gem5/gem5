@@ -45,7 +45,6 @@
 #include "sim/system.hh"
 
 using namespace CopyEngineReg;
-using namespace std;
 
 CopyEngine::CopyEngine(const Params *p)
     : PciDev(p)

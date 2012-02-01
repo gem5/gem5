@@ -51,6 +51,9 @@ class ResourceRequest;
 typedef ResourceRequest ResReq;
 typedef ResourceRequest* ResReqPtr;
 
+class CacheRequest;
+typedef CacheRequest* CacheReqPtr;
+
 class Resource {
   public:
     typedef ThePipeline::DynInstPtr DynInstPtr;
@@ -154,8 +157,9 @@ class Resource {
      *  if instruction is actually in resource before
      *  trying to do access.Needs to be defined for derived units.
      */
-    virtual Fault doCacheAccess(DynInstPtr inst, uint64_t *res=NULL)
-    { panic("doCacheAccess undefined for %s", name()); return NoFault; }
+    virtual void doCacheAccess(DynInstPtr inst, uint64_t *write_result = NULL,
+                               CacheReqPtr split_req = NULL)
+    { panic("doCacheAccess undefined for %s", name()); }
 
     /** Setup Squash to be sent out to pipeline and resource pool */
     void setupSquash(DynInstPtr inst, int stage_num, ThreadID tid);
@@ -283,7 +287,7 @@ class ResourceEvent : public Event
     virtual void process();
 
     /** Returns the description of the resource event. */
-    const char *description();
+    const char *description() const;
 
     /** Set slot idx for event */
     void setSlot(int slot) { slotIdx = slot; }
@@ -320,7 +324,7 @@ class ResourceRequest
     
     int reqID;
 
-    virtual void setRequest(DynInstPtr _inst, int stage_num,
+    void setRequest(DynInstPtr _inst, int stage_num,
                     int res_idx, int slot_num, unsigned _cmd);
 
     virtual void clearRequest();

@@ -51,10 +51,10 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/timebuf.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 template <class>
-class O3ThreadState;
+struct O3ThreadState;
 
 /**
  * DefaultCommit handles single threaded and SMT commit. Its width is

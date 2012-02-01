@@ -121,7 +121,7 @@ class CowDiskImage : public DiskImage
     CowDiskImage(const Params *p);
     ~CowDiskImage();
 
-    void init(int hash_size);
+    void initSectorTable(int hash_size);
     bool open(const std::string &file);
     void save();
     void save(const std::string &file);

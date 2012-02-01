@@ -32,10 +32,6 @@
 #include "cpu/o3/mem_dep_unit_impl.hh"
 #include "cpu/o3/store_set.hh"
 
-// Force instantation of memory dependency unit using store sets and
-// O3CPUImpl.
-template class MemDepUnit<StoreSet, O3CPUImpl>;
-
 #ifdef DEBUG
 template <>
 int
@@ -47,3 +43,7 @@ template <>
 int
 MemDepUnit<StoreSet, O3CPUImpl>::MemDepEntry::memdep_erase = 0;
 #endif
+
+// Force instantation of memory dependency unit using store sets and
+// O3CPUImpl.
+template class MemDepUnit<StoreSet, O3CPUImpl>;

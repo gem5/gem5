@@ -184,7 +184,7 @@ GenRepl::add(unsigned long tag_index)
 }
 
 void
-GenRepl::regStats(const string name)
+GenRepl::regStatsWithSuffix(const string name)
 {
     using namespace Stats;
 

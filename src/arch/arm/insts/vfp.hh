@@ -107,6 +107,9 @@ enum VfpRoundingMode
     VfpRoundZero = 3
 };
 
+static inline float bitsToFp(uint64_t, float);
+static inline uint32_t fpToBits(float);
+
 template <class fpType>
 static inline bool
 flushToZero(fpType &op)

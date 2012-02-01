@@ -43,6 +43,9 @@
 
 #include <algorithm>
 #include <cstring>
+#include <list>
+#include <map>
+#include <queue>
 
 #include "arch/isa_traits.hh"
 #include "arch/tlb.hh"
@@ -52,7 +55,6 @@
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
 #include "cpu/base.hh"
-#include "cpu/checker/cpu.hh"
 #include "cpu/o3/fetch.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Activity.hh"
@@ -65,6 +67,10 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif // USE_CHECKER
 
 using namespace std;
 

@@ -107,8 +107,9 @@ TableWalker::getPort(const std::string &if_name, int idx)
 
 Fault
 TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _mode,
-            TLB::Translation *_trans, bool _timing)
+            TLB::Translation *_trans, bool _timing, bool _functional)
 {
+    assert(!(_functional && _timing));
     if (!currState) {
         // For atomic mode, a new WalkerState instance should be only created
         // once per TLB. For timing mode, a new instance is generated for every
@@ -136,6 +137,7 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint8_t _cid, TLB::Mode _
     currState->fault = NoFault;
     currState->contextId = _cid;
     currState->timing = _timing;
+    currState->functional = _functional;
     currState->mode = _mode;
 
     /** @todo These should be cached or grabbed from cached copies in
@@ -230,11 +232,20 @@ TableWalker::processWalk()
                 stateQueueL1.size());
         stateQueueL1.push_back(currState);
         currState = NULL;
-    } else {
+    } else if (!currState->functional) {
         port->dmaAction(MemCmd::ReadReq, l1desc_addr, sizeof(uint32_t),
                 NULL, (uint8_t*)&currState->l1Desc.data,
                 currState->tc->getCpuPtr()->ticks(1), flag);
         doL1Descriptor();
+        f = currState->fault;
+    } else {
+        RequestPtr req = new Request(l1desc_addr, sizeof(uint32_t), flag);
+        PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+        pkt->dataStatic((uint8_t*)&currState->l1Desc.data);
+        port->sendFunctional(pkt);
+        doL1Descriptor();
+        delete req;
+        delete pkt;
         f = currState->fault;
     }
 
@@ -566,11 +577,19 @@ TableWalker::doL1Descriptor()
             port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
                     &doL2DescEvent, (uint8_t*)&currState->l2Desc.data,
                     currState->tc->getCpuPtr()->ticks(1));
-        } else {
+        } else if (!currState->functional) {
             port->dmaAction(MemCmd::ReadReq, l2desc_addr, sizeof(uint32_t),
                     NULL, (uint8_t*)&currState->l2Desc.data,
                     currState->tc->getCpuPtr()->ticks(1));
             doL2Descriptor();
+        } else {
+            RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0);
+            PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+            pkt->dataStatic((uint8_t*)&currState->l2Desc.data);
+            port->sendFunctional(pkt);
+            doL2Descriptor();
+            delete req;
+            delete pkt;
         }
         return;
       default:

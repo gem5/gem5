@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,7 +45,6 @@
 #include "arch/locked_mem.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
-#include "config/use_checker.hh"
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "debug/Activity.hh"
@@ -246,12 +245,6 @@ void
 LSQUnit<Impl>::setDcachePort(Port *dcache_port)
 {
     dcachePort = dcache_port;
-
-#if USE_CHECKER
-    if (cpu->checker) {
-        cpu->checker->setDcachePort(dcachePort);
-    }
-#endif
 }
 
 template<class Impl>
@@ -878,6 +871,11 @@ LSQUnit<Impl>::writebackStores()
                         inst->seqNum);
                 WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
                 cpu->schedule(wb, curTick() + 1);
+#if USE_CHECKER
+                // Make sure to set the LLSC data for verification
+                inst->reqToVerify->setExtraData(0);
+                inst->completeAcc(data_pkt);
+#endif
                 completeStore(storeWBIdx);
                 incrStIdx(storeWBIdx);
                 continue;

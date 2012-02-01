@@ -86,8 +86,8 @@ AuxVector<IntType>::AuxVector(IntType type, IntType val)
     a_val = TheISA::htog(val);
 }
 
-template class AuxVector<uint32_t>;
-template class AuxVector<uint64_t>;
+template struct AuxVector<uint32_t>;
+template struct AuxVector<uint64_t>;
 
 Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system),

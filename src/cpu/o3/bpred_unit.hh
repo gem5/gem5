@@ -41,7 +41,7 @@
 #include "cpu/pred/tournament.hh"
 #include "cpu/inst_seq.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 /**
  * Basically a wrapper class to hold both the branch predictor

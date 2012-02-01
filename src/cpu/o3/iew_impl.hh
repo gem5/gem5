@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -48,6 +48,7 @@
 
 #include "arch/utility.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/timebuf.hh"
@@ -55,6 +56,10 @@
 #include "debug/Decode.hh"
 #include "debug/IEW.hh"
 #include "params/DerivO3CPU.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif // USE_CHECKER
 
 using namespace std;
 
@@ -294,6 +299,13 @@ DefaultIEW<Impl>::initStage()
             ldstQueue.numFreeEntries(tid);
     }
 
+// Initialize the checker's dcache port here
+#if USE_CHECKER
+    if (cpu->checker) {
+        cpu->checker->setDcachePort(cpu->getDcachePort());
+     }
+#endif
+
     cpu->activateStage(O3CPU::IEWIdx);
 }
 
@@ -400,7 +412,7 @@ DefaultIEW<Impl>::takeOverFrom()
 
     instQueue.takeOverFrom();
     ldstQueue.takeOverFrom();
-    fuPool->takeOverFrom();
+    fuPool->takeOver();
 
     initStage();
     cpu->activityThisCycle();

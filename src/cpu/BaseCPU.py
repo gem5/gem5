@@ -164,7 +164,6 @@ class BaseCPU(MemObject):
         self.connectUncachedPorts(uncached_bus)
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
-        assert(len(self._cached_ports) < 7)
         self.icache = ic
         self.dcache = dc
         self.icache_port = ic.cpu_side
@@ -180,6 +179,11 @@ class BaseCPU(MemObject):
                                        "dtb_walker_cache.mem_side"]
             else:
                 self._cached_ports += ["itb.walker.port", "dtb.walker.port"]
+            # Checker doesn't need its own tlb caches because it does
+            # functional accesses only
+            if buildEnv['USE_CHECKER']:
+                self._cached_ports += ["checker.itb.walker.port", \
+                                       "checker.dtb.walker.port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)

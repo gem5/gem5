@@ -50,6 +50,12 @@
 #include "params/NSGigE.hh"
 #include "sim/system.hh"
 
+// clang complains about std::set being overloaded with Packet::set if
+// we open up the entire namespace std
+using std::min;
+using std::ostream;
+using std::string;
+
 const char *NsRxStateStrings[] =
 {
     "rxIdle",
@@ -81,7 +87,6 @@ const char *NsDmaState[] =
     "dmaWriteWaiting"
 };
 
-using namespace std;
 using namespace Net;
 using namespace TheISA;
 
@@ -479,11 +484,11 @@ NSGigE::write(PacketPtr pkt)
 // all these #if 0's are because i don't THINK the kernel needs to
 // have these implemented. if there is a problem relating to one of
 // these, you may need to add functionality in.
+
+// grouped together and #if 0'ed to avoid empty if body and make clang happy
+#if 0
             if (reg & CFGR_TBI_EN) ;
             if (reg & CFGR_MODE_1000) ;
-
-            if (reg & CFGR_AUTO_1000)
-                panic("CFGR_AUTO_1000 not implemented!\n");
 
             if (reg & CFGR_PINT_DUPSTS ||
                 reg & CFGR_PINT_LNKSTS ||
@@ -494,21 +499,10 @@ NSGigE::write(PacketPtr pkt)
             if (reg & CFGR_MRM_DIS) ;
             if (reg & CFGR_MWI_DIS) ;
 
-            if (reg & CFGR_T64ADDR) ;
-            // panic("CFGR_T64ADDR is read only register!\n");
-
-            if (reg & CFGR_PCI64_DET)
-                panic("CFGR_PCI64_DET is read only register!\n");
-
             if (reg & CFGR_DATA64_EN) ;
             if (reg & CFGR_M64ADDR) ;
             if (reg & CFGR_PHY_RST) ;
             if (reg & CFGR_PHY_DIS) ;
-
-            if (reg & CFGR_EXTSTS_EN)
-                extstsEnable = true;
-            else
-                extstsEnable = false;
 
             if (reg & CFGR_REQALG) ;
             if (reg & CFGR_SB) ;
@@ -518,6 +512,20 @@ NSGigE::write(PacketPtr pkt)
             if (reg & CFGR_BROM_DIS) ;
             if (reg & CFGR_EXT_125) ;
             if (reg & CFGR_BEM) ;
+
+            if (reg & CFGR_T64ADDR) ;
+            // panic("CFGR_T64ADDR is read only register!\n");
+#endif
+            if (reg & CFGR_AUTO_1000)
+                panic("CFGR_AUTO_1000 not implemented!\n");
+
+            if (reg & CFGR_PCI64_DET)
+                panic("CFGR_PCI64_DET is read only register!\n");
+
+            if (reg & CFGR_EXTSTS_EN)
+                extstsEnable = true;
+            else
+                extstsEnable = false;
             break;
 
           case MEAR:
@@ -541,9 +549,13 @@ NSGigE::write(PacketPtr pkt)
             eepromClk = reg & MEAR_EECLK;
 
             // since phy is completely faked, MEAR_MD* don't matter
+
+// grouped together and #if 0'ed to avoid empty if body and make clang happy
+#if 0
             if (reg & MEAR_MDIO) ;
             if (reg & MEAR_MDDIR) ;
             if (reg & MEAR_MDC) ;
+#endif
             break;
 
           case PTSCR:

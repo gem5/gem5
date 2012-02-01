@@ -72,7 +72,7 @@ class ContainerPrint
 
 // Treat all objects in an stl container as pointers to heap objects,
 // calling delete on each one and zeroing the pointers along the way
-template <typename T, template <typename T, typename A> class C, typename A>
+template <template <typename T, typename A> class C, typename T, typename A>
 void
 deletePointers(C<T,A> &container)
 {
@@ -81,7 +81,7 @@ deletePointers(C<T,A> &container)
 
 // Write out all elements in an stl container as a space separated
 // list enclosed in square brackets
-template <typename T, template <typename T, typename A> class C, typename A>
+template <template <typename T, typename A> class C, typename T, typename A>
 std::ostream &
 operator<<(std::ostream& out, const C<T,A> &vec)
 {

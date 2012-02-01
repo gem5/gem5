@@ -118,7 +118,7 @@ class ResourcePool {
         void process();
 
         /** Returns the description of the resource event. */
-        const char *description();
+        const char *description() const;
 
         /** Schedule Event */
         void scheduleEvent(int delay);

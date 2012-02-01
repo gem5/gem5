@@ -72,7 +72,7 @@ template<class T>
 uint8_t
 writeOutField(PortProxy* proxy, Addr addr, T val)
 {
-    T guestVal = X86ISA::htog(val);
+    uint64_t guestVal = X86ISA::htog(val);
     proxy->writeBlob(addr, (uint8_t *)(&guestVal), sizeof(T));
 
     uint8_t checkSum = 0;

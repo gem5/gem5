@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 
+#include "enums/MemoryMode.hh"
 #include "params/SimObject.hh"
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
@@ -146,7 +147,7 @@ class SimObject : public EventManager, public Serializable
     // before the object will be done draining. Normally this should be 1
     virtual unsigned int drain(Event *drain_event);
     virtual void resume();
-    virtual void setMemoryMode(State new_mode);
+    virtual void setMemoryMode(Enums::MemoryMode new_mode);
     virtual void switchOut();
     virtual void takeOverFrom(BaseCPU *cpu);
 

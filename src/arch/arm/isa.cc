@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,11 +39,16 @@
  */
 
 #include "arch/arm/isa.hh"
+#include "config/use_checker.hh"
 #include "debug/Arm.hh"
 #include "debug/MiscRegs.hh"
 #include "sim/faults.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 namespace ArmISA
 {
@@ -279,7 +284,11 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         PCState pc = tc->pcState();
         pc.nextThumb(cpsr.t);
         pc.nextJazelle(cpsr.j);
+#if USE_CHECKER
+        tc->pcStateNoRecord(pc);
+#else
         tc->pcState(pc);
+#endif //USE_CHECKER
     } else if (misc_reg >= MISCREG_CP15_UNIMP_START &&
         misc_reg < MISCREG_CP15_END) {
         panic("Unimplemented CP15 register %s wrote with %#x.\n",
@@ -382,6 +391,14 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                     oc = sys->getThreadContext(x);
                     oc->getDTBPtr()->allCpusCaching();
                     oc->getITBPtr()->allCpusCaching();
+#if USE_CHECKER
+                    CheckerCPU *checker =
+                        dynamic_cast<CheckerCPU*>(oc->getCheckerCpuPtr());
+                    if (checker) {
+                        checker->getDTBPtr()->allCpusCaching();
+                        checker->getITBPtr()->allCpusCaching();
+                    }
+#endif
                 }
                 return;
             }
@@ -399,6 +416,14 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 assert(oc->getITBPtr() && oc->getDTBPtr());
                 oc->getITBPtr()->flushAll();
                 oc->getDTBPtr()->flushAll();
+#if USE_CHECKER
+                CheckerCPU *checker =
+                    dynamic_cast<CheckerCPU*>(oc->getCheckerCpuPtr());
+                if (checker) {
+                    checker->getITBPtr()->flushAll();
+                    checker->getDTBPtr()->flushAll();
+                }
+#endif
             }
             return;
           case MISCREG_ITLBIALL:
@@ -417,6 +442,16 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                         bits(newVal, 7,0));
                 oc->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
                         bits(newVal, 7,0));
+#if USE_CHECKER
+                CheckerCPU *checker =
+                    dynamic_cast<CheckerCPU*>(oc->getCheckerCpuPtr());
+                if (checker) {
+                    checker->getITBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                            bits(newVal, 7,0));
+                    checker->getDTBPtr()->flushMvaAsid(mbits(newVal, 31, 12),
+                            bits(newVal, 7,0));
+                }
+#endif
             }
             return;
           case MISCREG_TLBIASIDIS:
@@ -427,6 +462,14 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 assert(oc->getITBPtr() && oc->getDTBPtr());
                 oc->getITBPtr()->flushAsid(bits(newVal, 7,0));
                 oc->getDTBPtr()->flushAsid(bits(newVal, 7,0));
+#if USE_CHECKER
+                CheckerCPU *checker =
+                    dynamic_cast<CheckerCPU*>(oc->getCheckerCpuPtr());
+                if (checker) {
+                    checker->getITBPtr()->flushAsid(bits(newVal, 7,0));
+                    checker->getDTBPtr()->flushAsid(bits(newVal, 7,0));
+                }
+#endif
             }
             return;
           case MISCREG_TLBIMVAAIS:
@@ -437,6 +480,14 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 assert(oc->getITBPtr() && oc->getDTBPtr());
                 oc->getITBPtr()->flushMva(mbits(newVal, 31,12));
                 oc->getDTBPtr()->flushMva(mbits(newVal, 31,12));
+#if USE_CHECKER
+                CheckerCPU *checker =
+                    dynamic_cast<CheckerCPU*>(oc->getCheckerCpuPtr());
+                if (checker) {
+                    checker->getITBPtr()->flushMva(mbits(newVal, 31,12));
+                    checker->getDTBPtr()->flushMva(mbits(newVal, 31,12));
+                }
+#endif
             }
             return;
           case MISCREG_ITLBIMVA:

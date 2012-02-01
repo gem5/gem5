@@ -294,6 +294,9 @@ class TableWalker : public MemObject
         /** If the mode is timing or atomic */
         bool timing;
 
+        /** If the atomic mode should be functional */
+        bool functional;
+
         /** Save mode for use in delayed response */
         BaseTLB::Mode mode;
 
@@ -354,7 +357,7 @@ class TableWalker : public MemObject
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 
     Fault walk(RequestPtr req, ThreadContext *tc, uint8_t cid, TLB::Mode mode,
-            TLB::Translation *_trans, bool timing);
+            TLB::Translation *_trans, bool timing, bool functional = false);
 
     void setTlb(TLB *_tlb) { tlb = _tlb; }
     void memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,

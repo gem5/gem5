@@ -52,9 +52,9 @@
 #include "sim/sim_object.hh"
 
 class PortProxy;
-class X86SMBiosBiosInformationParams;
-class X86SMBiosSMBiosStructureParams;
-class X86SMBiosSMBiosTableParams;
+struct X86SMBiosBiosInformationParams;
+struct X86SMBiosSMBiosStructureParams;
+struct X86SMBiosSMBiosTableParams;
 
 namespace X86ISA
 {

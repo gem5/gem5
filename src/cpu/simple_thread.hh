@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -39,6 +51,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/decode.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
@@ -106,11 +119,8 @@ class SimpleThread : public ThreadState
   public:
     std::string name() const
     {
-        return csprintf("%s.[tid:%i]", cpu->name(), tc->threadId());
+        return csprintf("%s.[tid:%i]", baseCpu->name(), tc->threadId());
     }
-
-    // pointer to CPU associated with this SimpleThread
-    BaseCPU *cpu;
 
     ProxyThreadContext<SimpleThread> *tc;
 
@@ -182,11 +192,15 @@ class SimpleThread : public ThreadState
      * ThreadContext interface functions.
      ******************************************/
 
-    BaseCPU *getCpuPtr() { return cpu; }
+    BaseCPU *getCpuPtr() { return baseCpu; }
 
     TheISA::TLB *getITBPtr() { return itb; }
 
     TheISA::TLB *getDTBPtr() { return dtb; }
+
+#if USE_CHECKER
+    BaseCPU *getCheckerCpuPtr() { return NULL; }
+#endif
 
     Decoder *getDecoderPtr() { return &decoder; }
 
@@ -281,7 +295,10 @@ class SimpleThread : public ThreadState
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
         assert(flatIndex < TheISA::NumFloatRegs);
-        floatRegs.i[flatIndex] = val;
+        // XXX: Fix array out of bounds compiler error for gem5.fast
+        // when checkercpu enabled
+        if (flatIndex < TheISA::NumFloatRegs)
+            floatRegs.i[flatIndex] = val;
         DPRINTF(FloatRegs, "Setting float reg %d (%d) bits to %#x, %#f.\n",
                 reg_idx, flatIndex, val, floatRegs.f[flatIndex]);
     }
@@ -297,6 +314,14 @@ class SimpleThread : public ThreadState
     {
         _pcState = val;
     }
+
+#if USE_CHECKER
+    void
+    pcStateNoRecord(const TheISA::PCState &val)
+    {
+        _pcState = val;
+    }
+#endif
 
     Addr
     instAddr()

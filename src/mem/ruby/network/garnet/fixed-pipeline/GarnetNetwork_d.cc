@@ -104,11 +104,12 @@ GarnetNetwork_d::init()
         for (vector<Router_d*>::const_iterator i= m_router_ptr_vector.begin();
              i != m_router_ptr_vector.end(); ++i) {
             Router_d* router = safe_cast<Router_d*>(*i);
-            int router_id=fault_model->declare_router(router->get_num_inports(),
-                                                      router->get_num_outports(),
-                                                      router->get_vc_per_vnet(),
-                                                      getBuffersPerDataVC(),
-                                                      getBuffersPerCtrlVC());
+            int router_id M5_VAR_USED =
+                fault_model->declare_router(router->get_num_inports(),
+                                            router->get_num_outports(),
+                                            router->get_vc_per_vnet(),
+                                            getBuffersPerDataVC(),
+                                            getBuffersPerCtrlVC());
             assert(router_id == router->get_id());
             router->printAggregateFaultProbability(cout);
             router->printFaultVector(cout);

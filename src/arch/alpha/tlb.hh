@@ -49,7 +49,7 @@ class ThreadContext;
 
 namespace AlphaISA {
 
-class TlbEntry;
+struct TlbEntry;
 
 class TLB : public BaseTLB
 {

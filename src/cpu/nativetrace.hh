@@ -108,7 +108,7 @@ class NativeTrace : public ExeTracer
     {
         size_t soFar = 0;
         while (soFar < size) {
-            size_t res = ::read(fd, (uint8_t *)ptr + soFar, size - soFar);
+            ssize_t res = ::read(fd, (uint8_t *)ptr + soFar, size - soFar);
             if (res < 0)
                 panic("Read call failed! %s\n", strerror(errno));
             else

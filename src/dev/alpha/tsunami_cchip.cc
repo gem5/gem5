@@ -53,7 +53,6 @@
 #include "params/TsunamiCChip.hh"
 #include "sim/system.hh"
 
-using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 

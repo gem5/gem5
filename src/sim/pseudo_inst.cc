@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010-2011 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,6 +51,7 @@
 #include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "base/debug.hh"
+#include "base/output.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/quiesce_event.hh"
@@ -385,6 +386,48 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     CopyIn(tc, vaddr, buf, result);
     delete [] buf;
     return result;
+}
+
+uint64_t
+writefile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset,
+            Addr filename_addr)
+{
+    ostream *os;
+
+    // copy out target filename
+    char fn[100];
+    std::string filename;
+    CopyStringOut(tc, fn, filename_addr, 100);
+    filename = std::string(fn);
+
+    if (offset == 0) {
+        // create a new file (truncate)
+        os = simout.create(filename, true);
+    } else {
+        // do not truncate file if offset is non-zero
+        // (ios::in flag is required as well to keep the existing data
+        //  intact, otherwise existing data will be zeroed out.)
+        os = simout.openFile(simout.directory() + filename,
+                            ios::in | ios::out | ios::binary);
+    }
+    if (!os)
+        panic("could not open file %s\n", filename);
+
+    // seek to offset
+    os->seekp(offset);
+
+    // copy out data and write to file
+    char *buf = new char[len];
+    CopyOut(tc, buf, vaddr, len);
+    os->write(buf, len);
+    if (os->fail() || os->bad())
+        panic("Error while doing writefile!\n");
+
+    simout.close(os);
+
+    delete [] buf;
+
+    return len;
 }
 
 void

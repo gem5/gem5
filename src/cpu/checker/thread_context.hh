@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -36,6 +48,7 @@
 #include "cpu/checker/cpu.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
+#include "debug/Checker.hh"
 
 class EndQuiesceEvent;
 namespace TheISA {
@@ -77,17 +90,31 @@ class CheckerThreadContext : public ThreadContext
 
     BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
-    void setCpuId(int id)
+    int cpuId() { return actualTC->cpuId(); }
+
+    int contextId() { return actualTC->contextId(); }
+
+    void setContextId(int id)
     {
-        actualTC->setCpuId(id);
-        checkerTC->setCpuId(id);
+       actualTC->setContextId(id);
+       checkerTC->setContextId(id);
     }
 
-    int cpuId() { return actualTC->cpuId(); }
+    /** Returns this thread's ID number. */
+    int threadId() { return actualTC->threadId(); }
+    void setThreadId(int id)
+    {
+        checkerTC->setThreadId(id);
+        actualTC->setThreadId(id);
+    }
 
     TheISA::TLB *getITBPtr() { return actualTC->getITBPtr(); }
 
     TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
+
+    BaseCPU *getCheckerCpuPtr() { return checkerTC->getCpuPtr(); }
+
+    Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
 
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
@@ -103,7 +130,20 @@ class CheckerThreadContext : public ThreadContext
     FSTranslatingPortProxy* getVirtProxy()
     { return actualTC->getVirtProxy(); }
 
+    //XXX: How does this work now?
+    void initMemProxies(ThreadContext *tc)
+    { actualTC->initMemProxies(tc); }
+
+    void connectMemPorts(ThreadContext *tc)
+    {
+        actualTC->connectMemPorts(tc);
+    }
+
     SETranslatingPortProxy* getMemProxy() { return actualTC->getMemProxy(); }
+
+    /** Executes a syscall in SE mode. */
+    void syscall(int64_t callnum)
+    { return actualTC->syscall(callnum); }
 
     Status status() const { return actualTC->status(); }
 
@@ -118,10 +158,10 @@ class CheckerThreadContext : public ThreadContext
     void activate(int delay = 1) { actualTC->activate(delay); }
 
     /// Set the status to Suspended.
-    void suspend() { actualTC->suspend(); }
+    void suspend(int delay) { actualTC->suspend(delay); }
 
     /// Set the status to Halted.
-    void halt() { actualTC->halt(); }
+    void halt(int delay) { actualTC->halt(delay); }
 
     void dumpFuncProfile() { actualTC->dumpFuncProfile(); }
 
@@ -131,7 +171,11 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->copyState(oldContext);
     }
 
-    void regStats(const std::string &name) { actualTC->regStats(name); }
+    void regStats(const std::string &name)
+    {
+        actualTC->regStats(name);
+        checkerTC->regStats(name);
+    }
 
     void serialize(std::ostream &os) { actualTC->serialize(os); }
     void unserialize(Checkpoint *cp, const std::string &section)
@@ -144,8 +188,6 @@ class CheckerThreadContext : public ThreadContext
 
     void profileClear() { return actualTC->profileClear(); }
     void profileSample() { return actualTC->profileSample(); }
-
-    int threadId() { return actualTC->threadId(); }
 
     // @todo: Do I need this?
     void copyArchRegs(ThreadContext *tc)
@@ -190,32 +232,36 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->setFloatRegBits(reg_idx, val);
     }
 
-    uint64_t readPC() { return actualTC->readPC(); }
+    /** Reads this thread's PC state. */
+    TheISA::PCState pcState()
+    { return actualTC->pcState(); }
 
-    void setPC(uint64_t val)
+    /** Sets this thread's PC state. */
+    void pcState(const TheISA::PCState &val)
     {
-        actualTC->setPC(val);
-        checkerTC->setPC(val);
+        DPRINTF(Checker, "Changing PC to %s, old PC %s\n",
+                         val, checkerTC->pcState());
+        checkerTC->pcState(val);
         checkerCPU->recordPCChange(val);
+        return actualTC->pcState(val);
     }
 
-    uint64_t readNextPC() { return actualTC->readNextPC(); }
-
-    void setNextPC(uint64_t val)
+    void pcStateNoRecord(const TheISA::PCState &val)
     {
-        actualTC->setNextPC(val);
-        checkerTC->setNextPC(val);
-        checkerCPU->recordNextPCChange(val);
+        return actualTC->pcState(val);
     }
 
-    uint64_t readNextNPC() { return actualTC->readNextNPC(); }
+    /** Reads this thread's PC. */
+    Addr instAddr()
+    { return actualTC->instAddr(); }
 
-    void setNextNPC(uint64_t val)
-    {
-        actualTC->setNextNPC(val);
-        checkerTC->setNextNPC(val);
-        checkerCPU->recordNextPCChange(val);
-    }
+    /** Reads this thread's next PC. */
+    Addr nextInstAddr()
+    { return actualTC->nextInstAddr(); }
+
+    /** Reads this thread's next PC. */
+    MicroPC microPC()
+    { return actualTC->microPC(); }
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     { return actualTC->readMiscRegNoEffect(misc_reg); }
@@ -225,22 +271,28 @@ class CheckerThreadContext : public ThreadContext
 
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     {
+        DPRINTF(Checker, "Setting misc reg with no effect: %d to both Checker"
+                         " and O3..\n", misc_reg);
         checkerTC->setMiscRegNoEffect(misc_reg, val);
         actualTC->setMiscRegNoEffect(misc_reg, val);
     }
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     {
+        DPRINTF(Checker, "Setting misc reg with effect: %d to both Checker"
+                         " and O3..\n", misc_reg);
         checkerTC->setMiscReg(misc_reg, val);
         actualTC->setMiscReg(misc_reg, val);
     }
+
+    int flattenIntIndex(int reg) { return actualTC->flattenIntIndex(reg); }
+    int flattenFloatIndex(int reg) { return actualTC->flattenFloatIndex(reg); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }
 
     void setStCondFailures(unsigned sc_failures)
     {
-        checkerTC->setStCondFailures(sc_failures);
         actualTC->setStCondFailures(sc_failures);
     }
 

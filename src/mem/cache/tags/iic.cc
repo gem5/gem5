@@ -187,7 +187,7 @@ IIC::regStats(const string &name)
         .flags(pdf)
         ;
 
-    repl->regStats(name);
+    repl->regStatsWithSuffix(name);
 
     if (PROFILE_IIC)
         setAccess

@@ -53,8 +53,6 @@
 #include "params/Pl111.hh"
 #include "sim/serialize.hh"
 
-using namespace std;
-
 class Gic;
 class VncServer;
 class Bitmap;
@@ -304,7 +302,7 @@ class Pl111: public AmbaDmaDevice
     EventWrapper<Pl111, &Pl111::fillFifo> fillFifoEvent;
 
     /** DMA done event */
-    vector<EventWrapper<Pl111, &Pl111::dmaDone> > dmaDoneEvent;
+    std::vector<EventWrapper<Pl111, &Pl111::dmaDone> > dmaDoneEvent;
 
     /** Wrapper to create an event out of the interrupt */
     EventWrapper<Pl111, &Pl111::generateInterrupt> intEvent;

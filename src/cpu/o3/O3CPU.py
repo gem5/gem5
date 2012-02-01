@@ -40,11 +40,15 @@ class DerivO3CPU(BaseCPU):
     activity = Param.Unsigned(0, "Initial count")
 
     if buildEnv['USE_CHECKER']:
-        checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
+        # FIXME: Shouldn't need to derefernce Parent.workload
+        #        Somewhere in the param parsing code
+        #        src/python/m5/params.py is and error that
+        #        has trouble converting the workload parameter properly.
+        checker = Param.BaseCPU(O3Checker(workload=Parent.workload[0],
                                           exitOnError=False,
                                           updateOnError=True,
-                                          warnOnlyOnLoadError=False),
-                                "checker")
+                                          warnOnlyOnLoadError=True),
+                                          "checker")
         checker.itb = Parent.itb
         checker.dtb = Parent.dtb
 

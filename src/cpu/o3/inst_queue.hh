@@ -56,7 +56,7 @@
 #include "cpu/timebuf.hh"
 #include "sim/eventq.hh"
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 class FUPool;
 class MemInterface;
 
@@ -92,8 +92,6 @@ class InstructionQueue
 
     // Typedef of iterator through the list of instructions.
     typedef typename std::list<DynInstPtr>::iterator ListIt;
-
-    friend class Impl::O3CPU;
 
     /** FU completion event class. */
     class FUCompletion : public Event {

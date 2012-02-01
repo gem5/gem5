@@ -134,7 +134,9 @@ if env['TARGET_ISA'] == 'sparc':
     Source('legiontrace.cc')
 
 if env['USE_CHECKER']:
+    SimObject('DummyChecker.py')
     Source('checker/cpu.cc')
+    Source('dummy_checker_builder.cc')
     DebugFlag('Checker')
     checker_supports = False
     for i in CheckerSupportedCPUList:

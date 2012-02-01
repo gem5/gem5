@@ -50,6 +50,10 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+// clang complains about std::set being overloaded with Packet::set if
+// we open up the entire namespace std
+using std::vector;
+
 using namespace AmbaDev;
 
 // initialize clcd registers
@@ -69,11 +73,12 @@ Pl111::Pl111(const Params *p)
 
     pic = simout.create(csprintf("%s.framebuffer.bmp", sys->name()), true);
 
-    dmaBuffer = new uint8_t[LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t)];
+    const int buffer_size = LcdMaxWidth * LcdMaxHeight * sizeof(uint32_t);
+    dmaBuffer = new uint8_t[buffer_size];
 
     memset(lcdPalette, 0, sizeof(lcdPalette));
     memset(cursorImage, 0, sizeof(cursorImage));
-    memset(dmaBuffer, 0, sizeof(dmaBuffer));
+    memset(dmaBuffer, 0, buffer_size);
 
     if (vncserver)
         vncserver->setFramebufferAddr(dmaBuffer);

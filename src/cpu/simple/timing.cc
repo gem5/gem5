@@ -176,7 +176,7 @@ TimingSimpleCPU::switchOut()
 void
 TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 {
-    BaseCPU::takeOverFrom(oldCPU, &icachePort, &dcachePort);
+    BaseCPU::takeOverFrom(oldCPU);
 
     // if any of this CPU's ThreadContexts are active, mark the CPU as
     // running and schedule its tick event.
@@ -197,7 +197,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 
 
 void
-TimingSimpleCPU::activateContext(int thread_num, int delay)
+TimingSimpleCPU::activateContext(ThreadID thread_num, int delay)
 {
     DPRINTF(SimpleCPU, "ActivateContext %d (%d cycles)\n", thread_num, delay);
 
@@ -215,7 +215,7 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
 
 
 void
-TimingSimpleCPU::suspendContext(int thread_num)
+TimingSimpleCPU::suspendContext(ThreadID thread_num)
 {
     DPRINTF(SimpleCPU, "SuspendContext %d\n", thread_num);
 

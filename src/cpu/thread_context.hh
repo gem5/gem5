@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -38,6 +50,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
@@ -120,6 +133,10 @@ class ThreadContext
 
     virtual TheISA::TLB *getDTBPtr() = 0;
 
+#if USE_CHECKER
+    virtual BaseCPU *getCheckerCpuPtr() = 0;
+#endif
+
     virtual Decoder *getDecoderPtr() = 0;
 
     virtual System *getSystemPtr() = 0;
@@ -197,6 +214,10 @@ class ThreadContext
     virtual TheISA::PCState pcState() = 0;
 
     virtual void pcState(const TheISA::PCState &val) = 0;
+
+#if USE_CHECKER
+    virtual void pcStateNoRecord(const TheISA::PCState &val) = 0;
+#endif
 
     virtual Addr instAddr() = 0;
 
@@ -287,6 +308,10 @@ class ProxyThreadContext : public ThreadContext
 
     TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
+#if USE_CHECKER
+    BaseCPU *getCheckerCpuPtr() { return actualTC->getCheckerCpuPtr(); }
+#endif
+
     Decoder *getDecoderPtr() { return actualTC->getDecoderPtr(); }
 
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
@@ -366,6 +391,10 @@ class ProxyThreadContext : public ThreadContext
     TheISA::PCState pcState() { return actualTC->pcState(); }
 
     void pcState(const TheISA::PCState &val) { actualTC->pcState(val); }
+
+#if USE_CHECKER
+    void pcStateNoRecord(const TheISA::PCState &val) { actualTC->pcState(val); }
+#endif
 
     Addr instAddr() { return actualTC->instAddr(); }
     Addr nextInstAddr() { return actualTC->nextInstAddr(); }

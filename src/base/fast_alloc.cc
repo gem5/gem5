@@ -40,10 +40,6 @@
 
 #if USE_FAST_ALLOC
 
-#ifdef __GNUC__
-#pragma implementation
-#endif
-
 void *FastAlloc::freeLists[Num_Buckets];
 
 #if FAST_ALLOC_STATS

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -36,6 +48,7 @@
 #include "arch/predecoder.hh"
 #include "base/statistics.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/base.hh"
 #include "cpu/decode.hh"
 #include "cpu/pc_event.hh"
@@ -47,6 +60,10 @@
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
+
+#if USE_CHECKER
+#include "cpu/checker/cpu.hh"
+#endif
 
 // forward declarations
 class Checkpoint;
@@ -66,7 +83,7 @@ namespace Trace {
     class InstRecord;
 }
 
-class BaseSimpleCPUParams;
+struct BaseSimpleCPUParams;
 
 
 class BaseSimpleCPU : public BaseCPU
@@ -111,6 +128,10 @@ class BaseSimpleCPU : public BaseCPU
      * objects to modify this thread's state.
      */
     ThreadContext *tc;
+
+#if USE_CHECKER
+    CheckerCPU *checker;
+#endif
   protected:
 
     enum Status {
@@ -157,8 +178,8 @@ class BaseSimpleCPU : public BaseCPU
     void postExecute();
     void advancePC(Fault fault);
 
-    virtual void deallocateContext(int thread_num);
-    virtual void haltContext(int thread_num);
+    virtual void deallocateContext(ThreadID thread_num);
+    virtual void haltContext(ThreadID thread_num);
 
     // statistics
     virtual void regStats();

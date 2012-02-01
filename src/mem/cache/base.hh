@@ -73,6 +73,7 @@ class BaseCache : public MemObject
         MSHRQueue_WriteBuffer
     };
 
+  public:
     /**
      * Reasons for caches to be blocked.
      */
@@ -83,7 +84,6 @@ class BaseCache : public MemObject
         NUM_BLOCKED_CAUSES
     };
 
-  public:
     /**
      * Reasons for cache to request a bus.
      */
@@ -94,7 +94,7 @@ class BaseCache : public MemObject
         NUM_REQUEST_CAUSES
     };
 
-  private:
+  protected:
 
     class CachePort : public SimpleTimingPort
     {
@@ -104,8 +104,6 @@ class BaseCache : public MemObject
       protected:
         CachePort(const std::string &_name, BaseCache *_cache,
                   const std::string &_label);
-
-        virtual void recvRangeChange() const;
 
         virtual unsigned deviceBlockSize() const;
 
@@ -117,15 +115,11 @@ class BaseCache : public MemObject
         const std::string label;
 
       public:
-        void setOtherPort(CachePort *_otherPort) { otherPort = _otherPort; }
-
         void setBlocked();
 
         void clearBlocked();
 
         bool checkFunctional(PacketPtr pkt);
-
-        CachePort *otherPort;
 
         bool blocked;
 
@@ -144,7 +138,6 @@ class BaseCache : public MemObject
         }
     };
 
-  public: //Made public so coherence can get at it.
     CachePort *cpuSidePort;
     CachePort *memSidePort;
 

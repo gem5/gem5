@@ -43,8 +43,6 @@
 #include "params/PciConfigAll.hh"
 #include "sim/system.hh"
 
-using namespace std;
-
 PciConfigAll::PciConfigAll(const Params *p)
     : PioDevice(p)
 {

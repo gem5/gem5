@@ -147,7 +147,7 @@ class InOrderCPU : public BaseCPU
         void process();
 
         /** Returns the description of the tick event. */
-        const char *description();
+        const char *description() const;
     };
 
     /** The tick event used for scheduling CPU ticks. */
@@ -229,7 +229,7 @@ class InOrderCPU : public BaseCPU
         void process();
 
         /** Returns the description of the CPU event. */
-        const char *description();
+        const char *description() const;
 
         /** Schedule Event */
         void scheduleEvent(int delay);
@@ -469,13 +469,13 @@ class InOrderCPU : public BaseCPU
     void deactivateThread(ThreadID tid);
 
     /** Schedule a thread suspension on the CPU */
-    void suspendContext(ThreadID tid, int delay = 0);
+  void suspendContext(ThreadID tid);
 
     /** Suspend Thread, Remove from Active Threads List, Add to Suspend List */
     void suspendThread(ThreadID tid);
 
     /** Schedule a thread halt on the CPU */
-    void haltContext(ThreadID tid, int delay = 0);
+    void haltContext(ThreadID tid);
 
     /** Halt Thread, Remove from Active Thread List, Place Thread on Halted 
      *  Threads List 

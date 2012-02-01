@@ -51,7 +51,9 @@
 #include "params/DerivO3CPU.hh"
 #include "sim/core.hh"
 
-using namespace std;
+// clang complains about std::set being overloaded with Packet::set if
+// we open up the entire namespace std
+using std::list;
 
 template <class Impl>
 InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,

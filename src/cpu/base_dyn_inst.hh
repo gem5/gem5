@@ -48,12 +48,14 @@
 #include <bitset>
 #include <list>
 #include <string>
+#include <queue>
 
 #include "arch/faults.hh"
 #include "arch/utility.hh"
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
@@ -175,6 +177,11 @@ class BaseDynInst : public FastAlloc, public RefCounted
     RequestPtr savedSreqLow;
     RequestPtr savedSreqHigh;
 
+#if USE_CHECKER
+    // Need a copy of main request pointer to verify on writes.
+    RequestPtr reqToVerify;
+#endif //USE_CHECKER
+
     /** @todo: Consider making this private. */
   public:
     /** The sequence number of the instruction. */
@@ -247,14 +254,17 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
     union Result {
         uint64_t integer;
-//        float fp;
         double dbl;
+        void set(uint64_t i) { integer = i; }
+        void set(double d) { dbl = d; }
+        void get(uint64_t& i) { i = integer; }
+        void get(double& d) { d = dbl; }
     };
 
-    /** The result of the instruction; assumes for now that there's only one
-     *  destination register.
+    /** The result of the instruction; assumes an instruction can have many
+     *  destination registers.
      */
-    Result instResult;
+    std::queue<Result> instResult;
 
     /** Records changes to result? */
     bool recordResult;
@@ -557,56 +567,68 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Returns the logical register index of the i'th source register. */
     RegIndex srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
 
-    /** Returns the result of an integer instruction. */
-    uint64_t readIntResult() { return instResult.integer; }
+    /** Pops a result off the instResult queue */
+    template <class T>
+    void popResult(T& t)
+    {
+        if (!instResult.empty()) {
+            instResult.front().get(t);
+            instResult.pop();
+        }
+    }
 
-    /** Returns the result of a floating point instruction. */
-    float readFloatResult() { return (float)instResult.dbl; }
+    /** Read the most recent result stored by this instruction */
+    template <class T>
+    void readResult(T& t)
+    {
+        instResult.back().get(t);
+    }
 
-    /** Returns the result of a floating point (double) instruction. */
-    double readDoubleResult() { return instResult.dbl; }
+    /** Pushes a result onto the instResult queue */
+    template <class T>
+    void setResult(T t)
+    {
+        if (recordResult) {
+            Result instRes;
+            instRes.set(t);
+            instResult.push(instRes);
+        }
+    }
 
     /** Records an integer register being set to a value. */
     void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
-        if (recordResult)
-            instResult.integer = val;
+        setResult<uint64_t>(val);
     }
 
     /** Records an fp register being set to a value. */
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
                             int width)
     {
-        if (recordResult) {
-            if (width == 32)
-                instResult.dbl = (double)val;
-            else if (width == 64)
-                instResult.dbl = val;
-            else
-                panic("Unsupported width!");
+        if (width == 32 || width == 64) {
+            setResult<double>(val);
+        } else {
+            panic("Unsupported width!");
         }
     }
 
     /** Records an fp register being set to a value. */
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
-        if (recordResult)
-            instResult.dbl = (double)val;
+        setResult<double>(val);
     }
 
     /** Records an fp register being set to an integer value. */
     void setFloatRegOperandBits(const StaticInst *si, int idx, uint64_t val,
                                 int width)
     {
-        if (recordResult)
-            instResult.integer = val;
+        setResult<uint64_t>(val);
     }
 
     /** Records an fp register being set to an integer value. */
     void setFloatRegOperandBits(const StaticInst *si, int idx, uint64_t val)
     {
-        if (recordResult)
-            instResult.integer = val;
+        setResult<uint64_t>(val);
     }
 
     /** Records that one of the source registers is ready. */
@@ -871,6 +893,12 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
             effAddr = req->getVaddr();
             effSize = size;
             effAddrValid = true;
+#if USE_CHECKER
+            if (reqToVerify != NULL) {
+                delete reqToVerify;
+            }
+            reqToVerify = new Request(*req);
+#endif //USE_CHECKER
             fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
         } else {
             // Commit will have to clean up whatever happened.  Set this
@@ -926,6 +954,12 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
         effAddr = req->getVaddr();
         effSize = size;
         effAddrValid = true;
+#if USE_CHECKER
+        if (reqToVerify != NULL) {
+            delete reqToVerify;
+        }
+        reqToVerify = new Request(*req);
+#endif // USE_CHECKER
         fault = cpu->write(req, sreqLow, sreqHigh, data, sqIdx);
     }
 

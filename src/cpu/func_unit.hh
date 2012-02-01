@@ -47,8 +47,9 @@
 //
 //
 
-struct OpDesc : public SimObject
+class OpDesc : public SimObject
 {
+  public:
     OpClass opClass;
     unsigned    opLat;
     unsigned    issueLat;
@@ -58,8 +59,9 @@ struct OpDesc : public SimObject
           issueLat(p->issueLat) {};
 };
 
-struct FUDesc : public SimObject
+class FUDesc : public SimObject
 {
+  public:
     std::vector<OpDesc *> opDescList;
     unsigned         number;
 

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Geoffrey Blake
  */
 
 #include <list>
@@ -38,10 +51,11 @@
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "params/CheckerCPU.hh"
+#include "sim/tlb.hh"
 
 using namespace std;
-//The CheckerCPU does alpha only
-using namespace AlphaISA;
+using namespace TheISA;
 
 void
 CheckerCPU::init()
@@ -52,6 +66,8 @@ CheckerCPU::CheckerCPU(Params *p)
     : BaseCPU(p), thread(NULL), tc(NULL)
 {
     memReq = NULL;
+    curStaticInst = NULL;
+    curMacroStaticInst = NULL;
 
     numInst = 0;
     startNumInst = 0;
@@ -66,13 +82,14 @@ CheckerCPU::CheckerCPU(Params *p)
     itb = p->itb;
     dtb = p->dtb;
     systemPtr = NULL;
-    process = p->process;
-    thread = new SimpleThread(this, /* thread_num */ 0, process);
+    workload = p->workload;
+    // XXX: This is a hack to get this to work some
+    thread = new SimpleThread(this, /* thread_num */ 0, workload[0], itb, dtb);
 
     tc = thread->getTC();
     threadContexts.push_back(tc);
 
-    result.integer = 0;
+    updateOnError = true;
 }
 
 CheckerCPU::~CheckerCPU()
@@ -107,191 +124,193 @@ CheckerCPU::setDcachePort(Port *dcache_port)
 void
 CheckerCPU::serialize(ostream &os)
 {
-/*
-    BaseCPU::serialize(os);
-    SERIALIZE_SCALAR(inst);
-    nameOut(os, csprintf("%s.xc", name()));
-    thread->serialize(os);
-    cacheCompletionEvent.serialize(os);
-*/
 }
 
 void
 CheckerCPU::unserialize(Checkpoint *cp, const string &section)
 {
-/*
-    BaseCPU::unserialize(cp, section);
-    UNSERIALIZE_SCALAR(inst);
-    thread->unserialize(cp, csprintf("%s.xc", section));
-*/
 }
 
-template <class T>
 Fault
-CheckerCPU::read(Addr addr, T &data, unsigned flags)
+CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
 {
-    // need to fill in CPU & thread IDs here
-    memReq = new Request();
+    Fault fault = NoFault;
+    unsigned blockSize = dcachePort->peerBlockSize();
+    int fullSize = size;
+    Addr secondAddr = roundDown(addr + size - 1, blockSize);
+    bool checked_flags = false;
+    bool flags_match = true;
+    Addr pAddr = 0x0;
 
-    memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
-    // translate to physical address
-    dtb->translateAtomic(memReq, tc, false);
+    if (secondAddr > addr)
+       size = secondAddr - addr;
 
-    PacketPtr pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
+    // Need to account for multiple accesses like the Atomic and TimingSimple
+    while (1) {
+        memReq = new Request();
+        memReq->setVirt(0, addr, size, flags, thread->pcState().instAddr());
 
-    pkt->dataStatic(&data);
+        // translate to physical address
+        fault = dtb->translateFunctional(memReq, tc, BaseTLB::Read);
 
-    if (!(memReq->isUncacheable())) {
-        // Access memory to see if we have the same data
-        dcachePort->sendFunctional(pkt);
-    } else {
-        // Assume the data is correct if it's an uncached access
-        memcpy(&data, &unverifiedResult.integer, sizeof(T));
-    }
-
-    delete pkt;
-
-    return NoFault;
-}
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-template
-Fault
-CheckerCPU::read(Addr addr, uint64_t &data, unsigned flags);
-
-template
-Fault
-CheckerCPU::read(Addr addr, uint32_t &data, unsigned flags);
-
-template
-Fault
-CheckerCPU::read(Addr addr, uint16_t &data, unsigned flags);
-
-template
-Fault
-CheckerCPU::read(Addr addr, uint8_t &data, unsigned flags);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-CheckerCPU::read(Addr addr, double &data, unsigned flags)
-{
-    return read(addr, *(uint64_t*)&data, flags);
-}
-
-template<>
-Fault
-CheckerCPU::read(Addr addr, float &data, unsigned flags)
-{
-    return read(addr, *(uint32_t*)&data, flags);
-}
-
-template<>
-Fault
-CheckerCPU::read(Addr addr, int32_t &data, unsigned flags)
-{
-    return read(addr, (uint32_t&)data, flags);
-}
-
-template <class T>
-Fault
-CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
-{
-    // need to fill in CPU & thread IDs here
-    memReq = new Request();
-
-    memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
-
-    // translate to physical address
-    dtb->translateAtomic(memReq, tc, true);
-
-    // Can compare the write data and result only if it's cacheable,
-    // not a store conditional, or is a store conditional that
-    // succeeded.
-    // @todo: Verify that actual memory matches up with these values.
-    // Right now it only verifies that the instruction data is the
-    // same as what was in the request that got sent to memory; there
-    // is no verification that it is the same as what is in memory.
-    // This is because the LSQ would have to be snooped in the CPU to
-    // verify this data.
-    if (unverifiedReq &&
-        !(unverifiedReq->isUncacheable()) &&
-        (!(unverifiedReq->isLLSC()) ||
-         ((unverifiedReq->isLLSC()) &&
-          unverifiedReq->getExtraData() == 1))) {
-        T inst_data;
-/*
-        // This code would work if the LSQ allowed for snooping.
-        PacketPtr pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
-        pkt.dataStatic(&inst_data);
-
-        dcachePort->sendFunctional(pkt);
-
-        delete pkt;
-*/
-        memcpy(&inst_data, unverifiedMemData, sizeof(T));
-
-        if (data != inst_data) {
-            warn("%lli: Store value does not match value in memory! "
-                 "Instruction: %#x, memory: %#x",
-                 curTick(), inst_data, data);
-            handleError();
+        if (!checked_flags && fault == NoFault && unverifiedReq) {
+            flags_match = checkFlags(unverifiedReq, memReq->getVaddr(),
+                                     memReq->getPaddr(), memReq->getFlags());
+            pAddr = memReq->getPaddr();
+            checked_flags = true;
         }
+
+        // Now do the access
+        if (fault == NoFault &&
+            !memReq->getFlags().isSet(Request::NO_ACCESS)) {
+            PacketPtr pkt = new Packet(memReq,
+                              memReq->isLLSC() ?
+                              MemCmd::LoadLockedReq : MemCmd::ReadReq,
+                              Packet::Broadcast);
+
+            pkt->dataStatic(data);
+
+            if (!(memReq->isUncacheable() || memReq->isMmappedIpr())) {
+                // Access memory to see if we have the same data
+                dcachePort->sendFunctional(pkt);
+            } else {
+                // Assume the data is correct if it's an uncached access
+                memcpy(data, unverifiedMemData, size);
+            }
+
+            delete memReq;
+            memReq = NULL;
+            delete pkt;
+        }
+
+        if (fault != NoFault) {
+            if (memReq->isPrefetch()) {
+                fault = NoFault;
+            }
+            delete memReq;
+            memReq = NULL;
+            break;
+        }
+
+        if (memReq != NULL) {
+            delete memReq;
+        }
+
+        //If we don't need to access a second cache line, stop now.
+        if (secondAddr <= addr)
+        {
+            break;
+        }
+
+        // Setup for accessing next cache line
+        data += size;
+        unverifiedMemData += size;
+        size = addr + fullSize - secondAddr;
+        addr = secondAddr;
     }
 
-    // Assume the result was the same as the one passed in.  This checker
-    // doesn't check if the SC should succeed or fail, it just checks the
-    // value.
-    if (res && unverifiedReq->scResultValid())
-        *res = unverifiedReq->getExtraData();
+    if (!flags_match) {
+        warn("%lli: Flags do not match CPU:%#x %#x %#x Checker:%#x %#x %#x\n",
+             curTick(), unverifiedReq->getVaddr(), unverifiedReq->getPaddr(),
+             unverifiedReq->getFlags(), addr, pAddr, flags);
+        handleError();
+    }
 
-    return NoFault;
+    return fault;
 }
 
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-template
 Fault
-CheckerCPU::write(uint64_t data, Addr addr, unsigned flags, uint64_t *res);
-
-template
-Fault
-CheckerCPU::write(uint32_t data, Addr addr, unsigned flags, uint64_t *res);
-
-template
-Fault
-CheckerCPU::write(uint16_t data, Addr addr, unsigned flags, uint64_t *res);
-
-template
-Fault
-CheckerCPU::write(uint8_t data, Addr addr, unsigned flags, uint64_t *res);
-
-#endif //DOXYGEN_SHOULD_SKIP_THIS
-
-template<>
-Fault
-CheckerCPU::write(double data, Addr addr, unsigned flags, uint64_t *res)
+CheckerCPU::writeMem(uint8_t *data, unsigned size,
+                     Addr addr, unsigned flags, uint64_t *res)
 {
-    return write(*(uint64_t*)&data, addr, flags, res);
-}
+    Fault fault = NoFault;
+    bool checked_flags = false;
+    bool flags_match = true;
+    Addr pAddr = 0x0;
 
-template<>
-Fault
-CheckerCPU::write(float data, Addr addr, unsigned flags, uint64_t *res)
-{
-    return write(*(uint32_t*)&data, addr, flags, res);
-}
+    unsigned blockSize = dcachePort->peerBlockSize();
+    int fullSize = size;
 
-template<>
-Fault
-CheckerCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
-{
-    return write((uint32_t)data, addr, flags, res);
-}
+    Addr secondAddr = roundDown(addr + size - 1, blockSize);
 
+    if (secondAddr > addr)
+        size = secondAddr - addr;
+
+    // Need to account for a multiple access like Atomic and Timing CPUs
+    while (1) {
+        memReq = new Request();
+        memReq->setVirt(0, addr, size, flags, thread->pcState().instAddr());
+
+        // translate to physical address
+        fault = dtb->translateFunctional(memReq, tc, BaseTLB::Write);
+
+        if (!checked_flags && fault == NoFault && unverifiedReq) {
+           flags_match = checkFlags(unverifiedReq, memReq->getVaddr(),
+                                    memReq->getPaddr(), memReq->getFlags());
+           pAddr = memReq->getPaddr();
+           checked_flags = true;
+        }
+
+        /*
+         * We don't actually check memory for the store because there
+         * is no guarantee it has left the lsq yet, and therefore we
+         * can't verify the memory on stores without lsq snooping
+         * enabled.  This is left as future work for the Checker: LSQ snooping
+         * and memory validation after stores have committed.
+         */
+
+        delete memReq;
+
+        //If we don't need to access a second cache line, stop now.
+        if (fault != NoFault || secondAddr <= addr)
+        {
+            if (fault != NoFault && memReq->isPrefetch()) {
+              fault = NoFault;
+            }
+            break;
+        }
+
+        //Update size and access address
+        size = addr + fullSize - secondAddr;
+        //And access the right address.
+        addr = secondAddr;
+   }
+
+   if (!flags_match) {
+       warn("%lli: Flags do not match CPU:%#x %#x Checker:%#x %#x %#x\n",
+            curTick(), unverifiedReq->getVaddr(), unverifiedReq->getPaddr(),
+            unverifiedReq->getFlags(), addr, pAddr, flags);
+       handleError();
+   }
+
+   // Assume the result was the same as the one passed in.  This checker
+   // doesn't check if the SC should succeed or fail, it just checks the
+   // value.
+   if (unverifiedReq && res && unverifiedReq->extraDataValid())
+       *res = unverifiedReq->getExtraData();
+
+   // Entire purpose here is to make sure we are getting the
+   // same data to send to the mem system as the CPU did.
+   // Cannot check this is actually what went to memory because
+   // there stores can be in ld/st queue or coherent operations
+   // overwriting values.
+   bool extraData;
+   if (unverifiedReq) {
+       extraData = unverifiedReq->extraDataValid() ?
+                        unverifiedReq->getExtraData() : 1;
+   }
+
+   if (unverifiedReq && unverifiedMemData &&
+       memcmp(data, unverifiedMemData, fullSize) && extraData) {
+           warn("%lli: Store value does not match value sent to memory!\
+                  data: %#x inst_data: %#x", curTick(), data,
+                  unverifiedMemData);
+       handleError();
+   }
+
+   return fault;
+}
 
 Addr
 CheckerCPU::dbg_vtophys(Addr addr)
@@ -299,24 +318,30 @@ CheckerCPU::dbg_vtophys(Addr addr)
     return vtophys(tc, addr);
 }
 
+/**
+ * Checks if the flags set by the Checker and Checkee match.
+ */
 bool
-CheckerCPU::checkFlags(Request *req)
+CheckerCPU::checkFlags(Request *unverified_req, Addr vAddr,
+                       Addr pAddr, int flags)
 {
-    // Remove any dynamic flags that don't have to do with the request itself.
-    unsigned flags = unverifiedReq->getFlags();
-    unsigned mask = LOCKED | PHYSICAL | VPTE | ALTMODE | UNCACHEABLE | PREFETCH;
-    flags = flags & (mask);
-    if (flags == req->getFlags()) {
+    Addr unverifiedVAddr = unverified_req->getVaddr();
+    Addr unverifiedPAddr = unverified_req->getPaddr();
+    int unverifiedFlags = unverified_req->getFlags();
+
+    if (unverifiedVAddr != vAddr ||
+        unverifiedPAddr != pAddr ||
+        unverifiedFlags != flags) {
         return false;
-    } else {
-        return true;
     }
+
+    return true;
 }
 
 void
 CheckerCPU::dumpAndExit()
 {
-    warn("%lli: Checker PC:%#x, next PC:%#x",
-         curTick(), thread->readPC(), thread->readNextPC());
+    warn("%lli: Checker PC:%s",
+         curTick(), thread->pcState());
     panic("Checker found an error!");
 }

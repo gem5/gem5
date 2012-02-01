@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2011 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -35,6 +47,7 @@
 #include <map>
 #include <queue>
 
+#include "arch/predecoder.hh"
 #include "arch/types.hh"
 #include "base/statistics.hh"
 #include "cpu/base.hh"
@@ -42,6 +55,8 @@
 #include "cpu/pc_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
+#include "debug/Checker.hh"
+#include "params/CheckerCPU.hh"
 #include "sim/eventq.hh"
 
 // forward declarations
@@ -52,12 +67,6 @@ namespace TheISA
 
 template <class>
 class BaseDynInst;
-class CheckerCPUParams;
-class Checkpoint;
-class MemInterface;
-class PhysicalMemory;
-class Process;
-class Processor;
 class ThreadContext;
 class Request;
 
@@ -90,11 +99,11 @@ class CheckerCPU : public BaseCPU
   public:
     typedef CheckerCPUParams Params;
     const Params *params() const
-    { return reinterpret_cast<const Params *>(_params); }    
+    { return reinterpret_cast<const Params *>(_params); }
     CheckerCPU(Params *p);
     virtual ~CheckerCPU();
 
-    Process *process;
+    std::vector<Process*> workload;
 
     void setSystem(System *system);
 
@@ -127,25 +136,34 @@ class CheckerCPU : public BaseCPU
 
     union Result {
         uint64_t integer;
-//        float fp;
         double dbl;
+        void set(uint64_t i) { integer = i; }
+        void set(double d) { dbl = d; }
+        void get(uint64_t& i) { i = integer; }
+        void get(double& d) { d = dbl; }
     };
 
-    Result result;
+    // ISAs like ARM can have multiple destination registers to check,
+    // keep them all in a std::queue
+    std::queue<Result> result;
 
     // current instruction
-    MachInst machInst;
+    TheISA::MachInst machInst;
 
     // Pointer to the one memory request.
     RequestPtr memReq;
 
     StaticInstPtr curStaticInst;
+    StaticInstPtr curMacroStaticInst;
 
     // number of simulated instructions
     Counter numInst;
     Counter startNumInst;
 
     std::queue<int> miscRegIdxs;
+
+    TheISA::TLB* getITBPtr() { return itb; }
+    TheISA::TLB* getDTBPtr() { return dtb; }
 
     virtual Counter totalInstructions() const
     {
@@ -158,12 +176,6 @@ class CheckerCPU : public BaseCPU
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-    template <class T>
-    Fault read(Addr addr, T &data, unsigned flags);
-
-    template <class T>
-    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
@@ -198,17 +210,25 @@ class CheckerCPU : public BaseCPU
         return thread->readFloatRegBits(reg_idx);
     }
 
+    template <class T>
+    void setResult(T t)
+    {
+        Result instRes;
+        instRes.set(t);
+        result.push(instRes);
+    }
+
     void setIntRegOperand(const StaticInst *si, int idx, uint64_t val)
     {
         thread->setIntReg(si->destRegIdx(idx), val);
-        result.integer = val;
+        setResult<uint64_t>(val);
     }
 
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatReg(reg_idx, val);
-        result.dbl = (double)val;
+        setResult<double>(val);
     }
 
     void setFloatRegOperandBits(const StaticInst *si, int idx,
@@ -216,12 +236,26 @@ class CheckerCPU : public BaseCPU
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatRegBits(reg_idx, val);
-        result.integer = val;
+        setResult<uint64_t>(val);
     }
 
-    uint64_t instAddr() { return thread->instAddr(); }
+    bool readPredicate() { return thread->readPredicate(); }
+    void setPredicate(bool val)
+    {
+        thread->setPredicate(val);
+    }
 
-    uint64_t nextInstAddr() { return thread->nextInstAddr(); }
+    TheISA::PCState pcState() { return thread->pcState(); }
+    void pcState(const TheISA::PCState &val)
+    {
+        DPRINTF(Checker, "Changing PC to %s, old PC %s.\n",
+                         val, thread->pcState());
+        thread->pcState(val);
+    }
+    Addr instAddr() { return thread->instAddr(); }
+    Addr nextInstAddr() { return thread->nextInstAddr(); }
+    MicroPC microPC() { return thread->microPC(); }
+    //////////////////////////////////////////
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     {
@@ -235,7 +269,6 @@ class CheckerCPU : public BaseCPU
 
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
     {
-        result.integer = val;
         miscRegIdxs.push(misc_reg);
         return thread->setMiscRegNoEffect(misc_reg, val);
     }
@@ -246,8 +279,25 @@ class CheckerCPU : public BaseCPU
         return thread->setMiscReg(misc_reg, val);
     }
 
-    void recordPCChange(uint64_t val) { changedPC = true; newPC = val; }
-    void recordNextPCChange(uint64_t val) { changedNextPC = true; }
+    MiscReg readMiscRegOperand(const StaticInst *si, int idx)
+    {
+        int reg_idx = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
+        return thread->readMiscReg(reg_idx);
+    }
+
+    void setMiscRegOperand(
+            const StaticInst *si, int idx, const MiscReg &val)
+    {
+        int reg_idx = si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
+        return thread->setMiscReg(reg_idx, val);
+    }
+    /////////////////////////////////////////
+
+    void recordPCChange(const TheISA::PCState &val)
+    {
+       changedPC = true;
+       newPCState = val;
+    }
 
     void demapPage(Addr vaddr, uint64_t asn)
     {
@@ -265,8 +315,17 @@ class CheckerCPU : public BaseCPU
         this->dtb->demapPage(vaddr, asn);
     }
 
+    Fault readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags);
+    Fault writeMem(uint8_t *data, unsigned size,
+                   Addr addr, unsigned flags, uint64_t *res);
+
+    void setStCondFailures(unsigned sc_failures)
+    {}
+    /////////////////////////////////////////////////////
+
     Fault hwrei() { return thread->hwrei(); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
+    void wakeup() { }
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.
     void syscall(uint64_t callnum) { }
@@ -277,7 +336,8 @@ class CheckerCPU : public BaseCPU
             dumpAndExit();
     }
 
-    bool checkFlags(Request *req);
+    bool checkFlags(Request *unverified_req, Addr vAddr,
+                    Addr pAddr, int flags);
 
     void dumpAndExit();
 
@@ -290,7 +350,7 @@ class CheckerCPU : public BaseCPU
 
     bool changedPC;
     bool willChangePC;
-    uint64_t newPC;
+    TheISA::PCState newPCState;
     bool changedNextPC;
     bool exitOnError;
     bool updateOnError;
@@ -305,16 +365,22 @@ class CheckerCPU : public BaseCPU
  * template instantiations of the Checker must be placed at the bottom
  * of checker/cpu.cc.
  */
-template <class DynInstPtr>
+template <class Impl>
 class Checker : public CheckerCPU
 {
+  private:
+    typedef typename Impl::DynInstPtr DynInstPtr;
+
   public:
     Checker(Params *p)
-        : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL)
+        : CheckerCPU(p), updateThisCycle(false), unverifiedInst(NULL),
+          predecoder(NULL)
     { }
 
     void switchOut();
     void takeOverFrom(BaseCPU *oldCPU);
+
+    void advancePC(Fault fault);
 
     void verify(DynInstPtr &inst);
 
@@ -322,7 +388,8 @@ class Checker : public CheckerCPU
     void validateExecution(DynInstPtr &inst);
     void validateState();
 
-    void copyResult(DynInstPtr &inst);
+    void copyResult(DynInstPtr &inst, uint64_t mismatch_val, int start_idx);
+    void handlePendingInt();
 
   private:
     void handleError(DynInstPtr &inst)
@@ -339,6 +406,7 @@ class Checker : public CheckerCPU
     bool updateThisCycle;
 
     DynInstPtr unverifiedInst;
+    TheISA::Predecoder predecoder;
 
     std::list<DynInstPtr> instList;
     typedef typename std::list<DynInstPtr>::iterator InstListIt;

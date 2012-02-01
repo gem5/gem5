@@ -49,7 +49,7 @@ struct SNHash {
     }
 };
 
-class DerivO3CPUParams;
+struct DerivO3CPUParams;
 
 template <class Impl>
 class InstructionQueue;

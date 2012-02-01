@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "cpu/op_class.hh"
-#include "cpu/sched_list.hh"
 #include "params/FUPool.hh"
 #include "sim/sim_object.hh"
 
@@ -162,7 +161,7 @@ class FUPool : public SimObject
     void switchOut();
 
     /** Takes over from another CPU's thread. */
-    void takeOverFrom();
+    void takeOver();
 };
 
 #endif // __CPU_O3_FU_POOL_HH__
