@@ -40,17 +40,19 @@ add_option = optparser.add_option
 add_option('-v', '--verbose', action='store_true', default=False,
            help='echo commands before executing')
 add_option('--builds',
-           default='ALPHA_SE,ALPHA_SE_MOESI_hammer,' \
-           'ALPHA_SE_MESI_CMP_directory,'  \
-           'ALPHA_SE_MOESI_CMP_directory,' \
-           'ALPHA_SE_MOESI_CMP_token,' \
-           'ALPHA_FS,' \
-           'MIPS_SE,' \
-           'POWER_SE,' \
-           'SPARC_SE,SPARC_FS,' \
-           'X86_SE,X86_FS,' \
-           'ARM_SE,ARM_FS',
+           default='ALPHA,ALPHA_MOESI_hammer,' \
+           'ALPHA_MESI_CMP_directory,'  \
+           'ALPHA_MOESI_CMP_directory,' \
+           'ALPHA_MOESI_CMP_token,' \
+           'MIPS,' \
+           'POWER,' \
+           'SPARC,' \
+           'X86,' \
+           'ARM',
            help="comma-separated build targets to test (default: '%default')")
+add_option('--modes',
+           default='se,fs',
+           help="comma-separated modes to test (default: '%default')")
 add_option('--test-variants', default='opt',
            help="comma-separated build variants to test (default: '%default')"\
            ", set to '' for none")
@@ -82,6 +84,7 @@ def split_if_nonempty(s):
 
 # split list options on ',' to get Python lists
 builds = split_if_nonempty(options.builds)
+modes = split_if_nonempty(options.modes)
 test_variants = split_if_nonempty(options.test_variants)
 compile_variants = split_if_nonempty(options.compile_variants)
 
@@ -112,25 +115,21 @@ if compile_variants:
                 for variant in compile_variants
                 for build in builds]
 
-# By default run the 'quick' tests
+# By default run the 'quick' tests, all expands to quick and long
 if not tests:
     tests = ['quick']
+elif 'all' in tests:
+    tests = ['quick,long']
 
-# set up test targets for scons
-if 'all' in tests:
-    targets += ['%s/%s/tests/%s' % (options.build_dir, build, variant)
-                for build in builds
-                for variant in test_variants]
-else:
-    # Ugly! Since we don't have any quick SPARC_FS tests remove the
-    # SPARC_FS target If we ever get a quick SPARC_FS test, this code
-    # should be removed
-    if 'quick' in tests and 'SPARC_FS' in builds:
-        builds.remove('SPARC_FS')
-    targets += ['%s/%s/tests/%s/%s' % (options.build_dir, build, variant, test)
-                for build in builds
-                for variant in test_variants
-                for test in tests]
+# set up test targets for scons, since we don't have any quick SPARC
+# full-system tests exclude it
+targets += ['%s/%s/tests/%s/%s/%s' % (options.build_dir, build, variant, test,
+                                      mode)
+            for build in builds
+            for variant in test_variants
+            for test in tests
+            for mode in modes
+            if not (build == 'SPARC' and test == 'quick' and mode == 'fs')]
 
 def cpu_count():
     if 'bsd' in sys.platform or sys.platform == 'darwin':
