@@ -385,12 +385,12 @@ def connectX86ClassicSystem(x86_sys):
 
     # Create a bridge from the IO bus to the memory bus to allow access to
     # the local APIC (two pages)
-    x86_sys.iobridge = Bridge(delay='50ns', nack_delay='4ns')
-    x86_sys.iobridge.slave = x86_sys.iobus.port
-    x86_sys.iobridge.master = x86_sys.membus.port
-    x86_sys.iobridge.ranges = [AddrRange(interrupts_address_space_base,
-                                         interrupts_address_space_base +
-                                         APIC_range_size - 1)]
+    x86_sys.apicbridge = Bridge(delay='50ns', nack_delay='4ns')
+    x86_sys.apicbridge.slave = x86_sys.iobus.port
+    x86_sys.apicbridge.master = x86_sys.membus.port
+    x86_sys.apicbridge.ranges = [AddrRange(interrupts_address_space_base,
+                                           interrupts_address_space_base +
+                                           APIC_range_size - 1)]
 
     # connect the io bus
     x86_sys.pc.attachIO(x86_sys.iobus)
