@@ -119,7 +119,7 @@ if compile_variants:
 if not tests:
     tests = ['quick']
 elif 'all' in tests:
-    tests = ['quick,long']
+    tests = ['quick', 'long']
 
 # set up test targets for scons, since we don't have any quick SPARC
 # full-system tests exclude it
