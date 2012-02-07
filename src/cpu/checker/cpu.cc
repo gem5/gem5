@@ -84,7 +84,8 @@ CheckerCPU::CheckerCPU(Params *p)
     systemPtr = NULL;
     workload = p->workload;
     // XXX: This is a hack to get this to work some
-    thread = new SimpleThread(this, /* thread_num */ 0, workload[0], itb, dtb);
+    thread = new SimpleThread(this, /* thread_num */ 0,
+            workload.size() ? workload[0] : NULL, itb, dtb);
 
     tc = thread->getTC();
     threadContexts.push_back(tc);
