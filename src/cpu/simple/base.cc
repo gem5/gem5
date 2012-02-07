@@ -40,7 +40,6 @@
  * Authors: Steve Reinhardt
  */
 
-#include "arch/faults.hh"
 #include "arch/kernel_stats.hh"
 #include "arch/stacktrace.hh"
 #include "arch/tlb.hh"
@@ -74,6 +73,7 @@
 #include "params/BaseSimpleCPU.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
+#include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"

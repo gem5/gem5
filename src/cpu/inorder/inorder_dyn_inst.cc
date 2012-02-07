@@ -34,7 +34,6 @@
 #include <sstream>
 #include <string>
 
-#include "arch/faults.hh"
 #include "base/bigint.hh"
 #include "base/cp_annotate.hh"
 #include "base/cprintf.hh"
@@ -45,6 +44,7 @@
 #include "cpu/exetrace.hh"
 #include "debug/InOrderDynInst.hh"
 #include "mem/request.hh"
+#include "sim/fault_fwd.hh"
 #include "sim/full_system.hh"
 
 using namespace std;

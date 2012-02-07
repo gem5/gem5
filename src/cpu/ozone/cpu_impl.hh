@@ -30,7 +30,6 @@
  */
 
 #include "arch/alpha/osfpal.hh"
-#include "arch/faults.hh"
 #include "arch/isa_traits.hh" // For MachInst
 #include "arch/kernel_stats.hh"
 #include "arch/tlb.hh"

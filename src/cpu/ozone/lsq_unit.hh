@@ -35,13 +35,13 @@
 #include <map>
 #include <queue>
 
-#include "arch/faults.hh"
 #include "arch/types.hh"
 #include "base/hashmap.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "mem/mem_interface.hh"
 //#include "mem/page_table.hh"
+#include "sim/fault_fwd.hh"
 #include "sim/sim_object.hh"
 
 class PageTable;

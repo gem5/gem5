@@ -31,7 +31,6 @@
 #ifndef __CPU_INORDER_THREAD_STATE_HH__
 #define __CPU_INORDER_THREAD_STATE_HH__
 
-#include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "base/callback.hh"
 #include "base/output.hh"

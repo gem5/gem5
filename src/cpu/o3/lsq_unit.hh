@@ -37,7 +37,6 @@
 #include <map>
 #include <queue>
 
-#include "arch/faults.hh"
 #include "arch/generic/debugfaults.hh"
 #include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
@@ -50,6 +49,7 @@
 #include "debug/LSQUnit.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
+#include "sim/fault_fwd.hh"
 
 struct DerivO3CPUParams;
 

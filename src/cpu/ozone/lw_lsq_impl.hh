@@ -28,12 +28,12 @@
  * Authors: Kevin Lim
  */
 
-#include "arch/faults.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
 #include "config/use_checker.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/ozone/lw_lsq.hh"
+#include "sim/fault_fwd.hh"
 
 template<class Impl>
 OzoneLWLSQ<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,

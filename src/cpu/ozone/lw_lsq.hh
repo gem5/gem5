@@ -36,7 +36,6 @@
 #include <map>
 #include <queue>
 
-#include "arch/faults.hh"
 #include "arch/types.hh"
 #include "base/fast_alloc.hh"
 #include "base/hashmap.hh"
@@ -46,6 +45,7 @@
 #include "mem/port.hh"
 //#include "mem/page_table.hh"
 #include "sim/debug.hh"
+#include "sim/fault_fwd.hh"
 #include "sim/sim_object.hh"
 
 class MemObject;

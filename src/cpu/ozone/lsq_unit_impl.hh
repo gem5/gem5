@@ -28,10 +28,10 @@
  * Authors: Kevin Lim
  */
 
-#include "arch/faults.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
 #include "cpu/ozone/lsq_unit.hh"
+#include "sim/fault_fwd.hh"
 
 template <class Impl>
 OzoneLSQ<Impl>::StoreCompletionEvent::StoreCompletionEvent(int store_idx,

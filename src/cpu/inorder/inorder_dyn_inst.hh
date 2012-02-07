@@ -37,7 +37,6 @@
 #include <list>
 #include <string>
 
-#include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "arch/mt.hh"
 #include "arch/types.hh"
@@ -58,6 +57,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/InOrderDynInst.hh"
 #include "mem/packet.hh"
+#include "sim/fault_fwd.hh"
 #include "sim/system.hh"
 
 #if THE_ISA == ALPHA_ISA

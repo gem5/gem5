@@ -34,7 +34,6 @@
 
 #include <vector>
 
-#include "arch/faults.hh"
 #include "arch/isa_traits.hh"
 #include "base/types.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
