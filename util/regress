@@ -111,7 +111,7 @@ targets = []
 
 # start with compile-only targets, if any
 if compile_variants:
-    targets += ['%s/%s/m5.%s' % (options.build_dir, build, variant)
+    targets += ['%s/%s/gem5.%s' % (options.build_dir, build, variant)
                 for variant in compile_variants
                 for build in builds]
 
