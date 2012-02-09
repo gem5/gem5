@@ -71,8 +71,6 @@ class Bus : public MemObject
         of the interfaces connecting to the bus. */
     class BusPort : public Port
     {
-        bool _onRetryList;
-
         /** A pointer to the bus to which this port belongs. */
         Bus *bus;
 
@@ -83,14 +81,8 @@ class Bus : public MemObject
 
         /** Constructor for the BusPort.*/
         BusPort(const std::string &_name, Bus *_bus, int _id)
-            : Port(_name, _bus), _onRetryList(false), bus(_bus), id(_id)
+            : Port(_name, _bus), bus(_bus), id(_id)
         { }
-
-        bool onRetryList()
-        { return _onRetryList; }
-
-        void onRetryList(bool newVal)
-        { _onRetryList = newVal; }
 
         int getId() const { return id; }
 
@@ -301,25 +293,22 @@ class Bus : public MemObject
 
     /** An array of pointers to ports that retry should be called on because the
      * original send failed for whatever reason.*/
-    std::list<BusPort*> retryList;
+    std::list<Port*> retryList;
 
-    void addToRetryList(BusPort * port)
+    void addToRetryList(Port* port)
     {
         if (!inRetry) {
-            // The device wasn't retrying a packet, or wasn't at an appropriate
-            // time.
-            assert(!port->onRetryList());
-            port->onRetryList(true);
+            // The device wasn't retrying a packet, or wasn't at an
+            // appropriate time.
             retryList.push_back(port);
         } else {
-            if (port->onRetryList()) {
-                // The device was retrying a packet. It didn't work, so we'll leave
-                // it at the head of the retry list.
-                assert(port == retryList.front());
+            if (!retryList.empty() && port == retryList.front()) {
+                // The device was retrying a packet. It didn't work,
+                // so we'll leave it at the head of the retry list.
                 inRetry = false;
-            }
-            else {
-                port->onRetryList(true);
+            } else {
+                // We are in retry, but not for this port, put it at
+                // the end.
                 retryList.push_back(port);
             }
         }

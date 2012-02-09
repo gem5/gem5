@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011-2012 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -255,7 +255,6 @@ Bus::recvTiming(PacketPtr pkt)
     // Also take care of retries
     if (inRetry) {
         DPRINTF(Bus, "Remove retry from list %d\n", src);
-        retryList.front()->onRetryList(false);
         retryList.pop_front();
         inRetry = false;
     }
@@ -274,7 +273,6 @@ Bus::recvRetry(int id)
         // If inRetry is still true, sendTiming wasn't called
         if (inRetry)
         {
-            retryList.front()->onRetryList(false);
             retryList.pop_front();
             inRetry = false;
 
