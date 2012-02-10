@@ -105,7 +105,8 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
       numThreads(params->numThreads),
       drainPending(false),
       switchedOut(false),
-      trapLatency(params->trapLatency)
+      trapLatency(params->trapLatency),
+      canHandleInterrupts(true)
 {
     _status = Active;
     _nextStatus = Inactive;
@@ -714,7 +715,7 @@ DefaultCommit<Impl>::handleInterrupt()
 
     // Wait until all in flight instructions are finished before enterring
     // the interrupt.
-    if (cpu->instList.empty()) {
+    if (canHandleInterrupts && cpu->instList.empty()) {
         // Squash or record that I need to squash this cycle if
         // an interrupt needed to be handled.
         DPRINTF(Commit, "Interrupt detected.\n");
@@ -743,7 +744,10 @@ DefaultCommit<Impl>::handleInterrupt()
 
         interrupt = NoFault;
     } else {
-        DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
+        DPRINTF(Commit, "Interrupt pending: instruction is %sin "
+                "flight, ROB is %sempty\n",
+                canHandleInterrupts ? "not " : "",
+                cpu->instList.empty() ? "" : "not " );
     }
 }
 
@@ -775,11 +779,6 @@ void
 DefaultCommit<Impl>::commit()
 {
     if (FullSystem) {
-        // Check for any interrupt that we've already squashed for and
-        // start processing it.
-        if (interrupt != NoFault)
-            handleInterrupt();
-
         // Check if we have a interrupt and get read to handle it
         if (cpu->checkInterrupts(cpu->tcBase(0)))
             propagateInterrupt();
@@ -936,6 +935,11 @@ DefaultCommit<Impl>::commitInsts()
     // Commit as many instructions as possible until the commit bandwidth
     // limit is reached, or it becomes impossible to commit any more.
     while (num_committed < commitWidth) {
+        // Check for any interrupt that we've already squashed for
+        // and start processing it.
+        if (interrupt != NoFault)
+            handleInterrupt();
+
         int commit_thread = getCommittingThread();
 
         if (commit_thread == -1 || !rob->isHeadReady(commit_thread))
@@ -990,6 +994,12 @@ DefaultCommit<Impl>::commitInsts()
                 // prefetches towards the total commit count.
                 if (!head_inst->isNop() && !head_inst->isInstPrefetch()) {
                     cpu->instDone(tid);
+                }
+
+                if (tid == 0) {
+                    canHandleInterrupts =  (!head_inst->isDelayedCommit()) &&
+                                           ((THE_ISA != ALPHA_ISA) ||
+                                             (!(pc[0].instAddr() & 0x3)));
                 }
 
                 // Updates misc. registers.

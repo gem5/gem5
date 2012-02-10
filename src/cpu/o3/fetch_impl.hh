@@ -1144,6 +1144,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             // an delayed commit micro-op currently (delayed commit instructions
             // are not interruptable by interrupts, only faults)
             ++fetchMiscStallCycles;
+            DPRINTF(Fetch, "[tid:%i]: Fetch is stalled!\n", tid);
             return;
         }
     } else {

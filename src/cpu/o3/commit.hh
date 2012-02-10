@@ -441,6 +441,9 @@ class DefaultCommit
     /** Rename map interface. */
     RenameMap *renameMap[Impl::MaxThreads];
 
+    /** True if last committed microop can be followed by an interrupt */
+    bool canHandleInterrupts;
+
     /** Updates commit stats based on this instruction. */
     void updateComInstStats(DynInstPtr &inst);
 
