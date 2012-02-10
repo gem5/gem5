@@ -1282,6 +1282,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             // Move to the next instruction, unless we have a branch.
             thisPC = nextPC;
+            inRom = isRomMicroPC(thisPC.microPC());
 
             if (newMacro) {
                 fetchAddr = thisPC.instAddr() & BaseCPU::PCMask;
