@@ -544,7 +544,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         DPRINTF(Fetch, "[tid:%i] Can't fetch cache line, switched out\n",
                 tid);
         return false;
-    } else if (checkInterrupt(pc)) {
+    } else if (checkInterrupt(pc) && !delayedCommit[tid]) {
         // Hold off fetch from getting new instructions when:
         // Cache is blocked, or
         // while an interrupt is pending and we're not in PAL mode, or
@@ -720,6 +720,13 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
     }
 
     fetchStatus[tid] = Squashing;
+
+    // microops are being squashed, it is not known wheather the
+    // youngest non-squashed microop was  marked delayed commit
+    // or not. Setting the flag to true ensures that the
+    // interrupts are not handled when they cannot be, though
+    // some opportunities to handle interrupts may be missed.
+    delayedCommit[tid] = true;
 
     ++fetchSquashCycles;
 }
