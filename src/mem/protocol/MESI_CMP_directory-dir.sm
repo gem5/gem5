@@ -109,6 +109,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   void set_tbe(TBE tbe);
   void unset_tbe();
+  void wakeUpBuffers(Address a);
       
   Entry getDirectoryEntry(Address addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
@@ -191,7 +192,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   // ** IN_PORTS **
 
-  in_port(requestNetwork_in, RequestMsg, requestToDir) {
+  in_port(requestNetwork_in, RequestMsg, requestToDir, rank = 0) {
     if (requestNetwork_in.isReady()) {
       peek(requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));
@@ -211,7 +212,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     }
   }
 
-  in_port(responseNetwork_in, ResponseMsg, responseToDir) {
+  in_port(responseNetwork_in, ResponseMsg, responseToDir, rank = 1) {
     if (responseNetwork_in.isReady()) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
@@ -228,7 +229,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   }
 
   // off-chip memory request/response is done
-  in_port(memQueue_in, MemoryMsg, memBuffer) {
+  in_port(memQueue_in, MemoryMsg, memBuffer, rank = 2) {
     if (memQueue_in.isReady()) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
@@ -242,7 +243,6 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
       }
     }
   }
-
 
 
   // Actions
@@ -295,6 +295,10 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
     memQueue_in.dequeue();
+  }
+
+  action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
+    wakeUpBuffers(address);
   }
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
@@ -400,8 +404,8 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
       }
   }
 
-  action(z_recycleRequestQueue, "z", desc="recycle request queue") {
-    requestNetwork_in.recycle();
+  action(z_stallAndWaitRequest, "z", desc="recycle request queue") {
+    stall_and_wait(requestNetwork_in, address);
   }
 
   action(zz_recycleDMAQueue, "zz", desc="recycle DMA queue") {
@@ -502,6 +506,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   transition(IM, Memory_Data, M) {
     d_sendData;
     l_popMemQueue;
+    kd_wakeUpDependents;
   }
 //added by SS
   transition(M, CleanReplacement, I) {
@@ -520,6 +525,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     c_clearOwner;
     aa_sendAck;
     l_popMemQueue;
+    kd_wakeUpDependents;
   }
 
 
@@ -532,6 +538,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   transition(ID, Memory_Data, I) {
     dr_sendDMAData;
     l_popMemQueue;
+    kd_wakeUpDependents;
   }
 
   transition(I, DMA_WRITE, ID_W) {
@@ -543,10 +550,11 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   transition(ID_W, Memory_Ack, I) {
     da_sendDMAAck;
     l_popMemQueue;
+    kd_wakeUpDependents;
   }
 
   transition({ID, ID_W, M_DRDI, M_DWRI, IM, MI}, {Fetch, Data} ) {
-    z_recycleRequestQueue;
+    z_stallAndWaitRequest;
   }
 
   transition({ID, ID_W, M_DRD, M_DRDI, M_DWR, M_DWRI, IM, MI}, {DMA_WRITE, DMA_READ} ) {
@@ -570,6 +578,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     aa_sendAck;
     c_clearOwner;
     l_popMemQueue;
+    kd_wakeUpDependents;
   }
 
   transition(M, DMA_WRITE, M_DWR) {
@@ -591,6 +600,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     da_sendDMAAck;
     w_deallocateTBE;
     l_popMemQueue;
+    kd_wakeUpDependents;
   }
 
 }

@@ -158,6 +158,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   void unset_cache_entry();
   void set_tbe(TBE a);
   void unset_tbe();
+  void wakeUpBuffers(Address a);
 
   // inclusive cache, returns L2 entries only
   Entry getCacheEntry(Address addr), return_by_pointer="yes" {
@@ -283,7 +284,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   out_port(responseIntraChipL2Network_out, ResponseMsg, responseFromL2Cache);
 
 
-  in_port(L1unblockNetwork_in, ResponseMsg, unblockToL2Cache) {
+  in_port(L1unblockNetwork_in, ResponseMsg, unblockToL2Cache, rank = 2) {
     if(L1unblockNetwork_in.isReady()) {
       peek(L1unblockNetwork_in,  ResponseMsg) {
         Entry cache_entry := getCacheEntry(in_msg.Address);
@@ -305,7 +306,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   // Response IntraChip L2 Network - response msg to this particular L2 bank
-  in_port(responseIntraChipL2Network_in, ResponseMsg, responseToL2Cache) {
+  in_port(responseIntraChipL2Network_in, ResponseMsg, responseToL2Cache, rank = 1) {
     if (responseIntraChipL2Network_in.isReady()) {
       peek(responseIntraChipL2Network_in, ResponseMsg) {
         // test wether it's from a local L1 or an off chip source
@@ -349,7 +350,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   // L1 Request
-  in_port(L1RequestIntraChipL2Network_in, RequestMsg, L1RequestToL2Cache) {
+  in_port(L1RequestIntraChipL2Network_in, RequestMsg, L1RequestToL2Cache, rank = 0) {
     if(L1RequestIntraChipL2Network_in.isReady()) {
       peek(L1RequestIntraChipL2Network_in,  RequestMsg) {
         Entry cache_entry := getCacheEntry(in_msg.Address);
@@ -791,14 +792,17 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
-  action(zz_recycleL1RequestQueue, "zz", desc="recycle L1 request queue") {
-    L1RequestIntraChipL2Network_in.recycle();
+  action(zz_stallAndWaitL1RequestQueue, "zz", desc="recycle L1 request queue") {
+    stall_and_wait(L1RequestIntraChipL2Network_in, address);
   }
 
   action(zn_recycleResponseNetwork, "zn", desc="recycle memory request") {
     responseIntraChipL2Network_in.recycle();
   }
 
+  action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
+    wakeUpBuffers(address);
+  }
 
   //*****************************************************
   // TRANSITIONS
@@ -820,7 +824,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition({IM, IS, ISS, SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L2_Replacement, L2_Replacement_clean}) {
-    zz_recycleL1RequestQueue;
+    zz_stallAndWaitL1RequestQueue;
   }
 
   transition({IM, IS, ISS, SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, MEM_Inv) {         
@@ -833,7 +837,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
 
   transition({SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE}) {
-    zz_recycleL1RequestQueue;
+    zz_stallAndWaitL1RequestQueue;
   }
 
 
@@ -885,6 +889,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     e_sendDataToGetSRequestors;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IM, Mem_Data, MT_MB) {
@@ -902,11 +907,11 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition({IS, ISS}, L1_GETX) {
-    zz_recycleL1RequestQueue;
+    zz_stallAndWaitL1RequestQueue;
   }
 
   transition(IM, {L1_GETX, L1_GETS, L1_GET_INSTR}) {
-    zz_recycleL1RequestQueue;
+    zz_stallAndWaitL1RequestQueue;
   }
 
   // transitions from SS
@@ -1018,30 +1023,35 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   // transitions from blocking states
   transition(SS_MB, Unblock_Cancel, SS) {
     k_popUnblockQueue;
+    kd_wakeUpDependents;
   }
 
   transition(MT_MB, Unblock_Cancel, MT) {
     k_popUnblockQueue;
+    kd_wakeUpDependents;
   }
 
   transition(MT_IB, Unblock_Cancel, MT) {
     k_popUnblockQueue;
+    kd_wakeUpDependents;
   }
 
   transition(SS_MB, Exclusive_Unblock, MT) {
     // update actual directory
     mmu_markExclusiveFromUnblock;
     k_popUnblockQueue;
+    kd_wakeUpDependents;
   }
 
   transition({M_MB, MT_MB}, Exclusive_Unblock, MT) {
     // update actual directory
     mmu_markExclusiveFromUnblock;
     k_popUnblockQueue;
+    kd_wakeUpDependents;
   }
   
   transition(MT_IIB, {L1_PUTX, L1_PUTX_old}){
-    zz_recycleL1RequestQueue;
+    zz_stallAndWaitL1RequestQueue;
   }
 
   transition(MT_IIB, Unblock, MT_IB) {
@@ -1057,16 +1067,18 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   transition(MT_IB, {WB_Data, WB_Data_clean}, SS) {
     m_writeDataToCache;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(MT_SB, Unblock, SS) {
     nnu_addSharerFromUnblock;
     k_popUnblockQueue;
+    kd_wakeUpDependents;
   }
 
   // writeback states
   transition({I_I, S_I, MT_I, MCT_I, M_I}, {L1_GETX, L1_UPGRADE, L1_GETS, L1_GET_INSTR}) {
-    zz_recycleL1RequestQueue;
+    zz_stallAndWaitL1RequestQueue;
   }
 
   transition(I_I, Ack) {
@@ -1091,7 +1103,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition(MCT_I,  {L1_PUTX, L1_PUTX_old}){
-    zz_recycleL1RequestQueue; 
+    zz_stallAndWaitL1RequestQueue; 
   }
   
   // L1 never changed Dirty data
@@ -1101,17 +1113,18 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   transition(MT_I, {L1_PUTX, L1_PUTX_old}){
-    zz_recycleL1RequestQueue; 
+    zz_stallAndWaitL1RequestQueue; 
   }
 
   // possible race between unblock and immediate replacement
   transition({MT_MB,SS_MB}, {L1_PUTX, L1_PUTX_old}) {
-    zz_recycleL1RequestQueue;
+    zz_stallAndWaitL1RequestQueue;
   }
 
   transition(MT_I, WB_Data_clean, NP) {
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(S_I, Ack) {
@@ -1127,5 +1140,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   transition(M_I, Mem_Ack, NP) {
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 }

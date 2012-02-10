@@ -136,6 +136,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   void unset_cache_entry();
   void set_tbe(TBE a);
   void unset_tbe();
+  void wakeUpBuffers(Address a);
 
   // inclusive cache returns L1 entries only
   Entry getCacheEntry(Address addr), return_by_pointer="yes" {
@@ -230,7 +231,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   out_port(unblockNetwork_out, ResponseMsg, unblockFromL1Cache);
 
   // Response IntraChip L1 Network - response msg to this L1 cache
-  in_port(responseIntraChipL1Network_in, ResponseMsg, responseToL1Cache) {
+  in_port(responseIntraChipL1Network_in, ResponseMsg, responseToL1Cache, rank = 2) {
     if (responseIntraChipL1Network_in.isReady()) {
       peek(responseIntraChipL1Network_in, ResponseMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
@@ -268,7 +269,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Request InterChip network - request from this L1 cache to the shared L2
-  in_port(requestIntraChipL1Network_in, RequestMsg, requestToL1Cache) {
+  in_port(requestIntraChipL1Network_in, RequestMsg, requestToL1Cache, rank = 1) {
     if(requestIntraChipL1Network_in.isReady()) {
       peek(requestIntraChipL1Network_in, RequestMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
@@ -293,7 +294,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Mandatory Queue betweens Node's CPU and it's L1 caches
-  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...", rank = 0) {
     if (mandatoryQueue_in.isReady()) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 
@@ -653,9 +654,6 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
-  action(z_stall, "z", desc="Stall") {
-  }
-
   action(ff_deallocateL1CacheBlock, "\f", desc="Deallocate L1 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
     if (L1DcacheMemory.isTagPresent(address)) {
       L1DcacheMemory.deallocate(address);
@@ -677,12 +675,12 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
-  action(zz_recycleRequestQueue, "zz", desc="recycle L1 request queue") {
-    requestIntraChipL1Network_in.recycle();
+  action(z_stallAndWaitMandatoryQueue, "\z", desc="recycle L1 request queue") {
+    stall_and_wait(mandatoryQueue_in, address);
   }
 
-  action(z_recycleMandatoryQueue, "\z", desc="recycle L1 request queue") {
-    mandatoryQueue_in.recycle();
+  action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
+    wakeUpBuffers(address);
   }
 
   action(uu_profileInstMiss, "\ui", desc="Profile the demand miss") {
@@ -702,8 +700,8 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({IS, IM, IS_I, M_I, SM}, {Load, Ifetch, Store, L1_Replacement}) {
-    z_recycleMandatoryQueue;
+  transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK}, {Load, Ifetch, Store, L1_Replacement}) {
+    z_stallAndWaitMandatoryQueue;
   }
 
   // Transitions from Idle
@@ -824,6 +822,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
   transition(M_I, WB_Ack, I) {
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(M, Inv, I) {
@@ -871,6 +870,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS_I, Data_all_Acks, I) {
@@ -878,6 +878,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS, DataS_fromL1, S) {
@@ -886,6 +887,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS_I, DataS_fromL1, I) {
@@ -894,6 +896,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     h_load_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   // directory is blocked when sending exclusive data
@@ -903,6 +906,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     jj_sendExclusiveUnblock;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   transition(IS, Data_Exclusive, E) {
@@ -911,6 +915,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     jj_sendExclusiveUnblock;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   // Transitions from IM
@@ -931,6 +936,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     jj_sendExclusiveUnblock;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 
   // transitions from SM
@@ -944,10 +950,7 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     hh_store_hit;
     s_deallocateTBE;
     o_popIncomingResponseQueue;
-  }
-
-  transition(SINK_WB_ACK, {Load, Store, Ifetch, L1_Replacement}){
-      z_recycleMandatoryQueue;
+    kd_wakeUpDependents;
   }
 
   transition(SINK_WB_ACK, Inv){
@@ -955,8 +958,9 @@ machine(L1Cache, "MESI Directory L1 Cache CMP")
     l_popRequestQueue;
   }
 
-  transition(SINK_WB_ACK, WB_Ack){
+  transition(SINK_WB_ACK, WB_Ack, I){
     s_deallocateTBE;
     o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
   }
 }
