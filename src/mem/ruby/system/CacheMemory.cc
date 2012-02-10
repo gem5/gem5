@@ -339,12 +339,12 @@ CacheMemory::lookup(const Address& address) const
 void
 CacheMemory::setMRU(const Address& address)
 {
-    Index cacheSet;
+    Index cacheSet = addressToCacheSet(address);
+    int loc = findTagInSet(cacheSet, address);
 
-    cacheSet = addressToCacheSet(address);
-    m_replacementPolicy_ptr->
-        touch(cacheSet, findTagInSet(cacheSet, address),
-              g_eventQueue_ptr->getTime());
+    if(loc != -1)
+        m_replacementPolicy_ptr->
+             touch(cacheSet, loc, g_eventQueue_ptr->getTime());
 }
 
 void

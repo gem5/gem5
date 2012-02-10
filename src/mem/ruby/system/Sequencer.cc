@@ -482,11 +482,9 @@ Sequencer::hitCallback(SequencerRequest* srequest,
 
     // Set this cache entry to the most recently used
     if (type == RubyRequestType_IFETCH) {
-        if (m_instCache_ptr->isTagPresent(request_line_address))
-            m_instCache_ptr->setMRU(request_line_address);
+        m_instCache_ptr->setMRU(request_line_address);
     } else {
-        if (m_dataCache_ptr->isTagPresent(request_line_address))
-            m_dataCache_ptr->setMRU(request_line_address);
+        m_dataCache_ptr->setMRU(request_line_address);
     }
 
     assert(g_eventQueue_ptr->getTime() >= issued_time);
