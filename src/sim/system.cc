@@ -77,6 +77,7 @@ System::System(Params *p)
     : MemObject(p), _systemPort("system_port", this),
       physmem(p->physmem),
       _numContexts(0),
+      pagePtr(0),
       init_param(p->init_param),
       loadAddrMask(p->load_addr_mask),
       nextPID(0),
