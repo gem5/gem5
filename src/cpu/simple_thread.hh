@@ -137,8 +137,8 @@ class SimpleThread : public ThreadState
                  TheISA::TLB *_itb, TheISA::TLB *_dtb,
                  bool use_kernel_stats = true);
     // SE
-    SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                 TheISA::TLB *_itb, TheISA::TLB *_dtb);
+    SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
+                 Process *_process, TheISA::TLB *_itb, TheISA::TLB *_dtb);
 
     SimpleThread();
 

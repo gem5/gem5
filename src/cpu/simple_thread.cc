@@ -59,9 +59,11 @@
 using namespace std;
 
 // constructor
-SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                           TheISA::TLB *_itb, TheISA::TLB *_dtb)
-    : ThreadState(_cpu, _thread_num, _process), itb(_itb), dtb(_dtb)
+SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
+                           Process *_process, TheISA::TLB *_itb,
+                           TheISA::TLB *_dtb)
+    : ThreadState(_cpu, _thread_num, _process), system(_sys), itb(_itb),
+      dtb(_dtb)
 {
     clearArchRegs();
     tc = new ProxyThreadContext<SimpleThread>(this);
