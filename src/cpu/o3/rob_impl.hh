@@ -544,3 +544,14 @@ ROB<Impl>::regStats()
         .desc("The number of ROB writes");
 }
 
+template <class Impl>
+typename Impl::DynInstPtr
+ROB<Impl>::findInst(ThreadID tid, InstSeqNum squash_inst)
+{
+    for (InstIt it = instList[tid].begin(); it != instList[tid].end(); it++) {
+        if ((*it)->seqNum == squash_inst) {
+            return *it;
+        }
+    }
+    return NULL;
+}

@@ -856,7 +856,8 @@ DefaultCommit<Impl>::commit()
                 fromIEW->mispredictInst[tid];
             toIEW->commitInfo[tid].branchTaken =
                 fromIEW->branchTaken[tid];
-            toIEW->commitInfo[tid].squashInst = NULL;
+            toIEW->commitInfo[tid].squashInst =
+                                    rob->findInst(tid, squashed_inst);
 
             toIEW->commitInfo[tid].pc = fromIEW->pc[tid];
 

@@ -1189,8 +1189,15 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         // StaticInst from the rom, the current macroop, or what's already
         // in the predecoder.
         bool needMem = !inRom && !curMacroop && !predecoder.extMachInstReady();
+        fetchAddr = (thisPC.instAddr() + pcOffset) & BaseCPU::PCMask;
+        Addr block_PC = icacheBlockAlignPC(fetchAddr);
 
         if (needMem) {
+            // If buffer is no longer valid or fetchAddr has moved to point
+            // to the next cache block then start fetch from icache.
+            if (!cacheDataValid[tid] || block_PC != cacheDataPC[tid])
+                break;
+
             if (blkOffset >= numInsts) {
                 // We need to process more memory, but we've run out of the
                 // current block.
