@@ -71,7 +71,7 @@ class ISA
                             // on the previous level)
     uint64_t tba;           // Trap Base Address
 
-    uint16_t pstate;        // Process State Register
+    PSTATE pstate;        // Process State Register
     uint8_t tl;             // Trap Level
     uint8_t pil;            // Process Interrupt Register
     uint8_t cwp;            // Current Window Pointer
@@ -83,7 +83,7 @@ class ISA
     uint8_t gl;             // Global level register
 
     /** Hyperprivileged Registers */
-    uint64_t hpstate;       // Hyperprivileged State Register
+    HPSTATE hpstate;       // Hyperprivileged State Register
     uint64_t htstate[MaxTL];// Hyperprivileged Trap State Register
     uint64_t hintp;
     uint64_t htba;          // Hyperprivileged Trap Base Address register
@@ -172,8 +172,8 @@ class ISA
 
   protected:
 
-    bool isHyperPriv() { return (hpstate & (1 << 2)); }
-    bool isPriv() { return (hpstate & (1 << 2)) || (pstate & (1 << 2)); }
+    bool isHyperPriv() { return hpstate.hpriv; }
+    bool isPriv() { return hpstate.hpriv || pstate.priv; }
     bool isNonPriv() { return !isPriv(); }
 
   public:

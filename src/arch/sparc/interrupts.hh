@@ -127,17 +127,16 @@ class Interrupts : public SimObject
     Fault
     getInterrupt(ThreadContext *tc)
     {
-        int hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-        int pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-        bool ie = pstate & PSTATE::ie;
+        HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+        PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
 
         // THESE ARE IN ORDER OF PRIORITY
         // since there are early returns, and the highest
         // priority interrupts should get serviced,
         // it is v. important that new interrupts are inserted
         // in the right order of processing
-        if (hpstate & HPSTATE::hpriv) {
-            if (ie) {
+        if (hpstate.hpriv) {
+            if (pstate.ie) {
                 if (interrupts[IT_HINTP]) {
                     // This will be cleaned by a HINTP write
                     return new HstickMatch;
@@ -160,7 +159,7 @@ class Interrupts : public SimObject
                 // this will be cleared by an ASI read (or write)
                 return new InterruptVector;
             }
-            if (ie) {
+            if (pstate.ie) {
                 if (interrupts[IT_CPU_MONDO]) {
                     return new CpuMondo;
                 }
@@ -175,7 +174,7 @@ class Interrupts : public SimObject
                 if (interrupts[IT_RES_ERROR]) {
                     return new ResumableError;
                 }
-            } // !hpriv && ie
+            } // !hpriv && pstate.ie
         }  // !hpriv
         return NoFault;
     }

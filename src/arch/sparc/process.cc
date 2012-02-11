@@ -161,7 +161,10 @@ Sparc32LiveProcess::initState()
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     // The process runs in user mode with 32 bit addresses
-    tc->setMiscReg(MISCREG_PSTATE, 0x0a);
+    PSTATE pstate = 0;
+    pstate.ie = 1;
+    pstate.am = 1;
+    tc->setMiscReg(MISCREG_PSTATE, pstate);
 
     argsInit(32 / 8, VMPageSize);
 }
@@ -173,7 +176,9 @@ Sparc64LiveProcess::initState()
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     // The process runs in user mode
-    tc->setMiscReg(MISCREG_PSTATE, 0x02);
+    PSTATE pstate = 0;
+    pstate.ie = 1;
+    tc->setMiscReg(MISCREG_PSTATE, pstate);
 
     argsInit(sizeof(IntReg), VMPageSize);
 }
@@ -533,27 +538,22 @@ SparcLiveProcess::setSyscallReturn(ThreadContext *tc,
     // check for error condition.  SPARC syscall convention is to
     // indicate success/failure in reg the carry bit of the ccr
     // and put the return value itself in the standard return value reg ().
+    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     if (return_value.successful()) {
         // no error, clear XCC.C
         tc->setIntReg(NumIntArchRegs + 2,
                 tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
-        // tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) & 0xEE);
         IntReg val = return_value.value();
-        if (bits(tc->readMiscRegNoEffect(
-                        SparcISA::MISCREG_PSTATE), 3, 3)) {
+        if (pstate.am)
             val = bits(val, 31, 0);
-        }
         tc->setIntReg(ReturnValueReg, val);
     } else {
         // got an error, set XCC.C
         tc->setIntReg(NumIntArchRegs + 2,
                 tc->readIntReg(NumIntArchRegs + 2) | 0x11);
-        // tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) | 0x11);
         IntReg val = -return_value.value();
-        if (bits(tc->readMiscRegNoEffect(
-                        SparcISA::MISCREG_PSTATE), 3, 3)) {
+        if (pstate.am)
             val = bits(val, 31, 0);
-        }
         tc->setIntReg(ReturnValueReg, val);
     }
 }

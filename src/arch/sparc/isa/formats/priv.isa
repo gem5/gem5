@@ -264,7 +264,7 @@ let {{
 }};
 
 def format Priv(code, extraCond=true, checkTl=false, *opt_flags) {{
-        checkCode = "(%s) && !(Pstate<2:> || Hpstate<2:>)" % extraCond
+        checkCode = "(%s) && !(Pstate.priv || Hpstate.hpriv)" % extraCond
         if checkTl != "false":
             tlCheck = "Tl == 0"
         else:
@@ -289,7 +289,7 @@ def format NoPriv(code, checkTl=false, *opt_flags) {{
 }};
 
 def format HPriv(code, checkTl=false, *opt_flags) {{
-        checkCode = "!Hpstate<2:2>"
+        checkCode = "!Hpstate.hpriv"
         if checkTl != "false":
             tlCheck = "Tl == 0"
         else:

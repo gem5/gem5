@@ -181,9 +181,9 @@ RemoteGDB::getregs()
     memset(gdbregs.regs, 0, gdbregs.size);
 
     PCState pc = context->pcState();
+    PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
 
-    if (context->readMiscReg(MISCREG_PSTATE) &
-           PSTATE::am) {
+    if (pstate.am) {
         uint32_t *regs;
         regs = (uint32_t*)gdbregs.regs;
         regs[Reg32Pc] = htobe((uint32_t)pc.pc());
@@ -192,7 +192,7 @@ RemoteGDB::getregs()
             regs[x] = htobe((uint32_t)context->readIntReg(x - RegG0));
 
         regs[Reg32Y] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 1));
-        regs[Reg32Psr] = htobe((uint32_t)context->readMiscReg(MISCREG_PSTATE));
+        regs[Reg32Psr] = htobe((uint32_t)pstate);
         regs[Reg32Fsr] = htobe((uint32_t)context->readMiscReg(MISCREG_FSR));
         regs[Reg32Csr] = htobe((uint32_t)context->readIntReg(NumIntArchRegs + 2));
     } else {
@@ -206,7 +206,7 @@ RemoteGDB::getregs()
         gdbregs.regs[RegY] = htobe(context->readIntReg(NumIntArchRegs + 1));
         gdbregs.regs[RegState] = htobe(
             context->readMiscReg(MISCREG_CWP) |
-            context->readMiscReg(MISCREG_PSTATE) << 8 |
+            pstate << 8 |
             context->readMiscReg(MISCREG_ASI) << 24 |
             context->readIntReg(NumIntArchRegs + 2) << 32);
     }

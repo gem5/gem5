@@ -139,7 +139,7 @@ decode OP default Unknown::unknown()
     }
     0x1: BranchN::call(30, {{
             IntReg midVal;
-            R15 = midVal = (Pstate<3:> ? (PC)<31:0> : PC);
+            R15 = midVal = (Pstate.am ? (PC)<31:0> : PC);
             NNPC = midVal + disp;
     }},None, None, IsIndirectControl, IsCall);
     0x2: decode OP3 {
@@ -327,7 +327,7 @@ decode OP default Unknown::unknown()
                 0x03: NoPriv::rdasi({{Rd = Asi;}});
                 0x04: Priv::rdtick({{Rd = Tick;}}, {{Tick<63:>}});
                 0x05: NoPriv::rdpc({{
-                    if (Pstate<3:>)
+                    if (Pstate.am)
                         Rd = (PC)<31:0>;
                     else
                         Rd = PC;
@@ -356,7 +356,7 @@ decode OP default Unknown::unknown()
                 0x18: Priv::rdstick({{Rd = Stick}}, {{Stick<63:>}});
                 0x19: Priv::rdstick_cmpr({{Rd = StickCmpr;}});
                 0x1A: Priv::rdstrand_sts_reg({{
-                    if (Pstate<2:> && !Hpstate<2:>)
+                    if (Pstate.am && !Hpstate.hpriv)
                         Rd = StrandStsReg<0:>;
                     else
                         Rd = StrandStsReg;
@@ -479,7 +479,7 @@ decode OP default Unknown::unknown()
                 0x11: Priv::wrpic({{Pic = Rs1 ^ Rs2_or_imm13;}}, {{Pcr<0:>}});
                 // 0x12 should cause an illegal instruction exception
                 0x13: NoPriv::wrgsr({{
-                    if (Fprs<2:> == 0 || Pstate<4:> == 0)
+                    if (Fprs<2:> == 0 || Pstate.pef == 0)
                         return new FpDisabled;
                     Gsr = Rs1 ^ Rs2_or_imm13;
                 }});
@@ -488,7 +488,7 @@ decode OP default Unknown::unknown()
                 0x16: Priv::wrsoftint({{Softint = Rs1 ^ Rs2_or_imm13;}});
                 0x17: Priv::wrtick_cmpr({{TickCmpr = Rs1 ^ Rs2_or_imm13;}});
                 0x18: NoPriv::wrstick({{
-                    if (!Hpstate<2:>)
+                    if (!Hpstate.hpriv)
                         return new IllegalInstruction;
                     Stick = Rs1 ^ Rs2_or_imm13;
                 }});
@@ -536,7 +536,7 @@ decode OP default Unknown::unknown()
                 0x05: Priv::wrprtba({{Tba = Rs1 ^ Rs2_or_imm13;}});
                 0x06: Priv::wrprpstate({{Pstate = Rs1 ^ Rs2_or_imm13;}});
                 0x07: Priv::wrprtl({{
-                    if (Pstate<2:> && !Hpstate<2:>)
+                    if (Pstate.priv && !Hpstate.hpriv)
                         Tl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxPTL);
                     else
                         Tl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxTL);
@@ -550,7 +550,7 @@ decode OP default Unknown::unknown()
                 0x0E: Priv::wrprwstate({{Wstate = Rs1 ^ Rs2_or_imm13;}});
                 // 0x0F should cause an illegal instruction exception
                 0x10: Priv::wrprgl({{
-                    if (Pstate<2:> && !Hpstate<2:>)
+                    if (Pstate.priv && !Hpstate.hpriv)
                         Gl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxPGL);
                     else
                         Gl = std::min<uint64_t>(Rs1 ^ Rs2_or_imm13, MaxGL);
@@ -997,7 +997,7 @@ decode OP default Unknown::unknown()
                 if (target & 0x3) {
                     fault = new MemAddressNotAligned;
                 } else {
-                    if (Pstate<3:>)
+                    if (Pstate.am)
                         Rd = (PC)<31:0>;
                     else
                         Rd = PC;

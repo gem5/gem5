@@ -276,17 +276,15 @@ enterREDState(ThreadContext *tc)
 {
     //@todo Disable the mmu?
     //@todo Disable watchpoints?
-    MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    // HPSTATE.red = 1
-    HPSTATE |= (1 << 5);
-    // HPSTATE.hpriv = 1
-    HPSTATE |= (1 << 2);
-    tc->setMiscReg(MISCREG_HPSTATE, HPSTATE);
+    HPSTATE hpstate= tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+    hpstate.red = 1;
+    hpstate.hpriv = 1;
+    tc->setMiscReg(MISCREG_HPSTATE, hpstate);
     // PSTATE.priv is set to 1 here. The manual says it should be 0, but
     // Legion sets it to 1.
-    MiscReg PSTATE = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-    PSTATE |= (1 << 2);
-    tc->setMiscReg(MISCREG_PSTATE, PSTATE);
+    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
+    pstate.priv = 1;
+    tc->setMiscReg(MISCREG_PSTATE, pstate);
 }
 
 /**
@@ -299,8 +297,8 @@ doREDFault(ThreadContext *tc, TrapType tt)
 {
     MiscReg TL = tc->readMiscRegNoEffect(MISCREG_TL);
     MiscReg TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
-    MiscReg PSTATE = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-    MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
+    HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
     MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
     MiscReg ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
     MiscReg CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
@@ -310,7 +308,7 @@ doREDFault(ThreadContext *tc, TrapType tt)
 
     TL++;
 
-    Addr pcMask = bits(PSTATE, 3) ? mask(32) : mask(64);
+    Addr pcMask = pstate.am ? mask(32) : mask(64);
 
     // set TSTATE.gl to gl
     replaceBits(TSTATE, 42, 40, GL);
@@ -319,7 +317,7 @@ doREDFault(ThreadContext *tc, TrapType tt)
     // set TSTATE.asi to asi
     replaceBits(TSTATE, 31, 24, ASI);
     // set TSTATE.pstate to pstate
-    replaceBits(TSTATE, 20, 8, PSTATE);
+    replaceBits(TSTATE, 20, 8, pstate);
     // set TSTATE.cwp to cwp
     replaceBits(TSTATE, 4, 0, CWP);
 
@@ -332,7 +330,7 @@ doREDFault(ThreadContext *tc, TrapType tt)
     tc->setMiscRegNoEffect(MISCREG_TNPC, pc.npc() & pcMask);
 
     // set HTSTATE.hpstate to hpstate
-    tc->setMiscRegNoEffect(MISCREG_HTSTATE, HPSTATE);
+    tc->setMiscRegNoEffect(MISCREG_HTSTATE, hpstate);
 
     // TT = trap type;
     tc->setMiscRegNoEffect(MISCREG_TT, tt);
@@ -340,19 +338,17 @@ doREDFault(ThreadContext *tc, TrapType tt)
     // Update GL
     tc->setMiscReg(MISCREG_GL, min<int>(GL+1, MaxGL));
 
-    PSTATE = mbits(PSTATE, 2, 2); // just save the priv bit
-    PSTATE |= (1 << 4); // set PSTATE.pef to 1
-    tc->setMiscRegNoEffect(MISCREG_PSTATE, PSTATE);
+    bool priv = pstate.priv; // just save the priv bit
+    pstate = 0;
+    pstate.priv = priv;
+    pstate.pef = 1;
+    tc->setMiscRegNoEffect(MISCREG_PSTATE, pstate);
 
-    // set HPSTATE.red to 1
-    HPSTATE |= (1 << 5);
-    // set HPSTATE.hpriv to 1
-    HPSTATE |= (1 << 2);
-    // set HPSTATE.ibe to 0
-    HPSTATE &= ~(1 << 10);
-    // set HPSTATE.tlz to 0
-    HPSTATE &= ~(1 << 0);
-    tc->setMiscRegNoEffect(MISCREG_HPSTATE, HPSTATE);
+    hpstate.red = 1;
+    hpstate.hpriv = 1;
+    hpstate.ibe = 0;
+    hpstate.tlz = 0;
+    tc->setMiscRegNoEffect(MISCREG_HPSTATE, hpstate);
 
     bool changedCWP = true;
     if (tt == 0x24)
@@ -380,8 +376,8 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 {
     MiscReg TL = tc->readMiscRegNoEffect(MISCREG_TL);
     MiscReg TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
-    MiscReg PSTATE = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-    MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
+    HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
     MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
     MiscReg ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
     MiscReg CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
@@ -393,7 +389,7 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     TL++;
     tc->setMiscRegNoEffect(MISCREG_TL, TL);
 
-    Addr pcMask = bits(PSTATE, 3) ? mask(32) : mask(64);
+    Addr pcMask = pstate.am ? mask(32) : mask(64);
 
     // Save off state
 
@@ -404,7 +400,7 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     // set TSTATE.asi to asi
     replaceBits(TSTATE, 31, 24, ASI);
     // set TSTATE.pstate to pstate
-    replaceBits(TSTATE, 20, 8, PSTATE);
+    replaceBits(TSTATE, 20, 8, pstate);
     // set TSTATE.cwp to cwp
     replaceBits(TSTATE, 4, 0, CWP);
 
@@ -417,7 +413,7 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     tc->setMiscRegNoEffect(MISCREG_TNPC, pc.npc() & pcMask);
 
     // set HTSTATE.hpstate to hpstate
-    tc->setMiscRegNoEffect(MISCREG_HTSTATE, HPSTATE);
+    tc->setMiscRegNoEffect(MISCREG_HTSTATE, hpstate);
 
     // TT = trap type;
     tc->setMiscRegNoEffect(MISCREG_TT, tt);
@@ -428,26 +424,26 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
     else
         tc->setMiscReg(MISCREG_GL, min<int>(GL + 1, MaxGL));
 
-    // PSTATE.mm is unchanged
-    PSTATE |= (1 << 4); // PSTATE.pef = whether or not an fpu is present
-    PSTATE &= ~(1 << 3); // PSTATE.am = 0
-    PSTATE &= ~(1 << 1); // PSTATE.ie = 0
-    // PSTATE.tle is unchanged
-    // PSTATE.tct = 0
+    // pstate.mm is unchanged
+    pstate.pef = 1; // PSTATE.pef = whether or not an fpu is present
+    pstate.am = 0;
+    pstate.ie = 0;
+    // pstate.tle is unchanged
+    // pstate.tct = 0
 
     if (gotoHpriv) {
-        PSTATE &= ~(1 << 9); // PSTATE.cle = 0
+        pstate.cle = 0;
         // The manual says PSTATE.priv should be 0, but Legion leaves it alone
-        HPSTATE &= ~(1 << 5); // HPSTATE.red = 0
-        HPSTATE |= (1 << 2); // HPSTATE.hpriv = 1
-        HPSTATE &= ~(1 << 10); // HPSTATE.ibe = 0
-        // HPSTATE.tlz is unchanged
-        tc->setMiscRegNoEffect(MISCREG_HPSTATE, HPSTATE);
+        hpstate.red = 0;
+        hpstate.hpriv = 1;
+        hpstate.ibe = 0;
+        // hpstate.tlz is unchanged
+        tc->setMiscRegNoEffect(MISCREG_HPSTATE, hpstate);
     } else { // we are going to priv
-        PSTATE |= (1 << 2); // PSTATE.priv = 1
-        replaceBits(PSTATE, 9, 9, PSTATE >> 8); // PSTATE.cle = PSTATE.tle
+        pstate.priv = 1;
+        pstate.cle = pstate.tle;
     }
-    tc->setMiscRegNoEffect(MISCREG_PSTATE, PSTATE);
+    tc->setMiscRegNoEffect(MISCREG_PSTATE, pstate);
 
 
     bool changedCWP = true;
@@ -506,22 +502,22 @@ SparcFaultBase::invoke(ThreadContext * tc, StaticInstPtr inst)
     // in the middle could change it in the regfile out from under us.
     MiscReg tl = tc->readMiscRegNoEffect(MISCREG_TL);
     MiscReg tt = tc->readMiscRegNoEffect(MISCREG_TT);
-    MiscReg pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
-    MiscReg hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
+    HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
 
     Addr PC, NPC;
 
     PrivilegeLevel current;
-    if (hpstate & HPSTATE::hpriv)
+    if (hpstate.hpriv)
         current = Hyperprivileged;
-    else if (pstate & PSTATE::priv)
+    else if (pstate.priv)
         current = Privileged;
     else
         current = User;
 
     PrivilegeLevel level = getNextLevel(current);
 
-    if ((hpstate & HPSTATE::red) || (tl == MaxTL - 1)) {
+    if (hpstate.red || (tl == MaxTL - 1)) {
         getREDVector(5, PC, NPC);
         doREDFault(tc, tt);
         // This changes the hpstate and pstate, so we need to make sure we
@@ -565,20 +561,18 @@ PowerOnReset::invoke(ThreadContext *tc, StaticInstPtr inst)
     tc->setMiscRegNoEffect(MISCREG_TT, trapType());
     tc->setMiscReg(MISCREG_GL, MaxGL);
 
-    // Turn on pef and priv, set everything else to 0
-    tc->setMiscRegNoEffect(MISCREG_PSTATE, (1 << 4) | (1 << 2));
+    PSTATE pstate = 0;
+    pstate.pef = 1;
+    pstate.priv = 1;
+    tc->setMiscRegNoEffect(MISCREG_PSTATE, pstate);
 
     // Turn on red and hpriv, set everything else to 0
-    MiscReg HPSTATE = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    // HPSTATE.red = 1
-    HPSTATE |= (1 << 5);
-    // HPSTATE.hpriv = 1
-    HPSTATE |= (1 << 2);
-    // HPSTATE.ibe = 0
-    HPSTATE &= ~(1 << 10);
-    // HPSTATE.tlz = 0
-    HPSTATE &= ~(1 << 0);
-    tc->setMiscRegNoEffect(MISCREG_HPSTATE, HPSTATE);
+    HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+    hpstate.red = 1;
+    hpstate.hpriv = 1;
+    hpstate.ibe = 0;
+    hpstate.tlz = 0;
+    tc->setMiscRegNoEffect(MISCREG_HPSTATE, hpstate);
 
     // The tick register is unreadable by nonprivileged software
     tc->setMiscRegNoEffect(MISCREG_TICK, 1ULL << 63);

@@ -317,17 +317,17 @@ let {{
     # are split into ones that are available in priv and hpriv, and
     # those that are only available in hpriv
     AlternateASIPrivFaultCheck = '''
-        if ((!bits(Pstate,2,2) && !bits(Hpstate,2,2) &&
+        if ((!Pstate.priv && !Hpstate.hpriv &&
              !asiIsUnPriv((ASI)EXT_ASI)) ||
-            (!bits(Hpstate,2,2) && asiIsHPriv((ASI)EXT_ASI)))
+            (!Hpstate.hpriv && asiIsHPriv((ASI)EXT_ASI)))
             fault = new PrivilegedAction;
-        else if (asiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
+        else if (asiIsAsIfUser((ASI)EXT_ASI) && !Pstate.priv)
             fault = new PrivilegedAction;
     '''
 
     TruncateEA = '''
         if (!FullSystem)
-            EA = Pstate<3:> ? EA<31:0> : EA;
+            EA = Pstate.am ? EA<31:0> : EA;
     '''
 }};
 

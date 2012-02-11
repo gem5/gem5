@@ -32,6 +32,7 @@
 #ifndef __ARCH_SPARC_MISCREGS_HH__
 #define __ARCH_SPARC_MISCREGS_HH__
 
+#include "base/bitunion.hh"
 #include "base/types.hh"
 
 namespace SparcISA
@@ -115,26 +116,25 @@ enum MiscRegIndex
     MISCREG_NUMMISCREGS
 };
 
-struct HPSTATE
-{
-    const static uint64_t id = 0x800;   // this impl. dependent (id) field m
-    const static uint64_t ibe = 0x400;
-    const static uint64_t red = 0x20;
-    const static uint64_t hpriv = 0x4;
-    const static uint64_t tlz = 0x1;
-};
+BitUnion64(HPSTATE)
+    Bitfield<0> tlz;
+    Bitfield<2> hpriv;
+    Bitfield<5> red;
+    Bitfield<10> ibe;
+    Bitfield<11> id;  // this impl. dependent (id) field m
+EndBitUnion(HPSTATE)
 
-
-struct PSTATE
-{
-    const static int cle = 0x200;
-    const static int tle = 0x100;
-    const static int mm = 0xC0;
-    const static int pef = 0x10;
-    const static int am = 0x8;
-    const static int priv = 0x4;
-    const static int ie = 0x2;
-};
+BitUnion16(PSTATE)
+    Bitfield<1> ie;
+    Bitfield<2> priv;
+    Bitfield<3> am;
+    Bitfield<4> pef;
+    Bitfield<6, 7> mm;
+    Bitfield<8> tle;
+    Bitfield<9> cle;
+    Bitfield<10> pid0;
+    Bitfield<11> pid1;
+EndBitUnion(PSTATE)
 
 struct STS
 {

@@ -206,13 +206,18 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         break;
 
       case MISCREG_HPSTATE:
-        // T1000 spec says impl. dependent val must always be 1
-        setMiscRegNoEffect(miscReg, val | HPSTATE::id);
-        if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
-            cpu->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
-        else
-            cpu->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
-        break;
+        {
+            HPSTATE newVal = val;
+            newVal.id = 1;
+            // T1000 spec says impl. dependent val must always be 1
+            setMiscRegNoEffect(miscReg, newVal);
+            newVal = hpstate;
+            if (newVal.tlz && tl == 0 && !newVal.hpriv)
+                cpu->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
+            else
+                cpu->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
+            break;
+        }
       case MISCREG_HTSTATE:
         setMiscRegNoEffect(miscReg, val);
         break;

@@ -40,10 +40,22 @@
 namespace SparcISA
 {
 
-enum RegMask
+static PSTATE
+buildPstateMask()
 {
-    PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
-};
+    PSTATE mask = 0;
+    mask.ie = 1;
+    mask.priv = 1;
+    mask.am = 1;
+    mask.pef = 1;
+    mask.mm = 3;
+    mask.tle = 1;
+    mask.cle = 1;
+    mask.pid1 = 1;
+    return mask;
+}
+
+static const PSTATE PstateMask = buildPstateMask();
 
 void
 ISA::reloadRegMap()
@@ -110,7 +122,8 @@ ISA::clear()
     // otherwin = 0;
     // wstate = 0;
     // In a T1, bit 11 is apparently always 1
-    hpstate = (1 << 11);
+    hpstate = 0;
+    hpstate.id = 1;
     memset(htstate, 0, sizeof(htstate));
     hintp = 0;
     htba = 0;
@@ -163,9 +176,10 @@ ISA::readMiscRegNoEffect(int miscReg)
      *                                                           |^lsuim
      *                                                           ^lsudm
      */
-    return bits((uint64_t)hpstate,2,2) |
-           bits((uint64_t)hpstate,5,5) << 1 |
-           bits((uint64_t)pstate,3,2) << 2 |
+    return      (uint64_t)hpstate.hpriv |
+                (uint64_t)hpstate.red << 1 |
+                (uint64_t)pstate.priv << 2 |
+                (uint64_t)pstate.am << 3 |
            bits((uint64_t)lsuCtrlReg,3,2) << 4 |
            bits((uint64_t)partId,7,0) << 8 |
            bits((uint64_t)tl,2,0) << 16 |
@@ -215,7 +229,7 @@ ISA::readMiscRegNoEffect(int miscReg)
       case MISCREG_TBA:
         return tba;
       case MISCREG_PSTATE:
-        return pstate;
+        return (MiscReg)pstate;
       case MISCREG_TL:
         return tl;
       case MISCREG_PIL:
@@ -238,7 +252,7 @@ ISA::readMiscRegNoEffect(int miscReg)
 
         /** Hyper privileged registers */
       case MISCREG_HPSTATE:
-        return hpstate;
+        return (MiscReg)hpstate;
       case MISCREG_HTSTATE:
         return htstate[tl-1];
       case MISCREG_HINTP:
@@ -408,7 +422,7 @@ ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
         tba = val & ULL(~0x7FFF);
         break;
       case MISCREG_PSTATE:
-        pstate = (val & PSTATE_MASK);
+        pstate = (val & PstateMask);
         break;
       case MISCREG_TL:
         tl = val;
@@ -550,15 +564,17 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
         // Set up performance counting based on pcr value
         break;
       case MISCREG_PSTATE:
-        pstate = val & PSTATE_MASK;
+        pstate = val & PstateMask;
         return;
       case MISCREG_TL:
-        tl = val;
-        if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
-            tc->getCpuPtr()->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
-        else
-            tc->getCpuPtr()->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
-        return;
+        {
+            tl = val;
+            if (hpstate.tlz && tl == 0 && !hpstate.hpriv)
+                tc->getCpuPtr()->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
+            else
+                tc->getCpuPtr()->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
+            return;
+        }
       case MISCREG_CWP:
         new_val = val >= NWindows ? NWindows - 1 : val;
         if (val >= NWindows)
@@ -616,12 +632,12 @@ ISA::serialize(EventManager *em, std::ostream &os)
     SERIALIZE_ARRAY(tstate,MaxTL);
     SERIALIZE_ARRAY(tt,MaxTL);
     SERIALIZE_SCALAR(tba);
-    SERIALIZE_SCALAR(pstate);
+    SERIALIZE_SCALAR((uint16_t)pstate);
     SERIALIZE_SCALAR(tl);
     SERIALIZE_SCALAR(pil);
     SERIALIZE_SCALAR(cwp);
     SERIALIZE_SCALAR(gl);
-    SERIALIZE_SCALAR(hpstate);
+    SERIALIZE_SCALAR((uint64_t)hpstate);
     SERIALIZE_ARRAY(htstate,MaxTL);
     SERIALIZE_SCALAR(hintp);
     SERIALIZE_SCALAR(htba);
@@ -692,13 +708,21 @@ ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(tstate,MaxTL);
     UNSERIALIZE_ARRAY(tt,MaxTL);
     UNSERIALIZE_SCALAR(tba);
-    UNSERIALIZE_SCALAR(pstate);
+    {
+        uint16_t pstate;
+        UNSERIALIZE_SCALAR(pstate);
+        this->pstate = pstate;
+    }
     UNSERIALIZE_SCALAR(tl);
     UNSERIALIZE_SCALAR(pil);
     UNSERIALIZE_SCALAR(cwp);
     UNSERIALIZE_SCALAR(gl);
     reloadRegMap();
-    UNSERIALIZE_SCALAR(hpstate);
+    {
+        uint64_t hpstate;
+        UNSERIALIZE_SCALAR(hpstate);
+        this->hpstate = hpstate;
+    }
     UNSERIALIZE_ARRAY(htstate,MaxTL);
     UNSERIALIZE_SCALAR(hintp);
     UNSERIALIZE_SCALAR(htba);

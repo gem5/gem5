@@ -58,8 +58,9 @@ uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);
 static inline bool
 inUserMode(ThreadContext *tc)
 {
-    return !((tc->readMiscRegNoEffect(MISCREG_PSTATE) & (1 << 2)) ||
-             (tc->readMiscRegNoEffect(MISCREG_HPSTATE) & (1 << 2)));
+    PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
+    HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
+    return !(pstate.priv || hpstate.hpriv);
 }
 
 /**

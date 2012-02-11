@@ -40,7 +40,10 @@ def operand_types {{
     'tudw' : 'Twin64_t',
     'tuw' : 'Twin32_t',
     'sf' : 'float',
-    'df' : 'double'
+    'df' : 'double',
+
+    'pstate' : 'PSTATE',
+    'hpstate' : 'HPSTATE'
 }};
 
 output header {{
@@ -167,7 +170,7 @@ def operands {{
     'Tt':               ('ControlReg', 'udw', 'MISCREG_TT', None, 56),
     'Tick':             ('ControlReg', 'udw', 'MISCREG_TICK', None, 57),
     'Tba':              ('ControlReg', 'udw', 'MISCREG_TBA', None, 58),
-    'Pstate':           ('ControlReg', 'udw', 'MISCREG_PSTATE', None, 59),
+    'Pstate':           ('ControlReg', 'pstate', 'MISCREG_PSTATE', None, 59),
     'Tl':               ('ControlReg', 'udw', 'MISCREG_TL', None, 60),
     'Pil':              ('ControlReg', 'udw', 'MISCREG_PIL', None, 61),
     'Cwp':              ('ControlReg', 'udw', 'MISCREG_CWP', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 62),
@@ -183,7 +186,7 @@ def operands {{
     'Wstate':           ('IntReg', 'udw', 'NumIntArchRegs + 7', None, 67),
     'Gl':               ('ControlReg', 'udw', 'MISCREG_GL', None, 68),
 
-    'Hpstate':          ('ControlReg', 'udw', 'MISCREG_HPSTATE', None, 69),
+    'Hpstate':          ('ControlReg', 'hpstate', 'MISCREG_HPSTATE', None, 69),
     'Htstate':          ('ControlReg', 'udw', 'MISCREG_HTSTATE', None, 70),
     'Hintp':            ('ControlReg', 'udw', 'MISCREG_HINTP', None, 71),
     'Htba':             ('ControlReg', 'udw', 'MISCREG_HTBA', None, 72),
