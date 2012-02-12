@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2012 04:48:33
-gem5 started Jan 23 2012 05:24:12
+gem5 compiled Feb 11 2012 13:05:17
+gem5 started Feb 11 2012 13:10:45
 gem5 executing on zizzer
-command line: build/ALPHA_SE/gem5.opt -d build/ALPHA_SE/tests/opt/long/30.eon/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/long/30.eon/alpha/tru64/o3-timing
+command line: build/ALPHA/gem5.fast -d build/ALPHA/tests/fast/long/se/30.eon/alpha/tru64/o3-timing -re tests/run.py build/ALPHA/tests/fast/long/se/30.eon/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.

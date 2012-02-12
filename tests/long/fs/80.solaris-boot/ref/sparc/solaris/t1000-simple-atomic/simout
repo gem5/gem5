@@ -1,14 +1,11 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2012 04:05:05
-gem5 started Jan 23 2012 06:26:23
+gem5 compiled Feb 11 2012 13:08:33
+gem5 started Feb 11 2012 14:02:46
 gem5 executing on zizzer
-command line: build/SPARC_FS/gem5.opt -d build/SPARC_FS/tests/opt/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re tests/run.py build/SPARC_FS/tests/opt/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
+command line: build/SPARC/gem5.fast -d build/SPARC/tests/fast/long/fs/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re tests/run.py build/SPARC/tests/fast/long/fs/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second
-      0: system.t1000.htod: Real-time clock set to Thu Jan  1 00:00:00 2009
-
-      0: system.t1000.htod: Real-time clock set to 1230768000
 info: No kernel set for full system simulation. Assuming you know what you're doing...
 info: Entering event queue @ 0.  Starting simulation...
 info: Ignoring write to SPARC ERROR regsiter

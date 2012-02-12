@@ -1,13 +1,12 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2012 04:12:17
-gem5 started Jan 23 2012 04:24:49
+gem5 compiled Feb 11 2012 13:08:53
+gem5 started Feb 11 2012 14:06:52
 gem5 executing on zizzer
-command line: build/X86_FS/gem5.opt -d build/X86_FS/tests/opt/quick/10.linux-boot/x86/linux/pc-simple-timing -re tests/run.py build/X86_FS/tests/opt/quick/10.linux-boot/x86/linux/pc-simple-timing
+command line: build/X86/gem5.fast -d build/X86/tests/fast/quick/fs/10.linux-boot/x86/linux/pc-simple-timing -re tests/run.py build/X86/tests/fast/quick/fs/10.linux-boot/x86/linux/pc-simple-timing
 warning: add_child('terminal'): child 'terminal' already has parent
 Global frequency set at 1000000000000 ticks per second
-      0: rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
 info: kernel located at: /dist/m5/system/binaries/x86_64-vmlinux-2.6.22.9
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 5195470393000 because m5_exit instruction encountered

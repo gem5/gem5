@@ -1,14 +1,12 @@
-Redirecting stdout to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3/simout
-Redirecting stderr to build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Feb  3 2012 14:00:40
-gem5 started Feb  3 2012 14:01:01
-gem5 executing on ribera.cs.wisc.edu
-command line: build/ARM/gem5.opt -d build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM/tests/opt/long/fs/10.linux-boot/arm/linux/realview-o3
+gem5 compiled Feb 11 2012 13:10:40
+gem5 started Feb 11 2012 16:39:00
+gem5 executing on zizzer
+command line: build/ARM/gem5.fast -d build/ARM/tests/fast/long/fs/10.linux-boot/arm/linux/realview-o3 -re tests/run.py build/ARM/tests/fast/long/fs/10.linux-boot/arm/linux/realview-o3
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /scratch/nilay/GEM5/system/binaries/vmlinux.arm.smp.fb.2.6.38.8
+info: kernel located at: /dist/m5/system/binaries/vmlinux.arm.smp.fb.2.6.38.8
 info: Using bootloader at address 0x80000000
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 2503580880500 because m5_exit instruction encountered

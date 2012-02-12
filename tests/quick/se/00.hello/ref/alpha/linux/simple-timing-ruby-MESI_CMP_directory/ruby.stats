@@ -34,27 +34,26 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Jan/23/2012 04:21:55
+Real time: Feb/12/2012 15:33:22
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 2
-Elapsed_time_in_minutes: 0.0333333
-Elapsed_time_in_hours: 0.000555556
-Elapsed_time_in_days: 2.31481e-05
+Elapsed_time_in_seconds: 1
+Elapsed_time_in_minutes: 0.0166667
+Elapsed_time_in_hours: 0.000277778
+Elapsed_time_in_days: 1.15741e-05
 
-Virtual_time_in_seconds: 0.38
-Virtual_time_in_minutes: 0.00633333
-Virtual_time_in_hours:   0.000105556
-Virtual_time_in_days:    4.39815e-06
+Virtual_time_in_seconds: 1.01
+Virtual_time_in_minutes: 0.0168333
+Virtual_time_in_hours:   0.000280556
+Virtual_time_in_days:    1.16898e-05
 
 Ruby_current_time: 279353
 Ruby_start_time: 0
 Ruby_cycles: 279353
 
-mbytes_resident: 45.5547
-mbytes_total: 214.371
-resident_ratio: 0.212504
+mbytes_resident: 0
+mbytes_total: 0
 
 ruby_cycles_executed: [ 279354 ]
 
@@ -101,9 +100,9 @@ filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN
 
 Message Delayed Cycles
 ----------------------
-Total_delay_cycles: [binsize: 1 max: 20 count: 9645 average: 0.064282 | standard deviation: 0.540462 | 9495 0 1 0 147 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 ]
+Total_delay_cycles: [binsize: 1 max: 18 count: 9645 average: 0.0636599 | standard deviation: 0.52686 | 9495 0 1 0 147 0 1 0 0 0 0 0 0 0 0 0 0 0 1 ]
 Total_nonPF_delay_cycles: [binsize: 1 max: 2 count: 6920 average: 0.000289017 | standard deviation: 0.0240441 | 6919 0 1 ]
-  virtual_network_0_delay_cycles: [binsize: 1 max: 20 count: 2725 average: 0.226789 | standard deviation: 0.997795 | 2576 0 0 0 147 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 ]
+  virtual_network_0_delay_cycles: [binsize: 1 max: 18 count: 2725 average: 0.224587 | standard deviation: 0.972266 | 2576 0 0 0 147 0 1 0 0 0 0 0 0 0 0 0 0 0 1 ]
   virtual_network_1_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_2_delay_cycles: [binsize: 1 max: 0 count: 1041 average:     0 | standard deviation: 0 | 1041 ]
   virtual_network_3_delay_cycles: [binsize: 1 max: 2 count: 5879 average: 0.000340194 | standard deviation: 0.0260865 | 5878 0 1 ]
@@ -119,11 +118,11 @@ Resource Usage
 page_size: 4096
 user_time: 0
 system_time: 0
-page_reclaims: 11862
-page_faults: 127
+page_reclaims: 13214
+page_faults: 148
 swaps: 0
-block_inputs: 22816
-block_outputs: 96
+block_inputs: 2
+block_outputs: 4
 
 Network Stats
 -------------
@@ -320,11 +319,6 @@ M_I  Fwd_GETS [0 ] 0
 M_I  Fwd_GET_INSTR [0 ] 0
 M_I  WB_Ack [436 ] 436
 
-E_I  Load [0 ] 0
-E_I  Ifetch [0 ] 0
-E_I  Store [0 ] 0
-E_I  L1_Replacement [0 ] 0
-
 SINK_WB_ACK  Load [0 ] 0
 SINK_WB_ACK  Ifetch [0 ] 0
 SINK_WB_ACK  Store [0 ] 0
@@ -348,7 +342,7 @@ Cache Stats: system.l2_cntrl0.L2cacheMemory
  --- L2Cache ---
  - Event Counts -
 L1_GET_INSTR [691 ] 691
-L1_GETS [586 ] 586
+L1_GETS [585 ] 585
 L1_GETX [216 ] 216
 L1_UPGRADE [0 ] 0
 L1_PUTX [436 ] 436
@@ -405,7 +399,7 @@ MT  L2_Replacement_clean [352 ] 352
 MT  MEM_Inv [0 ] 0
 
 M_I  L1_GET_INSTR [0 ] 0
-M_I  L1_GETS [3 ] 3
+M_I  L1_GETS [2 ] 2
 M_I  L1_GETX [0 ] 0
 M_I  L1_UPGRADE [0 ] 0
 M_I  L1_PUTX [0 ] 0

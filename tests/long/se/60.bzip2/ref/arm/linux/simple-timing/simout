@@ -1,10 +1,10 @@
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2012 04:16:21
-gem5 started Jan 23 2012 09:45:39
+gem5 compiled Feb 11 2012 13:10:40
+gem5 started Feb 11 2012 16:33:49
 gem5 executing on zizzer
-command line: build/ARM_SE/gem5.opt -d build/ARM_SE/tests/opt/long/60.bzip2/arm/linux/simple-timing -re tests/run.py build/ARM_SE/tests/opt/long/60.bzip2/arm/linux/simple-timing
+command line: build/ARM/gem5.fast -d build/ARM/tests/fast/long/se/60.bzip2/arm/linux/simple-timing -re tests/run.py build/ARM/tests/fast/long/se/60.bzip2/arm/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 spec_init

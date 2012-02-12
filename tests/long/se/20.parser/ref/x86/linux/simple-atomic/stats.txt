@@ -4,11 +4,13 @@ sim_seconds                                  0.885229                       # Nu
 sim_ticks                                885229360000                       # Number of ticks simulated
 final_tick                               885229360000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                2258239                       # Simulator instruction rate (inst/s)
-host_tick_rate                             1307438877                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 208528                       # Number of bytes of host memory used
-host_seconds                                   677.07                       # Real time elapsed on the host
-sim_insts                                  1528988757                       # Number of instructions simulated
+host_inst_rate                                1663979                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3076883                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1781404357                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 214024                       # Number of bytes of host memory used
+host_seconds                                   496.93                       # Real time elapsed on the host
+sim_insts                                   826877145                       # Number of instructions simulated
+sim_ops                                    1528988757                       # Number of ops (including micro ops) simulated
 system.physmem.bytes_read                 10832432532                       # Number of bytes read from this memory
 system.physmem.bytes_inst_read             8546776872                       # Number of instructions bytes read from this memory
 system.physmem.bytes_written                991849460                       # Number of bytes written to this memory
@@ -23,7 +25,8 @@ system.cpu.workload.num_syscalls                  551                       # Nu
 system.cpu.numCycles                       1770458721                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
-system.cpu.num_insts                       1528988757                       # Number of instructions executed
+system.cpu.committedInsts                   826877145                       # Number of instructions committed
+system.cpu.committedOps                    1528988757                       # Number of ops (including micro ops) committed
 system.cpu.num_int_alu_accesses            1528317615                       # Number of integer alu accesses
 system.cpu.num_fp_alu_accesses                      0                       # Number of float alu accesses
 system.cpu.num_func_calls                           0                       # number of times a function call or return occured

@@ -4,11 +4,13 @@ sim_seconds                                  0.200001                       # Nu
 sim_ticks                                200000789468                       # Number of ticks simulated
 final_tick                               4300236018046                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                              201516796                       # Simulator instruction rate (inst/s)
-host_tick_rate                           147427543497                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 479620                       # Number of bytes of host memory used
-host_seconds                                     1.36                       # Real time elapsed on the host
+host_inst_rate                              238054601                       # Simulator instruction rate (inst/s)
+host_op_rate                                238047910                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                           174152914765                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 476544                       # Number of bytes of host memory used
+host_seconds                                     1.15                       # Real time elapsed on the host
 sim_insts                                   273374833                       # Number of instructions simulated
+sim_ops                                     273374833                       # Number of ops (including micro ops) simulated
 testsys.physmem.bytes_read                   19104208                       # Number of bytes read from this memory
 testsys.physmem.bytes_inst_read              14257548                       # Number of instructions bytes read from this memory
 testsys.physmem.bytes_written                 3887982                       # Number of bytes written to this memory
@@ -66,7 +68,8 @@ testsys.cpu.itb.data_accesses                       0                       # DT
 testsys.cpu.numCycles                    199569460393                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-testsys.cpu.num_insts                         3560411                       # Number of instructions executed
+testsys.cpu.committedInsts                    3560411                       # Number of instructions committed
+testsys.cpu.committedOps                      3560411                       # Number of ops (including micro ops) committed
 testsys.cpu.num_int_alu_accesses              3348322                       # Number of integer alu accesses
 testsys.cpu.num_fp_alu_accesses                 17380                       # Number of float alu accesses
 testsys.cpu.num_func_calls                     107994                       # number of times a function call or return occured
@@ -258,7 +261,8 @@ drivesys.cpu.itb.data_accesses                      0                       # DT
 drivesys.cpu.numCycles                   199571362884                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
-drivesys.cpu.num_insts                        1958129                       # Number of instructions executed
+drivesys.cpu.committedInsts                   1958129                       # Number of instructions committed
+drivesys.cpu.committedOps                     1958129                       # Number of ops (including micro ops) committed
 drivesys.cpu.num_int_alu_accesses             1889973                       # Number of integer alu accesses
 drivesys.cpu.num_fp_alu_accesses                 1278                       # Number of float alu accesses
 drivesys.cpu.num_func_calls                    121650                       # number of times a function call or return occured
@@ -391,11 +395,13 @@ sim_seconds                                  0.000001                       # Nu
 sim_ticks                                      785978                       # Number of ticks simulated
 final_tick                               4300236804024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                           864513825905                       # Simulator instruction rate (inst/s)
-host_tick_rate                             2363296319                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 479620                       # Number of bytes of host memory used
+host_inst_rate                           826237832724                       # Simulator instruction rate (inst/s)
+host_op_rate                             785322914063                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             2155916043                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 476544                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
 sim_insts                                   273374833                       # Number of instructions simulated
+sim_ops                                     273374833                       # Number of ops (including micro ops) simulated
 testsys.physmem.bytes_read                          0                       # Number of bytes read from this memory
 testsys.physmem.bytes_inst_read                     0                       # Number of instructions bytes read from this memory
 testsys.physmem.bytes_written                       0                       # Number of bytes written to this memory
@@ -449,7 +455,8 @@ testsys.cpu.itb.data_accesses                       0                       # DT
 testsys.cpu.numCycles                               0                       # number of cpu cycles simulated
 testsys.cpu.numWorkItemsStarted                     0                       # number of work items this cpu started
 testsys.cpu.numWorkItemsCompleted                   0                       # number of work items this cpu completed
-testsys.cpu.num_insts                               0                       # Number of instructions executed
+testsys.cpu.committedInsts                          0                       # Number of instructions committed
+testsys.cpu.committedOps                            0                       # Number of ops (including micro ops) committed
 testsys.cpu.num_int_alu_accesses                    0                       # Number of integer alu accesses
 testsys.cpu.num_fp_alu_accesses                     0                       # Number of float alu accesses
 testsys.cpu.num_func_calls                          0                       # number of times a function call or return occured
@@ -568,7 +575,8 @@ drivesys.cpu.itb.data_accesses                      0                       # DT
 drivesys.cpu.numCycles                              0                       # number of cpu cycles simulated
 drivesys.cpu.numWorkItemsStarted                    0                       # number of work items this cpu started
 drivesys.cpu.numWorkItemsCompleted                  0                       # number of work items this cpu completed
-drivesys.cpu.num_insts                              0                       # Number of instructions executed
+drivesys.cpu.committedInsts                         0                       # Number of instructions committed
+drivesys.cpu.committedOps                           0                       # Number of ops (including micro ops) committed
 drivesys.cpu.num_int_alu_accesses                   0                       # Number of integer alu accesses
 drivesys.cpu.num_fp_alu_accesses                    0                       # Number of float alu accesses
 drivesys.cpu.num_func_calls                         0                       # number of times a function call or return occured
