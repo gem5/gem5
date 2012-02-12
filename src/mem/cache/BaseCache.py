@@ -27,7 +27,7 @@
 # Authors: Nathan Binkert
 
 from m5.params import *
-from m5.proxy import Self
+from m5.proxy import *
 from MemObject import MemObject
 from Prefetcher import BasePrefetcher
 
@@ -44,7 +44,6 @@ class BaseCache(MemObject):
     prioritizeRequests = Param.Bool(False,
         "always service demand misses first")
     repl = Param.Repl(NULL, "replacement policy")
-    num_cpus =  Param.Int(1, "number of cpus sharing this cache")
     size = Param.MemorySize("capacity in bytes")
     forward_snoops = Param.Bool(True,
         "forward snoops from mem side to cpu side")
@@ -62,3 +61,4 @@ class BaseCache(MemObject):
     cpu_side = Port("Port on side closer to CPU")
     mem_side = Port("Port on side closer to MEM")
     addr_range = Param.AddrRange(AllMemory, "The address range for the CPU-side port")
+    system = Param.System(Parent.any, "System we belong to")

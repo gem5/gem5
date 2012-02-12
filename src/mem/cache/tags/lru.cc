@@ -116,7 +116,7 @@ LRU::~LRU()
 }
 
 LRU::BlkType*
-LRU::accessBlock(Addr addr, int &lat, int context_src)
+LRU::accessBlock(Addr addr, int &lat, int master_id)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
@@ -153,20 +153,8 @@ LRU::findVictim(Addr addr, PacketList &writebacks)
     unsigned set = extractSet(addr);
     // grab a replacement candidate
     BlkType *blk = sets[set].blks[assoc-1];
+
     if (blk->isValid()) {
-        replacements[0]++;
-        totalRefs += blk->refCount;
-        ++sampledRefs;
-        blk->refCount = 0;
-
-        // deal with evicted block
-        if (blk->contextSrc != -1) {
-            occupancies[blk->contextSrc % cache->numCpus()]--;
-            blk->contextSrc = -1;
-        } else {
-            occupancies[cache->numCpus()]--;
-        }
-
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
                 set, regenerateBlkAddr(blk->tag, set));
     }
@@ -174,7 +162,7 @@ LRU::findVictim(Addr addr, PacketList &writebacks)
 }
 
 void
-LRU::insertBlock(Addr addr, BlkType *blk, int context_src)
+LRU::insertBlock(Addr addr, BlkType *blk, int master_id)
 {
     if (!blk->isTouched) {
         tagsInUse++;
@@ -185,16 +173,28 @@ LRU::insertBlock(Addr addr, BlkType *blk, int context_src)
         }
     }
 
+    // If we're replacing a block that was previously valid update
+    // stats for it. This can't be done in findBlock() because a
+    // found block might not actually be replaced there if the
+    // coherence protocol says it can't be.
+    if (blk->isValid()) {
+        replacements[0]++;
+        totalRefs += blk->refCount;
+        ++sampledRefs;
+        blk->refCount = 0;
+
+        // deal with evicted block
+        assert(blk->srcMasterId < cache->system->maxMasters());
+        occupancies[blk->srcMasterId]--;
+    }
+
     // Set tag for new block.  Caller is responsible for setting status.
     blk->tag = extractTag(addr);
 
     // deal with what we are bringing in
-    if (context_src != -1) {
-        occupancies[context_src % cache->numCpus()]++;
-    } else {
-        occupancies[cache->numCpus()]++;
-    }
-    blk->contextSrc = context_src;
+    assert(master_id < cache->system->maxMasters());
+    occupancies[master_id]++;
+    blk->srcMasterId = master_id;
 
     unsigned set = extractSet(addr);
     sets[set].moveToHead(blk);
@@ -204,16 +204,15 @@ void
 LRU::invalidateBlk(BlkType *blk)
 {
     if (blk) {
+        if (blk->isValid()) {
+            tagsInUse--;
+            assert(blk->srcMasterId < cache->system->maxMasters());
+            occupancies[blk->srcMasterId]--;
+            blk->srcMasterId = Request::invldMasterId;
+        }
         blk->status = 0;
         blk->isTouched = false;
         blk->clearLoadLocks();
-        tagsInUse--;
-        if (blk->contextSrc != -1) {
-            occupancies[blk->contextSrc % cache->numCpus()]--;
-            blk->contextSrc = -1;
-        } else {
-            occupancies[cache->numCpus()]--;
-        }
     }
 }
 

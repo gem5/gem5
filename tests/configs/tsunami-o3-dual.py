@@ -85,7 +85,6 @@ system.iocache.mem_side = system.membus.port
 system.l2c = L2(size='4MB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.port
 system.l2c.mem_side = system.membus.port
-system.l2c.num_cpus = 2
 
 #connect up the cpu and l1s
 for c in cpus:

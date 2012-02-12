@@ -103,8 +103,8 @@ class CacheBlk
     /** Number of references to this block since it was brought in. */
     int refCount;
 
-    /** holds the context source ID of the requestor for this block. */
-    int contextSrc;
+    /** holds the source requestor ID for this block. */
+    int srcMasterId;
 
   protected:
     /**
@@ -135,7 +135,8 @@ class CacheBlk
 
     CacheBlk()
         : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
-          set(-1), isTouched(false), refCount(0), contextSrc(-1)
+          set(-1), isTouched(false), refCount(0),
+          srcMasterId(Request::invldMasterId)
     {}
 
     /**

@@ -64,7 +64,6 @@ system = System(cpu = cpus, funcmem = PhysicalMemory(),
 system.toL2Bus = Bus(clock="500GHz", width=16)
 system.l2c = L2(size='64kB', assoc=8)
 system.l2c.cpu_side = system.toL2Bus.port
-system.l2c.num_cpus = nb_cores
 
 # connect l2c to membus
 system.l2c.mem_side = system.membus.port

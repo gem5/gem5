@@ -87,17 +87,23 @@ BaseTags::regStats(const string &name)
         ;
 
     occupancies
-        .init(cache->numCpus() + 1)
+        .init(cache->system->maxMasters())
         .name(name + ".occ_blocks")
-        .desc("Average occupied blocks per context")
+        .desc("Average occupied blocks per requestor")
         .flags(nozero | nonan)
         ;
+    for (int i = 0; i < cache->system->maxMasters(); i++) {
+        occupancies.subname(i, cache->system->getMasterName(i));
+    }
 
     avgOccs
         .name(name + ".occ_percent")
         .desc("Average percentage of cache occupancy")
-        .flags(nozero)
+        .flags(nozero | total)
         ;
+    for (int i = 0; i < cache->system->maxMasters(); i++) {
+        avgOccs.subname(i, cache->system->getMasterName(i));
+    }
 
     avgOccs = occupancies / Stats::constant(numBlocks);
 

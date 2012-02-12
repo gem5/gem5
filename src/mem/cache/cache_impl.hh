@@ -312,7 +312,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
         if (pkt->needsExclusive() ? blk->isWritable() : blk->isReadable()) {
             // OK to satisfy access
-            incHitCount(pkt, id);
+            incHitCount(pkt);
             satisfyCpuSideRequest(pkt, blk);
             return true;
         }
@@ -332,10 +332,10 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
             if (blk == NULL) {
                 // no replaceable block available, give up.
                 // writeback will be forwarded to next level.
-                incMissCount(pkt, id);
+                incMissCount(pkt);
                 return false;
             }
-            int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+            int id = pkt->req->masterId();
             tags->insertBlock(pkt->getAddr(), blk, id);
             blk->status = BlkValid | BlkReadable;
         }
@@ -346,11 +346,11 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        incHitCount(pkt, id);
+        incHitCount(pkt);
         return true;
     }
 
-    incMissCount(pkt, id);
+    incMissCount(pkt);
 
     if (blk == NULL && pkt->isLLSC() && pkt->isWrite()) {
         // complete miss on store conditional... just give up now
@@ -514,7 +514,8 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         if (mshr) {
             // MSHR hit
             //@todo remove hw_pf here
-            mshr_hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+            assert(pkt->req->masterId() < system->maxMasters());
+            mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
             if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
                 mshr->threadNum = -1;
             }
@@ -529,7 +530,8 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             }
         } else {
             // no MSHR
-            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+            assert(pkt->req->masterId() < system->maxMasters());
+            mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
             // always mark as cache fill for now... if we implement
             // no-write-allocate or bypass accesses this will have to
             // be changed.
@@ -849,10 +851,12 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     PacketList writebacks;
 
     if (pkt->req->isUncacheable()) {
-        mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->threadId()*/] +=
+        assert(pkt->req->masterId() < system->maxMasters());
+        mshr_uncacheable_lat[stats_cmd_idx][pkt->req->masterId()] +=
             miss_latency;
     } else {
-        mshr_miss_latency[stats_cmd_idx][0/*pkt->req->threadId()*/] +=
+        assert(pkt->req->masterId() < system->maxMasters());
+        mshr_miss_latency[stats_cmd_idx][pkt->req->masterId()] +=
             miss_latency;
     }
 
@@ -898,7 +902,9 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                     (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
 
                 assert(!target->pkt->req->isUncacheable());
-                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->threadId()*/] +=
+
+                assert(pkt->req->masterId() < system->maxMasters());
+                missLatency[target->pkt->cmdToIndex()][target->pkt->req->masterId()] +=
                     completion_time - target->recvTime;
             } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
                 // failed StoreCond upgrade
@@ -1003,7 +1009,7 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
 {
     assert(blk && blk->isValid() && blk->isDirty());
 
-    writebacks[0/*pkt->req->threadId()*/]++;
+    writebacks[Request::wbMasterId]++;
 
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
@@ -1082,7 +1088,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             tempBlock->tag = tags->extractTag(addr);
             DPRINTF(Cache, "using temp block for %x\n", addr);
         } else {
-            int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+            int id = pkt->req->masterId();
             tags->insertBlock(pkt->getAddr(), blk, id);
         }
 
@@ -1427,7 +1433,8 @@ Cache<TagStore>::getNextMSHR()
                                              !writeBuffer.findMatch(pf_addr)) {
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
-                mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+                assert(pkt->req->masterId() < system->maxMasters());
+                mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
                 // Don't request bus, since we already have it
                 return allocateMissBuffer(pkt, curTick(), false);
             } else {

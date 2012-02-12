@@ -40,6 +40,7 @@
 #define __MEM_REQUEST_HH__
 
 #include <cassert>
+#include <climits>
 
 #include "base/fast_alloc.hh"
 #include "base/flags.hh"
@@ -111,6 +112,10 @@ class Request : public FastAlloc
     static const MasterID funcMasterId = 1;
     /** This request id is used for message signaled interrupts */
     static const MasterID intMasterId = 2;
+    /** Invalid request id for assertion checking only. It is invalid behavior
+     * to ever send this id as part of a request.
+     * @todo C++1x replace with numeric_limits when constexpr is added  */
+    static const MasterID invldMasterId = USHRT_MAX;
     /** @} */
 
   private:

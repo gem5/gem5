@@ -97,10 +97,10 @@ class BaseTags
     /** The cycle that the warmup percentage was hit. */
     Stats::Scalar warmupCycle;
 
-    /** Average occupancy of each context/cpu using the cache */
+    /** Average occupancy of each requestor using the cache */
     Stats::AverageVector occupancies;
 
-    /** Average occ % of each context/cpu using the cache */
+    /** Average occ % of each requestor using the cache */
     Stats::Formula avgOccs;
 
     /**
