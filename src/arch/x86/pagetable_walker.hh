@@ -50,6 +50,7 @@
 #include "mem/packet.hh"
 #include "params/X86PagetableWalker.hh"
 #include "sim/faults.hh"
+#include "sim/system.hh"
 
 class ThreadContext;
 
@@ -67,7 +68,7 @@ namespace X86ISA
             {}
 
           protected:
-            Walker * walker;
+            Walker *walker;
 
             bool recvTiming(PacketPtr pkt);
             Tick recvAtomic(PacketPtr pkt);
@@ -97,7 +98,7 @@ namespace X86ISA
             };
 
           protected:
-            Walker * walker;
+            Walker *walker;
             ThreadContext *tc;
             RequestPtr req;
             State state;
@@ -115,7 +116,6 @@ namespace X86ISA
             bool timing;
             bool retrying;
             bool started;
-
           public:
             WalkerState(Walker * _walker, BaseTLB::Translation *_translation,
                     RequestPtr _req, bool _isFunctional = false) :
@@ -172,6 +172,7 @@ namespace X86ISA
         // The TLB we're supposed to load.
         TLB * tlb;
         System * sys;
+        MasterID masterId;
 
         // Functions for dealing with packets.
         bool recvTiming(PacketPtr pkt);
@@ -187,9 +188,16 @@ namespace X86ISA
 
         typedef X86PagetableWalkerParams Params;
 
+        const Params *
+        params() const
+        {
+            return static_cast<const Params *>(_params);
+        }
+
         Walker(const Params *params) :
             MemObject(params), port(name() + ".port", this),
-            funcState(this, NULL, NULL, true), tlb(NULL), sys(params->system)
+            funcState(this, NULL, NULL, true), tlb(NULL), sys(params->system),
+            masterId(sys->getMasterId(name()))
         {
         }
     };

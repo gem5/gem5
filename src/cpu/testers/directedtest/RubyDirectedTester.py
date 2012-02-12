@@ -35,6 +35,7 @@ class DirectedGenerator(SimObject):
     type = 'DirectedGenerator'
     abstract = True
     num_cpus = Param.Int("num of cpus")
+    system = Param.System(Parent.any, "System we belong to")
 
 class SeriesRequestGenerator(DirectedGenerator):
     type = 'SeriesRequestGenerator'

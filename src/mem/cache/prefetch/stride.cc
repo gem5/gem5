@@ -47,16 +47,11 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         return;
     }
 
-    if (useContextId && !pkt->req->hasContextId()) {
-        DPRINTF(HWPrefetch, "ignoring request with no context ID");
-        return;
-    }
-
     Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
-    int ctx_id = useContextId ? pkt->req->contextId() : 0;
+    MasterID master_id = useMasterId ? pkt->req->masterId() : 0;
     Addr pc = pkt->req->getPC();
-    assert(ctx_id < Max_Contexts);
-    std::list<StrideEntry*> &tab = table[ctx_id];
+    assert(master_id < Max_Contexts);
+    std::list<StrideEntry*> &tab = table[master_id];
 
     /* Scan Table for instAddr Match */
     std::list<StrideEntry*>::iterator iter;

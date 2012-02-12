@@ -60,6 +60,7 @@ using namespace TheISA;
 void
 CheckerCPU::init()
 {
+    masterId = systemPtr->getMasterId(name());
 }
 
 CheckerCPU::CheckerCPU(Params *p)
@@ -241,7 +242,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
     // Need to account for a multiple access like Atomic and Timing CPUs
     while (1) {
         memReq = new Request();
-        memReq->setVirt(0, addr, size, flags, thread->pcState().instAddr());
+        memReq->setVirt(0, addr, size, flags, masterId, thread->pcState().instAddr());
 
         // translate to physical address
         fault = dtb->translateFunctional(memReq, tc, BaseTLB::Write);

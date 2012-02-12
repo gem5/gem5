@@ -70,7 +70,7 @@ class BasePrefetcher : public SimObject
     unsigned degree;
 
     /** If patterns should be found per context id */
-    bool useContextId;
+    bool useMasterId;
     /** Do we prefetch across page boundaries. */
     bool pageStop;
 
@@ -79,6 +79,12 @@ class BasePrefetcher : public SimObject
 
     /** Do we prefetch on only data reads, or on inst reads as well. */
     bool onlyData;
+
+    /** System we belong to */
+    System* system;
+
+    /** Request id for prefetches */
+    MasterID masterId;
 
   public:
 

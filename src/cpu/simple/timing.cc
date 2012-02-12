@@ -385,7 +385,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     buildPacket(pkt1, req1, read);
     buildPacket(pkt2, req2, read);
 
-    req->setPhys(req1->getPaddr(), req->getSize(), req1->getFlags());
+    req->setPhys(req1->getPaddr(), req->getSize(), req1->getFlags(), dataMasterId());
     PacketPtr pkt = new Packet(req, pkt1->cmd.responseCommand(),
                                Packet::Broadcast);
 
@@ -418,7 +418,7 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
     }
 
     RequestPtr req  = new Request(asid, addr, size,
-                                  flags, pc, _cpuId, tid);
+                                  flags, dataMasterId(), pc, _cpuId, tid);
 
     Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
@@ -488,7 +488,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     }
 
     RequestPtr req = new Request(asid, addr, size,
-                                 flags, pc, _cpuId, tid);
+                                 flags, dataMasterId(), pc, _cpuId, tid);
 
     Addr split_addr = roundDown(addr + size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);

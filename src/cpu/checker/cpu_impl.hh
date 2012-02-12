@@ -247,7 +247,7 @@ Checker<Impl>::verify(DynInstPtr &completed_inst)
                                      fetch_PC, thread->contextId(),
                                      unverifiedInst->threadNumber);
                 memReq->setVirt(0, fetch_PC, sizeof(MachInst),
-                                Request::INST_FETCH, thread->instAddr());
+                                Request::INST_FETCH, masterId, thread->instAddr());
 
 
                 fault = itb->translateFunctional(memReq, tc, BaseTLB::Execute);

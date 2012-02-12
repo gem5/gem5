@@ -159,7 +159,8 @@ FetchUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
     if (cache_req->memReq == NULL) {
         cache_req->memReq =
             new Request(tid, aligned_addr, acc_size, flags,
-                        inst->instAddr(), cpu->readCpuId(), tid);
+                        cpu->instMasterId(), inst->instAddr(), cpu->readCpuId(),
+                        tid);
         DPRINTF(InOrderCachePort, "[sn:%i] Created memReq @%x, ->%x\n",
                 inst->seqNum, &cache_req->memReq, cache_req->memReq);
     }

@@ -134,6 +134,8 @@ class NetworkTest : public MemObject
     double injRate;
     int precision;
 
+    MasterID masterId;
+
     void completeRequest(PacketPtr pkt);
 
     void generatePkt();

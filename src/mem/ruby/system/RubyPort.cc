@@ -687,7 +687,7 @@ void
 RubyPort::ruby_eviction_callback(const Address& address)
 {
     DPRINTF(RubyPort, "Sending invalidations.\n");
-    Request req(address.getAddress(), 0, 0);
+    Request req(address.getAddress(), 0, 0, Request::funcMasterId);
     for (CpuPortIter it = cpu_ports.begin(); it != cpu_ports.end(); it++) {
         Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1);
         (*it)->sendTiming(pkt);

@@ -424,6 +424,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Read this CPU's ID. */
     int cpuId() { return cpu->cpuId(); }
 
+    /** Read this CPU's data requestor ID */
+    MasterID masterId() { return cpu->dataMasterId(); }
+
     /** Read this context's system-wide ID **/
     int contextId() { return thread->contextId(); }
 
@@ -878,7 +881,7 @@ BaseDynInst<Impl>::readMem(Addr addr, uint8_t *data,
         sreqLow = savedSreqLow;
         sreqHigh = savedSreqHigh;
     } else {
-        req = new Request(asid, addr, size, flags, this->pc.instAddr(),
+        req = new Request(asid, addr, size, flags, masterId(), this->pc.instAddr(),
                           thread->contextId(), threadNumber);
 
         // Only split the request if the ISA supports unaligned accesses.
@@ -940,7 +943,7 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size,
         sreqLow = savedSreqLow;
         sreqHigh = savedSreqHigh;
     } else {
-        req = new Request(asid, addr, size, flags, this->pc.instAddr(),
+        req = new Request(asid, addr, size, flags, masterId(), this->pc.instAddr(),
                           thread->contextId(), threadNumber);
 
         // Only split the request if the ISA supports unaligned accesses.

@@ -369,7 +369,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
                                   tag_ptr->size);
 */
             Request *writebackReq = new Request(regenerateBlkAddr(tag_ptr->tag, 0),
-                                           blkSize, 0);
+                                           blkSize, 0, Request::wbMasterId);
             PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback,
                                              -1);
             writeback->allocate();

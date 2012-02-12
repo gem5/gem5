@@ -120,6 +120,8 @@ CPUProgressEvent::description() const
 
 BaseCPU::BaseCPU(Params *p)
     : MemObject(p), clock(p->clock), instCnt(0), _cpuId(p->cpu_id),
+      _instMasterId(p->system->getMasterId(name() + ".inst")),
+      _dataMasterId(p->system->getMasterId(name() + ".data")),
       interrupts(p->interrupts),
       numThreads(p->numThreads), system(p->system),
       phase(p->phase)

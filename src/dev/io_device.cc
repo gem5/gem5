@@ -116,6 +116,7 @@ BasicPioDevice::getAddrRanges()
 DmaPort::DmaPort(MemObject *dev, System *s, Tick min_backoff, Tick max_backoff,
                  bool recv_snoops)
     : Port(dev->name() + "-dmaport", dev), device(dev), sys(s),
+      masterId(s->getMasterId(dev->name())),
       pendingCount(0), actionInProgress(0), drainEvent(NULL),
       backoffTime(0), minBackoffDelay(min_backoff),
       maxBackoffDelay(max_backoff), inRetry(false), recvSnoops(recv_snoops),
@@ -187,7 +188,6 @@ DmaDevice::DmaDevice(const Params *p)
     : PioDevice(p), dmaPort(NULL)
 { }
 
-
 unsigned int
 DmaDevice::drain(Event *de)
 {
@@ -254,7 +254,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
             event ? event->scheduled() : -1 );
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-            Request *req = new Request(gen.addr(), gen.size(), flag);
+            Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
             PacketPtr pkt = new Packet(req, cmd, Packet::Broadcast);
 
             // Increment the data pointer on a write

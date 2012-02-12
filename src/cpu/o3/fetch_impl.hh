@@ -565,7 +565,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     // Build request here.
     RequestPtr mem_req =
         new Request(tid, block_PC, cacheBlkSize, Request::INST_FETCH,
-                    pc, cpu->thread[tid]->contextId(), tid);
+                    cpu->instMasterId(), pc, cpu->thread[tid]->contextId(), tid);
 
     memReq[tid] = mem_req;
 

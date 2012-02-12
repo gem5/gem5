@@ -46,6 +46,7 @@
 #include "mem/request.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -132,6 +133,7 @@ MemTest::MemTest(const Params *p)
       percentFunctional(p->percent_functional),
       percentUncacheable(p->percent_uncacheable),
       issueDmas(p->issue_dmas),
+      masterId(p->sys->getMasterId(name())),
       progressInterval(p->progress_interval),
       nextProgressMessage(p->progress_interval),
       percentSourceUnaligned(p->percent_source_unaligned),
@@ -321,11 +323,11 @@ MemTest::tick()
 
     if (issueDmas) {
         paddr &= ~((1 << dma_access_size) - 1);
-        req->setPhys(paddr, 1 << dma_access_size, flags);
+        req->setPhys(paddr, 1 << dma_access_size, flags, masterId);
         req->setThreadContext(id,0);
     } else {
         paddr &= ~((1 << access_size) - 1);
-        req->setPhys(paddr, 1 << access_size, flags);
+        req->setPhys(paddr, 1 << access_size, flags, masterId);
         req->setThreadContext(id,0);
     }
     assert(req->getSize() == 1);

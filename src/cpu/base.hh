@@ -104,6 +104,12 @@ class BaseCPU : public MemObject
     // therefore no setCpuId() method is provided
     int _cpuId;
 
+    /** instruction side request id that must be placed in all requests */
+    MasterID _instMasterId;
+
+    /** data side request id that must be placed in all requests */
+    MasterID _dataMasterId;
+
     /**
      * Define a base class for the CPU ports (instruction and data)
      * that is refined in the subclasses. This class handles the
@@ -143,6 +149,11 @@ class BaseCPU : public MemObject
   public:
     /** Reads this CPU's ID. */
     int cpuId() { return _cpuId; }
+
+    /** Reads this CPU's unique data requestor ID */
+    MasterID dataMasterId() { return _dataMasterId; }
+    /** Reads this CPU's unique instruction requestor ID */
+    MasterID instMasterId() { return _instMasterId; }
 
 //    Tick currentTick;
     inline Tick frequency() const { return SimClock::Frequency / clock; }

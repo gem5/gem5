@@ -52,6 +52,7 @@ using namespace ArmISA;
 
 TableWalker::TableWalker(const Params *p)
     : MemObject(p), port(NULL), tlb(NULL), currState(NULL), pending(false),
+      masterId(p->sys->getMasterId(name())),
       doL1DescEvent(this), doL2DescEvent(this), doProcessEvent(this)
 {
     sctlr = 0;
@@ -61,7 +62,6 @@ TableWalker::~TableWalker()
 {
     ;
 }
-
 
 unsigned int
 TableWalker::drain(Event *de)
@@ -239,7 +239,7 @@ TableWalker::processWalk()
         doL1Descriptor();
         f = currState->fault;
     } else {
-        RequestPtr req = new Request(l1desc_addr, sizeof(uint32_t), flag);
+        RequestPtr req = new Request(l1desc_addr, sizeof(uint32_t), flag, masterId);
         PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
         pkt->dataStatic((uint8_t*)&currState->l1Desc.data);
         port->sendFunctional(pkt);
@@ -583,7 +583,7 @@ TableWalker::doL1Descriptor()
                     currState->tc->getCpuPtr()->ticks(1));
             doL2Descriptor();
         } else {
-            RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0);
+            RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0, masterId);
             PacketPtr pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
             pkt->dataStatic((uint8_t*)&currState->l2Desc.data);
             port->sendFunctional(pkt);

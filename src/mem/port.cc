@@ -70,7 +70,7 @@ Port::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd)
 
     for (ChunkGenerator gen(addr, size, peerBlockSize());
          !gen.done(); gen.next()) {
-        req.setPhys(gen.addr(), gen.size(), 0);
+        req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
         Packet pkt(&req, cmd, Packet::Broadcast);
         pkt.dataStatic(p);
         sendFunctional(&pkt);
@@ -106,7 +106,7 @@ Port::memsetBlob(Addr addr, uint8_t val, int size)
 void
 Port::printAddr(Addr a)
 {
-    Request req(a, 1, 0);
+    Request req(a, 1, 0, Request::funcMasterId);
     Packet pkt(&req, MemCmd::PrintReq, Packet::Broadcast);
     Packet::PrintReqState prs(std::cerr);
     pkt.senderState = &prs;

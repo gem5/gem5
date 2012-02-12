@@ -367,6 +367,7 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
         if (cache_req->memReq == NULL) {
             cache_req->memReq =
                 new Request(cpu->asid[tid], aligned_addr, acc_size, flags,
+                            cpu->dataMasterId(),
                             inst->instAddr(),
                             cpu->readCpuId(), //@todo: use context id
                             tid);
@@ -379,6 +380,7 @@ CacheUnit::setupMemRequest(DynInstPtr inst, CacheReqPtr cache_req,
                                             inst->split2ndAddr,
                                             acc_size, 
                                             flags, 
+                                            cpu->dataMasterId(),
                                             inst->instAddr(),
                                             cpu->readCpuId(), 
                                             tid);
@@ -1070,6 +1072,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                                        inst->getMemAddr(),
                                        inst->totalSize,
                                        0,
+                                       cpu->dataMasterId(),
                                        0);
 
             split_pkt = new Packet(cache_req->memReq, cache_req->pktCmd,

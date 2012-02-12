@@ -138,6 +138,9 @@ class MemTest : public MemObject
 
     bool issueDmas;
 
+    /** Request id for all generated traffic */
+    MasterID masterId;
+
     int id;
 
     std::set<unsigned> outstandingAddrs;

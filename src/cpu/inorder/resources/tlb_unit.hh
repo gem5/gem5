@@ -118,7 +118,9 @@ class TLBUnitRequest : public ResourceRequest {
             req_size = sizeof(TheISA::MachInst);
             flags = 0;
             inst->fetchMemReq = new Request(inst->readTid(), aligned_addr,
-                                            req_size, flags, inst->instAddr(),
+                                            req_size, flags,
+                                            res->cpu->instMasterId(),
+                                            inst->instAddr(),
                                             res->cpu->readCpuId(),
                                             inst->readTid());
             memReq = inst->fetchMemReq;
@@ -132,7 +134,9 @@ class TLBUnitRequest : public ResourceRequest {
             }
 
             inst->dataMemReq = new Request(inst->readTid(), aligned_addr,
-                                           req_size, flags, inst->instAddr(),
+                                           req_size, flags,
+                                           res->cpu->dataMasterId(),
+                                           inst->instAddr(),
                                            res->cpu->readCpuId(),
                                            inst->readTid());
             memReq = inst->dataMemReq;

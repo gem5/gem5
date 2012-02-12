@@ -269,7 +269,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data,
     dcache_latency = 0;
 
     while (1) {
-        req->setVirt(0, addr, size, flags, thread->pcState().instAddr());
+        req->setVirt(0, addr, size, flags, dataMasterId(), thread->pcState().instAddr());
 
         // translate to physical address
         Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Read);
@@ -357,7 +357,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size,
     dcache_latency = 0;
 
     while(1) {
-        req->setVirt(0, addr, size, flags, thread->pcState().instAddr());
+        req->setVirt(0, addr, size, flags, dataMasterId(), thread->pcState().instAddr());
 
         // translate to physical address
         Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Write);

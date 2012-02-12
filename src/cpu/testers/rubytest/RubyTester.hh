@@ -101,6 +101,7 @@ class RubyTester : public MemObject
     void print(std::ostream& out) const;
     bool getCheckFlush() { return m_check_flush; }
 
+    MasterID masterId() { return _masterId; }
   protected:
     class CheckStartEvent : public Event
     {
@@ -116,6 +117,8 @@ class RubyTester : public MemObject
     };
 
     CheckStartEvent checkStartEvent;
+
+    MasterID _masterId;
 
   private:
     void hitCallback(NodeID proc, SubBlock* data);

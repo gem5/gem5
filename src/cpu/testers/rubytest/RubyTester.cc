@@ -36,9 +36,11 @@
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/system/System.hh"
 #include "sim/sim_exit.hh"
+#include "sim/system.hh"
 
 RubyTester::RubyTester(const Params *p)
   : MemObject(p), checkStartEvent(this),
+    _masterId(p->system->getMasterId(name())),
     m_checks_to_complete(p->checks_to_complete),
     m_deadlock_threshold(p->deadlock_threshold),
     m_wakeup_frequency(p->wakeup_frequency),

@@ -229,7 +229,35 @@ class System : public MemObject
     uint32_t numWorkIds;
     std::vector<bool> activeCpus;
 
+    /** This array is a per-sytem list of all devices capable of issuing a
+     * memory system request and an associated string for each master id.
+     * It's used to uniquely id any master in the system by name for things
+     * like cache statistics.
+     */
+    std::vector<std::string> masterIds;
+
   public:
+
+    /** Request an id used to create a request object in the system. All objects
+     * that intend to issues requests into the memory system must request an id
+     * in the init() phase of startup. All master ids must be fixed by the
+     * regStats() phase that immediately preceeds it. This allows objects in the
+     * memory system to understand how many masters may exist and
+     * appropriately name the bins of their per-master stats before the stats
+     * are finalized
+     */
+    MasterID getMasterId(std::string req_name);
+
+    /** Get the name of an object for a given request id.
+     */
+    std::string getMasterName(MasterID master_id);
+
+    /** Get the number of masters registered in the system */
+    MasterID maxMasters()
+    {
+        return masterIds.size();
+    }
+
     virtual void regStats();
     /**
      * Called by pseudo_inst to track the number of work items started by this

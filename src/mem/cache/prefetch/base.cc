@@ -42,11 +42,13 @@
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/base.hh"
 #include "mem/request.hh"
+#include "sim/system.hh"
 
 BasePrefetcher::BasePrefetcher(const Params *p)
     : SimObject(p), size(p->size), latency(p->latency), degree(p->degree),
-      useContextId(p->use_cpu_id), pageStop(!p->cross_pages),
-      serialSquash(p->serial_squash), onlyData(p->data_accesses_only)
+      useMasterId(p->use_master_id), pageStop(!p->cross_pages),
+      serialSquash(p->serial_squash), onlyData(p->data_accesses_only),
+      system(p->sys), masterId(system->getMasterId(name()))
 {
 }
 
@@ -230,7 +232,7 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             }
 
             // create a prefetch memreq
-            Request *prefetchReq = new Request(*addrIter, blkSize, 0);
+            Request *prefetchReq = new Request(*addrIter, blkSize, 0, masterId);
             PacketPtr prefetch =
                 new Packet(prefetchReq, MemCmd::HardPFReq, Packet::Broadcast);
             prefetch->allocate();

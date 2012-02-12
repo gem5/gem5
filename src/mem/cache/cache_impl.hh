@@ -1006,7 +1006,8 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
     writebacks[0/*pkt->req->threadId()*/]++;
 
     Request *writebackReq =
-        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
+        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
+                Request::wbMasterId);
     PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, -1);
     if (blk->isWritable()) {
         writeback->setSupplyExclusive();

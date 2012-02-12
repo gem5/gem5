@@ -1,5 +1,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
+from m5.proxy import *
+
 class BasePrefetcher(SimObject):
     type = 'BasePrefetcher'
     abstract = True
@@ -13,10 +15,11 @@ class BasePrefetcher(SimObject):
          "Degree of the prefetch depth")
     latency = Param.Latency('10t',
          "Latency of the prefetcher")
-    use_cpu_id = Param.Bool(True,
-         "Use the CPU ID to separate calculations of prefetches")
+    use_master_id = Param.Bool(True,
+         "Use the master id to separate calculations of prefetches")
     data_accesses_only = Param.Bool(False,
          "Only prefetch on data not on instruction accesses")
+    sys = Param.System(Parent.any, "System this device belongs to")
 
 class GHBPrefetcher(BasePrefetcher):
     type = 'GHBPrefetcher'

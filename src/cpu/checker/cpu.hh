@@ -93,6 +93,9 @@ class CheckerCPU : public BaseCPU
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
+
+    /** id attached to all issued requests */
+    MasterID masterId;
   public:
     virtual void init();
 

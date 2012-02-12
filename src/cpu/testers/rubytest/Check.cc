@@ -103,8 +103,8 @@ Check::initiatePrefetch()
     }
 
     // Prefetches are assumed to be 0 sized
-    Request *req = new Request(m_address.getAddress(), 0, flags, curTick(),
-                               m_pc.getAddress());
+    Request *req = new Request(m_address.getAddress(), 0, flags,
+            m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
     req->setThreadContext(index, 0);
 
     PacketPtr pkt = new Packet(req, cmd, port->idx);
@@ -141,8 +141,8 @@ Check::initiateFlush()
 
     Request::Flags flags;
 
-    Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags, curTick(),
-                               m_pc.getAddress());
+    Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags,
+            m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
 
     Packet::Command cmd;
 
@@ -176,7 +176,8 @@ Check::initiateAction()
     Address writeAddr(m_address.getAddress() + m_store_count);
 
     // Stores are assumed to be 1 byte-sized
-    Request *req = new Request(writeAddr.getAddress(), 1, flags, curTick(),
+    Request *req = new Request(writeAddr.getAddress(), 1, flags,
+            m_tester_ptr->masterId(), curTick(),
                                m_pc.getAddress());
 
     req->setThreadContext(index, 0);
@@ -243,7 +244,7 @@ Check::initiateCheck()
 
     // Checks are sized depending on the number of bytes written
     Request *req = new Request(m_address.getAddress(), CHECK_SIZE, flags,
-                               curTick(), m_pc.getAddress());
+                               m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
 
     req->setThreadContext(index, 0);
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq, port->idx);

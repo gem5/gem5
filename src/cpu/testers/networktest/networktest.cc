@@ -44,6 +44,7 @@
 #include "mem/request.hh"
 #include "sim/sim_events.hh"
 #include "sim/stats.hh"
+#include "sim/system.hh"
 
 using namespace std;
 
@@ -113,7 +114,8 @@ NetworkTest::NetworkTest(const Params *p)
       maxPackets(p->max_packets),
       trafficType(p->traffic_type),
       injRate(p->inj_rate),
-      precision(p->precision)
+      precision(p->precision),
+      masterId(p->system->getMasterId(name()))
 {
     // set up counters
     noResponseCycles = 0;
@@ -263,17 +265,17 @@ NetworkTest::generatePkt()
     if (randomReqType == 0) {
         // generate packet for virtual network 0
         requestType = MemCmd::ReadReq;
-        req->setPhys(paddr, access_size, flags);
+        req->setPhys(paddr, access_size, flags, masterId);
     } else if (randomReqType == 1) {
         // generate packet for virtual network 1
         requestType = MemCmd::ReadReq;
         flags.set(Request::INST_FETCH);
-        req->setVirt(0, 0x0, access_size, flags, 0x0);
+        req->setVirt(0, 0x0, access_size, flags, 0x0, masterId);
         req->setPaddr(paddr);
     } else {  // if (randomReqType == 2)
         // generate packet for virtual network 2
         requestType = MemCmd::WriteReq;
-        req->setPhys(paddr, access_size, flags);
+        req->setPhys(paddr, access_size, flags, masterId);
     }
 
     req->setThreadContext(id,0);

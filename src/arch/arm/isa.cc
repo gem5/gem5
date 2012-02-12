@@ -559,7 +559,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                       panic("Security Extensions not implemented!");
               }
               warn("Translating via MISCREG in atomic mode! Fix Me!\n");
-              req->setVirt(0, val, 1, flags, tc->pcState().pc());
+              req->setVirt(0, val, 1, flags, tc->pcState().pc(),
+                      Request::funcMasterId);
               fault = tc->getDTBPtr()->translateAtomic(req, tc, mode);
               if (fault == NoFault) {
                   miscRegs[MISCREG_PAR] =

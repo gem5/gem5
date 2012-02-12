@@ -42,20 +42,15 @@ void
 GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                  std::list<Tick> &delays)
 {
-    if (useContextId && !pkt->req->hasContextId()) {
-        DPRINTF(HWPrefetch, "ignoring request with no context ID");
-        return;
-    }
-
     Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
-    int ctx_id = useContextId ? pkt->req->contextId() : 0;
-    assert(ctx_id < Max_Contexts);
+    int master_id = useMasterId ? pkt->req->masterId() : 0;
+    assert(master_id < Max_Masters);
 
-    int new_stride = blk_addr - lastMissAddr[ctx_id];
-    int old_stride = lastMissAddr[ctx_id] - secondLastMissAddr[ctx_id];
+    int new_stride = blk_addr - lastMissAddr[master_id];
+    int old_stride = lastMissAddr[master_id] - secondLastMissAddr[master_id];
 
-    secondLastMissAddr[ctx_id] = lastMissAddr[ctx_id];
-    lastMissAddr[ctx_id] = blk_addr;
+    secondLastMissAddr[master_id] = lastMissAddr[master_id];
+    lastMissAddr[master_id] = blk_addr;
 
     if (new_stride == old_stride) {
         for (int d = 1; d <= degree; d++) {

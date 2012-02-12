@@ -104,6 +104,9 @@ class DmaPort : public Port
      * we are currently operating in. */
     System *sys;
 
+    /** Id for all requests */
+    MasterID masterId;
+
     /** Number of outstanding packets the dma port has. */
     int pendingCount;
 

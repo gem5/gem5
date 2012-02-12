@@ -113,6 +113,16 @@ System::System(Params *p)
         physProxy = new PortProxy(*getSystemPort());
         virtProxy = new FSTranslatingPortProxy(*getSystemPort());
     }
+
+    // Get the generic system master IDs
+    MasterID tmp_id M5_VAR_USED;
+    tmp_id = getMasterId("writebacks");
+    assert(tmp_id == Request::wbMasterId);
+    tmp_id = getMasterId("functional");
+    assert(tmp_id == Request::funcMasterId);
+    tmp_id = getMasterId("interrupt");
+    assert(tmp_id == Request::intMasterId);
+
 }
 
 System::~System()
@@ -397,6 +407,42 @@ void
 printSystems()
 {
     System::printSystems();
+}
+
+MasterID
+System::getMasterId(std::string master_name)
+{
+    // strip off system name if the string starts with it
+    if (master_name.size() > name().size() &&
+                          master_name.compare(0, name().size(), name()) == 0)
+        master_name = master_name.erase(0, name().size() + 1);
+
+    // CPUs in switch_cpus ask for ids again after switching
+    for (int i = 0; i < masterIds.size(); i++) {
+        if (masterIds[i] == master_name) {
+            return i;
+        }
+    }
+
+    // todo: Check if stats are enabled yet
+    // I just don't know a good way to do it
+
+    if (false)
+        fatal("Can't request a masterId after regStats(). \
+                You must do so in init().\n");
+
+    masterIds.push_back(master_name);
+
+    return masterIds.size() - 1;
+}
+
+std::string
+System::getMasterName(MasterID master_id)
+{
+    if (master_id >= masterIds.size())
+        fatal("Invalid master_id passed to getMasterName()\n");
+
+    return masterIds[master_id];
 }
 
 const char *System::MemoryModeStrings[3] = {"invalid", "atomic",

@@ -74,7 +74,8 @@ CacheRecorder::enqueueNextFlushRequest()
         TraceRecord* rec = m_records[m_records_flushed];
         m_records_flushed++;
         Request* req = new Request(rec->m_data_address,
-                                   RubySystem::getBlockSizeBytes(),0);
+                                   RubySystem::getBlockSizeBytes(),0,
+                                   Request::funcMasterId);
         MemCmd::Command requestType = MemCmd::FlushReq;
         Packet *pkt = new Packet(req, requestType, -1);
 
@@ -100,16 +101,16 @@ CacheRecorder::enqueueNextFetchRequest()
         if (traceRecord->m_type == RubyRequestType_LD) {
             requestType = MemCmd::ReadReq;
             req->setPhys(traceRecord->m_data_address,
-                    RubySystem::getBlockSizeBytes(),0);
+                    RubySystem::getBlockSizeBytes(),0, Request::funcMasterId);
         }   else if (traceRecord->m_type == RubyRequestType_IFETCH) {
             requestType = MemCmd::ReadReq;
             req->setPhys(traceRecord->m_data_address,
                     RubySystem::getBlockSizeBytes(),
-                    Request::INST_FETCH);
+                    Request::INST_FETCH, Request::funcMasterId);
         }   else {
             requestType = MemCmd::WriteReq;
             req->setPhys(traceRecord->m_data_address,
-                    RubySystem::getBlockSizeBytes(),0);
+                    RubySystem::getBlockSizeBytes(),0, Request::funcMasterId);
         }
 
         Packet *pkt = new Packet(req, requestType, -1);

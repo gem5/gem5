@@ -43,10 +43,10 @@ class GHBPrefetcher : public BasePrefetcher
 {
   protected:
 
-    static const int Max_Contexts = 64;
+    static const int Max_Masters = 64;
 
-    Addr secondLastMissAddr[Max_Contexts];
-    Addr lastMissAddr[Max_Contexts];
+    Addr secondLastMissAddr[Max_Masters];
+    Addr lastMissAddr[Max_Masters];
 
   public:
     GHBPrefetcher(const Params *p)

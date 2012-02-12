@@ -28,6 +28,7 @@
 
 from MemObject import MemObject
 from m5.params import *
+from m5.proxy import *
 
 class NetworkTest(MemObject):
     type = 'NetworkTest'
@@ -41,3 +42,4 @@ class NetworkTest(MemObject):
     inj_rate = Param.Float(0.1, "Packet injection rate")
     precision = Param.Int(3, "Number of digits of precision after decimal point")
     test = Port("Port to the memory system to test")
+    system = Param.System(Parent.any, "System we belong to")
