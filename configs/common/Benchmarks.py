@@ -112,7 +112,7 @@ Benchmarks = {
 
     'MutexTest':        [SysConfig('mutex-test.rcS', '128MB')],
     'ArmAndroid':       [SysConfig('null.rcS', '256MB',
-                     'ARMv7a-Gingerbread-Android.SMP.mouse.nolock.clean.img)')],
+                     'ARMv7a-Gingerbread-Android.SMP.mouse.nolock.clean.img')],
     'bbench':           [SysConfig('bbench.rcS', '256MB',
                             'ARMv7a-Gingerbread-Android.SMP.mouse.nolock.img')]
 }
