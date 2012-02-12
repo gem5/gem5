@@ -1,10 +1,12 @@
+Redirecting stdout to build/ALPHA_MESI_CMP_directory/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory/simout
+Redirecting stderr to build/ALPHA_MESI_CMP_directory/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jan 23 2012 03:44:57
-gem5 started Jan 23 2012 04:22:03
-gem5 executing on zizzer
-command line: build/ALPHA_SE_MESI_CMP_directory/gem5.opt -d build/ALPHA_SE_MESI_CMP_directory/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory -re tests/run.py build/ALPHA_SE_MESI_CMP_directory/tests/opt/quick/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory
+gem5 compiled Feb 12 2012 12:56:01
+gem5 started Feb 12 2012 12:56:15
+gem5 executing on ribera.cs.wisc.edu
+command line: build/ALPHA_MESI_CMP_directory/gem5.opt -d build/ALPHA_MESI_CMP_directory/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory -re tests/run.py build/ALPHA_MESI_CMP_directory/tests/opt/quick/se/60.rubytest/alpha/linux/rubytest-ruby-MESI_CMP_directory
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 363611 because Ruby Tester completed
+Exiting @ tick 366301 because Ruby Tester completed
