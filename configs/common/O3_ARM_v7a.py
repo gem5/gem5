@@ -190,10 +190,7 @@ class O3_ARM_v7aL2(BaseCache):
     size = '1MB'
     assoc = 16
     write_buffers = 8
-    # Simple stride prefetcher
-    prefetch_policy = 'stride'
     prefetch_on_access = 'true'
-    prefetch_latency = '1.0ns'
-    prefetch_degree = 8
-
+    # Simple stride prefetcher
+    prefetcher = StridePrefetcher(degree=8, latency='1.0ns')
 

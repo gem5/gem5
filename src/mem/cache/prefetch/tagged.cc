@@ -35,9 +35,8 @@
 
 #include "mem/cache/prefetch/tagged.hh"
 
-TaggedPrefetcher::TaggedPrefetcher(const BaseCacheParams *p)
-    : BasePrefetcher(p),
-      latency(p->prefetch_latency), degree(p->prefetch_degree)
+TaggedPrefetcher::TaggedPrefetcher(const Params *p)
+    : BasePrefetcher(p)
 {
 }
 
@@ -62,3 +61,8 @@ calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
 }
 
 
+TaggedPrefetcher*
+TaggedPrefetcherParams::create()
+{
+   return new TaggedPrefetcher(this);
+}

@@ -211,7 +211,7 @@ class Cache : public BaseCache
 
   public:
     /** Instantiates a basic cache object. */
-    Cache(const Params *p, TagStore *tags, BasePrefetcher *prefetcher);
+    Cache(const Params *p, TagStore *tags);
 
     virtual Port *getPort(const std::string &if_name, int idx = -1);
 

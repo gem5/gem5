@@ -63,10 +63,10 @@
 #include "sim/sim_exit.hh"
 
 template<class TagStore>
-Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
+Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     : BaseCache(p),
       tags(tags),
-      prefetcher(pf),
+      prefetcher(p->prefetcher),
       doFastWrites(true),
       prefetchOnAccess(p->prefetch_on_access)
 {
@@ -89,8 +89,6 @@ Cache<TagStore>::regStats()
 {
     BaseCache::regStats();
     tags->regStats(name());
-    if (prefetcher)
-        prefetcher->regStats(name());
 }
 
 template<class TagStore>

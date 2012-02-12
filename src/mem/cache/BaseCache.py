@@ -29,8 +29,8 @@
 from m5.params import *
 from m5.proxy import Self
 from MemObject import MemObject
+from Prefetcher import BasePrefetcher
 
-class Prefetch(Enum): vals = ['none', 'tagged', 'stride', 'ghb']
 
 class BaseCache(MemObject):
     type = 'BaseCache'
@@ -58,22 +58,7 @@ class BaseCache(MemObject):
     write_buffers = Param.Int(8, "number of write buffers")
     prefetch_on_access = Param.Bool(False,
          "notify the hardware prefetcher on every access (not just misses)")
-    prefetcher_size = Param.Int(100,
-         "Number of entries in the hardware prefetch queue")
-    prefetch_past_page = Param.Bool(False,
-         "Allow prefetches to cross virtual page boundaries")
-    prefetch_serial_squash = Param.Bool(False,
-         "Squash prefetches with a later time on a subsequent miss")
-    prefetch_degree = Param.Int(1,
-         "Degree of the prefetch depth")
-    prefetch_latency = Param.Latency(10 * Self.latency,
-         "Latency of the prefetcher")
-    prefetch_policy = Param.Prefetch('none',
-         "Type of prefetcher to use")
-    prefetch_use_cpu_id = Param.Bool(True,
-         "Use the CPU ID to separate calculations of prefetches")
-    prefetch_data_accesses_only = Param.Bool(False,
-         "Only prefetch on data not on instruction accesses")
+    prefetcher = Param.BasePrefetcher(NULL,"Prefetcher attached to cache")
     cpu_side = Port("Port on side closer to CPU")
     mem_side = Port("Port on side closer to MEM")
     addr_range = Param.AddrRange(AllMemory, "The address range for the CPU-side port")

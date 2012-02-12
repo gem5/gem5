@@ -39,6 +39,7 @@
 #include <climits>
 
 #include "mem/cache/prefetch/base.hh"
+#include "params/StridePrefetcher.hh"
 
 class StridePrefetcher : public BasePrefetcher
 {
@@ -63,15 +64,11 @@ class StridePrefetcher : public BasePrefetcher
     Addr *lastMissAddr[Max_Contexts];
 
     std::list<StrideEntry*> table[Max_Contexts];
-    Tick latency;
-    int degree;
-    bool useContextId;
 
   public:
 
-    StridePrefetcher(const BaseCacheParams *p)
-        : BasePrefetcher(p), latency(p->prefetch_latency),
-          degree(p->prefetch_degree), useContextId(p->prefetch_use_cpu_id)
+    StridePrefetcher(const Params *p)
+        : BasePrefetcher(p)
     {
     }
 

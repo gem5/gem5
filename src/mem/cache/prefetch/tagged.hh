@@ -37,17 +37,14 @@
 #define __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
 
 #include "mem/cache/prefetch/base.hh"
+#include "params/TaggedPrefetcher.hh"
+
 
 class TaggedPrefetcher : public BasePrefetcher
 {
-  protected:
-
-    Tick latency;
-    int degree;
-
   public:
 
-    TaggedPrefetcher(const BaseCacheParams *p);
+    TaggedPrefetcher(const Params *p);
 
     ~TaggedPrefetcher() {}
 

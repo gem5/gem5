@@ -132,3 +132,10 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         tab.push_back(new_entry);
     }
 }
+
+
+StridePrefetcher*
+StridePrefetcherParams::create()
+{
+   return new StridePrefetcher(this);
+}

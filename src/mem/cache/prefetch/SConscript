@@ -32,6 +32,7 @@ Import('*')
 
 if env['TARGET_ISA'] == 'no':
     Return()
+SimObject('Prefetcher.py')
 
 Source('base.cc')
 Source('ghb.cc')

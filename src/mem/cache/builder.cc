@@ -37,7 +37,6 @@
 #include <vector>
 
 #include "config/the_isa.hh"
-#include "enums/Prefetch.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/cache.hh"
 #include "mem/config/cache.hh"
@@ -57,30 +56,13 @@
 #include "mem/cache/tags/iic.hh"
 #endif
 
-//Prefetcher Headers
-#include "mem/cache/prefetch/ghb.hh"
-#include "mem/cache/prefetch/stride.hh"
-#include "mem/cache/prefetch/tagged.hh"
 
 using namespace std;
 
 #define BUILD_CACHE(TAGS, tags)                         \
     do {                                                \
-        BasePrefetcher *pf;                             \
-        if (prefetch_policy == Enums::tagged) {         \
-            pf = new TaggedPrefetcher(this);            \
-        }                                               \
-        else if (prefetch_policy == Enums::stride) {    \
-            pf = new StridePrefetcher(this);            \
-        }                                               \
-        else if (prefetch_policy == Enums::ghb) {       \
-            pf = new GHBPrefetcher(this);               \
-        }                                               \
-        else {                                          \
-            pf = NULL;                                  \
-        }                                               \
         Cache<TAGS> *retval =                           \
-            new Cache<TAGS>(this, tags, pf);            \
+            new Cache<TAGS>(this, tags);            \
         return retval;                                  \
     } while (0)
 

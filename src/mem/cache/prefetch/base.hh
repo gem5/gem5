@@ -41,10 +41,11 @@
 #include "base/statistics.hh"
 #include "mem/packet.hh"
 #include "params/BaseCache.hh"
+#include "sim/sim_object.hh"
 
 class BaseCache;
 
-class BasePrefetcher
+class BasePrefetcher : public SimObject
 {
   protected:
 
@@ -62,6 +63,14 @@ class BasePrefetcher
     /** The block size of the parent cache. */
     int blkSize;
 
+    /** The latency before a prefetch is issued */
+    Tick latency;
+
+    /** The number of prefetches to issue */
+    unsigned degree;
+
+    /** If patterns should be found per context id */
+    bool useContextId;
     /** Do we prefetch across page boundaries. */
     bool pageStop;
 
@@ -70,8 +79,6 @@ class BasePrefetcher
 
     /** Do we prefetch on only data reads, or on inst reads as well. */
     bool onlyData;
-
-    std::string _name;
 
   public:
 
@@ -85,15 +92,13 @@ class BasePrefetcher
     Stats::Scalar pfSpanPage;
     Stats::Scalar pfSquashed;
 
-    void regStats(const std::string &name);
+    void regStats();
 
   public:
-
-    BasePrefetcher(const BaseCacheParams *p);
+    typedef BasePrefetcherParams Params;
+    BasePrefetcher(const Params *p);
 
     virtual ~BasePrefetcher() {}
-
-    const std::string name() const { return _name; }
 
     void setCache(BaseCache *_cache);
 
@@ -130,7 +135,12 @@ class BasePrefetcher
      * Utility function: are addresses a and b on the same VM page?
      */
     bool samePage(Addr a, Addr b);
+ public:
+    const Params*
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
 };
-
-
 #endif //__MEM_CACHE_PREFETCH_BASE_PREFETCHER_HH__

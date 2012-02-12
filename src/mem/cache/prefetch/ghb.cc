@@ -71,3 +71,10 @@ GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         }
     }
 }
+
+
+GHBPrefetcher*
+GHBPrefetcherParams::create()
+{
+   return new GHBPrefetcher(this);
+}
